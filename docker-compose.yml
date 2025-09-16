@@ -1,0 +1,259 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "20080:20080"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+    networks:
+      - open-dpp-local
+
+  keycloak:
+    container_name: keycloak
+    image: ghcr.io/open-dpp/open-dpp-auth:main
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=${AUTH_ADMIN_USERNAME}
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=${AUTH_ADMIN_PWD}
+      - KC_HEALTH_ENABLED=true
+      - KC_HOSTNAME_STRICT=false
+      - KC_HOSTNAME=${SERVICE_KEYCLOAK_URL}
+      - KC_HTTP_ENABLED=true
+      - PROXY_ADDRESS_FORWARDING=true
+      - KC_PROXY_HEADERS=xforwarded
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://auth-db/auth
+      - KC_DB_USERNAME=admin
+      - KC_DB_PASSWORD=admin
+    healthcheck:
+      test: [ "CMD-SHELL", "java -jar /opt/healthcheck/healthcheck.jar http://127.0.0.1:8080/realms/open-dpp" ]
+      interval: 30s
+      timeout: 30s
+      retries: 10
+      start_period: 30s
+    command: start
+    ports:
+      - ${SERVICE_KEYCLOAK_PORT}:8080
+    depends_on:
+      - auth-db
+    networks:
+      - open-dpp-local
+
+  auth-db:
+    container_name: auth-db
+    image: postgres:17-alpine
+    volumes:
+      - ./auth-db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=auth
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+    ports:
+      - ${SERVICE_AUTHDB_PORT}:5432
+    networks:
+      - open-dpp-local
+
+  admin:
+    container_name: admin
+    image: ghcr.io/open-dpp/admin-interface:latest
+    networks:
+      - open-dpp-local
+
+  presentation-interface:
+    container_name: presentation
+    image: ghcr.io/open-dpp/presentation-interface:latest
+    networks:
+      - open-dpp-local
+
+  open-dpp:
+    container_name: open-dpp
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - APP_NAME=main
+    ports:
+      - 4001:3000
+    environment:
+      - SERVICE_TOKEN=${API_SERVICE_TOKEN}
+      - API_TOKEN=apiToken
+      - DB_HOST=api-db
+      - DB_PORT=5432
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+      - DB_DATABASE=management
+      - MONGO_DB_HOST=api-mongo-db
+      - MONGO_DB_PORT=27017
+      - KEYCLOAK_PUBLIC_URL=${SERVICE_KEYCLOAK_URL}
+      - KEYCLOAK_NETWORK_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=open-dpp
+      - KEYCLOAK_ADMIN_USERNAME=${AUTH_ADMIN_USERNAME}
+      - KEYCLOAK_ADMIN_PASSWORD=${AUTH_ADMIN_PWD}
+      - MARKETPLACE_URL=${SERVICE_MARKETPLACE_URL}
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    networks:
+      - open-dpp-local
+
+  open-dpp-media:
+    container_name: open-dpp-media
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - APP_NAME=media
+    ports:
+      - 4002:3000
+    environment:
+      - PORT=3000
+      - DB_HOST=api-mongo-db
+      - DB_PORT=27017
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+      - DB_DATABASE=management
+      - KEYCLOAK_PUBLIC_URL=${SERVICE_KEYCLOAK_URL}
+      - KEYCLOAK_NETWORK_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=open-dpp
+      - S3_ENDPOINT=minio
+      - S3_PORT=9000
+      - S3_ACCESS_KEY=minioadmin
+      - S3_SECRET_KEY=minioadmin
+      - S3_BUCKET_NAME_DEFAULT=dpp
+      - S3_BUCKET_NAME_PROFILE_PICTURES=profile-pictures
+      - CLAMAV_URL=http://clamav-rest
+      - CLAMAV_PORT=9000
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    networks:
+      - open-dpp-local
+
+  api-db:
+    container_name: api-db
+    platform: linux/amd64
+    image: postgres:17-alpine
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=management
+    volumes:
+      - ./api-db:/var/lib/postgresql/data/
+    ports:
+      - ${SERVICE_APIDB_PORT}:5432
+    networks:
+      - open-dpp-local
+
+  api-mongo-db:
+    ports:
+      - ${SERVICE_MONGODB_PORT}:27017
+    container_name: api-mongo-db
+    logging:
+      options:
+        max-size: 1g
+    volumes:
+      - ./api-mongo-db:/data/db
+      - ./api-mongo-config:/data/configdb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+      - MONGO_INITDB_DATABASE=management
+    image: mongo:6.0
+    networks:
+      - open-dpp-local
+
+  mailpit:
+    container_name: mailpit
+    image: axllent/mailpit:latest
+    networks:
+      - open-dpp-local
+
+  keycloak-config-cli:
+    container_name: keycloak-configurator
+    image: adorsys/keycloak-config-cli:latest-26.1.0 # ensure this is equal to keycloak version
+    environment:
+      - KEYCLOAK_URL=http://keycloak:8080/
+      - KEYCLOAK_USER=${AUTH_ADMIN_USERNAME}
+      - KEYCLOAK_PASSWORD=${AUTH_ADMIN_PWD}
+      - KEYCLOAK_AVAILABILITYCHECK_ENABLED=true
+      - KEYCLOAK_AVAILABILITYCHECK_TIMEOUT=120s
+      - IMPORT_FILES_LOCATIONS=/config/*.json
+      - IMPORT_VALIDATE=true
+      - IMPORT_CACHE_ENABLED=false
+      - IMPORT_VARSUBSTITUTION_ENABLED=true
+      - CUSTOM_VAR_ADMIN_INTERFACE_ROOT_URL=http://localhost:5173
+      - CUSTOM_VAR_ADMIN_INTERFACE_WEBORIGIN=http://localhost:5173
+      - CUSTOM_VAR_SMTP_AUTH_ENABLED=false
+      - CUSTOM_VAR_SMTP_USER=open-dpp
+      - CUSTOM_VAR_SMTP_PASSWORD=*******
+      - CUSTOM_VAR_SMTP_TLS_ENABLED=false
+      - CUSTOM_VAR_SMTP_PORT=1025
+      - CUSTOM_VAR_SMTP_HOST=mailpit
+      - CUSTOM_VAR_SMTP_FROM=keycloak@open-dpp.localhost
+      - CUSTOM_VAR_SMTP_FROM_NAME=open-dpp-[LOCAL]
+      - CUSTOM_VAR_SMTP_REPLYTO=keycloak@open-dpp.localhost
+      - CUSTOM_VAR_SMTP_REPLYTO_NAME=open-dpp-[LOCAL]
+      - CUSTOM_VAR_POSTMAN_CLIENT_SECRET=uYs1LvvYrXA1B4Gf0pEY3m4hV8mvav27
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    volumes:
+      - ./keycloak-realm.json:/config/keycloak-realm.json
+    networks:
+      - open-dpp-local
+
+  minio:
+    container_name: minio
+    image: quay.io/minio/minio:latest
+    command: minio server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"  # MinIO API
+      - "9001:9001"  # MinIO Console (Web UI)
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - open-dpp-local
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 10;
+      /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin};
+      /usr/bin/mc mb myminio/${MINIO_DEFAULT_BUCKET:-dpp} --ignore-existing;
+      /usr/bin/mc anonymous set public myminio/${MINIO_DEFAULT_BUCKET:-dpp};
+      /usr/bin/mc mb myminio/${MINIO_DEFAULT_BUCKET:-profile-pictures} --ignore-existing;
+      /usr/bin/mc anonymous set public myminio/${MINIO_DEFAULT_BUCKET:-profile-pictures};
+      /usr/bin/mc version enable myminio/dpp;
+      /usr/bin/mc version enable myminio/profile-pictures;
+      exit 0;
+      "
+    networks:
+      - open-dpp-local
+
+  clamav-rest:
+    image: ajilaag/clamav-rest
+    ports:
+      - "3310:9000"
+    networks:
+      - open-dpp-local
+
+volumes:
+  caddy_data:
+  caddy_config:
+  minio_data:
+  etcd_data:
+
+networks:
+  open-dpp-local:

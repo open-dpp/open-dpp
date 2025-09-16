@@ -1,0 +1,928 @@
+{
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "type": {
+      "type": "array",
+      "readOnly": true,
+      "const": [
+        "DigitalTraceabilityEvent",
+        "VerifiableCredential"
+      ],
+      "default": [
+        "DigitalTraceabilityEvent",
+        "VerifiableCredential"
+      ],
+      "items": {
+        "type": "string",
+        "enum": [
+          "DigitalTraceabilityEvent",
+          "VerifiableCredential"
+        ]
+      }
+    },
+    "id": {
+      "example": "https://example-company.com/credentials/2a423366-a0d6-4855-ba65-2e0c926d09b0",
+      "type": "string",
+      "format": "uri",
+      "description": "A unique identifier (URI) assigned to the product passport. May be a UUID"
+    },
+    "@context": {
+      "example": "https://test.uncefact.org/vocabulary/untp/dcc/dcc-context.jsonld",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "https://www.w3.org/ns/credentials/v2",
+          "https://test.uncefact.org/vocabulary/untp/dte/0.5.0/"
+        ]
+      },
+      "description": "A list of JSON-LD context URIs that define the semantic meaning of properties within the credential. ",
+      "readOnly": true,
+      "const": [
+        "https://www.w3.org/ns/credentials/v2",
+        "https://test.uncefact.org/vocabulary/untp/dte/0.5.0/"
+      ],
+      "default": [
+        "https://www.w3.org/ns/credentials/v2",
+        "https://test.uncefact.org/vocabulary/untp/dte/0.5.0/"
+      ]
+    },
+    "issuer": {
+      "$ref": "#/$defs/CredentialIssuer",
+      "description": "The organisation that is the issuer of this VC. Note that the \"id\" property MUST be a W3C DID.  Other identifiers such as tax registration numbers can be listed in the \"otherIdentifiers\" property."
+    },
+    "validFrom": {
+      "example": "2024-03-15T12:00:00",
+      "type": "string",
+      "format": "date-time",
+      "description": "The date and time from which the credential is valid."
+    },
+    "credentialSubject": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Event"
+      },
+      "description": "VC subject is the transaction event structure"
+    }
+  },
+  "description": "An array of Traceability Events as a VC",
+  "required": [
+    "id",
+    "@context",
+    "issuer"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "CredentialIssuer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "array",
+          "readOnly": true,
+          "const": [
+            "CredentialIssuer"
+          ],
+          "default": [
+            "CredentialIssuer"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "CredentialIssuer"
+            ]
+          }
+        },
+        "id": {
+          "example": "did:web:identifiers.example-company.com:12345",
+          "type": "string",
+          "format": "uri",
+          "description": "The W3C DID of the issuer - should be a did:web or did:tdw"
+        },
+        "name": {
+          "example": "Example Company Pty Ltd",
+          "type": "string",
+          "description": "The name of the issuer person or organisation"
+        },
+        "otherIdentifier": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Identifier"
+          },
+          "description": "An optional list of other registered identifiers for this credential issuer "
+        }
+      },
+      "description": "The issuer party (person or organisation) of a verifiable credential.",
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "Identifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "array",
+          "readOnly": true,
+          "const": [
+            "Identifier"
+          ],
+          "default": [
+            "Identifier"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "Identifier"
+            ]
+          }
+        },
+        "id": {
+          "example": "https://id.gs1.org/01/09520123456788/21/12345",
+          "type": "string",
+          "format": "uri",
+          "description": "The globally unique ID of the entity as a resolvable URL according to ISO 18975. ExamplesProduct - id.gs1.org/01/09520123456788/21/12345  Party - abr.business.gov.au/ABN/View?abn=90664869327. Facility - did:web:facilities.example-company.com:123. "
+        },
+        "name": {
+          "example": "EV battery 300Ah.",
+          "type": "string",
+          "description": "The registered name of the entity within the identifier scheme.  Examples: product - EV battery 300Ah, Party - Sample Company Pty Ltd,  Facility - Green Acres battery factory"
+        },
+        "registeredId": {
+          "example": "90664869327",
+          "type": "string",
+          "description": "The registration number (alphanumeric) of the entity within the register. Unique within the register."
+        },
+        "idScheme": {
+          "$ref": "#/$defs/IdentifierScheme",
+          "description": "The identifier scheme.  Examples : Product - id.gs1.org/01,  Party - business.gov.au/abn,  Facility - did:web:facilities.acme.com. "
+        }
+      },
+      "description": "The ID and Name of an identified entity such as a product, facility, party, standard, etc.  If the identifier is a W3C DID then the corresponding DID document SHOULD include a serviceEndpoint of type \"IdentityResolver\". If the identifier is not a W3C DID then the id property SHOULD be an identity resolver URL.",
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "IdentifierScheme": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "array",
+          "readOnly": true,
+          "const": [
+            "IdentifierScheme"
+          ],
+          "default": [
+            "IdentifierScheme"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "IdentifierScheme"
+            ]
+          }
+        },
+        "id": {
+          "example": "https://id.gs1.org/01/",
+          "type": "string",
+          "format": "uri",
+          "description": "The globally unique identifier of the registration scheme. The scheme should be registered and discoverable from vocabulary.uncefact.org/identifierSchemes"
+        },
+        "name": {
+          "example": "Global Trade Identification Number (GTIN)",
+          "type": "string",
+          "description": "The name of the identifier scheme. "
+        }
+      },
+      "description": "An identifier registration scheme for products, facilities, or organisations. Typically operated by a state, national or global authority."
+    },
+    "TransformationEvent": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "type": {
+          "type": "array",
+          "readOnly": true,
+          "const": [
+            "TransformationEvent",
+            "Event"
+          ],
+          "default": [
+            "TransformationEvent",
+            "Event"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "TransformationEvent",
+              "Event"
+            ]
+          }
+        },
+        "id": {
+          "readOnly": true,
+          "example": "https://events.sample.com/b681df10-c682-454a-b11b-d0b9374c01bd",
+          "type": "string",
+          "format": "uri",
+          "description": "The unique identifier of this event - SHOULD be a UUID"
+        },
+        "processType": {
+          "example": "Weaving",
+          "type": "string",
+          "description": "A human readable name for industry specific process represented by this event."
+        },
+        "eventTime": {
+          "example": "2024-09-01T12:00:00",
+          "type": "string",
+          "format": "date-time",
+          "description": "The ISO-8601 date time when the event occurred."
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "observe",
+            "add",
+            "delete"
+          ],
+          "example": "observe",
+          "description": "Code describing how an event relates to the life-cycle of the entity impacted by the event."
+        },
+        "disposition": {
+          "type": "string",
+          "x-external-enumeration": "https://ref.gs1.org/cbv/Disp",
+          "description": "Disposition code describing the state of the item after the event. \n\n    This is an enumerated value, but the list of valid values are too big, or change too often to include here. You can access the list of allowable values at this URL:  https://ref.gs1.org/cbv/Disp\n    "
+        },
+        "bizStep": {
+          "type": "string",
+          "x-external-enumeration": "https://ref.gs1.org/cbv/BizStep",
+          "description": "A business step code drawn from a controlled vocabulary.\n\n    This is an enumerated value, but the list of valid values are too big, or change too often to include here. You can access the list of allowable values at this URL:  https://ref.gs1.org/cbv/BizStep\n    "
+        },
+        "bizLocation": {
+          "example": "https://id.gs1.org/414/9520123456788",
+          "type": "string",
+          "format": "uri",
+          "description": "A Business Location is a uniquely identified and discretely recorded geospatial location that is meant to designate the specific place where an object is assumed to be following an event until it is reported to be at a different Business Location by a subsequent event. The bizLocation must be a resolvable URI that links to facility information and geo-location data."
+        },
+        "sensorElementList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SensorElement"
+          },
+          "description": "An array (one for each sensor) of sensor device data sets associated with the event. "
+        },
+        "outputEPCList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Item"
+          },
+          "description": "The list of uniquely identified items that are the output of this transformation event - for example a list of individually identified bolts of cloth that are the output of a weaving process."
+        },
+        "inputEPCList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Item"
+          },
+          "description": "The list of uniquely identified items that are the input of this transformation event - for example a list of individually identified bobbins of yarn that are the input of a weaving process."
+        },
+        "inputQuantityList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/QuantityElement"
+          },
+          "description": "The quantified list of product classes that are the input of this transformation event - used when each item does not have a unique identity.  for example the weight of raw cotton that is the input to a ginning process."
+        },
+        "outputQuantityList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/QuantityElement"
+          },
+          "description": "The quantified list of product classes that are the output of this transformation event - used when each item does not have a unique identity.  for example a count of the bales of cleaned cotton that are the output of a ginning process."
+        }
+      },
+      "description": "Transformation represents an event in which input objects are fully or partially consumed and output objects are produced, such that any of the input objects may have contributed to all of the output objects - for example consuming bales of cotton to produce yarn."
+    },
+    "SensorElement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "array",
+          "readOnly": true,
+          "const": [
+            "SensorElement"
+          ],
+          "default": [
+            "SensorElement"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "SensorElement"
+            ]
+          }
+        },
+        "sensorMetadata": {
+          "$ref": "#/$defs/Sensor",
+          "description": "Data that describes the physical sensor that recorded the sensor data set."
+        },
+        "sensorReport": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SensorData"
+          },
+          "description": "A list of sensor readings from the given sensor relevant to the traceability event context."
+        },
+        "sensorIntegrityProof": {
+          "type": "string",
+          "format": "uri",
+          "description": "An optional reference to a verifiable credential signed by the sensor device or device manufacturer that contains the digitally signed raw data associated with this sensor report."
+        }
+      },
+      "description": "A SensorElement is used to carry data related to an event that is captured one sensor such as an IoT device. Include one sensor property and an array of sensor data values."
+    },
+    "Sensor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "array",
+          "readOnly": true,
+          "const": [
+            "Sensor"
+          ],
+          "default": [
+            "Sensor"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "Sensor"
+            ]
+          }
+        },
+        "device": {
+          "$ref": "#/$defs/Item",
+          "description": "The device Identifier for the sensor as a URI (typically an EPC)"
+        },
+        "dataProcessingMethod": {
+          "example": "https://standards.org/sensorMethod#1234",
+          "type": "string",
+          "format": "uri",
+          "description": "The data processing method used by the sensor - should reference a documented standard criteria as a URI"
+        }
+      },
+      "description": "A physical sensor that records a sensor data set."
+    },
+    "Item": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "array",
+          "readOnly": true,
+          "const": [
+            "Item"
+          ],
+          "default": [
+            "Item"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "Item"
+            ]
+          }
+        },
+        "id": {
+          "example": "https://id.gs1.org/01/09520123456788/21/12345",
+          "type": "string",
+          "format": "uri",
+          "description": "The globally unique ID of the product as a URI. Ideally as a resolvable URL according to ISO 18975. "
+        },
+        "name": {
+          "example": "EV battery 300Ah.",
+          "type": "string",
+          "description": "The name of the product class to which the product item belongs.  "
+        }
+      },
+      "description": "A specific serialised trade item which is an instance of a more generic product. ",
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "SensorData": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "array",
+          "readOnly": true,
+          "const": [
+            "SensorData"
+          ],
+          "default": [
+            "SensorData"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "SensorData"
+            ]
+          }
+        },
+        "time": {
+          "example": "2024-07-24T12:00:00",
+          "type": "string",
+          "format": "date-time",
+          "description": "the timestamp at which the sensor reading was made."
+        },
+        "sensorType": {
+          "example": "https://samplesensors.com/model1234",
+          "type": "string",
+          "format": "uri",
+          "description": "the measurement type of the sensor reading, as a URI reference to a measurement method specification."
+        },
+        "value": {
+          "example": 25,
+          "type": "number",
+          "description": "the sensor reading"
+        },
+        "uom": {
+          "type": "string",
+          "x-external-enumeration": "https://vocabulary.uncefact.org/UnitMeasureCode",
+          "description": "the unit of measure for the sensor reading, drawn from UNECE rec20 code list.\n\n    This is an enumerated value, but the list of valid values are too big, or change too often to include here. You can access the list of allowable values at this URL:  https://vocabulary.uncefact.org/UnitMeasureCode\n    "
+        }
+      },
+      "description": "A data point read by a sensor."
+    },
+    "QuantityElement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "array",
+          "readOnly": true,
+          "const": [
+            "QuantityElement"
+          ],
+          "default": [
+            "QuantityElement"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "QuantityElement"
+            ]
+          }
+        },
+        "productId": {
+          "example": "https://id.gs1.org/01/09520123456788/21/12345",
+          "type": "string",
+          "format": "uri",
+          "description": "THe identifier of a product class (as opposed to a product instance) such as a GTIN code for a manufactured product."
+        },
+        "productName": {
+          "example": "EV battery 300Ah.",
+          "type": "string",
+          "description": "The registered name of the product within the identifier scheme. "
+        },
+        "quantity": {
+          "example": 20,
+          "type": "number",
+          "description": "The numeric quantity of the product class (eg 100 kg of cotton)"
+        },
+        "uom": {
+          "type": "string",
+          "x-external-enumeration": "https://vocabulary.uncefact.org/UnitMeasureCode",
+          "description": "The unit of measure for the quantity value (eg Kg or meters etc) using the UNECE Rec 20 unit of measure codelist.\n\n    This is an enumerated value, but the list of valid values are too big, or change too often to include here. You can access the list of allowable values at this URL:  https://vocabulary.uncefact.org/UnitMeasureCode\n    "
+        }
+      },
+      "description": "The quantity element is used to define the quantity (eg 100 kg of a product class. Used when serialised items are not applicable.",
+      "required": [
+        "productId",
+        "productName",
+        "quantity"
+      ]
+    },
+    "ObjectEvent": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "type": {
+          "type": "array",
+          "readOnly": true,
+          "const": [
+            "ObjectEvent",
+            "Event"
+          ],
+          "default": [
+            "ObjectEvent",
+            "Event"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "ObjectEvent",
+              "Event"
+            ]
+          }
+        },
+        "id": {
+          "readOnly": true,
+          "example": "https://events.sample.com/b681df10-c682-454a-b11b-d0b9374c01bd",
+          "type": "string",
+          "format": "uri",
+          "description": "The unique identifier of this event - SHOULD be a UUID"
+        },
+        "processType": {
+          "example": "Weaving",
+          "type": "string",
+          "description": "A human readable name for industry specific process represented by this event."
+        },
+        "eventTime": {
+          "example": "2024-09-01T12:00:00",
+          "type": "string",
+          "format": "date-time",
+          "description": "The ISO-8601 date time when the event occurred."
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "observe",
+            "add",
+            "delete"
+          ],
+          "example": "observe",
+          "description": "Code describing how an event relates to the life-cycle of the entity impacted by the event."
+        },
+        "disposition": {
+          "type": "string",
+          "x-external-enumeration": "https://ref.gs1.org/cbv/Disp",
+          "description": "Disposition code describing the state of the item after the event. \n\n    This is an enumerated value, but the list of valid values are too big, or change too often to include here. You can access the list of allowable values at this URL:  https://ref.gs1.org/cbv/Disp\n    "
+        },
+        "bizStep": {
+          "type": "string",
+          "x-external-enumeration": "https://ref.gs1.org/cbv/BizStep",
+          "description": "A business step code drawn from a controlled vocabulary.\n\n    This is an enumerated value, but the list of valid values are too big, or change too often to include here. You can access the list of allowable values at this URL:  https://ref.gs1.org/cbv/BizStep\n    "
+        },
+        "bizLocation": {
+          "example": "https://id.gs1.org/414/9520123456788",
+          "type": "string",
+          "format": "uri",
+          "description": "A Business Location is a uniquely identified and discretely recorded geospatial location that is meant to designate the specific place where an object is assumed to be following an event until it is reported to be at a different Business Location by a subsequent event. The bizLocation must be a resolvable URI that links to facility information and geo-location data."
+        },
+        "sensorElementList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SensorElement"
+          },
+          "description": "An array (one for each sensor) of sensor device data sets associated with the event. "
+        },
+        "epcList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Item"
+          },
+          "description": "A list of uniquely identified items (eg specific items serial numbers or tagged shipments / packages) that are the focus of this object event.  "
+        },
+        "quantityList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/QuantityElement"
+          },
+          "description": "A quantified list of product classes (eg GS1 GTINs) that are the focus of this object event"
+        }
+      },
+      "description": "Object represents an event that happened to one or more physical or digital objects - such as an inspection or certification of a product or shipment. The physical objects may be identified either as specific items (eg a unique consignment number) or as a quantified amount of a product class (eg 100Kg of cotton yarn)"
+    },
+    "AggregationEvent": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "type": {
+          "type": "array",
+          "readOnly": true,
+          "const": [
+            "AggregationEvent",
+            "Event"
+          ],
+          "default": [
+            "AggregationEvent",
+            "Event"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "AggregationEvent",
+              "Event"
+            ]
+          }
+        },
+        "id": {
+          "readOnly": true,
+          "example": "https://events.sample.com/b681df10-c682-454a-b11b-d0b9374c01bd",
+          "type": "string",
+          "format": "uri",
+          "description": "The unique identifier of this event - SHOULD be a UUID"
+        },
+        "processType": {
+          "example": "Weaving",
+          "type": "string",
+          "description": "A human readable name for industry specific process represented by this event."
+        },
+        "eventTime": {
+          "example": "2024-09-01T12:00:00",
+          "type": "string",
+          "format": "date-time",
+          "description": "The ISO-8601 date time when the event occurred."
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "observe",
+            "add",
+            "delete"
+          ],
+          "example": "observe",
+          "description": "Code describing how an event relates to the life-cycle of the entity impacted by the event."
+        },
+        "disposition": {
+          "type": "string",
+          "x-external-enumeration": "https://ref.gs1.org/cbv/Disp",
+          "description": "Disposition code describing the state of the item after the event. \n\n    This is an enumerated value, but the list of valid values are too big, or change too often to include here. You can access the list of allowable values at this URL:  https://ref.gs1.org/cbv/Disp\n    "
+        },
+        "bizStep": {
+          "type": "string",
+          "x-external-enumeration": "https://ref.gs1.org/cbv/BizStep",
+          "description": "A business step code drawn from a controlled vocabulary.\n\n    This is an enumerated value, but the list of valid values are too big, or change too often to include here. You can access the list of allowable values at this URL:  https://ref.gs1.org/cbv/BizStep\n    "
+        },
+        "bizLocation": {
+          "example": "https://id.gs1.org/414/9520123456788",
+          "type": "string",
+          "format": "uri",
+          "description": "A Business Location is a uniquely identified and discretely recorded geospatial location that is meant to designate the specific place where an object is assumed to be following an event until it is reported to be at a different Business Location by a subsequent event. The bizLocation must be a resolvable URI that links to facility information and geo-location data."
+        },
+        "sensorElementList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SensorElement"
+          },
+          "description": "An array (one for each sensor) of sensor device data sets associated with the event. "
+        },
+        "parentEPC": {
+          "$ref": "#/$defs/Item",
+          "description": "The unique item identifier that is the result of this aggregation. Typically a packaging ID used in shipments that represents a box/ pallet / container of contained items."
+        },
+        "childEPCList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Item"
+          },
+          "description": "The list of child items that have been aggregated into the parent (or dis-aggregated from the parent). Maybe a list of package references (eg boxes on a pallet) or may be individual items (eg products in a box)."
+        },
+        "childQuantityList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/QuantityElement"
+          },
+          "description": "List of quantified product classes that have been aggregated into the parent.  Used when the child items do not have unique identifiers (eg 100 Kg of cotton bales)"
+        }
+      },
+      "description": "Aggregation represents an event that happened to one or more objects that are physically aggregated together (physically constrained to be in the same place at the same time, as when cases are aggregated to a pallet).  This event is also used to represent de-aggregation (eg unpacking) when businessStepCode is unpacking."
+    },
+    "TransactionEvent": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "type": {
+          "type": "array",
+          "readOnly": true,
+          "const": [
+            "TransactionEvent",
+            "Event"
+          ],
+          "default": [
+            "TransactionEvent",
+            "Event"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "TransactionEvent",
+              "Event"
+            ]
+          }
+        },
+        "id": {
+          "readOnly": true,
+          "example": "https://events.sample.com/b681df10-c682-454a-b11b-d0b9374c01bd",
+          "type": "string",
+          "format": "uri",
+          "description": "The unique identifier of this event - SHOULD be a UUID"
+        },
+        "processType": {
+          "example": "Weaving",
+          "type": "string",
+          "description": "A human readable name for industry specific process represented by this event."
+        },
+        "eventTime": {
+          "example": "2024-09-01T12:00:00",
+          "type": "string",
+          "format": "date-time",
+          "description": "The ISO-8601 date time when the event occurred."
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "observe",
+            "add",
+            "delete"
+          ],
+          "example": "observe",
+          "description": "Code describing how an event relates to the life-cycle of the entity impacted by the event."
+        },
+        "disposition": {
+          "type": "string",
+          "x-external-enumeration": "https://ref.gs1.org/cbv/Disp",
+          "description": "Disposition code describing the state of the item after the event. \n\n    This is an enumerated value, but the list of valid values are too big, or change too often to include here. You can access the list of allowable values at this URL:  https://ref.gs1.org/cbv/Disp\n    "
+        },
+        "bizStep": {
+          "type": "string",
+          "x-external-enumeration": "https://ref.gs1.org/cbv/BizStep",
+          "description": "A business step code drawn from a controlled vocabulary.\n\n    This is an enumerated value, but the list of valid values are too big, or change too often to include here. You can access the list of allowable values at this URL:  https://ref.gs1.org/cbv/BizStep\n    "
+        },
+        "bizLocation": {
+          "example": "https://id.gs1.org/414/9520123456788",
+          "type": "string",
+          "format": "uri",
+          "description": "A Business Location is a uniquely identified and discretely recorded geospatial location that is meant to designate the specific place where an object is assumed to be following an event until it is reported to be at a different Business Location by a subsequent event. The bizLocation must be a resolvable URI that links to facility information and geo-location data."
+        },
+        "sensorElementList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SensorElement"
+          },
+          "description": "An array (one for each sensor) of sensor device data sets associated with the event. "
+        },
+        "sourcePartyId": {
+          "example": "https://abr.business.gov.au/ABN/View?abn=90664869327",
+          "type": "string",
+          "format": "uri",
+          "description": "The source party for this supply chain transaction - typically the seller party"
+        },
+        "destinationPartyId": {
+          "example": "https://abr.business.gov.au/ABN/View?abn=90664869327",
+          "type": "string",
+          "format": "uri",
+          "description": "The destination party for this supply chain transaction - typically the buyer party."
+        },
+        "bizTransaction": {
+          "type": "string",
+          "x-external-enumeration": "https://ref.gs1.org/cbv/BTT",
+          "description": "The document type representing the trade transaction drawn from the business transaction type vocabulary.\n\n    This is an enumerated value, but the list of valid values are too big, or change too often to include here. You can access the list of allowable values at this URL:  https://ref.gs1.org/cbv/BTT\n    "
+        },
+        "epcList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Item"
+          },
+          "description": "The list of uniquely identified trade items included in this supply chain transaction."
+        },
+        "quantityList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/QuantityElement"
+          },
+          "description": "List of quantified product classes that are included in this transaction.  Used when the trade items do not have unique identifiers (eg 100 reels of yarn)"
+        }
+      },
+      "description": "Transaction represents an event in which one or more objects become associated or disassociated with one or more identified business transactions - such as the purchase / shipment of goods between buyer and seller.",
+      "required": [
+        "sourcePartyId",
+        "destinationPartyId"
+      ]
+    },
+    "AssociationEvent": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "type": {
+          "type": "array",
+          "readOnly": true,
+          "const": [
+            "AssociationEvent",
+            "Event"
+          ],
+          "default": [
+            "AssociationEvent",
+            "Event"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "AssociationEvent",
+              "Event"
+            ]
+          }
+        },
+        "id": {
+          "readOnly": true,
+          "example": "https://events.sample.com/b681df10-c682-454a-b11b-d0b9374c01bd",
+          "type": "string",
+          "format": "uri",
+          "description": "The unique identifier of this event - SHOULD be a UUID"
+        },
+        "processType": {
+          "example": "Weaving",
+          "type": "string",
+          "description": "A human readable name for industry specific process represented by this event."
+        },
+        "eventTime": {
+          "example": "2024-09-01T12:00:00",
+          "type": "string",
+          "format": "date-time",
+          "description": "The ISO-8601 date time when the event occurred."
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "observe",
+            "add",
+            "delete"
+          ],
+          "example": "observe",
+          "description": "Code describing how an event relates to the life-cycle of the entity impacted by the event."
+        },
+        "disposition": {
+          "type": "string",
+          "x-external-enumeration": "https://ref.gs1.org/cbv/Disp",
+          "description": "Disposition code describing the state of the item after the event. \n\n    This is an enumerated value, but the list of valid values are too big, or change too often to include here. You can access the list of allowable values at this URL:  https://ref.gs1.org/cbv/Disp\n    "
+        },
+        "bizStep": {
+          "type": "string",
+          "x-external-enumeration": "https://ref.gs1.org/cbv/BizStep",
+          "description": "A business step code drawn from a controlled vocabulary.\n\n    This is an enumerated value, but the list of valid values are too big, or change too often to include here. You can access the list of allowable values at this URL:  https://ref.gs1.org/cbv/BizStep\n    "
+        },
+        "bizLocation": {
+          "example": "https://id.gs1.org/414/9520123456788",
+          "type": "string",
+          "format": "uri",
+          "description": "A Business Location is a uniquely identified and discretely recorded geospatial location that is meant to designate the specific place where an object is assumed to be following an event until it is reported to be at a different Business Location by a subsequent event. The bizLocation must be a resolvable URI that links to facility information and geo-location data."
+        },
+        "sensorElementList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SensorElement"
+          },
+          "description": "An array (one for each sensor) of sensor device data sets associated with the event. "
+        },
+        "parentEPC": {
+          "$ref": "#/$defs/Item",
+          "description": "The unique item identifier that is the parent of this association. Typically an assembled product ID such as a desktop computer that is built from the associated child components."
+        },
+        "childEPCList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Item"
+          },
+          "description": "The list of child items that have been assembled to create the parent - for example the power supply or hard drive components of a desktop computer."
+        },
+        "childQuantityList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/QuantityElement"
+          },
+          "description": "List of quantified product classes that have been assembled into the parent.  Used when the child items do not have unique identifiers (eg brackets and screws used in the assembly of a desktop computer)"
+        }
+      },
+      "description": "The association event represents the assembly of child sub-components to create a parent assembled item. For example a desktop computer assembled from power supply, hard drive, and motherboard.  The association event is very similar in structure to the aggregation event but is used for physical assembly. An association event may represent a bill of materials used to assemble a  product whilst an aggregation event may represent a packing list or items for transport. "
+    },
+    "Event": {
+      "type": "object",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/TransformationEvent"
+        },
+        {
+          "$ref": "#/$defs/ObjectEvent"
+        },
+        {
+          "$ref": "#/$defs/AggregationEvent"
+        },
+        {
+          "$ref": "#/$defs/TransactionEvent"
+        },
+        {
+          "$ref": "#/$defs/AssociationEvent"
+        }
+      ],
+      "description": "This abstract event structure provides a common language to describe supply chain events such as shipments, inspections, manufacturing processes, etc. There are four types of EPCIS event but this is an abstract class representing all common properties of an EPCIS event.",
+      "additionalProperties": true
+    }
+  }
+}

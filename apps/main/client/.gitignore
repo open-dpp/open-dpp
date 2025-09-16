@@ -1,0 +1,20 @@
+# IDE
+.idea
+
+# vue
+node_modules
+dist
+
+tsconfig.tsbuildinfo
+# dotenv files
+.env
+
+.DS_Store
+src/.DS_Store
+src/assets/.DS_Store
+
+cypress/screenshots
+
+# local npm registry
+yalc.lock
+.yalc

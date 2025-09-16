@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "apps/main/src",
+  "compilerOptions": {
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/main/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/main",
+  "projects": {
+    "auth": {
+      "type": "library",
+      "root": "libs/auth",
+      "entryFile": "index",
+      "sourceRoot": "libs/auth/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/auth/tsconfig.lib.json"
+      }
+    },
+    "exception": {
+      "type": "library",
+      "root": "libs/exception",
+      "entryFile": "index",
+      "sourceRoot": "libs/exception/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/exception/tsconfig.lib.json"
+      }
+    },
+    "main": {
+      "type": "application",
+      "root": "apps/main",
+      "entryFile": "main",
+      "sourceRoot": "apps/main/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/main/tsconfig.app.json"
+      }
+    },
+    "marketplace": {
+      "type": "application",
+      "root": "apps/marketplace",
+      "entryFile": "main",
+      "sourceRoot": "apps/marketplace/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/marketplace/tsconfig.app.json"
+      }
+    },
+    "media": {
+      "type": "application",
+      "root": "apps/media",
+      "entryFile": "main",
+      "sourceRoot": "apps/media/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/media/tsconfig.app.json"
+      }
+    },
+    "permission": {
+      "type": "library",
+      "root": "libs/permission",
+      "entryFile": "index",
+      "sourceRoot": "libs/permission/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/permission/tsconfig.lib.json"
+      }
+    }
+  }
+}
