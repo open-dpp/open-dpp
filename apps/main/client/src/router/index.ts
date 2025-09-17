@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import keycloakIns from "../lib/keycloak";
-import { ADMIN_URL, keycloakDisabled } from "../const";
+import { keycloakDisabled } from "../const";
 import { useLayoutStore } from "../stores/layout";
 
 import { AUTH_ROUTES } from "./routes/auth";
@@ -44,7 +44,7 @@ router.beforeEach(async (to, from, next) => {
   }
   if (!keycloakIns.authenticated) {
     await keycloakIns.login({
-      redirectUri: ADMIN_URL + to.path,
+      redirectUri: `${window.location.origin}${to.fullPath}`,
     });
     next();
   } else {

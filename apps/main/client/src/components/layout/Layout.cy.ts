@@ -16,7 +16,7 @@ const router = createRouter({
   routes: routes,
 });
 
-describe("<Layout />", () => {
+describe("<LayoutPresentation />", () => {
   it("should render sidebar and route to correct view", () => {
     const orgaId = "orgaI";
 
