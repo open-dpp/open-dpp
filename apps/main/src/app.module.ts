@@ -62,10 +62,9 @@ import { join } from 'path';
       ProductPassportModule,
       ServeStaticModule.forRoot({
           rootPath: join(__dirname, 'client', 'dist'),
-          renderPath: '/admin'
-      }, {
-          rootPath: join(__dirname, 'presentation', 'dist'),
-          renderPath: '/presentation'
+          serveStaticOptions: {
+              fallthrough: true,
+          }
       }),
   ],
   controllers: [],

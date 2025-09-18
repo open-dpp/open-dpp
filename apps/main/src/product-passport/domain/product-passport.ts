@@ -102,7 +102,7 @@ export class ProductPassport {
     uniqueProductIdentifier: UniqueProductIdentifier;
   }) {
       if (!data.model.description) {
-          throw new ValueError("Model does not have a description. Please add one.");
+          // throw new ValueError("Model does not have a description. Please add one.");
       }
     const dataSections = data.template.sections.map((section) =>
       DataSection.create({ section, model: data.model, item: data.item }),
@@ -110,7 +110,7 @@ export class ProductPassport {
     return new ProductPassport(
       data.uniqueProductIdentifier.uuid,
       data.model.name,
-      data.model.description,
+      data.model.description || '',
       dataSections,
     );
   }

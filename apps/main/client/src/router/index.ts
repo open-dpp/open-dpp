@@ -8,6 +8,7 @@ import { ORGANIZATION_ROUTES } from "./routes/organizations";
 import { useIndexStore } from "../stores";
 import { MARKETPLACE_ROUTES } from "./routes/marketplace";
 import { MEDIA_ROUTES } from "./routes/media";
+import {PRESENTATION_ROUTES} from "./routes/presentation/presentation";
 
 // const MODE = import.meta.env.MODE;
 
@@ -29,6 +30,7 @@ export const routes: RouteRecordRaw[] = [
   ...ORGANIZATION_ROUTES,
   ...MARKETPLACE_ROUTES,
   ...MEDIA_ROUTES,
+    ...PRESENTATION_ROUTES
 ];
 
 export const router = createRouter({
