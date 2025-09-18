@@ -12,7 +12,7 @@ import {
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport-data/domain/data-value';
 import { randomUUID } from 'crypto';
-import {NotSupportedError} from "@app/exception/domain.errors";
+import { NotSupportedError } from '@app/exception/domain.errors';
 
 type SectionProps = {
   name: string;

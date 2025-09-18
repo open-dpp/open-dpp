@@ -9,7 +9,7 @@ import { Model } from '../../models/domain/model';
 import { Template } from '../../templates/domain/template';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { z } from 'zod';
-import {ValueError} from "@app/exception/domain.errors";
+import { ValueError } from '@app/exception/domain.errors';
 
 export class AasConnection {
   private constructor(

@@ -10,7 +10,8 @@ import {
 import { PassportTemplate } from '../domain/passport-template';
 import { passportTemplatePropsFactory } from '../fixtures/passport-template-props.factory';
 import { randomUUID } from 'crypto';
-import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
+import { expect } from '@jest/globals';
+import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
 
 describe('PassportTemplateService', () => {
   let service: PassportTemplateService;

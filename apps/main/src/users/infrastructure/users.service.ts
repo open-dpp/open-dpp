@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Equal, FindManyOptions, Repository } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { User } from '../domain/user';
-import {NotFoundInDatabaseException} from "@app/exception/service.exceptions";
-import {KeycloakUserInToken} from "@app/auth/keycloak-auth/KeycloakUserInToken";
+import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import { KeycloakUserInToken } from '@app/auth/keycloak-auth/KeycloakUserInToken';
 
 @Injectable()
 export class UsersService {

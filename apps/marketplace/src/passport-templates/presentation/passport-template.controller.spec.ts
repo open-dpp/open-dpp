@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { Test, TestingModule } from '@nestjs/testing';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { APP_GUARD, Reflector } from '@nestjs/core';
-import * as request from 'supertest';
+import request from 'supertest';
 import { PassportTemplateModule } from '../passport-template.module';
 import { Connection } from 'mongoose';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
@@ -20,6 +20,7 @@ import { PassportTemplate } from '../domain/passport-template';
 import { passportTemplateToDto } from './dto/passport-template.dto';
 import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
+import { expect } from '@jest/globals';
 
 describe('PassportTemplateController', () => {
   let app: INestApplication;

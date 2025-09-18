@@ -13,9 +13,9 @@ export class SectionDraftFactory extends Factory<SectionDraftDbProps> {
     return this;
   }
   override build(
-    params?: DeepPartialObject<SectionDraftDbProps> | undefined,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    options?: BuildOptions<SectionDraftDbProps, any> | undefined,
+    params?: DeepPartialObject<SectionDraftDbProps>,
+
+    options?: BuildOptions<SectionDraftDbProps, any>,
   ) {
     const result: SectionDraftDbProps = super.build(
       {

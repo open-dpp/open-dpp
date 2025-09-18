@@ -28,7 +28,7 @@ export class ItemsApplicationService {
       ? await this.templateService.findOneOrFail(model.templateId)
       : undefined;
     if (!template) {
-        throw new ForbiddenException();
+      throw new ForbiddenException();
     }
 
     const item = Item.create({

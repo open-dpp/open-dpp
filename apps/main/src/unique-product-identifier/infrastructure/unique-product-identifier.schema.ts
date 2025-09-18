@@ -10,9 +10,9 @@ export enum UniqueProductIdentifierSchemaVersion {
   timestamps: true,
 })
 export class UniqueProductIdentifierDoc extends Document {
-    @Prop({ required: true })
-        // @ts-ignore
-    _id: string;
+  @Prop({ required: true })
+  // @ts-ignore
+  _id: string;
 
   @Prop({ required: true })
   referenceId: string;

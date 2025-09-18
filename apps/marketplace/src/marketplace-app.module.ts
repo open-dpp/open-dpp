@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import {PassportTemplateModule} from "./passport-templates/passport-template.module";
+import { PassportTemplateModule } from './passport-templates/passport-template.module';
 
 @Module({
   imports: [PassportTemplateModule],

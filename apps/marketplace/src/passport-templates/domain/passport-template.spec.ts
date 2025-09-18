@@ -1,5 +1,6 @@
 import { PassportTemplate, Sector } from './passport-template';
 import { passportTemplatePropsFactory } from '../fixtures/passport-template-props.factory';
+import { expect } from '@jest/globals';
 
 describe('PassportTemplate', () => {
   it('is created', () => {

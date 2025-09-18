@@ -15,7 +15,7 @@ export class PassportTemplateDoc extends Document {
   _schemaVersion: PassportTemplateSchemaVersion;
 
   @Prop({ required: true })
-  // @ts-ignore
+  // @ts-expect-error
   _id: string;
   @Prop({ required: true })
   version: string;

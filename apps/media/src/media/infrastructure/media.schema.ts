@@ -13,9 +13,9 @@ export class MediaDoc extends Document {
   }) // Track schema version
   _schemaVersion: MediaSchemaVersion;
 
-    @Prop({ required: true })
-        // @ts-ignore
-    _id: string;
+  @Prop({ required: true })
+  // @ts-ignore
+  _id: string;
   @Prop({ required: true })
   title: string;
   @Prop({ required: true })

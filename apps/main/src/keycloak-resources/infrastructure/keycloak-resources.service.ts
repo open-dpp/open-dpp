@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import KcAdminClient from '@keycloak/keycloak-admin-client';
 import { Organization } from '../../organizations/domain/organization';
 import { User } from '../../users/domain/user';
-import {AuthContext} from "@app/auth/auth-request";
+import { AuthContext } from '@app/auth/auth-request';
 
 @Injectable()
 export class KeycloakResourcesService {
@@ -19,10 +19,10 @@ export class KeycloakResourcesService {
   private readonly realm: string;
 
   constructor(private configService: ConfigService) {
-      this.kcAdminClient = new KcAdminClient({
-          baseUrl: this.configService.get<string>('KEYCLOAK_NETWORK_URL', ''),
-      });
-      this.realm = this.configService.get<string>('KEYCLOAK_REALM', '');
+    this.kcAdminClient = new KcAdminClient({
+      baseUrl: this.configService.get<string>('KEYCLOAK_NETWORK_URL', ''),
+    });
+    this.realm = this.configService.get<string>('KEYCLOAK_REALM', '');
   }
 
   async reloadToken() {

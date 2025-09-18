@@ -9,7 +9,7 @@ import { MediaDoc } from './media.schema';
 import { Media } from '../domain/media';
 import { fileTypeFromBuffer } from './file-type-util';
 import { randomUUID } from 'crypto';
-import {NotFoundInDatabaseException} from "@app/exception/service.exceptions";
+import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
 
 enum BucketDefaultPaths {
   PRODUCT_PASSPORT_FILES = 'product-passport-files',
@@ -37,11 +37,11 @@ export class MediaService {
     });
     this.bucketNameDefault = configService.get<string>(
       'S3_BUCKET_NAME_DEFAULT',
-        ''
+      '',
     );
     this.bucketNameProfilePictures = configService.get<string>(
       'S3_BUCKET_NAME_PROFILE_PICTURES',
-        ''
+      '',
     );
   }
 
@@ -112,7 +112,7 @@ export class MediaService {
     }
     const fileType = await fileTypeFromBuffer(buffer);
     if (!fileType) {
-        throw new Error('File type not recognized');
+      throw new Error('File type not recognized');
     }
     let fileTypeMime = fileType.mime;
     let uploadBuffer: Buffer = buffer;
@@ -158,9 +158,9 @@ export class MediaService {
     ownedByOrganizationId: string,
   ) {
     const fileType = await fileTypeFromBuffer(buffer);
-      if (!fileType) {
-          throw new Error('File type not recognized');
-      }
+    if (!fileType) {
+      throw new Error('File type not recognized');
+    }
     let fileTypeMime = fileType.mime;
     let uploadBuffer: Buffer = buffer;
     if (fileType.mime.startsWith('image/')) {

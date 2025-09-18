@@ -16,187 +16,186 @@ import { memoryStorage } from 'multer';
 import { VirusScanFileValidator } from './virus-scan.file-validator';
 import { MediaService } from '../infrastructure/media.service';
 import express from 'express';
-import {Media} from '../domain/media';
-import * as authRequest from "@app/auth/auth-request";
-import {Public} from "@app/auth/public/public.decorator";
+import { Media } from '../domain/media';
+import * as authRequest from '@app/auth/auth-request';
+import { Public } from '@app/auth/public/public.decorator';
 
 @Controller('media')
 export class MediaController {
-    constructor(private readonly filesService: MediaService) {
-    }
+  constructor(private readonly filesService: MediaService) {}
 
-    @Post('profileImage')
-    @UseInterceptors(
-        FileInterceptor('file', {
-            storage: memoryStorage(),
-        }),
+  @Post('profileImage')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+    }),
+  )
+  async uploadProfileImage(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: 10 * 1024 * 1024 /* max 10MB */,
+          }),
+          new FileTypeValidator({
+            fileType: /(image\/(jpeg|jpg|png|heic|webp))$/,
+          }),
+          new VirusScanFileValidator({ storageType: 'memory' }),
+        ],
+      }),
     )
-    async uploadProfileImage(
-        @UploadedFile(
-            new ParseFilePipe({
-                validators: [
-                    new MaxFileSizeValidator({
-                        maxSize: 10 * 1024 * 1024 /* max 10MB */,
-                    }),
-                    new FileTypeValidator({
-                        fileType: /(image\/(jpeg|jpg|png|heic|webp))$/,
-                    }),
-                    new VirusScanFileValidator({storageType: 'memory'}),
-                ],
-            }),
-        )
-        file: Express.Multer.File,
-        @Req() req: authRequest.AuthRequest,
-    ): Promise<void> {
-        await this.filesService.uploadProfilePicture(
-            file.buffer,
-            req.authContext.keycloakUser.sub,
-        );
-    }
+    file: Express.Multer.File,
+    @Req() req: authRequest.AuthRequest,
+  ): Promise<void> {
+    await this.filesService.uploadProfilePicture(
+      file.buffer,
+      req.authContext.keycloakUser.sub,
+    );
+  }
 
-    @Post('dpp/:orgId/:upi/:dataFieldId')
-    @UseInterceptors(
-        FileInterceptor('file', {
-            storage: memoryStorage(),
-        }),
+  @Post('dpp/:orgId/:upi/:dataFieldId')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+    }),
+  )
+  async uploadDppFile(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: 15 * 1024 * 1024 /* max 15MB */,
+          }),
+          new FileTypeValidator({
+            fileType: /(image\/(jpeg|jpg|png|heic|webp)|application\/pdf)$/,
+          }),
+          new VirusScanFileValidator({ storageType: 'memory' }),
+        ],
+      }),
     )
-    async uploadDppFile(
-        @UploadedFile(
-            new ParseFilePipe({
-                validators: [
-                    new MaxFileSizeValidator({
-                        maxSize: 15 * 1024 * 1024 /* max 15MB */,
-                    }),
-                    new FileTypeValidator({
-                        fileType: /(image\/(jpeg|jpg|png|heic|webp)|application\/pdf)$/,
-                    }),
-                    new VirusScanFileValidator({storageType: 'memory'}),
-                ],
-            }),
-        )
-        file: Express.Multer.File,
-        @Param('orgId') orgId: string,
-        @Param('upi') upi: string,
-        @Param('dataFieldId') dataFieldId: string,
-        @Req() req: authRequest.AuthRequest,
-    ): Promise<{
-        mediaId: string;
-    }> {
-        const media = await this.filesService.uploadFileOfProductPassport(
-            file.originalname,
-            file.buffer,
-            dataFieldId,
-            upi,
-            req.authContext.keycloakUser.sub,
-            orgId,
-        );
-        return {
-            mediaId: media.id,
-        };
-    }
+    file: Express.Multer.File,
+    @Param('orgId') orgId: string,
+    @Param('upi') upi: string,
+    @Param('dataFieldId') dataFieldId: string,
+    @Req() req: authRequest.AuthRequest,
+  ): Promise<{
+    mediaId: string;
+  }> {
+    const media = await this.filesService.uploadFileOfProductPassport(
+      file.originalname,
+      file.buffer,
+      dataFieldId,
+      upi,
+      req.authContext.keycloakUser.sub,
+      orgId,
+    );
+    return {
+      mediaId: media.id,
+    };
+  }
 
-    @Get('dpp/:upi/:dataFieldId/info')
-    @Public()
-    async getDppFileInfo(
-        @Param('upi') upi: string,
-        @Param('dataFieldId') dataFieldId: string,
-    ): Promise<Media> {
-        return this.filesService.findOneDppFileOrFail(dataFieldId, upi);
-    }
+  @Get('dpp/:upi/:dataFieldId/info')
+  @Public()
+  async getDppFileInfo(
+    @Param('upi') upi: string,
+    @Param('dataFieldId') dataFieldId: string,
+  ): Promise<Media> {
+    return this.filesService.findOneDppFileOrFail(dataFieldId, upi);
+  }
 
-    @Get('dpp/:upi/:dataFieldId/download')
-    @Public()
-    async streamDppFile(
-        @Param('upi') upi: string,
-        @Param('dataFieldId') dataFieldId: string,
-        @Req() req: authRequest.AuthRequest,
-        @Res() res: express.Response,
-    ): Promise<void> {
-        try {
-            const result = await this.filesService.getFilestreamOfProductPassport(
-                dataFieldId,
-                upi,
-            );
-            res.setHeader('Content-Type', result.media.mimeType);
-            res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
-            if (result.media.updatedAt) {
-                res.setHeader('Last-Modified', result.media.updatedAt.toUTCString());
-            }
-            res.setHeader('Cache-Control', 'private, max-age=31536000');
-            result.stream.pipe(res);
-            result.stream.on('error', () => {
-                if (!res.headersSent) {
-                    res.status(500).json({error: 'Failed to retrieve file'});
-                }
-            });
-        } catch {
-            res.status(404).json({error: 'File not found'});
+  @Get('dpp/:upi/:dataFieldId/download')
+  @Public()
+  async streamDppFile(
+    @Param('upi') upi: string,
+    @Param('dataFieldId') dataFieldId: string,
+    @Req() req: authRequest.AuthRequest,
+    @Res() res: express.Response,
+  ): Promise<void> {
+    try {
+      const result = await this.filesService.getFilestreamOfProductPassport(
+        dataFieldId,
+        upi,
+      );
+      res.setHeader('Content-Type', result.media.mimeType);
+      res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
+      if (result.media.updatedAt) {
+        res.setHeader('Last-Modified', result.media.updatedAt.toUTCString());
+      }
+      res.setHeader('Cache-Control', 'private, max-age=31536000');
+      result.stream.pipe(res);
+      result.stream.on('error', () => {
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Failed to retrieve file' });
         }
+      });
+    } catch {
+      res.status(404).json({ error: 'File not found' });
     }
+  }
 
-    @Get('by-organization/:organizationId')
-    async getFileInfoByOrganization(
-        @Param('organizationId') organizationId: string,
-    ): Promise<Array<Media>> {
-        return this.filesService.findAllByOrganizationId(organizationId);
-    }
+  @Get('by-organization/:organizationId')
+  async getFileInfoByOrganization(
+    @Param('organizationId') organizationId: string,
+  ): Promise<Array<Media>> {
+    return this.filesService.findAllByOrganizationId(organizationId);
+  }
 
-    @Get(':id/download')
-    @Public()
-    async streamFile(
-        @Param('id') id: string,
-        @Req() req: authRequest.AuthRequest,
-        @Res() res: express.Response,
-    ): Promise<void> {
-        try {
-            const result = await this.filesService.getFilestreamById(id);
-            res.setHeader('Content-Type', result.media.mimeType);
-            res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
-            if (result.media.updatedAt) {
-                res.setHeader('Last-Modified', result.media.updatedAt.toUTCString());
-            }
-            res.setHeader('Cache-Control', 'private, max-age=31536000');
-            result.stream.pipe(res);
-            result.stream.on('error', () => {
-                if (!res.headersSent) {
-                    res.status(500).json({error: 'Failed to retrieve file'});
-                }
-            });
-        } catch (error) {
-            console.log(error);
-            res.status(404).json({error: 'File not found'});
+  @Get(':id/download')
+  @Public()
+  async streamFile(
+    @Param('id') id: string,
+    @Req() req: authRequest.AuthRequest,
+    @Res() res: express.Response,
+  ): Promise<void> {
+    try {
+      const result = await this.filesService.getFilestreamById(id);
+      res.setHeader('Content-Type', result.media.mimeType);
+      res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
+      if (result.media.updatedAt) {
+        res.setHeader('Last-Modified', result.media.updatedAt.toUTCString());
+      }
+      res.setHeader('Cache-Control', 'private, max-age=31536000');
+      result.stream.pipe(res);
+      result.stream.on('error', () => {
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Failed to retrieve file' });
         }
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(404).json({ error: 'File not found' });
     }
+  }
 
-    @Get(':id/info')
-    @Public()
-    async getMediaInfo(@Param('id') id: string): Promise<Media> {
-        return await this.filesService.findOneOrFail(id);
-    }
+  @Get(':id/info')
+  @Public()
+  async getMediaInfo(@Param('id') id: string): Promise<Media> {
+    return await this.filesService.findOneOrFail(id);
+  }
 
-    @Post(':orgId')
-    @UseInterceptors(
-        FileInterceptor('file', {
-            storage: memoryStorage(),
-        }),
+  @Post(':orgId')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+    }),
+  )
+  async uploadFile(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: 15 * 1024 * 1024 /* max 15MB */,
+          }),
+          new FileTypeValidator({
+            fileType: /(image\/(jpeg|jpg|png|heic|webp)|application\/pdf)$/,
+          }),
+          new VirusScanFileValidator({ storageType: 'memory' }),
+        ],
+      }),
     )
-    async uploadFile(
-        @UploadedFile(
-            new ParseFilePipe({
-                validators: [
-                    new MaxFileSizeValidator({
-                        maxSize: 15 * 1024 * 1024 /* max 15MB */,
-                    }),
-                    new FileTypeValidator({
-                        fileType: /(image\/(jpeg|jpg|png|heic|webp)|application\/pdf)$/,
-                    }),
-                    new VirusScanFileValidator({storageType: 'memory'}),
-                ],
-            }),
-        )
-        file: Express.Multer.File,
-        @Param('orgId') orgId: string,
-        @Req() req: authRequest.AuthRequest,
+    file: Express.Multer.File,
+    @Param('orgId') orgId: string,
+    @Req() req: authRequest.AuthRequest,
   ): Promise<{
     mediaId: string;
   }> {

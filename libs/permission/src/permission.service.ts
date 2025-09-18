@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { ResourcePermission } from './resource-permission.interface';
-import {AuthContext} from "@app/auth/auth-request";
+import { AuthContext } from '@app/auth/auth-request';
 
 @Injectable()
 export class PermissionService {
@@ -14,10 +14,10 @@ export class PermissionService {
    * @param organizationId ID of organization
    * @returns Boolean indicating if user has all required permissions
    */
-  async canAccessOrganization(
+  canAccessOrganization(
     organizationId: string,
     authContext: AuthContext,
-  ): Promise<boolean> {
+  ): boolean {
     if (!authContext.permissions) {
       return false;
     }
@@ -36,14 +36,11 @@ export class PermissionService {
    * @returns Boolean indicating if user has all required permissions
    * @throws ForbiddenException if user has no access to organization
    */
-  async canAccessOrganizationOrFail(
+  canAccessOrganizationOrFail(
     organizationId: string,
     authContext: AuthContext,
-  ): Promise<boolean> {
-    const canAccess = await this.canAccessOrganization(
-      organizationId,
-      authContext,
-    );
+  ): boolean {
+    const canAccess = this.canAccessOrganization(organizationId, authContext);
     if (!canAccess) {
       throw new ForbiddenException();
     }
@@ -56,10 +53,10 @@ export class PermissionService {
    * @param requiredPermissions Array of required permissions
    * @returns Boolean indicating if user has all required permissions
    */
-  async hasPermission(
+  hasPermission(
     authContext: AuthContext,
     requiredPermissions: ResourcePermission[],
-  ): Promise<boolean> {
+  ): boolean {
     try {
       // Get user permissions from Keycloak (fresh data) or use cached permissions
       let userPermissions: ResourcePermission[] = [];

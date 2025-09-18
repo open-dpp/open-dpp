@@ -4,7 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { getModelToken } from '@nestjs/mongoose';
 import { MediaDoc } from './media.schema';
 import { Media } from '../domain/media';
-import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
+import { expect } from '@jest/globals';
+import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
 
 // Mocks for external modules
 const mockMinioClient = {

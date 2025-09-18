@@ -1,8 +1,6 @@
 import { Factory } from 'fishery';
 import { randomUUID } from 'crypto';
-import {
-  VisibilityLevel,
-} from '@open-dpp/api-client';
+import { VisibilityLevel } from '@open-dpp/api-client';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { SectionType } from '@open-dpp/api-client';

@@ -6,7 +6,7 @@ import {
   PassportTemplateDoc,
   PassportTemplateDbSchema,
 } from './infrastructure/passport-template.schema';
-import {PermissionModule} from "@app/permission";
+import { PermissionModule } from '@app/permission';
 
 @Module({
   imports: [

@@ -3,9 +3,9 @@ import { Document, Schema } from 'mongoose';
 import { DataValueDoc, DataValueSchema } from './data-value.schema';
 
 export abstract class PassportDoc extends Document {
-    @Prop({ required: true })
-        // @ts-ignore
-    _id: string;
+  @Prop({ required: true })
+  // @ts-ignore
+  _id: string;
 
   @Prop({ required: true })
   createdByUserId: string;

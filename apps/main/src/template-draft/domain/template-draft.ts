@@ -5,7 +5,7 @@ import { Template } from '../../templates/domain/template';
 import * as semver from 'semver';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { Sector } from '@open-dpp/api-client';
-import {NotFoundError, ValueError} from "@app/exception/domain.errors";
+import { NotFoundError, ValueError } from '@app/exception/domain.errors';
 
 export type Publication = {
   id: string;
@@ -170,7 +170,7 @@ export class TemplateDraft {
     const siblingSections = this.findSectionsOfParent(section.parentId);
     const siblingIndex = siblingSections.findIndex((s) => s.id === sectionId);
     const shiftIndex = direction === MoveDirection.UP ? -1 : 1;
-    let newSiblingIndex = siblingIndex + shiftIndex;
+    const newSiblingIndex = siblingIndex + shiftIndex;
 
     // Bounds checking for sibling position
     if (newSiblingIndex < 0 || newSiblingIndex >= siblingSections.length) {
@@ -230,9 +230,9 @@ export class TemplateDraft {
   }
 
   publish(createdByUserId: string): Template {
-      if (!this.ownedByOrganizationId) {
-          throw new ValueError(`Template must belong to an organization`);
-      }
+    if (!this.ownedByOrganizationId) {
+      throw new ValueError(`Template must belong to an organization`);
+    }
     const lastPublished = this.publications.slice(-1);
 
     const versionToPublish =

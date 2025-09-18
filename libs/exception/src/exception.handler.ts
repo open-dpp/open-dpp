@@ -11,8 +11,8 @@ import { NotFoundError, ValueError } from './domain.errors';
 export class NotFoundInDatabaseExceptionFilter implements ExceptionFilter {
   catch(exception: NotFoundInDatabaseException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
-    const response = ctx.getResponse();
-    const request = ctx.getRequest();
+    const response: any = ctx.getResponse();
+    const request: any = ctx.getRequest();
     response.status(HttpStatus.NOT_FOUND).json({
       statusCode: HttpStatus.NOT_FOUND,
       timestamp: new Date().toISOString(),

@@ -15,7 +15,7 @@ import { ItemsService } from '../items/infrastructure/items.service';
 import { TraceabilityEventsModule } from '../traceability-events/traceability-events.module';
 import { ItemsApplicationService } from '../items/presentation/items-application.service';
 import { OrganizationsModule } from '../organizations/organizations.module';
-import {PermissionModule} from "@app/permission";
+import { PermissionModule } from '@app/permission';
 
 @Module({
   imports: [
