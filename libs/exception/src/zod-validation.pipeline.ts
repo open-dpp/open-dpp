@@ -4,11 +4,17 @@ import {
   Injectable,
   PipeTransform,
 } from '@nestjs/common';
-import { z } from 'zod';
+
+// Define a minimal interface to decouple from specific Zod types
+type SafeParseable = {
+  safeParse: (
+    value: unknown,
+  ) => { success: true; data: unknown } | { success: false; error: any };
+};
 
 @Injectable()
 export class ZodValidationPipe implements PipeTransform {
-  constructor(private schema: z.ZodSchema) {}
+  constructor(private schema: SafeParseable) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   transform(value: unknown, metadata: ArgumentMetadata) {
