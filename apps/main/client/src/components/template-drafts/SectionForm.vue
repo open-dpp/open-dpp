@@ -10,7 +10,7 @@
       <FormKitSchema v-if="formSchema" :schema="formSchema" />
       <div class="flex gap-1">
         <BaseButton variant="primary" data-cy="submit" type="submit">
-          {{ sectionToModify ? "Ändern" : "Hinzufügen" }}
+          {{ sectionToModify ? 'Ändern' : 'Hinzufügen' }}
         </BaseButton>
         <BaseButton
           v-if="sectionToModify"
@@ -27,17 +27,17 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from "vue";
+import { ref, watch } from 'vue';
 import {
   GranularityLevel,
   SectionDto,
   SectionType,
-} from "@open-dpp/api-client";
-import { useDraftStore } from "../../stores/draft";
-import { z } from "zod/v4";
-import { useDraftSidebarStore } from "../../stores/draftSidebar";
-import BaseButton from "../BaseButton.vue";
-import { useModelDialogStore } from "../../stores/modal.dialog";
+} from '@open-dpp/api-client';
+import { useDraftStore } from '../../stores/draft';
+import { z } from 'zod/v4';
+import { useDraftSidebarStore } from '../../stores/draftSidebar';
+import BaseButton from '../BaseButton.vue';
+import { useModelDialogStore } from '../../stores/modal.dialog';
 
 const props = defineProps<{
   type: SectionType;
@@ -58,25 +58,25 @@ const formSchemaFromType = (
   existingGranularityLevel: GranularityLevel | undefined,
 ) => {
   const granularityOptions = {
-    [GranularityLevel.MODEL]: "Produktmodellebene",
-    [GranularityLevel.ITEM]: "Artikelebene",
+    [GranularityLevel.MODEL]: 'Produktmodellebene',
+    [GranularityLevel.ITEM]: 'Artikelebene',
   };
 
   const dataSectionFormkitSchema = [];
   dataSectionFormkitSchema.push({
-    $formkit: "text",
-    name: "name",
-    label: "Name des Abschnitts",
-    "data-cy": "name",
+    $formkit: 'text',
+    name: 'name',
+    label: 'Name des Abschnitts',
+    'data-cy': 'name',
   });
 
   if (!existingGranularityLevel && type === SectionType.REPEATABLE) {
     dataSectionFormkitSchema.push({
-      $formkit: "select",
-      name: "granularityLevel",
-      label: "Granularitätsebene",
+      $formkit: 'select',
+      name: 'granularityLevel',
+      label: 'Granularitätsebene',
       options: granularityOptions,
-      "data-cy": "select-granularity-level",
+      'data-cy': 'select-granularity-level',
     });
   }
   return dataSectionFormkitSchema;
@@ -104,9 +104,9 @@ watch(
 const onDelete = async () => {
   modelDialogStore.open(
     {
-      title: "Abschnitt löschen",
-      description: "Sind Sie sicher, dass Sie diesen Abschnitt löschen wollen?",
-      type: "warning",
+      title: 'Abschnitt löschen',
+      description: 'Sind Sie sicher, dass Sie diesen Abschnitt löschen wollen?',
+      type: 'warning',
     },
     async () => {
       if (sectionToModify.value) {

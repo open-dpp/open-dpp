@@ -62,11 +62,11 @@
   </div>
 </template>
 <script setup lang="ts">
-import { DataSectionDto } from "@open-dpp/api-client";
-import DataValue from "./DataValue.vue";
-import { computed } from "vue";
-import { useProductPassportStore } from "../../stores/product-passport";
-import { useRouter } from "vue-router";
+import { DataSectionDto } from '@open-dpp/api-client';
+import DataValue from './DataValue.vue';
+import { computed } from 'vue';
+import { useProductPassportStore } from '../../stores/product-passport';
+import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const props = defineProps<{ dataSection: DataSectionDto }>();
@@ -77,7 +77,7 @@ const subSections = computed(() =>
 const headers = computed(() => {
   const headers = props.dataSection.dataFields.map((d) => d.name);
   if (subSections.value && subSections.value.length > 0) {
-    headers.push("Weiterführende Abschnitte");
+    headers.push('Weiterführende Abschnitte');
   }
   return headers;
 });
@@ -90,13 +90,13 @@ const onSubSectionClick = async (subSectionId: string, rowIndex: number) => {
 
 const generateHeaderClasses = (index: number) => {
   return index === 0
-    ? "py-3.5 pr-3 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0"
-    : "hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell";
+    ? 'py-3.5 pr-3 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0'
+    : 'hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell';
 };
 
 const generateCellClasses = (index: number) => {
   return index === 0
-    ? "px-3 py-4 text-sm text-gray-500 table-cell"
-    : "hidden px-3 py-4 text-sm text-gray-500 lg:table-cell";
+    ? 'px-3 py-4 text-sm text-gray-500 table-cell'
+    : 'hidden px-3 py-4 text-sm text-gray-500 lg:table-cell';
 };
 </script>

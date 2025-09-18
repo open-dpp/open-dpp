@@ -26,12 +26,12 @@
 </template>
 
 <script setup lang="ts">
-import { useProductPassportStore } from "../../stores/product-passport";
-import { ref, watch } from "vue";
-import { SectionType, DataSectionDto } from "@open-dpp/api-client";
-import TableView from "./TableView.vue";
-import SectionView from "./SectionView.vue";
-import { useRoute } from "vue-router";
+import { useProductPassportStore } from '../../stores/product-passport';
+import { ref, watch } from 'vue';
+import { DataSectionDto, SectionType } from '@open-dpp/api-client';
+import TableView from './TableView.vue';
+import SectionView from './SectionView.vue';
+import { useRoute } from 'vue-router';
 
 const route = useRoute();
 

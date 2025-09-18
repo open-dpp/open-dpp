@@ -74,7 +74,7 @@
 </template>
 
 <script lang="ts" setup>
-import { useProfileStore } from "../stores/profile";
+import { useProfileStore } from '../stores/profile';
 
 const profileStore = useProfileStore();
 </script>

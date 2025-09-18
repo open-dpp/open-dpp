@@ -53,8 +53,8 @@
 </template>
 
 <script lang="ts" setup>
-import { CubeIcon, UsersIcon } from "@heroicons/vue/24/outline";
-import { computed } from "vue";
+import { CubeIcon, UsersIcon } from '@heroicons/vue/24/outline';
+import { computed } from 'vue';
 
 const props = defineProps<{
   organizationId: string;
@@ -62,22 +62,22 @@ const props = defineProps<{
 
 const actions = computed(() => [
   {
-    title: "Mitglieder hinzufügen",
+    title: 'Mitglieder hinzufügen',
     description:
-      "Mitglieder der Organisation ansehen, um dort ein neues Mitglieder hinzuzufügen.",
-    to: "/organizations/" + props.organizationId + "/members",
+      'Mitglieder der Organisation ansehen, um dort ein neues Mitglieder hinzuzufügen.',
+    to: '/organizations/' + props.organizationId + '/members',
     icon: UsersIcon,
-    iconForeground: "text-sky-700",
-    iconBackground: "bg-sky-50",
+    iconForeground: 'text-sky-700',
+    iconBackground: 'bg-sky-50',
   },
   {
-    title: "Modell hinzufügen",
+    title: 'Modell hinzufügen',
     description:
-      "Modelle der Organisation ansehen, um dort ein neues Modell hinzuzufügen.",
-    to: "/organizations/" + props.organizationId + "/models",
+      'Modelle der Organisation ansehen, um dort ein neues Modell hinzuzufügen.',
+    to: '/organizations/' + props.organizationId + '/models',
     icon: CubeIcon,
-    iconForeground: "text-yellow-700",
-    iconBackground: "bg-yellow-50",
+    iconForeground: 'text-yellow-700',
+    iconBackground: 'bg-yellow-50',
   },
 ]);
 </script>

@@ -1,5 +1,5 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
 import {
   DataSectionDto,
   DataValueDto,
@@ -7,9 +7,9 @@ import {
   ProductPassportDto,
   SectionDto,
   UniqueProductIdentifierDto,
-} from "@open-dpp/api-client";
-import apiClient from "../lib/api-client";
-import { assign, keys, pick } from "lodash";
+} from '@open-dpp/api-client';
+import apiClient from '../lib/api-client';
+import { assign, keys, pick } from 'lodash';
 
 type FormKitSchemaNode =
   | string // Text content
@@ -29,7 +29,7 @@ interface FormKitSchemaObject {
 
 export type DataValues = Record<string, unknown>;
 
-export const usePassportFormStore = defineStore("passport.form", () => {
+export const usePassportFormStore = defineStore('passport.form', () => {
   const granularityLevel = ref<GranularityLevel>(GranularityLevel.MODEL);
   const productPassport = ref<ProductPassportDto>();
   const uniqueProductIdentifier = ref<UniqueProductIdentifierDto>();
@@ -37,8 +37,8 @@ export const usePassportFormStore = defineStore("passport.form", () => {
   const fetchInFlight = ref<boolean>(false);
 
   const VALUE_FOR_OTHER_GRANULARITY_LEVEL = {
-    [GranularityLevel.MODEL]: "Wird auf Artikelebene gesetzt",
-    [GranularityLevel.ITEM]: "Wird auf Modelebene gesetzt",
+    [GranularityLevel.MODEL]: 'Wird auf Artikelebene gesetzt',
+    [GranularityLevel.ITEM]: 'Wird auf Modelebene gesetzt',
   };
 
   const getValueForOtherGranularityLevel = () => {
@@ -78,11 +78,11 @@ export const usePassportFormStore = defineStore("passport.form", () => {
     for (const dataField of section.dataFields) {
       if (dataField.granularityLevel !== granularityLevel.value) {
         children.push({
-          $cmp: "FakeField",
+          $cmp: 'FakeField',
           props: {
             dataCy: dataField.id,
             placeholder: getValueForOtherGranularityLevel(),
-            label: dataField!.name,
+            label: dataField.name,
             options: dataField.options,
           },
         });
@@ -92,8 +92,8 @@ export const usePassportFormStore = defineStore("passport.form", () => {
           props: {
             id: dataField.id,
             name: dataField.id,
-            label: dataField!.name,
-            validation: "required",
+            label: dataField.name,
+            validation: 'required',
             options: dataField.options,
             dataCy: dataField.id,
           },
@@ -103,7 +103,7 @@ export const usePassportFormStore = defineStore("passport.form", () => {
 
     return [
       {
-        $el: "div",
+        $el: 'div',
         attrs: {
           class: `grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 items-center`,
         },

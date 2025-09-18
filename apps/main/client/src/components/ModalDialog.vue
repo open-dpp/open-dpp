@@ -88,13 +88,13 @@ import {
   DialogTitle,
   TransitionChild,
   TransitionRoot,
-} from "@headlessui/vue";
+} from '@headlessui/vue';
 import {
   ExclamationTriangleIcon,
   InformationCircleIcon,
-} from "@heroicons/vue/24/outline";
-import { useModelDialogStore } from "../stores/modal.dialog";
-import BaseButton from "./BaseButton.vue";
+} from '@heroicons/vue/24/outline';
+import { useModelDialogStore } from '../stores/modal.dialog';
+import BaseButton from './BaseButton.vue';
 
 const modelDialogStore = useModelDialogStore();
 </script>

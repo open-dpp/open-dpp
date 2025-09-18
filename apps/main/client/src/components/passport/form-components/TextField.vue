@@ -9,7 +9,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, useAttrs } from "vue";
+import { computed, useAttrs } from 'vue';
 
 const props = defineProps<{ id: string; className?: string }>();
 

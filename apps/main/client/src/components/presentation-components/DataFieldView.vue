@@ -13,8 +13,8 @@
 </template>
 
 <script setup lang="ts">
-import { FieldView } from "../../lib/field-view";
-import DataValue from "./DataValue.vue";
+import { FieldView } from '../../lib/field-view';
+import DataValue from './DataValue.vue';
 
 const props = defineProps<{ fieldView: FieldView }>();
 </script>

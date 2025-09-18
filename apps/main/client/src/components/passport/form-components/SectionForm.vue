@@ -37,22 +37,22 @@
 </template>
 
 <script lang="ts" setup>
-import { DataSectionDto } from "@open-dpp/api-client";
-import { ref, watch } from "vue";
-import TextField from "./TextField.vue";
-import FakeField from "./FakeField.vue";
-import ProductPassportLink from "./ProductPassportLink.vue";
+import { DataSectionDto } from '@open-dpp/api-client';
+import { ref, watch } from 'vue';
+import TextField from './TextField.vue';
+import FakeField from './FakeField.vue';
+import ProductPassportLink from './ProductPassportLink.vue';
 import {
   DataValues,
   usePassportFormStore,
-} from "../../../stores/passport.form";
-import NumericField from "./NumericField.vue";
-import FileField from "./FileField.vue";
-import { useNotificationStore } from "../../../stores/notification";
-import { useErrorHandlingStore } from "../../../stores/error.handling";
-import BaseButton from "../../BaseButton.vue";
-import { useRouter } from "vue-router";
-import { FolderIcon } from "@heroicons/vue/24/outline";
+} from '../../../stores/passport.form';
+import NumericField from './NumericField.vue';
+import FileField from './FileField.vue';
+import { useNotificationStore } from '../../../stores/notification';
+import { useErrorHandlingStore } from '../../../stores/error.handling';
+import BaseButton from '../../BaseButton.vue';
+import { useRouter } from 'vue-router';
+import { FolderIcon } from '@heroicons/vue/24/outline';
 
 const props = defineProps<{
   section: DataSectionDto;
@@ -96,10 +96,10 @@ const onSubmit = async () => {
       formData.value,
       props.row,
     );
-    notificationStore.addSuccessNotification("Daten erfolgreich gespeichert");
+    notificationStore.addSuccessNotification('Daten erfolgreich gespeichert');
   } catch (e) {
     errorHandlingStore.logErrorWithNotification(
-      "Daten konnten nicht gespeichert werden",
+      'Daten konnten nicht gespeichert werden',
       e,
     );
   }

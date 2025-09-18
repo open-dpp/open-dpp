@@ -1,19 +1,19 @@
-import { RouteLocationNormalizedGeneric, RouteRecordRaw } from "vue-router";
-import { useLayoutStore } from "../../stores/layout";
-import { ORGANIZATION_MODELS_PARENT } from "./models/models";
-import { ORGANIZATION_DRAFTS_PARENT } from "./product-data-model-drafts/drafts";
-import { ORGANIZATION_INTEGRATIONS_PARENT } from "./integrations";
-import { ORGANIZATION_STATISTICS_PARENT } from "./statistics";
+import { RouteLocationNormalizedGeneric, RouteRecordRaw } from 'vue-router';
+import { useLayoutStore } from '../../stores/layout';
+import { ORGANIZATION_MODELS_PARENT } from './models/models';
+import { ORGANIZATION_DRAFTS_PARENT } from './product-data-model-drafts/drafts';
+import { ORGANIZATION_INTEGRATIONS_PARENT } from './integrations';
+import { ORGANIZATION_STATISTICS_PARENT } from './statistics';
 
 const organizationListBreadCrumbs = (to: RouteLocationNormalizedGeneric) => [
-  { name: "Organisationen", route: ORGANIZATION_LIST, params: to.params },
+  { name: 'Organisationen', route: ORGANIZATION_LIST, params: to.params },
 ];
 
 export const ORGANIZATION_LIST: RouteRecordRaw = {
-  path: "",
-  name: "Organizations",
+  path: '',
+  name: 'Organizations',
   component: () =>
-    import("../../view/organizations/SelectOrganizationView.vue"),
+    import('../../view/organizations/SelectOrganizationView.vue'),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = organizationListBreadCrumbs(to);
@@ -21,10 +21,10 @@ export const ORGANIZATION_LIST: RouteRecordRaw = {
 };
 
 export const ORGANIZATION_CREATE: RouteRecordRaw = {
-  path: "create",
-  name: "OrganizationCreate",
+  path: 'create',
+  name: 'OrganizationCreate',
   component: () =>
-    import("../../view/organizations/CreateOrganizationView.vue"),
+    import('../../view/organizations/CreateOrganizationView.vue'),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = organizationListBreadCrumbs(to);
@@ -32,23 +32,23 @@ export const ORGANIZATION_CREATE: RouteRecordRaw = {
 };
 
 export const ORGANIZATION: RouteRecordRaw = {
-  path: "",
-  name: "Organization",
+  path: '',
+  name: 'Organization',
   props: true,
-  component: () => import("../../view/organizations/OrganizationView.vue"),
+  component: () => import('../../view/organizations/OrganizationView.vue'),
 };
 
 export const ORGANIZATION_MEMBERS: RouteRecordRaw = {
-  path: "members",
-  name: "OrganizationMembers",
+  path: 'members',
+  name: 'OrganizationMembers',
   props: true,
   component: () =>
-    import("../../view/organizations/OrganizationMembersView.vue"),
+    import('../../view/organizations/OrganizationMembersView.vue'),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = [
       {
-        name: "Mitglieder",
+        name: 'Mitglieder',
         route: ORGANIZATION_MEMBERS,
         params: to.params,
       },
@@ -57,7 +57,7 @@ export const ORGANIZATION_MEMBERS: RouteRecordRaw = {
 };
 
 export const ORGANIZATION_PARENT: RouteRecordRaw = {
-  path: ":organizationId",
+  path: ':organizationId',
   children: [
     ORGANIZATION,
     ORGANIZATION_MEMBERS,
@@ -69,7 +69,7 @@ export const ORGANIZATION_PARENT: RouteRecordRaw = {
 };
 
 export const ORGANIZATIONS_PARENT: RouteRecordRaw = {
-  path: "/organizations",
+  path: '/organizations',
   children: [ORGANIZATION_LIST, ORGANIZATION_CREATE, ORGANIZATION_PARENT],
 };
 

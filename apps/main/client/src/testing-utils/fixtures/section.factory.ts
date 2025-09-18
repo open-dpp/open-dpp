@@ -1,11 +1,11 @@
-import { Factory } from "fishery";
+import { Factory } from 'fishery';
 import {
   DataFieldDto,
   DataFieldType,
   GranularityLevel,
   SectionDto,
-} from "@open-dpp/api-client";
-import { SectionType } from "@open-dpp/api-client";
+  SectionType,
+} from '@open-dpp/api-client';
 
 export const dataFieldFactory = Factory.define<DataFieldDto>(
   ({ sequence }) => ({

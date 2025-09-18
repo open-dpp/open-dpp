@@ -33,10 +33,10 @@
 </template>
 
 <script lang="ts" setup>
-import { useRoute } from "vue-router";
-import { watch } from "vue";
-import PassportForm from "../../components/passport/PassportForm.vue";
-import { usePassportFormStore } from "../../stores/passport.form";
+import { useRoute } from 'vue-router';
+import { watch } from 'vue';
+import PassportForm from '../../components/passport/PassportForm.vue';
+import { usePassportFormStore } from '../../stores/passport.form';
 
 const route = useRoute();
 const modelFormStore = usePassportFormStore();

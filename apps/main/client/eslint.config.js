@@ -1,33 +1,34 @@
-import globals from "globals";
-import pluginJs from "@eslint/js";
-import tseslint from "typescript-eslint";
-import pluginVue from "eslint-plugin-vue";
-import prettierConfig from "eslint-config-prettier";
-import prettierPlugin from "eslint-plugin-prettier";
+import rootConfig from '../../../eslint.config.mjs';
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
 
+// Delegate to the monorepo root ESLint config and add local adjustments so
+// running `npm run lint` inside this package behaves the same as running from root.
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-  { files: ["**/*.{js,mjs,cjs,ts,vue}"] },
-  { languageOptions: { globals: globals.browser } },
-  pluginJs.configs.recommended,
-  ...tseslint.configs.recommended,
-  ...pluginVue.configs["flat/essential"],
+  // Use the root configuration (covers Vue + Prettier + TS rules)
+  ...rootConfig,
+  // Ensure browser globals and ESM are set when linting locally in this package
   {
-    files: ["**/*.vue"],
-    languageOptions: { parserOptions: { parser: tseslint.parser } },
-    rules: {
-      "vue/multi-word-component-names": "off",
+    files: ['**/*.{js,mjs,cjs,ts,tsx,vue}'],
+    languageOptions: {
+      globals: globals.browser,
+      sourceType: 'module',
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+        extraFileExtensions: ['.vue'],
+      },
     },
   },
+  // Ensure Vue SFCs use the TS parser here as well
   {
-    // Integrate Prettier
-    files: ["**/*.{js,mjs,cjs,ts,vue}"],
-    plugins: {
-      prettier: prettierPlugin,
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: { parser: tseslint.parser },
     },
     rules: {
-      ...prettierConfig.rules,
-      "prettier/prettier": "error", // Ensures Prettier issues are reported as ESLint errors
+      'vue/multi-word-component-names': 'off',
     },
   },
 ];

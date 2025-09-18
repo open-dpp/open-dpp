@@ -106,19 +106,19 @@ import {
   DialogTitle,
   TransitionChild,
   TransitionRoot,
-} from "@headlessui/vue";
-import { EnvelopeIcon, XMarkIcon } from "@heroicons/vue/24/outline";
-import apiClient from "../../lib/api-client";
-import { ref } from "vue";
-import RingLoader from "../RingLoader.vue";
+} from '@headlessui/vue';
+import { EnvelopeIcon, XMarkIcon } from '@heroicons/vue/24/outline';
+import apiClient from '../../lib/api-client';
+import { ref } from 'vue';
+import RingLoader from '../RingLoader.vue';
 
 const props = defineProps<{
   organizationId: string;
 }>();
 
 const emit = defineEmits<{
-  (e: "close"): void;
-  (e: "invitedUser"): void;
+  (e: 'close'): void;
+  (e: 'invitedUser'): void;
 }>();
 
 const loading = ref<boolean>(false);
@@ -138,16 +138,16 @@ const inviteUser = async (fields: { email: string }) => {
       loading.value = false;
       if (response.status === 201) {
         success.value = true;
-        emit("invitedUser");
+        emit('invitedUser');
       } else {
-        errors.value.push("Ein Fehler ist aufgetreten.");
+        errors.value.push('Ein Fehler ist aufgetreten.');
       }
     } else {
-      errors.value.push("Bitte geben Sie eine E-Mail Adresse ein.");
+      errors.value.push('Bitte geben Sie eine E-Mail Adresse ein.');
     }
   } catch (error) {
     console.error(error);
-    errors.value.push("Ein Fehler ist aufgetreten.");
+    errors.value.push('Ein Fehler ist aufgetreten.');
     loading.value = false;
   }
 };

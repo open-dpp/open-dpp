@@ -4,8 +4,8 @@ import { Connection } from 'mongoose';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import {
-  PassportTemplateDoc,
   PassportTemplateDbSchema,
+  PassportTemplateDoc,
 } from './passport-template.schema';
 import { PassportTemplate } from '../domain/passport-template';
 import { passportTemplatePropsFactory } from '../fixtures/passport-template-props.factory';

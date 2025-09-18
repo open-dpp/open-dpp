@@ -1,10 +1,10 @@
-import { RouteLocationNormalizedGeneric, RouteRecordRaw } from "vue-router";
-import { useLayoutStore } from "../../stores/layout";
-import { PRO_ALPHA_INTEGRATION_ID } from "../../const";
+import { RouteLocationNormalizedGeneric, RouteRecordRaw } from 'vue-router';
+import { useLayoutStore } from '../../stores/layout';
+import { PRO_ALPHA_INTEGRATION_ID } from '../../const';
 
 export const integrationBreadcrumbs = (to: RouteLocationNormalizedGeneric) => [
   {
-    name: "Integrationen",
+    name: 'Integrationen',
     route: INTEGRATIONS,
     params: to.params,
   },
@@ -13,7 +13,7 @@ export const integrationBreadcrumbs = (to: RouteLocationNormalizedGeneric) => [
 const aasConnectionListBreadcrumbs = (to: RouteLocationNormalizedGeneric) => [
   ...integrationBreadcrumbs(to),
   {
-    name: "Proalpha",
+    name: 'Proalpha',
     route: AAS_CONNECTION_LIST,
     params: to.params,
   },
@@ -24,7 +24,7 @@ export const aasConnectionBreadcrumbs = (
 ) => [
   ...aasConnectionListBreadcrumbs(to),
   {
-    name: to.params.connectionId + "" || "Verbindung",
+    name: `${to.params.connectionId as string}` || 'Verbindung',
     route: AAS_CONNECTION,
     params: to.params,
   },
@@ -35,16 +35,16 @@ export const aiIntegrationBreadcrumbs = (
 ) => [
   ...integrationBreadcrumbs(to),
   {
-    name: "KI-Integrationen",
+    name: 'KI-Integrationen',
     route: AI_INTEGRATION,
     params: to.params,
   },
 ];
 
 export const INTEGRATIONS: RouteRecordRaw = {
-  path: "",
-  name: "Integrationen",
-  component: () => import("../../view/integrations/IntegrationView.vue"),
+  path: '',
+  name: 'Integrationen',
+  component: () => import('../../view/integrations/IntegrationView.vue'),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = integrationBreadcrumbs(to);
@@ -52,9 +52,9 @@ export const INTEGRATIONS: RouteRecordRaw = {
 };
 
 export const AI_INTEGRATION: RouteRecordRaw = {
-  path: "ai-integration",
-  name: "KI-Integration",
-  component: () => import("../../view/integrations/AiIntegrationView.vue"),
+  path: 'ai-integration',
+  name: 'KI-Integration',
+  component: () => import('../../view/integrations/AiIntegrationView.vue'),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = aiIntegrationBreadcrumbs(to);
@@ -62,9 +62,9 @@ export const AI_INTEGRATION: RouteRecordRaw = {
 };
 
 export const AAS_CONNECTION_LIST: RouteRecordRaw = {
-  path: "",
-  name: "Verbindungen",
-  component: () => import("../../view/integrations/ConnectionListView.vue"),
+  path: '',
+  name: 'Verbindungen',
+  component: () => import('../../view/integrations/ConnectionListView.vue'),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = aasConnectionListBreadcrumbs(to);
@@ -72,9 +72,9 @@ export const AAS_CONNECTION_LIST: RouteRecordRaw = {
 };
 
 export const AAS_CONNECTION: RouteRecordRaw = {
-  path: ":connectionId",
-  name: "Verbindung",
-  component: () => import("../../view/integrations/ConnectionView.vue"),
+  path: ':connectionId',
+  name: 'Verbindung',
+  component: () => import('../../view/integrations/ConnectionView.vue'),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = aasConnectionBreadcrumbs(to);
@@ -82,15 +82,15 @@ export const AAS_CONNECTION: RouteRecordRaw = {
 };
 
 export const AAS_CONNECTION_CREATE: RouteRecordRaw = {
-  path: "create",
-  name: "Verbindung erstellen",
-  component: () => import("../../view/integrations/CreateConnectionView.vue"),
+  path: 'create',
+  name: 'Verbindung erstellen',
+  component: () => import('../../view/integrations/CreateConnectionView.vue'),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = [
       ...aasConnectionListBreadcrumbs(to),
       {
-        name: "Erstellen",
+        name: 'Erstellen',
         route: AAS_CONNECTION_CREATE,
         params: to.params,
       },
@@ -109,6 +109,6 @@ const PRO_ALPHA_INTEGRATION_PARENT: RouteRecordRaw = {
 };
 
 export const ORGANIZATION_INTEGRATIONS_PARENT: RouteRecordRaw = {
-  path: "integrations",
+  path: 'integrations',
   children: [INTEGRATIONS, PRO_ALPHA_INTEGRATION_PARENT, AI_INTEGRATION],
 };

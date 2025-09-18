@@ -12,12 +12,12 @@
 </template>
 
 <script lang="ts" setup>
-import DraftsList from "../../components/template-drafts/DraftsList.vue";
-import { onMounted, ref } from "vue";
-import apiClient from "../../lib/api-client";
-import EmptyState from "../../components/models/EmptyState.vue";
-import { useIndexStore } from "../../stores";
-import { TemplateDraftGetAllDto } from "@open-dpp/api-client";
+import DraftsList from '../../components/template-drafts/DraftsList.vue';
+import { onMounted, ref } from 'vue';
+import apiClient from '../../lib/api-client';
+import EmptyState from '../../components/models/EmptyState.vue';
+import { useIndexStore } from '../../stores';
+import { TemplateDraftGetAllDto } from '@open-dpp/api-client';
 
 const indexStore = useIndexStore();
 const fetchInFlight = ref(true);

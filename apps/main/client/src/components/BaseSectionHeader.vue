@@ -30,8 +30,8 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowPathIcon, TableCellsIcon } from "@heroicons/vue/24/outline";
-import { SectionDto, SectionType } from "@open-dpp/api-client";
+import { ArrowPathIcon, TableCellsIcon } from '@heroicons/vue/24/outline';
+import { SectionDto, SectionType } from '@open-dpp/api-client';
 
 const props = defineProps<{
   section: SectionDto;

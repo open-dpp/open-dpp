@@ -15,7 +15,7 @@ export class PassportTemplateDoc extends Document {
   _schemaVersion: PassportTemplateSchemaVersion;
 
   @Prop({ required: true })
-  // @ts-expect-error
+  // @ts-expect-error uses mongo _id
   _id: string;
   @Prop({ required: true })
   version: string;

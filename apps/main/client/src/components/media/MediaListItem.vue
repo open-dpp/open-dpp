@@ -19,8 +19,8 @@
 </template>
 
 <script lang="ts" setup>
-import { MediaInfo } from "./MediaInfo.interface";
-import MediaPreview from "./MediaPreview.vue";
+import { MediaInfo } from './MediaInfo.interface';
+import MediaPreview from './MediaPreview.vue';
 
 defineProps<{
   media: MediaInfo;
@@ -29,6 +29,6 @@ defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: "on-select", id: MediaInfo): void;
+  (e: 'on-select', id: MediaInfo): void;
 }>();
 </script>

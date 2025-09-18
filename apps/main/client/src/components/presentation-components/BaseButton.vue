@@ -12,21 +12,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed } from 'vue';
 
 const props = defineProps<{
-  type?: "button" | "submit" | "reset";
+  type?: 'button' | 'submit' | 'reset';
   disabled?: boolean;
-  variant?: "primary" | "error";
+  variant?: 'primary' | 'error';
 }>();
 
 const colorClasses = computed(() => {
-  const defaultColors = "bg-white text-gray-900 hover:bg-gray-50";
+  const defaultColors = 'bg-white text-gray-900 hover:bg-gray-50';
   switch (props.variant) {
-    case "primary":
-      return "bg-indigo-600 hover:bg-indigo-500 focus-visible:outline-indigo-600 text-white";
-    case "error":
-      return "bg-red-600 hover:bg-red-500 focus-visible:outline-red-600 text-white";
+    case 'primary':
+      return 'bg-indigo-600 hover:bg-indigo-500 focus-visible:outline-indigo-600 text-white';
+    case 'error':
+      return 'bg-red-600 hover:bg-red-500 focus-visible:outline-red-600 text-white';
     default:
       return defaultColors;
   }

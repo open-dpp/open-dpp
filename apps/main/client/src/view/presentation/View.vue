@@ -5,11 +5,11 @@
 </template>
 
 <script lang="ts" setup>
-import { useRoute, useRouter } from "vue-router";
-import { watch } from "vue";
-import ViewInformation from "../../components/presentation-components/ViewInformation.vue";
-import { useProductPassportStore } from "../../stores/product-passport";
-import apiClient from "../../lib/api-client";
+import { useRoute, useRouter } from 'vue-router';
+import { watch } from 'vue';
+import ViewInformation from '../../components/presentation-components/ViewInformation.vue';
+import { useProductPassportStore } from '../../stores/product-passport';
+import apiClient from '../../lib/api-client';
 
 const route = useRoute();
 const router = useRouter();
@@ -25,7 +25,7 @@ watch(
 
       if (response.status === 404) {
         await router.push({
-          path: "404",
+          path: '404',
           query: {
             permalink: permalink,
           },
@@ -36,7 +36,7 @@ watch(
     } catch (e) {
       console.error(e);
       await router.push({
-        path: "404",
+        path: '404',
         query: {
           permalink: permalink,
         },

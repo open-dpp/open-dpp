@@ -1,13 +1,13 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
-import apiClient from "../lib/api-client";
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import apiClient from '../lib/api-client';
 import {
   AasConnectionGetAllDto,
   CreateAasConnectionDto,
-} from "@open-dpp/api-client";
-import { useErrorHandlingStore } from "./error.handling";
+} from '@open-dpp/api-client';
+import { useErrorHandlingStore } from './error.handling';
 
-export const useAasConnectionStore = defineStore("aas-integration", () => {
+export const useAasConnectionStore = defineStore('aas-integration', () => {
   const aasConnections = ref<AasConnectionGetAllDto[]>([]);
   const errorHandlingStore = useErrorHandlingStore();
   const fetchConnections = async () => {
@@ -16,7 +16,7 @@ export const useAasConnectionStore = defineStore("aas-integration", () => {
       aasConnections.value = response.data;
     } catch (error) {
       errorHandlingStore.logErrorWithNotification(
-        "Laden der Verbindungen fehlgeschlagen:",
+        'Laden der Verbindungen fehlgeschlagen:',
         error,
       );
     }

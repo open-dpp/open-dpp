@@ -11,11 +11,11 @@
   </section>
 </template>
 <script lang="ts" setup>
-import ModelList from "../../components/models/ModelList.vue";
-import { onMounted, ref } from "vue";
-import { useModelsStore } from "../../stores/models";
-import EmptyState from "../../components/models/EmptyState.vue";
-import { useIndexStore } from "../../stores";
+import ModelList from '../../components/models/ModelList.vue';
+import { onMounted, ref } from 'vue';
+import { useModelsStore } from '../../stores/models';
+import EmptyState from '../../components/models/EmptyState.vue';
+import { useIndexStore } from '../../stores';
 
 const modelsStore = useModelsStore();
 const indexStore = useIndexStore();

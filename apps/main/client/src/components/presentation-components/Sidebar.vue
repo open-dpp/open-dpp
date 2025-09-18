@@ -37,10 +37,10 @@
 </template>
 
 <script lang="ts" setup>
-import { useProductPassportStore } from "../../stores/product-passport";
-import { ref, watch } from "vue";
-import { useRoute } from "vue-router";
-import { DataSectionDto } from "@open-dpp/api-client";
+import { useProductPassportStore } from '../../stores/product-passport';
+import { ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import { DataSectionDto } from '@open-dpp/api-client';
 
 const route = useRoute();
 

@@ -37,10 +37,10 @@
 </template>
 
 <script lang="ts" setup>
-import { HomeIcon } from "@heroicons/vue/20/solid";
-import { useLayoutStore } from "../stores/layout";
-import { RouteRecordRaw, useRoute } from "vue-router";
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { HomeIcon } from '@heroicons/vue/20/solid';
+import { useLayoutStore } from '../stores/layout';
+import { RouteRecordRaw, useRoute } from 'vue-router';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 const lgBreakpoint = 1300;
 const isLargeScreen = ref(window.innerWidth > lgBreakpoint);
@@ -50,11 +50,11 @@ const updateScreenSize = () => {
 };
 
 onMounted(() => {
-  window.addEventListener("resize", updateScreenSize);
+  window.addEventListener('resize', updateScreenSize);
 });
 
 onUnmounted(() => {
-  window.removeEventListener("resize", updateScreenSize);
+  window.removeEventListener('resize', updateScreenSize);
 });
 
 const slicedBreadcrumbs = computed(() => {

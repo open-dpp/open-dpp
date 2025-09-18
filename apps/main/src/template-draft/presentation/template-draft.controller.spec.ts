@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
 import { AuthContext } from '../../auth/auth-request';
@@ -313,7 +313,7 @@ describe('TemplateDraftController', () => {
     };
     const response = await request(app.getHttpServer())
       .post(
-        `/organizations/${otherOrganizationId}/template-drafts/${laptopDraft}/publish`,
+        `/organizations/${otherOrganizationId}/template-drafts/${laptopDraft.id}/publish`,
       )
       .set(
         'Authorization',

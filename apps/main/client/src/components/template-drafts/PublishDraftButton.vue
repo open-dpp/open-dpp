@@ -52,22 +52,22 @@
 </template>
 
 <script setup lang="ts">
-import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/vue";
-import { ChevronDownIcon } from "@heroicons/vue/20/solid";
-import { VisibilityLevel } from "@open-dpp/api-client";
-import { ref } from "vue";
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
+import { ChevronDownIcon } from '@heroicons/vue/20/solid';
+import { VisibilityLevel } from '@open-dpp/api-client';
+import { ref } from 'vue';
 
 const selectedVisibility = ref<VisibilityLevel>(VisibilityLevel.PRIVATE);
 
 const emits = defineEmits<{
-  (e: "onPublish", visibility: VisibilityLevel): void;
+  (e: 'onPublish', visibility: VisibilityLevel): void;
 }>();
 
 const items: { name: string; visibility: VisibilityLevel }[] = [
   {
-    name: "nur für Organisation sichtbar",
+    name: 'nur für Organisation sichtbar',
     visibility: VisibilityLevel.PRIVATE,
   },
-  { name: "für jeden sichtbar", visibility: VisibilityLevel.PUBLIC },
+  { name: 'für jeden sichtbar', visibility: VisibilityLevel.PUBLIC },
 ];
 </script>

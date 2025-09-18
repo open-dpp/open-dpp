@@ -21,12 +21,12 @@
 </template>
 
 <script setup lang="ts">
-import { FieldView } from "../../lib/field-view";
-import { onMounted, ref } from "vue";
-import { ArrowDownTrayIcon } from "@heroicons/vue/24/outline";
-import { useMediaStore } from "../../stores/media";
-import { MediaInfo } from "../media/MediaInfo.interface";
-import MediaPreview from "../media/MediaPreview.vue";
+import { FieldView } from '../../lib/field-view';
+import { onMounted, ref } from 'vue';
+import { ArrowDownTrayIcon } from '@heroicons/vue/24/outline';
+import { useMediaStore } from '../../stores/media';
+import { MediaInfo } from '../media/MediaInfo.interface';
+import MediaPreview from '../media/MediaPreview.vue';
 
 const mediaStore = useMediaStore();
 
@@ -47,7 +47,7 @@ const loadFile = async () => {
         URL.revokeObjectURL(uploadedFileUrl.value);
       } catch (revokeErr) {
         console.error(
-          "Fehler beim Freigeben der vorherigen Objekt-URL:",
+          'Fehler beim Freigeben der vorherigen Objekt-URL:',
           revokeErr,
         );
       }
@@ -58,14 +58,14 @@ const loadFile = async () => {
     }
     uploadedMedia.value = mediaInfo;
   } catch (error) {
-    console.error("Fehler beim Laden der Datei:", error);
+    console.error('Fehler beim Laden der Datei:', error);
     // Reset state on failure
     if (uploadedFileUrl.value) {
       try {
         URL.revokeObjectURL(uploadedFileUrl.value);
       } catch (revokeErr) {
         console.error(
-          "Fehler beim Freigeben der Objekt-URL nach Fehler:",
+          'Fehler beim Freigeben der Objekt-URL nach Fehler:',
           revokeErr,
         );
       }
@@ -81,7 +81,7 @@ const loadFile = async () => {
     } catch {
       // Fallback to console if the notification store is not available for any reason
       console.error(
-        "Benachrichtigung über Ladefehler konnte nicht angezeigt werden.",
+        'Benachrichtigung über Ladefehler konnte nicht angezeigt werden.',
       );
     }
     // We intentionally do not rethrow to keep caller logic simple unless needed.

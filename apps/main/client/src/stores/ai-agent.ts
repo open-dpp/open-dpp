@@ -1,20 +1,20 @@
-import { defineStore } from "pinia";
-import { io, type Socket } from "socket.io-client";
-import { ref } from "vue";
-import { AGENT_SERVER_URL } from "../const";
-import { useRoute } from "vue-router";
+import { defineStore } from 'pinia';
+import { io, type Socket } from 'socket.io-client';
+import { ref } from 'vue';
+import { AGENT_SERVER_URL } from '../const';
+import { useRoute } from 'vue-router';
 
 export enum Sender {
-  Bot = "Bot",
-  User = "User",
+  Bot = 'Bot',
+  User = 'User',
 }
 
 export enum MsgStatus {
-  Success = "Success",
-  Error = "Error",
+  Success = 'Success',
+  Error = 'Error',
 }
 
-export const useAiAgentStore = defineStore("socket", () => {
+export const useAiAgentStore = defineStore('socket', () => {
   const socket = ref<Socket | null>(null);
   const messages = ref<
     { id: number; sender: Sender; text: string; status: MsgStatus }[]
@@ -24,13 +24,13 @@ export const useAiAgentStore = defineStore("socket", () => {
   let listenersBound = false;
   const connect = () => {
     if (!AGENT_SERVER_URL) {
-      console.error("AGENT_SERVER_URL is not set");
+      console.error('AGENT_SERVER_URL is not set');
       return;
     }
     if (!socket.value) {
       socket.value = io(AGENT_SERVER_URL, {
         autoConnect: true,
-        path: "/ai-socket/socket.io",
+        path: '/ai-socket/socket.io',
       });
     } else if (!socket.value.connected) {
       socket.value.connect();
@@ -39,7 +39,7 @@ export const useAiAgentStore = defineStore("socket", () => {
       return;
     }
     if (!listenersBound && socket.value) {
-      socket.value.on("botMessage", (msg: string) => {
+      socket.value.on('botMessage', (msg: string) => {
         messages.value.push({
           id: Date.now(),
           sender: Sender.Bot,
@@ -47,10 +47,10 @@ export const useAiAgentStore = defineStore("socket", () => {
           status: MsgStatus.Success,
         });
       });
-      socket.value.on("errorMessage", (msg: string) => {
+      socket.value.on('errorMessage', (msg: string) => {
         const text =
-          msg === "AI is not enabled"
-            ? "Die KI Funktion ist für diesen Produktpass nicht aktiviert"
+          msg === 'AI is not enabled'
+            ? 'Die KI Funktion ist für diesen Produktpass nicht aktiviert'
             : `Es ist ein Fehler aufgetreten`;
         messages.value.push({
           id: Date.now(),
@@ -60,8 +60,8 @@ export const useAiAgentStore = defineStore("socket", () => {
         });
       });
       // surface connection errors to the console; optional: push a message
-      socket.value.on("connect_error", (err) => {
-        console.error("AI agent socket connect_error:", err.message);
+      socket.value.on('connect_error', (err) => {
+        console.error('AI agent socket connect_error:', err.message);
       });
       listenersBound = true;
     }
@@ -69,7 +69,7 @@ export const useAiAgentStore = defineStore("socket", () => {
 
   const sendMessage = (msg: string) => {
     if (socket.value) {
-      socket.value.emit("userMessage", {
+      socket.value.emit('userMessage', {
         msg,
         passportUUID: route.params.permalink,
       });

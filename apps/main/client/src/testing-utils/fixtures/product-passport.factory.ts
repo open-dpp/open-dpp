@@ -5,10 +5,10 @@ import {
   GranularityLevel,
   ProductPassportDto,
   SectionType,
-} from "@open-dpp/api-client";
-import { DeepPartialObject, Factory } from "fishery";
-import { v4 as uuid4 } from "uuid";
-import { BuildOptions } from "fishery/dist/types";
+} from '@open-dpp/api-client';
+import { DeepPartialObject, Factory } from 'fishery';
+import { v4 as uuid4 } from 'uuid';
+import { BuildOptions } from 'fishery/dist/types';
 
 export class ProductPassportFactory extends Factory<ProductPassportDto> {
   private _dataSections: DataSectionDto[] = [];
@@ -25,9 +25,9 @@ export class ProductPassportFactory extends Factory<ProductPassportDto> {
   }
 
   override build(
-    params?: DeepPartialObject<DataSectionDto> | undefined,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    options?: BuildOptions<DataSectionDto, any> | undefined,
+    params?: DeepPartialObject<DataSectionDto>,
+
+    options?: BuildOptions<DataSectionDto, any>,
   ) {
     const result: ProductPassportDto = super.build(
       {
@@ -46,7 +46,7 @@ export const productPassportFactory = ProductPassportFactory.define(() => {
   return {
     id,
     name: `Product Name ${id}`,
-    description: "Product Description",
+    description: 'Product Description',
     dataSections: [],
   };
 });
@@ -64,9 +64,9 @@ export class DataSectionFactory extends Factory<DataSectionDto> {
     return this;
   }
   override build(
-    params?: DeepPartialObject<DataSectionDto> | undefined,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    options?: BuildOptions<DataSectionDto, any> | undefined,
+    params?: DeepPartialObject<DataSectionDto>,
+
+    options?: BuildOptions<DataSectionDto, any>,
   ) {
     const result: DataSectionDto = super.build(
       {

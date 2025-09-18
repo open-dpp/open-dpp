@@ -6,10 +6,9 @@ import { Organization } from '../../organizations/domain/organization';
 import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
 import { TraceabilityEventWrapper } from '../../traceability-events/domain/traceability-event-wrapper';
 import { TraceabilityEvent } from '../../traceability-events/domain/traceability-event';
-import { Connection } from 'mongoose';
+import { Connection, Model as MongooseModel } from 'mongoose';
 import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
-import { Model as MongooseModel } from 'mongoose';
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,

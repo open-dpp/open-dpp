@@ -100,14 +100,20 @@
 </template>
 
 <script lang="ts" setup>
-import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from "@headlessui/vue";
-import MediaGrid from "./MediaGrid.vue";
-import { ref, watch } from "vue";
-import { CloudArrowUpIcon, XMarkIcon } from "@heroicons/vue/24/outline";
-import { MediaInfo } from "./MediaInfo.interface";
-import { useMediaStore } from "../../stores/media";
-import { useNotificationStore } from "../../stores/notification";
-import { useIndexStore } from "../../stores";
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  TransitionChild,
+  TransitionRoot,
+} from '@headlessui/vue';
+import MediaGrid from './MediaGrid.vue';
+import { ref, watch } from 'vue';
+import { CloudArrowUpIcon, XMarkIcon } from '@heroicons/vue/24/outline';
+import { MediaInfo } from './MediaInfo.interface';
+import { useMediaStore } from '../../stores/media';
+import { useNotificationStore } from '../../stores/notification';
+import { useIndexStore } from '../../stores';
 
 const mediaStore = useMediaStore();
 const notificationStore = useNotificationStore();
@@ -118,8 +124,8 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: "confirm", files: Array<MediaInfo>): void;
-  (e: "cancel"): void;
+  (e: 'confirm', files: Array<MediaInfo>): void;
+  (e: 'cancel'): void;
 }>();
 
 const selected = ref<Array<MediaInfo>>([]);
@@ -139,12 +145,12 @@ const uploadFile = async () => {
       selectedLocalFile.value,
       (progress) => (uploadProgress.value = progress),
     );
-    notificationStore.addSuccessNotification("Datei erfolgreich hochgeladen.");
+    notificationStore.addSuccessNotification('Datei erfolgreich hochgeladen.');
     await mediaStore.fetchMediaByOrganizationId(organizationId);
   } catch (error: unknown) {
-    console.error("Fehler beim Hochladen der Datei:", error);
+    console.error('Fehler beim Hochladen der Datei:', error);
     notificationStore.addErrorNotification(
-      "Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+      'Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.',
     );
     selectedFile.value = null;
   } finally {

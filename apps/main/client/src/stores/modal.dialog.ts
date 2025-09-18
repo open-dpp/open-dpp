@@ -1,17 +1,17 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
-import { useNotificationStore } from "./notification";
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import { useNotificationStore } from './notification';
 
 type ConfirmAction = () => Promise<void>;
 type CancelAction = () => void;
 type Content = {
   title: string;
   description: string;
-  type?: "info" | "warning";
+  type?: 'info' | 'warning';
 };
 
-export const useModelDialogStore = defineStore("model-dialog-store", () => {
-  const defaultContent: Content = { title: "", description: "" };
+export const useModelDialogStore = defineStore('model-dialog-store', () => {
+  const defaultContent: Content = { title: '', description: '' };
   const isOpen = ref<boolean>(false);
   const confirmAction = ref<ConfirmAction | null>(null);
   const cancelAction = ref<CancelAction | null>(null);
@@ -42,7 +42,7 @@ export const useModelDialogStore = defineStore("model-dialog-store", () => {
       } catch {
         const notificationStore = useNotificationStore();
         notificationStore.addErrorNotification(
-          "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+          'Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',
         );
       }
     }

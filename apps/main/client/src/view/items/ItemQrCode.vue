@@ -2,11 +2,10 @@
   <QrCode v-if="link && content" :link="link" :content="content" />
 </template>
 <script lang="ts" setup>
-import { onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
-import { VIEW_ROOT_URL } from "../../const";
-import QrCode from "../../components/QrCode.vue";
-import apiClient from "../../lib/api-client";
+import { onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import QrCode from '../../components/QrCode.vue';
+import apiClient from '../../lib/api-client';
 
 const route = useRoute();
 const link = ref<string>();

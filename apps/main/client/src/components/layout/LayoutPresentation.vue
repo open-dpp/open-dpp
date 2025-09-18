@@ -21,6 +21,6 @@
 </template>
 
 <script lang="ts" setup>
-import Navbar from "./Navbar.vue";
-import Footer from "./Footer.vue";
+import Navbar from './Navbar.vue';
+import Footer from './Footer.vue';
 </script>

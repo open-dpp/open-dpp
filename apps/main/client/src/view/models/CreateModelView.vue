@@ -49,12 +49,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
-import apiClient from "../../lib/api-client";
-import { useRouter } from "vue-router";
-import ModelTemplateList from "../../components/models/ModelTemplateList.vue";
-import { useNotificationStore } from "../../stores/notification";
-import { TemplateGetAllDto } from "@open-dpp/api-client";
+import { ref } from 'vue';
+import apiClient from '../../lib/api-client';
+import { useRouter } from 'vue-router';
+import ModelTemplateList from '../../components/models/ModelTemplateList.vue';
+import { useNotificationStore } from '../../stores/notification';
+import { TemplateGetAllDto } from '@open-dpp/api-client';
 
 const router = useRouter();
 const notificationStore = useNotificationStore();
@@ -63,18 +63,18 @@ const props = defineProps<{
   organizationId: string;
 }>();
 
-const name = ref<string>("");
+const name = ref<string>('');
 const selectedTemplate = ref<TemplateGetAllDto | null>(null);
 const isMarketplaceSelected = ref<boolean>(false);
 
 const onSubmit = async () => {
   if (!name.value) {
-    notificationStore.addErrorNotification("Bitte geben Sie einen Namen ein.");
+    notificationStore.addErrorNotification('Bitte geben Sie einen Namen ein.');
     return;
   }
   if (!selectedTemplate.value) {
     notificationStore.addErrorNotification(
-      "Bitte wählen Sie eine Vorlage aus.",
+      'Bitte wählen Sie eine Vorlage aus.',
     );
     return;
   }

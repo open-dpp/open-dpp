@@ -1,15 +1,15 @@
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia';
 import {
   AiConfigurationDto,
   AiConfigurationUpsertDto,
-} from "@open-dpp/api-client";
-import { ref } from "vue";
-import { useErrorHandlingStore } from "./error.handling";
-import apiClient from "../lib/api-client";
-import { useNotificationStore } from "./notification";
-import { AxiosError } from "axios";
+} from '@open-dpp/api-client';
+import { ref } from 'vue';
+import { useErrorHandlingStore } from './error.handling';
+import apiClient from '../lib/api-client';
+import { useNotificationStore } from './notification';
+import { AxiosError } from 'axios';
 
-export const useAiIntegrationStore = defineStore("ai-integration", () => {
+export const useAiIntegrationStore = defineStore('ai-integration', () => {
   const configuration = ref<AiConfigurationDto>();
   const notificationStore = useNotificationStore();
   const errorHandlingStore = useErrorHandlingStore();
@@ -19,10 +19,10 @@ export const useAiIntegrationStore = defineStore("ai-integration", () => {
       configuration.value = response.data;
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 404) {
-        console.error("Configuration not found.");
+        console.error('Configuration not found.');
       } else {
         errorHandlingStore.logErrorWithNotification(
-          "Laden der Konfiguration fehlgeschlagen:",
+          'Laden der Konfiguration fehlgeschlagen:',
           error,
         );
       }
@@ -39,11 +39,11 @@ export const useAiIntegrationStore = defineStore("ai-integration", () => {
         );
       configuration.value = response.data;
       notificationStore.addSuccessNotification(
-        "Konfiguration erfolgreich gespeichert.",
+        'Konfiguration erfolgreich gespeichert.',
       );
     } catch (error) {
       errorHandlingStore.logErrorWithNotification(
-        "Anpassung der Konfiguration fehlgeschlagen:",
+        'Anpassung der Konfiguration fehlgeschlagen:',
         error,
       );
     }

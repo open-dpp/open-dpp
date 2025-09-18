@@ -1,7 +1,7 @@
-import { createMemoryHistory, createRouter } from "vue-router";
+import { createMemoryHistory, createRouter } from 'vue-router';
 
-import { API_URL } from "../../const";
-import { routes } from "../../router";
+import { API_URL } from '../../const';
+import { routes } from '../../router';
 import {
   DataFieldDto,
   DataFieldType,
@@ -12,32 +12,32 @@ import {
   SectionType,
   Sector,
   TemplateDraftDto,
-} from "@open-dpp/api-client";
-import { useIndexStore } from "../../stores";
-import DraftView from "./DraftView.vue";
-import TestWrapper from "../../testing-utils/TestWrapper.vue";
+} from '@open-dpp/api-client';
+import { useIndexStore } from '../../stores';
+import DraftView from './DraftView.vue';
+import TestWrapper from '../../testing-utils/TestWrapper.vue';
 
 const router = createRouter({
   history: createMemoryHistory(),
   routes: routes,
 });
 
-describe("<DraftView />", () => {
+describe('<DraftView />', () => {
   const section: SectionDto = {
-    id: "s1",
-    name: "Tech Specs",
+    id: 's1',
+    name: 'Tech Specs',
     type: SectionType.GROUP,
     dataFields: [
       {
-        id: "d1",
-        name: "Processor",
+        id: 'd1',
+        name: 'Processor',
         type: DataFieldType.TEXT_FIELD,
         options: {},
         granularityLevel: GranularityLevel.MODEL,
       },
       {
-        id: "d2",
-        name: "Memory",
+        id: 'd2',
+        name: 'Memory',
         type: DataFieldType.TEXT_FIELD,
         options: {},
         granularityLevel: GranularityLevel.MODEL,
@@ -47,8 +47,8 @@ describe("<DraftView />", () => {
   };
 
   const repeatableSection: SectionDto = {
-    id: "s2",
-    name: "Materials",
+    id: 's2',
+    name: 'Materials',
     type: SectionType.REPEATABLE,
     dataFields: [],
     subSections: [],
@@ -56,23 +56,23 @@ describe("<DraftView />", () => {
   };
 
   const draft: TemplateDraftDto = {
-    id: "draftId",
-    name: "My draft",
-    description: "My description",
+    id: 'draftId',
+    name: 'My draft',
+    description: 'My description',
     sectors: [Sector.BATTERY],
-    version: "1.0.0",
+    version: '1.0.0',
     publications: [],
     sections: [section, repeatableSection],
-    createdByUserId: "u1",
-    ownedByOrganizationId: "o1",
+    createdByUserId: 'u1',
+    ownedByOrganizationId: 'o1',
   };
 
-  it("renders draft and creates a section", () => {
-    const orgaId = "orgaId";
-    const newSectionName = "Sustainability";
+  it('renders draft and creates a section', () => {
+    const orgaId = 'orgaId';
+    const newSectionName = 'Sustainability';
 
     const sectionToCreate = {
-      id: "sCreate1",
+      id: 'sCreate1',
       name: newSectionName,
       type: SectionType.REPEATABLE,
       dataFields: [],
@@ -81,16 +81,16 @@ describe("<DraftView />", () => {
     };
 
     cy.intercept(
-      "GET",
+      'GET',
       `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}`,
       {
         statusCode: 200,
         body: draft, // Mock response
       },
-    ).as("getDraft");
+    ).as('getDraft');
 
     cy.intercept(
-      "POST",
+      'POST',
       `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}/sections`,
       {
         statusCode: 200,
@@ -99,7 +99,7 @@ describe("<DraftView />", () => {
           sections: [...draft.sections, sectionToCreate],
         },
       },
-    ).as("createSection");
+    ).as('createSection');
 
     const indexStore = useIndexStore();
     indexStore.selectOrganization(orgaId);
@@ -109,21 +109,21 @@ describe("<DraftView />", () => {
     );
     cy.mountWithPinia(DraftView, { router });
 
-    cy.wait("@getDraft").its("response.statusCode").should("eq", 200);
-    cy.contains(`Passvorlagen Entwurf ${draft.name}`).should("be.visible");
-    cy.contains(`Version ${draft.version}`).should("be.visible");
-    cy.contains("button", "Abschnitt hinzufügen").click();
-    cy.contains(`Abschnitt hinzufügen`).should("be.visible");
-    cy.contains(`Auswahl`).should("be.visible");
+    cy.wait('@getDraft').its('response.statusCode').should('eq', 200);
+    cy.contains(`Passvorlagen Entwurf ${draft.name}`).should('be.visible');
+    cy.contains(`Version ${draft.version}`).should('be.visible');
+    cy.contains('button', 'Abschnitt hinzufügen').click();
+    cy.contains(`Abschnitt hinzufügen`).should('be.visible');
+    cy.contains(`Auswahl`).should('be.visible');
     // Check that no data fields are selectable
-    cy.contains("li", "Textfeld").should("not.exist");
-    cy.contains("li", "Repeater").click();
+    cy.contains('li', 'Textfeld').should('not.exist');
+    cy.contains('li', 'Repeater').click();
     cy.get('[data-cy="name"]').type(newSectionName);
     cy.get('[data-cy="select-granularity-level"]').select(
       sectionToCreate.granularityLevel,
     );
     cy.get('[data-cy="submit"]').click();
-    cy.wait("@createSection").then(({ request }) => {
+    cy.wait('@createSection').then(({ request }) => {
       const expected = {
         name: newSectionName,
         type: SectionType.REPEATABLE,
@@ -132,23 +132,23 @@ describe("<DraftView />", () => {
       cy.expectDeepEqualWithDiff(request.body, expected);
     });
 
-    cy.contains(newSectionName).should("be.visible");
+    cy.contains(newSectionName).should('be.visible');
   });
 
-  it("renders draft and moves section", () => {
-    const orgaId = "orgaId";
+  it('renders draft and moves section', () => {
+    const orgaId = 'orgaId';
 
     cy.intercept(
-      "GET",
+      'GET',
       `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}`,
       {
         statusCode: 200,
         body: draft, // Mock response
       },
-    ).as("getDraft");
+    ).as('getDraft');
 
     cy.intercept(
-      "POST",
+      'POST',
       `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}/sections/${repeatableSection.id}/move`,
       {
         statusCode: 200,
@@ -157,7 +157,7 @@ describe("<DraftView />", () => {
           sections: [repeatableSection, section],
         },
       },
-    ).as("moveSection");
+    ).as('moveSection');
 
     const indexStore = useIndexStore();
     indexStore.selectOrganization(orgaId);
@@ -167,9 +167,9 @@ describe("<DraftView />", () => {
     );
     cy.mountWithPinia(DraftView, { router });
 
-    cy.wait("@getDraft").its("response.statusCode").should("eq", 200);
+    cy.wait('@getDraft').its('response.statusCode').should('eq', 200);
     cy.get(`[data-cy="move-section-${repeatableSection.id}-up"]`).click();
-    cy.wait("@moveSection").then(({ request }) => {
+    cy.wait('@moveSection').then(({ request }) => {
       const expected = {
         type: MoveType.POSITION,
         direction: MoveDirection.UP,
@@ -178,20 +178,20 @@ describe("<DraftView />", () => {
     });
   });
 
-  it("renders draft and moves data field", () => {
-    const orgaId = "orgaId";
+  it('renders draft and moves data field', () => {
+    const orgaId = 'orgaId';
 
     cy.intercept(
-      "GET",
+      'GET',
       `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}`,
       {
         statusCode: 200,
         body: draft, // Mock response
       },
-    ).as("getDraft");
+    ).as('getDraft');
 
     cy.intercept(
-      "POST",
+      'POST',
       `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}/sections/${section.id}/data-fields/${section.dataFields[1].id}/move`,
       {
         statusCode: 200,
@@ -206,7 +206,7 @@ describe("<DraftView />", () => {
           ],
         },
       },
-    ).as("moveDataField");
+    ).as('moveDataField');
 
     const indexStore = useIndexStore();
     indexStore.selectOrganization(orgaId);
@@ -216,11 +216,11 @@ describe("<DraftView />", () => {
     );
     cy.mountWithPinia(DraftView, { router });
 
-    cy.wait("@getDraft").its("response.statusCode").should("eq", 200);
+    cy.wait('@getDraft').its('response.statusCode').should('eq', 200);
     cy.get(
       `[data-cy="move-data-field-${section.dataFields[1].id}-up"]`,
     ).click();
-    cy.wait("@moveDataField").then(({ request }) => {
+    cy.wait('@moveDataField').then(({ request }) => {
       const expected = {
         type: MoveType.POSITION,
         direction: MoveDirection.UP,
@@ -229,22 +229,22 @@ describe("<DraftView />", () => {
     });
   });
 
-  it("modify and delete a section", () => {
-    const orgaId = "orgaId";
+  it('modify and delete a section', () => {
+    const orgaId = 'orgaId';
 
     cy.intercept(
-      "GET",
+      'GET',
       `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}`,
       {
         statusCode: 200,
         body: draft, // Mock response
       },
-    ).as("getDraft");
+    ).as('getDraft');
 
-    const newSectionName = "New Name";
+    const newSectionName = 'New Name';
 
     cy.intercept(
-      "PATCH",
+      'PATCH',
       `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}/sections/${section.id}`,
       {
         statusCode: 200,
@@ -253,10 +253,10 @@ describe("<DraftView />", () => {
           sections: [{ ...section, name: newSectionName }, repeatableSection],
         },
       },
-    ).as("patchSection");
+    ).as('patchSection');
 
     cy.intercept(
-      "DELETE",
+      'DELETE',
       `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}/sections/${section.id}`,
       {
         statusCode: 200,
@@ -265,7 +265,7 @@ describe("<DraftView />", () => {
           sections: draft.sections.filter((s) => s.id !== section.id),
         },
       },
-    ).as("deleteSection");
+    ).as('deleteSection');
 
     const indexStore = useIndexStore();
     indexStore.selectOrganization(orgaId);
@@ -281,29 +281,29 @@ describe("<DraftView />", () => {
       router,
     });
 
-    cy.wait("@getDraft").its("response.statusCode").should("eq", 200);
+    cy.wait('@getDraft').its('response.statusCode').should('eq', 200);
     const actionsOfSection = cy.get(
       `[data-cy="actions-section-${section.id}"]`,
     );
-    actionsOfSection.within(() => cy.contains("Editieren").click());
+    actionsOfSection.within(() => cy.contains('Editieren').click());
 
     cy.get('[data-cy="name"]').clear();
     cy.get('[data-cy="name"]').type(newSectionName);
 
     cy.get('[data-cy="submit"]').click();
 
-    cy.wait("@patchSection").then(({ request }) => {
+    cy.wait('@patchSection').then(({ request }) => {
       const expected = {
         name: newSectionName,
       };
       cy.expectDeepEqualWithDiff(request.body, expected);
     });
 
-    actionsOfSection.within(() => cy.contains("Editieren").click());
+    actionsOfSection.within(() => cy.contains('Editieren').click());
 
-    cy.contains("Abschnitt löschen").click();
-    cy.contains("button", "Bestätigen").click();
-    cy.wait("@deleteSection").its("response.statusCode").should("eq", 200);
+    cy.contains('Abschnitt löschen').click();
+    cy.contains('button', 'Bestätigen').click();
+    cy.wait('@deleteSection').its('response.statusCode').should('eq', 200);
   });
 
   interface TestCase {
@@ -313,35 +313,35 @@ describe("<DraftView />", () => {
 
   Cypress._.forEach<TestCase>(
     [
-      { type: DataFieldType.TEXT_FIELD, textToSelect: "Textfeld" },
+      { type: DataFieldType.TEXT_FIELD, textToSelect: 'Textfeld' },
       {
         type: DataFieldType.PRODUCT_PASSPORT_LINK,
-        textToSelect: "Produktpass Verlinkung",
+        textToSelect: 'Produktpass Verlinkung',
       },
     ],
     ({ type, textToSelect }) => {
       it(`renders draft and creates a data field of type ${type}`, () => {
-        const orgaId = "orgaId";
+        const orgaId = 'orgaId';
 
         const dataFieldToCreate: DataFieldDto = {
-          id: "dCreate1",
+          id: 'dCreate1',
           type: type,
-          name: "Processor",
+          name: 'Processor',
           options: {},
           granularityLevel: GranularityLevel.ITEM,
         };
 
         cy.intercept(
-          "GET",
+          'GET',
           `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}`,
           {
             statusCode: 200,
             body: draft,
           },
-        ).as("getDraft");
+        ).as('getDraft');
 
         cy.intercept(
-          "POST",
+          'POST',
           `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}/sections/${section.id}/data-fields`,
           {
             statusCode: 200,
@@ -356,7 +356,7 @@ describe("<DraftView />", () => {
               ],
             }, // Mock response
           },
-        ).as("createDataField");
+        ).as('createDataField');
 
         const indexStore = useIndexStore();
         indexStore.selectOrganization(orgaId);
@@ -366,16 +366,16 @@ describe("<DraftView />", () => {
         );
         cy.mountWithPinia(DraftView, { router });
 
-        cy.wait("@getDraft").its("response.statusCode").should("eq", 200);
+        cy.wait('@getDraft').its('response.statusCode').should('eq', 200);
 
         // add data field
         const actionsOfSection = cy.get(
           `[data-cy="actions-section-${section.id}"]`,
         );
         actionsOfSection.within(() =>
-          cy.contains("Datenfeld hinzufügen").click(),
+          cy.contains('Datenfeld hinzufügen').click(),
         );
-        cy.contains("li", textToSelect).click();
+        cy.contains('li', textToSelect).click();
         cy.get('[data-cy="name"]').type(dataFieldToCreate.name);
         cy.get('[data-cy="select-granularity-level"]').select(
           dataFieldToCreate.granularityLevel,
@@ -383,7 +383,7 @@ describe("<DraftView />", () => {
 
         cy.get('[data-cy="submit"]').click();
 
-        cy.wait("@createDataField").then(({ request }) => {
+        cy.wait('@createDataField').then(({ request }) => {
           const expected = {
             name: dataFieldToCreate.name,
             type: type,
@@ -393,29 +393,29 @@ describe("<DraftView />", () => {
         });
 
         cy.get(`[data-cy="${dataFieldToCreate.id}"]`)
-          .find("input")
-          .should("have.attr", "placeholder", dataFieldToCreate.name);
+          .find('input')
+          .should('have.attr', 'placeholder', dataFieldToCreate.name);
       });
     },
   );
 
-  it("creates a sub section and data field of repeatable", () => {
-    const orgaId = "orgaId";
-    const newSectionName = "Sustainability";
+  it('creates a sub section and data field of repeatable', () => {
+    const orgaId = 'orgaId';
+    const newSectionName = 'Sustainability';
 
     const sectionToCreate = {
       parentId: repeatableSection.id,
-      id: "sCreate1",
+      id: 'sCreate1',
       name: newSectionName,
       type: SectionType.GROUP,
       dataFields: [],
       subSections: [],
       granularityLevel: GranularityLevel.ITEM,
     };
-    const newDataFieldName = "New Data Field";
+    const newDataFieldName = 'New Data Field';
 
     const dataFieldToCreate: DataFieldDto = {
-      id: "dCreate1",
+      id: 'dCreate1',
       type: DataFieldType.TEXT_FIELD,
       name: newDataFieldName,
       options: {},
@@ -423,16 +423,16 @@ describe("<DraftView />", () => {
     };
 
     cy.intercept(
-      "GET",
+      'GET',
       `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}`,
       {
         statusCode: 200,
         body: draft, // Mock response
       },
-    ).as("getDraft");
+    ).as('getDraft');
 
     cy.intercept(
-      "POST",
+      'POST',
       `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}/sections`,
       {
         statusCode: 200,
@@ -441,10 +441,10 @@ describe("<DraftView />", () => {
           sections: [...draft.sections, sectionToCreate],
         },
       },
-    ).as("createSection");
+    ).as('createSection');
 
     cy.intercept(
-      "POST",
+      'POST',
       `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}/sections/${repeatableSection.id}/data-fields`,
       {
         statusCode: 200,
@@ -459,7 +459,7 @@ describe("<DraftView />", () => {
           ],
         }, // Mock response
       },
-    ).as("createDataField");
+    ).as('createDataField');
 
     const indexStore = useIndexStore();
     indexStore.selectOrganization(orgaId);
@@ -469,24 +469,24 @@ describe("<DraftView />", () => {
     );
     cy.mountWithPinia(DraftView, { router });
 
-    cy.wait("@getDraft").its("response.statusCode").should("eq", 200);
+    cy.wait('@getDraft').its('response.statusCode').should('eq', 200);
     let actionsOfSection = cy.get(
       `[data-cy="actions-section-${repeatableSection.id}"]`,
     );
-    cy.spy(router, "push").as("pushSpy");
+    cy.spy(router, 'push').as('pushSpy');
 
-    actionsOfSection.within(() => cy.contains("Abschnitt hinzufügen").click());
-    cy.get("@pushSpy").should(
-      "have.been.calledWith",
+    actionsOfSection.within(() => cy.contains('Abschnitt hinzufügen').click());
+    cy.get('@pushSpy').should(
+      'have.been.calledWith',
       `?sectionId=${repeatableSection.id}`,
     );
-    cy.contains("Abschnitt hinzufügen").click();
+    cy.contains('Abschnitt hinzufügen').click();
 
-    cy.contains("li", "Gruppierung").click();
+    cy.contains('li', 'Gruppierung').click();
     cy.get('[data-cy="name"]').type(newSectionName);
-    cy.get('[data-cy="select-granularity-level"]').should("not.exist");
+    cy.get('[data-cy="select-granularity-level"]').should('not.exist');
     cy.get('[data-cy="submit"]').click();
-    cy.wait("@createSection").then(({ request }) => {
+    cy.wait('@createSection').then(({ request }) => {
       const expected = {
         name: newSectionName,
         type: sectionToCreate.type,
@@ -495,16 +495,16 @@ describe("<DraftView />", () => {
       };
       cy.expectDeepEqualWithDiff(request.body, expected);
     });
-    cy.contains("Zur Startseite").click();
+    cy.contains('Zur Startseite').click();
     actionsOfSection = cy.get(
       `[data-cy="actions-section-${repeatableSection.id}"]`,
     );
-    actionsOfSection.within(() => cy.contains("Datenfeld hinzufügen").click());
-    cy.contains("li", "Textfeld").click();
+    actionsOfSection.within(() => cy.contains('Datenfeld hinzufügen').click());
+    cy.contains('li', 'Textfeld').click();
     cy.get('[data-cy="name"]').type(newDataFieldName);
-    cy.get('[data-cy="select-granularity-level"]').should("not.exist");
+    cy.get('[data-cy="select-granularity-level"]').should('not.exist');
     cy.get('[data-cy="submit"]').click();
-    cy.wait("@createDataField").then(({ request }) => {
+    cy.wait('@createDataField').then(({ request }) => {
       const expected = {
         name: newDataFieldName,
         type: DataFieldType.TEXT_FIELD,
@@ -514,21 +514,21 @@ describe("<DraftView />", () => {
     });
   });
 
-  it("renders draft and modifies a data field", () => {
-    const orgaId = "orgaId";
+  it('renders draft and modifies a data field', () => {
+    const orgaId = 'orgaId';
     const dataFieldToModify = section.dataFields[0];
 
     cy.intercept(
-      "GET",
+      'GET',
       `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}`,
       {
         statusCode: 200,
         body: draft,
       },
-    ).as("getDraft");
+    ).as('getDraft');
 
     cy.intercept(
-      "PATCH",
+      'PATCH',
       `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}/sections/${section.id}/data-fields/${dataFieldToModify.id}`,
       {
         statusCode: 200,
@@ -542,7 +542,7 @@ describe("<DraftView />", () => {
           ],
         }, // Mock response
       },
-    ).as("modifyDataField");
+    ).as('modifyDataField');
 
     const indexStore = useIndexStore();
     indexStore.selectOrganization(orgaId);
@@ -552,19 +552,19 @@ describe("<DraftView />", () => {
     );
     cy.mountWithPinia(DraftView, { router });
 
-    cy.wait("@getDraft").its("response.statusCode").should("eq", 200);
+    cy.wait('@getDraft').its('response.statusCode').should('eq', 200);
 
     cy.get(`[data-cy="${dataFieldToModify.id}"]`).click();
-    cy.get('[data-cy="select-granularity-level"]').should("not.exist");
-    const newFieldName = "New Name";
+    cy.get('[data-cy="select-granularity-level"]').should('not.exist');
+    const newFieldName = 'New Name';
     const nameField = cy.get('[data-cy="name"]');
-    nameField.should("have.value", dataFieldToModify.name);
+    nameField.should('have.value', dataFieldToModify.name);
     nameField.clear();
     nameField.type(newFieldName);
 
     cy.get('[data-cy="submit"]').click();
 
-    cy.wait("@modifyDataField").then(({ request }) => {
+    cy.wait('@modifyDataField').then(({ request }) => {
       const expected = {
         name: newFieldName,
       };
@@ -572,21 +572,21 @@ describe("<DraftView />", () => {
     });
   });
 
-  it("renders draft and deletes data field", () => {
-    const orgaId = "orgaId";
+  it('renders draft and deletes data field', () => {
+    const orgaId = 'orgaId';
     const dataFieldToDelete = section.dataFields[0];
 
     cy.intercept(
-      "GET",
+      'GET',
       `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}`,
       {
         statusCode: 200,
         body: draft,
       },
-    ).as("getDraft");
+    ).as('getDraft');
 
     cy.intercept(
-      "DELETE",
+      'DELETE',
       `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}/sections/${section.id}/data-fields/${dataFieldToDelete.id}`,
       {
         statusCode: 200,
@@ -602,7 +602,7 @@ describe("<DraftView />", () => {
           ],
         },
       },
-    ).as("deleteDataField");
+    ).as('deleteDataField');
 
     const indexStore = useIndexStore();
     indexStore.selectOrganization(orgaId);
@@ -617,15 +617,15 @@ describe("<DraftView />", () => {
       router,
     });
 
-    cy.wait("@getDraft").its("response.statusCode").should("eq", 200);
+    cy.wait('@getDraft').its('response.statusCode').should('eq', 200);
 
     cy.get(`[data-cy="${dataFieldToDelete.id}"]`).click();
     cy.get('[data-cy="delete"]').click();
 
-    cy.contains("button", "Bestätigen").click();
+    cy.contains('button', 'Bestätigen').click();
 
-    cy.wait("@deleteDataField").its("response.statusCode").should("eq", 200);
-    cy.get(`[data-cy="${dataFieldToDelete.id}"]`).should("not.exist");
+    cy.wait('@deleteDataField').its('response.statusCode').should('eq', 200);
+    cy.get(`[data-cy="${dataFieldToDelete.id}"]`).should('not.exist');
   });
 
   //

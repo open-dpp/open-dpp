@@ -32,22 +32,22 @@
       class="absolute bottom-1 right-1 h-fit w-10 z-10 bg-[#6BAD87] text-white text-[0.6rem] p-1 rounded"
     >
       <div class="w-fit mx-auto">
-        {{ media.mimeType.substring(media.mimeType.indexOf("/") + 1) }}
+        {{ media.mimeType.substring(media.mimeType.indexOf('/') + 1) }}
       </div>
     </div>
   </div>
 </template>
 <script lang="ts" setup>
-import RingLoader from "../RingLoader.vue";
-import { useMediaStore } from "../../stores/media";
-import { onMounted, onUnmounted, ref } from "vue";
-import { MediaInfo } from "./MediaInfo.interface";
+import RingLoader from '../RingLoader.vue';
+import { useMediaStore } from '../../stores/media';
+import { onMounted, onUnmounted, ref } from 'vue';
+import { MediaInfo } from './MediaInfo.interface';
 import {
   DocumentIcon,
   ExclamationTriangleIcon,
   PhotoIcon,
   VideoCameraIcon,
-} from "@heroicons/vue/24/solid";
+} from '@heroicons/vue/24/solid';
 
 const mediaStore = useMediaStore();
 

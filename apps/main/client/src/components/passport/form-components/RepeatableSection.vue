@@ -20,11 +20,11 @@
   </ul>
 </template>
 <script setup lang="ts">
-import { DataSectionDto } from "@open-dpp/api-client";
-import { computed, ref } from "vue";
-import BaseButton from "../../BaseButton.vue";
-import SectionForm from "./SectionForm.vue";
-import { usePassportFormStore } from "../../../stores/passport.form";
+import { DataSectionDto } from '@open-dpp/api-client';
+import { computed, ref } from 'vue';
+import BaseButton from '../../BaseButton.vue';
+import SectionForm from './SectionForm.vue';
+import { usePassportFormStore } from '../../../stores/passport.form';
 
 const productPassportStore = usePassportFormStore();
 

@@ -194,8 +194,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import UnderConstruction from "./UnderConstruction.vue";
+import { ref } from 'vue';
+import UnderConstruction from './UnderConstruction.vue';
 
 interface Integration {
   id: number;
@@ -209,41 +209,41 @@ interface Integration {
 const integrations = ref<Integration[]>([
   {
     id: 1,
-    name: "ERP",
+    name: 'ERP',
     description:
-      "Nutzen Sie die Daten aus Ihrem ERP System um Produktpässe zu erstellen.",
+      'Nutzen Sie die Daten aus Ihrem ERP System um Produktpässe zu erstellen.',
     isActive: true,
-    icon: "database",
-    lastSync: "vor 2 Minuten",
+    icon: 'database',
+    lastSync: 'vor 2 Minuten',
   },
   {
     id: 2,
-    name: "Business Intelligence",
-    description: "Erstellen Sie Auswertungen mit Ihrem BI System.",
+    name: 'Business Intelligence',
+    description: 'Erstellen Sie Auswertungen mit Ihrem BI System.',
     isActive: true,
-    icon: "database",
-    lastSync: "vor 5 Minuten",
+    icon: 'database',
+    lastSync: 'vor 5 Minuten',
   },
   {
     id: 3,
-    name: "Excel Import / Export",
-    description: "Importieren und Exportieren Sie Excel-Dateien.",
+    name: 'Excel Import / Export',
+    description: 'Importieren und Exportieren Sie Excel-Dateien.',
     isActive: false,
-    icon: "folder",
+    icon: 'folder',
   },
   {
     id: 4,
-    name: "KI Assistent",
-    description: "Lassen Sie sich von unserem KI-Assistenten helfen.",
+    name: 'KI Assistent',
+    description: 'Lassen Sie sich von unserem KI-Assistenten helfen.',
     isActive: true,
-    icon: "key",
+    icon: 'key',
   },
   {
     id: 5,
-    name: "Email Alarme",
-    description: "Lassen Sie sich bei Fehlern per Email benachrichtigen.",
+    name: 'Email Alarme',
+    description: 'Lassen Sie sich bei Fehlern per Email benachrichtigen.',
     isActive: false,
-    icon: "envelope",
+    icon: 'envelope',
   },
 ]);
 </script>

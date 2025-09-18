@@ -2,10 +2,10 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Param,
   Post,
   Request,
-  NotFoundException,
 } from '@nestjs/common';
 import { PassportTemplateService } from '../infrastructure/passport-template.service';
 import * as passportTemplateDto_1 from './dto/passport-template.dto';
@@ -30,7 +30,7 @@ export class PassportTemplateController {
     @Request() req: authRequest.AuthRequest,
     @Body() body: passportTemplateDto_1.PassportTemplateCreateDto,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -68,14 +68,9 @@ export class PassportTemplateController {
   @Public()
   @Get(templatesEndpoint)
   async getTemplates() {
-    try {
-      const passportTemplates = await this.passportTemplateService.findAll();
-      return passportTemplates.map((pt) =>
-        passportTemplateDto_1.passportTemplateToDto(pt),
-      );
-    } catch (error) {
-      // Log the error or handle it as needed
-      throw error;
-    }
+    const passportTemplates = await this.passportTemplateService.findAll();
+    return passportTemplates.map((pt) =>
+      passportTemplateDto_1.passportTemplateToDto(pt),
+    );
   }
 }

@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { useAasConnectionFormStore } from "../../stores/aas.connection.form";
+import { useAasConnectionFormStore } from '../../stores/aas.connection.form';
 
 const aasConnectionFormStore = useAasConnectionFormStore();
 

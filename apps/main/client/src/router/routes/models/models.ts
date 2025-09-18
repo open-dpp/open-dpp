@@ -1,12 +1,12 @@
-import { RouteLocationNormalizedGeneric, RouteRecordRaw } from "vue-router";
-import { useLayoutStore } from "../../../stores/layout";
-import { ITEMS_PARENT } from "./items";
-import { useModelsStore } from "../../../stores/models";
+import { RouteLocationNormalizedGeneric, RouteRecordRaw } from 'vue-router';
+import { useLayoutStore } from '../../../stores/layout';
+import { ITEMS_PARENT } from './items';
+import { useModelsStore } from '../../../stores/models';
 
 const modelListBreadcrumbs = (to: RouteLocationNormalizedGeneric) => [
   // ...organizationBreadcrumbs(to),
   {
-    name: "Modellpässe",
+    name: 'Modellpässe',
     route: MODEL_LIST,
     params: to.params,
   },
@@ -33,7 +33,7 @@ export const modelBreadcrumbs = async (to: RouteLocationNormalizedGeneric) => {
   return [
     ...modelListBreadcrumbs(to),
     {
-      name: "Modellpass",
+      name: 'Modellpass',
       route: MODEL,
       params: to.params,
     },
@@ -41,9 +41,9 @@ export const modelBreadcrumbs = async (to: RouteLocationNormalizedGeneric) => {
 };
 
 export const MODEL: RouteRecordRaw = {
-  path: "",
-  name: "Model",
-  component: () => import("../../../view/models/ModelView.vue"),
+  path: '',
+  name: 'Model',
+  component: () => import('../../../view/models/ModelView.vue'),
   beforeEnter: async (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = await modelBreadcrumbs(to);
@@ -51,15 +51,15 @@ export const MODEL: RouteRecordRaw = {
 };
 
 export const MODEL_QRCODE: RouteRecordRaw = {
-  path: "qr-code",
-  name: "ModelQrCode",
-  component: () => import("../../../view/models/ModelQrCode.vue"),
+  path: 'qr-code',
+  name: 'ModelQrCode',
+  component: () => import('../../../view/models/ModelQrCode.vue'),
   beforeEnter: async (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = [
       ...(await modelBreadcrumbs(to)),
       {
-        name: "QR Code",
+        name: 'QR Code',
         route: MODEL_QRCODE,
         params: to.params,
       },
@@ -68,16 +68,16 @@ export const MODEL_QRCODE: RouteRecordRaw = {
 };
 
 const MODEL_PARENT: RouteRecordRaw = {
-  path: ":modelId",
+  path: ':modelId',
   children: [MODEL, MODEL_QRCODE, ITEMS_PARENT],
 };
 
 // MODELS
 
 export const MODEL_LIST: RouteRecordRaw = {
-  path: "",
-  name: "Models",
-  component: () => import("../../../view/models/Models.vue"),
+  path: '',
+  name: 'Models',
+  component: () => import('../../../view/models/Models.vue'),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = modelListBreadcrumbs(to);
@@ -85,16 +85,16 @@ export const MODEL_LIST: RouteRecordRaw = {
 };
 
 export const MODEL_CREATE: RouteRecordRaw = {
-  path: "create",
-  name: "ModelCreate",
+  path: 'create',
+  name: 'ModelCreate',
   props: true,
-  component: () => import("../../../view/models/CreateModelView.vue"),
+  component: () => import('../../../view/models/CreateModelView.vue'),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = [
       ...modelListBreadcrumbs(to),
       {
-        name: "Erstellen",
+        name: 'Erstellen',
         route: MODEL_CREATE,
         params: to.params,
       },
@@ -103,6 +103,6 @@ export const MODEL_CREATE: RouteRecordRaw = {
 };
 
 export const ORGANIZATION_MODELS_PARENT: RouteRecordRaw = {
-  path: "models",
+  path: 'models',
   children: [MODEL_LIST, MODEL_CREATE, MODEL_PARENT],
 };

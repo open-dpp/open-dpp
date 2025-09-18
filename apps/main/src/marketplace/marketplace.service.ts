@@ -1,5 +1,7 @@
-import { PassportTemplateDto } from '@open-dpp/api-client';
-import { MarketplaceApiClient } from '@open-dpp/api-client';
+import {
+  MarketplaceApiClient,
+  PassportTemplateDto,
+} from '@open-dpp/api-client';
 import { ConfigService } from '@nestjs/config';
 import { OrganizationsService } from '../organizations/infrastructure/organizations.service';
 import { Template } from '../templates/domain/template';

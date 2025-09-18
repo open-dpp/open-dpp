@@ -19,11 +19,11 @@
 </template>
 
 <script setup lang="ts">
-import { DataSectionDto, SectionType } from "@open-dpp/api-client";
-import { usePassportFormStore } from "../stores/passport.form";
-import BaseSectionHeader from "./BaseSectionHeader.vue";
-import { computed } from "vue";
-import BaseButton from "./BaseButton.vue";
+import { DataSectionDto, SectionType } from '@open-dpp/api-client';
+import { usePassportFormStore } from '../stores/passport.form';
+import BaseSectionHeader from './BaseSectionHeader.vue';
+import { computed } from 'vue';
+import BaseButton from './BaseButton.vue';
 
 const props = defineProps<{
   section: DataSectionDto;

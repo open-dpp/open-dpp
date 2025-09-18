@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useProductPassportStore } from "../../stores/product-passport";
-import { computed } from "vue";
-import QrCode from "./QrCode.vue";
+import { useProductPassportStore } from '../../stores/product-passport';
+import { computed } from 'vue';
+import QrCode from './QrCode.vue';
 
 const productPassportStore = useProductPassportStore();
 
@@ -9,10 +9,10 @@ const productPassport = computed(() => productPassportStore.productPassport);
 
 const url = computed(() => {
   const href = window.location.href;
-  if (!href.includes("#")) {
+  if (!href.includes('#')) {
     return href;
   }
-  return href.substring(0, href.lastIndexOf("#"));
+  return href.substring(0, href.lastIndexOf('#'));
 });
 </script>
 

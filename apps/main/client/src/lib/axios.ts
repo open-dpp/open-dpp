@@ -1,6 +1,6 @@
-import axios from "axios";
-import { logout } from "./keycloak";
-import { API_URL } from "../const";
+import axios from 'axios';
+import { logout } from './keycloak';
+import { API_URL } from '../const';
 
 const axiosIns = axios.create({
   baseURL: API_URL,
@@ -15,16 +15,16 @@ axiosIns.interceptors.response.use(
     if (
       error.response &&
       error.response.status === 401 &&
-      error.message === "Unauthorized"
+      error.message === 'Unauthorized'
     ) {
       logout();
     }
-    return Promise.reject(error);
+    return Promise.reject(new Error(error));
   },
 );
 
 export const setAxiosAuthHeader = (token: string) => {
-  axiosIns.defaults.headers.common.Authorization = "Bearer " + token;
+  axiosIns.defaults.headers.common.Authorization = 'Bearer ' + token;
 };
 
 export default axiosIns;

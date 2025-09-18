@@ -30,10 +30,10 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted } from "vue";
-import { useModelsStore } from "../../stores/models";
-import CreateConnectionForm from "../../components/integrations/CreateConnectionForm.vue";
-import { useIndexStore } from "../../stores";
+import { onMounted } from 'vue';
+import { useModelsStore } from '../../stores/models';
+import CreateConnectionForm from '../../components/integrations/CreateConnectionForm.vue';
+import { useIndexStore } from '../../stores';
 
 const modelsStore = useModelsStore();
 const indexStore = useIndexStore();

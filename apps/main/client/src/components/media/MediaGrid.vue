@@ -23,12 +23,12 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted } from "vue";
-import Pagination from "../lists/Pagination.vue";
-import { useMediaStore } from "../../stores/media";
-import { useIndexStore } from "../../stores";
-import { MediaInfo } from "./MediaInfo.interface";
-import MediaListItem from "./MediaListItem.vue";
+import { computed, onMounted } from 'vue';
+import Pagination from '../lists/Pagination.vue';
+import { useMediaStore } from '../../stores/media';
+import { useIndexStore } from '../../stores';
+import { MediaInfo } from './MediaInfo.interface';
+import MediaListItem from './MediaListItem.vue';
 
 const mediaStore = useMediaStore();
 const indexStore = useIndexStore();
@@ -40,7 +40,7 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: "update-selected-items", items: Array<MediaInfo>): void;
+  (e: 'update-selected-items', items: Array<MediaInfo>): void;
 }>();
 
 const page = computed(() => {
@@ -50,14 +50,14 @@ const page = computed(() => {
 const onSelect = (media: MediaInfo) => {
   if (props.selected.some((f) => f.id === media.id)) {
     emits(
-      "update-selected-items",
+      'update-selected-items',
       props.selected.filter((f) => f.id !== media.id),
     );
   } else {
     if (props.multiple) {
-      emits("update-selected-items", props.selected.concat(media));
+      emits('update-selected-items', props.selected.concat(media));
     } else {
-      emits("update-selected-items", [media]);
+      emits('update-selected-items', [media]);
     }
   }
 };

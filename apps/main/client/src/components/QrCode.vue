@@ -18,9 +18,9 @@
 </template>
 
 <script lang="ts" setup>
-import { toCanvas } from "qrcode";
-import { onMounted, ref } from "vue";
-import { ArrowTopRightOnSquareIcon } from "@heroicons/vue/16/solid";
+import { toCanvas } from 'qrcode';
+import { onMounted, ref } from 'vue';
+import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/16/solid';
 
 const canvas = ref<HTMLCanvasElement>();
 const props = defineProps<{

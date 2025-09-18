@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import path from 'path';
+import path, { join } from 'path';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { generateConfig, generateMongoConfig } from './database/config';
@@ -20,7 +20,6 @@ import { ProductPassportModule } from './product-passport/product-passport.modul
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthGuard } from '@app/auth/keycloak-auth/keycloak-auth.guard';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
 
 @Module({
   imports: [

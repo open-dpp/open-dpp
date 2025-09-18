@@ -11,14 +11,14 @@
 </template>
 
 <script setup lang="ts">
-import { FieldView } from "../../lib/field-view";
-import { useRouter } from "vue-router";
+import { FieldView } from '../../lib/field-view';
+import { useRouter } from 'vue-router';
 
 const props = defineProps<{ fieldView: FieldView }>();
 
 const router = useRouter();
 
-const onLinkClick = () => {
-  router.push(`/${props.fieldView.value}`);
+const onLinkClick = async () => {
+  await router.push(`/${props.fieldView.value as string}`);
 };
 </script>

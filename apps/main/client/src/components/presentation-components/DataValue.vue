@@ -13,10 +13,10 @@
 </template>
 
 <script setup lang="ts">
-import { FieldView } from "../../lib/field-view";
-import { DataFieldType } from "@open-dpp/api-client";
-import LinkValue from "./LinkValue.vue";
-import DataFieldFileValue from "./DataFieldFileValue.vue";
+import { FieldView } from '../../lib/field-view';
+import { DataFieldType } from '@open-dpp/api-client';
+import LinkValue from './LinkValue.vue';
+import DataFieldFileValue from './DataFieldFileValue.vue';
 
 const props = defineProps<{ fieldView: FieldView }>();
 </script>

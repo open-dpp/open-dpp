@@ -17,10 +17,10 @@
 </template>
 
 <script lang="ts" setup>
-import CreateDraftForm from "../../components/template-drafts/CreateDraftForm.vue";
-import { useRoute, useRouter } from "vue-router";
-import { useDraftStore } from "../../stores/draft";
-import { TemplateDraftCreateDto } from "@open-dpp/api-client";
+import CreateDraftForm from '../../components/template-drafts/CreateDraftForm.vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useDraftStore } from '../../stores/draft';
+import { TemplateDraftCreateDto } from '@open-dpp/api-client';
 
 const router = useRouter();
 const route = useRoute();
@@ -31,7 +31,7 @@ const onSubmit = async (draftData: TemplateDraftCreateDto) => {
   await draftStore.createDraft(draftData);
 
   await router.push(
-    `/organizations/${route.params.organizationId}/data-model-drafts/${draftStore.draft?.id}`,
+    `/organizations/${route.params.organizationId as string}/data-model-drafts/${draftStore.draft?.id}`,
   );
 };
 </script>

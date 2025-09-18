@@ -1,30 +1,30 @@
-import Keycloak, { KeycloakInitOptions } from "keycloak-js";
-import { setAxiosAuthHeader } from "./axios";
-import { API_URL, KEYCLOAK_URL } from "../const";
-import apiClient from "./api-client";
-import { useProfileStore } from "../stores/profile";
+import Keycloak, { KeycloakInitOptions } from 'keycloak-js';
+import { setAxiosAuthHeader } from './axios';
+import { API_URL, KEYCLOAK_URL } from '../const';
+import apiClient from './api-client';
+import { useProfileStore } from '../stores/profile';
 
 export const keycloakIns = new Keycloak({
   url: KEYCLOAK_URL,
-  realm: "open-dpp",
-  clientId: "frontend",
+  realm: 'open-dpp',
+  clientId: 'frontend',
 });
 
 const initOptions: KeycloakInitOptions = {
-  scope: "openid profile",
-  pkceMethod: "S256",
+  scope: 'openid profile',
+  pkceMethod: 'S256',
   checkLoginIframe: false,
 };
 
 // use the access token from cypress if it exists
-if (window.localStorage.getItem("access_token")) {
-  initOptions.token = window.localStorage.getItem("access_token") || undefined;
+if (window.localStorage.getItem('access_token')) {
+  initOptions.token = window.localStorage.getItem('access_token') || undefined;
 }
 
 // use the refresh token from cypress if it exists
-if (window.localStorage.getItem("refresh_token")) {
+if (window.localStorage.getItem('refresh_token')) {
   initOptions.refreshToken =
-    window.localStorage.getItem("refresh_token") || undefined;
+    window.localStorage.getItem('refresh_token') || undefined;
 }
 
 export const initializeKeycloak = async (keycloak: Keycloak) => {
@@ -34,10 +34,10 @@ export const initializeKeycloak = async (keycloak: Keycloak) => {
     apiClient.setApiKey(keycloak.token);
     const profileStore = useProfileStore();
     profileStore.setProfile({
-      name: keycloak.tokenParsed.name || "",
-      email: keycloak.tokenParsed.email || "",
-      firstName: keycloak.tokenParsed.given_name || "",
-      lastName: keycloak.tokenParsed.family_name || "",
+      name: keycloak.tokenParsed.name || '',
+      email: keycloak.tokenParsed.email || '',
+      firstName: keycloak.tokenParsed.given_name || '',
+      lastName: keycloak.tokenParsed.family_name || '',
     });
   }
 
@@ -63,7 +63,7 @@ export const logout = async () => {
 };
 
 export const generateRegistrationLink = (token: string) => {
-  return API_URL + "/register/" + token;
+  return API_URL + '/register/' + token;
 };
 
 export default keycloakIns;

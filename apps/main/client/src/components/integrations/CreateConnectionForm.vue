@@ -31,15 +31,15 @@
 </template>
 
 <script lang="ts" setup>
-import { useModelsStore } from "../../stores/models";
-import { computed } from "vue";
-import { useAasConnectionStore } from "../../stores/aas.connection";
-import { useNotificationStore } from "../../stores/notification";
-import { AssetAdministrationShellType } from "@open-dpp/api-client";
-import { useRouter } from "vue-router";
-import { useIndexStore } from "../../stores";
-import { z } from "zod/v4";
-import { AAS_NAME_MAPPING } from "../../lib/aas-name-mapping";
+import { useModelsStore } from '../../stores/models';
+import { computed } from 'vue';
+import { useAasConnectionStore } from '../../stores/aas.connection';
+import { useNotificationStore } from '../../stores/notification';
+import { AssetAdministrationShellType } from '@open-dpp/api-client';
+import { useRouter } from 'vue-router';
+import { useIndexStore } from '../../stores';
+import { z } from 'zod/v4';
+import { AAS_NAME_MAPPING } from '../../lib/aas-name-mapping';
 
 const modelsStore = useModelsStore();
 const aasConnectionStore = useAasConnectionStore();
@@ -87,7 +87,7 @@ const create = async (formFields: unknown) => {
     );
   } else {
     notificationsStore.addErrorNotification(
-      "Erstellen der Verbindung fehlgeschlagen",
+      'Erstellen der Verbindung fehlgeschlagen',
     );
   }
 };

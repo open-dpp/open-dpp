@@ -10,7 +10,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed } from 'vue';
 
 const props = withDefaults(
   defineProps<{
@@ -22,10 +22,10 @@ const props = withDefaults(
   }>(),
   {
     loading: true,
-    color: "#5dc596",
-    size: "120px",
-    margin: "2px",
-    radius: "100%",
+    color: '#5dc596',
+    size: '120px',
+    margin: '2px',
+    radius: '100%',
   },
 );
 
@@ -33,7 +33,7 @@ const spinnerStyle = computed(() => {
   return {
     height: props.size,
     width: props.size,
-    border: parseFloat(props.size) / 10 + "px solid" + props.color,
+    border: parseFloat(props.size) / 10 + 'px solid' + props.color,
     opacity: 0.4,
     borderRadius: props.radius,
   };

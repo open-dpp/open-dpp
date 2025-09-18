@@ -39,9 +39,9 @@
 </template>
 
 <script lang="ts" setup>
-import logo from "../../assets/logo.svg";
+import logo from '../../assets/logo.svg';
 
-const email = "info@open-dpp.de";
+const email = 'info@open-dpp.de';
 
 const props = defineProps<{ showPreview?: boolean }>();
 </script>

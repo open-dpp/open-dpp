@@ -22,15 +22,15 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, useAttrs } from "vue";
-import { ArrowRightStartOnRectangleIcon } from "@heroicons/vue/16/solid";
-import { useRouter } from "vue-router";
-import { useUniqueProductIdentifierStore } from "../../../stores/unique.product.identifier";
-import { useErrorHandlingStore } from "../../../stores/error.handling";
+import { computed, ref, useAttrs } from 'vue';
+import { ArrowRightStartOnRectangleIcon } from '@heroicons/vue/16/solid';
+import { useRouter } from 'vue-router';
+import { useUniqueProductIdentifierStore } from '../../../stores/unique.product.identifier';
+import { useErrorHandlingStore } from '../../../stores/error.handling';
 
 const router = useRouter();
 
-const inputValue = ref<string>("");
+const inputValue = ref<string>('');
 
 const uniqueProductIdentifierStore = useUniqueProductIdentifierStore();
 
@@ -47,7 +47,7 @@ const onLinkClick = async () => {
       await router.push(link);
     } catch (e) {
       errorHandlingStore.logErrorWithNotification(
-        "Navigation zu Produktpass fehlgeschlagen",
+        'Navigation zu Produktpass fehlgeschlagen',
         e,
       );
     }

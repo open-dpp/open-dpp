@@ -1,9 +1,9 @@
-import { defineStore } from "pinia";
-import apiClient from "../lib/api-client";
-import { GranularityLevel } from "@open-dpp/api-client";
+import { defineStore } from 'pinia';
+import apiClient from '../lib/api-client';
+import { GranularityLevel } from '@open-dpp/api-client';
 
 export const useUniqueProductIdentifierStore = defineStore(
-  "uniqueProductIdentifier",
+  'uniqueProductIdentifier',
   () => {
     const buildLinkToReferencedProduct = async (id: string) => {
       const response =
@@ -16,7 +16,7 @@ export const useUniqueProductIdentifierStore = defineStore(
         return `/organizations/${reference.organizationId}/models/${reference.id}`;
       }
       throw new Error(
-        `Unsupported granularity level: ${reference.granularityLevel}`,
+        `Unsupported granularity level: ${String(reference.granularityLevel as unknown)}`,
       );
     };
 

@@ -20,10 +20,10 @@
 </template>
 
 <script lang="ts" setup>
-import { useDraftStore } from "../../stores/draft";
-import { SectionDto } from "@open-dpp/api-client";
-import DataFieldDraft from "./DataFieldDraft.vue";
-import { computed } from "vue";
+import { useDraftStore } from '../../stores/draft';
+import { SectionDto } from '@open-dpp/api-client';
+import DataFieldDraft from './DataFieldDraft.vue';
+import { computed } from 'vue';
 
 const props = defineProps<{
   section: SectionDto;

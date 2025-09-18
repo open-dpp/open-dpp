@@ -59,8 +59,8 @@
 </template>
 
 <script lang="ts" setup>
-import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/vue";
-import type { FunctionalComponent } from "vue";
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
+import type { FunctionalComponent } from 'vue';
 
 defineProps<{
   icon: FunctionalComponent;
@@ -69,10 +69,10 @@ defineProps<{
     icon?: FunctionalComponent;
     text: string;
   }>;
-  position?: "above" | "below";
+  position?: 'above' | 'below';
 }>();
 
 const emits = defineEmits<{
-  (e: "item-clicked", index: number): void;
+  (e: 'item-clicked', index: number): void;
 }>();
 </script>

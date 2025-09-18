@@ -43,13 +43,13 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
-import { GranularityLevel } from "@open-dpp/api-client";
+import { ref } from 'vue';
+import { GranularityLevel } from '@open-dpp/api-client';
 import {
   SidebarContentType,
   useDraftSidebarStore,
-} from "../../stores/draftSidebar";
-import { SelectOption } from "../../lib/item-selection";
+} from '../../stores/draftSidebar';
+import { SelectOption } from '../../lib/item-selection';
 
 const selectedType = ref<string | undefined>(undefined);
 

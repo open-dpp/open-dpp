@@ -7,6 +7,7 @@ import { User } from '../domain/user';
 import { BadRequestException } from '@nestjs/common';
 import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { KeycloakUserInToken } from '../../auth/keycloak-auth/KeycloakUserInToken';
+import { expect } from '@jest/globals';
 
 describe('UsersService', () => {
   let service: UsersService;

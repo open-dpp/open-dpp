@@ -52,28 +52,28 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref } from 'vue';
 import {
   ChatBubbleOvalLeftEllipsisIcon,
   UserCircleIcon,
-} from "@heroicons/vue/16/solid";
-import { MsgStatus, Sender, useAiAgentStore } from "../../stores/ai-agent";
-import BaseButton from "../../components/presentation-components/BaseButton.vue";
+} from '@heroicons/vue/16/solid';
+import { MsgStatus, Sender, useAiAgentStore } from '../../stores/ai-agent';
+import BaseButton from '../../components/presentation-components/BaseButton.vue';
 
 const aiAgentStore = useAiAgentStore();
 
-const input = ref("");
+const input = ref('');
 
 onMounted(() => {
   aiAgentStore.connect();
 });
 
 const getMessageColor = (msgStatus: MsgStatus) => {
-  return msgStatus === MsgStatus.Success ? "ring-gray-200" : "ring-red-200";
+  return msgStatus === MsgStatus.Success ? 'ring-gray-200' : 'ring-red-200';
 };
 
 function sendMessage() {
   aiAgentStore.sendMessage(input.value);
-  input.value = "";
+  input.value = '';
 }
 </script>

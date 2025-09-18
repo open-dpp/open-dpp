@@ -1,8 +1,8 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
-import { ProductPassportDto } from "@open-dpp/api-client";
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import { ProductPassportDto } from '@open-dpp/api-client';
 
-export const useProductPassportStore = defineStore("productPassport", () => {
+export const useProductPassportStore = defineStore('productPassport', () => {
   const productPassport = ref<ProductPassportDto>();
 
   const findSubSections = (sectionId: string) => {

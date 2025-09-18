@@ -1,21 +1,21 @@
-import { createApp } from "vue";
-import "./index.css";
-import App from "./App.vue";
-import { router } from "./router";
-import { createPinia } from "pinia";
-import keycloakIns, { initializeKeycloak } from "./lib/keycloak";
-import { keycloakDisabled } from "./const";
-import { useIndexStore } from "./stores";
-import { defaultConfig, plugin } from "@formkit/vue";
-import { genesisIcons } from "@formkit/icons";
-import { rootClasses } from "../formkit.theme";
-import { de } from "@formkit/i18n";
+import { createApp } from 'vue';
+import './index.css';
+import App from './App.vue';
+import { router } from './router';
+import { createPinia } from 'pinia';
+import keycloakIns, { initializeKeycloak } from './lib/keycloak';
+import { keycloakDisabled } from './const';
+import { useIndexStore } from './stores';
+import { defaultConfig, plugin } from '@formkit/vue';
+import { genesisIcons } from '@formkit/icons';
+import { rootClasses } from '../formkit.theme';
+import { de } from '@formkit/i18n';
 import {
   createAutoAnimatePlugin,
   createMultiStepPlugin,
-} from "@formkit/addons";
-import "@formkit/addons/css/multistep";
-import { useOrganizationsStore } from "./stores/organizations";
+} from '@formkit/addons';
+import '@formkit/addons/css/multistep';
+import { useOrganizationsStore } from './stores/organizations';
 
 const pinia = createPinia();
 
@@ -31,13 +31,13 @@ const startApp = async () => {
         ...genesisIcons,
       },
       locales: { de },
-      locale: "de",
+      locale: 'de',
       plugins: [createMultiStepPlugin(), createAutoAnimatePlugin()],
     }),
   );
   const indexStore = useIndexStore();
   if (!keycloakDisabled) {
-    app.provide("$keycloak", keycloakIns);
+    app.provide('$keycloak', keycloakIns);
     await initializeKeycloak(keycloakIns);
     if (keycloakIns.authenticated) {
       const organizationsStore = useOrganizationsStore();
@@ -54,7 +54,7 @@ const startApp = async () => {
   }
 
   app.use(router);
-  app.mount("#app");
+  app.mount('#app');
 };
 
 startApp();

@@ -2,9 +2,9 @@ import { randomUUID } from 'crypto';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldValidationResult } from './data-field';
 import {
+  findSectionClassByTypeOrFail,
   Section,
   SectionDbProps,
-  findSectionClassByTypeOrFail,
 } from './section';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport-data/domain/data-value';

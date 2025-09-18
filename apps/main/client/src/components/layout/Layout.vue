@@ -302,7 +302,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, type FunctionalComponent, ref } from "vue";
+import { computed, type FunctionalComponent, ref } from 'vue';
 import {
   Dialog,
   DialogPanel,
@@ -312,7 +312,7 @@ import {
   MenuItems,
   TransitionChild,
   TransitionRoot,
-} from "@headlessui/vue";
+} from '@headlessui/vue';
 import {
   Bars3Icon,
   BuildingOfficeIcon,
@@ -320,22 +320,22 @@ import {
   Square3Stack3DIcon,
   UsersIcon,
   XMarkIcon,
-} from "@heroicons/vue/24/outline";
-import logo from "../../assets/logo-with-text.svg";
-import { useRoute, useRouter } from "vue-router";
-import Breadcrumbs from "../Breadcrumbs.vue";
-import { useIndexStore } from "../../stores";
-import SelectOrganization from "../organizations/SelectOrganization.vue";
-import RingLoader from "../RingLoader.vue";
-import { useLayoutStore } from "../../stores/layout";
-import NotificationHandler from "../notifications/NotificationHandler.vue";
+} from '@heroicons/vue/24/outline';
+import logo from '../../assets/logo-with-text.svg';
+import { useRoute, useRouter } from 'vue-router';
+import Breadcrumbs from '../Breadcrumbs.vue';
+import { useIndexStore } from '../../stores';
+import SelectOrganization from '../organizations/SelectOrganization.vue';
+import RingLoader from '../RingLoader.vue';
+import { useLayoutStore } from '../../stores/layout';
+import NotificationHandler from '../notifications/NotificationHandler.vue';
 import {
   ChartBarIcon,
   CloudIcon,
   LinkIcon,
   Squares2X2Icon,
-} from "@heroicons/vue/16/solid";
-import { useProfileStore } from "../../stores/profile";
+} from '@heroicons/vue/16/solid';
+import { useProfileStore } from '../../stores/profile';
 
 const route = useRoute();
 const router = useRouter();
@@ -352,58 +352,58 @@ interface MenuItemInterface {
 }
 
 const initials = computed(() => {
-  if (!profileStore.profile) return "AN";
-  const first = profileStore.profile.firstName?.substring(0, 1) || "A";
-  const last = profileStore.profile.lastName?.substring(0, 1) || "N";
+  if (!profileStore.profile) return 'AN';
+  const first = profileStore.profile.firstName?.substring(0, 1) || 'A';
+  const last = profileStore.profile.lastName?.substring(0, 1) || 'N';
   return (first + last).toUpperCase();
 });
 
 const unfilteredNavigation = computed<Array<MenuItemInterface>>(() => [
   {
-    name: "Produktpässe",
+    name: 'Produktpässe',
     to: `/organizations/${indexStore.selectedOrganization}/models`,
     icon: CubeIcon,
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: "Passvorlagen Entwürfe",
+    name: 'Passvorlagen Entwürfe',
     to: `/organizations/${indexStore.selectedOrganization}/data-model-drafts`,
     icon: Square3Stack3DIcon,
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: "Integrationen",
+    name: 'Integrationen',
     to: `/organizations/${indexStore.selectedOrganization}/integrations`,
     icon: LinkIcon,
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: "Auswertungen",
+    name: 'Auswertungen',
     to: `/organizations/${indexStore.selectedOrganization}/statistics`,
     icon: ChartBarIcon,
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: "Mitglieder",
-    to: "/organizations/" + indexStore.selectedOrganization + "/members",
+    name: 'Mitglieder',
+    to: '/organizations/' + indexStore.selectedOrganization + '/members',
     icon: UsersIcon,
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: "Organisation auswählen",
-    to: "/organizations",
+    name: 'Organisation auswählen',
+    to: '/organizations',
     icon: BuildingOfficeIcon,
     show: () => indexStore.selectedOrganization === null,
   },
   {
-    name: "Marktplatz",
-    to: "/marketplace",
+    name: 'Marktplatz',
+    to: '/marketplace',
     icon: Squares2X2Icon,
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: "Medien",
-    to: "/media",
+    name: 'Medien',
+    to: '/media',
     icon: CloudIcon,
     show: () => indexStore.selectedOrganization !== null,
   },
@@ -412,8 +412,8 @@ const navigation = computed<Array<MenuItemInterface>>(() =>
   unfilteredNavigation.value.filter((item) => item.show()),
 );
 const userNavigation = [
-  { name: "Dein Profil", to: "/profile" },
-  { name: "Abmelden", to: "/logout" },
+  { name: 'Dein Profil', to: '/profile' },
+  { name: 'Abmelden', to: '/logout' },
 ];
 
 const sidebarOpen = ref(false);

@@ -119,18 +119,18 @@
 </template>
 
 <script setup lang="ts">
-import { watch, ref } from "vue";
-import { useRoute } from "vue-router";
-import { useAasConnectionFormStore } from "../../stores/aas.connection.form";
-import AasConnectionForm from "../../components/integrations/AasConnectionForm.vue";
-import { useModelsStore } from "../../stores/models";
-import { ModelDto } from "@open-dpp/api-client";
-import { AAS_NAME_MAPPING } from "../../lib/aas-name-mapping";
+import { ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
+import { useAasConnectionFormStore } from '../../stores/aas.connection.form';
+import AasConnectionForm from '../../components/integrations/AasConnectionForm.vue';
+import { useModelsStore } from '../../stores/models';
+import { ModelDto } from '@open-dpp/api-client';
+import { AAS_NAME_MAPPING } from '../../lib/aas-name-mapping';
 
 const route = useRoute();
 const aasConnectionFormStore = useAasConnectionFormStore();
 const selectedModel = ref<ModelDto | null>();
-const selectedModelId = ref<string>("");
+const selectedModelId = ref<string>('');
 const editModel = ref(false);
 const modelsStore = useModelsStore();
 
@@ -140,7 +140,7 @@ const findModel = (id: string) => {
 
 const onCancel = () => {
   editModel.value = false;
-  selectedModelId.value = selectedModel.value?.id ?? "";
+  selectedModelId.value = selectedModel.value?.id ?? '';
 };
 
 const updateModel = async () => {
@@ -166,7 +166,7 @@ watch(
       selectedModel.value = findModel(
         aasConnectionFormStore.aasConnection.modelId,
       );
-      selectedModelId.value = selectedModel.value?.id ?? "";
+      selectedModelId.value = selectedModel.value?.id ?? '';
     }
   },
   { immediate: true }, // Optional: to run the watcher immediately when the component mounts

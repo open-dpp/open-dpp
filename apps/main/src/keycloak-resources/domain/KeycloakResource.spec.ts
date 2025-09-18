@@ -1,6 +1,6 @@
 import {
-  KeycloakResource,
   KEYCLOAK_RESOURCE_NAME_PREFIX,
+  KeycloakResource,
 } from './KeycloakResource';
 import { KeycloakResourceType } from './KeycloakResourceType';
 
