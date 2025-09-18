@@ -1,7 +1,5 @@
 import { Test } from '@nestjs/testing';
 
-import { AuthContext } from '../../auth/auth-request';
-
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { TemplateService } from '../../templates/infrastructure/template.service';
@@ -9,21 +7,24 @@ import { TemplateModule } from '../../templates/template.module';
 import { INestApplication } from '@nestjs/common';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { APP_GUARD, Reflector } from '@nestjs/core';
-import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UniqueProductIdentifierModule } from '../unique.product.identifier.module';
 import { Model } from '../../models/domain/model';
-import * as request from 'supertest';
-import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
+import request from 'supertest';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { Template, TemplateDbProps } from '../../templates/domain/template';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { Item } from '../../items/domain/item';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { ItemsService } from '../../items/infrastructure/items.service';
-import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 import { phoneFactory } from '../../product-passport/fixtures/product-passport.factory';
-import { ALLOW_SERVICE_ACCESS } from '../../auth/decorators/allow-service-access.decorator';
+import { expect } from '@jest/globals';
+import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
+import { AuthContext } from '@app/auth/auth-request';
+import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
+import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
+import { ALLOW_SERVICE_ACCESS } from '@app/auth/allow-service-access.decorator';
+import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
 
 describe('UniqueProductIdentifierController', () => {
   let app: INestApplication;
@@ -39,7 +40,7 @@ describe('UniqueProductIdentifierController', () => {
     new Map([['SERVICE_TOKEN', serviceToken]]),
   );
   const authContext = new AuthContext();
-  authContext.user = new User(randomUUID(), `${randomUUID()}@example.com`);
+  authContext.keycloakUser = createKeycloakUserInToken();
   const organizationId = randomUUID();
 
   beforeEach(() => {
@@ -71,7 +72,7 @@ describe('UniqueProductIdentifierController', () => {
 
     await app.init();
   });
-  const authProps = { userId: authContext.user.id, organizationId };
+  const authProps = { userId: authContext.keycloakUser.sub, organizationId };
   const phoneTemplate: TemplateDbProps = phoneFactory
     .addSections()
     .build(authProps);
@@ -87,7 +88,7 @@ describe('UniqueProductIdentifierController', () => {
     });
     const item = Item.create({
       organizationId,
-      userId: authContext.user.id,
+      userId: authContext.keycloakUser.sub,
       template,
       model,
     });
@@ -101,7 +102,7 @@ describe('UniqueProductIdentifierController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          authContext.keycloakUser.sub,
           [organizationId],
           keycloakAuthTestingGuard,
         ),
@@ -131,7 +132,7 @@ describe('UniqueProductIdentifierController', () => {
     });
     const item = Item.create({
       organizationId,
-      userId: authContext.user.id,
+      userId: authContext.keycloakUser.sub,
       template,
       model,
     });
@@ -177,7 +178,7 @@ describe('UniqueProductIdentifierController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          authContext.keycloakUser.sub,
           [organizationId],
           keycloakAuthTestingGuard,
         ),

@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { KeycloakResourcesService } from './keycloak-resources.service';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthContext } from '../../auth/auth-request';
 import { randomUUID } from 'crypto';
 import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';
@@ -12,6 +11,9 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { expect } from '@jest/globals';
+import { AuthContext } from '@app/auth/auth-request';
+import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
 
 jest.mock('@keycloak/keycloak-admin-client', () => {
   return {
@@ -43,15 +45,7 @@ describe('KeycloakResourcesService', () => {
   let mockConfigService: Partial<ConfigService>;
 
   const authContext = new AuthContext();
-  authContext.user = new User(randomUUID(), 'test@test.test');
-  authContext.keycloakUser = {
-    sub: authContext.user.id,
-    email: 'test@test.test',
-    name: 'Test User',
-    preferred_username: 'testuser',
-    email_verified: true,
-    memberships: [],
-  };
+  authContext.keycloakUser = createKeycloakUserInToken();
 
   beforeEach(async () => {
     mockConfigService = {
@@ -115,7 +109,7 @@ describe('KeycloakResourcesService', () => {
           uris,
           ownerManagedAccess: true,
           attributes: {
-            owner: [authContext.user.id],
+            owner: [authContext.keycloakUser.sub],
           },
           scopes: [
             {
@@ -209,7 +203,7 @@ describe('KeycloakResourcesService', () => {
 
     it('should throw ForbiddenException if user not in group', async () => {
       mockKcAdminClient.users.findOne.mockResolvedValue({
-        id: authContext.user.id,
+        id: authContext.keycloakUser.sub,
       });
       mockKcAdminClient.users.listGroups.mockResolvedValue([
         { name: 'other-group' },
@@ -222,7 +216,7 @@ describe('KeycloakResourcesService', () => {
 
     it('should throw BadRequestException if invited user already in group', async () => {
       mockKcAdminClient.users.findOne
-        .mockResolvedValueOnce({ id: authContext.user.id })
+        .mockResolvedValueOnce({ id: authContext.keycloakUser.sub })
         .mockResolvedValueOnce({ id: 'user-id' });
 
       mockKcAdminClient.users.listGroups
@@ -236,7 +230,7 @@ describe('KeycloakResourcesService', () => {
 
     it('should throw NotFoundException if group not found', async () => {
       mockKcAdminClient.users.findOne
-        .mockResolvedValueOnce({ id: authContext.user.id })
+        .mockResolvedValueOnce({ id: authContext.keycloakUser.sub })
         .mockResolvedValueOnce({ id: 'user-id' });
 
       mockKcAdminClient.users.listGroups
@@ -252,7 +246,7 @@ describe('KeycloakResourcesService', () => {
 
     it('should throw BadRequestException if multiple groups found', async () => {
       mockKcAdminClient.users.findOne
-        .mockResolvedValueOnce({ id: authContext.user.id })
+        .mockResolvedValueOnce({ id: authContext.keycloakUser.sub })
         .mockResolvedValueOnce({ id: 'user-id' });
 
       mockKcAdminClient.users.listGroups
@@ -271,7 +265,7 @@ describe('KeycloakResourcesService', () => {
 
     it('should throw UnauthorizedException if requested user not found', async () => {
       mockKcAdminClient.users.findOne
-        .mockResolvedValueOnce({ id: authContext.user.id })
+        .mockResolvedValueOnce({ id: authContext.keycloakUser.sub })
         .mockResolvedValueOnce(null);
 
       mockKcAdminClient.users.listGroups.mockResolvedValueOnce([
@@ -291,7 +285,7 @@ describe('KeycloakResourcesService', () => {
 
     it('should add user to group successfully', async () => {
       mockKcAdminClient.users.findOne
-        .mockResolvedValueOnce({ id: authContext.user.id })
+        .mockResolvedValueOnce({ id: authContext.keycloakUser.sub })
         .mockResolvedValueOnce({ id: 'user-id' });
 
       mockKcAdminClient.users.listGroups

@@ -1,7 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { Test, TestingModule } from '@nestjs/testing';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { APP_GUARD, Reflector } from '@nestjs/core';
 import request from 'supertest';
 import { PassportTemplateModule } from '../passport-template.module';
@@ -18,9 +17,10 @@ import {
 } from '../infrastructure/passport-template.schema';
 import { PassportTemplate } from '../domain/passport-template';
 import { passportTemplateToDto } from './dto/passport-template.dto';
-import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
-import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
 import { expect } from '@jest/globals';
+import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
+import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
 
 describe('PassportTemplateController', () => {
   let app: INestApplication;
@@ -85,7 +85,6 @@ describe('PassportTemplateController', () => {
           userId,
           [organizationId],
           keycloakAuthTestingGuard,
-          userEmail,
         ),
       )
       .send(passportTemplate);

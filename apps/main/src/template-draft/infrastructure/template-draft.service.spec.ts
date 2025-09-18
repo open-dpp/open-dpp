@@ -6,11 +6,9 @@ import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { Connection, Model as MongooseModel } from 'mongoose';
 import { TemplateDraftService } from './template-draft.service';
 import { TemplateDraftDoc, TemplateDraftSchema } from './template-draft.schema';
-import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { SectionDraft } from '../domain/section-draft';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import {
   templateDraftCreatePropsFactory,
@@ -18,6 +16,9 @@ import {
 } from '../fixtures/template-draft.factory';
 import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
 import { TemplateDocSchemaVersion } from '../../templates/infrastructure/template.schema';
+import { expect } from '@jest/globals';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
+import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
 
 describe('TemplateDraftService', () => {
   let service: TemplateDraftService;
@@ -264,14 +265,22 @@ describe('TemplateDraftService', () => {
       { upsert: true },
     );
     let foundRaw = await templateDraftDoc.findById(id);
-    expect(foundRaw.sections[0].layout).toBeDefined();
-    expect(foundRaw.sections[0].dataFields[0].layout).toBeDefined();
-    const found = await service.findOneOrFail(id);
-    const saved = await service.save(found);
-    foundRaw = await templateDraftDoc.findById(saved.id);
-    expect(foundRaw._schemaVersion).toEqual(TemplateDocSchemaVersion.v1_0_3);
-    expect(foundRaw.sections[0].layout).toBeUndefined();
-    expect(foundRaw.sections[0].dataFields[0].layout).toBeUndefined();
+    expect(foundRaw).toBeDefined();
+    if (foundRaw) {
+      expect(foundRaw.sections[0].layout).toBeDefined();
+      expect(foundRaw.sections[0].dataFields[0].layout).toBeDefined();
+      const found = await service.findOneOrFail(id);
+      const saved = await service.save(found);
+      foundRaw = await templateDraftDoc.findById(saved.id);
+      expect(foundRaw).toBeDefined();
+      if (foundRaw) {
+        expect(foundRaw._schemaVersion).toEqual(
+          TemplateDocSchemaVersion.v1_0_3,
+        );
+        expect(foundRaw.sections[0].layout).toBeUndefined();
+        expect(foundRaw.sections[0].dataFields[0].layout).toBeUndefined();
+      }
+    }
   });
 
   afterAll(async () => {

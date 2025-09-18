@@ -3,12 +3,8 @@ import { Model } from '../../models/domain/model';
 import { randomUUID } from 'crypto';
 import { Item } from '../domain/item';
 import { ItemsService } from './items.service';
-import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
 import { TraceabilityEventsModule } from '../../traceability-events/traceability-events.module';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
-import { userObj1 } from '../../../test/users-and-orgs';
-import { AuthContext } from '../../auth/auth-request';
 import { Connection, Model as MongooseModel } from 'mongoose';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { ItemDoc, ItemDocSchemaVersion, ItemSchema } from './item.schema';
@@ -16,23 +12,28 @@ import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from '../../unique-product-identifier/infrastructure/unique-product-identifier.schema';
-import { PermissionsModule } from '../../permissions/permissions.module';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
-import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { UsersService } from '../../users/infrastructure/users.service';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { Template } from '../../templates/domain/template';
-import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport-data/domain/data-value';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { Sector } from '@open-dpp/api-client';
 import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
+import { expect } from '@jest/globals';
+import { PermissionModule } from '@app/permission';
+import { AuthContext } from '@app/auth/auth-request';
+import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
+import { user1org1 } from '@app/testing/users-and-orgs';
+import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import { ignoreIds } from '@app/testing/utils';
 
 describe('ItemsService', () => {
   let itemService: ItemsService;
@@ -40,7 +41,7 @@ describe('ItemsService', () => {
   const organizationId = randomUUID();
   let mongoConnection: Connection;
   const authContext = new AuthContext();
-  authContext.user = userObj1;
+  authContext.keycloakUser = user1org1;
   let itemDoc: MongooseModel<ItemDoc>;
   const template = Template.create(templateCreatePropsFactory.build());
   let module: TestingModule;
@@ -59,7 +60,7 @@ describe('ItemsService', () => {
             schema: UniqueProductIdentifierSchema,
           },
         ]),
-        PermissionsModule,
+        PermissionModule,
         TraceabilityEventsModule,
         TypeOrmTestingModule,
         TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),

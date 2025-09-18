@@ -3,6 +3,7 @@ import { KeycloakResourcesModule } from './keycloak-resources.module';
 import { KeycloakResourcesService } from './infrastructure/keycloak-resources.service';
 import { KeycloakResourcesController } from './presentation/keycloak-resources.controller';
 import { ConfigModule } from '@nestjs/config';
+import { expect } from '@jest/globals';
 
 // Mock the Keycloak admin client
 jest.mock('@keycloak/keycloak-admin-client', () => {

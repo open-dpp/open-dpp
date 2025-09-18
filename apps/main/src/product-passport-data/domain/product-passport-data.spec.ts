@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
-
 import { DataValue } from './data-value';
+import { expect } from '@jest/globals';
 
 describe('DataValue', () => {
   it('should be created', () => {

@@ -5,9 +5,9 @@ import { UsersService } from './users.service';
 import { UserEntity } from './user.entity';
 import { User } from '../domain/user';
 import { BadRequestException } from '@nestjs/common';
-import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { KeycloakUserInToken } from '../../auth/keycloak-auth/KeycloakUserInToken';
 import { expect } from '@jest/globals';
+import { KeycloakUserInToken } from '@app/auth/keycloak-auth/KeycloakUserInToken';
+import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -77,12 +77,15 @@ describe('UsersService', () => {
 
       const result = await service.findOne(userId);
 
-      expect(userRepository.findOne).toHaveBeenCalledWith({
-        where: { id: expect.anything() },
-      });
-      expect(result).toBeInstanceOf(User);
-      expect(result.id).toBe(userId);
-      expect(result.email).toBe(userEmail);
+      expect(result).toBeDefined();
+      if (result) {
+        expect(userRepository.findOne).toHaveBeenCalledWith({
+          where: { id: expect.anything() },
+        });
+        expect(result).toBeInstanceOf(User);
+        expect(result.id).toBe(userId);
+        expect(result.email).toBe(userEmail);
+      }
     });
 
     it('should return undefined if no user is found', async () => {

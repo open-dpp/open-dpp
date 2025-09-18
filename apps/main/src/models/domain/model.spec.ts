@@ -1,9 +1,10 @@
 import { Model } from './model';
 import { randomUUID } from 'crypto';
 import { Template } from '../../templates/domain/template';
-import { ignoreIds } from '../../../test/utils';
 import { DataValue } from '../../product-passport-data/domain/data-value';
 import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
+import { expect } from '@jest/globals';
+import { ignoreIds } from '@app/testing/utils';
 
 describe('Model', () => {
   const userId = randomUUID();

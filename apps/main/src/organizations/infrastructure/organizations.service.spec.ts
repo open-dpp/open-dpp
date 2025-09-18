@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OrganizationsService } from './organizations.service';
-import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { OrganizationEntity } from './organization.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -9,16 +8,17 @@ import { DataSource } from 'typeorm';
 import { Organization } from '../domain/organization';
 import { randomUUID } from 'crypto';
 import { User } from '../../users/domain/user';
-import { AuthContext } from '../../auth/auth-request';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { UsersService } from '../../users/infrastructure/users.service';
-import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { PermissionsModule } from '../../permissions/permissions.module';
 import {
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { expect } from '@jest/globals';
+import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
+import { AuthContext } from '@app/auth/auth-request';
+import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
+import { PermissionModule } from '@app/permission';
 
 describe('OrganizationsService', () => {
   let organizationsService: OrganizationsService;
@@ -34,7 +34,7 @@ describe('OrganizationsService', () => {
       imports: [
         TypeOrmTestingModule,
         TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
-        PermissionsModule,
+        PermissionModule,
       ],
       providers: [OrganizationsService, UsersService, KeycloakResourcesService],
     })

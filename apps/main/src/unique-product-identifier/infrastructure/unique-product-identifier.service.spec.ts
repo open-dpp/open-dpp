@@ -2,8 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { v4 as uuid4 } from 'uuid';
 import { UniqueProductIdentifier } from '../domain/unique.product.identifier';
 import { randomUUID } from 'crypto';
-import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { TraceabilityEventsModule } from '../../traceability-events/traceability-events.module';
 import { Connection } from 'mongoose';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
@@ -12,7 +10,10 @@ import {
   UniqueProductIdentifierSchema,
 } from './unique-product-identifier.schema';
 import { UniqueProductIdentifierService } from './unique-product-identifier.service';
-import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
+import { expect } from '@jest/globals';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
+import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
+import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
 
 describe('UniqueProductIdentifierService', () => {
   let service: UniqueProductIdentifierService;

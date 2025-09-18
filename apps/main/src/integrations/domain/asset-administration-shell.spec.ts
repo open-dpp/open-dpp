@@ -2,6 +2,7 @@ import {
   AssetAdministrationShellType,
   createAasForType,
 } from './asset-administration-shell';
+import { expect } from '@jest/globals';
 
 describe('AssetAdministrationShell', () => {
   it('should be create from truck', () => {

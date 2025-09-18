@@ -8,6 +8,7 @@ import {
 import { Model } from '../../models/domain/model';
 import { Item } from '../../items/domain/item';
 import { DataSection, ProductPassport } from './product-passport';
+import { expect } from '@jest/globals';
 
 describe('ProductPassport', () => {
   const template = Template.loadFromDb(phoneFactory.addSections().build());
