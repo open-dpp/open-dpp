@@ -18,7 +18,7 @@ import {
   UniqueProductIdentifierSchema,
 } from './infrastructure/unique-product-identifier.schema';
 import { UniqueProductIdentifierService } from './infrastructure/unique-product-identifier.service';
-import {PermissionModule} from "@app/permission";
+import { PermissionModule } from '@app/permission';
 
 @Module({
   imports: [

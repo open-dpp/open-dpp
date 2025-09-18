@@ -11,6 +11,7 @@ import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC } from '../public/public.decorator';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
 import { HttpModule } from '@nestjs/axios';
+import { expect } from '@jest/globals';
 
 describe('KeycloakAuthGuard', () => {
   let guard: KeycloakAuthGuard;

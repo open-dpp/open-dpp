@@ -6,7 +6,7 @@ import { ProductPassportData } from '../../product-passport-data/domain/product-
 import { Model } from '../../models/domain/model';
 import { Template } from '../../templates/domain/template';
 import { DataValue } from '../../product-passport-data/domain/data-value';
-import {ValueError} from "@app/exception/domain.errors";
+import { ValueError } from '@app/exception/domain.errors';
 
 export type ItemCreateProps = {
   organizationId: string;

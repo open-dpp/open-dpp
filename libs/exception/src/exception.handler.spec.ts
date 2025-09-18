@@ -6,6 +6,7 @@ import {
 import { NotFoundInDatabaseException } from './service.exceptions';
 import { ArgumentsHost, HttpStatus } from '@nestjs/common';
 import { ValueError } from './domain.errors';
+import { expect } from '@jest/globals';
 
 describe('ExceptionFilter', () => {
   let notFoundInDatabaseExceptionFilter: NotFoundInDatabaseExceptionFilter;
@@ -63,10 +64,7 @@ describe('ExceptionFilter', () => {
     const exception = new NotFoundInDatabaseException('TestEntity');
 
     // Call the filter
-    notFoundInDatabaseExceptionFilter.catch(
-      exception as any,
-      mockArgumentsHost,
-    );
+    notFoundInDatabaseExceptionFilter.catch(exception, mockArgumentsHost);
 
     // Verify the ArgumentsHost was used correctly
     expect(mockArgumentsHost.switchToHttp).toHaveBeenCalled();

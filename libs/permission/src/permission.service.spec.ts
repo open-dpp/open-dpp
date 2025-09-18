@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PermissionService } from './permission.service';
-import { AuthContext } from '../auth/auth-request';
 import { ForbiddenException, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { AuthContext } from '@app/auth/auth-request';
+import { expect } from '@jest/globals';
 
 describe('PermissionService', () => {
   let service: PermissionService;
@@ -48,16 +49,13 @@ describe('PermissionService', () => {
   });
 
   describe('canAccessOrganization', () => {
-    it('should return false if user has no permissions', async () => {
-      authContext.permissions = undefined;
-      const result = await service.canAccessOrganization(
-        organizationId,
-        authContext,
-      );
+    it('should return false if user has no permissions', () => {
+      authContext.permissions = [];
+      const result = service.canAccessOrganization(organizationId, authContext);
       expect(result).toBe(false);
     });
 
-    it('should return false if user has no matching permission', async () => {
+    it('should return false if user has no matching permission', () => {
       authContext.permissions = [
         {
           type: 'organization',
@@ -65,14 +63,11 @@ describe('PermissionService', () => {
           scopes: ['organization:access'],
         },
       ];
-      const result = await service.canAccessOrganization(
-        organizationId,
-        authContext,
-      );
+      const result = service.canAccessOrganization(organizationId, authContext);
       expect(result).toBe(false);
     });
 
-    it('should return false if user has matching organization but wrong scope', async () => {
+    it('should return false if user has matching organization but wrong scope', () => {
       authContext.permissions = [
         {
           type: 'organization',
@@ -80,14 +75,11 @@ describe('PermissionService', () => {
           scopes: ['organization:edit'],
         },
       ];
-      const result = await service.canAccessOrganization(
-        organizationId,
-        authContext,
-      );
+      const result = service.canAccessOrganization(organizationId, authContext);
       expect(result).toBe(false);
     });
 
-    it('should return true if user has matching organization and access scope', async () => {
+    it('should return true if user has matching organization and access scope', () => {
       authContext.permissions = [
         {
           type: 'organization',
@@ -95,14 +87,11 @@ describe('PermissionService', () => {
           scopes: ['organization:access'],
         },
       ];
-      const result = await service.canAccessOrganization(
-        organizationId,
-        authContext,
-      );
+      const result = service.canAccessOrganization(organizationId, authContext);
       expect(result).toBe(true);
     });
 
-    it('should return true if user has matching organization and multiple scopes including access', async () => {
+    it('should return true if user has matching organization and multiple scopes including access', () => {
       authContext.permissions = [
         {
           type: 'organization',
@@ -114,10 +103,7 @@ describe('PermissionService', () => {
           ],
         },
       ];
-      const result = await service.canAccessOrganization(
-        organizationId,
-        authContext,
-      );
+      const result = service.canAccessOrganization(organizationId, authContext);
       expect(result).toBe(true);
     });
   });
@@ -130,7 +116,7 @@ describe('PermissionService', () => {
       ).rejects.toThrow(ForbiddenException);
     });
 
-    it('should return true if user can access organization', async () => {
+    it('should return true if user can access organization', () => {
       authContext.permissions = [
         {
           type: 'organization',
@@ -138,7 +124,7 @@ describe('PermissionService', () => {
           scopes: ['organization:access'],
         },
       ];
-      const result = await service.canAccessOrganizationOrFail(
+      const result = service.canAccessOrganizationOrFail(
         organizationId,
         authContext,
       );
@@ -147,15 +133,15 @@ describe('PermissionService', () => {
   });
 
   describe('hasPermission', () => {
-    it('should return false if user has no permissions', async () => {
-      authContext.permissions = undefined;
-      const result = await service.hasPermission(authContext, [
+    it('should return false if user has no permissions', () => {
+      authContext.permissions = [];
+      const result = service.hasPermission(authContext, [
         { type: 'organization', resource: 'resource1' },
       ]);
       expect(result).toBe(false);
     });
 
-    it('should return false if user does not have required resource permission', async () => {
+    it('should return false if user does not have required resource permission', () => {
       authContext.permissions = [
         {
           type: 'organization',
@@ -163,13 +149,13 @@ describe('PermissionService', () => {
           scopes: ['read'],
         },
       ];
-      const result = await service.hasPermission(authContext, [
+      const result = service.hasPermission(authContext, [
         { type: 'organization', resource: 'resource2' },
       ]);
       expect(result).toBe(false);
     });
 
-    it('should return false if user has resource but is missing required scope', async () => {
+    it('should return false if user has resource but is missing required scope', () => {
       authContext.permissions = [
         {
           type: 'organization',
@@ -177,13 +163,13 @@ describe('PermissionService', () => {
           scopes: ['read'],
         },
       ];
-      const result = await service.hasPermission(authContext, [
+      const result = service.hasPermission(authContext, [
         { type: 'organization', resource: 'resource1', scopes: ['write'] },
       ]);
       expect(result).toBe(false);
     });
 
-    it('should return true if user has all required permissions without scopes', async () => {
+    it('should return true if user has all required permissions without scopes', () => {
       authContext.permissions = [
         {
           type: 'organization',
@@ -191,13 +177,13 @@ describe('PermissionService', () => {
           scopes: ['read'],
         },
       ];
-      const result = await service.hasPermission(authContext, [
+      const result = service.hasPermission(authContext, [
         { type: 'organization', resource: 'resource1' },
       ]);
       expect(result).toBe(true);
     });
 
-    it('should return true if user has all required permissions with matching scopes', async () => {
+    it('should return true if user has all required permissions with matching scopes', () => {
       authContext.permissions = [
         {
           type: 'organization',
@@ -205,13 +191,13 @@ describe('PermissionService', () => {
           scopes: ['read', 'write'],
         },
       ];
-      const result = await service.hasPermission(authContext, [
+      const result = service.hasPermission(authContext, [
         { type: 'organization', resource: 'resource1', scopes: ['read'] },
       ]);
       expect(result).toBe(true);
     });
 
-    it('should return true if user has all required permissions for multiple resources', async () => {
+    it('should return true if user has all required permissions for multiple resources', () => {
       authContext.permissions = [
         {
           type: 'organization',
@@ -224,14 +210,14 @@ describe('PermissionService', () => {
           scopes: ['read', 'delete'],
         },
       ];
-      const result = await service.hasPermission(authContext, [
+      const result = service.hasPermission(authContext, [
         { type: 'organization', resource: 'resource1', scopes: ['write'] },
         { type: 'organization', resource: 'resource2', scopes: ['read'] },
       ]);
       expect(result).toBe(true);
     });
 
-    it('should return false if user is missing one of multiple required permissions', async () => {
+    it('should return false if user is missing one of multiple required permissions', () => {
       authContext.permissions = [
         {
           type: 'organization',
@@ -244,7 +230,7 @@ describe('PermissionService', () => {
           scopes: ['read'],
         },
       ];
-      const result = await service.hasPermission(authContext, [
+      const result = service.hasPermission(authContext, [
         { type: 'organization', resource: 'resource1', scopes: ['write'] },
         { type: 'organization', resource: 'resource2', scopes: ['delete'] },
       ]);

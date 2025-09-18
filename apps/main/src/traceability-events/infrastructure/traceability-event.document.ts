@@ -12,9 +12,9 @@ export enum TraceabilityEventSchemaVersion {
  */
 @Schema({ collection: 'traceability_events', timestamps: true })
 export class TraceabilityEventDocument extends Document {
-    @Prop({ required: true })
-        // @ts-ignore
-    _id: string;
+  @Prop({ required: true })
+  // @ts-ignore
+  _id: string;
 
   @Prop({
     default: TraceabilityEventSchemaVersion.v1_0_0,
@@ -51,7 +51,8 @@ export class TraceabilityEventDocument extends Document {
 
   @Prop({
     required: false,
-    enum: TraceabilityEventType, type: String
+    enum: TraceabilityEventType,
+    type: String,
   })
   type: TraceabilityEventType;
 

@@ -15,6 +15,7 @@ import { sectionDbPropsFactory } from '../../templates/fixtures/section.factory'
 import { dataFieldDbPropsFactory } from '../../templates/fixtures/data-field.factory';
 import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
+import { expect } from '@jest/globals';
 
 describe('AasMapping', () => {
   const organizationId = randomUUID();

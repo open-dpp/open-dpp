@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MediaService } from './infrastructure/media.service';
-import { ConfigModule } from '@nestjs/config';
 import { MediaController } from './presentation/media.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MediaDbSchema, MediaDoc } from './infrastructure/media.schema';
-import {HttpModule} from "@nestjs/axios";
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -14,10 +13,10 @@ import {HttpModule} from "@nestjs/axios";
         schema: MediaDbSchema,
       },
     ]),
-    HttpModule
+    HttpModule,
   ],
   providers: [MediaService],
   controllers: [MediaController],
-    exports: [MediaService]
+  exports: [MediaService],
 })
 export class MediaModule {}

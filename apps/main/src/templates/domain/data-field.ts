@@ -5,7 +5,7 @@ import {
 } from '../../data-modelling/domain/data-field-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { randomUUID } from 'crypto';
-import {NotSupportedError} from "@app/exception/domain.errors";
+import { NotSupportedError } from '@app/exception/domain.errors';
 
 export class DataFieldValidationResult {
   private constructor(

@@ -1,22 +1,13 @@
 import { INestApplication } from '@nestjs/common';
-import { AuthContext } from '../../auth/auth-request';
-import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { Test } from '@nestjs/testing';
-import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { APP_GUARD, Reflector } from '@nestjs/core';
-import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
-import * as request from 'supertest';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { UsersService } from '../../users/infrastructure/users.service';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
-import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
-import { PermissionsModule } from '../../permissions/permissions.module';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { Template, TemplateDbProps } from '../../templates/domain/template';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { TemplateService } from '../../templates/infrastructure/template.service';
@@ -35,6 +26,15 @@ import { Organization } from '../../organizations/domain/organization';
 import { laptopFactory } from '../../templates/fixtures/laptop.factory';
 import { sectionDbPropsFactory } from '../../templates/fixtures/section.factory';
 import { dataFieldDbPropsFactory } from '../../templates/fixtures/data-field.factory';
+import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
+import { AuthContext } from '@app/auth/auth-request';
+import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
+import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { PermissionModule } from '@app/permission';
+import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
+import { expect } from '@jest/globals';
+import request from 'supertest';
+import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
 
 describe('AasConnectionController', () => {
   let app: INestApplication;
@@ -51,7 +51,14 @@ describe('AasConnectionController', () => {
   let configService: ConfigService;
 
   const authContext = new AuthContext();
-  authContext.user = new User(randomUUID(), 'test@test.test');
+  authContext.keycloakUser = {
+    sub: randomUUID(),
+    email: 'test@test.test',
+    name: 'Test',
+    preferred_username: 'test@test.test',
+    email_verified: true,
+    memberships: [],
+  };
   const organizationId = randomUUID();
 
   beforeEach(() => {
@@ -65,7 +72,7 @@ describe('AasConnectionController', () => {
         TypeOrmModule.forFeature([UserEntity, OrganizationEntity]),
         MongooseTestingModule,
         IntegrationModule,
-        PermissionsModule,
+        PermissionModule,
       ],
       providers: [
         OrganizationsService,
@@ -77,7 +84,12 @@ describe('AasConnectionController', () => {
         {
           provide: KeycloakResourcesService,
           useValue: KeycloakResourcesServiceTesting.fromPlain({
-            users: [{ id: authContext.user.id, email: authContext.user.email }],
+            users: [
+              {
+                id: authContext.keycloakUser.sub,
+                email: authContext.keycloakUser.email,
+              },
+            ],
           }),
         },
       ],
@@ -85,7 +97,12 @@ describe('AasConnectionController', () => {
       .overrideProvider(KeycloakResourcesService)
       .useValue(
         KeycloakResourcesServiceTesting.fromPlain({
-          users: [{ id: authContext.user.id, email: authContext.user.email }],
+          users: [
+            {
+              id: authContext.keycloakUser.sub,
+              email: authContext.keycloakUser.email,
+            },
+          ],
         }),
       )
       .compile();
@@ -107,8 +124,8 @@ describe('AasConnectionController', () => {
         id: organizationId,
         name: 'orga name',
         members: [authContext.user],
-        createdByUserId: authContext.user.id,
-        ownedByUserId: authContext.user.id,
+        createdByUserId: authContext.keycloakUser.sub,
+        ownedByUserId: authContext.keycloakUser.sub,
       }),
     );
     uniqueProductIdentifierService = moduleRef.get(
@@ -124,7 +141,7 @@ describe('AasConnectionController', () => {
 
   const laptopModel: TemplateDbProps = laptopFactory.build({
     organizationId,
-    userId: authContext.user.id,
+    userId: authContext.keycloakUser.sub,
     sections: [
       sectionDbPropsFactory.build({
         id: sectionId1,
@@ -146,14 +163,14 @@ describe('AasConnectionController', () => {
     await templateService.save(template);
     const model = Model.create({
       organizationId,
-      userId: authContext.user.id,
+      userId: authContext.keycloakUser.sub,
       name: 'Laptop',
       template,
     });
     const aasMapping = AasConnection.create({
       name: 'Connection Name',
       organizationId,
-      userId: authContext.user.id,
+      userId: authContext.keycloakUser.sub,
       dataModelId: template.id,
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
       modelId: model.id,
@@ -210,7 +227,7 @@ describe('AasConnectionController', () => {
     await templateService.save(template);
     const model = Model.create({
       organizationId,
-      userId: authContext.user.id,
+      userId: authContext.keycloakUser.sub,
       name: 'Laptop',
       template,
     });
@@ -236,7 +253,7 @@ describe('AasConnectionController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          authContext.keycloakUser.sub,
           [organizationId],
           keycloakAuthTestingGuard,
         ),
@@ -256,7 +273,7 @@ describe('AasConnectionController', () => {
     const aasConnection = AasConnection.create({
       name: 'Connection Name',
       organizationId,
-      userId: authContext.user.id,
+      userId: authContext.keycloakUser.sub,
       dataModelId: randomUUID(),
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
       modelId: randomUUID(),
@@ -267,7 +284,7 @@ describe('AasConnectionController', () => {
     await templateService.save(template);
     const model = Model.create({
       organizationId,
-      userId: authContext.user.id,
+      userId: authContext.keycloakUser.sub,
       name: 'Laptop',
       template,
     });
@@ -293,7 +310,7 @@ describe('AasConnectionController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          authContext.keycloakUser.sub,
           [organizationId],
           keycloakAuthTestingGuard,
         ),
@@ -316,7 +333,7 @@ describe('AasConnectionController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          authContext.keycloakUser.sub,
           [organizationId],
           keycloakAuthTestingGuard,
         ),
@@ -348,7 +365,7 @@ describe('AasConnectionController', () => {
     const aasConnection1 = AasConnection.create({
       name: 'Connection Name 1',
       organizationId: otherOrganizationId,
-      userId: authContext.user.id,
+      userId: authContext.keycloakUser.sub,
       dataModelId: randomUUID(),
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
       modelId: randomUUID(),
@@ -356,7 +373,7 @@ describe('AasConnectionController', () => {
     const aasConnection2 = AasConnection.create({
       name: 'Connection Name 2',
       organizationId: otherOrganizationId,
-      userId: authContext.user.id,
+      userId: authContext.keycloakUser.sub,
       dataModelId: randomUUID(),
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
       modelId: randomUUID(),
@@ -369,7 +386,7 @@ describe('AasConnectionController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          authContext.keycloakUser.sub,
           [otherOrganizationId],
           keycloakAuthTestingGuard,
         ),

@@ -7,7 +7,7 @@ import { maxBy, minBy } from 'lodash';
 import { DataValue } from '../../product-passport-data/domain/data-value';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
-import {ValueError} from "@app/exception/domain.errors";
+import { ValueError } from '@app/exception/domain.errors';
 
 export class DataSection extends Section {
   private constructor(
@@ -57,7 +57,7 @@ export class DataSection extends Section {
     const maxRow = Number.isFinite(maxFound) ? maxFound + 1 : 0;
     const dataValues: Array<any> = [];
     for (let rowIndex = minRow; rowIndex < maxRow; rowIndex++) {
-        dataValues.push(
+      dataValues.push(
         this.processDataFields(
           section,
           dataValuesOfSection.filter((v) => v.row === rowIndex),
@@ -101,9 +101,9 @@ export class ProductPassport {
     item?: Item;
     uniqueProductIdentifier: UniqueProductIdentifier;
   }) {
-      if (!data.model.description) {
-          // throw new ValueError("Model does not have a description. Please add one.");
-      }
+    if (!data.model.description) {
+      // throw new ValueError("Model does not have a description. Please add one.");
+    }
     const dataSections = data.template.sections.map((section) =>
       DataSection.create({ section, model: data.model, item: data.item }),
     );

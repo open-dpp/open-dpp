@@ -3,7 +3,7 @@ import { Document, Schema as MongooseSchema } from 'mongoose';
 import { DataFieldType } from '../domain/data-field-base';
 import { SectionType } from '../domain/section-base';
 import { GranularityLevel } from '../domain/granularity-level';
-import {Sector} from '@open-dpp/api-client';
+import { Sector } from '@open-dpp/api-client';
 
 @Schema()
 export class DataFieldDoc {
@@ -18,7 +18,8 @@ export class DataFieldDoc {
   @Prop({
     required: true,
     enum: GranularityLevel,
-    default: GranularityLevel.MODEL, type: String
+    default: GranularityLevel.MODEL,
+    type: String,
   })
   granularityLevel: GranularityLevel;
   /** @deprecated Since template and template draft version 1.0.2. Use templateId instead */
@@ -52,7 +53,8 @@ export class SectionDoc {
   subSections: string[];
 
   @Prop({
-    enum: GranularityLevel, type: String
+    enum: GranularityLevel,
+    type: String,
   })
   granularityLevel?: GranularityLevel;
 }
@@ -60,9 +62,9 @@ export class SectionDoc {
 const SectionSchema = SchemaFactory.createForClass(SectionDoc);
 
 export abstract class TemplateBaseDoc extends Document {
-    @Prop({ required: true })
-        // @ts-ignore
-    _id: string;
+  @Prop({ required: true })
+  // @ts-ignore
+  _id: string;
 
   @Prop({ required: true })
   name: string;

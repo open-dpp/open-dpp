@@ -14,7 +14,7 @@ import { ModelDoc, ModelSchema } from '../models/infrastructure/model.schema';
 import { ItemDoc, ItemSchema } from './infrastructure/item.schema';
 import { TemplateModule } from '../templates/template.module';
 import { ItemsApplicationService } from './presentation/items-application.service';
-import {PermissionModule} from "@app/permission";
+import { PermissionModule } from '@app/permission';
 
 @Module({
   imports: [

@@ -11,7 +11,7 @@ import { Item } from '../../items/domain/item';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataValue } from '../../product-passport-data/domain/data-value';
-import {DataFieldType} from "../../data-modelling/domain/data-field-base";
+import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 
 export class View {
   private constructor(
@@ -39,10 +39,10 @@ export class View {
     for (const section of rootSectionsFilteredByLevel) {
       if (isRepeaterSection(section)) {
         // @ts-ignore
-          nodes.push(this.processRepeaterSection(section));
+        nodes.push(this.processRepeaterSection(section));
       } else if (isGroupSection(section)) {
         // @ts-ignore
-          nodes.push(this.processSection(section));
+        nodes.push(this.processSection(section));
       }
     }
     return {
@@ -63,7 +63,7 @@ export class View {
     const rows = [];
     for (let rowIndex = minRow; rowIndex <= maxRow; rowIndex++) {
       // @ts-ignore
-        rows.push(this.processSection(section, rowIndex));
+      rows.push(this.processSection(section, rowIndex));
     }
     return {
       name: section.name,
@@ -90,7 +90,7 @@ export class View {
     for (const subSectionId of section.subSections) {
       const subSection = this.template.findSectionByIdOrFail(subSectionId);
       // @ts-ignore
-        children.push(this.processSection(subSection, rowIndex));
+      children.push(this.processSection(subSection, rowIndex));
     }
 
     return {
@@ -101,9 +101,9 @@ export class View {
 
   processDataFields(section: Section, dataValuesOfSection: DataValue[]) {
     const result: Array<{
-        type: DataFieldType,
-        name: string,
-        value: unknown,
+      type: DataFieldType;
+      name: string;
+      value: unknown;
     }> = [];
     for (const dataField of section.dataFields) {
       const dataValue = dataValuesOfSection.find(

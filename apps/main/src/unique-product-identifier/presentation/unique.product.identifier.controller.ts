@@ -6,26 +6,24 @@ import {
   UniqueProductIdentifierMetadataDtoSchema,
   UniqueProductIdentifierReferenceDtoSchema,
 } from './dto/unique-product-identifier-dto.schema';
-import {PermissionService} from "@app/permission";
-import * as authRequest from "@app/auth/auth-request";
-import {AllowServiceAccess} from "@app/auth/allow-service-access.decorator";
-
+import { PermissionService } from '@app/permission';
+import * as authRequest from '@app/auth/auth-request';
+import { AllowServiceAccess } from '@app/auth/allow-service-access.decorator';
 
 @Controller()
 export class UniqueProductIdentifierController {
-    constructor(
-        private readonly modelsService: ModelsService,
-        private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
-        private readonly itemService: ItemsService,
-        private readonly permissionsService: PermissionService,
-    ) {
-    }
+  constructor(
+    private readonly modelsService: ModelsService,
+    private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
+    private readonly itemService: ItemsService,
+    private readonly permissionsService: PermissionService,
+  ) {}
 
-    @Get('organizations/:orgaId/unique-product-identifiers/:id/reference')
-    async getReferencedProductPassport(
-        @Param('orgaId') organizationId: string,
-        @Param('id') id: string,
-        @Request() req: authRequest.AuthRequest,
+  @Get('organizations/:orgaId/unique-product-identifiers/:id/reference')
+  async getReferencedProductPassport(
+    @Param('orgaId') organizationId: string,
+    @Param('id') id: string,
+    @Request() req: authRequest.AuthRequest,
   ) {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,

@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MediaController } from './media.controller';
 import { MediaService } from '../infrastructure/media.service';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MediaDbSchema, MediaDoc } from '../infrastructure/media.schema';
 import { ConfigModule } from '@nestjs/config';
+import { expect } from '@jest/globals';
 
 describe('MediaController', () => {
   let controller: MediaController;

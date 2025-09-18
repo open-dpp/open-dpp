@@ -5,7 +5,7 @@ import { TemplateService } from '../../templates/infrastructure/template.service
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { ProductPassport } from '../domain/product-passport';
 import { productPassportToDto } from './dto/product-passport.dto';
-import {Public} from "@app/auth/public/public.decorator";
+import { Public } from '@app/auth/public/public.decorator';
 
 @Controller()
 export class ProductPassportController {

@@ -7,7 +7,7 @@ import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
 import { randomUUID } from 'crypto';
 import { SectionDbProps } from '../../templates/domain/section';
 import { MoveDirection } from './template-draft';
-import {NotFoundError, ValueError} from "@app/exception/domain.errors";
+import { NotFoundError, ValueError } from '@app/exception/domain.errors';
 
 export type SectionDraftCreateProps = {
   name: string;
@@ -128,7 +128,7 @@ export class SectionDraft extends SectionBase {
     }
     const shiftIndex = direction === MoveDirection.UP ? -1 : 1;
 
-    let toIndex = fromIndex + shiftIndex;
+    const toIndex = fromIndex + shiftIndex;
     if (toIndex < 0 || toIndex >= this.dataFields.length) {
       return;
     }

@@ -7,7 +7,7 @@ import {
   deserializeTemplate,
   serializeTemplate,
 } from '../domain/serialization';
-import {NotFoundInDatabaseException} from "@app/exception/service.exceptions";
+import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
 
 @Injectable()
 export class TemplateService {

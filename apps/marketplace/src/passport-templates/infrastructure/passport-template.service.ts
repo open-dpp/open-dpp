@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { PassportTemplateDoc } from './passport-template.schema';
 import { PassportTemplate } from '../domain/passport-template';
-import {NotFoundInDatabaseException} from "@app/exception/service.exceptions";
+import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
 
 @Injectable()
 export class PassportTemplateService {
