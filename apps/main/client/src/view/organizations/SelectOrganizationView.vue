@@ -3,5 +3,5 @@
 </template>
 
 <script lang="ts" setup>
-import OrganizationsGrid from "../../components/organizations/OrganizationsGrid.vue";
+import OrganizationsGrid from '../../components/organizations/OrganizationsGrid.vue';
 </script>

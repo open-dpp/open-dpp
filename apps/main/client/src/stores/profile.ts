@@ -1,5 +1,5 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
 
 type Profile = {
   name: string;
@@ -8,7 +8,7 @@ type Profile = {
   lastName: string;
 };
 
-export const useProfileStore = defineStore("profile", () => {
+export const useProfileStore = defineStore('profile', () => {
   const profile = ref<Profile>();
   const setProfile = (newProfile: Profile) => {
     profile.value = newProfile;

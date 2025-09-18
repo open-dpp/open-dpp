@@ -107,17 +107,17 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from "vue";
-import { OrganizationDto } from "@open-dpp/api-client";
-import apiClient from "../../lib/api-client";
-import { UserCircleIcon } from "@heroicons/vue/20/solid";
-import BaseButton from "../../components/BaseButton.vue";
+import { onMounted, ref } from 'vue';
+import { OrganizationDto } from '@open-dpp/api-client';
+import apiClient from '../../lib/api-client';
+import { UserCircleIcon } from '@heroicons/vue/20/solid';
+import BaseButton from '../../components/BaseButton.vue';
 
 const props = defineProps<{
   organizationId: string;
 }>();
 
-const userEmailToAdd = ref<string>("");
+const userEmailToAdd = ref<string>('');
 const organization = ref<OrganizationDto>();
 
 const inviteUserToOrg = async () => {
@@ -128,7 +128,7 @@ const inviteUserToOrg = async () => {
     );
     if (response.status === 201) {
       await fetchOrganization();
-      userEmailToAdd.value = "";
+      userEmailToAdd.value = '';
     }
   }
 };

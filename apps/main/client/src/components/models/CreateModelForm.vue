@@ -44,7 +44,7 @@
 </template>
 
 <script lang="ts" setup>
-import { TemplateGetAllDto } from "@open-dpp/api-client";
+import { TemplateGetAllDto } from '@open-dpp/api-client';
 
 const props = defineProps<{ templates: TemplateGetAllDto[] }>();
 const selectableDataModels = props.templates.map((p) => ({
@@ -53,7 +53,7 @@ const selectableDataModels = props.templates.map((p) => ({
 }));
 
 const emits = defineEmits<{
-  (e: "submit", selectedProductDataModelId: string, modelName: string): void;
+  (e: 'submit', selectedProductDataModelId: string, modelName: string): void;
 }>();
 
 const create = async (fields: {
@@ -65,7 +65,7 @@ const create = async (fields: {
   };
 }) => {
   emits(
-    "submit",
+    'submit',
     fields.stepper.generalInfo.productDataModelId,
     fields.stepper.generalInfo.name,
   );

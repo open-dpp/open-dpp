@@ -16,11 +16,11 @@
 </template>
 
 <script lang="ts" setup>
-import { useIndexStore } from "../../stores";
-import ListHeader from "../lists/ListHeader.vue";
-import { computed } from "vue";
-import SimpleTable from "../lists/SimpleTable.vue";
-import { TemplateDraftGetAllDto } from "@open-dpp/api-client";
+import { useIndexStore } from '../../stores';
+import ListHeader from '../lists/ListHeader.vue';
+import { computed } from 'vue';
+import SimpleTable from '../lists/SimpleTable.vue';
+import { TemplateDraftGetAllDto } from '@open-dpp/api-client';
 
 const indexStore = useIndexStore();
 
@@ -34,7 +34,7 @@ const rows = computed(() => {
 
 const actions = [
   {
-    name: "Editieren",
+    name: 'Editieren',
     actionLinkBuilder: (row: Record<string, string>) =>
       `/organizations/${indexStore.selectedOrganization}/data-model-drafts/${row.id}`,
   },

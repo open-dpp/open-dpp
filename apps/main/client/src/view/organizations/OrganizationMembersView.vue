@@ -9,11 +9,11 @@
   </section>
 </template>
 <script lang="ts" setup>
-import OrganizationMembersList from "../../components/organizations/OrganizationMembersList.vue";
-import { onMounted, ref } from "vue";
-import { OrganizationDto, UserDto } from "@open-dpp/api-client";
-import apiClient from "../../lib/api-client";
-import { useIndexStore } from "../../stores";
+import OrganizationMembersList from '../../components/organizations/OrganizationMembersList.vue';
+import { onMounted, ref } from 'vue';
+import { OrganizationDto, UserDto } from '@open-dpp/api-client';
+import apiClient from '../../lib/api-client';
+import { useIndexStore } from '../../stores';
 
 const indexStore = useIndexStore();
 

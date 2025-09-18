@@ -26,19 +26,19 @@
       <div>
         <p class="text-sm text-gray-700">
           Zeigt
-          {{ " " }}
+          {{ ' ' }}
           <span class="font-medium">{{ currentPage * itemsPerPage + 1 }}</span>
-          {{ " " }}
+          {{ ' ' }}
           bis
-          {{ " " }}
+          {{ ' ' }}
           <span class="font-medium">{{
             Math.min((currentPage + 1) * itemsPerPage, totalItems)
           }}</span>
-          {{ " " }}
+          {{ ' ' }}
           von
-          {{ " " }}
+          {{ ' ' }}
           <span class="font-medium">{{ totalItems }}</span>
-          {{ " " }}
+          {{ ' ' }}
           Elementen
         </p>
       </div>
@@ -91,8 +91,8 @@
 </template>
 
 <script lang="ts" setup>
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/vue/20/solid";
-import { computed } from "vue";
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/20/solid';
+import { computed } from 'vue';
 
 const props = defineProps<{
   currentPage: number;
@@ -101,7 +101,7 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: "page-changed", page: number): void;
+  (e: 'page-changed', page: number): void;
 }>();
 
 const totalPages = computed(() => {

@@ -8,9 +8,9 @@
 import {
   SidebarContentType,
   useDraftSidebarStore,
-} from "../../stores/draftSidebar";
-import { GranularityLevel } from "@open-dpp/api-client";
-import BaseButton from "../BaseButton.vue";
+} from '../../stores/draftSidebar';
+import { GranularityLevel } from '@open-dpp/api-client';
+import BaseButton from '../BaseButton.vue';
 
 const props = defineProps<{
   parentId?: string;

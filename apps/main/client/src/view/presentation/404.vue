@@ -19,7 +19,8 @@
         <router-link
           to="/"
           class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-          >Zurück zur App</router-link>
+          >Zurück zur App</router-link
+        >
         <a
           href="https://open-dpp.de"
           class="text-sm font-semibold text-gray-900"

@@ -39,14 +39,14 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
-import MediaGrid from "../../components/media/MediaGrid.vue";
-import MediaDetailsSidebar from "../../components/media/MediaDetailsSidebar.vue";
-import { MediaInfo } from "../../components/media/MediaInfo.interface";
-import { CloudArrowUpIcon } from "@heroicons/vue/24/outline";
-import { useMediaStore } from "../../stores/media";
-import { useNotificationStore } from "../../stores/notification";
-import { useIndexStore } from "../../stores";
+import { ref } from 'vue';
+import MediaGrid from '../../components/media/MediaGrid.vue';
+import MediaDetailsSidebar from '../../components/media/MediaDetailsSidebar.vue';
+import { MediaInfo } from '../../components/media/MediaInfo.interface';
+import { CloudArrowUpIcon } from '@heroicons/vue/24/outline';
+import { useMediaStore } from '../../stores/media';
+import { useNotificationStore } from '../../stores/notification';
+import { useIndexStore } from '../../stores';
 
 const mediaStore = useMediaStore();
 const notificationStore = useNotificationStore();
@@ -74,12 +74,12 @@ const uploadFile = async () => {
       selectedLocalFile.value,
       (progress) => (uploadProgress.value = progress),
     );
-    notificationStore.addSuccessNotification("Datei erfolgreich hochgeladen.");
+    notificationStore.addSuccessNotification('Datei erfolgreich hochgeladen.');
     await mediaStore.fetchMedia(indexStore.selectedOrganization);
   } catch (error: unknown) {
-    console.error("Fehler beim Hochladen der Datei:", error);
+    console.error('Fehler beim Hochladen der Datei:', error);
     notificationStore.addErrorNotification(
-      "Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+      'Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.',
     );
     selectedFile.value = null;
   } finally {

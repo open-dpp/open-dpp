@@ -35,16 +35,16 @@
 </template>
 
 <script lang="ts" setup>
-import { Disclosure } from "@headlessui/vue";
-import { ChatBubbleOvalLeftEllipsisIcon } from "@heroicons/vue/16/solid";
-import { useRoute, useRouter } from "vue-router";
-import { computed } from "vue";
-import BaseButton from "../presentation-components/BaseButton.vue";
+import { Disclosure } from '@headlessui/vue';
+import { ChatBubbleOvalLeftEllipsisIcon } from '@heroicons/vue/16/solid';
+import { useRoute, useRouter } from 'vue-router';
+import { computed } from 'vue';
+import BaseButton from '../presentation-components/BaseButton.vue';
 
 const route = useRoute();
 const router = useRouter();
-const permalink = computed(() => String(route.params.permalink ?? ""));
-const isChatRoute = computed(() => route.path.endsWith("/chat"));
+const permalink = computed(() => String(route.params.permalink ?? ''));
+const isChatRoute = computed(() => route.path.endsWith('/chat'));
 
 const navigateToPassportView = () => {
   router.push(`/${permalink.value}`);
@@ -55,6 +55,6 @@ const navigateToAiChat = () => {
 };
 
 const backToApp = () => {
-  router.push("/");
+  router.push('/');
 };
 </script>

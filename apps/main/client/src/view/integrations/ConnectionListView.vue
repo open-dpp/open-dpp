@@ -12,12 +12,12 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
-import { useAasConnectionStore } from "../../stores/aas.connection";
-import EmptyState from "../../components/models/EmptyState.vue";
-import ConnectionList from "../../components/integrations/ConnectionList.vue";
-import { useIndexStore } from "../../stores";
-import { PRO_ALPHA_INTEGRATION_ID } from "../../const";
+import { onMounted, ref } from 'vue';
+import { useAasConnectionStore } from '../../stores/aas.connection';
+import EmptyState from '../../components/models/EmptyState.vue';
+import ConnectionList from '../../components/integrations/ConnectionList.vue';
+import { useIndexStore } from '../../stores';
+import { PRO_ALPHA_INTEGRATION_ID } from '../../const';
 
 const fetchInFlight = ref(true);
 

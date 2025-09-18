@@ -10,7 +10,7 @@
       <FormKitSchema v-if="formSchema" :schema="formSchema" />
       <div class="flex gap-1">
         <BaseButton data-cy="submit" type="submit" variant="primary">
-          {{ dataFieldToModify ? "Ändern" : "Hinzufügen" }}
+          {{ dataFieldToModify ? 'Ändern' : 'Hinzufügen' }}
         </BaseButton>
         <BaseButton
           v-if="dataFieldToModify"
@@ -27,18 +27,18 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from "vue";
+import { ref, watch } from 'vue';
 import {
   DataFieldDto,
   DataFieldType,
   GranularityLevel,
-} from "@open-dpp/api-client";
-import { useDraftStore } from "../../stores/draft";
-import { z } from "zod/v4";
-import { useDraftSidebarStore } from "../../stores/draftSidebar";
-import { useNotificationStore } from "../../stores/notification";
-import BaseButton from "../BaseButton.vue";
-import { useModelDialogStore } from "../../stores/modal.dialog";
+} from '@open-dpp/api-client';
+import { useDraftStore } from '../../stores/draft';
+import { z } from 'zod/v4';
+import { useDraftSidebarStore } from '../../stores/draftSidebar';
+import { useNotificationStore } from '../../stores/notification';
+import BaseButton from '../BaseButton.vue';
+import { useModelDialogStore } from '../../stores/modal.dialog';
 
 const props = defineProps<{
   type: DataFieldType;
@@ -55,72 +55,72 @@ const draftSidebarStore = useDraftSidebarStore();
 const modelDialogStore = useModelDialogStore();
 
 const formSchemaFromType = (
-  type: string,
+  type: DataFieldType,
   existingGranularityLevel: GranularityLevel | undefined,
 ) => {
   const granularityOptions = {
-    [GranularityLevel.MODEL]: "Produktmodellebene",
-    [GranularityLevel.ITEM]: "Artikelebene",
+    [GranularityLevel.MODEL]: 'Produktmodellebene',
+    [GranularityLevel.ITEM]: 'Artikelebene',
   };
   const dataFieldFormkitSchema = [];
 
   switch (type) {
     case DataFieldType.TEXT_FIELD:
       dataFieldFormkitSchema.push({
-        $formkit: "text",
-        name: "name",
-        label: "Name des Textfeldes",
-        "data-cy": "name",
+        $formkit: 'text',
+        name: 'name',
+        label: 'Name des Textfeldes',
+        'data-cy': 'name',
       });
       break;
     case DataFieldType.PRODUCT_PASSPORT_LINK:
       dataFieldFormkitSchema.push({
-        $formkit: "text",
-        name: "name",
-        label: "Name der Produktpass Verlinkung",
-        "data-cy": "name",
+        $formkit: 'text',
+        name: 'name',
+        label: 'Name der Produktpass Verlinkung',
+        'data-cy': 'name',
       });
       break;
     case DataFieldType.NUMERIC_FIELD:
       dataFieldFormkitSchema.push({
-        $formkit: "text",
-        name: "name",
-        label: "Name des numerischen Feldes",
-        "data-cy": "name",
+        $formkit: 'text',
+        name: 'name',
+        label: 'Name des numerischen Feldes',
+        'data-cy': 'name',
       });
       dataFieldFormkitSchema.push({
-        $formkit: "number",
-        name: "min",
-        label: "Minimum",
-        "data-cy": "min",
+        $formkit: 'number',
+        name: 'min',
+        label: 'Minimum',
+        'data-cy': 'min',
       });
       dataFieldFormkitSchema.push({
-        $formkit: "number",
-        name: "max",
-        label: "Maximum",
-        "data-cy": "max",
+        $formkit: 'number',
+        name: 'max',
+        label: 'Maximum',
+        'data-cy': 'max',
       });
       break;
     case DataFieldType.FILE_FIELD:
       dataFieldFormkitSchema.push({
-        $formkit: "text",
-        name: "name",
-        label: "Name des Dateifeldes",
-        "data-cy": "name",
+        $formkit: 'text',
+        name: 'name',
+        label: 'Name des Dateifeldes',
+        'data-cy': 'name',
       });
       break;
     default:
       console.warn(
-        `[DataFieldForm] Unsupported node type: ${type}, using generic form. Please implement a form schema for this type.`,
+        `[DataFieldForm] Unsupported node type: ${type as string}, using generic form. Please implement a form schema for this type.`,
       );
   }
   if (!existingGranularityLevel) {
     dataFieldFormkitSchema.push({
-      $formkit: "select",
-      name: "granularityLevel",
-      label: "Granularitätsebene",
+      $formkit: 'select',
+      name: 'granularityLevel',
+      label: 'Granularitätsebene',
       options: granularityOptions,
-      "data-cy": "select-granularity-level",
+      'data-cy': 'select-granularity-level',
     });
   }
   return dataFieldFormkitSchema;
@@ -157,9 +157,9 @@ watch(
 const onDelete = async () => {
   modelDialogStore.open(
     {
-      title: "Datenfeld löschen",
-      description: "Sind Sie sicher, dass Sie dieses Datenfeld löschen wollen?",
-      type: "warning",
+      title: 'Datenfeld löschen',
+      description: 'Sind Sie sicher, dass Sie dieses Datenfeld löschen wollen?',
+      type: 'warning',
     },
     async () => {
       if (dataFieldToModify.value) {
@@ -207,7 +207,7 @@ const onSubmit = async () => {
   } else {
     const notificationStore = useNotificationStore();
     notificationStore.addErrorNotification(
-      "Datenfeld konnte nicht hinzugefügt werden.",
+      'Datenfeld konnte nicht hinzugefügt werden.',
     );
   }
 

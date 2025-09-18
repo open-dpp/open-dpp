@@ -14,7 +14,7 @@ export class MediaDoc extends Document {
   _schemaVersion: MediaSchemaVersion;
 
   @Prop({ required: true })
-  // @ts-ignore
+  // @ts-expect-error uses mongo id
   _id: string;
   @Prop({ required: true })
   title: string;

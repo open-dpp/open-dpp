@@ -101,23 +101,23 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { useDraftStore } from "../../stores/draft";
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/vue/20/solid";
-import { SectionDto, VisibilityLevel } from "@open-dpp/api-client";
-import PublishDraftButton from "../../components/template-drafts/PublishDraftButton.vue";
-import { useNotificationStore } from "../../stores/notification";
-import { useIndexStore } from "../../stores";
-import DraftSidebar from "../../components/template-drafts/DraftSidebar.vue";
-import BaseSectionHeader from "../../components/BaseSectionHeader.vue";
-import BaseButton from "../../components/BaseButton.vue";
+import { computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { useDraftStore } from '../../stores/draft';
+import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/vue/20/solid';
+import { SectionDto, VisibilityLevel } from '@open-dpp/api-client';
+import PublishDraftButton from '../../components/template-drafts/PublishDraftButton.vue';
+import { useNotificationStore } from '../../stores/notification';
+import { useIndexStore } from '../../stores';
+import DraftSidebar from '../../components/template-drafts/DraftSidebar.vue';
+import BaseSectionHeader from '../../components/BaseSectionHeader.vue';
+import BaseButton from '../../components/BaseButton.vue';
 import {
   SidebarContentType,
   useDraftSidebarStore,
-} from "../../stores/draftSidebar";
-import AddSection from "../../components/template-drafts/AddSection.vue";
-import SectionDraft from "../../components/template-drafts/SectionDraft.vue";
+} from '../../stores/draftSidebar';
+import AddSection from '../../components/template-drafts/AddSection.vue';
+import SectionDraft from '../../components/template-drafts/SectionDraft.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -178,9 +178,9 @@ const isLast = (id: string) => {
 const onPublish = async (visibility: VisibilityLevel) => {
   await draftStore.publish({ visibility });
   notificationStore.addSuccessNotification(
-    "Ihr Entwurf wurde erfolgreich veröffentlicht. Sie können nun darauf basierend Modelle anlegen.",
+    'Ihr Entwurf wurde erfolgreich veröffentlicht. Sie können nun darauf basierend Modelle anlegen.',
     {
-      label: "Modell anlegen",
+      label: 'Modell anlegen',
       to: `/organizations/${indexStore.selectedOrganization}/models/create`,
     },
   );

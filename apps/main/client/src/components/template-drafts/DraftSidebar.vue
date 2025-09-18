@@ -66,9 +66,9 @@ import {
   DialogTitle,
   TransitionChild,
   TransitionRoot,
-} from "@headlessui/vue";
-import { useDraftSidebarStore } from "../../stores/draftSidebar";
-import { XMarkIcon } from "@heroicons/vue/24/outline";
+} from '@headlessui/vue';
+import { useDraftSidebarStore } from '../../stores/draftSidebar';
+import { XMarkIcon } from '@heroicons/vue/24/outline';
 
 const draftSidebarStore = useDraftSidebarStore();
 </script>

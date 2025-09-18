@@ -2,10 +2,10 @@ import { maxBy, minBy } from 'lodash';
 import { Template } from '../../templates/domain/template';
 import { Model } from '../../models/domain/model';
 import {
-  Section,
   isGroupSection,
   isRepeaterSection,
   RepeaterSection,
+  Section,
 } from '../../templates/domain/section';
 import { Item } from '../../items/domain/item';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
@@ -38,10 +38,10 @@ export class View {
         );
     for (const section of rootSectionsFilteredByLevel) {
       if (isRepeaterSection(section)) {
-        // @ts-ignore
+        // @ts-expect-error uses never at the moment, should get typed
         nodes.push(this.processRepeaterSection(section));
       } else if (isGroupSection(section)) {
-        // @ts-ignore
+        // @ts-expect-error uses never at the moment, should get typed
         nodes.push(this.processSection(section));
       }
     }
@@ -62,7 +62,7 @@ export class View {
 
     const rows = [];
     for (let rowIndex = minRow; rowIndex <= maxRow; rowIndex++) {
-      // @ts-ignore
+      // @ts-expect-error uses mongo id
       rows.push(this.processSection(section, rowIndex));
     }
     return {
@@ -89,7 +89,7 @@ export class View {
     const children = this.processDataFields(section, dataValuesOfSection);
     for (const subSectionId of section.subSections) {
       const subSection = this.template.findSectionByIdOrFail(subSectionId);
-      // @ts-ignore
+      // @ts-expect-error uses mongo id
       children.push(this.processSection(subSection, rowIndex));
     }
 

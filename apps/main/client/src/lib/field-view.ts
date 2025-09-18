@@ -1,4 +1,4 @@
-import { DataFieldDto } from "@open-dpp/api-client";
+import { DataFieldDto } from '@open-dpp/api-client';
 
 export type FieldView = {
   dataField: DataFieldDto;

@@ -9,8 +9,8 @@
 </template>
 
 <script lang="ts" setup>
-import { toCanvas } from "qrcode";
-import { onMounted, ref } from "vue";
+import { toCanvas } from 'qrcode';
+import { onMounted, ref } from 'vue';
 
 const canvas = ref<HTMLCanvasElement>();
 const props = defineProps<{

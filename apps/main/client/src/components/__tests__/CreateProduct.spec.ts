@@ -1,11 +1,11 @@
-import { describe, test, vi } from "vitest";
+import { describe, test, vi } from 'vitest';
 
-vi.mock("../../lib/axios", () => ({
+vi.mock('../../lib/axios', () => ({
   default: {
     post: vi.fn(),
   },
 }));
-vi.mock("../../lib/api-client", () => ({
+vi.mock('../../lib/api-client', () => ({
   default: {
     postModel: vi.fn(),
   },
@@ -13,8 +13,8 @@ vi.mock("../../lib/api-client", () => ({
 
 // const mockedApiClient = apiClient as Mocked<typeof apiClient>;
 
-describe("CreateModel.vue", () => {
-  test("creates a product with given name and description", async () => {
+describe('CreateModel.vue', () => {
+  test('creates a product with given name and description', async () => {
     /* mockedApiClient.postModel.mockResolvedValue({} as any);
             render(CreateModel, {
               props: { modelValue: true },

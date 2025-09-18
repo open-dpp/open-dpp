@@ -25,7 +25,7 @@ export enum AasConnectionDocSchemaVersion {
 @Schema({ collection: 'aas_mapping', timestamps: true })
 export class AasConnectionDoc extends Document {
   @Prop({ required: true })
-  // @ts-ignore
+  // @ts-expect-error uses mongo id
   _id: string;
   @Prop({
     default: AasConnectionDocSchemaVersion.v1_0_0,

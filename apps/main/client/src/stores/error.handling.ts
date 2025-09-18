@@ -1,7 +1,7 @@
-import { defineStore } from "pinia";
-import { useNotificationStore } from "./notification";
+import { defineStore } from 'pinia';
+import { useNotificationStore } from './notification';
 
-export const useErrorHandlingStore = defineStore("error-handling-store", () => {
+export const useErrorHandlingStore = defineStore('error-handling-store', () => {
   const notificationStore = useNotificationStore();
 
   const logErrorWithNotification = (message: string, error?: unknown) => {

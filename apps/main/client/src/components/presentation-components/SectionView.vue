@@ -54,11 +54,11 @@
 </template>
 
 <script setup lang="ts">
-import { DataSectionDto } from "@open-dpp/api-client";
-import DataFieldView from "./DataFieldView.vue";
-import { FolderIcon } from "@heroicons/vue/16/solid";
-import { useProductPassportStore } from "../../stores/product-passport";
-import { computed } from "vue";
+import { DataSectionDto } from '@open-dpp/api-client';
+import DataFieldView from './DataFieldView.vue';
+import { FolderIcon } from '@heroicons/vue/16/solid';
+import { useProductPassportStore } from '../../stores/product-passport';
+import { computed } from 'vue';
 
 const props = defineProps<{
   dataSection: DataSectionDto;

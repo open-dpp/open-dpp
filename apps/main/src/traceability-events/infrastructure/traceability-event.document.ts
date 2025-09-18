@@ -13,7 +13,7 @@ export enum TraceabilityEventSchemaVersion {
 @Schema({ collection: 'traceability_events', timestamps: true })
 export class TraceabilityEventDocument extends Document {
   @Prop({ required: true })
-  // @ts-ignore
+  // @ts-expect-error uses mongo id
   _id: string;
 
   @Prop({

@@ -7,7 +7,6 @@ import { maxBy, minBy } from 'lodash';
 import { DataValue } from '../../product-passport-data/domain/data-value';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
-import { ValueError } from '@app/exception/domain.errors';
 
 export class DataSection extends Section {
   private constructor(

@@ -40,11 +40,11 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, watch } from "vue";
-import AdvancedListSelector from "../lists/AdvancedListSelector.vue";
-import apiClient from "../../lib/api-client";
-import { TemplateGetAllDto } from "@open-dpp/api-client";
-import Tabs from "../lists/Tabs.vue";
+import { onMounted, ref, watch } from 'vue';
+import AdvancedListSelector from '../lists/AdvancedListSelector.vue';
+import apiClient from '../../lib/api-client';
+import { TemplateGetAllDto } from '@open-dpp/api-client';
+import Tabs from '../lists/Tabs.vue';
 
 const props = defineProps<{
   selected: TemplateGetAllDto[];
@@ -53,8 +53,8 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: "update-selected-items", items: TemplateGetAllDto[]): void;
-  (e: "update-is-marketplace-selected", isSelected: boolean): void;
+  (e: 'update-selected-items', items: TemplateGetAllDto[]): void;
+  (e: 'update-is-marketplace-selected', isSelected: boolean): void;
 }>();
 
 const localTemplates = ref<TemplateGetAllDto[]>([]);

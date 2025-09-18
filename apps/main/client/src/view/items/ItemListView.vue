@@ -31,14 +31,14 @@
 </template>
 
 <script lang="ts" setup>
-import { useRoute } from "vue-router";
-import { onMounted, ref } from "vue";
-import ItemList from "../../components/items/ItemList.vue";
-import apiClient from "../../lib/api-client";
-import { ItemDto } from "@open-dpp/api-client";
+import { useRoute } from 'vue-router';
+import { onMounted, ref } from 'vue';
+import ItemList from '../../components/items/ItemList.vue';
+import apiClient from '../../lib/api-client';
+import { ItemDto } from '@open-dpp/api-client';
 
 const route = useRoute();
-const buttonLabel = "Neuen Artikelpass hinzufügen";
+const buttonLabel = 'Neuen Artikelpass hinzufügen';
 
 const items = ref<ItemDto[]>([]);
 

@@ -34,9 +34,9 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { DataFieldDto, SectionDto } from "@open-dpp/api-client";
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/vue/20/solid";
-import { useDraftStore } from "../../../stores/draft";
+import { DataFieldDto, SectionDto } from '@open-dpp/api-client';
+import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/vue/20/solid';
+import { useDraftStore } from '../../../stores/draft';
 
 const props = defineProps<{ dataField: DataFieldDto; section: SectionDto }>();
 
@@ -51,6 +51,6 @@ const isLast = (id: string) => {
 };
 
 const emits = defineEmits<{
-  (e: "clicked"): void;
+  (e: 'clicked'): void;
 }>();
 </script>

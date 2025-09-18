@@ -16,11 +16,11 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted } from "vue";
-import { useModelsStore } from "../../stores/models";
-import { useIndexStore } from "../../stores";
-import SimpleTable from "../lists/SimpleTable.vue";
-import ListHeader from "../lists/ListHeader.vue";
+import { computed, onMounted } from 'vue';
+import { useModelsStore } from '../../stores/models';
+import { useIndexStore } from '../../stores';
+import SimpleTable from '../lists/SimpleTable.vue';
+import ListHeader from '../lists/ListHeader.vue';
 
 const indexStore = useIndexStore();
 const modelsStore = useModelsStore();
@@ -35,17 +35,17 @@ const rows = computed(() => {
 
 const actions = [
   {
-    name: "Artikelpässe",
+    name: 'Artikelpässe',
     actionLinkBuilder: (row: Record<string, string>) =>
       `/organizations/${indexStore.selectedOrganization}/models/${row.id}/items`,
   },
   {
-    name: "Editieren",
+    name: 'Editieren',
     actionLinkBuilder: (row: Record<string, string>) =>
       `/organizations/${indexStore.selectedOrganization}/models/${row.id}`,
   },
   {
-    name: "QR-Code",
+    name: 'QR-Code',
     actionLinkBuilder: (row: Record<string, string>) =>
       `/organizations/${indexStore.selectedOrganization}/models/${row.id}/qr-code`,
   },

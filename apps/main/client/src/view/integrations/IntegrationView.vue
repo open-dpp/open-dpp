@@ -24,14 +24,14 @@
 </template>
 
 <script lang="ts" setup>
-import SimpleTable from "../../components/lists/SimpleTable.vue";
-import { useIndexStore } from "../../stores";
-import { AI_INTEGRATION_ID, PRO_ALPHA_INTEGRATION_ID } from "../../const";
-import keycloakIns from "../../lib/keycloak";
-import axiosIns from "../../lib/axios";
-import { useNotificationStore } from "../../stores/notification";
-import { computed, onMounted } from "vue";
-import { useAiIntegrationStore } from "../../stores/ai.integration";
+import SimpleTable from '../../components/lists/SimpleTable.vue';
+import { useIndexStore } from '../../stores';
+import { AI_INTEGRATION_ID, PRO_ALPHA_INTEGRATION_ID } from '../../const';
+import keycloakIns from '../../lib/keycloak';
+import axiosIns from '../../lib/axios';
+import { useNotificationStore } from '../../stores/notification';
+import { computed, onMounted } from 'vue';
+import { useAiIntegrationStore } from '../../stores/ai.integration';
 
 const indexStore = useIndexStore();
 const notificationStore = useNotificationStore();
@@ -39,20 +39,20 @@ const aiIntegrationStore = useAiIntegrationStore();
 
 const rows = computed(() => [
   {
-    name: "ProAlpha Integration",
-    status: "Aktiv",
+    name: 'ProAlpha Integration',
+    status: 'Aktiv',
     id: PRO_ALPHA_INTEGRATION_ID,
   },
   {
-    name: "KI-Integration",
-    status: aiIntegrationStore.configuration?.isEnabled ? "Aktiv" : "Inaktiv",
+    name: 'KI-Integration',
+    status: aiIntegrationStore.configuration?.isEnabled ? 'Aktiv' : 'Inaktiv',
     id: AI_INTEGRATION_ID,
   },
 ]);
 
 const actions = [
   {
-    name: "Editieren",
+    name: 'Editieren',
     actionLinkBuilder: (row: Record<string, string>) =>
       `/organizations/${indexStore.selectedOrganization}/integrations/${row.id}`,
   },
@@ -72,7 +72,7 @@ const createApiKey = async () => {
     }
   } catch {
     notificationStore.addErrorNotification(
-      "Fehler beim Erstellen des API Keys. Bitte versuchen Sie es erneut.",
+      'Fehler beim Erstellen des API Keys. Bitte versuchen Sie es erneut.',
     );
   }
 };

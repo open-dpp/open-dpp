@@ -25,6 +25,6 @@ async function bootstrap() {
     bodyParser.urlencoded({ limit: '50mb', extended: true }),
   );
   const port = Number(configService.get('PORT', '3004'));
-  await app.listen(process.env.port ?? 3000);
+  await app.listen(process.env.port ?? port);
 }
 bootstrap();

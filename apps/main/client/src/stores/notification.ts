@@ -1,12 +1,12 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
-import { v4 as uuidv4 } from "uuid";
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import { v4 as uuidv4 } from 'uuid';
 
 export enum NotificationType {
-  SUCCESS = "Success",
-  ERROR = "Error",
-  INFO = "Info",
-  WARNING = "Warning",
+  SUCCESS = 'Success',
+  ERROR = 'Error',
+  INFO = 'Info',
+  WARNING = 'Warning',
 }
 
 type ActionLink = { to: string; label: string };
@@ -17,7 +17,7 @@ export type Notification = {
   actionLink?: ActionLink;
 };
 
-export const useNotificationStore = defineStore("notification", () => {
+export const useNotificationStore = defineStore('notification', () => {
   const notifications = ref<Notification[]>([]);
 
   const addNotification = (

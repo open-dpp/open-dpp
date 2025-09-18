@@ -1,6 +1,6 @@
-import { createPinia, setActivePinia } from "pinia";
-import { expect, it, vi } from "vitest";
-import { useAasConnectionFormStore } from "./aas.connection.form";
+import { createPinia, setActivePinia } from 'pinia';
+import { expect, it, vi } from 'vitest';
+import { useAasConnectionFormStore } from './aas.connection.form';
 import {
   AasConnectionDto,
   AasFieldAssignmentDto,
@@ -11,9 +11,9 @@ import {
   ModelDto,
   SectionType,
   TemplateDto,
-} from "@open-dpp/api-client";
-import apiClient from "../lib/api-client";
-import { waitFor } from "@testing-library/vue";
+} from '@open-dpp/api-client';
+import apiClient from '../lib/api-client';
+import { waitFor } from '@testing-library/vue';
 
 const mocks = vi.hoisted(() => {
   return {
@@ -25,7 +25,7 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("../lib/api-client", () => ({
+vi.mock('../lib/api-client', () => ({
   default: {
     setActiveOrganizationId: vi.fn(),
     dpp: {
@@ -44,143 +44,143 @@ vi.mock("../lib/api-client", () => ({
   },
 }));
 
-describe("IntegrationFormStore", () => {
+describe('IntegrationFormStore', () => {
   beforeEach(() => {
     // Create a fresh pinia instance and make it active
     setActivePinia(createPinia());
   });
 
-  const connectionId = "aasMappingId";
+  const connectionId = 'aasMappingId';
 
   const aasConnection: AasConnectionDto = {
     id: connectionId,
-    name: "Connection 1",
-    modelId: "modelId",
+    name: 'Connection 1',
+    modelId: 'modelId',
     aasType: AssetAdministrationShellType.Truck,
-    dataModelId: "dataModelId",
+    dataModelId: 'dataModelId',
     fieldAssignments: [
       {
-        dataFieldId: "f1",
-        sectionId: "s1",
-        idShortParent: "p1",
-        idShort: "i1",
+        dataFieldId: 'f1',
+        sectionId: 's1',
+        idShortParent: 'p1',
+        idShort: 'i1',
       },
       {
-        dataFieldId: "f2",
-        sectionId: "s2",
-        idShortParent: "p2",
-        idShort: "i2",
+        dataFieldId: 'f2',
+        sectionId: 's2',
+        idShortParent: 'p2',
+        idShort: 'i2',
       },
     ],
   };
 
   const mockedProperties: AasPropertyWithParentDto[] = [
     {
-      parentIdShort: "p1",
+      parentIdShort: 'p1',
       property: {
-        idShort: "i1",
-        valueType: "xs:string",
-        modelType: "Property",
+        idShort: 'i1',
+        valueType: 'xs:string',
+        modelType: 'Property',
       },
     },
     {
-      parentIdShort: "p2",
+      parentIdShort: 'p2',
       property: {
-        idShort: "i2",
-        valueType: "xs:string",
-        modelType: "Property",
+        idShort: 'i2',
+        valueType: 'xs:string',
+        modelType: 'Property',
       },
     },
   ];
 
   const selectOptionsAas = [
     {
-      group: "p1",
+      group: 'p1',
       options: [
         {
-          label: "i1",
+          label: 'i1',
           property: {
-            idShort: "i1",
-            modelType: "Property",
-            valueType: "xs:string",
+            idShort: 'i1',
+            modelType: 'Property',
+            valueType: 'xs:string',
           },
-          value: "p1/i1",
+          value: 'p1/i1',
         },
       ],
     },
     {
-      group: "p2",
+      group: 'p2',
       options: [
         {
-          label: "i2",
+          label: 'i2',
           property: {
-            idShort: "i2",
-            modelType: "Property",
-            valueType: "xs:string",
+            idShort: 'i2',
+            modelType: 'Property',
+            valueType: 'xs:string',
           },
-          value: "p2/i2",
+          value: 'p2/i2',
         },
       ],
     },
   ];
 
   const templateDto: TemplateDto = {
-    id: "dataModelId",
-    name: "Test Product Data Model",
-    version: "1.0.0",
-    createdByUserId: "userId",
-    ownedByOrganizationId: "orgaId",
+    id: 'dataModelId',
+    name: 'Test Product Data Model',
+    version: '1.0.0',
+    createdByUserId: 'userId',
+    ownedByOrganizationId: 'orgaId',
     sections: [
       {
-        id: "s0",
-        name: "Section 0",
+        id: 's0',
+        name: 'Section 0',
         type: SectionType.GROUP,
-        subSections: ["s2"],
+        subSections: ['s2'],
         dataFields: [
           {
-            id: "f0",
-            name: "Field 0",
+            id: 'f0',
+            name: 'Field 0',
             type: DataFieldType.TEXT_FIELD,
             granularityLevel: GranularityLevel.ITEM,
           },
         ],
       },
       {
-        id: "s1",
-        name: "Section 1",
+        id: 's1',
+        name: 'Section 1',
         type: SectionType.GROUP,
         subSections: [],
         dataFields: [
           {
-            id: "f1",
-            name: "Field 1",
+            id: 'f1',
+            name: 'Field 1',
             type: DataFieldType.TEXT_FIELD,
             granularityLevel: GranularityLevel.ITEM,
           },
         ],
       },
       {
-        id: "s2",
-        parentId: "s0",
-        name: "Section 2",
+        id: 's2',
+        parentId: 's0',
+        name: 'Section 2',
         type: SectionType.GROUP,
         subSections: [],
         dataFields: [
           {
-            id: "f2",
-            name: "Field 2",
+            id: 'f2',
+            name: 'Field 2',
             type: DataFieldType.TEXT_FIELD,
             granularityLevel: GranularityLevel.ITEM,
           },
           {
-            id: "f3",
-            name: "Field 3",
+            id: 'f3',
+            name: 'Field 3',
             type: DataFieldType.TEXT_FIELD,
             granularityLevel: GranularityLevel.ITEM,
           },
           {
-            id: "f4",
-            name: "Field 4",
+            id: 'f4',
+            name: 'Field 4',
             type: DataFieldType.TEXT_FIELD,
             granularityLevel: GranularityLevel.MODEL,
           },
@@ -190,62 +190,62 @@ describe("IntegrationFormStore", () => {
   };
 
   const otherTemplateDto: TemplateDto = {
-    id: "other-dataModelId",
-    name: "Other Test Product Data Model",
-    version: "1.0.0",
-    createdByUserId: "userId",
-    ownedByOrganizationId: "orgaId",
+    id: 'other-dataModelId',
+    name: 'Other Test Product Data Model',
+    version: '1.0.0',
+    createdByUserId: 'userId',
+    ownedByOrganizationId: 'orgaId',
     sections: [
       {
-        id: "s0",
-        name: "Section 0",
+        id: 's0',
+        name: 'Section 0',
         type: SectionType.GROUP,
-        subSections: ["s2"],
+        subSections: ['s2'],
         dataFields: [
           {
-            id: "f0",
-            name: "Field 0",
+            id: 'f0',
+            name: 'Field 0',
             type: DataFieldType.TEXT_FIELD,
             granularityLevel: GranularityLevel.ITEM,
           },
         ],
       },
       {
-        id: "s1",
-        name: "Section 1",
+        id: 's1',
+        name: 'Section 1',
         type: SectionType.GROUP,
         subSections: [],
         dataFields: [
           {
-            id: "f1-other",
-            name: "Field 1 other",
+            id: 'f1-other',
+            name: 'Field 1 other',
             type: DataFieldType.TEXT_FIELD,
             granularityLevel: GranularityLevel.ITEM,
           },
         ],
       },
       {
-        id: "s2",
-        parentId: "s0",
-        name: "Section 2",
+        id: 's2',
+        parentId: 's0',
+        name: 'Section 2',
         type: SectionType.GROUP,
         subSections: [],
         dataFields: [
           {
-            id: "f2",
-            name: "Field 2",
+            id: 'f2',
+            name: 'Field 2',
             type: DataFieldType.TEXT_FIELD,
             granularityLevel: GranularityLevel.ITEM,
           },
           {
-            id: "f3-other",
-            name: "Field 3 other",
+            id: 'f3-other',
+            name: 'Field 3 other',
             type: DataFieldType.TEXT_FIELD,
             granularityLevel: GranularityLevel.ITEM,
           },
           {
-            id: "f4",
-            name: "Field 4",
+            id: 'f4',
+            name: 'Field 4',
             type: DataFieldType.TEXT_FIELD,
             granularityLevel: GranularityLevel.MODEL,
           },
@@ -256,33 +256,33 @@ describe("IntegrationFormStore", () => {
 
   const selectOptionsOfOtherTemplate = [
     {
-      group: "Section 0",
+      group: 'Section 0',
       options: [
         {
-          label: "Field 0",
-          value: "s0/f0",
+          label: 'Field 0',
+          value: 's0/f0',
         },
       ],
     },
     {
-      group: "Section 1",
+      group: 'Section 1',
       options: [
         {
-          label: "Field 1 other",
-          value: "s1/f1-other",
+          label: 'Field 1 other',
+          value: 's1/f1-other',
         },
       ],
     },
     {
-      group: "Section 2",
+      group: 'Section 2',
       options: [
         {
-          label: "Field 2",
-          value: "s2/f2",
+          label: 'Field 2',
+          value: 's2/f2',
         },
         {
-          label: "Field 3 other",
-          value: "s2/f3-other",
+          label: 'Field 3 other',
+          value: 's2/f3-other',
         },
       ],
     },
@@ -290,73 +290,73 @@ describe("IntegrationFormStore", () => {
 
   const selectOptionsOfTemplate = [
     {
-      group: "Section 0",
+      group: 'Section 0',
       options: [
         {
-          label: "Field 0",
-          value: "s0/f0",
+          label: 'Field 0',
+          value: 's0/f0',
         },
       ],
     },
     {
-      group: "Section 1",
+      group: 'Section 1',
       options: [
         {
-          label: "Field 1",
-          value: "s1/f1",
+          label: 'Field 1',
+          value: 's1/f1',
         },
       ],
     },
     {
-      group: "Section 2",
+      group: 'Section 2',
       options: [
         {
-          label: "Field 2",
-          value: "s2/f2",
+          label: 'Field 2',
+          value: 's2/f2',
         },
         {
-          label: "Field 3",
-          value: "s2/f3",
+          label: 'Field 3',
+          value: 's2/f3',
         },
       ],
     },
   ];
 
   const rowDiv = {
-    $el: "div",
+    $el: 'div',
     attrs: {
-      class: "flex flex-col md:flex-row justify-around gap-2 items-center",
+      class: 'flex flex-col md:flex-row justify-around gap-2 items-center',
     },
     children: [],
   };
 
   const horizontalLine = {
-    $el: "div",
+    $el: 'div',
     attrs: {
-      class: "w-full border-t border-gray-300 m-2",
+      class: 'w-full border-t border-gray-300 m-2',
     },
   };
 
   const connectedMsgDiv = {
-    $el: "div",
+    $el: 'div',
     attrs: {
-      class: "flex",
+      class: 'flex',
     },
-    children: "ist verknüpft mit",
+    children: 'ist verknüpft mit',
   };
 
   const flexDivStart = {
-    $el: "div",
+    $el: 'div',
     attrs: {
-      class: "flex",
+      class: 'flex',
     },
   };
 
   const placeHolderAas =
-    "Wählen Sie ein Feld aus der Asset Administration Shell";
-  const placeHolderDpp = "Wählen Sie ein Feld aus dem Produktdatenmodell";
-  const labelAas = "Feld aus der Asset Administration Shell";
-  const labelDpp = "Feld aus dem Produktdatenmodell";
+    'Wählen Sie ein Feld aus der Asset Administration Shell';
+  const placeHolderDpp = 'Wählen Sie ein Feld aus dem Produktdatenmodell';
+  const labelAas = 'Feld aus der Asset Administration Shell';
+  const labelDpp = 'Feld aus dem Produktdatenmodell';
 
   const expectedFormSchema = [
     {
@@ -366,12 +366,12 @@ describe("IntegrationFormStore", () => {
           ...flexDivStart,
           children: [
             {
-              $formkit: "select",
+              $formkit: 'select',
               label: labelAas,
               placeholder: placeHolderAas,
               name: `aas-${0}`,
               options: selectOptionsAas,
-              "data-cy": "aas-select-0",
+              'data-cy': 'aas-select-0',
               required: true,
             },
           ],
@@ -381,12 +381,12 @@ describe("IntegrationFormStore", () => {
           ...flexDivStart,
           children: [
             {
-              $formkit: "select",
+              $formkit: 'select',
               label: labelDpp,
               placeholder: placeHolderDpp,
               name: `dpp-${0}`,
               options: selectOptionsOfTemplate,
-              "data-cy": "dpp-select-0",
+              'data-cy': 'dpp-select-0',
               required: true,
             },
           ],
@@ -402,12 +402,12 @@ describe("IntegrationFormStore", () => {
           ...flexDivStart,
           children: [
             {
-              $formkit: "select",
+              $formkit: 'select',
               label: labelAas,
               placeholder: placeHolderAas,
               name: `aas-${1}`,
               options: selectOptionsAas,
-              "data-cy": "aas-select-1",
+              'data-cy': 'aas-select-1',
               required: true,
             },
           ],
@@ -417,12 +417,12 @@ describe("IntegrationFormStore", () => {
           ...flexDivStart,
           children: [
             {
-              $formkit: "select",
+              $formkit: 'select',
               label: labelDpp,
               placeholder: placeHolderDpp,
               name: `dpp-${1}`,
               options: selectOptionsOfTemplate,
-              "data-cy": "dpp-select-1",
+              'data-cy': 'dpp-select-1',
               required: true,
             },
           ],
@@ -431,7 +431,7 @@ describe("IntegrationFormStore", () => {
       rowIndex: 1,
     },
   ];
-  it("should initialize formSchema and formData correctly", async () => {
+  it('should initialize formSchema and formData correctly', async () => {
     const integrationFormStore = useAasConnectionFormStore();
 
     mocks.getTemplateById.mockResolvedValue({
@@ -444,37 +444,37 @@ describe("IntegrationFormStore", () => {
     expect(integrationFormStore.formSchema).toEqual(expectedFormSchema);
 
     expect(integrationFormStore.formData).toEqual({
-      "aas-0": "p1/i1",
-      "aas-1": "p2/i2",
-      "dpp-0": "s1/f1",
-      "dpp-1": "s2/f2",
+      'aas-0': 'p1/i1',
+      'aas-1': 'p2/i2',
+      'dpp-0': 's1/f1',
+      'dpp-1': 's2/f2',
     });
   });
 
-  it("should update connection", async () => {
+  it('should update connection', async () => {
     const integrationFormStore = useAasConnectionFormStore();
     const formUpdate = {
-      name: "Connection 1",
-      modelId: "modelId",
+      name: 'Connection 1',
+      modelId: 'modelId',
       fieldAssignments: {
-        "aas-0": "p1-update/i1-update",
-        "aas-1": "p2-update/i2-update",
-        "dpp-0": "s0/f0",
-        "dpp-1": "s2/f3",
+        'aas-0': 'p1-update/i1-update',
+        'aas-1': 'p2-update/i2-update',
+        'dpp-0': 's0/f0',
+        'dpp-1': 's2/f3',
       },
     };
     const newFieldAssignments: AasFieldAssignmentDto[] = [
       {
-        idShortParent: "p1-update",
-        idShort: "i1-update",
-        dataFieldId: "f0",
-        sectionId: "s0",
+        idShortParent: 'p1-update',
+        idShort: 'i1-update',
+        dataFieldId: 'f0',
+        sectionId: 's0',
       },
       {
-        idShortParent: "p2-update",
-        idShort: "i2-update",
-        dataFieldId: "f3",
-        sectionId: "s2",
+        idShortParent: 'p2-update',
+        idShort: 'i2-update',
+        dataFieldId: 'f3',
+        sectionId: 's2',
       },
     ];
     const mockedAasConnectionUpdate: AasConnectionDto = {
@@ -508,14 +508,14 @@ describe("IntegrationFormStore", () => {
 
     expect(integrationFormStore.formSchema).toEqual(expectedFormSchema);
     expect(integrationFormStore.formData).toEqual({
-      "aas-0": "p1-update/i1-update",
-      "aas-1": "p2-update/i2-update",
-      "dpp-0": "s0/f0",
-      "dpp-1": "s2/f3",
+      'aas-0': 'p1-update/i1-update',
+      'aas-1': 'p2-update/i2-update',
+      'dpp-0': 's0/f0',
+      'dpp-1': 's2/f3',
     });
   });
 
-  it("should add field assignment", async () => {
+  it('should add field assignment', async () => {
     const integrationFormStore = useAasConnectionFormStore();
 
     mocks.getTemplateById.mockResolvedValue({
@@ -537,12 +537,12 @@ describe("IntegrationFormStore", () => {
             ...flexDivStart,
             children: [
               {
-                $formkit: "select",
+                $formkit: 'select',
                 label: labelAas,
                 name: `aas-${2}`,
                 placeholder: placeHolderAas,
                 options: selectOptionsAas,
-                "data-cy": "aas-select-2",
+                'data-cy': 'aas-select-2',
                 required: true,
               },
             ],
@@ -552,12 +552,12 @@ describe("IntegrationFormStore", () => {
             ...flexDivStart,
             children: [
               {
-                $formkit: "select",
+                $formkit: 'select',
                 label: labelDpp,
                 name: `dpp-${2}`,
                 placeholder: placeHolderDpp,
                 options: selectOptionsOfTemplate,
-                "data-cy": "dpp-select-2",
+                'data-cy': 'dpp-select-2',
                 required: true,
               },
             ],
@@ -568,14 +568,14 @@ describe("IntegrationFormStore", () => {
     ]);
 
     expect(integrationFormStore.formData).toEqual({
-      "aas-0": "p1/i1",
-      "aas-1": "p2/i2",
-      "dpp-0": "s1/f1",
-      "dpp-1": "s2/f2",
+      'aas-0': 'p1/i1',
+      'aas-1': 'p2/i2',
+      'dpp-0': 's1/f1',
+      'dpp-1': 's2/f2',
     });
   });
 
-  it("should switch model", async () => {
+  it('should switch model', async () => {
     const integrationFormStore = useAasConnectionFormStore();
 
     mocks.getTemplateById.mockImplementation((id: string) =>
@@ -587,7 +587,7 @@ describe("IntegrationFormStore", () => {
             data: otherTemplateDto,
           },
     );
-    const otherModelId = "otherModelId";
+    const otherModelId = 'otherModelId';
     mocks.getConnection.mockResolvedValue({ data: aasConnection });
     mocks.getPropertiesOfAas.mockResolvedValue({ data: mockedProperties });
     mocks.getModelById.mockResolvedValue({
@@ -598,10 +598,10 @@ describe("IntegrationFormStore", () => {
     });
     await integrationFormStore.fetchConnection(connectionId);
     const model: ModelDto = {
-      name: "modelName",
+      name: 'modelName',
       id: otherModelId,
       templateId: otherTemplateDto.id,
-      owner: "o1",
+      owner: 'o1',
       uniqueProductIdentifiers: [],
       dataValues: [],
     };
@@ -616,12 +616,12 @@ describe("IntegrationFormStore", () => {
             ...flexDivStart,
             children: [
               {
-                $formkit: "select",
+                $formkit: 'select',
                 label: labelAas,
                 placeholder: placeHolderAas,
                 name: `aas-${0}`,
                 options: selectOptionsAas,
-                "data-cy": "aas-select-0",
+                'data-cy': 'aas-select-0',
                 required: true,
               },
             ],
@@ -631,12 +631,12 @@ describe("IntegrationFormStore", () => {
             ...flexDivStart,
             children: [
               {
-                $formkit: "select",
+                $formkit: 'select',
                 label: labelDpp,
                 placeholder: placeHolderDpp,
                 name: `dpp-${0}`,
                 options: selectOptionsOfOtherTemplate,
-                "data-cy": "dpp-select-0",
+                'data-cy': 'dpp-select-0',
                 required: true,
               },
             ],
@@ -652,12 +652,12 @@ describe("IntegrationFormStore", () => {
             ...flexDivStart,
             children: [
               {
-                $formkit: "select",
+                $formkit: 'select',
                 label: labelAas,
                 placeholder: placeHolderAas,
                 name: `aas-${1}`,
                 options: selectOptionsAas,
-                "data-cy": "aas-select-1",
+                'data-cy': 'aas-select-1',
                 required: true,
               },
             ],
@@ -667,12 +667,12 @@ describe("IntegrationFormStore", () => {
             ...flexDivStart,
             children: [
               {
-                $formkit: "select",
+                $formkit: 'select',
                 label: labelDpp,
                 placeholder: placeHolderDpp,
                 name: `dpp-${1}`,
                 options: selectOptionsOfOtherTemplate,
-                "data-cy": "dpp-select-1",
+                'data-cy': 'dpp-select-1',
                 required: true,
               },
             ],
@@ -683,10 +683,10 @@ describe("IntegrationFormStore", () => {
     ]);
 
     expect(integrationFormStore.formData).toEqual({
-      "aas-0": "p1/i1",
-      "aas-1": "p2/i2",
-      "dpp-0": "",
-      "dpp-1": "s2/f2",
+      'aas-0': 'p1/i1',
+      'aas-1': 'p2/i2',
+      'dpp-0': '',
+      'dpp-1': 's2/f2',
     });
   });
 });

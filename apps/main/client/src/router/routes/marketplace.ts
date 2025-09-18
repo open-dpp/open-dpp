@@ -1,14 +1,14 @@
-import { RouteLocationNormalizedGeneric, RouteRecordRaw } from "vue-router";
-import { useLayoutStore } from "../../stores/layout";
+import { RouteLocationNormalizedGeneric, RouteRecordRaw } from 'vue-router';
+import { useLayoutStore } from '../../stores/layout';
 
 const marketplaceListBreadCrumbs = (to: RouteLocationNormalizedGeneric) => [
-  { name: "Marktplatz", route: MARKETPLACE, params: to.params },
+  { name: 'Marktplatz', route: MARKETPLACE, params: to.params },
 ];
 
 export const MARKETPLACE: RouteRecordRaw = {
-  path: "",
-  name: "Marketplace",
-  component: () => import("../../view/marketplace/MarketplaceView.vue"),
+  path: '',
+  name: 'Marketplace',
+  component: () => import('../../view/marketplace/MarketplaceView.vue'),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = marketplaceListBreadCrumbs(to);
@@ -16,7 +16,7 @@ export const MARKETPLACE: RouteRecordRaw = {
 };
 
 export const MARKETPLACE_PARENT: RouteRecordRaw = {
-  path: "/marketplace",
+  path: '/marketplace',
   children: [MARKETPLACE],
 };
 

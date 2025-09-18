@@ -102,11 +102,11 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { CheckIcon, Cog8ToothIcon } from "@heroicons/vue/20/solid";
-import { useIndexStore } from "../../stores";
-import { useRouter } from "vue-router";
-import { useOrganizationsStore } from "../../stores/organizations";
-import EmptyState from "./EmptyState.vue";
+import { CheckIcon, Cog8ToothIcon } from '@heroicons/vue/20/solid';
+import { useIndexStore } from '../../stores';
+import { useRouter } from 'vue-router';
+import { useOrganizationsStore } from '../../stores/organizations';
+import EmptyState from './EmptyState.vue';
 
 const indexStore = useIndexStore();
 const organizationsStore = useOrganizationsStore();
@@ -114,6 +114,6 @@ const router = useRouter();
 
 const setOrganization = (organizationId: string) => {
   indexStore.selectOrganization(organizationId);
-  router.push("/");
+  router.push('/');
 };
 </script>

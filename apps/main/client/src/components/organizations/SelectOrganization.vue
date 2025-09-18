@@ -102,17 +102,17 @@ import {
   ListboxLabel,
   ListboxOption,
   ListboxOptions,
-} from "@headlessui/vue";
-import { ChevronUpDownIcon } from "@heroicons/vue/16/solid";
+} from '@headlessui/vue';
+import { ChevronUpDownIcon } from '@heroicons/vue/16/solid';
 import {
   CheckIcon,
-  PlusCircleIcon,
   ListBulletIcon,
-} from "@heroicons/vue/20/solid";
-import { useOrganizationsStore } from "../../stores/organizations";
-import { useIndexStore } from "../../stores";
-import { useRouter } from "vue-router";
-import { computed } from "vue";
+  PlusCircleIcon,
+} from '@heroicons/vue/20/solid';
+import { useOrganizationsStore } from '../../stores/organizations';
+import { useIndexStore } from '../../stores';
+import { useRouter } from 'vue-router';
+import { computed } from 'vue';
 
 const organizationsStore = useOrganizationsStore();
 const indexStore = useIndexStore();
@@ -124,11 +124,11 @@ const nameOfSelectedOrganization = computed(() => {
       (org) => org.id === indexStore.selectedOrganization,
     )?.name;
   }
-  return "Auswählen";
+  return 'Auswählen';
 });
 
 const setOrganization = (organizationId: string) => {
   indexStore.selectOrganization(organizationId);
-  router.push("/");
+  router.push('/');
 };
 </script>

@@ -16,12 +16,12 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from "vue";
-import { useIndexStore } from "../../stores";
-import { useRoute } from "vue-router";
-import ListHeader from "../lists/ListHeader.vue";
-import SimpleTable from "../lists/SimpleTable.vue";
-import { ItemDto } from "@open-dpp/api-client";
+import { computed } from 'vue';
+import { useIndexStore } from '../../stores';
+import { useRoute } from 'vue-router';
+import ListHeader from '../lists/ListHeader.vue';
+import SimpleTable from '../lists/SimpleTable.vue';
+import { ItemDto } from '@open-dpp/api-client';
 
 const indexStore = useIndexStore();
 
@@ -32,7 +32,7 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: "add"): void;
+  (e: 'add'): void;
 }>();
 
 const rows = computed(() => {
@@ -44,14 +44,14 @@ const rows = computed(() => {
 
 const actions = [
   {
-    name: "Editieren",
+    name: 'Editieren',
     actionLinkBuilder: (row: Record<string, string>) =>
-      `/organizations/${indexStore.selectedOrganization}/models/${route.params.modelId}/items/${row.id}`,
+      `/organizations/${indexStore.selectedOrganization}/models/${route.params.modelId as string}/items/${row.id}`,
   },
   {
-    name: "QR-Code",
+    name: 'QR-Code',
     actionLinkBuilder: (row: Record<string, string>) =>
-      `/organizations/${indexStore.selectedOrganization}/models/${route.params.modelId}/items/${row.id}/qr-code`,
+      `/organizations/${indexStore.selectedOrganization}/models/${route.params.modelId as string}/items/${row.id}/qr-code`,
   },
 ];
 </script>

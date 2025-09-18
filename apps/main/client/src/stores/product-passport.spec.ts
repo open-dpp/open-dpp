@@ -1,19 +1,19 @@
-import { createPinia, setActivePinia } from "pinia";
-import { useProductPassportStore } from "./product-passport";
+import { createPinia, setActivePinia } from 'pinia';
+import { useProductPassportStore } from './product-passport';
 import {
   dataSectionFactory,
   productPassportFactory,
-} from "../testing-utils/fixtures/product-passport.factory";
-import { SectionType } from "@open-dpp/api-client";
-import { describe, it, beforeEach, expect } from "vitest";
+} from '../testing-utils/fixtures/product-passport.factory';
+import { SectionType } from '@open-dpp/api-client';
+import { beforeEach, describe, expect, it } from 'vitest';
 
-describe("ProductPassportStore", () => {
+describe('ProductPassportStore', () => {
   beforeEach(() => {
     // Create a fresh pinia instance and make it active
     setActivePinia(createPinia());
   });
 
-  it("should find section", async () => {
+  it('should find section', async () => {
     const dataSection1 = dataSectionFactory.build();
     const dataSection2 = dataSectionFactory.build({
       type: SectionType.REPEATABLE,

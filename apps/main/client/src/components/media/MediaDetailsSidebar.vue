@@ -48,15 +48,15 @@
 </template>
 
 <script lang="ts" setup>
-import { MediaInfo } from "./MediaInfo.interface";
-import MediaPreview from "./MediaPreview.vue";
-import { XMarkIcon } from "@heroicons/vue/24/outline";
+import { MediaInfo } from './MediaInfo.interface';
+import MediaPreview from './MediaPreview.vue';
+import { XMarkIcon } from '@heroicons/vue/24/outline';
 
 defineProps<{
   media: MediaInfo;
 }>();
 
 const emits = defineEmits<{
-  (e: "close"): void;
+  (e: 'close'): void;
 }>();
 </script>

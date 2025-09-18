@@ -13,8 +13,8 @@ import {
 } from '../fixtures/passport-template-props.factory';
 import { PassportTemplateService } from '../infrastructure/passport-template.service';
 import {
-  PassportTemplateDoc,
   PassportTemplateDbSchema,
+  PassportTemplateDoc,
 } from '../infrastructure/passport-template.schema';
 import { PassportTemplate } from '../domain/passport-template';
 import { passportTemplateToDto } from './dto/passport-template.dto';

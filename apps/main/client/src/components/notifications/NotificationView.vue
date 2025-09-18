@@ -63,14 +63,14 @@ import {
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   InformationCircleIcon,
-} from "@heroicons/vue/24/outline";
-import { XMarkIcon } from "@heroicons/vue/20/solid";
+} from '@heroicons/vue/24/outline';
+import { XMarkIcon } from '@heroicons/vue/20/solid';
 import {
   Notification,
   NotificationType,
   useNotificationStore,
-} from "../../stores/notification";
-import { computed } from "vue";
+} from '../../stores/notification';
+import { computed } from 'vue';
 
 const props = defineProps<{ notification: Notification }>();
 
@@ -82,11 +82,11 @@ const onDelete = () => {
 
 const title = computed<string>(() => {
   const titleMap = {
-    [NotificationType.SUCCESS]: "Erfolg",
-    [NotificationType.ERROR]: "Fehler",
-    [NotificationType.WARNING]: "Warnung",
-    [NotificationType.INFO]: "Information",
+    [NotificationType.SUCCESS]: 'Erfolg',
+    [NotificationType.ERROR]: 'Fehler',
+    [NotificationType.WARNING]: 'Warnung',
+    [NotificationType.INFO]: 'Information',
   };
-  return titleMap[props.notification.type] || "Information";
+  return titleMap[props.notification.type] || 'Information';
 });
 </script>

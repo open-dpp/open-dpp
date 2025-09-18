@@ -104,15 +104,15 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, ref, useAttrs } from "vue";
-import { usePassportFormStore } from "../../../stores/passport.form";
-import { useIndexStore } from "../../../stores";
-import { useNotificationStore } from "../../../stores/notification";
-import { useMediaStore } from "../../../stores/media";
-import { DocumentIcon, PencilIcon } from "@heroicons/vue/16/solid";
-import MediaModal from "../../media/MediaModal.vue";
-import { MediaInfo } from "../../media/MediaInfo.interface";
-import MediaPreview from "../../media/MediaPreview.vue";
+import { computed, onMounted, onUnmounted, ref, useAttrs } from 'vue';
+import { usePassportFormStore } from '../../../stores/passport.form';
+import { useIndexStore } from '../../../stores';
+import { useNotificationStore } from '../../../stores/notification';
+import { useMediaStore } from '../../../stores/media';
+import { DocumentIcon, PencilIcon } from '@heroicons/vue/16/solid';
+import MediaModal from '../../media/MediaModal.vue';
+import { MediaInfo } from '../../media/MediaInfo.interface';
+import MediaPreview from '../../media/MediaPreview.vue';
 
 const passportFormStore = usePassportFormStore();
 const indexStore = useIndexStore();
@@ -127,7 +127,7 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: "clicked"): void;
+  (e: 'clicked'): void;
 }>();
 
 const attrs = useAttrs() as Record<string, unknown>;
@@ -149,7 +149,7 @@ const isImage = computed(() => {
   if (!selectedLocalFile.value) {
     return false;
   }
-  return selectedLocalFile.value.type.startsWith("image/");
+  return selectedLocalFile.value.type.startsWith('image/');
 });
 
 const fileUrl = computed(() => {
@@ -161,7 +161,7 @@ const fileUrl = computed(() => {
 
 const selectedFileSizeKB = computed(() => {
   const size = selectedLocalFile.value?.size;
-  if (typeof size !== "number") {
+  if (typeof size !== 'number') {
     return null;
   }
   return (size / 1024).toFixed(1);
@@ -194,14 +194,14 @@ const uploadFile = async () => {
       selectedLocalFile.value,
       (progress) => (uploadProgress.value = progress),
     );
-    notificationStore.addSuccessNotification("Datei erfolgreich hochgeladen.");
+    notificationStore.addSuccessNotification('Datei erfolgreich hochgeladen.');
     selectedLocalFile.value = null;
     await loadFile();
   } catch (error: unknown) {
-    console.error("Fehler beim Hochladen der Datei:", error);
+    console.error('Fehler beim Hochladen der Datei:', error);
     uploadedMediaId.value = undefined;
     notificationStore.addErrorNotification(
-      "Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+      'Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.',
     );
     selectedFile.value = null;
   } finally {
@@ -225,7 +225,7 @@ const loadFile = async () => {
         URL.revokeObjectURL(uploadedFileUrl.value);
       } catch (revokeErr) {
         console.error(
-          "Fehler beim Freigeben der vorherigen Objekt-URL:",
+          'Fehler beim Freigeben der vorherigen Objekt-URL:',
           revokeErr,
         );
       }
@@ -236,14 +236,14 @@ const loadFile = async () => {
     }
     uploadedMedia.value = mediaInfo;
   } catch (error) {
-    console.error("Fehler beim Laden der Datei:", error);
+    console.error('Fehler beim Laden der Datei:', error);
     // Reset state on failure
     if (uploadedFileUrl.value) {
       try {
         URL.revokeObjectURL(uploadedFileUrl.value);
       } catch (revokeErr) {
         console.error(
-          "Fehler beim Freigeben der Objekt-URL nach Fehler:",
+          'Fehler beim Freigeben der Objekt-URL nach Fehler:',
           revokeErr,
         );
       }
@@ -254,12 +254,12 @@ const loadFile = async () => {
     // Notify user via the existing notification store if available
     try {
       notificationStore.addErrorNotification(
-        "Die Datei konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
+        'Die Datei konnte nicht geladen werden. Bitte versuchen Sie es erneut.',
       );
     } catch {
       // Fallback to console if the notification store is not available for any reason
       console.error(
-        "Benachrichtigung über Ladefehler konnte nicht angezeigt werden.",
+        'Benachrichtigung über Ladefehler konnte nicht angezeigt werden.',
       );
     }
     // We intentionally do not rethrow to keep caller logic simple unless needed.

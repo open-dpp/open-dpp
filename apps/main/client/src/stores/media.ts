@@ -1,10 +1,10 @@
-import { defineStore } from "pinia";
-import axiosIns from "../lib/axios";
-import { MEDIA_SERVICE_URL } from "../const";
-import { MediaInfo } from "../components/media/MediaInfo.interface";
-import { ref } from "vue";
+import { defineStore } from 'pinia';
+import axiosIns from '../lib/axios';
+import { MEDIA_SERVICE_URL } from '../const';
+import { MediaInfo } from '../components/media/MediaInfo.interface';
+import { ref } from 'vue';
 
-export const useMediaStore = defineStore("media", () => {
+export const useMediaStore = defineStore('media', () => {
   const organizationMedia = ref<Array<MediaInfo>>([]);
 
   const uploadDppMedia = async (
@@ -15,14 +15,14 @@ export const useMediaStore = defineStore("media", () => {
     onUploadProgress?: (progress: number) => void,
   ): Promise<string> => {
     if (!organizationId) {
-      throw new Error("No organization selected");
+      throw new Error('No organization selected');
     }
     if (!uuid) {
-      throw new Error("No UUID provided");
+      throw new Error('No UUID provided');
     }
 
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('file', file);
 
     const response = await axiosIns.post(
       `${MEDIA_SERVICE_URL}/media/dpp/${organizationId}/${uuid}/${dataFieldId}`,
@@ -55,11 +55,11 @@ export const useMediaStore = defineStore("media", () => {
     onUploadProgress?: (progress: number) => void,
   ): Promise<string> => {
     if (!organizationId) {
-      throw new Error("No organization selected");
+      throw new Error('No organization selected');
     }
 
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('file', file);
 
     const response = await axiosIns.post(
       `${MEDIA_SERVICE_URL}/media/${organizationId}`,
@@ -91,7 +91,7 @@ export const useMediaStore = defineStore("media", () => {
     dataFieldId: string,
   ): Promise<MediaInfo> => {
     if (!uuid) {
-      throw new Error("No UUID provided");
+      throw new Error('No UUID provided');
     }
     const response = await axiosIns.get(
       `${MEDIA_SERVICE_URL}/media/dpp/${uuid}/${dataFieldId}/info`,
@@ -101,7 +101,7 @@ export const useMediaStore = defineStore("media", () => {
 
   const getMediaInfo = async (id: string | undefined): Promise<MediaInfo> => {
     if (!id) {
-      throw new Error("No ID provided");
+      throw new Error('No ID provided');
     }
     const response = await axiosIns.get(
       `${MEDIA_SERVICE_URL}/media/${id}/info`,
@@ -114,11 +114,11 @@ export const useMediaStore = defineStore("media", () => {
     dataFieldId: string,
   ): Promise<Blob> => {
     if (!uuid) {
-      throw new Error("No UUID provided");
+      throw new Error('No UUID provided');
     }
     const response = await axiosIns.get(
       `${MEDIA_SERVICE_URL}/media/dpp/${uuid}/${dataFieldId}/download`,
-      { responseType: "blob" },
+      { responseType: 'blob' },
     );
     return response.data as Blob;
   };
@@ -159,7 +159,7 @@ export const useMediaStore = defineStore("media", () => {
     try {
       const response = await axiosIns.get(
         `${MEDIA_SERVICE_URL}/media/${id}/download`,
-        { responseType: "blob" },
+        { responseType: 'blob' },
       );
       if (response.status !== 200) {
         return null;

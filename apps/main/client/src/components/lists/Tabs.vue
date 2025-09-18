@@ -59,7 +59,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ChevronDownIcon } from "@heroicons/vue/16/solid";
+import { ChevronDownIcon } from '@heroicons/vue/16/solid';
 
 defineProps<{
   tabs: Array<string>;
@@ -67,6 +67,6 @@ defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: "change", index: number): void;
+  (e: 'change', index: number): void;
 }>();
 </script>

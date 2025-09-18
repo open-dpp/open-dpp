@@ -20,11 +20,11 @@
 </template>
 
 <script lang="ts" setup>
-import Sidebar from "./Sidebar.vue";
-import ProductPassportHeader from "./ProductPassportHeader.vue";
-import ProductPassportBody from "./ProductPassportBody.vue";
-import { useProductPassportStore } from "../../stores/product-passport";
-import { computed } from "vue";
+import Sidebar from './Sidebar.vue';
+import ProductPassportHeader from './ProductPassportHeader.vue';
+import ProductPassportBody from './ProductPassportBody.vue';
+import { useProductPassportStore } from '../../stores/product-passport';
+import { computed } from 'vue';
 
 const productPassportStore = useProductPassportStore();
 

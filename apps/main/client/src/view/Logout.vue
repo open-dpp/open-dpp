@@ -3,9 +3,9 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted } from "vue";
-import keycloakIns from "../lib/keycloak";
-import { useIndexStore } from "../stores";
+import { onMounted } from 'vue';
+import keycloakIns from '../lib/keycloak';
+import { useIndexStore } from '../stores';
 
 const indexStore = useIndexStore();
 

@@ -40,14 +40,14 @@
 </template>
 
 <script setup lang="ts">
-import { usePassportFormStore } from "../../stores/passport.form";
-import SectionForm from "./form-components/SectionForm.vue";
-import SectionHeader from "../SectionHeader.vue";
-import RepeatableSection from "./form-components/RepeatableSection.vue";
-import { SectionType } from "@open-dpp/api-client";
-import { computed } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import BaseButton from "../BaseButton.vue";
+import { usePassportFormStore } from '../../stores/passport.form';
+import SectionForm from './form-components/SectionForm.vue';
+import SectionHeader from '../SectionHeader.vue';
+import RepeatableSection from './form-components/RepeatableSection.vue';
+import { SectionType } from '@open-dpp/api-client';
+import { computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import BaseButton from '../BaseButton.vue';
 
 const passportFormStore = usePassportFormStore();
 const route = useRoute();

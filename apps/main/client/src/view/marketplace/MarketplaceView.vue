@@ -19,9 +19,9 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
-import ModelTemplateList from "../../components/models/ModelTemplateList.vue";
-import { TemplateGetAllDto } from "@open-dpp/api-client";
+import { ref } from 'vue';
+import ModelTemplateList from '../../components/models/ModelTemplateList.vue';
+import { TemplateGetAllDto } from '@open-dpp/api-client';
 
 const selectedTemplate = ref<TemplateGetAllDto | null>(null);
 const isMarketplaceSelected = ref<boolean>(true);

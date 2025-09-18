@@ -18,13 +18,13 @@
 </template>
 
 <script lang="ts" setup>
-import { DataFieldDto, DataFieldType, SectionDto } from "@open-dpp/api-client";
+import { DataFieldDto, DataFieldType, SectionDto } from '@open-dpp/api-client';
 import {
   SidebarContentType,
   useDraftSidebarStore,
-} from "../../stores/draftSidebar";
-import DraftDataFieldUnsupported from "./draft-data-field-types/DraftDataFieldUnsupported.vue";
-import DraftDataFieldGeneric from "./draft-data-field-types/DraftDataFieldGeneric.vue";
+} from '../../stores/draftSidebar';
+import DraftDataFieldUnsupported from './draft-data-field-types/DraftDataFieldUnsupported.vue';
+import DraftDataFieldGeneric from './draft-data-field-types/DraftDataFieldGeneric.vue';
 
 const props = defineProps<{ dataField: DataFieldDto; section: SectionDto }>();
 

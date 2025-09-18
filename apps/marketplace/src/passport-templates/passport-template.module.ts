@@ -3,8 +3,8 @@ import { PassportTemplateController } from './presentation/passport-template.con
 import { PassportTemplateService } from './infrastructure/passport-template.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
-  PassportTemplateDoc,
   PassportTemplateDbSchema,
+  PassportTemplateDoc,
 } from './infrastructure/passport-template.schema';
 import { PermissionModule } from '@app/permission';
 

@@ -30,8 +30,8 @@
 </template>
 
 <script lang="ts" setup>
-import NotificationView from "./NotificationView.vue";
-import { useNotificationStore } from "../../stores/notification";
+import NotificationView from './NotificationView.vue';
+import { useNotificationStore } from '../../stores/notification';
 
 const notificationStore = useNotificationStore();
 </script>

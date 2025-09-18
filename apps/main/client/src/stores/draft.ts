@@ -1,6 +1,6 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
-import apiClient from "../lib/api-client";
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import apiClient from '../lib/api-client';
 import {
   DataFieldDraftCreateDto,
   DataFieldDraftUpdateDto,
@@ -11,9 +11,9 @@ import {
   TemplateDraftCreateDto,
   TemplateDraftDto,
   VisibilityLevel,
-} from "@open-dpp/api-client";
+} from '@open-dpp/api-client';
 
-export const useDraftStore = defineStore("draft", () => {
+export const useDraftStore = defineStore('draft', () => {
   const draft = ref<TemplateDraftDto>();
 
   const createDraft = async (data: TemplateDraftCreateDto) => {
@@ -156,7 +156,7 @@ export const useDraftStore = defineStore("draft", () => {
   ) => {
     const section = findSectionOfDataField(dataFieldId);
     if (draft.value && section) {
-      console.log("api client", apiClient.dpp.templateDrafts);
+      console.log('api client', apiClient.dpp.templateDrafts);
 
       const response = await apiClient.dpp.templateDrafts.moveDataField(
         draft.value.id,

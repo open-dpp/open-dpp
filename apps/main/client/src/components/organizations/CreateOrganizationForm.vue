@@ -35,12 +35,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
-import { reset } from "@formkit/core";
-import { useOrganizationsStore } from "../../stores/organizations";
-import { useIndexStore } from "../../stores";
-import { useRouter } from "vue-router";
-import keycloakIns, { updateKeycloakToken } from "../../lib/keycloak";
+import { ref } from 'vue';
+import { reset } from '@formkit/core';
+import { useOrganizationsStore } from '../../stores/organizations';
+import { useIndexStore } from '../../stores';
+import { useRouter } from 'vue-router';
+import keycloakIns, { updateKeycloakToken } from '../../lib/keycloak';
 
 const router = useRouter();
 
@@ -62,9 +62,9 @@ const create = async (fields: {
   await new Promise((resolve) => setTimeout(resolve, 250));
   await updateKeycloakToken(keycloakIns, 1000);
   submitted.value = true;
-  reset("createOrganizationForm");
+  reset('createOrganizationForm');
   await organizationStore.fetchOrganizations();
   indexStore.selectOrganization(responseData.id);
-  await router.push("/");
+  await router.push('/');
 };
 </script>

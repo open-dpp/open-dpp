@@ -435,5 +435,5 @@
 </template>
 
 <script lang="ts" setup>
-import { PhotoIcon, UserCircleIcon } from "@heroicons/vue/24/solid";
+import { PhotoIcon, UserCircleIcon } from '@heroicons/vue/24/solid';
 </script>

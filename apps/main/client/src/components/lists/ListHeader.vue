@@ -31,6 +31,6 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: "add"): void;
+  (e: 'add'): void;
 }>();
 </script>

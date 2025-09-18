@@ -47,10 +47,10 @@
 </template>
 
 <script lang="ts" setup>
-import { TemplateDraftCreateDto, Sector } from "@open-dpp/api-client";
+import { Sector, TemplateDraftCreateDto } from '@open-dpp/api-client';
 
 const emits = defineEmits<{
-  (e: "submit", draftData: TemplateDraftCreateDto): void;
+  (e: 'submit', draftData: TemplateDraftCreateDto): void;
 }>();
 
 const create = async (fields: {
@@ -59,7 +59,7 @@ const create = async (fields: {
   sectors: Sector[];
 }) => {
   console.log(fields.sectors);
-  emits("submit", {
+  emits('submit', {
     name: fields.name,
     description: fields.description,
     sectors: fields.sectors,

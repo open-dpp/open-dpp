@@ -86,10 +86,10 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { OrganizationDto, UserDto } from "@open-dpp/api-client";
-import { UserCircleIcon } from "@heroicons/vue/24/solid";
-import InviteMemberDialog from "./InviteMemberDialog.vue";
-import { ModalType, useLayoutStore } from "../../stores/layout";
+import { OrganizationDto, UserDto } from '@open-dpp/api-client';
+import { UserCircleIcon } from '@heroicons/vue/24/solid';
+import InviteMemberDialog from './InviteMemberDialog.vue';
+import { ModalType, useLayoutStore } from '../../stores/layout';
 
 const layoutStore = useLayoutStore();
 
@@ -99,6 +99,6 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "invitedUser"): void;
+  (e: 'invitedUser'): void;
 }>();
 </script>

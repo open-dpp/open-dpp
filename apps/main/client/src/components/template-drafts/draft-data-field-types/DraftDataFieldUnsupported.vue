@@ -7,7 +7,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { DataFieldDto } from "@open-dpp/api-client";
+import { DataFieldDto } from '@open-dpp/api-client';
 
 defineProps<{ dataField: DataFieldDto }>();
 </script>

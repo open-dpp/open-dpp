@@ -14,26 +14,25 @@
 // ***********************************************************
 
 // Import commands.js using ES2015 syntax:
-import "./commands.js";
+import './commands.js';
 
-import "../plugins/tailwind.js";
-import { mount } from "cypress/vue";
+import '../plugins/tailwind.js';
+import { mount } from 'cypress/vue';
 // Augment the Cypress namespace to include type definitions for
 // your custom command.
 // Alternatively, can be defined in cypress/support/component.d.ts
 // with a <reference path="./component" /> at the top of your spec.
-import { createPinia, Pinia, setActivePinia } from "pinia";
-import { plugin as FormKit } from "@formkit/vue";
-import { defaultConfig } from "@formkit/vue";
-import { rootClasses } from "../../formkit.theme.js";
-import { genesisIcons } from "@formkit/icons";
-import { de } from "@formkit/i18n";
+import { createPinia, Pinia, setActivePinia } from 'pinia';
+import { defaultConfig, plugin as FormKit } from '@formkit/vue';
+import { rootClasses } from '../../formkit.theme.js';
+import { genesisIcons } from '@formkit/icons';
+import { de } from '@formkit/i18n';
 import {
   createAutoAnimatePlugin,
   createMultiStepPlugin,
-} from "@formkit/addons";
-import { diff } from "jest-diff";
-import _ from "lodash";
+} from '@formkit/addons';
+import { diff } from 'jest-diff';
+import _ from 'lodash';
 
 let pinia: Pinia;
 
@@ -46,7 +45,7 @@ beforeEach(() => {
   setActivePinia(pinia);
 });
 
-Cypress.Commands.add("mountWithPinia", (component, options = {}) => {
+Cypress.Commands.add('mountWithPinia', (component, options = {}) => {
   options.global = options.global || {};
   options.global.plugins = options.global.plugins || [];
 
@@ -84,7 +83,7 @@ Cypress.Commands.add("mountWithPinia", (component, options = {}) => {
               ...genesisIcons,
             },
             locales: { de },
-            locale: "de",
+            locale: 'de',
             plugins: [createMultiStepPlugin(), createAutoAnimatePlugin()],
           }),
         ],
@@ -92,11 +91,11 @@ Cypress.Commands.add("mountWithPinia", (component, options = {}) => {
     },
   });
 });
-Cypress.Commands.add("mount", mount);
+Cypress.Commands.add('mount', mount);
 
-Cypress.Commands.add("expectDeepEqualWithDiff", (actual, expected) => {
+Cypress.Commands.add('expectDeepEqualWithDiff', (actual, expected) => {
   if (!_.isEqual(actual, expected)) {
-    console.log("🔍 Deep diff:\n", diff(expected, actual));
+    console.log('🔍 Deep diff:\n', diff(expected, actual));
   }
   expect(actual).to.deep.equal(expected);
 });

@@ -1,10 +1,13 @@
 import { Factory } from 'fishery';
 import { randomUUID } from 'crypto';
-import { VisibilityLevel } from '@open-dpp/api-client';
+import {
+  PassportTemplateDto,
+  SectionType,
+  Sector,
+  VisibilityLevel,
+} from '@open-dpp/api-client';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { SectionType } from '@open-dpp/api-client';
-import { Sector, PassportTemplateDto } from '@open-dpp/api-client';
 import { TemplateDocSchemaVersion } from '../../templates/infrastructure/template.schema';
 
 export const nowDate = new Date('2025-01-01T12:00:00Z');

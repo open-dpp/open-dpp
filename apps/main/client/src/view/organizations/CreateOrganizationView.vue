@@ -15,5 +15,5 @@
 </template>
 
 <script lang="ts" setup>
-import CreateOrganizationForm from "../../components/organizations/CreateOrganizationForm.vue";
+import CreateOrganizationForm from '../../components/organizations/CreateOrganizationForm.vue';
 </script>

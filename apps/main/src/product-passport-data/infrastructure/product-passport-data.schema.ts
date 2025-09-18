@@ -4,7 +4,7 @@ import { DataValueDoc, DataValueSchema } from './data-value.schema';
 
 export abstract class PassportDoc extends Document {
   @Prop({ required: true })
-  // @ts-ignore
+  // @ts-expect-error uses mongo id
   _id: string;
 
   @Prop({ required: true })

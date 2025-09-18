@@ -28,9 +28,9 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from "vue";
-import { useAiIntegrationStore } from "../../stores/ai.integration";
-import { AiProvider } from "@open-dpp/api-client";
+import { ref, watch } from 'vue';
+import { useAiIntegrationStore } from '../../stores/ai.integration';
+import { AiProvider } from '@open-dpp/api-client';
 
 const aiIntegrationStore = useAiIntegrationStore();
 const formData = ref<{ isEnabled: boolean }>({ isEnabled: false });
@@ -52,7 +52,7 @@ const onSubmit = async () => {
   if (formData.value) {
     await aiIntegrationStore.modifyConfiguration({
       isEnabled: formData.value.isEnabled,
-      model: aiIntegrationStore.configuration?.model ?? "codestral-latest",
+      model: aiIntegrationStore.configuration?.model ?? 'codestral-latest',
       provider:
         aiIntegrationStore.configuration?.provider ?? AiProvider.Mistral,
     });

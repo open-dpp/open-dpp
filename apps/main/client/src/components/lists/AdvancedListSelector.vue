@@ -209,15 +209,15 @@
 </template>
 
 <script generic="T extends AdvancedListItem" lang="ts" setup>
-import { computed, type FunctionalComponent, ref } from "vue";
-import { AdvancedListItem } from "./AdvancedListItem.interface";
+import { computed, type FunctionalComponent, ref } from 'vue';
+import { AdvancedListItem } from './AdvancedListItem.interface';
 import {
   EllipsisVerticalIcon,
   FunnelIcon,
   MagnifyingGlassIcon,
-} from "@heroicons/vue/16/solid";
-import Dropdown from "../Dropdown.vue";
-import Pagination from "./Pagination.vue";
+} from '@heroicons/vue/16/solid';
+import Dropdown from '../Dropdown.vue';
+import Pagination from './Pagination.vue';
 
 const defaults = {
   rowsPerPage: 5,
@@ -250,21 +250,21 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: "update-selected-items", item: T[]): void;
-  (e: "update-search", value: string): void;
-  (e: "item-action", itemId: string, actionIndex: number): void;
+  (e: 'update-selected-items', item: T[]): void;
+  (e: 'update-search', value: string): void;
+  (e: 'item-action', itemId: string, actionIndex: number): void;
 }>();
 
 const page = ref<number>(0);
 
 const headers = computed(() =>
   props.itemActions && props.itemActions.length > 0
-    ? [...props.headers, "Aktionen"]
+    ? [...props.headers, 'Aktionen']
     : props.headers,
 );
 
 const rowsPerPage = computed(() => {
-  if (typeof props.pagination === "boolean") {
+  if (typeof props.pagination === 'boolean') {
     return defaults.rowsPerPage;
   }
   return props.pagination?.rowsPerPage ?? defaults.rowsPerPage;
@@ -282,7 +282,7 @@ const filteredItems = computed(() => {
     Object.values(item).some((value) =>
       String(value)
         .toLowerCase()
-        .includes((props.search ?? "").toLowerCase()),
+        .includes((props.search ?? '').toLowerCase()),
     ),
   );
 });
@@ -314,12 +314,12 @@ const toggleSelectedItem = (item: T) => {
     } else {
       selected.push(item);
     }
-    emits("update-selected-items", selected);
+    emits('update-selected-items', selected);
   } else {
     if (isSelected(item)) {
-      emits("update-selected-items", []);
+      emits('update-selected-items', []);
     } else {
-      emits("update-selected-items", [item]);
+      emits('update-selected-items', [item]);
     }
   }
 };
@@ -329,9 +329,9 @@ const toggleSelectAll = () => {
     return;
   }
   if (selectedItems.value.length === 0) {
-    emits("update-selected-items", props.items);
+    emits('update-selected-items', props.items);
   } else {
-    emits("update-selected-items", []);
+    emits('update-selected-items', []);
   }
 };
 </script>

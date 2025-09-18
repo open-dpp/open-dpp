@@ -6,5 +6,5 @@
   </section>
 </template>
 <script lang="ts" setup>
-import ProfileForm from "../components/ProfileForm.vue";
+import ProfileForm from '../components/ProfileForm.vue';
 </script>

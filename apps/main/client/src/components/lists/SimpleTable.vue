@@ -48,8 +48,8 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from "vue";
-import { useNotificationStore } from "../../stores/notification";
+import { computed } from 'vue';
+import { useNotificationStore } from '../../stores/notification';
 
 const notificationStore = useNotificationStore();
 
@@ -64,7 +64,7 @@ const props = defineProps<{
 }>();
 
 const headers = computed(() =>
-  props.rowActions.length > 0 ? [...props.headers, "Aktionen"] : props.headers,
+  props.rowActions.length > 0 ? [...props.headers, 'Aktionen'] : props.headers,
 );
 
 const rowKeys = computed(() => {
@@ -76,10 +76,10 @@ const rowKeys = computed(() => {
 });
 
 const copyIdentifierToClipboard = (key: string, text: string) => {
-  if (key === "uuid" || key === "id") {
+  if (key === 'uuid' || key === 'id') {
     navigator.clipboard.writeText(text);
     notificationStore.addSuccessNotification(
-      "In die Zwischenablage kopiert.",
+      'In die Zwischenablage kopiert.',
       undefined,
       1000,
     );

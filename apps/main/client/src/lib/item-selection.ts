@@ -1,5 +1,5 @@
-import type { FunctionalComponent, HTMLAttributes, VNodeProps } from "vue";
-import { SidebarContentType } from "../stores/draftSidebar";
+import type { FunctionalComponent, HTMLAttributes, VNodeProps } from 'vue';
+import { SidebarContentType } from '../stores/draftSidebar';
 
 export type SelectOption = {
   title: string;
