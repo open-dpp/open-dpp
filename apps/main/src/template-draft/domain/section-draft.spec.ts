@@ -2,11 +2,12 @@ import { SectionDraft } from './section-draft';
 import { DataFieldDraft } from './data-field-draft';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { MoveDirection } from './template-draft';
 import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
 import { dataFieldDraftDbPropsFactory } from '../fixtures/data-field-draft.factory';
+import { expect } from '@jest/globals';
+import { NotFoundError, ValueError } from '@app/exception/domain.errors';
 
 describe('DataSectionDraft', () => {
   it('is created', () => {

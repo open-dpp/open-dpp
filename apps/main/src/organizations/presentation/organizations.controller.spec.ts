@@ -1,30 +1,31 @@
 import { Test } from '@nestjs/testing';
 import { INestApplication, NotFoundException } from '@nestjs/common';
-import * as request from 'supertest';
-import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
+import request from 'supertest';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { OrganizationEntity } from '../infrastructure/organization.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
-import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
 import { OrganizationsService } from '../infrastructure/organizations.service';
 import { OrganizationsModule } from '../organizations.module';
 import { User } from '../../users/domain/user';
-import { AuthContext } from '../../auth/auth-request';
 import { randomUUID } from 'crypto';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
-import { NotFoundInDatabaseExceptionFilter } from '../../exceptions/exception.handler';
-import { PermissionsService } from '../../permissions/permissions.service';
 import { Organization } from '../domain/organization';
+import { expect } from '@jest/globals';
+import { PermissionService } from '@app/permission';
+import { AuthContext } from '@app/auth/auth-request';
+import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
+import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
+import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
+import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
 
 describe('OrganizationController', () => {
   let app: INestApplication;
   let service: OrganizationsService;
-  let permissionsService: PermissionsService;
+  let PermissionService: PermissionService;
   const authContext = new AuthContext();
-  const userId = randomUUID();
-  authContext.user = new User(userId, 'test@example.com');
+  authContext.keycloakUser = createKeycloakUserInToken();
+  const userId = authContext.keycloakUser.sub;
 
   // Mock for permissions
   authContext.permissions = [
@@ -46,7 +47,7 @@ describe('OrganizationController', () => {
         {
           provide: APP_GUARD,
           useValue: new KeycloakAuthTestingGuard(
-            new Map([['token1', authContext.user]]),
+            new Map([['token1', authContext.keycloakUser]]),
           ),
         },
       ],
@@ -54,13 +55,18 @@ describe('OrganizationController', () => {
       .overrideProvider(KeycloakResourcesService)
       .useValue(
         KeycloakResourcesServiceTesting.fromPlain({
-          users: [{ id: authContext.user.id, email: authContext.user.email }],
+          users: [
+            {
+              id: authContext.keycloakUser.sub,
+              email: authContext.keycloakUser.email,
+            },
+          ],
         }),
       )
       .compile();
 
     service = moduleRef.get<OrganizationsService>(OrganizationsService);
-    permissionsService = moduleRef.get<PermissionsService>(PermissionsService);
+    PermissionService = moduleRef.get<PermissionService>(PermissionService);
     app = moduleRef.createNestApplication();
     app.useGlobalFilters(new NotFoundInDatabaseExceptionFilter());
 
@@ -102,7 +108,7 @@ describe('OrganizationController', () => {
 
       // For future calls, make sure all permissions are pre-authorized for this test
       jest
-        .spyOn(permissionsService, 'canAccessOrganization')
+        .spyOn(PermissionService, 'canAccessOrganization')
         .mockResolvedValue(true);
 
       // Verify we can get all orgs including the new one
@@ -132,7 +138,7 @@ describe('OrganizationController', () => {
 
       // Mock permissions to allow access
       jest
-        .spyOn(permissionsService, 'canAccessOrganizationOrFail')
+        .spyOn(PermissionService, 'canAccessOrganizationOrFail')
         .mockResolvedValue(true);
 
       const response = await request(app.getHttpServer())
@@ -149,7 +155,7 @@ describe('OrganizationController', () => {
 
       // Mock permissions to deny access
       jest
-        .spyOn(permissionsService, 'canAccessOrganizationOrFail')
+        .spyOn(PermissionService, 'canAccessOrganizationOrFail')
         .mockImplementation(async () => {
           throw new NotFoundException();
         });
@@ -173,7 +179,7 @@ describe('OrganizationController', () => {
 
       // Mock permissions to allow access
       jest
-        .spyOn(permissionsService, 'canAccessOrganizationOrFail')
+        .spyOn(PermissionService, 'canAccessOrganizationOrFail')
         .mockResolvedValue(true);
 
       // Mock service methods
@@ -199,7 +205,7 @@ describe('OrganizationController', () => {
 
       // Mock permissions to deny access
       jest
-        .spyOn(permissionsService, 'canAccessOrganizationOrFail')
+        .spyOn(PermissionService, 'canAccessOrganizationOrFail')
         .mockImplementation(async () => {
           throw new NotFoundException();
         });
@@ -226,7 +232,7 @@ describe('OrganizationController', () => {
 
       // Mock permissions to allow access
       jest
-        .spyOn(permissionsService, 'canAccessOrganizationOrFail')
+        .spyOn(PermissionService, 'canAccessOrganizationOrFail')
         .mockResolvedValue(true);
 
       const response = await request(app.getHttpServer())
@@ -237,7 +243,9 @@ describe('OrganizationController', () => {
       expect(response.body).toBeInstanceOf(Array);
       expect(response.body.length).toEqual(2);
       expect(
-        response.body.some((member) => member.id === authContext.user.id),
+        response.body.some(
+          (member) => member.id === authContext.keycloakUser.sub,
+        ),
       ).toBe(true);
       expect(response.body.some((member) => member.id === member2.id)).toBe(
         true,
@@ -249,7 +257,7 @@ describe('OrganizationController', () => {
 
       // Mock permissions to deny access
       jest
-        .spyOn(permissionsService, 'canAccessOrganizationOrFail')
+        .spyOn(PermissionService, 'canAccessOrganizationOrFail')
         .mockImplementation(async () => {
           throw new NotFoundException();
         });

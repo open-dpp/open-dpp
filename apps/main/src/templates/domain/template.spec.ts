@@ -1,10 +1,11 @@
 import { Template, TemplateDbProps } from './template';
 import { DataFieldValidationResult } from './data-field';
-import { ignoreIds } from '../../../test/utils';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport-data/domain/data-value';
 import { laptopFactory, LaptopFactory } from '../fixtures/laptop.factory';
 import { randomUUID } from 'crypto';
+import { expect } from '@jest/globals';
+import { ignoreIds } from '@app/testing/utils';
 
 describe('Template', () => {
   const laptopModel: TemplateDbProps = laptopFactory.addSections().build();

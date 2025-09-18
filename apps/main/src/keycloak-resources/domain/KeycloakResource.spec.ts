@@ -3,6 +3,7 @@ import {
   KeycloakResource,
 } from './KeycloakResource';
 import { KeycloakResourceType } from './KeycloakResourceType';
+import { expect } from '@jest/globals';
 
 describe('KeycloakResource', () => {
   it('should create a keycloak resource with default values', () => {

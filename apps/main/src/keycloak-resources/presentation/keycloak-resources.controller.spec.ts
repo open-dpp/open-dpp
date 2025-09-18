@@ -3,9 +3,9 @@ import { KeycloakResourcesController } from './keycloak-resources.controller';
 import { KeycloakResourcesService } from '../infrastructure/keycloak-resources.service';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
-import { AuthContext } from '../../auth/auth-request';
-import { randomUUID } from 'crypto';
-import { User } from '../../users/domain/user';
+import { expect } from '@jest/globals';
+import { AuthContext } from '@app/auth/auth-request';
+import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
 
 jest.mock('@keycloak/keycloak-admin-client', () => {
   return {
@@ -54,7 +54,7 @@ describe('KeycloakResourcesController', () => {
     it('should call createResource with correct parameters', async () => {
       // Arrange
       const mockAuthContext = new AuthContext();
-      mockAuthContext.user = new User(randomUUID(), 'test@test.test');
+      mockAuthContext.keycloakUser = createKeycloakUserInToken();
 
       const mockRequest = {
         authContext: mockAuthContext,

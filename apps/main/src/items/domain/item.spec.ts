@@ -9,6 +9,7 @@ import {
   laptopFactory,
 } from '../../templates/fixtures/laptop.factory';
 import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
+import { expect } from '@jest/globals';
 
 describe('Item', () => {
   const organizationId = randomUUID();

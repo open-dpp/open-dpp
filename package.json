@@ -19,7 +19,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config apps/main/test/jest-e2e.json",
-    "copy:assets": "cpx 'apps/main/client/dist/**' 'dist/apps/main/client/dist' && cpx 'apps/main/presentation/dist/**' 'dist/apps/main/presentation/dist'"
+    "copy:assets": "cpx 'apps/main/client/dist/**' 'dist/apps/main/client/dist'",
+    "check-ts": "tsc --noEmit"
   },
   "dependencies": {
     "@keycloak/keycloak-admin-client": "^26.3.4",
@@ -101,7 +102,8 @@
     "moduleNameMapper": {
       "^@app/auth(|/.*)$": "<rootDir>/libs/auth/src/$1",
       "^@app/exception(|/.*)$": "<rootDir>/libs/exception/src/$1",
-      "^@app/permission(|/.*)$": "<rootDir>/libs/permission/src/$1"
+      "^@app/permission(|/.*)$": "<rootDir>/libs/permission/src/$1",
+      "^@app/testing(|/.*)$": "<rootDir>/libs/testing/src/$1"
     }
   }
 }

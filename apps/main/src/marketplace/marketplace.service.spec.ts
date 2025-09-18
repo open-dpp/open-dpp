@@ -12,7 +12,6 @@ import { Organization } from '../organizations/domain/organization';
 import { User } from '../users/domain/user';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrganizationEntity } from '../organizations/infrastructure/organization.entity';
-import { TypeOrmTestingModule } from '../../test/typeorm.testing.module';
 import { UserEntity } from '../users/infrastructure/user.entity';
 import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
 import { UsersService } from '../users/infrastructure/users.service';
@@ -22,11 +21,13 @@ import {
   passportTemplateDtoFactory,
   templateDataFactory,
 } from './fixtures/passport.template.factory';
-import { MongooseTestingModule } from '../../test/mongo.testing.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { laptopFactory } from '../templates/fixtures/laptop.factory';
 import { TemplateService } from '../templates/infrastructure/template.service';
 import { templateCreatePropsFactory } from '../templates/fixtures/template.factory';
+import { expect } from '@jest/globals';
+import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
 
 const mockCreatePassportTemplateInMarketplace = jest.fn();
 const mockGetPassportTemplateInMarketplace = jest.fn();

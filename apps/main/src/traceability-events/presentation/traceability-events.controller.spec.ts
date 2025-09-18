@@ -6,7 +6,8 @@ import {
   DppEventSchema,
   TraceabilityEventDocument,
 } from '../infrastructure/traceability-event.document';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { expect } from '@jest/globals';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
 
 describe('DppEventsController', () => {
   let controller: TraceabilityEventsController;

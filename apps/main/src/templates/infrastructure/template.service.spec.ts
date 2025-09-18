@@ -2,9 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TemplateService } from './template.service';
 import { Template } from '../domain/template';
 import { randomUUID } from 'crypto';
-import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { Connection, Model as MongooseModel } from 'mongoose';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import {
   TemplateDoc,
@@ -18,6 +16,9 @@ import { laptopFactory } from '../fixtures/laptop.factory';
 import { sectionDbPropsFactory } from '../fixtures/section.factory';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
+import { expect } from '@jest/globals';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
+import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
 
 describe('TemplateService', () => {
   let service: TemplateService;
@@ -243,14 +244,21 @@ describe('TemplateService', () => {
       { upsert: true },
     );
     let foundRaw = await templateDoc.findById(id);
-    expect(foundRaw.sections[0].layout).toBeDefined();
-    expect(foundRaw.sections[0].dataFields[0].layout).toBeDefined();
-    const found = await service.findOneOrFail(id);
-    const saved = await service.save(found);
-    foundRaw = await templateDoc.findById(saved.id);
-    expect(foundRaw._schemaVersion).toEqual(TemplateDocSchemaVersion.v1_0_3);
-    expect(foundRaw.sections[0].layout).toBeUndefined();
-    expect(foundRaw.sections[0].dataFields[0].layout).toBeUndefined();
+    expect(foundRaw).toBeDefined();
+    if (foundRaw) {
+      expect(foundRaw.sections[0].layout).toBeDefined();
+      expect(foundRaw.sections[0].dataFields[0].layout).toBeDefined();
+      const found = await service.findOneOrFail(id);
+      const saved = await service.save(found);
+      foundRaw = await templateDoc.findById(saved.id);
+      if (foundRaw) {
+        expect(foundRaw._schemaVersion).toEqual(
+          TemplateDocSchemaVersion.v1_0_3,
+        );
+        expect(foundRaw.sections[0].layout).toBeUndefined();
+        expect(foundRaw.sections[0].dataFields[0].layout).toBeUndefined();
+      }
+    }
   });
 
   afterAll(async () => {

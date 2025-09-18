@@ -6,14 +6,15 @@ import { OrganizationsService } from '../../organizations/infrastructure/organiz
 import { Logger } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from '../../users/users.module';
-import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
+import { DataSource } from 'typeorm';
+import { expect } from '@jest/globals';
+import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
 import {
   keycloakUsers,
   org1,
   user1org1,
   user2org1,
-} from '../../../test/users-and-orgs';
-import { DataSource } from 'typeorm';
+} from '@app/testing/users-and-orgs';
 
 describe('UsersSyncOnStartupService', () => {
   let service: KeycloakSyncOnStartupService;

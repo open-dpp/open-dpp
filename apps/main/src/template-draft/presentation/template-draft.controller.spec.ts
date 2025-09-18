@@ -2,13 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { APP_GUARD } from '@nestjs/core';
-import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
-import { AuthContext } from '../../auth/auth-request';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { TemplateDraftModule } from '../template-draft.module';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { MoveDirection, TemplateDraft } from '../domain/template-draft';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { SectionDraft } from '../domain/section-draft';
@@ -20,42 +17,46 @@ import {
   TemplateDraftDoc,
   TemplateDraftSchema,
 } from '../infrastructure/template-draft.schema';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { TemplateDraftService } from '../infrastructure/template-draft.service';
 import {
   TemplateDoc,
   TemplateSchema,
 } from '../../templates/infrastructure/template.schema';
-import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
-
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { templateDraftToDto } from './dto/template-draft.dto';
 import { sectionToDto } from '../../data-modelling/presentation/dto/section-base.dto';
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { Sector } from '@open-dpp/api-client';
-import { MarketplaceServiceTesting } from '../../../test/marketplace.service.testing';
 import { MarketplaceService } from '../../marketplace/marketplace.service';
 import {
   templateDraftCreateDtoFactory,
   templateDraftCreatePropsFactory,
 } from '../fixtures/template-draft.factory';
 import { VisibilityLevel } from './dto/publish.dto';
-import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
 import { MoveType } from './dto/move.dto';
 import { dataFieldDraftDbPropsFactory } from '../fixtures/data-field-draft.factory';
+import { expect } from '@jest/globals';
+import { AuthContext } from '@app/auth/auth-request';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
+import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
+import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
+import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
+import { MarketplaceServiceTesting } from '../../../../media/test/marketplace.service.testing';
+import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
+import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
 
 describe('TemplateDraftController', () => {
   let app: INestApplication;
   const authContext = new AuthContext();
   let templateDraftService: TemplateDraftService;
   let productDataModelService: TemplateService;
-  authContext.user = new User(randomUUID(), 'test@test.test');
-  const userId = authContext.user.id;
+  authContext.keycloakUser = createKeycloakUserInToken();
+  const userId = authContext.keycloakUser.sub;
   const organizationId = randomUUID();
   const otherOrganizationId = randomUUID();
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
@@ -91,7 +92,12 @@ describe('TemplateDraftController', () => {
       .overrideProvider(KeycloakResourcesService)
       .useValue(
         KeycloakResourcesServiceTesting.fromPlain({
-          users: [{ id: authContext.user.id, email: authContext.user.email }],
+          users: [
+            {
+              id: authContext.keycloakUser.sub,
+              email: authContext.keycloakUser.email,
+            },
+          ],
         }),
       )
       .overrideProvider(MarketplaceService)

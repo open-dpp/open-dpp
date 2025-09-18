@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { ModelsModule } from '../models.module';
-import * as request from 'supertest';
+import request from 'supertest';
 import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
@@ -31,6 +31,7 @@ import {
 import { MarketplaceModule } from '../../marketplace/marketplace.module';
 import { MarketplaceServiceTesting } from '../../../test/marketplace.service.testing';
 import { MarketplaceService } from '../../marketplace/marketplace.service';
+import { expect } from '@jest/globals';
 
 describe('ModelsController', () => {
   let app: INestApplication;

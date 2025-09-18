@@ -39,6 +39,12 @@
       "@app/permission/*": [
         "libs/permission/src/*"
       ],
+      "@app/testing": [
+        "libs/testing/src"
+      ],
+      "@app/testing/*": [
+        "libs/testing/src/*"
+      ]
     }
   }
 }

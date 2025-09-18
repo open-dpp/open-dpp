@@ -1,6 +1,7 @@
 import { DataFieldDraft } from './data-field-draft';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import { expect } from '@jest/globals';
 
 describe('DataField', () => {
   it('is created', () => {

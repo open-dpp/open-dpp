@@ -1,13 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
-import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 import { AasConnectionService } from './aas-connection.service';
 import { AasConnectionDoc, AasConnectionSchema } from './aas-connection.schema';
 import { AasConnection } from '../domain/aas-connection';
 import { AssetAdministrationShellType } from '../domain/asset-administration-shell';
+import { expect } from '@jest/globals';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
+import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
 
 describe('AasMappingService', () => {
   let aasConnectionService: AasConnectionService;

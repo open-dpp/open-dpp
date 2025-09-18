@@ -5,7 +5,6 @@ import {
 } from './template-draft';
 import { DataFieldDraft } from './data-field-draft';
 import { SectionDraft } from './section-draft';
-import { NotFoundError, ValueError } from '../../exceptions/domain.errors';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { randomUUID } from 'crypto';
@@ -19,6 +18,8 @@ import {
 import { textFieldProps } from '../fixtures/data-field-draft.factory';
 import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
 import { Sector } from '@open-dpp/api-client';
+import { expect } from '@jest/globals';
+import { NotFoundError, ValueError } from '@app/exception/domain.errors';
 
 describe('TemplateDraft', () => {
   const userId = randomUUID();
@@ -43,7 +44,7 @@ describe('TemplateDraft', () => {
       productDataModelDraft.publish(otherUserId);
 
     const expected: TemplateDbProps = {
-      id: expect.any(String),
+      id: randomUUID(),
       marketplaceResourceId: null,
       name: productDataModelDraft.name,
       description: productDataModelDraft.description,
@@ -156,8 +157,8 @@ describe('TemplateDraft', () => {
     const childSection = publishedProductDataModel.sections.find(
       (s) => s.name === 'Measurement',
     );
-    expect(parentSection.subSections).toEqual([childSection.id]);
-    expect(childSection.parentId).toEqual(parentSection.id);
+    expect(parentSection?.subSections).toEqual([childSection?.id]);
+    expect(childSection?.parentId).toEqual(parentSection?.id);
   });
 
   it('should be created', () => {

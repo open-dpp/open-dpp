@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PassportTemplateService } from './passport-template.service';
 import { Connection } from 'mongoose';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import {
   PassportTemplateDbSchema,
@@ -12,6 +11,7 @@ import { passportTemplatePropsFactory } from '../fixtures/passport-template-prop
 import { randomUUID } from 'crypto';
 import { expect } from '@jest/globals';
 import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
 
 describe('PassportTemplateService', () => {
   let service: PassportTemplateService;

@@ -1,6 +1,6 @@
-import { Template } from '../src/templates/domain/template';
 import { Sector } from '@open-dpp/api-client';
 import { Injectable } from '@nestjs/common';
+import { Template } from '../../main/src/templates/domain/template';
 
 @Injectable()
 export class MarketplaceServiceTesting {

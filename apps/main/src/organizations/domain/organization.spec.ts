@@ -1,6 +1,7 @@
 import { Organization } from './organization';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
+import { expect } from '@jest/globals';
 
 describe('Organization', () => {
   it('creates a organization and add members', () => {

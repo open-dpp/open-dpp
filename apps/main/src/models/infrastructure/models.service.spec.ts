@@ -7,7 +7,6 @@ import { TraceabilityEventsService } from '../../traceability-events/infrastruct
 import { TraceabilityEventWrapper } from '../../traceability-events/domain/traceability-event-wrapper';
 import { TraceabilityEvent } from '../../traceability-events/domain/traceability-event';
 import { Connection, Model as MongooseModel } from 'mongoose';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import {
   UniqueProductIdentifierDoc,
@@ -15,20 +14,22 @@ import {
 } from '../../unique-product-identifier/infrastructure/unique-product-identifier.schema';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
 import { User } from '../../users/domain/user';
-import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { UsersService } from '../../users/infrastructure/users.service';
 import { ModelDoc, ModelDocSchemaVersion, ModelSchema } from './model.schema';
-import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
-import { ignoreIds } from '../../../test/utils';
 import { DataValue } from '../../product-passport-data/domain/data-value';
 import { laptopFactory } from '../../templates/fixtures/laptop.factory';
 import { Model } from '../domain/model';
+import { expect } from '@jest/globals';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
+import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
+import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
+import { ignoreIds } from '@app/testing/utils';
+import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;

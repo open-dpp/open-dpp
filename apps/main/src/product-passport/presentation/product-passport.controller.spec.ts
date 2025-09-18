@@ -5,10 +5,8 @@ import { INestApplication } from '@nestjs/common';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { APP_GUARD, Reflector } from '@nestjs/core';
 import { Model } from '../../models/domain/model';
-import * as request from 'supertest';
-import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
+import request from 'supertest';
 import { Template, TemplateDbProps } from '../../templates/domain/template';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
 import { Item } from '../../items/domain/item';
 import { ItemsService } from '../../items/infrastructure/items.service';
 import {
@@ -19,7 +17,10 @@ import {
 import { ProductPassport } from '../domain/product-passport';
 import { ProductPassportModule } from '../product-passport.module';
 import { productPassportToDto } from './dto/product-passport.dto';
-import { IS_PUBLIC } from '../../auth/decorators/public.decorator';
+import { expect } from '@jest/globals';
+import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
+import { IS_PUBLIC } from '@app/auth/public/public.decorator';
 
 describe('ProductPassportController', () => {
   let app: INestApplication;
