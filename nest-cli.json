@@ -10,6 +10,24 @@
   "monorepo": true,
   "root": "apps/main",
   "projects": {
+    "agent": {
+      "type": "application",
+      "root": "apps/agent",
+      "entryFile": "main",
+      "sourceRoot": "apps/agent/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/agent/tsconfig.app.json"
+      }
+    },
+    "analytics": {
+      "type": "application",
+      "root": "apps/analytics",
+      "entryFile": "main",
+      "sourceRoot": "apps/analytics/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/analytics/tsconfig.app.json"
+      }
+    },
     "auth": {
       "type": "library",
       "root": "libs/auth",
@@ -44,6 +62,15 @@
       "sourceRoot": "apps/marketplace/src",
       "compilerOptions": {
         "tsConfigPath": "apps/marketplace/tsconfig.app.json"
+      }
+    },
+    "mcp": {
+      "type": "application",
+      "root": "apps/mcp",
+      "entryFile": "main",
+      "sourceRoot": "apps/mcp/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/mcp/tsconfig.app.json"
       }
     },
     "media": {
