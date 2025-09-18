@@ -1,5 +1,5 @@
 <template>
-  <QrCode v-if="url" :url="url" />
+  <QrCode v-if="link && content" :link="link" :content="content" />
 </template>
 <script lang="ts" setup>
 import { onMounted, ref } from "vue";
@@ -9,7 +9,8 @@ import QrCode from "../../components/QrCode.vue";
 import apiClient from "../../lib/api-client";
 
 const route = useRoute();
-const url = ref<string>();
+const link = ref<string>();
+const content = ref<string>();
 
 onMounted(async () => {
   const response = await apiClient.dpp.models.getById(
@@ -17,6 +18,7 @@ onMounted(async () => {
   );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const model = response.data as any;
-  url.value = `${VIEW_ROOT_URL}/${model.uniqueProductIdentifiers[0].uuid}`;
+  link.value = `/presentation/${model.uniqueProductIdentifiers[0].uuid}`;
+  content.value = `${VIEW_ROOT_URL}/presentation/${model.uniqueProductIdentifiers[0].uuid}`;
 });
 </script>
