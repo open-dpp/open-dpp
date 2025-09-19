@@ -25,6 +25,7 @@ import { AiConfigurationModule } from '../../agent/src/ai/ai-configuration/ai-co
 import { AiModule } from '../../agent/src/ai/ai.module';
 import { McpClientModule } from '../../agent/src/ai/mcp-client/mcp-client.module';
 import { PassportModule } from '../../agent/src/ai/passports/passport.module';
+import { MarketplaceAppModule } from 'apps/marketplace/src/marketplace-app.module';
 
 @Module({
   imports: [
@@ -66,14 +67,16 @@ import { PassportModule } from '../../agent/src/ai/passports/passport.module';
     ProductPassportModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, 'client', 'dist'),
+      exclude: ['/api', '/api/{*test}'],
       serveStaticOptions: {
         fallthrough: true,
       },
     }),
     MediaModule,
+    MarketplaceAppModule,
     AiConfigurationModule,
     AiModule,
-    McpClientModule,
+    //McpClientModule,
     PassportModule,
   ],
   controllers: [],
