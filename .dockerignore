@@ -1,0 +1,8 @@
+api-db
+api-mongo-config
+api-mongo-db
+auth-db
+
+node_modules
+dist
+apps/main/client/node_modules
