@@ -47,11 +47,11 @@ const permalink = computed(() => String(route.params.permalink ?? ''));
 const isChatRoute = computed(() => route.path.endsWith('/chat'));
 
 const navigateToPassportView = () => {
-  router.push(`/${permalink.value}`);
+  router.push(`/presentation/${permalink.value}`);
 };
 
 const navigateToAiChat = () => {
-  router.push(`/${permalink.value}/chat`);
+  router.push(`/presentation/${permalink.value}/chat`);
 };
 
 const backToApp = () => {

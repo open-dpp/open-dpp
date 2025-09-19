@@ -69,13 +69,13 @@ const uploadFile = async () => {
     return;
   }
   try {
-    await mediaStore.uploadMedia(
+    const mediaId = await mediaStore.uploadMedia(
       indexStore.selectedOrganization,
       selectedLocalFile.value,
       (progress) => (uploadProgress.value = progress),
     );
     notificationStore.addSuccessNotification('Datei erfolgreich hochgeladen.');
-    await mediaStore.fetchMedia(indexStore.selectedOrganization);
+    await mediaStore.fetchMedia(mediaId);
   } catch (error: unknown) {
     console.error('Fehler beim Hochladen der Datei:', error);
     notificationStore.addErrorNotification(

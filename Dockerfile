@@ -3,7 +3,7 @@
 # Very thanks to https://www.tomray.dev/nestjs-docker-production
 ###################
 
-FROM node:23-alpine As development
+FROM node:24-alpine As development
 
 # Create app directory
 WORKDIR /usr/src/app
@@ -26,7 +26,7 @@ USER node
 # BUILD FOR PRODUCTION
 ###################
 
-FROM node:23-alpine As build
+FROM node:24-alpine As build
 ARG APP_NAME=main
 
 WORKDIR /usr/src/app
@@ -53,7 +53,7 @@ USER node
 # PRODUCTION
 ###################
 
-FROM node:23-alpine As production
+FROM node:24-alpine As production
 
 ARG APP_NAME=main
 ENV APP_NAME=${APP_NAME}

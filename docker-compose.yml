@@ -55,18 +55,6 @@ services:
     networks:
       - open-dpp-local
 
-  admin:
-    container_name: admin
-    image: ghcr.io/open-dpp/admin-interface:latest
-    networks:
-      - open-dpp-local
-
-  presentation-interface:
-    container_name: presentation
-    image: ghcr.io/open-dpp/presentation-interface:latest
-    networks:
-      - open-dpp-local
-
   open-dpp:
     container_name: open-dpp
     build:
@@ -92,6 +80,19 @@ services:
       - KEYCLOAK_ADMIN_USERNAME=${AUTH_ADMIN_USERNAME}
       - KEYCLOAK_ADMIN_PASSWORD=${AUTH_ADMIN_PWD}
       - MARKETPLACE_URL=${SERVICE_MARKETPLACE_URL}
+      - S3_ENDPOINT=minio
+      - S3_PORT=9000
+      - S3_ACCESS_KEY=minioadmin
+      - S3_SECRET_KEY=minioadmin
+      - S3_BUCKET_NAME_DEFAULT=dpp
+      - S3_BUCKET_NAME_PROFILE_PICTURES=profile-pictures
+      - CLAMAV_URL=http://clamav-rest
+      - CLAMAV_PORT=9000
+      - OLLAMA_URL=${OLLAMA_URL}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - MCP_URL=http://mcp-server:3000/sse
+      - DPP_API_URL=http://localhost:3000/api
+      - DPP_API_SERVICE_TOKEN=${API_SERVICE_TOKEN}
     depends_on:
       keycloak:
         condition: service_healthy
@@ -128,6 +129,74 @@ services:
     depends_on:
       keycloak:
         condition: service_healthy
+    networks:
+      - open-dpp-local
+
+  open-dpp-analytics:
+    container_name: open-dpp-analytics
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - APP_NAME=analytics
+    ports:
+      - 4003:3000
+    environment:
+      - PORT=3000
+      - DB_HOST=api-mongo-db
+      - DB_PORT=27017
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+      - DB_DATABASE=management
+      - KEYCLOAK_PUBLIC_URL=${SERVICE_KEYCLOAK_URL}
+      - KEYCLOAK_NETWORK_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=open-dpp
+      - DPP_API_URL=${DPP_API_URL}
+      - DPP_API_SERVICE_TOKEN=${API_SERVICE_TOKEN}
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    networks:
+      - open-dpp-local
+
+  open-dpp-agent:
+    container_name: open-dpp-agent
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - APP_NAME=agent
+    ports:
+      - 4004:3000
+    environment:
+      - DPP_API_URL=http://open-dpp:3000/api
+      - DPP_API_SERVICE_TOKEN=${API_SERVICE_TOKEN}
+      - PORT=3000
+      - DB_HOST=api-mongo-db
+      - DB_PORT=27017
+      - DB_USERNAME=admin
+      - DB_PASSWORD=admin
+      - DB_DATABASE=management
+      - KEYCLOAK_PUBLIC_URL=${SERVICE_KEYCLOAK_URL}
+      - KEYCLOAK_NETWORK_URL=http://keycloak:8080
+      - KEYCLOAK_REALM=open-dpp
+      - OLLAMA_URL=${OLLAMA_URL}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - MCP_URL=http://mcp-server:3000/sse
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    networks:
+      - open-dpp-local
+
+  mcp-server:
+    container_name: mcp-server
+    ports:
+      - 4005:3000
+    image: ghcr.io/open-dpp/mcp-server:main
+    environment:
+      - DPP_API_URL=${DPP_API_URL}
+      - PORT=3000
     networks:
       - open-dpp-local
 
