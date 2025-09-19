@@ -20,6 +20,11 @@ import { ProductPassportModule } from './product-passport/product-passport.modul
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthGuard } from '@app/auth/keycloak-auth/keycloak-auth.guard';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { MediaModule } from '@app/media-module/media/media.module';
+import { AiConfigurationModule } from '../../agent/src/ai/ai-configuration/ai-configuration.module';
+import { AiModule } from '../../agent/src/ai/ai.module';
+import { McpClientModule } from '../../agent/src/ai/mcp-client/mcp-client.module';
+import { PassportModule } from '../../agent/src/ai/passports/passport.module';
 
 @Module({
   imports: [
@@ -65,6 +70,11 @@ import { ServeStaticModule } from '@nestjs/serve-static';
         fallthrough: true,
       },
     }),
+    MediaModule,
+    AiConfigurationModule,
+    AiModule,
+    McpClientModule,
+    PassportModule,
   ],
   controllers: [],
   providers: [

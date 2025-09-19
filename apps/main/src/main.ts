@@ -9,6 +9,8 @@ import {
 import { buildOpenApiDocumentation } from './open-api-docs';
 import { ValidationPipe } from '@nestjs/common';
 import { applyBodySizeHandler } from './BodySizeHandler';
+import * as bodyParser from 'body-parser';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -20,12 +22,22 @@ async function bootstrap() {
     new NotFoundExceptionFilter(),
     new ValueErrorFilter(),
   );
+  app.use(
+    '/media/upload-dpp-file/:upi',
+    bodyParser.urlencoded({ limit: '50mb', extended: true }),
+  );
   applyBodySizeHandler(app);
 
   app.useGlobalPipes(new ValidationPipe());
   if (configService.get<string>('BUILD_OPEN_API_DOCUMENTATION') === 'true') {
     buildOpenApiDocumentation(app);
   }
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.TCP,
+    options: {
+      port: Number(configService.get('MSG_PORT', '5002')), // Microservice port
+    },
+  });
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

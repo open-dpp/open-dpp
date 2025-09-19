@@ -3,17 +3,7 @@ auth.open-dpp.localhost:20080 {
 	tls internal
 }
 
-admin.open-dpp.localhost:20080 {
-	reverse_proxy admin:80
-	tls internal
-}
-
-presentation.open-dpp.localhost:20080 {
-	reverse_proxy presentation:80
-	tls internal
-}
-
-api.open-dpp.localhost:20080 {
+open-dpp.localhost:20080 {
 	reverse_proxy open-dpp:3000
 	tls internal
 }
@@ -34,7 +24,7 @@ media.open-dpp.localhost:20080 {
 }
 
 agent-server.open-dpp.localhost:20080 {
-	reverse_proxy agent-server:3000
+	reverse_proxy open-dpp-agent:3000
 	tls internal
 }
 

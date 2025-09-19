@@ -27,10 +27,11 @@ export const useAiAgentStore = defineStore('socket', () => {
       console.error('AGENT_SERVER_URL is not set');
       return;
     }
+    console.log('Connecting to AI agent server', AGENT_SERVER_URL);
     if (!socket.value) {
       socket.value = io(AGENT_SERVER_URL, {
         autoConnect: true,
-        path: '/ai-socket/socket.io',
+        path: 'ai-socket/socket.io',
       });
     } else if (!socket.value.connected) {
       socket.value.connect();

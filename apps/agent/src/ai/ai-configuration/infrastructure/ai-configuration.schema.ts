@@ -23,7 +23,7 @@ export class AiConfigurationDoc extends Document {
   createdByUserId: string;
   @Prop({ required: true })
   isEnabled: boolean;
-  @Prop({ required: true, enum: AiProvider })
+  @Prop({ required: true, enum: AiProvider, type: String })
   provider: AiProvider;
   @Prop({ required: true })
   aiModel: string;

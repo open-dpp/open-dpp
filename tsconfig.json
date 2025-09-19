@@ -33,6 +33,12 @@
       "@app/exception/*": [
         "libs/exception/src/*"
       ],
+      "@app/media-module": [
+        "libs/media-module/src"
+      ],
+      "@app/media-module/*": [
+        "libs/media-module/src/*"
+      ],
       "@app/permission": [
         "libs/permission/src"
       ],
