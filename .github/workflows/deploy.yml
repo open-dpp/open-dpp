@@ -27,7 +27,6 @@ jobs:
           server-name: "gh-actions-server"
           server-image: "docker-ce"
           server-type: "cax11"
-          server-location: "nbg1"
           ssh-key-name: "my key name"
           hcloud-token: ${{ secrets.HCLOUD_TOKEN }}
       - uses: webfactory/ssh-agent@v0.4.1
