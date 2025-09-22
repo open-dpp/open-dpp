@@ -7,18 +7,20 @@ import {
   ValueErrorFilter,
 } from '@app/exception/exception.handler';
 import { buildOpenApiDocumentation } from './open-api-docs';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { applyBodySizeHandler } from './BodySizeHandler';
 import * as bodyParser from 'body-parser';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
   // Proxy SPA routes in development before setting global prefix
   if (process.env.NODE_ENV !== 'production') {
+    logger.log('Proxying frontend routes');
     app.use(
       '/',
       createProxyMiddleware({
@@ -54,6 +56,8 @@ async function bootstrap() {
       port: Number(configService.get('MSG_PORT', '5002')), // Microservice port
     },
   });
-  await app.listen(process.env.PORT ?? 3000);
+  const port = Number(configService.get('PORT', '3000'));
+  logger.log(`Starting server on port ${port}`);
+  await app.listen(port);
 }
 bootstrap();

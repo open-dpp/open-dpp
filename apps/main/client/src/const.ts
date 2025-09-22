@@ -4,16 +4,10 @@ export { keycloakDisabled };
 export const KEYCLOAK_URL =
   (import.meta.env.VITE_KEYCLOAK_ROOT as string) || 'http://localhost:20001';
 export const API_URL = import.meta.env.VITE_API_ROOT;
-export const MARKETPLACE_URL = import.meta.env.VITE_MARKETPLACE_ROOT;
+export const MARKETPLACE_URL = API_URL;
 export const VIEW_ROOT_URL = import.meta.env.VITE_VIEW_ROOT_URL;
-export const MEDIA_SERVICE_URL = import.meta.env.VITE_MEDIA_SERVICE_ROOT;
-if (!import.meta.env.VITE_AGENT_SERVER_ROOT) {
-  throw new Error(
-    'Missing required environment variable: VITE_AGENT_SERVER_ROOT',
-  );
-}
-export const AGENT_SERVER_URL = import.meta.env
-  .VITE_AGENT_SERVER_ROOT as string;
+export const MEDIA_SERVICE_URL = API_URL;
+export const AGENT_SERVER_URL = API_URL;
 
 // local storage keys
 const LOCAL_STORAGE_PREFIX = 'open-dpp-local';

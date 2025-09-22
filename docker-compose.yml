@@ -35,7 +35,7 @@ services:
       start_period: 30s
     command: start
     ports:
-      - ${SERVICE_KEYCLOAK_PORT}:8080
+      - 20001:8080
     depends_on:
       - auth-db
     networks:
@@ -65,21 +65,23 @@ services:
     ports:
       - 4001:3000
     environment:
+      - NODE_ENV=production
+      - PORT=${PORT}
       - SERVICE_TOKEN=${API_SERVICE_TOKEN}
-      - API_TOKEN=apiToken
+      - API_TOKEN=${API_TOKEN}
       - DB_HOST=api-db
       - DB_PORT=5432
-      - DB_USERNAME=admin
-      - DB_PASSWORD=admin
-      - DB_DATABASE=management
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
       - MONGO_DB_HOST=api-mongo-db
       - MONGO_DB_PORT=27017
-      - KEYCLOAK_PUBLIC_URL=${SERVICE_KEYCLOAK_URL}
+      - KEYCLOAK_PUBLIC_URL=${KEYCLOAK_PUBLIC_URL}
       - KEYCLOAK_NETWORK_URL=http://keycloak:8080
-      - KEYCLOAK_REALM=open-dpp
-      - KEYCLOAK_ADMIN_USERNAME=${AUTH_ADMIN_USERNAME}
-      - KEYCLOAK_ADMIN_PASSWORD=${AUTH_ADMIN_PWD}
-      - MARKETPLACE_URL=${SERVICE_MARKETPLACE_URL}
+      - KEYCLOAK_REALM=${KEYCLOAK_REALM}
+      - KEYCLOAK_ADMIN_USERNAME=${KEYCLOAK_ADMIN_USERNAME}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+      - API_URL=${API_URL}
       - S3_ENDPOINT=minio
       - S3_PORT=9000
       - S3_ACCESS_KEY=minioadmin
@@ -92,97 +94,7 @@ services:
       - MISTRAL_API_KEY=${MISTRAL_API_KEY}
       - MCP_URL=http://mcp-server:3000/sse
       - DPP_API_URL=http://localhost:3000/api
-      - DPP_API_SERVICE_TOKEN=${API_SERVICE_TOKEN}
-    depends_on:
-      keycloak:
-        condition: service_healthy
-    networks:
-      - open-dpp-local
-
-  open-dpp-media:
-    container_name: open-dpp-media
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - APP_NAME=media
-    ports:
-      - 4002:3000
-    environment:
-      - PORT=3000
-      - DB_HOST=api-mongo-db
-      - DB_PORT=27017
-      - DB_USERNAME=admin
-      - DB_PASSWORD=admin
-      - DB_DATABASE=management
-      - KEYCLOAK_PUBLIC_URL=${SERVICE_KEYCLOAK_URL}
-      - KEYCLOAK_NETWORK_URL=http://keycloak:8080
-      - KEYCLOAK_REALM=open-dpp
-      - S3_ENDPOINT=minio
-      - S3_PORT=9000
-      - S3_ACCESS_KEY=minioadmin
-      - S3_SECRET_KEY=minioadmin
-      - S3_BUCKET_NAME_DEFAULT=dpp
-      - S3_BUCKET_NAME_PROFILE_PICTURES=profile-pictures
-      - CLAMAV_URL=http://clamav-rest
-      - CLAMAV_PORT=9000
-    depends_on:
-      keycloak:
-        condition: service_healthy
-    networks:
-      - open-dpp-local
-
-  open-dpp-analytics:
-    container_name: open-dpp-analytics
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - APP_NAME=analytics
-    ports:
-      - 4003:3000
-    environment:
-      - PORT=3000
-      - DB_HOST=api-mongo-db
-      - DB_PORT=27017
-      - DB_USERNAME=admin
-      - DB_PASSWORD=admin
-      - DB_DATABASE=management
-      - KEYCLOAK_PUBLIC_URL=${SERVICE_KEYCLOAK_URL}
-      - KEYCLOAK_NETWORK_URL=http://keycloak:8080
-      - KEYCLOAK_REALM=open-dpp
-      - DPP_API_URL=${DPP_API_URL}
-      - DPP_API_SERVICE_TOKEN=${API_SERVICE_TOKEN}
-    depends_on:
-      keycloak:
-        condition: service_healthy
-    networks:
-      - open-dpp-local
-
-  open-dpp-agent:
-    container_name: open-dpp-agent
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - APP_NAME=agent
-    ports:
-      - 4004:3000
-    environment:
-      - DPP_API_URL=http://open-dpp:3000/api
-      - DPP_API_SERVICE_TOKEN=${API_SERVICE_TOKEN}
-      - PORT=3000
-      - DB_HOST=api-mongo-db
-      - DB_PORT=27017
-      - DB_USERNAME=admin
-      - DB_PASSWORD=admin
-      - DB_DATABASE=management
-      - KEYCLOAK_PUBLIC_URL=${SERVICE_KEYCLOAK_URL}
-      - KEYCLOAK_NETWORK_URL=http://keycloak:8080
-      - KEYCLOAK_REALM=open-dpp
-      - OLLAMA_URL=${OLLAMA_URL}
-      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
-      - MCP_URL=http://mcp-server:3000/sse
+      - DPP_API_SERVICE_TOKEN=${DPP_API_SERVICE_TOKEN}
     depends_on:
       keycloak:
         condition: service_healthy
@@ -205,19 +117,19 @@ services:
     platform: linux/amd64
     image: postgres:17-alpine
     environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=admin
-      - POSTGRES_DB=management
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_DATABASE}
     volumes:
       - ./api-db:/var/lib/postgresql/data/
     ports:
-      - ${SERVICE_APIDB_PORT}:5432
+      - ${DB_PORT}:5432
     networks:
       - open-dpp-local
 
   api-mongo-db:
     ports:
-      - ${SERVICE_MONGODB_PORT}:27017
+      - ${MONGO_DB_PORT}:27017
     container_name: api-mongo-db
     logging:
       options:
@@ -226,9 +138,9 @@ services:
       - ./api-mongo-db:/data/db
       - ./api-mongo-config:/data/configdb
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=admin
-      - MONGO_INITDB_DATABASE=management
+      - MONGO_INITDB_ROOT_USERNAME=${DB_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${DB_PASSWORD}
+      - MONGO_INITDB_DATABASE=${DB_DATABASE}
     image: mongo:6.0
     networks:
       - open-dpp-local

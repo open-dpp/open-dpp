@@ -27,10 +27,11 @@ export class MarketplaceService {
     private templateDoc: Model<TemplateDoc>,
     private templateService: TemplateService,
   ) {
-    const baseURL = configService.get<string>('MARKETPLACE_URL');
+    const baseURL = configService.get<string>('API_URL');
     if (!baseURL) {
-      throw new Error('MARKETPLACE_URL is not set');
+      throw new Error('API_URL is not set');
     }
+    this.logger.log(`Using API_URL for marketplace: ${baseURL}`);
     this.marketplaceClient = new MarketplaceApiClient({ baseURL });
   }
 
