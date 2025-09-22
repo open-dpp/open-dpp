@@ -25,8 +25,6 @@ jobs:
           HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
       - name: Checkout
         uses: actions/checkout@v4
-      - name: set hcloud context
-        run: hcloud context create open-dpp
       - name: Create server
         run: hcloud server create \
           --datacenter nbg1-dc3 \
