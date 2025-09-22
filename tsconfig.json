@@ -21,6 +21,12 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
+      "@app/analytics": [
+        "libs/analytics/src"
+      ],
+      "@app/analytics/*": [
+        "libs/analytics/src/*"
+      ],
       "@app/auth": [
         "libs/auth/src"
       ],
