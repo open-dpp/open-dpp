@@ -65,6 +65,7 @@ services:
     ports:
       - 4001:3000
     environment:
+      - NODE_ENV=production
       - SERVICE_TOKEN=${API_SERVICE_TOKEN}
       - API_TOKEN=apiToken
       - DB_HOST=api-db
@@ -79,11 +80,10 @@ services:
       - KEYCLOAK_REALM=open-dpp
       - KEYCLOAK_ADMIN_USERNAME=${AUTH_ADMIN_USERNAME}
       - KEYCLOAK_ADMIN_PASSWORD=${AUTH_ADMIN_PWD}
-      - MARKETPLACE_URL=${SERVICE_MARKETPLACE_URL}
       - S3_ENDPOINT=minio
       - S3_PORT=9000
-      - S3_ACCESS_KEY=minioadmin
-      - S3_SECRET_KEY=minioadmin
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY}
+      - S3_SECRET_KEY=${S3_SECRET_KEY}
       - S3_BUCKET_NAME_DEFAULT=dpp
       - S3_BUCKET_NAME_PROFILE_PICTURES=profile-pictures
       - CLAMAV_URL=http://clamav-rest
