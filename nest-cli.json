@@ -73,6 +73,15 @@
         "tsConfigPath": "apps/mcp/tsconfig.app.json"
       }
     },
+    "mcp-module": {
+      "type": "library",
+      "root": "libs/mcp-module",
+      "entryFile": "index",
+      "sourceRoot": "libs/mcp-module/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/mcp-module/tsconfig.lib.json"
+      }
+    },
     "media": {
       "type": "application",
       "root": "apps/media",

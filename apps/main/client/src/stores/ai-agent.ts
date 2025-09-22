@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { io, type Socket } from 'socket.io-client';
 import { ref } from 'vue';
-import { AGENT_SERVER_URL } from '../const';
+import { AGENT_WEBSOCKET_URL } from '../const';
 import { useRoute } from 'vue-router';
 
 export enum Sender {
@@ -23,15 +23,16 @@ export const useAiAgentStore = defineStore('socket', () => {
 
   let listenersBound = false;
   const connect = () => {
-    if (!AGENT_SERVER_URL) {
-      console.error('AGENT_SERVER_URL is not set');
+    if (!AGENT_WEBSOCKET_URL) {
+      console.error('AGENT_WEBSOCKET_URL is not set');
       return;
     }
-    console.log('Connecting to AI agent server', AGENT_SERVER_URL);
+    console.log('Connecting to AI agent server', AGENT_WEBSOCKET_URL);
     if (!socket.value) {
-      socket.value = io(AGENT_SERVER_URL, {
+      socket.value = io(AGENT_WEBSOCKET_URL, {
         autoConnect: true,
-        path: 'ai-socket/socket.io',
+        path: '/api/ai-socket',
+        port: 5002,
       });
     } else if (!socket.value.connected) {
       socket.value.connect();

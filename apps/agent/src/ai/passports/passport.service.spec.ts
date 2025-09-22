@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { PassportService } from './passport.service';
 import { Passport } from './domain/passport';
 import { ConfigService } from '@nestjs/config';
+import { expect } from '@jest/globals';
 
 const mockGetMetadata = jest.fn();
 
@@ -30,7 +31,7 @@ describe('PassportService', () => {
             get: jest.fn().mockImplementation((key) => {
               if (key === 'DPP_API_URL') {
                 return 'http://api.url';
-              } else if (key === 'DPP_API_SERVICE_TOKEN') {
+              } else if (key === 'API_SERVICE_TOKEN') {
                 return 'service-token';
               } else {
                 return undefined;

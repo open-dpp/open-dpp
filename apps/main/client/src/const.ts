@@ -14,7 +14,13 @@ if (!import.meta.env.VITE_AGENT_SERVER_ROOT) {
 }
 export const AGENT_SERVER_URL = import.meta.env
   .VITE_AGENT_SERVER_ROOT as string;
-
+if (!import.meta.env.VITE_AGENT_WEBSOCKET_ROOT) {
+  throw new Error(
+    'Missing required environment variable: VITE_AGENT_WEBSOCKET_ROOT',
+  );
+}
+export const AGENT_WEBSOCKET_URL = import.meta.env
+  .VITE_AGENT_WEBSOCKET_ROOT as string;
 // local storage keys
 const LOCAL_STORAGE_PREFIX = 'open-dpp-local';
 export const LAST_SELECTED_ORGANIZATION_ID_KEY = `${LOCAL_STORAGE_PREFIX}-last-selected-organization-id`;

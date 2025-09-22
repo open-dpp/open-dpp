@@ -21,11 +21,13 @@ import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthGuard } from '@app/auth/keycloak-auth/keycloak-auth.guard';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { MediaModule } from '@app/media-module/media/media.module';
-import { AiConfigurationModule } from '../../agent/src/ai/ai-configuration/ai-configuration.module';
-import { AiModule } from '../../agent/src/ai/ai.module';
-import { McpClientModule } from '../../agent/src/ai/mcp-client/mcp-client.module';
-import { PassportModule } from '../../agent/src/ai/passports/passport.module';
 import { MarketplaceAppModule } from 'apps/marketplace/src/marketplace-app.module';
+import { ChatGateway } from './ai/chat.gateway';
+import { ChatService } from './ai/chat.service';
+import { AiModule } from './ai/ai.module';
+import { AiConfigurationModule } from './ai/ai-configuration/ai-configuration.module';
+import { McpClientModule } from './ai/mcp-client/mcp-client.module';
+import { PassportModule } from './ai/passports/passport.module';
 
 @Module({
   imports: [
@@ -49,6 +51,7 @@ import { MarketplaceAppModule } from 'apps/marketplace/src/marketplace-app.modul
         autoLoadEntities: true,
         migrationsTransactionMode: 'each',
         migrationsRun: true,
+        synchronize: true,
       }),
       inject: [ConfigService],
     }),
@@ -76,11 +79,13 @@ import { MarketplaceAppModule } from 'apps/marketplace/src/marketplace-app.modul
     MarketplaceAppModule,
     AiConfigurationModule,
     AiModule,
-    //McpClientModule,
+    McpClientModule,
     PassportModule,
   ],
   controllers: [],
   providers: [
+    ChatGateway,
+    ChatService,
     {
       provide: APP_GUARD,
       useClass: KeycloakAuthGuard,

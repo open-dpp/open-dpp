@@ -5,7 +5,7 @@
         <ModelTemplateList
           :is-marketplace-selected="isMarketplaceSelected"
           :selected="selectedTemplate ? [selectedTemplate] : []"
-          :show-tabs="false"
+          :show-tabs="true"
           @update-selected-items="
             (items) => (selectedTemplate = items[0] ? items[0] : null)
           "

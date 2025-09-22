@@ -33,6 +33,12 @@
       "@app/exception/*": [
         "libs/exception/src/*"
       ],
+      "@app/mcp-module": [
+        "libs/mcp-module/src"
+      ],
+      "@app/mcp-module/*": [
+        "libs/mcp-module/src/*"
+      ],
       "@app/media-module": [
         "libs/media-module/src"
       ],

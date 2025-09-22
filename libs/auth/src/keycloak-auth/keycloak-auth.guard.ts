@@ -14,6 +14,7 @@ import { firstValueFrom } from 'rxjs';
 import { AxiosResponse } from 'axios';
 import jwksRsa from 'jwks-rsa';
 import * as jwt from 'jsonwebtoken';
+import { ALLOW_SERVICE_ACCESS } from '@app/auth/allow-service-access.decorator';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
@@ -37,8 +38,22 @@ export class KeycloakAuthGuard implements CanActivate {
       IS_PUBLIC,
       context.getHandler(),
     );
+    const allowServiceAccess = this.reflector.get<boolean>(
+      ALLOW_SERVICE_ACCESS,
+      context.getHandler(),
+    );
     if (isPublic) {
       return isPublic;
+    }
+    if (allowServiceAccess) {
+      if (
+        request.headers.service_token !==
+        this.configService.get('SERVICE_TOKEN')
+      ) {
+        throw new UnauthorizedException('Invalid service token.');
+      } else {
+        return allowServiceAccess;
+      }
     }
 
     const headerAuthorization = request.headers.authorization;
@@ -46,7 +61,7 @@ export class KeycloakAuthGuard implements CanActivate {
     let accessToken: string;
 
     if (headerAuthorization) {
-      accessToken = await this.readTokenFromJwt(headerAuthorization);
+      accessToken = this.readTokenFromJwt(headerAuthorization);
     } else if (headerApiKey) {
       accessToken = await this.readTokenFromApiKeyOrFail(headerApiKey);
     } else {
@@ -67,6 +82,7 @@ export class KeycloakAuthGuard implements CanActivate {
       );
     }
     authContext.keycloakUser = payload;
+    // await this.usersService.create(user, true);
     const memberships = payload.memberships || ([] as string[]);
     memberships.forEach((membership: string) => {
       authContext.permissions.push({
@@ -129,7 +145,7 @@ export class KeycloakAuthGuard implements CanActivate {
     const authUrl = this.getAuthUrl();
     try {
       const response = await firstValueFrom<AxiosResponse<{ jwt: string }>>(
-        this.httpService.get(`${authUrl}?apiKey=${headerApiKey}`),
+        this.httpService.get(authUrl, { params: { apiKey: headerApiKey } }),
       );
       if (response.status === 200) {
         return response.data.jwt;
@@ -140,7 +156,7 @@ export class KeycloakAuthGuard implements CanActivate {
     throw new UnauthorizedException('API Key invalid');
   }
 
-  private async readTokenFromJwt(authorization: string): Promise<string> {
+  private readTokenFromJwt(authorization: string): string {
     const parts = authorization.split(' ');
     if (parts.length !== 2 || parts[0] !== 'Bearer') {
       throw new UnauthorizedException(

@@ -35,7 +35,7 @@ import { KeycloakAuthGuard } from '@app/auth/keycloak-auth/keycloak-auth.guard';
             KEYCLOAK_REALM: z.string(),
             KEYCLOAK_PUBLIC_URL: z.string(),
             DPP_API_URL: z.string(),
-            DPP_API_SERVICE_TOKEN: z.string(),
+            API_SERVICE_TOKEN: z.string(),
           })
           .parse(config),
     }),

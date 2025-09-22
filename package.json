@@ -115,6 +115,7 @@
     "moduleNameMapper": {
       "^@app/auth(|/.*)$": "<rootDir>/libs/auth/src/$1",
       "^@app/exception(|/.*)$": "<rootDir>/libs/exception/src/$1",
+      "^@app/mcp-module(|/.*)$": "<rootDir>/libs/mcp-module/src/$1",
       "^@app/media-module(|/.*)$": "<rootDir>/libs/media-module/src/$1",
       "^@app/permission(|/.*)$": "<rootDir>/libs/permission/src/$1",
       "^@app/testing(|/.*)$": "<rootDir>/libs/testing/src/$1"
