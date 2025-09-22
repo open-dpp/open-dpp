@@ -26,14 +26,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Create server
-        run: hcloud server create \
-          --datacenter nbg1-dc3 \
-          --image docker-ce \
-          --location nbg1 \
-          --name gh-actions-server \
-          --type cax11 \
-          --ssh-key ODDP hetzner \
-          --start-after-create \
+        run: hcloud server create --datacenter nbg1-dc3 --image docker-ce --location nbg1 --name gh-actions-server --type cax11 --ssh-key ODDP hetzner --start-after-create
       - uses: webfactory/ssh-agent@v0.4.1
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
