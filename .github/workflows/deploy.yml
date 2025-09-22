@@ -19,16 +19,23 @@ jobs:
       packages: write
       id-token: write
     steps:
+      - uses: hetznercloud/setup-hcloud@v1
+      - run: hcloud server-type list
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Create Server and transfer files
-        uses: TimDaub/hetzner-cloud-deploy-server-action@v2
-        with:
-          server-name: "gh-actions-server"
-          server-image: "docker-ce"
-          server-type: "cax11"
-          ssh-key-name: "my key name"
-          hcloud-token: ${{ secrets.HCLOUD_TOKEN }}
+      - name: set hcloud context
+        run: hcloud context create open-dpp
+      - name: Create server
+        run: hcloud server create \
+          --datacenter nbg1-dc3 \
+          --image docker-ce \
+          --location nbg1 \
+          --name gh-actions-server \
+          --type cax11 \
+          --ssh-key ODDP hetzner \
+          --start-after-create \
       - uses: webfactory/ssh-agent@v0.4.1
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
