@@ -28,6 +28,8 @@ jobs:
       - run: mkdir -p ~/.ssh/ && touch ~/.ssh/known_hosts
       - run: ssh-keyscan ${{ secrets.HETZNER_IPV4 }} >> ~/.ssh/known_hosts
       - run: eval $(ssh-agent) && ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} docker stop $(docker ps -a -q)
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} rm -rf app
       - run: ssh root@${{ secrets.HETZNER_IPV4 }} mkdir app
       - name: Copy files to server
         run: |
@@ -59,8 +61,8 @@ jobs:
       - run: ssh root@${{ secrets.HETZNER_IPV4 }} export AUTH_ADMIN_USERNAME='${{ secrets.AUTH_ADMIN_USERNAME }}'
       - run: ssh root@${{ secrets.HETZNER_IPV4 }} export AUTH_ADMIN_PWD='${{ secrets.AUTH_ADMIN_PWD }}'
       - run: ssh root@${{ secrets.HETZNER_IPV4 }} export API_SERVICE_TOKEN='${{ secrets.API_SERVICE_TOKEN }}'
-      - run: ssh root@${{ secrets.HETZNER_IPV4 }} mv public-env .env
       - run: ssh root@${{ secrets.HETZNER_IPV4 }} cd app
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} mv ./public-env ./.env
       - run: ssh root@${{ secrets.HETZNER_IPV4 }} npm install
       - run: ssh root@${{ secrets.HETZNER_IPV4 }} cd apps/main/client
       - run: ssh root@${{ secrets.HETZNER_IPV4 }} npm install
