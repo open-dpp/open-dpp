@@ -19,6 +19,7 @@ import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testi
 import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
 import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
 import { NotFoundInDatabaseExceptionFilter } from '@app/exception/exception.handler';
+import { UsersService } from '../../users/infrastructure/users.service';
 
 describe('OrganizationController', () => {
   let app: INestApplication;
@@ -26,6 +27,9 @@ describe('OrganizationController', () => {
   let permissionService: PermissionService;
   const authContext = new AuthContext();
   authContext.keycloakUser = createKeycloakUserInToken();
+  const orgaId = 'testOrgId';
+  const token = Buffer.from(`[${orgaId}]`).toString('base64');
+  authContext.token = token;
   const userId = authContext.keycloakUser.sub;
   const user = new User(userId, authContext.keycloakUser.email);
 
@@ -33,7 +37,7 @@ describe('OrganizationController', () => {
   authContext.permissions = [
     {
       type: 'organization',
-      resource: 'testOrgId',
+      resource: orgaId,
       scopes: ['organization:access'],
     },
   ];
@@ -49,7 +53,7 @@ describe('OrganizationController', () => {
         {
           provide: APP_GUARD,
           useValue: new KeycloakAuthTestingGuard(
-            new Map([['token1', authContext.keycloakUser]]),
+            new Map([[token, authContext.keycloakUser]]),
           ),
         },
       ],
@@ -69,6 +73,9 @@ describe('OrganizationController', () => {
 
     service = moduleRef.get<OrganizationsService>(OrganizationsService);
     permissionService = moduleRef.get<PermissionService>(PermissionService);
+    const usersService = moduleRef.get<UsersService>(UsersService);
+    await usersService.save(user);
+
     app = moduleRef.createNestApplication();
     app.useGlobalFilters(new NotFoundInDatabaseExceptionFilter());
 
@@ -80,7 +87,7 @@ describe('OrganizationController', () => {
       const body = { name: 'Test Organization' };
       const response = await request(app.getHttpServer())
         .post('/organizations')
-        .set('Authorization', 'Bearer token1')
+        .set('Authorization', `Bearer ${token}`)
         .send(body);
 
       expect(response.status).toEqual(201);
@@ -97,7 +104,7 @@ describe('OrganizationController', () => {
       // Get existing orgs to avoid conflicts with other tests
       const response1 = await request(app.getHttpServer())
         .get('/organizations')
-        .set('Authorization', 'Bearer token1');
+        .set('Authorization', `Bearer ${token}`);
 
       const initialCount = response1.body.length;
 
@@ -116,7 +123,7 @@ describe('OrganizationController', () => {
       // Verify we can get all orgs including the new one
       const response2 = await request(app.getHttpServer())
         .get('/organizations')
-        .set('Authorization', 'Bearer token1');
+        .set('Authorization', `Bearer ${token}`);
 
       expect(response2.status).toEqual(200);
       expect(response2.body).toBeInstanceOf(Array);
@@ -145,7 +152,7 @@ describe('OrganizationController', () => {
 
       const response = await request(app.getHttpServer())
         .get(`/organizations/${org.id}`)
-        .set('Authorization', 'Bearer token1');
+        .set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toEqual(200);
       expect(response.body.id).toEqual(org.id);
@@ -164,7 +171,7 @@ describe('OrganizationController', () => {
 
       const response = await request(app.getHttpServer())
         .get(`/organizations/${orgId}`)
-        .set('Authorization', 'Bearer token1');
+        .set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toEqual(404);
     });
@@ -191,12 +198,12 @@ describe('OrganizationController', () => {
 
       const response = await request(app.getHttpServer())
         .post(`/organizations/${savedOrg.id}/invite`)
-        .set('Authorization', 'Bearer token1')
+        .set('Authorization', `Bearer ${token}`)
         .send({ email: 'invited@example.com' });
 
       expect(response.status).toEqual(201);
       expect(inviteUserSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ user: user }),
+        authContext,
         savedOrg.id,
         'invited@example.com',
       );
@@ -214,7 +221,7 @@ describe('OrganizationController', () => {
 
       const response = await request(app.getHttpServer())
         .post(`/organizations/${orgId}/invite`)
-        .set('Authorization', 'Bearer token1')
+        .set('Authorization', `Bearer ${token}`)
         .send({ email: 'invited@example.com' });
 
       expect(response.status).toEqual(404);
@@ -239,7 +246,7 @@ describe('OrganizationController', () => {
 
       const response = await request(app.getHttpServer())
         .get(`/organizations/${savedOrg.id}/members`)
-        .set('Authorization', 'Bearer token1');
+        .set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toEqual(200);
       expect(response.body).toBeInstanceOf(Array);
@@ -266,7 +273,7 @@ describe('OrganizationController', () => {
 
       const response = await request(app.getHttpServer())
         .get(`/organizations/${orgId}/members`)
-        .set('Authorization', 'Bearer token1');
+        .set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toEqual(404);
     });
