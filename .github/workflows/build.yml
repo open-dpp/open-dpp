@@ -52,6 +52,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
           build-args: |
             APP_NAME=main
           push: ${{ github.event_name != 'pull_request' }}
