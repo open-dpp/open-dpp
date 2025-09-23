@@ -111,9 +111,9 @@ describe('PermissionService', () => {
   describe('canAccessOrganizationOrFail', () => {
     it('should throw ForbiddenException if user cannot access organization', async () => {
       authContext.permissions = [];
-      await expect(
+      expect(() =>
         service.canAccessOrganizationOrFail(organizationId, authContext),
-      ).rejects.toThrow(ForbiddenException);
+      ).toThrow(ForbiddenException);
     });
 
     it('should return true if user can access organization', () => {

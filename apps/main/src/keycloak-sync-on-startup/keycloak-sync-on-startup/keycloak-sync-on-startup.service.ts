@@ -28,11 +28,11 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
     this.logger.log('Syncing users from Keycloak to database');
     const keycloakUsers = await this.keycloakResourcesServices.getUsers();
     for (const keycloakUser of keycloakUsers) {
-      const user = await this.usersService.findOne(keycloakUser.id);
+      const user = await this.usersService.findOne(keycloakUser.sub);
       if (!user) {
         await this.usersService.create(
           {
-            sub: keycloakUser.id,
+            sub: keycloakUser.sub,
             name: keycloakUser.firstName + ' ' + keycloakUser.lastName,
             email: keycloakUser.email,
             email_verified: keycloakUser.emailVerified,
