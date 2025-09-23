@@ -19,59 +19,51 @@ jobs:
       packages: write
       id-token: write
     steps:
-      - uses: hetznercloud/setup-hcloud@v1
-      - run: hcloud server-type list
-        env:
-          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Create server
-        run: hcloud server create --image docker-ce --location nbg1 --name gh-actions-server --type cax11 --ssh-key "hetzner-gh" --start-after-create
-        env:
-          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
-      - uses: webfactory/ssh-agent@v0.4.1
+      - name: Connect with SSH
+        uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - run: mkdir -p ~/.ssh/ && ssh-keyscan -H $SERVER_IPV4 >> ~/.ssh/known_hosts
-      - run: ssh root@$SERVER_IPV4 mkdir app
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} mkdir app
       - name: Copy files to server
         run: |
             rsync -az --delete \
               -e "ssh -p ${{ secrets.HETZNER_SSH_PORT }}" \
               . \
-              root@$SERVER_IPV4:app/
-      - run: ssh root@$SERVER_IPV4 export DB_HOST='${{ secrets.DB_HOST }}'
-      - run: ssh root@$SERVER_IPV4 export DB_PORT='${{ secrets.DB_PORT }}'
-      - run: ssh root@$SERVER_IPV4 export DB_USERNAME='${{ secrets.DB_USERNAME }}'
-      - run: ssh root@$SERVER_IPV4 export DB_PASSWORD='${{ secrets.DB_PASSWORD }}'
-      - run: ssh root@$SERVER_IPV4 export DB_DATABASE='${{ secrets.DB_DATABASE }}'
-      - run: ssh root@$SERVER_IPV4 export KEYCLOAK_NETWORK_URL='${{ secrets.KEYCLOAK_NETWORK_URL }}'
-      - run: ssh root@$SERVER_IPV4 export KEYCLOAK_REALM='${{ secrets.KEYCLOAK_REALM }}'
-      - run: ssh root@$SERVER_IPV4 export KEYCLOAK_JWT_AUDIENCE='${{ secrets.KEYCLOAK_JWT_AUDIENCE }}'
-      - run: ssh root@$SERVER_IPV4 export KEYCLOAK_ADMIN_USERNAME='${{ secrets.KEYCLOAK_ADMIN_USERNAME }}'
-      - run: ssh root@$SERVER_IPV4 export KEYCLOAK_ADMIN_PASSWORD='${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}'
-      - run: ssh root@$SERVER_IPV4 export MONGO_DB_HOST='${{ secrets.MONGO_DB_HOST }}'
-      - run: ssh root@$SERVER_IPV4 export MONGO_DB_PORT='${{ secrets.MONGO_DB_PORT }}'
-      - run: ssh root@$SERVER_IPV4 export API_TOKEN='${{ secrets.API_TOKEN }}'
-      - run: ssh root@$SERVER_IPV4 export SERVICE_TOKEN='${{ secrets.SERVICE_TOKEN }}'
-      - run: ssh root@$SERVER_IPV4 export PORT='${{ secrets.PORT }}'
-      - run: ssh root@$SERVER_IPV4 export S3_ENDPOINT='${{ secrets.S3_ENDPOINT }}'
-      - run: ssh root@$SERVER_IPV4 export S3_PORT='${{ secrets.S3_PORT }}'
-      - run: ssh root@$SERVER_IPV4 export S3_ACCESS_KEY='${{ secrets.S3_ACCESS_KEY }}'
-      - run: ssh root@$SERVER_IPV4 export S3_SECRET_KEY='${{ secrets.S3_SECRET_KEY }}'
-      - run: ssh root@$SERVER_IPV4 export MISTRAL_API_KEY='${{ secrets.MISTRAL_API_KEY }}'
-      - run: ssh root@$SERVER_IPV4 export OLLAMA_URL='${{ secrets.OLLAMA_URL }}'
-      - run: ssh root@$SERVER_IPV4 export AUTH_ADMIN_USERNAME='${{ secrets.AUTH_ADMIN_USERNAME }}'
-      - run: ssh root@$SERVER_IPV4 export AUTH_ADMIN_PWD='${{ secrets.AUTH_ADMIN_PWD }}'
-      - run: ssh root@$SERVER_IPV4 export API_SERVICE_TOKEN='${{ secrets.API_SERVICE_TOKEN }}'
-      - run: ssh root@$SERVER_IPV4 mv public-env .env
-      - run: ssh root@$SERVER_IPV4 cd app
-      - run: ssh root@$SERVER_IPV4 npm install
-      - run: ssh root@$SERVER_IPV4 cd apps/main/client
-      - run: ssh root@$SERVER_IPV4 npm install
-      - run: ssh root@$SERVER_IPV4 npm run build
-      - run: ssh root@$SERVER_IPV4 cd ../../
-      - run: ssh root@$SERVER_IPV4 npm run build
-      - run: ssh root@$SERVER_IPV4 docker compose pull
-      - run: ssh root@$SERVER_IPV4 docker compose build
-      - run: ssh root@$SERVER_IPV4 docker compose up -d
+              root@${{ secrets.HETZNER_IPV4 }}:app/
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export DB_HOST='${{ secrets.DB_HOST }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export DB_PORT='${{ secrets.DB_PORT }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export DB_USERNAME='${{ secrets.DB_USERNAME }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export DB_PASSWORD='${{ secrets.DB_PASSWORD }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export DB_DATABASE='${{ secrets.DB_DATABASE }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export KEYCLOAK_NETWORK_URL='${{ secrets.KEYCLOAK_NETWORK_URL }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export KEYCLOAK_REALM='${{ secrets.KEYCLOAK_REALM }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export KEYCLOAK_JWT_AUDIENCE='${{ secrets.KEYCLOAK_JWT_AUDIENCE }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export KEYCLOAK_ADMIN_USERNAME='${{ secrets.KEYCLOAK_ADMIN_USERNAME }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export KEYCLOAK_ADMIN_PASSWORD='${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export MONGO_DB_HOST='${{ secrets.MONGO_DB_HOST }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export MONGO_DB_PORT='${{ secrets.MONGO_DB_PORT }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export API_TOKEN='${{ secrets.API_TOKEN }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export SERVICE_TOKEN='${{ secrets.SERVICE_TOKEN }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export PORT='${{ secrets.PORT }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export S3_ENDPOINT='${{ secrets.S3_ENDPOINT }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export S3_PORT='${{ secrets.S3_PORT }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export S3_ACCESS_KEY='${{ secrets.S3_ACCESS_KEY }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export S3_SECRET_KEY='${{ secrets.S3_SECRET_KEY }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export MISTRAL_API_KEY='${{ secrets.MISTRAL_API_KEY }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export OLLAMA_URL='${{ secrets.OLLAMA_URL }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export AUTH_ADMIN_USERNAME='${{ secrets.AUTH_ADMIN_USERNAME }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export AUTH_ADMIN_PWD='${{ secrets.AUTH_ADMIN_PWD }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} export API_SERVICE_TOKEN='${{ secrets.API_SERVICE_TOKEN }}'
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} mv public-env .env
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} cd app
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} npm install
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} cd apps/main/client
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} npm install
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} npm run build
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} cd ../../
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} npm run build
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} docker compose pull
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} docker compose build
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} docker compose up -d
