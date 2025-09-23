@@ -109,6 +109,10 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/apps/main/client/"
+    ],
     "collectCoverageFrom": [
       "**/*.(t|j)s",
       "!**/*-migration.ts"

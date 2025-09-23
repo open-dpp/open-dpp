@@ -1,14 +1,14 @@
 import { INestApplication } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { Test, TestingModule } from '@nestjs/testing';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
 import { APP_GUARD, Reflector } from '@nestjs/core';
-import * as request from 'supertest';
+import request from 'supertest';
 import { Connection } from 'mongoose';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { aiConfigurationToDto } from './dto/ai-configuration.dto';
-import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
-import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
+import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
+import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
 import { AiConfigurationModule } from '../ai-configuration.module';
 import {
   AiConfigurationDbSchema,
@@ -17,7 +17,8 @@ import {
 import { AiConfigurationService } from '../infrastructure/ai-configuration.service';
 import { aiConfigurationFactory } from '../fixtures/ai-configuration-props.factory';
 import { AiConfiguration, AiProvider } from '../domain/ai-configuration';
-import { NotFoundInDatabaseExceptionFilter } from '../../exceptions/exception.handler';
+import { NotFoundInDatabaseExceptionFilter } from '@app/exception/exception.handler';
+import { expect } from '@jest/globals';
 
 describe('AiConfigurationController', () => {
   let app: INestApplication;
@@ -88,9 +89,9 @@ describe('AiConfigurationController', () => {
     expect(response.status).toEqual(200);
     const found = await aiConfigurationService.findOneByOrganizationId(orgaId);
     expect(found).toBeDefined();
-    expect(found.isEnabled).toEqual(body.isEnabled);
-    expect(found.provider).toEqual(body.provider);
-    expect(found.model).toEqual(body.model);
+    expect(found!.isEnabled).toEqual(body.isEnabled);
+    expect(found!.provider).toEqual(body.provider);
+    expect(found!.model).toEqual(body.model);
   });
 
   it(`/PUT create configuration fails if user is no member of organization`, async () => {
@@ -132,10 +133,11 @@ describe('AiConfigurationController', () => {
       .send(body);
     expect(response.status).toEqual(200);
     const found = await aiConfigurationService.findOneByOrganizationId(orgaId);
-    expect(found.id).toEqual(id);
-    expect(found.isEnabled).toEqual(body.isEnabled);
-    expect(found.provider).toEqual(body.provider);
-    expect(found.model).toEqual(body.model);
+    expect(found).toBeDefined();
+    expect(found!.id).toEqual(id);
+    expect(found!.isEnabled).toEqual(body.isEnabled);
+    expect(found!.provider).toEqual(body.provider);
+    expect(found!.model).toEqual(body.model);
   });
 
   it(`/GET find configuration`, async () => {
