@@ -65,7 +65,6 @@ services:
     ports:
       - 4001:3000
     environment:
-      - NODE_ENV=production
       - SERVICE_TOKEN=${API_SERVICE_TOKEN}
       - API_TOKEN=apiToken
       - DB_HOST=api-db
