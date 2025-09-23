@@ -33,7 +33,7 @@ jobs:
               . \
               root@${{ secrets.HETZNER_IPV4 }}:app/
       - run: mkdir -p ~/.ssh/ && touch ~/.ssh/known_hosts
-      - run: ssh-keyscan [hostname] >> ~/.ssh/known_hosts
+      - run: ssh-keyscan ${{ secrets.HETZNER_IPV4 }} >> ~/.ssh/known_hosts
       - run: eval $(ssh-agent) && ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
       - run: ssh root@${{ secrets.HETZNER_IPV4 }} export DB_HOST='${{ secrets.DB_HOST }}'
       - run: ssh root@${{ secrets.HETZNER_IPV4 }} export DB_PORT='${{ secrets.DB_PORT }}'
