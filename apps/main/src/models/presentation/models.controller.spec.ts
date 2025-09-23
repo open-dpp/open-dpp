@@ -2,11 +2,11 @@ import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { ModelsModule } from '../models.module';
 import request from 'supertest';
-import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
+import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
 import { APP_GUARD } from '@nestjs/core';
-import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
+import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
 import { ModelsService } from '../infrastructure/models.service';
-import { AuthContext } from '../../auth/auth-request';
+import { AuthContext } from '@app/auth/auth-request';
 import { Model } from '../domain/model';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
@@ -14,24 +14,25 @@ import { Template, TemplateDbProps } from '../../templates/domain/template';
 import { TemplateService } from '../../templates/infrastructure/template.service';
 import { TemplateModule } from '../../templates/template.module';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
+import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsModule } from '../../organizations/organizations.module';
-import { NotFoundInDatabaseExceptionFilter } from '../../exceptions/exception.handler';
-import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { NotFoundInDatabaseExceptionFilter } from '@app/exception/exception.handler';
+import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { modelToDto } from './dto/model.dto';
-import { ignoreIds } from '../../../test/utils';
+import { ignoreIds } from '@app/testing/utils';
 import { DataValue } from '../../product-passport-data/domain/data-value';
 import {
   LaptopFactory,
   laptopFactory,
 } from '../../templates/fixtures/laptop.factory';
 import { MarketplaceModule } from '../../marketplace/marketplace.module';
-import { MarketplaceServiceTesting } from '../../../test/marketplace.service.testing';
+import { MarketplaceServiceTesting } from '@app/testing/marketplace.service.testing';
 import { MarketplaceService } from '../../marketplace/marketplace.service';
 import { expect } from '@jest/globals';
+import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
 
 describe('ModelsController', () => {
   let app: INestApplication;
@@ -40,10 +41,14 @@ describe('ModelsController', () => {
   let templateService: TemplateService;
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
   const authContext = new AuthContext();
-  authContext.user = new User(randomUUID(), 'test@example.com');
+  authContext.keycloakUser = createKeycloakUserInToken();
+  const user = new User(
+    authContext.keycloakUser.sub,
+    authContext.keycloakUser.email,
+  );
   const organization = Organization.create({
     name: 'orga',
-    user: authContext.user,
+    user,
   });
   let marketplaceService: MarketplaceService;
 
@@ -67,7 +72,7 @@ describe('ModelsController', () => {
       .overrideProvider(KeycloakResourcesService)
       .useValue(
         KeycloakResourcesServiceTesting.fromPlain({
-          users: [{ id: authContext.user.id, email: authContext.user.email }],
+          users: [{ id: user.id, email: user.email }],
         }),
       )
       .overrideProvider(MarketplaceService)
@@ -93,7 +98,7 @@ describe('ModelsController', () => {
 
   const laptopModel: TemplateDbProps = laptopFactory
     .addSections()
-    .build({ organizationId: organization.id, userId: authContext.user.id });
+    .build({ organizationId: organization.id, userId: user.id });
 
   it(`/CREATE model`, async () => {
     const template = Template.loadFromDb(laptopModel);
@@ -108,7 +113,7 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          user.id,
           [organization.id],
           keycloakAuthTestingGuard,
         ),
@@ -132,7 +137,7 @@ describe('ModelsController', () => {
   it(`/CREATE model using template from marketplace`, async () => {
     const template = Template.loadFromDb(laptopModel);
     const token = getKeycloakAuthToken(
-      authContext.user.id,
+      user.id,
       [organization.id],
       keycloakAuthTestingGuard,
     );
@@ -166,7 +171,7 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          user.id,
           [organization.id],
           keycloakAuthTestingGuard,
         ),
@@ -192,7 +197,7 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          user.id,
           [organization.id],
           keycloakAuthTestingGuard,
         ),
@@ -213,7 +218,7 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          user.id,
           [organization.id],
           keycloakAuthTestingGuard,
         ),
@@ -239,7 +244,7 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          user.id,
           [organization.id],
           keycloakAuthTestingGuard,
         ),
@@ -265,7 +270,7 @@ describe('ModelsController', () => {
         const model = Model.create({
           name: pn,
           organizationId: otherOrganizationId,
-          userId: authContext.user.id,
+          userId: user.id,
           template,
         });
         return await modelsService.save(model);
@@ -275,7 +280,7 @@ describe('ModelsController', () => {
       Model.create({
         name: 'Other Orga',
         organizationId: organization.id,
-        userId: authContext.user.id,
+        userId: user.id,
         template,
       }),
     );
@@ -285,7 +290,7 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          user.id,
           [organization.id, otherOrganizationId],
           keycloakAuthTestingGuard,
         ),
@@ -302,7 +307,7 @@ describe('ModelsController', () => {
     const model = Model.create({
       name: 'Model',
       organizationId: otherOrganizationId,
-      userId: authContext.user.id,
+      userId: user.id,
       template,
     });
     await modelsService.save(model);
@@ -312,7 +317,7 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          user.id,
           [organization.id],
           keycloakAuthTestingGuard,
         ),
@@ -326,7 +331,7 @@ describe('ModelsController', () => {
     const model = Model.create({
       name: 'Model',
       organizationId: organization.id,
-      userId: authContext.user.id,
+      userId: user.id,
       template,
     });
     await modelsService.save(model);
@@ -335,7 +340,7 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          user.id,
           [organization.id],
           keycloakAuthTestingGuard,
         ),
@@ -351,7 +356,7 @@ describe('ModelsController', () => {
     const model = Model.create({
       name: 'Model',
       organizationId: otherOrganizationId,
-      userId: authContext.user.id,
+      userId: user.id,
       template,
     });
     await modelsService.save(model);
@@ -360,7 +365,7 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          user.id,
           [organization.id],
           keycloakAuthTestingGuard,
         ),
@@ -375,7 +380,7 @@ describe('ModelsController', () => {
     const model = Model.create({
       name: 'Model',
       organizationId: otherOrganizationId,
-      userId: authContext.user.id,
+      userId: user.id,
       template,
     });
     await modelsService.save(model);
@@ -384,7 +389,7 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          user.id,
           [organization.id],
           keycloakAuthTestingGuard,
         ),
@@ -399,7 +404,7 @@ describe('ModelsController', () => {
     const model = Model.create({
       name: 'My name',
       organizationId: organization.id,
-      userId: authContext.user.id,
+      userId: user.id,
       template,
     });
 
@@ -427,7 +432,7 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          user.id,
           [organization.id],
           keycloakAuthTestingGuard,
         ),
@@ -462,7 +467,7 @@ describe('ModelsController', () => {
     const model = Model.create({
       name: 'My name',
       organizationId: organization.id,
-      userId: authContext.user.id,
+      userId: user.id,
       template,
     });
 
@@ -483,7 +488,7 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          user.id,
           [organization.id],
           keycloakAuthTestingGuard,
         ),
@@ -499,7 +504,7 @@ describe('ModelsController', () => {
     const model = Model.create({
       name: 'My name',
       organizationId: otherOrganizationId,
-      userId: authContext.user.id,
+      userId: user.id,
       template,
     });
 
@@ -518,7 +523,7 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          user.id,
           [organization.id],
           keycloakAuthTestingGuard,
         ),
@@ -534,7 +539,7 @@ describe('ModelsController', () => {
     const model = Model.create({
       name: 'My name',
       organizationId: organization.id,
-      userId: authContext.user.id,
+      userId: user.id,
       template,
     });
 
@@ -558,7 +563,7 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          user.id,
           [organization.id],
           keycloakAuthTestingGuard,
         ),
@@ -583,7 +588,7 @@ describe('ModelsController', () => {
     const model = Model.create({
       name: 'My name',
       organizationId: organization.id,
-      userId: authContext.user.id,
+      userId: user.id,
       template,
     });
     model.createUniqueProductIdentifier();
@@ -609,7 +614,7 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          user.id,
           [organization.id],
           keycloakAuthTestingGuard,
         ),
@@ -634,7 +639,7 @@ describe('ModelsController', () => {
     const model = Model.create({
       name: 'My name',
       organizationId: otherOrganizationId,
-      userId: authContext.user.id,
+      userId: user.id,
       template,
     });
 
@@ -647,7 +652,7 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          user.id,
           [organization.id],
           keycloakAuthTestingGuard,
         ),
@@ -663,7 +668,7 @@ describe('ModelsController', () => {
     const model = Model.create({
       name: 'My name',
       organizationId: otherOrganizationId,
-      userId: authContext.user.id,
+      userId: user.id,
       template,
     });
 
@@ -674,7 +679,7 @@ describe('ModelsController', () => {
       .set(
         'Authorization',
         getKeycloakAuthToken(
-          authContext.user.id,
+          user.id,
           [organization.id],
           keycloakAuthTestingGuard,
         ),
