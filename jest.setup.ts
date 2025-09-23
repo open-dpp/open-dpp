@@ -1,9 +1,6 @@
 import 'reflect-metadata';
 import { org1, user2org1 } from '@app/testing/users-and-orgs';
 
-// or
-import '@jest/globals';
-
 jest.mock('@keycloak/keycloak-admin-client', () => {
   return {
     __esModule: true, // Ensure Jest understands it's an ES module
