@@ -61,7 +61,7 @@ jobs:
       - run: ssh root@${{ secrets.HETZNER_IPV4 }} export AUTH_ADMIN_PWD='${{ secrets.AUTH_ADMIN_PWD }}'
       - run: ssh root@${{ secrets.HETZNER_IPV4 }} export API_SERVICE_TOKEN='${{ secrets.API_SERVICE_TOKEN }}'
       - run: ssh root@${{ secrets.HETZNER_IPV4 }} cd app
-      - run: ssh root@${{ secrets.HETZNER_IPV4 }} cp public-env .env
+      - run: ssh root@${{ secrets.HETZNER_IPV4 }} cp ./public-env ./.env
       - run: ssh root@${{ secrets.HETZNER_IPV4 }} npm install
       - run: ssh root@${{ secrets.HETZNER_IPV4 }} cd apps/main/client
       - run: ssh root@${{ secrets.HETZNER_IPV4 }} npm install
