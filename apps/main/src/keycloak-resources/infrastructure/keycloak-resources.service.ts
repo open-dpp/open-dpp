@@ -197,7 +197,16 @@ export class KeycloakResourcesService {
     });
   }
 
-  async getUsers() {
+  async getUsers(): Promise<
+    {
+      id: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      emailVerified: boolean;
+      username: string;
+    }[]
+  > {
     await this.reloadToken();
     return this.kcAdminClient.users.find({ realm: this.realm });
   }
