@@ -1,77 +1,72 @@
-name: Deploy to Hetzner
+name: Deploy Docker image via SSH
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to deploy (e.g., latest, main, v1.2.3, sha)'
+        required: false
+        default: latest
+
+permissions:
+  contents: read
+  packages: read
 
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository }}/open-dpp
-  CONTAINER_NAME: open-dpp
-  COMPOSE_FILE: docker-compose.yml
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_TAG: ${{ github.event.inputs.image_tag }}
+  DEPLOY_DIR: app
 
 jobs:
-  build-and-deploy:
-    name: Build and Push Image
+  deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
     steps:
-      - uses: hetznercloud/setup-hcloud@v1
-      - run: hcloud server-type list
-        env:
-          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Create server
-        run: hcloud server create --image docker-ce --location nbg1 --name gh-actions-server --type cax11 --ssh-key "hetzner-gh" --start-after-create
-        env:
-          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
-      - uses: webfactory/ssh-agent@v0.4.1
+
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - run: mkdir -p ~/.ssh/ && ssh-keyscan -H $SERVER_IPV4 >> ~/.ssh/known_hosts
-      - run: ssh root@$SERVER_IPV4 mkdir app
-      - name: Copy files to server
+
+      - name: Add server to known_hosts
         run: |
-            rsync -az --delete \
-              -e "ssh -p ${{ secrets.HETZNER_SSH_PORT }}" \
-              . \
-              root@$SERVER_IPV4:app/
-      - run: ssh root@$SERVER_IPV4 export DB_HOST='${{ secrets.DB_HOST }}'
-      - run: ssh root@$SERVER_IPV4 export DB_PORT='${{ secrets.DB_PORT }}'
-      - run: ssh root@$SERVER_IPV4 export DB_USERNAME='${{ secrets.DB_USERNAME }}'
-      - run: ssh root@$SERVER_IPV4 export DB_PASSWORD='${{ secrets.DB_PASSWORD }}'
-      - run: ssh root@$SERVER_IPV4 export DB_DATABASE='${{ secrets.DB_DATABASE }}'
-      - run: ssh root@$SERVER_IPV4 export KEYCLOAK_NETWORK_URL='${{ secrets.KEYCLOAK_NETWORK_URL }}'
-      - run: ssh root@$SERVER_IPV4 export KEYCLOAK_REALM='${{ secrets.KEYCLOAK_REALM }}'
-      - run: ssh root@$SERVER_IPV4 export KEYCLOAK_JWT_AUDIENCE='${{ secrets.KEYCLOAK_JWT_AUDIENCE }}'
-      - run: ssh root@$SERVER_IPV4 export KEYCLOAK_ADMIN_USERNAME='${{ secrets.KEYCLOAK_ADMIN_USERNAME }}'
-      - run: ssh root@$SERVER_IPV4 export KEYCLOAK_ADMIN_PASSWORD='${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}'
-      - run: ssh root@$SERVER_IPV4 export MONGO_DB_HOST='${{ secrets.MONGO_DB_HOST }}'
-      - run: ssh root@$SERVER_IPV4 export MONGO_DB_PORT='${{ secrets.MONGO_DB_PORT }}'
-      - run: ssh root@$SERVER_IPV4 export API_TOKEN='${{ secrets.API_TOKEN }}'
-      - run: ssh root@$SERVER_IPV4 export SERVICE_TOKEN='${{ secrets.SERVICE_TOKEN }}'
-      - run: ssh root@$SERVER_IPV4 export PORT='${{ secrets.PORT }}'
-      - run: ssh root@$SERVER_IPV4 export S3_ENDPOINT='${{ secrets.S3_ENDPOINT }}'
-      - run: ssh root@$SERVER_IPV4 export S3_PORT='${{ secrets.S3_PORT }}'
-      - run: ssh root@$SERVER_IPV4 export S3_ACCESS_KEY='${{ secrets.S3_ACCESS_KEY }}'
-      - run: ssh root@$SERVER_IPV4 export S3_SECRET_KEY='${{ secrets.S3_SECRET_KEY }}'
-      - run: ssh root@$SERVER_IPV4 export MISTRAL_API_KEY='${{ secrets.MISTRAL_API_KEY }}'
-      - run: ssh root@$SERVER_IPV4 export OLLAMA_URL='${{ secrets.OLLAMA_URL }}'
-      - run: ssh root@$SERVER_IPV4 export AUTH_ADMIN_USERNAME='${{ secrets.AUTH_ADMIN_USERNAME }}'
-      - run: ssh root@$SERVER_IPV4 export AUTH_ADMIN_PWD='${{ secrets.AUTH_ADMIN_PWD }}'
-      - run: ssh root@$SERVER_IPV4 export API_SERVICE_TOKEN='${{ secrets.API_SERVICE_TOKEN }}'
-      - run: ssh root@$SERVER_IPV4 mv public-env .env
-      - run: ssh root@$SERVER_IPV4 cd app
-      - run: ssh root@$SERVER_IPV4 npm install
-      - run: ssh root@$SERVER_IPV4 cd apps/main/client
-      - run: ssh root@$SERVER_IPV4 npm install
-      - run: ssh root@$SERVER_IPV4 npm run build
-      - run: ssh root@$SERVER_IPV4 cd ../../
-      - run: ssh root@$SERVER_IPV4 npm run build
-      - run: ssh root@$SERVER_IPV4 docker compose pull
-      - run: ssh root@$SERVER_IPV4 docker compose build
-      - run: ssh root@$SERVER_IPV4 docker compose up -d
+          mkdir -p ~/.ssh
+          ssh-keyscan -p ${{ secrets.HETZNER_SSH_PORT }} ${{ secrets.HETZNER_IPV4 }} >> ~/.ssh/known_hosts
+
+      - name: Generate docker-compose override (use prebuilt image)
+        run: |
+          cat > docker-compose.override.yml <<EOF
+          services:
+            open-dpp:
+              image: ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+              build: null
+          EOF
+
+      - name: Copy deployment files to server
+        run: |
+          ssh -p ${{ secrets.HETZNER_SSH_PORT }} root@${{ secrets.HETZNER_IPV4 }} "mkdir -p ${DEPLOY_DIR}"
+          rsync -az --delete -e "ssh -p ${{ secrets.HETZNER_SSH_PORT }}" \
+            docker-compose.yml docker-compose.override.yml public-env \
+            root@${{ secrets.HETZNER_IPV4 }}:${{ env.DEPLOY_DIR }}/
+
+      - name: Prepare env file on server
+        run: |
+          ssh -p ${{ secrets.HETZNER_SSH_PORT }} root@${{ secrets.HETZNER_IPV4 }} "cd ${DEPLOY_DIR} && cp -f public-env .env || true"
+
+      - name: Log in to GHCR on server
+        run: |
+          ssh -p ${{ secrets.HETZNER_SSH_PORT }} root@${{ secrets.HETZNER_IPV4 }} "echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin"
+
+      - name: Pull and restart open-dpp service
+        run: |
+          ssh -p ${{ secrets.HETZNER_SSH_PORT }} root@${{ secrets.HETZNER_IPV4 }} "\
+            cd ${DEPLOY_DIR} && \
+            set -a; [ -f .env ] && . ./.env; set +a; \
+            export AUTH_ADMIN_USERNAME='${{ secrets.AUTH_ADMIN_USERNAME }}' AUTH_ADMIN_PWD='${{ secrets.AUTH_ADMIN_PWD }}' API_SERVICE_TOKEN='${{ secrets.API_SERVICE_TOKEN }}' MISTRAL_API_KEY='${{ secrets.MISTRAL_API_KEY }}' OLLAMA_URL='${{ secrets.OLLAMA_URL }}'; \
+            export SERVICE_API_HOST=\"${SERVICE_API_HOST:-api.${SERVICES_HOST_SUFFIX:-open-dpp.localhost}}\"; \
+            export SERVICE_MARKETPLACE_URL=\"${SERVICE_MARKETPLACE_URL:-${MARKETPLACE_URL:-http://localhost:3000/api}}\"; \
+            docker compose -f docker-compose.yml -f docker-compose.override.yml pull open-dpp && \
+            docker compose -f docker-compose.yml -f docker-compose.override.yml up -d open-dpp \
+          "
