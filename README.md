@@ -33,3 +33,13 @@ To run the backend tests you have to run
 docker compose up
 npm run test
 ```
+To run frontend unit tests:
+```shell
+cd apps/main/client
+npm run test
+```
+To run frontend component tests
+```shell
+cd apps/main/client
+npm run cypress:headless
+```

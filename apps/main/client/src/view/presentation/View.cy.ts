@@ -7,6 +7,7 @@ import {
   dataSectionFactory,
   productPassportFactory,
 } from '../../testing-utils/fixtures/product-passport.factory';
+import { API_URL } from '../../const';
 
 const router = createRouter({
   history: createMemoryHistory(),
@@ -83,14 +84,15 @@ describe('<View />', () => {
     });
 
   const uuid = productPassport.id;
-  const apiPath = `/product-passports/${uuid}`;
+  const apiPath = `${API_URL}/product-passports/${uuid}`;
 
   it('renders sections at root level and navigates to row 1 entry', () => {
     cy.intercept('GET', apiPath, {
       statusCode: 200,
       body: productPassport,
     }).as('getProductPassport');
-    cy.wrap(router.push(`/${uuid}`));
+    console.log(uuid);
+    cy.wrap(router.push(`/presentation/${uuid}`));
     cy.mountWithPinia(View, { router });
     cy.wait('@getProductPassport').its('response.statusCode').should('eq', 200);
     cy.spy(router, 'push').as('pushSpy');
@@ -124,7 +126,7 @@ describe('<View />', () => {
       statusCode: 200,
       body: productPassport,
     }).as('getProductPassport');
-    cy.wrap(router.push(`/${uuid}`));
+    cy.wrap(router.push(`/presentation/${uuid}`));
     cy.mountWithPinia(View, { router });
     cy.wait('@getProductPassport').its('response.statusCode').should('eq', 200);
     cy.spy(router, 'push').as('pushSpy');
@@ -146,7 +148,7 @@ describe('<View />', () => {
     }).as('getProductPassport');
     cy.viewport(1920, 1080);
 
-    cy.wrap(router.push(`/${uuid}`));
+    cy.wrap(router.push(`/presentation/${uuid}`));
     cy.mountWithPinia(View, { router });
     cy.wait('@getProductPassport').its('response.statusCode').should('eq', 200);
     cy.spy(router, 'push').as('pushSpy');
@@ -165,7 +167,9 @@ describe('<View />', () => {
       statusCode: 200,
       body: productPassport,
     }).as('getProductPassport');
-    cy.wrap(router.push(`/${uuid}?sectionId=${dataSection2.id}&row=1`));
+    cy.wrap(
+      router.push(`/presentation/${uuid}?sectionId=${dataSection2.id}&row=1`),
+    );
     cy.mountWithPinia(View, { router });
     cy.wait('@getProductPassport').its('response.statusCode').should('eq', 200);
 
@@ -184,11 +188,15 @@ describe('<View />', () => {
       statusCode: 200,
       body: productPassport,
     }).as('getProductPassport');
-    cy.intercept('GET', `/product-passports/${otherProductPassport.id}`, {
-      statusCode: 200,
-      body: otherProductPassport,
-    }).as('getOtherProductPassport');
-    cy.wrap(router.push(`/${uuid}`));
+    cy.intercept(
+      'GET',
+      `${API_URL}/product-passports/${otherProductPassport.id}`,
+      {
+        statusCode: 200,
+        body: otherProductPassport,
+      },
+    ).as('getOtherProductPassport');
+    cy.wrap(router.push(`/presentation/${uuid}`));
     cy.mountWithPinia(View, { router });
     cy.viewport(1920, 1080);
     cy.wait('@getProductPassport').its('response.statusCode').should('eq', 200);
@@ -218,7 +226,7 @@ describe('<View />', () => {
       statusCode: 200,
       body: productPassport,
     }).as('getProductPassport');
-    cy.wrap(router.push(`/${uuid}`));
+    cy.wrap(router.push(`/presentation/${uuid}`));
     cy.mountWithPinia(View, { router });
     cy.viewport(1920, 1080);
     cy.wait('@getProductPassport').its('response.statusCode').should('eq', 200);
