@@ -43,3 +43,14 @@ To run frontend component tests
 cd apps/main/client
 npm run cypress:headless
 ```
+
+### Create new nestjs app
+```shell
+nest generate app my-app
+```
+
+
+### Create new nestjs lib
+```shell
+nest generate library my-library
+```

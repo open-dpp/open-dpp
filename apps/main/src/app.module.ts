@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common';
 import path, { join } from 'path';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
-import { generateConfig, generateMongoConfig } from './database/config';
+import { generateConfig } from './database/postgres-config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TemplateDraftModule } from './template-draft/template-draft.module';
 import { TemplateModule } from './templates/template.module';
@@ -28,19 +27,14 @@ import { AiModule } from './ai/ai.module';
 import { AiConfigurationModule } from './ai/ai-configuration/ai-configuration.module';
 import { McpClientModule } from './ai/mcp-client/mcp-client.module';
 import { PassportModule } from './ai/passports/passport.module';
+import { DatabaseModule } from '@app/database';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        ...generateMongoConfig(configService),
-      }),
-      inject: [ConfigService],
-    }),
+    DatabaseModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({

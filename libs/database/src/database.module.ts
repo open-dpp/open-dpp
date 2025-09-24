@@ -1,13 +1,10 @@
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { generateMongoConfig } from '../../../apps/main/src/database/postgres-config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { generateMongoConfig } from '@app/database/config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -17,4 +14,4 @@ import { generateMongoConfig } from '../../../apps/main/src/database/postgres-co
     }),
   ],
 })
-export class MongooseTestingModule {}
+export class DatabaseModule {}

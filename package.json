@@ -126,6 +126,7 @@
     "moduleNameMapper": {
       "^@app/analytics(|/.*)$": "<rootDir>/libs/analytics/src/$1",
       "^@app/auth(|/.*)$": "<rootDir>/libs/auth/src/$1",
+      "^@app/database(|/.*)$": "<rootDir>/libs/database/src/$1",
       "^@app/exception(|/.*)$": "<rootDir>/libs/exception/src/$1",
       "^@app/mcp-module(|/.*)$": "<rootDir>/libs/mcp-module/src/$1",
       "^@app/media-module(|/.*)$": "<rootDir>/libs/media-module/src/$1",
