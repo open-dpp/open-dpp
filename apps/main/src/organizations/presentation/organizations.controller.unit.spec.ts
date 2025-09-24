@@ -9,13 +9,17 @@ import { expect } from '@jest/globals';
 import { PermissionService } from '@app/permission';
 import { AuthContext, AuthRequest } from '@app/auth/auth-request';
 import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
+import { UsersService } from '../../users/infrastructure/users.service';
+import { User } from '../../users/domain/user';
 
 // We'll mock the implementation directly instead of extending the controller
 
 describe('OrganizationsController (Unit)', () => {
   let controller: OrganizationsController;
   let organizationsService: OrganizationsService;
-  let PermissionService: PermissionService;
+  let usersService: UsersService;
+
+  let permissionService: PermissionService;
 
   const mockUser = createKeycloakUserInToken();
   const authContext = new AuthContext();
@@ -39,18 +43,24 @@ describe('OrganizationsController (Unit)', () => {
       canAccessOrganizationOrFail: jest.fn(),
     };
 
+    const mockUserService = {
+      findOne: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [OrganizationsController],
       providers: [
         { provide: OrganizationsService, useValue: mockOrganizationsService },
         { provide: PermissionService, useValue: mockPermissionService },
+        { provide: UsersService, useValue: mockUserService },
       ],
     }).compile();
 
     controller = module.get<OrganizationsController>(OrganizationsController);
     organizationsService =
       module.get<OrganizationsService>(OrganizationsService);
-    PermissionService = module.get<PermissionService>(PermissionService);
+    permissionService = module.get<PermissionService>(PermissionService);
+    usersService = module.get<UsersService>(UsersService);
   });
 
   it('should be defined', () => {
@@ -65,14 +75,18 @@ describe('OrganizationsController (Unit)', () => {
       const expectedOrg = {
         id: organizationId,
         name: createDto.name,
-        ownedByUserId: mockUser.id,
-        createdByUserId: mockUser.id,
+        ownedByUserId: mockUser.sub,
+        createdByUserId: mockUser.sub,
       };
 
       // Mock
       jest
         .spyOn(organizationsService, 'save')
         .mockResolvedValue(expectedOrg as Organization);
+
+      jest
+        .spyOn(usersService, 'findOne')
+        .mockResolvedValue(new User(mockUser.sub, mockUser.email));
 
       // Execute
       const result = await controller.create(mockRequest, createDto);
@@ -82,8 +96,8 @@ describe('OrganizationsController (Unit)', () => {
       expect(organizationsService.save).toHaveBeenCalledWith(
         expect.objectContaining({
           name: createDto.name,
-          createdByUserId: mockUser.id,
-          ownedByUserId: mockUser.id,
+          createdByUserId: mockUser.sub,
+          ownedByUserId: mockUser.sub,
         }),
       );
     });
@@ -104,8 +118,8 @@ describe('OrganizationsController (Unit)', () => {
         .spyOn(organizationsService, 'findAllWhereMember')
         .mockResolvedValue(mockOrgs);
       jest
-        .spyOn(PermissionService, 'canAccessOrganization')
-        .mockResolvedValue(true);
+        .spyOn(permissionService, 'canAccessOrganization')
+        .mockReturnValue(true);
 
       // Execute
       await controller.findAll(mockRequest);
@@ -130,8 +144,8 @@ describe('OrganizationsController (Unit)', () => {
         .spyOn(organizationsService, 'findAllWhereMember')
         .mockResolvedValue(mockOrgs);
       const permissionsSpy = jest
-        .spyOn(PermissionService, 'canAccessOrganization')
-        .mockResolvedValue(true);
+        .spyOn(permissionService, 'canAccessOrganization')
+        .mockReturnValue(true);
 
       // Execute
       await controller.findAll(mockRequest);
@@ -150,8 +164,8 @@ describe('OrganizationsController (Unit)', () => {
 
       // Mock
       jest
-        .spyOn(PermissionService, 'canAccessOrganizationOrFail')
-        .mockResolvedValue(true);
+        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .mockReturnValue(true);
       jest
         .spyOn(organizationsService, 'findOneOrFail')
         .mockResolvedValue(mockOrg);
@@ -162,7 +176,7 @@ describe('OrganizationsController (Unit)', () => {
       // Verify
       expect(result).toEqual(mockOrg);
       expect(
-        PermissionService.canAccessOrganizationOrFail,
+        permissionService.canAccessOrganizationOrFail,
       ).toHaveBeenCalledWith(orgId, authContext);
     });
 
@@ -172,8 +186,10 @@ describe('OrganizationsController (Unit)', () => {
 
       // Mock
       jest
-        .spyOn(PermissionService, 'canAccessOrganizationOrFail')
-        .mockRejectedValue(new ForbiddenException());
+        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .mockImplementation(() => {
+          throw new ForbiddenException();
+        });
 
       // Execute & Verify
       await expect(controller.findOne(orgId, mockRequest)).rejects.toThrow(
@@ -190,8 +206,8 @@ describe('OrganizationsController (Unit)', () => {
 
       // Mock
       jest
-        .spyOn(PermissionService, 'canAccessOrganizationOrFail')
-        .mockResolvedValue(true);
+        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .mockReturnValue(true);
       jest
         .spyOn(organizationsService, 'inviteUser')
         .mockResolvedValue(undefined);
@@ -201,7 +217,7 @@ describe('OrganizationsController (Unit)', () => {
 
       // Verify
       expect(
-        PermissionService.canAccessOrganizationOrFail,
+        permissionService.canAccessOrganizationOrFail,
       ).toHaveBeenCalledWith(orgId, authContext);
       expect(organizationsService.inviteUser).toHaveBeenCalledWith(
         authContext,
@@ -217,8 +233,10 @@ describe('OrganizationsController (Unit)', () => {
 
       // Mock
       jest
-        .spyOn(PermissionService, 'canAccessOrganizationOrFail')
-        .mockRejectedValue(new ForbiddenException());
+        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .mockImplementation(() => {
+          throw new ForbiddenException();
+        });
 
       // Execute & Verify
       await expect(
@@ -235,15 +253,15 @@ describe('OrganizationsController (Unit)', () => {
         id: orgId,
         name: 'Test Org',
         members: [
-          { id: mockUser.id, email: mockUser.email },
+          { id: mockUser.sub, email: mockUser.email },
           { id: randomUUID(), email: 'member2@example.com' },
         ],
       } as Organization;
 
       // Mock
       jest
-        .spyOn(PermissionService, 'canAccessOrganizationOrFail')
-        .mockResolvedValue(true);
+        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .mockReturnValue(true);
       jest
         .spyOn(organizationsService, 'findOneOrFail')
         .mockResolvedValue(mockOrg);
@@ -254,7 +272,7 @@ describe('OrganizationsController (Unit)', () => {
       // Verify
       expect(result).toEqual(mockOrg.members);
       expect(
-        PermissionService.canAccessOrganizationOrFail,
+        permissionService.canAccessOrganizationOrFail,
       ).toHaveBeenCalledWith(orgId, authContext);
     });
 
@@ -264,8 +282,10 @@ describe('OrganizationsController (Unit)', () => {
 
       // Mock
       jest
-        .spyOn(PermissionService, 'canAccessOrganizationOrFail')
-        .mockRejectedValue(new ForbiddenException());
+        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .mockImplementation(() => {
+          throw new ForbiddenException();
+        });
 
       // Execute & Verify
       await expect(controller.getMembers(orgId, mockRequest)).rejects.toThrow(
@@ -279,8 +299,8 @@ describe('OrganizationsController (Unit)', () => {
 
       // Mock
       jest
-        .spyOn(PermissionService, 'canAccessOrganizationOrFail')
-        .mockResolvedValue(true);
+        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .mockReturnValue(true);
       jest
         .spyOn(organizationsService, 'findOneOrFail')
         .mockRejectedValue(new NotFoundException());

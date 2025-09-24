@@ -1,5 +1,5 @@
 import { AasConnection, AasFieldAssignment } from './aas-connection';
-import { ignoreIds } from '../../../test/utils';
+import { ignoreIds } from '@app/testing/utils';
 import { DataValue } from '../../product-passport-data/domain/data-value';
 import {
   AssetAdministrationShell,

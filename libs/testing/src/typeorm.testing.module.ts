@@ -14,9 +14,14 @@ import { generateConfig } from '../../../apps/main/src/database/config';
       useFactory: (configService: ConfigService) => ({
         ...generateConfig(
           configService,
-          path.join(__dirname, '../src/migrations/**/*{.ts,.js}'),
+          path.join(
+            __dirname,
+            '../../../apps/main/src/migrations/**/*{.ts,.js}',
+          ),
         ),
-        entities: [path.join(__dirname, '../src/**/*.entity{.ts,.js}')],
+        entities: [
+          path.join(__dirname, '../../../apps/main/src/**/*.entity{.ts,.js}'),
+        ],
       }),
       inject: [ConfigService],
     }),

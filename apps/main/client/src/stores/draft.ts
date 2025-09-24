@@ -156,8 +156,6 @@ export const useDraftStore = defineStore('draft', () => {
   ) => {
     const section = findSectionOfDataField(dataFieldId);
     if (draft.value && section) {
-      console.log('api client', apiClient.dpp.templateDrafts);
-
       const response = await apiClient.dpp.templateDrafts.moveDataField(
         draft.value.id,
         section.id,

@@ -15,6 +15,7 @@ import {
   user1org1,
   user2org1,
 } from '@app/testing/users-and-orgs';
+import { User } from '../../users/domain/user';
 
 describe('UsersSyncOnStartupService', () => {
   let service: KeycloakSyncOnStartupService;
@@ -72,7 +73,7 @@ describe('UsersSyncOnStartupService', () => {
         .mockResolvedValue(keycloakUsers);
       jest
         .spyOn(usersService, 'findOne')
-        .mockResolvedValueOnce(user1org1) // First user exists
+        .mockResolvedValueOnce(new User(user1org1.sub, user1org1.email)) // First user exists
         .mockResolvedValueOnce(undefined); // Second user doesn't exist
       jest.spyOn(organizationsService, 'findAll').mockResolvedValue([org1]);
       jest
@@ -87,13 +88,13 @@ describe('UsersSyncOnStartupService', () => {
 
       // Verify
       expect(keycloakResourcesService.getUsers).toHaveBeenCalledTimes(1);
-      expect(usersService.findOne).toHaveBeenCalledWith(user1org1.id);
-      expect(usersService.findOne).toHaveBeenCalledWith(user2org1.id);
+      expect(usersService.findOne).toHaveBeenNthCalledWith(1, user1org1.sub);
+      expect(usersService.findOne).toHaveBeenCalledWith(user2org1.sub);
 
       // Should only create the second user (the first one exists)
       expect(usersService.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          sub: user2org1.id,
+          sub: user2org1.sub,
         }),
         true,
       );

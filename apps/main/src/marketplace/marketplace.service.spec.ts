@@ -25,26 +25,35 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { laptopFactory } from '../templates/fixtures/laptop.factory';
 import { TemplateService } from '../templates/infrastructure/template.service';
 import { templateCreatePropsFactory } from '../templates/fixtures/template.factory';
-import { expect } from '@jest/globals';
+import { expect, jest } from '@jest/globals';
 import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
 import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-
-const mockCreatePassportTemplateInMarketplace = jest.fn();
-const mockGetPassportTemplateInMarketplace = jest.fn();
+import { AxiosResponse } from 'axios';
+import type * as ApiClientModule from '@open-dpp/api-client';
+type ApiClientResponse = Promise<Pick<AxiosResponse, 'data'>>;
+const mockCreatePassportTemplateInMarketplace =
+  jest.fn<(data: PassportTemplateCreateDto) => ApiClientResponse>();
+const mockGetPassportTemplateInMarketplace =
+  jest.fn<(id: string) => ApiClientResponse>();
 const mockSetActiveOrganizationId = jest.fn();
 const mockSetApiKey = jest.fn();
 
-jest.mock('@open-dpp/api-client', () => ({
-  ...jest.requireActual('@open-dpp/api-client'),
-  MarketplaceApiClient: jest.fn().mockImplementation(() => ({
-    setActiveOrganizationId: mockSetActiveOrganizationId,
-    setApiKey: mockSetApiKey,
-    passportTemplates: {
-      create: mockCreatePassportTemplateInMarketplace,
-      getById: mockGetPassportTemplateInMarketplace,
-    },
-  })),
-}));
+jest.mock('@open-dpp/api-client', () => {
+  const actualModule = jest.requireActual<typeof ApiClientModule>(
+    '@open-dpp/api-client',
+  );
+  return {
+    ...actualModule,
+    MarketplaceApiClient: jest.fn().mockImplementation(() => ({
+      setActiveOrganizationId: mockSetActiveOrganizationId,
+      setApiKey: mockSetApiKey,
+      passportTemplates: {
+        create: mockCreatePassportTemplateInMarketplace,
+        getById: mockGetPassportTemplateInMarketplace,
+      },
+    })),
+  };
+});
 
 describe('MarketplaceService', () => {
   let service: MarketplaceService;
@@ -107,7 +116,7 @@ describe('MarketplaceService', () => {
     });
     const token = randomUUID();
     await service.upload(template, token);
-    expect(mockSetActiveOrganizationId).toBeCalledWith(organizationId);
+    expect(mockSetActiveOrganizationId).toHaveBeenCalledWith(organizationId);
     expect(mockSetApiKey).toHaveBeenCalledWith(token);
     const expected: PassportTemplateCreateDto = {
       version: template.version,
@@ -142,7 +151,9 @@ describe('MarketplaceService', () => {
         marketplaceResourceId: template.marketplaceResourceId,
       },
     };
-    expect(mockCreatePassportTemplateInMarketplace).toBeCalledWith(expected);
+    expect(mockCreatePassportTemplateInMarketplace).toHaveBeenCalledWith(
+      expected,
+    );
   });
 
   it('should return already downloaded template instead of fetching it from the marketplace', async () => {
@@ -177,7 +188,7 @@ describe('MarketplaceService', () => {
       userId,
       passportTemplateDto.id,
     );
-    expect(mockGetPassportTemplateInMarketplace).toBeCalledWith(
+    expect(mockGetPassportTemplateInMarketplace).toHaveBeenCalledWith(
       passportTemplateDto.id,
     );
     expect(productDataModel).toBeInstanceOf(Template);

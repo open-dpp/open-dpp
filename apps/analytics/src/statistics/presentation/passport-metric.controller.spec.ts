@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PassportMetricModule } from '../passport-metric.module';
 import { PassportMetricController } from './passport-metric.controller';
 import { randomUUID } from 'crypto';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import {
   PassportMetricDoc,
@@ -14,17 +14,18 @@ import {
 } from '../infrastructure/passport-metric.service';
 import { MeasurementType, PassportMetric } from '../domain/passport-metric';
 import { Connection } from 'mongoose';
-import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
-import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
+import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
+import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
 import { APP_GUARD, Reflector } from '@nestjs/core';
-import * as request from 'supertest';
+import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
-import { PermissionsModule } from '../../permissions/permissions.module';
+import { PermissionModule } from '@app/permission/permission.module';
 import { PassportService } from '../../passports/passport.service';
-import { PassportServiceTesting } from '../../../test/passport.service.testing';
+import { PassportServiceTesting } from '@app/testing/passport.service.testing';
 import { Passport } from '../../passports/domain/passport';
 import { passportFactory } from '../../passports/fixtures/passport.factory';
 import { dataFieldFactory } from '../fixtures/passport-metric.factory';
+import { expect } from '@jest/globals';
 
 describe('PassportMetricController', () => {
   let app: INestApplication;
@@ -54,7 +55,7 @@ describe('PassportMetricController', () => {
             schema: PassportMetricSchema,
           },
         ]),
-        PermissionsModule,
+        PermissionModule,
         PassportMetricModule,
       ],
       providers: [

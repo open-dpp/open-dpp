@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PassportMetricService, TimePeriod } from './passport-metric.service';
 import { Connection } from 'mongoose';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import {
   PassportMetricDoc,
@@ -12,10 +12,11 @@ import {
   passportMetricFactory,
 } from '../fixtures/passport-metric.factory';
 import { MeasurementType, PassportMetric } from '../domain/passport-metric';
-import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
+import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
 import { randomUUID } from 'crypto';
 import { PassportMetricModule } from '../passport-metric.module';
 import { PassportMetricAggregation } from '../domain/passport-metric-aggregation';
+import { expect } from '@jest/globals';
 
 describe('PassportMetricService', () => {
   let passportMetricService: PassportMetricService;

@@ -13,18 +13,3 @@ mail.open-dpp.localhost:20080 {
 	tls internal
 }
 
-marketplace.open-dpp.localhost:20080 {
-	reverse_proxy open-dpp-marketplace:3000
-	tls internal
-}
-
-media.open-dpp.localhost:20080 {
-	reverse_proxy open-dpp-media:3000
-	tls internal
-}
-
-agent-server.open-dpp.localhost:20080 {
-	reverse_proxy open-dpp-agent:3000
-	tls internal
-}
-

@@ -24,7 +24,20 @@ const user2org2 = createKeycloakUserInToken();
 const user1org3 = createKeycloakUserInToken();
 
 // Array of all keycloak users
-const keycloakUsers = [user1org1, user2org1, user1org2, user2org2, user1org3];
+const keycloakUsers = [
+  user1org1,
+  user2org1,
+  user1org2,
+  user2org2,
+  user1org3,
+].map((k) => ({
+  id: k.sub,
+  email: k.email,
+  firstName: k.name,
+  lastName: '',
+  emailVerified: true,
+  username: k.preferred_username,
+}));
 
 // Organization domain objects
 const org1 = Organization.fromPlain({

@@ -76,17 +76,17 @@ describe('PassportTemplateController', () => {
 
   it(`/POST passport template`, async () => {
     const passportTemplate = passportRequestFactory.build();
-    const userEmail = 'user@example.com';
+    const token = getKeycloakAuthToken(
+      userId,
+      [organizationId],
+      keycloakAuthTestingGuard,
+    );
+    const userEmail = keycloakAuthTestingGuard.tokenToUserMap.get(
+      token.replace('Bearer ', ''),
+    )!.email;
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organizationId}/templates/passports`)
-      .set(
-        'Authorization',
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set('Authorization', token)
       .send(passportTemplate);
     expect(response.status).toEqual(201);
     const found = await passportTemplateService.findOneOrFail(response.body.id);

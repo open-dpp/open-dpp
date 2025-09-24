@@ -33,6 +33,7 @@ import { PermissionModule } from '@app/permission';
 import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
 import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
 import { ignoreIds } from '@app/testing/utils';
+import { User } from '../../users/domain/user';
 
 describe('ItemsController', () => {
   let app: INestApplication;
@@ -45,9 +46,13 @@ describe('ItemsController', () => {
 
   const authContext = new AuthContext();
   authContext.keycloakUser = createKeycloakUserInToken();
+  const user = new User(
+    authContext.keycloakUser.sub,
+    authContext.keycloakUser.email,
+  );
   const organization = Organization.create({
     name: 'orga',
-    user: authContext.user,
+    user,
   });
   const sectionId1 = randomUUID();
   const sectionId2 = randomUUID();
@@ -645,7 +650,7 @@ describe('ItemsController', () => {
     await itemsService.save(item);
     const otherOrganization = Organization.create({
       name: 'My orga',
-      user: authContext.user,
+      user,
     });
     await organizationsService.save(otherOrganization);
     const response = await request(app.getHttpServer())

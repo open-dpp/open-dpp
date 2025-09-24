@@ -26,15 +26,16 @@ import { Organization } from '../../organizations/domain/organization';
 import { laptopFactory } from '../../templates/fixtures/laptop.factory';
 import { sectionDbPropsFactory } from '../../templates/fixtures/section.factory';
 import { dataFieldDbPropsFactory } from '../../templates/fixtures/data-field.factory';
-import { KeycloakAuthTestingGuard } from '../../../test/keycloak-auth.guard.testing';
+import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
 import { AuthContext } from '@app/auth/auth-request';
-import { TypeOrmTestingModule } from '../../../test/typeorm.testing.module';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
 import { PermissionModule } from '@app/permission';
-import { KeycloakResourcesServiceTesting } from '../../../test/keycloak.resources.service.testing';
+import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
 import { expect } from '@jest/globals';
 import request from 'supertest';
-import getKeycloakAuthToken from '../../../test/auth-token-helper.testing';
+import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
+import { User } from '../../users/domain/user';
 
 describe('AasConnectionController', () => {
   let app: INestApplication;
@@ -59,6 +60,10 @@ describe('AasConnectionController', () => {
     email_verified: true,
     memberships: [],
   };
+  const user = new User(
+    authContext.keycloakUser.sub,
+    authContext.keycloakUser.email,
+  );
   const organizationId = randomUUID();
 
   beforeEach(() => {
@@ -123,7 +128,7 @@ describe('AasConnectionController', () => {
       Organization.fromPlain({
         id: organizationId,
         name: 'orga name',
-        members: [authContext.user],
+        members: [user],
         createdByUserId: authContext.keycloakUser.sub,
         ownedByUserId: authContext.keycloakUser.sub,
       }),
@@ -190,7 +195,7 @@ describe('AasConnectionController', () => {
       .post(
         `/organizations/${organizationId}/integration/aas/connections/${aasMapping.id}/items`,
       )
-      .set('API_TOKEN', configService.get('API_TOKEN'))
+      .set('API_TOKEN', configService.get('API_TOKEN')!)
       .send({
         ...semitrailerTruckAas,
         assetAdministrationShells: [

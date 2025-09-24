@@ -1,6 +1,6 @@
 import { Item } from './item';
 import { randomUUID } from 'crypto';
-import { ignoreIds } from '../../../test/utils';
+import { ignoreIds } from '@app/testing/utils';
 import { Template, TemplateDbProps } from '../../templates/domain/template';
 import { Model } from '../../models/domain/model';
 import { DataValue } from '../../product-passport-data/domain/data-value';

@@ -5,7 +5,6 @@ export function generateConfig(
   configService: ConfigService,
   migrationPath: string,
 ): DataSourceOptions {
-  console.log('!!!!!!! PORT HERE ------->:', configService.get('DB_PORT'));
   return {
     type: 'postgres',
     host: configService.get('DB_HOST'),

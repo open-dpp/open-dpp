@@ -9,9 +9,9 @@
     "build": "nest build",
     "postbuild": "npm run copy:assets",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
-    "start": "nest start",
-    "start:dev": "nest start --watch",
-    "start:debug": "nest start --debug --watch",
+    "start": "nest start main",
+    "start:dev": "nest start main --watch",
+    "start:debug": "nest start main --debug --watch",
     "start:prod": "node dist/apps/main/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
@@ -74,7 +74,7 @@
     "@types/jest": "^30.0.0",
     "@types/multer": "^2.0.0",
     "@types/node": "^22.10.7",
-    "@types/supertest": "^6.0.2",
+    "@types/supertest": "^6.0.3",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
@@ -84,7 +84,7 @@
     "jest": "^30.0.0",
     "prettier": "^3.4.2",
     "source-map-support": "^0.5.21",
-    "supertest": "^7.0.0",
+    "supertest": "^7.1.4",
     "ts-jest": "^29.2.5",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
@@ -93,6 +93,12 @@
     "typescript-eslint": "^8.20.0"
   },
   "jest": {
+    "setupFiles": [
+      "./jest.setup.ts"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!@open-dpp/api-client)"
+    ],
     "moduleFileExtensions": [
       "js",
       "json",
@@ -103,8 +109,13 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/apps/main/client/"
+    ],
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.(t|j)s",
+      "!**/*-migration.ts"
     ],
     "coverageDirectory": "./coverage",
     "testEnvironment": "node",
@@ -113,6 +124,7 @@
       "<rootDir>/libs/"
     ],
     "moduleNameMapper": {
+      "^@app/analytics(|/.*)$": "<rootDir>/libs/analytics/src/$1",
       "^@app/auth(|/.*)$": "<rootDir>/libs/auth/src/$1",
       "^@app/exception(|/.*)$": "<rootDir>/libs/exception/src/$1",
       "^@app/mcp-module(|/.*)$": "<rootDir>/libs/mcp-module/src/$1",

@@ -1,6 +1,4 @@
 import { Test } from '@nestjs/testing';
-
-import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { TemplateService } from '../../templates/infrastructure/template.service';
 import { TemplateModule } from '../../templates/template.module';

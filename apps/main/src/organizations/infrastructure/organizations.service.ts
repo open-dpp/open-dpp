@@ -99,7 +99,7 @@ export class OrganizationsService {
     authContext: AuthContext,
     organizationId: string,
     email: string,
-  ) {
+  ): Promise<void> {
     if (authContext.keycloakUser.email === email) {
       throw new BadRequestException();
     }
