@@ -50,15 +50,7 @@ jobs:
         run: |
           ssh -p ${{ secrets.HETZNER_SSH_PORT }} root@${{ secrets.HETZNER_IPV4 }} "echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin"
 
-      - name: Pull and restart open-dpp service
-        run: |
-          ssh -p ${{ secrets.HETZNER_SSH_PORT }} root@${{ secrets.HETZNER_IPV4 }} "\
-            cd ${DEPLOY_DIR} && \
-            set -a; [ -f .env ] && . ./.env; set +a; \
-            docker compose -f docker-compose.yml pull \
-          "
-
-      - name: Pull and restart open-dpp service
+      - name: Pull and (re-)start containers
         run: |
           ssh -p ${{ secrets.HETZNER_SSH_PORT }} root@${{ secrets.HETZNER_IPV4 }} "\
             cd ${DEPLOY_DIR} && \
@@ -70,5 +62,7 @@ jobs:
             export OLLAMA_URL='${{ secrets.OLLAMA_URL }}'; \
             export SERVICE_API_HOST=\"${SERVICE_API_HOST:-api.${SERVICES_HOST_SUFFIX:-open-dpp.localhost}}\"; \
             export SERVICE_MARKETPLACE_URL=\"${SERVICE_MARKETPLACE_URL:-${MARKETPLACE_URL:-http://localhost:3000/api}}\"; \
+            docker compose -f docker-compose.yml pull && \
+            docker compose -f docker-compose.yml stop open-dpp mcp-server && \
             docker compose -f docker-compose.yml up -d \
           "
