@@ -112,7 +112,6 @@ services:
 
   api-db:
     container_name: api-db
-    platform: linux/amd64
     image: postgres:17-alpine
     environment:
       - POSTGRES_USER=admin
