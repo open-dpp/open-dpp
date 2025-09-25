@@ -55,7 +55,7 @@ jobs:
           ssh -p ${{ secrets.HETZNER_SSH_PORT }} root@${{ secrets.HETZNER_IPV4 }} "\
             cd ${DEPLOY_DIR} && \
             set -a; [ -f .env ] && . ./.env; set +a; \
-            docker compose -f docker-compose.yml pull open-dpp && \
+            docker compose -f docker-compose.yml pull \
           "
 
       - name: Pull and restart open-dpp service
@@ -70,6 +70,5 @@ jobs:
             export OLLAMA_URL='${{ secrets.OLLAMA_URL }}'; \
             export SERVICE_API_HOST=\"${SERVICE_API_HOST:-api.${SERVICES_HOST_SUFFIX:-open-dpp.localhost}}\"; \
             export SERVICE_MARKETPLACE_URL=\"${SERVICE_MARKETPLACE_URL:-${MARKETPLACE_URL:-http://localhost:3000/api}}\"; \
-            docker compose -f docker-compose.yml pull open-dpp && \
-            docker compose -f docker-compose.yml up -d open-dpp \
+            docker compose -f docker-compose.yml up -d \
           "
