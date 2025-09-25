@@ -1,14 +1,14 @@
 {$SERVICE_KEYCLOAK_URL} {
 	reverse_proxy keycloak:8080
-	tls internal
+	tls {$CADDY_TLS}
 }
 
 {$SERVICE_APP_URL} {
 	reverse_proxy open-dpp:3000
-	tls internal
+	tls {$CADDY_TLS}
 }
 
 {$SERVICE_MAILPIT_URL} {
 	reverse_proxy mailpit:8025
-	tls internal
+	tls {$CADDY_TLS}
 }

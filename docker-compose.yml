@@ -2,11 +2,12 @@ services:
   caddy:
     image: caddy:2-alpine
     ports:
-      - "20080:20080"
+      - ${SERVICE_CADDY_PORT}:${SERVICE_CADDY_PORT}
     environment:
       - SERVICE_KEYCLOAK_URL=${SERVICE_KEYCLOAK_URL}
       - SERVICE_APP_URL=${SERVICE_APP_URL}
       - SERVICE_MAILPIT_URL=${SERVICE_MAILPIT_URL}
+      - CADDY_TLS=${CADDY_TLS}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data

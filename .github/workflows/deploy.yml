@@ -67,6 +67,7 @@ jobs:
             export OLLAMA_URL='${{ secrets.OLLAMA_URL }}'; \
             export SERVICE_APP_URL='${{ vars.SERVICE_APP_URL }}'; \
             export SERVICE_APP_URL='${{ vars.SERVICE_KEYCLOAK_URL }}'; \
+            export CADDY_TLS='${{ vars.CADDY_TLS }}'; \
             docker compose -f docker-compose.yml pull && \
             docker compose -f docker-compose.yml stop open-dpp mcp-server && \
             docker compose -f docker-compose.yml up -d \
