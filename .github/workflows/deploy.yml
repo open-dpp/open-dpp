@@ -7,6 +7,10 @@ on:
         description: 'Docker image tag to deploy (e.g., latest, main, v1.2.3, sha)'
         required: false
         default: latest
+      environment:
+        type: environment
+        description: 'Select the environment to deploy to'
+        required: true
 
 permissions:
   contents: read
@@ -20,6 +24,7 @@ env:
 
 jobs:
   deploy:
+    environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -60,8 +65,8 @@ jobs:
             export API_SERVICE_TOKEN='${{ secrets.API_SERVICE_TOKEN }}'; \
             export MISTRAL_API_KEY='${{ secrets.MISTRAL_API_KEY }}'; \
             export OLLAMA_URL='${{ secrets.OLLAMA_URL }}'; \
-            export SERVICE_API_HOST=\"${SERVICE_API_HOST:-api.${SERVICES_HOST_SUFFIX:-open-dpp.localhost}}\"; \
-            export SERVICE_MARKETPLACE_URL=\"${SERVICE_MARKETPLACE_URL:-${MARKETPLACE_URL:-http://localhost:3000/api}}\"; \
+            export SERVICE_APP_URL='${{ vars.SERVICE_APP_URL }}'; \
+            export SERVICE_APP_URL='${{ vars.SERVICE_KEYCLOAK_URL }}'; \
             docker compose -f docker-compose.yml pull && \
             docker compose -f docker-compose.yml stop open-dpp mcp-server && \
             docker compose -f docker-compose.yml up -d \

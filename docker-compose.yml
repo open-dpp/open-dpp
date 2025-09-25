@@ -3,6 +3,10 @@ services:
     image: caddy:2-alpine
     ports:
       - "20080:20080"
+    environment:
+      - SERVICE_KEYCLOAK_URL=${SERVICE_KEYCLOAK_URL}
+      - SERVICE_APP_URL=${SERVICE_APP_URL}
+      - SERVICE_MAILPIT_URL=${SERVICE_MAILPIT_URL}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
@@ -75,7 +79,6 @@ services:
       - KEYCLOAK_REALM=open-dpp
       - KEYCLOAK_ADMIN_USERNAME=${AUTH_ADMIN_USERNAME}
       - KEYCLOAK_ADMIN_PASSWORD=${AUTH_ADMIN_PWD}
-      - MARKETPLACE_URL=${SERVICE_MARKETPLACE_URL}
       - S3_ENDPOINT=minio
       - S3_PORT=9000
       - S3_ACCESS_KEY=minioadmin

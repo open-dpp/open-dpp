@@ -1,30 +1,14 @@
-auth.open-dpp.localhost:20080 {
+{$SERVICE_KEYCLOAK_URL} {
 	reverse_proxy keycloak:8080
 	tls internal
 }
 
-open-dpp.localhost:20080 {
+{$SERVICE_APP_URL} {
 	reverse_proxy open-dpp:3000
 	tls internal
 }
 
-mail.open-dpp.localhost:20080 {
+{$SERVICE_MAILPIT_URL} {
 	reverse_proxy mailpit:8025
 	tls internal
 }
-
-marketplace.open-dpp.localhost:20080 {
-	reverse_proxy open-dpp-marketplace:3000
-	tls internal
-}
-
-media.open-dpp.localhost:20080 {
-	reverse_proxy open-dpp-media:3000
-	tls internal
-}
-
-agent-server.open-dpp.localhost:20080 {
-	reverse_proxy open-dpp-agent:3000
-	tls internal
-}
-
