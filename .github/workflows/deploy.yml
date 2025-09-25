@@ -39,7 +39,7 @@ jobs:
         run: |
           ssh -p ${{ secrets.HETZNER_SSH_PORT }} root@${{ secrets.HETZNER_IPV4 }} "mkdir -p ${DEPLOY_DIR}"
           rsync -az --delete -e "ssh -p ${{ secrets.HETZNER_SSH_PORT }}" \
-            docker-compose.yml public-env \
+            docker-compose.yml public-env Caddyfile \
             root@${{ secrets.HETZNER_IPV4 }}:${{ env.DEPLOY_DIR }}/
 
       - name: Prepare env file on server
