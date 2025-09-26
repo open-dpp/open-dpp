@@ -13,7 +13,6 @@ import {
 import * as passportPageViewDto_1 from './dto/passport-page-view.dto';
 import { PassportMetricQuerySchema } from './dto/passport-metric-query.dto';
 import { PassportMetricAggregation } from '../domain/passport-metric-aggregation';
-import { PassportService } from '../../passports/passport.service';
 import { PassportMetric } from '../domain/passport-metric';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import * as itemUpdateEventDto from './dto/item-update-event.dto';
@@ -21,6 +20,7 @@ import { PermissionService } from '@app/permission';
 import { Public } from '@app/auth/public/public.decorator';
 import { ZodValidationPipe } from '@app/exception/zod-validation.pipeline';
 import * as authRequest from '@app/auth/auth-request';
+import { PassportMetadataService } from '@app/passport-metadata';
 
 @Controller()
 export class PassportMetricController {
@@ -28,7 +28,7 @@ export class PassportMetricController {
 
   constructor(
     private passportMetricService: PassportMetricService,
-    private passportService: PassportService,
+    private passportMetadataService: PassportMetadataService,
     private readonly permissionsService: PermissionService,
   ) {}
 
@@ -66,7 +66,7 @@ export class PassportMetricController {
     @Body(new ZodValidationPipe(passportPageViewDto_1.PassportPageViewSchema))
     passportPageViewDto: passportPageViewDto_1.PassportPageViewDto,
   ) {
-    const passport = await this.passportService.findOneOrFail(
+    const passport = await this.passportMetadataService.findOneOrFail(
       passportPageViewDto.uuid,
     );
     if (!passport) {
@@ -115,7 +115,7 @@ export class PassportMetricController {
         query,
       )}`,
     );
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );

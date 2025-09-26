@@ -1,5 +1,6 @@
 import { Passport } from './passport';
-import { passportFactory } from '../fixtures/passport.factory';
+import { passportFactory } from '@app/passport-metadata/fixtures/passport.factory';
+import { expect } from '@jest/globals';
 
 describe('PassportTemplate', () => {
   it('is created', () => {

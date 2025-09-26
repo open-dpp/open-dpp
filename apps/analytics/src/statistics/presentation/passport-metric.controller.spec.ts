@@ -20,12 +20,12 @@ import { APP_GUARD, Reflector } from '@nestjs/core';
 import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { PermissionModule } from '@app/permission/permission.module';
-import { PassportService } from '../../passports/passport.service';
-import { PassportServiceTesting } from '@app/testing/passport.service.testing';
-import { Passport } from '../../passports/domain/passport';
-import { passportFactory } from '../../passports/fixtures/passport.factory';
+import { PassportMetadataServiceTesting } from '@app/testing/passport-metadata.service.testing';
 import { dataFieldFactory } from '../fixtures/passport-metric.factory';
 import { expect } from '@jest/globals';
+import { PassportMetadataService } from '@app/passport-metadata';
+import { Passport } from '@app/passport-metadata/domain/passport';
+import { passportFactory } from '@app/passport-metadata/fixtures/passport.factory';
 
 describe('PassportMetricController', () => {
   let app: INestApplication;
@@ -43,7 +43,7 @@ describe('PassportMetricController', () => {
     reflector,
   );
 
-  const passportService = new PassportServiceTesting();
+  const passportMetadataServiceTesting = new PassportMetadataServiceTesting();
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -59,7 +59,7 @@ describe('PassportMetricController', () => {
         PassportMetricModule,
       ],
       providers: [
-        PassportService,
+        PassportMetadataService,
         {
           provide: APP_GUARD,
           useValue: keycloakAuthTestingGuard,
@@ -67,8 +67,8 @@ describe('PassportMetricController', () => {
       ],
       controllers: [PassportMetricController],
     })
-      .overrideProvider(PassportService)
-      .useValue(passportService)
+      .overrideProvider(PassportMetadataService)
+      .useValue(passportMetadataServiceTesting)
       .compile();
 
     mongoConnection = module.get<Connection>(getConnectionToken());
@@ -150,7 +150,7 @@ describe('PassportMetricController', () => {
     const passport = Passport.create(
       passportFactory.build({ ownedByOrganizationId: organizationId, uuid }),
     );
-    passportService.addPassport(uuid, passport);
+    passportMetadataServiceTesting.addPassport(uuid, passport);
     const response = await request(app.getHttpServer())
       .post(`/passport-metrics/page-views`)
       .send({

@@ -109,6 +109,15 @@
         "tsConfigPath": "libs/media-module/tsconfig.lib.json"
       }
     },
+    "passport-metadata": {
+      "type": "library",
+      "root": "libs/passport-metadata",
+      "entryFile": "index",
+      "sourceRoot": "libs/passport-metadata/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/passport-metadata/tsconfig.lib.json"
+      }
+    },
     "permission": {
       "type": "library",
       "root": "libs/permission",

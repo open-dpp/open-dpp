@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { DppApiClient } from '@open-dpp/api-client';
 import { ConfigService } from '@nestjs/config';
-import { Passport } from './domain/passport';
+import { Passport } from '@app/passport-metadata/domain/passport';
 
 @Injectable()
-export class PassportService {
+export class PassportMetadataService {
   private readonly dppApiClient: DppApiClient;
 
   constructor(configService: ConfigService) {
@@ -22,10 +22,11 @@ export class PassportService {
   async findOneOrFail(uuid: string): Promise<Passport | undefined> {
     const response =
       await this.dppApiClient.uniqueProductIdentifiers.getMetadata(uuid);
-    const { organizationId } = response.data;
+    const metadata = response.data;
     return Passport.create({
       uuid,
-      ownedByOrganizationId: organizationId,
+      ...metadata,
+      ownedByOrganizationId: metadata.organizationId,
     });
   }
 }

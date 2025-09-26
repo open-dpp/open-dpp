@@ -6,9 +6,9 @@ import {
   PassportMetricDoc,
   PassportMetricSchema,
 } from './infrastructure/passport-metric.schema';
-import { PassportModule } from '../passports/passport.module';
 import { ConfigModule } from '@nestjs/config';
 import { PermissionModule } from '@app/permission';
+import { PassportMetadataModule } from '@app/passport-metadata';
 
 @Module({
   imports: [
@@ -20,7 +20,7 @@ import { PermissionModule } from '@app/permission';
       },
     ]),
     PermissionModule,
-    PassportModule,
+    PassportMetadataModule,
   ],
   controllers: [PassportMetricController],
   providers: [PassportMetricService],

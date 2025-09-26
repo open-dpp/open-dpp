@@ -1,15 +1,14 @@
 import { Module } from '@nestjs/common';
 import { PassportMetricModule } from './statistics/passport-metric.module';
-import { PassportModule } from './passports/passport.module';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { z } from 'zod';
-import { MongooseModule } from '@nestjs/mongoose';
-import { generateMongoConfig } from './database/config';
 import { HttpModule } from '@nestjs/axios';
 import { AuthModule } from '@app/auth';
 import { PermissionModule } from '@app/permission';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthGuard } from '@app/auth/keycloak-auth/keycloak-auth.guard';
+import { DatabaseModule } from '@app/database';
+import { PassportMetadataModule } from '@app/passport-metadata';
 
 @Module({
   imports: [
@@ -32,17 +31,11 @@ import { KeycloakAuthGuard } from '@app/auth/keycloak-auth/keycloak-auth.guard';
           })
           .parse(config),
     }),
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        ...generateMongoConfig(configService),
-      }),
-      inject: [ConfigService],
-    }),
+    DatabaseModule,
     HttpModule,
     AuthModule,
     PassportMetricModule,
-    PassportModule,
+    PassportMetadataModule,
     PermissionModule,
   ],
   providers: [

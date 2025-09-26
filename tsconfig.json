@@ -57,6 +57,12 @@
       "@app/media-module/*": [
         "libs/media-module/src/*"
       ],
+      "@app/passport-metadata": [
+        "libs/passport-metadata/src"
+      ],
+      "@app/passport-metadata/*": [
+        "libs/passport-metadata/src/*"
+      ],
       "@app/permission": [
         "libs/permission/src"
       ],

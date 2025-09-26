@@ -1,6 +1,6 @@
-import { Passport } from '../../../apps/analytics/src/passports/domain/passport';
+import { Passport } from '@app/passport-metadata/domain/passport';
 
-export class PassportServiceTesting {
+export class PassportMetadataServiceTesting {
   private passports = new Map<string, Passport>();
   addPassport(uuid: string, passport: Passport) {
     this.passports.set(uuid, passport);

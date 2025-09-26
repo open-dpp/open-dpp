@@ -1,19 +1,18 @@
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { z } from 'zod';
-import { MongooseModule } from '@nestjs/mongoose';
-import { generateMongoConfig } from './database/config';
-import { AiConfigurationModule } from './ai/ai-configuration/ai-configuration.module';
-import { AiModule } from './ai/ai.module';
-import { McpClientModule } from './ai/mcp-client/mcp-client.module';
-import { PassportModule } from './ai/passports/passport.module';
+import { AiConfigurationModule } from './ai-configuration/ai-configuration.module';
+import { AiModule } from './ai.module';
+import { McpClientModule } from './mcp-client/mcp-client.module';
 import { AuthModule } from '@app/auth';
 import { PermissionModule } from '@app/permission';
-import { ChatGateway } from './ai/chat.gateway';
-import { ChatService } from './ai/chat.service';
+import { ChatGateway } from './chat.gateway';
+import { ChatService } from './chat.service';
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthGuard } from '@app/auth/keycloak-auth/keycloak-auth.guard';
+import { DatabaseModule } from '@app/database';
+import { PassportMetadataModule } from '@app/passport-metadata';
 
 @Module({
   imports: [
@@ -39,19 +38,13 @@ import { KeycloakAuthGuard } from '@app/auth/keycloak-auth/keycloak-auth.guard';
           })
           .parse(config),
     }),
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        ...generateMongoConfig(configService),
-      }),
-      inject: [ConfigService],
-    }),
+    DatabaseModule,
     AiConfigurationModule,
     AiModule,
     McpClientModule,
     PermissionModule,
     AuthModule,
-    PassportModule,
+    PassportMetadataModule,
     HttpModule,
   ],
   controllers: [],

@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { randomUUID } from 'crypto';
-import { PassportService } from './passport.service';
 import { Passport } from './domain/passport';
 import { ConfigService } from '@nestjs/config';
 import { expect } from '@jest/globals';
+import { PassportMetadataService } from '@app/passport-metadata/passport-metadata.service';
 
 const mockGetMetadata = jest.fn();
 
@@ -16,15 +16,15 @@ jest.mock('@open-dpp/api-client', () => ({
   })),
 }));
 
-describe('PassportService', () => {
-  let service: PassportService;
+describe('PassportMetadataService', () => {
+  let service: PassportMetadataService;
   let module: TestingModule;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [],
       providers: [
-        PassportService,
+        PassportMetadataService,
         {
           provide: ConfigService,
           useValue: {
@@ -41,7 +41,7 @@ describe('PassportService', () => {
         },
       ],
     }).compile();
-    service = module.get<PassportService>(PassportService);
+    service = module.get<PassportMetadataService>(PassportMetadataService);
   });
 
   it('should find passport', async () => {
