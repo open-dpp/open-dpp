@@ -3,6 +3,7 @@ import {
   aiConfigurationCreationFactory,
   aiConfigurationFactory,
 } from '../fixtures/ai-configuration-props.factory';
+import { expect } from '@jest/globals';
 
 describe('AiConfiguration', () => {
   it('is created', () => {
