@@ -66,7 +66,7 @@ jobs:
             export MISTRAL_API_KEY='${{ secrets.MISTRAL_API_KEY }}'; \
             export OLLAMA_URL='${{ secrets.OLLAMA_URL }}'; \
             export SERVICE_APP_URL='${{ vars.SERVICE_APP_URL }}'; \
-            export SERVICE_APP_URL='${{ vars.SERVICE_KEYCLOAK_URL }}'; \
+            export SERVICE_KEYCLOAK_URL='${{ vars.SERVICE_KEYCLOAK_URL }}'; \
             export CADDY_TLS='${{ vars.CADDY_TLS }}'; \
             export SERVICE_CADDY_PORT='80'; \
             docker compose -f docker-compose.yml pull && \

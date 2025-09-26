@@ -63,8 +63,6 @@ services:
   open-dpp:
     container_name: open-dpp
     image: ghcr.io/open-dpp/open-dpp:latest
-    ports:
-      - 4001:3000
     environment:
       - SERVICE_TOKEN=${API_SERVICE_TOKEN}
       - API_TOKEN=apiToken
@@ -102,8 +100,6 @@ services:
 
   mcp-server:
     container_name: mcp-server
-    ports:
-      - 4005:3000
     image: ghcr.io/open-dpp/mcp-server:main
     environment:
       - DPP_API_URL=http://open-dpp:3000/api
@@ -223,8 +219,6 @@ services:
 
   clamav-rest:
     image: ajilaag/clamav-rest
-    ports:
-      - "3310:9000"
     networks:
       - open-dpp-local
 
