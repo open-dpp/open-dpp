@@ -7,6 +7,7 @@ services:
       - SERVICE_KEYCLOAK_URL=${SERVICE_KEYCLOAK_URL}
       - SERVICE_APP_URL=${SERVICE_APP_URL}
       - SERVICE_MAILPIT_URL=${SERVICE_MAILPIT_URL}
+      - SERVICE_MCP_SERVER_URL=${SERVICE_MCP_SERVER_URL}
       - CADDY_TLS=${CADDY_TLS}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
@@ -101,6 +102,8 @@ services:
   mcp-server:
     container_name: mcp-server
     image: ghcr.io/open-dpp/mcp-server:main
+    ports:
+      - "3002:3000"
     environment:
       - DPP_API_URL=http://open-dpp:3000/api
       - PORT=3000

@@ -23,6 +23,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          - node-version: 24.0
+        run: cd apps/main/client && npm i && npm run build
+
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:

@@ -68,6 +68,7 @@ jobs:
             export SERVICE_APP_URL='${{ vars.SERVICE_APP_URL }}'; \
             export SERVICE_KEYCLOAK_URL='${{ vars.SERVICE_KEYCLOAK_URL }}'; \
             export SERVICE_MAILPIT_URL='${{ vars.SERVICE_MAILPIT_URL }}'; \
+            export SERVICE_MCP_SERVER_URL='${{ vars.SERVICE_MCP_SERVER_URL }}'; \
             export CADDY_TLS='${{ vars.CADDY_TLS }}'; \
             export SERVICE_CADDY_PORT='${{ vars.SERVICE_CADDY_PORT }}'; \
             docker compose -f docker-compose.yml pull && \

@@ -8,6 +8,11 @@
 	tls {$CADDY_TLS}
 }
 
+{$SERVICE_MCP_SERVER_URL} {
+	reverse_proxy mcp-server:3000
+	tls {$CADDY_TLS}
+}
+
 {$SERVICE_MAILPIT_URL} {
 	reverse_proxy mailpit:8025
 	tls {$CADDY_TLS}

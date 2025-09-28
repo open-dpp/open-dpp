@@ -33,6 +33,7 @@ import { PassportModule } from './ai/passports/passport.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      expandVariables: true,
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
