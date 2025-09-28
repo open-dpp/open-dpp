@@ -33,11 +33,6 @@ jobs:
           set -a; [ -f .env ] && . ./.env; set +a; \
           export VITE_API_ROOT='https://app.demo1.open-dpp.de/api'; \
           export VITE_KEYCLOAK_ROOT='https://auth.demo1.open-dpp.de'; \
-          export VITE_VIEW_ROOT_URL='https://app.demo1.open-dpp.de/api'; \
-          export VITE_MARKETPLACE_ROOT='https://app.demo1.open-dpp.de/api'; \
-          export VITE_MEDIA_SERVICE_ROOT='https://app.demo1.open-dpp.de/api'; \
-          export VITE_AGENT_SERVER_ROOT='https://app.demo1.open-dpp.de/api'; \
-          export VITE_AGENT_WEBSOCKET_ROOT='https://app.demo1.open-dpp.de/api'; \
           cd apps/main/client && npm i && npm run build
 
       - name: Log in to the Container registry
