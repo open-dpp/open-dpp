@@ -26,7 +26,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v5
         with:
-          - node-version: 24.0
+          node-version: 24
       - name: Install dependencies and build
         run: cd apps/main/client && npm i && npm run build
 
