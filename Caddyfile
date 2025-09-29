@@ -1,15 +1,19 @@
-auth.open-dpp.localhost:20080 {
+{$SERVICE_KEYCLOAK_URL} {
 	reverse_proxy keycloak:8080
-	tls internal
+	tls {$CADDY_TLS}
 }
 
-open-dpp.localhost:20080 {
+{$SERVICE_APP_URL} {
 	reverse_proxy open-dpp:3000
-	tls internal
+	tls {$CADDY_TLS}
 }
 
-mail.open-dpp.localhost:20080 {
+{$SERVICE_MCP_SERVER_URL} {
+	reverse_proxy mcp-server:3000
+	tls {$CADDY_TLS}
+}
+
+{$SERVICE_MAILPIT_URL} {
 	reverse_proxy mailpit:8025
-	tls internal
+	tls {$CADDY_TLS}
 }
-

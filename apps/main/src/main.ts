@@ -37,11 +37,11 @@ async function bootstrap() {
     new NotFoundExceptionFilter(),
     new ValueErrorFilter(),
   );
+  applyBodySizeHandler(app);
   app.use(
     '/media/upload-dpp-file/:upi',
     bodyParser.urlencoded({ limit: '50mb', extended: true }),
   );
-  applyBodySizeHandler(app);
 
   app.useGlobalPipes(new ValidationPipe());
   if (configService.get<string>('BUILD_OPEN_API_DOCUMENTATION') === 'true') {
@@ -53,7 +53,7 @@ async function bootstrap() {
       port: Number(configService.get('MSG_PORT', '5002')), // Microservice port
     },
   });
-  app.startAllMicroservices();
+  await app.startAllMicroservices();
   const port = Number(configService.get('PORT', '3000'));
   await app.listen(port);
   console.log(`Application is running on port: ${port}`);

@@ -7,6 +7,10 @@ on:
         description: 'Docker image tag to deploy (e.g., latest, main, v1.2.3, sha)'
         required: false
         default: latest
+      environment:
+        type: environment
+        description: 'Select the environment to deploy to'
+        required: true
 
 permissions:
   contents: read
@@ -20,6 +24,7 @@ env:
 
 jobs:
   deploy:
+    environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -35,20 +40,11 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -p ${{ secrets.HETZNER_SSH_PORT }} ${{ secrets.HETZNER_IPV4 }} >> ~/.ssh/known_hosts
 
-      - name: Generate docker-compose override (use prebuilt image)
-        run: |
-          cat > docker-compose.override.yml <<EOF
-          services:
-            open-dpp:
-              image: ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
-              build: null
-          EOF
-
       - name: Copy deployment files to server
         run: |
           ssh -p ${{ secrets.HETZNER_SSH_PORT }} root@${{ secrets.HETZNER_IPV4 }} "mkdir -p ${DEPLOY_DIR}"
           rsync -az --delete -e "ssh -p ${{ secrets.HETZNER_SSH_PORT }}" \
-            docker-compose.yml docker-compose.override.yml public-env \
+            docker-compose.yml public-env Caddyfile keycloak-realm.json \
             root@${{ secrets.HETZNER_IPV4 }}:${{ env.DEPLOY_DIR }}/
 
       - name: Prepare env file on server
@@ -59,14 +55,23 @@ jobs:
         run: |
           ssh -p ${{ secrets.HETZNER_SSH_PORT }} root@${{ secrets.HETZNER_IPV4 }} "echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin"
 
-      - name: Pull and restart open-dpp service
+      - name: Pull and (re-)start containers
         run: |
           ssh -p ${{ secrets.HETZNER_SSH_PORT }} root@${{ secrets.HETZNER_IPV4 }} "\
             cd ${DEPLOY_DIR} && \
             set -a; [ -f .env ] && . ./.env; set +a; \
-            export AUTH_ADMIN_USERNAME='${{ secrets.AUTH_ADMIN_USERNAME }}' AUTH_ADMIN_PWD='${{ secrets.AUTH_ADMIN_PWD }}' API_SERVICE_TOKEN='${{ secrets.API_SERVICE_TOKEN }}' MISTRAL_API_KEY='${{ secrets.MISTRAL_API_KEY }}' OLLAMA_URL='${{ secrets.OLLAMA_URL }}'; \
-            export SERVICE_API_HOST=\"${SERVICE_API_HOST:-api.${SERVICES_HOST_SUFFIX:-open-dpp.localhost}}\"; \
-            export SERVICE_MARKETPLACE_URL=\"${SERVICE_MARKETPLACE_URL:-${MARKETPLACE_URL:-http://localhost:3000/api}}\"; \
-            docker compose -f docker-compose.yml -f docker-compose.override.yml pull open-dpp && \
-            docker compose -f docker-compose.yml -f docker-compose.override.yml up -d open-dpp \
+            export AUTH_ADMIN_USERNAME='${{ secrets.AUTH_ADMIN_USERNAME }}'; \
+            export AUTH_ADMIN_PWD='${{ secrets.AUTH_ADMIN_PWD }}'; \
+            export API_SERVICE_TOKEN='${{ secrets.API_SERVICE_TOKEN }}'; \
+            export MISTRAL_API_KEY='${{ secrets.MISTRAL_API_KEY }}'; \
+            export OLLAMA_URL='${{ secrets.OLLAMA_URL }}'; \
+            export SERVICE_APP_URL='${{ vars.SERVICE_APP_URL }}'; \
+            export SERVICE_KEYCLOAK_URL='${{ vars.SERVICE_KEYCLOAK_URL }}'; \
+            export SERVICE_MAILPIT_URL='${{ vars.SERVICE_MAILPIT_URL }}'; \
+            export SERVICE_MCP_SERVER_URL='${{ vars.SERVICE_MCP_SERVER_URL }}'; \
+            export CADDY_TLS='${{ vars.CADDY_TLS }}'; \
+            export SERVICE_CADDY_PORT='${{ vars.SERVICE_CADDY_PORT }}'; \
+            docker compose -f docker-compose.yml pull && \
+            docker compose -f docker-compose.yml stop open-dpp mcp-server && \
+            docker compose -f docker-compose.yml up -d \
           "

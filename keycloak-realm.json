@@ -930,11 +930,13 @@
       "redirectUris": [
         "$(CUSTOM_VAR_ADMIN_INTERFACE_ROOT_URL)/*",
         "http://localhost:4001/*",
+        "http://localhost:5173/*",
         "https://open-dpp.localhost:20080/*"
       ],
       "webOrigins": [
         "$(CUSTOM_VAR_ADMIN_INTERFACE_WEBORIGIN)",
         "http://localhost:4001",
+        "http://localhost:5173",
         "https://open-dpp.localhost:20080"
       ],
       "notBefore": 0,

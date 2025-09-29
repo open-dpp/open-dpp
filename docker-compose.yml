@@ -2,7 +2,13 @@ services:
   caddy:
     image: caddy:2-alpine
     ports:
-      - "20080:20080"
+      - ${SERVICE_CADDY_PORT}:${SERVICE_CADDY_PORT}
+    environment:
+      - SERVICE_KEYCLOAK_URL=${SERVICE_KEYCLOAK_URL}
+      - SERVICE_APP_URL=${SERVICE_APP_URL}
+      - SERVICE_MAILPIT_URL=${SERVICE_MAILPIT_URL}
+      - SERVICE_MCP_SERVER_URL=${SERVICE_MCP_SERVER_URL}
+      - CADDY_TLS=${CADDY_TLS}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
@@ -57,13 +63,7 @@ services:
 
   open-dpp:
     container_name: open-dpp
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - APP_NAME=main
-    ports:
-      - 4001:3000
+    image: ghcr.io/open-dpp/open-dpp:latest
     environment:
       - SERVICE_TOKEN=${API_SERVICE_TOKEN}
       - API_TOKEN=apiToken
@@ -101,9 +101,9 @@ services:
 
   mcp-server:
     container_name: mcp-server
-    ports:
-      - 4005:3000
     image: ghcr.io/open-dpp/mcp-server:main
+    ports:
+      - "3002:3000"
     environment:
       - DPP_API_URL=http://open-dpp:3000/api
       - PORT=3000
@@ -112,7 +112,6 @@ services:
 
   api-db:
     container_name: api-db
-    platform: linux/amd64
     image: postgres:17-alpine
     environment:
       - POSTGRES_USER=admin
@@ -162,8 +161,8 @@ services:
       - IMPORT_VALIDATE=true
       - IMPORT_CACHE_ENABLED=false
       - IMPORT_VARSUBSTITUTION_ENABLED=true
-      - CUSTOM_VAR_ADMIN_INTERFACE_ROOT_URL=http://localhost:5173
-      - CUSTOM_VAR_ADMIN_INTERFACE_WEBORIGIN=http://localhost:5173
+      - CUSTOM_VAR_ADMIN_INTERFACE_ROOT_URL=${SERVICE_APP_URL}
+      - CUSTOM_VAR_ADMIN_INTERFACE_WEBORIGIN=${SERVICE_APP_URL}
       - CUSTOM_VAR_SMTP_AUTH_ENABLED=false
       - CUSTOM_VAR_SMTP_USER=open-dpp
       - CUSTOM_VAR_SMTP_PASSWORD=*******
@@ -223,8 +222,6 @@ services:
 
   clamav-rest:
     image: ajilaag/clamav-rest
-    ports:
-      - "3310:9000"
     networks:
       - open-dpp-local
 

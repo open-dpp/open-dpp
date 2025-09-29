@@ -28,11 +28,13 @@ import { AiModule } from './ai/ai.module';
 import { AiConfigurationModule } from './ai/ai-configuration/ai-configuration.module';
 import { McpClientModule } from './ai/mcp-client/mcp-client.module';
 import { PassportModule } from './ai/passports/passport.module';
+import { CreateNonExistingUserGuard } from './users/infrastructure/create-non-existing-user.guard';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      expandVariables: true,
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -89,6 +91,10 @@ import { PassportModule } from './ai/passports/passport.module';
     {
       provide: APP_GUARD,
       useClass: KeycloakAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: CreateNonExistingUserGuard,
     },
   ],
 })

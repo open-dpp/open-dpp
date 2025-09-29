@@ -5,6 +5,7 @@ import { UserEntity } from './infrastructure/user.entity';
 import { OrganizationsModule } from '../organizations/organizations.module';
 import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
 import { KeycloakSyncOnStartupService } from '../keycloak-sync-on-startup/keycloak-sync-on-startup/keycloak-sync-on-startup.service';
+import { CreateNonExistingUserGuard } from './infrastructure/create-non-existing-user.guard';
 
 @Module({
   imports: [
@@ -13,7 +14,11 @@ import { KeycloakSyncOnStartupService } from '../keycloak-sync-on-startup/keyclo
     KeycloakResourcesModule,
   ],
   controllers: [],
-  providers: [UsersService, KeycloakSyncOnStartupService],
-  exports: [UsersService],
+  providers: [
+    UsersService,
+    KeycloakSyncOnStartupService,
+    CreateNonExistingUserGuard,
+  ],
+  exports: [UsersService, CreateNonExistingUserGuard],
 })
 export class UsersModule {}
