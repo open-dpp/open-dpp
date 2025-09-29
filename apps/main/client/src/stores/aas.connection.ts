@@ -6,8 +6,10 @@ import {
   CreateAasConnectionDto,
 } from '@open-dpp/api-client';
 import { useErrorHandlingStore } from './error.handling';
+import { i18n } from '../translations/i18n';
 
 export const useAasConnectionStore = defineStore('aas-integration', () => {
+  const { t } = i18n.global;
   const aasConnections = ref<AasConnectionGetAllDto[]>([]);
   const errorHandlingStore = useErrorHandlingStore();
   const fetchConnections = async () => {
@@ -16,7 +18,7 @@ export const useAasConnectionStore = defineStore('aas-integration', () => {
       aasConnections.value = response.data;
     } catch (error) {
       errorHandlingStore.logErrorWithNotification(
-        'Laden der Verbindungen fehlgeschlagen:',
+        t('integrations.connections.errorLoad'),
         error,
       );
     }

@@ -2,9 +2,11 @@
   <div class="">
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
-        <h1 class="text-base font-semibold text-gray-900">Organisation</h1>
+        <h1 class="text-base font-semibold text-gray-900">
+          {{ t('organizations.organizations', 1) }}
+        </h1>
         <p class="mt-2 text-sm text-gray-700">
-          Erstellen Sie eine neue Organisation.
+          {{ t('organizations.create') }}
         </p>
       </div>
     </div>
@@ -15,5 +17,8 @@
 </template>
 
 <script lang="ts" setup>
+import { useI18n } from 'vue-i18n';
 import CreateOrganizationForm from '../../components/organizations/CreateOrganizationForm.vue';
+
+const { t } = useI18n();
 </script>

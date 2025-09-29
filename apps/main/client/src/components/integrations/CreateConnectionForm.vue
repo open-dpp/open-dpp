@@ -2,8 +2,8 @@
   <form-kit id="createDraftForm" :actions="false" type="form" @submit="create">
     <form-kit
       data-cy="name"
-      help="Geben Sie Ihrer Verbindung einen Namen"
-      label="Name"
+      :help="t('integrations.connections.name.help')"
+      :label="t('integrations.connections.name.label')"
       name="name"
       type="text"
       validation="required"
@@ -11,8 +11,8 @@
     <form-kit
       :options="selectableModels"
       data-cy="select-model"
-      help="Wählen Sie einen Modellpass, für den Sie Artikpässe über diese Verbindung erstellen möchten"
-      label="Modellpass Auswahl"
+      :help="t('integrations.connections.model.help')"
+      :label="t('integrations.connections.model.label')"
       name="modelId"
       type="select"
       validation="required"
@@ -20,8 +20,8 @@
     <form-kit
       :options="selectableAasTypes"
       data-cy="select-aas-type"
-      help="Wählen Sie eine Asset Admininstration Shell"
-      label="Asset Admininstration Shell Auswahl"
+      :help="t('integrations.connections.aas.help')"
+      :label="t('integrations.connections.aas.label')"
       name="aasType"
       type="select"
       validation="required"
@@ -40,7 +40,9 @@ import { useRouter } from 'vue-router';
 import { useIndexStore } from '../../stores';
 import { z } from 'zod/v4';
 import { AAS_NAME_MAPPING } from '../../lib/aas-name-mapping';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const modelsStore = useModelsStore();
 const aasConnectionStore = useAasConnectionStore();
 const notificationsStore = useNotificationStore();
@@ -50,20 +52,20 @@ const selectableModels = computed(() =>
   modelsStore.models.map((m) => ({ label: `${m.name} ${m.id}`, value: m.id })),
 );
 
-const selectableAasTypes = [
+const selectableAasTypes = computed(() => [
   {
-    label: AAS_NAME_MAPPING[AssetAdministrationShellType.Truck],
+    label: t(AAS_NAME_MAPPING[AssetAdministrationShellType.Truck]),
     value: AssetAdministrationShellType.Truck,
   },
   {
-    label: AAS_NAME_MAPPING[AssetAdministrationShellType.Semitrailer],
+    label: t(AAS_NAME_MAPPING[AssetAdministrationShellType.Semitrailer]),
     value: AssetAdministrationShellType.Semitrailer,
   },
   {
-    label: AAS_NAME_MAPPING[AssetAdministrationShellType.Semitrailer_Truck],
+    label: t(AAS_NAME_MAPPING[AssetAdministrationShellType.Semitrailer_Truck]),
     value: AssetAdministrationShellType.Semitrailer_Truck,
   },
-];
+]);
 
 const create = async (formFields: unknown) => {
   const fields = z
@@ -87,7 +89,7 @@ const create = async (formFields: unknown) => {
     );
   } else {
     notificationsStore.addErrorNotification(
-      'Erstellen der Verbindung fehlgeschlagen',
+      t('integrations.connections.errorCreate'),
     );
   }
 };

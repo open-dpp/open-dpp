@@ -2,40 +2,50 @@
   <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
     <div class="px-4 py-6 sm:px-6">
       <h3 class="text-base/7 font-semibold text-gray-900">
-        Organisation Informationen
+        {{ t('organizations.info') }}
       </h3>
       <p class="mt-1 max-w-2xl text-sm/6 text-gray-500">
-        Details und User der Organisation.
+        {{ t('organizations.details') }}
       </p>
     </div>
     <div v-if="organization" class="border-t border-gray-100">
       <dl class="divide-y divide-gray-100">
         <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-          <dt class="text-sm font-medium text-gray-900">ID</dt>
+          <dt class="text-sm font-medium text-gray-900">
+            {{ t('organizations.form.id') }}
+          </dt>
           <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
             {{ organization.id }}
           </dd>
         </div>
         <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-          <dt class="text-sm font-medium text-gray-900">Name</dt>
+          <dt class="text-sm font-medium text-gray-900">
+            {{ t('organizations.form.name.label') }}
+          </dt>
           <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
             {{ organization.name }}
           </dd>
         </div>
         <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-          <dt class="text-sm font-medium text-gray-900">Erstellt von</dt>
+          <dt class="text-sm font-medium text-gray-900">
+            {{ t('organizations.form.createdBy') }}
+          </dt>
           <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
             {{ organization.createdByUserId }}
           </dd>
         </div>
         <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-          <dt class="text-sm font-medium text-gray-900">Administriert von</dt>
+          <dt class="text-sm font-medium text-gray-900">
+            {{ t('organizations.form.administeredBy') }}
+          </dt>
           <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
             {{ organization.ownedByUserId }}
           </dd>
         </div>
         <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-          <dt class="text-sm font-medium text-gray-900">Beschreibung</dt>
+          <dt class="text-sm font-medium text-gray-900">
+            {{ t('organizations.form.description') }}
+          </dt>
           <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
             Fugiat ipsum ipsum deserunt culpa aute sint do nostrud anim
             incididunt cillum culpa consequat. Excepteur qui ipsum aliquip
@@ -66,12 +76,12 @@
                     <span
                       v-if="organization.ownedByUserId === member.id"
                       class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
-                      >Admin</span
+                      >{{ t('organizations.memberAdmin') }}</span
                     >
                     <span
                       v-if="organization.createdByUserId === member.id"
                       class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
-                      >Ersteller</span
+                      >{{ t('organizations.memberCreator') }}</span
                     >
                   </div>
                 </div>
@@ -79,8 +89,9 @@
                   <a
                     class="font-medium text-red-600 hover:text-red-500"
                     href="#"
-                    >Entfernen</a
                   >
+                    {{ t('common.remove') }}
+                  </a>
                 </div>
               </li>
             </ul>
@@ -88,16 +99,15 @@
               <input
                 v-model="userEmailToAdd"
                 class="block rounded-md border-gray-300 min-w-80"
-                placeholder="E-Mail"
+                :placeholder="t('common.form.email.label')"
                 type="text"
               />
               <BaseButton
                 variant="primary"
                 type="button"
                 @click="inviteUserToOrg"
+                >{{ t('organizations.addUser') }}</BaseButton
               >
-                User hinzufügen
-              </BaseButton>
             </div>
           </dd>
         </div>
@@ -112,6 +122,9 @@ import { OrganizationDto } from '@open-dpp/api-client';
 import apiClient from '../../lib/api-client';
 import { UserCircleIcon } from '@heroicons/vue/20/solid';
 import BaseButton from '../../components/BaseButton.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   organizationId: string;

@@ -3,20 +3,19 @@ import { ref } from 'vue';
 import apiClient from '../lib/api-client';
 import { ModelCreateDto, ModelDto } from '@open-dpp/api-client';
 import { useErrorHandlingStore } from './error.handling';
+import { i18n } from '../translations/i18n';
 
 export const useModelsStore = defineStore('models', () => {
   const models = ref<ModelDto[]>([]);
   const errorHandlingStore = useErrorHandlingStore();
+  const { t } = i18n.global;
 
   const getModels = async () => {
     try {
       const response = await apiClient.dpp.models.getAll();
       models.value = response.data;
     } catch (e) {
-      errorHandlingStore.logErrorWithNotification(
-        'Laden der Modellpässe fehlgeschlagen',
-        e,
-      );
+      errorHandlingStore.logErrorWithNotification(t('notifications.error'), e);
     }
   };
 

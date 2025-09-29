@@ -1,10 +1,17 @@
 import { RouteLocationNormalizedGeneric, RouteRecordRaw } from 'vue-router';
 import { useLayoutStore } from '../../stores/layout';
 import { PRO_ALPHA_INTEGRATION_ID } from '../../const';
+import {
+  localizedBreadcrumb,
+  textOrLocalizedFallback,
+} from '../../lib/breadcrumbs';
 
 export const integrationBreadcrumbs = (to: RouteLocationNormalizedGeneric) => [
   {
-    name: 'Integrationen',
+    name: {
+      text: 'integrations.integrations',
+      localized: true,
+    },
     route: INTEGRATIONS,
     params: to.params,
   },
@@ -13,7 +20,10 @@ export const integrationBreadcrumbs = (to: RouteLocationNormalizedGeneric) => [
 const aasConnectionListBreadcrumbs = (to: RouteLocationNormalizedGeneric) => [
   ...integrationBreadcrumbs(to),
   {
-    name: 'Proalpha',
+    name: {
+      text: 'Proalpha',
+      localized: false,
+    },
     route: AAS_CONNECTION_LIST,
     params: to.params,
   },
@@ -24,7 +34,10 @@ export const aasConnectionBreadcrumbs = (
 ) => [
   ...aasConnectionListBreadcrumbs(to),
   {
-    name: `${to.params.connectionId as string}` || 'Verbindung',
+    name: textOrLocalizedFallback(
+      `${to.params.connectionId as string}`,
+      'integrations.connections.label',
+    ),
     route: AAS_CONNECTION,
     params: to.params,
   },
@@ -35,7 +48,7 @@ export const aiIntegrationBreadcrumbs = (
 ) => [
   ...integrationBreadcrumbs(to),
   {
-    name: 'KI-Integrationen',
+    name: localizedBreadcrumb('integrations.ai.label'),
     route: AI_INTEGRATION,
     params: to.params,
   },
@@ -90,7 +103,7 @@ export const AAS_CONNECTION_CREATE: RouteRecordRaw = {
     layoutStore.breadcrumbs = [
       ...aasConnectionListBreadcrumbs(to),
       {
-        name: 'Erstellen',
+        name: localizedBreadcrumb('common.create'),
         route: AAS_CONNECTION_CREATE,
         params: to.params,
       },

@@ -4,15 +4,17 @@
     class="mb-4 grid grid-cols-1 gap-4"
   >
     <div v-if="!currentSections.isRootLevel" class="flex items-center gap-2">
-      <div>Datenreihe {{ row }}</div>
-      <BaseButton variant="primary" @click="navigateBackToHome"
-        >Zur Startseite</BaseButton
-      >
+      <div>{{ t('models.form.repeater.series') + ' ' + row }}</div>
+      <BaseButton variant="primary" @click="navigateBackToHome">{{
+        t('common.toHome')
+      }}</BaseButton>
       <BaseButton
         variant="primary"
         v-if="currentSections.parentSection"
         @click="navigateBackToParent"
-        >Zurück zu {{ currentSections.parentSection.name }}</BaseButton
+        >{{
+          t('common.backTo', { link: currentSections.parentSection.name })
+        }}</BaseButton
       >
     </div>
     <div
@@ -48,7 +50,9 @@ import { SectionType } from '@open-dpp/api-client';
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import BaseButton from '../BaseButton.vue';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const passportFormStore = usePassportFormStore();
 const route = useRoute();
 const router = useRouter();

@@ -175,7 +175,7 @@ describe('<ConnectionView />', () => {
         `${section2.id}/${dataField2.id}`,
       );
 
-      cy.contains('button', 'Speichern').click();
+      cy.get("[type='submit']").click();
       cy.wait('@modifyConnection').then(({ request }) => {
         const expected = {
           name: aasConnection.name,

@@ -27,8 +27,10 @@ import { ArrowRightStartOnRectangleIcon } from '@heroicons/vue/16/solid';
 import { useRouter } from 'vue-router';
 import { useUniqueProductIdentifierStore } from '../../../stores/unique.product.identifier';
 import { useErrorHandlingStore } from '../../../stores/error.handling';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
+const { t } = useI18n();
 
 const inputValue = ref<string>('');
 
@@ -47,7 +49,7 @@ const onLinkClick = async () => {
       await router.push(link);
     } catch (e) {
       errorHandlingStore.logErrorWithNotification(
-        'Navigation zu Produktpass fehlgeschlagen',
+        t('models.form.link.navigationError'),
         e,
       );
     }

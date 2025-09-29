@@ -10,7 +10,7 @@
       <FormKitSchema v-if="formSchema" :schema="formSchema" />
       <div class="flex gap-1">
         <BaseButton variant="primary" data-cy="submit" type="submit">
-          {{ sectionToModify ? 'Ändern' : 'Hinzufügen' }}
+          {{ sectionToModify ? t('common.edit') : t('common.add') }}
         </BaseButton>
         <BaseButton
           v-if="sectionToModify"
@@ -19,8 +19,8 @@
           variant="error"
           @click="onDelete"
         >
-          Abschnitt löschen
-        </BaseButton>
+          {{ t('builder.delete.label') }}</BaseButton
+        >
       </div>
     </FormKit>
   </div>
@@ -38,6 +38,9 @@ import { z } from 'zod/v4';
 import { useDraftSidebarStore } from '../../stores/draftSidebar';
 import BaseButton from '../BaseButton.vue';
 import { useModelDialogStore } from '../../stores/modal.dialog';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   type: SectionType;
@@ -58,15 +61,15 @@ const formSchemaFromType = (
   existingGranularityLevel: GranularityLevel | undefined,
 ) => {
   const granularityOptions = {
-    [GranularityLevel.MODEL]: 'Produktmodellebene',
-    [GranularityLevel.ITEM]: 'Artikelebene',
+    [GranularityLevel.MODEL]: t('builder.granularity.model'),
+    [GranularityLevel.ITEM]: t('builder.granularity.item'),
   };
 
   const dataSectionFormkitSchema = [];
   dataSectionFormkitSchema.push({
     $formkit: 'text',
     name: 'name',
-    label: 'Name des Abschnitts',
+    label: t('builder.name'),
     'data-cy': 'name',
   });
 
@@ -74,7 +77,7 @@ const formSchemaFromType = (
     dataSectionFormkitSchema.push({
       $formkit: 'select',
       name: 'granularityLevel',
-      label: 'Granularitätsebene',
+      label: t('builder.granularityLevel'),
       options: granularityOptions,
       'data-cy': 'select-granularity-level',
     });
@@ -104,8 +107,8 @@ watch(
 const onDelete = async () => {
   modelDialogStore.open(
     {
-      title: 'Abschnitt löschen',
-      description: 'Sind Sie sicher, dass Sie diesen Abschnitt löschen wollen?',
+      title: t('builder.delete.label'),
+      description: t('builder.delete.description'),
       type: 'warning',
     },
     async () => {

@@ -1,9 +1,9 @@
 <template>
   <div class="flex flex-col gap-4">
-    <div>Modellpassvorlagen</div>
+    <div>{{ t('draft.drafts') }}</div>
     <div v-if="showTabs">
       <Tabs
-        :tabs="['Meine Vorlagen', 'Marktplatz']"
+        :tabs="[t('models.myDrafts'), t('marketplace.marketplace')]"
         :value="selectedTabIndex"
         @change="
           (index) => {
@@ -14,7 +14,7 @@
     </div>
     <div>
       <AdvancedListSelector
-        :headers="['Name', 'Version']"
+        :headers="[t('draft.form.name.label'), t('draft.version')]"
         :items="selectedTabIndex === 0 ? localTemplates : marketplaceTemplates"
         :pagination="{
           rowsPerPage: 5,
@@ -45,6 +45,9 @@ import AdvancedListSelector from '../lists/AdvancedListSelector.vue';
 import apiClient from '../../lib/api-client';
 import { TemplateGetAllDto } from '@open-dpp/api-client';
 import Tabs from '../lists/Tabs.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   selected: TemplateGetAllDto[];

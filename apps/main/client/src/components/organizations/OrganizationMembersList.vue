@@ -3,10 +3,10 @@
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
         <h1 class="text-base font-semibold leading-6 text-gray-900">
-          Mitglieder
+          {{ t('organizations.member') }}
         </h1>
         <p class="mt-2 text-sm text-gray-700">
-          Eine Liste von allen Mitgliedern dieser Organisation.
+          {{ t('organizations.memberListDescription') }}
         </p>
       </div>
       <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
@@ -21,7 +21,7 @@
           type="button"
           @click="layoutStore.openModal(ModalType.INVITE_USER_MODAL)"
         >
-          Benutzer einladen
+          {{ t('organizations.inviteUser') }}
         </button>
       </div>
     </div>
@@ -35,16 +35,16 @@
                   class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0"
                   scope="col"
                 >
-                  Name
+                  {{ t('organizations.memberName') }}
                 </th>
                 <th
                   class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                   scope="col"
                 >
-                  Rolle
+                  {{ t('organizations.memberRole') }}
                 </th>
                 <th class="relative py-3.5 pl-3 pr-4 sm:pr-0" scope="col">
-                  <span class="sr-only">Edit</span>
+                  <span class="sr-only">{{ t('common.edit') }}</span>
                 </th>
               </tr>
             </thead>
@@ -68,13 +68,13 @@
                     v-if="organization.ownedByUserId === member.id"
                     class="text-gray-900"
                   >
-                    Admin
+                    {{ t('organizations.memberAdmin') }}
                   </div>
                   <div
                     v-if="organization.createdByUserId === member.id"
                     class="mt-1 text-gray-500"
                   >
-                    Ersteller
+                    {{ t('organizations.memberCreator') }}
                   </div>
                 </td>
               </tr>
@@ -90,6 +90,9 @@ import { OrganizationDto, UserDto } from '@open-dpp/api-client';
 import { UserCircleIcon } from '@heroicons/vue/24/solid';
 import InviteMemberDialog from './InviteMemberDialog.vue';
 import { ModalType, useLayoutStore } from '../../stores/layout';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const layoutStore = useLayoutStore();
 

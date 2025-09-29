@@ -1,6 +1,6 @@
 <template>
   <BaseButton @click="open" type="button" variant="primary">
-    Abschnitt hinzufügen
+    {{ t('draft.addSection') }}
   </BaseButton>
 </template>
 
@@ -11,6 +11,9 @@ import {
 } from '../../stores/draftSidebar';
 import { GranularityLevel } from '@open-dpp/api-client';
 import BaseButton from '../BaseButton.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   parentId?: string;

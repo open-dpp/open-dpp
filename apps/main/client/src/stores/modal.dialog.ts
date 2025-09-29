@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { useNotificationStore } from './notification';
+import { i18n } from '../translations/i18n';
 
 type ConfirmAction = () => Promise<void>;
 type CancelAction = () => void;
@@ -16,6 +17,7 @@ export const useModelDialogStore = defineStore('model-dialog-store', () => {
   const confirmAction = ref<ConfirmAction | null>(null);
   const cancelAction = ref<CancelAction | null>(null);
   const content = ref<Content>(defaultContent);
+  const { t } = i18n.global;
 
   const open = (
     dialogContent: Content,
@@ -41,9 +43,7 @@ export const useModelDialogStore = defineStore('model-dialog-store', () => {
         await confirmAction.value();
       } catch {
         const notificationStore = useNotificationStore();
-        notificationStore.addErrorNotification(
-          'Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',
-        );
+        notificationStore.addErrorNotification(t('common.unknownErrorOccured'));
       }
     }
     close();

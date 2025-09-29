@@ -1,7 +1,12 @@
 import { defineStore } from 'pinia';
-import { ref, watch } from 'vue';
-import { LAST_SELECTED_ORGANIZATION_ID_KEY } from '../const';
+import { computed, ComputedRef, ref, watch } from 'vue';
+import {
+  LAST_SELECTED_LANGUAGE,
+  LAST_SELECTED_ORGANIZATION_ID_KEY,
+} from '../const';
+import { i18n } from '../translations/i18n';
 import apiClient from '../lib/api-client';
+import { Composer } from 'vue-i18n';
 
 export const useIndexStore = defineStore('index', () => {
   const selectedOrganization = ref<string | null>(
@@ -9,6 +14,21 @@ export const useIndexStore = defineStore('index', () => {
       ? localStorage.getItem(LAST_SELECTED_ORGANIZATION_ID_KEY)
       : null,
   );
+
+  const initialLocale =
+    localStorage.getItem(LAST_SELECTED_LANGUAGE) ||
+    (i18n.global as unknown as Composer).locale.value ||
+    'en-US'; // Hack to make typescript happy
+
+  // Hack to make typescript happy
+  (i18n.global as unknown as Composer).locale.value = initialLocale;
+
+  const formkitLocale: ComputedRef<'en' | 'de'> = computed(() => {
+    const code = initialLocale.toLowerCase();
+    if (code.startsWith('de')) return 'de';
+    if (code.startsWith('en')) return 'en';
+    return 'en'; // fallback
+  });
 
   const selectOrganization = (organizationId: string | null) => {
     if (!organizationId) {
@@ -33,5 +53,5 @@ export const useIndexStore = defineStore('index', () => {
     },
   );
 
-  return { selectedOrganization, selectOrganization };
+  return { selectedOrganization, formkitLocale, selectOrganization };
 });

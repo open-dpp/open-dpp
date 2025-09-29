@@ -8,8 +8,13 @@ export enum ModalType {
 
 export enum SidebarType {}
 
+export interface BreadcrumbTitle {
+  text: string;
+  localized: boolean;
+}
+
 export interface BreadcrumbItem {
-  name: string;
+  name: BreadcrumbTitle;
   route: RouteRecordRaw;
   params?: RouteParamsGeneric;
 }

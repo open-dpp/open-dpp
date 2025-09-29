@@ -1,8 +1,13 @@
 import { RouteLocationNormalizedGeneric, RouteRecordRaw } from 'vue-router';
 import { useLayoutStore } from '../../stores/layout';
+import { localizedBreadcrumb } from '../../lib/breadcrumbs';
 
 const marketplaceListBreadCrumbs = (to: RouteLocationNormalizedGeneric) => [
-  { name: 'Marktplatz', route: MARKETPLACE, params: to.params },
+  {
+    name: localizedBreadcrumb('marketplace.marketplace'),
+    route: MARKETPLACE,
+    params: to.params,
+  },
 ];
 
 export const MARKETPLACE: RouteRecordRaw = {

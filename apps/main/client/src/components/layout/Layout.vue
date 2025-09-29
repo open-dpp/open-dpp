@@ -336,6 +336,7 @@ import {
   Squares2X2Icon,
 } from '@heroicons/vue/16/solid';
 import { useProfileStore } from '../../stores/profile';
+import { useI18n } from 'vue-i18n';
 
 const route = useRoute();
 const router = useRouter();
@@ -358,45 +359,47 @@ const initials = computed(() => {
   return (first + last).toUpperCase();
 });
 
+const { t } = useI18n();
+
 const unfilteredNavigation = computed<Array<MenuItemInterface>>(() => [
   {
-    name: 'Produktpässe',
+    name: t('models.models'),
     to: `/organizations/${indexStore.selectedOrganization}/models`,
     icon: CubeIcon,
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: 'Passvorlagen Entwürfe',
+    name: t('draft.passportDraft', 2),
     to: `/organizations/${indexStore.selectedOrganization}/data-model-drafts`,
     icon: Square3Stack3DIcon,
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: 'Integrationen',
+    name: t('integrations.integrations'),
     to: `/organizations/${indexStore.selectedOrganization}/integrations`,
     icon: LinkIcon,
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: 'Auswertungen',
+    name: t('statistics.statistics'),
     to: `/organizations/${indexStore.selectedOrganization}/statistics`,
     icon: ChartBarIcon,
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: 'Mitglieder',
+    name: t('members.members'),
     to: '/organizations/' + indexStore.selectedOrganization + '/members',
     icon: UsersIcon,
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: 'Organisation auswählen',
+    name: t('organizations.pick'),
     to: '/organizations',
     icon: BuildingOfficeIcon,
     show: () => indexStore.selectedOrganization === null,
   },
   {
-    name: 'Marktplatz',
+    name: t('marketplace.marketplace'),
     to: '/marketplace',
     icon: Squares2X2Icon,
     show: () => indexStore.selectedOrganization !== null,
@@ -412,8 +415,8 @@ const navigation = computed<Array<MenuItemInterface>>(() =>
   unfilteredNavigation.value.filter((item) => item.show()),
 );
 const userNavigation = [
-  { name: 'Dein Profil', to: '/profile' },
-  { name: 'Abmelden', to: '/logout' },
+  { name: t('user.profile'), to: '/profile' },
+  { name: t('user.logout'), to: '/logout' },
 ];
 
 const sidebarOpen = ref(false);

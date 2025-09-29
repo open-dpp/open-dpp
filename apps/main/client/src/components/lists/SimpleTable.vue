@@ -50,6 +50,9 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 import { useNotificationStore } from '../../stores/notification';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const notificationStore = useNotificationStore();
 
@@ -64,7 +67,9 @@ const props = defineProps<{
 }>();
 
 const headers = computed(() =>
-  props.rowActions.length > 0 ? [...props.headers, 'Aktionen'] : props.headers,
+  props.rowActions.length > 0
+    ? [...props.headers, t('common.actions')]
+    : props.headers,
 );
 
 const rowKeys = computed(() => {
@@ -79,7 +84,7 @@ const copyIdentifierToClipboard = (key: string, text: string) => {
   if (key === 'uuid' || key === 'id') {
     navigator.clipboard.writeText(text);
     notificationStore.addSuccessNotification(
-      'In die Zwischenablage kopiert.',
+      t('common.clipboardSuccess'),
       undefined,
       1000,
     );
