@@ -33,11 +33,14 @@
 
 <script lang="ts" setup>
 import { defineComponent, h } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const navigation = {
   main: [
-    { name: 'Website', href: 'https://open-dpp.de' },
-    { name: 'Kontakt', href: 'https://open-dpp.de/contact' },
+    { name: t('common.website'), href: 'https://open-dpp.de' },
+    { name: t('common.contact'), href: 'https://open-dpp.de/contact' },
   ],
   social: [
     {

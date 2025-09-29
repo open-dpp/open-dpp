@@ -405,7 +405,7 @@ const unfilteredNavigation = computed<Array<MenuItemInterface>>(() => [
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: 'Medien',
+    name: t('media.media'),
     to: '/media',
     icon: CloudIcon,
     show: () => indexStore.selectedOrganization !== null,

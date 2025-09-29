@@ -1,5 +1,9 @@
 {
   "common": {
+    "id": "ID",
+    "identification": "Identifikation",
+    "name": "Name",
+    "send": "Senden",
     "actions": "Aktionen",
     "clipboardSuccess": "In die Zwischenablage kopiert.",
     "edit": "Editieren",
@@ -16,6 +20,10 @@
     "abort": "Abbrechen",
     "general": "Allgemein",
     "remove": "Entfernen",
+    "back": "Zurück",
+    "call": "Aufrufen",
+    "website": "Website",
+    "contact": "Kontakt",
     "errorOccured": "Ein Fehler ist aufgetreten",
     "unknownErrorOccured": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
     "toHome": "Zur Startseite",
@@ -233,6 +241,38 @@
   },
   "marketplace": {
     "marketplace": "Marktplatz"
+  },
+  "file": {
+    "type": "Dateityp",
+    "size": "Dateigröße",
+    "upload": "Datei hochladen",
+    "uploadSuccess": "Datei erfolgreich hochgeladen.",
+    "uploadError": "Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+    "change": "Datei ändern",
+    "download": "Datei herunterladen",
+    "downloadError": "Die Datei konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
+    "select": "Datei auswählen",
+    "noSelection": "Keine Datei ausgewählt",
+    "notFound": "Datei nicht vorhanden",
+    "couldNotBeLoaded": "Datei konnte nicht geladen werden.",
+    "errorRevokingUrl": "Fehler beim Freigeben der vorherigen Objekt-URL:",
+    "errorRevokingUrlError": "Fehler beim Freigeben der Objekt-URL nach Fehler:"
+  },
+  "media": {
+    "media": "Medien",
+    "preview": "Vorschau"
+  },
+  "presentation": {
+    "productDetails": "Produktdetails",
+    "productDetailsDesc": "Allgemeine Informationen zum Produkt.",
+    "additionalSections": "Weiterführende Abschnitte",
+    "moreInfo": "Mehr Informationen",
+    "navigation": "Navigation",
+    "backToApp": "Zurück zur App",
+    "toPass": "Zur Passansicht",
+    "chatWithAI": "Mit KI chatten",
+    "productpass": "Produktpass",
+    "askQuestion": "Stellen Sie Ihre Frage..."
   },
   "models": {
     "models": "Produktpässe",

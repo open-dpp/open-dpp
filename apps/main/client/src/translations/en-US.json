@@ -28,7 +28,15 @@
         "label": "Email address",
         "error": "Please enter an email address."
       }
-    }
+    },
+    "id": "ID",
+    "identification": "Identification",
+    "name": "Name",
+    "send": "Send",
+    "back": "Back",
+    "call": "Call",
+    "website": "Website",
+    "contact": "Contact"
   },
   "builder": {
     "repeater": {
@@ -325,5 +333,37 @@
     "to": " to ",
     "of": " of ",
     "elements": "elements"
+  },
+  "media": {
+    "media": "Media",
+    "preview": "Preview"
+  },
+  "file": {
+    "type": "File type",
+    "size": "File size",
+    "upload": "Upload file",
+    "uploadSuccess": "File uploaded successfully.",
+    "uploadError": "An unexpected error occurred while uploading the file. Please try again.",
+    "change": "Change file",
+    "download": "Download file",
+    "downloadError": "The file could not be loaded. Please try again.",
+    "select": "Select file",
+    "noSelection": "No file selected",
+    "notFound": "File not found",
+    "couldNotBeLoaded": "File could not be loaded.",
+    "errorRevokingUrl": "Error revoking previous object URL:",
+    "errorRevokingUrlError": "Error revoking object URL after error:"
+  },
+  "presentation": {
+    "productDetails": "Product details",
+    "productDetailsDesc": "General information about the product.",
+    "additionalSections": "Additional sections",
+    "moreInfo": "More information",
+    "navigation": "Navigation",
+    "backToApp": "Back to app",
+    "toPass": "To pass view",
+    "chatWithAI": "Chat with AI",
+    "productpass": "Product passport",
+    "askQuestion": "Ask your question..."
   }
 }

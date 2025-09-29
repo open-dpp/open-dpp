@@ -17,7 +17,7 @@
           @click="openFileInput"
         >
           <CloudArrowUpIcon class="w-5 h-5 my-auto text-black" />
-          <span>Datei hochladen</span>
+          <span>{{ t('file.upload') }}</span>
         </button>
       </div>
       <div>
@@ -47,7 +47,9 @@ import { CloudArrowUpIcon } from '@heroicons/vue/24/outline';
 import { useMediaStore } from '../../stores/media';
 import { useNotificationStore } from '../../stores/notification';
 import { useIndexStore } from '../../stores';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const mediaStore = useMediaStore();
 const notificationStore = useNotificationStore();
 const indexStore = useIndexStore();
@@ -74,13 +76,11 @@ const uploadFile = async () => {
       selectedLocalFile.value,
       (progress) => (uploadProgress.value = progress),
     );
-    notificationStore.addSuccessNotification('Datei erfolgreich hochgeladen.');
+    notificationStore.addSuccessNotification(t('file.uploadSuccess'));
     await mediaStore.fetchMedia(mediaId);
   } catch (error: unknown) {
     console.error('Fehler beim Hochladen der Datei:', error);
-    notificationStore.addErrorNotification(
-      'Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.',
-    );
+    notificationStore.addErrorNotification(t('file.uploadError'));
     selectedFile.value = null;
   } finally {
     uploadProgress.value = 0;

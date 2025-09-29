@@ -24,7 +24,7 @@
     >
       <div class="flex flex-row gap-2 w-fit mx-auto">
         <ExclamationTriangleIcon class="w-4 h-4 my-auto" />
-        <span>Datei nicht vorhanden</span>
+        <span>{{ t('file.notFound') }}</span>
       </div>
     </div>
     <div
@@ -48,6 +48,9 @@ import {
   PhotoIcon,
   VideoCameraIcon,
 } from '@heroicons/vue/24/solid';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const mediaStore = useMediaStore();
 

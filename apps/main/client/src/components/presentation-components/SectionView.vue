@@ -15,7 +15,7 @@
       class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0 border-t border-gray-100"
     >
       <dt class="text-sm/6 font-medium text-gray-900">
-        Weiterführende Abschnitte
+        {{ t('presentation.additionalSections') }}
       </dt>
       <dd class="mt-2 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
         <ul
@@ -43,7 +43,7 @@
                 :to="`?sectionId=${subSection.id}&row=${props.rowIndex}&parentSectionId=${dataSection.id}`"
                 :data-cy="subSection.id"
                 class="font-medium text-indigo-600 hover:text-indigo-500"
-                >Mehr Infos</router-link
+                >{{ t('presentation.moreInfo') }}</router-link
               >
             </div>
           </li>
@@ -59,6 +59,9 @@ import DataFieldView from './DataFieldView.vue';
 import { FolderIcon } from '@heroicons/vue/16/solid';
 import { useProductPassportStore } from '../../stores/product-passport';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   dataSection: DataSectionDto;

@@ -1,9 +1,10 @@
 import { RouteLocationNormalizedGeneric, RouteRecordRaw } from 'vue-router';
 import { useLayoutStore } from '../../../stores/layout';
+import { localizedBreadcrumb } from '../../../lib/breadcrumbs';
 
 const presentationBreadcrumbs = (to: RouteLocationNormalizedGeneric) => [
   {
-    name: 'Produktpass',
+    name: localizedBreadcrumb('presentation.productpass'),
     route: PRESENTATION_VIEW,
     params: to.params,
   },

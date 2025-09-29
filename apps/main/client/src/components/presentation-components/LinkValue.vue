@@ -6,16 +6,18 @@
     ]"
     @click="onLinkClick"
   >
-    Aufrufen
+    {{ t('common.call') }}
   </button>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { FieldView } from '../../lib/field-view';
 import { useRouter } from 'vue-router';
 
 const props = defineProps<{ fieldView: FieldView }>();
 
+const { t } = useI18n();
 const router = useRouter();
 
 const onLinkClick = async () => {
