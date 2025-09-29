@@ -20,12 +20,12 @@
       }
     },
     "analytics": {
-      "type": "application",
-      "root": "apps/analytics",
-      "entryFile": "main",
-      "sourceRoot": "apps/analytics/src",
+      "type": "library",
+      "root": "libs/analytics",
+      "entryFile": "index",
+      "sourceRoot": "libs/analytics/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/analytics/tsconfig.app.json"
+        "tsConfigPath": "libs/analytics/tsconfig.lib.json"
       }
     },
     "auth": {

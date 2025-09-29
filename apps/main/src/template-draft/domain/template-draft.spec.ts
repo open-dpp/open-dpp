@@ -20,6 +20,7 @@ import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
 import { Sector } from '@open-dpp/api-client';
 import { expect } from '@jest/globals';
 import { NotFoundError, ValueError } from '@app/exception/domain.errors';
+import { ignoreIds } from '@app/testing/utils';
 
 describe('TemplateDraft', () => {
   const userId = randomUUID();
@@ -131,7 +132,9 @@ describe('TemplateDraft', () => {
         },
       ],
     };
-    expect(publishedProductDataModel).toEqual(Template.loadFromDb(expected));
+    expect(publishedProductDataModel).toEqual(
+      ignoreIds(Template.loadFromDb(expected)),
+    );
     expect(publishedProductDataModel.id).not.toEqual(productDataModelDraft.id);
     expect(productDataModelDraft.publications).toEqual([
       {

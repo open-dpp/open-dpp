@@ -1,16 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AiConfigurationService } from './ai-configuration.service';
 import { Connection } from 'mongoose';
-import { MongooseTestingModule } from '../../../test/mongo.testing.module';
+import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { randomUUID } from 'crypto';
-import { NotFoundInDatabaseException } from '../../exceptions/service.exceptions';
+import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
 import {
   AiConfigurationDbSchema,
   AiConfigurationDoc,
 } from './ai-configuration.schema';
 import { AiConfiguration } from '../domain/ai-configuration';
 import { aiConfigurationFactory } from '../fixtures/ai-configuration-props.factory';
+import { expect } from '@jest/globals';
 
 describe('AiConfigurationService', () => {
   let service: AiConfigurationService;
