@@ -20,7 +20,7 @@ import { ProductPassportModule } from './product-passport/product-passport.modul
 import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthGuard } from '@app/auth/keycloak-auth/keycloak-auth.guard';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { MediaModule } from '@app/media-module/media/media.module';
+import { MediaModule } from './media/media.module';
 import { MarketplaceAppModule } from 'apps/marketplace/src/marketplace-app.module';
 import { ChatGateway } from './ai/chat.gateway';
 import { ChatService } from './ai/chat.service';

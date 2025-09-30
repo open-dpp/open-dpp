@@ -11,13 +11,14 @@ import { ValidationPipe } from '@nestjs/common';
 import { applyBodySizeHandler } from './BodySizeHandler';
 import * as bodyParser from 'body-parser';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
   // Proxy SPA routes in development before setting global prefix
-  /* if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
     app.use(
       '/',
       createProxyMiddleware({
@@ -25,10 +26,10 @@ async function bootstrap() {
         changeOrigin: true,
         ws: true,
         // Only proxy requests NOT starting with /api
-        pathFilter: (pathname, _req) => !pathname.startsWith('/api'),
+        pathFilter: (pathname) => !pathname.startsWith('/api'),
       }),
     );
-  } */
+  }
 
   app.setGlobalPrefix('api');
   app.enableCors();

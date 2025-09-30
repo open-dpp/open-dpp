@@ -64,24 +64,6 @@
         "tsConfigPath": "apps/marketplace/tsconfig.app.json"
       }
     },
-    "media": {
-      "type": "application",
-      "root": "apps/media",
-      "entryFile": "main",
-      "sourceRoot": "apps/media/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/media/tsconfig.app.json"
-      }
-    },
-    "media-module": {
-      "type": "library",
-      "root": "libs/media-module",
-      "entryFile": "index",
-      "sourceRoot": "libs/media-module/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/media-module/tsconfig.lib.json"
-      }
-    },
     "permission": {
       "type": "library",
       "root": "libs/permission",
