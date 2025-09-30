@@ -21,7 +21,6 @@ import { APP_GUARD } from '@nestjs/core';
 import { KeycloakAuthGuard } from '@app/auth/keycloak-auth/keycloak-auth.guard';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { MediaModule } from './media/media.module';
-import { MarketplaceAppModule } from 'apps/marketplace/src/marketplace-app.module';
 import { ChatGateway } from './ai/chat.gateway';
 import { ChatService } from './ai/chat.service';
 import { AiModule } from './ai/ai.module';
@@ -29,6 +28,7 @@ import { AiConfigurationModule } from './ai/ai-configuration/ai-configuration.mo
 import { McpClientModule } from './ai/mcp-client/mcp-client.module';
 import { PassportModule } from './ai/passports/passport.module';
 import { CreateNonExistingUserGuard } from './users/infrastructure/create-non-existing-user.guard';
+import { PassportTemplateModule } from './marketplace/passport-templates/passport-template.module';
 
 @Module({
   imports: [
@@ -78,7 +78,7 @@ import { CreateNonExistingUserGuard } from './users/infrastructure/create-non-ex
       },
     }),
     MediaModule,
-    MarketplaceAppModule,
+    PassportTemplateModule,
     AiConfigurationModule,
     AiModule,
     McpClientModule,
