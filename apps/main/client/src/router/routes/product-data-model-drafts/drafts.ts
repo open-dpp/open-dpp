@@ -1,10 +1,14 @@
 import { RouteLocationNormalizedGeneric, RouteRecordRaw } from 'vue-router';
 import { useLayoutStore } from '../../../stores/layout';
 import { useDraftStore } from '../../../stores/draft';
+import {
+  localizedBreadcrumb,
+  textOrLocalizedFallback,
+} from '../../../lib/breadcrumbs';
 
 const draftListBreadcrumbs = (to: RouteLocationNormalizedGeneric) => [
   {
-    name: 'Passvorlagen Entwürfe',
+    name: localizedBreadcrumb('draft.passTemplates'),
     route: DRAFT_LIST,
     params: to.params,
   },
@@ -21,7 +25,7 @@ export const draftBreadcrumbs = async (to: RouteLocationNormalizedGeneric) => {
   return [
     ...draftListBreadcrumbs(to),
     {
-      name: draftName || draftId || 'Datenmodellentwurf',
+      name: textOrLocalizedFallback(draftName || draftId, 'draft.draft'),
       route: DRAFT,
       params: to.params,
     },
@@ -58,7 +62,7 @@ export const DRAFT_CREATE: RouteRecordRaw = {
     layoutStore.breadcrumbs = [
       ...draftListBreadcrumbs(to),
       {
-        name: 'Erstellen',
+        name: localizedBreadcrumb('common.create'),
         route: DRAFT_CREATE,
         params: to.params,
       },

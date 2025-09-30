@@ -80,13 +80,13 @@
                 class="inline-flex items-center rounded-sm bg-white px-2 py-1 text-sm font-semibold text-gray-900 shadow-xs ring-1 ring-gray-300 ring-inset hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-white"
                 type="button"
               >
-                Alle bearbeiten
+                {{ t('lists.editAll') }}
               </button>
               <button
                 class="inline-flex items-center rounded-sm bg-white px-2 py-1 text-sm font-semibold text-gray-900 shadow-xs ring-1 ring-gray-300 ring-inset hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-white"
                 type="button"
               >
-                Alle löschen
+                {{ t('lists.deleteAll') }}
               </button>
             </div>
             <table class="min-w-full table-fixed divide-y divide-gray-300">
@@ -188,7 +188,7 @@
                     :colspan="headers.length + (selection ? 1 : 0)"
                     class="py-4 text-center w-full h-full"
                   >
-                    Keine Elemente gefunden
+                    {{ t('lists.noElements') }}
                   </td>
                 </tr>
               </tbody>
@@ -218,6 +218,9 @@ import {
 } from '@heroicons/vue/16/solid';
 import Dropdown from '../Dropdown.vue';
 import Pagination from './Pagination.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const defaults = {
   rowsPerPage: 5,

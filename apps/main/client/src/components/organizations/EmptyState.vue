@@ -5,13 +5,16 @@
     @click="emits('add')"
   >
     <BuildingOfficeIcon class="size-32 mx-auto" />
-    <span class="mt-2 block text-sm font-semibold text-gray-900"
-      >Neue Organisation erstellen</span
-    >
+    <span class="mt-2 block text-sm font-semibold text-gray-900">{{
+      t('organizations.new')
+    }}</span>
   </button>
 </template>
 <script lang="ts" setup>
 import { BuildingOfficeIcon } from '@heroicons/vue/24/outline';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const emits = defineEmits<{
   (e: 'add'): void;

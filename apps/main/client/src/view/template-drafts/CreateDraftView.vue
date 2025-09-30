@@ -3,10 +3,10 @@
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
         <h1 class="text-base font-semibold text-gray-900">
-          Passvorlagen Entwurf
+          {{ t('draft.passTemplate') }}
         </h1>
         <p class="mt-2 text-sm text-gray-700">
-          Entwerfen Sie eine neue Passvorlage.
+          {{ t('draft.createNewPassTemplate') }}
         </p>
       </div>
     </div>
@@ -21,9 +21,11 @@ import CreateDraftForm from '../../components/template-drafts/CreateDraftForm.vu
 import { useRoute, useRouter } from 'vue-router';
 import { useDraftStore } from '../../stores/draft';
 import { TemplateDraftCreateDto } from '@open-dpp/api-client';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
 const route = useRoute();
+const { t } = useI18n();
 
 const draftStore = useDraftStore();
 

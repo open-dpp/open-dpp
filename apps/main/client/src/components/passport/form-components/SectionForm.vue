@@ -11,13 +11,13 @@
       }"
       :schema="formSchema"
     />
-    <FormKit label="Speichern" type="submit" />
+    <FormKit :label="t('common.save')" type="submit" />
   </FormKit>
   <h3
     v-if="passportFormStore.findSubSections(section.id).length > 0"
     class="text-base/7 font-semibold text-gray-900"
   >
-    Weiterführende Abschnitte
+    {{ t('models.form.section.additional') }}
   </h3>
   <div class="flex">
     <BaseButton
@@ -53,12 +53,14 @@ import { useErrorHandlingStore } from '../../../stores/error.handling';
 import BaseButton from '../../BaseButton.vue';
 import { useRouter } from 'vue-router';
 import { FolderIcon } from '@heroicons/vue/24/outline';
+import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{
   section: DataSectionDto;
   row: number;
 }>();
 
+const { t } = useI18n();
 const passportFormStore = usePassportFormStore();
 const router = useRouter();
 
@@ -96,10 +98,12 @@ const onSubmit = async () => {
       formData.value,
       props.row,
     );
-    notificationStore.addSuccessNotification('Daten erfolgreich gespeichert');
+    notificationStore.addSuccessNotification(
+      t('models.form.section.saveSuccess'),
+    );
   } catch (e) {
     errorHandlingStore.logErrorWithNotification(
-      'Daten konnten nicht gespeichert werden',
+      t('models.form.section.saveError'),
       e,
     );
   }

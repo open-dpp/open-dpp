@@ -3,7 +3,7 @@
     class="flex flex-1 flex-col divide-y divide-gray-200"
     aria-label="Sidebar"
   >
-    <div class="font-bold py-3 text-xl">Navigation</div>
+    <div class="font-bold py-3 text-xl">{{ t('presentation.navigation') }}</div>
     <ul role="list" class="-mx-2 space-y-1 pt-2">
       <li v-if="section" key="back">
         <router-link
@@ -16,7 +16,7 @@
             'text-gray-700 hover:bg-gray-50 hover:text-indigo-600',
             'group flex gap-x-3 rounded-md p-2 pl-3 text-sm/6 font-semibold',
           ]"
-          >Zurück</router-link
+          >{{ t('common.back') }}</router-link
         >
       </li>
       <li
@@ -41,6 +41,9 @@ import { useProductPassportStore } from '../../stores/product-passport';
 import { ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { DataSectionDto } from '@open-dpp/api-client';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const route = useRoute();
 

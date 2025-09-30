@@ -1,8 +1,9 @@
 import { RouteLocationNormalizedGeneric, RouteRecordRaw } from 'vue-router';
 import { useLayoutStore } from '../../stores/layout';
+import { localizedBreadcrumb } from '../../lib/breadcrumbs';
 
 const filesListBreadCrumbs = (to: RouteLocationNormalizedGeneric) => [
-  { name: 'Medien', route: MEDIA, params: to.params },
+  { name: localizedBreadcrumb('media.media'), route: MEDIA, params: to.params },
 ];
 
 export const MEDIA: RouteRecordRaw = {

@@ -5,9 +5,8 @@
         variant="primary"
         v-if="!disabledMessage && section.type === SectionType.REPEATABLE"
         @click="onAddRow"
+        >{{ t('models.form.repeater.addSeries') }}</BaseButton
       >
-        Datenreihe hinzufügen
-      </BaseButton>
       <div
         class="m-2 text-sm/6 font-medium text-gray-900"
         v-if="disabledMessage"
@@ -24,6 +23,9 @@ import { usePassportFormStore } from '../stores/passport.form';
 import BaseSectionHeader from './BaseSectionHeader.vue';
 import { computed } from 'vue';
 import BaseButton from './BaseButton.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   section: DataSectionDto;

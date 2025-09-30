@@ -53,7 +53,7 @@
               class="text-indigo-600 hover:text-indigo-900"
               :data-cy="`${dataSection.id}_${rowIndex}`"
               :to="`?sectionId=${dataSection.id}&row=${rowIndex}&parentSectionId=${dataSection.id}`"
-              >Mehr Infos</router-link
+              >{{ t('presentation.moreInfo') }}</router-link
             >
           </td>
         </tr>
@@ -67,7 +67,9 @@ import DataValue from './DataValue.vue';
 import { computed } from 'vue';
 import { useProductPassportStore } from '../../stores/product-passport';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const router = useRouter();
 const props = defineProps<{ dataSection: DataSectionDto }>();
 const productPassportStore = useProductPassportStore();

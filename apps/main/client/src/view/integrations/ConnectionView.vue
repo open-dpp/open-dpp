@@ -3,7 +3,7 @@
     <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
       <div class="px-4 py-6 sm:px-6">
         <h3 class="text-base/7 font-semibold text-gray-900">
-          Verbindungsinformationen
+          {{ t('integrations.connections.info') }}
         </h3>
       </div>
       <div
@@ -12,24 +12,32 @@
       >
         <dl class="divide-y divide-gray-100">
           <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-            <dt class="text-sm font-medium text-gray-900">ID</dt>
+            <dt class="text-sm font-medium text-gray-900">
+              {{ t('integrations.connections.id') }}
+            </dt>
             <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
               {{ aasConnectionFormStore.aasConnection.id }}
             </dd>
           </div>
           <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-            <dt class="text-sm font-medium text-gray-900">Name</dt>
+            <dt class="text-sm font-medium text-gray-900">
+              {{ t('integrations.connections.name.label') }}
+            </dt>
             <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
               {{ aasConnectionFormStore.aasConnection.name }}
             </dd>
           </div>
           <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
             <dt class="text-sm font-medium text-gray-900">
-              Verknüpfte Asset Administration Shell
+              {{ t('integrations.connections.aas.linked') }}
             </dt>
             <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
               {{
-                AAS_NAME_MAPPING[aasConnectionFormStore.aasConnection.aasType]
+                t(
+                  AAS_NAME_MAPPING[
+                    aasConnectionFormStore.aasConnection.aasType
+                  ],
+                )
               }}
             </dd>
           </div>
@@ -38,7 +46,7 @@
             class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 items-center"
           >
             <dt class="text-sm font-medium text-gray-900">
-              Verknüpfter Modellpass
+              {{ t('integrations.connections.model.linked') }}
             </dt>
             <dd class="mt-1 flex justify-between gap-x-6 sm:mt-0">
               <div>
@@ -67,7 +75,7 @@
                   @click="editModel = true"
                   class="text-sm/6 font-semibold text-indigo-600 hover:text-indigo-500"
                 >
-                  Editieren
+                  {{ t('common.edit') }}
                 </button>
                 <button
                   v-if="editModel"
@@ -75,7 +83,7 @@
                   @click="updateModel"
                   class="text-sm/6 font-semibold text-indigo-600 hover:text-indigo-500"
                 >
-                  Speichern
+                  {{ t('common.save') }}
                 </button>
                 <button
                   v-if="editModel"
@@ -83,7 +91,7 @@
                   @click="onCancel"
                   class="text-sm/6 font-semibold text-gray-600 hover:text-gray-500"
                 >
-                  Cancel
+                  {{ t('common.cancel') }}
                 </button>
               </div>
             </dd>
@@ -99,14 +107,16 @@
       class="flex justify-between items-center border-b border-gray-900/5 bg-gray-50"
     >
       <div class="flex items-center gap-2">
-        <div class="text-sm/6 font-medium text-gray-900">Feldverknüpfungen</div>
+        <div class="text-sm/6 font-medium text-gray-900">
+          {{ t('integrations.connections.fieldAssignments') }}
+        </div>
       </div>
       <button
         class="m-2 block rounded-md bg-indigo-600 px-3 py-1.5 text-center text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
         type="button"
         @click="aasConnectionFormStore.addFieldAssignmentRow"
       >
-        Feldverknüpfung hinzufügen
+        {{ t('integrations.connections.addFieldAssignments') }}
       </button>
     </div>
     <AasConnectionForm
@@ -126,7 +136,9 @@ import AasConnectionForm from '../../components/integrations/AasConnectionForm.v
 import { useModelsStore } from '../../stores/models';
 import { ModelDto } from '@open-dpp/api-client';
 import { AAS_NAME_MAPPING } from '../../lib/aas-name-mapping';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const route = useRoute();
 const aasConnectionFormStore = useAasConnectionFormStore();
 const selectedModel = ref<ModelDto | null>();

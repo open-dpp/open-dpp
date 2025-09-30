@@ -9,18 +9,22 @@ import { useIndexStore } from './stores';
 import { defaultConfig, plugin } from '@formkit/vue';
 import { genesisIcons } from '@formkit/icons';
 import { rootClasses } from '../formkit.theme';
-import { de } from '@formkit/i18n';
+import { de, en } from '@formkit/i18n';
 import {
   createAutoAnimatePlugin,
   createMultiStepPlugin,
 } from '@formkit/addons';
 import '@formkit/addons/css/multistep';
 import { useOrganizationsStore } from './stores/organizations';
-
+import { i18n } from './translations/i18n';
 const pinia = createPinia();
 
 const startApp = async () => {
   const app = createApp(App).use(pinia);
+  app.use(i18n);
+
+  const indexStore = useIndexStore();
+
   app.use(
     plugin,
     defaultConfig({
@@ -30,12 +34,11 @@ const startApp = async () => {
       icons: {
         ...genesisIcons,
       },
-      locales: { de },
-      locale: 'de',
+      locales: { de, en },
+      locale: indexStore.formkitLocale,
       plugins: [createMultiStepPlugin(), createAutoAnimatePlugin()],
     }),
   );
-  const indexStore = useIndexStore();
   if (!keycloakDisabled) {
     app.provide('$keycloak', keycloakIns);
     await initializeKeycloak(keycloakIns);

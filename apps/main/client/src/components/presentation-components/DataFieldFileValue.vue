@@ -15,9 +15,7 @@
       {{ uploadedMedia.title }}
     </div>
   </div>
-  <div v-else class="flex flex-row gap-4">
-    Datei konnte nicht geladen werden.
-  </div>
+  <div v-else class="flex flex-row gap-4">{{ t('file.couldNotBeLoaded') }}</div>
 </template>
 
 <script setup lang="ts">
@@ -27,7 +25,9 @@ import { ArrowDownTrayIcon } from '@heroicons/vue/24/outline';
 import { useMediaStore } from '../../stores/media';
 import { MediaInfo } from '../media/MediaInfo.interface';
 import MediaPreview from '../media/MediaPreview.vue';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const mediaStore = useMediaStore();
 
 const props = defineProps<{ fieldView: FieldView }>();
@@ -46,10 +46,7 @@ const loadFile = async () => {
       try {
         URL.revokeObjectURL(uploadedFileUrl.value);
       } catch (revokeErr) {
-        console.error(
-          'Fehler beim Freigeben der vorherigen Objekt-URL:',
-          revokeErr,
-        );
+        console.error(t('file.errorRevokingUrl'), revokeErr);
       }
     }
 
@@ -64,10 +61,7 @@ const loadFile = async () => {
       try {
         URL.revokeObjectURL(uploadedFileUrl.value);
       } catch (revokeErr) {
-        console.error(
-          'Fehler beim Freigeben der Objekt-URL nach Fehler:',
-          revokeErr,
-        );
+        console.error(t('file.errorRevokingUrlError'), revokeErr);
       }
     }
     uploadedFileUrl.value = undefined;

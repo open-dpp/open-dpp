@@ -42,11 +42,11 @@
         @keydown.shift.enter.exact.prevent="input += '\n'"
         id="question"
         class="flex-1 overflow-hidden outline-gray-300 rounded-lg pb-12 outline-1 -outline-offset-1 focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-indigo-600 dark:bg-white/5 dark:outline-white/10 dark:focus-within:outline-indigo-500"
-        placeholder="Stellen Sie Ihre Frage..."
+        :placeholder="t('presentation.askQuestion')"
       />
-      <BaseButton variant="primary" @click="sendMessage">
-        Abschicken
-      </BaseButton>
+      <BaseButton variant="primary" @click="sendMessage">{{
+        t('common.send')
+      }}</BaseButton>
     </div>
   </div>
 </template>
@@ -59,7 +59,9 @@ import {
 } from '@heroicons/vue/16/solid';
 import { MsgStatus, Sender, useAiAgentStore } from '../../stores/ai-agent';
 import BaseButton from '../../components/presentation-components/BaseButton.vue';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const aiAgentStore = useAiAgentStore();
 
 const input = ref('');

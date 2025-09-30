@@ -2,12 +2,12 @@
   <div>
     <ListHeader
       :creation-link="`/organizations/${indexStore.selectedOrganization}/models/create`"
-      creation-label="Modellpass hinzufügen"
-      description="Alle Pässe auf der Produktmodellebene. Ein Produktmodell ist zum Beispiel das Galaxy S22 Ultra."
-      title="Modellpässe"
+      :creation-label="t('models.list.creation-label')"
+      :description="t('models.list.description')"
+      :title="t('models.list.title')"
     />
     <SimpleTable
-      :headers="['ID', 'Name']"
+      :headers="[t('models.form.id'), t('models.form.name.label')]"
       :ignore-row-keys="['id']"
       :row-actions="actions"
       :rows="rows"
@@ -21,6 +21,9 @@ import { useModelsStore } from '../../stores/models';
 import { useIndexStore } from '../../stores';
 import SimpleTable from '../lists/SimpleTable.vue';
 import ListHeader from '../lists/ListHeader.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const indexStore = useIndexStore();
 const modelsStore = useModelsStore();
@@ -35,17 +38,17 @@ const rows = computed(() => {
 
 const actions = [
   {
-    name: 'Artikelpässe',
+    name: t('items.label'),
     actionLinkBuilder: (row: Record<string, string>) =>
       `/organizations/${indexStore.selectedOrganization}/models/${row.id}/items`,
   },
   {
-    name: 'Editieren',
+    name: t('common.edit'),
     actionLinkBuilder: (row: Record<string, string>) =>
       `/organizations/${indexStore.selectedOrganization}/models/${row.id}`,
   },
   {
-    name: 'QR-Code',
+    name: t('common.qrCode'),
     actionLinkBuilder: (row: Record<string, string>) =>
       `/organizations/${indexStore.selectedOrganization}/models/${row.id}/qr-code`,
   },

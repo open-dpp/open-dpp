@@ -1,9 +1,9 @@
 <template>
   <div>
     <ListHeader
-      creation-label="Artikelpass hinzufügen"
-      description="Alle Pässe auf Einzelartikelebene."
-      title="Artikelpässe"
+      :creation-label="t('items.add')"
+      :description="t('items.description')"
+      :title="t('items.label')"
       @add="emits('add')"
     />
     <SimpleTable
@@ -22,9 +22,11 @@ import { useRoute } from 'vue-router';
 import ListHeader from '../lists/ListHeader.vue';
 import SimpleTable from '../lists/SimpleTable.vue';
 import { ItemDto } from '@open-dpp/api-client';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const indexStore = useIndexStore();
-
 const route = useRoute();
 
 const props = defineProps<{
@@ -44,12 +46,12 @@ const rows = computed(() => {
 
 const actions = [
   {
-    name: 'Editieren',
+    name: t('common.edit'),
     actionLinkBuilder: (row: Record<string, string>) =>
       `/organizations/${indexStore.selectedOrganization}/models/${route.params.modelId as string}/items/${row.id}`,
   },
   {
-    name: 'QR-Code',
+    name: t('common.qrCode'),
     actionLinkBuilder: (row: Record<string, string>) =>
       `/organizations/${indexStore.selectedOrganization}/models/${route.params.modelId as string}/items/${row.id}/qr-code`,
   },

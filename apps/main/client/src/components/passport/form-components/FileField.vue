@@ -60,13 +60,13 @@
             class="bg-[#6BAD87] rounded-sm p-2 hover:cursor-pointer h-12 my-auto"
             @click="openFileInput"
           >
-            Datei ändern
+            {{ t('models.form.file.change') }}
           </button>
           <button
             class="bg-[#6BAD87] rounded-sm p-2 hover:cursor-pointer h-12 my-auto"
             @click="uploadFile"
           >
-            Datei hochladen
+            {{ t('models.form.file.upload') }}
           </button>
         </div>
         <div v-else-if="uploadedMedia" class="max-w-full flex flex-col gap-4">
@@ -84,7 +84,9 @@
           </div>
         </div>
         <div v-else class="flex flex-row gap-4 w-full justify-between">
-          <div class="text-gray-600 my-auto">Keine Datei ausgewählt</div>
+          <div class="text-gray-600 my-auto">
+            {{ t('models.form.file.noSelection') }}
+          </div>
           <div class="my-auto">
             <button
               class="bg-[#6BAD87]/50 rounded-sm p-2 hover:cursor-pointer my-auto"
@@ -113,6 +115,9 @@ import { DocumentIcon, PencilIcon } from '@heroicons/vue/16/solid';
 import MediaModal from '../../media/MediaModal.vue';
 import { MediaInfo } from '../../media/MediaInfo.interface';
 import MediaPreview from '../../media/MediaPreview.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const passportFormStore = usePassportFormStore();
 const indexStore = useIndexStore();
@@ -194,15 +199,15 @@ const uploadFile = async () => {
       selectedLocalFile.value,
       (progress) => (uploadProgress.value = progress),
     );
-    notificationStore.addSuccessNotification('Datei erfolgreich hochgeladen.');
+    notificationStore.addSuccessNotification(
+      t('models.form.file.uploadSuccess'),
+    );
     selectedLocalFile.value = null;
     await loadFile();
   } catch (error: unknown) {
     console.error('Fehler beim Hochladen der Datei:', error);
     uploadedMediaId.value = undefined;
-    notificationStore.addErrorNotification(
-      'Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.',
-    );
+    notificationStore.addErrorNotification(t('models.form.file.uploadError'));
     selectedFile.value = null;
   } finally {
     uploadProgress.value = 0;
@@ -254,7 +259,7 @@ const loadFile = async () => {
     // Notify user via the existing notification store if available
     try {
       notificationStore.addErrorNotification(
-        'Die Datei konnte nicht geladen werden. Bitte versuchen Sie es erneut.',
+        t('models.form.file.downloadError'),
       );
     } catch {
       // Fallback to console if the notification store is not available for any reason

@@ -5,6 +5,7 @@ import { createMemoryHistory, createRouter } from 'vue-router';
 import { routes } from '../../router';
 import { createPinia } from 'pinia';
 import { ItemDto } from '@open-dpp/api-client';
+import { i18n } from '../../translations/i18n';
 
 const pinia = createPinia();
 const router = createRouter({
@@ -33,7 +34,7 @@ describe('ItemList.vue', () => {
         items,
       },
       global: {
-        plugins: [pinia, router],
+        plugins: [i18n, pinia, router],
       },
     });
     expect(screen.getByText('Artikelpässe')).toBeTruthy();
@@ -72,7 +73,7 @@ describe('ItemList.vue', () => {
         items,
       },
       global: {
-        plugins: [pinia, router],
+        plugins: [i18n, pinia, router],
       },
     });
     const createButton = screen.getByRole('button', {

@@ -10,10 +10,12 @@
         v-if="rowInEditMode !== index"
         class="flex justify-between items-center"
       >
-        <div>Datenreihe {{ index }}</div>
-        <BaseButton variant="primary" @click="rowInEditMode = index"
-          >Editieren</BaseButton
-        >
+        <div>
+          {{ t('models.form.repeater.series') + ' ' + index }}
+        </div>
+        <BaseButton variant="primary" @click="rowInEditMode = index">{{
+          t('common.edit')
+        }}</BaseButton>
       </div>
       <SectionForm v-else :section="props.section" :row="index" />
     </li>
@@ -25,6 +27,9 @@ import { computed, ref } from 'vue';
 import BaseButton from '../../BaseButton.vue';
 import SectionForm from './SectionForm.vue';
 import { usePassportFormStore } from '../../../stores/passport.form';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const productPassportStore = usePassportFormStore();
 

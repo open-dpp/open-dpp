@@ -15,19 +15,19 @@
     >
       <form-kit
         :wrapper-class="{ 'w-full': true }"
-        label="Allgemein"
+        :label="t('common.general')"
         name="generalInfo"
         type="step"
       >
         <form-kit
-          help="Geben Sie Ihrer Organisation einen Namen"
-          label="Name"
+          :help="t('organizations.form.name.help')"
+          :label="t('organizations.form.name.label')"
           name="name"
           type="text"
           validation="required"
         />
         <template #stepNext>
-          <FormKit label="Erstellen" type="submit" />
+          <FormKit :label="t('common.create')" type="submit" />
         </template>
       </form-kit>
     </form-kit>
@@ -41,8 +41,11 @@ import { useOrganizationsStore } from '../../stores/organizations';
 import { useIndexStore } from '../../stores';
 import { useRouter } from 'vue-router';
 import keycloakIns, { updateKeycloakToken } from '../../lib/keycloak';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
+
+const { t } = useI18n();
 
 const indexStore = useIndexStore();
 const organizationStore = useOrganizationsStore();

@@ -33,6 +33,7 @@ import {
 } from '@formkit/addons';
 import { diff } from 'jest-diff';
 import _ from 'lodash';
+import { i18n } from '../../src/translations/i18n.js';
 
 let pinia: Pinia;
 
@@ -72,6 +73,7 @@ Cypress.Commands.add('mountWithPinia', (component, options = {}) => {
       ...options?.global,
       plugins: [
         ...options.global.plugins,
+        i18n,
         pinia,
         [
           FormKit,

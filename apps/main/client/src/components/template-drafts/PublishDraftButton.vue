@@ -5,7 +5,7 @@
       class="relative inline-flex items-center rounded-l-md px-3 py-2 text-sm font-semibold border-r-2 border-white bg-indigo-600 text-white hover:bg-indigo-500"
       @click="emits('onPublish', selectedVisibility)"
     >
-      Veröffentlichen
+      {{ t('draft.publish') }}
     </button>
     <Menu as="div" class="relative -ml-px block">
       <MenuButton
@@ -56,6 +56,9 @@ import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
 import { ChevronDownIcon } from '@heroicons/vue/20/solid';
 import { VisibilityLevel } from '@open-dpp/api-client';
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const selectedVisibility = ref<VisibilityLevel>(VisibilityLevel.PRIVATE);
 
@@ -65,9 +68,9 @@ const emits = defineEmits<{
 
 const items: { name: string; visibility: VisibilityLevel }[] = [
   {
-    name: 'nur für Organisation sichtbar',
+    name: t('draft.visibility.private'),
     visibility: VisibilityLevel.PRIVATE,
   },
-  { name: 'für jeden sichtbar', visibility: VisibilityLevel.PUBLIC },
+  { name: t('draft.visibility.public'), visibility: VisibilityLevel.PUBLIC },
 ];
 </script>

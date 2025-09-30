@@ -2,16 +2,16 @@
   <form-kit id="createDraftForm" :actions="false" type="form" @submit="create">
     <form-kit
       data-cy="name"
-      help="Geben Sie Ihrer Passvorlage einen Namen"
-      label="Name"
+      :help="t('draft.form.name.help')"
+      :label="t('draft.form.name.label')"
       name="name"
       type="text"
       validation="required"
     />
     <form-kit
       data-cy="description"
-      help="Geben Sie Ihrer Passvorlage eine Beschreibung"
-      label="Beschreibung"
+      :help="t('draft.form.description.help')"
+      :label="t('draft.form.description.label')"
       name="description"
       type="text"
       validation="required"
@@ -20,34 +20,46 @@
       data-cy="sectors"
       name="sectors"
       type="checkbox"
-      label="Branchen"
+      :label="t('draft.form.sectors.label')"
       :options="[
         {
           value: Sector.BATTERY,
-          label: 'Batterie',
+          label: t('draft.form.sectors.battery'),
         },
-        { value: Sector.CONSTRUCTION, label: 'Bau' },
-        { value: Sector.MINING, label: 'Bergbau' },
-        { value: Sector.ELECTRONICS, label: 'Elektronik' },
-        { value: Sector.TRADE, label: 'Handel' },
-        { value: Sector.HEALTHCARE, label: 'Gesundheit' },
-        { value: Sector.AGRICULTURE, label: 'Landwirtschaft' },
-        { value: Sector.EDUCATION, label: 'Lehre' },
-        { value: Sector.AEROSPACE, label: 'Luftfahrt' },
-        { value: Sector.MACHINERY, label: 'Maschinenbau' },
-        { value: Sector.MEDICAL, label: 'Medizin' },
-        { value: Sector.TEXTILE, label: 'Textil' },
-        { value: Sector.OTHER, label: 'Sonstiges' },
+        {
+          value: Sector.CONSTRUCTION,
+          label: t('draft.form.sectors.construction'),
+        },
+        { value: Sector.MINING, label: t('draft.form.sectors.mining') },
+        {
+          value: Sector.ELECTRONICS,
+          label: t('draft.form.sectors.electronics'),
+        },
+        { value: Sector.TRADE, label: t('draft.form.sectors.trade') },
+        { value: Sector.HEALTHCARE, label: t('draft.form.sectors.healthcare') },
+        {
+          value: Sector.AGRICULTURE,
+          label: t('draft.form.sectors.agriculture'),
+        },
+        { value: Sector.EDUCATION, label: t('draft.form.sectors.education') },
+        { value: Sector.AEROSPACE, label: t('draft.form.sectors.aerospace') },
+        { value: Sector.MACHINERY, label: t('draft.form.sectors.machinery') },
+        { value: Sector.MEDICAL, label: t('draft.form.sectors.medical') },
+        { value: Sector.TEXTILE, label: t('draft.form.sectors.textile') },
+        { value: Sector.OTHER, label: t('draft.form.sectors.other') },
       ]"
-      help="Wählen Sie mindestens eine Branche aus, für die Ihre Passvorlage angewendet werden kann."
+      :help="t('draft.form.sectors.help')"
       validation="required|min:1"
     />
-    <form-kit label="Erstellen" type="submit" />
+    <form-kit :label="t('draft.create')" type="submit" />
   </form-kit>
 </template>
 
 <script lang="ts" setup>
 import { Sector, TemplateDraftCreateDto } from '@open-dpp/api-client';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const emits = defineEmits<{
   (e: 'submit', draftData: TemplateDraftCreateDto): void;

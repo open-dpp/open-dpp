@@ -5,7 +5,7 @@
       <EmptyState
         v-else
         :button-link="`/organizations/${indexStore.selectedOrganization}/data-model-drafts/create`"
-        button-label="Neue Passvorlage entwerfen"
+        :button-label="t('draft.createNewShort')"
       />
     </div>
   </section>
@@ -18,7 +18,9 @@ import apiClient from '../../lib/api-client';
 import EmptyState from '../../components/models/EmptyState.vue';
 import { useIndexStore } from '../../stores';
 import { TemplateDraftGetAllDto } from '@open-dpp/api-client';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const indexStore = useIndexStore();
 const fetchInFlight = ref(true);
 

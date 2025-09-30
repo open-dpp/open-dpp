@@ -1,11 +1,12 @@
 import { RouteLocationNormalizedGeneric, RouteRecordRaw } from 'vue-router';
 import { useLayoutStore } from '../../../stores/layout';
 import { modelBreadcrumbs } from './models';
+import { localizedBreadcrumb } from '../../../lib/breadcrumbs';
 
 const itemListBreadcrumbs = async (to: RouteLocationNormalizedGeneric) => [
   ...(await modelBreadcrumbs(to)),
   {
-    name: 'Artikelpässe',
+    name: localizedBreadcrumb('items.label'),
     route: ITEM_LIST,
     params: to.params,
   },
@@ -40,7 +41,7 @@ export const ITEM_QRCODE: RouteRecordRaw = {
     layoutStore.breadcrumbs = [
       ...(await itemListBreadcrumbs(to)),
       {
-        name: 'Artikel',
+        name: localizedBreadcrumb('items.item'),
         route: ITEM_QRCODE,
         params: to.params,
       },

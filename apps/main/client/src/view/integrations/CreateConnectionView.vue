@@ -2,9 +2,11 @@
   <div class="flex flex-col gap-3 p-3">
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
-        <h1 class="text-base font-semibold text-gray-900">Verbindung</h1>
+        <h1 class="text-base font-semibold text-gray-900">
+          {{ t('integrations.connections.label', 1) }}
+        </h1>
         <p class="mt-2 text-sm text-gray-700">
-          Erstellen Sie eine neue Verbindung.
+          {{ t('integrations.connections.create') }}
         </p>
       </div>
     </div>
@@ -16,13 +18,12 @@
         v-if="modelsStore.models && modelsStore.models.length === 0"
         class="text-gray-500 p-4"
       >
-        Kein Modellpass vorhanden, für den Artikelpässe automatisiert über eine
-        Verbindung erstellt werden können. Bitte
+        {{ t('integrations.connections.model.noModelFound') }}
         <router-link
           :to="`/organizations/${indexStore.selectedOrganization}/models`"
           class="text-blue-600 hover:text-blue-800 underline"
         >
-          erstellen Sie zuerst einen Modellpass.
+          {{ t('integrations.connections.model.noModelFoundLink') }}
         </router-link>
       </div>
     </div>
@@ -34,6 +35,9 @@ import { onMounted } from 'vue';
 import { useModelsStore } from '../../stores/models';
 import CreateConnectionForm from '../../components/integrations/CreateConnectionForm.vue';
 import { useIndexStore } from '../../stores';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const modelsStore = useModelsStore();
 const indexStore = useIndexStore();

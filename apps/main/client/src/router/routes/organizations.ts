@@ -4,9 +4,14 @@ import { ORGANIZATION_MODELS_PARENT } from './models/models';
 import { ORGANIZATION_DRAFTS_PARENT } from './product-data-model-drafts/drafts';
 import { ORGANIZATION_INTEGRATIONS_PARENT } from './integrations';
 import { ORGANIZATION_STATISTICS_PARENT } from './statistics';
+import { localizedBreadcrumb } from '../../lib/breadcrumbs';
 
 const organizationListBreadCrumbs = (to: RouteLocationNormalizedGeneric) => [
-  { name: 'Organisationen', route: ORGANIZATION_LIST, params: to.params },
+  {
+    name: localizedBreadcrumb('organizations.organizations'),
+    route: ORGANIZATION_LIST,
+    params: to.params,
+  },
 ];
 
 export const ORGANIZATION_LIST: RouteRecordRaw = {
@@ -48,7 +53,7 @@ export const ORGANIZATION_MEMBERS: RouteRecordRaw = {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = [
       {
-        name: 'Mitglieder',
+        name: localizedBreadcrumb('members.members'),
         route: ORGANIZATION_MEMBERS,
         params: to.params,
       },

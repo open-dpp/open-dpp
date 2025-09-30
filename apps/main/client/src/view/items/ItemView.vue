@@ -3,7 +3,7 @@
     <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
       <div class="px-4 py-6 sm:px-6">
         <h3 class="text-base/7 font-semibold text-gray-900">
-          Artikelpass Informationen
+          {{ t('items.info') }}
         </h3>
       </div>
       <div
@@ -40,6 +40,9 @@ import { useRoute } from 'vue-router';
 import { watch } from 'vue';
 import PassportForm from '../../components/passport/PassportForm.vue';
 import { usePassportFormStore } from '../../stores/passport.form';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const route = useRoute();
 const productPassportStore = usePassportFormStore();

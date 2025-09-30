@@ -6,10 +6,10 @@
       >
         <div>
           <h3 class="text-base/7 font-semibold text-gray-900">
-            Passvorlagen Entwurf {{ draftStore.draft.name }}
+            {{ t('draft.passportDraft') + ' ' + draftStore.draft.name }}
           </h3>
           <p class="mt-1 max-w-2xl text-sm/6 text-gray-500">
-            Version {{ draftStore.draft.version }}
+            {{ t('draft.version') + ' ' + draftStore.draft.version }}
           </p>
         </div>
         <div class="">
@@ -23,12 +23,14 @@
           <BaseButton
             v-if="currentSections.parentSection"
             @click="navigateBackToParent"
-            >Zur Startseite</BaseButton
+            >{{ t('common.toHome') }}</BaseButton
           >
           <BaseButton
             v-if="currentSections.parentSection?.parentId"
             @click="navigateBackToParent"
-            >Zurück zu {{ currentSections.parentSection.name }}</BaseButton
+            >{{
+              t('common.backTo', { link: currentSections.parentSection.name })
+            }}</BaseButton
           >
         </div>
         <AddSection
@@ -50,19 +52,19 @@
                 variant="primary"
                 @click="onEditSectionClicked(section)"
               >
-                Editieren
+                {{ t('draft.edit') }}
               </BaseButton>
               <BaseButton
                 variant="primary"
                 @click="onAddDataFieldClicked(section)"
               >
-                Datenfeld hinzufügen
+                {{ t('draft.addDataField') }}
               </BaseButton>
               <BaseButton
                 variant="primary"
                 @click="onAddSubSectionClicked(section)"
               >
-                Abschnitt hinzufügen
+                {{ t('draft.addSection') }}
               </BaseButton>
               <div class="flex items-center rounded-md">
                 <button
@@ -118,6 +120,9 @@ import {
 } from '../../stores/draftSidebar';
 import AddSection from '../../components/template-drafts/AddSection.vue';
 import SectionDraft from '../../components/template-drafts/SectionDraft.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const route = useRoute();
 const router = useRouter();
@@ -178,9 +183,9 @@ const isLast = (id: string) => {
 const onPublish = async (visibility: VisibilityLevel) => {
   await draftStore.publish({ visibility });
   notificationStore.addSuccessNotification(
-    'Ihr Entwurf wurde erfolgreich veröffentlicht. Sie können nun darauf basierend Modelle anlegen.',
+    t('draft.createPassTemplateSuccess'),
     {
-      label: 'Modell anlegen',
+      label: t('draft.createModel'),
       to: `/organizations/${indexStore.selectedOrganization}/models/create`,
     },
   );

@@ -9,11 +9,11 @@
         <div class="flex items-center">
           <router-link class="text-gray-400 hover:text-gray-500" to="/">
             <HomeIcon aria-hidden="true" class="h-5 w-5 shrink-0" />
-            <span class="sr-only">Home</span>
+            <span class="sr-only">{{ t('common.home') }}</span>
           </router-link>
         </div>
       </li>
-      <li v-for="page in slicedBreadcrumbs" :key="page.name" class="flex">
+      <li v-for="page in slicedBreadcrumbs" :key="page.name.text" class="flex">
         <div class="flex items-center">
           <svg
             aria-hidden="true"
@@ -28,7 +28,7 @@
             :aria-current="isCurrent(page.route) ? 'page' : undefined"
             :to="{ name: page.route.name, params: page.params }"
             class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700"
-            >{{ page.name }}
+            >{{ page.name.localized ? t(page.name.text) : page.name.text }}
           </router-link>
         </div>
       </li>
@@ -41,6 +41,9 @@ import { HomeIcon } from '@heroicons/vue/20/solid';
 import { useLayoutStore } from '../stores/layout';
 import { RouteRecordRaw, useRoute } from 'vue-router';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const lgBreakpoint = 1300;
 const isLargeScreen = ref(window.innerWidth > lgBreakpoint);

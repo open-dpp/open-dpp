@@ -34,8 +34,8 @@
                   <DialogTitle
                     as="h3"
                     class="text-base font-semibold text-gray-900"
-                    >Datei auswählen
-                  </DialogTitle>
+                    >{{ t('file.select') }}</DialogTitle
+                  >
                 </div>
                 <div>
                   <button
@@ -81,14 +81,14 @@
                   type="button"
                   @click="emits('confirm', selected)"
                 >
-                  Auswählen
+                  {{ t('common.select') }}
                 </button>
                 <button
                   class="bg-[#6BAD87]/20 p-2 rounded text-[#6BAD87]/80 hover:cursor-pointer"
                   type="button"
                   @click="emits('cancel')"
                 >
-                  Abbrechen
+                  {{ t('common.abort') }}
                 </button>
               </div>
             </DialogPanel>
@@ -114,6 +114,9 @@ import { MediaInfo } from './MediaInfo.interface';
 import { useMediaStore } from '../../stores/media';
 import { useNotificationStore } from '../../stores/notification';
 import { useIndexStore } from '../../stores';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const mediaStore = useMediaStore();
 const notificationStore = useNotificationStore();
@@ -145,13 +148,11 @@ const uploadFile = async () => {
       selectedLocalFile.value,
       (progress) => (uploadProgress.value = progress),
     );
-    notificationStore.addSuccessNotification('Datei erfolgreich hochgeladen.');
+    notificationStore.addSuccessNotification(t('file.uploadSuccess'));
     await mediaStore.fetchMediaByOrganizationId(organizationId);
   } catch (error: unknown) {
-    console.error('Fehler beim Hochladen der Datei:', error);
-    notificationStore.addErrorNotification(
-      'Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.',
-    );
+    console.error(t('file.upload.error'), error);
+    notificationStore.addErrorNotification(t('file.upload.error'));
     selectedFile.value = null;
   } finally {
     uploadProgress.value = 0;

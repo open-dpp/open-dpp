@@ -10,6 +10,7 @@ import {
 } from '@open-dpp/api-client';
 import apiClient from '../lib/api-client';
 import { assign, keys, pick } from 'lodash';
+import { i18n } from '../translations/i18n';
 
 type FormKitSchemaNode =
   | string // Text content
@@ -35,10 +36,11 @@ export const usePassportFormStore = defineStore('passport.form', () => {
   const uniqueProductIdentifier = ref<UniqueProductIdentifierDto>();
   const modelId = ref<string>();
   const fetchInFlight = ref<boolean>(false);
+  const { t } = i18n.global;
 
   const VALUE_FOR_OTHER_GRANULARITY_LEVEL = {
-    [GranularityLevel.MODEL]: 'Wird auf Artikelebene gesetzt',
-    [GranularityLevel.ITEM]: 'Wird auf Modelebene gesetzt',
+    [GranularityLevel.MODEL]: t('builder.granularity.setOnModel'),
+    [GranularityLevel.ITEM]: t('builder.granularity.setOnItem'),
   };
 
   const getValueForOtherGranularityLevel = () => {

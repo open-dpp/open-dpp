@@ -8,11 +8,14 @@ import { useErrorHandlingStore } from './error.handling';
 import apiClient from '../lib/api-client';
 import { useNotificationStore } from './notification';
 import { AxiosError } from 'axios';
+import { i18n } from '../translations/i18n';
 
 export const useAiIntegrationStore = defineStore('ai-integration', () => {
   const configuration = ref<AiConfigurationDto>();
   const notificationStore = useNotificationStore();
   const errorHandlingStore = useErrorHandlingStore();
+  const { t } = i18n.global;
+
   const fetchConfiguration = async () => {
     try {
       const response = await apiClient.agentServer.aiConfigurations.get();
@@ -22,7 +25,7 @@ export const useAiIntegrationStore = defineStore('ai-integration', () => {
         console.error('Configuration not found.');
       } else {
         errorHandlingStore.logErrorWithNotification(
-          'Laden der Konfiguration fehlgeschlagen:',
+          t('integrations.ai.errorLoadingConfiguration'),
           error,
         );
       }
@@ -39,11 +42,11 @@ export const useAiIntegrationStore = defineStore('ai-integration', () => {
         );
       configuration.value = response.data;
       notificationStore.addSuccessNotification(
-        'Konfiguration erfolgreich gespeichert.',
+        t('integrations.ai.savedConfigurationSuccess'),
       );
     } catch (error) {
       errorHandlingStore.logErrorWithNotification(
-        'Anpassung der Konfiguration fehlgeschlagen:',
+        t('integrations.ai.modifyConfigurationError'),
         error,
       );
     }

@@ -1,0 +1,369 @@
+{
+  "common": {
+    "id": "ID",
+    "identification": "Identifikation",
+    "name": "Name",
+    "send": "Senden",
+    "actions": "Aktionen",
+    "clipboardSuccess": "In die Zwischenablage kopiert.",
+    "edit": "Editieren",
+    "qrCode": "QR-Code",
+    "add": "Hinzufügen",
+    "change": "Ändern",
+    "save": "Speichern",
+    "create": "Erstellen",
+    "close": "Schließen",
+    "cancel": "Cancel",
+    "select": "Auswählen",
+    "selected": "Ausgewählt",
+    "submit": "Bestätigen",
+    "abort": "Abbrechen",
+    "general": "Allgemein",
+    "remove": "Entfernen",
+    "back": "Zurück",
+    "call": "Aufrufen",
+    "website": "Website",
+    "contact": "Kontakt",
+    "errorOccured": "Ein Fehler ist aufgetreten",
+    "unknownErrorOccured": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+    "toHome": "Zur Startseite",
+    "home": "Startseite",
+    "backTo": "Zurück zu { link }",
+    "presentationMode": "Präsentations-Modus",
+    "form": {
+      "email": {
+        "help": "Geben Sie eine E-Mail Adresse ein.",
+        "label": "E-Mail Adresse",
+        "error": "Bitte geben Sie eine E-Mail Adresse ein."
+      }
+    }
+  },
+  "builder": {
+    "repeater": {
+      "label": "Repeater",
+      "description": "Fügen Sie einen Repeater Abschnitt hinzu, um eine Gruppe von Feldern beliebig oft hinzuzufügen zu können."
+    },
+    "group": {
+      "label": "Gruppierung",
+      "description": "Fügen Sie einen Abschnitt hinzu, der mehrere Felder gruppiert"
+    },
+    "granularity": {
+      "model": "Produktmodellebene",
+      "item": "Artikelebene",
+      "setOnModel": "Wird auf Artikelebene gesetzt",
+      "setOnItem": "Wird auf Modelebene gesetzt"
+    },
+    "delete": {
+      "label": "Abschnitt löschen",
+      "description": "Sind Sie sicher, dass Sie diesen Abschnitt löschen wollen?"
+    },
+    "textField": {
+      "name": "Name des Textfeldes"
+    },
+    "passportLink": {
+      "name": "Name der Produktpass Verlinkung"
+    },
+    "numeric": {
+      "name": "Name des numerischen Feldes",
+      "min": "Minimum",
+      "max": "Maximum"
+    },
+    "file": {
+      "name": "Name des Dateifeldes"
+    },
+    "name": "Name des Abschnitts",
+    "granularityLevel": "Granularitätsebene"
+  },
+  "draft": {
+    "drafts": "Modellpassvorlagen",
+    "draft": "Datenmodellentwurf",
+    "edit": "Editieren",
+    "publish": "Veröffentlichen",
+    "visibility": {
+      "private": "Nur für Organisationen sichtbar",
+      "public": "Für alle sichtbar"
+    },
+    "passTemplate": "Passvorlagen Entwurf",
+    "passTemplates": "Passvorlagen Entwürfe",
+    "createNewPassTemplate": "Entwerfen Sie eine neue Passvorlage.",
+    "createNewShort": "Neue Passvorlage entwerfen",
+    "create": "Erstellen",
+    "createDraft": "Passvorlage entwerfen",
+    "createPassTemplateSuccess": "Ihr Entwurf wurde erfolgreich veröffentlicht. Sie können nun darauf basierend Modelle anlegen.",
+    "createModel": "Modell anlegen",
+    "form": {
+      "name": {
+        "label": "Name",
+        "help": "Geben Sie Ihrer Passvorlage einen Namen"
+      },
+      "description": {
+        "label": "Beschreibung",
+        "help": "Geben Sie Ihrer Passvorlage eine Beschreibung"
+      },
+      "sectors": {
+        "label": "Branchen",
+        "help": "Wählen Sie mindestens eine Branche aus, für die Ihre Passvorlage angewendet werden kann.",
+        "battery": "Batterie",
+        "construction": "Bau",
+        "mining": "Bergbau",
+        "electronics": "Elektronik",
+        "trade": "Handel",
+        "healthcare": "Gesundheit",
+        "agriculture": "Landwirtschaft",
+        "education": "Lehre",
+        "aerospace": "Luftfahrt",
+        "machinery": "Maschinenbau",
+        "medical": "Medizin",
+        "textile": "Textil",
+        "other": "Sonstiges"
+      }
+    },
+    "version": "Version",
+    "selection": "Auswahl",
+    "section": "Abschnitt",
+    "addSection": "Abschnitt hinzufügen",
+    "configuration": "Konfiguration",
+    "dataField": "Datenfeld",
+    "addDataField": "Datenfeld hinzufügen",
+    "deleteDataField": "Datenfeld löschen",
+    "deleteDataFieldDescription": "Sind Sie sicher, dass Sie dieses Datenfeld löschen wollen?",
+    "errorAddingDataField": "Datenfeld konnte nicht hinzugefügt werden.",
+    "textField": "Textfeld",
+    "addTextField": "Fügen Sie ein Textfeld hinzu",
+    "passportLink": "Produktpass Verlinkung",
+    "addPassportLink": "Fügen Sie eine Verlinkung zu einem Produktpass hinzu",
+    "numberField": "Numerisches Feld",
+    "addNumberField": "Numerisches Feld",
+    "fileField": "Datei",
+    "addFileField": "Fügen Sie einen Dateiupload hinzu",
+    "passportDraft": "Passvorlagen Entwurf | Passvorlagen Entwürfe",
+    "passportDraftDescription": "Alle Passvorlagen Entwürfe"
+  },
+  "integrations": {
+    "integrations": "Integrationen",
+    "allIntegrations": "Alle Ihre Integrationen",
+    "proAlpha": "ProAlpha Integration",
+    "ai": {
+      "label": "KI-Integration",
+      "configuration": "KI Konfiguration",
+      "configurationDesc": "Konfigurieren Sie die KI-Integration",
+      "activate": "KI-Integration aktivieren",
+      "errorLoadingConfiguration": "Laden der Konfiguration fehlgeschlagen: ",
+      "savedConfigurationSuccess": "Konfiguration erfolgreich gespeichert.",
+      "modifyConfigurationError": "Anpassung der Konfiguration fehlgeschlagen:"
+    },
+    "connections": {
+      "label": "Verbindung | Verbindungen",
+      "info": "Verbindungsinformationen",
+      "description": "Alle Ihre Verbindungen",
+      "new": "Neue Verbindung hinzufügen",
+      "create": " Erstellen Sie eine neue Verbindung.",
+      "errorSave": "Speichern der Verbindung fehlgeschlagen",
+      "errorSwitch": "Wechsel des Modellpasses fehlgeschlagen",
+      "errorLoad": "Laden der Verbindungen fehlgeschlagen:",
+      "add": "Verbindung erstellen",
+      "id": "ID",
+      "name": {
+        "label": "Name",
+        "help": "Geben Sie Ihrer Verbindung einen Namen"
+      },
+      "model": {
+        "help": "Wählen Sie einen Modellpass, für den Sie Artikpässe über diese Verbindung erstellen möchten",
+        "label": "Modellpass Auswahl",
+        "linked": "Verknüpfter Modellpass",
+        "noModelFound": "Kein Modellpass vorhanden, für den Artikelpässe automatisiert über eine Verbindung erstellt werden können. Bitte",
+        "noModelFoundLink": "erstellen Sie zuerst einen Modellpass."
+      },
+      "aas": {
+        "linked": "Verknüpfte Asset Administration Shell",
+        "isLinked": "ist verknüpft mit",
+        "field": "Feld aus der Asset Administration Shell",
+        "modelField": "Feld aus dem Produktdatenmodell",
+        "selectModelField": "Wählen Sie ein Feld aus dem Produktdatenmodell",
+        "selectField": "Wählen Sie ein Feld aus der Asset Administration Shell",
+        "help": "Wählen Sie eine Asset Admininstration Shell",
+        "label": "Asset Admininstration Shell Auswahl",
+        "truck": "Truck",
+        "semitrailer": "Sattelauflieger",
+        "semitrailerTruck": "Sattelschlepper"
+      },
+      "status": {
+        "label": "Status",
+        "active": "Aktiv",
+        "inactive": "Inaktiv"
+      },
+      "fieldAssignments": "Feldverknüpfungen",
+      "addFieldAssignments": "Neue Feldverknüpfung hinzufügen"
+    },
+    "apiKey": {
+      "create": "API Key erstellen",
+      "createSuccess": "API Key wurde erfolgreich erstellt. Bitte kopieren Sie den Schlüssel: { key }",
+      "createError": "Fehler beim Erstellen des API Keys. Bitte versuchen Sie es erneut."
+    },
+    "edit": "Editieren",
+    "errorCreate": "Erstellen der Verbindung fehlgeschlagen"
+  },
+  "statistics": {
+    "statistics": "Auswertungen"
+  },
+  "members": {
+    "members": "Mitglieder"
+  },
+  "organizations": {
+    "organizations": "Organisation | Organisationen",
+    "select": "Organisation wählen",
+    "info": "Organisation Informationen",
+    "details": "Details und User der Organisation.",
+    "create": " Erstellen Sie eine neue Organisation.",
+    "assignedOrganizations": "Alle zugewiesenen Organisationen",
+    "pick": "Organisation auswählen",
+    "new": "Neue Organisation erstellen",
+    "invite": "Einladen",
+    "inviteUser": "Benutzer einladen",
+    "inviteUserSuccess": "Der Benutzer wurde erfolgreich eingeladen.",
+    "member": "Mitglieder",
+    "memberListDescription": "Eine Lisxte von allen Mitgliedern in dieser Organisation.",
+    "memberName": "Name",
+    "memberRole": "Rolle",
+    "memberAdmin": "Admin",
+    "memberCreator": "Ersteller",
+    "addUser": "Benutzer hinzufügen",
+    "form": {
+      "id": "ID",
+      "createdBy": "Erstellt von",
+      "administeredBy": "Administriert von",
+      "description": "Beschreibung",
+      "name": {
+        "help": "Geben Sie Ihrer Organisation einen Namen",
+        "label": "Name"
+      }
+    }
+  },
+  "marketplace": {
+    "marketplace": "Marktplatz"
+  },
+  "file": {
+    "type": "Dateityp",
+    "size": "Dateigröße",
+    "upload": "Datei hochladen",
+    "uploadSuccess": "Datei erfolgreich hochgeladen.",
+    "uploadError": "Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+    "change": "Datei ändern",
+    "download": "Datei herunterladen",
+    "downloadError": "Die Datei konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
+    "select": "Datei auswählen",
+    "noSelection": "Keine Datei ausgewählt",
+    "notFound": "Datei nicht vorhanden",
+    "couldNotBeLoaded": "Datei konnte nicht geladen werden.",
+    "errorRevokingUrl": "Fehler beim Freigeben der vorherigen Objekt-URL:",
+    "errorRevokingUrlError": "Fehler beim Freigeben der Objekt-URL nach Fehler:"
+  },
+  "media": {
+    "media": "Medien",
+    "preview": "Vorschau"
+  },
+  "presentation": {
+    "productDetails": "Produktdetails",
+    "productDetailsDesc": "Allgemeine Informationen zum Produkt.",
+    "additionalSections": "Weiterführende Abschnitte",
+    "moreInfo": "Mehr Informationen",
+    "navigation": "Navigation",
+    "backToApp": "Zurück zur App",
+    "toPass": "Zur Passansicht",
+    "chatWithAI": "Mit KI chatten",
+    "productpass": "Produktpass",
+    "askQuestion": "Stellen Sie Ihre Frage..."
+  },
+  "models": {
+    "models": "Produktpässe",
+    "pass": "Modellpass",
+    "info": "Modellpass Informationen",
+    "errorLoad": "Laden der Modellpässe fehlgeschlagen",
+    "createPass": "Erstellen Sie einen neuen Modellpass.",
+    "submitCreatePass": "Modelpass erstellen",
+    "general": "Allgemein",
+    "myDrafts": "Meine Vorlagen",
+    "form": {
+      "id": "ID",
+      "name": {
+        "help": "Geben Sie Ihrem Modellpass einen Namen",
+        "label": "Name",
+        "error": "Bitte geben Sie einen Namen ein."
+      },
+      "passportDraft": {
+        "help": "Wählen Sie die passende Passvorlage aus",
+        "label": "Passvorlage",
+        "error": "Bitte wählen Sie eine Vorlage aus."
+      },
+      "file": {
+        "change": "Datei ändern",
+        "upload": "Datei hochladen",
+        "uploadSuccess": "Datei erfolgreich hochgeladen.",
+        "uploadError": "Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+        "download": "Datei herunterladen",
+        "downloadError": "Die Datei konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
+        "select": "Datei auswählen",
+        "noSelection": "Keine Datei ausgewählt"
+      },
+      "link": {
+        "navigationError": "Navigation zum Produktpass fehlgeschlagen"
+      },
+      "repeater": {
+        "series": "Datenreihe",
+        "addSeries": "Datenreihe hinzufügen"
+      },
+      "section": {
+        "additional": "Weiterführende Abschnitte",
+        "saveSuccess": "Daten erfolgreich gesichert",
+        "saveError": "Daten konnten nicht gespeichert werden"
+      }
+    },
+    "list": {
+      "creation-label": "Modellpass hinzufügen",
+      "description": "Alle Pässe auf der Produktmodellebene. Ein Produktmodell ist zum Beispiel das Galaxy S22 Ultra.",
+      "title": "Modellpässe"
+    }
+  },
+  "actions": {
+    "member": {
+      "title": "Mitglieder hinzufügen",
+      "description": "Mitglieder der Organisation ansehen, um dort ein neues Mitglieder hinzuzufügen."
+    },
+    "model": {
+      "title": "Modell hinzufügen",
+      "description": "Modelle der Organisation ansehen, um dort ein neues Modell hinzuzufügen."
+    }
+  },
+  "items": {
+    "info": "Artikelpass Informationen",
+    "add": "Artikelpass hinzufügen",
+    "new": "Neuen Artikelpass hinzufügen",
+    "description": "Alle Pässe auf Einzelartikelebene.",
+    "label": "Artikelpässe",
+    "item": "Artikel"
+  },
+  "user": {
+    "profile": "Dein Profil",
+    "personalInformation": "Persönliche Informationen",
+    "logout": "Abmelden",
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "language": "Sprache",
+    "displaySettings": "Anzeigeeinstellungen"
+  },
+  "notifications": {
+    "success": "Erfolg",
+    "error": "Fehler",
+    "warning": "Warnung",
+    "info": "Information"
+  },
+  "lists": {
+    "editAll": "Alle bearbeiten",
+    "deleteAll": "Alle löschen",
+    "noElements": "Keine Elemente gefunden",
+    "shows": "Zeigt ",
+    "to": " bis ",
+    "of": " von ",
+    "elements": " Elementen"
+  }
+}

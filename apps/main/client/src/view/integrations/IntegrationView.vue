@@ -2,21 +2,28 @@
   <div class="flex flex-col gap-3 p-3">
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
-        <h1 class="text-base font-semibold text-gray-900">Integrationen</h1>
-        <p class="mt-2 text-sm text-gray-700">Alle Ihre Integrationen</p>
+        <h1 class="text-base font-semibold text-gray-900">
+          {{ t('integrations.integrations') }}
+        </h1>
+        <p class="mt-2 text-sm text-gray-700">
+          {{ t('integrations.allIntegrations') }}
+        </p>
       </div>
       <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
         <button
           class="block rounded-md bg-indigo-600 px-3 py-1.5 text-center text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           @click="createApiKey"
         >
-          API Key erstellen
+          {{ t('integrations.apiKey.create') }}
         </button>
       </div>
     </div>
     <SimpleTable
-      :headers="['Name', 'Status']"
       :ignore-row-keys="['id']"
+      :headers="[
+        t('integrations.connections.name.label'),
+        t('integrations.connections.status.label'),
+      ]"
       :row-actions="actions"
       :rows="rows"
     />
@@ -32,31 +39,36 @@ import axiosIns from '../../lib/axios';
 import { useNotificationStore } from '../../stores/notification';
 import { computed, onMounted } from 'vue';
 import { useAiIntegrationStore } from '../../stores/ai.integration';
+import { useI18n } from 'vue-i18n';
 
 const indexStore = useIndexStore();
 const notificationStore = useNotificationStore();
 const aiIntegrationStore = useAiIntegrationStore();
 
+const { t } = useI18n();
+
 const rows = computed(() => [
   {
-    name: 'ProAlpha Integration',
-    status: 'Aktiv',
+    name: t('integrations.proAlpha'),
+    status: t('integrations.connections.status.active'),
     id: PRO_ALPHA_INTEGRATION_ID,
   },
   {
-    name: 'KI-Integration',
-    status: aiIntegrationStore.configuration?.isEnabled ? 'Aktiv' : 'Inaktiv',
+    name: t('integrations.ai.label'),
+    status: aiIntegrationStore.configuration?.isEnabled
+      ? t('integrations.connections.status.active')
+      : t('integrations.connections.status.inactive'),
     id: AI_INTEGRATION_ID,
   },
 ]);
 
-const actions = [
+const actions = computed(() => [
   {
-    name: 'Editieren',
+    name: t('common.edit'),
     actionLinkBuilder: (row: Record<string, string>) =>
       `/organizations/${indexStore.selectedOrganization}/integrations/${row.id}`,
   },
-];
+]);
 
 const createApiKey = async () => {
   try {
@@ -65,14 +77,14 @@ const createApiKey = async () => {
     );
     if (response.status === 200) {
       notificationStore.addSuccessNotification(
-        `API Key wurde erfolgreich erstellt. Bitte kopieren Sie den Schlüssel: ${response.data}`,
+        t('integrations.apiKey.createSuccess', { key: response.data }),
         undefined,
         24_000,
       );
     }
   } catch {
     notificationStore.addErrorNotification(
-      'Fehler beim Erstellen des API Keys. Bitte versuchen Sie es erneut.',
+      t('integrations.apiKey.createError'),
     );
   }
 };

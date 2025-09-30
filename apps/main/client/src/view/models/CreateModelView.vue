@@ -2,9 +2,11 @@
   <div class="">
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
-        <h1 class="text-base font-semibold text-gray-900">Modellpass</h1>
+        <h1 class="text-base font-semibold text-gray-900">
+          {{ t('models.pass') }}
+        </h1>
         <p class="mt-2 text-sm text-gray-700">
-          Erstellen Sie einen neuen Modellpass.
+          {{ t('models.createPass') }}
         </p>
       </div>
     </div>
@@ -14,8 +16,8 @@
           <form-kit
             v-model="name"
             data-cy="name"
-            help="Geben Sie Ihrem Modellpass einen Namen"
-            label="Name"
+            :help="t('models.form.name.help')"
+            :label="t('models.form.name.label')"
             name="name"
             type="text"
             validation="required"
@@ -27,7 +29,7 @@
             type="button"
             @click="onSubmit"
           >
-            Modelpass erstellen
+            {{ t('models.submitCreatePass') }}
           </button>
         </div>
       </div>
@@ -55,6 +57,9 @@ import { useRouter } from 'vue-router';
 import ModelTemplateList from '../../components/models/ModelTemplateList.vue';
 import { useNotificationStore } from '../../stores/notification';
 import { TemplateGetAllDto } from '@open-dpp/api-client';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const router = useRouter();
 const notificationStore = useNotificationStore();
@@ -69,12 +74,12 @@ const isMarketplaceSelected = ref<boolean>(false);
 
 const onSubmit = async () => {
   if (!name.value) {
-    notificationStore.addErrorNotification('Bitte geben Sie einen Namen ein.');
+    notificationStore.addErrorNotification(t('models.form.name.error'));
     return;
   }
   if (!selectedTemplate.value) {
     notificationStore.addErrorNotification(
-      'Bitte wählen Sie eine Vorlage aus.',
+      t('models.form.passportDraft.error'),
     );
     return;
   }

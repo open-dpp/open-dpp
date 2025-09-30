@@ -4,9 +4,9 @@
     :model-value="indexStore.selectedOrganization"
     @update:model-value="(org) => setOrganization(org.id)"
   >
-    <ListboxLabel class="block text-sm/6 font-medium text-gray-900"
-      >Organisation wählen</ListboxLabel
-    >
+    <ListboxLabel class="block text-sm/6 font-medium text-gray-900">{{
+      t('organizations.select')
+    }}</ListboxLabel>
     <div class="relative flex flex-row gap-2">
       <div
         v-if="organizationsStore.organizations.length > 0"
@@ -79,7 +79,7 @@
           <span
             v-if="organizationsStore.organizations.length === 0"
             class="text-md pl-1"
-            >Organisation erstellen</span
+            >{{ t('organizations.new') }}</span
           >
         </button>
       </router-link>
@@ -113,6 +113,9 @@ import { useOrganizationsStore } from '../../stores/organizations';
 import { useIndexStore } from '../../stores';
 import { useRouter } from 'vue-router';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const organizationsStore = useOrganizationsStore();
 const indexStore = useIndexStore();
@@ -124,7 +127,7 @@ const nameOfSelectedOrganization = computed(() => {
       (org) => org.id === indexStore.selectedOrganization,
     )?.name;
   }
-  return 'Auswählen';
+  return t('common.select');
 });
 
 const setOrganization = (organizationId: string) => {

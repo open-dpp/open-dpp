@@ -5,7 +5,7 @@
       <EmptyState
         v-else
         :button-link="`/organizations/${indexStore.selectedOrganization}/models/create`"
-        button-label="Neuen Modellpass hinzufügen"
+        :button-label="t('models.createPass')"
       />
     </div>
   </section>
@@ -16,6 +16,9 @@ import { onMounted, ref } from 'vue';
 import { useModelsStore } from '../../stores/models';
 import EmptyState from '../../components/models/EmptyState.vue';
 import { useIndexStore } from '../../stores';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const modelsStore = useModelsStore();
 const indexStore = useIndexStore();
