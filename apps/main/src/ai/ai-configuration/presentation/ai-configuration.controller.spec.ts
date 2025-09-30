@@ -86,7 +86,8 @@ describe('AiConfigurationController', () => {
       )
       .send(body);
     expect(response.status).toEqual(200);
-    const found = await aiConfigurationService.findOneByOrganizationId(orgaId);
+    const found =
+      await aiConfigurationService.findOneByOrganizationIdOrFail(orgaId);
     expect(found).toBeDefined();
     expect(found.isEnabled).toEqual(body.isEnabled);
     expect(found.provider).toEqual(body.provider);
@@ -131,7 +132,8 @@ describe('AiConfigurationController', () => {
       )
       .send(body);
     expect(response.status).toEqual(200);
-    const found = await aiConfigurationService.findOneByOrganizationId(orgaId);
+    const found =
+      await aiConfigurationService.findOneByOrganizationIdOrFail(orgaId);
     expect(found.id).toEqual(id);
     expect(found.isEnabled).toEqual(body.isEnabled);
     expect(found.provider).toEqual(body.provider);

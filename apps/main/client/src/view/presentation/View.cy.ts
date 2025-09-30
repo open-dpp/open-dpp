@@ -112,7 +112,7 @@ describe('<View />', () => {
       cy.contains(dataField3.name).should('be.visible');
       cy.contains('f3 value').should('be.visible');
       cy.contains(dataField4.name).should('not.be.visible');
-      cy.get('a').contains('Mehr Infos').should('be.visible');
+      cy.get('a').contains('Mehr Informationen').should('be.visible');
       cy.get(`[data-cy="${dataSection2.id}_1"]`).click();
       cy.get('@pushSpy').should(
         'have.been.calledWith',
@@ -207,7 +207,7 @@ describe('<View />', () => {
       cy.contains('f3 value').should('be.visible');
       cy.contains(dataField4.name).should('be.visible');
       cy.contains('f4 value').should('be.visible');
-      cy.get('a').contains('Mehr Infos').should('be.visible');
+      cy.get('a').contains('Mehr Informationen').should('be.visible');
       // navigates to other product passport
       const dataField2View = cy.get(`[data-cy="${dataField2.id}"]`);
       dataField2View.within(() => {
