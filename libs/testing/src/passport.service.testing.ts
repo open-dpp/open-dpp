@@ -1,4 +1,4 @@
-import { Passport } from '../../../apps/analytics/src/passports/domain/passport';
+import { Passport } from '../../../apps/main/src/ai/passports/domain/passport';
 
 export class PassportServiceTesting {
   private passports = new Map<string, Passport>();

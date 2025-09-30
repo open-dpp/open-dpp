@@ -10,24 +10,6 @@
   "monorepo": true,
   "root": "apps/main",
   "projects": {
-    "agent": {
-      "type": "application",
-      "root": "apps/agent",
-      "entryFile": "main",
-      "sourceRoot": "apps/agent/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/agent/tsconfig.app.json"
-      }
-    },
-    "analytics": {
-      "type": "library",
-      "root": "libs/analytics",
-      "entryFile": "index",
-      "sourceRoot": "libs/analytics/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/analytics/tsconfig.lib.json"
-      }
-    },
     "auth": {
       "type": "library",
       "root": "libs/auth",

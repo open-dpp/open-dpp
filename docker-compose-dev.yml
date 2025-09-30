@@ -49,10 +49,10 @@ services:
     container_name: mcp-server
     image: ghcr.io/open-dpp/mcp-server:main
     ports:
-      - "3002:3000"
+      - "3002:3001"
     environment:
-      - DPP_API_URL=http://localhost:3000/api
-      - PORT=3000
+      - DPP_API_URL=http://host.docker.internal:3000/api
+      - PORT=3001
     networks:
       - open-dpp-local
 
