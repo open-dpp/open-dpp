@@ -1,3 +1,4 @@
+# <div align="center"><img  src="https://github.com/user-attachments/assets/4ecd546b-ad7c-4c1d-bee4-e06518c41ec8" width="100"/> </br>open-dpp</div>
 ## Local Development
 ### Install
 ```shell
@@ -42,4 +43,3 @@ To run frontend component tests
 ```shell
 cd apps/main/client
 npm run cypress:headless
-```
