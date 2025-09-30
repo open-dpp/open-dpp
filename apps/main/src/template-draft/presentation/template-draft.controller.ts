@@ -21,7 +21,7 @@ import * as publishDto_1 from './dto/publish.dto';
 import * as updateDataFieldDraftDto from './dto/update-data-field-draft.dto';
 
 import { TemplateDraftService } from '../infrastructure/template-draft.service';
-import { omit } from 'lodash';
+import { omit, pick } from 'lodash';
 
 import * as updateSectionDraftDto from './dto/update-section-draft.dto';
 import { templateDraftToDto } from './dto/template-draft.dto';
@@ -175,7 +175,10 @@ export class TemplateDraftController {
     if (publishDto.visibility === publishDto_1.VisibilityLevel.PUBLIC) {
       const marketplaceResponse = await this.marketplaceService.upload(
         publishedProductDataModel,
-        req.authContext.token,
+        {
+          email: req.authContext.keycloakUser.email,
+          sub: req.authContext.keycloakUser.sub,
+        },
       );
       publishedProductDataModel.assignMarketplaceResource(
         marketplaceResponse.id,

@@ -19,34 +19,7 @@ const templatesEndpoint = 'templates/passports';
 
 @Controller()
 export class PassportTemplateController {
-  constructor(
-    private passportTemplateService: PassportTemplateService,
-    private permissionsService: PermissionService,
-  ) {}
-
-  @Post('organizations/:organizationId/templates/passports')
-  async createTemplate(
-    @Param('organizationId') organizationId: string,
-    @Request() req: authRequest.AuthRequest,
-    @Body() body: passportTemplateDto_1.PassportTemplateCreateDto,
-  ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
-    const passportTemplateDto =
-      passportTemplateDto_1.PassportTemplateCreateSchema.parse(body);
-    const passportTemplate = await this.passportTemplateService.save(
-      PassportTemplate.create({
-        ...passportTemplateDto,
-        contactEmail: req.authContext.keycloakUser.email,
-        isOfficial: false,
-        ownedByOrganizationId: organizationId,
-        createdByUserId: req.authContext.keycloakUser.sub,
-      }),
-    );
-    return passportTemplateDto_1.passportTemplateToDto(passportTemplate);
-  }
+  constructor(private passportTemplateService: PassportTemplateService) {}
 
   @Public()
   @Get(`${templatesEndpoint}/:id`)

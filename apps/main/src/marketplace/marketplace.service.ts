@@ -14,6 +14,9 @@ import { TemplateDoc } from '../templates/infrastructure/template.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TemplateService } from '../templates/infrastructure/template.service';
+import { PassportTemplate } from './passport-templates/domain/passport-template';
+import { PassportTemplateService } from './passport-templates/infrastructure/passport-template.service';
+import { KeycloakUserInToken } from '@app/auth/keycloak-auth/KeycloakUserInToken';
 
 @Injectable()
 export class MarketplaceService {
@@ -26,6 +29,7 @@ export class MarketplaceService {
     @InjectModel(TemplateDoc.name)
     private templateDoc: Model<TemplateDoc>,
     private templateService: TemplateService,
+    private passportTemplateService: PassportTemplateService,
   ) {
     const baseURL = configService.get<string>('MARKETPLACE_URL');
     if (!baseURL) {
@@ -36,24 +40,28 @@ export class MarketplaceService {
 
   async upload(
     template: Template,
-    token: string,
-  ): Promise<PassportTemplateDto> {
+    keycloakUser: Pick<KeycloakUserInToken, 'sub' | 'email'>,
+  ): Promise<PassportTemplate> {
     try {
       const templateData = serializeTemplate(template);
       const organization = await this.organizationService.findOneOrFail(
         template.ownedByOrganizationId,
       );
-      this.marketplaceClient.setActiveOrganizationId(organization.id);
-      this.marketplaceClient.setApiKey(token);
-      const response = await this.marketplaceClient.passportTemplates.create({
-        version: template.version,
-        name: template.name,
-        description: template.description,
-        sectors: template.sectors,
-        organizationName: organization.name,
-        templateData,
-      });
-      return response.data;
+      return await this.passportTemplateService.save(
+        PassportTemplate.create({
+          website: null,
+          version: template.version,
+          name: template.name,
+          description: template.description,
+          sectors: template.sectors,
+          organizationName: organization.name,
+          templateData,
+          contactEmail: keycloakUser.email,
+          isOfficial: false,
+          ownedByOrganizationId: organization.id,
+          createdByUserId: keycloakUser.sub,
+        }),
+      );
     } catch (error) {
       this.logger.error(
         `Failed to upload template to marketplace: ${error.message}`,
