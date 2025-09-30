@@ -30,6 +30,11 @@ import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
 import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
 import { AxiosResponse } from 'axios';
 import type * as ApiClientModule from '@open-dpp/api-client';
+import { PassportTemplateService } from './passport-templates/infrastructure/passport-template.service';
+import {
+  PassportTemplateDbSchema,
+  PassportTemplateDoc,
+} from './passport-templates/infrastructure/passport-template.schema';
 type ApiClientResponse = Promise<Pick<AxiosResponse, 'data'>>;
 const mockCreatePassportTemplateInMarketplace =
   jest.fn<(data: PassportTemplateCreateDto) => ApiClientResponse>();
@@ -48,7 +53,6 @@ jest.mock('@open-dpp/api-client', () => {
       setActiveOrganizationId: mockSetActiveOrganizationId,
       setApiKey: mockSetApiKey,
       passportTemplates: {
-        create: mockCreatePassportTemplateInMarketplace,
         getById: mockGetPassportTemplateInMarketplace,
       },
     })),
@@ -63,6 +67,7 @@ describe('MarketplaceService', () => {
   let module: TestingModule;
   let dataSource: DataSource;
   let templateService: TemplateService;
+  let passportTemplateService: PassportTemplateService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -72,6 +77,10 @@ describe('MarketplaceService', () => {
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
+            name: PassportTemplateDoc.name,
+            schema: PassportTemplateDbSchema,
+          },
+          {
             name: TemplateDoc.name,
             schema: TemplateSchema,
           },
@@ -79,6 +88,7 @@ describe('MarketplaceService', () => {
         KeycloakResourcesModule,
       ],
       providers: [
+        PassportTemplateService,
         MarketplaceService,
         OrganizationsService,
         UsersService,
@@ -87,6 +97,9 @@ describe('MarketplaceService', () => {
     }).compile();
     service = module.get<MarketplaceService>(MarketplaceService);
     templateService = module.get<TemplateService>(TemplateService);
+    passportTemplateService = module.get<PassportTemplateService>(
+      PassportTemplateService,
+    );
     organizationService =
       module.get<OrganizationsService>(OrganizationsService);
     dataSource = module.get<DataSource>(DataSource);
@@ -114,46 +127,47 @@ describe('MarketplaceService', () => {
     mockCreatePassportTemplateInMarketplace.mockResolvedValue({
       data: { id: randomUUID() },
     });
-    const token = randomUUID();
-    await service.upload(template, token);
-    expect(mockSetActiveOrganizationId).toHaveBeenCalledWith(organizationId);
-    expect(mockSetApiKey).toHaveBeenCalledWith(token);
-    const expected: PassportTemplateCreateDto = {
+    const user = { sub: randomUUID(), email: 'test@example.com' };
+    const { id } = await service.upload(template, user);
+    const expected = {
       version: template.version,
       name: template.name,
       description: template.description,
       sectors: template.sectors,
       organizationName: organization.name,
-      templateData: {
-        _id: template.id,
-        name: template.name,
-        description: template.description,
-        sectors: template.sectors,
-        version: template.version,
-        _schemaVersion: TemplateDocSchemaVersion.v1_0_3,
-        sections: template.sections.map((s) => ({
-          _id: s.id,
-          name: s.name,
-          type: s.type,
-          granularityLevel: s.granularityLevel,
-          dataFields: s.dataFields.map((d) => ({
-            _id: d.id,
-            name: d.name,
-            type: d.type,
-            options: d.options,
-            granularityLevel: d.granularityLevel,
-          })),
-          subSections: s.subSections,
-          parentId: s.parentId,
-        })),
-        createdByUserId: template.createdByUserId,
-        ownedByOrganizationId: template.ownedByOrganizationId,
-        marketplaceResourceId: template.marketplaceResourceId,
-      },
     };
-    expect(mockCreatePassportTemplateInMarketplace).toHaveBeenCalledWith(
-      expected,
-    );
+    const foundUpload = await passportTemplateService.findOneOrFail(id);
+    expect(foundUpload.templateData).toEqual({
+      _id: template.id,
+      name: template.name,
+      description: template.description,
+      sectors: template.sectors,
+      version: template.version,
+      _schemaVersion: TemplateDocSchemaVersion.v1_0_3,
+      sections: template.sections.map((s) => ({
+        _id: s.id,
+        name: s.name,
+        type: s.type,
+        granularityLevel: s.granularityLevel,
+        dataFields: s.dataFields.map((d) => ({
+          _id: d.id,
+          name: d.name,
+          type: d.type,
+          options: d.options,
+          granularityLevel: d.granularityLevel,
+        })),
+        subSections: s.subSections,
+        parentId: s.parentId,
+      })),
+      createdByUserId: template.createdByUserId,
+      ownedByOrganizationId: template.ownedByOrganizationId,
+      marketplaceResourceId: template.marketplaceResourceId,
+    });
+    expect(foundUpload.version).toEqual(expected.version);
+    expect(foundUpload.name).toEqual(expected.name);
+    expect(foundUpload.description).toEqual(expected.description);
+    expect(foundUpload.sectors).toEqual(expected.sectors);
+    expect(foundUpload.organizationName).toEqual(expected.organizationName);
   });
 
   it('should return already downloaded template instead of fetching it from the marketplace', async () => {

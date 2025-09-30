@@ -12,11 +12,20 @@ import {
   TemplateSchema,
 } from '../templates/infrastructure/template.schema';
 import { TemplateService } from '../templates/infrastructure/template.service';
+import {
+  PassportTemplateDbSchema,
+  PassportTemplateDoc,
+} from './passport-templates/infrastructure/passport-template.schema';
+import { PassportTemplateService } from './passport-templates/infrastructure/passport-template.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
     MongooseModule.forFeature([
+      {
+        name: PassportTemplateDoc.name,
+        schema: PassportTemplateDbSchema,
+      },
       {
         name: TemplateDoc.name,
         schema: TemplateSchema,
@@ -26,6 +35,7 @@ import { TemplateService } from '../templates/infrastructure/template.service';
   ],
   controllers: [],
   providers: [
+    PassportTemplateService,
     MarketplaceService,
     OrganizationsService,
     UsersService,
