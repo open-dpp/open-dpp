@@ -1,6 +1,6 @@
 ###################
 # BUILD FOR LOCAL DEVELOPMENT
-# Very thanks to https://www.tomray.dev/nestjs-docker-production
+# Thanks to https://www.tomray.dev/nestjs-docker-production
 ###################
 
 FROM node:24-alpine AS development
@@ -23,10 +23,10 @@ COPY --chown=node:node . .
 USER node
 
 ###################
-# BUILD FOR PRODUCTION
+# BUILD BACKEND FOR PRODUCTION
 ###################
 
-FROM node:24-alpine AS build
+FROM node:24-alpine AS build-backend
 ARG APP_NAME=main
 
 WORKDIR /usr/src/app
@@ -42,12 +42,29 @@ COPY --chown=node:node . .
 RUN npm run build main
 
 # Set NODE_ENV environment variable
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 # Running `npm ci` removes the existing node_modules directory and passing in --only=production ensures that only the production dependencies are installed. This ensures that the node_modules directory is as optimized as possible
 RUN npm ci --only=production && npm cache clean --force
 
 USER node
+
+###################
+# BUILD FRONTEND FOR PRODUCTION
+###################
+
+FROM node:24-alpine AS build-frontend
+
+WORKDIR /usr/src/frontend
+
+COPY --chown=node:node ./apps/main/client/package*.json ./
+
+RUN npm install
+
+COPY --chown=node:node ./apps/main/client .
+
+# Run the build command which creates the production bundle
+RUN npm run build
 
 ###################
 # PRODUCTION
@@ -59,8 +76,9 @@ ARG APP_NAME=main
 ENV APP_NAME=${APP_NAME}
 
 # Copy the bundled code from the build stage to the production image
-COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
-COPY --chown=node:node --from=build /usr/src/app/dist ./dist
+COPY --chown=node:node --from=build-backend /usr/src/app/node_modules ./node_modules
+COPY --chown=node:node --from=build-backend /usr/src/app/dist ./dist
+COPY --chown=node:node --from=build-frontend /usr/src/frontend/dist ./dist/apps/main/client/dist
 
 EXPOSE 3000
 

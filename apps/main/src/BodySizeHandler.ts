@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { json, NextFunction, Request, Response } from 'express';
+import { EnvService } from 'libs/env/src/env.service';
 
 /**
  * Applies body size handling and JSON parsing middleware to the provided Nest application.
@@ -8,14 +8,14 @@ import { json, NextFunction, Request, Response } from 'express';
  * robust error handling for payload too large and invalid JSON parsing errors.
  */
 export function applyBodySizeHandler(app: INestApplication) {
-  const configService = app.get(ConfigService);
+  const configService = app.get(EnvService);
 
   // Single JSON body parser selector based on a precise integration route match
   const integrationRouteRegex = /^\/organizations\/[^/]+\/integration(?:\/|$)/;
-  const defaultJsonLimit =
-    configService.get<string>('JSON_LIMIT_DEFAULT') || '10mb';
-  const integrationJsonLimit =
-    configService.get<string>('JSON_LIMIT_INTEGRATION') || '50mb';
+  const defaultJsonLimit = configService.get('OPEN_DPP_JSON_LIMIT_DEFAULT');
+  const integrationJsonLimit = configService.get(
+    'OPEN_DPP_JSON_LIMIT_INTEGRATION',
+  );
   const defaultJsonParser = json({ limit: defaultJsonLimit });
   const integrationJsonParser = json({ limit: integrationJsonLimit });
 

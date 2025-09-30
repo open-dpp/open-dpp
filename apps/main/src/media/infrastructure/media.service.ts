@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import * as Minio from 'minio';
-import { ConfigService } from '@nestjs/config';
 import { join } from 'lodash';
 import sharp from 'sharp';
 import { InjectModel } from '@nestjs/mongoose';
@@ -10,6 +9,7 @@ import { Media } from '../domain/media';
 import { fileTypeFromBuffer } from './file-type-util';
 import { randomUUID } from 'crypto';
 import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import { EnvService } from 'libs/env/src/env.service';
 
 enum BucketDefaultPaths {
   PRODUCT_PASSPORT_FILES = 'product-passport-files',
@@ -23,25 +23,21 @@ export class MediaService {
   private readonly pathDelimiter = '/';
 
   constructor(
-    private readonly configService: ConfigService,
+    private readonly configService: EnvService,
     @InjectModel(MediaDoc.name)
     private mediaDoc: Model<MediaDoc>,
   ) {
     this.client = new Minio.Client({
-      endPoint: configService.get<string>('S3_ENDPOINT', ''),
-      port: configService.get<number>('S3_PORT'),
-      useSSL: configService.get<string>('S3_SSL') === 'true',
-      accessKey: configService.get<string>('S3_ACCESS_KEY'),
-      secretKey: configService.get<string>('S3_SECRET_KEY'),
+      endPoint: configService.get('OPEN_DPP_S3_ENDPOINT'),
+      port: configService.get('OPEN_DPP_S3_PORT'),
+      useSSL: configService.get('OPEN_DPP_S3_SSL'),
+      accessKey: configService.get('OPEN_DPP_S3_ACCESS_KEY'),
+      secretKey: configService.get('OPEN_DPP_S3_SECRET_KEY'),
       region: 'nbg1',
     });
-    this.bucketNameDefault = configService.get<string>(
-      'S3_BUCKET_NAME_DEFAULT',
-      '',
-    );
-    this.bucketNameProfilePictures = configService.get<string>(
-      'S3_BUCKET_NAME_PROFILE_PICTURES',
-      '',
+    this.bucketNameDefault = configService.get('OPEN_DPP_S3_DEFAULT_BUCKET');
+    this.bucketNameProfilePictures = configService.get(
+      'OPEN_DPP_S3_PROFILE_PICTURE_BUCKET',
     );
   }
 

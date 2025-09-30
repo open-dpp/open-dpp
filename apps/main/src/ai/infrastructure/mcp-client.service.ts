@@ -1,13 +1,13 @@
 // mcp-client.service.ts
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { MultiServerMCPClient } from '@langchain/mcp-adapters';
-import { ConfigService } from '@nestjs/config';
+import { EnvService } from 'libs/env/src/env.service';
 
 @Injectable()
 export class McpClientService implements OnModuleInit, OnModuleDestroy {
   private client: MultiServerMCPClient;
 
-  constructor(private configService: ConfigService) {}
+  constructor(private configService: EnvService) {}
 
   async onModuleInit() {
     // Initialize the client when the module is initialized
@@ -28,7 +28,7 @@ export class McpClientService implements OnModuleInit, OnModuleDestroy {
       mcpServers: {
         productPassport: {
           transport: 'http',
-          url: this.configService.get<string>('MCP_URL') || '',
+          url: this.configService.get('OPEN_DPP_MCP_URL'),
           reconnect: {
             enabled: true,
             maxAttempts: 5,

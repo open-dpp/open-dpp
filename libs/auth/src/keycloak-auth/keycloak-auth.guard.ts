@@ -5,7 +5,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ConfigService } from '@nestjs/config';
 import { AuthContext } from '../auth-request';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
 import { IS_PUBLIC } from '../public/public.decorator';
@@ -15,6 +14,7 @@ import { AxiosResponse } from 'axios';
 import jwksRsa from 'jwks-rsa';
 import * as jwt from 'jsonwebtoken';
 import { ALLOW_SERVICE_ACCESS } from '@app/auth/allow-service-access.decorator';
+import { EnvService } from 'libs/env/src/env.service';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
@@ -22,11 +22,11 @@ export class KeycloakAuthGuard implements CanActivate {
 
   constructor(
     private reflector: Reflector,
-    private configService: ConfigService,
+    private configService: EnvService,
     private readonly httpService: HttpService,
   ) {
     this.jwksClient = jwksRsa({
-      jwksUri: `${this.configService.get('KEYCLOAK_NETWORK_URL')}/realms/${this.configService.get<string>('KEYCLOAK_REALM')}/protocol/openid-connect/certs`,
+      jwksUri: `${this.configService.get('OPEN_DPP_KEYCLOAK_URL')}/realms/${this.configService.get('OPEN_DPP_KEYCLOAK_REALM')}/protocol/openid-connect/certs`,
       cache: true,
       rateLimit: true,
     });
@@ -48,7 +48,7 @@ export class KeycloakAuthGuard implements CanActivate {
     if (allowServiceAccess) {
       if (
         request.headers.service_token !==
-        this.configService.get('SERVICE_TOKEN')
+        this.configService.get('OPEN_DPP_SERVICE_TOKEN')
       ) {
         throw new UnauthorizedException('Invalid service token.');
       } else {
@@ -101,8 +101,8 @@ export class KeycloakAuthGuard implements CanActivate {
     token: string,
   ): Promise<jwt.JwtPayload & KeycloakUserInToken> {
     const validationOptions: jwt.VerifyOptions = {
-      audience: this.configService.get('KEYCLOAK_JWT_AUDIENCE', 'account'),
-      issuer: `${this.configService.get('KEYCLOAK_PUBLIC_URL')}/realms/${this.configService.get<string>('KEYCLOAK_REALM')}`,
+      audience: this.configService.get('OPEN_DPP_KEYCLOAK_JWT_AUDIENCE'),
+      issuer: `${this.configService.get('OPEN_DPP_KEYCLOAK_URL')}/realms/${this.configService.get('OPEN_DPP_KEYCLOAK_REALM')}`,
       algorithms: ['RS256'],
     };
     const decoded = jwt.decode(token, { complete: true });
@@ -123,14 +123,14 @@ export class KeycloakAuthGuard implements CanActivate {
   }
 
   private getAuthUrl() {
-    const baseUrl = this.configService.get<string>('KEYCLOAK_NETWORK_URL');
+    const baseUrl = this.configService.get('OPEN_DPP_KEYCLOAK_URL');
     if (!baseUrl) {
       throw new Error('KEYCLOAK_NETWORK_URL configuration is missing');
     }
 
     try {
       const url = new URL(
-        `/realms/${this.configService.get<string>('KEYCLOAK_REALM')}/api-key/auth`,
+        `/realms/${this.configService.get('OPEN_DPP_KEYCLOAK_REALM')}/api-key/auth`,
         baseUrl,
       );
       return url.toString();

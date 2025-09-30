@@ -3,6 +3,7 @@ import { FileValidator } from '@nestjs/common';
 import FormData from 'form-data';
 import { existsSync, readFileSync, unlinkSync } from 'fs';
 import { firstValueFrom } from 'rxjs';
+import { EnvService } from 'libs/env/src/env.service';
 import { ConfigService } from '@nestjs/config';
 
 interface VirusScanValidatorOptions {
@@ -11,10 +12,10 @@ interface VirusScanValidatorOptions {
 
 export class VirusScanFileValidator extends FileValidator<VirusScanValidatorOptions> {
   private readonly httpService = new HttpService();
-  private readonly configService = new ConfigService();
+  private readonly configService = new EnvService(new ConfigService());
 
   async isValid(file?: Express.Multer.File): Promise<boolean> {
-    const clamAvUrl = `${this.configService.get('CLAMAV_URL')}:${this.configService.get('CLAMAV_PORT')}`;
+    const clamAvUrl = `${this.configService.get('OPEN_DPP_CLAMAV_URL')}:${this.configService.get('OPEN_DPP_CLAMAV_PORT')}`;
     try {
       const form = new FormData();
 

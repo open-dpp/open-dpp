@@ -1,21 +1,21 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ConfigService } from '@nestjs/config';
 import {
   NotFoundExceptionFilter,
   NotFoundInDatabaseExceptionFilter,
   ValueErrorFilter,
 } from '@app/exception/exception.handler';
 import { buildOpenApiDocumentation } from './open-api-docs';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import { ValidationPipe } from '@nestjs/common';
 import { applyBodySizeHandler } from './BodySizeHandler';
 import * as bodyParser from 'body-parser';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { createProxyMiddleware } from 'http-proxy-middleware';
+import { EnvService } from 'libs/env/src/env.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const configService = app.get(ConfigService);
+  const configService = app.get(EnvService);
 
   // Proxy SPA routes in development before setting global prefix
   if (process.env.NODE_ENV !== 'production') {
@@ -45,17 +45,17 @@ async function bootstrap() {
   );
 
   app.useGlobalPipes(new ValidationPipe());
-  if (configService.get<string>('BUILD_OPEN_API_DOCUMENTATION') === 'true') {
+  if (configService.get('OPEN_DPP_BUILD_API_DOC')) {
     buildOpenApiDocumentation(app);
   }
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.TCP,
     options: {
-      port: Number(configService.get('MSG_PORT', '5002')), // Microservice port
+      port: Number(configService.get('OPEN_DPP_MSG_PORT')), // Microservice port
     },
   });
   await app.startAllMicroservices();
-  const port = Number(configService.get('PORT', '3000'));
+  const port = Number(configService.get('OPEN_DPP_PORT'));
   await app.listen(port);
   console.log(`Application is running on port: ${port}`);
 }
