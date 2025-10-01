@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import KcAdminClient from '@keycloak/keycloak-admin-client';
 import { Organization } from '../../organizations/domain/organization';
 import { User } from '../../users/domain/user';
-import { AuthContext } from '@app/auth/auth-request';
+import { AuthContext } from '@open-dpp/auth';
 
 @Injectable()
 export class KeycloakResourcesService {

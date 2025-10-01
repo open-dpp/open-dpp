@@ -5,7 +5,7 @@ import { DataValue } from '../../product-passport-data/domain/data-value';
 import { laptopFactory, LaptopFactory } from '../fixtures/laptop.factory';
 import { randomUUID } from 'crypto';
 import { expect } from '@jest/globals';
-import { ignoreIds } from '@app/testing/utils';
+import { ignoreIds } from '@open-dpp/testing';
 
 describe('Template', () => {
   const laptopModel: TemplateDbProps = laptopFactory.addSections().build();

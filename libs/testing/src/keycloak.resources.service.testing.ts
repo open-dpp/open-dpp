@@ -1,7 +1,7 @@
 import { Expose, plainToInstance } from 'class-transformer';
 import { randomUUID } from 'crypto';
 import { Injectable } from '@nestjs/common';
-import { AuthContext } from '@app/auth/auth-request';
+import { AuthContext } from '@open-dpp/auth';
 import { Organization } from '../../../apps/main/src/organizations/domain/organization';
 
 type KeycloakUser = {

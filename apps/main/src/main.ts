@@ -5,7 +5,7 @@ import {
   NotFoundExceptionFilter,
   NotFoundInDatabaseExceptionFilter,
   ValueErrorFilter,
-} from '@app/exception/exception.handler';
+} from '@open-dpp/exception';
 import { buildOpenApiDocumentation } from './open-api-docs';
 import { ValidationPipe } from '@nestjs/common';
 import { applyBodySizeHandler } from './BodySizeHandler';

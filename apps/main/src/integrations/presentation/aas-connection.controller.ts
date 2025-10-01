@@ -28,9 +28,9 @@ import { GetAasConnectionCollectionSchema } from './dto/get-aas-connection-colle
 import { ItemsApplicationService } from '../../items/presentation/items-application.service';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
-import { PermissionService } from '@app/permission';
-import { Public } from '@app/auth/public/public.decorator';
-import * as authRequest from '@app/auth/auth-request';
+import { PermissionService } from '@open-dpp/auth';
+import { Public } from '@open-dpp/auth';
+import * as authRequest from '@open-dpp/auth';
 
 @Controller('organizations/:orgaId/integration/aas')
 export class AasConnectionController {

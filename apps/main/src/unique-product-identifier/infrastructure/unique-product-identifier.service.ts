@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { ModelDocSchemaVersion } from '../../models/infrastructure/model.schema';
 import { Model as MongooseModel } from 'mongoose';
 import { UniqueProductIdentifierDoc } from './unique-product-identifier.schema';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import { NotFoundInDatabaseException } from '@open-dpp/exception';
 
 @Injectable()
 export class UniqueProductIdentifierService {

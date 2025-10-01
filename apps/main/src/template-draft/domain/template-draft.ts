@@ -5,7 +5,7 @@ import { Template } from '../../templates/domain/template';
 import * as semver from 'semver';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { Sector } from '@open-dpp/api-client';
-import { NotFoundError, ValueError } from '@app/exception/domain.errors';
+import { NotFoundError, ValueError } from '@open-dpp/exception';
 
 export type Publication = {
   id: string;

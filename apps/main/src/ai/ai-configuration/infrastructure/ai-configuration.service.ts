@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { AiConfigurationDoc } from './ai-configuration.schema';
 import { AiConfiguration } from '../domain/ai-configuration';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import { NotFoundInDatabaseException } from '@open-dpp/exception';
 
 @Injectable()
 export class AiConfigurationService {

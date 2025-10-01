@@ -18,10 +18,10 @@ import { KeycloakSyncOnStartupModule } from './keycloak-sync-on-startup/keycloak
 import { IntegrationModule } from './integrations/integration.module';
 import { ProductPassportModule } from './product-passport/product-passport.module';
 import { APP_GUARD } from '@nestjs/core';
-import { KeycloakAuthGuard } from '@app/auth/keycloak-auth/keycloak-auth.guard';
+import { KeycloakAuthGuard } from '@open-dpp/auth';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { MediaModule } from '@app/media-module/media/media.module';
-import { MarketplaceAppModule } from 'apps/marketplace/src/marketplace-app.module';
+import { MediaModule } from './media/media.module';
+import { MarketplaceModule } from './marketplace/marketplace.module';
 import { ChatGateway } from './ai/chat.gateway';
 import { ChatService } from './ai/chat.service';
 import { AiModule } from './ai/ai.module';
@@ -78,7 +78,7 @@ import { CreateNonExistingUserGuard } from './users/infrastructure/create-non-ex
       },
     }),
     MediaModule,
-    MarketplaceAppModule,
+    MarketplaceModule,
     AiConfigurationModule,
     AiModule,
     McpClientModule,

@@ -1,0 +1,34 @@
+{
+  "name": "@open-dpp/testing",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "pnpm run clean && tsc",
+    "check-ts": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@open-dpp/auth": "workspace:*",
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/mongoose": "^11.0.3",
+    "@nestjs/typeorm": "^11.0.0",
+    "class-transformer": "^0.5.1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.17.1"
+}

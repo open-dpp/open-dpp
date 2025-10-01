@@ -6,7 +6,7 @@ import { Model as MongooseModel } from 'mongoose';
 import { Model } from '../domain/model';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { migrateModelDoc } from './migrations';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import { NotFoundInDatabaseException } from '@open-dpp/exception';
 
 @Injectable()
 export class ModelsService {

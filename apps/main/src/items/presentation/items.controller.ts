@@ -30,9 +30,9 @@ import {
   dataValueDocumentation,
   orgaParamDocumentation,
 } from '../../product-passport-data/presentation/dto/docs/product-passport-data.doc';
-import { ZodValidationPipe } from '@app/exception/zod-validation.pipeline';
-import { PermissionService } from '@app/permission';
-import * as authRequest from '@app/auth/auth-request';
+import { ZodValidationPipe } from '@open-dpp/exception';
+import { PermissionService } from '@open-dpp/auth';
+import * as authRequest from '@open-dpp/auth';
 
 @Controller('organizations/:orgaId/models/:modelId/items')
 export class ItemsController {

@@ -26,8 +26,8 @@ import { laptopFactory } from '../templates/fixtures/laptop.factory';
 import { TemplateService } from '../templates/infrastructure/template.service';
 import { templateCreatePropsFactory } from '../templates/fixtures/template.factory';
 import { expect } from '@jest/globals';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
+import { TypeOrmTestingModule } from '@open-dpp/testing/typeorm.testing.module';
+import { MongooseTestingModule } from '@open-dpp/testing/mongo.testing.module';
 
 const mockCreatePassportTemplateInMarketplace = jest.fn();
 const mockGetPassportTemplateInMarketplace = jest.fn();

@@ -15,10 +15,10 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { expect } from '@jest/globals';
-import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
-import { AuthContext } from '@app/auth/auth-request';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
-import { PermissionModule } from '@app/permission';
+import { KeycloakResourcesServiceTesting } from '@open-dpp/testing/keycloak.resources.service.testing';
+import { AuthContext } from '@open-dpp/auth/auth-request';
+import { TypeOrmTestingModule } from '@open-dpp/testing/typeorm.testing.module';
+import { PermissionModule } from '@open-dpp/permission';
 
 describe('OrganizationsService', () => {
   let organizationsService: OrganizationsService;

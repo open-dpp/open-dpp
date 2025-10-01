@@ -27,13 +27,13 @@ import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { Sector } from '@open-dpp/api-client';
 import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
 import { expect } from '@jest/globals';
-import { PermissionModule } from '@app/permission';
-import { AuthContext } from '@app/auth/auth-request';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { user1org1 } from '@app/testing/users-and-orgs';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
-import { ignoreIds } from '@app/testing/utils';
+import { PermissionModule } from '@open-dpp/auth';
+import { AuthContext } from '@open-dpp/auth';
+import { TypeOrmTestingModule } from '@open-dpp/testing';
+import { MongooseTestingModule } from '@open-dpp/testing';
+import { user1org1 } from '@open-dpp/testing';
+import { NotFoundInDatabaseException } from '@open-dpp/exception';
+import { ignoreIds } from '@open-dpp/testing';
 
 describe('ItemsService', () => {
   let itemService: ItemsService;

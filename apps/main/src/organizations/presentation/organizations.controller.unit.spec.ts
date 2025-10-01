@@ -6,9 +6,9 @@ import { randomUUID } from 'crypto';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { expect } from '@jest/globals';
-import { PermissionService } from '@app/permission';
-import { AuthContext, AuthRequest } from '@app/auth/auth-request';
-import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
+import { PermissionService } from '@open-dpp/permission';
+import { AuthContext, AuthRequest } from '@open-dpp/auth/auth-request';
+import { createKeycloakUserInToken } from '@open-dpp/testing/users-and-orgs';
 
 // We'll mock the implementation directly instead of extending the controller
 

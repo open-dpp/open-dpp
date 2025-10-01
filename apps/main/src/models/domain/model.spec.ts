@@ -4,7 +4,7 @@ import { Template } from '../../templates/domain/template';
 import { DataValue } from '../../product-passport-data/domain/data-value';
 import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
 import { expect } from '@jest/globals';
-import { ignoreIds } from '@app/testing/utils';
+import { ignoreIds } from '@open-dpp/testing/utils';
 
 describe('Model', () => {
   const userId = randomUUID();

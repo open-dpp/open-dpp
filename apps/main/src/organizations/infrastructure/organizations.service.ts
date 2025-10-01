@@ -12,8 +12,8 @@ import { Organization } from '../domain/organization';
 import { User } from '../../users/domain/user';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { UsersService } from '../../users/infrastructure/users.service';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
-import { AuthContext } from '@app/auth/auth-request';
+import { NotFoundInDatabaseException } from '@open-dpp/exception';
+import { AuthContext } from '@open-dpp/auth';
 
 @Injectable()
 export class OrganizationsService {

@@ -14,7 +14,7 @@ import { firstValueFrom } from 'rxjs';
 import { AxiosResponse } from 'axios';
 import jwksRsa from 'jwks-rsa';
 import * as jwt from 'jsonwebtoken';
-import { ALLOW_SERVICE_ACCESS } from '@app/auth/allow-service-access.decorator';
+import { ALLOW_SERVICE_ACCESS } from '../allow-service-access.decorator';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {

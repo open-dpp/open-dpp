@@ -8,13 +8,13 @@ import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from '../../users/users.module';
 import { DataSource } from 'typeorm';
 import { expect } from '@jest/globals';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
+import { TypeOrmTestingModule } from '@open-dpp/testing/typeorm.testing.module';
 import {
   keycloakUsers,
   org1,
   user1org1,
   user2org1,
-} from '@app/testing/users-and-orgs';
+} from '@open-dpp/testing/users-and-orgs';
 
 describe('UsersSyncOnStartupService', () => {
   let service: KeycloakSyncOnStartupService;

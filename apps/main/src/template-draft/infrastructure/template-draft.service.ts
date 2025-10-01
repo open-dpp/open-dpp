@@ -14,7 +14,7 @@ import {
 } from '../../data-modelling/infrastructure/template-base.schema';
 import { DataFieldDraft } from '../domain/data-field-draft';
 import { SectionDraft } from '../domain/section-draft';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import { NotFoundInDatabaseException } from '@open-dpp/exception';
 
 @Injectable()
 export class TemplateDraftService {

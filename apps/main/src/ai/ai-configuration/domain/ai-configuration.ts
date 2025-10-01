@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { ValueError } from '@app/exception/domain.errors';
+import { ValueError } from '@open-dpp/exception';
 
 export enum AiProvider {
   Ollama = 'ollama',

@@ -17,8 +17,8 @@ import { sectionDbPropsFactory } from '../fixtures/section.factory';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { expect } from '@jest/globals';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import { MongooseTestingModule } from '@open-dpp/testing';
+import { NotFoundInDatabaseException } from '@open-dpp/exception';
 
 describe('TemplateService', () => {
   let service: TemplateService;

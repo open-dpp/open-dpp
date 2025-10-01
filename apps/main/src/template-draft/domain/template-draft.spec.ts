@@ -19,7 +19,7 @@ import { textFieldProps } from '../fixtures/data-field-draft.factory';
 import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
 import { Sector } from '@open-dpp/api-client';
 import { expect } from '@jest/globals';
-import { NotFoundError, ValueError } from '@app/exception/domain.errors';
+import { NotFoundError, ValueError } from '@open-dpp/exception';
 
 describe('TemplateDraft', () => {
   const userId = randomUUID();

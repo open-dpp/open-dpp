@@ -12,8 +12,8 @@ import {
   templateDocumentation,
   templateGetAllDocumentation,
 } from '../../open-api-docs/template.doc';
-import { PermissionService } from '@app/permission';
-import * as authRequest from '@app/auth/auth-request';
+import { PermissionService } from '@open-dpp/auth';
+import * as authRequest from '@open-dpp/auth';
 
 @Controller('/organizations/:organizationId/templates')
 export class TemplateController {

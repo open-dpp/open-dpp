@@ -12,7 +12,7 @@ import {
   TemplateSchema,
 } from '../templates/infrastructure/template.schema';
 import { MarketplaceModule } from '../marketplace/marketplace.module';
-import { PermissionModule } from '@app/permission';
+import { PermissionModule } from '@open-dpp/auth';
 
 @Module({
   imports: [

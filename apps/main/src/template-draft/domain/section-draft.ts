@@ -7,7 +7,7 @@ import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
 import { randomUUID } from 'crypto';
 import { SectionDbProps } from '../../templates/domain/section';
 import { MoveDirection } from './template-draft';
-import { NotFoundError, ValueError } from '@app/exception/domain.errors';
+import { NotFoundError, ValueError } from '@open-dpp/exception';
 
 export type SectionDraftCreateProps = {
   name: string;

@@ -10,8 +10,8 @@ import {
 import { OrganizationsService } from '../infrastructure/organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { Organization } from '../domain/organization';
-import { PermissionService } from '@app/permission';
-import * as authRequest from '@app/auth/auth-request';
+import { PermissionService } from '@open-dpp/auth';
+import * as authRequest from '@open-dpp/auth';
 import { UsersService } from '../../users/infrastructure/users.service';
 
 @Controller('organizations')

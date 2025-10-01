@@ -3,7 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { KeycloakSyncOnStartupModule } from './keycloak-sync-on-startup.module';
 import { KeycloakSyncOnStartupService } from './keycloak-sync-on-startup/keycloak-sync-on-startup.service';
 import { DataSource } from 'typeorm';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
+import { TypeOrmTestingModule } from '@open-dpp/testing/typeorm.testing.module';
 import { expect } from '@jest/globals';
 
 describe('KeycloakSyncOnStartupModule', () => {

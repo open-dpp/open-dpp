@@ -14,12 +14,12 @@ import { templateToDto } from './dto/template.dto';
 import { templateCreatePropsFactory } from '../fixtures/template.factory';
 import { laptopFactory } from '../fixtures/laptop.factory';
 import { expect } from '@jest/globals';
-import { AuthContext } from '@app/auth/auth-request';
-import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
-import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
-import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
+import { AuthContext } from '@open-dpp/auth/auth-request';
+import { KeycloakAuthTestingGuard } from '@open-dpp/testing/keycloak-auth.guard.testing';
+import { MongooseTestingModule } from '@open-dpp/testing/mongo.testing.module';
+import { KeycloakResourcesServiceTesting } from '@open-dpp/testing/keycloak.resources.service.testing';
+import getKeycloakAuthToken from '@open-dpp/testing/auth-token-helper.testing';
+import { createKeycloakUserInToken } from '@open-dpp/testing/users-and-orgs';
 
 describe('TemplateController', () => {
   let app: INestApplication;

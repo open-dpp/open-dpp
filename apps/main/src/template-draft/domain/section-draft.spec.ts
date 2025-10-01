@@ -7,7 +7,7 @@ import { MoveDirection } from './template-draft';
 import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
 import { dataFieldDraftDbPropsFactory } from '../fixtures/data-field-draft.factory';
 import { expect } from '@jest/globals';
-import { NotFoundError, ValueError } from '@app/exception/domain.errors';
+import { NotFoundError, ValueError } from '@open-dpp/exception';
 
 describe('DataSectionDraft', () => {
   it('is created', () => {

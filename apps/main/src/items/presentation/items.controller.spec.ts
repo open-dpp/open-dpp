@@ -24,15 +24,15 @@ import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { Sector } from '@open-dpp/api-client';
 import { expect } from '@jest/globals';
-import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
-import { AuthContext } from '@app/auth/auth-request';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
-import { PermissionModule } from '@app/permission';
-import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
-import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
-import { ignoreIds } from '@app/testing/utils';
+import { KeycloakAuthTestingGuard } from '@open-dpp/testing/keycloak-auth.guard.testing';
+import { AuthContext } from '@open-dpp/auth/auth-request';
+import { TypeOrmTestingModule } from '@open-dpp/testing/typeorm.testing.module';
+import { MongooseTestingModule } from '@open-dpp/testing/mongo.testing.module';
+import { createKeycloakUserInToken } from '@open-dpp/testing/users-and-orgs';
+import { PermissionModule } from '@open-dpp/permission';
+import { KeycloakResourcesServiceTesting } from '@open-dpp/testing/keycloak.resources.service.testing';
+import getKeycloakAuthToken from '@open-dpp/testing/auth-token-helper.testing';
+import { ignoreIds } from '@open-dpp/testing/utils';
 
 describe('ItemsController', () => {
   let app: INestApplication;

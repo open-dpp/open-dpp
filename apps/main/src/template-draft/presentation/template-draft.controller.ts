@@ -27,9 +27,9 @@ import * as updateSectionDraftDto from './dto/update-section-draft.dto';
 import { templateDraftToDto } from './dto/template-draft.dto';
 import { MarketplaceService } from '../../marketplace/marketplace.service';
 import * as moveDto_1 from './dto/move.dto';
-import { PermissionService } from '@app/permission';
-import * as authRequest from '@app/auth/auth-request';
-import { ZodValidationPipe } from '@app/exception/zod-validation.pipeline';
+import { PermissionService } from '@open-dpp/auth';
+import * as authRequest from '@open-dpp/auth';
+import { ZodValidationPipe } from '@open-dpp/exception';
 
 @Controller('/organizations/:orgaId/template-drafts')
 export class TemplateDraftController {

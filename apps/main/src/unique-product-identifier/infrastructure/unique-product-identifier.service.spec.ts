@@ -11,9 +11,9 @@ import {
 } from './unique-product-identifier.schema';
 import { UniqueProductIdentifierService } from './unique-product-identifier.service';
 import { expect } from '@jest/globals';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import { MongooseTestingModule } from '@open-dpp/testing';
+import { TypeOrmTestingModule } from '@open-dpp/testing';
+import { NotFoundInDatabaseException } from '@open-dpp/exception';
 
 describe('UniqueProductIdentifierService', () => {
   let service: UniqueProductIdentifierService;

@@ -4,10 +4,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC } from '@app/auth/public/public.decorator';
-import { ALLOW_SERVICE_ACCESS } from '@app/auth/allow-service-access.decorator';
-import { AuthContext } from '@app/auth/auth-request';
-import { KeycloakUserInToken } from '@app/auth/keycloak-auth/KeycloakUserInToken';
+import { IS_PUBLIC } from '@open-dpp/auth';
+import { ALLOW_SERVICE_ACCESS } from '@open-dpp/auth';
+import { AuthContext } from '@open-dpp/auth';
+import { KeycloakUserInToken } from '@open-dpp/auth';
 
 export class KeycloakAuthTestingGuard implements CanActivate {
   constructor(

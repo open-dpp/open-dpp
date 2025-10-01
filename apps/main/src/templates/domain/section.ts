@@ -12,7 +12,7 @@ import {
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport-data/domain/data-value';
 import { randomUUID } from 'crypto';
-import { NotSupportedError } from '@app/exception/domain.errors';
+import { NotSupportedError } from '@open-dpp/exception';
 
 type SectionProps = {
   name: string;
@@ -90,7 +90,7 @@ export abstract class Section extends SectionBase {
       for (const dataField of this.dataFields.filter(
         (d) => d.granularityLevel === granularity,
       )) {
-        const dataValue = (dataValuesOfRow as Array<DataValue>).find(
+        const dataValue = dataValuesOfRow.find(
           (v) => v.dataFieldId === dataField.id,
         );
         validations.push(

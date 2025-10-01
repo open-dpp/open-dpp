@@ -6,7 +6,7 @@ import {
   AasConnectionDocSchemaVersion,
 } from './aas-connection.schema';
 import { AasConnection, AasFieldAssignment } from '../domain/aas-connection';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import { NotFoundInDatabaseException } from '@open-dpp/exception';
 
 @Injectable()
 export class AasConnectionService {

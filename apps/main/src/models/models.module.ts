@@ -13,7 +13,7 @@ import {
 import { TraceabilityEventsModule } from '../traceability-events/traceability-events.module';
 import { ModelDoc, ModelSchema } from './infrastructure/model.schema';
 import { MarketplaceModule } from '../marketplace/marketplace.module';
-import { PermissionModule } from '@app/permission';
+import { PermissionModule } from '@open-dpp/auth';
 
 @Module({
   imports: [

@@ -6,7 +6,7 @@ import {
 } from './infrastructure/ai-configuration.schema';
 import { AiConfigurationController } from './presentation/ai-configuration.controller';
 import { AiConfigurationService } from './infrastructure/ai-configuration.service';
-import { PermissionModule } from '@app/permission';
+import { PermissionModule } from '@open-dpp/auth';
 
 @Module({
   imports: [

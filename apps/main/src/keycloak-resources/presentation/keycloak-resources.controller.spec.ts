@@ -4,8 +4,8 @@ import { KeycloakResourcesService } from '../infrastructure/keycloak-resources.s
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
 import { expect } from '@jest/globals';
-import { AuthContext } from '@app/auth/auth-request';
-import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
+import { AuthContext } from '@open-dpp/auth/auth-request';
+import { createKeycloakUserInToken } from '@open-dpp/testing/users-and-orgs';
 
 jest.mock('@keycloak/keycloak-admin-client', () => {
   return {

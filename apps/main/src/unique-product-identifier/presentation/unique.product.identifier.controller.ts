@@ -6,9 +6,9 @@ import {
   UniqueProductIdentifierMetadataDtoSchema,
   UniqueProductIdentifierReferenceDtoSchema,
 } from './dto/unique-product-identifier-dto.schema';
-import { PermissionService } from '@app/permission';
-import * as authRequest from '@app/auth/auth-request';
-import { AllowServiceAccess } from '@app/auth/allow-service-access.decorator';
+import { PermissionService } from '@open-dpp/auth';
+import * as authRequest from '@open-dpp/auth';
+import { AllowServiceAccess } from '@open-dpp/auth';
 
 @Controller()
 export class UniqueProductIdentifierController {

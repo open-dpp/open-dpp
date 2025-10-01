@@ -25,11 +25,11 @@ import { DataValue } from '../../product-passport-data/domain/data-value';
 import { laptopFactory } from '../../templates/fixtures/laptop.factory';
 import { Model } from '../domain/model';
 import { expect } from '@jest/globals';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
-import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
-import { ignoreIds } from '@app/testing/utils';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import { MongooseTestingModule } from '@open-dpp/testing/mongo.testing.module';
+import { TypeOrmTestingModule } from '@open-dpp/testing/typeorm.testing.module';
+import { KeycloakResourcesServiceTesting } from '@open-dpp/testing/keycloak.resources.service.testing';
+import { ignoreIds } from '@open-dpp/testing/utils';
+import { NotFoundInDatabaseException } from '@open-dpp/exception';
 
 describe('ModelsService', () => {
   let modelsService: ModelsService;

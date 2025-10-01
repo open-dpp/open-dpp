@@ -4,7 +4,7 @@ import { TemplateService } from './infrastructure/template.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TemplateDoc, TemplateSchema } from './infrastructure/template.schema';
 import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
-import { PermissionModule } from '@app/permission';
+import { PermissionModule } from '@open-dpp/auth';
 
 @Module({
   imports: [

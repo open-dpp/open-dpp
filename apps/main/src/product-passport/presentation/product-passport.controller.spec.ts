@@ -18,9 +18,9 @@ import { ProductPassport } from '../domain/product-passport';
 import { ProductPassportModule } from '../product-passport.module';
 import { productPassportToDto } from './dto/product-passport.dto';
 import { expect } from '@jest/globals';
-import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { IS_PUBLIC } from '@app/auth/public/public.decorator';
+import { KeycloakAuthTestingGuard } from '@open-dpp/testing/keycloak-auth.guard.testing';
+import { MongooseTestingModule } from '@open-dpp/testing/mongo.testing.module';
+import { IS_PUBLIC } from '@open-dpp/auth/public/public.decorator';
 
 describe('ProductPassportController', () => {
   let app: INestApplication;

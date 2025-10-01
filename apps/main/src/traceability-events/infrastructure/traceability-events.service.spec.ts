@@ -16,7 +16,7 @@ import { randomUUID } from 'crypto';
 import { OpenEpcisEvent } from '../modules/openepcis-events/domain/openepcis-event';
 import { UntpEvent } from '../modules/untp-events/domain/untp-event';
 import { expect } from '@jest/globals';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
+import { MongooseTestingModule } from '@open-dpp/testing/mongo.testing.module';
 
 describe('TraceabilityEventsService', () => {
   let service: TraceabilityEventsService;

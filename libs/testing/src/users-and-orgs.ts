@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { KeycloakUserInToken } from '@app/auth/keycloak-auth/KeycloakUserInToken';
+import { KeycloakUserInToken } from '@open-dpp/auth';
 import { Organization } from '../../../apps/main/src/organizations/domain/organization';
 
 const createKeycloakUserInToken = (

@@ -1,6 +1,4 @@
 import { Test } from '@nestjs/testing';
-
-import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 import { TemplateService } from '../../templates/infrastructure/template.service';
 import { TemplateModule } from '../../templates/template.module';
@@ -18,13 +16,13 @@ import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { phoneFactory } from '../../product-passport/fixtures/product-passport.factory';
 import { expect } from '@jest/globals';
-import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
-import { AuthContext } from '@app/auth/auth-request';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
-import { ALLOW_SERVICE_ACCESS } from '@app/auth/allow-service-access.decorator';
-import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
+import { KeycloakAuthTestingGuard } from '@open-dpp/testing';
+import { AuthContext } from '@open-dpp/auth';
+import { TypeOrmTestingModule } from '@open-dpp/testing';
+import { MongooseTestingModule } from '@open-dpp/testing';
+import getKeycloakAuthToken from '@open-dpp/testing';
+import { ALLOW_SERVICE_ACCESS } from '@open-dpp/auth';
+import { createKeycloakUserInToken } from '@open-dpp/testing';
 
 describe('UniqueProductIdentifierController', () => {
   let app: INestApplication;

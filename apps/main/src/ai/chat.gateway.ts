@@ -8,8 +8,8 @@ import {
 import { Server } from 'socket.io';
 import { ChatService } from './chat.service';
 import { Logger, UseFilters } from '@nestjs/common';
-import { SocketIoExceptionFilter } from '@app/exception/websocket-exception.filter';
-import { Public } from '@app/auth/public/public.decorator';
+import { SocketIoExceptionFilter } from '@open-dpp/exception';
+import { Public } from '@open-dpp/auth';
 
 @WebSocketGateway({ cors: true, path: '/api/ai-socket' })
 @UseFilters(new SocketIoExceptionFilter())

@@ -17,8 +17,8 @@ import {
 import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
 import { TemplateDocSchemaVersion } from '../../templates/infrastructure/template.schema';
 import { expect } from '@jest/globals';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import { MongooseTestingModule } from '@open-dpp/testing';
+import { NotFoundInDatabaseException } from '@open-dpp/exception';
 
 describe('TemplateDraftService', () => {
   let service: TemplateDraftService;

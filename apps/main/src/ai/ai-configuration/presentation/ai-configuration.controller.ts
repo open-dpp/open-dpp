@@ -2,9 +2,9 @@ import { Body, Controller, Get, Param, Put, Request } from '@nestjs/common';
 import { AiConfigurationService } from '../infrastructure/ai-configuration.service';
 import * as aiConfigurationDto from './dto/ai-configuration.dto';
 import { AiConfiguration } from '../domain/ai-configuration';
-import { PermissionService } from '@app/permission';
-import * as authRequest from '@app/auth/auth-request';
-import { ZodValidationPipe } from '@app/exception/zod-validation.pipeline';
+import { PermissionService } from '@open-dpp/auth';
+import * as authRequest from '@open-dpp/auth';
+import { ZodValidationPipe } from '@open-dpp/exception';
 import { AiConfigurationUpsertDtoSchema } from './dto/ai-configuration.dto';
 
 @Controller('organizations/:organizationId/configurations')

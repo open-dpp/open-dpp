@@ -1,5 +1,5 @@
 import { KeycloakAuthTestingGuard } from './keycloak-auth.guard.testing';
-import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
+import { createKeycloakUserInToken } from './users-and-orgs';
 
 const getKeycloakAuthToken = (
   userId: string,

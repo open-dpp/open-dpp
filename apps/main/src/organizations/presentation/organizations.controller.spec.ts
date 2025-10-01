@@ -12,12 +12,12 @@ import { randomUUID } from 'crypto';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { Organization } from '../domain/organization';
 import { expect } from '@jest/globals';
-import { PermissionService } from '@app/permission';
-import { AuthContext } from '@app/auth/auth-request';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
-import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
-import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
-import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
+import { PermissionService } from '@open-dpp/permission';
+import { AuthContext } from '@open-dpp/auth/auth-request';
+import { TypeOrmTestingModule } from '@open-dpp/testing/typeorm.testing.module';
+import { KeycloakAuthTestingGuard } from '@open-dpp/testing/keycloak-auth.guard.testing';
+import { KeycloakResourcesServiceTesting } from '@open-dpp/testing/keycloak.resources.service.testing';
+import { createKeycloakUserInToken } from '@open-dpp/testing/users-and-orgs';
 
 describe('OrganizationController', () => {
   let app: INestApplication;

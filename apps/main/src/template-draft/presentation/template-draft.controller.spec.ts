@@ -41,14 +41,14 @@ import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
 import { MoveType } from './dto/move.dto';
 import { dataFieldDraftDbPropsFactory } from '../fixtures/data-field-draft.factory';
 import { expect } from '@jest/globals';
-import { AuthContext } from '@app/auth/auth-request';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
-import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
+import { AuthContext } from '@open-dpp/auth/auth-request';
+import { MongooseTestingModule } from '@open-dpp/testing/mongo.testing.module';
+import { KeycloakAuthTestingGuard } from '@open-dpp/testing/keycloak-auth.guard.testing';
+import { TypeOrmTestingModule } from '@open-dpp/testing/typeorm.testing.module';
+import { KeycloakResourcesServiceTesting } from '@open-dpp/testing/keycloak.resources.service.testing';
 import { MarketplaceServiceTesting } from '../../../../media/test/marketplace.service.testing';
-import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
-import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
+import getKeycloakAuthToken from '@open-dpp/testing/auth-token-helper.testing';
+import { createKeycloakUserInToken } from '@open-dpp/testing/users-and-orgs';
 
 describe('TemplateDraftController', () => {
   let app: INestApplication;

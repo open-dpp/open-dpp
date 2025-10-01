@@ -7,8 +7,8 @@ import { AasConnectionDoc, AasConnectionSchema } from './aas-connection.schema';
 import { AasConnection } from '../domain/aas-connection';
 import { AssetAdministrationShellType } from '../domain/asset-administration-shell';
 import { expect } from '@jest/globals';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import { MongooseTestingModule } from '@open-dpp/testing';
+import { NotFoundInDatabaseException } from '@open-dpp/exception';
 
 describe('AasMappingService', () => {
   let aasConnectionService: AasConnectionService;

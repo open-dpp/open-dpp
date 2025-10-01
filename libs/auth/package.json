@@ -1,0 +1,35 @@
+{
+  "name": "@open-dpp/auth",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "pnpm run clean && tsc",
+    "check-ts": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nestjs/axios": "^4.0.1",
+    "@nestjs/config": "^4.0.2",
+    "axios": "^1.12.2",
+    "jwks-rsa": "^3.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "rxjs": "^7.8.1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.17.1"
+}
