@@ -1,4 +1,5 @@
 {
+  "exclude": ["apps/main/client"],
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",

@@ -13,9 +13,6 @@ vi.mock('../lib/axios', () => ({
     get: (...args: never[]) => getMock(...args),
   },
 }));
-vi.mock('../const', () => ({
-  MEDIA_SERVICE_URL: 'http://media-service',
-}));
 
 describe('media store', () => {
   beforeEach(() => {
@@ -69,9 +66,7 @@ describe('media store', () => {
         expect(mediaId).toBe('mid-' + status);
         // Verify URL formatting
         expect(postMock).toHaveBeenLastCalledWith(
-          expect.stringMatching(
-            /^http:\/\/media-service\/media\/dpp\/org\/uuid\/field$/,
-          ),
+          expect.stringMatching(/media\/dpp\/org\/uuid\/field$/),
           expect.any(FormData),
           expect.objectContaining({ onUploadProgress: expect.any(Function) }),
         );
@@ -129,9 +124,7 @@ describe('media store', () => {
       getMock.mockResolvedValueOnce({ data: info });
       const result = await store.getDppMediaInfo('uuid', 'field');
       expect(result).toEqual(info);
-      expect(getMock).toHaveBeenCalledWith(
-        'http://media-service/media/dpp/uuid/field/info',
-      );
+      expect(getMock).toHaveBeenCalledWith('/media/dpp/uuid/field/info');
     });
   });
 
@@ -149,10 +142,9 @@ describe('media store', () => {
       getMock.mockResolvedValueOnce({ data: blob });
       const result = await store.downloadDppMedia('uuid', 'field');
       expect(result).toEqual(blob);
-      expect(getMock).toHaveBeenCalledWith(
-        'http://media-service/media/dpp/uuid/field/download',
-        { responseType: 'blob' },
-      );
+      expect(getMock).toHaveBeenCalledWith('/media/dpp/uuid/field/download', {
+        responseType: 'blob',
+      });
     });
   });
 
@@ -181,13 +173,10 @@ describe('media store', () => {
       const result = await store.fetchDppMedia('uuid', 'field');
       expect(result.blob).toEqual(blob);
       expect(result.mediaInfo.mimeType).toEqual('image/jpeg');
-      expect(getMock).toHaveBeenCalledWith(
-        'http://media-service/media/dpp/uuid/field/info',
-      );
-      expect(getMock).toHaveBeenCalledWith(
-        'http://media-service/media/dpp/uuid/field/download',
-        { responseType: 'blob' },
-      );
+      expect(getMock).toHaveBeenCalledWith('/media/dpp/uuid/field/info');
+      expect(getMock).toHaveBeenCalledWith('/media/dpp/uuid/field/download', {
+        responseType: 'blob',
+      });
     });
   });
 });

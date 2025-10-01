@@ -10,24 +10,6 @@
   "monorepo": true,
   "root": "apps/main",
   "projects": {
-    "agent": {
-      "type": "application",
-      "root": "apps/agent",
-      "entryFile": "main",
-      "sourceRoot": "apps/agent/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/agent/tsconfig.app.json"
-      }
-    },
-    "analytics": {
-      "type": "library",
-      "root": "libs/analytics",
-      "entryFile": "index",
-      "sourceRoot": "libs/analytics/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/analytics/tsconfig.lib.json"
-      }
-    },
     "auth": {
       "type": "library",
       "root": "libs/auth",
@@ -53,51 +35,6 @@
       "sourceRoot": "apps/main/src",
       "compilerOptions": {
         "tsConfigPath": "apps/main/tsconfig.app.json"
-      }
-    },
-    "marketplace": {
-      "type": "application",
-      "root": "apps/marketplace",
-      "entryFile": "main",
-      "sourceRoot": "apps/marketplace/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/marketplace/tsconfig.app.json"
-      }
-    },
-    "mcp": {
-      "type": "application",
-      "root": "apps/mcp",
-      "entryFile": "main",
-      "sourceRoot": "apps/mcp/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/mcp/tsconfig.app.json"
-      }
-    },
-    "mcp-module": {
-      "type": "library",
-      "root": "libs/mcp-module",
-      "entryFile": "index",
-      "sourceRoot": "libs/mcp-module/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/mcp-module/tsconfig.lib.json"
-      }
-    },
-    "media": {
-      "type": "application",
-      "root": "apps/media",
-      "entryFile": "main",
-      "sourceRoot": "apps/media/src",
-      "compilerOptions": {
-        "tsConfigPath": "apps/media/tsconfig.app.json"
-      }
-    },
-    "media-module": {
-      "type": "library",
-      "root": "libs/media-module",
-      "entryFile": "index",
-      "sourceRoot": "libs/media-module/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/media-module/tsconfig.lib.json"
       }
     },
     "permission": {
