@@ -26,7 +26,6 @@ import { ChatService } from './ai/chat.service';
 import { AiModule } from './ai/ai.module';
 import { AiConfigurationModule } from './ai/ai-configuration/ai-configuration.module';
 import { McpClientModule } from './ai/mcp-client/mcp-client.module';
-import { PassportModule } from './ai/passports/passport.module';
 import { CreateNonExistingUserGuard } from './users/infrastructure/create-non-existing-user.guard';
 import { MarketplaceModule } from './marketplace/marketplace.module';
 
@@ -82,7 +81,6 @@ import { MarketplaceModule } from './marketplace/marketplace.module';
     AiConfigurationModule,
     AiModule,
     McpClientModule,
-    PassportModule,
   ],
   controllers: [],
   providers: [

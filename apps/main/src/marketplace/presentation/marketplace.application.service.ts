@@ -15,8 +15,8 @@ import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 
 @Injectable()
-export class MarketplaceService {
-  private readonly logger = new Logger(MarketplaceService.name);
+export class MarketplaceApplicationService {
+  private readonly logger = new Logger(MarketplaceApplicationService.name);
 
   constructor(
     private organizationService: OrganizationsService,

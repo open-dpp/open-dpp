@@ -19,6 +19,7 @@ import {
 } from './infrastructure/unique-product-identifier.schema';
 import { UniqueProductIdentifierService } from './infrastructure/unique-product-identifier.service';
 import { PermissionModule } from '@app/permission';
+import { UniqueProductIdentifierApplicationService } from './presentation/unique.product.identifier.application.service';
 
 @Module({
   imports: [
@@ -47,11 +48,15 @@ import { PermissionModule } from '@app/permission';
   ],
   controllers: [UniqueProductIdentifierController],
   providers: [
+    UniqueProductIdentifierApplicationService,
     UniqueProductIdentifierService,
     ModelsService,
     TemplateService,
     ItemsService,
   ],
-  exports: [UniqueProductIdentifierService],
+  exports: [
+    UniqueProductIdentifierService,
+    UniqueProductIdentifierApplicationService,
+  ],
 })
 export class UniqueProductIdentifierModule {}

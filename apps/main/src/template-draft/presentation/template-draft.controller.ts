@@ -25,7 +25,7 @@ import { omit } from 'lodash';
 
 import * as updateSectionDraftDto from './dto/update-section-draft.dto';
 import { templateDraftToDto } from './dto/template-draft.dto';
-import { MarketplaceService } from '../../marketplace/presentation/marketplace.service';
+import { MarketplaceApplicationService } from '../../marketplace/presentation/marketplace.application.service';
 import * as moveDto_1 from './dto/move.dto';
 import { PermissionService } from '@app/permission';
 import * as authRequest from '@app/auth/auth-request';
@@ -38,7 +38,7 @@ export class TemplateDraftController {
     private readonly permissionsService: PermissionService,
     private readonly templateService: TemplateService,
     private readonly templateDraftService: TemplateDraftService,
-    private readonly marketplaceService: MarketplaceService,
+    private readonly marketplaceService: MarketplaceApplicationService,
   ) {}
 
   @Post()

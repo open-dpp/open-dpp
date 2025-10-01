@@ -3,7 +3,7 @@ import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resource
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrganizationEntity } from '../organizations/infrastructure/organization.entity';
 import { UserEntity } from '../users/infrastructure/user.entity';
-import { MarketplaceService } from './presentation/marketplace.service';
+import { MarketplaceApplicationService } from './presentation/marketplace.application.service';
 import { OrganizationsService } from '../organizations/infrastructure/organizations.service';
 import { UsersService } from '../users/infrastructure/users.service';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -39,11 +39,11 @@ import { PassportTemplateController } from './presentation/passport-template.con
   controllers: [PassportTemplateController],
   providers: [
     PassportTemplateService,
-    MarketplaceService,
+    MarketplaceApplicationService,
     OrganizationsService,
     UsersService,
     TemplateService,
   ],
-  exports: [MarketplaceService],
+  exports: [MarketplaceApplicationService],
 })
 export class MarketplaceModule {}

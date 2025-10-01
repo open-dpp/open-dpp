@@ -33,7 +33,7 @@ import {
   orgaParamDocumentation,
 } from '../../product-passport-data/presentation/dto/docs/product-passport-data.doc';
 import { modelParamDocumentation } from '../../open-api-docs/item.doc';
-import { MarketplaceService } from '../../marketplace/presentation/marketplace.service';
+import { MarketplaceApplicationService } from '../../marketplace/presentation/marketplace.application.service';
 import { PermissionService } from '@app/permission';
 import { ZodValidationPipe } from '@app/exception/zod-validation.pipeline';
 import * as authRequest from '@app/auth/auth-request';
@@ -44,7 +44,7 @@ export class ModelsController {
     private readonly modelsService: ModelsService,
     private readonly templateService: TemplateService,
     private readonly permissionsService: PermissionService,
-    private readonly marketplaceService: MarketplaceService,
+    private readonly marketplaceService: MarketplaceApplicationService,
   ) {}
 
   @ApiOperation({

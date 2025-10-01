@@ -28,7 +28,7 @@ import { sectionToDto } from '../../data-modelling/presentation/dto/section-base
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { Sector } from '@open-dpp/api-client';
-import { MarketplaceService } from '../../marketplace/presentation/marketplace.service';
+import { MarketplaceApplicationService } from '../../marketplace/presentation/marketplace.application.service';
 import {
   templateDraftCreateDtoFactory,
   templateDraftCreatePropsFactory,
@@ -61,7 +61,7 @@ describe('TemplateDraftController', () => {
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
   let module: TestingModule;
   let organizationService: OrganizationsService;
-  let marketplaceService: MarketplaceService;
+  let marketplaceService: MarketplaceApplicationService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -106,7 +106,9 @@ describe('TemplateDraftController', () => {
     templateService = module.get<TemplateService>(TemplateService);
     templateDraftService =
       module.get<TemplateDraftService>(TemplateDraftService);
-    marketplaceService = module.get<MarketplaceService>(MarketplaceService);
+    marketplaceService = module.get<MarketplaceApplicationService>(
+      MarketplaceApplicationService,
+    );
 
     organizationService =
       module.get<OrganizationsService>(OrganizationsService);

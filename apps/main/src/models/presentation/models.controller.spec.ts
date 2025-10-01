@@ -29,7 +29,7 @@ import {
   laptopFactory,
 } from '../../templates/fixtures/laptop.factory';
 import { MarketplaceModule } from '../../marketplace/marketplace.module';
-import { MarketplaceService } from '../../marketplace/presentation/marketplace.service';
+import { MarketplaceApplicationService } from '../../marketplace/presentation/marketplace.application.service';
 import { expect } from '@jest/globals';
 import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
@@ -50,7 +50,7 @@ describe('ModelsController', () => {
     name: 'orga',
     user,
   });
-  let marketplaceService: MarketplaceService;
+  let marketplaceService: MarketplaceApplicationService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -82,7 +82,9 @@ describe('ModelsController', () => {
     );
     modelsService = moduleRef.get(ModelsService);
     templateService = moduleRef.get<TemplateService>(TemplateService);
-    marketplaceService = moduleRef.get<MarketplaceService>(MarketplaceService);
+    marketplaceService = moduleRef.get<MarketplaceApplicationService>(
+      MarketplaceApplicationService,
+    );
     const organizationService =
       moduleRef.get<OrganizationsService>(OrganizationsService);
     await organizationService.save(organization);

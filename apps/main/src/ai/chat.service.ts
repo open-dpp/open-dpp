@@ -6,7 +6,7 @@ import { RunnableSequence } from '@langchain/core/runnables';
 import { AiService } from './ai.service';
 import { McpClientService } from './mcp-client/mcp-client.service';
 import { AiConfigurationService } from './ai-configuration/infrastructure/ai-configuration.service';
-import { PassportService } from './passports/passport.service';
+import { UniqueProductIdentifierApplicationService } from '../unique-product-identifier/presentation/unique.product.identifier.application.service';
 
 @Injectable()
 export class ChatService {
@@ -15,20 +15,23 @@ export class ChatService {
   constructor(
     private mcpClientService: McpClientService,
     private aiService: AiService,
-    private passportService: PassportService,
+    private uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
     private aiConfigurationService: AiConfigurationService,
   ) {}
 
   async askAgent(query: string, passportUuid: string) {
     this.logger.log(`Find passport with UUID: ${passportUuid}`);
-    const passport = await this.passportService.findOneOrFail(passportUuid);
+    const passport =
+      await this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifier(
+        passportUuid,
+      );
     if (!passport) {
       throw new Error('Passport not found');
     }
     this.logger.log(`Fetch ai configuration`);
     const aiConfiguration =
       await this.aiConfigurationService.findOneByOrganizationId(
-        passport.ownedByOrganizationId,
+        passport.organizationId,
       );
 
     if (!aiConfiguration?.isEnabled) {

@@ -14,7 +14,7 @@ import { OrganizationEntity } from '../../organizations/infrastructure/organizat
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { KeycloakResourcesModule } from '../../keycloak-resources/keycloak-resources.module';
 import { UsersService } from '../../users/infrastructure/users.service';
-import { MarketplaceService } from './marketplace.service';
+import { MarketplaceApplicationService } from './marketplace.application.service';
 import { DataSource } from 'typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
 import { laptopFactory } from '../../templates/fixtures/laptop.factory';
@@ -30,7 +30,7 @@ import {
 } from '../infrastructure/passport-template.schema';
 
 describe('MarketplaceService', () => {
-  let marketplaceService: MarketplaceService;
+  let marketplaceService: MarketplaceApplicationService;
   const userId = randomUUID();
   const organizationId = randomUUID();
   let organizationService: OrganizationsService;
@@ -60,13 +60,15 @@ describe('MarketplaceService', () => {
       ],
       providers: [
         PassportTemplateService,
-        MarketplaceService,
+        MarketplaceApplicationService,
         OrganizationsService,
         UsersService,
         TemplateService,
       ],
     }).compile();
-    marketplaceService = module.get<MarketplaceService>(MarketplaceService);
+    marketplaceService = module.get<MarketplaceApplicationService>(
+      MarketplaceApplicationService,
+    );
     templateService = module.get<TemplateService>(TemplateService);
     passportTemplateService = module.get<PassportTemplateService>(
       PassportTemplateService,
