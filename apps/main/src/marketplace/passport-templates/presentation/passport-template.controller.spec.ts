@@ -6,10 +6,7 @@ import request from 'supertest';
 import { PassportTemplateModule } from '../passport-template.module';
 import { Connection } from 'mongoose';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
-import {
-  passportRequestFactory,
-  passportTemplatePropsFactory,
-} from '../fixtures/passport-template-props.factory';
+import { passportTemplatePropsFactory } from '../fixtures/passport-template-props.factory';
 import { PassportTemplateService } from '../infrastructure/passport-template.service';
 import {
   PassportTemplateDbSchema,
@@ -20,7 +17,6 @@ import { passportTemplateToDto } from './dto/passport-template.dto';
 import { expect } from '@jest/globals';
 import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
 import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
 
 describe('PassportTemplateController', () => {
   let app: INestApplication;
@@ -33,8 +29,6 @@ describe('PassportTemplateController', () => {
   let mongoConnection: Connection;
   let module: TestingModule;
   let passportTemplateService: PassportTemplateService;
-  const userId = randomUUID();
-  const organizationId = randomUUID();
 
   const mockNow = new Date('2025-01-01T12:00:00Z');
 
@@ -72,67 +66,6 @@ describe('PassportTemplateController', () => {
     passportTemplateService = module.get(PassportTemplateService);
 
     await app.init();
-  });
-
-  it(`/POST passport template`, async () => {
-    const passportTemplate = passportRequestFactory.build();
-    const token = getKeycloakAuthToken(
-      userId,
-      [organizationId],
-      keycloakAuthTestingGuard,
-    );
-    const userEmail = keycloakAuthTestingGuard.tokenToUserMap.get(
-      token.replace('Bearer ', ''),
-    )!.email;
-    const response = await request(app.getHttpServer())
-      .post(`/organizations/${organizationId}/templates/passports`)
-      .set('Authorization', token)
-      .send(passportTemplate);
-    expect(response.status).toEqual(201);
-    const found = await passportTemplateService.findOneOrFail(response.body.id);
-
-    expect(found).toEqual(
-      PassportTemplate.loadFromDb({
-        ...passportTemplate,
-        contactEmail: userEmail,
-        ownedByOrganizationId: organizationId,
-        createdByUserId: userId,
-        isOfficial: false,
-        createdAt: mockNow,
-        updatedAt: mockNow,
-        id: response.body.id,
-      }),
-    );
-  });
-
-  it(`/POST passport template fails if user is not member of organization`, async () => {
-    const passportTemplate = passportRequestFactory.build();
-    const otherOrganizationId = randomUUID();
-    const response = await request(app.getHttpServer())
-      .post(`/organizations/${organizationId}/templates/passports`)
-      .set(
-        'Authorization',
-        getKeycloakAuthToken(
-          userId,
-          [otherOrganizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
-      .send(passportTemplate);
-    expect(response.status).toEqual(403);
-  });
-
-  it(`/GET find passport template`, async () => {
-    jest.spyOn(reflector, 'get').mockReturnValue(true);
-    const passportTemplate = PassportTemplate.loadFromDb(
-      passportTemplatePropsFactory.build(),
-    );
-    await passportTemplateService.save(passportTemplate);
-    const response = await request(app.getHttpServer()).get(
-      `/templates/passports/${passportTemplate.id}`,
-    );
-    expect(response.status).toEqual(200);
-    expect(response.body).toEqual(passportTemplateToDto(passportTemplate));
   });
 
   it(`/GET find all passport templates`, async () => {

@@ -29,10 +29,10 @@ import {
   laptopFactory,
 } from '../../templates/fixtures/laptop.factory';
 import { MarketplaceModule } from '../../marketplace/marketplace.module';
-import { MarketplaceServiceTesting } from '@app/testing/marketplace.service.testing';
 import { MarketplaceService } from '../../marketplace/marketplace.service';
 import { expect } from '@jest/globals';
 import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 
 describe('ModelsController', () => {
   let app: INestApplication;
@@ -75,8 +75,6 @@ describe('ModelsController', () => {
           users: [{ id: user.id, email: user.email }],
         }),
       )
-      .overrideProvider(MarketplaceService)
-      .useClass(MarketplaceServiceTesting)
       .compile();
 
     uniqueProductIdentifierService = moduleRef.get(
@@ -85,6 +83,9 @@ describe('ModelsController', () => {
     modelsService = moduleRef.get(ModelsService);
     templateService = moduleRef.get<TemplateService>(TemplateService);
     marketplaceService = moduleRef.get<MarketplaceService>(MarketplaceService);
+    const organizationService =
+      moduleRef.get<OrganizationsService>(OrganizationsService);
+    await organizationService.save(organization);
 
     app = moduleRef.createNestApplication();
     app.useGlobalFilters(new NotFoundInDatabaseExceptionFilter());
@@ -141,12 +142,15 @@ describe('ModelsController', () => {
       [organization.id],
       keycloakAuthTestingGuard,
     );
-    const { id } = await marketplaceService.upload(template, token);
+    const { id: marketplaceResourceId } = await marketplaceService.upload(
+      template,
+      user,
+    );
 
     const body = {
       name: 'My name',
       description: 'My desc',
-      marketplaceResourceId: id,
+      marketplaceResourceId,
     };
     const response = await request(app.getHttpServer())
       .post(`/organizations/${organization.id}/models`)
@@ -156,7 +160,8 @@ describe('ModelsController', () => {
     const found = await modelsService.findOneOrFail(response.body.id);
     expect(response.body.id).toEqual(found.id);
     expect(found.isOwnedBy(organization.id)).toBeTruthy();
-    expect(found.templateId).toEqual(template.id);
+    const foundTemplate = await templateService.findOneOrFail(found.templateId);
+    expect(foundTemplate.marketplaceResourceId).toEqual(marketplaceResourceId);
   });
 
   it(`/CREATE model fails if user is not member of organization`, async () => {

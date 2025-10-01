@@ -21,7 +21,7 @@ import * as publishDto_1 from './dto/publish.dto';
 import * as updateDataFieldDraftDto from './dto/update-data-field-draft.dto';
 
 import { TemplateDraftService } from '../infrastructure/template-draft.service';
-import { omit, pick } from 'lodash';
+import { omit } from 'lodash';
 
 import * as updateSectionDraftDto from './dto/update-section-draft.dto';
 import { templateDraftToDto } from './dto/template-draft.dto';
@@ -30,6 +30,7 @@ import * as moveDto_1 from './dto/move.dto';
 import { PermissionService } from '@app/permission';
 import * as authRequest from '@app/auth/auth-request';
 import { ZodValidationPipe } from '@app/exception/zod-validation.pipeline';
+import { User } from '../../users/domain/user';
 
 @Controller('/organizations/:orgaId/template-drafts')
 export class TemplateDraftController {
@@ -51,7 +52,7 @@ export class TemplateDraftController {
     )
     createTemplateDraftDto: createTemplateDraftDto_1.CreateTemplateDraftDto,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -72,7 +73,7 @@ export class TemplateDraftController {
     @Param('draftId') draftId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -96,7 +97,7 @@ export class TemplateDraftController {
     )
     updateTemplateDraftDto: updateTemplateDraftDto_1.UpdateTemplateDraftDto,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -123,7 +124,7 @@ export class TemplateDraftController {
     )
     createSectionDraftDto: createSectionDraftDto_1.CreateSectionDraftDto,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -158,7 +159,7 @@ export class TemplateDraftController {
     @Body(new ZodValidationPipe(publishDto_1.PublishDtoSchema))
     publishDto: publishDto_1.PublishDto,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -175,10 +176,10 @@ export class TemplateDraftController {
     if (publishDto.visibility === publishDto_1.VisibilityLevel.PUBLIC) {
       const marketplaceResponse = await this.marketplaceService.upload(
         publishedProductDataModel,
-        {
+        User.create({
           email: req.authContext.keycloakUser.email,
-          sub: req.authContext.keycloakUser.sub,
-        },
+          id: req.authContext.keycloakUser.sub,
+        }),
       );
       publishedProductDataModel.assignMarketplaceResource(
         marketplaceResponse.id,
@@ -207,7 +208,7 @@ export class TemplateDraftController {
     )
     createDataFieldDraftDto: createDataFieldDraftDto_1.CreateDataFieldDraftDto,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -233,7 +234,7 @@ export class TemplateDraftController {
     @Param('draftId') draftId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -260,7 +261,7 @@ export class TemplateDraftController {
     modifySectionDraftDto: updateSectionDraftDto.UpdateSectionDraftDto,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -289,7 +290,7 @@ export class TemplateDraftController {
     moveDto: moveDto_1.MoveDto,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -320,7 +321,7 @@ export class TemplateDraftController {
     modifyDataFieldDraftDto: updateDataFieldDraftDto.UpdateDataFieldDraftDto,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -351,7 +352,7 @@ export class TemplateDraftController {
     moveDto: moveDto_1.MoveDto,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -380,7 +381,7 @@ export class TemplateDraftController {
     @Param('fieldId') fieldId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -402,7 +403,7 @@ export class TemplateDraftController {
     @Param('orgaId') organizationId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );

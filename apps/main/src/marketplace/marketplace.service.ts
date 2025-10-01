@@ -1,8 +1,3 @@
-import {
-  MarketplaceApiClient,
-  PassportTemplateDto,
-} from '@open-dpp/api-client';
-import { ConfigService } from '@nestjs/config';
 import { OrganizationsService } from '../organizations/infrastructure/organizations.service';
 import { Template } from '../templates/domain/template';
 import { Injectable, Logger } from '@nestjs/common';
@@ -16,32 +11,22 @@ import { Model } from 'mongoose';
 import { TemplateService } from '../templates/infrastructure/template.service';
 import { PassportTemplate } from './passport-templates/domain/passport-template';
 import { PassportTemplateService } from './passport-templates/infrastructure/passport-template.service';
-import { KeycloakUserInToken } from '@app/auth/keycloak-auth/KeycloakUserInToken';
+import { User } from '../users/domain/user';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class MarketplaceService {
-  private readonly marketplaceClient: MarketplaceApiClient;
   private readonly logger = new Logger(MarketplaceService.name);
 
   constructor(
-    configService: ConfigService,
     private organizationService: OrganizationsService,
     @InjectModel(TemplateDoc.name)
     private templateDoc: Model<TemplateDoc>,
     private templateService: TemplateService,
     private passportTemplateService: PassportTemplateService,
-  ) {
-    const baseURL = configService.get<string>('MARKETPLACE_URL');
-    if (!baseURL) {
-      throw new Error('MARKETPLACE_URL is not set');
-    }
-    this.marketplaceClient = new MarketplaceApiClient({ baseURL });
-  }
+  ) {}
 
-  async upload(
-    template: Template,
-    keycloakUser: Pick<KeycloakUserInToken, 'sub' | 'email'>,
-  ): Promise<PassportTemplate> {
+  async upload(template: Template, user: User): Promise<PassportTemplate> {
     try {
       const templateData = serializeTemplate(template);
       const organization = await this.organizationService.findOneOrFail(
@@ -56,10 +41,10 @@ export class MarketplaceService {
           sectors: template.sectors,
           organizationName: organization.name,
           templateData,
-          contactEmail: keycloakUser.email,
+          contactEmail: user.email,
           isOfficial: false,
           ownedByOrganizationId: organization.id,
-          createdByUserId: keycloakUser.sub,
+          createdByUserId: user.id,
         }),
       );
     } catch (error) {
@@ -87,30 +72,13 @@ export class MarketplaceService {
       return existingTemplate;
     }
 
-    const response = await this.marketplaceClient.passportTemplates.getById(
+    const passportTemplate = await this.passportTemplateService.findOneOrFail(
       marketplaceResourceId,
     );
 
-    // Validate response and response.data
-    if (!response) {
-      throw new Error('Invalid response from marketplace API');
-    }
-
-    if (!response.data) {
-      throw new Error('Invalid response data from marketplace API');
-    }
-
-    // Validate response.data.templateData
-    if (
-      !response.data.templateData ||
-      typeof response.data.templateData !== 'object'
-    ) {
-      throw new Error('Invalid template data in marketplace API response');
-    }
-
     // Create a template document with validated data
-    const templateDoc = new this.templateDoc(response.data.templateData);
-    templateDoc._id = response.data.id;
+    const templateDoc = new this.templateDoc(passportTemplate.templateData);
+    templateDoc._id = randomUUID();
 
     await templateDoc.validate();
 
@@ -119,7 +87,7 @@ export class MarketplaceService {
       userId,
     );
 
-    template.assignMarketplaceResource(response.data.id);
+    template.assignMarketplaceResource(passportTemplate.id);
     await this.templateService.save(template);
     return template;
   }

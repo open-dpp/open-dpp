@@ -1,42 +1,13 @@
-import {
-  Body,
-  Controller,
-  Get,
-  NotFoundException,
-  Param,
-  Post,
-  Request,
-} from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { PassportTemplateService } from '../infrastructure/passport-template.service';
 import * as passportTemplateDto_1 from './dto/passport-template.dto';
-import { PassportTemplate } from '../domain/passport-template';
-import { PermissionService } from '@app/permission';
-import * as authRequest from '@app/auth/auth-request';
 import { Public } from '@app/auth/public/public.decorator';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
 
 const templatesEndpoint = 'templates/passports';
 
 @Controller()
 export class PassportTemplateController {
   constructor(private passportTemplateService: PassportTemplateService) {}
-
-  @Public()
-  @Get(`${templatesEndpoint}/:id`)
-  async findTemplate(@Param('id') id: string) {
-    try {
-      return passportTemplateDto_1.passportTemplateToDto(
-        await this.passportTemplateService.findOneOrFail(id),
-      );
-    } catch (error) {
-      if (error instanceof NotFoundInDatabaseException) {
-        throw new NotFoundException(
-          `Passport template with id ${id} could not be found.`,
-        );
-      }
-      throw error;
-    }
-  }
 
   @Public()
   @Get(templatesEndpoint)
