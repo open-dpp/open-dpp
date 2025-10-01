@@ -1,7 +1,6 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { UsersService } from '../../users/infrastructure/users.service';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -13,7 +12,6 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
   constructor(
     private readonly usersService: UsersService,
     private readonly keycloakResourcesServices: KeycloakResourcesService,
-    private readonly organizationsService: OrganizationsService,
     private readonly configService: ConfigService,
   ) {}
 

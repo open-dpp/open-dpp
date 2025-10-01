@@ -1,8 +1,10 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import * as path from 'path';
 import { generateConfig } from '../../../apps/main/src/database/config';
+import { EnvModule } from 'libs/env/src/env.module';
+import { EnvService } from 'libs/env/src/env.service';
 
 @Module({
   imports: [
@@ -10,8 +12,8 @@ import { generateConfig } from '../../../apps/main/src/database/config';
       isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
+      imports: [EnvModule],
+      useFactory: (configService: EnvService) => ({
         ...generateConfig(
           configService,
           path.join(
@@ -23,7 +25,7 @@ import { generateConfig } from '../../../apps/main/src/database/config';
           path.join(__dirname, '../../../apps/main/src/**/*.entity{.ts,.js}'),
         ],
       }),
-      inject: [ConfigService],
+      inject: [EnvService],
     }),
   ],
 })

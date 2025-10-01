@@ -74,14 +74,20 @@ FROM node:24-alpine AS production
 
 ARG APP_NAME=main
 ENV APP_NAME=${APP_NAME}
+ENV NODE_ENV=production
+ENV OPEN_DPP_BACKEND_MAIN=/dist/apps/${APP_NAME}/main.js
+ENV OPEN_DPP_FRONTEND_ROOT=/dist/apps/main/client/dist
 
 # Copy the bundled code from the build stage to the production image
 COPY --chown=node:node --from=build-backend /usr/src/app/node_modules ./node_modules
 COPY --chown=node:node --from=build-backend /usr/src/app/dist ./dist
 COPY --chown=node:node --from=build-frontend /usr/src/frontend/dist ./dist/apps/main/client/dist
+COPY --chown=node:node /docker/startup.sh /startup.sh
+
+RUN chmod +x /startup.sh
 
 EXPOSE 3000
 
 # Start the server using the production build
-CMD ["sh", "-c", "node dist/apps/$APP_NAME/main.js"]
+CMD ["sh", "-c", "/startup.sh"]
 

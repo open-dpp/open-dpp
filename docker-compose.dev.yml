@@ -48,10 +48,12 @@ services:
   mcp-server:
     container_name: mcp-server
     image: ghcr.io/open-dpp/mcp-server:main
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "3002:3000"
     environment:
-      - DPP_API_URL=http://localhost:3000/api
+      - DPP_API_URL=http://host.docker.internal:3000/api
       - PORT=3000
     networks:
       - open-dpp-local
@@ -132,7 +134,7 @@ services:
     volumes:
       - minio_data:/data
     ports:
-      - "9000:9000" # MinIO API
+      - "${OPEN_DPP_S3_PORT}:9000" # MinIO API
       - "9001:9001" # MinIO Console (Web UI)
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
@@ -141,6 +143,7 @@ services:
       retries: 3
     networks:
       - open-dpp-local
+
   minio-init:
     image: minio/mc:latest
     depends_on:

@@ -1,7 +1,9 @@
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { generateMongoConfig } from '../../../apps/main/src/database/config';
+import { EnvService } from 'libs/env/src/env.service';
+import { EnvModule } from 'libs/env/src/env.module';
 
 @Module({
   imports: [
@@ -9,11 +11,11 @@ import { generateMongoConfig } from '../../../apps/main/src/database/config';
       isGlobal: true,
     }),
     MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
+      imports: [EnvModule],
+      useFactory: (configService: EnvService) => ({
         ...generateMongoConfig(configService),
       }),
-      inject: [ConfigService],
+      inject: [EnvService],
     }),
   ],
 })

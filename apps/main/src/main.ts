@@ -19,6 +19,7 @@ async function bootstrap() {
 
   // Proxy SPA routes in development before setting global prefix
   if (process.env.NODE_ENV !== 'production') {
+    console.log('Proxy established for routes / except /api');
     app.use(
       '/',
       createProxyMiddleware({

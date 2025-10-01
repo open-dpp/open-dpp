@@ -16,6 +16,7 @@ import { TraceabilityEventsModule } from '../traceability-events/traceability-ev
 import { ItemsApplicationService } from '../items/presentation/items-application.service';
 import { OrganizationsModule } from '../organizations/organizations.module';
 import { PermissionModule } from '@app/permission';
+import { EnvModule } from 'libs/env/src/env.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { PermissionModule } from '@app/permission';
         schema: AasConnectionSchema,
       },
     ]),
+    EnvModule,
     OrganizationsModule,
     TemplateModule,
     UniqueProductIdentifierModule,

@@ -16,20 +16,12 @@ npm run install:all
 
 ### Build and run with docker
 
-```
-NODE_ENV=production
-```
-
 ```shell
-npm run build -- --all
-cd /apps/main/client
-npm run build
-docker compose build
+docker build -t ghcr.io/open-dpp/open-dpp .
 docker compose up
 ```
 
-Now navigate to https://open-dpp.localhost:20080 and accept the security warning coming from using
-a local certificate for https.
+Now navigate to http://open-dpp.localhost:20080
 
 For email verification go to https://mail.open-dpp.localhost:20080.
 

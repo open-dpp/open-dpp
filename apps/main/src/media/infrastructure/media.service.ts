@@ -35,6 +35,7 @@ export class MediaService {
       secretKey: configService.get('OPEN_DPP_S3_SECRET_KEY'),
       region: 'nbg1',
     });
+
     this.bucketNameDefault = configService.get('OPEN_DPP_S3_DEFAULT_BUCKET');
     this.bucketNameProfilePictures = configService.get(
       'OPEN_DPP_S3_PROFILE_PICTURE_BUCKET',
