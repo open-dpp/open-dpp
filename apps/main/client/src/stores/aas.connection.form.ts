@@ -5,8 +5,10 @@ import { groupBy } from 'lodash';
 import {
   AasConnectionDto,
   AasPropertyDto,
+  DataFieldDto,
   GranularityLevel,
   ModelDto,
+  SectionDto,
   SectionType,
   TemplateDto,
 } from '@open-dpp/api-client';
@@ -258,8 +260,8 @@ export const useAasConnectionFormStore = defineStore(
                 const { sectionId, dataFieldId } =
                   dataFieldDropdownValueToDppId(value);
                 const foundValue = template.sections
-                  .find((s) => s.id === sectionId)
-                  ?.dataFields.find((f) => f.id === dataFieldId);
+                  .find((s: SectionDto) => s.id === sectionId)
+                  ?.dataFields.find((f: DataFieldDto) => f.id === dataFieldId);
                 if (!foundValue) {
                   return [key, ''];
                 }
