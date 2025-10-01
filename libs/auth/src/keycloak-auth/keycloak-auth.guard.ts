@@ -15,6 +15,7 @@ import { AxiosResponse } from 'axios';
 import jwksRsa from 'jwks-rsa';
 import * as jwt from 'jsonwebtoken';
 import { ALLOW_SERVICE_ACCESS } from '@app/auth/allow-service-access.decorator';
+import { Request } from 'express';
 
 @Injectable()
 export class KeycloakAuthGuard implements CanActivate {
@@ -33,7 +34,7 @@ export class KeycloakAuthGuard implements CanActivate {
   }
 
   async canActivate(context: ExecutionContext) {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request>();
     const isPublic = this.reflector.get<boolean>(
       IS_PUBLIC,
       context.getHandler(),
@@ -47,8 +48,7 @@ export class KeycloakAuthGuard implements CanActivate {
     }
     if (allowServiceAccess) {
       if (
-        request.headers.service_token !==
-        this.configService.get('SERVICE_TOKEN')
+        request.get('service_token') !== this.configService.get('SERVICE_TOKEN')
       ) {
         throw new UnauthorizedException('Invalid service token.');
       } else {
@@ -56,8 +56,8 @@ export class KeycloakAuthGuard implements CanActivate {
       }
     }
 
-    const headerAuthorization = request.headers.authorization;
-    const headerApiKey = request.headers['api_token'];
+    const headerAuthorization = request.get('authorization');
+    const headerApiKey = request.get('api_token');
     let accessToken: string;
 
     if (headerAuthorization) {

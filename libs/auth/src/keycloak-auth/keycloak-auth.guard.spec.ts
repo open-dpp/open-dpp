@@ -12,6 +12,9 @@ import { IS_PUBLIC } from '../public/public.decorator';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
 import { HttpModule } from '@nestjs/axios';
 import { expect } from '@jest/globals';
+import { AuthContext } from '@app/auth/auth-request';
+
+const mockRequestGet = jest.fn();
 
 describe('KeycloakAuthGuard', () => {
   let guard: KeycloakAuthGuard;
@@ -25,6 +28,10 @@ describe('KeycloakAuthGuard', () => {
     email_verified: true,
     memberships: [],
   };
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -56,11 +63,16 @@ describe('KeycloakAuthGuard', () => {
 
   describe('canActivate', () => {
     let context: ExecutionContext;
-    let mockRequest: any;
+    let mockRequest: {
+      headers: Record<string, string>;
+      get: jest.Mock;
+      authContext?: AuthContext;
+    };
 
     beforeEach(() => {
       mockRequest = {
         headers: {},
+        get: mockRequestGet,
       };
       context = {
         switchToHttp: () => ({
@@ -82,25 +94,29 @@ describe('KeycloakAuthGuard', () => {
     it('should throw unauthorized exception when authorization header is missing', async () => {
       jest.spyOn(reflector, 'get').mockReturnValue(false);
 
+      mockRequestGet.mockReturnValue(undefined);
       await expect(guard.canActivate(context)).rejects.toThrow(
         new HttpException('Authorization missing', HttpStatus.UNAUTHORIZED),
       );
+      expect(mockRequestGet).toHaveBeenCalledWith('authorization');
     });
 
     it('should throw unauthorized exception when authorization format is invalid', async () => {
       jest.spyOn(reflector, 'get').mockReturnValue(false);
-      mockRequest.headers.authorization = 'InvalidFormat';
+      mockRequestGet.mockReturnValue('InvalidFormat');
 
       await expect(guard.canActivate(context)).rejects.toThrow(
         new UnauthorizedException(
           'Authorization: Bearer <token> header invalid',
         ),
       );
+      expect(mockRequestGet).toHaveBeenCalledWith('authorization');
     });
 
     it('should authenticate user and set auth context with permissions', async () => {
       jest.spyOn(reflector, 'get').mockReturnValue(false);
-      mockRequest.headers.authorization = 'Bearer valid-token';
+
+      mockRequestGet.mockReturnValue('Bearer valid-token');
 
       const mockPayload = {
         ...mockUser,
@@ -113,8 +129,8 @@ describe('KeycloakAuthGuard', () => {
 
       expect(result).toBe(true);
       expect(mockRequest.authContext).toBeDefined();
-      expect(mockRequest.authContext.keycloakUser).toEqual(mockPayload);
-      expect(mockRequest.authContext.permissions).toEqual([
+      expect(mockRequest.authContext!.keycloakUser).toEqual(mockPayload);
+      expect(mockRequest.authContext!.permissions).toEqual([
         {
           type: 'organization',
           resource: 'org1',
@@ -126,11 +142,12 @@ describe('KeycloakAuthGuard', () => {
           scopes: ['organization:access'],
         },
       ]);
+      expect(mockRequestGet).toHaveBeenCalledWith('authorization');
     });
 
     it('should handle empty memberships', async () => {
       jest.spyOn(reflector, 'get').mockReturnValue(false);
-      mockRequest.headers.authorization = 'Bearer valid-token';
+      mockRequestGet.mockReturnValue('Bearer valid-token');
 
       const mockPayload = {
         ...mockUser,
@@ -140,9 +157,10 @@ describe('KeycloakAuthGuard', () => {
       jest.spyOn(guard, 'validateToken').mockResolvedValue(mockPayload);
 
       const result = await guard.canActivate(context);
+      expect(mockRequestGet).toHaveBeenCalledWith('authorization');
 
       expect(result).toBe(true);
-      expect(mockRequest.authContext.permissions).toEqual([]);
+      expect(mockRequest.authContext!.permissions).toEqual([]);
     });
   });
 });

@@ -21,6 +21,10 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
+    "typeRoots": [
+      "./@types",
+      "./node_modules/@types"
+    ],
     "paths": {
       "@app/analytics": [
         "libs/analytics/src"
