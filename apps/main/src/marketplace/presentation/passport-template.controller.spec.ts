@@ -3,7 +3,6 @@ import { randomUUID } from 'crypto';
 import { Test, TestingModule } from '@nestjs/testing';
 import { APP_GUARD, Reflector } from '@nestjs/core';
 import request from 'supertest';
-import { PassportTemplateModule } from '../passport-template.module';
 import { Connection } from 'mongoose';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { passportTemplatePropsFactory } from '../fixtures/passport-template-props.factory';
@@ -17,6 +16,8 @@ import { passportTemplateToDto } from './dto/passport-template.dto';
 import { expect } from '@jest/globals';
 import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
 import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
+import { MarketplaceModule } from '../marketplace.module';
+import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
 
 describe('PassportTemplateController', () => {
   let app: INestApplication;
@@ -44,6 +45,7 @@ describe('PassportTemplateController', () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
+        TypeOrmTestingModule,
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -51,7 +53,7 @@ describe('PassportTemplateController', () => {
             schema: PassportTemplateDbSchema,
           },
         ]),
-        PassportTemplateModule,
+        MarketplaceModule,
       ],
       providers: [
         {

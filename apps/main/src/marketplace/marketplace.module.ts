@@ -3,7 +3,7 @@ import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resource
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrganizationEntity } from '../organizations/infrastructure/organization.entity';
 import { UserEntity } from '../users/infrastructure/user.entity';
-import { MarketplaceService } from './marketplace.service';
+import { MarketplaceService } from './presentation/marketplace.service';
 import { OrganizationsService } from '../organizations/infrastructure/organizations.service';
 import { UsersService } from '../users/infrastructure/users.service';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -15,8 +15,10 @@ import { TemplateService } from '../templates/infrastructure/template.service';
 import {
   PassportTemplateDbSchema,
   PassportTemplateDoc,
-} from './passport-templates/infrastructure/passport-template.schema';
-import { PassportTemplateService } from './passport-templates/infrastructure/passport-template.service';
+} from './infrastructure/passport-template.schema';
+import { PassportTemplateService } from './infrastructure/passport-template.service';
+import { PermissionModule } from '@app/permission';
+import { PassportTemplateController } from './presentation/passport-template.controller';
 
 @Module({
   imports: [
@@ -32,8 +34,9 @@ import { PassportTemplateService } from './passport-templates/infrastructure/pas
       },
     ]),
     KeycloakResourcesModule,
+    PermissionModule,
   ],
-  controllers: [],
+  controllers: [PassportTemplateController],
   providers: [
     PassportTemplateService,
     MarketplaceService,
@@ -41,7 +44,6 @@ import { PassportTemplateService } from './passport-templates/infrastructure/pas
     UsersService,
     TemplateService,
   ],
-
   exports: [MarketplaceService],
 })
 export class MarketplaceModule {}

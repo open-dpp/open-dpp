@@ -25,7 +25,7 @@ import { omit } from 'lodash';
 
 import * as updateSectionDraftDto from './dto/update-section-draft.dto';
 import { templateDraftToDto } from './dto/template-draft.dto';
-import { MarketplaceService } from '../../marketplace/marketplace.service';
+import { MarketplaceService } from '../../marketplace/presentation/marketplace.service';
 import * as moveDto_1 from './dto/move.dto';
 import { PermissionService } from '@app/permission';
 import * as authRequest from '@app/auth/auth-request';

@@ -29,7 +29,7 @@ import {
   laptopFactory,
 } from '../../templates/fixtures/laptop.factory';
 import { MarketplaceModule } from '../../marketplace/marketplace.module';
-import { MarketplaceService } from '../../marketplace/marketplace.service';
+import { MarketplaceService } from '../../marketplace/presentation/marketplace.service';
 import { expect } from '@jest/globals';
 import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';

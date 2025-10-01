@@ -33,7 +33,7 @@ import {
   orgaParamDocumentation,
 } from '../../product-passport-data/presentation/dto/docs/product-passport-data.doc';
 import { modelParamDocumentation } from '../../open-api-docs/item.doc';
-import { MarketplaceService } from '../../marketplace/marketplace.service';
+import { MarketplaceService } from '../../marketplace/presentation/marketplace.service';
 import { PermissionService } from '@app/permission';
 import { ZodValidationPipe } from '@app/exception/zod-validation.pipeline';
 import * as authRequest from '@app/auth/auth-request';

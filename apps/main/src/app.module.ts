@@ -28,7 +28,7 @@ import { AiConfigurationModule } from './ai/ai-configuration/ai-configuration.mo
 import { McpClientModule } from './ai/mcp-client/mcp-client.module';
 import { PassportModule } from './ai/passports/passport.module';
 import { CreateNonExistingUserGuard } from './users/infrastructure/create-non-existing-user.guard';
-import { PassportTemplateModule } from './marketplace/passport-templates/passport-template.module';
+import { MarketplaceModule } from './marketplace/marketplace.module';
 
 @Module({
   imports: [
@@ -78,7 +78,7 @@ import { PassportTemplateModule } from './marketplace/passport-templates/passpor
       },
     }),
     MediaModule,
-    PassportTemplateModule,
+    MarketplaceModule,
     AiConfigurationModule,
     AiModule,
     McpClientModule,

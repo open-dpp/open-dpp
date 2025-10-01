@@ -1,33 +1,33 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Template } from '../templates/domain/template';
+import { Template } from '../../templates/domain/template';
 import { randomUUID } from 'crypto';
 import {
   TemplateDoc,
   TemplateDocSchemaVersion,
   TemplateSchema,
-} from '../templates/infrastructure/template.schema';
-import { OrganizationsService } from '../organizations/infrastructure/organizations.service';
-import { Organization } from '../organizations/domain/organization';
-import { User } from '../users/domain/user';
+} from '../../templates/infrastructure/template.schema';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { Organization } from '../../organizations/domain/organization';
+import { User } from '../../users/domain/user';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { OrganizationEntity } from '../organizations/infrastructure/organization.entity';
-import { UserEntity } from '../users/infrastructure/user.entity';
-import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
-import { UsersService } from '../users/infrastructure/users.service';
+import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
+import { UserEntity } from '../../users/infrastructure/user.entity';
+import { KeycloakResourcesModule } from '../../keycloak-resources/keycloak-resources.module';
+import { UsersService } from '../../users/infrastructure/users.service';
 import { MarketplaceService } from './marketplace.service';
 import { DataSource } from 'typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
-import { laptopFactory } from '../templates/fixtures/laptop.factory';
-import { TemplateService } from '../templates/infrastructure/template.service';
-import { templateCreatePropsFactory } from '../templates/fixtures/template.factory';
+import { laptopFactory } from '../../templates/fixtures/laptop.factory';
+import { TemplateService } from '../../templates/infrastructure/template.service';
+import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
 import { expect, jest } from '@jest/globals';
 import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
 import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { PassportTemplateService } from './passport-templates/infrastructure/passport-template.service';
+import { PassportTemplateService } from '../infrastructure/passport-template.service';
 import {
   PassportTemplateDbSchema,
   PassportTemplateDoc,
-} from './passport-templates/infrastructure/passport-template.schema';
+} from '../infrastructure/passport-template.schema';
 
 describe('MarketplaceService', () => {
   let marketplaceService: MarketplaceService;

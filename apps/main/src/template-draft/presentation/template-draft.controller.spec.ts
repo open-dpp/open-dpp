@@ -28,7 +28,7 @@ import { sectionToDto } from '../../data-modelling/presentation/dto/section-base
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { Sector } from '@open-dpp/api-client';
-import { MarketplaceService } from '../../marketplace/marketplace.service';
+import { MarketplaceService } from '../../marketplace/presentation/marketplace.service';
 import {
   templateDraftCreateDtoFactory,
   templateDraftCreatePropsFactory,

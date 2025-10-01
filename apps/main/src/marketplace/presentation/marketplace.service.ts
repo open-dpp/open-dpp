@@ -1,17 +1,17 @@
-import { OrganizationsService } from '../organizations/infrastructure/organizations.service';
-import { Template } from '../templates/domain/template';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+import { Template } from '../../templates/domain/template';
 import { Injectable, Logger } from '@nestjs/common';
 import {
   deserializeTemplate,
   serializeTemplate,
-} from '../templates/domain/serialization';
-import { TemplateDoc } from '../templates/infrastructure/template.schema';
+} from '../../templates/domain/serialization';
+import { TemplateDoc } from '../../templates/infrastructure/template.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { TemplateService } from '../templates/infrastructure/template.service';
-import { PassportTemplate } from './passport-templates/domain/passport-template';
-import { PassportTemplateService } from './passport-templates/infrastructure/passport-template.service';
-import { User } from '../users/domain/user';
+import { TemplateService } from '../../templates/infrastructure/template.service';
+import { PassportTemplate } from '../domain/passport-template';
+import { PassportTemplateService } from '../infrastructure/passport-template.service';
+import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 
 @Injectable()
