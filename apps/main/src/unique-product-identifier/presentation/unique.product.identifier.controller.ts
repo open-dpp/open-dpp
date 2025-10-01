@@ -2,10 +2,7 @@ import { Controller, Get, Param, Request } from '@nestjs/common';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { UniqueProductIdentifierService } from '../infrastructure/unique-product-identifier.service';
-import {
-  UniqueProductIdentifierMetadataDtoSchema,
-  UniqueProductIdentifierReferenceDtoSchema,
-} from './dto/unique-product-identifier-dto.schema';
+import { UniqueProductIdentifierReferenceDtoSchema } from './dto/unique-product-identifier-dto.schema';
 import { PermissionService } from '@app/permission';
 import * as authRequest from '@app/auth/auth-request';
 import { AllowServiceAccess } from '@app/auth/allow-service-access.decorator';
