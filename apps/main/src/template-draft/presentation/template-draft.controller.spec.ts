@@ -27,7 +27,6 @@ import { templateDraftToDto } from './dto/template-draft.dto';
 import { sectionToDto } from '../../data-modelling/presentation/dto/section-base.dto';
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
-import { Sector } from '@open-dpp/api-client';
 import { MarketplaceApplicationService } from '../../marketplace/presentation/marketplace.application.service';
 import {
   templateDraftCreateDtoFactory,
@@ -49,6 +48,8 @@ import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources
 import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
 import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
 import { getApp } from '@app/testing/utils';
+
+import { Sector } from '../../data-modelling/domain/sectors';
 
 describe('TemplateDraftController', () => {
   let app: INestApplication;

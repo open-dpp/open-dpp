@@ -1,5 +1,6 @@
 import { sectionBaseDocumentation } from './section-base.doc';
-import { Sector } from '@open-dpp/api-client';
+
+import { Sector } from '../data-modelling/domain/sectors';
 
 export const templateDocumentation = {
   type: 'object',

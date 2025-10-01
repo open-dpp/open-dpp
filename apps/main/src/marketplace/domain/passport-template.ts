@@ -1,20 +1,5 @@
 import { randomUUID } from 'crypto';
-
-export enum Sector {
-  BATTERY = 'Battery',
-  TEXTILE = 'Textile',
-  ELECTRONICS = 'Electronics',
-  MACHINERY = 'Machinery',
-  AEROSPACE = 'Aerospace',
-  CONSTRUCTION = 'Construction',
-  MEDICAL = 'Medical',
-  HEALTHCARE = 'Healthcare',
-  EDUCATION = 'Education',
-  TRADE = 'Trade',
-  AGRICULTURE = 'Agriculture',
-  MINING = 'Mining',
-  OTHER = 'Other',
-}
+import { Sector } from '../../data-modelling/domain/sectors';
 
 type JsonObject = Record<string, unknown>;
 

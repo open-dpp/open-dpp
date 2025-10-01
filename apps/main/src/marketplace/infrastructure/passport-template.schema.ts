@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
-import { Sector } from '../domain/passport-template';
+
+import { Sector } from '../../data-modelling/domain/sectors';
 
 export enum PassportTemplateSchemaVersion {
   v1_0_0 = '1.0.0',

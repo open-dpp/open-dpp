@@ -17,10 +17,11 @@ import {
 } from '../fixtures/template-draft.factory';
 import { textFieldProps } from '../fixtures/data-field-draft.factory';
 import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
-import { Sector } from '@open-dpp/api-client';
 import { expect } from '@jest/globals';
 import { NotFoundError, ValueError } from '@app/exception/domain.errors';
 import { ignoreIds } from '@app/testing/utils';
+
+import { Sector } from '../../data-modelling/domain/sectors';
 
 describe('TemplateDraft', () => {
   const userId = randomUUID();

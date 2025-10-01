@@ -1,5 +1,6 @@
-import { PassportTemplate, Sector } from '../../domain/passport-template';
+import { PassportTemplate } from '../../domain/passport-template';
 import { z } from 'zod';
+import { Sector } from '../../../data-modelling/domain/sectors';
 
 export const PassportTemplateCreateSchema = z.object({
   version: z.string(),

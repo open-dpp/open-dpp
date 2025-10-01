@@ -4,7 +4,8 @@ import {
   sectionToDto,
 } from '../../../data-modelling/presentation/dto/section-base.dto';
 import { TemplateDraft } from '../../domain/template-draft';
-import { Sector } from '@open-dpp/api-client';
+
+import { Sector } from '../../../data-modelling/domain/sectors';
 
 const PublicationDtoSchema = z.object({
   id: z.string(),

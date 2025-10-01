@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { Sector } from '@open-dpp/api-client';
+
+import { Sector } from '../../../data-modelling/domain/sectors';
 
 export const UpdateTemplateDraftDtoSchema = z.object({
   name: z.string().min(1),

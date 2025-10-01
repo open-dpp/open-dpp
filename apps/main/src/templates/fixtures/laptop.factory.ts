@@ -1,5 +1,4 @@
 import { dataFieldDbPropsFactory } from './data-field.factory';
-import { Sector } from '@open-dpp/api-client';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { SectionType } from '../../data-modelling/domain/section-base';
@@ -7,6 +6,8 @@ import { sectionDbPropsFactory } from './section.factory';
 import { Factory } from 'fishery';
 import { TemplateDbProps } from '../domain/template';
 import { randomUUID } from 'crypto';
+
+import { Sector } from '../../data-modelling/domain/sectors';
 
 export class LaptopFactory extends Factory<TemplateDbProps> {
   static ids = {

@@ -22,7 +22,6 @@ import { TemplateService } from '../../templates/infrastructure/template.service
 import { DataValue } from '../../product-passport-data/domain/data-value';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { Sector } from '@open-dpp/api-client';
 import { expect } from '@jest/globals';
 import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
 import { AuthContext } from '@app/auth/auth-request';
@@ -34,6 +33,8 @@ import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources
 import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
 import { getApp, ignoreIds } from '@app/testing/utils';
 import { User } from '../../users/domain/user';
+
+import { Sector } from '../../data-modelling/domain/sectors';
 
 describe('ItemsController', () => {
   let app: INestApplication;

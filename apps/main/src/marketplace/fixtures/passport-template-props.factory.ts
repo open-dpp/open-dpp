@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
-import { PassportTemplateProps, Sector } from '../domain/passport-template';
+import { PassportTemplateProps } from '../domain/passport-template';
 import { Factory } from 'fishery';
+import { Sector } from '../../data-modelling/domain/sectors';
 
 export const nowDate = new Date('2025-01-01T12:00:00Z');
 
