@@ -1,20 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PassportTemplateService } from './passport-template.service';
+import { PassportTemplatePublicationService } from './passport-template-publication.service';
 import { Connection } from 'mongoose';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import {
-  PassportTemplateDbSchema,
-  PassportTemplateDoc,
-} from './passport-template.schema';
-import { PassportTemplate } from '../domain/passport-template';
-import { passportTemplatePropsFactory } from '../fixtures/passport-template-props.factory';
+  PassportTemplatePublicationDbSchema,
+  PassportTemplatePublicationDoc,
+} from './passport-template-publication.schema';
+import { PassportTemplatePublication } from '../domain/passport-template-publication';
+import { passportTemplatePublicationPropsFactory } from '../fixtures/passport-template-publication-props.factory';
 import { randomUUID } from 'crypto';
 import { expect } from '@jest/globals';
 import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
 import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
 
 describe('PassportTemplateService', () => {
-  let service: PassportTemplateService;
+  let service: PassportTemplatePublicationService;
   let mongoConnection: Connection;
   let module: TestingModule;
 
@@ -34,26 +34,28 @@ describe('PassportTemplateService', () => {
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
-            name: PassportTemplateDoc.name,
-            schema: PassportTemplateDbSchema,
+            name: PassportTemplatePublicationDoc.name,
+            schema: PassportTemplatePublicationDbSchema,
           },
         ]),
       ],
-      providers: [PassportTemplateService],
+      providers: [PassportTemplatePublicationService],
     }).compile();
-    service = module.get<PassportTemplateService>(PassportTemplateService);
+    service = module.get<PassportTemplatePublicationService>(
+      PassportTemplatePublicationService,
+    );
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
   it('fails if requested passport template could not be found', async () => {
     await expect(service.findOneOrFail(randomUUID())).rejects.toThrow(
-      new NotFoundInDatabaseException(PassportTemplate.name),
+      new NotFoundInDatabaseException(PassportTemplatePublication.name),
     );
   });
 
   it('should create passport template', async () => {
-    const passportTemplate = PassportTemplate.loadFromDb(
-      passportTemplatePropsFactory.build(),
+    const passportTemplate = PassportTemplatePublication.loadFromDb(
+      passportTemplatePublicationPropsFactory.build(),
     );
 
     const { id } = await service.save(passportTemplate);
@@ -62,11 +64,11 @@ describe('PassportTemplateService', () => {
   });
 
   it('should find all passport templates', async () => {
-    const passportTemplate = PassportTemplate.loadFromDb(
-      passportTemplatePropsFactory.build(),
+    const passportTemplate = PassportTemplatePublication.loadFromDb(
+      passportTemplatePublicationPropsFactory.build(),
     );
-    const passportTemplate2 = PassportTemplate.loadFromDb(
-      passportTemplatePropsFactory.build({ id: randomUUID() }),
+    const passportTemplate2 = PassportTemplatePublication.loadFromDb(
+      passportTemplatePublicationPropsFactory.build({ id: randomUUID() }),
     );
 
     await service.save(passportTemplate);

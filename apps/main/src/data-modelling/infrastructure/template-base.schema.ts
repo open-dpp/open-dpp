@@ -3,7 +3,8 @@ import { Document, Schema as MongooseSchema } from 'mongoose';
 import { DataFieldType } from '../domain/data-field-base';
 import { SectionType } from '../domain/section-base';
 import { GranularityLevel } from '../domain/granularity-level';
-import { Sector } from '@open-dpp/api-client';
+
+import { Sector } from '../domain/sectors';
 
 @Schema()
 export class DataFieldDoc {

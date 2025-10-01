@@ -24,7 +24,6 @@ import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
 import { DataValue } from '../../product-passport-data/domain/data-value';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { Sector } from '@open-dpp/api-client';
 import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
 import { expect } from '@jest/globals';
 import { PermissionModule } from '@app/permission';
@@ -34,6 +33,8 @@ import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
 import { user1org1 } from '@app/testing/users-and-orgs';
 import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
 import { ignoreIds } from '@app/testing/utils';
+
+import { Sector } from '../../data-modelling/domain/sectors';
 
 describe('ItemsService', () => {
   let itemService: ItemsService;

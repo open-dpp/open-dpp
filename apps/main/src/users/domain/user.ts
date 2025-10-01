@@ -9,4 +9,8 @@ export class User {
     this.id = id;
     this.email = email;
   }
+
+  static create(data: { id: string; email: string }): User {
+    return new User(data.id, data.email);
+  }
 }

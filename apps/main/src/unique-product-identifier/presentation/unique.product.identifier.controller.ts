@@ -2,13 +2,11 @@ import { Controller, Get, Param, Request } from '@nestjs/common';
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { UniqueProductIdentifierService } from '../infrastructure/unique-product-identifier.service';
-import {
-  UniqueProductIdentifierMetadataDtoSchema,
-  UniqueProductIdentifierReferenceDtoSchema,
-} from './dto/unique-product-identifier-dto.schema';
+import { UniqueProductIdentifierReferenceDtoSchema } from './dto/unique-product-identifier-dto.schema';
 import { PermissionService } from '@app/permission';
 import * as authRequest from '@app/auth/auth-request';
 import { AllowServiceAccess } from '@app/auth/allow-service-access.decorator';
+import { UniqueProductIdentifierApplicationService } from './unique.product.identifier.application.service';
 
 @Controller()
 export class UniqueProductIdentifierController {
@@ -17,6 +15,7 @@ export class UniqueProductIdentifierController {
     private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
     private readonly itemService: ItemsService,
     private readonly permissionsService: PermissionService,
+    private readonly uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
   ) {}
 
   @Get('organizations/:orgaId/unique-product-identifiers/:id/reference')
@@ -25,7 +24,7 @@ export class UniqueProductIdentifierController {
     @Param('id') id: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -57,23 +56,8 @@ export class UniqueProductIdentifierController {
   @AllowServiceAccess()
   @Get('unique-product-identifiers/:id/metadata')
   async get(@Param('id') id: string) {
-    const uniqueProductIdentifier =
-      await this.uniqueProductIdentifierService.findOneOrFail(id);
-
-    const item = await this.itemService.findOne(
-      uniqueProductIdentifier.referenceId,
+    return this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifier(
+      id,
     );
-    let organizationId;
-    if (item) {
-      organizationId = item.ownedByOrganizationId;
-    } else {
-      const model = await this.modelsService.findOneOrFail(
-        uniqueProductIdentifier.referenceId,
-      );
-      organizationId = model.ownedByOrganizationId;
-    }
-    return UniqueProductIdentifierMetadataDtoSchema.parse({
-      organizationId,
-    });
   }
 }

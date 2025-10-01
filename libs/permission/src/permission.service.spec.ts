@@ -109,7 +109,7 @@ describe('PermissionService', () => {
   });
 
   describe('canAccessOrganizationOrFail', () => {
-    it('should throw ForbiddenException if user cannot access organization', async () => {
+    it('should throw ForbiddenException if user cannot access organization', () => {
       authContext.permissions = [];
       expect(() =>
         service.canAccessOrganizationOrFail(organizationId, authContext),

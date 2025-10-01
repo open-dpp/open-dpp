@@ -20,6 +20,7 @@ import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources
 import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
 import { NotFoundInDatabaseExceptionFilter } from '@app/exception/exception.handler';
 import { UsersService } from '../../users/infrastructure/users.service';
+import { getApp } from '@app/testing/utils';
 
 describe('OrganizationController', () => {
   let app: INestApplication;
@@ -85,7 +86,7 @@ describe('OrganizationController', () => {
   describe('POST /organizations', () => {
     it('should create a new organization', async () => {
       const body = { name: 'Test Organization' };
-      const response = await request(app.getHttpServer())
+      const response = await request(getApp(app))
         .post('/organizations')
         .set('Authorization', `Bearer ${token}`)
         .send(body);
@@ -102,7 +103,7 @@ describe('OrganizationController', () => {
   describe('GET /organizations', () => {
     it('should return all organizations the user is a member of', async () => {
       // Get existing orgs to avoid conflicts with other tests
-      const response1 = await request(app.getHttpServer())
+      const response1 = await request(getApp(app))
         .get('/organizations')
         .set('Authorization', `Bearer ${token}`);
 
@@ -121,7 +122,7 @@ describe('OrganizationController', () => {
         .mockReturnValue(true);
 
       // Verify we can get all orgs including the new one
-      const response2 = await request(app.getHttpServer())
+      const response2 = await request(getApp(app))
         .get('/organizations')
         .set('Authorization', `Bearer ${token}`);
 
@@ -150,7 +151,7 @@ describe('OrganizationController', () => {
         .spyOn(permissionService, 'canAccessOrganizationOrFail')
         .mockReturnValue(true);
 
-      const response = await request(app.getHttpServer())
+      const response = await request(getApp(app))
         .get(`/organizations/${org.id}`)
         .set('Authorization', `Bearer ${token}`);
 
@@ -169,7 +170,7 @@ describe('OrganizationController', () => {
           throw new NotFoundException();
         });
 
-      const response = await request(app.getHttpServer())
+      const response = await request(getApp(app))
         .get(`/organizations/${orgId}`)
         .set('Authorization', `Bearer ${token}`);
 
@@ -196,7 +197,7 @@ describe('OrganizationController', () => {
         .spyOn(service, 'inviteUser')
         .mockImplementation(async () => {});
 
-      const response = await request(app.getHttpServer())
+      const response = await request(getApp(app))
         .post(`/organizations/${savedOrg.id}/invite`)
         .set('Authorization', `Bearer ${token}`)
         .send({ email: 'invited@example.com' });
@@ -219,7 +220,7 @@ describe('OrganizationController', () => {
           throw new NotFoundException();
         });
 
-      const response = await request(app.getHttpServer())
+      const response = await request(getApp(app))
         .post(`/organizations/${orgId}/invite`)
         .set('Authorization', `Bearer ${token}`)
         .send({ email: 'invited@example.com' });
@@ -244,7 +245,7 @@ describe('OrganizationController', () => {
         .spyOn(permissionService, 'canAccessOrganizationOrFail')
         .mockReturnValue(true);
 
-      const response = await request(app.getHttpServer())
+      const response = await request(getApp(app))
         .get(`/organizations/${savedOrg.id}/members`)
         .set('Authorization', `Bearer ${token}`);
 
@@ -271,7 +272,7 @@ describe('OrganizationController', () => {
           throw new NotFoundException();
         });
 
-      const response = await request(app.getHttpServer())
+      const response = await request(getApp(app))
         .get(`/organizations/${orgId}/members`)
         .set('Authorization', `Bearer ${token}`);
 

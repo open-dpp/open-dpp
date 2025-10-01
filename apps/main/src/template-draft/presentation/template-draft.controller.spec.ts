@@ -27,8 +27,7 @@ import { templateDraftToDto } from './dto/template-draft.dto';
 import { sectionToDto } from '../../data-modelling/presentation/dto/section-base.dto';
 import { Organization } from '../../organizations/domain/organization';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
-import { Sector } from '@open-dpp/api-client';
-import { MarketplaceService } from '../../marketplace/marketplace.service';
+import { MarketplaceApplicationService } from '../../marketplace/presentation/marketplace.application.service';
 import {
   templateDraftCreateDtoFactory,
   templateDraftCreatePropsFactory,
@@ -48,13 +47,15 @@ import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
 import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
 import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
 import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
-import { MarketplaceServiceTesting } from '@app/testing/marketplace.service.testing';
+import { getApp } from '@app/testing/utils';
+
+import { Sector } from '../../data-modelling/domain/sectors';
 
 describe('TemplateDraftController', () => {
   let app: INestApplication;
   const authContext = new AuthContext();
   let templateDraftService: TemplateDraftService;
-  let productDataModelService: TemplateService;
+  let templateService: TemplateService;
   authContext.keycloakUser = createKeycloakUserInToken();
   const userId = authContext.keycloakUser.sub;
   const organizationId = randomUUID();
@@ -62,7 +63,7 @@ describe('TemplateDraftController', () => {
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
   let module: TestingModule;
   let organizationService: OrganizationsService;
-  let marketplaceServiceTesting: MarketplaceService;
+  let marketplaceService: MarketplaceApplicationService;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -100,17 +101,16 @@ describe('TemplateDraftController', () => {
           ],
         }),
       )
-      .overrideProvider(MarketplaceService)
-      .useClass(MarketplaceServiceTesting)
       .compile();
 
     app = module.createNestApplication();
 
-    productDataModelService = module.get<TemplateService>(TemplateService);
+    templateService = module.get<TemplateService>(TemplateService);
     templateDraftService =
       module.get<TemplateDraftService>(TemplateDraftService);
-    marketplaceServiceTesting =
-      module.get<MarketplaceService>(MarketplaceService);
+    marketplaceService = module.get<MarketplaceApplicationService>(
+      MarketplaceApplicationService,
+    );
 
     organizationService =
       module.get<OrganizationsService>(OrganizationsService);
@@ -123,7 +123,7 @@ describe('TemplateDraftController', () => {
 
   it(`/CREATE template draft`, async () => {
     const body = templateDraftCreateDtoFactory.build();
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organizationId}/template-drafts`)
       .set(
         'Authorization',
@@ -143,7 +143,7 @@ describe('TemplateDraftController', () => {
   it(`/CREATE template draft ${userNotMemberTxt}`, async () => {
     const body = templateDraftCreateDtoFactory.build();
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${otherOrganizationId}/template-drafts`)
       .set(
         'Authorization',
@@ -167,7 +167,7 @@ describe('TemplateDraftController', () => {
 
     await templateDraftService.save(laptopDraft);
     const body = templateDraftCreateDtoFactory.build();
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}`,
       )
@@ -197,7 +197,7 @@ describe('TemplateDraftController', () => {
 
     await templateDraftService.save(laptopDraft);
     const body = templateDraftCreateDtoFactory.build();
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${otherOrganizationId}/template-drafts/${laptopDraft.id}`,
       )
@@ -222,7 +222,7 @@ describe('TemplateDraftController', () => {
     );
     await templateDraftService.save(laptopDraft);
     const body = templateDraftCreateDtoFactory.build();
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}`,
       )
@@ -274,7 +274,7 @@ describe('TemplateDraftController', () => {
     const body = {
       visibility: VisibilityLevel.PUBLIC,
     };
-    const spyUpload = jest.spyOn(marketplaceServiceTesting, 'upload');
+    const spyUpload = jest.spyOn(marketplaceService, 'upload');
 
     const token = getKeycloakAuthToken(
       userId,
@@ -282,7 +282,7 @@ describe('TemplateDraftController', () => {
       keycloakAuthTestingGuard,
     );
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/publish`,
       )
@@ -295,15 +295,14 @@ describe('TemplateDraftController', () => {
     expect(foundDraft.publications).toEqual([
       { id: expect.any(String), version: '1.0.0' },
     ]);
-    const foundModel = await productDataModelService.findOneOrFail(
+    const foundTemplate = await templateService.findOneOrFail(
       foundDraft.publications[0].id,
     );
-    expect(foundModel.id).toEqual(foundDraft.publications[0].id);
-    expect(foundModel.marketplaceResourceId).toEqual(
-      `templateFor${foundModel.id}`,
-    );
+    expect(foundTemplate.id).toEqual(foundDraft.publications[0].id);
 
-    expect(spyUpload).toHaveBeenCalledWith(foundModel, token.substring(7));
+    expect(foundTemplate.marketplaceResourceId).toBeDefined();
+    const user = User.create({ id: userId, email: `${userId}@test.test` });
+    expect(spyUpload).toHaveBeenCalledWith(foundTemplate, user);
   });
 
   it(`/PUBLISH template draft ${userNotMemberTxt}`, async () => {
@@ -317,7 +316,7 @@ describe('TemplateDraftController', () => {
       visibility: VisibilityLevel.PUBLIC,
       sectors: [Sector.TEXTILE],
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${otherOrganizationId}/template-drafts/${laptopDraft.id}/publish`,
       )
@@ -345,7 +344,7 @@ describe('TemplateDraftController', () => {
       visibility: VisibilityLevel.PUBLIC,
       sectors: [Sector.TEXTILE],
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/publish`,
       )
@@ -377,7 +376,7 @@ describe('TemplateDraftController', () => {
     );
     await templateDraftService.save(laptopDraft);
     await templateDraftService.save(phoneDraft);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${myOrgaId}/template-drafts`)
       .set(
         'Authorization',
@@ -392,7 +391,7 @@ describe('TemplateDraftController', () => {
   });
 
   it(`/GET template drafts of organization ${userNotMemberTxt}`, async () => {
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/template-drafts`)
       .set(
         'Authorization',
@@ -418,7 +417,7 @@ describe('TemplateDraftController', () => {
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections`,
       )
@@ -473,7 +472,7 @@ describe('TemplateDraftController', () => {
 
       granularityLevel: GranularityLevel.MODEL,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections`,
       )
@@ -513,7 +512,7 @@ describe('TemplateDraftController', () => {
       parentSectionId: undefined,
       granularityLevel: GranularityLevel.MODEL,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections`,
       )
@@ -544,7 +543,7 @@ describe('TemplateDraftController', () => {
 
       granularityLevel: GranularityLevel.MODEL,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections`,
       )
@@ -576,7 +575,7 @@ describe('TemplateDraftController', () => {
     laptopDraft.addSection(section);
 
     await templateDraftService.save(laptopDraft);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${organizationId}/template-drafts/${laptopDraft.id}`)
       .set(
         'Authorization',
@@ -592,7 +591,7 @@ describe('TemplateDraftController', () => {
   });
 
   it(`/GET draft ${userNotMemberTxt}`, async () => {
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(
         `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}`,
       )
@@ -616,7 +615,7 @@ describe('TemplateDraftController', () => {
     );
     await templateDraftService.save(laptopDraft);
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${organizationId}/template-drafts/${laptopDraft.id}`)
       .set(
         'Authorization',
@@ -649,7 +648,7 @@ describe('TemplateDraftController', () => {
     const body = {
       name: 'Technical Specs',
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}`,
       )
@@ -674,7 +673,7 @@ describe('TemplateDraftController', () => {
     const body = {
       name: 'Technical Specs',
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}`,
       )
@@ -701,7 +700,7 @@ describe('TemplateDraftController', () => {
     const body = {
       name: 'Technical Specs',
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}`,
       )
@@ -739,7 +738,7 @@ describe('TemplateDraftController', () => {
       type: MoveType.POSITION,
       direction: MoveDirection.UP,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section2.id}/move`,
       )
@@ -769,7 +768,7 @@ describe('TemplateDraftController', () => {
       type: MoveType.POSITION,
       direction: MoveDirection.UP,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
       )
@@ -797,7 +796,7 @@ describe('TemplateDraftController', () => {
       type: MoveType.POSITION,
       direction: MoveDirection.UP,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
       )
@@ -844,7 +843,7 @@ describe('TemplateDraftController', () => {
       type: MoveType.POSITION,
       direction: MoveDirection.UP,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section1.id}/data-fields/${dataField3.id}/move`,
       )
@@ -878,7 +877,7 @@ describe('TemplateDraftController', () => {
       type: MoveType.POSITION,
       direction: MoveDirection.UP,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}/move`,
       )
@@ -906,7 +905,7 @@ describe('TemplateDraftController', () => {
       type: MoveType.POSITION,
       direction: MoveDirection.UP,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}/move`,
       )
@@ -937,7 +936,7 @@ describe('TemplateDraftController', () => {
     });
     laptopDraft.addSection(section);
     await templateDraftService.save(laptopDraft);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .delete(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}`,
       )
@@ -955,7 +954,7 @@ describe('TemplateDraftController', () => {
   });
 
   it(`/DELETE section draft ${userNotMemberTxt}`, async () => {
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .delete(
         `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}`,
       )
@@ -979,7 +978,7 @@ describe('TemplateDraftController', () => {
     );
     await templateDraftService.save(laptopDraft);
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .delete(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}`,
       )
@@ -1016,7 +1015,7 @@ describe('TemplateDraftController', () => {
       options: { min: 2 },
       granularityLevel: GranularityLevel.MODEL,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields`,
       )
@@ -1054,7 +1053,7 @@ describe('TemplateDraftController', () => {
 
       granularityLevel: GranularityLevel.MODEL,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}/data-fields`,
       )
@@ -1085,7 +1084,7 @@ describe('TemplateDraftController', () => {
 
       granularityLevel: GranularityLevel.MODEL,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields`,
       )
@@ -1127,7 +1126,7 @@ describe('TemplateDraftController', () => {
       name: 'Memory',
       options: { max: 8 },
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields/${dataField.id}`,
       )
@@ -1156,7 +1155,7 @@ describe('TemplateDraftController', () => {
       name: 'Memory',
       options: { max: 8 },
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/someId/data-fields/someId`,
       )
@@ -1184,7 +1183,7 @@ describe('TemplateDraftController', () => {
       name: 'Memory',
       options: { max: 8 },
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/someId/data-fields/someId`,
       )
@@ -1223,7 +1222,7 @@ describe('TemplateDraftController', () => {
     laptopDraft.addDataFieldToSection(section.id, dataField);
 
     await templateDraftService.save(laptopDraft);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .delete(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields/${dataField.id}`,
       )
@@ -1243,7 +1242,7 @@ describe('TemplateDraftController', () => {
   });
 
   it(`/DELETE data field ${userNotMemberTxt}`, async () => {
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .delete(
         `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}/data-fields/${randomUUID()}`,
       )
@@ -1267,7 +1266,7 @@ describe('TemplateDraftController', () => {
     );
     await templateDraftService.save(laptopDraft);
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .delete(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}`,
       )

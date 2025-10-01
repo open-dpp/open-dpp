@@ -19,7 +19,7 @@
     "@formkit/vue": "^1.6.9",
     "@headlessui/vue": "^1.7.23",
     "@heroicons/vue": "^2.2.0",
-    "@open-dpp/api-client": "^2.1.10",
+    "@open-dpp/api-client": "^2.2.1",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.10",
     "@types/qrcode": "^1.5.5",

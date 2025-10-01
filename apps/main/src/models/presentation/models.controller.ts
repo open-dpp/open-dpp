@@ -33,7 +33,7 @@ import {
   orgaParamDocumentation,
 } from '../../product-passport-data/presentation/dto/docs/product-passport-data.doc';
 import { modelParamDocumentation } from '../../open-api-docs/item.doc';
-import { MarketplaceService } from '../../marketplace/marketplace.service';
+import { MarketplaceApplicationService } from '../../marketplace/presentation/marketplace.application.service';
 import { PermissionService } from '@app/permission';
 import { ZodValidationPipe } from '@app/exception/zod-validation.pipeline';
 import * as authRequest from '@app/auth/auth-request';
@@ -44,7 +44,7 @@ export class ModelsController {
     private readonly modelsService: ModelsService,
     private readonly templateService: TemplateService,
     private readonly permissionsService: PermissionService,
-    private readonly marketplaceService: MarketplaceService,
+    private readonly marketplaceService: MarketplaceApplicationService,
   ) {}
 
   @ApiOperation({
@@ -65,7 +65,7 @@ export class ModelsController {
     createModelDto: createModelDto_1.CreateModelDto,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -127,7 +127,7 @@ export class ModelsController {
     @Param('orgaId') organizationId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -151,7 +151,7 @@ export class ModelsController {
     @Param('modelId') id: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -182,7 +182,7 @@ export class ModelsController {
     updateModelDto: updateModelDto_1.UpdateModelDto,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -220,7 +220,7 @@ export class ModelsController {
     updateDataValues: DataValueDto[],
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -262,7 +262,7 @@ export class ModelsController {
     addDataValues: DataValueDto[],
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );

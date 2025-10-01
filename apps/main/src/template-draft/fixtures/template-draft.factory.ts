@@ -1,6 +1,5 @@
 import { randomUUID } from 'crypto';
 import { Factory } from 'fishery';
-import { Sector } from '@open-dpp/api-client';
 import {
   TemplateDraftCreateProps,
   TemplateDraftDbProps,
@@ -9,6 +8,8 @@ import { CreateTemplateDraftDto } from '../presentation/dto/create-template-draf
 import { sectionDraftDbPropsFactory } from './section-draft.factory';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { textFieldProps } from './data-field-draft.factory';
+
+import { Sector } from '../../data-modelling/domain/sectors';
 
 export const templateDraftCreatePropsFactory =
   Factory.define<TemplateDraftCreateProps>(() => ({

@@ -20,6 +20,7 @@ import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
 import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
 import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
 import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
+import { getApp } from '@app/testing/utils';
 
 describe('TemplateController', () => {
   let app: INestApplication;
@@ -79,7 +80,7 @@ describe('TemplateController', () => {
     const template = Template.loadFromDb({ ...laptopPlain });
 
     await service.save(template);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${organizationId}/templates/${template.id}`)
       .set(
         'Authorization',
@@ -102,7 +103,7 @@ describe('TemplateController', () => {
       }),
     );
     await service.save(template);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/templates/${template.id}`)
       .set(
         'Authorization',
@@ -136,7 +137,7 @@ describe('TemplateController', () => {
     await service.save(laptopTemplate);
     await service.save(phoneTemplate);
     await service.save(notAccessibleTemplate);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${organizationId}/templates`)
       .set(
         'Authorization',
@@ -173,7 +174,7 @@ describe('TemplateController', () => {
 
   it(`/GET all templates which belong to the organization ${userHasNotThePermissionsTxt}`, async () => {
     const otherOrganizationId = randomUUID();
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/templates`)
       .set(
         'Authorization',

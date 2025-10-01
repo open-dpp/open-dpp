@@ -8,7 +8,7 @@ import { DataValue } from '../../product-passport-data/domain/data-value';
 import { ItemDbProps } from '../../items/domain/item';
 import { Factory } from 'fishery';
 import { sectionDbPropsFactory } from '../../templates/fixtures/section.factory';
-import { Sector } from '@open-dpp/api-client';
+import { Sector } from '../../data-modelling/domain/sectors';
 
 export class PhoneFactory extends Factory<TemplateDbProps> {
   static ids = {

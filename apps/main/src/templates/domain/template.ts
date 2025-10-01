@@ -8,7 +8,7 @@ import {
 } from './section';
 import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
 import { DataValue } from '../../product-passport-data/domain/data-value';
-import { Sector } from '@open-dpp/api-client';
+import { Sector } from '../../data-modelling/domain/sectors';
 
 export class ValidationResult {
   private readonly _validationResults: DataFieldValidationResult[] = [];

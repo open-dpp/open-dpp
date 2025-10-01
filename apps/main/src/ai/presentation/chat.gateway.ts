@@ -6,7 +6,7 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
-import { ChatService } from './chat.service';
+import { ChatService } from '../infrastructure/chat.service';
 import { Logger, UseFilters } from '@nestjs/common';
 import { SocketIoExceptionFilter } from '@app/exception/websocket-exception.filter';
 import { Public } from '@app/auth/public/public.decorator';

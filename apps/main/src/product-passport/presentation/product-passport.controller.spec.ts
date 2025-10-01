@@ -21,6 +21,7 @@ import { expect } from '@jest/globals';
 import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
 import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
 import { IS_PUBLIC } from '@app/auth/public/public.decorator';
+import { getApp } from '@app/testing/utils';
 
 describe('ProductPassportController', () => {
   let app: INestApplication;
@@ -85,8 +86,7 @@ describe('ProductPassportController', () => {
     await itemsService.save(item);
     await modelsService.save(model);
     jest.spyOn(reflector, 'get').mockImplementation((key) => key === IS_PUBLIC);
-
-    const response = await request(app.getHttpServer()).get(
+    const response = await request(getApp(app)).get(
       `/product-passports/${uuid}`,
     );
     expect(response.status).toEqual(200);

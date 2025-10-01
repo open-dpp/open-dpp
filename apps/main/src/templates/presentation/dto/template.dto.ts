@@ -4,7 +4,8 @@ import {
   sectionToDto,
 } from '../../../data-modelling/presentation/dto/section-base.dto';
 import { Template } from '../../domain/template';
-import { Sector } from '@open-dpp/api-client';
+
+import { Sector } from '../../../data-modelling/domain/sectors';
 
 const TemplateDtoSchema = z.object({
   id: z.uuid(),

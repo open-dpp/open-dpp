@@ -22,7 +22,6 @@ import { TemplateService } from '../../templates/infrastructure/template.service
 import { DataValue } from '../../product-passport-data/domain/data-value';
 import { SectionType } from '../../data-modelling/domain/section-base';
 import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { Sector } from '@open-dpp/api-client';
 import { expect } from '@jest/globals';
 import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
 import { AuthContext } from '@app/auth/auth-request';
@@ -32,8 +31,10 @@ import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
 import { PermissionModule } from '@app/permission';
 import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
 import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
-import { ignoreIds } from '@app/testing/utils';
+import { getApp, ignoreIds } from '@app/testing/utils';
 import { User } from '../../users/domain/user';
+
+import { Sector } from '../../data-modelling/domain/sectors';
 
 describe('ItemsController', () => {
   let app: INestApplication;
@@ -223,7 +224,7 @@ describe('ItemsController', () => {
       template,
     });
     await modelsService.save(model);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models/${model.id}/items`)
       .set(
         'Authorization',
@@ -261,7 +262,7 @@ describe('ItemsController', () => {
       template,
     });
     await modelsService.save(model);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${otherOrganizationId}/models/${model.id}/items`)
       .set(
         'Authorization',
@@ -284,7 +285,7 @@ describe('ItemsController', () => {
       template,
     });
     await modelsService.save(model);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models/${model.id}/items`)
       .set(
         'Authorization',
@@ -324,7 +325,7 @@ describe('ItemsController', () => {
         row: 0,
       },
     ];
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${organizationId}/models/${model.id}/items/${item.id}/data-values`,
       )
@@ -365,7 +366,7 @@ describe('ItemsController', () => {
     });
     await itemsService.save(item);
     const addedValues = [];
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${otherOrganizationId}/models/${model.id}/items/${item.id}/data-values`,
       )
@@ -397,7 +398,7 @@ describe('ItemsController', () => {
     });
     await itemsService.save(item);
     const addedValues = [];
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${organization.id}/models/${model.id}/items/${item.id}/data-values`,
       )
@@ -447,7 +448,7 @@ describe('ItemsController', () => {
       },
     ];
     await itemsService.save(item);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${organization.id}/models/${model.id}/items/${item.id}/data-values`,
       )
@@ -502,8 +503,7 @@ describe('ItemsController', () => {
         row: 0,
       },
     ];
-
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${otherOrganizationId}/models/${randomUUID()}/items/${item.id}/data-values`,
       )
@@ -543,7 +543,7 @@ describe('ItemsController', () => {
       },
     ];
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${organization.id}/models/${model.id}/items/${item.id}/data-values`,
       )
@@ -575,7 +575,7 @@ describe('ItemsController', () => {
     });
     const uniqueProductId = item.createUniqueProductIdentifier();
     await itemsService.save(item);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(
         `/organizations/${organization.id}/models/${model.id}/items/${item.id}`,
       )
@@ -617,7 +617,7 @@ describe('ItemsController', () => {
     });
 
     await itemsService.save(item);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(
         `/organizations/${organization.id}/models/${model.id}/items/${item.id}`,
       )
@@ -653,7 +653,7 @@ describe('ItemsController', () => {
       user,
     });
     await organizationsService.save(otherOrganization);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(
         `/organizations/${organization.id}/models/${model.id}/items/${item.id}`,
       )
@@ -693,7 +693,7 @@ describe('ItemsController', () => {
     });
     const uniqueProductId2 = item2.createUniqueProductIdentifier();
     await itemsService.save(item2);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/models/${model.id}/items`)
       .set(
         'Authorization',
@@ -753,7 +753,7 @@ describe('ItemsController', () => {
       template,
     });
     await itemsService.save(item2);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/models/${model.id}/items`)
       .set(
         'Authorization',
@@ -789,7 +789,7 @@ describe('ItemsController', () => {
       model,
     });
     await itemsService.save(item2);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${organization.id}/models/${model.id}/items`)
       .set(
         'Authorization',

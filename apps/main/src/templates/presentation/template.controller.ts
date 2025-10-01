@@ -38,7 +38,7 @@ export class TemplateController {
   ) {
     const found = await this.templateService.findOneOrFail(id);
 
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -62,7 +62,7 @@ export class TemplateController {
     @Param('organizationId') organizationId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );

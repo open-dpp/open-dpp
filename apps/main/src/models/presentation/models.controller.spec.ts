@@ -22,17 +22,17 @@ import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
 import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { modelToDto } from './dto/model.dto';
-import { ignoreIds } from '@app/testing/utils';
+import { getApp, ignoreIds } from '@app/testing/utils';
 import { DataValue } from '../../product-passport-data/domain/data-value';
 import {
   LaptopFactory,
   laptopFactory,
 } from '../../templates/fixtures/laptop.factory';
 import { MarketplaceModule } from '../../marketplace/marketplace.module';
-import { MarketplaceServiceTesting } from '@app/testing/marketplace.service.testing';
-import { MarketplaceService } from '../../marketplace/marketplace.service';
+import { MarketplaceApplicationService } from '../../marketplace/presentation/marketplace.application.service';
 import { expect } from '@jest/globals';
 import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
+import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 
 describe('ModelsController', () => {
   let app: INestApplication;
@@ -50,7 +50,7 @@ describe('ModelsController', () => {
     name: 'orga',
     user,
   });
-  let marketplaceService: MarketplaceService;
+  let marketplaceService: MarketplaceApplicationService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -75,8 +75,6 @@ describe('ModelsController', () => {
           users: [{ id: user.id, email: user.email }],
         }),
       )
-      .overrideProvider(MarketplaceService)
-      .useClass(MarketplaceServiceTesting)
       .compile();
 
     uniqueProductIdentifierService = moduleRef.get(
@@ -84,7 +82,12 @@ describe('ModelsController', () => {
     );
     modelsService = moduleRef.get(ModelsService);
     templateService = moduleRef.get<TemplateService>(TemplateService);
-    marketplaceService = moduleRef.get<MarketplaceService>(MarketplaceService);
+    marketplaceService = moduleRef.get<MarketplaceApplicationService>(
+      MarketplaceApplicationService,
+    );
+    const organizationService =
+      moduleRef.get<OrganizationsService>(OrganizationsService);
+    await organizationService.save(organization);
 
     app = moduleRef.createNestApplication();
     app.useGlobalFilters(new NotFoundInDatabaseExceptionFilter());
@@ -108,7 +111,7 @@ describe('ModelsController', () => {
       description: 'My desc',
       templateId: template.id,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models`)
       .set(
         'Authorization',
@@ -141,14 +144,17 @@ describe('ModelsController', () => {
       [organization.id],
       keycloakAuthTestingGuard,
     );
-    const { id } = await marketplaceService.upload(template, token);
+    const { id: marketplaceResourceId } = await marketplaceService.upload(
+      template,
+      user,
+    );
 
     const body = {
       name: 'My name',
       description: 'My desc',
-      marketplaceResourceId: id,
+      marketplaceResourceId,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models`)
       .set('Authorization', token)
       .send(body);
@@ -156,7 +162,8 @@ describe('ModelsController', () => {
     const found = await modelsService.findOneOrFail(response.body.id);
     expect(response.body.id).toEqual(found.id);
     expect(found.isOwnedBy(organization.id)).toBeTruthy();
-    expect(found.templateId).toEqual(template.id);
+    const foundTemplate = await templateService.findOneOrFail(found.templateId);
+    expect(foundTemplate.marketplaceResourceId).toEqual(marketplaceResourceId);
   });
 
   it(`/CREATE model fails if user is not member of organization`, async () => {
@@ -166,7 +173,7 @@ describe('ModelsController', () => {
       templateId: randomUUID(),
     };
     const otherOrganizationId = randomUUID();
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${otherOrganizationId}/models`)
       .set(
         'Authorization',
@@ -192,7 +199,7 @@ describe('ModelsController', () => {
       description: 'My desc',
       templateId: template.id,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models`)
       .set(
         'Authorization',
@@ -213,7 +220,7 @@ describe('ModelsController', () => {
       templateId: randomUUID(),
       marketplaceResourceId: randomUUID(),
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models`)
       .set(
         'Authorization',
@@ -239,7 +246,7 @@ describe('ModelsController', () => {
       name: 'My name',
       description: 'My desc',
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models`)
       .set(
         'Authorization',
@@ -285,7 +292,7 @@ describe('ModelsController', () => {
       }),
     );
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/models`)
       .set(
         'Authorization',
@@ -312,7 +319,7 @@ describe('ModelsController', () => {
     });
     await modelsService.save(model);
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/models`)
       .set(
         'Authorization',
@@ -335,7 +342,7 @@ describe('ModelsController', () => {
       template,
     });
     await modelsService.save(model);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${organization.id}/models/${model.id}`)
       .set(
         'Authorization',
@@ -360,7 +367,7 @@ describe('ModelsController', () => {
       template,
     });
     await modelsService.save(model);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/models/${model.id}`)
       .set(
         'Authorization',
@@ -384,7 +391,7 @@ describe('ModelsController', () => {
       template,
     });
     await modelsService.save(model);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${organization.id}/models/${model.id}`)
       .set(
         'Authorization',
@@ -427,7 +434,7 @@ describe('ModelsController', () => {
         row: 0,
       },
     ];
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set(
         'Authorization',
@@ -481,7 +488,7 @@ describe('ModelsController', () => {
         row: 0,
       },
     ];
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${otherOrganizationId}/models/${model.id}/data-values`,
       )
@@ -518,7 +525,7 @@ describe('ModelsController', () => {
         row: 0,
       },
     ];
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set(
         'Authorization',
@@ -558,7 +565,7 @@ describe('ModelsController', () => {
         row: 0,
       },
     ];
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set(
         'Authorization',
@@ -609,7 +616,7 @@ describe('ModelsController', () => {
         row: 0,
       },
     ];
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set(
         'Authorization',
@@ -645,7 +652,7 @@ describe('ModelsController', () => {
 
     await modelsService.save(model);
     const addedValues = [];
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${otherOrganizationId}/models/${model.id}/data-values`,
       )
@@ -674,7 +681,7 @@ describe('ModelsController', () => {
 
     await modelsService.save(model);
     const addedValues = [];
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set(
         'Authorization',
