@@ -23,11 +23,11 @@ import { templateCreatePropsFactory } from '../../templates/fixtures/template.fa
 import { expect, jest } from '@jest/globals';
 import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
 import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { PassportTemplateService } from '../infrastructure/passport-template.service';
+import { PassportTemplatePublicationService } from '../infrastructure/passport-template-publication.service';
 import {
-  PassportTemplateDbSchema,
-  PassportTemplateDoc,
-} from '../infrastructure/passport-template.schema';
+  PassportTemplatePublicationDbSchema,
+  PassportTemplatePublicationDoc,
+} from '../infrastructure/passport-template-publication.schema';
 
 describe('MarketplaceService', () => {
   let marketplaceService: MarketplaceApplicationService;
@@ -37,7 +37,7 @@ describe('MarketplaceService', () => {
   let module: TestingModule;
   let dataSource: DataSource;
   let templateService: TemplateService;
-  let passportTemplateService: PassportTemplateService;
+  let passportTemplateService: PassportTemplatePublicationService;
   let organization: Organization;
 
   beforeAll(async () => {
@@ -48,8 +48,8 @@ describe('MarketplaceService', () => {
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
-            name: PassportTemplateDoc.name,
-            schema: PassportTemplateDbSchema,
+            name: PassportTemplatePublicationDoc.name,
+            schema: PassportTemplatePublicationDbSchema,
           },
           {
             name: TemplateDoc.name,
@@ -59,7 +59,7 @@ describe('MarketplaceService', () => {
         KeycloakResourcesModule,
       ],
       providers: [
-        PassportTemplateService,
+        PassportTemplatePublicationService,
         MarketplaceApplicationService,
         OrganizationsService,
         UsersService,
@@ -70,8 +70,8 @@ describe('MarketplaceService', () => {
       MarketplaceApplicationService,
     );
     templateService = module.get<TemplateService>(TemplateService);
-    passportTemplateService = module.get<PassportTemplateService>(
-      PassportTemplateService,
+    passportTemplateService = module.get<PassportTemplatePublicationService>(
+      PassportTemplatePublicationService,
     );
     organizationService =
       module.get<OrganizationsService>(OrganizationsService);

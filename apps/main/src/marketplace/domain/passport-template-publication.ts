@@ -3,7 +3,7 @@ import { Sector } from '../../data-modelling/domain/sectors';
 
 type JsonObject = Record<string, unknown>;
 
-type PassportTemplateCreationProps = {
+type PassportTemplatePublicationCreationProps = {
   ownedByOrganizationId: string;
   createdByUserId: string;
   version: string;
@@ -16,13 +16,14 @@ type PassportTemplateCreationProps = {
   organizationName: string;
   templateData: JsonObject;
 };
-export type PassportTemplateProps = PassportTemplateCreationProps & {
-  id: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-};
+export type PassportTemplatePublicationProps =
+  PassportTemplatePublicationCreationProps & {
+    id: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+  };
 
-export class PassportTemplate {
+export class PassportTemplatePublication {
   private constructor(
     public readonly id: string,
     public readonly ownedByOrganizationId: string,
@@ -40,9 +41,11 @@ export class PassportTemplate {
     public readonly updatedAt?: Date,
   ) {}
 
-  static create(data: PassportTemplateCreationProps): PassportTemplate {
+  static create(
+    data: PassportTemplatePublicationCreationProps,
+  ): PassportTemplatePublication {
     const now = new Date(Date.now());
-    return new PassportTemplate(
+    return new PassportTemplatePublication(
       randomUUID(),
       data.ownedByOrganizationId,
       data.createdByUserId,
@@ -60,8 +63,10 @@ export class PassportTemplate {
     );
   }
 
-  static loadFromDb(data: PassportTemplateProps): PassportTemplate {
-    return new PassportTemplate(
+  static loadFromDb(
+    data: PassportTemplatePublicationProps,
+  ): PassportTemplatePublication {
+    return new PassportTemplatePublication(
       data.id,
       data.ownedByOrganizationId,
       data.createdByUserId,

@@ -1,14 +1,14 @@
-import { PassportTemplate } from './passport-template';
-import { passportTemplatePropsFactory } from '../fixtures/passport-template-props.factory';
+import { PassportTemplatePublication } from './passport-template-publication';
+import { passportTemplatePublicationPropsFactory } from '../fixtures/passport-template-publication-props.factory';
 import { expect } from '@jest/globals';
 import { Sector } from '../../data-modelling/domain/sectors';
 
 describe('PassportTemplate', () => {
   it('is created', () => {
-    const props = passportTemplatePropsFactory.build();
+    const props = passportTemplatePublicationPropsFactory.build();
 
-    const passportTemplate = PassportTemplate.create(props);
-    expect(passportTemplate).toBeInstanceOf(PassportTemplate);
+    const passportTemplate = PassportTemplatePublication.create(props);
+    expect(passportTemplate).toBeInstanceOf(PassportTemplatePublication);
     expect(passportTemplate.id).toEqual(expect.any(String));
     expect(passportTemplate.name).toEqual('test');
     expect(passportTemplate.description).toEqual('test description');
@@ -26,10 +26,10 @@ describe('PassportTemplate', () => {
     expect(passportTemplate.createdAt).toBeInstanceOf(Date);
   });
   it('is loaded from database', () => {
-    const props = passportTemplatePropsFactory.build();
+    const props = passportTemplatePublicationPropsFactory.build();
 
-    const passportTemplate = PassportTemplate.loadFromDb(props);
-    expect(passportTemplate).toBeInstanceOf(PassportTemplate);
+    const passportTemplate = PassportTemplatePublication.loadFromDb(props);
+    expect(passportTemplate).toBeInstanceOf(PassportTemplatePublication);
     expect(passportTemplate.id).toEqual(props.id);
     expect(passportTemplate.name).toEqual('test');
     expect(passportTemplate.description).toEqual('test description');

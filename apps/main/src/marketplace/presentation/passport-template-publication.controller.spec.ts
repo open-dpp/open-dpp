@@ -5,14 +5,14 @@ import { APP_GUARD, Reflector } from '@nestjs/core';
 import request from 'supertest';
 import { Connection } from 'mongoose';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
-import { passportTemplatePropsFactory } from '../fixtures/passport-template-props.factory';
-import { PassportTemplateService } from '../infrastructure/passport-template.service';
+import { passportTemplatePublicationPropsFactory } from '../fixtures/passport-template-publication-props.factory';
+import { PassportTemplatePublicationService } from '../infrastructure/passport-template-publication.service';
 import {
-  PassportTemplateDbSchema,
-  PassportTemplateDoc,
-} from '../infrastructure/passport-template.schema';
-import { PassportTemplate } from '../domain/passport-template';
-import { passportTemplateToDto } from './dto/passport-template.dto';
+  PassportTemplatePublicationDbSchema,
+  PassportTemplatePublicationDoc,
+} from '../infrastructure/passport-template-publication.schema';
+import { PassportTemplatePublication } from '../domain/passport-template-publication';
+import { passportTemplatePublicationToDto } from './dto/passport-template-publication.dto';
 import { expect } from '@jest/globals';
 import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
 import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
@@ -30,7 +30,7 @@ describe('PassportTemplateController', () => {
 
   let mongoConnection: Connection;
   let module: TestingModule;
-  let passportTemplateService: PassportTemplateService;
+  let passportTemplateService: PassportTemplatePublicationService;
 
   const mockNow = new Date('2025-01-01T12:00:00Z');
 
@@ -50,8 +50,8 @@ describe('PassportTemplateController', () => {
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
-            name: PassportTemplateDoc.name,
-            schema: PassportTemplateDbSchema,
+            name: PassportTemplatePublicationDoc.name,
+            schema: PassportTemplatePublicationDbSchema,
           },
         ]),
         MarketplaceModule,
@@ -66,18 +66,18 @@ describe('PassportTemplateController', () => {
 
     app = module.createNestApplication();
     mongoConnection = module.get(getConnectionToken());
-    passportTemplateService = module.get(PassportTemplateService);
+    passportTemplateService = module.get(PassportTemplatePublicationService);
 
     await app.init();
   });
 
   it(`/GET find all passport templates`, async () => {
     jest.spyOn(reflector, 'get').mockReturnValue(true);
-    const passportTemplate = PassportTemplate.loadFromDb(
-      passportTemplatePropsFactory.build(),
+    const passportTemplate = PassportTemplatePublication.loadFromDb(
+      passportTemplatePublicationPropsFactory.build(),
     );
-    const passportTemplate2 = PassportTemplate.loadFromDb(
-      passportTemplatePropsFactory.build({ id: randomUUID() }),
+    const passportTemplate2 = PassportTemplatePublication.loadFromDb(
+      passportTemplatePublicationPropsFactory.build({ id: randomUUID() }),
     );
 
     await passportTemplateService.save(passportTemplate);
@@ -85,10 +85,10 @@ describe('PassportTemplateController', () => {
     const response = await request(getApp(app)).get(`/templates/passports`);
     expect(response.status).toEqual(200);
     expect(response.body).toContainEqual(
-      passportTemplateToDto(passportTemplate),
+      passportTemplatePublicationToDto(passportTemplate),
     );
     expect(response.body).toContainEqual(
-      passportTemplateToDto(passportTemplate2),
+      passportTemplatePublicationToDto(passportTemplate2),
     );
   });
 

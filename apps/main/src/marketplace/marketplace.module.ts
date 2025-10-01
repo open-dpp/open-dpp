@@ -13,20 +13,20 @@ import {
 } from '../templates/infrastructure/template.schema';
 import { TemplateService } from '../templates/infrastructure/template.service';
 import {
-  PassportTemplateDbSchema,
-  PassportTemplateDoc,
-} from './infrastructure/passport-template.schema';
-import { PassportTemplateService } from './infrastructure/passport-template.service';
+  PassportTemplatePublicationDbSchema,
+  PassportTemplatePublicationDoc,
+} from './infrastructure/passport-template-publication.schema';
+import { PassportTemplatePublicationService } from './infrastructure/passport-template-publication.service';
 import { PermissionModule } from '@app/permission';
-import { PassportTemplateController } from './presentation/passport-template.controller';
+import { PassportTemplatePublicationController } from './presentation/passport-template-publication.controller';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
     MongooseModule.forFeature([
       {
-        name: PassportTemplateDoc.name,
-        schema: PassportTemplateDbSchema,
+        name: PassportTemplatePublicationDoc.name,
+        schema: PassportTemplatePublicationDbSchema,
       },
       {
         name: TemplateDoc.name,
@@ -36,9 +36,9 @@ import { PassportTemplateController } from './presentation/passport-template.con
     KeycloakResourcesModule,
     PermissionModule,
   ],
-  controllers: [PassportTemplateController],
+  controllers: [PassportTemplatePublicationController],
   providers: [
-    PassportTemplateService,
+    PassportTemplatePublicationService,
     MarketplaceApplicationService,
     OrganizationsService,
     UsersService,

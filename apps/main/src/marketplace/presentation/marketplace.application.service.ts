@@ -9,8 +9,8 @@ import { TemplateDoc } from '../../templates/infrastructure/template.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { TemplateService } from '../../templates/infrastructure/template.service';
-import { PassportTemplate } from '../domain/passport-template';
-import { PassportTemplateService } from '../infrastructure/passport-template.service';
+import { PassportTemplatePublication } from '../domain/passport-template-publication';
+import { PassportTemplatePublicationService } from '../infrastructure/passport-template-publication.service';
 import { User } from '../../users/domain/user';
 import { randomUUID } from 'crypto';
 
@@ -23,17 +23,20 @@ export class MarketplaceApplicationService {
     @InjectModel(TemplateDoc.name)
     private templateDoc: Model<TemplateDoc>,
     private templateService: TemplateService,
-    private passportTemplateService: PassportTemplateService,
+    private passportTemplateService: PassportTemplatePublicationService,
   ) {}
 
-  async upload(template: Template, user: User): Promise<PassportTemplate> {
+  async upload(
+    template: Template,
+    user: User,
+  ): Promise<PassportTemplatePublication> {
     try {
       const templateData = serializeTemplate(template);
       const organization = await this.organizationService.findOneOrFail(
         template.ownedByOrganizationId,
       );
       return await this.passportTemplateService.save(
-        PassportTemplate.create({
+        PassportTemplatePublication.create({
           website: null,
           version: template.version,
           name: template.name,

@@ -1,12 +1,12 @@
 import { randomUUID } from 'crypto';
-import { PassportTemplateProps } from '../domain/passport-template';
+import { PassportTemplatePublicationProps } from '../domain/passport-template-publication';
 import { Factory } from 'fishery';
 import { Sector } from '../../data-modelling/domain/sectors';
 
 export const nowDate = new Date('2025-01-01T12:00:00Z');
 
-export const passportTemplatePropsFactory =
-  Factory.define<PassportTemplateProps>(() => ({
+export const passportTemplatePublicationPropsFactory =
+  Factory.define<PassportTemplatePublicationProps>(() => ({
     id: randomUUID(),
     ownedByOrganizationId: randomUUID(),
     createdByUserId: randomUUID(),

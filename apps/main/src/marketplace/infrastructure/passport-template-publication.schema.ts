@@ -3,17 +3,17 @@ import { Document, Schema as MongooseSchema } from 'mongoose';
 
 import { Sector } from '../../data-modelling/domain/sectors';
 
-export enum PassportTemplateSchemaVersion {
+export enum PassportTemplatePublicationSchemaVersion {
   v1_0_0 = '1.0.0',
 }
 
-@Schema({ collection: 'passport_templates' })
-export class PassportTemplateDoc extends Document {
+@Schema({ collection: 'passport_template_publications' })
+export class PassportTemplatePublicationDoc extends Document {
   @Prop({
-    default: PassportTemplateSchemaVersion.v1_0_0,
-    enum: PassportTemplateSchemaVersion,
+    default: PassportTemplatePublicationSchemaVersion.v1_0_0,
+    enum: PassportTemplatePublicationSchemaVersion,
   }) // Track schema version
-  _schemaVersion: PassportTemplateSchemaVersion;
+  _schemaVersion: PassportTemplatePublicationSchemaVersion;
 
   @Prop({ required: true })
   // @ts-expect-error uses mongo _id
@@ -45,7 +45,8 @@ export class PassportTemplateDoc extends Document {
   @Prop({ required: true })
   updatedAt: Date;
 }
-export const PassportTemplateDbSchema =
-  SchemaFactory.createForClass(PassportTemplateDoc);
+export const PassportTemplatePublicationDbSchema = SchemaFactory.createForClass(
+  PassportTemplatePublicationDoc,
+);
 
-PassportTemplateDbSchema.index({ organizationName: 1, sectors: 1 });
+PassportTemplatePublicationDbSchema.index({ organizationName: 1, sectors: 1 });
