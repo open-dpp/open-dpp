@@ -15,6 +15,7 @@ import { DataFieldDraft } from '../domain/data-field-draft';
 import { TemplateService } from '../../templates/infrastructure/template.service';
 import * as createTemplateDraftDto_1 from './dto/create-template-draft.dto';
 import * as createSectionDraftDto_1 from './dto/create-section-draft.dto';
+import { CreateSectionDraftDtoSchema } from './dto/create-section-draft.dto';
 import * as createDataFieldDraftDto_1 from './dto/create-data-field-draft.dto';
 import * as updateTemplateDraftDto_1 from './dto/update-template-draft.dto';
 import * as publishDto_1 from './dto/publish.dto';
@@ -117,11 +118,7 @@ export class TemplateDraftController {
     @Param('orgaId') organizationId: string,
     @Param('draftId') draftId: string,
     @Request() req: authRequest.AuthRequest,
-    @Body(
-      new ZodValidationPipe(
-        createSectionDraftDto_1.CreateSectionDraftDtoSchema,
-      ),
-    )
+    @Body(new ZodValidationPipe(CreateSectionDraftDtoSchema))
     createSectionDraftDto: createSectionDraftDto_1.CreateSectionDraftDto,
   ) {
     this.permissionsService.canAccessOrganizationOrFail(

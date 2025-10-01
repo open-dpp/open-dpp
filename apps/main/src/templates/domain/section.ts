@@ -90,7 +90,7 @@ export abstract class Section extends SectionBase {
       for (const dataField of this.dataFields.filter(
         (d) => d.granularityLevel === granularity,
       )) {
-        const dataValue = (dataValuesOfRow as Array<DataValue>).find(
+        const dataValue = dataValuesOfRow.find(
           (v) => v.dataFieldId === dataField.id,
         );
         validations.push(
