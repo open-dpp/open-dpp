@@ -4,9 +4,9 @@ import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { RunnableSequence } from '@langchain/core/runnables';
 import { AiService } from './ai.service';
-import { McpClientService } from './mcp-client/mcp-client.service';
-import { AiConfigurationService } from './ai-configuration/infrastructure/ai-configuration.service';
-import { UniqueProductIdentifierApplicationService } from '../unique-product-identifier/presentation/unique.product.identifier.application.service';
+import { McpClientService } from './mcp-client.service';
+import { AiConfigurationService } from './ai-configuration.service';
+import { UniqueProductIdentifierApplicationService } from '../../unique-product-identifier/presentation/unique.product.identifier.application.service';
 
 @Injectable()
 export class ChatService {

@@ -8,7 +8,6 @@ import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
 import { aiConfigurationToDto } from './dto/ai-configuration.dto';
 import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
 import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
-import { AiConfigurationModule } from '../ai-configuration.module';
 import {
   AiConfigurationDbSchema,
   AiConfigurationDoc,
@@ -18,6 +17,7 @@ import { aiConfigurationFactory } from '../fixtures/ai-configuration-props.facto
 import { AiConfiguration, AiProvider } from '../domain/ai-configuration';
 import { NotFoundInDatabaseExceptionFilter } from '@app/exception/exception.handler';
 import request from 'supertest';
+import { AiModule } from '../ai.module';
 
 describe('AiConfigurationController', () => {
   let app: INestApplication;
@@ -53,7 +53,7 @@ describe('AiConfigurationController', () => {
             schema: AiConfigurationDbSchema,
           },
         ]),
-        AiConfigurationModule,
+        AiModule,
       ],
       providers: [
         {

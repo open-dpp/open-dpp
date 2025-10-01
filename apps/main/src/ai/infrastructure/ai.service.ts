@@ -4,7 +4,7 @@ import { createReactAgent } from '@langchain/langgraph/prebuilt';
 import { StructuredToolInterface } from '@langchain/core/tools';
 import { ConfigService } from '@nestjs/config';
 import { ChatMistralAI } from '@langchain/mistralai';
-import { AiProvider } from './ai-configuration/domain/ai-configuration';
+import { AiProvider } from '../domain/ai-configuration';
 
 @Injectable()
 export class AiService {
