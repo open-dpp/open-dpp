@@ -1,5 +1,7 @@
 import { isArray, isObject, transform } from 'lodash';
 import { expect } from '@jest/globals';
+import { INestApplication } from '@nestjs/common';
+import { App } from 'supertest/types';
 
 export function ignoreIds(plain: any) {
   return transform(plain, (result, value, key) => {
@@ -13,4 +15,8 @@ export function ignoreIds(plain: any) {
       result[key] = value;
     }
   });
+}
+
+export function getApp(app: INestApplication): App {
+  return app.getHttpServer() as App;
 }

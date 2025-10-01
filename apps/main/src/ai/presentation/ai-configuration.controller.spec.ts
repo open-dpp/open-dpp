@@ -18,6 +18,8 @@ import { AiConfiguration, AiProvider } from '../domain/ai-configuration';
 import { NotFoundInDatabaseExceptionFilter } from '@app/exception/exception.handler';
 import request from 'supertest';
 import { AiModule } from '../ai.module';
+import { getApp } from '@app/testing/utils';
+import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
 
 describe('AiConfigurationController', () => {
   let app: INestApplication;
@@ -46,6 +48,7 @@ describe('AiConfigurationController', () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
+        TypeOrmTestingModule,
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -78,7 +81,7 @@ describe('AiConfigurationController', () => {
       provider: AiProvider.Mistral,
       model: 'codestral-latest',
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .put(`/organizations/${orgaId}/configurations`)
       .set(
         'Authorization',
@@ -101,7 +104,7 @@ describe('AiConfigurationController', () => {
       provider: AiProvider.Mistral,
       model: 'codestral-latest',
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .put(`/organizations/${orgaId}/configurations`)
       .set(
         'Authorization',
@@ -124,7 +127,7 @@ describe('AiConfigurationController', () => {
       provider: AiProvider.Ollama,
       model: 'qwen3:0.6b',
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .put(`/organizations/${orgaId}/configurations`)
       .set(
         'Authorization',
@@ -147,7 +150,7 @@ describe('AiConfigurationController', () => {
       aiConfigurationFactory.build({ ownedByOrganizationId: organizationId }),
     );
     await aiConfigurationService.save(aiConfiguration);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${organizationId}/configurations`)
       .set(
         'Authorization',
@@ -168,7 +171,7 @@ describe('AiConfigurationController', () => {
       aiConfigurationFactory.build({ ownedByOrganizationId: organizationId }),
     );
     await aiConfigurationService.save(aiConfiguration);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${organizationId}/configurations`)
       .set(
         'Authorization',
@@ -179,7 +182,7 @@ describe('AiConfigurationController', () => {
 
   it(`/GET cannot find configuration`, async () => {
     const orgaId = randomUUID();
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${orgaId}/configurations`)
       .set(
         'Authorization',
@@ -189,8 +192,8 @@ describe('AiConfigurationController', () => {
   });
 
   afterAll(async () => {
-    await app.close();
     await mongoConnection.close();
     await module.close();
+    await app.close();
   });
 });

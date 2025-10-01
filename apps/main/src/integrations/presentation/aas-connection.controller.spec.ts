@@ -36,6 +36,7 @@ import { expect } from '@jest/globals';
 import request from 'supertest';
 import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
 import { User } from '../../users/domain/user';
+import { getApp } from '@app/testing/utils';
 
 describe('AasConnectionController', () => {
   let app: INestApplication;
@@ -191,7 +192,7 @@ describe('AasConnectionController', () => {
     await aasConnectionService.save(aasMapping);
 
     const globalAssetId = `Semitrailer_Truck_-10204004-0010-02_${randomUUID()}`;
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${organizationId}/integration/aas/connections/${aasMapping.id}/items`,
       )
@@ -253,7 +254,7 @@ describe('AasConnectionController', () => {
       ],
     };
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organizationId}/integration/aas/connections`)
       .set(
         'Authorization',
@@ -308,7 +309,7 @@ describe('AasConnectionController', () => {
       ],
     };
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${organizationId}/integration/aas/connections/${aasConnection.id}`,
       )
@@ -331,7 +332,7 @@ describe('AasConnectionController', () => {
   it(`/GET all properties of aas`, async () => {
     jest.spyOn(reflector, 'get').mockReturnValue(false);
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(
         `/organizations/${organizationId}/integration/aas/${AssetAdministrationShellType.Semitrailer_Truck}/properties`,
       )
@@ -386,7 +387,7 @@ describe('AasConnectionController', () => {
     await aasConnectionService.save(aasConnection1);
     await aasConnectionService.save(aasConnection2);
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/integration/aas/connections`)
       .set(
         'Authorization',

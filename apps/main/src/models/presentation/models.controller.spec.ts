@@ -22,7 +22,7 @@ import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
 import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { modelToDto } from './dto/model.dto';
-import { ignoreIds } from '@app/testing/utils';
+import { getApp, ignoreIds } from '@app/testing/utils';
 import { DataValue } from '../../product-passport-data/domain/data-value';
 import {
   LaptopFactory,
@@ -111,7 +111,7 @@ describe('ModelsController', () => {
       description: 'My desc',
       templateId: template.id,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models`)
       .set(
         'Authorization',
@@ -154,7 +154,7 @@ describe('ModelsController', () => {
       description: 'My desc',
       marketplaceResourceId,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models`)
       .set('Authorization', token)
       .send(body);
@@ -173,7 +173,7 @@ describe('ModelsController', () => {
       templateId: randomUUID(),
     };
     const otherOrganizationId = randomUUID();
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${otherOrganizationId}/models`)
       .set(
         'Authorization',
@@ -199,7 +199,7 @@ describe('ModelsController', () => {
       description: 'My desc',
       templateId: template.id,
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models`)
       .set(
         'Authorization',
@@ -220,7 +220,7 @@ describe('ModelsController', () => {
       templateId: randomUUID(),
       marketplaceResourceId: randomUUID(),
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models`)
       .set(
         'Authorization',
@@ -246,7 +246,7 @@ describe('ModelsController', () => {
       name: 'My name',
       description: 'My desc',
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models`)
       .set(
         'Authorization',
@@ -292,7 +292,7 @@ describe('ModelsController', () => {
       }),
     );
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/models`)
       .set(
         'Authorization',
@@ -319,7 +319,7 @@ describe('ModelsController', () => {
     });
     await modelsService.save(model);
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/models`)
       .set(
         'Authorization',
@@ -342,7 +342,7 @@ describe('ModelsController', () => {
       template,
     });
     await modelsService.save(model);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${organization.id}/models/${model.id}`)
       .set(
         'Authorization',
@@ -367,7 +367,7 @@ describe('ModelsController', () => {
       template,
     });
     await modelsService.save(model);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/models/${model.id}`)
       .set(
         'Authorization',
@@ -391,7 +391,7 @@ describe('ModelsController', () => {
       template,
     });
     await modelsService.save(model);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${organization.id}/models/${model.id}`)
       .set(
         'Authorization',
@@ -434,7 +434,7 @@ describe('ModelsController', () => {
         row: 0,
       },
     ];
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set(
         'Authorization',
@@ -488,7 +488,7 @@ describe('ModelsController', () => {
         row: 0,
       },
     ];
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${otherOrganizationId}/models/${model.id}/data-values`,
       )
@@ -525,7 +525,7 @@ describe('ModelsController', () => {
         row: 0,
       },
     ];
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set(
         'Authorization',
@@ -565,7 +565,7 @@ describe('ModelsController', () => {
         row: 0,
       },
     ];
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set(
         'Authorization',
@@ -616,7 +616,7 @@ describe('ModelsController', () => {
         row: 0,
       },
     ];
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set(
         'Authorization',
@@ -652,7 +652,7 @@ describe('ModelsController', () => {
 
     await modelsService.save(model);
     const addedValues = [];
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${otherOrganizationId}/models/${model.id}/data-values`,
       )
@@ -681,7 +681,7 @@ describe('ModelsController', () => {
 
     await modelsService.save(model);
     const addedValues = [];
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set(
         'Authorization',

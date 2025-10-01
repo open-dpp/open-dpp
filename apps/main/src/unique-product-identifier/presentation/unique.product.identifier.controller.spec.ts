@@ -23,6 +23,7 @@ import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
 import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
 import { ALLOW_SERVICE_ACCESS } from '@app/auth/allow-service-access.decorator';
 import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
+import { getApp } from '@app/testing/utils';
 
 describe('UniqueProductIdentifierController', () => {
   let app: INestApplication;
@@ -93,7 +94,7 @@ describe('UniqueProductIdentifierController', () => {
     const { uuid } = item.createUniqueProductIdentifier('externalId');
     await itemsService.save(item);
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(
         `/organizations/${organizationId}/unique-product-identifiers/${uuid}/reference`,
       )
@@ -137,7 +138,7 @@ describe('UniqueProductIdentifierController', () => {
     const { uuid } = item.createUniqueProductIdentifier('externalId');
     await itemsService.save(item);
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/unique-product-identifiers/${uuid}/metadata`)
       .set('service_token', serviceToken);
 
@@ -152,7 +153,7 @@ describe('UniqueProductIdentifierController', () => {
       .spyOn(reflector, 'get')
       .mockImplementation((key) => key === ALLOW_SERVICE_ACCESS);
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/unique-product-identifiers/${randomUUID()}/metadata`)
       .set('service_token', 'invalid_token');
     expect(response.status).toEqual(401);
@@ -169,7 +170,7 @@ describe('UniqueProductIdentifierController', () => {
     });
     const { uuid } = model.createUniqueProductIdentifier();
     await modelsService.save(model);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(
         `/organizations/${organizationId}/unique-product-identifiers/${uuid}/reference`,
       )

@@ -18,6 +18,7 @@ import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testi
 import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
 import { MarketplaceModule } from '../marketplace.module';
 import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
+import { getApp } from '@app/testing/utils';
 
 describe('PassportTemplateController', () => {
   let app: INestApplication;
@@ -81,9 +82,7 @@ describe('PassportTemplateController', () => {
 
     await passportTemplateService.save(passportTemplate);
     await passportTemplateService.save(passportTemplate2);
-    const response = await request(app.getHttpServer()).get(
-      `/templates/passports`,
-    );
+    const response = await request(getApp(app)).get(`/templates/passports`);
     expect(response.status).toEqual(200);
     expect(response.body).toContainEqual(
       passportTemplateToDto(passportTemplate),
