@@ -18,7 +18,8 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "pnpm run clean && tsc",
-    "check-ts": "tsc --noEmit"
+    "check-ts": "tsc --noEmit",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   },
   "dependencies": {
     "@open-dpp/auth": "workspace:*",
