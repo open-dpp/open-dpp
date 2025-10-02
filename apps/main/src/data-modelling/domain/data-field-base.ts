@@ -1,4 +1,4 @@
-import { GranularityLevel } from './granularity-level';
+import type { GranularityLevel } from './granularity-level'
 
 export enum DataFieldType {
   TEXT_FIELD = 'TextField',
@@ -17,6 +17,6 @@ export abstract class DataFieldBase {
   ) {}
 
   get name() {
-    return this._name;
+    return this._name
   }
 }

@@ -1,3 +1,98 @@
+<script lang="ts" setup>
+import {
+  ArrowPathIcon,
+  CheckCircleIcon,
+  CircleStackIcon,
+  DocumentCheckIcon,
+  DocumentPlusIcon,
+  UserGroupIcon,
+} from "@heroicons/vue/24/outline";
+import UnderConstruction from "./UnderConstruction.vue";
+
+const stats = [
+  {
+    name: "Anzahl Produktpässe",
+    value: "3,721",
+    change: "12%",
+    changeType: "increase",
+    icon: DocumentCheckIcon,
+  },
+  {
+    name: "Produktpässe im Umlauf",
+    value: "2,834",
+    change: "7%",
+    changeType: "increase",
+    icon: CircleStackIcon,
+  },
+  {
+    name: "EU-Konformitätsrate",
+    value: "94.2%",
+    change: "3%",
+    changeType: "increase",
+    icon: CheckCircleIcon,
+  },
+  {
+    name: "Tägliche Kunden Interaktionen",
+    value: "847",
+    change: "2%",
+    changeType: "decrease",
+    icon: UserGroupIcon,
+  },
+];
+
+const sustainableMaterials = [
+  { name: "Recyceltes Plastik", percentage: 85 },
+  { name: "Nachwachsendes Holz", percentage: 72 },
+  { name: "Organische Materialien", percentage: 64 },
+  { name: "Biologisch abbaubare Komponenten", percentage: 58 },
+];
+
+const complianceStatus = [
+  { name: "EU-Konformität", value: 98 },
+  { name: "Datenvollständigkeit", value: 87 },
+  { name: "Nachvollziebarkeit der Materialien", value: 92 },
+  { name: "Tracking des CO2-Fußabdrucks", value: 76 },
+];
+
+const recentActivity = [
+  {
+    id: 1,
+    content: "Neuer Produktpass für „Umweltfreundlichen Bürostuhl“ erstellt",
+    type: "creation",
+    icon: DocumentPlusIcon,
+    date: "vor 20 Minuten",
+    datetime: "2024-01-20T13:00",
+  },
+  {
+    id: 2,
+    content:
+      "Aktualisierte Nachhaltigkeitskennzahlen für „Bamboo Desk Series“.",
+    type: "update",
+    icon: ArrowPathIcon,
+    date: "vor 2 Stunden",
+    datetime: "2024-01-20T11:00",
+  },
+  {
+    id: 3,
+    content:
+      "Prüfung der Einhaltung der Vorschriften für die „Recycled Plastic Container Line“ abgeschlossen",
+    type: "check",
+    icon: CheckCircleIcon,
+    date: "vor 5 Stunden",
+    datetime: "2024-01-20T08:00",
+  },
+  {
+    id: 4,
+    content:
+      "Materialzusammensetzung für „Smart LED Lighting System“ aktualisiert",
+    type: "update",
+    icon: ArrowPathIcon,
+    date: "vor 1 Tag",
+    datetime: "2024-01-19T15:00",
+  },
+];
+</script>
+
 <template>
   <UnderConstruction :show-preview="true">
     <!-- Stats Overview -->
@@ -28,11 +123,10 @@
                     {{ stat.value }}
                   </div>
                   <div
-                    :class="[
+                    class="ml-2 flex items-baseline text-sm font-semibold" :class="[
                       stat.changeType === 'increase'
                         ? 'text-green-600'
                         : 'text-red-600',
-                      'ml-2 flex items-baseline text-sm font-semibold',
                     ]"
                   >
                     <component
@@ -79,12 +173,10 @@
                 <div
                   class="absolute h-full bg-GJDarkGreen opacity-75"
                   :style="{ width: `${material.percentage}%` }"
-                ></div>
+                />
               </div>
             </div>
-            <span class="ml-4 text-sm text-gray-600"
-              >{{ material.percentage }}%</span
-            >
+            <span class="ml-4 text-sm text-gray-600">{{ material.percentage }}%</span>
           </div>
         </div>
       </div>
@@ -100,7 +192,9 @@
             :key="status.name"
             class="bg-gray-50 p-4 rounded-lg"
           >
-            <dt class="text-sm font-medium text-gray-500">{{ status.name }}</dt>
+            <dt class="text-sm font-medium text-gray-500">
+              {{ status.name }}
+            </dt>
             <dd class="mt-1 text-3xl font-semibold text-GJDarkGreen">
               {{ status.value }}%
             </dd>
@@ -131,11 +225,10 @@
                   <div class="relative flex space-x-3">
                     <div>
                       <span
-                        :class="[
+                        class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white" :class="[
                           activity.type === 'creation'
                             ? 'bg-green-500'
                             : 'bg-blue-500',
-                          'h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white',
                         ]"
                       >
                         <component
@@ -171,98 +264,3 @@
     </div>
   </UnderConstruction>
 </template>
-
-<script lang="ts" setup>
-import {
-  ArrowPathIcon,
-  CheckCircleIcon,
-  CircleStackIcon,
-  DocumentCheckIcon,
-  DocumentPlusIcon,
-  UserGroupIcon,
-} from '@heroicons/vue/24/outline';
-import UnderConstruction from './UnderConstruction.vue';
-
-const stats = [
-  {
-    name: 'Anzahl Produktpässe',
-    value: '3,721',
-    change: '12%',
-    changeType: 'increase',
-    icon: DocumentCheckIcon,
-  },
-  {
-    name: 'Produktpässe im Umlauf',
-    value: '2,834',
-    change: '7%',
-    changeType: 'increase',
-    icon: CircleStackIcon,
-  },
-  {
-    name: 'EU-Konformitätsrate',
-    value: '94.2%',
-    change: '3%',
-    changeType: 'increase',
-    icon: CheckCircleIcon,
-  },
-  {
-    name: 'Tägliche Kunden Interaktionen',
-    value: '847',
-    change: '2%',
-    changeType: 'decrease',
-    icon: UserGroupIcon,
-  },
-];
-
-const sustainableMaterials = [
-  { name: 'Recyceltes Plastik', percentage: 85 },
-  { name: 'Nachwachsendes Holz', percentage: 72 },
-  { name: 'Organische Materialien', percentage: 64 },
-  { name: 'Biologisch abbaubare Komponenten', percentage: 58 },
-];
-
-const complianceStatus = [
-  { name: 'EU-Konformität', value: 98 },
-  { name: 'Datenvollständigkeit', value: 87 },
-  { name: 'Nachvollziebarkeit der Materialien', value: 92 },
-  { name: 'Tracking des CO2-Fußabdrucks', value: 76 },
-];
-
-const recentActivity = [
-  {
-    id: 1,
-    content: 'Neuer Produktpass für „Umweltfreundlichen Bürostuhl“ erstellt',
-    type: 'creation',
-    icon: DocumentPlusIcon,
-    date: 'vor 20 Minuten',
-    datetime: '2024-01-20T13:00',
-  },
-  {
-    id: 2,
-    content:
-      'Aktualisierte Nachhaltigkeitskennzahlen für „Bamboo Desk Series“.',
-    type: 'update',
-    icon: ArrowPathIcon,
-    date: 'vor 2 Stunden',
-    datetime: '2024-01-20T11:00',
-  },
-  {
-    id: 3,
-    content:
-      'Prüfung der Einhaltung der Vorschriften für die „Recycled Plastic Container Line“ abgeschlossen',
-    type: 'check',
-    icon: CheckCircleIcon,
-    date: 'vor 5 Stunden',
-    datetime: '2024-01-20T08:00',
-  },
-  {
-    id: 4,
-    content:
-      'Materialzusammensetzung für „Smart LED Lighting System“ aktualisiert',
-    type: 'update',
-    icon: ArrowPathIcon,
-    date: 'vor 1 Tag',
-    datetime: '2024-01-19T15:00',
-  },
-];
-</script>

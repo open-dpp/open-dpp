@@ -1,3 +1,24 @@
+<script lang="ts" setup>
+import type { TemplateDraftCreateDto } from "@open-dpp/api-client";
+import { Sector } from "@open-dpp/api-client";
+
+const emits = defineEmits<{
+  (e: "submit", draftData: TemplateDraftCreateDto): void;
+}>();
+
+async function create(fields: {
+  name: string;
+  description: string;
+  sectors: Sector[];
+}) {
+  emits("submit", {
+    name: fields.name,
+    description: fields.description,
+    sectors: fields.sectors,
+  });
+}
+</script>
+
 <template>
   <form-kit id="createDraftForm" :actions="false" type="form" @submit="create">
     <form-kit
@@ -45,24 +66,3 @@
     <form-kit label="Erstellen" type="submit" />
   </form-kit>
 </template>
-
-<script lang="ts" setup>
-import { Sector, TemplateDraftCreateDto } from '@open-dpp/api-client';
-
-const emits = defineEmits<{
-  (e: 'submit', draftData: TemplateDraftCreateDto): void;
-}>();
-
-const create = async (fields: {
-  name: string;
-  description: string;
-  sectors: Sector[];
-}) => {
-  console.log(fields.sectors);
-  emits('submit', {
-    name: fields.name,
-    description: fields.description,
-    sectors: fields.sectors,
-  });
-};
-</script>

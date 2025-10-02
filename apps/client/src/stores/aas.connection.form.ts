@@ -1,23 +1,25 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import apiClient from '../lib/api-client';
-import { groupBy } from 'lodash';
-import {
+import type {
   AasConnectionDto,
   AasPropertyDto,
-  GranularityLevel,
   ModelDto,
-  SectionType,
   TemplateDto,
-} from '@open-dpp/api-client';
-import { useErrorHandlingStore } from './error.handling';
+} from "@open-dpp/api-client";
+import {
+  GranularityLevel,
+  SectionType,
+} from "@open-dpp/api-client";
+import { groupBy } from "lodash";
+import { defineStore } from "pinia";
+import { ref } from "vue";
+import apiClient from "../lib/api-client";
+import { useErrorHandlingStore } from "./error.handling";
 
 function aasDropdownValue(parentIdShort: string, idShort: string) {
-  return [parentIdShort, idShort].join('/');
+  return [parentIdShort, idShort].join("/");
 }
 
 function aasDropdownValueToAasId(dropdownValue: string) {
-  const [parentIdShort, idShort] = dropdownValue.split('/');
+  const [parentIdShort, idShort] = dropdownValue.split("/");
   return {
     parentIdShort,
     idShort,
@@ -25,11 +27,11 @@ function aasDropdownValueToAasId(dropdownValue: string) {
 }
 
 function dataFieldDropdownValue(sectionId: string, fieldId: string) {
-  return [sectionId, fieldId].join('/');
+  return [sectionId, fieldId].join("/");
 }
 
 function dataFieldDropdownValueToDppId(dropdownValue: string) {
-  const [sectionId, dataFieldId] = dropdownValue.split('/');
+  const [sectionId, dataFieldId] = dropdownValue.split("/");
   return {
     sectionId,
     dataFieldId,
@@ -50,15 +52,15 @@ interface FieldAssignmentRow {
 
 function isFieldAssignmentRow(item: unknown): item is FieldAssignmentRow {
   return (
-    typeof item === 'object' &&
-    item !== null &&
-    'rowIndex' in item &&
-    typeof item.rowIndex === 'number'
+    typeof item === "object"
+    && item !== null
+    && "rowIndex" in item
+    && typeof item.rowIndex === "number"
   );
 }
 
 export const useAasConnectionFormStore = defineStore(
-  'aas-connection-form',
+  "aas-connection-form",
   () => {
     const formData = ref<Record<string, string>>({});
     const formSchema = ref();
@@ -91,60 +93,60 @@ export const useAasConnectionFormStore = defineStore(
 
     const horizontalLine = () => {
       return {
-        $el: 'div',
+        $el: "div",
         attrs: {
-          class: 'w-full border-t border-gray-300 m-2',
+          class: "w-full border-t border-gray-300 m-2",
         },
       };
     };
 
     const newFieldAssignmentRow = (index: number) => {
       return {
-        $el: 'div',
+        $el: "div",
         rowIndex: index,
         attrs: {
-          class: 'flex flex-col md:flex-row justify-around gap-2 items-center',
+          class: "flex flex-col md:flex-row justify-around gap-2 items-center",
         },
         children: [
           {
-            $el: 'div',
+            $el: "div",
             attrs: {
-              class: 'flex',
+              class: "flex",
             },
             children: [
               {
-                $formkit: 'select',
-                required: true,
-                label: `Feld aus der Asset Administration Shell`,
-                name: aasFieldId(index),
-                placeholder:
-                  'Wählen Sie ein Feld aus der Asset Administration Shell',
-                options: aasProperties.value,
-                'data-cy': `aas-select-${index}`,
+                "$formkit": "select",
+                "required": true,
+                "label": `Feld aus der Asset Administration Shell`,
+                "name": aasFieldId(index),
+                "placeholder":
+                  "Wählen Sie ein Feld aus der Asset Administration Shell",
+                "options": aasProperties.value,
+                "data-cy": `aas-select-${index}`,
               },
             ],
           },
           {
-            $el: 'div',
-            children: 'ist verknüpft mit',
+            $el: "div",
+            children: "ist verknüpft mit",
             attrs: {
-              class: 'flex',
+              class: "flex",
             },
           },
           {
-            $el: 'div',
+            $el: "div",
             attrs: {
-              class: 'flex',
+              class: "flex",
             },
             children: [
               {
-                $formkit: 'select',
-                required: true,
-                label: `Feld aus dem Produktdatenmodell`,
-                placeholder: 'Wählen Sie ein Feld aus dem Produktdatenmodell', // Add this line
-                name: dppFieldId(index),
-                options: templateOptions.value,
-                'data-cy': `dpp-select-${index}`,
+                "$formkit": "select",
+                "required": true,
+                "label": `Feld aus dem Produktdatenmodell`,
+                "placeholder": "Wählen Sie ein Feld aus dem Produktdatenmodell", // Add this line
+                "name": dppFieldId(index),
+                "options": templateOptions.value,
+                "data-cy": `dpp-select-${index}`,
               },
             ],
           },
@@ -198,8 +200,8 @@ export const useAasConnectionFormStore = defineStore(
         if (aasConnection.value) {
           const fieldAssignments = Object.entries(formData.value)
             .map(([key, value]) => {
-              const [source, keyIndex] = key.split('-');
-              if (source === 'aas') {
+              const [source, keyIndex] = key.split("-");
+              if (source === "aas") {
                 const ddpField = formData.value[`dpp-${keyIndex}`];
                 if (!ddpField) {
                   return undefined;
@@ -212,11 +214,12 @@ export const useAasConnectionFormStore = defineStore(
                   idShortParent: aasValues.parentIdShort,
                   idShort: aasValues.idShort,
                 };
-              } else {
+              }
+              else {
                 return undefined;
               }
             })
-            .filter((a) => a !== undefined);
+            .filter(a => a !== undefined);
 
           const response = await apiClient.dpp.aasIntegration.modifyConnection(
             aasConnection.value.id,
@@ -228,11 +231,33 @@ export const useAasConnectionFormStore = defineStore(
           );
           aasConnection.value = response.data;
         }
-      } catch (e) {
+      }
+      catch (e) {
         errorHandlingStore.logErrorWithNotification(
-          'Speichern der Verbindung fehlgeschlagen',
+          "Speichern der Verbindung fehlgeschlagen",
           e,
         );
+      }
+    };
+
+    const updateTemplateOptions = async (templateDto: TemplateDto) => {
+      if (aasConnection.value) {
+        templateOptions.value = templateDto.sections
+          .filter(
+            s =>
+              (s.granularityLevel === granularityLevel
+                || !s.granularityLevel)
+              && s.type === SectionType.GROUP,
+          )
+          .map(section => ({
+            group: section.name,
+            options: section.dataFields
+              .filter(d => d.granularityLevel === granularityLevel)
+              .map(field => ({
+                label: field.name,
+                value: dataFieldDropdownValue(section.id, field.id),
+              })),
+          }));
       }
     };
 
@@ -253,46 +278,27 @@ export const useAasConnectionFormStore = defineStore(
           });
           formData.value = Object.fromEntries(
             Object.entries(formData.value).map(([key, value]) => {
-              if (key.startsWith('dpp') && value) {
-                const { sectionId, dataFieldId } =
-                  dataFieldDropdownValueToDppId(value);
+              if (key.startsWith("dpp") && value) {
+                const { sectionId, dataFieldId }
+                  = dataFieldDropdownValueToDppId(value);
                 const foundValue = template.sections
-                  .find((s) => s.id === sectionId)
-                  ?.dataFields.find((f) => f.id === dataFieldId);
+                  .find(s => s.id === sectionId)
+                  ?.dataFields
+                  .find(f => f.id === dataFieldId);
                 if (!foundValue) {
-                  return [key, ''];
+                  return [key, ""];
                 }
               }
               return [key, value];
             }),
           );
         }
-      } catch (e) {
+      }
+      catch (e) {
         errorHandlingStore.logErrorWithNotification(
-          'Wechsel des Modellpasses fehlgeschlagen',
+          "Wechsel des Modellpasses fehlgeschlagen",
           e,
         );
-      }
-    };
-
-    const updateTemplateOptions = async (templateDto: TemplateDto) => {
-      if (aasConnection.value) {
-        templateOptions.value = templateDto.sections
-          .filter(
-            (s) =>
-              (s.granularityLevel === granularityLevel ||
-                !s.granularityLevel) &&
-              s.type === SectionType.GROUP,
-          )
-          .map((section) => ({
-            group: section.name,
-            options: section.dataFields
-              .filter((d) => d.granularityLevel === granularityLevel)
-              .map((field) => ({
-                label: field.name,
-                value: dataFieldDropdownValue(section.id, field.id),
-              })),
-          }));
       }
     };
 
@@ -302,16 +308,16 @@ export const useAasConnectionFormStore = defineStore(
       aasConnection.value = response.data;
 
       if (aasConnection.value) {
-        const propertiesResponse =
-          await apiClient.dpp.aasIntegration.getPropertiesOfAas(
+        const propertiesResponse
+          = await apiClient.dpp.aasIntegration.getPropertiesOfAas(
             aasConnection.value.aasType,
           );
         const properties = propertiesResponse.data;
         aasProperties.value = Object.entries(
-          groupBy(properties, 'parentIdShort'),
+          groupBy(properties, "parentIdShort"),
         ).map(([parentIdShort, props]) => ({
           group: parentIdShort,
-          options: props.map((prop) => ({
+          options: props.map(prop => ({
             label: prop.property.idShort,
             value: aasDropdownValue(parentIdShort, prop.property.idShort),
             property: prop.property,

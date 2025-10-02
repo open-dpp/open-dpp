@@ -1,8 +1,8 @@
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ItemsModule } from '../items/items.module';
-import { ModelsModule } from '../models/models.module';
-import { TemplateModule } from '../templates/template.module';
-import { INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common'
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import { ItemsModule } from '../items/items.module'
+import { ModelsModule } from '../models/models.module'
+import { TemplateModule } from '../templates/template.module'
 
 export function buildOpenApiDocumentation(app: INestApplication) {
   const config = new DocumentBuilder()
@@ -19,10 +19,10 @@ export function buildOpenApiDocumentation(app: INestApplication) {
     .addServer('http://localhost:3000', 'Local') // Add server URL and description
     .addServer('https://api.cloud.open-dpp.de', 'Production')
     .addSecurityRequirements('api_token')
-    .build();
+    .build()
   const documentFactory = () =>
     SwaggerModule.createDocument(app, config, {
       include: [ItemsModule, ModelsModule, TemplateModule],
-    });
-  SwaggerModule.setup('api', app, documentFactory);
+    })
+  SwaggerModule.setup('api', app, documentFactory)
 }

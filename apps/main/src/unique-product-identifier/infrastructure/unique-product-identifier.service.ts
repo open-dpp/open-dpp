@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { UniqueProductIdentifier } from '../domain/unique.product.identifier';
-import { InjectModel } from '@nestjs/mongoose';
-import { ModelDocSchemaVersion } from '../../models/infrastructure/model.schema';
-import { Model as MongooseModel } from 'mongoose';
-import { UniqueProductIdentifierDoc } from './unique-product-identifier.schema';
-import { NotFoundInDatabaseException } from '@open-dpp/exception';
+import type { Model as MongooseModel } from 'mongoose'
+import { Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/mongoose'
+import { NotFoundInDatabaseException } from '@open-dpp/exception'
+import { ModelDocSchemaVersion } from '../../models/infrastructure/model.schema'
+import { UniqueProductIdentifier } from '../domain/unique.product.identifier'
+import { UniqueProductIdentifierDoc } from './unique-product-identifier.schema'
 
 @Injectable()
 export class UniqueProductIdentifierService {
@@ -17,7 +17,7 @@ export class UniqueProductIdentifierService {
     return UniqueProductIdentifier.loadFromDb({
       uuid: uniqueProductIdentifierDoc._id.toString(),
       referenceId: uniqueProductIdentifierDoc.referenceId,
-    });
+    })
   }
 
   async save(uniqueProductIdentifier: UniqueProductIdentifier) {
@@ -34,32 +34,32 @@ export class UniqueProductIdentifierService {
           runValidators: true,
         },
       ),
-    );
+    )
   }
 
   async findOne(uuid: string) {
-    const uniqueProductIdentifierDoc =
-      await this.uniqueProductIdentifierDoc.findById(uuid);
+    const uniqueProductIdentifierDoc
+      = await this.uniqueProductIdentifierDoc.findById(uuid)
     if (!uniqueProductIdentifierDoc) {
-      return undefined;
+      return undefined
     }
-    return this.convertToDomain(uniqueProductIdentifierDoc);
+    return this.convertToDomain(uniqueProductIdentifierDoc)
   }
 
   async findOneOrFail(uuid: string) {
-    const uniqueProductIdentifier = await this.findOne(uuid);
+    const uniqueProductIdentifier = await this.findOne(uuid)
     if (!uniqueProductIdentifier) {
-      throw new NotFoundInDatabaseException(UniqueProductIdentifier.name);
+      throw new NotFoundInDatabaseException(UniqueProductIdentifier.name)
     }
-    return uniqueProductIdentifier;
+    return uniqueProductIdentifier
   }
 
   async findAllByReferencedId(referenceId: string) {
     const uniqueProductIdentifiers = await this.uniqueProductIdentifierDoc.find(
       { referenceId },
-    );
-    return uniqueProductIdentifiers.map((permalink) =>
+    )
+    return uniqueProductIdentifiers.map(permalink =>
       this.convertToDomain(permalink),
-    );
+    )
   }
 }

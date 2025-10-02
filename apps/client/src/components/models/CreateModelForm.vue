@@ -1,3 +1,32 @@
+<script lang="ts" setup>
+import type { TemplateGetAllDto } from "@open-dpp/api-client";
+
+const props = defineProps<{ templates: TemplateGetAllDto[] }>();
+const emits = defineEmits<{
+  (e: "submit", selectedProductDataModelId: string, modelName: string): void;
+}>();
+
+const selectableDataModels = props.templates.map(p => ({
+  label: `${p.name} ${p.version}`,
+  value: p.id,
+}));
+
+async function create(fields: {
+  stepper: {
+    generalInfo: {
+      name: string;
+      productDataModelId: string;
+    };
+  };
+}) {
+  emits(
+    "submit",
+    fields.stepper.generalInfo.productDataModelId,
+    fields.stepper.generalInfo.name,
+  );
+}
+</script>
+
 <template>
   <form-kit
     id="createProductForm"
@@ -42,32 +71,3 @@
     </form-kit>
   </form-kit>
 </template>
-
-<script lang="ts" setup>
-import { TemplateGetAllDto } from '@open-dpp/api-client';
-
-const props = defineProps<{ templates: TemplateGetAllDto[] }>();
-const selectableDataModels = props.templates.map((p) => ({
-  label: `${p.name} ${p.version}`,
-  value: p.id,
-}));
-
-const emits = defineEmits<{
-  (e: 'submit', selectedProductDataModelId: string, modelName: string): void;
-}>();
-
-const create = async (fields: {
-  stepper: {
-    generalInfo: {
-      name: string;
-      productDataModelId: string;
-    };
-  };
-}) => {
-  emits(
-    'submit',
-    fields.stepper.generalInfo.productDataModelId,
-    fields.stepper.generalInfo.name,
-  );
-};
-</script>

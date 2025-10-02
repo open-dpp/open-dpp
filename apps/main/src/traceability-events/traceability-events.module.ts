@@ -1,11 +1,11 @@
-import { Module } from '@nestjs/common';
-import { TraceabilityEventsService } from './infrastructure/traceability-events.service';
-import { TraceabilityEventsController } from './presentation/traceability-events.controller';
-import { MongooseModule } from '@nestjs/mongoose';
+import { Module } from '@nestjs/common'
+import { MongooseModule } from '@nestjs/mongoose'
 import {
   DppEventSchema,
   TraceabilityEventDocument,
-} from './infrastructure/traceability-event.document';
+} from './infrastructure/traceability-event.document'
+import { TraceabilityEventsService } from './infrastructure/traceability-events.service'
+import { TraceabilityEventsController } from './presentation/traceability-events.controller'
 
 @Module({
   imports: [

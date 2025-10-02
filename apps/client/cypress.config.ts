@@ -1,11 +1,11 @@
-import { defineConfig } from 'cypress';
+import { defineConfig } from "cypress";
 
 export default defineConfig({
   component: {
-    supportFile: 'cypress/support/component.ts',
+    supportFile: "cypress/support/component.ts",
     devServer: {
-      framework: 'vue',
-      bundler: 'vite',
+      framework: "vue",
+      bundler: "vite",
     },
   },
 });

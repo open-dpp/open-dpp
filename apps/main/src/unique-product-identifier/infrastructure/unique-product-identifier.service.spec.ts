@@ -1,23 +1,23 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { v4 as uuid4 } from 'uuid';
-import { UniqueProductIdentifier } from '../domain/unique.product.identifier';
-import { randomUUID } from 'crypto';
-import { TraceabilityEventsModule } from '../../traceability-events/traceability-events.module';
-import { Connection } from 'mongoose';
-import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
+import type { TestingModule } from '@nestjs/testing'
+import type { Connection } from 'mongoose'
+import { randomUUID } from 'node:crypto'
+import { expect } from '@jest/globals'
+import { getConnectionToken, MongooseModule } from '@nestjs/mongoose'
+import { Test } from '@nestjs/testing'
+import { NotFoundInDatabaseException } from '@open-dpp/exception'
+import { MongooseTestingModule, TypeOrmTestingModule } from '@open-dpp/testing'
+import { v4 as uuid4 } from 'uuid'
+import { TraceabilityEventsModule } from '../../traceability-events/traceability-events.module'
+import { UniqueProductIdentifier } from '../domain/unique.product.identifier'
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
-} from './unique-product-identifier.schema';
-import { UniqueProductIdentifierService } from './unique-product-identifier.service';
-import { expect } from '@jest/globals';
-import { MongooseTestingModule } from '@open-dpp/testing';
-import { TypeOrmTestingModule } from '@open-dpp/testing';
-import { NotFoundInDatabaseException } from '@open-dpp/exception';
+} from './unique-product-identifier.schema'
+import { UniqueProductIdentifierService } from './unique-product-identifier.service'
 
-describe('UniqueProductIdentifierService', () => {
-  let service: UniqueProductIdentifierService;
-  let mongoConnection: Connection;
+describe('uniqueProductIdentifierService', () => {
+  let service: UniqueProductIdentifierService
+  let mongoConnection: Connection
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -34,47 +34,47 @@ describe('UniqueProductIdentifierService', () => {
         ]),
       ],
       providers: [UniqueProductIdentifierService],
-    }).compile();
+    }).compile()
     service = module.get<UniqueProductIdentifierService>(
       UniqueProductIdentifierService,
-    );
-    mongoConnection = module.get<Connection>(getConnectionToken());
-  });
+    )
+    mongoConnection = module.get<Connection>(getConnectionToken())
+  })
 
   it('should create unique product identifier with external id', async () => {
-    const referenceId = uuid4();
-    const externalUUID = uuid4();
+    const referenceId = uuid4()
+    const externalUUID = uuid4()
     const uniqueProductIdentifier = UniqueProductIdentifier.create({
       referenceId,
       externalUUID,
-    });
-    const { uuid } = await service.save(uniqueProductIdentifier);
-    const found = await service.findOneOrFail(uuid);
-    expect(found.referenceId).toEqual(referenceId);
-  });
+    })
+    const { uuid } = await service.save(uniqueProductIdentifier)
+    const found = await service.findOneOrFail(uuid)
+    expect(found.referenceId).toEqual(referenceId)
+  })
 
   it('fails if requested unique product identifier model could not be found', async () => {
     await expect(service.findOneOrFail(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(UniqueProductIdentifier.name),
-    );
-  });
+    )
+  })
 
   it('should find all unique product identifiers with given referenced id', async () => {
-    const referenceId = uuid4();
+    const referenceId = uuid4()
     const uniqueProductIdentifier1 = UniqueProductIdentifier.create({
       referenceId,
-    });
-    await service.save(uniqueProductIdentifier1);
+    })
+    await service.save(uniqueProductIdentifier1)
     const uniqueProductIdentifier2 = UniqueProductIdentifier.create({
       referenceId,
-    });
-    await service.save(uniqueProductIdentifier2);
-    const found = await service.findAllByReferencedId(referenceId);
-    expect(found).toContainEqual(uniqueProductIdentifier1);
-    expect(found).toContainEqual(uniqueProductIdentifier2);
-  });
+    })
+    await service.save(uniqueProductIdentifier2)
+    const found = await service.findAllByReferencedId(referenceId)
+    expect(found).toContainEqual(uniqueProductIdentifier1)
+    expect(found).toContainEqual(uniqueProductIdentifier2)
+  })
 
   afterAll(async () => {
-    await mongoConnection.close();
-  });
-});
+    await mongoConnection.close()
+  })
+})

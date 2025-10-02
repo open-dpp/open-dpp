@@ -1,12 +1,12 @@
-import { dataFieldDbPropsFactory } from './data-field.factory';
-import { Sector } from '@open-dpp/api-client';
-import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { SectionType } from '../../data-modelling/domain/section-base';
-import { sectionDbPropsFactory } from './section.factory';
-import { Factory } from 'fishery';
-import { TemplateDbProps } from '../domain/template';
-import { randomUUID } from 'crypto';
+import type { TemplateDbProps } from '../domain/template'
+import { randomUUID } from 'node:crypto'
+import { Sector } from '@open-dpp/api-client'
+import { Factory } from 'fishery'
+import { DataFieldType } from '../../data-modelling/domain/data-field-base'
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
+import { SectionType } from '../../data-modelling/domain/section-base'
+import { dataFieldDbPropsFactory } from './data-field.factory'
+import { sectionDbPropsFactory } from './section.factory'
 
 export class LaptopFactory extends Factory<TemplateDbProps> {
   static ids = {
@@ -40,7 +40,7 @@ export class LaptopFactory extends Factory<TemplateDbProps> {
         co2Emissions: randomUUID(),
       },
     },
-  };
+  }
 
   techSpecsSection() {
     return sectionDbPropsFactory.params({
@@ -66,7 +66,7 @@ export class LaptopFactory extends Factory<TemplateDbProps> {
           granularityLevel: GranularityLevel.ITEM,
         }),
       ],
-    });
+    })
   }
 
   materialSection() {
@@ -85,7 +85,7 @@ export class LaptopFactory extends Factory<TemplateDbProps> {
           name: 'Mass',
         }),
       ],
-    });
+    })
   }
 
   materialCo2Section() {
@@ -103,7 +103,7 @@ export class LaptopFactory extends Factory<TemplateDbProps> {
           name: 'Co2 emissions',
         }),
       ],
-    });
+    })
   }
 
   environmentSection() {
@@ -123,7 +123,7 @@ export class LaptopFactory extends Factory<TemplateDbProps> {
           granularityLevel: GranularityLevel.ITEM,
         }),
       ],
-    });
+    })
   }
 
   addSections() {
@@ -138,7 +138,7 @@ export class LaptopFactory extends Factory<TemplateDbProps> {
           parentId: LaptopFactory.ids.material.id,
         }),
       ],
-    });
+    })
   }
 }
 
@@ -152,4 +152,4 @@ export const laptopFactory = LaptopFactory.define(() => ({
   userId: randomUUID(),
   sections: [],
   marketplaceResourceId: randomUUID(),
-}));
+}))

@@ -1,3 +1,123 @@
+<script lang="ts" setup>
+import type { FunctionalComponent } from "vue";
+import {
+  Dialog,
+  DialogPanel,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  TransitionChild,
+  TransitionRoot,
+} from "@headlessui/vue";
+import {
+  ChartBarIcon,
+  CloudIcon,
+  LinkIcon,
+  Squares2X2Icon,
+} from "@heroicons/vue/16/solid";
+import {
+  Bars3Icon,
+  BuildingOfficeIcon,
+  CubeIcon,
+  Square3Stack3DIcon,
+  UsersIcon,
+  XMarkIcon,
+} from "@heroicons/vue/24/outline";
+import { computed, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import logo from "../../assets/logo-with-text.svg";
+import { useIndexStore } from "../../stores";
+import { useLayoutStore } from "../../stores/layout";
+import { useProfileStore } from "../../stores/profile";
+import Breadcrumbs from "../Breadcrumbs.vue";
+import NotificationHandler from "../notifications/NotificationHandler.vue";
+import SelectOrganization from "../organizations/SelectOrganization.vue";
+import RingLoader from "../RingLoader.vue";
+
+const route = useRoute();
+const router = useRouter();
+
+const indexStore = useIndexStore();
+const layoutStore = useLayoutStore();
+const profileStore = useProfileStore();
+
+interface MenuItemInterface {
+  name: string;
+  to: string;
+  icon: FunctionalComponent;
+  show: () => boolean;
+}
+
+const initials = computed(() => {
+  if (!profileStore.profile)
+    return "AN";
+  const first = profileStore.profile.firstName?.substring(0, 1) || "A";
+  const last = profileStore.profile.lastName?.substring(0, 1) || "N";
+  return (first + last).toUpperCase();
+});
+
+const unfilteredNavigation = computed<Array<MenuItemInterface>>(() => [
+  {
+    name: "Produktpässe",
+    to: `/organizations/${indexStore.selectedOrganization}/models`,
+    icon: CubeIcon,
+    show: () => indexStore.selectedOrganization !== null,
+  },
+  {
+    name: "Passvorlagen Entwürfe",
+    to: `/organizations/${indexStore.selectedOrganization}/data-model-drafts`,
+    icon: Square3Stack3DIcon,
+    show: () => indexStore.selectedOrganization !== null,
+  },
+  {
+    name: "Integrationen",
+    to: `/organizations/${indexStore.selectedOrganization}/integrations`,
+    icon: LinkIcon,
+    show: () => indexStore.selectedOrganization !== null,
+  },
+  {
+    name: "Auswertungen",
+    to: `/organizations/${indexStore.selectedOrganization}/statistics`,
+    icon: ChartBarIcon,
+    show: () => indexStore.selectedOrganization !== null,
+  },
+  {
+    name: "Mitglieder",
+    to: `/organizations/${indexStore.selectedOrganization}/members`,
+    icon: UsersIcon,
+    show: () => indexStore.selectedOrganization !== null,
+  },
+  {
+    name: "Organisation auswählen",
+    to: "/organizations",
+    icon: BuildingOfficeIcon,
+    show: () => indexStore.selectedOrganization === null,
+  },
+  {
+    name: "Marktplatz",
+    to: "/marketplace",
+    icon: Squares2X2Icon,
+    show: () => indexStore.selectedOrganization !== null,
+  },
+  {
+    name: "Medien",
+    to: "/media",
+    icon: CloudIcon,
+    show: () => indexStore.selectedOrganization !== null,
+  },
+]);
+const navigation = computed<Array<MenuItemInterface>>(() =>
+  unfilteredNavigation.value.filter(item => item.show()),
+);
+const userNavigation = [
+  { name: "Dein Profil", to: "/profile" },
+  { name: "Abmelden", to: "/logout" },
+];
+
+const sidebarOpen = ref(false);
+</script>
+
 <template>
   <NotificationHandler />
   <div>
@@ -55,7 +175,7 @@
                 data-cy="sidebar"
               >
                 <div class="flex h-16 shrink-0 items-center">
-                  <img :src="logo" alt="open-dpp GmbH" class="h-8 w-auto" />
+                  <img :src="logo" alt="open-dpp GmbH" class="h-8 w-auto">
                 </div>
                 <nav class="flex flex-1 flex-col">
                   <ul class="flex flex-1 flex-col gap-y-7" role="list">
@@ -63,21 +183,19 @@
                       <ul class="-mx-2 space-y-1" role="list">
                         <li v-for="item in navigation" :key="item.name">
                           <router-link
-                            :class="[
+                            class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6" :class="[
                               item.to === route.path
                                 ? 'bg-gray-50 text-GJDarkGreen'
                                 : 'text-gray-700 hover:bg-gray-50 hover:text-GJDarkGreen',
-                              'group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6',
                             ]"
                             :to="item.to"
                           >
                             <component
                               :is="item.icon"
-                              :class="[
+                              class="h-6 w-6 shrink-0" :class="[
                                 item.to === route.path
                                   ? 'text-GJDarkGreen'
                                   : 'text-gray-400 group-hover:text-GJDarkGreen',
-                                'h-6 w-6 shrink-0',
                               ]"
                               aria-hidden="true"
                             />
@@ -98,25 +216,22 @@
                           :key="item.name"
                         >
                           <router-link
-                            :class="[
+                            class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6" :class="[
                               item.path === route.path
                                 ? 'bg-gray-50 text-GJDarkGreen'
                                 : 'text-gray-700 hover:bg-gray-50 hover:text-GJDarkGreen',
-                              'group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6',
                             ]"
                             :to="item.path"
                           >
                             <span
-                              :class="[
+                              class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border bg-white text-[0.625rem] font-medium" :class="[
                                 item.path === route.path
                                   ? 'border-GJDarkGreen text-GJDarkGreen'
                                   : 'border-gray-200 text-gray-400 group-hover:border-GJDarkGreen group-hover:text-GJDarkGreen',
-                                'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border bg-white text-[0.625rem] font-medium',
                               ]"
-                              >{{
-                                item.name.substring(0, 2).toLocaleUpperCase()
-                              }}</span
-                            >
+                            >{{
+                              item.name.substring(0, 2).toLocaleUpperCase()
+                            }}</span>
                             <span class="truncate">{{ item.name }}</span>
                           </router-link>
                         </li>
@@ -145,7 +260,7 @@
             alt="open-dpp GmbH"
             class="h-8 w-auto hover:cursor-pointer"
             @click="router.push('/')"
-          />
+          >
         </div>
         <nav class="flex flex-1 flex-col">
           <ul class="flex flex-1 flex-col gap-y-7" role="list">
@@ -153,21 +268,19 @@
               <ul class="-mx-2 space-y-1" role="list">
                 <li v-for="item in navigation" :key="item.name">
                   <router-link
-                    :class="[
+                    class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6" :class="[
                       item.to === route.path
                         ? 'bg-gray-50 text-GJDarkGreen'
                         : 'text-gray-700 hover:bg-gray-50 hover:text-GJDarkGreen',
-                      'group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6',
                     ]"
                     :to="item.to"
                   >
                     <component
                       :is="item.icon"
-                      :class="[
+                      class="h-6 w-6 shrink-0" :class="[
                         item.to === route.path
                           ? 'text-GJDarkGreen'
                           : 'text-gray-400 group-hover:text-GJDarkGreen',
-                        'h-6 w-6 shrink-0',
                       ]"
                       aria-hidden="true"
                     />
@@ -186,23 +299,20 @@
                   :key="item.name"
                 >
                   <router-link
-                    :class="[
+                    class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6" :class="[
                       item.path === route.path
                         ? 'bg-gray-50 text-GJDarkGreen'
                         : 'text-gray-700 hover:bg-gray-50 hover:text-GJDarkGreen',
-                      'group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6',
                     ]"
                     :to="item.path"
                   >
                     <span
-                      :class="[
+                      class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border bg-white text-[0.625rem] font-medium" :class="[
                         item.path === route.path
                           ? 'border-GJDarkGreen text-GJDarkGreen'
                           : 'border-gray-200 text-gray-400 group-hover:border-GJDarkGreen group-hover:text-GJDarkGreen',
-                        'flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border bg-white text-[0.625rem] font-medium',
                       ]"
-                      >{{ item.name.substring(0, 2).toLocaleUpperCase() }}</span
-                    >
+                    >{{ item.name.substring(0, 2).toLocaleUpperCase() }}</span>
                     <span class="truncate">{{ item.name }}</span>
                   </router-link>
                 </li>
@@ -239,8 +349,7 @@
             <span
               aria-hidden="true"
               class="hidden xl:inline-block ml-4 text-sm font-semibold leading-6 text-gray-900"
-              >{{ profileStore.profile?.name }}</span
-            >
+            >{{ profileStore.profile?.name }}</span>
             <!-- Profile dropdown -->
             <Menu as="div" class="relative">
               <MenuButton class="-m-1.5 flex items-center p-1.5">
@@ -267,12 +376,12 @@
                     v-slot="{ active }"
                   >
                     <router-link
-                      :class="[
+                      class="block px-3 py-1 text-sm leading-6 text-gray-900" :class="[
                         active ? 'bg-gray-50' : '',
-                        'block px-3 py-1 text-sm leading-6 text-gray-900',
                       ]"
                       :to="item.to"
-                      >{{ item.name }}
+                    >
+                      {{ item.name }}
                     </router-link>
                   </MenuItem>
                 </MenuItems>
@@ -300,121 +409,3 @@
     </div>
   </div>
 </template>
-
-<script lang="ts" setup>
-import { computed, type FunctionalComponent, ref } from 'vue';
-import {
-  Dialog,
-  DialogPanel,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems,
-  TransitionChild,
-  TransitionRoot,
-} from '@headlessui/vue';
-import {
-  Bars3Icon,
-  BuildingOfficeIcon,
-  CubeIcon,
-  Square3Stack3DIcon,
-  UsersIcon,
-  XMarkIcon,
-} from '@heroicons/vue/24/outline';
-import logo from '../../assets/logo-with-text.svg';
-import { useRoute, useRouter } from 'vue-router';
-import Breadcrumbs from '../Breadcrumbs.vue';
-import { useIndexStore } from '../../stores';
-import SelectOrganization from '../organizations/SelectOrganization.vue';
-import RingLoader from '../RingLoader.vue';
-import { useLayoutStore } from '../../stores/layout';
-import NotificationHandler from '../notifications/NotificationHandler.vue';
-import {
-  ChartBarIcon,
-  CloudIcon,
-  LinkIcon,
-  Squares2X2Icon,
-} from '@heroicons/vue/16/solid';
-import { useProfileStore } from '../../stores/profile';
-
-const route = useRoute();
-const router = useRouter();
-
-const indexStore = useIndexStore();
-const layoutStore = useLayoutStore();
-const profileStore = useProfileStore();
-
-interface MenuItemInterface {
-  name: string;
-  to: string;
-  icon: FunctionalComponent;
-  show: () => boolean;
-}
-
-const initials = computed(() => {
-  if (!profileStore.profile) return 'AN';
-  const first = profileStore.profile.firstName?.substring(0, 1) || 'A';
-  const last = profileStore.profile.lastName?.substring(0, 1) || 'N';
-  return (first + last).toUpperCase();
-});
-
-const unfilteredNavigation = computed<Array<MenuItemInterface>>(() => [
-  {
-    name: 'Produktpässe',
-    to: `/organizations/${indexStore.selectedOrganization}/models`,
-    icon: CubeIcon,
-    show: () => indexStore.selectedOrganization !== null,
-  },
-  {
-    name: 'Passvorlagen Entwürfe',
-    to: `/organizations/${indexStore.selectedOrganization}/data-model-drafts`,
-    icon: Square3Stack3DIcon,
-    show: () => indexStore.selectedOrganization !== null,
-  },
-  {
-    name: 'Integrationen',
-    to: `/organizations/${indexStore.selectedOrganization}/integrations`,
-    icon: LinkIcon,
-    show: () => indexStore.selectedOrganization !== null,
-  },
-  {
-    name: 'Auswertungen',
-    to: `/organizations/${indexStore.selectedOrganization}/statistics`,
-    icon: ChartBarIcon,
-    show: () => indexStore.selectedOrganization !== null,
-  },
-  {
-    name: 'Mitglieder',
-    to: '/organizations/' + indexStore.selectedOrganization + '/members',
-    icon: UsersIcon,
-    show: () => indexStore.selectedOrganization !== null,
-  },
-  {
-    name: 'Organisation auswählen',
-    to: '/organizations',
-    icon: BuildingOfficeIcon,
-    show: () => indexStore.selectedOrganization === null,
-  },
-  {
-    name: 'Marktplatz',
-    to: '/marketplace',
-    icon: Squares2X2Icon,
-    show: () => indexStore.selectedOrganization !== null,
-  },
-  {
-    name: 'Medien',
-    to: '/media',
-    icon: CloudIcon,
-    show: () => indexStore.selectedOrganization !== null,
-  },
-]);
-const navigation = computed<Array<MenuItemInterface>>(() =>
-  unfilteredNavigation.value.filter((item) => item.show()),
-);
-const userNavigation = [
-  { name: 'Dein Profil', to: '/profile' },
-  { name: 'Abmelden', to: '/logout' },
-];
-
-const sidebarOpen = ref(false);
-</script>

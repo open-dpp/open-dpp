@@ -1,50 +1,50 @@
-import { createPinia, setActivePinia } from 'pinia';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AxiosRequestConfig } from 'axios';
-import { useMediaStore } from './media';
-import { MediaInfo } from '../components/media/MediaInfo.interface';
+import type { AxiosRequestConfig } from "axios";
+import type { MediaInfo } from "../components/media/MediaInfo.interface";
+import { createPinia, setActivePinia } from "pinia";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { useMediaStore } from "./media";
 
 // Mocks
 const postMock = vi.fn();
 const getMock = vi.fn();
-vi.mock('../lib/axios', () => ({
+vi.mock("../lib/axios", () => ({
   default: {
     post: (...args: never[]) => postMock(...args),
     get: (...args: never[]) => getMock(...args),
   },
 }));
-vi.mock('../const', () => ({
-  MEDIA_SERVICE_URL: 'http://media-service',
+vi.mock("../const", () => ({
+  MEDIA_SERVICE_URL: "http://media-service",
 }));
 
-describe('media store', () => {
+describe("media store", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     postMock.mockReset();
     getMock.mockReset();
   });
 
-  describe('uploadDppMedia', () => {
-    it('throws if no organization selected', async () => {
+  describe("uploadDppMedia", () => {
+    it("throws if no organization selected", async () => {
       const store = useMediaStore();
       await expect(
-        store.uploadDppMedia(null, 'uuid', 'field', new File(['a'], 'a.txt')),
-      ).rejects.toThrow('No organization selected');
+        store.uploadDppMedia(null, "uuid", "field", new File(["a"], "a.txt")),
+      ).rejects.toThrow("No organization selected");
     });
 
-    it('throws if no uuid provided', async () => {
+    it("throws if no uuid provided", async () => {
       const store = useMediaStore();
       await expect(
         store.uploadDppMedia(
-          'org',
+          "org",
           undefined,
-          'field',
-          new File(['a'], 'a.txt'),
+          "field",
+          new File(["a"], "a.txt"),
         ),
-      ).rejects.toThrow('No UUID provided');
+      ).rejects.toThrow("No UUID provided");
     });
 
-    it('returns mediaId on 200/201/304 and calls progress handler', async () => {
+    it("returns mediaId on 200/201/304 and calls progress handler", async () => {
       const store = useMediaStore();
       const statuses = [200, 201, 304] as const;
       for (const status of statuses) {
@@ -54,19 +54,19 @@ describe('media store', () => {
             config?.onUploadProgress?.({ loaded: 50, total: 100 } as never);
             return Promise.resolve({
               status,
-              data: { mediaId: 'mid-' + status },
+              data: { mediaId: `mid-${status}` },
             });
           },
         );
         const progressCalls: number[] = [];
         const mediaId = await store.uploadDppMedia(
-          'org',
-          'uuid',
-          'field',
-          new File(['a'], 'a.txt'),
-          (p) => progressCalls.push(p),
+          "org",
+          "uuid",
+          "field",
+          new File(["a"], "a.txt"),
+          p => progressCalls.push(p),
         );
-        expect(mediaId).toBe('mid-' + status);
+        expect(mediaId).toBe(`mid-${status}`);
         // Verify URL formatting
         expect(postMock).toHaveBeenLastCalledWith(
           expect.stringMatching(
@@ -79,7 +79,7 @@ describe('media store', () => {
       }
     });
 
-    it('computes progress even if total is undefined (uses 1)', async () => {
+    it("computes progress even if total is undefined (uses 1)", async () => {
       const store = useMediaStore();
       postMock.mockImplementationOnce(
         (url: string, formData: FormData, config: AxiosRequestConfig) => {
@@ -87,106 +87,106 @@ describe('media store', () => {
             loaded: 123,
             total: undefined,
           } as never);
-          return Promise.resolve({ status: 200, data: { mediaId: 'mid' } });
+          return Promise.resolve({ status: 200, data: { mediaId: "mid" } });
         },
       );
       const progressCalls: number[] = [];
       await store.uploadDppMedia(
-        'org',
-        'uuid',
-        'field',
-        new File(['a'], 'a.txt'),
-        (p) => progressCalls.push(p),
+        "org",
+        "uuid",
+        "field",
+        new File(["a"], "a.txt"),
+        p => progressCalls.push(p),
       );
       expect(progressCalls).toEqual([12300]);
     });
 
-    it('throws on unexpected status', async () => {
+    it("throws on unexpected status", async () => {
       const store = useMediaStore();
       postMock.mockResolvedValueOnce({ status: 418, data: {} });
       await expect(
-        store.uploadDppMedia('org', 'uuid', 'field', new File(['a'], 'a.txt')),
-      ).rejects.toThrow('Unexpected upload status 418');
+        store.uploadDppMedia("org", "uuid", "field", new File(["a"], "a.txt")),
+      ).rejects.toThrow("Unexpected upload status 418");
     });
   });
 
-  describe('getDppMediaInfo', () => {
-    it('throws if no uuid provided', async () => {
+  describe("getDppMediaInfo", () => {
+    it("throws if no uuid provided", async () => {
       const store = useMediaStore();
-      await expect(store.getDppMediaInfo(undefined, 'field')).rejects.toThrow(
-        'No UUID provided',
+      await expect(store.getDppMediaInfo(undefined, "field")).rejects.toThrow(
+        "No UUID provided",
       );
     });
 
-    it('returns media info from endpoint', async () => {
+    it("returns media info from endpoint", async () => {
       const store = useMediaStore();
       const info: MediaInfo = {
-        id: '',
-        title: '',
+        id: "",
+        title: "",
         size: 5,
-        mimeType: 'image/png',
+        mimeType: "image/png",
       };
       getMock.mockResolvedValueOnce({ data: info });
-      const result = await store.getDppMediaInfo('uuid', 'field');
+      const result = await store.getDppMediaInfo("uuid", "field");
       expect(result).toEqual(info);
       expect(getMock).toHaveBeenCalledWith(
-        'http://media-service/media/dpp/uuid/field/info',
+        "http://media-service/media/dpp/uuid/field/info",
       );
     });
   });
 
-  describe('downloadDppMedia', () => {
-    it('throws if no uuid provided', async () => {
+  describe("downloadDppMedia", () => {
+    it("throws if no uuid provided", async () => {
       const store = useMediaStore();
-      await expect(store.downloadDppMedia(undefined, 'field')).rejects.toThrow(
-        'No UUID provided',
+      await expect(store.downloadDppMedia(undefined, "field")).rejects.toThrow(
+        "No UUID provided",
       );
     });
 
-    it('returns blob from endpoint', async () => {
+    it("returns blob from endpoint", async () => {
       const store = useMediaStore();
-      const blob = new Blob(['hello'], { type: 'text/plain' });
+      const blob = new Blob(["hello"], { type: "text/plain" });
       getMock.mockResolvedValueOnce({ data: blob });
-      const result = await store.downloadDppMedia('uuid', 'field');
+      const result = await store.downloadDppMedia("uuid", "field");
       expect(result).toEqual(blob);
       expect(getMock).toHaveBeenCalledWith(
-        'http://media-service/media/dpp/uuid/field/download',
-        { responseType: 'blob' },
+        "http://media-service/media/dpp/uuid/field/download",
+        { responseType: "blob" },
       );
     });
   });
 
-  describe('fetchDppMedia', () => {
-    it('combines info and blob (contentType from info)', async () => {
+  describe("fetchDppMedia", () => {
+    it("combines info and blob (contentType from info)", async () => {
       const store = useMediaStore();
-      const blob = new Blob(['data'], { type: 'application/octet-stream' });
+      const blob = new Blob(["data"], { type: "application/octet-stream" });
 
       // Mock axios GET to return appropriate responses irrespective of call order
       getMock.mockImplementation((url: string) => {
-        if (url.endsWith('/info')) {
+        if (url.endsWith("/info")) {
           const info: MediaInfo = {
-            id: '',
-            title: '',
+            id: "",
+            title: "",
             size: 5,
-            mimeType: 'image/jpeg',
+            mimeType: "image/jpeg",
           };
           return Promise.resolve({ data: info });
         }
-        if (url.endsWith('/download')) {
+        if (url.endsWith("/download")) {
           return Promise.resolve({ data: blob });
         }
-        return Promise.reject(new Error('unexpected url: ' + url));
+        return Promise.reject(new Error(`unexpected url: ${url}`));
       });
 
-      const result = await store.fetchDppMedia('uuid', 'field');
+      const result = await store.fetchDppMedia("uuid", "field");
       expect(result.blob).toEqual(blob);
-      expect(result.mediaInfo.mimeType).toEqual('image/jpeg');
+      expect(result.mediaInfo.mimeType).toEqual("image/jpeg");
       expect(getMock).toHaveBeenCalledWith(
-        'http://media-service/media/dpp/uuid/field/info',
+        "http://media-service/media/dpp/uuid/field/info",
       );
       expect(getMock).toHaveBeenCalledWith(
-        'http://media-service/media/dpp/uuid/field/download',
-        { responseType: 'blob' },
+        "http://media-service/media/dpp/uuid/field/download",
+        { responseType: "blob" },
       );
     });
   });

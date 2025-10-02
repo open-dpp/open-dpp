@@ -8,29 +8,29 @@ import {
   OneToMany,
   PrimaryColumn,
   UpdateDateColumn,
-} from 'typeorm';
-import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
+} from 'typeorm'
+import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity'
 
 @Entity('user')
 export class UserEntity {
   @PrimaryColumn()
-  id: string;
+  id: string
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt: Date
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt: Date
 
   @DeleteDateColumn({ nullable: true })
-  deletedAt: Date | null;
+  deletedAt: Date | null
 
   @Column()
-  email: string;
+  email: string
 
   @ManyToMany(
     () => OrganizationEntity,
-    (organization) => organization.members,
+    organization => organization.members,
     {
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
@@ -43,11 +43,11 @@ export class UserEntity {
       { name: 'organization_id', referencedColumnName: 'id' },
     ],
   })
-  organizations: OrganizationEntity[];
+  organizations: OrganizationEntity[]
 
-  @OneToMany(() => OrganizationEntity, (org) => org.createdByUserId)
-  creatorOfOrganizations: OrganizationEntity[];
+  @OneToMany(() => OrganizationEntity, org => org.createdByUserId)
+  creatorOfOrganizations: OrganizationEntity[]
 
-  @OneToMany(() => OrganizationEntity, (org) => org.ownedByUserId)
-  ownerOfOrganizations: OrganizationEntity[];
+  @OneToMany(() => OrganizationEntity, org => org.ownedByUserId)
+  ownerOfOrganizations: OrganizationEntity[]
 }

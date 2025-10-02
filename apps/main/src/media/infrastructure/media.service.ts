@@ -1,15 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import * as Minio from 'minio';
-import { ConfigService } from '@nestjs/config';
-import { join } from 'lodash';
-import sharp from 'sharp';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { MediaDoc } from './media.schema';
-import { Media } from '../domain/media';
-import { fileTypeFromBuffer } from './file-type-util';
-import { randomUUID } from 'crypto';
-import { NotFoundInDatabaseException } from '@open-dpp/exception';
+import type { ConfigService } from '@nestjs/config'
+import type { Model } from 'mongoose'
+import type { Buffer } from 'node:buffer'
+import { randomUUID } from 'node:crypto'
+import { Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/mongoose'
+import { NotFoundInDatabaseException } from '@open-dpp/exception'
+import { join } from 'lodash'
+import * as Minio from 'minio'
+import sharp from 'sharp'
+import { Media } from '../domain/media'
+import { fileTypeFromBuffer } from './file-type-util'
+import { MediaDoc } from './media.schema'
 
 enum BucketDefaultPaths {
   PRODUCT_PASSPORT_FILES = 'product-passport-files',
@@ -17,10 +18,10 @@ enum BucketDefaultPaths {
 
 @Injectable()
 export class MediaService {
-  private client: Minio.Client;
-  private readonly bucketNameDefault: string;
-  private readonly bucketNameProfilePictures: string;
-  private readonly pathDelimiter = '/';
+  private client: Minio.Client
+  private readonly bucketNameDefault: string
+  private readonly bucketNameProfilePictures: string
+  private readonly pathDelimiter = '/'
 
   constructor(
     private readonly configService: ConfigService,
@@ -34,19 +35,19 @@ export class MediaService {
       accessKey: configService.get<string>('S3_ACCESS_KEY'),
       secretKey: configService.get<string>('S3_SECRET_KEY'),
       region: 'nbg1',
-    });
+    })
     this.bucketNameDefault = configService.get<string>(
       'S3_BUCKET_NAME_DEFAULT',
       '',
-    );
+    )
     this.bucketNameProfilePictures = configService.get<string>(
       'S3_BUCKET_NAME_PROFILE_PICTURES',
       '',
-    );
+    )
   }
 
   buildBucketPath(objectName: string, remoteFolders: string[] = []) {
-    return join([...remoteFolders, objectName], this.pathDelimiter);
+    return join([...remoteFolders, objectName], this.pathDelimiter)
   }
 
   async uploadFile(
@@ -57,11 +58,11 @@ export class MediaService {
     size: number,
     mimeType: string,
   ) {
-    const bucketExists = await this.client.bucketExists(bucketName);
+    const bucketExists = await this.client.bucketExists(bucketName)
     if (!bucketExists) {
-      throw new Error(`Bucket ${bucketName} does not exist`);
+      throw new Error(`Bucket ${bucketName} does not exist`)
     }
-    const objectName = this.buildBucketPath(remoteFileBaseName, remoteFolders);
+    const objectName = this.buildBucketPath(remoteFileBaseName, remoteFolders)
     const uploadInfo = await this.client.putObject(
       bucketName,
       objectName,
@@ -70,14 +71,14 @@ export class MediaService {
       {
         'Content-Type': mimeType,
       },
-    );
+    )
     return {
       info: uploadInfo,
       location: {
         bucket: bucketName,
         objectName,
       },
-    };
+    }
   }
 
   async uploadProfilePicture(buffer: Buffer, userId: string) {
@@ -89,7 +90,7 @@ export class MediaService {
       [],
       buffer.length,
       'image/webp',
-    );
+    )
   }
 
   async uploadFileOfProductPassport(
@@ -103,25 +104,25 @@ export class MediaService {
     const findMedia = await this.mediaDoc.find({
       dataFieldId,
       uniqueProductIdentifier,
-    });
+    })
     if (findMedia.length > 0) {
       await this.mediaDoc.deleteMany({
         dataFieldId,
         uniqueProductIdentifier,
-      });
+      })
     }
-    const fileType = await fileTypeFromBuffer(buffer);
+    const fileType = await fileTypeFromBuffer(buffer)
     if (!fileType) {
-      throw new Error('File type not recognized');
+      throw new Error('File type not recognized')
     }
-    let fileTypeMime = fileType.mime;
-    let uploadBuffer: Buffer = buffer;
+    let fileTypeMime = fileType.mime
+    let uploadBuffer: Buffer = buffer
     if (fileType.mime.startsWith('image/')) {
       uploadBuffer = await sharp(buffer)
         .resize({ width: 480, height: 480, fit: 'cover' })
         .webp({ quality: 85 })
-        .toBuffer();
-      fileTypeMime = 'image/webp';
+        .toBuffer()
+      fileTypeMime = 'image/webp'
     }
     const uploadInfo = await this.uploadFile(
       this.bucketNameDefault,
@@ -130,7 +131,7 @@ export class MediaService {
       [BucketDefaultPaths.PRODUCT_PASSPORT_FILES, uniqueProductIdentifier],
       uploadBuffer.length,
       fileTypeMime,
-    );
+    )
     const media = Media.create({
       createdByUserId,
       ownedByOrganizationId,
@@ -146,9 +147,9 @@ export class MediaService {
       objectName: uploadInfo.location.objectName,
       eTag: uploadInfo.info.etag,
       versionId: uploadInfo.info.versionId || '',
-    });
-    await this.save(media);
-    return media;
+    })
+    await this.save(media)
+    return media
   }
 
   async uploadMedia(
@@ -157,20 +158,20 @@ export class MediaService {
     createdByUserId: string,
     ownedByOrganizationId: string,
   ) {
-    const fileType = await fileTypeFromBuffer(buffer);
+    const fileType = await fileTypeFromBuffer(buffer)
     if (!fileType) {
-      throw new Error('File type not recognized');
+      throw new Error('File type not recognized')
     }
-    let fileTypeMime = fileType.mime;
-    let uploadBuffer: Buffer = buffer;
+    let fileTypeMime = fileType.mime
+    let uploadBuffer: Buffer = buffer
     if (fileType.mime.startsWith('image/')) {
       uploadBuffer = await sharp(buffer)
         .resize({ width: 480, height: 480, fit: 'cover' })
         .webp({ quality: 85 })
-        .toBuffer();
-      fileTypeMime = 'image/webp';
+        .toBuffer()
+      fileTypeMime = 'image/webp'
     }
-    const uuid = randomUUID();
+    const uuid = randomUUID()
     const uploadInfo = await this.uploadFile(
       this.bucketNameDefault,
       uploadBuffer,
@@ -178,7 +179,7 @@ export class MediaService {
       [BucketDefaultPaths.PRODUCT_PASSPORT_FILES],
       uploadBuffer.length,
       fileTypeMime,
-    );
+    )
     const media = Media.create({
       createdByUserId,
       ownedByOrganizationId,
@@ -194,9 +195,9 @@ export class MediaService {
       objectName: uploadInfo.location.objectName,
       eTag: uploadInfo.info.etag,
       versionId: uploadInfo.info.versionId || '',
-    });
-    await this.save(media);
-    return media;
+    })
+    await this.save(media)
+    return media
   }
 
   async getFileStream(
@@ -204,12 +205,12 @@ export class MediaService {
     remoteFileBaseName: string,
     remoteFolders: string[] = [],
   ) {
-    const bucketExists = await this.client.bucketExists(bucketName);
+    const bucketExists = await this.client.bucketExists(bucketName)
     if (!bucketExists) {
-      throw new Error('Bucket does not exist');
+      throw new Error('Bucket does not exist')
     }
-    const objectName = this.buildBucketPath(remoteFileBaseName, remoteFolders);
-    return await this.client.getObject(bucketName, objectName);
+    const objectName = this.buildBucketPath(remoteFileBaseName, remoteFolders)
+    return await this.client.getObject(bucketName, objectName)
   }
 
   async getFilestreamOfProductPassport(
@@ -219,25 +220,25 @@ export class MediaService {
     const media = await this.findOneDppFileOrFail(
       dataFieldId,
       uniqueProductIdentifier,
-    );
-    const stream = await this.getFilestreamOfMedia(media);
+    )
+    const stream = await this.getFilestreamOfMedia(media)
     return {
       stream,
       media,
-    };
+    }
   }
 
   async getFilestreamById(id: string) {
-    const media = await this.findOneOrFail(id);
-    const stream = await this.getFilestreamOfMedia(media);
+    const media = await this.findOneOrFail(id)
+    const stream = await this.getFilestreamOfMedia(media)
     return {
       stream,
       media,
-    };
+    }
   }
 
   async getFilestreamOfMedia(media: Media) {
-    return this.getFileStream(media.bucket, media.objectName);
+    return this.getFileStream(media.bucket, media.objectName)
   }
 
   convertToDomain(mediaDoc: MediaDoc): Media {
@@ -259,7 +260,7 @@ export class MediaService {
       objectName: mediaDoc.objectName,
       eTag: mediaDoc.eTag,
       versionId: mediaDoc.versionId,
-    });
+    })
   }
 
   async save(media: Media) {
@@ -288,16 +289,16 @@ export class MediaService {
         upsert: true, // Create a new document if none found
         runValidators: true,
       },
-    );
-    return this.convertToDomain(dataModelDoc);
+    )
+    return this.convertToDomain(dataModelDoc)
   }
 
   async findOneOrFail(id: string) {
-    const mediaDocument = await this.mediaDoc.findById(id);
+    const mediaDocument = await this.mediaDoc.findById(id)
     if (!mediaDocument) {
-      throw new NotFoundInDatabaseException(Media.name);
+      throw new NotFoundInDatabaseException(Media.name)
     }
-    return this.convertToDomain(mediaDocument);
+    return this.convertToDomain(mediaDocument)
   }
 
   async findOneDppFileOrFail(
@@ -307,22 +308,22 @@ export class MediaService {
     const mediaDocuments = await this.mediaDoc.find({
       dataFieldId,
       uniqueProductIdentifier,
-    });
+    })
     if (mediaDocuments.length === 0) {
-      throw new NotFoundInDatabaseException(Media.name);
+      throw new NotFoundInDatabaseException(Media.name)
     }
-    return this.convertToDomain(mediaDocuments[0]); // Assuming there's only one match
+    return this.convertToDomain(mediaDocuments[0]) // Assuming there's only one match
   }
 
   async findAll() {
-    const mediaDocuments = await this.mediaDoc.find();
-    return mediaDocuments.map((mediaDocument) =>
+    const mediaDocuments = await this.mediaDoc.find()
+    return mediaDocuments.map(mediaDocument =>
       this.convertToDomain(mediaDocument),
-    );
+    )
   }
 
   async removeById(id: string) {
-    await this.mediaDoc.deleteOne({ _id: id });
+    await this.mediaDoc.deleteOne({ _id: id })
   }
 
   async findAllByOrganizationId(organizationId: string) {
@@ -347,9 +348,9 @@ export class MediaService {
         dataFieldId: true,
         originalFilename: true,
       },
-    );
-    return mediaDocuments.map((mediaDocument) =>
+    )
+    return mediaDocuments.map(mediaDocument =>
       this.convertToDomain(mediaDocument),
-    );
+    )
   }
 }

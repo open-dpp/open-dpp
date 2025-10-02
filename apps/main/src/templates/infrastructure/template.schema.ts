@@ -1,8 +1,8 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import {
   createCommonIndexesForTemplate,
   TemplateBaseDoc,
-} from '../../data-modelling/infrastructure/template-base.schema';
+} from '../../data-modelling/infrastructure/template-base.schema'
 
 export enum TemplateDocSchemaVersion {
   v1_0_0 = '1.0.0',
@@ -17,16 +17,16 @@ export class TemplateDoc extends TemplateBaseDoc {
     default: TemplateDocSchemaVersion.v1_0_3,
     enum: TemplateDocSchemaVersion,
   }) // Track schema version
-  _schemaVersion: TemplateDocSchemaVersion;
+  _schemaVersion: TemplateDocSchemaVersion
 
   @Prop({
     required: false,
     default: null,
   })
-  marketplaceResourceId: string;
+  marketplaceResourceId: string
 }
 
-export const TemplateSchema = SchemaFactory.createForClass(TemplateDoc);
+export const TemplateSchema = SchemaFactory.createForClass(TemplateDoc)
 
-createCommonIndexesForTemplate(TemplateSchema);
-TemplateSchema.index({ marketplaceResourceId: 1 });
+createCommonIndexesForTemplate(TemplateSchema)
+TemplateSchema.index({ marketplaceResourceId: 1 })

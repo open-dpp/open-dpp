@@ -1,13 +1,31 @@
+<script setup lang="ts">
+import type { DataSectionDto } from "@open-dpp/api-client";
+import { FolderIcon } from "@heroicons/vue/16/solid";
+import { computed } from "vue";
+import { useProductPassportStore } from "../../stores/product-passport";
+import DataFieldView from "./DataFieldView.vue";
+
+const props = defineProps<{
+  dataSection: DataSectionDto;
+  rowIndex: number;
+}>();
+
+const productPassportStore = useProductPassportStore();
+const subSections = computed(() =>
+  productPassportStore.findSubSections(props.dataSection.id),
+);
+</script>
+
 <template>
   <div class="mt-6">
     <dl class="grid grid-cols-1 sm:grid-cols-2">
       <DataFieldView
         v-for="dataField in props.dataSection.dataFields"
+        :key="dataField.id"
         :field-view="{
-          dataField: dataField,
+          dataField,
           value: props.dataSection.dataValues[rowIndex][dataField.id],
         }"
-        :key="dataField.id"
       />
     </dl>
     <dl
@@ -23,9 +41,9 @@
           class="divide-y divide-gray-100 rounded-md border border-gray-200"
         >
           <li
-            class="flex items-center justify-between py-4 pr-5 pl-4 text-sm/6"
             v-for="subSection in subSections"
             :key="subSection.id"
+            class="flex items-center justify-between py-4 pr-5 pl-4 text-sm/6"
           >
             <div class="flex w-0 flex-1 items-center">
               <FolderIcon
@@ -43,8 +61,9 @@
                 :to="`?sectionId=${subSection.id}&row=${props.rowIndex}&parentSectionId=${dataSection.id}`"
                 :data-cy="subSection.id"
                 class="font-medium text-indigo-600 hover:text-indigo-500"
-                >Mehr Infos</router-link
               >
+                Mehr Infos
+              </router-link>
             </div>
           </li>
         </ul>
@@ -52,21 +71,3 @@
     </dl>
   </div>
 </template>
-
-<script setup lang="ts">
-import { DataSectionDto } from '@open-dpp/api-client';
-import DataFieldView from './DataFieldView.vue';
-import { FolderIcon } from '@heroicons/vue/16/solid';
-import { useProductPassportStore } from '../../stores/product-passport';
-import { computed } from 'vue';
-
-const props = defineProps<{
-  dataSection: DataSectionDto;
-  rowIndex: number;
-}>();
-
-const productPassportStore = useProductPassportStore();
-const subSections = computed(() =>
-  productPassportStore.findSubSections(props.dataSection.id),
-);
-</script>

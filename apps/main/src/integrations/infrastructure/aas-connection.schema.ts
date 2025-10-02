@@ -1,22 +1,25 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-import { AssetAdministrationShellType } from '../domain/asset-administration-shell';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
+import { Document } from 'mongoose'
+import { AssetAdministrationShellType } from '../domain/asset-administration-shell'
 
 @Schema({ _id: false })
 export class AasFieldAssignmentDoc {
   @Prop({ required: true })
-  sectionId: string;
+  sectionId: string
+
   @Prop({ required: true })
-  dataFieldId: string;
+  dataFieldId: string
+
   @Prop({ required: true })
-  idShortParent: string;
+  idShortParent: string
+
   @Prop({ required: true })
-  idShort: string;
+  idShort: string
 }
 
 export const AasFieldMappingSchema = SchemaFactory.createForClass(
   AasFieldAssignmentDoc,
-);
+)
 
 export enum AasConnectionDocSchemaVersion {
   v1_0_0 = '1.0.0',
@@ -26,35 +29,36 @@ export enum AasConnectionDocSchemaVersion {
 export class AasConnectionDoc extends Document {
   @Prop({ required: true })
   // @ts-expect-error uses mongo id
-  _id: string;
+  _id: string
+
   @Prop({
     default: AasConnectionDocSchemaVersion.v1_0_0,
     enum: AasConnectionDocSchemaVersion,
   }) // Track schema version
-  _schemaVersion: AasConnectionDocSchemaVersion;
+  _schemaVersion: AasConnectionDocSchemaVersion
 
   @Prop({ required: true })
-  name: string;
+  name: string
 
   @Prop({ required: true })
-  createdByUserId: string;
+  createdByUserId: string
 
   @Prop({ required: true })
-  ownedByOrganizationId: string;
+  ownedByOrganizationId: string
 
   @Prop({ type: String, required: true })
-  dataModelId: string;
+  dataModelId: string
 
   @Prop({ required: true, enum: AssetAdministrationShellType, type: String })
-  aasType: AssetAdministrationShellType;
+  aasType: AssetAdministrationShellType
 
   @Prop({ required: false, type: String })
-  modelId: string | null;
+  modelId: string | null
 
   @Prop({ type: [AasFieldMappingSchema], default: [] })
-  fieldAssignments: AasFieldAssignmentDoc[];
+  fieldAssignments: AasFieldAssignmentDoc[]
 }
-export const AasConnectionSchema =
-  SchemaFactory.createForClass(AasConnectionDoc);
+export const AasConnectionSchema
+  = SchemaFactory.createForClass(AasConnectionDoc)
 
-AasConnectionSchema.index({ ownedByOrganizationId: 1 });
+AasConnectionSchema.index({ ownedByOrganizationId: 1 })

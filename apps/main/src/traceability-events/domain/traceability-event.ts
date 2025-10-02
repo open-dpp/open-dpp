@@ -1,9 +1,9 @@
-import { TraceabilityEventType } from './traceability-event-type.enum';
+import type { TraceabilityEventType } from './traceability-event-type.enum'
 
 export abstract class TraceabilityEvent {
-  type: TraceabilityEventType;
+  type: TraceabilityEventType
 
   protected constructor(type: TraceabilityEventType) {
-    this.type = type;
+    this.type = type
   }
 }

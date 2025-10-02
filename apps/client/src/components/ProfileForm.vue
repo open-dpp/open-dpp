@@ -1,3 +1,9 @@
+<script lang="ts" setup>
+import { useProfileStore } from "../stores/profile";
+
+const profileStore = useProfileStore();
+</script>
+
 <template>
   <form>
     <div class="space-y-12">
@@ -15,8 +21,7 @@
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="first-name"
-              >Vorname</label
-            >
+            >Vorname</label>
             <div class="mt-2">
               <input
                 id="first-name"
@@ -26,7 +31,7 @@
                 type="text"
                 disabled
                 :value="profileStore.profile?.firstName"
-              />
+              >
             </div>
           </div>
 
@@ -34,8 +39,7 @@
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="last-name"
-              >Nachname</label
-            >
+            >Nachname</label>
             <div class="mt-2">
               <input
                 id="last-name"
@@ -45,7 +49,7 @@
                 type="text"
                 disabled
                 :value="profileStore.profile?.lastName"
-              />
+              >
             </div>
           </div>
 
@@ -53,8 +57,7 @@
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="email"
-              >Email-Adresse</label
-            >
+            >Email-Adresse</label>
             <div class="mt-2">
               <input
                 id="email"
@@ -64,7 +67,7 @@
                 type="email"
                 disabled
                 :value="profileStore.profile?.email"
-              />
+              >
             </div>
           </div>
         </div>
@@ -72,9 +75,3 @@
     </div>
   </form>
 </template>
-
-<script lang="ts" setup>
-import { useProfileStore } from '../stores/profile';
-
-const profileStore = useProfileStore();
-</script>

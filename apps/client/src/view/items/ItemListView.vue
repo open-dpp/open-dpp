@@ -1,3 +1,32 @@
+<script lang="ts" setup>
+import type { ItemDto } from "@open-dpp/api-client";
+import { onMounted, ref } from "vue";
+import { useRoute } from "vue-router";
+import ItemList from "../../components/items/ItemList.vue";
+import apiClient from "../../lib/api-client";
+
+const route = useRoute();
+const buttonLabel = "Neuen Artikelpass hinzufügen";
+
+const items = ref<ItemDto[]>([]);
+
+async function fetchItems() {
+  const response = await apiClient.dpp.items.getAll(
+    String(route.params.modelId),
+  );
+  items.value = response.data;
+}
+
+async function onAdd() {
+  await apiClient.dpp.items.create(String(route.params.modelId));
+  await fetchItems();
+}
+
+onMounted(async () => {
+  await fetchItems();
+});
+</script>
+
 <template>
   <section>
     <div class="flex flex-col gap-3 p-3">
@@ -29,32 +58,3 @@
     </div>
   </section>
 </template>
-
-<script lang="ts" setup>
-import { useRoute } from 'vue-router';
-import { onMounted, ref } from 'vue';
-import ItemList from '../../components/items/ItemList.vue';
-import apiClient from '../../lib/api-client';
-import { ItemDto } from '@open-dpp/api-client';
-
-const route = useRoute();
-const buttonLabel = 'Neuen Artikelpass hinzufügen';
-
-const items = ref<ItemDto[]>([]);
-
-const fetchItems = async () => {
-  const response = await apiClient.dpp.items.getAll(
-    String(route.params.modelId),
-  );
-  items.value = response.data;
-};
-
-const onAdd = async () => {
-  await apiClient.dpp.items.create(String(route.params.modelId));
-  await fetchItems();
-};
-
-onMounted(async () => {
-  await fetchItems();
-});
-</script>

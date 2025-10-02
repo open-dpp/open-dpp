@@ -1,15 +1,15 @@
-import { z } from 'zod';
+import type { TemplateDraft } from '../../domain/template-draft'
+import { Sector } from '@open-dpp/api-client'
+import { z } from 'zod'
 import {
   SectionBaseDtoSchema,
   sectionToDto,
-} from '../../../data-modelling/presentation/dto/section-base.dto';
-import { TemplateDraft } from '../../domain/template-draft';
-import { Sector } from '@open-dpp/api-client';
+} from '../../../data-modelling/presentation/dto/section-base.dto'
 
 const PublicationDtoSchema = z.object({
   id: z.string(),
   version: z.string(),
-});
+})
 
 const TemplateDraftDtoSchema = z.object({
   id: z.uuid(),
@@ -21,9 +21,9 @@ const TemplateDraftDtoSchema = z.object({
   sections: SectionBaseDtoSchema.array(),
   createdByUserId: z.uuid(),
   ownedByOrganizationId: z.uuid(),
-});
+})
 
-export type TemplateDraftDto = z.infer<typeof TemplateDraftDtoSchema>;
+export type TemplateDraftDto = z.infer<typeof TemplateDraftDtoSchema>
 
 export function templateDraftToDto(
   templateDraft: TemplateDraft,
@@ -34,14 +34,14 @@ export function templateDraftToDto(
     description: templateDraft.description,
     sectors: templateDraft.sectors,
     version: templateDraft.version,
-    publications: templateDraft.publications.map((publication) =>
+    publications: templateDraft.publications.map(publication =>
       PublicationDtoSchema.parse({
         id: publication.id,
         version: publication.version,
       }),
     ),
-    sections: templateDraft.sections.map((section) => sectionToDto(section)),
+    sections: templateDraft.sections.map(section => sectionToDto(section)),
     createdByUserId: templateDraft.createdByUserId,
     ownedByOrganizationId: templateDraft.ownedByOrganizationId,
-  });
+  })
 }

@@ -1,28 +1,30 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import keycloakIns from '../lib/keycloak';
-import { keycloakDisabled } from '../const';
-import { useLayoutStore } from '../stores/layout';
+import type { RouteRecordRaw } from "vue-router";
+import { createRouter, createWebHistory } from "vue-router";
+import { keycloakDisabled } from "../const";
+import keycloakIns from "../lib/keycloak";
+import { useIndexStore } from "../stores";
 
-import { AUTH_ROUTES } from './routes/auth';
-import { ORGANIZATION_ROUTES } from './routes/organizations';
-import { useIndexStore } from '../stores';
-import { MARKETPLACE_ROUTES } from './routes/marketplace';
-import { MEDIA_ROUTES } from './routes/media';
-import { PRESENTATION_ROUTES } from './routes/presentation/presentation';
+import { useLayoutStore } from "../stores/layout";
+import { AUTH_ROUTES } from "./routes/auth";
+import { MARKETPLACE_ROUTES } from "./routes/marketplace";
+import { MEDIA_ROUTES } from "./routes/media";
+import { ORGANIZATION_ROUTES } from "./routes/organizations";
+import { PRESENTATION_ROUTES } from "./routes/presentation/presentation";
 
 // const MODE = import.meta.env.MODE;
 
 export const routes: RouteRecordRaw[] = [
   {
-    path: '/',
+    path: "/",
     redirect: () => {
       const indexStore = useIndexStore();
       const org = indexStore.selectedOrganization;
 
       if (org) {
         return `/organizations/${indexStore.selectedOrganization}/models`;
-      } else {
-        return '/organizations'; // fallback
+      }
+      else {
+        return "/organizations"; // fallback
       }
     },
   },
@@ -49,7 +51,8 @@ router.beforeEach(async (to, from, next) => {
       redirectUri: `${window.location.origin}${to.fullPath}`,
     });
     next();
-  } else {
+  }
+  else {
     next();
   }
 });

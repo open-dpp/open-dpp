@@ -1,13 +1,23 @@
+<script lang="ts" setup>
+import logo from "../../assets/logo.svg";
+
+const props = defineProps<{ showPreview?: boolean }>();
+
+const email = "info@open-dpp.de";
+</script>
+
 <template>
   <div>
     <div
       class="construction-container flex flex-col items-center justify-center p-8 text-center"
     >
       <div class="logo-wrapper mb-8">
-        <img :src="logo" alt="Company Logo" class="w-48 h-auto logo-bounce" />
+        <img :src="logo" alt="Company Logo" class="w-48 h-auto logo-bounce">
       </div>
 
-      <h2 class="text-2xl font-bold mb-4 text-GJDarkGreen">In Arbeit!</h2>
+      <h2 class="text-2xl font-bold mb-4 text-GJDarkGreen">
+        In Arbeit!
+      </h2>
       <p class="mb-4 text-gray-600">
         Wir arbeiten mit Hochdruck an dieser Funktionalität.
       </p>
@@ -33,18 +43,10 @@
       <h3 class="text-lg font-semibold mb-2 text-GJDarkGreen">
         Hier eine kleine Vorschau, wie es einmal aussehen kann.
       </h3>
-      <slot></slot>
+      <slot />
     </div>
   </div>
 </template>
-
-<script lang="ts" setup>
-import logo from '../../assets/logo.svg';
-
-const email = 'info@open-dpp.de';
-
-const props = defineProps<{ showPreview?: boolean }>();
-</script>
 
 <style scoped>
 .logo-bounce {

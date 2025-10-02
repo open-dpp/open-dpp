@@ -1,16 +1,18 @@
-import {
-  TemplateDoc,
-  TemplateDocSchemaVersion,
-} from '../infrastructure/template.schema';
-import {
+import type {
   DataFieldDoc,
   SectionDoc,
-} from '../../data-modelling/infrastructure/template-base.schema';
-import { SectionDbProps } from './section';
-import { DataFieldDbProps } from './data-field';
-import { Template } from './template';
-import { SectionType } from '../../data-modelling/domain/section-base';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+} from '../../data-modelling/infrastructure/template-base.schema'
+import type {
+  TemplateDoc,
+} from '../infrastructure/template.schema'
+import type { DataFieldDbProps } from './data-field'
+import type { SectionDbProps } from './section'
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
+import { SectionType } from '../../data-modelling/domain/section-base'
+import {
+  TemplateDocSchemaVersion,
+} from '../infrastructure/template.schema'
+import { Template } from './template'
 
 export function serializeTemplate(t: Template) {
   return {
@@ -20,12 +22,12 @@ export function serializeTemplate(t: Template) {
     sectors: t.sectors,
     version: t.version,
     _schemaVersion: TemplateDocSchemaVersion.v1_0_3,
-    sections: t.sections.map((s) => ({
+    sections: t.sections.map(s => ({
       _id: s.id,
       name: s.name,
       type: s.type,
       granularityLevel: s.granularityLevel,
-      dataFields: s.dataFields.map((d) => ({
+      dataFields: s.dataFields.map(d => ({
         _id: d.id,
         name: d.name,
         type: d.type,
@@ -38,7 +40,7 @@ export function serializeTemplate(t: Template) {
     createdByUserId: t.createdByUserId,
     ownedByOrganizationId: t.ownedByOrganizationId,
     marketplaceResourceId: t.marketplaceResourceId,
-  };
+  }
 }
 
 export function deserializeTemplate(plain: TemplateDoc) {
@@ -52,8 +54,8 @@ export function deserializeTemplate(plain: TemplateDoc) {
     userId: plain.createdByUserId,
     organizationId: plain.ownedByOrganizationId,
     sections: plain.sections.map((s: SectionDoc) => createSection(s)),
-  };
-  return Template.loadFromDb(tmp);
+  }
+  return Template.loadFromDb(tmp)
 }
 
 function createSection(sectionDoc: SectionDoc): SectionDbProps {
@@ -63,13 +65,13 @@ function createSection(sectionDoc: SectionDoc): SectionDbProps {
     name: sectionDoc.name,
     parentId: sectionDoc.parentId,
     subSections: sectionDoc.subSections,
-    dataFields: sectionDoc.dataFields.map((df) => createDataField(df)),
+    dataFields: sectionDoc.dataFields.map(df => createDataField(df)),
     granularityLevel: sectionDoc.granularityLevel
       ? sectionDoc.granularityLevel
       : sectionDoc.type === SectionType.REPEATABLE
         ? GranularityLevel.MODEL
         : undefined,
-  };
+  }
 }
 
 function createDataField(dataFieldDoc: DataFieldDoc): DataFieldDbProps {
@@ -79,5 +81,5 @@ function createDataField(dataFieldDoc: DataFieldDoc): DataFieldDbProps {
     granularityLevel: dataFieldDoc.granularityLevel,
     options: dataFieldDoc.options,
     name: dataFieldDoc.name,
-  };
+  }
 }

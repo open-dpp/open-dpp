@@ -1,3 +1,39 @@
+<script lang="ts" setup>
+import type {
+  Notification,
+} from "../../stores/notification";
+import { XMarkIcon } from "@heroicons/vue/20/solid";
+import {
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+} from "@heroicons/vue/24/outline";
+import { computed } from "vue";
+import {
+  NotificationType,
+  useNotificationStore,
+} from "../../stores/notification";
+
+const props = defineProps<{ notification: Notification }>();
+
+const notificationStore = useNotificationStore();
+
+function onDelete() {
+  notificationStore.removeNotification(props.notification.id);
+}
+
+const title = computed<string>(() => {
+  const titleMap = {
+    [NotificationType.SUCCESS]: "Erfolg",
+    [NotificationType.ERROR]: "Fehler",
+    [NotificationType.WARNING]: "Warnung",
+    [NotificationType.INFO]: "Information",
+  };
+  return titleMap[props.notification.type] || "Information";
+});
+</script>
+
 <template>
   <div
     v-if="props.notification"
@@ -28,7 +64,9 @@
           />
         </div>
         <div class="ml-3 w-0 flex-1 pt-0.5">
-          <p class="text-sm font-medium text-gray-900">{{ title }}</p>
+          <p class="text-sm font-medium text-gray-900">
+            {{ title }}
+          </p>
           <p class="mt-1 text-sm text-gray-500">
             {{ props.notification.message }}
           </p>
@@ -57,36 +95,3 @@
     </div>
   </div>
 </template>
-<script lang="ts" setup>
-import {
-  CheckCircleIcon,
-  ExclamationCircleIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-} from '@heroicons/vue/24/outline';
-import { XMarkIcon } from '@heroicons/vue/20/solid';
-import {
-  Notification,
-  NotificationType,
-  useNotificationStore,
-} from '../../stores/notification';
-import { computed } from 'vue';
-
-const props = defineProps<{ notification: Notification }>();
-
-const notificationStore = useNotificationStore();
-
-const onDelete = () => {
-  notificationStore.removeNotification(props.notification.id);
-};
-
-const title = computed<string>(() => {
-  const titleMap = {
-    [NotificationType.SUCCESS]: 'Erfolg',
-    [NotificationType.ERROR]: 'Fehler',
-    [NotificationType.WARNING]: 'Warnung',
-    [NotificationType.INFO]: 'Information',
-  };
-  return titleMap[props.notification.type] || 'Information';
-});
-</script>

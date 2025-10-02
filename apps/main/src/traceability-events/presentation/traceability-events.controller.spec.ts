@@ -1,16 +1,17 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { TraceabilityEventsController } from './traceability-events.controller';
-import { TraceabilityEventsService } from '../infrastructure/traceability-events.service';
-import { MongooseModule } from '@nestjs/mongoose';
+import type { TestingModule } from '@nestjs/testing'
+import { expect } from '@jest/globals'
+import { MongooseModule } from '@nestjs/mongoose'
+import { Test } from '@nestjs/testing'
+import { MongooseTestingModule } from '@open-dpp/testing/mongo.testing.module'
 import {
   DppEventSchema,
   TraceabilityEventDocument,
-} from '../infrastructure/traceability-event.document';
-import { expect } from '@jest/globals';
-import { MongooseTestingModule } from '@open-dpp/testing/mongo.testing.module';
+} from '../infrastructure/traceability-event.document'
+import { TraceabilityEventsService } from '../infrastructure/traceability-events.service'
+import { TraceabilityEventsController } from './traceability-events.controller'
 
-describe('DppEventsController', () => {
-  let controller: TraceabilityEventsController;
+describe('dppEventsController', () => {
+  let controller: TraceabilityEventsController
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -25,14 +26,14 @@ describe('DppEventsController', () => {
       ],
       controllers: [TraceabilityEventsController],
       providers: [TraceabilityEventsService],
-    }).compile();
+    }).compile()
 
     controller = module.get<TraceabilityEventsController>(
       TraceabilityEventsController,
-    );
-  });
+    )
+  })
 
   it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-});
+    expect(controller).toBeDefined()
+  })
+})

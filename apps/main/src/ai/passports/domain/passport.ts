@@ -1,7 +1,7 @@
-export type PassportProps = {
-  uuid: string;
-  ownedByOrganizationId: string;
-};
+export interface PassportProps {
+  uuid: string
+  ownedByOrganizationId: string
+}
 
 export class Passport {
   private constructor(
@@ -10,6 +10,6 @@ export class Passport {
   ) {}
 
   static create(data: PassportProps): Passport {
-    return new Passport(data.uuid, data.ownedByOrganizationId);
+    return new Passport(data.uuid, data.ownedByOrganizationId)
   }
 }

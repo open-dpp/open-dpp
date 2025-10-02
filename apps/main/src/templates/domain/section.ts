@@ -1,31 +1,33 @@
-import {
+import type { GranularityLevel } from '../../data-modelling/domain/granularity-level'
+import type { DataValue } from '../../product-passport-data/domain/data-value'
+import type {
   DataField,
   DataFieldDbProps,
-  DataFieldValidationResult,
-  findDataFieldClassByTypeOrFail,
-} from './data-field';
-import { groupBy } from 'lodash';
+} from './data-field'
+import { randomUUID } from 'node:crypto'
+import { NotSupportedError } from '@open-dpp/exception'
+import { groupBy } from 'lodash'
 import {
   SectionBase,
   SectionType,
-} from '../../data-modelling/domain/section-base';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { DataValue } from '../../product-passport-data/domain/data-value';
-import { randomUUID } from 'crypto';
-import { NotSupportedError } from '@open-dpp/exception';
+} from '../../data-modelling/domain/section-base'
+import {
+  DataFieldValidationResult,
+  findDataFieldClassByTypeOrFail,
+} from './data-field'
 
-type SectionProps = {
-  name: string;
-  granularityLevel?: GranularityLevel; // Required for repeater sections
-};
+interface SectionProps {
+  name: string
+  granularityLevel?: GranularityLevel // Required for repeater sections
+}
 
 export type SectionDbProps = SectionProps & {
-  id: string;
-  type: SectionType;
-  parentId: string | undefined;
-  subSections: string[];
-  dataFields: DataFieldDbProps[];
-};
+  id: string
+  type: SectionType
+  parentId: string | undefined
+  subSections: string[]
+  dataFields: DataFieldDbProps[]
+}
 
 export abstract class Section extends SectionBase {
   public constructor(
@@ -37,7 +39,7 @@ export abstract class Section extends SectionBase {
     public granularityLevel: GranularityLevel | undefined,
     public readonly dataFields: DataField[],
   ) {
-    super(id, _name, type, _subSections, _parentId, granularityLevel);
+    super(id, _name, type, _subSections, _parentId, granularityLevel)
   }
 
   protected static createInstance<T extends Section>(
@@ -53,7 +55,7 @@ export abstract class Section extends SectionBase {
       undefined,
       data.granularityLevel,
       [],
-    );
+    )
   }
 
   // Add static factory method for loadFromDb
@@ -70,10 +72,10 @@ export abstract class Section extends SectionBase {
       data.parentId,
       data.granularityLevel,
       data.dataFields.map((d) => {
-        const DataFieldClass = findDataFieldClassByTypeOrFail(d.type);
-        return DataFieldClass.loadFromDb(d);
+        const DataFieldClass = findDataFieldClassByTypeOrFail(d.type)
+        return DataFieldClass.loadFromDb(d)
       }),
-    );
+    )
   }
 
   validate(
@@ -81,18 +83,18 @@ export abstract class Section extends SectionBase {
     values: DataValue[],
     granularity: GranularityLevel,
   ): DataFieldValidationResult[] {
-    const validations: Array<DataFieldValidationResult> = [];
+    const validations: Array<DataFieldValidationResult> = []
     const sectionValues = groupBy(
-      values.filter((v) => v.dataSectionId === this.id),
+      values.filter(v => v.dataSectionId === this.id),
       'row',
-    );
+    )
     for (const [row, dataValuesOfRow] of Object.entries(sectionValues)) {
       for (const dataField of this.dataFields.filter(
-        (d) => d.granularityLevel === granularity,
+        d => d.granularityLevel === granularity,
       )) {
         const dataValue = dataValuesOfRow.find(
-          (v) => v.dataFieldId === dataField.id,
-        );
+          v => v.dataFieldId === dataField.id,
+        )
         validations.push(
           dataValue
             ? dataField.validate(version, dataValue.value)
@@ -103,10 +105,10 @@ export abstract class Section extends SectionBase {
                 row: Number(row),
                 errorMessage: `Value for data field is missing`,
               }),
-        );
+        )
       }
     }
-    return validations;
+    return validations
   }
 
   toDbProps(): SectionDbProps {
@@ -117,8 +119,8 @@ export abstract class Section extends SectionBase {
       subSections: this._subSections,
       parentId: this._parentId,
       granularityLevel: this.granularityLevel,
-      dataFields: this.dataFields.map((d) => d.toDbProps()),
-    };
+      dataFields: this.dataFields.map(d => d.toDbProps()),
+    }
   }
 }
 
@@ -128,7 +130,7 @@ export class RepeaterSection extends Section {
       RepeaterSection,
       data,
       SectionType.REPEATABLE,
-    );
+    )
   }
 
   static loadFromDb(data: SectionDbProps) {
@@ -136,39 +138,39 @@ export class RepeaterSection extends Section {
       RepeaterSection,
       data,
       SectionType.REPEATABLE,
-    );
+    )
   }
 }
 
 export class GroupSection extends Section {
   static create(data: SectionProps) {
-    return Section.createInstance(GroupSection, data, SectionType.GROUP);
+    return Section.createInstance(GroupSection, data, SectionType.GROUP)
   }
 
   static loadFromDb(data: SectionDbProps) {
-    return Section.loadFromDbInstance(GroupSection, data, SectionType.GROUP);
+    return Section.loadFromDbInstance(GroupSection, data, SectionType.GROUP)
   }
 }
 
 const sectionSubTypes = [
   { value: RepeaterSection, name: SectionType.REPEATABLE },
   { value: GroupSection, name: SectionType.GROUP },
-];
+]
 
 export function findSectionClassByTypeOrFail(type: SectionType) {
-  const foundSectionType = sectionSubTypes.find((st) => st.name === type);
+  const foundSectionType = sectionSubTypes.find(st => st.name === type)
   if (!foundSectionType) {
-    throw new NotSupportedError(`Section type ${type} is not supported`);
+    throw new NotSupportedError(`Section type ${type} is not supported`)
   }
-  return foundSectionType.value;
+  return foundSectionType.value
 }
 
 export function isGroupSection(section: Section): section is GroupSection {
-  return section.type === SectionType.GROUP;
+  return section.type === SectionType.GROUP
 }
 
 export function isRepeaterSection(
   section: Section,
 ): section is RepeaterSection {
-  return section.type === SectionType.REPEATABLE;
+  return section.type === SectionType.REPEATABLE
 }

@@ -1,22 +1,24 @@
-import { RouteLocationNormalizedGeneric, RouteRecordRaw } from 'vue-router';
-import { useLayoutStore } from '../../stores/layout';
-
-const filesListBreadCrumbs = (to: RouteLocationNormalizedGeneric) => [
-  { name: 'Medien', route: MEDIA, params: to.params },
-];
+import type { RouteLocationNormalizedGeneric, RouteRecordRaw } from "vue-router";
+import { useLayoutStore } from "../../stores/layout";
 
 export const MEDIA: RouteRecordRaw = {
-  path: '',
-  name: 'Medien',
-  component: () => import('../../view/media/MediaView.vue'),
+  path: "",
+  name: "Medien",
+  component: () => import("../../view/media/MediaView.vue"),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = filesListBreadCrumbs(to);
   },
 };
 
+function filesListBreadCrumbs(to: RouteLocationNormalizedGeneric) {
+  return [
+    { name: "Medien", route: MEDIA, params: to.params },
+  ];
+}
+
 export const MEDIA_PARENT: RouteRecordRaw = {
-  path: '/media',
+  path: "/media",
   children: [MEDIA],
 };
 

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 export enum VisibilityLevel {
   PRIVATE = 'Private',
@@ -7,6 +7,6 @@ export enum VisibilityLevel {
 
 export const PublishDtoSchema = z.object({
   visibility: z.enum(VisibilityLevel),
-});
+})
 
-export type PublishDto = z.infer<typeof PublishDtoSchema>;
+export type PublishDto = z.infer<typeof PublishDtoSchema>

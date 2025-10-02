@@ -1,29 +1,31 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import type { ArgumentsHost } from '@nestjs/common'
+import type { TestingModule } from '@nestjs/testing'
+import { expect } from '@jest/globals'
+import { HttpStatus } from '@nestjs/common'
+import { Test } from '@nestjs/testing'
+import { ValueError } from './domain.errors'
 import {
   NotFoundInDatabaseExceptionFilter,
   ValueErrorFilter,
-} from './exception.handler';
-import { NotFoundInDatabaseException } from './service.exceptions';
-import { ArgumentsHost, HttpStatus } from '@nestjs/common';
-import { ValueError } from './domain.errors';
-import { expect } from '@jest/globals';
+} from './exception.handler'
+import { NotFoundInDatabaseException } from './service.exceptions'
 
-describe('ExceptionFilter', () => {
-  let notFoundInDatabaseExceptionFilter: NotFoundInDatabaseExceptionFilter;
-  let valueErrorFilter: ValueErrorFilter;
+describe('exceptionFilter', () => {
+  let notFoundInDatabaseExceptionFilter: NotFoundInDatabaseExceptionFilter
+  let valueErrorFilter: ValueErrorFilter
 
-  let mockJson: jest.Mock;
-  let mockStatus: jest.Mock;
-  let mockResponse: any;
-  let mockRequest: any;
-  let mockArgumentsHost: ArgumentsHost;
+  let mockJson: jest.Mock
+  let mockStatus: jest.Mock
+  let mockResponse: any
+  let mockRequest: any
+  let mockArgumentsHost: ArgumentsHost
 
   beforeEach(async () => {
     // Set up mock response and request
-    mockJson = jest.fn().mockReturnThis();
-    mockStatus = jest.fn().mockReturnValue({ json: mockJson });
-    mockResponse = { status: mockStatus };
-    mockRequest = { url: '/test-url' };
+    mockJson = jest.fn().mockReturnThis()
+    mockStatus = jest.fn().mockReturnValue({ json: mockJson })
+    mockResponse = { status: mockStatus }
+    mockRequest = { url: '/test-url' }
 
     // Set up mock ArgumentsHost
     mockArgumentsHost = {
@@ -31,48 +33,48 @@ describe('ExceptionFilter', () => {
         getResponse: jest.fn().mockReturnValue(mockResponse),
         getRequest: jest.fn().mockReturnValue(mockRequest),
       }),
-    } as unknown as ArgumentsHost;
+    } as unknown as ArgumentsHost
 
     // Set up the filter
     const module: TestingModule = await Test.createTestingModule({
       providers: [NotFoundInDatabaseExceptionFilter, ValueErrorFilter],
-    }).compile();
+    }).compile()
 
-    notFoundInDatabaseExceptionFilter =
-      module.get<NotFoundInDatabaseExceptionFilter>(
+    notFoundInDatabaseExceptionFilter
+      = module.get<NotFoundInDatabaseExceptionFilter>(
         NotFoundInDatabaseExceptionFilter,
-      );
-    valueErrorFilter = module.get<ValueErrorFilter>(ValueErrorFilter);
+      )
+    valueErrorFilter = module.get<ValueErrorFilter>(ValueErrorFilter)
 
     // Mock Date.toISOString for consistent testing
     jest
       .spyOn(Date.prototype, 'toISOString')
-      .mockReturnValue('2025-03-26T12:00:00.000Z');
-  });
+      .mockReturnValue('2025-03-26T12:00:00.000Z')
+  })
 
   afterEach(() => {
-    jest.clearAllMocks();
-  });
+    jest.clearAllMocks()
+  })
 
   it('should be defined', () => {
-    expect(notFoundInDatabaseExceptionFilter).toBeDefined();
-    expect(ValueErrorFilter).toBeDefined();
-  });
+    expect(notFoundInDatabaseExceptionFilter).toBeDefined()
+    expect(ValueErrorFilter).toBeDefined()
+  })
 
   it('should transform NotFoundInDatabaseException to a proper HTTP response', () => {
     // Create a NotFoundInDatabaseException
-    const exception = new NotFoundInDatabaseException('TestEntity');
+    const exception = new NotFoundInDatabaseException('TestEntity')
 
     // Call the filter
-    notFoundInDatabaseExceptionFilter.catch(exception, mockArgumentsHost);
+    notFoundInDatabaseExceptionFilter.catch(exception, mockArgumentsHost)
 
     // Verify the ArgumentsHost was used correctly
-    expect(mockArgumentsHost.switchToHttp).toHaveBeenCalled();
-    expect(mockArgumentsHost.switchToHttp().getResponse).toHaveBeenCalled();
-    expect(mockArgumentsHost.switchToHttp().getRequest).toHaveBeenCalled();
+    expect(mockArgumentsHost.switchToHttp).toHaveBeenCalled()
+    expect(mockArgumentsHost.switchToHttp().getResponse).toHaveBeenCalled()
+    expect(mockArgumentsHost.switchToHttp().getRequest).toHaveBeenCalled()
 
     // Verify the response status was set to 404
-    expect(mockStatus).toHaveBeenCalledWith(HttpStatus.NOT_FOUND);
+    expect(mockStatus).toHaveBeenCalledWith(HttpStatus.NOT_FOUND)
 
     // Verify the JSON response has the correct format
     expect(mockJson).toHaveBeenCalledWith({
@@ -80,41 +82,41 @@ describe('ExceptionFilter', () => {
       timestamp: '2025-03-26T12:00:00.000Z',
       path: '/test-url',
       message: 'TestEntity could not be found.',
-    });
-  });
+    })
+  })
 
   it('should include the correct error message in the response', () => {
     // Create a NotFoundInDatabaseException with a specific entity name
-    const exception = new NotFoundInDatabaseException('CustomEntity');
+    const exception = new NotFoundInDatabaseException('CustomEntity')
 
     // Call the filter
     notFoundInDatabaseExceptionFilter.catch(
       exception as any,
       mockArgumentsHost,
-    );
+    )
 
     // Verify the JSON response has the correct message
     expect(mockJson).toHaveBeenCalledWith(
       expect.objectContaining({
         message: 'CustomEntity could not be found.',
       }),
-    );
-  });
+    )
+  })
 
   it('should transform ValueError to a proper HTTP response', () => {
     // Create a NotFoundInDatabaseException
-    const exception = new ValueError('Not valid property provided');
+    const exception = new ValueError('Not valid property provided')
 
     // Call the filter
-    valueErrorFilter.catch(exception as any, mockArgumentsHost);
+    valueErrorFilter.catch(exception as any, mockArgumentsHost)
 
     // Verify the ArgumentsHost was used correctly
-    expect(mockArgumentsHost.switchToHttp).toHaveBeenCalled();
-    expect(mockArgumentsHost.switchToHttp().getResponse).toHaveBeenCalled();
-    expect(mockArgumentsHost.switchToHttp().getRequest).toHaveBeenCalled();
+    expect(mockArgumentsHost.switchToHttp).toHaveBeenCalled()
+    expect(mockArgumentsHost.switchToHttp().getResponse).toHaveBeenCalled()
+    expect(mockArgumentsHost.switchToHttp().getRequest).toHaveBeenCalled()
 
     // Verify the response status was set to 400
-    expect(mockStatus).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
+    expect(mockStatus).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST)
 
     // Verify the JSON response has the correct format
     expect(mockJson).toHaveBeenCalledWith({
@@ -122,21 +124,21 @@ describe('ExceptionFilter', () => {
       timestamp: '2025-03-26T12:00:00.000Z',
       path: '/test-url',
       message: 'Not valid property provided',
-    });
-  });
+    })
+  })
 
   it('should include the correct error message for value error in the response', () => {
     // Create a NotFoundInDatabaseException with a specific entity name
-    const exception = new ValueError('Not valid property provided');
+    const exception = new ValueError('Not valid property provided')
 
     // Call the filter
-    valueErrorFilter.catch(exception as any, mockArgumentsHost);
+    valueErrorFilter.catch(exception as any, mockArgumentsHost)
 
     // Verify the JSON response has the correct message
     expect(mockJson).toHaveBeenCalledWith(
       expect.objectContaining({
         message: 'Not valid property provided',
       }),
-    );
-  });
-});
+    )
+  })
+})

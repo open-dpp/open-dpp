@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
-import { TemplateController } from './presentation/template.controller';
-import { TemplateService } from './infrastructure/template.service';
-import { MongooseModule } from '@nestjs/mongoose';
-import { TemplateDoc, TemplateSchema } from './infrastructure/template.schema';
-import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
-import { PermissionModule } from '@open-dpp/auth';
+import { Module } from '@nestjs/common'
+import { MongooseModule } from '@nestjs/mongoose'
+import { PermissionModule } from '@open-dpp/auth'
+import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module'
+import { TemplateDoc, TemplateSchema } from './infrastructure/template.schema'
+import { TemplateService } from './infrastructure/template.service'
+import { TemplateController } from './presentation/template.controller'
 
 @Module({
   imports: [

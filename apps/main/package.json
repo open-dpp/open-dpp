@@ -1,7 +1,11 @@
 {
   "name": "@open-dpp/main",
   "version": "1.0.0",
+  "packageManager": "pnpm@10.17.1",
   "description": "",
+  "author": "",
+  "license": "ISC",
+  "keywords": [],
   "main": "index.js",
   "scripts": {
     "build": "nest build",
@@ -11,7 +15,8 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/apps/main/main",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -21,9 +26,6 @@
     "check-ts": "tsc --noEmit"
   },
   "dependencies": {
-    "@open-dpp/auth": "workspace:*",
-    "@open-dpp/exception": "workspace:*",
-    "@open-dpp/testing": "workspace:*",
     "@keycloak/keycloak-admin-client": "^26.3.4",
     "@langchain/core": "^0.3.77",
     "@langchain/langgraph": "^0.4.9",
@@ -44,6 +46,9 @@
     "@nestjs/typeorm": "^11.0.0",
     "@nestjs/websockets": "^11.1.6",
     "@open-dpp/api-client": "^2.2.0",
+    "@open-dpp/auth": "workspace:*",
+    "@open-dpp/exception": "workspace:*",
+    "@open-dpp/testing": "workspace:*",
     "axios": "^1.12.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
@@ -68,11 +73,12 @@
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
+    "@tsconfig/node-lts": "^22.0.2",
+    "@tsconfig/node-ts": "^23.6.1",
     "@types/express": "^5.0.3",
     "@types/multer": "^2.0.0",
     "@types/node": "^22.10.7",
     "@types/supertest": "^6.0.2",
-    "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
     "eslint-plugin-vue": "^9.32.0",
@@ -85,10 +91,6 @@
     "tsconfig-paths": "^4.2.0",
     "typescript-eslint": "^8.20.0"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.17.1",
   "jest": {
     "moduleFileExtensions": [
       "js",

@@ -1,5 +1,5 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
+import { Document } from 'mongoose'
 
 export enum UniqueProductIdentifierSchemaVersion {
   v1_0_0 = '1.0.0',
@@ -12,25 +12,25 @@ export enum UniqueProductIdentifierSchemaVersion {
 export class UniqueProductIdentifierDoc extends Document {
   @Prop({ required: true })
   // @ts-expect-error uses mongo id
-  _id: string;
+  _id: string
 
   @Prop({ required: true })
-  referenceId: string;
+  referenceId: string
 
   @Prop({
     default: UniqueProductIdentifierSchemaVersion.v1_0_0,
     enum: UniqueProductIdentifierSchemaVersion,
   }) // Track schema version
-  _schemaVersion: UniqueProductIdentifierSchemaVersion;
+  _schemaVersion: UniqueProductIdentifierSchemaVersion
 
   @Prop()
-  createdAt?: Date;
+  createdAt?: Date
 
   @Prop()
-  updatedAt?: Date;
+  updatedAt?: Date
 }
 export const UniqueProductIdentifierSchema = SchemaFactory.createForClass(
   UniqueProductIdentifierDoc,
-);
+)
 
-UniqueProductIdentifierSchema.index({ referenceId: 1 });
+UniqueProductIdentifierSchema.index({ referenceId: 1 })

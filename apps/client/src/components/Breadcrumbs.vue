@@ -1,3 +1,39 @@
+<script lang="ts" setup>
+import type { RouteRecordRaw } from "vue-router";
+import { HomeIcon } from "@heroicons/vue/20/solid";
+import { computed, onMounted, onUnmounted, ref } from "vue";
+import { useRoute } from "vue-router";
+import { useLayoutStore } from "../stores/layout";
+
+const layoutStore = useLayoutStore();
+const route = useRoute();
+
+const lgBreakpoint = 1300;
+const isLargeScreen = ref(window.innerWidth > lgBreakpoint);
+
+function updateScreenSize() {
+  isLargeScreen.value = window.innerWidth > lgBreakpoint;
+}
+
+onMounted(() => {
+  window.addEventListener("resize", updateScreenSize);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("resize", updateScreenSize);
+});
+
+const slicedBreadcrumbs = computed(() => {
+  return isLargeScreen.value
+    ? layoutStore.breadcrumbs.slice(-4)
+    : layoutStore.breadcrumbs.slice(-3);
+});
+
+function isCurrent(record: RouteRecordRaw) {
+  return route.name === record.name;
+}
+</script>
+
 <template>
   <nav aria-label="Breadcrumb" class="flex">
     <ol
@@ -28,46 +64,11 @@
             :aria-current="isCurrent(page.route) ? 'page' : undefined"
             :to="{ name: page.route.name, params: page.params }"
             class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700"
-            >{{ page.name }}
+          >
+            {{ page.name }}
           </router-link>
         </div>
       </li>
     </ol>
   </nav>
 </template>
-
-<script lang="ts" setup>
-import { HomeIcon } from '@heroicons/vue/20/solid';
-import { useLayoutStore } from '../stores/layout';
-import { RouteRecordRaw, useRoute } from 'vue-router';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
-
-const lgBreakpoint = 1300;
-const isLargeScreen = ref(window.innerWidth > lgBreakpoint);
-
-const updateScreenSize = () => {
-  isLargeScreen.value = window.innerWidth > lgBreakpoint;
-};
-
-onMounted(() => {
-  window.addEventListener('resize', updateScreenSize);
-});
-
-onUnmounted(() => {
-  window.removeEventListener('resize', updateScreenSize);
-});
-
-const slicedBreadcrumbs = computed(() => {
-  return isLargeScreen.value
-    ? layoutStore.breadcrumbs.slice(-4)
-    : layoutStore.breadcrumbs.slice(-3);
-});
-
-const layoutStore = useLayoutStore();
-
-const route = useRoute();
-
-const isCurrent = (record: RouteRecordRaw) => {
-  return route.name === record.name;
-};
-</script>

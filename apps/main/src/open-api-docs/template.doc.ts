@@ -1,5 +1,5 @@
-import { sectionBaseDocumentation } from './section-base.doc';
-import { Sector } from '@open-dpp/api-client';
+import { Sector } from '@open-dpp/api-client'
+import { sectionBaseDocumentation } from './section-base.doc'
 
 export const templateDocumentation = {
   type: 'object',
@@ -54,7 +54,7 @@ export const templateDocumentation = {
     'createdByUserId',
     'ownedByOrganizationId',
   ],
-};
+}
 
 export const templateGetAllDocumentation = {
   type: 'object',
@@ -77,4 +77,4 @@ export const templateGetAllDocumentation = {
       description: 'The sectors which the template is applicable to.',
     },
   },
-};
+}

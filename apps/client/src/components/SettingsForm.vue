@@ -12,6 +12,10 @@
   }
   ```
 -->
+<script lang="ts" setup>
+import { PhotoIcon, UserCircleIcon } from "@heroicons/vue/24/solid";
+</script>
+
 <template>
   <form>
     <div class="space-y-12">
@@ -35,23 +39,21 @@
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="website"
-              >Website</label
-            >
+            >Website</label>
             <div class="mt-2">
               <div
                 class="flex rounded-md shadow-xs ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md"
               >
                 <span
                   class="flex select-none items-center pl-3 text-gray-500 sm:text-sm"
-                  >http://</span
-                >
+                >http://</span>
                 <input
                   id="website"
                   class="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
                   name="website"
                   placeholder="www.example.com"
                   type="text"
-                />
+                >
               </div>
             </div>
           </div>
@@ -60,8 +62,7 @@
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="about"
-              >About</label
-            >
+            >About</label>
             <div class="mt-2">
               <textarea
                 id="about"
@@ -79,8 +80,7 @@
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="photo"
-              >Photo</label
-            >
+            >Photo</label>
             <div class="mt-2 flex items-center gap-x-3">
               <UserCircleIcon
                 aria-hidden="true"
@@ -99,8 +99,7 @@
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="cover-photo"
-              >Cover photo</label
-            >
+            >Cover photo</label>
             <div
               class="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10"
             >
@@ -120,9 +119,11 @@
                       class="sr-only"
                       name="file-upload"
                       type="file"
-                    />
+                    >
                   </label>
-                  <p class="pl-1">or drag and drop</p>
+                  <p class="pl-1">
+                    or drag and drop
+                  </p>
                 </div>
                 <p class="text-xs leading-5 text-gray-600">
                   PNG, JPG, GIF up to 10MB
@@ -152,8 +153,7 @@
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="first-name"
-              >First name</label
-            >
+            >First name</label>
             <div class="mt-2">
               <input
                 id="first-name"
@@ -161,7 +161,7 @@
                 class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 name="first-name"
                 type="text"
-              />
+              >
             </div>
           </div>
 
@@ -169,8 +169,7 @@
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="last-name"
-              >Last name</label
-            >
+            >Last name</label>
             <div class="mt-2">
               <input
                 id="last-name"
@@ -178,7 +177,7 @@
                 class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 name="last-name"
                 type="text"
-              />
+              >
             </div>
           </div>
 
@@ -186,8 +185,7 @@
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="email"
-              >Email address</label
-            >
+            >Email address</label>
             <div class="mt-2">
               <input
                 id="email"
@@ -195,7 +193,7 @@
                 class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 name="email"
                 type="email"
-              />
+              >
             </div>
           </div>
 
@@ -203,8 +201,7 @@
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="country"
-              >Country</label
-            >
+            >Country</label>
             <div class="mt-2">
               <select
                 id="country"
@@ -223,8 +220,7 @@
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="street-address"
-              >Street address</label
-            >
+            >Street address</label>
             <div class="mt-2">
               <input
                 id="street-address"
@@ -232,7 +228,7 @@
                 class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 name="street-address"
                 type="text"
-              />
+              >
             </div>
           </div>
 
@@ -240,8 +236,7 @@
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="city"
-              >City</label
-            >
+            >City</label>
             <div class="mt-2">
               <input
                 id="city"
@@ -249,7 +244,7 @@
                 class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 name="city"
                 type="text"
-              />
+              >
             </div>
           </div>
 
@@ -257,8 +252,7 @@
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="region"
-              >State / Province</label
-            >
+            >State / Province</label>
             <div class="mt-2">
               <input
                 id="region"
@@ -266,7 +260,7 @@
                 class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 name="region"
                 type="text"
-              />
+              >
             </div>
           </div>
 
@@ -274,8 +268,7 @@
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="postal-code"
-              >ZIP / Postal code</label
-            >
+            >ZIP / Postal code</label>
             <div class="mt-2">
               <input
                 id="postal-code"
@@ -283,7 +276,7 @@
                 class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 name="postal-code"
                 type="text"
-              />
+              >
             </div>
           </div>
         </div>
@@ -315,12 +308,10 @@
                     class="h-4 w-4 rounded-sm border-gray-300 text-indigo-600 focus:ring-indigo-600"
                     name="comments"
                     type="checkbox"
-                  />
+                  >
                 </div>
                 <div class="text-sm leading-6">
-                  <label class="font-medium text-gray-900" for="comments"
-                    >Comments</label
-                  >
+                  <label class="font-medium text-gray-900" for="comments">Comments</label>
                   <p class="text-gray-500">
                     Get notified when someones posts a comment on a posting.
                   </p>
@@ -333,12 +324,10 @@
                     class="h-4 w-4 rounded-sm border-gray-300 text-indigo-600 focus:ring-indigo-600"
                     name="candidates"
                     type="checkbox"
-                  />
+                  >
                 </div>
                 <div class="text-sm leading-6">
-                  <label class="font-medium text-gray-900" for="candidates"
-                    >Candidates</label
-                  >
+                  <label class="font-medium text-gray-900" for="candidates">Candidates</label>
                   <p class="text-gray-500">
                     Get notified when a candidate applies for a job.
                   </p>
@@ -351,12 +340,10 @@
                     class="h-4 w-4 rounded-sm border-gray-300 text-indigo-600 focus:ring-indigo-600"
                     name="offers"
                     type="checkbox"
-                  />
+                  >
                 </div>
                 <div class="text-sm leading-6">
-                  <label class="font-medium text-gray-900" for="offers"
-                    >Offers</label
-                  >
+                  <label class="font-medium text-gray-900" for="offers">Offers</label>
                   <p class="text-gray-500">
                     Get notified when a candidate accepts or rejects an offer.
                   </p>
@@ -378,12 +365,11 @@
                   class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600"
                   name="push-notifications"
                   type="radio"
-                />
+                >
                 <label
                   class="block text-sm font-medium leading-6 text-gray-900"
                   for="push-everything"
-                  >Everything</label
-                >
+                >Everything</label>
               </div>
               <div class="flex items-center gap-x-3">
                 <input
@@ -391,12 +377,11 @@
                   class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600"
                   name="push-notifications"
                   type="radio"
-                />
+                >
                 <label
                   class="block text-sm font-medium leading-6 text-gray-900"
                   for="push-email"
-                  >Same as email</label
-                >
+                >Same as email</label>
               </div>
               <div class="flex items-center gap-x-3">
                 <input
@@ -404,12 +389,11 @@
                   class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600"
                   name="push-notifications"
                   type="radio"
-                />
+                >
                 <label
                   class="block text-sm font-medium leading-6 text-gray-900"
                   for="push-nothing"
-                  >No push notifications</label
-                >
+                >No push notifications</label>
               </div>
             </div>
           </fieldset>
@@ -433,7 +417,3 @@
     </div>
   </form>
 </template>
-
-<script lang="ts" setup>
-import { PhotoIcon, UserCircleIcon } from '@heroicons/vue/24/solid';
-</script>

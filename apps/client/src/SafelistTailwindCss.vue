@@ -1,5 +1,7 @@
+<script setup lang="ts"></script>
+
 <template>
-  <!--  Ensure that the css classes are loaded for the dynamic grid. See https://tailwindcss.com/docs/detecting-classes-in-source-files-->
+  <!--  Ensure that the css classes are loaded for the dynamic grid. See https://tailwindcss.com/docs/detecting-classes-in-source-files -->
   <!-- grid-cols -->
   <div class="hidden">
     grid-cols-1 grid-cols-2 grid-cols-3 grid-cols-4 grid-cols-5 grid-cols-6
@@ -89,4 +91,3 @@
     2xl:row-span-9 2xl:row-span-10 2xl:row-span-11 2xl:row-span-12
   </div>
 </template>
-<script setup lang="ts"></script>

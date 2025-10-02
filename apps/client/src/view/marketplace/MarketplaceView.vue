@@ -1,3 +1,12 @@
+<script lang="ts" setup>
+import type { TemplateGetAllDto } from "@open-dpp/api-client";
+import { ref } from "vue";
+import ModelTemplateList from "../../components/models/ModelTemplateList.vue";
+
+const selectedTemplate = ref<TemplateGetAllDto | null>(null);
+const isMarketplaceSelected = ref<boolean>(true);
+</script>
+
 <template>
   <div class="">
     <div class="mt-8 flex flex-col gap-10">
@@ -17,12 +26,3 @@
     </div>
   </div>
 </template>
-
-<script lang="ts" setup>
-import { ref } from 'vue';
-import ModelTemplateList from '../../components/models/ModelTemplateList.vue';
-import { TemplateGetAllDto } from '@open-dpp/api-client';
-
-const selectedTemplate = ref<TemplateGetAllDto | null>(null);
-const isMarketplaceSelected = ref<boolean>(true);
-</script>

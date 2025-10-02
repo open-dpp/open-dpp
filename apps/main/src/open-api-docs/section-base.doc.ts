@@ -1,6 +1,6 @@
-import { dataFieldDocumentation } from './data-field-base.doc';
-import { SectionType } from '../data-modelling/domain/section-base';
-import { GranularityLevel } from '../data-modelling/domain/granularity-level';
+import { GranularityLevel } from '../data-modelling/domain/granularity-level'
+import { SectionType } from '../data-modelling/domain/section-base'
+import { dataFieldDocumentation } from './data-field-base.doc'
 
 export const sectionBaseDocumentation = {
   type: 'object',
@@ -29,4 +29,4 @@ export const sectionBaseDocumentation = {
       nullable: true,
     },
   },
-};
+}

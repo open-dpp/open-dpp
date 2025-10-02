@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model as MongooseModel } from 'mongoose';
+import type { Model as MongooseModel } from 'mongoose'
+import { Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/mongoose'
+import { NotFoundInDatabaseException } from '@open-dpp/exception'
+import { AasConnection, AasFieldAssignment } from '../domain/aas-connection'
 import {
   AasConnectionDoc,
   AasConnectionDocSchemaVersion,
-} from './aas-connection.schema';
-import { AasConnection, AasFieldAssignment } from '../domain/aas-connection';
-import { NotFoundInDatabaseException } from '@open-dpp/exception';
+} from './aas-connection.schema'
 
 @Injectable()
 export class AasConnectionService {
@@ -24,7 +24,7 @@ export class AasConnectionService {
       organizationId: aasConnectionDoc.ownedByOrganizationId,
       userId: aasConnectionDoc.createdByUserId,
       name: aasConnectionDoc.name,
-      fieldAssignments: aasConnectionDoc.fieldAssignments.map((fieldMapping) =>
+      fieldAssignments: aasConnectionDoc.fieldAssignments.map(fieldMapping =>
         AasFieldAssignment.create({
           sectionId: fieldMapping.sectionId,
           dataFieldId: fieldMapping.dataFieldId,
@@ -32,7 +32,7 @@ export class AasConnectionService {
           idShort: fieldMapping.idShort,
         }),
       ),
-    });
+    })
   }
 
   async save(aasConnection: AasConnection) {
@@ -47,7 +47,7 @@ export class AasConnectionService {
         ownedByOrganizationId: aasConnection.ownedByOrganizationId,
         createdByUserId: aasConnection.createdByUserId,
         fieldAssignments: aasConnection.fieldAssignments.map(
-          (fieldMapping) => ({
+          fieldMapping => ({
             dataFieldId: fieldMapping.dataFieldId,
             sectionId: fieldMapping.sectionId,
             idShortParent: fieldMapping.idShortParent,
@@ -60,17 +60,17 @@ export class AasConnectionService {
         upsert: true, // Create a new document if none found
         runValidators: true,
       },
-    );
+    )
 
-    return this.convertToDomain(aasMappingDoc);
+    return this.convertToDomain(aasMappingDoc)
   }
 
   async findById(id: string) {
-    const aasMappingDoc = await this.aasConnectionDoc.findById(id);
+    const aasMappingDoc = await this.aasConnectionDoc.findById(id)
     if (!aasMappingDoc) {
-      throw new NotFoundInDatabaseException(AasConnection.name);
+      throw new NotFoundInDatabaseException(AasConnection.name)
     }
-    return this.convertToDomain(aasMappingDoc);
+    return this.convertToDomain(aasMappingDoc)
   }
 
   async findAllByOrganization(organizationId: string) {
@@ -79,9 +79,9 @@ export class AasConnectionService {
         ownedByOrganizationId: organizationId,
       })
       .sort({ name: 1 })
-      .exec();
-    return aasConnectionDocs.map((aasConnectionDoc) =>
+      .exec()
+    return aasConnectionDocs.map(aasConnectionDoc =>
       this.convertToDomain(aasConnectionDoc),
-    );
+    )
   }
 }

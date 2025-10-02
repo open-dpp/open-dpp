@@ -7,16 +7,16 @@ export class DataValue {
   ) {}
 
   static create(data: {
-    value: unknown;
-    dataSectionId: string;
-    dataFieldId: string;
-    row: number;
+    value: unknown
+    dataSectionId: string
+    dataFieldId: string
+    row: number
   }) {
     return new DataValue(
       data.value,
       data.dataSectionId,
       data.dataFieldId,
       data.row,
-    );
+    )
   }
 }

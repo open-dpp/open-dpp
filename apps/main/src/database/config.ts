@@ -1,11 +1,10 @@
-import { ConfigService } from '@nestjs/config';
-import { DataSourceOptions } from 'typeorm';
+import type { ConfigService } from '@nestjs/config'
+import type { DataSourceOptions } from 'typeorm'
 
 export function generateConfig(
   configService: ConfigService,
   migrationPath: string,
 ): DataSourceOptions {
-  console.log('!!!!!!! PORT HERE ------->:', configService.get('DB_PORT'));
   return {
     type: 'postgres',
     host: configService.get('DB_HOST'),
@@ -16,7 +15,7 @@ export function generateConfig(
     synchronize: true,
     dropSchema: false,
     migrations: [migrationPath],
-  };
+  }
 }
 
 export function generateMongoConfig(configService: ConfigService) {
@@ -25,5 +24,5 @@ export function generateMongoConfig(configService: ConfigService) {
     user: configService.get('DB_USERNAME'),
     pass: configService.get('DB_PASSWORD'),
     dbName: configService.get('DB_DATABASE'),
-  };
+  }
 }

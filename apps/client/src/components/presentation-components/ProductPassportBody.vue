@@ -1,37 +1,11 @@
-<template>
-  <div
-    v-for="(dataSection, index) in dataSectionsToShow"
-    :key="index"
-    class="overflow-hidden bg-white shadow sm:rounded-lg w-full"
-  >
-    <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg p-4">
-      <div class="px-4 sm:px-0">
-        <h3 class="text-base/7 font-semibold text-gray-900">
-          {{ dataSection.name }}
-        </h3>
-      </div>
-      <TableView
-        v-if="
-          dataSection.type === SectionType.REPEATABLE && sectionId === undefined
-        "
-        :data-section="dataSection"
-      />
-      <SectionView
-        v-if="dataSection.type === SectionType.GROUP || sectionId !== undefined"
-        :dataSection="dataSection"
-        :row-index="rowIndex"
-      />
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { useProductPassportStore } from '../../stores/product-passport';
-import { ref, watch } from 'vue';
-import { DataSectionDto, SectionType } from '@open-dpp/api-client';
-import TableView from './TableView.vue';
-import SectionView from './SectionView.vue';
-import { useRoute } from 'vue-router';
+import type { DataSectionDto } from "@open-dpp/api-client";
+import { SectionType } from "@open-dpp/api-client";
+import { ref, watch } from "vue";
+import { useRoute } from "vue-router";
+import { useProductPassportStore } from "../../stores/product-passport";
+import SectionView from "./SectionView.vue";
+import TableView from "./TableView.vue";
 
 const route = useRoute();
 
@@ -54,15 +28,43 @@ watch(
     if (productPassportStore.productPassport) {
       dataSectionsToShow.value = sectionId.value
         ? productPassportStore.productPassport.dataSections.filter(
-            (dataSection) => dataSection.id === sectionId.value,
+            dataSection => dataSection.id === sectionId.value,
           )
         : productPassportStore.productPassport.dataSections.filter(
-            (dataSection) => dataSection.parentId === undefined,
+            dataSection => dataSection.parentId === undefined,
           );
-    } else {
+    }
+    else {
       dataSectionsToShow.value = [];
     }
   },
   { immediate: true },
 );
 </script>
+
+<template>
+  <div
+    v-for="(dataSection, index) in dataSectionsToShow"
+    :key="index"
+    class="overflow-hidden bg-white shadow sm:rounded-lg w-full"
+  >
+    <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg p-4">
+      <div class="px-4 sm:px-0">
+        <h3 class="text-base/7 font-semibold text-gray-900">
+          {{ dataSection.name }}
+        </h3>
+      </div>
+      <TableView
+        v-if="
+          dataSection.type === SectionType.REPEATABLE && sectionId === undefined
+        "
+        :data-section="dataSection"
+      />
+      <SectionView
+        v-if="dataSection.type === SectionType.GROUP || sectionId !== undefined"
+        :data-section="dataSection"
+        :row-index="rowIndex"
+      />
+    </div>
+  </div>
+</template>

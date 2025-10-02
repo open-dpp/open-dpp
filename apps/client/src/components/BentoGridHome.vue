@@ -1,7 +1,9 @@
 <template>
   <div class="bg-white py-24 sm:py-32">
     <div class="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
-      <h2 class="text-base/7 font-semibold text-indigo-600">Deploy faster</h2>
+      <h2 class="text-base/7 font-semibold text-indigo-600">
+        Deploy faster
+      </h2>
       <p
         class="mt-2 max-w-lg text-pretty text-4xl font-medium tracking-tight text-gray-950 sm:text-5xl"
       >
@@ -21,7 +23,7 @@
               alt=""
               class="h-80 object-cover object-left"
               src="https://tailwindui.com/plus/img/component-images/bento-01-performance.png"
-            />
+            >
             <div class="p-10 pt-4">
               <h3 class="text-sm/4 font-semibold text-indigo-600">
                 Performance
@@ -53,9 +55,11 @@
               alt=""
               class="h-80 object-cover object-left lg:object-right"
               src="https://tailwindui.com/plus/img/component-images/bento-01-releases.png"
-            />
+            >
             <div class="p-10 pt-4">
-              <h3 class="text-sm/4 font-semibold text-indigo-600">Releases</h3>
+              <h3 class="text-sm/4 font-semibold text-indigo-600">
+                Releases
+              </h3>
               <p
                 class="mt-2 text-lg/7 font-medium tracking-tight text-gray-950"
               >
@@ -82,9 +86,11 @@
               alt=""
               class="h-80 object-cover object-left"
               src="https://tailwindui.com/plus/img/component-images/bento-01-speed.png"
-            />
+            >
             <div class="p-10 pt-4">
-              <h3 class="text-sm/4 font-semibold text-indigo-600">Speed</h3>
+              <h3 class="text-sm/4 font-semibold text-indigo-600">
+                Speed
+              </h3>
               <p
                 class="mt-2 text-lg/7 font-medium tracking-tight text-gray-950"
               >
@@ -108,7 +114,7 @@
               alt=""
               class="h-80 object-cover object-center"
               src="https://tailwindui.com/plus/img/component-images/bento-01-integrations.png"
-            />
+            >
             <div class="p-10 pt-4">
               <h3 class="text-sm/4 font-semibold text-indigo-600">
                 Integrations
@@ -139,9 +145,11 @@
               alt=""
               class="h-80 object-cover object-center"
               src="https://tailwindui.com/plus/img/component-images/bento-01-network.png"
-            />
+            >
             <div class="p-10 pt-4">
-              <h3 class="text-sm/4 font-semibold text-indigo-600">Network</h3>
+              <h3 class="text-sm/4 font-semibold text-indigo-600">
+                Network
+              </h3>
               <p
                 class="mt-2 text-lg/7 font-medium tracking-tight text-gray-950"
               >

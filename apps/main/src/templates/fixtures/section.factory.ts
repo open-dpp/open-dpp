@@ -1,8 +1,8 @@
-import { Factory } from 'fishery';
-import { randomUUID } from 'crypto';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { SectionDbProps } from '../domain/section';
-import { SectionType } from '../../data-modelling/domain/section-base';
+import type { SectionDbProps } from '../domain/section'
+import { randomUUID } from 'node:crypto'
+import { Factory } from 'fishery'
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
+import { SectionType } from '../../data-modelling/domain/section-base'
 
 export const sectionDbPropsFactory = Factory.define<SectionDbProps>(() => ({
   id: randomUUID(),
@@ -12,4 +12,4 @@ export const sectionDbPropsFactory = Factory.define<SectionDbProps>(() => ({
   granularityLevel: GranularityLevel.MODEL,
   dataFields: [],
   subSections: [],
-}));
+}))

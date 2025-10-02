@@ -1,5 +1,5 @@
-import { DataFieldType } from '../data-modelling/domain/data-field-base';
-import { GranularityLevel } from '../data-modelling/domain/granularity-level';
+import { DataFieldType } from '../data-modelling/domain/data-field-base'
+import { GranularityLevel } from '../data-modelling/domain/granularity-level'
 
 export const dataFieldDocumentation = {
   type: 'object',
@@ -22,4 +22,4 @@ export const dataFieldDocumentation = {
       nullable: true,
     },
   },
-};
+}

@@ -1,67 +1,70 @@
-import { HttpService } from '@nestjs/axios';
-import { FileValidator } from '@nestjs/common';
-import FormData from 'form-data';
-import { existsSync, readFileSync, unlinkSync } from 'fs';
-import { firstValueFrom } from 'rxjs';
-import { ConfigService } from '@nestjs/config';
+import { existsSync, readFileSync, unlinkSync } from 'node:fs'
+import process from 'node:process'
+import { HttpService } from '@nestjs/axios'
+import { FileValidator } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import FormData from 'form-data'
+import { firstValueFrom } from 'rxjs'
 
 interface VirusScanValidatorOptions {
-  storageType: 'disk' | 'memory';
+  storageType: 'disk' | 'memory'
 }
 
 export class VirusScanFileValidator extends FileValidator<VirusScanValidatorOptions> {
-  private readonly httpService = new HttpService();
-  private readonly configService = new ConfigService();
+  private readonly httpService = new HttpService()
+  private readonly configService = new ConfigService()
 
   async isValid(file?: Express.Multer.File): Promise<boolean> {
-    const clamAvUrl = `${this.configService.get('CLAMAV_URL')}:${this.configService.get('CLAMAV_PORT')}`;
+    const clamAvUrl = `${this.configService.get('CLAMAV_URL')}:${this.configService.get('CLAMAV_PORT')}`
     try {
-      const form = new FormData();
+      const form = new FormData()
 
       if (!file) {
-        return false;
+        return false
       }
 
-      const fileContent =
-        this.validationOptions.storageType === 'disk'
+      const fileContent
+        = this.validationOptions.storageType === 'disk'
           ? readFileSync(file.path)
-          : file.buffer.toString();
-      form.append('file', fileContent, file.originalname);
+          : file.buffer.toString()
+      form.append('file', fileContent, file.originalname)
 
       try {
         const result = (
           await firstValueFrom(this.httpService.post(`${clamAvUrl}/scan`, form))
-        ).status;
+        ).status
         if (result === 200) {
-          return true;
+          return true
         }
-      } catch (err: unknown) {
-        console.error('Error during virus scan:', err);
+      }
+      catch (err: unknown) {
+        console.error('Error during virus scan:', err)
         if (
-          typeof err === 'object' &&
-          err !== null &&
-          'syscall' in err &&
-          err.syscall === 'getaddrinfo' &&
-          process.env.NODE_ENV === 'LOCAL'
+          typeof err === 'object'
+          && err !== null
+          && 'syscall' in err
+          && err.syscall === 'getaddrinfo'
+          && process.env.NODE_ENV === 'LOCAL'
         ) {
-          return true; // ignore if in LOCAL env and clamav is not available
+          return true // ignore if in LOCAL env and clamav is not available
         }
       }
 
       if (
-        this.validationOptions.storageType === 'disk' &&
-        existsSync(file.path)
+        this.validationOptions.storageType === 'disk'
+        && existsSync(file.path)
       ) {
-        unlinkSync(file.path); // delete a file when infected
+        unlinkSync(file.path) // delete a file when infected
       }
-      return false;
-    } catch (error) {
-      console.error('Error during virus scan:', error);
-      return false;
+      return false
+    }
+    catch (error) {
+      console.error('Error during virus scan:', error)
+      return false
     }
   }
 
   buildErrorMessage(): string {
-    return 'The file was denied by our virus scanning system.';
+    return 'The file was denied by our virus scanning system.'
   }
 }

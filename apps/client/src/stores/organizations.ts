@@ -1,9 +1,9 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import { OrganizationDto } from '@open-dpp/api-client';
-import apiClient from '../lib/api-client';
+import type { OrganizationDto } from "@open-dpp/api-client";
+import { defineStore } from "pinia";
+import { ref } from "vue";
+import apiClient from "../lib/api-client";
 
-export const useOrganizationsStore = defineStore('organizations', () => {
+export const useOrganizationsStore = defineStore("organizations", () => {
   const organizations = ref<OrganizationDto[]>([]);
 
   const fetchOrganizations = async () => {

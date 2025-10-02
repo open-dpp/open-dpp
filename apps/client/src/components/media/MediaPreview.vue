@@ -1,3 +1,41 @@
+<script lang="ts" setup>
+import type { MediaInfo } from "./MediaInfo.interface";
+import {
+  DocumentIcon,
+  ExclamationTriangleIcon,
+  PhotoIcon,
+  VideoCameraIcon,
+} from "@heroicons/vue/24/solid";
+import { onMounted, onUnmounted, ref } from "vue";
+import { useMediaStore } from "../../stores/media";
+import RingLoader from "../RingLoader.vue";
+
+const props = defineProps<{
+  media: MediaInfo;
+  showType?: boolean;
+}>();
+
+const mediaStore = useMediaStore();
+
+const url = ref<string | null>(null);
+const loading = ref<boolean>(false);
+
+onMounted(async () => {
+  loading.value = true;
+  const blob = await mediaStore.downloadMedia(props.media.id);
+  if (blob) {
+    url.value = URL.createObjectURL(blob);
+  }
+  loading.value = false;
+});
+
+onUnmounted(() => {
+  if (url.value) {
+    URL.revokeObjectURL(url.value);
+  }
+});
+</script>
+
 <template>
   <div class="h-[150px] w-full rounded-lg bg-[#6BAD87]/10 relative">
     <div v-if="loading" class="mx-auto my-auto">
@@ -8,7 +46,7 @@
       :alt="url"
       :src="url"
       class="max-h-[150px] mx-auto"
-    />
+    >
     <div v-else class="w-full h-full flex items-center justify-center">
       <PhotoIcon v-if="media.mimeType.startsWith('image/')" class="w-12 h-12" />
       <VideoCameraIcon
@@ -37,40 +75,3 @@
     </div>
   </div>
 </template>
-<script lang="ts" setup>
-import RingLoader from '../RingLoader.vue';
-import { useMediaStore } from '../../stores/media';
-import { onMounted, onUnmounted, ref } from 'vue';
-import { MediaInfo } from './MediaInfo.interface';
-import {
-  DocumentIcon,
-  ExclamationTriangleIcon,
-  PhotoIcon,
-  VideoCameraIcon,
-} from '@heroicons/vue/24/solid';
-
-const mediaStore = useMediaStore();
-
-const props = defineProps<{
-  media: MediaInfo;
-  showType?: boolean;
-}>();
-
-const url = ref<string | null>(null);
-const loading = ref<boolean>(false);
-
-onMounted(async () => {
-  loading.value = true;
-  const blob = await mediaStore.downloadMedia(props.media.id);
-  if (blob) {
-    url.value = URL.createObjectURL(blob);
-  }
-  loading.value = false;
-});
-
-onUnmounted(() => {
-  if (url.value) {
-    URL.revokeObjectURL(url.value);
-  }
-});
-</script>

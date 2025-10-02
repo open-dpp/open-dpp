@@ -1,11 +1,11 @@
-import type { FunctionalComponent, HTMLAttributes, VNodeProps } from 'vue';
-import { SidebarContentType } from '../stores/draftSidebar';
+import type { FunctionalComponent, HTMLAttributes, VNodeProps } from "vue";
+import type { SidebarContentType } from "../stores/draftSidebar";
 
-export type SelectOption = {
+export interface SelectOption {
   title: string;
   description: string;
   icon: FunctionalComponent<HTMLAttributes & VNodeProps>;
   background: string;
   type: string;
   sidebarType: SidebarContentType;
-};
+}

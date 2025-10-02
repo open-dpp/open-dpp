@@ -1,6 +1,6 @@
-import { KeycloakResourceType } from './KeycloakResourceType';
+import { KeycloakResourceType } from './KeycloakResourceType'
 
-export const KEYCLOAK_RESOURCE_NAME_PREFIX = 'urn:backend';
+export const KEYCLOAK_RESOURCE_NAME_PREFIX = 'urn:backend'
 
 export class KeycloakResource {
   constructor(

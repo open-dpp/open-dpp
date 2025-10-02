@@ -1,7 +1,7 @@
 import {
   dataValueDocumentation,
   uniqueProductIdentifierDocumentation,
-} from '../product-passport-data/presentation/dto/docs/product-passport-data.doc';
+} from '../product-passport-data/presentation/dto/docs/product-passport-data.doc'
 
 export const createModelDocumentation = {
   type: 'object',
@@ -13,12 +13,12 @@ export const createModelDocumentation = {
   },
   description: 'Either templateId or marketplaceResourceId must be provided.',
   required: ['name'],
-};
+}
 
 export const updateModelDocumentation = {
   ...createModelDocumentation,
   required: [],
-};
+}
 
 export const modelDocumentation = {
   type: 'object',
@@ -35,4 +35,4 @@ export const modelDocumentation = {
     owner: { type: 'string', format: 'uuid' },
   },
   required: ['id', 'name', 'uniqueProductIdentifiers', 'dataValues', 'owner'],
-};
+}

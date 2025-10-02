@@ -1,3 +1,52 @@
+<script lang="ts" setup>
+import type { MediaInfo } from "./MediaInfo.interface";
+import { computed, onMounted } from "vue";
+import { useIndexStore } from "../../stores";
+import { useMediaStore } from "../../stores/media";
+import Pagination from "../lists/Pagination.vue";
+import MediaListItem from "./MediaListItem.vue";
+
+const props = defineProps<{
+  selectable: boolean;
+  multiple: boolean;
+  selected: Array<MediaInfo>;
+}>();
+const emits = defineEmits<{
+  (e: "updateSelectedItems", items: Array<MediaInfo>): void;
+}>();
+const mediaStore = useMediaStore();
+const indexStore = useIndexStore();
+
+const page = computed(() => {
+  return mediaStore.organizationMedia;
+});
+
+function onSelect(media: MediaInfo) {
+  if (props.selected.some(f => f.id === media.id)) {
+    emits(
+      "updateSelectedItems",
+      props.selected.filter(f => f.id !== media.id),
+    );
+  }
+  else {
+    if (props.multiple) {
+      emits("updateSelectedItems", props.selected.concat(media));
+    }
+    else {
+      emits("updateSelectedItems", [media]);
+    }
+  }
+}
+
+onMounted(async () => {
+  if (indexStore.selectedOrganization) {
+    await mediaStore.fetchMediaByOrganizationId(
+      indexStore.selectedOrganization,
+    );
+  }
+});
+</script>
+
 <template>
   <div>
     <div class="overflow-y-auto p-3">
@@ -21,52 +70,3 @@
     </div>
   </div>
 </template>
-
-<script lang="ts" setup>
-import { computed, onMounted } from 'vue';
-import Pagination from '../lists/Pagination.vue';
-import { useMediaStore } from '../../stores/media';
-import { useIndexStore } from '../../stores';
-import { MediaInfo } from './MediaInfo.interface';
-import MediaListItem from './MediaListItem.vue';
-
-const mediaStore = useMediaStore();
-const indexStore = useIndexStore();
-
-const props = defineProps<{
-  selectable: boolean;
-  multiple: boolean;
-  selected: Array<MediaInfo>;
-}>();
-
-const emits = defineEmits<{
-  (e: 'update-selected-items', items: Array<MediaInfo>): void;
-}>();
-
-const page = computed(() => {
-  return mediaStore.organizationMedia;
-});
-
-const onSelect = (media: MediaInfo) => {
-  if (props.selected.some((f) => f.id === media.id)) {
-    emits(
-      'update-selected-items',
-      props.selected.filter((f) => f.id !== media.id),
-    );
-  } else {
-    if (props.multiple) {
-      emits('update-selected-items', props.selected.concat(media));
-    } else {
-      emits('update-selected-items', [media]);
-    }
-  }
-};
-
-onMounted(async () => {
-  if (indexStore.selectedOrganization) {
-    await mediaStore.fetchMediaByOrganizationId(
-      indexStore.selectedOrganization,
-    );
-  }
-});
-</script>

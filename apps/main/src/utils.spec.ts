@@ -1,5 +1,5 @@
-import { replaceIdByUnderscoreId, replaceUnderscoreIdToId } from './utils';
-import { expect } from '@jest/globals';
+import { expect } from '@jest/globals'
+import { replaceIdByUnderscoreId, replaceUnderscoreIdToId } from './utils'
 
 describe('replaceIdWithUnderscoreId', () => {
   it('replace id with _id and back', () => {
@@ -22,8 +22,8 @@ describe('replaceIdWithUnderscoreId', () => {
         { id: '111', name: 'Array Item 1' },
         { id: '222', name: 'Array Item 2' },
       ],
-    };
-    const updatedObject = replaceIdByUnderscoreId(originalObject);
+    }
+    const updatedObject = replaceIdByUnderscoreId(originalObject)
     expect(updatedObject).toEqual({
       _id: '123',
       name: 'Sample Object',
@@ -43,7 +43,7 @@ describe('replaceIdWithUnderscoreId', () => {
         { _id: '111', name: 'Array Item 1' },
         { _id: '222', name: 'Array Item 2' },
       ],
-    });
-    expect(replaceUnderscoreIdToId(updatedObject)).toEqual(originalObject);
-  });
-});
+    })
+    expect(replaceUnderscoreIdToId(updatedObject)).toEqual(originalObject)
+  })
+})

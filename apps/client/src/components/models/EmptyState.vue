@@ -1,3 +1,10 @@
+<script lang="ts" setup>
+const props = defineProps<{
+  buttonLabel: string;
+  buttonLink: string;
+}>();
+</script>
+
 <template>
   <router-link :to="buttonLink">
     <button
@@ -24,9 +31,3 @@
     </button>
   </router-link>
 </template>
-<script lang="ts" setup>
-const props = defineProps<{
-  buttonLabel: string;
-  buttonLink: string;
-}>();
-</script>

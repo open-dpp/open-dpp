@@ -1,23 +1,25 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import {
+import type {
   DataSectionDto,
   DataValueDto,
-  GranularityLevel,
   ProductPassportDto,
   SectionDto,
   UniqueProductIdentifierDto,
-} from '@open-dpp/api-client';
-import apiClient from '../lib/api-client';
-import { assign, keys, pick } from 'lodash';
+} from "@open-dpp/api-client";
+import {
+  GranularityLevel,
+} from "@open-dpp/api-client";
+import { assign, keys, pick } from "lodash";
+import { defineStore } from "pinia";
+import { ref } from "vue";
+import apiClient from "../lib/api-client";
 
-type FormKitSchemaNode =
-  | string // Text content
-  | number // Number content
-  | boolean // Boolean content
-  | null
-  | FormKitSchemaObject // Actual schema object
-  | FormKitSchemaNode[]; // Array of nodes (for children or conditional rendering)
+type FormKitSchemaNode
+  = | string // Text content
+    | number // Number content
+    | boolean // Boolean content
+    | null
+    | FormKitSchemaObject // Actual schema object
+    | FormKitSchemaNode[]; // Array of nodes (for children or conditional rendering)
 
 interface FormKitSchemaObject {
   $el?: string; // HTML tag or FormKit component (e.g., 'div', 'FormKit')
@@ -29,7 +31,7 @@ interface FormKitSchemaObject {
 
 export type DataValues = Record<string, unknown>;
 
-export const usePassportFormStore = defineStore('passport.form', () => {
+export const usePassportFormStore = defineStore("passport.form", () => {
   const granularityLevel = ref<GranularityLevel>(GranularityLevel.MODEL);
   const productPassport = ref<ProductPassportDto>();
   const uniqueProductIdentifier = ref<UniqueProductIdentifierDto>();
@@ -37,8 +39,8 @@ export const usePassportFormStore = defineStore('passport.form', () => {
   const fetchInFlight = ref<boolean>(false);
 
   const VALUE_FOR_OTHER_GRANULARITY_LEVEL = {
-    [GranularityLevel.MODEL]: 'Wird auf Artikelebene gesetzt',
-    [GranularityLevel.ITEM]: 'Wird auf Modelebene gesetzt',
+    [GranularityLevel.MODEL]: "Wird auf Artikelebene gesetzt",
+    [GranularityLevel.ITEM]: "Wird auf Modelebene gesetzt",
   };
 
   const getValueForOtherGranularityLevel = () => {
@@ -47,7 +49,7 @@ export const usePassportFormStore = defineStore('passport.form', () => {
 
   const getDataOfSection = (sectionId: string): DataValues[] => {
     return (
-      productPassport.value?.dataSections.find((s) => s.id === sectionId)
+      productPassport.value?.dataSections.find(s => s.id === sectionId)
         ?.dataValues ?? []
     );
   };
@@ -55,7 +57,7 @@ export const usePassportFormStore = defineStore('passport.form', () => {
   const findSubSections = (sectionId: string | undefined): DataSectionDto[] => {
     return (
       productPassport.value?.dataSections.filter(
-        (s) => s.parentId === sectionId,
+        s => s.parentId === sectionId,
       ) ?? []
     );
   };
@@ -70,7 +72,7 @@ export const usePassportFormStore = defineStore('passport.form', () => {
   };
 
   const findSectionById = (sectionId: string) => {
-    return productPassport.value?.dataSections.find((s) => s.id === sectionId);
+    return productPassport.value?.dataSections.find(s => s.id === sectionId);
   };
 
   const getFormSchema = (section: SectionDto): FormKitSchemaObject[] => {
@@ -78,7 +80,7 @@ export const usePassportFormStore = defineStore('passport.form', () => {
     for (const dataField of section.dataFields) {
       if (dataField.granularityLevel !== granularityLevel.value) {
         children.push({
-          $cmp: 'FakeField',
+          $cmp: "FakeField",
           props: {
             dataCy: dataField.id,
             placeholder: getValueForOtherGranularityLevel(),
@@ -86,14 +88,15 @@ export const usePassportFormStore = defineStore('passport.form', () => {
             options: dataField.options,
           },
         });
-      } else {
+      }
+      else {
         children.push({
           $cmp: dataField.type,
           props: {
             id: dataField.id,
             name: dataField.id,
             label: dataField.name,
-            validation: 'required',
+            validation: "required",
             options: dataField.options,
             dataCy: dataField.id,
           },
@@ -103,18 +106,18 @@ export const usePassportFormStore = defineStore('passport.form', () => {
 
     return [
       {
-        $el: 'div',
+        $el: "div",
         attrs: {
           class: `grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 items-center`,
         },
-        children: children,
+        children,
       },
     ];
   };
 
   const generateDataValues = (sectionId: string): DataValueDto[] => {
     const section = productPassport.value?.dataSections.find(
-      (s) => s.id === sectionId,
+      s => s.id === sectionId,
     );
     if (!section) {
       return [];
@@ -126,7 +129,7 @@ export const usePassportFormStore = defineStore('passport.form', () => {
       dataValuesToCreate.push(...generateDataValues(subSectionId));
     }
     dataValuesToCreate.push(
-      ...section.dataFields.map((f) => ({
+      ...section.dataFields.map(f => ({
         value: undefined,
         dataSectionId: section?.id,
         dataFieldId: f.id,
@@ -136,14 +139,24 @@ export const usePassportFormStore = defineStore('passport.form', () => {
     return dataValuesToCreate;
   };
 
+  const fetchProductPassport = async () => {
+    if (uniqueProductIdentifier.value) {
+      const response = await apiClient.dpp.productPassports.getById(
+        uniqueProductIdentifier.value.uuid,
+      );
+      productPassport.value = response.data;
+    }
+  };
+
   const addRowToSection = async (sectionId: string) => {
     if (modelId.value && uniqueProductIdentifier.value) {
       const dataValuesToCreate = generateDataValues(sectionId);
-      if (granularityLevel.value === GranularityLevel.MODEL)
+      if (granularityLevel.value === GranularityLevel.MODEL) {
         await apiClient.dpp.models.addData(
           uniqueProductIdentifier.value.referenceId,
           dataValuesToCreate,
         );
+      }
       else {
         await apiClient.dpp.items.addData(
           modelId.value,
@@ -152,15 +165,6 @@ export const usePassportFormStore = defineStore('passport.form', () => {
         );
       }
       await fetchProductPassport();
-    }
-  };
-
-  const fetchProductPassport = async () => {
-    if (uniqueProductIdentifier.value) {
-      const response = await apiClient.dpp.productPassports.getById(
-        uniqueProductIdentifier.value.uuid,
-      );
-      productPassport.value = response.data;
     }
   };
 
@@ -207,7 +211,8 @@ export const usePassportFormStore = defineStore('passport.form', () => {
           uniqueProductIdentifier.value.referenceId,
           dataValueModifications,
         );
-      } else {
+      }
+      else {
         await apiClient.dpp.items.modifyData(
           modelId.value,
           uniqueProductIdentifier.value.referenceId,

@@ -1,14 +1,15 @@
-import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
-import { UsersService } from '../../users/infrastructure/users.service';
-import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
-import { ConfigService } from '@nestjs/config';
+import type { OnApplicationBootstrap } from '@nestjs/common'
+import type { ConfigService } from '@nestjs/config'
+import type { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service'
+import type { OrganizationsService } from '../../organizations/infrastructure/organizations.service'
+import type { UsersService } from '../../users/infrastructure/users.service'
+import { Injectable, Logger } from '@nestjs/common'
 
 @Injectable()
 export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
   private readonly logger: Logger = new Logger(
     KeycloakSyncOnStartupService.name,
-  );
+  )
 
   constructor(
     private readonly usersService: UsersService,
@@ -19,28 +20,28 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
 
   async onApplicationBootstrap() {
     if (this.configService.get('NODE_ENV') === 'test') {
-      return;
+      return
     }
-    await this.sync();
+    await this.sync()
   }
 
   async sync() {
-    this.logger.log('Syncing users from Keycloak to database');
-    const keycloakUsers = await this.keycloakResourcesServices.getUsers();
+    this.logger.log('Syncing users from Keycloak to database')
+    const keycloakUsers = await this.keycloakResourcesServices.getUsers()
     for (const keycloakUser of keycloakUsers) {
-      const user = await this.usersService.findOne(keycloakUser.id);
+      const user = await this.usersService.findOne(keycloakUser.id)
       if (!user) {
         await this.usersService.create(
           {
             sub: keycloakUser.id,
-            name: keycloakUser.firstName + ' ' + keycloakUser.lastName,
+            name: `${keycloakUser.firstName} ${keycloakUser.lastName}`,
             email: keycloakUser.email,
             email_verified: keycloakUser.emailVerified,
             preferred_username: keycloakUser.username,
             memberships: [],
           },
           true,
-        );
+        )
       }
     }
     /* this.logger.log('Syncing users from DB to Keycloak');
@@ -85,6 +86,6 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
         }
       }
     } */
-    this.logger.log('Finished syncing users from Keycloak to database');
+    this.logger.log('Finished syncing users from Keycloak to database')
   }
 }

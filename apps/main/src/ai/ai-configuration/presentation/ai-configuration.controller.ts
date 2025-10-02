@@ -1,11 +1,11 @@
-import { Body, Controller, Get, Param, Put, Request } from '@nestjs/common';
-import { AiConfigurationService } from '../infrastructure/ai-configuration.service';
-import * as aiConfigurationDto from './dto/ai-configuration.dto';
-import { AiConfiguration } from '../domain/ai-configuration';
-import { PermissionService } from '@open-dpp/auth';
-import * as authRequest from '@open-dpp/auth';
-import { ZodValidationPipe } from '@open-dpp/exception';
-import { AiConfigurationUpsertDtoSchema } from './dto/ai-configuration.dto';
+import type { PermissionService } from '@open-dpp/auth'
+import type * as authRequest from '@open-dpp/auth'
+import type { AiConfigurationService } from '../infrastructure/ai-configuration.service'
+import { Body, Controller, Get, Param, Put, Request } from '@nestjs/common'
+import { ZodValidationPipe } from '@open-dpp/exception'
+import { AiConfiguration } from '../domain/ai-configuration'
+import * as aiConfigurationDto from './dto/ai-configuration.dto'
+import { AiConfigurationUpsertDtoSchema } from './dto/ai-configuration.dto'
 
 @Controller('organizations/:organizationId/configurations')
 export class AiConfigurationController {
@@ -24,26 +24,27 @@ export class AiConfigurationController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
+    )
 
-    let aiConfiguration =
-      await this.aiConfigurationService.findOneByOrganizationId(organizationId);
+    let aiConfiguration
+      = await this.aiConfigurationService.findOneByOrganizationId(organizationId)
 
     if (aiConfiguration) {
-      aiConfiguration.update(aiConfigurationUpsertDto);
-    } else {
+      aiConfiguration.update(aiConfigurationUpsertDto)
+    }
+    else {
       aiConfiguration = AiConfiguration.create({
         ownedByOrganizationId: organizationId,
         createdByUserId: req.authContext.keycloakUser.sub,
         provider: aiConfigurationUpsertDto.provider,
         model: aiConfigurationUpsertDto.model,
         isEnabled: aiConfigurationUpsertDto.isEnabled,
-      });
+      })
     }
 
     return aiConfigurationDto.aiConfigurationToDto(
       await this.aiConfigurationService.save(aiConfiguration),
-    );
+    )
   }
 
   @Get()
@@ -54,11 +55,11 @@ export class AiConfigurationController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
+    )
     return aiConfigurationDto.aiConfigurationToDto(
       await this.aiConfigurationService.findOneByOrganizationIdOrFail(
         organizationId,
       ),
-    );
+    )
   }
 }

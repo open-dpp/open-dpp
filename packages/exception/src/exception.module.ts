@@ -1,5 +1,5 @@
-import { Module } from '@nestjs/common';
-import { ExceptionService } from './exception.service';
+import { Module } from '@nestjs/common'
+import { ExceptionService } from './exception.service'
 
 @Module({
   providers: [ExceptionService],

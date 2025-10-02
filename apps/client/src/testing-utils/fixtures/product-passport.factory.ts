@@ -1,21 +1,24 @@
-import {
+import type {
   DataFieldDto,
-  DataFieldType,
   DataSectionDto,
-  GranularityLevel,
   ProductPassportDto,
+} from "@open-dpp/api-client";
+import type { DeepPartialObject } from "fishery";
+import type { BuildOptions } from "fishery/dist/types";
+import {
+  DataFieldType,
+  GranularityLevel,
   SectionType,
-} from '@open-dpp/api-client';
-import { DeepPartialObject, Factory } from 'fishery';
-import { v4 as uuid4 } from 'uuid';
-import { BuildOptions } from 'fishery/dist/types';
+} from "@open-dpp/api-client";
+import { Factory } from "fishery";
+import { v4 as uuid4 } from "uuid";
 
 export class ProductPassportFactory extends Factory<ProductPassportDto> {
   private _dataSections: DataSectionDto[] = [];
   addDataSection(dataSection: DataSectionDto, parentSectionId?: string) {
     if (parentSectionId) {
       const parentSection = this._dataSections.find(
-        (d) => d.id === parentSectionId,
+        d => d.id === parentSectionId,
       )!;
       parentSection.subSections.push(dataSection.id);
       dataSection = { ...dataSection, parentId: parentSection.id };
@@ -46,7 +49,7 @@ export const productPassportFactory = ProductPassportFactory.define(() => {
   return {
     id,
     name: `Product Name ${id}`,
-    description: 'Product Description',
+    description: "Product Description",
     dataSections: [],
   };
 });
@@ -58,11 +61,13 @@ export class DataSectionFactory extends Factory<DataSectionDto> {
     this._dataFields.push(dataField);
     return this;
   }
+
   addDataValue(fieldId: string, dataValue: unknown, row: number = 0) {
     this._dataValues[row] = this._dataValues[row] ?? {};
     this._dataValues[row][fieldId] = dataValue;
     return this;
   }
+
   override build(
     params?: DeepPartialObject<DataSectionDto>,
 

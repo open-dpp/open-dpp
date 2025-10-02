@@ -1,3 +1,91 @@
+<script lang="ts" setup>
+import type { MediaInfo } from "./MediaInfo.interface";
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  TransitionChild,
+  TransitionRoot,
+} from "@headlessui/vue";
+import { CloudArrowUpIcon, XMarkIcon } from "@heroicons/vue/24/outline";
+import { ref, watch } from "vue";
+import { useIndexStore } from "../../stores";
+import { useMediaStore } from "../../stores/media";
+import { useNotificationStore } from "../../stores/notification";
+import MediaGrid from "./MediaGrid.vue";
+
+const props = defineProps<{
+  open: boolean;
+}>();
+const emits = defineEmits<{
+  (e: "confirm", files: Array<MediaInfo>): void;
+  (e: "cancel"): void;
+}>();
+const mediaStore = useMediaStore();
+const notificationStore = useNotificationStore();
+const indexStore = useIndexStore();
+
+const selected = ref<Array<MediaInfo>>([]);
+const fileInput = ref<HTMLInputElement>();
+const selectedLocalFile = ref<File | null>(null);
+const selectedFile = ref<MediaInfo | null>(null);
+const uploadProgress = ref<number>(0);
+
+async function uploadFile() {
+  const organizationId = indexStore.selectedOrganization;
+  if (!selectedLocalFile.value || !organizationId) {
+    return;
+  }
+  try {
+    await mediaStore.uploadMedia(
+      organizationId,
+      selectedLocalFile.value,
+      progress => (uploadProgress.value = progress),
+    );
+    notificationStore.addSuccessNotification("Datei erfolgreich hochgeladen.");
+    await mediaStore.fetchMediaByOrganizationId(organizationId);
+  }
+  catch (error: unknown) {
+    console.error("Fehler beim Hochladen der Datei:", error);
+    notificationStore.addErrorNotification(
+      "Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+    );
+    selectedFile.value = null;
+  }
+  finally {
+    uploadProgress.value = 0;
+  }
+}
+
+function openFileInput() {
+  if (fileInput.value) {
+    fileInput.value.click();
+  }
+}
+
+async function selectFile(event: Event) {
+  const target = event.target as HTMLInputElement;
+  if (target.files && target.files.length > 0) {
+    selectedLocalFile.value = target.files[0];
+    await uploadFile();
+  }
+  else {
+    selectedLocalFile.value = null;
+  }
+}
+
+watch(
+  () => props.open,
+  (newVal) => {
+    if (newVal) {
+      selected.value = [];
+      selectedFile.value = null;
+      uploadProgress.value = 0;
+    }
+  },
+);
+</script>
+
 <template>
   <TransitionRoot :show="props.open" as="template">
     <Dialog class="relative z-50" @close="emits('cancel')">
@@ -34,7 +122,8 @@
                   <DialogTitle
                     as="h3"
                     class="text-base font-semibold text-gray-900"
-                    >Datei auswählen
+                  >
+                    Datei auswählen
                   </DialogTitle>
                 </div>
                 <div>
@@ -55,7 +144,7 @@
                     readonly
                     type="file"
                     @change="selectFile"
-                  />
+                  >
                 </form>
                 <button
                   class="p-2 bg-[#6BAD87]/20 rounded-full hover:cursor-pointer"
@@ -98,90 +187,3 @@
     </Dialog>
   </TransitionRoot>
 </template>
-
-<script lang="ts" setup>
-import {
-  Dialog,
-  DialogPanel,
-  DialogTitle,
-  TransitionChild,
-  TransitionRoot,
-} from '@headlessui/vue';
-import MediaGrid from './MediaGrid.vue';
-import { ref, watch } from 'vue';
-import { CloudArrowUpIcon, XMarkIcon } from '@heroicons/vue/24/outline';
-import { MediaInfo } from './MediaInfo.interface';
-import { useMediaStore } from '../../stores/media';
-import { useNotificationStore } from '../../stores/notification';
-import { useIndexStore } from '../../stores';
-
-const mediaStore = useMediaStore();
-const notificationStore = useNotificationStore();
-const indexStore = useIndexStore();
-
-const props = defineProps<{
-  open: boolean;
-}>();
-
-const emits = defineEmits<{
-  (e: 'confirm', files: Array<MediaInfo>): void;
-  (e: 'cancel'): void;
-}>();
-
-const selected = ref<Array<MediaInfo>>([]);
-const fileInput = ref<HTMLInputElement>();
-const selectedLocalFile = ref<File | null>(null);
-const selectedFile = ref<MediaInfo | null>(null);
-const uploadProgress = ref<number>(0);
-
-const uploadFile = async () => {
-  const organizationId = indexStore.selectedOrganization;
-  if (!selectedLocalFile.value || !organizationId) {
-    return;
-  }
-  try {
-    await mediaStore.uploadMedia(
-      organizationId,
-      selectedLocalFile.value,
-      (progress) => (uploadProgress.value = progress),
-    );
-    notificationStore.addSuccessNotification('Datei erfolgreich hochgeladen.');
-    await mediaStore.fetchMediaByOrganizationId(organizationId);
-  } catch (error: unknown) {
-    console.error('Fehler beim Hochladen der Datei:', error);
-    notificationStore.addErrorNotification(
-      'Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.',
-    );
-    selectedFile.value = null;
-  } finally {
-    uploadProgress.value = 0;
-  }
-};
-
-const openFileInput = () => {
-  if (fileInput.value) {
-    fileInput.value.click();
-  }
-};
-
-const selectFile = async (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  if (target.files && target.files.length > 0) {
-    selectedLocalFile.value = target.files[0];
-    await uploadFile();
-  } else {
-    selectedLocalFile.value = null;
-  }
-};
-
-watch(
-  () => props.open,
-  (newVal) => {
-    if (newVal) {
-      selected.value = [];
-      selectedFile.value = null;
-      uploadProgress.value = 0;
-    }
-  },
-);
-</script>

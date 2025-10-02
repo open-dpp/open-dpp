@@ -1,15 +1,15 @@
-import { defineStore } from 'pinia';
-import {
+import type {
   AiConfigurationDto,
   AiConfigurationUpsertDto,
-} from '@open-dpp/api-client';
-import { ref } from 'vue';
-import { useErrorHandlingStore } from './error.handling';
-import apiClient from '../lib/api-client';
-import { useNotificationStore } from './notification';
-import { AxiosError } from 'axios';
+} from "@open-dpp/api-client";
+import { AxiosError } from "axios";
+import { defineStore } from "pinia";
+import { ref } from "vue";
+import apiClient from "../lib/api-client";
+import { useErrorHandlingStore } from "./error.handling";
+import { useNotificationStore } from "./notification";
 
-export const useAiIntegrationStore = defineStore('ai-integration', () => {
+export const useAiIntegrationStore = defineStore("ai-integration", () => {
   const configuration = ref<AiConfigurationDto>();
   const notificationStore = useNotificationStore();
   const errorHandlingStore = useErrorHandlingStore();
@@ -17,12 +17,14 @@ export const useAiIntegrationStore = defineStore('ai-integration', () => {
     try {
       const response = await apiClient.agentServer.aiConfigurations.get();
       configuration.value = response.data;
-    } catch (error) {
+    }
+    catch (error) {
       if (error instanceof AxiosError && error.response?.status === 404) {
-        console.error('Configuration not found.');
-      } else {
+        console.error("Configuration not found.");
+      }
+      else {
         errorHandlingStore.logErrorWithNotification(
-          'Laden der Konfiguration fehlgeschlagen:',
+          "Laden der Konfiguration fehlgeschlagen:",
           error,
         );
       }
@@ -33,17 +35,18 @@ export const useAiIntegrationStore = defineStore('ai-integration', () => {
     upsertConfiguration: AiConfigurationUpsertDto,
   ) => {
     try {
-      const response =
-        await apiClient.agentServer.aiConfigurations.upsert(
+      const response
+        = await apiClient.agentServer.aiConfigurations.upsert(
           upsertConfiguration,
         );
       configuration.value = response.data;
       notificationStore.addSuccessNotification(
-        'Konfiguration erfolgreich gespeichert.',
+        "Konfiguration erfolgreich gespeichert.",
       );
-    } catch (error) {
+    }
+    catch (error) {
       errorHandlingStore.logErrorWithNotification(
-        'Anpassung der Konfiguration fehlgeschlagen:',
+        "Anpassung der Konfiguration fehlgeschlagen:",
         error,
       );
     }

@@ -1,3 +1,16 @@
+<script lang="ts" setup>
+import { toCanvas } from "qrcode";
+import { onMounted, ref } from "vue";
+
+const props = defineProps<{
+  url: string;
+}>();
+const canvas = ref<HTMLCanvasElement>();
+onMounted(async () => {
+  toCanvas(canvas.value, props.url, () => {});
+});
+</script>
+
 <template>
   <div
     class="divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow-sm max-w-xl"
@@ -7,16 +20,3 @@
     </div>
   </div>
 </template>
-
-<script lang="ts" setup>
-import { toCanvas } from 'qrcode';
-import { onMounted, ref } from 'vue';
-
-const canvas = ref<HTMLCanvasElement>();
-const props = defineProps<{
-  url: string;
-}>();
-onMounted(async () => {
-  toCanvas(canvas.value, props.url, () => {});
-});
-</script>

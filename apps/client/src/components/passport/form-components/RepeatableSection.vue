@@ -1,36 +1,15 @@
-<template>
-  <ul>
-    <li
-      class="border-t border-gray-100"
-      v-for="(_, index) in rows"
-      :key="index"
-      :data-cy="`row-${index}`"
-    >
-      <div
-        v-if="rowInEditMode !== index"
-        class="flex justify-between items-center"
-      >
-        <div>Datenreihe {{ index }}</div>
-        <BaseButton variant="primary" @click="rowInEditMode = index"
-          >Editieren</BaseButton
-        >
-      </div>
-      <SectionForm v-else :section="props.section" :row="index" />
-    </li>
-  </ul>
-</template>
 <script setup lang="ts">
-import { DataSectionDto } from '@open-dpp/api-client';
-import { computed, ref } from 'vue';
-import BaseButton from '../../BaseButton.vue';
-import SectionForm from './SectionForm.vue';
-import { usePassportFormStore } from '../../../stores/passport.form';
-
-const productPassportStore = usePassportFormStore();
+import type { DataSectionDto } from "@open-dpp/api-client";
+import { computed, ref } from "vue";
+import { usePassportFormStore } from "../../../stores/passport.form";
+import BaseButton from "../../BaseButton.vue";
+import SectionForm from "./SectionForm.vue";
 
 const props = defineProps<{
   section: DataSectionDto;
 }>();
+
+const productPassportStore = usePassportFormStore();
 
 const rows = computed(() => {
   const dataValues = props.section.dataValues;
@@ -46,3 +25,25 @@ const rows = computed(() => {
 
 const rowInEditMode = ref<number>(0);
 </script>
+
+<template>
+  <ul>
+    <li
+      v-for="(_, index) in rows"
+      :key="index"
+      class="border-t border-gray-100"
+      :data-cy="`row-${index}`"
+    >
+      <div
+        v-if="rowInEditMode !== index"
+        class="flex justify-between items-center"
+      >
+        <div>Datenreihe {{ index }}</div>
+        <BaseButton variant="primary" @click="rowInEditMode = index">
+          Editieren
+        </BaseButton>
+      </div>
+      <SectionForm v-else :section="props.section" :row="index" />
+    </li>
+  </ul>
+</template>

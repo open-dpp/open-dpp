@@ -1,21 +1,21 @@
-import { createMemoryHistory, createRouter } from 'vue-router';
-import Navbar from './Navbar.vue';
-import { routes } from '../../router';
+import { createMemoryHistory, createRouter } from "vue-router";
+import { routes } from "../../router";
+import Navbar from "./Navbar.vue";
 
 const router = createRouter({
   history: createMemoryHistory(),
-  routes: routes,
+  routes,
 });
 
-describe('<Chat />', () => {
-  it('renders chat messages', () => {
-    const permalinkId = '1234567890';
+describe("<Chat />", () => {
+  it("renders chat messages", () => {
+    const permalinkId = "1234567890";
     cy.wrap(router.push(`/${permalinkId}`));
     cy.mountWithPinia(Navbar, { router });
-    cy.spy(router, 'push').as('pushSpy');
-    cy.contains('Mit KI chatten').click();
-    cy.get('@pushSpy').should('have.been.calledWith', `/${permalinkId}/chat`);
-    cy.contains('Zur Passansicht').click();
-    cy.get('@pushSpy').should('have.been.calledWith', `/${permalinkId}`);
+    cy.spy(router, "push").as("pushSpy");
+    cy.contains("Mit KI chatten").click();
+    cy.get("@pushSpy").should("have.been.calledWith", `/${permalinkId}/chat`);
+    cy.contains("Zur Passansicht").click();
+    cy.get("@pushSpy").should("have.been.calledWith", `/${permalinkId}`);
   });
 });

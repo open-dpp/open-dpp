@@ -1,3 +1,8 @@
+import type { PermissionService } from '@open-dpp/auth'
+import type * as authRequest from '@open-dpp/auth'
+import type { MarketplaceService } from '../../marketplace/marketplace.service'
+import type { TemplateService } from '../../templates/infrastructure/template.service'
+import type { TemplateDraftService } from '../infrastructure/template-draft.service'
 import {
   Body,
   Controller,
@@ -8,28 +13,23 @@ import {
   Patch,
   Post,
   Request,
-} from '@nestjs/common';
-import { TemplateDraft } from '../domain/template-draft';
-import { SectionDraft } from '../domain/section-draft';
-import { DataFieldDraft } from '../domain/data-field-draft';
-import { TemplateService } from '../../templates/infrastructure/template.service';
-import * as createTemplateDraftDto_1 from './dto/create-template-draft.dto';
-import * as createSectionDraftDto_1 from './dto/create-section-draft.dto';
-import * as createDataFieldDraftDto_1 from './dto/create-data-field-draft.dto';
-import * as updateTemplateDraftDto_1 from './dto/update-template-draft.dto';
-import * as publishDto_1 from './dto/publish.dto';
-import * as updateDataFieldDraftDto from './dto/update-data-field-draft.dto';
+} from '@nestjs/common'
+import { ZodValidationPipe } from '@open-dpp/exception'
+import { omit } from 'lodash'
+import { DataFieldDraft } from '../domain/data-field-draft'
+import { SectionDraft } from '../domain/section-draft'
+import { TemplateDraft } from '../domain/template-draft'
 
-import { TemplateDraftService } from '../infrastructure/template-draft.service';
-import { omit } from 'lodash';
+import * as createDataFieldDraftDto_1 from './dto/create-data-field-draft.dto'
+import * as createSectionDraftDto_1 from './dto/create-section-draft.dto'
 
-import * as updateSectionDraftDto from './dto/update-section-draft.dto';
-import { templateDraftToDto } from './dto/template-draft.dto';
-import { MarketplaceService } from '../../marketplace/marketplace.service';
-import * as moveDto_1 from './dto/move.dto';
-import { PermissionService } from '@open-dpp/auth';
-import * as authRequest from '@open-dpp/auth';
-import { ZodValidationPipe } from '@open-dpp/exception';
+import * as createTemplateDraftDto_1 from './dto/create-template-draft.dto'
+import * as moveDto_1 from './dto/move.dto'
+import * as publishDto_1 from './dto/publish.dto'
+import { templateDraftToDto } from './dto/template-draft.dto'
+import * as updateDataFieldDraftDto from './dto/update-data-field-draft.dto'
+import * as updateSectionDraftDto from './dto/update-section-draft.dto'
+import * as updateTemplateDraftDto_1 from './dto/update-template-draft.dto'
 
 @Controller('/organizations/:orgaId/template-drafts')
 export class TemplateDraftController {
@@ -54,7 +54,7 @@ export class TemplateDraftController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
+    )
     return templateDraftToDto(
       await this.templateDraftService.save(
         TemplateDraft.create({
@@ -63,7 +63,7 @@ export class TemplateDraftController {
           userId: req.authContext.keycloakUser.sub,
         }),
       ),
-    );
+    )
   }
 
   @Get(':draftId')
@@ -75,13 +75,13 @@ export class TemplateDraftController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    )
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId)
 
-    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft)
 
-    return templateDraftToDto(foundProductDataModelDraft);
+    return templateDraftToDto(foundProductDataModelDraft)
   }
 
   @Patch(':draftId')
@@ -99,16 +99,16 @@ export class TemplateDraftController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    )
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId)
 
-    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft)
 
-    foundProductDataModelDraft.rename(updateTemplateDraftDto.name);
-    await this.templateDraftService.save(foundProductDataModelDraft);
+    foundProductDataModelDraft.rename(updateTemplateDraftDto.name)
+    await this.templateDraftService.save(foundProductDataModelDraft)
 
-    return templateDraftToDto(foundProductDataModelDraft);
+    return templateDraftToDto(foundProductDataModelDraft)
   }
 
   @Post(':draftId/sections')
@@ -126,28 +126,29 @@ export class TemplateDraftController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
+    )
 
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId)
 
-    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft)
 
     const section = SectionDraft.create({
       ...omit(createSectionDraftDto, ['parentSectionId']),
-    });
+    })
 
     if (createSectionDraftDto.parentSectionId) {
       foundProductDataModelDraft.addSubSection(
         createSectionDraftDto.parentSectionId,
         section,
-      );
-    } else {
-      foundProductDataModelDraft.addSection(section);
+      )
+    }
+    else {
+      foundProductDataModelDraft.addSection(section)
     }
     return templateDraftToDto(
       await this.templateDraftService.save(foundProductDataModelDraft),
-    );
+    )
   }
 
   @Post(':draftId/publish')
@@ -161,34 +162,34 @@ export class TemplateDraftController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
+    )
 
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId)
 
-    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft)
 
     const publishedProductDataModel = foundProductDataModelDraft.publish(
       req.authContext.keycloakUser.sub,
-    );
+    )
 
     if (publishDto.visibility === publishDto_1.VisibilityLevel.PUBLIC) {
       const marketplaceResponse = await this.marketplaceService.upload(
         publishedProductDataModel,
         req.authContext.token,
-      );
+      )
       publishedProductDataModel.assignMarketplaceResource(
         marketplaceResponse.id,
-      );
+      )
     }
 
-    await this.templateService.save(publishedProductDataModel);
+    await this.templateService.save(publishedProductDataModel)
     const draft = await this.templateDraftService.save(
       foundProductDataModelDraft,
       publishedProductDataModel.version,
-    );
+    )
 
-    return templateDraftToDto(draft);
+    return templateDraftToDto(draft)
   }
 
   @Post(':draftId/sections/:sectionId/data-fields')
@@ -207,20 +208,20 @@ export class TemplateDraftController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
+    )
 
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId)
 
-    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft)
 
-    const dataField = DataFieldDraft.create(createDataFieldDraftDto);
+    const dataField = DataFieldDraft.create(createDataFieldDraftDto)
 
-    foundProductDataModelDraft.addDataFieldToSection(sectionId, dataField);
+    foundProductDataModelDraft.addDataFieldToSection(sectionId, dataField)
 
     return templateDraftToDto(
       await this.templateDraftService.save(foundProductDataModelDraft),
-    );
+    )
   }
 
   @Delete(':draftId/sections/:sectionId')
@@ -233,17 +234,17 @@ export class TemplateDraftController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    )
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId)
 
-    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft)
 
-    foundProductDataModelDraft.deleteSection(sectionId);
+    foundProductDataModelDraft.deleteSection(sectionId)
 
     return templateDraftToDto(
       await this.templateDraftService.save(foundProductDataModelDraft),
-    );
+    )
   }
 
   @Patch(':draftId/sections/:sectionId')
@@ -260,21 +261,21 @@ export class TemplateDraftController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
+    )
 
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId)
 
-    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft)
 
     foundProductDataModelDraft.modifySection(
       sectionId,
       omit(modifySectionDraftDto),
-    );
+    )
 
     return templateDraftToDto(
       await this.templateDraftService.save(foundProductDataModelDraft),
-    );
+    )
   }
 
   @Post(':draftId/sections/:sectionId/move')
@@ -289,18 +290,18 @@ export class TemplateDraftController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
+    )
 
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId)
 
-    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft)
 
-    foundProductDataModelDraft.moveSection(sectionId, moveDto.direction);
+    foundProductDataModelDraft.moveSection(sectionId, moveDto.direction)
 
     return templateDraftToDto(
       await this.templateDraftService.save(foundProductDataModelDraft),
-    );
+    )
   }
 
   @Patch(':draftId/sections/:sectionId/data-fields/:fieldId')
@@ -320,22 +321,22 @@ export class TemplateDraftController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
+    )
 
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId)
 
-    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft)
 
     foundProductDataModelDraft.modifyDataField(
       sectionId,
       fieldId,
       omit(modifyDataFieldDraftDto, 'view'),
-    );
+    )
 
     return templateDraftToDto(
       await this.templateDraftService.save(foundProductDataModelDraft),
-    );
+    )
   }
 
   @Post(':draftId/sections/:sectionId/data-fields/:fieldId/move')
@@ -351,22 +352,22 @@ export class TemplateDraftController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
+    )
 
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId)
 
-    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft)
 
     foundProductDataModelDraft.moveDataField(
       sectionId,
       fieldId,
       moveDto.direction,
-    );
+    )
 
     return templateDraftToDto(
       await this.templateDraftService.save(foundProductDataModelDraft),
-    );
+    )
   }
 
   @Delete(':draftId/sections/:sectionId/data-fields/:fieldId')
@@ -380,18 +381,18 @@ export class TemplateDraftController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
+    )
 
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId)
 
-    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
+    this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft)
 
-    foundProductDataModelDraft.deleteDataFieldOfSection(sectionId, fieldId);
+    foundProductDataModelDraft.deleteDataFieldOfSection(sectionId, fieldId)
 
     return templateDraftToDto(
       await this.templateDraftService.save(foundProductDataModelDraft),
-    );
+    )
   }
 
   @Get()
@@ -402,11 +403,11 @@ export class TemplateDraftController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
+    )
 
     return await this.templateDraftService.findAllByOrganization(
       organizationId,
-    );
+    )
   }
 
   private hasPermissionsOrFail(
@@ -414,7 +415,7 @@ export class TemplateDraftController {
     templateDraft: TemplateDraft,
   ) {
     if (!templateDraft.isOwnedBy(organizationId)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException()
     }
   }
 }

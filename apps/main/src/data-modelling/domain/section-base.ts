@@ -1,4 +1,4 @@
-import { GranularityLevel } from './granularity-level';
+import type { GranularityLevel } from './granularity-level'
 
 export enum SectionType {
   GROUP = 'Group',
@@ -16,18 +16,18 @@ export abstract class SectionBase {
   ) {}
 
   public setGranularityLevel(level: GranularityLevel): void {
-    this.granularityLevel = level;
+    this.granularityLevel = level
   }
 
   get name() {
-    return this._name;
+    return this._name
   }
 
   get subSections() {
-    return this._subSections;
+    return this._subSections
   }
 
   get parentId() {
-    return this._parentId;
+    return this._parentId
   }
 }

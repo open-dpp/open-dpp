@@ -1,26 +1,26 @@
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto'
 
-type MediaCreationProps = {
-  ownedByOrganizationId: string;
-  createdByUserId: string;
-  title: string;
-  description: string;
-  mimeType: string;
-  fileExtension: string;
-  size: number;
-  originalFilename: string;
-  uniqueProductIdentifier: string | null;
-  dataFieldId: string | null;
-  bucket: string;
-  objectName: string;
-  eTag: string;
-  versionId: string;
-};
+interface MediaCreationProps {
+  ownedByOrganizationId: string
+  createdByUserId: string
+  title: string
+  description: string
+  mimeType: string
+  fileExtension: string
+  size: number
+  originalFilename: string
+  uniqueProductIdentifier: string | null
+  dataFieldId: string | null
+  bucket: string
+  objectName: string
+  eTag: string
+  versionId: string
+}
 export type MediaProps = MediaCreationProps & {
-  id: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-};
+  id: string
+  createdAt?: Date
+  updatedAt?: Date
+}
 
 export class Media {
   private constructor(
@@ -44,7 +44,7 @@ export class Media {
   ) {}
 
   static create(data: MediaCreationProps): Media {
-    const now = new Date(Date.now());
+    const now = new Date(Date.now())
     return new Media(
       randomUUID(),
       data.ownedByOrganizationId,
@@ -63,7 +63,7 @@ export class Media {
       data.versionId,
       now,
       now,
-    );
+    )
   }
 
   static loadFromDb(data: MediaProps): Media {
@@ -85,6 +85,6 @@ export class Media {
       data.versionId,
       data.createdAt,
       data.updatedAt,
-    );
+    )
   }
 }

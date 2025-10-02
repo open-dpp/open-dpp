@@ -1,5 +1,45 @@
+<script lang="ts" setup>
+import { ArrowRightStartOnRectangleIcon } from "@heroicons/vue/16/solid";
+import { computed, ref, useAttrs } from "vue";
+import { useRouter } from "vue-router";
+import { useErrorHandlingStore } from "../../../stores/error.handling";
+import { useUniqueProductIdentifierStore } from "../../../stores/unique.product.identifier";
+
+const props = defineProps<{ id: string; className?: string }>();
+
+const router = useRouter();
+
+const inputValue = ref<string>("");
+
+const uniqueProductIdentifierStore = useUniqueProductIdentifierStore();
+
+const errorHandlingStore = useErrorHandlingStore();
+const attrs = useAttrs() as Record<string, unknown>;
+async function onLinkClick() {
+  if (inputValue.value) {
+    try {
+      const link
+        = await uniqueProductIdentifierStore.buildLinkToReferencedProduct(
+          inputValue.value,
+        );
+      await router.push(link);
+    }
+    catch (e) {
+      errorHandlingStore.logErrorWithNotification(
+        "Navigation zu Produktpass fehlgeschlagen",
+        e,
+      );
+    }
+  }
+}
+
+const computedAttrs = computed(() => ({
+  ...attrs,
+}));
+</script>
+
 <template>
-  <div :class="[props.className, 'flex flex-row gap-2 items-center']">
+  <div class="flex flex-row gap-2 items-center" :class="[props.className]">
     <FormKit
       v-model="inputValue"
       :data-cy="props.id"
@@ -20,41 +60,3 @@
     </FormKit>
   </div>
 </template>
-
-<script lang="ts" setup>
-import { computed, ref, useAttrs } from 'vue';
-import { ArrowRightStartOnRectangleIcon } from '@heroicons/vue/16/solid';
-import { useRouter } from 'vue-router';
-import { useUniqueProductIdentifierStore } from '../../../stores/unique.product.identifier';
-import { useErrorHandlingStore } from '../../../stores/error.handling';
-
-const router = useRouter();
-
-const inputValue = ref<string>('');
-
-const uniqueProductIdentifierStore = useUniqueProductIdentifierStore();
-
-const props = defineProps<{ id: string; className?: string }>();
-const errorHandlingStore = useErrorHandlingStore();
-const attrs = useAttrs() as Record<string, unknown>;
-const onLinkClick = async () => {
-  if (inputValue.value) {
-    try {
-      const link =
-        await uniqueProductIdentifierStore.buildLinkToReferencedProduct(
-          inputValue.value,
-        );
-      await router.push(link);
-    } catch (e) {
-      errorHandlingStore.logErrorWithNotification(
-        'Navigation zu Produktpass fehlgeschlagen',
-        e,
-      );
-    }
-  }
-};
-
-const computedAttrs = computed(() => ({
-  ...attrs,
-}));
-</script>

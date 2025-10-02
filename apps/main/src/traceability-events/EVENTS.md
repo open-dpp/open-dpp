@@ -104,21 +104,21 @@ const event = TraceabilityEventWrapper.create({
   type: DppEventType.OPEN_DPP,
   source: 'source-identifier',
   eventJsonData: JSON.stringify(data),
-});
+})
 
 // Save the event
-await dppEventsService.save(event);
+await dppEventsService.save(event)
 ```
 
 To find events:
 
 ```typescript
 // Find events by ID
-const events = await dppEventsService.findById('event-id');
+const events = await dppEventsService.findById('event-id')
 
 // Find events by source
-const events = await dppEventsService.findByDppId('source-identifier');
+const events = await dppEventsService.findByDppId('source-identifier')
 
 // Find events by type
-const events = await dppEventsService.findByType(DppEventType.OPEN_DPP);
+const events = await dppEventsService.findByType(DppEventType.OPEN_DPP)
 ```

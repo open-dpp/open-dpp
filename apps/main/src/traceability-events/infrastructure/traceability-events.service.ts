@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { TraceabilityEventDocument } from './traceability-event.document';
-import { TraceabilityEventWrapper } from '../domain/traceability-event-wrapper';
-import { TraceabilityEventType } from '../domain/traceability-event-type.enum';
-import { TraceabilityEvent } from '../domain/traceability-event';
+import type { Model } from 'mongoose'
+import type { TraceabilityEvent } from '../domain/traceability-event'
+import type { TraceabilityEventType } from '../domain/traceability-event-type.enum'
+import { Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/mongoose'
+import { TraceabilityEventWrapper } from '../domain/traceability-event-wrapper'
+import { TraceabilityEventDocument } from './traceability-event.document'
 
 @Injectable()
 export class TraceabilityEventsService {
@@ -28,7 +28,7 @@ export class TraceabilityEventsService {
       organizationId: dppEvent.organizationId,
       geolocation: dppEvent.geolocation,
       type: dppEvent.type,
-    });
+    })
     return TraceabilityEventWrapper.loadFromDb<T>({
       _id: newTraceabilityEvent.id,
       createdAt: newTraceabilityEvent.createdAt,
@@ -41,7 +41,7 @@ export class TraceabilityEventsService {
       geolocation: newTraceabilityEvent.geolocation,
       type: newTraceabilityEvent.type,
       data: newTraceabilityEvent.data as T,
-    });
+    })
   }
 
   async findById(id: string) {
@@ -55,8 +55,8 @@ export class TraceabilityEventsService {
           updatedAt: true,
         },
       )
-      .exec();
-    return foundDocs.map((dm) => TraceabilityEventWrapper.loadFromDb(dm));
+      .exec()
+    return foundDocs.map(dm => TraceabilityEventWrapper.loadFromDb(dm))
   }
 
   async findByDataType(type: TraceabilityEventType) {
@@ -64,7 +64,7 @@ export class TraceabilityEventsService {
       .find({
         'data.type': type,
       })
-      .exec();
-    return foundData.map((dm) => TraceabilityEventWrapper.loadFromDb(dm));
+      .exec()
+    return foundData.map(dm => TraceabilityEventWrapper.loadFromDb(dm))
   }
 }

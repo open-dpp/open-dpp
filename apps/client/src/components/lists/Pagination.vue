@@ -1,3 +1,65 @@
+<script lang="ts" setup>
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/vue/20/solid";
+import { computed } from "vue";
+
+const props = defineProps<{
+  currentPage: number;
+  totalItems: number;
+  itemsPerPage: number;
+}>();
+
+const emits = defineEmits<{
+  (e: "pageChanged", page: number): void;
+}>();
+
+const totalPages = computed(() => {
+  return Math.ceil(props.totalItems / props.itemsPerPage);
+});
+
+const actions = computed<
+  Array<{
+    label: string;
+    page: number;
+  }>
+>(() => {
+  if (totalPages.value === 0) {
+    return [
+      {
+        label: String(props.currentPage),
+        page: props.currentPage,
+      },
+    ];
+  }
+
+  const result: Array<{ label: string; page: number }> = [];
+  const maxPagesToShow = 5; // Current page + 2 before + 2 after
+
+  // Calculate start and end page numbers
+  let startPage = Math.max(0, props.currentPage - 2);
+  let endPage = Math.min(totalPages.value - 1, props.currentPage + 2);
+
+  // Adjust if we're at the beginning or end
+  if (props.currentPage < 2) {
+    // If we're at the beginning, show more pages after
+    endPage = Math.min(totalPages.value - 1, startPage + maxPagesToShow - 1);
+  }
+  else if (props.currentPage > totalPages.value - 3) {
+    // If we're at the end, show more pages before
+    startPage = Math.max(0, endPage - maxPagesToShow + 1);
+  }
+
+  // Create page objects
+  for (let i = startPage; i <= endPage; i++) {
+    result.push({
+      label: String(i),
+      page: i,
+    });
+  }
+
+  return result;
+});
+</script>
+
 <template>
   <div
     class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6"
@@ -6,7 +68,7 @@
       <button
         class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
         @click="
-          currentPage === 0 ? () => {} : emits('page-changed', currentPage - 1)
+          currentPage === 0 ? () => {} : emits('pageChanged', currentPage - 1)
         "
       >
         Previous
@@ -16,7 +78,7 @@
         @click="
           currentPage === totalPages - 1
             ? () => {}
-            : emits('page-changed', currentPage + 1)
+            : emits('pageChanged', currentPage + 1)
         "
       >
         Next
@@ -52,7 +114,7 @@
             @click="
               currentPage === 0
                 ? () => {}
-                : emits('page-changed', currentPage - 1)
+                : emits('pageChanged', currentPage - 1)
             "
           >
             <span class="sr-only">Previous</span>
@@ -69,7 +131,7 @@
                 action.page !== currentPage,
             }"
             class="relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus-visible:outline-2 focus-visible:outline-offset-2 hover:cursor-pointer"
-            @click="emits('page-changed', action.page)"
+            @click="emits('pageChanged', action.page)"
           >
             {{ action.page + 1 }}
           </button>
@@ -78,7 +140,7 @@
             @click="
               currentPage === totalPages - 1
                 ? () => {}
-                : emits('page-changed', currentPage + 1)
+                : emits('pageChanged', currentPage + 1)
             "
           >
             <span class="sr-only">Next</span>
@@ -89,64 +151,3 @@
     </div>
   </div>
 </template>
-
-<script lang="ts" setup>
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/20/solid';
-import { computed } from 'vue';
-
-const props = defineProps<{
-  currentPage: number;
-  totalItems: number;
-  itemsPerPage: number;
-}>();
-
-const emits = defineEmits<{
-  (e: 'page-changed', page: number): void;
-}>();
-
-const totalPages = computed(() => {
-  return Math.ceil(props.totalItems / props.itemsPerPage);
-});
-
-const actions = computed<
-  Array<{
-    label: string;
-    page: number;
-  }>
->(() => {
-  if (totalPages.value === 0) {
-    return [
-      {
-        label: String(props.currentPage),
-        page: props.currentPage,
-      },
-    ];
-  }
-
-  const result: Array<{ label: string; page: number }> = [];
-  const maxPagesToShow = 5; // Current page + 2 before + 2 after
-
-  // Calculate start and end page numbers
-  let startPage = Math.max(0, props.currentPage - 2);
-  let endPage = Math.min(totalPages.value - 1, props.currentPage + 2);
-
-  // Adjust if we're at the beginning or end
-  if (props.currentPage < 2) {
-    // If we're at the beginning, show more pages after
-    endPage = Math.min(totalPages.value - 1, startPage + maxPagesToShow - 1);
-  } else if (props.currentPage > totalPages.value - 3) {
-    // If we're at the end, show more pages before
-    startPage = Math.max(0, endPage - maxPagesToShow + 1);
-  }
-
-  // Create page objects
-  for (let i = startPage; i <= endPage; i++) {
-    result.push({
-      label: String(i),
-      page: i,
-    });
-  }
-
-  return result;
-});
-</script>

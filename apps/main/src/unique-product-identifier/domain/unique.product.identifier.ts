@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto'
 
 export class UniqueProductIdentifier {
   private constructor(
@@ -7,16 +7,16 @@ export class UniqueProductIdentifier {
   ) {}
 
   static create(data: {
-    externalUUID?: string;
-    referenceId: string;
+    externalUUID?: string
+    referenceId: string
   }): UniqueProductIdentifier {
     return new UniqueProductIdentifier(
       data.externalUUID ?? randomUUID(),
       data.referenceId,
-    );
+    )
   }
 
-  static loadFromDb(data: { uuid: string; referenceId: string }) {
-    return new UniqueProductIdentifier(data.uuid, data.referenceId);
+  static loadFromDb(data: { uuid: string, referenceId: string }) {
+    return new UniqueProductIdentifier(data.uuid, data.referenceId)
   }
 }

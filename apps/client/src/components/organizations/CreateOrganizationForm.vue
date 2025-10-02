@@ -1,3 +1,38 @@
+<script lang="ts" setup>
+import { reset } from "@formkit/core";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import keycloakIns, { updateKeycloakToken } from "../../lib/keycloak";
+import { useIndexStore } from "../../stores";
+import { useOrganizationsStore } from "../../stores/organizations";
+
+const router = useRouter();
+
+const indexStore = useIndexStore();
+const organizationStore = useOrganizationsStore();
+
+const submitted = ref(false);
+
+async function create(fields: {
+  stepper: {
+    generalInfo: {
+      name: string;
+    };
+  };
+}) {
+  const responseData = await organizationStore.createOrganization({
+    name: fields.stepper.generalInfo.name,
+  });
+  await new Promise(resolve => setTimeout(resolve, 250));
+  await updateKeycloakToken(keycloakIns, 1000);
+  submitted.value = true;
+  reset("createOrganizationForm");
+  await organizationStore.fetchOrganizations();
+  indexStore.selectOrganization(responseData.id);
+  await router.push("/");
+}
+</script>
+
 <template>
   <form-kit
     id="createOrganizationForm"
@@ -33,38 +68,3 @@
     </form-kit>
   </form-kit>
 </template>
-
-<script lang="ts" setup>
-import { ref } from 'vue';
-import { reset } from '@formkit/core';
-import { useOrganizationsStore } from '../../stores/organizations';
-import { useIndexStore } from '../../stores';
-import { useRouter } from 'vue-router';
-import keycloakIns, { updateKeycloakToken } from '../../lib/keycloak';
-
-const router = useRouter();
-
-const indexStore = useIndexStore();
-const organizationStore = useOrganizationsStore();
-
-const submitted = ref(false);
-
-const create = async (fields: {
-  stepper: {
-    generalInfo: {
-      name: string;
-    };
-  };
-}) => {
-  const responseData = await organizationStore.createOrganization({
-    name: fields.stepper.generalInfo.name,
-  });
-  await new Promise((resolve) => setTimeout(resolve, 250));
-  await updateKeycloakToken(keycloakIns, 1000);
-  submitted.value = true;
-  reset('createOrganizationForm');
-  await organizationStore.fetchOrganizations();
-  indexStore.selectOrganization(responseData.id);
-  await router.push('/');
-};
-</script>

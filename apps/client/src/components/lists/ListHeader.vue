@@ -1,3 +1,16 @@
+<script setup lang="ts">
+const props = defineProps<{
+  title: string;
+  description: string;
+  creationLink?: string;
+  creationLabel: string;
+}>();
+
+const emits = defineEmits<{
+  (e: "add"): void;
+}>();
+</script>
+
 <template>
   <div class="sm:flex sm:items-center">
     <div class="sm:flex-auto">
@@ -21,16 +34,3 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-const props = defineProps<{
-  title: string;
-  description: string;
-  creationLink?: string;
-  creationLabel: string;
-}>();
-
-const emits = defineEmits<{
-  (e: 'add'): void;
-}>();
-</script>

@@ -1,10 +1,10 @@
-import { z } from 'zod';
+import type { Template } from '../../domain/template'
+import { Sector } from '@open-dpp/api-client'
+import { z } from 'zod'
 import {
   SectionBaseDtoSchema,
   sectionToDto,
-} from '../../../data-modelling/presentation/dto/section-base.dto';
-import { Template } from '../../domain/template';
-import { Sector } from '@open-dpp/api-client';
+} from '../../../data-modelling/presentation/dto/section-base.dto'
 
 const TemplateDtoSchema = z.object({
   id: z.uuid(),
@@ -16,9 +16,9 @@ const TemplateDtoSchema = z.object({
   createdByUserId: z.uuid(),
   ownedByOrganizationId: z.uuid(),
   marketplaceResourceId: z.string().nullable(),
-});
+})
 
-export type TemplateDto = z.infer<typeof TemplateDtoSchema>;
+export type TemplateDto = z.infer<typeof TemplateDtoSchema>
 
 export function templateToDto(template: Template): TemplateDto {
   return TemplateDtoSchema.parse({
@@ -27,11 +27,11 @@ export function templateToDto(template: Template): TemplateDto {
     description: template.description,
     sectors: template.sectors,
     version: template.version,
-    sections: template.sections.map((section) => sectionToDto(section)),
+    sections: template.sections.map(section => sectionToDto(section)),
     createdByUserId: template.createdByUserId,
     ownedByOrganizationId: template.ownedByOrganizationId,
     marketplaceResourceId: template.marketplaceResourceId,
-  });
+  })
 }
 
 export const templateParamDocumentation = {
@@ -40,4 +40,4 @@ export const templateParamDocumentation = {
   required: true,
   type: 'string',
   format: 'uuid',
-};
+}

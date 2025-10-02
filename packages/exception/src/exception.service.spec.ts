@@ -1,19 +1,20 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { ExceptionService } from './exception.service';
-import { expect } from '@jest/globals';
+import type { TestingModule } from '@nestjs/testing'
+import { expect } from '@jest/globals'
+import { Test } from '@nestjs/testing'
+import { ExceptionService } from './exception.service'
 
-describe('ExceptionService', () => {
-  let service: ExceptionService;
+describe('exceptionService', () => {
+  let service: ExceptionService
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [ExceptionService],
-    }).compile();
+    }).compile()
 
-    service = module.get<ExceptionService>(ExceptionService);
-  });
+    service = module.get<ExceptionService>(ExceptionService)
+  })
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-});
+    expect(service).toBeDefined()
+  })
+})

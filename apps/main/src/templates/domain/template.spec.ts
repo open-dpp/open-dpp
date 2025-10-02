@@ -1,20 +1,21 @@
-import { Template, TemplateDbProps } from './template';
-import { DataFieldValidationResult } from './data-field';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { DataValue } from '../../product-passport-data/domain/data-value';
-import { laptopFactory, LaptopFactory } from '../fixtures/laptop.factory';
-import { randomUUID } from 'crypto';
-import { expect } from '@jest/globals';
-import { ignoreIds } from '@open-dpp/testing';
+import type { TemplateDbProps } from './template'
+import { randomUUID } from 'node:crypto'
+import { expect } from '@jest/globals'
+import { ignoreIds } from '@open-dpp/testing'
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
+import { DataValue } from '../../product-passport-data/domain/data-value'
+import { laptopFactory, LaptopFactory } from '../fixtures/laptop.factory'
+import { DataFieldValidationResult } from './data-field'
+import { Template } from './template'
 
-describe('Template', () => {
-  const laptopModel: TemplateDbProps = laptopFactory.addSections().build();
+describe('template', () => {
+  const laptopModel: TemplateDbProps = laptopFactory.addSections().build()
 
   it('should create data values at model level', () => {
-    const productDataModel = Template.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel)
     const dataValues = productDataModel.createInitialDataValues(
       GranularityLevel.MODEL,
-    );
+    )
     expect(dataValues).toEqual(
       ignoreIds([
         DataValue.create({
@@ -36,14 +37,14 @@ describe('Template', () => {
           row: 0,
         }),
       ]),
-    );
-  });
+    )
+  })
 
   it('should create data values at item level', () => {
-    const productDataModel = Template.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel)
     const dataValues = productDataModel.createInitialDataValues(
       GranularityLevel.ITEM,
-    );
+    )
     expect(dataValues).toEqual(
       ignoreIds([
         DataValue.create({
@@ -65,11 +66,11 @@ describe('Template', () => {
           row: 0,
         }),
       ]),
-    );
-  });
+    )
+  })
   //
   it('should validate values successfully', () => {
-    const productDataModel = Template.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel)
 
     const dataValues = [
       DataValue.create({
@@ -114,13 +115,13 @@ describe('Template', () => {
         dataFieldId: LaptopFactory.ids.materialCo2.fields.co2Emissions,
         row: 0,
       }),
-    ];
+    ]
     const validationOutput = productDataModel.validate(
       dataValues,
       GranularityLevel.MODEL,
-    );
+    )
 
-    expect(validationOutput.isValid).toBeTruthy();
+    expect(validationOutput.isValid).toBeTruthy()
     expect(validationOutput.validationResults).toEqual([
       DataFieldValidationResult.create({
         dataFieldId: LaptopFactory.ids.techSpecs.fields.processor,
@@ -157,11 +158,11 @@ describe('Template', () => {
         dataFieldName: 'Co2 emissions',
         isValid: true,
       }),
-    ]);
-  });
+    ])
+  })
 
   it('should validate values successfully if there are no data values for repeatable section', () => {
-    const productDataModel = Template.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel)
 
     const dataValues = [
       DataValue.create({
@@ -182,13 +183,13 @@ describe('Template', () => {
         dataFieldId: LaptopFactory.ids.environment.fields.waterConsumption,
         row: 0,
       }),
-    ];
+    ]
     const validationOutput = productDataModel.validate(
       dataValues,
       GranularityLevel.MODEL,
-    );
+    )
 
-    expect(validationOutput.isValid).toBeTruthy();
+    expect(validationOutput.isValid).toBeTruthy()
     expect(validationOutput.validationResults).toEqual([
       DataFieldValidationResult.create({
         dataFieldId: LaptopFactory.ids.techSpecs.fields.processor,
@@ -205,11 +206,11 @@ describe('Template', () => {
         dataFieldName: 'Water consumption',
         isValid: true,
       }),
-    ]);
-  });
+    ])
+  })
 
   it('should fail validation caused by missing field and wrong type', () => {
-    const productDataModel = Template.loadFromDb(laptopModel);
+    const productDataModel = Template.loadFromDb(laptopModel)
     const dataValues = [
       DataValue.create({
         value: 'Intel 7',
@@ -247,13 +248,13 @@ describe('Template', () => {
         dataFieldId: LaptopFactory.ids.materialCo2.fields.co2Emissions,
         row: 0,
       }),
-    ];
+    ]
     const validationOutput = productDataModel.validate(
       dataValues,
       GranularityLevel.MODEL,
-    );
+    )
 
-    expect(validationOutput.isValid).toBeFalsy();
+    expect(validationOutput.isValid).toBeFalsy()
     expect(validationOutput.validationResults).toEqual([
       DataFieldValidationResult.create({
         dataFieldId: LaptopFactory.ids.techSpecs.fields.processor,
@@ -294,28 +295,28 @@ describe('Template', () => {
         dataFieldName: 'Co2 emissions',
         isValid: true,
       }),
-    ]);
-  });
+    ])
+  })
 
   it('should copy template', () => {
-    const template = Template.loadFromDb(laptopModel);
-    const orgaId = randomUUID();
-    const userId = randomUUID();
-    const templateCopy = template.copy(orgaId, userId);
-    expect(templateCopy.id).not.toEqual(template.id);
-    expect(templateCopy.ownedByOrganizationId).toEqual(orgaId);
-    expect(templateCopy.createdByUserId).toEqual(userId);
-    expect(templateCopy.name).toEqual(template.name);
-    expect(templateCopy.version).toEqual(template.version);
+    const template = Template.loadFromDb(laptopModel)
+    const orgaId = randomUUID()
+    const userId = randomUUID()
+    const templateCopy = template.copy(orgaId, userId)
+    expect(templateCopy.id).not.toEqual(template.id)
+    expect(templateCopy.ownedByOrganizationId).toEqual(orgaId)
+    expect(templateCopy.createdByUserId).toEqual(userId)
+    expect(templateCopy.name).toEqual(template.name)
+    expect(templateCopy.version).toEqual(template.version)
     expect(templateCopy.marketplaceResourceId).toEqual(
       template.marketplaceResourceId,
-    );
-    expect(templateCopy.sections).toEqual(template.sections);
-  });
+    )
+    expect(templateCopy.sections).toEqual(template.sections)
+  })
 
   it('should assign marketplace resource ID at the model level', () => {
-    const productDataModel = Template.loadFromDb(laptopModel);
-    productDataModel.assignMarketplaceResource('m1');
-    expect(productDataModel.marketplaceResourceId).toEqual('m1');
-  });
-});
+    const productDataModel = Template.loadFromDb(laptopModel)
+    productDataModel.assignMarketplaceResource('m1')
+    expect(productDataModel.marketplaceResourceId).toEqual('m1')
+  })
+})

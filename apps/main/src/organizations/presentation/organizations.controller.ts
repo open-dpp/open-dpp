@@ -1,3 +1,8 @@
+import type { PermissionService } from '@open-dpp/auth'
+import type * as authRequest from '@open-dpp/auth'
+import type { UsersService } from '../../users/infrastructure/users.service'
+import type { OrganizationsService } from '../infrastructure/organizations.service'
+import type { CreateOrganizationDto } from './dto/create-organization.dto'
 import {
   Body,
   Controller,
@@ -6,13 +11,8 @@ import {
   Param,
   Post,
   Request,
-} from '@nestjs/common';
-import { OrganizationsService } from '../infrastructure/organizations.service';
-import { CreateOrganizationDto } from './dto/create-organization.dto';
-import { Organization } from '../domain/organization';
-import { PermissionService } from '@open-dpp/auth';
-import * as authRequest from '@open-dpp/auth';
-import { UsersService } from '../../users/infrastructure/users.service';
+} from '@nestjs/common'
+import { Organization } from '../domain/organization'
 
 @Controller('organizations')
 export class OrganizationsController {
@@ -29,28 +29,28 @@ export class OrganizationsController {
   ) {
     const user = await this.userService.findOne(
       req.authContext.keycloakUser.sub,
-    );
+    )
     if (!user) {
-      throw new NotFoundException();
+      throw new NotFoundException()
     }
     const organization = Organization.create({
       name: createOrganizationDto.name,
-      user: user,
-    });
+      user,
+    })
 
-    return this.organizationsService.save(organization);
+    return this.organizationsService.save(organization)
   }
 
   @Get()
   async findAll(@Request() req: authRequest.AuthRequest) {
     return (
       await this.organizationsService.findAllWhereMember(req.authContext)
-    ).filter((organization) =>
+    ).filter(organization =>
       this.permissionsService.canAccessOrganization(
         organization.id,
         req.authContext,
       ),
-    );
+    )
   }
 
   @Get(':id')
@@ -61,8 +61,8 @@ export class OrganizationsController {
     await this.permissionsService.canAccessOrganizationOrFail(
       id,
       req.authContext,
-    );
-    return this.organizationsService.findOneOrFail(id);
+    )
+    return this.organizationsService.findOneOrFail(id)
   }
 
   @Post(':organizationId/invite')
@@ -74,12 +74,12 @@ export class OrganizationsController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
+    )
     return this.organizationsService.inviteUser(
       req.authContext,
       organizationId,
       body.email,
-    );
+    )
   }
 
   @Get(':id/members')
@@ -90,11 +90,11 @@ export class OrganizationsController {
     await this.permissionsService.canAccessOrganizationOrFail(
       id,
       req.authContext,
-    );
-    const organization = await this.findOne(id, req);
+    )
+    const organization = await this.findOne(id, req)
     if (!organization) {
-      throw new NotFoundException();
+      throw new NotFoundException()
     }
-    return organization.members;
+    return organization.members
   }
 }

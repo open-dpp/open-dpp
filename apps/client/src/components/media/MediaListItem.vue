@@ -1,3 +1,18 @@
+<script lang="ts" setup>
+import type { MediaInfo } from "./MediaInfo.interface";
+import MediaPreview from "./MediaPreview.vue";
+
+defineProps<{
+  media: MediaInfo;
+  selectable?: boolean;
+  isSelected?: boolean;
+}>();
+
+const emits = defineEmits<{
+  (e: "onSelect", id: MediaInfo): void;
+}>();
+</script>
+
 <template>
   <div
     :class="{
@@ -6,7 +21,7 @@
       'ring-2 ring-[#6BAD87] ring-offset-2 ring-offset-gray-100': isSelected,
     }"
     class="p-2 rounded"
-    @click="selectable && emits('on-select', media)"
+    @click="selectable && emits('onSelect', media)"
   >
     <MediaPreview :media="media" :show-type="true" />
     <p class="mt-2 block truncate text-sm font-medium text-gray-900">
@@ -17,18 +32,3 @@
     </p>
   </div>
 </template>
-
-<script lang="ts" setup>
-import { MediaInfo } from './MediaInfo.interface';
-import MediaPreview from './MediaPreview.vue';
-
-defineProps<{
-  media: MediaInfo;
-  selectable?: boolean;
-  isSelected?: boolean;
-}>();
-
-const emits = defineEmits<{
-  (e: 'on-select', id: MediaInfo): void;
-}>();
-</script>

@@ -1,19 +1,19 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import {
   createCommonIndexesForTemplate,
   TemplateBaseDoc,
-} from '../../data-modelling/infrastructure/template-base.schema';
+} from '../../data-modelling/infrastructure/template-base.schema'
 
 @Schema({ _id: false }) // No separate _id for embedded documents
 class PublicationDoc {
   @Prop({ required: true })
-  id: string;
+  id: string
 
   @Prop({ required: true })
-  version: string;
+  version: string
 }
 
-const PublicationSchema = SchemaFactory.createForClass(PublicationDoc);
+const PublicationSchema = SchemaFactory.createForClass(PublicationDoc)
 
 export enum TemplateDraftDocSchemaVersion {
   v1_0_0 = '1.0.0',
@@ -28,13 +28,13 @@ export class TemplateDraftDoc extends TemplateBaseDoc {
     default: TemplateDraftDocSchemaVersion.v1_0_3,
     enum: TemplateDraftDocSchemaVersion,
   }) // Track schema version
-  _schemaVersion: TemplateDraftDocSchemaVersion;
+  _schemaVersion: TemplateDraftDocSchemaVersion
 
   @Prop({ type: [PublicationSchema], default: [] })
-  publications: PublicationDoc[];
+  publications: PublicationDoc[]
 }
 
-export const TemplateDraftSchema =
-  SchemaFactory.createForClass(TemplateDraftDoc);
+export const TemplateDraftSchema
+  = SchemaFactory.createForClass(TemplateDraftDoc)
 
-createCommonIndexesForTemplate(TemplateDraftSchema);
+createCommonIndexesForTemplate(TemplateDraftSchema)

@@ -1,16 +1,5 @@
-<template>
-  <div class="v-spinner" v-show="loading">
-    <div
-      class="v-ring v-ring1"
-      :style="{ height: size, width: size, position: 'relative' }"
-    >
-      <div class="v-ring v-ring2" :style="{ ...spinnerStyle }"></div>
-      <div class="v-ring v-ring3" :style="{ ...spinnerStyle }"></div>
-    </div>
-  </div>
-</template>
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed } from "vue";
 
 const props = withDefaults(
   defineProps<{
@@ -22,10 +11,10 @@ const props = withDefaults(
   }>(),
   {
     loading: true,
-    color: '#5dc596',
-    size: '120px',
-    margin: '2px',
-    radius: '100%',
+    color: "#5dc596",
+    size: "120px",
+    margin: "2px",
+    radius: "100%",
   },
 );
 
@@ -33,12 +22,25 @@ const spinnerStyle = computed(() => {
   return {
     height: props.size,
     width: props.size,
-    border: parseFloat(props.size) / 10 + 'px solid' + props.color,
+    border: `${Number.parseFloat(props.size) / 10}px solid${props.color}`,
     opacity: 0.4,
     borderRadius: props.radius,
   };
 });
 </script>
+
+<template>
+  <div v-show="loading" class="v-spinner">
+    <div
+      class="v-ring v-ring1"
+      :style="{ height: size, width: size, position: 'relative' }"
+    >
+      <div class="v-ring v-ring2" :style="{ ...spinnerStyle }" />
+      <div class="v-ring v-ring3" :style="{ ...spinnerStyle }" />
+    </div>
+  </div>
+</template>
+
 <style>
 .v-spinner .v-ring {
 }

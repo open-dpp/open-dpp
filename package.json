@@ -2,19 +2,24 @@
   "name": "open-dpp",
   "version": "0.0.1",
   "description": "",
-  "author": "",
+  "author": "open-dpp GmbH",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "LGPL-3.0-only",
   "packageManager": "pnpm@10.17.1",
   "dependencies": {
     "@nestjs/core": "^11.0.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.18.0",
     "@types/jest": "^30.0.0",
+    "eslint": "^9.18.0",
+    "eslint-plugin-prettier": "^5.2.2",
+    "eslint-plugin-node": "^11.1.0",
+    "globals": "^16.0.0",
     "jest": "^30.0.0",
-    "prettier": "^3.4.2",
-    "turbo": "^2.5.8",
     "ts-jest": "^29.2.5",
-    "typescript": "^5.7.3"
+    "turbo": "^2.5.8",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0"
   }
 }

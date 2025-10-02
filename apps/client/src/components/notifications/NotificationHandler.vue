@@ -1,3 +1,10 @@
+<script lang="ts" setup>
+import { useNotificationStore } from "../../stores/notification";
+import NotificationView from "./NotificationView.vue";
+
+const notificationStore = useNotificationStore();
+</script>
+
 <template>
   <!-- Global notification live region, render this permanently at the end of the document -->
   <div
@@ -20,18 +27,11 @@
         >
           <NotificationView
             v-for="notification in notificationStore.notifications"
-            :notification="notification"
             :key="notification.id"
+            :notification="notification"
           />
         </div>
       </transition>
     </div>
   </div>
 </template>
-
-<script lang="ts" setup>
-import NotificationView from './NotificationView.vue';
-import { useNotificationStore } from '../../stores/notification';
-
-const notificationStore = useNotificationStore();
-</script>

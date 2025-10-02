@@ -1,7 +1,7 @@
-import { Factory } from 'fishery';
-import { TemplateCreateProps } from '../domain/template';
-import { randomUUID } from 'crypto';
-import { Sector } from '@open-dpp/api-client';
+import type { TemplateCreateProps } from '../domain/template'
+import { randomUUID } from 'node:crypto'
+import { Sector } from '@open-dpp/api-client'
+import { Factory } from 'fishery'
 
 export const templateCreatePropsFactory = Factory.define<TemplateCreateProps>(
   () => ({
@@ -11,4 +11,4 @@ export const templateCreatePropsFactory = Factory.define<TemplateCreateProps>(
     organizationId: randomUUID(),
     userId: randomUUID(),
   }),
-);
+)

@@ -1,3 +1,26 @@
+<script lang="ts" setup>
+import { onMounted, ref } from "vue";
+import EmptyState from "../../components/models/EmptyState.vue";
+import ModelList from "../../components/models/ModelList.vue";
+import { useIndexStore } from "../../stores";
+import { useModelsStore } from "../../stores/models";
+
+const modelsStore = useModelsStore();
+const indexStore = useIndexStore();
+const fetchInFlight = ref(true);
+const selectedProductId = ref<string>();
+
+async function onSelect(productId: string) {
+  selectedProductId.value = productId;
+}
+
+onMounted(async () => {
+  fetchInFlight.value = true;
+  await modelsStore.getModels();
+  fetchInFlight.value = false;
+});
+</script>
+
 <template>
   <section>
     <div v-if="!fetchInFlight" class="flex flex-col gap-3 p-3">
@@ -10,25 +33,3 @@
     </div>
   </section>
 </template>
-<script lang="ts" setup>
-import ModelList from '../../components/models/ModelList.vue';
-import { onMounted, ref } from 'vue';
-import { useModelsStore } from '../../stores/models';
-import EmptyState from '../../components/models/EmptyState.vue';
-import { useIndexStore } from '../../stores';
-
-const modelsStore = useModelsStore();
-const indexStore = useIndexStore();
-const fetchInFlight = ref(true);
-const selectedProductId = ref<string>();
-
-const onSelect = async (productId: string) => {
-  selectedProductId.value = productId;
-};
-
-onMounted(async () => {
-  fetchInFlight.value = true;
-  await modelsStore.getModels();
-  fetchInFlight.value = false;
-});
-</script>

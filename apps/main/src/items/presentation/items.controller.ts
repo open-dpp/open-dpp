@@ -1,3 +1,12 @@
+import type { PermissionService } from '@open-dpp/auth'
+import type * as authRequest from '@open-dpp/auth'
+import type { ModelsService } from '../../models/infrastructure/models.service'
+import type {
+  DataValueDto,
+} from '../../product-passport-data/presentation/dto/data-value.dto'
+import type { TemplateService } from '../../templates/infrastructure/template.service'
+import type { ItemsService } from '../infrastructure/items.service'
+import type { ItemsApplicationService } from './items-application.service'
 import {
   BadRequestException,
   Body,
@@ -8,31 +17,24 @@ import {
   Patch,
   Post,
   Request,
-} from '@nestjs/common';
-import { ItemsService } from '../infrastructure/items.service';
-import { itemToDto } from './dto/item.dto';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { TemplateService } from '../../templates/infrastructure/template.service';
-import {
-  DataValueDto,
-  DataValueDtoSchema,
-} from '../../product-passport-data/presentation/dto/data-value.dto';
-import { ModelsService } from '../../models/infrastructure/models.service';
-import { DataValue } from '../../product-passport-data/domain/data-value';
-import { ItemsApplicationService } from './items-application.service';
-import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+} from '@nestjs/common'
+import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger'
+import { ZodValidationPipe } from '@open-dpp/exception'
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
 import {
   itemDocumentation,
   itemParamDocumentation,
   modelParamDocumentation,
-} from '../../open-api-docs/item.doc';
+} from '../../open-api-docs/item.doc'
+import { DataValue } from '../../product-passport-data/domain/data-value'
+import {
+  DataValueDtoSchema,
+} from '../../product-passport-data/presentation/dto/data-value.dto'
 import {
   dataValueDocumentation,
   orgaParamDocumentation,
-} from '../../product-passport-data/presentation/dto/docs/product-passport-data.doc';
-import { ZodValidationPipe } from '@open-dpp/exception';
-import { PermissionService } from '@open-dpp/auth';
-import * as authRequest from '@open-dpp/auth';
+} from '../../product-passport-data/presentation/dto/docs/product-passport-data.doc'
+import { itemToDto } from './dto/item.dto'
 
 @Controller('organizations/:orgaId/models/:modelId/items')
 export class ItemsController {
@@ -63,13 +65,13 @@ export class ItemsController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
+    )
     const item = await this.itemsApplicationService.createItem(
       organizationId,
       modelId,
       req.authContext.keycloakUser.sub,
-    );
-    return itemToDto(await this.itemsService.save(item));
+    )
+    return itemToDto(await this.itemsService.save(item))
   }
 
   @ApiOperation({
@@ -90,14 +92,14 @@ export class ItemsController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
-    const model = await this.modelsService.findOneOrFail(modelId);
+    )
+    const model = await this.modelsService.findOneOrFail(modelId)
     if (!model.isOwnedBy(organizationId)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException()
     }
-    return (await this.itemsService.findAllByModel(modelId)).map((item) =>
+    return (await this.itemsService.findAllByModel(modelId)).map(item =>
       itemToDto(item),
-    );
+    )
   }
 
   @ApiOperation({
@@ -120,12 +122,12 @@ export class ItemsController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
-    const item = await this.itemsService.findOneOrFail(itemId);
+    )
+    const item = await this.itemsService.findOneOrFail(itemId)
     if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
-      throw new ForbiddenException();
+      throw new ForbiddenException()
     }
-    return itemToDto(item);
+    return itemToDto(item)
   }
 
   @ApiOperation({
@@ -154,28 +156,28 @@ export class ItemsController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
-    const item = await this.itemsService.findOneOrFail(itemId);
+    )
+    const item = await this.itemsService.findOneOrFail(itemId)
     if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
-      throw new ForbiddenException();
+      throw new ForbiddenException()
     }
-    item.addDataValues(addDataValues.map((d) => DataValue.create(d)));
+    item.addDataValues(addDataValues.map(d => DataValue.create(d)))
     if (!item.templateId) {
-      throw new BadRequestException('Item does not have a template assigned');
+      throw new BadRequestException('Item does not have a template assigned')
     }
     const productDataModel = await this.templateService.findOneOrFail(
       item.templateId,
-    );
+    )
 
     const validationResult = productDataModel.validate(
       item.dataValues,
       GranularityLevel.ITEM,
-    );
+    )
     if (!validationResult.isValid) {
-      throw new BadRequestException(validationResult.toJson());
+      throw new BadRequestException(validationResult.toJson())
     }
 
-    return itemToDto(await this.itemsService.save(item));
+    return itemToDto(await this.itemsService.save(item))
   }
 
   @ApiOperation({
@@ -203,28 +205,28 @@ export class ItemsController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
-    const item = await this.itemsService.findOneOrFail(itemId);
+    )
+    const item = await this.itemsService.findOneOrFail(itemId)
     if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
-      throw new ForbiddenException();
+      throw new ForbiddenException()
     }
 
-    item.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
+    item.modifyDataValues(updateDataValues.map(d => DataValue.create(d)))
     if (!item.templateId) {
-      throw new BadRequestException('Item does not have a template assigned');
+      throw new BadRequestException('Item does not have a template assigned')
     }
     const productDataModel = await this.templateService.findOneOrFail(
       item.templateId,
-    );
+    )
 
     const validationResult = productDataModel.validate(
       item.dataValues,
       GranularityLevel.ITEM,
-    );
+    )
     if (!validationResult.isValid) {
-      throw new BadRequestException(validationResult.toJson());
+      throw new BadRequestException(validationResult.toJson())
     }
 
-    return itemToDto(await this.itemsService.save(item));
+    return itemToDto(await this.itemsService.save(item))
   }
 }

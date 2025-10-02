@@ -1,8 +1,8 @@
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Module } from '@nestjs/common';
-import * as path from 'path';
-import { generateConfig } from '../../../apps/main/src/database/config';
+import * as path from 'node:path'
+import { Module } from '@nestjs/common'
+import { ConfigModule, ConfigService } from '@nestjs/config'
+import { TypeOrmModule } from '@nestjs/typeorm'
+import { generateConfig } from '../../../apps/main/src/database/config'
 
 @Module({
   imports: [

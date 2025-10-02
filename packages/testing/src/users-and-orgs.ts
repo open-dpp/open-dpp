@@ -1,30 +1,28 @@
-import { randomUUID } from 'crypto';
-import { KeycloakUserInToken } from '@open-dpp/auth';
-import { Organization } from '../../../apps/main/src/organizations/domain/organization';
+import type { KeycloakUserInToken } from '@open-dpp/auth'
+import { randomUUID } from 'node:crypto'
+import { Organization } from '../../../apps/main/src/organizations/domain/organization'
 
-const createKeycloakUserInToken = (
-  id: string = randomUUID(),
-): KeycloakUserInToken => {
-  const email = `${id}@test.test`;
+function createKeycloakUserInToken(id: string = randomUUID()): KeycloakUserInToken {
+  const email = `${id}@test.test`
   return {
     sub: id,
-    email: email,
+    email,
     name: id,
     preferred_username: email,
     email_verified: true,
     memberships: [],
-  };
-};
+  }
+}
 
 // Keycloak user objects (plain objects with user data)
-const user1org1 = createKeycloakUserInToken();
-const user2org1 = createKeycloakUserInToken();
-const user1org2 = createKeycloakUserInToken();
-const user2org2 = createKeycloakUserInToken();
-const user1org3 = createKeycloakUserInToken();
+const user1org1 = createKeycloakUserInToken()
+const user2org1 = createKeycloakUserInToken()
+const user1org2 = createKeycloakUserInToken()
+const user2org2 = createKeycloakUserInToken()
+const user1org3 = createKeycloakUserInToken()
 
 // Array of all keycloak users
-const keycloakUsers = [user1org1, user2org1, user1org2, user2org2, user1org3];
+const keycloakUsers = [user1org1, user2org1, user1org2, user2org2, user1org3]
 
 // Organization domain objects
 const org1 = Organization.fromPlain({
@@ -33,7 +31,7 @@ const org1 = Organization.fromPlain({
   members: [], // [userObj1, userObj2],
   createdByUserId: user1org1.sub,
   ownedByUserId: user1org1.sub,
-});
+})
 
 const org2 = Organization.fromPlain({
   id: 'org2',
@@ -41,7 +39,7 @@ const org2 = Organization.fromPlain({
   members: [], // [userObj3, userObj4],
   createdByUserId: user1org2.sub,
   ownedByUserId: user1org2.sub,
-});
+})
 
 const org3 = Organization.fromPlain({
   id: 'org3',
@@ -49,21 +47,21 @@ const org3 = Organization.fromPlain({
   members: [], // [userObj5],
   createdByUserId: user1org3.sub,
   ownedByUserId: user1org3.sub,
-});
+})
 
 // Array of all organizations
-const organizations = [org1, org2, org3];
+const organizations = [org1, org2, org3]
 
 export {
+  createKeycloakUserInToken,
   keycloakUsers,
-  organizations,
   org1,
   org2,
   org3,
+  organizations,
   user1org1,
-  user2org1,
   user1org2,
-  user2org2,
   user1org3,
-  createKeycloakUserInToken,
-};
+  user2org1,
+  user2org2,
+}

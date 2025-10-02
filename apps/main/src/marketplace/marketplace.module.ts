@@ -1,17 +1,17 @@
-import { Module } from '@nestjs/common';
-import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { OrganizationEntity } from '../organizations/infrastructure/organization.entity';
-import { UserEntity } from '../users/infrastructure/user.entity';
-import { MarketplaceService } from './marketplace.service';
-import { OrganizationsService } from '../organizations/infrastructure/organizations.service';
-import { UsersService } from '../users/infrastructure/users.service';
-import { MongooseModule } from '@nestjs/mongoose';
+import { Module } from '@nestjs/common'
+import { MongooseModule } from '@nestjs/mongoose'
+import { TypeOrmModule } from '@nestjs/typeorm'
+import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module'
+import { OrganizationEntity } from '../organizations/infrastructure/organization.entity'
+import { OrganizationsService } from '../organizations/infrastructure/organizations.service'
 import {
   TemplateDoc,
   TemplateSchema,
-} from '../templates/infrastructure/template.schema';
-import { TemplateService } from '../templates/infrastructure/template.service';
+} from '../templates/infrastructure/template.schema'
+import { TemplateService } from '../templates/infrastructure/template.service'
+import { UserEntity } from '../users/infrastructure/user.entity'
+import { UsersService } from '../users/infrastructure/users.service'
+import { MarketplaceService } from './marketplace.service'
 
 @Module({
   imports: [

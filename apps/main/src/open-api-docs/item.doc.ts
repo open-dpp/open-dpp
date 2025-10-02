@@ -1,7 +1,7 @@
 import {
   dataValueDocumentation,
   uniqueProductIdentifierDocumentation,
-} from '../product-passport-data/presentation/dto/docs/product-passport-data.doc';
+} from '../product-passport-data/presentation/dto/docs/product-passport-data.doc'
 
 export const itemDocumentation = {
   type: 'object',
@@ -15,7 +15,7 @@ export const itemDocumentation = {
     dataValues: { type: 'array', items: { ...dataValueDocumentation } },
   },
   required: ['id', 'uniqueProductIdentifiers', 'templateId', 'dataValues'],
-};
+}
 
 export const modelParamDocumentation = {
   name: 'modelId',
@@ -23,7 +23,7 @@ export const modelParamDocumentation = {
   required: true,
   type: 'string',
   format: 'uuid',
-};
+}
 
 export const itemParamDocumentation = {
   name: 'itemId',
@@ -31,4 +31,4 @@ export const itemParamDocumentation = {
   required: true,
   type: 'string',
   format: 'uuid',
-};
+}

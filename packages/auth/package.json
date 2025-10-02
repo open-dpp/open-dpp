@@ -1,13 +1,10 @@
 {
   "name": "@open-dpp/auth",
   "version": "1.0.0",
+  "packageManager": "pnpm@10.17.1",
   "description": "",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "author": "",
+  "license": "ISC",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -15,22 +12,28 @@
     },
     "./package.json": "./package.json"
   },
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "clean": "rimraf dist",
     "build": "pnpm run clean && tsc",
     "check-ts": "tsc --noEmit",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
+    "lint": "eslint",
+    "lint:fix": "eslint --fix"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.1",
     "@nestjs/config": "^4.0.2",
     "axios": "^1.12.2",
-    "jwks-rsa": "^3.2.0",
     "jsonwebtoken": "^9.0.2",
+    "jwks-rsa": "^3.2.0",
     "rxjs": "^7.8.1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.17.1"
+  "devDependencies": {
+    "@open-dpp/config-eslint": "workspace:*",
+    "@tsconfig/node-lts": "^22.0.2",
+    "@tsconfig/node-ts": "^23.6.1",
+    "rimraf": "^6.0.1"
+  }
 }

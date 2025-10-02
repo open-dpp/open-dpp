@@ -1,6 +1,6 @@
-import { randomUUID } from 'crypto';
-import { TraceabilityEvent } from './traceability-event';
-import { TraceabilityEventType } from './traceability-event-type.enum';
+import type { TraceabilityEvent } from './traceability-event'
+import type { TraceabilityEventType } from './traceability-event-type.enum'
+import { randomUUID } from 'node:crypto'
 
 export class TraceabilityEventWrapper<T extends TraceabilityEvent> {
   private constructor(
@@ -13,28 +13,28 @@ export class TraceabilityEventWrapper<T extends TraceabilityEvent> {
     public readonly chargeId: string | null,
     public readonly organizationId: string | null,
     public readonly geolocation: {
-      latitude: string;
-      longitude: string;
+      latitude: string
+      longitude: string
     } | null,
     public readonly type: TraceabilityEventType,
     public readonly data: T,
   ) {}
 
   static create<T extends TraceabilityEvent>(data: {
-    ip: string | null;
-    userId: string;
-    itemId: string;
-    chargeId?: string | null | undefined;
-    organizationId: string;
+    ip: string | null
+    userId: string
+    itemId: string
+    chargeId?: string | null | undefined
+    organizationId: string
     geolocation?:
       | {
-          latitude: string;
-          longitude: string;
-        }
+        latitude: string
+        longitude: string
+      }
       | null
-      | undefined;
-    type: TraceabilityEventType;
-    data: T;
+      | undefined
+    type: TraceabilityEventType
+    data: T
   }) {
     return new TraceabilityEventWrapper(
       randomUUID(),
@@ -48,27 +48,27 @@ export class TraceabilityEventWrapper<T extends TraceabilityEvent> {
       data.geolocation ?? null,
       data.type,
       data.data,
-    );
+    )
   }
 
   static loadFromDb<T extends TraceabilityEvent>(payload: {
-    _id: string;
-    createdAt: Date;
-    updatedAt: Date;
-    ip: string | null;
-    userId: string | null;
-    itemId: string | null;
-    chargeId?: string | null | undefined;
-    organizationId: string | null;
+    _id: string
+    createdAt: Date
+    updatedAt: Date
+    ip: string | null
+    userId: string | null
+    itemId: string | null
+    chargeId?: string | null | undefined
+    organizationId: string | null
     geolocation?:
       | {
-          latitude: string;
-          longitude: string;
-        }
+        latitude: string
+        longitude: string
+      }
       | null
-      | undefined;
-    type: TraceabilityEventType;
-    data: T;
+      | undefined
+    type: TraceabilityEventType
+    data: T
   }): TraceabilityEventWrapper<T> {
     return new TraceabilityEventWrapper(
       payload._id,
@@ -82,6 +82,6 @@ export class TraceabilityEventWrapper<T extends TraceabilityEvent> {
       payload.geolocation ?? null,
       payload.type,
       payload.data,
-    );
+    )
   }
 }

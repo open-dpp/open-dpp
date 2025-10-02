@@ -1,3 +1,60 @@
+<script lang="ts" setup>
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  TransitionChild,
+  TransitionRoot,
+} from "@headlessui/vue";
+import { EnvelopeIcon, XMarkIcon } from "@heroicons/vue/24/outline";
+import { ref } from "vue";
+import apiClient from "../../lib/api-client";
+import RingLoader from "../RingLoader.vue";
+
+const props = defineProps<{
+  organizationId: string;
+}>();
+
+const emit = defineEmits<{
+  (e: "close"): void;
+  (e: "invitedUser"): void;
+}>();
+
+const loading = ref<boolean>(false);
+const errors = ref<Array<string>>([]);
+const success = ref<boolean>(false);
+
+async function inviteUser(fields: { email: string }) {
+  success.value = false;
+  errors.value = [];
+  try {
+    if (fields.email) {
+      loading.value = true;
+      const response = await apiClient.dpp.organizations.inviteUser(
+        fields.email,
+        props.organizationId,
+      );
+      loading.value = false;
+      if (response.status === 201) {
+        success.value = true;
+        emit("invitedUser");
+      }
+      else {
+        errors.value.push("Ein Fehler ist aufgetreten.");
+      }
+    }
+    else {
+      errors.value.push("Bitte geben Sie eine E-Mail Adresse ein.");
+    }
+  }
+  catch (error) {
+    console.error(error);
+    errors.value.push("Ein Fehler ist aufgetreten.");
+    loading.value = false;
+  }
+}
+</script>
+
 <template>
   <TransitionRoot :show="true" as="template">
     <Dialog class="relative z-10" @close="emit('close')">
@@ -52,7 +109,8 @@
                   <DialogTitle
                     as="h3"
                     class="text-base font-semibold text-gray-900"
-                    >Benutzer einladen
+                  >
+                    Benutzer einladen
                   </DialogTitle>
                   <div v-if="success" class="mt-3">
                     <div class="text-sm text-green-600">
@@ -98,57 +156,3 @@
     </Dialog>
   </TransitionRoot>
 </template>
-
-<script lang="ts" setup>
-import {
-  Dialog,
-  DialogPanel,
-  DialogTitle,
-  TransitionChild,
-  TransitionRoot,
-} from '@headlessui/vue';
-import { EnvelopeIcon, XMarkIcon } from '@heroicons/vue/24/outline';
-import apiClient from '../../lib/api-client';
-import { ref } from 'vue';
-import RingLoader from '../RingLoader.vue';
-
-const props = defineProps<{
-  organizationId: string;
-}>();
-
-const emit = defineEmits<{
-  (e: 'close'): void;
-  (e: 'invitedUser'): void;
-}>();
-
-const loading = ref<boolean>(false);
-const errors = ref<Array<string>>([]);
-const success = ref<boolean>(false);
-
-const inviteUser = async (fields: { email: string }) => {
-  success.value = false;
-  errors.value = [];
-  try {
-    if (fields.email) {
-      loading.value = true;
-      const response = await apiClient.dpp.organizations.inviteUser(
-        fields.email,
-        props.organizationId,
-      );
-      loading.value = false;
-      if (response.status === 201) {
-        success.value = true;
-        emit('invitedUser');
-      } else {
-        errors.value.push('Ein Fehler ist aufgetreten.');
-      }
-    } else {
-      errors.value.push('Bitte geben Sie eine E-Mail Adresse ein.');
-    }
-  } catch (error) {
-    console.error(error);
-    errors.value.push('Ein Fehler ist aufgetreten.');
-    loading.value = false;
-  }
-};
-</script>

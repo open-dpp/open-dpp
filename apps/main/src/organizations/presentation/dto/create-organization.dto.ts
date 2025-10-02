@@ -1,3 +1,3 @@
 export class CreateOrganizationDto {
-  name: string;
+  name: string
 }

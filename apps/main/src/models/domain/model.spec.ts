@@ -1,33 +1,33 @@
-import { Model } from './model';
-import { randomUUID } from 'crypto';
-import { Template } from '../../templates/domain/template';
-import { DataValue } from '../../product-passport-data/domain/data-value';
-import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
-import { expect } from '@jest/globals';
-import { ignoreIds } from '@open-dpp/testing/utils';
+import { randomUUID } from 'node:crypto'
+import { expect } from '@jest/globals'
+import { ignoreIds } from '@open-dpp/testing/utils'
+import { DataValue } from '../../product-passport-data/domain/data-value'
+import { Template } from '../../templates/domain/template'
+import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory'
+import { Model } from './model'
 
-describe('Model', () => {
-  const userId = randomUUID();
-  const organizationId = randomUUID();
-  const template = Template.create(templateCreatePropsFactory.build());
+describe('model', () => {
+  const userId = randomUUID()
+  const organizationId = randomUUID()
+  const template = Template.create(templateCreatePropsFactory.build())
   it('should create unique product identifiers on model creation', () => {
     const model = Model.create({
       name: 'My model',
       userId,
       organizationId,
       template,
-    });
-    const uniqueModelIdentifier1 = model.createUniqueProductIdentifier();
-    const uniqueModelIdentifier2 = model.createUniqueProductIdentifier();
+    })
+    const uniqueModelIdentifier1 = model.createUniqueProductIdentifier()
+    const uniqueModelIdentifier2 = model.createUniqueProductIdentifier()
 
-    expect(model.id).toBeDefined();
+    expect(model.id).toBeDefined()
     expect(model.uniqueProductIdentifiers).toEqual([
       uniqueModelIdentifier1,
       uniqueModelIdentifier2,
-    ]);
-    expect(uniqueModelIdentifier1.referenceId).toEqual(model.id);
-    expect(uniqueModelIdentifier2.referenceId).toEqual(model.id);
-  });
+    ])
+    expect(uniqueModelIdentifier1.referenceId).toEqual(model.id)
+    expect(uniqueModelIdentifier2.referenceId).toEqual(model.id)
+  })
 
   it('should create new model', () => {
     const model = Model.create({
@@ -35,11 +35,11 @@ describe('Model', () => {
       userId,
       organizationId,
       template,
-    });
+    })
 
-    expect(model.isOwnedBy(organizationId)).toBeTruthy();
-    expect(model.isOwnedBy(randomUUID())).toBeFalsy();
-  });
+    expect(model.isOwnedBy(organizationId)).toBeTruthy()
+    expect(model.isOwnedBy(randomUUID())).toBeFalsy()
+  })
 
   it('is created from plain with defaults', () => {
     const model = Model.create({
@@ -48,21 +48,21 @@ describe('Model', () => {
       organizationId,
       description: 'my description',
       template,
-    });
-    expect(model.id).toEqual(expect.any(String));
-    expect(model.name).toEqual('My name');
-    expect(model.description).toEqual('my description');
-    expect(model.uniqueProductIdentifiers).toEqual([]);
-    expect(model.templateId).toEqual(template.id);
+    })
+    expect(model.id).toEqual(expect.any(String))
+    expect(model.name).toEqual('My name')
+    expect(model.description).toEqual('my description')
+    expect(model.uniqueProductIdentifiers).toEqual([])
+    expect(model.templateId).toEqual(template.id)
 
-    expect(model.dataValues).toEqual([]);
-  });
+    expect(model.dataValues).toEqual([])
+  })
 
   it('is created from persistence', () => {
-    const id = randomUUID();
-    const name = 'My name';
-    const description = 'Some description';
-    const templateId = randomUUID();
+    const id = randomUUID()
+    const name = 'My name'
+    const description = 'Some description'
+    const templateId = randomUUID()
     const dataValues = [
       {
         value: 'value1',
@@ -76,10 +76,10 @@ describe('Model', () => {
         dataFieldId: 'dataField 2',
         row: 0,
       },
-    ];
+    ]
 
-    const createdByUserId = randomUUID();
-    const ownedByOrganizationId = randomUUID();
+    const createdByUserId = randomUUID()
+    const ownedByOrganizationId = randomUUID()
 
     const model = Model.loadFromDb({
       id,
@@ -87,17 +87,17 @@ describe('Model', () => {
       organizationId: ownedByOrganizationId,
       userId: createdByUserId,
       uniqueProductIdentifiers: [],
-      templateId: templateId,
+      templateId,
       dataValues,
       description,
-    });
-    expect(model.id).toEqual(id);
-    expect(model.name).toEqual(name);
-    expect(model.description).toEqual(description);
-    expect(model.isOwnedBy(ownedByOrganizationId)).toBeTruthy();
-    expect(model.dataValues).toEqual(dataValues);
-    expect(model.templateId).toEqual(templateId);
-  });
+    })
+    expect(model.id).toEqual(id)
+    expect(model.name).toEqual(name)
+    expect(model.description).toEqual(description)
+    expect(model.isOwnedBy(ownedByOrganizationId)).toBeTruthy()
+    expect(model.dataValues).toEqual(dataValues)
+    expect(model.templateId).toEqual(templateId)
+  })
 
   it('add data values', () => {
     const model = Model.create({
@@ -105,7 +105,7 @@ describe('Model', () => {
       userId,
       organizationId,
       template,
-    });
+    })
     model.addDataValues([
       DataValue.create({
         dataFieldId: 'fieldId2',
@@ -131,7 +131,7 @@ describe('Model', () => {
         value: 'value 5',
         row: 1,
       }),
-    ]);
+    ])
     expect(model.dataValues).toEqual(
       ignoreIds([
         DataValue.create({
@@ -159,8 +159,8 @@ describe('Model', () => {
           row: 1,
         }),
       ]),
-    );
-  });
+    )
+  })
 
   it('add data values fails if data values already exist', () => {
     const dataValues = [
@@ -170,14 +170,14 @@ describe('Model', () => {
         dataFieldId: 'fieldId1',
         row: 0,
       }),
-    ];
+    ]
     const model = Model.create({
       name: 'my name',
       userId,
       organizationId,
       template,
-    });
-    model.addDataValues(dataValues);
+    })
+    model.addDataValues(dataValues)
 
     expect(() =>
       model.addDataValues([
@@ -196,8 +196,8 @@ describe('Model', () => {
       ]),
     ).toThrowError(
       'Data value for section sid1, field fieldId1, row 0 already exists',
-    );
-  });
+    )
+  })
 
   it('is renamed', () => {
     const model = Model.create({
@@ -205,12 +205,12 @@ describe('Model', () => {
       userId,
       organizationId,
       template,
-    });
-    model.rename('new Name');
-    model.modifyDescription('new description');
-    expect(model.name).toEqual('new Name');
-    expect(model.description).toEqual('new description');
-  });
+    })
+    model.rename('new Name')
+    model.modifyDescription('new description')
+    expect(model.name).toEqual('new Name')
+    expect(model.description).toEqual('new description')
+  })
 
   it('modifies data values', () => {
     const dataValue1 = DataValue.create({
@@ -218,13 +218,13 @@ describe('Model', () => {
       dataSectionId: 's1',
       dataFieldId: 'f1',
       row: 0,
-    });
+    })
     const dataValue3 = DataValue.create({
       value: 'v3',
       dataSectionId: 's2',
       dataFieldId: 'f3',
       row: 0,
-    });
+    })
     const dataValues = [
       dataValue1,
       DataValue.create({
@@ -234,14 +234,14 @@ describe('Model', () => {
         row: 0,
       }),
       dataValue3,
-    ];
+    ]
     const model = Model.create({
       name: 'my name',
       userId,
       organizationId,
       template,
-    });
-    model.addDataValues(dataValues);
+    })
+    model.addDataValues(dataValues)
     const dataValueUpdates = [
       DataValue.create({
         dataFieldId: dataValue1.dataFieldId,
@@ -255,8 +255,8 @@ describe('Model', () => {
         value: 'v3 new',
         row: 0,
       }),
-    ];
-    model.modifyDataValues(dataValueUpdates);
+    ]
+    model.modifyDataValues(dataValueUpdates)
     expect(model.dataValues).toEqual(
       ignoreIds([
         DataValue.create({
@@ -278,25 +278,25 @@ describe('Model', () => {
           row: 0,
         }),
       ]),
-    );
-  });
+    )
+  })
 
-  describe('DataValue', () => {
+  describe('dataValue', () => {
     it('should create from plain object', () => {
       const plain = {
         value: 'test-value',
         dataSectionId: 'section-1',
         dataFieldId: 'field-1',
         row: 3,
-      };
+      }
 
-      const dataValue = DataValue.create(plain);
+      const dataValue = DataValue.create(plain)
 
-      expect(dataValue.value).toBe('test-value');
-      expect(dataValue.dataSectionId).toBe('section-1');
-      expect(dataValue.dataFieldId).toBe('field-1');
-      expect(dataValue.row).toBe(3);
-    });
+      expect(dataValue.value).toBe('test-value')
+      expect(dataValue.dataSectionId).toBe('section-1')
+      expect(dataValue.dataFieldId).toBe('field-1')
+      expect(dataValue.row).toBe(3)
+    })
 
     it('should ignore extra properties when creating from plain', () => {
       const plain = {
@@ -304,14 +304,14 @@ describe('Model', () => {
         dataSectionId: 'section-1',
         dataFieldId: 'field-1',
         extraProperty: 'should be ignored',
-      };
+      }
 
-      const dataValue = DataValue.create(plain as any);
+      const dataValue = DataValue.create(plain as any)
 
-      expect(dataValue.value).toBe('test-value');
-      expect((dataValue as any).extraProperty).toBeUndefined();
-    });
-  });
+      expect(dataValue.value).toBe('test-value')
+      expect((dataValue as any).extraProperty).toBeUndefined()
+    })
+  })
 
   it('should initialize data values', () => {
     // Create a mock product data model
@@ -331,16 +331,16 @@ describe('Model', () => {
           row: 0,
         }),
       ]),
-    } as unknown as Template;
+    } as unknown as Template
     const model = Model.create({
       name: 'Test Model',
       userId,
       organizationId,
       template,
-    });
+    })
 
-    expect(model.templateId).toBe('pdm-1');
-    expect(model.dataValues).toHaveLength(2);
-    expect(template.createInitialDataValues).toHaveBeenCalled();
-  });
-});
+    expect(model.templateId).toBe('pdm-1')
+    expect(model.dataValues).toHaveLength(2)
+    expect(template.createInitialDataValues).toHaveBeenCalled()
+  })
+})

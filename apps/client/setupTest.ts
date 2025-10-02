@@ -1,6 +1,6 @@
-import { beforeAll } from 'vitest';
-import * as ResizeObserverModule from 'resize-observer-polyfill';
+import * as ResizeObserverModule from "resize-observer-polyfill";
+import { beforeAll } from "vitest";
 
 beforeAll(() => {
-  global.ResizeObserver = ResizeObserverModule.default;
+  (globalThis as any).ResizeObserver = ResizeObserverModule.default;
 });

@@ -1,3 +1,22 @@
+<script lang="ts" setup>
+import type { FunctionalComponent } from "vue";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/vue";
+
+defineProps<{
+  icon: FunctionalComponent;
+  title?: string;
+  items: Array<{
+    icon?: FunctionalComponent;
+    text: string;
+  }>;
+  position?: "above" | "below";
+}>();
+
+const emits = defineEmits<{
+  (e: "itemClicked", index: number): void;
+}>();
+</script>
+
 <template>
   <Menu as="div" class="relative inline-block text-left">
     <div class="h-full">
@@ -19,12 +38,13 @@
       leave-to-class="transform opacity-0 scale-95"
     >
       <MenuItems
-        :class="[
-          'absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-hidden',
+        class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-hidden" :class="[
           position === 'above' ? 'bottom-full' : 'top-full',
         ]"
       >
-        <div class="px-4 py-2 text-xl font-bold">{{ title }}</div>
+        <div class="px-4 py-2 text-xl font-bold">
+          {{ title }}
+        </div>
         <div class="py-1">
           <MenuItem
             v-for="(item, index) in items"
@@ -32,20 +52,18 @@
             v-slot="{ active }"
           >
             <button
-              :class="[
+              class="group flex items-center px-4 py-2 text-sm w-full hover:cursor-pointer" :class="[
                 active
                   ? 'bg-gray-100 text-gray-900 outline-hidden'
                   : 'text-gray-700',
-                'group flex items-center px-4 py-2 text-sm w-full hover:cursor-pointer',
               ]"
-              @click="emits('item-clicked', index)"
+              @click="emits('itemClicked', index)"
             >
               <component
                 :is="item.icon"
                 v-if="item.icon"
-                :class="[
+                class="mr-3 size-5 text-gray-400" :class="[
                   active ? 'text-gray-500' : '',
-                  'mr-3 size-5 text-gray-400',
                 ]"
                 aria-hidden="true"
               />
@@ -57,22 +75,3 @@
     </transition>
   </Menu>
 </template>
-
-<script lang="ts" setup>
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
-import type { FunctionalComponent } from 'vue';
-
-defineProps<{
-  icon: FunctionalComponent;
-  title?: string;
-  items: Array<{
-    icon?: FunctionalComponent;
-    text: string;
-  }>;
-  position?: 'above' | 'below';
-}>();
-
-const emits = defineEmits<{
-  (e: 'item-clicked', index: number): void;
-}>();
-</script>

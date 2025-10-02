@@ -1,3 +1,25 @@
+<script lang="ts" setup>
+import type { DataFieldDto, SectionDto } from "@open-dpp/api-client";
+import { DataFieldType } from "@open-dpp/api-client";
+import {
+  SidebarContentType,
+  useDraftSidebarStore,
+} from "../../stores/draftSidebar";
+import DraftDataFieldGeneric from "./draft-data-field-types/DraftDataFieldGeneric.vue";
+import DraftDataFieldUnsupported from "./draft-data-field-types/DraftDataFieldUnsupported.vue";
+
+const props = defineProps<{ dataField: DataFieldDto; section: SectionDto }>();
+
+const draftSidebarStore = useDraftSidebarStore();
+
+function onClicked() {
+  draftSidebarStore.open(SidebarContentType.DATA_FIELD_FORM, {
+    type: props.dataField.type,
+    id: props.dataField.id,
+  });
+}
+</script>
+
 <template>
   <div>
     <DraftDataFieldGeneric
@@ -16,24 +38,3 @@
     <DraftDataFieldUnsupported v-else :data-field="props.dataField" />
   </div>
 </template>
-
-<script lang="ts" setup>
-import { DataFieldDto, DataFieldType, SectionDto } from '@open-dpp/api-client';
-import {
-  SidebarContentType,
-  useDraftSidebarStore,
-} from '../../stores/draftSidebar';
-import DraftDataFieldUnsupported from './draft-data-field-types/DraftDataFieldUnsupported.vue';
-import DraftDataFieldGeneric from './draft-data-field-types/DraftDataFieldGeneric.vue';
-
-const props = defineProps<{ dataField: DataFieldDto; section: SectionDto }>();
-
-const draftSidebarStore = useDraftSidebarStore();
-
-const onClicked = () => {
-  draftSidebarStore.open(SidebarContentType.DATA_FIELD_FORM, {
-    type: props.dataField.type,
-    id: props.dataField.id,
-  });
-};
-</script>

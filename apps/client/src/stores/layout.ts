@@ -1,9 +1,9 @@
-import { defineStore } from 'pinia';
-import { computed, ref } from 'vue';
-import { RouteParamsGeneric, RouteRecordRaw } from 'vue-router';
+import type { RouteParamsGeneric, RouteRecordRaw } from "vue-router";
+import { defineStore } from "pinia";
+import { computed, ref } from "vue";
 
 export enum ModalType {
-  INVITE_USER_MODAL = 'inviteUserModal',
+  INVITE_USER_MODAL = "inviteUserModal",
 }
 
 export enum SidebarType {}
@@ -19,14 +19,14 @@ export interface QuickAccessItem {
   path: string;
 }
 
-export const useLayoutStore = defineStore('layout', () => {
+export const useLayoutStore = defineStore("layout", () => {
   const breadcrumbs = ref<BreadcrumbItem[]>([]);
   const modalOpen = ref<ModalType | null>(null);
   const sidebarOpen = ref<SidebarType | null>(null);
   const isPageLoading = ref(false);
   const quickAccessItems = ref<QuickAccessItem[]>(
-    localStorage.getItem('quickAccessItems')
-      ? JSON.parse(localStorage.getItem('quickAccessItems')!)
+    localStorage.getItem("quickAccessItems")
+      ? JSON.parse(localStorage.getItem("quickAccessItems")!)
       : [],
   );
 
@@ -55,14 +55,14 @@ export const useLayoutStore = defineStore('layout', () => {
 
   const addQuickAccessItem = (item: QuickAccessItem) => {
     quickAccessItems.value = quickAccessItems.value.filter(
-      (i) => i.path === item.path,
+      i => i.path === item.path,
     );
     if (quickAccessItems.value.length === 5) {
       quickAccessItems.value.pop();
     }
     quickAccessItems.value.push(item);
     localStorage.setItem(
-      'quickAccessItems',
+      "quickAccessItems",
       JSON.stringify(quickAccessItems.value),
     );
   };

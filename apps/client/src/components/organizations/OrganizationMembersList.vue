@@ -1,3 +1,21 @@
+<script lang="ts" setup>
+import type { OrganizationDto, UserDto } from "@open-dpp/api-client";
+import { UserCircleIcon } from "@heroicons/vue/24/solid";
+import { ModalType, useLayoutStore } from "../../stores/layout";
+import InviteMemberDialog from "./InviteMemberDialog.vue";
+
+defineProps<{
+  organization: OrganizationDto;
+  members: Array<UserDto>;
+}>();
+
+const emit = defineEmits<{
+  (e: "invitedUser"): void;
+}>();
+
+const layoutStore = useLayoutStore();
+</script>
+
 <template>
   <div class="px-4 sm:px-6 lg:px-8">
     <div class="sm:flex sm:items-center">
@@ -59,7 +77,9 @@
                       <div class="font-medium text-gray-900">
                         {{ member.email }}
                       </div>
-                      <div class="mt-1 text-gray-500">{{ member.email }}</div>
+                      <div class="mt-1 text-gray-500">
+                        {{ member.email }}
+                      </div>
                     </div>
                   </div>
                 </td>
@@ -85,20 +105,3 @@
     </div>
   </div>
 </template>
-<script lang="ts" setup>
-import { OrganizationDto, UserDto } from '@open-dpp/api-client';
-import { UserCircleIcon } from '@heroicons/vue/24/solid';
-import InviteMemberDialog from './InviteMemberDialog.vue';
-import { ModalType, useLayoutStore } from '../../stores/layout';
-
-const layoutStore = useLayoutStore();
-
-defineProps<{
-  organization: OrganizationDto;
-  members: Array<UserDto>;
-}>();
-
-const emit = defineEmits<{
-  (e: 'invitedUser'): void;
-}>();
-</script>

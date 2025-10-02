@@ -1,24 +1,28 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import { v4 as uuidv4 } from 'uuid';
+import { defineStore } from "pinia";
+import { v4 as uuidv4 } from "uuid";
+import { ref } from "vue";
 
 export enum NotificationType {
-  SUCCESS = 'Success',
-  ERROR = 'Error',
-  INFO = 'Info',
-  WARNING = 'Warning',
+  SUCCESS = "Success",
+  ERROR = "Error",
+  INFO = "Info",
+  WARNING = "Warning",
 }
 
-type ActionLink = { to: string; label: string };
-export type Notification = {
+interface ActionLink { to: string; label: string }
+export interface Notification {
   id: string;
   type: NotificationType;
   message: string;
   actionLink?: ActionLink;
-};
+}
 
-export const useNotificationStore = defineStore('notification', () => {
+export const useNotificationStore = defineStore("notification", () => {
   const notifications = ref<Notification[]>([]);
+
+  const removeNotification = (id: string) => {
+    notifications.value = notifications.value.filter(n => n.id !== id);
+  };
 
   const addNotification = (
     message: string,
@@ -69,9 +73,6 @@ export const useNotificationStore = defineStore('notification', () => {
     duration: number = 6000,
   ) => addNotification(message, NotificationType.WARNING, actionLink, duration);
 
-  const removeNotification = (id: string) => {
-    notifications.value = notifications.value.filter((n) => n.id !== id);
-  };
   return {
     notifications,
     removeNotification,

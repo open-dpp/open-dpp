@@ -1,31 +1,35 @@
+import type {
+  PipeTransform,
+} from '@nestjs/common'
 import {
-  ArgumentMetadata,
   BadRequestException,
   Injectable,
-  PipeTransform,
-} from '@nestjs/common';
+} from '@nestjs/common'
 
 // Define a minimal interface to decouple from specific Zod types
-type SafeParseable = {
+interface SafeParseable {
   safeParse: (
     value: unknown,
-  ) => { success: true; data: unknown } | { success: false; error: any };
-};
+  ) => { success: true, data: unknown } | { success: false, error: any }
+}
 
 @Injectable()
 export class ZodValidationPipe implements PipeTransform {
-  constructor(private schema: SafeParseable) {}
+  private schema: SafeParseable
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  transform(value: unknown, metadata: ArgumentMetadata) {
-    const result = this.schema.safeParse(value);
+  constructor(schema: SafeParseable) {
+    this.schema = schema
+  }
+
+  transform(value: unknown) {
+    const result = this.schema.safeParse(value)
     if (!result.success) {
-      const issues = result.error.issues;
+      const issues = (result as { success: false, error: any }).error.issues
       throw new BadRequestException({
         message: 'Validation failed',
         errors: issues,
-      });
+      })
     }
-    return result.data;
+    return result.data
   }
 }

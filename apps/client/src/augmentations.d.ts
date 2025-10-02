@@ -1,9 +1,9 @@
 // Ensure this file is parsed as a module regardless of dependencies.
 export {};
 
-type layout = 'default' | 'presentation';
+type layout = "default" | "presentation";
 
-declare module 'vue-router' {
+declare module "vue-router" {
   interface RouteMeta {
     layout: layout;
   }

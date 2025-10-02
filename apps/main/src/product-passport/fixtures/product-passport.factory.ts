@@ -1,14 +1,14 @@
-import { randomUUID } from 'crypto';
-import { TemplateDbProps } from '../../templates/domain/template';
-import { SectionType } from '../../data-modelling/domain/section-base';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { ModelDbProps } from '../../models/domain/model';
-import { DataValue } from '../../product-passport-data/domain/data-value';
-import { ItemDbProps } from '../../items/domain/item';
-import { Factory } from 'fishery';
-import { sectionDbPropsFactory } from '../../templates/fixtures/section.factory';
-import { Sector } from '@open-dpp/api-client';
+import type { ItemDbProps } from '../../items/domain/item'
+import type { ModelDbProps } from '../../models/domain/model'
+import type { TemplateDbProps } from '../../templates/domain/template'
+import { randomUUID } from 'node:crypto'
+import { Sector } from '@open-dpp/api-client'
+import { Factory } from 'fishery'
+import { DataFieldType } from '../../data-modelling/domain/data-field-base'
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
+import { SectionType } from '../../data-modelling/domain/section-base'
+import { DataValue } from '../../product-passport-data/domain/data-value'
+import { sectionDbPropsFactory } from '../../templates/fixtures/section.factory'
 
 export class PhoneFactory extends Factory<TemplateDbProps> {
   static ids = {
@@ -47,7 +47,7 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
         dataFieldIdForItem4: randomUUID(),
       },
     },
-  };
+  }
 
   section1() {
     return sectionDbPropsFactory.params({
@@ -73,7 +73,7 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
           granularityLevel: GranularityLevel.MODEL,
         },
       ],
-    });
+    })
   }
 
   section2() {
@@ -99,7 +99,7 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
           granularityLevel: GranularityLevel.MODEL,
         },
       ],
-    });
+    })
   }
 
   section3() {
@@ -124,7 +124,7 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
           granularityLevel: GranularityLevel.ITEM,
         },
       ],
-    });
+    })
   }
 
   sectionForItem1() {
@@ -150,7 +150,7 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
           granularityLevel: GranularityLevel.ITEM,
         },
       ],
-    });
+    })
   }
 
   sectionForItem2() {
@@ -176,7 +176,7 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
           granularityLevel: GranularityLevel.ITEM,
         },
       ],
-    });
+    })
   }
 
   addSections() {
@@ -194,7 +194,7 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
         }),
         this.section3().build(),
       ],
-    });
+    })
   }
 }
 
@@ -208,7 +208,7 @@ export const phoneFactory = PhoneFactory.define(() => ({
   organizationId: randomUUID(),
   userId: randomUUID(),
   sections: [],
-}));
+}))
 
 export class PhoneModelFactory extends Factory<ModelDbProps> {
   dataValuesSection1() {
@@ -237,7 +237,7 @@ export class PhoneModelFactory extends Factory<ModelDbProps> {
         value: 'val2,1',
         row: 1,
       }),
-    ];
+    ]
   }
 
   dataValuesSection2() {
@@ -266,7 +266,7 @@ export class PhoneModelFactory extends Factory<ModelDbProps> {
         value: 'val4,1',
         row: 1,
       }),
-    ];
+    ]
   }
 
   dataValuesSection3() {
@@ -277,7 +277,7 @@ export class PhoneModelFactory extends Factory<ModelDbProps> {
         value: 'val5,0',
         row: 0,
       }),
-    ];
+    ]
   }
 
   addDataValues() {
@@ -287,7 +287,7 @@ export class PhoneModelFactory extends Factory<ModelDbProps> {
         ...this.dataValuesSection2(),
         ...this.dataValuesSection3(),
       ],
-    });
+    })
   }
 }
 
@@ -300,7 +300,7 @@ export const phoneModelFactory = PhoneModelFactory.define(() => ({
   userId: randomUUID(),
   uniqueProductIdentifiers: [],
   dataValues: [],
-}));
+}))
 
 export class PhoneItemFactory extends Factory<ItemDbProps> {
   dataValuesSectionForItem1() {
@@ -333,7 +333,7 @@ export class PhoneItemFactory extends Factory<ItemDbProps> {
         value: 'val2,1,item',
         row: 1,
       }),
-    ];
+    ]
   }
 
   dataValuesSectionForItem2() {
@@ -366,8 +366,9 @@ export class PhoneItemFactory extends Factory<ItemDbProps> {
         value: 'val4,1,item',
         row: 1,
       }),
-    ];
+    ]
   }
+
   dataValuesSection3() {
     return [
       DataValue.create({
@@ -376,7 +377,7 @@ export class PhoneItemFactory extends Factory<ItemDbProps> {
         value: 'val5,0,item',
         row: 0,
       }),
-    ];
+    ]
   }
 
   addDataValues() {
@@ -386,12 +387,12 @@ export class PhoneItemFactory extends Factory<ItemDbProps> {
         ...this.dataValuesSectionForItem2(),
         ...this.dataValuesSection3(),
       ],
-    });
+    })
   }
 }
 
 export const phoneItemFactory = PhoneItemFactory.define(({ params }) => {
-  const id = params.id ?? randomUUID();
+  const id = params.id ?? randomUUID()
   return {
     id,
     templateId: randomUUID(),
@@ -405,5 +406,5 @@ export const phoneItemFactory = PhoneItemFactory.define(({ params }) => {
       },
     ],
     dataValues: [],
-  };
-});
+  }
+})

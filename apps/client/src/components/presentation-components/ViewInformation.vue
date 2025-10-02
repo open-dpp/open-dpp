@@ -1,3 +1,15 @@
+<script lang="ts" setup>
+import { computed } from "vue";
+import { useProductPassportStore } from "../../stores/product-passport";
+import ProductPassportBody from "./ProductPassportBody.vue";
+import ProductPassportHeader from "./ProductPassportHeader.vue";
+import Sidebar from "./Sidebar.vue";
+
+const productPassportStore = useProductPassportStore();
+
+const productPassport = computed(() => productPassportStore.productPassport);
+</script>
+
 <template>
   <div class="w-full my-10">
     <div class="flex flex-row gap-10">
@@ -8,8 +20,8 @@
         <Sidebar data-cy="sidebar" />
       </div>
       <div
-        data-cy="content"
         v-if="productPassport"
+        data-cy="content"
         class="flex flex-col gap-5 w-full"
       >
         <ProductPassportHeader />
@@ -18,15 +30,3 @@
     </div>
   </div>
 </template>
-
-<script lang="ts" setup>
-import Sidebar from './Sidebar.vue';
-import ProductPassportHeader from './ProductPassportHeader.vue';
-import ProductPassportBody from './ProductPassportBody.vue';
-import { useProductPassportStore } from '../../stores/product-passport';
-import { computed } from 'vue';
-
-const productPassportStore = useProductPassportStore();
-
-const productPassport = computed(() => productPassportStore.productPassport);
-</script>

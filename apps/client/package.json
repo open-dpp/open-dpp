@@ -1,14 +1,15 @@
 {
   "name": "admin",
-  "private": true,
-  "version": "0.0.0",
   "type": "module",
+  "version": "0.0.0",
+  "private": true,
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b --noEmit && vite build",
     "check-ts": "vue-tsc --noEmit",
-    "lint": "eslint --fix src",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
     "test": "vitest --run src",
     "cypress": "cypress open --component",
     "cypress:headless": "cypress run --component --headless",
@@ -38,6 +39,7 @@
   "devDependencies": {
     "@cypress/vue": "^6.0.2",
     "@eslint/js": "^9.21.0",
+    "@open-dpp/config-eslint": "workspace:*",
     "@tailwindcss/postcss": "^4.0.9",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/vue": "^8.1.0",

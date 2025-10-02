@@ -1,19 +1,21 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import apiClient from '../lib/api-client';
-import {
+import type {
   DataFieldDraftCreateDto,
   DataFieldDraftUpdateDto,
-  MoveDirection,
-  MoveType,
   SectionDraftCreateDto,
   SectionDraftUpdateDto,
   TemplateDraftCreateDto,
   TemplateDraftDto,
   VisibilityLevel,
-} from '@open-dpp/api-client';
+} from "@open-dpp/api-client";
+import {
+  MoveDirection,
+  MoveType,
+} from "@open-dpp/api-client";
+import { defineStore } from "pinia";
+import { ref } from "vue";
+import apiClient from "../lib/api-client";
 
-export const useDraftStore = defineStore('draft', () => {
+export const useDraftStore = defineStore("draft", () => {
   const draft = ref<TemplateDraftDto>();
 
   const createDraft = async (data: TemplateDraftCreateDto) => {
@@ -75,12 +77,12 @@ export const useDraftStore = defineStore('draft', () => {
   };
 
   const findSectionById = (sectionId: string) => {
-    return draft.value?.sections.find((s) => s.id === sectionId);
+    return draft.value?.sections.find(s => s.id === sectionId);
   };
 
   const findSectionOfDataField = (dataFieldId: string) => {
-    return draft.value?.sections.find((s) =>
-      s.dataFields.some((d) => d.id === dataFieldId),
+    return draft.value?.sections.find(s =>
+      s.dataFields.some(d => d.id === dataFieldId),
     );
   };
 
@@ -88,7 +90,7 @@ export const useDraftStore = defineStore('draft', () => {
     if (draft.value) {
       for (const section of draft.value.sections) {
         const foundDataField = section.dataFields.find(
-          (d) => d.id === dataFieldId,
+          d => d.id === dataFieldId,
         );
         if (foundDataField) {
           return foundDataField;
@@ -156,8 +158,6 @@ export const useDraftStore = defineStore('draft', () => {
   ) => {
     const section = findSectionOfDataField(dataFieldId);
     if (draft.value && section) {
-      console.log('api client', apiClient.dpp.templateDrafts);
-
       const response = await apiClient.dpp.templateDrafts.moveDataField(
         draft.value.id,
         section.id,

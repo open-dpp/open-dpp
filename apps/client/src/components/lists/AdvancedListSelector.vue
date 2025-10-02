@@ -1,3 +1,136 @@
+<script generic="T extends AdvancedListItem" lang="ts" setup>
+import type { FunctionalComponent } from "vue";
+import type { AdvancedListItem } from "./AdvancedListItem.interface";
+import {
+  EllipsisVerticalIcon,
+  FunnelIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/vue/16/solid";
+import { computed, ref } from "vue";
+import Dropdown from "../Dropdown.vue";
+import Pagination from "./Pagination.vue";
+
+const props = defineProps<{
+  headers: string[];
+  items: Array<T>;
+  itemActions?: Array<{
+    text: string;
+    icon?: FunctionalComponent;
+  }>;
+  pagination?:
+    | boolean
+    | {
+      rowsPerPage?: number;
+    };
+  selection?: {
+    multiple?: boolean;
+    multipleActions?: boolean;
+  };
+  searchable?: boolean;
+  search?: string;
+  sortable?: boolean;
+  selected?: Array<T>;
+  title?: string;
+  subtitle?: string;
+  showOptions?: boolean;
+  hideIdColumn?: boolean;
+}>();
+
+const emits = defineEmits<{
+  (e: "updateSelectedItems", item: T[]): void;
+  (e: "updateSearch", value: string): void;
+  (e: "itemAction", itemId: string, actionIndex: number): void;
+}>();
+
+const defaults = {
+  rowsPerPage: 5,
+};
+
+const page = ref<number>(0);
+
+const headers = computed(() =>
+  props.itemActions && props.itemActions.length > 0
+    ? [...props.headers, "Aktionen"]
+    : props.headers,
+);
+
+const rowsPerPage = computed(() => {
+  if (typeof props.pagination === "boolean") {
+    return defaults.rowsPerPage;
+  }
+  return props.pagination?.rowsPerPage ?? defaults.rowsPerPage;
+});
+
+const selectedItems = computed(() => {
+  return props.selected ?? [];
+});
+
+const filteredItems = computed(() => {
+  if (props.search === undefined) {
+    return props.items;
+  }
+  return props.items.filter(item =>
+    Object.values(item).some(value =>
+      String(value)
+        .toLowerCase()
+        .includes((props.search ?? "").toLowerCase()),
+    ),
+  );
+});
+
+const itemsOfPage = computed(() => {
+  if (props.pagination) {
+    return filteredItems.value.slice(
+      page.value * rowsPerPage.value,
+      (page.value + 1) * rowsPerPage.value,
+    );
+  }
+  return filteredItems.value;
+});
+
+function isSelected(item: T) {
+  return selectedItems.value.some(
+    selectedItem => selectedItem.id === item.id,
+  );
+}
+
+function toggleSelectedItem(item: T) {
+  if (props.selection?.multiple) {
+    const selected = [...(props.selected ?? [])];
+    if (isSelected(item)) {
+      const index = selected.findIndex(
+        selectedItem => selectedItem.id === item.id,
+      );
+      selected.splice(index, 1);
+    }
+    else {
+      selected.push(item);
+    }
+    emits("updateSelectedItems", selected);
+  }
+  else {
+    if (isSelected(item)) {
+      emits("updateSelectedItems", []);
+    }
+    else {
+      emits("updateSelectedItems", [item]);
+    }
+  }
+}
+
+function toggleSelectAll() {
+  if (!props.selection?.multiple) {
+    return;
+  }
+  if (selectedItems.value.length === 0) {
+    emits("updateSelectedItems", props.items);
+  }
+  else {
+    emits("updateSelectedItems", []);
+  }
+}
+</script>
+
 <template>
   <div>
     <div class="sm:flex sm:items-center">
@@ -33,11 +166,11 @@
                 @input="
                   (event) =>
                     emits(
-                      'update-search',
+                      'updateSearch',
                       (event.target as HTMLInputElement).value,
                     )
                 "
-              />
+              >
               <MagnifyingGlassIcon
                 aria-hidden="true"
                 class="pointer-events-none col-start-1 row-start-1 ml-3 size-5 self-center text-gray-400"
@@ -68,11 +201,11 @@
           <div class="relative">
             <div
               v-if="
-                selection &&
-                selection.multiple &&
-                selected &&
-                selected.length > 0 &&
-                selection.multipleActions
+                selection
+                  && selection.multiple
+                  && selected
+                  && selected.length > 0
+                  && selection.multipleActions
               "
               class="absolute top-0 left-14 flex h-12 items-center space-x-3 bg-white sm:left-12"
             >
@@ -106,7 +239,7 @@
                         class="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
                         type="checkbox"
                         @click="toggleSelectAll"
-                      />
+                      >
                     </div>
                   </th>
                   <th
@@ -148,12 +281,11 @@
                       type="checkbox"
                       @input="toggleSelectedItem(item)"
                       @click.stop
-                    />
+                    >
                   </td>
                   <td
                     v-if="!hideIdColumn"
-                    :class="[
-                      'py-4 pr-3 text-sm font-medium whitespace-nowrap',
+                    class="py-4 pr-3 text-sm font-medium whitespace-nowrap" :class="[
                       isSelected(item) ? 'text-indigo-600' : 'text-gray-900',
                     ]"
                   >
@@ -178,7 +310,7 @@
                       "
                       title="Aktionen"
                       @item-clicked="
-                        (index) => emits('item-action', item.id, index)
+                        (index) => emits('itemAction', item.id, index)
                       "
                     />
                   </td>
@@ -207,131 +339,3 @@
     </div>
   </div>
 </template>
-
-<script generic="T extends AdvancedListItem" lang="ts" setup>
-import { computed, type FunctionalComponent, ref } from 'vue';
-import { AdvancedListItem } from './AdvancedListItem.interface';
-import {
-  EllipsisVerticalIcon,
-  FunnelIcon,
-  MagnifyingGlassIcon,
-} from '@heroicons/vue/16/solid';
-import Dropdown from '../Dropdown.vue';
-import Pagination from './Pagination.vue';
-
-const defaults = {
-  rowsPerPage: 5,
-};
-
-const props = defineProps<{
-  headers: string[];
-  items: Array<T>;
-  itemActions?: Array<{
-    text: string;
-    icon?: FunctionalComponent;
-  }>;
-  pagination?:
-    | boolean
-    | {
-        rowsPerPage?: number;
-      };
-  selection?: {
-    multiple?: boolean;
-    multipleActions?: boolean;
-  };
-  searchable?: boolean;
-  search?: string;
-  sortable?: boolean;
-  selected?: Array<T>;
-  title?: string;
-  subtitle?: string;
-  showOptions?: boolean;
-  hideIdColumn?: boolean;
-}>();
-
-const emits = defineEmits<{
-  (e: 'update-selected-items', item: T[]): void;
-  (e: 'update-search', value: string): void;
-  (e: 'item-action', itemId: string, actionIndex: number): void;
-}>();
-
-const page = ref<number>(0);
-
-const headers = computed(() =>
-  props.itemActions && props.itemActions.length > 0
-    ? [...props.headers, 'Aktionen']
-    : props.headers,
-);
-
-const rowsPerPage = computed(() => {
-  if (typeof props.pagination === 'boolean') {
-    return defaults.rowsPerPage;
-  }
-  return props.pagination?.rowsPerPage ?? defaults.rowsPerPage;
-});
-
-const selectedItems = computed(() => {
-  return props.selected ?? [];
-});
-
-const filteredItems = computed(() => {
-  if (props.search === undefined) {
-    return props.items;
-  }
-  return props.items.filter((item) =>
-    Object.values(item).some((value) =>
-      String(value)
-        .toLowerCase()
-        .includes((props.search ?? '').toLowerCase()),
-    ),
-  );
-});
-
-const itemsOfPage = computed(() => {
-  if (props.pagination) {
-    return filteredItems.value.slice(
-      page.value * rowsPerPage.value,
-      (page.value + 1) * rowsPerPage.value,
-    );
-  }
-  return filteredItems.value;
-});
-
-const isSelected = (item: T) => {
-  return selectedItems.value.some(
-    (selectedItem) => selectedItem.id === item.id,
-  );
-};
-
-const toggleSelectedItem = (item: T) => {
-  if (props.selection?.multiple) {
-    const selected = [...(props.selected ?? [])];
-    if (isSelected(item)) {
-      const index = selected.findIndex(
-        (selectedItem) => selectedItem.id === item.id,
-      );
-      selected.splice(index, 1);
-    } else {
-      selected.push(item);
-    }
-    emits('update-selected-items', selected);
-  } else {
-    if (isSelected(item)) {
-      emits('update-selected-items', []);
-    } else {
-      emits('update-selected-items', [item]);
-    }
-  }
-};
-
-const toggleSelectAll = () => {
-  if (!props.selection?.multiple) {
-    return;
-  }
-  if (selectedItems.value.length === 0) {
-    emits('update-selected-items', props.items);
-  } else {
-    emits('update-selected-items', []);
-  }
-};
-</script>

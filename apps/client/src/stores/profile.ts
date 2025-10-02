@@ -1,14 +1,14 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { defineStore } from "pinia";
+import { ref } from "vue";
 
-type Profile = {
+interface Profile {
   name: string;
   email: string;
   firstName: string;
   lastName: string;
-};
+}
 
-export const useProfileStore = defineStore('profile', () => {
+export const useProfileStore = defineStore("profile", () => {
   const profile = ref<Profile>();
   const setProfile = (newProfile: Profile) => {
     profile.value = newProfile;

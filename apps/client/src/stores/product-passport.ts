@@ -1,18 +1,18 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import { ProductPassportDto } from '@open-dpp/api-client';
+import type { ProductPassportDto } from "@open-dpp/api-client";
+import { defineStore } from "pinia";
+import { ref } from "vue";
 
-export const useProductPassportStore = defineStore('productPassport', () => {
+export const useProductPassportStore = defineStore("productPassport", () => {
   const productPassport = ref<ProductPassportDto>();
 
   const findSubSections = (sectionId: string) => {
     return productPassport.value?.dataSections.filter(
-      (s) => s.parentId === sectionId,
+      s => s.parentId === sectionId,
     );
   };
 
   const findSection = (sectionId: string) => {
-    return productPassport.value?.dataSections.find((s) => s.id === sectionId);
+    return productPassport.value?.dataSections.find(s => s.id === sectionId);
   };
 
   return { productPassport, findSubSections, findSection };

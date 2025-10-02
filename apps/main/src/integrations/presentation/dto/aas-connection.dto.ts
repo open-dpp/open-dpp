@@ -1,12 +1,12 @@
-import { z } from 'zod';
-import { AssetAdministrationShellType } from '../../domain/asset-administration-shell';
+import { z } from 'zod'
+import { AssetAdministrationShellType } from '../../domain/asset-administration-shell'
 
 export const AasFieldAssignmentSchema = z.object({
   dataFieldId: z.uuid(),
   sectionId: z.uuid(),
   idShortParent: z.string(),
   idShort: z.string(),
-});
+})
 
 export const AasConnectionSchema = z.object({
   id: z.uuid(),
@@ -15,9 +15,9 @@ export const AasConnectionSchema = z.object({
   aasType: z.enum(AssetAdministrationShellType),
   modelId: z.uuid().nullable(),
   fieldAssignments: AasFieldAssignmentSchema.array(),
-});
+})
 
-export type AasConnectionDto = z.infer<typeof AasConnectionSchema>;
+export type AasConnectionDto = z.infer<typeof AasConnectionSchema>
 
 export function aasConnectionToDto(
   aasMapping: AasConnectionDto,
@@ -28,11 +28,11 @@ export function aasConnectionToDto(
     dataModelId: aasMapping.dataModelId,
     aasType: aasMapping.aasType,
     modelId: aasMapping.modelId,
-    fieldAssignments: aasMapping.fieldAssignments.map((fieldAssignment) => ({
+    fieldAssignments: aasMapping.fieldAssignments.map(fieldAssignment => ({
       dataFieldId: fieldAssignment.dataFieldId,
       sectionId: fieldAssignment.sectionId,
       idShort: fieldAssignment.idShort,
       idShortParent: fieldAssignment.idShortParent,
     })),
-  });
+  })
 }

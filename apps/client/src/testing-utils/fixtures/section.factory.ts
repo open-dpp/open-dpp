@@ -1,11 +1,13 @@
-import { Factory } from 'fishery';
-import {
+import type {
   DataFieldDto,
+  SectionDto,
+} from "@open-dpp/api-client";
+import {
   DataFieldType,
   GranularityLevel,
-  SectionDto,
   SectionType,
-} from '@open-dpp/api-client';
+} from "@open-dpp/api-client";
+import { Factory } from "fishery";
 
 export const dataFieldFactory = Factory.define<DataFieldDto>(
   ({ sequence }) => ({
@@ -16,9 +18,9 @@ export const dataFieldFactory = Factory.define<DataFieldDto>(
   }),
 );
 
-type SectionTransientParams = {
+interface SectionTransientParams {
   numberOfDataFields?: number;
-};
+}
 
 export const sectionFactory = Factory.define<
   SectionDto,

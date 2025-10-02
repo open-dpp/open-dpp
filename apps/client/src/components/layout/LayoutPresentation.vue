@@ -1,3 +1,8 @@
+<script lang="ts" setup>
+import Footer from "./Footer.vue";
+import Navbar from "./Navbar.vue";
+</script>
+
 <template>
   <div>
     <div class="xl:max-w-7xl pt-10 mx-auto">
@@ -19,8 +24,3 @@
     </div>
   </div>
 </template>
-
-<script lang="ts" setup>
-import Navbar from './Navbar.vue';
-import Footer from './Footer.vue';
-</script>

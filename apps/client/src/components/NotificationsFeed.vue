@@ -1,3 +1,51 @@
+<script lang="ts" setup>
+import {
+  ChatBubbleLeftEllipsisIcon,
+  TagIcon,
+  UserCircleIcon,
+} from "@heroicons/vue/20/solid";
+
+const activity = [
+  {
+    id: 1,
+    type: "comment",
+    person: { name: "Eduardo Benz", href: "#" },
+    imageUrl:
+      "https://images.unsplash.com/photo-1520785643438-5bf77931f493?ixlib=rb-=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=8&w=256&h=256&q=80",
+    comment:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Tincidunt nunc ipsum tempor purus vitae id. Morbi in vestibulum nec varius. Et diam cursus quis sed purus nam. ",
+    date: "6d ago",
+  },
+  {
+    id: 2,
+    type: "assignment",
+    person: { name: "Hilary Mahy", href: "#" },
+    assigned: { name: "Kristin Watson", href: "#" },
+    date: "2d ago",
+  },
+  {
+    id: 3,
+    type: "tags",
+    person: { name: "Hilary Mahy", href: "#" },
+    tags: [
+      { name: "Bug", href: "#", color: "fill-red-500" },
+      { name: "Accessibility", href: "#", color: "fill-indigo-500" },
+    ],
+    date: "6h ago",
+  },
+  {
+    id: 4,
+    type: "comment",
+    person: { name: "Jason Meyers", href: "#" },
+    imageUrl:
+      "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?ixlib=rb-=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=8&w=256&h=256&q=80",
+    comment:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Tincidunt nunc ipsum tempor purus vitae id. Morbi in vestibulum nec varius. Et diam cursus quis sed purus nam. Scelerisque amet elit non sit ut tincidunt condimentum. Nisl ultrices eu venenatis diam.",
+    date: "2h ago",
+  },
+];
+</script>
+
 <template>
   <div class="flow-root">
     <ul class="-mb-8" role="list">
@@ -18,7 +66,7 @@
                   :src="activityItem.imageUrl"
                   alt=""
                   class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-400 ring-8 ring-white"
-                />
+                >
 
                 <span
                   class="absolute -bottom-0.5 -right-1 rounded-tl bg-white px-0.5 py-px"
@@ -35,8 +83,7 @@
                     <a
                       :href="activityItem.person.href"
                       class="font-medium text-gray-900"
-                      >{{ activityItem.person.name }}</a
-                    >
+                    >{{ activityItem.person.name }}</a>
                   </div>
                   <p class="mt-0.5 text-sm text-gray-500">
                     Commented {{ activityItem.date }}
@@ -65,16 +112,14 @@
                   <a
                     :href="activityItem.person.href"
                     class="font-medium text-gray-900"
-                    >{{ activityItem.person.name }}</a
-                  >
+                  >{{ activityItem.person.name }}</a>
                   {{ ' ' }}
                   assigned
                   {{ ' ' }}
                   <a
                     :href="activityItem.assigned?.href"
                     class="font-medium text-gray-900"
-                    >{{ activityItem.assigned?.name }}</a
-                  >
+                  >{{ activityItem.assigned?.name }}</a>
                   {{ ' ' }}
                   <span class="whitespace-nowrap">{{ activityItem.date }}</span>
                 </div>
@@ -96,8 +141,7 @@
                     <a
                       :href="activityItem.person.href"
                       class="font-medium text-gray-900"
-                      >{{ activityItem.person.name }}</a
-                    >
+                    >{{ activityItem.person.name }}</a>
                     {{ ' ' }}
                     added tags
                   </span>
@@ -109,7 +153,7 @@
                         class="inline-flex items-center gap-x-1.5 rounded-full px-2 py-1 text-xs font-medium text-gray-900 ring-1 ring-inset ring-gray-200"
                       >
                         <svg
-                          :class="[tag.color, 'h-1.5 w-1.5']"
+                          class="h-1.5 w-1.5" :class="[tag.color]"
                           aria-hidden="true"
                           viewBox="0 0 6 6"
                         >
@@ -130,51 +174,3 @@
     </ul>
   </div>
 </template>
-
-<script lang="ts" setup>
-import {
-  ChatBubbleLeftEllipsisIcon,
-  TagIcon,
-  UserCircleIcon,
-} from '@heroicons/vue/20/solid';
-
-const activity = [
-  {
-    id: 1,
-    type: 'comment',
-    person: { name: 'Eduardo Benz', href: '#' },
-    imageUrl:
-      'https://images.unsplash.com/photo-1520785643438-5bf77931f493?ixlib=rb-=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=8&w=256&h=256&q=80',
-    comment:
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Tincidunt nunc ipsum tempor purus vitae id. Morbi in vestibulum nec varius. Et diam cursus quis sed purus nam. ',
-    date: '6d ago',
-  },
-  {
-    id: 2,
-    type: 'assignment',
-    person: { name: 'Hilary Mahy', href: '#' },
-    assigned: { name: 'Kristin Watson', href: '#' },
-    date: '2d ago',
-  },
-  {
-    id: 3,
-    type: 'tags',
-    person: { name: 'Hilary Mahy', href: '#' },
-    tags: [
-      { name: 'Bug', href: '#', color: 'fill-red-500' },
-      { name: 'Accessibility', href: '#', color: 'fill-indigo-500' },
-    ],
-    date: '6h ago',
-  },
-  {
-    id: 4,
-    type: 'comment',
-    person: { name: 'Jason Meyers', href: '#' },
-    imageUrl:
-      'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?ixlib=rb-=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=8&w=256&h=256&q=80',
-    comment:
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Tincidunt nunc ipsum tempor purus vitae id. Morbi in vestibulum nec varius. Et diam cursus quis sed purus nam. Scelerisque amet elit non sit ut tincidunt condimentum. Nisl ultrices eu venenatis diam.',
-    date: '2h ago',
-  },
-];
-</script>

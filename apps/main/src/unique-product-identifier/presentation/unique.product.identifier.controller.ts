@@ -1,14 +1,14 @@
-import { Controller, Get, Param, Request } from '@nestjs/common';
-import { ModelsService } from '../../models/infrastructure/models.service';
-import { ItemsService } from '../../items/infrastructure/items.service';
-import { UniqueProductIdentifierService } from '../infrastructure/unique-product-identifier.service';
+import type { PermissionService } from '@open-dpp/auth'
+import type * as authRequest from '@open-dpp/auth'
+import type { ItemsService } from '../../items/infrastructure/items.service'
+import type { ModelsService } from '../../models/infrastructure/models.service'
+import type { UniqueProductIdentifierService } from '../infrastructure/unique-product-identifier.service'
+import { Controller, Get, Param, Request } from '@nestjs/common'
+import { AllowServiceAccess } from '@open-dpp/auth'
 import {
   UniqueProductIdentifierMetadataDtoSchema,
   UniqueProductIdentifierReferenceDtoSchema,
-} from './dto/unique-product-identifier-dto.schema';
-import { PermissionService } from '@open-dpp/auth';
-import * as authRequest from '@open-dpp/auth';
-import { AllowServiceAccess } from '@open-dpp/auth';
+} from './dto/unique-product-identifier-dto.schema'
 
 @Controller()
 export class UniqueProductIdentifierController {
@@ -28,52 +28,54 @@ export class UniqueProductIdentifierController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
-    const uniqueProductIdentifier =
-      await this.uniqueProductIdentifierService.findOneOrFail(id);
+    )
+    const uniqueProductIdentifier
+      = await this.uniqueProductIdentifierService.findOneOrFail(id)
 
     const item = await this.itemService.findOne(
       uniqueProductIdentifier.referenceId,
-    );
+    )
     if (item) {
       return UniqueProductIdentifierReferenceDtoSchema.parse({
         id: item.id,
         organizationId: item.ownedByOrganizationId,
         modelId: item.modelId,
         granularityLevel: item.granularityLevel,
-      });
-    } else {
+      })
+    }
+    else {
       const model = await this.modelsService.findOneOrFail(
         uniqueProductIdentifier.referenceId,
-      );
+      )
       return UniqueProductIdentifierReferenceDtoSchema.parse({
         id: model.id,
         organizationId: model.ownedByOrganizationId,
         granularityLevel: model.granularityLevel,
-      });
+      })
     }
   }
 
   @AllowServiceAccess()
   @Get('unique-product-identifiers/:id/metadata')
   async get(@Param('id') id: string) {
-    const uniqueProductIdentifier =
-      await this.uniqueProductIdentifierService.findOneOrFail(id);
+    const uniqueProductIdentifier
+      = await this.uniqueProductIdentifierService.findOneOrFail(id)
 
     const item = await this.itemService.findOne(
       uniqueProductIdentifier.referenceId,
-    );
-    let organizationId;
+    )
+    let organizationId
     if (item) {
-      organizationId = item.ownedByOrganizationId;
-    } else {
+      organizationId = item.ownedByOrganizationId
+    }
+    else {
       const model = await this.modelsService.findOneOrFail(
         uniqueProductIdentifier.referenceId,
-      );
-      organizationId = model.ownedByOrganizationId;
+      )
+      organizationId = model.ownedByOrganizationId
     }
     return UniqueProductIdentifierMetadataDtoSchema.parse({
       organizationId,
-    });
+    })
   }
 }

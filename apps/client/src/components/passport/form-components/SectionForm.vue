@@ -1,58 +1,22 @@
-<template>
-  <FormKit v-model="formData" :actions="false" type="form" @submit="onSubmit">
-    <FormKitSchema
-      v-if="formSchema"
-      :library="{
-        TextField,
-        ProductPassportLink,
-        FakeField,
-        NumericField,
-        FileField,
-      }"
-      :schema="formSchema"
-    />
-    <FormKit label="Speichern" type="submit" />
-  </FormKit>
-  <h3
-    v-if="passportFormStore.findSubSections(section.id).length > 0"
-    class="text-base/7 font-semibold text-gray-900"
-  >
-    Weiterführende Abschnitte
-  </h3>
-  <div class="flex">
-    <BaseButton
-      v-for="subSection in passportFormStore.findSubSections(section.id)"
-      :key="subSection.id"
-      :data-cy="`edit-subsection-${subSection.id}`"
-      variant="primary"
-      @click="onEditSubsection(subSection.id)"
-      ><div class="flex items-center gap-2">
-        <FolderIcon aria-hidden="true" class="size-5 shrink-0 text-white" />
-        <div class="text-sm/6 font-medium text-white">
-          {{ subSection.name }}
-        </div>
-      </div>
-    </BaseButton>
-  </div>
-</template>
-
 <script lang="ts" setup>
-import { DataSectionDto } from '@open-dpp/api-client';
-import { ref, watch } from 'vue';
-import TextField from './TextField.vue';
-import FakeField from './FakeField.vue';
-import ProductPassportLink from './ProductPassportLink.vue';
-import {
+import type { DataSectionDto } from "@open-dpp/api-client";
+import type {
   DataValues,
+} from "../../../stores/passport.form";
+import { FolderIcon } from "@heroicons/vue/24/outline";
+import { ref, watch } from "vue";
+import { useRouter } from "vue-router";
+import { useErrorHandlingStore } from "../../../stores/error.handling";
+import { useNotificationStore } from "../../../stores/notification";
+import {
   usePassportFormStore,
-} from '../../../stores/passport.form';
-import NumericField from './NumericField.vue';
-import FileField from './FileField.vue';
-import { useNotificationStore } from '../../../stores/notification';
-import { useErrorHandlingStore } from '../../../stores/error.handling';
-import BaseButton from '../../BaseButton.vue';
-import { useRouter } from 'vue-router';
-import { FolderIcon } from '@heroicons/vue/24/outline';
+} from "../../../stores/passport.form";
+import BaseButton from "../../BaseButton.vue";
+import FakeField from "./FakeField.vue";
+import FileField from "./FileField.vue";
+import NumericField from "./NumericField.vue";
+import ProductPassportLink from "./ProductPassportLink.vue";
+import TextField from "./TextField.vue";
 
 const props = defineProps<{
   section: DataSectionDto;
@@ -85,23 +49,63 @@ watch(
   { immediate: true }, // Optional: to run the watcher immediately when the component mounts
 );
 
-const onEditSubsection = (subSectionId: string) => {
+function onEditSubsection(subSectionId: string) {
   router.push(`?sectionId=${subSectionId}&row=${props.row}`);
-};
+}
 
-const onSubmit = async () => {
+async function onSubmit() {
   try {
     await passportFormStore.updateDataValues(
       props.section.id,
       formData.value,
       props.row,
     );
-    notificationStore.addSuccessNotification('Daten erfolgreich gespeichert');
-  } catch (e) {
+    notificationStore.addSuccessNotification("Daten erfolgreich gespeichert");
+  }
+  catch (e) {
     errorHandlingStore.logErrorWithNotification(
-      'Daten konnten nicht gespeichert werden',
+      "Daten konnten nicht gespeichert werden",
       e,
     );
   }
-};
+}
 </script>
+
+<template>
+  <FormKit v-model="formData" :actions="false" type="form" @submit="onSubmit">
+    <FormKitSchema
+      v-if="formSchema"
+      :library="{
+        TextField,
+        ProductPassportLink,
+        FakeField,
+        NumericField,
+        FileField,
+      }"
+      :schema="formSchema"
+    />
+    <FormKit label="Speichern" type="submit" />
+  </FormKit>
+  <h3
+    v-if="passportFormStore.findSubSections(section.id).length > 0"
+    class="text-base/7 font-semibold text-gray-900"
+  >
+    Weiterführende Abschnitte
+  </h3>
+  <div class="flex">
+    <BaseButton
+      v-for="subSection in passportFormStore.findSubSections(section.id)"
+      :key="subSection.id"
+      :data-cy="`edit-subsection-${subSection.id}`"
+      variant="primary"
+      @click="onEditSubsection(subSection.id)"
+    >
+      <div class="flex items-center gap-2">
+        <FolderIcon aria-hidden="true" class="size-5 shrink-0 text-white" />
+        <div class="text-sm/6 font-medium text-white">
+          {{ subSection.name }}
+        </div>
+      </div>
+    </BaseButton>
+  </div>
+</template>

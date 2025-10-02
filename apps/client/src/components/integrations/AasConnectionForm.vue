@@ -1,3 +1,13 @@
+<script setup lang="ts">
+import { useAasConnectionFormStore } from "../../stores/aas.connection.form";
+
+const aasConnectionFormStore = useAasConnectionFormStore();
+
+async function onSubmit() {
+  await aasConnectionFormStore.submitModifications();
+}
+</script>
+
 <template>
   <FormKit
     v-model="aasConnectionFormStore.formData"
@@ -12,13 +22,3 @@
     <FormKit label="Speichern" type="submit" />
   </FormKit>
 </template>
-
-<script setup lang="ts">
-import { useAasConnectionFormStore } from '../../stores/aas.connection.form';
-
-const aasConnectionFormStore = useAasConnectionFormStore();
-
-const onSubmit = async () => {
-  await aasConnectionFormStore.submitModifications();
-};
-</script>

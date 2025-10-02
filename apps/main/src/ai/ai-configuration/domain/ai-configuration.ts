@@ -1,33 +1,33 @@
-import { randomUUID } from 'crypto';
-import { ValueError } from '@open-dpp/exception';
+import { randomUUID } from 'node:crypto'
+import { ValueError } from '@open-dpp/exception'
 
 export enum AiProvider {
   Ollama = 'ollama',
   Mistral = 'mistral',
 }
 
-const mistralModels = ['codestral-latest'];
-const ollamaModels = ['qwen3:0.6b'];
+const mistralModels = ['codestral-latest']
+const ollamaModels = ['qwen3:0.6b']
 
-export type AiConfigurationCreationProps = {
-  provider: AiProvider;
-  model: string;
-  ownedByOrganizationId: string;
-  createdByUserId: string;
-  isEnabled: boolean;
-};
+export interface AiConfigurationCreationProps {
+  provider: AiProvider
+  model: string
+  ownedByOrganizationId: string
+  createdByUserId: string
+  isEnabled: boolean
+}
 
 export type AiConfigurationProps = AiConfigurationCreationProps & {
-  id: string;
-  createdAt: Date;
-  updatedAt: Date;
-};
+  id: string
+  createdAt: Date
+  updatedAt: Date
+}
 
-type AiConfigurationUpdate = {
-  provider: AiProvider;
-  model: string;
-  isEnabled: boolean;
-};
+interface AiConfigurationUpdate {
+  provider: AiProvider
+  model: string
+  isEnabled: boolean
+}
 
 export class AiConfiguration {
   private constructor(
@@ -40,11 +40,11 @@ export class AiConfiguration {
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
   ) {
-    this.assertValidModelForProvider(provider, model);
+    this.assertValidModelForProvider(provider, model)
   }
 
   static create(data: AiConfigurationCreationProps): AiConfiguration {
-    const now = new Date(Date.now());
+    const now = new Date(Date.now())
     return new AiConfiguration(
       randomUUID(),
       data.ownedByOrganizationId,
@@ -54,7 +54,7 @@ export class AiConfiguration {
       data.isEnabled,
       now,
       now,
-    );
+    )
   }
 
   static loadFromDb(data: AiConfigurationProps): AiConfiguration {
@@ -67,24 +67,24 @@ export class AiConfiguration {
       data.isEnabled,
       data.createdAt,
       data.updatedAt,
-    );
+    )
   }
 
   isOwnedBy(organizationId: string) {
-    return this.ownedByOrganizationId === organizationId;
+    return this.ownedByOrganizationId === organizationId
   }
 
   update(data: AiConfigurationUpdate) {
-    this.assertValidModelForProvider(data.provider, data.model);
-    this.model = data.model;
-    this.provider = data.provider;
-    this.isEnabled = data.isEnabled;
+    this.assertValidModelForProvider(data.provider, data.model)
+    this.model = data.model
+    this.provider = data.provider
+    this.isEnabled = data.isEnabled
   }
 
   private assertValidModelForProvider(provider: AiProvider, model: string) {
-    const valid = provider === AiProvider.Ollama ? ollamaModels : mistralModels;
+    const valid = provider === AiProvider.Ollama ? ollamaModels : mistralModels
     if (!valid.includes(model)) {
-      throw new ValueError(`Invalid model ${model} for provider ${provider}`);
+      throw new ValueError(`Invalid model ${model} for provider ${provider}`)
     }
   }
 }

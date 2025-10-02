@@ -1,3 +1,24 @@
+<script setup lang="ts">
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/vue";
+import { ChevronDownIcon } from "@heroicons/vue/20/solid";
+import { VisibilityLevel } from "@open-dpp/api-client";
+import { ref } from "vue";
+
+const emits = defineEmits<{
+  (e: "onPublish", visibility: VisibilityLevel): void;
+}>();
+
+const selectedVisibility = ref<VisibilityLevel>(VisibilityLevel.PRIVATE);
+
+const items: { name: string; visibility: VisibilityLevel }[] = [
+  {
+    name: "nur für Organisation sichtbar",
+    visibility: VisibilityLevel.PRIVATE,
+  },
+  { name: "für jeden sichtbar", visibility: VisibilityLevel.PUBLIC },
+];
+</script>
+
 <template>
   <div class="inline-flex rounded-md shadow-sm">
     <button
@@ -34,11 +55,10 @@
             >
               <a
                 href="#"
-                :class="[
+                class="block px-4 py-2 text-sm" :class="[
                   item.visibility === selectedVisibility
                     ? 'bg-gray-100 text-gray-900 outline-none'
                     : 'text-gray-700',
-                  'block px-4 py-2 text-sm',
                 ]"
               >
                 {{ item.name }}
@@ -50,24 +70,3 @@
     </Menu>
   </div>
 </template>
-
-<script setup lang="ts">
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
-import { ChevronDownIcon } from '@heroicons/vue/20/solid';
-import { VisibilityLevel } from '@open-dpp/api-client';
-import { ref } from 'vue';
-
-const selectedVisibility = ref<VisibilityLevel>(VisibilityLevel.PRIVATE);
-
-const emits = defineEmits<{
-  (e: 'onPublish', visibility: VisibilityLevel): void;
-}>();
-
-const items: { name: string; visibility: VisibilityLevel }[] = [
-  {
-    name: 'nur für Organisation sichtbar',
-    visibility: VisibilityLevel.PRIVATE,
-  },
-  { name: 'für jeden sichtbar', visibility: VisibilityLevel.PUBLIC },
-];
-</script>

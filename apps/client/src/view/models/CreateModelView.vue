@@ -1,8 +1,56 @@
+<script lang="ts" setup>
+import type { TemplateGetAllDto } from "@open-dpp/api-client";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import ModelTemplateList from "../../components/models/ModelTemplateList.vue";
+import apiClient from "../../lib/api-client";
+import { useNotificationStore } from "../../stores/notification";
+
+const props = defineProps<{
+  organizationId: string;
+}>();
+const router = useRouter();
+const notificationStore = useNotificationStore();
+
+const name = ref<string>("");
+const selectedTemplate = ref<TemplateGetAllDto | null>(null);
+const isMarketplaceSelected = ref<boolean>(false);
+
+async function onSubmit() {
+  if (!name.value) {
+    notificationStore.addErrorNotification("Bitte geben Sie einen Namen ein.");
+    return;
+  }
+  if (!selectedTemplate.value) {
+    notificationStore.addErrorNotification(
+      "Bitte wählen Sie eine Vorlage aus.",
+    );
+    return;
+  }
+
+  const response = await apiClient.dpp.models.create({
+    name: name.value,
+    templateId: isMarketplaceSelected.value
+      ? undefined
+      : selectedTemplate.value.id,
+    marketplaceResourceId: isMarketplaceSelected.value
+      ? selectedTemplate.value.id
+      : undefined,
+  });
+
+  await router.push(
+    `/organizations/${props.organizationId}/models/${response.data.id}`,
+  );
+}
+</script>
+
 <template>
   <div class="">
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
-        <h1 class="text-base font-semibold text-gray-900">Modellpass</h1>
+        <h1 class="text-base font-semibold text-gray-900">
+          Modellpass
+        </h1>
         <p class="mt-2 text-sm text-gray-700">
           Erstellen Sie einen neuen Modellpass.
         </p>
@@ -47,50 +95,3 @@
     </div>
   </div>
 </template>
-
-<script lang="ts" setup>
-import { ref } from 'vue';
-import apiClient from '../../lib/api-client';
-import { useRouter } from 'vue-router';
-import ModelTemplateList from '../../components/models/ModelTemplateList.vue';
-import { useNotificationStore } from '../../stores/notification';
-import { TemplateGetAllDto } from '@open-dpp/api-client';
-
-const router = useRouter();
-const notificationStore = useNotificationStore();
-
-const props = defineProps<{
-  organizationId: string;
-}>();
-
-const name = ref<string>('');
-const selectedTemplate = ref<TemplateGetAllDto | null>(null);
-const isMarketplaceSelected = ref<boolean>(false);
-
-const onSubmit = async () => {
-  if (!name.value) {
-    notificationStore.addErrorNotification('Bitte geben Sie einen Namen ein.');
-    return;
-  }
-  if (!selectedTemplate.value) {
-    notificationStore.addErrorNotification(
-      'Bitte wählen Sie eine Vorlage aus.',
-    );
-    return;
-  }
-
-  const response = await apiClient.dpp.models.create({
-    name: name.value,
-    templateId: isMarketplaceSelected.value
-      ? undefined
-      : selectedTemplate.value.id,
-    marketplaceResourceId: isMarketplaceSelected.value
-      ? selectedTemplate.value.id
-      : undefined,
-  });
-
-  await router.push(
-    `/organizations/${props.organizationId}/models/${response.data.id}`,
-  );
-};
-</script>

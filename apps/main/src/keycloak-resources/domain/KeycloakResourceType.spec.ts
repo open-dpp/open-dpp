@@ -1,7 +1,7 @@
-import { KeycloakResourceType } from './KeycloakResourceType';
+import { KeycloakResourceType } from './KeycloakResourceType'
 
-describe('KeycloakResourceType', () => {
+describe('keycloakResourceType', () => {
   it('should define the organization resource type', () => {
-    expect(KeycloakResourceType.ORGANIZATION).toEqual('organization');
-  });
-});
+    expect(KeycloakResourceType.ORGANIZATION).toEqual('organization')
+  })
+})

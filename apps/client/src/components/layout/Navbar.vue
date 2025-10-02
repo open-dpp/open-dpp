@@ -1,3 +1,28 @@
+<script lang="ts" setup>
+import { Disclosure } from "@headlessui/vue";
+import { ChatBubbleOvalLeftEllipsisIcon } from "@heroicons/vue/16/solid";
+import { computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import BaseButton from "../presentation-components/BaseButton.vue";
+
+const route = useRoute();
+const router = useRouter();
+const permalink = computed(() => String(route.params.permalink ?? ""));
+const isChatRoute = computed(() => route.path.endsWith("/chat"));
+
+function navigateToPassportView() {
+  router.push(`/presentation/${permalink.value}`);
+}
+
+function navigateToAiChat() {
+  router.push(`/presentation/${permalink.value}/chat`);
+}
+
+function backToApp() {
+  router.push("/");
+}
+</script>
+
 <template>
   <Disclosure as="header" class="bg-white shadow-sm">
     <div
@@ -10,7 +35,7 @@
               class="h-12 w-auto"
               src="../../assets/logo-with-text.svg"
               alt="open-dpp GmbH"
-            />
+            >
           </div>
         </div>
         <div class="flex items-center gap-2">
@@ -22,7 +47,7 @@
             <ChatBubbleOvalLeftEllipsisIcon class="size-5 mr-2 inline-block" />
             Mit KI chatten
           </BaseButton>
-          <BaseButton variant="primary" v-else @click="navigateToPassportView">
+          <BaseButton v-else variant="primary" @click="navigateToPassportView">
             Zur Passansicht
           </BaseButton>
           <BaseButton class="hidden md:flex" @click="backToApp">
@@ -33,28 +58,3 @@
     </div>
   </Disclosure>
 </template>
-
-<script lang="ts" setup>
-import { Disclosure } from '@headlessui/vue';
-import { ChatBubbleOvalLeftEllipsisIcon } from '@heroicons/vue/16/solid';
-import { useRoute, useRouter } from 'vue-router';
-import { computed } from 'vue';
-import BaseButton from '../presentation-components/BaseButton.vue';
-
-const route = useRoute();
-const router = useRouter();
-const permalink = computed(() => String(route.params.permalink ?? ''));
-const isChatRoute = computed(() => route.path.endsWith('/chat'));
-
-const navigateToPassportView = () => {
-  router.push(`/presentation/${permalink.value}`);
-};
-
-const navigateToAiChat = () => {
-  router.push(`/presentation/${permalink.value}/chat`);
-};
-
-const backToApp = () => {
-  router.push('/');
-};
-</script>

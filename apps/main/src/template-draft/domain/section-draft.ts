@@ -1,26 +1,27 @@
-import { DataFieldDraft, DataFieldDraftDbProps } from './data-field-draft';
+import type { GranularityLevel } from '../../data-modelling/domain/granularity-level'
+import type { SectionDbProps } from '../../templates/domain/section'
+import type { DataFieldDraftDbProps } from './data-field-draft'
+import { randomUUID } from 'node:crypto'
+import { NotFoundError, ValueError } from '@open-dpp/exception'
 import {
   SectionBase,
   SectionType,
-} from '../../data-modelling/domain/section-base';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { randomUUID } from 'crypto';
-import { SectionDbProps } from '../../templates/domain/section';
-import { MoveDirection } from './template-draft';
-import { NotFoundError, ValueError } from '@open-dpp/exception';
+} from '../../data-modelling/domain/section-base'
+import { DataFieldDraft } from './data-field-draft'
+import { MoveDirection } from './template-draft'
 
-export type SectionDraftCreateProps = {
-  name: string;
-  type: SectionType;
-  granularityLevel?: GranularityLevel;
-};
+export interface SectionDraftCreateProps {
+  name: string
+  type: SectionType
+  granularityLevel?: GranularityLevel
+}
 
 export type SectionDraftDbProps = SectionDraftCreateProps & {
-  id: string;
-  subSections: string[];
-  parentId: string | undefined;
-  dataFields: DataFieldDraftDbProps[];
-};
+  id: string
+  subSections: string[]
+  parentId: string | undefined
+  dataFields: DataFieldDraftDbProps[]
+}
 
 export class SectionDraft extends SectionBase {
   private constructor(
@@ -32,12 +33,12 @@ export class SectionDraft extends SectionBase {
     public granularityLevel: GranularityLevel | undefined,
     public readonly dataFields: DataFieldDraft[],
   ) {
-    super(id, _name, type, _subSections, _parentId, granularityLevel);
+    super(id, _name, type, _subSections, _parentId, granularityLevel)
   }
 
   static create(data: SectionDraftCreateProps) {
     if (data.type === SectionType.REPEATABLE && !data.granularityLevel) {
-      throw new ValueError(`Repeatable must have a granularity level`);
+      throw new ValueError(`Repeatable must have a granularity level`)
     }
     return new SectionDraft(
       randomUUID(),
@@ -47,7 +48,7 @@ export class SectionDraft extends SectionBase {
       undefined,
       data.granularityLevel,
       [],
-    );
+    )
   }
 
   static loadFromDb(data: SectionDraftDbProps): SectionDraft {
@@ -58,91 +59,91 @@ export class SectionDraft extends SectionBase {
       data.subSections,
       data.parentId,
       data.granularityLevel,
-      data.dataFields.map((d) => DataFieldDraft.loadFromDb(d)),
-    );
+      data.dataFields.map(d => DataFieldDraft.loadFromDb(d)),
+    )
   }
 
   assignParent(parent: SectionDraft) {
-    this._parentId = parent.id;
+    this._parentId = parent.id
   }
 
   removeParent() {
-    this._parentId = undefined;
+    this._parentId = undefined
   }
 
   rename(newName: string) {
-    this._name = newName;
+    this._name = newName
   }
 
   addDataField(dataField: DataFieldDraft) {
     if (
-      this.granularityLevel &&
-      this.granularityLevel !== dataField.granularityLevel
+      this.granularityLevel
+      && this.granularityLevel !== dataField.granularityLevel
     ) {
       throw new ValueError(
         `Data field ${dataField.id} has a granularity level of ${dataField.granularityLevel} which does not match the section's granularity level of ${this.granularityLevel}`,
-      );
+      )
     }
-    this.dataFields.push(dataField);
+    this.dataFields.push(dataField)
   }
 
   addSubSection(section: SectionDraft) {
-    this._subSections.push(section.id);
-    section.assignParent(this);
+    this._subSections.push(section.id)
+    section.assignParent(this)
   }
 
   deleteSubSection(subSection: SectionDraft) {
-    if (!this.subSections.find((id) => id === subSection.id)) {
+    if (!this.subSections.find(id => id === subSection.id)) {
       throw new ValueError(
         `Could not found and delete sub section ${subSection.id} from ${this.id}`,
-      );
+      )
     }
-    this._subSections = this.subSections.filter((n) => n !== subSection.id);
-    subSection.removeParent();
-    return subSection;
+    this._subSections = this.subSections.filter(n => n !== subSection.id)
+    subSection.removeParent()
+    return subSection
   }
 
   modifyDataField(
     dataFieldId: string,
     data: {
-      name?: string;
-      options?: Record<string, unknown>;
+      name?: string
+      options?: Record<string, unknown>
     },
   ) {
-    const found = this.dataFields.find((d) => d.id === dataFieldId);
+    const found = this.dataFields.find(d => d.id === dataFieldId)
     if (!found) {
-      throw new NotFoundError(DataFieldDraft.name, dataFieldId);
+      throw new NotFoundError(DataFieldDraft.name, dataFieldId)
     }
     if (data.name) {
-      found.rename(data.name);
+      found.rename(data.name)
     }
     if (data.options) {
-      found.mergeOptions(data.options);
+      found.mergeOptions(data.options)
     }
   }
 
   moveDataField(dataFieldId: string, direction: MoveDirection) {
-    const fromIndex = this.dataFields.findIndex((d) => d.id === dataFieldId);
+    const fromIndex = this.dataFields.findIndex(d => d.id === dataFieldId)
     if (fromIndex < 0) {
-      throw new NotFoundError(DataFieldDraft.name, dataFieldId);
+      throw new NotFoundError(DataFieldDraft.name, dataFieldId)
     }
-    const shiftIndex = direction === MoveDirection.UP ? -1 : 1;
+    const shiftIndex = direction === MoveDirection.UP ? -1 : 1
 
-    const toIndex = fromIndex + shiftIndex;
+    const toIndex = fromIndex + shiftIndex
     if (toIndex < 0 || toIndex >= this.dataFields.length) {
-      return;
+      return
     }
 
-    const deletedField = this.dataFields.splice(fromIndex, 1);
-    this.dataFields.splice(toIndex, 0, deletedField[0]);
+    const deletedField = this.dataFields.splice(fromIndex, 1)
+    this.dataFields.splice(toIndex, 0, deletedField[0])
   }
 
   deleteDataField(dataFieldId: string) {
-    const foundIndex = this.dataFields.findIndex((d) => d.id === dataFieldId);
+    const foundIndex = this.dataFields.findIndex(d => d.id === dataFieldId)
     if (foundIndex < 0) {
-      throw new NotFoundError(DataFieldDraft.name, dataFieldId);
+      throw new NotFoundError(DataFieldDraft.name, dataFieldId)
     }
-    this.dataFields.splice(foundIndex, 1);
+    this.dataFields.splice(foundIndex, 1)
   }
 
   publish(): SectionDbProps {
@@ -152,8 +153,8 @@ export class SectionDraft extends SectionBase {
       name: this.name,
       parentId: this.parentId,
       subSections: this.subSections,
-      dataFields: this.dataFields.map((d) => d.publish()),
+      dataFields: this.dataFields.map(d => d.publish()),
       granularityLevel: this.granularityLevel,
-    };
+    }
   }
 }

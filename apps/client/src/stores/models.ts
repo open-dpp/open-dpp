@@ -1,10 +1,10 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import apiClient from '../lib/api-client';
-import { ModelCreateDto, ModelDto } from '@open-dpp/api-client';
-import { useErrorHandlingStore } from './error.handling';
+import type { ModelCreateDto, ModelDto } from "@open-dpp/api-client";
+import { defineStore } from "pinia";
+import { ref } from "vue";
+import apiClient from "../lib/api-client";
+import { useErrorHandlingStore } from "./error.handling";
 
-export const useModelsStore = defineStore('models', () => {
+export const useModelsStore = defineStore("models", () => {
   const models = ref<ModelDto[]>([]);
   const errorHandlingStore = useErrorHandlingStore();
 
@@ -12,9 +12,10 @@ export const useModelsStore = defineStore('models', () => {
     try {
       const response = await apiClient.dpp.models.getAll();
       models.value = response.data;
-    } catch (e) {
+    }
+    catch (e) {
       errorHandlingStore.logErrorWithNotification(
-        'Laden der Modellpässe fehlgeschlagen',
+        "Laden der Modellpässe fehlgeschlagen",
         e,
       );
     }

@@ -1,12 +1,50 @@
+<script lang="ts" setup>
+import {
+  Listbox,
+  ListboxButton,
+  ListboxLabel,
+  ListboxOption,
+  ListboxOptions,
+} from "@headlessui/vue";
+import { ChevronUpDownIcon } from "@heroicons/vue/16/solid";
+import {
+  CheckIcon,
+  ListBulletIcon,
+  PlusCircleIcon,
+} from "@heroicons/vue/20/solid";
+import { computed } from "vue";
+import { useRouter } from "vue-router";
+import { useIndexStore } from "../../stores";
+import { useOrganizationsStore } from "../../stores/organizations";
+
+const organizationsStore = useOrganizationsStore();
+const indexStore = useIndexStore();
+const router = useRouter();
+
+const nameOfSelectedOrganization = computed(() => {
+  if (indexStore.selectedOrganization) {
+    return organizationsStore.organizations.find(
+      org => org.id === indexStore.selectedOrganization,
+    )?.name;
+  }
+  return "Auswählen";
+});
+
+function setOrganization(organizationId: string) {
+  indexStore.selectOrganization(organizationId);
+  router.push("/");
+}
+</script>
+
 <template>
   <Listbox
     as="div"
     :model-value="indexStore.selectedOrganization"
     @update:model-value="(org) => setOrganization(org.id)"
   >
-    <ListboxLabel class="block text-sm/6 font-medium text-gray-900"
-      >Organisation wählen</ListboxLabel
-    >
+    <ListboxLabel class="block text-sm/6 font-medium text-gray-900">
+      Organisation wählen
+    </ListboxLabel>
     <div class="relative flex flex-row gap-2">
       <div
         v-if="organizationsStore.organizations.length > 0"
@@ -34,33 +72,29 @@
             class="absolute z-10 mt-1 -top-[calc(200%-8px)] max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-hidden sm:text-sm"
           >
             <ListboxOption
-              as="template"
               v-for="organization in organizationsStore.organizations"
               :key="organization.id"
+              v-slot="{ active, selected }"
+              as="template"
               :data-cy="organization.id"
               :value="organization"
-              v-slot="{ active, selected }"
             >
               <li
-                :class="[
+                class="relative cursor-default select-none py-2 pl-8 pr-4" :class="[
                   active
                     ? 'bg-indigo-600 text-white outline-hidden'
                     : 'text-gray-900',
-                  'relative cursor-default select-none py-2 pl-8 pr-4',
                 ]"
               >
                 <span
-                  :class="[
+                  class="block truncate" :class="[
                     selected ? 'font-semibold' : 'font-normal',
-                    'block truncate',
                   ]"
-                  >{{ organization.name }}</span
-                >
+                >{{ organization.name }}</span>
                 <span
                   v-if="selected"
-                  :class="[
+                  class="absolute inset-y-0 left-0 flex items-center pl-1.5" :class="[
                     active ? 'text-white' : 'text-indigo-600',
-                    'absolute inset-y-0 left-0 flex items-center pl-1.5',
                   ]"
                 >
                   <CheckIcon class="size-5" aria-hidden="true" />
@@ -79,8 +113,7 @@
           <span
             v-if="organizationsStore.organizations.length === 0"
             class="text-md pl-1"
-            >Organisation erstellen</span
-          >
+          >Organisation erstellen</span>
         </button>
       </router-link>
       <router-link v-if="false" to="/organizations">
@@ -94,41 +127,3 @@
     </div>
   </Listbox>
 </template>
-
-<script lang="ts" setup>
-import {
-  Listbox,
-  ListboxButton,
-  ListboxLabel,
-  ListboxOption,
-  ListboxOptions,
-} from '@headlessui/vue';
-import { ChevronUpDownIcon } from '@heroicons/vue/16/solid';
-import {
-  CheckIcon,
-  ListBulletIcon,
-  PlusCircleIcon,
-} from '@heroicons/vue/20/solid';
-import { useOrganizationsStore } from '../../stores/organizations';
-import { useIndexStore } from '../../stores';
-import { useRouter } from 'vue-router';
-import { computed } from 'vue';
-
-const organizationsStore = useOrganizationsStore();
-const indexStore = useIndexStore();
-const router = useRouter();
-
-const nameOfSelectedOrganization = computed(() => {
-  if (indexStore.selectedOrganization) {
-    return organizationsStore.organizations.find(
-      (org) => org.id === indexStore.selectedOrganization,
-    )?.name;
-  }
-  return 'Auswählen';
-});
-
-const setOrganization = (organizationId: string) => {
-  indexStore.selectOrganization(organizationId);
-  router.push('/');
-};
-</script>

@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { Item } from '../domain/item';
-import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model as MongooseModel } from 'mongoose';
-import { ItemDoc, ItemDocSchemaVersion } from './item.schema';
-import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
-import { migrateItemDoc } from './migrations';
-import { NotFoundInDatabaseException } from '@open-dpp/exception';
+import type { Model as MongooseModel } from 'mongoose'
+import type { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier'
+import type { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service'
+import { Injectable } from '@nestjs/common'
+import { InjectModel } from '@nestjs/mongoose'
+import { NotFoundInDatabaseException } from '@open-dpp/exception'
+import { Item } from '../domain/item'
+import { ItemDoc, ItemDocSchemaVersion } from './item.schema'
+import { migrateItemDoc } from './migrations'
 
 @Injectable()
 export class ItemsService {
@@ -20,7 +20,7 @@ export class ItemsService {
     itemDoc: ItemDoc,
     uniqueProductIdentifiers: UniqueProductIdentifier[],
   ) {
-    migrateItemDoc(itemDoc);
+    migrateItemDoc(itemDoc)
     return Item.loadFromDb({
       id: itemDoc.id,
       uniqueProductIdentifiers,
@@ -28,7 +28,7 @@ export class ItemsService {
       userId: itemDoc.createdByUserId,
       modelId: itemDoc.modelId,
       dataValues: itemDoc.dataValues
-        ? itemDoc.dataValues.map((dv) => ({
+        ? itemDoc.dataValues.map(dv => ({
             value: dv.value ?? undefined,
             dataSectionId: dv.dataSectionId,
             dataFieldId: dv.dataFieldId,
@@ -36,7 +36,7 @@ export class ItemsService {
           }))
         : [],
       templateId: itemDoc.templateId,
-    });
+    })
   }
 
   async save(item: Item) {
@@ -49,7 +49,7 @@ export class ItemsService {
           templateId: item.templateId,
           ownedByOrganizationId: item.ownedByOrganizationId,
           createdByUserId: item.createdByUserId,
-          dataValues: item.dataValues.map((d) => ({
+          dataValues: item.dataValues.map(d => ({
             value: d.value,
             dataSectionId: d.dataSectionId,
             dataFieldId: d.dataFieldId,
@@ -65,40 +65,40 @@ export class ItemsService {
         upsert: true, // Create a new document if none found
         runValidators: true,
       },
-    );
+    )
     for (const uniqueProductIdentifier of item.uniqueProductIdentifiers) {
-      await this.uniqueProductIdentifierService.save(uniqueProductIdentifier);
+      await this.uniqueProductIdentifierService.save(uniqueProductIdentifier)
     }
-    return this.convertToDomain(itemEntity, item.uniqueProductIdentifiers);
+    return this.convertToDomain(itemEntity, item.uniqueProductIdentifiers)
   }
 
   async findOneOrFail(id: string): Promise<Item> {
-    const item = await this.findOne(id);
+    const item = await this.findOne(id)
     if (!item) {
-      throw new NotFoundInDatabaseException(Item.name);
+      throw new NotFoundInDatabaseException(Item.name)
     }
-    return item;
+    return item
   }
 
   async findOne(id: string): Promise<Item | undefined> {
-    const itemDoc = await this.itemDoc.findById(id);
+    const itemDoc = await this.itemDoc.findById(id)
     if (!itemDoc) {
-      return undefined;
+      return undefined
     }
     return this.convertToDomain(
       itemDoc,
       await this.uniqueProductIdentifierService.findAllByReferencedId(
         itemDoc.id,
       ),
-    );
+    )
   }
 
   async findAllByModel(modelId: string) {
     const itemDocs = await this.itemDoc.find({
-      modelId: modelId,
-    });
+      modelId,
+    })
     return await Promise.all(
-      itemDocs.map(async (idocs) =>
+      itemDocs.map(async idocs =>
         this.convertToDomain(
           idocs,
           await this.uniqueProductIdentifierService.findAllByReferencedId(
@@ -106,6 +106,6 @@ export class ItemsService {
           ),
         ),
       ),
-    );
+    )
   }
 }

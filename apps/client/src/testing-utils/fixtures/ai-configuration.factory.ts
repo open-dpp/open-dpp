@@ -1,9 +1,10 @@
-import { Factory } from 'fishery';
-import { AiConfigurationDto, AiProvider } from '@open-dpp/api-client';
+import type { AiConfigurationDto } from "@open-dpp/api-client";
+import { AiProvider } from "@open-dpp/api-client";
+import { Factory } from "fishery";
 
-import { v4 as uuid4 } from 'uuid';
+import { v4 as uuid4 } from "uuid";
 
-const nowDate = new Date('2025-01-01T12:00:00Z');
+const nowDate = new Date("2025-01-01T12:00:00Z");
 export const aiConfigurationFactory = Factory.define<AiConfigurationDto>(
   () => ({
     id: uuid4(),
@@ -12,7 +13,7 @@ export const aiConfigurationFactory = Factory.define<AiConfigurationDto>(
     createdAt: nowDate.toISOString(),
     updatedAt: nowDate.toISOString(),
     provider: AiProvider.Mistral,
-    model: 'codestral-latest',
+    model: "codestral-latest",
     isEnabled: true,
   }),
 );

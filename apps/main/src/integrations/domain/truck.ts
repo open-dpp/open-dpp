@@ -557,4 +557,4 @@ export const truckAas = {
       ],
     },
   ],
-};
+}

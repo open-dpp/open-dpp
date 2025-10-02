@@ -1,11 +1,11 @@
-import { describe, test, vi } from 'vitest';
+import { describe, vi } from "vitest";
 
-vi.mock('../../lib/axios', () => ({
+vi.mock("../../lib/axios", () => ({
   default: {
     post: vi.fn(),
   },
 }));
-vi.mock('../../lib/api-client', () => ({
+vi.mock("../../lib/api-client", () => ({
   default: {
     postModel: vi.fn(),
   },
@@ -13,8 +13,8 @@ vi.mock('../../lib/api-client', () => ({
 
 // const mockedApiClient = apiClient as Mocked<typeof apiClient>;
 
-describe('CreateModel.vue', () => {
-  test('creates a product with given name and description', async () => {
+describe("createModel.vue", () => {
+  it("creates a product with given name and description", async () => {
     /* mockedApiClient.postModel.mockResolvedValue({} as any);
             render(CreateModel, {
               props: { modelValue: true },
@@ -22,7 +22,7 @@ describe('CreateModel.vue', () => {
             expect(await screen.findByText("Neues Produkt")).toBeTruthy();
             const nameInput = screen.getByLabelText("Name");
             const descriptionInput = screen.getByLabelText("Beschreibung");
-        
+
             await fireEvent.update(nameInput, "My new product");
             await fireEvent.update(descriptionInput, "My product description");
             await fireEvent.click(screen.getByText("Speichern"));

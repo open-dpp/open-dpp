@@ -1,8 +1,24 @@
+<script lang="ts" setup>
+import { onMounted } from "vue";
+import CreateConnectionForm from "../../components/integrations/CreateConnectionForm.vue";
+import { useIndexStore } from "../../stores";
+import { useModelsStore } from "../../stores/models";
+
+const modelsStore = useModelsStore();
+const indexStore = useIndexStore();
+
+onMounted(async () => {
+  await modelsStore.getModels();
+});
+</script>
+
 <template>
   <div class="flex flex-col gap-3 p-3">
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
-        <h1 class="text-base font-semibold text-gray-900">Verbindung</h1>
+        <h1 class="text-base font-semibold text-gray-900">
+          Verbindung
+        </h1>
         <p class="mt-2 text-sm text-gray-700">
           Erstellen Sie eine neue Verbindung.
         </p>
@@ -28,17 +44,3 @@
     </div>
   </div>
 </template>
-
-<script lang="ts" setup>
-import { onMounted } from 'vue';
-import { useModelsStore } from '../../stores/models';
-import CreateConnectionForm from '../../components/integrations/CreateConnectionForm.vue';
-import { useIndexStore } from '../../stores';
-
-const modelsStore = useModelsStore();
-const indexStore = useIndexStore();
-
-onMounted(async () => {
-  await modelsStore.getModels();
-});
-</script>

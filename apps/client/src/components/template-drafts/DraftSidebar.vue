@@ -1,3 +1,17 @@
+<script lang="ts" setup>
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  TransitionChild,
+  TransitionRoot,
+} from "@headlessui/vue";
+import { XMarkIcon } from "@heroicons/vue/24/outline";
+import { useDraftSidebarStore } from "../../stores/draftSidebar";
+
+const draftSidebarStore = useDraftSidebarStore();
+</script>
+
 <template>
   <TransitionRoot :show="draftSidebarStore.isOpen" as="template">
     <Dialog class="relative z-20" @close="draftSidebarStore.close">
@@ -23,9 +37,11 @@
                 >
                   <div class="bg-indigo-700 px-4 py-6 sm:px-6">
                     <div class="flex items-center justify-between">
-                      <DialogTitle class="text-base font-semibold text-white">{{
-                        draftSidebarStore.title
-                      }}</DialogTitle>
+                      <DialogTitle class="text-base font-semibold text-white">
+                        {{
+                          draftSidebarStore.title
+                        }}
+                      </DialogTitle>
                       <div class="ml-3 flex h-7 items-center">
                         <button
                           class="relative rounded-md bg-indigo-700 text-indigo-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
@@ -45,8 +61,8 @@
                     </div>
                   </div>
                   <component
-                    v-if="draftSidebarStore.content"
                     :is="draftSidebarStore.content"
+                    v-if="draftSidebarStore.content"
                     v-bind="draftSidebarStore.contentProps"
                   />
                 </div>
@@ -58,17 +74,3 @@
     </Dialog>
   </TransitionRoot>
 </template>
-
-<script lang="ts" setup>
-import {
-  Dialog,
-  DialogPanel,
-  DialogTitle,
-  TransitionChild,
-  TransitionRoot,
-} from '@headlessui/vue';
-import { useDraftSidebarStore } from '../../stores/draftSidebar';
-import { XMarkIcon } from '@heroicons/vue/24/outline';
-
-const draftSidebarStore = useDraftSidebarStore();
-</script>

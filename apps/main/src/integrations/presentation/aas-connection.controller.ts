@@ -1,3 +1,16 @@
+import type { ConfigService } from '@nestjs/config'
+import type * as authRequest from '@open-dpp/auth'
+import type { PermissionService } from '@open-dpp/auth'
+import type { ItemsService } from '../../items/infrastructure/items.service'
+import type { ItemsApplicationService } from '../../items/presentation/items-application.service'
+import type { ModelsService } from '../../models/infrastructure/models.service'
+import type { OrganizationsService } from '../../organizations/infrastructure/organizations.service'
+import type { TemplateService } from '../../templates/infrastructure/template.service'
+import type { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service'
+import type {
+  AssetAdministrationShellType,
+} from '../domain/asset-administration-shell'
+import type { AasConnectionService } from '../infrastructure/aas-connection.service'
 import {
   Body,
   Controller,
@@ -8,29 +21,18 @@ import {
   Patch,
   Post,
   Request,
-} from '@nestjs/common';
-import { ModelsService } from '../../models/infrastructure/models.service';
-import { AasConnectionService } from '../infrastructure/aas-connection.service';
-import { TemplateService } from '../../templates/infrastructure/template.service';
-import { ConfigService } from '@nestjs/config';
-import { itemToDto } from '../../items/presentation/dto/item.dto';
-import { ItemsService } from '../../items/infrastructure/items.service';
-import { aasConnectionToDto } from './dto/aas-connection.dto';
+} from '@nestjs/common'
+import { Public } from '@open-dpp/auth'
+import { itemToDto } from '../../items/presentation/dto/item.dto'
+import { AasConnection } from '../domain/aas-connection'
 import {
   AssetAdministrationShell,
-  AssetAdministrationShellType,
   createAasForType,
-} from '../domain/asset-administration-shell';
-import * as createAasConnectionDto from './dto/create-aas-connection.dto';
-import { AasConnection } from '../domain/aas-connection';
-import * as updateAasConnectionDto from './dto/update-aas-connection.dto';
-import { GetAasConnectionCollectionSchema } from './dto/get-aas-connection-collection.dto';
-import { ItemsApplicationService } from '../../items/presentation/items-application.service';
-import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
-import { PermissionService } from '@open-dpp/auth';
-import { Public } from '@open-dpp/auth';
-import * as authRequest from '@open-dpp/auth';
+} from '../domain/asset-administration-shell'
+import { aasConnectionToDto } from './dto/aas-connection.dto'
+import * as createAasConnectionDto from './dto/create-aas-connection.dto'
+import { GetAasConnectionCollectionSchema } from './dto/get-aas-connection-collection.dto'
+import * as updateAasConnectionDto from './dto/update-aas-connection.dto'
 
 @Controller('organizations/:orgaId/integration/aas')
 export class AasConnectionController {
@@ -55,28 +57,28 @@ export class AasConnectionController {
     @Body() aasJson: any,
   ) {
     if (apiToken !== this.configService.get('API_TOKEN')) {
-      throw new ForbiddenException('Wrong api token');
+      throw new ForbiddenException('Wrong api token')
     }
-    const aasConnection =
-      await this.aasConnectionService.findById(connectionId);
+    const aasConnection
+      = await this.aasConnectionService.findById(connectionId)
 
     if (!aasConnection.isOwnedBy(organizationId)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException()
     }
     if (!aasConnection.modelId) {
-      throw new ForbiddenException();
+      throw new ForbiddenException()
     }
     const assetAdministrationShell = AssetAdministrationShell.create({
       content: aasJson,
-    });
+    })
 
-    const uniqueProductIdentifier =
-      await this.uniqueProductIdentifierService.findOne(
+    const uniqueProductIdentifier
+      = await this.uniqueProductIdentifierService.findOne(
         assetAdministrationShell.globalAssetId,
-      );
+      )
 
-    const organization =
-      await this.organizationService.findOneOrFail(organizationId);
+    const organization
+      = await this.organizationService.findOneOrFail(organizationId)
 
     const item = uniqueProductIdentifier
       ? await this.itemService.findOneOrFail(
@@ -87,18 +89,18 @@ export class AasConnectionController {
           aasConnection.modelId,
           organization.createdByUserId,
           assetAdministrationShell.globalAssetId,
-        );
+        )
 
     const productDataModel = await this.templateService.findOneOrFail(
       aasConnection.dataModelId,
-    );
+    )
 
     const dataValues = aasConnection.generateDataValues(
       assetAdministrationShell,
       productDataModel,
-    );
-    item.modifyDataValues(dataValues);
-    return itemToDto(await this.itemService.save(item));
+    )
+    item.modifyDataValues(dataValues)
+    return itemToDto(await this.itemService.save(item))
   }
 
   @Post('/connections')
@@ -107,21 +109,21 @@ export class AasConnectionController {
     @Body() body: createAasConnectionDto.CreateAasConnectionDto,
     @Request() req: authRequest.AuthRequest,
   ) {
-    const createAasMapping =
-      createAasConnectionDto.CreateAasConnectionSchema.parse(body);
+    const createAasMapping
+      = createAasConnectionDto.CreateAasConnectionSchema.parse(body)
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
+    )
     if (!createAasMapping.modelId) {
-      throw new ForbiddenException();
+      throw new ForbiddenException()
     }
     const model = await this.modelsService.findOneOrFail(
       createAasMapping.modelId,
-    );
+    )
     const productDataModel = await this.templateService.findOneOrFail(
       createAasMapping.dataModelId,
-    );
+    )
     const aasConnection = AasConnection.create({
       name: createAasMapping.name,
       organizationId,
@@ -129,12 +131,12 @@ export class AasConnectionController {
       dataModelId: productDataModel.id,
       aasType: createAasMapping.aasType,
       modelId: model.id,
-    });
+    })
     for (const fieldMapping of createAasMapping.fieldAssignments) {
-      aasConnection.addFieldAssignment(fieldMapping);
+      aasConnection.addFieldAssignment(fieldMapping)
     }
-    await this.aasConnectionService.save(aasConnection);
-    return aasConnectionToDto(aasConnection);
+    await this.aasConnectionService.save(aasConnection)
+    return aasConnectionToDto(aasConnection)
   }
 
   @Patch('/connections/:connectionId')
@@ -144,33 +146,33 @@ export class AasConnectionController {
     @Body() body: updateAasConnectionDto.UpdateAasConnectionDto,
     @Request() req: authRequest.AuthRequest,
   ) {
-    const updateAasConnection =
-      updateAasConnectionDto.UpdateAasConnectionSchema.parse(body);
+    const updateAasConnection
+      = updateAasConnectionDto.UpdateAasConnectionSchema.parse(body)
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
+    )
 
-    const aasConnection =
-      await this.aasConnectionService.findById(connectionId);
+    const aasConnection
+      = await this.aasConnectionService.findById(connectionId)
     if (!aasConnection.isOwnedBy(organizationId)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException()
     }
-    aasConnection.rename(updateAasConnection.name);
+    aasConnection.rename(updateAasConnection.name)
 
     if (updateAasConnection.modelId !== null) {
       const model = await this.modelsService.findOneOrFail(
         updateAasConnection.modelId,
-      );
+      )
       if (!model.isOwnedBy(organizationId)) {
-        throw new ForbiddenException();
+        throw new ForbiddenException()
       }
 
-      aasConnection.assignModel(model);
+      aasConnection.assignModel(model)
     }
-    aasConnection.replaceFieldAssignments(updateAasConnection.fieldAssignments);
-    await this.aasConnectionService.save(aasConnection);
-    return aasConnectionToDto(aasConnection);
+    aasConnection.replaceFieldAssignments(updateAasConnection.fieldAssignments)
+    await this.aasConnectionService.save(aasConnection)
+    return aasConnectionToDto(aasConnection)
   }
 
   @Get('/connections/:connectionId')
@@ -182,13 +184,13 @@ export class AasConnectionController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
-    const aasConnection =
-      await this.aasConnectionService.findById(connectionId);
+    )
+    const aasConnection
+      = await this.aasConnectionService.findById(connectionId)
     if (!aasConnection.isOwnedBy(organizationId)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException()
     }
-    return aasConnectionToDto(aasConnection);
+    return aasConnectionToDto(aasConnection)
   }
 
   @Get('/connections')
@@ -199,10 +201,10 @@ export class AasConnectionController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
-    const aasConnections =
-      await this.aasConnectionService.findAllByOrganization(organizationId);
-    return GetAasConnectionCollectionSchema.parse(aasConnections);
+    )
+    const aasConnections
+      = await this.aasConnectionService.findAllByOrganization(organizationId)
+    return GetAasConnectionCollectionSchema.parse(aasConnections)
   }
 
   @Get(':aasType/properties')
@@ -214,8 +216,8 @@ export class AasConnectionController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
-    const assetAdministrationShell = createAasForType(aasType);
-    return assetAdministrationShell.propertiesWithParent;
+    )
+    const assetAdministrationShell = createAasForType(aasType)
+    return assetAdministrationShell.propertiesWithParent
   }
 }

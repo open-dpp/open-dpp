@@ -1,3 +1,33 @@
+<script lang="ts" setup>
+import { CubeIcon, UsersIcon } from "@heroicons/vue/24/outline";
+import { computed } from "vue";
+
+const props = defineProps<{
+  organizationId: string;
+}>();
+
+const actions = computed(() => [
+  {
+    title: "Mitglieder hinzufügen",
+    description:
+      "Mitglieder der Organisation ansehen, um dort ein neues Mitglieder hinzuzufügen.",
+    to: `/organizations/${props.organizationId}/members`,
+    icon: UsersIcon,
+    iconForeground: "text-sky-700",
+    iconBackground: "bg-sky-50",
+  },
+  {
+    title: "Modell hinzufügen",
+    description:
+      "Modelle der Organisation ansehen, um dort ein neues Modell hinzuzufügen.",
+    to: `/organizations/${props.organizationId}/models`,
+    icon: CubeIcon,
+    iconForeground: "text-yellow-700",
+    iconBackground: "bg-yellow-50",
+  },
+]);
+</script>
+
 <template>
   <div
     class="divide-y divide-gray-200 overflow-hidden rounded-lg bg-gray-200 shadow-sm sm:grid sm:grid-cols-2 sm:gap-px sm:divide-y-0"
@@ -5,22 +35,20 @@
     <div
       v-for="(action, actionIdx) in actions"
       :key="action.title"
-      :class="[
+      class="group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500" :class="[
         actionIdx === 0 ? 'rounded-tl-lg rounded-tr-lg sm:rounded-tr-none' : '',
         actionIdx === 1 ? 'sm:rounded-tr-lg' : '',
         actionIdx === actions.length - 2 ? 'sm:rounded-bl-lg' : '',
         actionIdx === actions.length - 1
           ? 'rounded-bl-lg rounded-br-lg sm:rounded-bl-none'
           : '',
-        'group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500',
       ]"
     >
       <div>
         <span
-          :class="[
+          class="inline-flex rounded-lg p-3 ring-4 ring-white" :class="[
             action.iconBackground,
             action.iconForeground,
-            'inline-flex rounded-lg p-3 ring-4 ring-white',
           ]"
         >
           <component :is="action.icon" aria-hidden="true" class="h-6 w-6" />
@@ -51,33 +79,3 @@
     </div>
   </div>
 </template>
-
-<script lang="ts" setup>
-import { CubeIcon, UsersIcon } from '@heroicons/vue/24/outline';
-import { computed } from 'vue';
-
-const props = defineProps<{
-  organizationId: string;
-}>();
-
-const actions = computed(() => [
-  {
-    title: 'Mitglieder hinzufügen',
-    description:
-      'Mitglieder der Organisation ansehen, um dort ein neues Mitglieder hinzuzufügen.',
-    to: '/organizations/' + props.organizationId + '/members',
-    icon: UsersIcon,
-    iconForeground: 'text-sky-700',
-    iconBackground: 'bg-sky-50',
-  },
-  {
-    title: 'Modell hinzufügen',
-    description:
-      'Modelle der Organisation ansehen, um dort ein neues Modell hinzuzufügen.',
-    to: '/organizations/' + props.organizationId + '/models',
-    icon: CubeIcon,
-    iconForeground: 'text-yellow-700',
-    iconBackground: 'bg-yellow-50',
-  },
-]);
-</script>

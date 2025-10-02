@@ -1,21 +1,24 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { KeycloakAuthGuard } from './keycloak-auth.guard';
-import { ConfigService } from '@nestjs/config';
-import {
+import type {
   ExecutionContext,
+} from '@nestjs/common'
+import type { TestingModule } from '@nestjs/testing'
+import type { KeycloakUserInToken } from './KeycloakUserInToken'
+import { expect } from '@jest/globals'
+import { HttpModule } from '@nestjs/axios'
+import {
   HttpException,
   HttpStatus,
   UnauthorizedException,
-} from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC } from '../public/public.decorator';
-import { KeycloakUserInToken } from './KeycloakUserInToken';
-import { HttpModule } from '@nestjs/axios';
-import { expect } from '@jest/globals';
+} from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import { Reflector } from '@nestjs/core'
+import { Test } from '@nestjs/testing'
+import { IS_PUBLIC } from '../public/public.decorator'
+import { KeycloakAuthGuard } from './keycloak-auth.guard'
 
-describe('KeycloakAuthGuard', () => {
-  let guard: KeycloakAuthGuard;
-  let reflector: Reflector;
+describe('keycloakAuthGuard', () => {
+  let guard: KeycloakAuthGuard
+  let reflector: Reflector
 
   const mockUser: KeycloakUserInToken = {
     sub: 'test-user-id',
@@ -24,7 +27,7 @@ describe('KeycloakAuthGuard', () => {
     preferred_username: 'testuser',
     email_verified: true,
     memberships: [],
-  };
+  }
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -44,76 +47,76 @@ describe('KeycloakAuthGuard', () => {
           },
         },
       ],
-    }).compile();
+    }).compile()
 
-    guard = module.get<KeycloakAuthGuard>(KeycloakAuthGuard);
-    reflector = module.get<Reflector>(Reflector);
-  });
+    guard = module.get<KeycloakAuthGuard>(KeycloakAuthGuard)
+    reflector = module.get<Reflector>(Reflector)
+  })
 
   it('should be defined', () => {
-    expect(guard).toBeDefined();
-  });
+    expect(guard).toBeDefined()
+  })
 
   describe('canActivate', () => {
-    let context: ExecutionContext;
-    let mockRequest: any;
+    let context: ExecutionContext
+    let mockRequest: any
 
     beforeEach(() => {
       mockRequest = {
         headers: {},
-      };
+      }
       context = {
         switchToHttp: () => ({
           getRequest: () => mockRequest,
         }),
         getHandler: () => ({}),
-      } as unknown as ExecutionContext;
-    });
+      } as unknown as ExecutionContext
+    })
 
     it('should return true for public routes', async () => {
-      jest.spyOn(reflector, 'get').mockReturnValue(true);
+      jest.spyOn(reflector, 'get').mockReturnValue(true)
 
-      const result = await guard.canActivate(context);
+      const result = await guard.canActivate(context)
 
-      expect(result).toBe(true);
-      expect(reflector.get).toHaveBeenCalledWith(IS_PUBLIC, expect.any(Object));
-    });
+      expect(result).toBe(true)
+      expect(reflector.get).toHaveBeenCalledWith(IS_PUBLIC, expect.any(Object))
+    })
 
     it('should throw unauthorized exception when authorization header is missing', async () => {
-      jest.spyOn(reflector, 'get').mockReturnValue(false);
+      jest.spyOn(reflector, 'get').mockReturnValue(false)
 
       await expect(guard.canActivate(context)).rejects.toThrow(
         new HttpException('Authorization missing', HttpStatus.UNAUTHORIZED),
-      );
-    });
+      )
+    })
 
     it('should throw unauthorized exception when authorization format is invalid', async () => {
-      jest.spyOn(reflector, 'get').mockReturnValue(false);
-      mockRequest.headers.authorization = 'InvalidFormat';
+      jest.spyOn(reflector, 'get').mockReturnValue(false)
+      mockRequest.headers.authorization = 'InvalidFormat'
 
       await expect(guard.canActivate(context)).rejects.toThrow(
         new UnauthorizedException(
           'Authorization: Bearer <token> header invalid',
         ),
-      );
-    });
+      )
+    })
 
     it('should authenticate user and set auth context with permissions', async () => {
-      jest.spyOn(reflector, 'get').mockReturnValue(false);
-      mockRequest.headers.authorization = 'Bearer valid-token';
+      jest.spyOn(reflector, 'get').mockReturnValue(false)
+      mockRequest.headers.authorization = 'Bearer valid-token'
 
       const mockPayload = {
         ...mockUser,
         memberships: ['organization-org1', 'organization-org2'],
-      };
+      }
 
-      jest.spyOn(guard, 'validateToken').mockResolvedValue(mockPayload);
+      jest.spyOn(guard, 'validateToken').mockResolvedValue(mockPayload)
 
-      const result = await guard.canActivate(context);
+      const result = await guard.canActivate(context)
 
-      expect(result).toBe(true);
-      expect(mockRequest.authContext).toBeDefined();
-      expect(mockRequest.authContext.keycloakUser).toEqual(mockPayload);
+      expect(result).toBe(true)
+      expect(mockRequest.authContext).toBeDefined()
+      expect(mockRequest.authContext.keycloakUser).toEqual(mockPayload)
       expect(mockRequest.authContext.permissions).toEqual([
         {
           type: 'organization',
@@ -125,24 +128,24 @@ describe('KeycloakAuthGuard', () => {
           resource: 'org2',
           scopes: ['organization:access'],
         },
-      ]);
-    });
+      ])
+    })
 
     it('should handle empty memberships', async () => {
-      jest.spyOn(reflector, 'get').mockReturnValue(false);
-      mockRequest.headers.authorization = 'Bearer valid-token';
+      jest.spyOn(reflector, 'get').mockReturnValue(false)
+      mockRequest.headers.authorization = 'Bearer valid-token'
 
       const mockPayload = {
         ...mockUser,
         // No memberships property
-      };
+      }
 
-      jest.spyOn(guard, 'validateToken').mockResolvedValue(mockPayload);
+      jest.spyOn(guard, 'validateToken').mockResolvedValue(mockPayload)
 
-      const result = await guard.canActivate(context);
+      const result = await guard.canActivate(context)
 
-      expect(result).toBe(true);
-      expect(mockRequest.authContext.permissions).toEqual([]);
-    });
-  });
-});
+      expect(result).toBe(true)
+      expect(mockRequest.authContext.permissions).toEqual([])
+    })
+  })
+})

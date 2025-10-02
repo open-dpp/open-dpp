@@ -1,11 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { randomUUID } from 'crypto';
-import { PassportService } from './passport.service';
-import { Passport } from './domain/passport';
-import { ConfigService } from '@nestjs/config';
-import { expect } from '@jest/globals';
+import type { TestingModule } from '@nestjs/testing'
+import { randomUUID } from 'node:crypto'
+import { expect } from '@jest/globals'
+import { ConfigService } from '@nestjs/config'
+import { Test } from '@nestjs/testing'
+import { Passport } from './domain/passport'
+import { PassportService } from './passport.service'
 
-const mockGetMetadata = jest.fn();
+const mockGetMetadata = jest.fn()
 
 jest.mock('@open-dpp/api-client', () => ({
   ...jest.requireActual('@open-dpp/api-client'),
@@ -14,11 +15,11 @@ jest.mock('@open-dpp/api-client', () => ({
       getMetadata: mockGetMetadata,
     },
   })),
-}));
+}))
 
-describe('PassportService', () => {
-  let service: PassportService;
-  let module: TestingModule;
+describe('passportService', () => {
+  let service: PassportService
+  let module: TestingModule
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -30,38 +31,40 @@ describe('PassportService', () => {
           useValue: {
             get: jest.fn().mockImplementation((key) => {
               if (key === 'DPP_API_URL') {
-                return 'http://api.url';
-              } else if (key === 'API_SERVICE_TOKEN') {
-                return 'service-token';
-              } else {
-                return undefined;
+                return 'http://api.url'
+              }
+              else if (key === 'API_SERVICE_TOKEN') {
+                return 'service-token'
+              }
+              else {
+                return undefined
               }
             }),
           },
         },
       ],
-    }).compile();
-    service = module.get<PassportService>(PassportService);
-  });
+    }).compile()
+    service = module.get<PassportService>(PassportService)
+  })
 
   it('should find passport', async () => {
-    const organizationId = randomUUID();
+    const organizationId = randomUUID()
     mockGetMetadata.mockResolvedValue({
       data: { organizationId },
-    });
-    const uuid = randomUUID();
-    const found = await service.findOneOrFail(uuid);
+    })
+    const uuid = randomUUID()
+    const found = await service.findOneOrFail(uuid)
     expect(found).toEqual(
       Passport.create({ uuid, ownedByOrganizationId: organizationId }),
-    );
-    expect(mockGetMetadata).toHaveBeenCalledWith(uuid);
-  });
+    )
+    expect(mockGetMetadata).toHaveBeenCalledWith(uuid)
+  })
 
   afterEach(() => {
-    jest.clearAllMocks();
-  });
+    jest.clearAllMocks()
+  })
 
   afterAll(async () => {
-    await module.close();
-  });
-});
+    await module.close()
+  })
+})

@@ -20,7 +20,7 @@ export const dataValueDocumentation = {
     dataFieldId: { type: 'string', format: 'uuid' },
     row: { type: 'integer' },
   },
-};
+}
 
 export const uniqueProductIdentifierDocumentation = {
   type: 'object',
@@ -28,11 +28,11 @@ export const uniqueProductIdentifierDocumentation = {
     uuid: { type: 'string', format: 'uuid' },
     value: { type: 'string' },
   },
-};
+}
 export const orgaParamDocumentation = {
   name: 'orgaId',
   description: 'The id of the organization you are a member of.',
   required: true,
   type: 'string',
   format: 'uuid',
-};
+}

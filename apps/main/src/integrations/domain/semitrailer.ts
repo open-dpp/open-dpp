@@ -389,4 +389,4 @@ export const semitrailerAas = {
       ],
     },
   ],
-};
+}

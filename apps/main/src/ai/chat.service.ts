@@ -1,16 +1,16 @@
+import type { AiConfigurationService } from './ai-configuration/infrastructure/ai-configuration.service'
+import type { AiService } from './ai.service'
+import type { McpClientService } from './mcp-client/mcp-client.service'
+import type { PassportService } from './passports/passport.service'
+import { StringOutputParser } from '@langchain/core/output_parsers'
+import { ChatPromptTemplate } from '@langchain/core/prompts'
+import { RunnableSequence } from '@langchain/core/runnables'
 // agent-server/src/chat.service.ts
-import { Injectable, Logger } from '@nestjs/common';
-import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { StringOutputParser } from '@langchain/core/output_parsers';
-import { RunnableSequence } from '@langchain/core/runnables';
-import { AiService } from './ai.service';
-import { McpClientService } from './mcp-client/mcp-client.service';
-import { AiConfigurationService } from './ai-configuration/infrastructure/ai-configuration.service';
-import { PassportService } from './passports/passport.service';
+import { Injectable, Logger } from '@nestjs/common'
 
 @Injectable()
 export class ChatService {
-  private readonly logger: Logger = new Logger(ChatService.name);
+  private readonly logger: Logger = new Logger(ChatService.name)
 
   constructor(
     private mcpClientService: McpClientService,
@@ -20,34 +20,34 @@ export class ChatService {
   ) {}
 
   async askAgent(query: string, passportUuid: string) {
-    this.logger.log(`Find passport with UUID: ${passportUuid}`);
-    const passport = await this.passportService.findOneOrFail(passportUuid);
+    this.logger.log(`Find passport with UUID: ${passportUuid}`)
+    const passport = await this.passportService.findOneOrFail(passportUuid)
     if (!passport) {
-      throw new Error('Passport not found');
+      throw new Error('Passport not found')
     }
-    this.logger.log(`Fetch ai configuration`);
-    const aiConfiguration =
-      await this.aiConfigurationService.findOneByOrganizationId(
+    this.logger.log(`Fetch ai configuration`)
+    const aiConfiguration
+      = await this.aiConfigurationService.findOneByOrganizationId(
         passport.ownedByOrganizationId,
-      );
+      )
 
     if (!aiConfiguration?.isEnabled) {
-      this.logger.log(`AI is not enabled`);
-      throw new Error('AI is not enabled');
+      this.logger.log(`AI is not enabled`)
+      throw new Error('AI is not enabled')
     }
-    this.logger.log(`Get llm`);
+    this.logger.log(`Get llm`)
 
     const llm = this.aiService.getLLM(
       aiConfiguration.provider,
       aiConfiguration.model,
-    );
-    this.logger.log(`Get tools`);
-    const tools = await this.mcpClientService.getTools();
-    this.logger.log(`Get agent with llm and tools`);
+    )
+    this.logger.log(`Get tools`)
+    const tools = await this.mcpClientService.getTools()
+    this.logger.log(`Get agent with llm and tools`)
     const agent = this.aiService.getAgent({
       llm,
       tools,
-    });
+    })
 
     const prompt = ChatPromptTemplate.fromMessages([
       [
@@ -55,21 +55,21 @@ export class ChatService {
         `You are a helpful assistant. The current product passport has the UUID: ${passportUuid}`,
       ],
       ['human', '{input}'],
-    ]);
+    ])
 
     const chain = RunnableSequence.from([
       prompt,
       agent,
       (agentResponse: { messages: any[] }) => {
-        const messages = agentResponse.messages || [];
-        const lastMessage = messages[messages.length - 1];
+        const messages = agentResponse.messages || []
+        const lastMessage = messages[messages.length - 1]
 
-        return lastMessage?.content || '';
+        return lastMessage?.content || ''
       },
       new StringOutputParser(),
-    ]);
-    this.logger.log(`Ask agent`);
+    ])
+    this.logger.log(`Ask agent`)
 
-    return await chain.invoke({ input: query });
+    return await chain.invoke({ input: query })
   }
 }

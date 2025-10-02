@@ -1,3 +1,43 @@
+<script setup lang="ts">
+import type { DataSectionDto } from "@open-dpp/api-client";
+import { computed } from "vue";
+import { useRouter } from "vue-router";
+import { useProductPassportStore } from "../../stores/product-passport";
+import DataValue from "./DataValue.vue";
+
+const props = defineProps<{ dataSection: DataSectionDto }>();
+const router = useRouter();
+const productPassportStore = useProductPassportStore();
+const subSections = computed(() =>
+  productPassportStore.findSubSections(props.dataSection.id),
+);
+const headers = computed(() => {
+  const headers = props.dataSection.dataFields.map(d => d.name);
+  if (subSections.value && subSections.value.length > 0) {
+    headers.push("Weiterführende Abschnitte");
+  }
+  return headers;
+});
+
+async function onSubSectionClick(subSectionId: string, rowIndex: number) {
+  await router.push(
+    `?sectionId=${subSectionId}&row=${rowIndex}&parentSectionId=${props.dataSection.id}`,
+  );
+}
+
+function generateHeaderClasses(index: number) {
+  return index === 0
+    ? "py-3.5 pr-3 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0"
+    : "hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell";
+}
+
+function generateCellClasses(index: number) {
+  return index === 0
+    ? "px-3 py-4 text-sm text-gray-500 table-cell"
+    : "hidden px-3 py-4 text-sm text-gray-500 lg:table-cell";
+}
+</script>
+
 <template>
   <div class="-mx-4 mt-8 sm:-mx-0">
     <table class="min-w-full divide-y divide-gray-300">
@@ -5,8 +45,8 @@
         <tr>
           <th
             v-for="(name, index) in headers"
-            scope="col"
             :key="index"
+            scope="col"
             :class="[generateHeaderClasses(index)]"
           >
             {{ name }}
@@ -38,11 +78,11 @@
           >
             <div class="grid grid-cols-2 gap-1">
               <button
-                :data-cy="`${subSection.id}_${rowIndex}`"
                 v-for="subSection in subSections"
-                @click="onSubSectionClick(subSection.id, rowIndex)"
                 :key="subSection.id"
+                :data-cy="`${subSection.id}_${rowIndex}`"
                 class="cursor-pointer p-1 block rounded-md text-center font-semibold shadow-xs focus-visible:outline focus-visible:outline-offset-2 bg-indigo-600 hover:bg-indigo-500 focus-visible:outline-indigo-600 text-white"
+                @click="onSubSectionClick(subSection.id, rowIndex)"
               >
                 {{ subSection.name }}
               </button>
@@ -53,50 +93,12 @@
               class="text-indigo-600 hover:text-indigo-900"
               :data-cy="`${dataSection.id}_${rowIndex}`"
               :to="`?sectionId=${dataSection.id}&row=${rowIndex}&parentSectionId=${dataSection.id}`"
-              >Mehr Infos</router-link
             >
+              Mehr Infos
+            </router-link>
           </td>
         </tr>
       </tbody>
     </table>
   </div>
 </template>
-<script setup lang="ts">
-import { DataSectionDto } from '@open-dpp/api-client';
-import DataValue from './DataValue.vue';
-import { computed } from 'vue';
-import { useProductPassportStore } from '../../stores/product-passport';
-import { useRouter } from 'vue-router';
-
-const router = useRouter();
-const props = defineProps<{ dataSection: DataSectionDto }>();
-const productPassportStore = useProductPassportStore();
-const subSections = computed(() =>
-  productPassportStore.findSubSections(props.dataSection.id),
-);
-const headers = computed(() => {
-  const headers = props.dataSection.dataFields.map((d) => d.name);
-  if (subSections.value && subSections.value.length > 0) {
-    headers.push('Weiterführende Abschnitte');
-  }
-  return headers;
-});
-
-const onSubSectionClick = async (subSectionId: string, rowIndex: number) => {
-  await router.push(
-    `?sectionId=${subSectionId}&row=${rowIndex}&parentSectionId=${props.dataSection.id}`,
-  );
-};
-
-const generateHeaderClasses = (index: number) => {
-  return index === 0
-    ? 'py-3.5 pr-3 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0'
-    : 'hidden px-3 py-3.5 text-left text-sm font-semibold text-gray-900 lg:table-cell';
-};
-
-const generateCellClasses = (index: number) => {
-  return index === 0
-    ? 'px-3 py-4 text-sm text-gray-500 table-cell'
-    : 'hidden px-3 py-4 text-sm text-gray-500 lg:table-cell';
-};
-</script>

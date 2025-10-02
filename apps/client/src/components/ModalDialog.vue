@@ -1,3 +1,21 @@
+<script lang="ts" setup>
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  TransitionChild,
+  TransitionRoot,
+} from "@headlessui/vue";
+import {
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+} from "@heroicons/vue/24/outline";
+import { useModelDialogStore } from "../stores/modal.dialog";
+import BaseButton from "./BaseButton.vue";
+
+const modelDialogStore = useModelDialogStore();
+</script>
+
 <template>
   <TransitionRoot :show="modelDialogStore.isOpen" as="template">
     <Dialog class="relative z-20" @close="modelDialogStore.close">
@@ -48,7 +66,8 @@
                   <DialogTitle
                     as="h3"
                     class="text-base font-semibold text-gray-900"
-                    >{{ modelDialogStore.content.title }}
+                  >
+                    {{ modelDialogStore.content.title }}
                   </DialogTitle>
                   <div class="mt-2">
                     <p class="text-sm text-gray-500">
@@ -80,21 +99,3 @@
     </Dialog>
   </TransitionRoot>
 </template>
-
-<script lang="ts" setup>
-import {
-  Dialog,
-  DialogPanel,
-  DialogTitle,
-  TransitionChild,
-  TransitionRoot,
-} from '@headlessui/vue';
-import {
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-} from '@heroicons/vue/24/outline';
-import { useModelDialogStore } from '../stores/modal.dialog';
-import BaseButton from './BaseButton.vue';
-
-const modelDialogStore = useModelDialogStore();
-</script>

@@ -1,6 +1,6 @@
-import { Controller, Post, Request } from '@nestjs/common';
-import { KeycloakResourcesService } from '../infrastructure/keycloak-resources.service';
-import * as authRequest from '@open-dpp/auth';
+import type * as authRequest from '@open-dpp/auth'
+import type { KeycloakResourcesService } from '../infrastructure/keycloak-resources.service'
+import { Controller, Post, Request } from '@nestjs/common'
 
 @Controller('keycloak-resources')
 export class KeycloakResourcesController {
@@ -12,6 +12,6 @@ export class KeycloakResourcesController {
       req.authContext,
       'organization123',
       ['/organizations/123'],
-    );
+    )
   }
 }

@@ -1,3 +1,10 @@
+<script setup lang="ts">
+import type { FieldView } from "../../lib/field-view";
+import DataValue from "./DataValue.vue";
+
+const props = defineProps<{ fieldView: FieldView }>();
+</script>
+
 <template>
   <div
     :data-cy="props.fieldView.dataField.id"
@@ -11,10 +18,3 @@
     </dd>
   </div>
 </template>
-
-<script setup lang="ts">
-import { FieldView } from '../../lib/field-view';
-import DataValue from './DataValue.vue';
-
-const props = defineProps<{ fieldView: FieldView }>();
-</script>

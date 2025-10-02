@@ -1,3 +1,12 @@
+import type { PermissionService } from '@open-dpp/auth'
+import type * as authRequest from '@open-dpp/auth'
+import type { MarketplaceService } from '../../marketplace/marketplace.service'
+import type {
+  DataValueDto,
+} from '../../product-passport-data/presentation/dto/data-value.dto'
+import type { TemplateService } from '../../templates/infrastructure/template.service'
+import type { ModelsService } from '../infrastructure/models.service'
+
 import {
   BadRequestException,
   Body,
@@ -8,35 +17,28 @@ import {
   Patch,
   Post,
   Request,
-} from '@nestjs/common';
-import { ModelsService } from '../infrastructure/models.service';
-import * as createModelDto_1 from './dto/create-model.dto';
-import * as updateModelDto_1 from './dto/update-model.dto';
-import { Model } from '../domain/model';
-import { TemplateService } from '../../templates/infrastructure/template.service';
-
-import { modelToDto } from './dto/model.dto';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import {
-  DataValueDto,
-  DataValueDtoSchema,
-} from '../../product-passport-data/presentation/dto/data-value.dto';
-import { DataValue } from '../../product-passport-data/domain/data-value';
-import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+} from '@nestjs/common'
+import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger'
+import { ZodValidationPipe } from '@open-dpp/exception'
+import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
+import { modelParamDocumentation } from '../../open-api-docs/item.doc'
 import {
   createModelDocumentation,
   modelDocumentation,
   updateModelDocumentation,
-} from '../../open-api-docs/model.doc';
+} from '../../open-api-docs/model.doc'
+import { DataValue } from '../../product-passport-data/domain/data-value'
+import {
+  DataValueDtoSchema,
+} from '../../product-passport-data/presentation/dto/data-value.dto'
 import {
   dataValueDocumentation,
   orgaParamDocumentation,
-} from '../../product-passport-data/presentation/dto/docs/product-passport-data.doc';
-import { modelParamDocumentation } from '../../open-api-docs/item.doc';
-import { MarketplaceService } from '../../marketplace/marketplace.service';
-import { PermissionService } from '@open-dpp/auth';
-import { ZodValidationPipe } from '@open-dpp/exception';
-import * as authRequest from '@open-dpp/auth';
+} from '../../product-passport-data/presentation/dto/docs/product-passport-data.doc'
+import { Model } from '../domain/model'
+import * as createModelDto_1 from './dto/create-model.dto'
+import { modelToDto } from './dto/model.dto'
+import * as updateModelDto_1 from './dto/update-model.dto'
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {
@@ -68,50 +70,52 @@ export class ModelsController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
+    )
 
     // Validate that only one of templateId or marketplaceResourceId is provided
     if (!createModelDto.templateId && !createModelDto.marketplaceResourceId) {
       throw new BadRequestException(
         'Either templateId or marketplaceResourceId must be provided',
-      );
+      )
     }
 
     if (createModelDto.templateId && createModelDto.marketplaceResourceId) {
       throw new BadRequestException(
         'Only one of templateId or marketplaceResourceId can be provided, not both',
-      );
+      )
     }
 
-    let template;
+    let template
 
     if (createModelDto.templateId) {
       template = await this.templateService.findOneOrFail(
         createModelDto.templateId,
-      );
-    } else if (!createModelDto.marketplaceResourceId) {
+      )
+    }
+    else if (!createModelDto.marketplaceResourceId) {
       throw new BadRequestException(
         'One of templateId or marketplaceResourceId must be provided, but not both',
-      );
-    } else {
+      )
+    }
+    else {
       template = await this.marketplaceService.download(
         organizationId,
         req.authContext.keycloakUser.sub,
         createModelDto.marketplaceResourceId,
-      );
+      )
     }
     if (!template.isOwnedBy(organizationId)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException()
     }
     const model = Model.create({
       name: createModelDto.name,
       description: createModelDto.description,
       userId: req.authContext.keycloakUser.sub,
-      organizationId: organizationId,
+      organizationId,
       template,
-    });
-    model.createUniqueProductIdentifier();
-    return modelToDto(await this.modelsService.save(model));
+    })
+    model.createUniqueProductIdentifier()
+    return modelToDto(await this.modelsService.save(model))
   }
 
   @ApiOperation({
@@ -130,10 +134,10 @@ export class ModelsController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
+    )
     return (await this.modelsService.findAllByOrganization(organizationId)).map(
-      (m) => modelToDto(m),
-    );
+      m => modelToDto(m),
+    )
   }
 
   @ApiOperation({
@@ -154,17 +158,17 @@ export class ModelsController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
-    const model = await this.modelsService.findOneOrFail(id);
+    )
+    const model = await this.modelsService.findOneOrFail(id)
     if (!model.isOwnedBy(organizationId)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException()
     }
-    return modelToDto(model);
+    return modelToDto(model)
   }
 
   @ApiOperation({
     summary: 'Update model',
-    description: "Update model's name and description.",
+    description: 'Update model\'s name and description.',
   })
   @ApiParam(orgaParamDocumentation)
   @ApiParam(modelParamDocumentation)
@@ -185,19 +189,19 @@ export class ModelsController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
-    const model = await this.modelsService.findOneOrFail(modelId);
+    )
+    const model = await this.modelsService.findOneOrFail(modelId)
     if (!model.isOwnedBy(organizationId)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException()
     }
 
     if (updateModelDto.name) {
-      model.rename(updateModelDto.name);
+      model.rename(updateModelDto.name)
     }
     if (updateModelDto.description) {
-      model.modifyDescription(updateModelDto.description);
+      model.modifyDescription(updateModelDto.description)
     }
-    return modelToDto(await this.modelsService.save(model));
+    return modelToDto(await this.modelsService.save(model))
   }
 
   @ApiOperation({
@@ -223,22 +227,22 @@ export class ModelsController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
-    const model = await this.modelsService.findOneOrFail(modelId);
+    )
+    const model = await this.modelsService.findOneOrFail(modelId)
     if (!model.isOwnedBy(organizationId)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException()
     }
 
-    model.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
-    const template = await this.templateService.findOneOrFail(model.templateId);
+    model.modifyDataValues(updateDataValues.map(d => DataValue.create(d)))
+    const template = await this.templateService.findOneOrFail(model.templateId)
     const validationResult = template.validate(
       model.dataValues,
       GranularityLevel.MODEL,
-    );
+    )
     if (!validationResult.isValid) {
-      throw new BadRequestException(validationResult.toJson());
+      throw new BadRequestException(validationResult.toJson())
     }
-    return modelToDto(await this.modelsService.save(model));
+    return modelToDto(await this.modelsService.save(model))
   }
 
   @ApiOperation({
@@ -265,20 +269,20 @@ export class ModelsController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    );
-    const model = await this.modelsService.findOneOrFail(modelId);
+    )
+    const model = await this.modelsService.findOneOrFail(modelId)
     if (model.ownedByOrganizationId !== organizationId) {
-      throw new ForbiddenException();
+      throw new ForbiddenException()
     }
-    model.addDataValues(addDataValues.map((d) => DataValue.create(d)));
-    const template = await this.templateService.findOneOrFail(model.templateId);
+    model.addDataValues(addDataValues.map(d => DataValue.create(d)))
+    const template = await this.templateService.findOneOrFail(model.templateId)
     const validationResult = template.validate(
       model.dataValues,
       GranularityLevel.MODEL,
-    );
+    )
     if (!validationResult.isValid) {
-      throw new BadRequestException(validationResult.toJson());
+      throw new BadRequestException(validationResult.toJson())
     }
-    return modelToDto(await this.modelsService.save(model));
+    return modelToDto(await this.modelsService.save(model))
   }
 }
