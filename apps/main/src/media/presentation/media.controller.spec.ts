@@ -5,7 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MediaDbSchema, MediaDoc } from '../infrastructure/media.schema';
 import { ConfigModule } from '@nestjs/config';
 import { expect } from '@jest/globals';
-import { MongooseTestingModule } from 'libs/testing/src/mongo.testing.module';
+import { MongooseTestingModule } from 'packages/testing/src/mongo.testing.module';
 
 describe('MediaController', () => {
   let controller: MediaController;
