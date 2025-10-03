@@ -26,6 +26,9 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix"
   },
+  "dependencies": {
+    "@nestjs/core": "^11.0.1"
+  },
   "devDependencies": {
     "@open-dpp/config-eslint": "workspace:*",
     "@tsconfig/node-lts": "^22.0.2",
