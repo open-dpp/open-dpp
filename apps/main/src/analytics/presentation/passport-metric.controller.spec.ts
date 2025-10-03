@@ -2,8 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PassportMetricController } from './passport-metric.controller';
 import { randomUUID } from 'crypto';
 import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
-import { PassportMetricService } from '../infrastructure/passport-metric.service';
-import { MeasurementType } from '../domain/passport-metric';
+import {
+  PassportMetricService,
+  TimePeriod,
+} from '../infrastructure/passport-metric.service';
+import { MeasurementType, PassportMetric } from '../domain/passport-metric';
 import { Connection } from 'mongoose';
 import { APP_GUARD, Reflector } from '@nestjs/core';
 import request from 'supertest';
@@ -30,12 +33,12 @@ import {
 } from '../../models/infrastructure/model.schema';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { PermissionService } from '@app/permission';
+import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
 
 describe('PassportMetricController', () => {
   let app: INestApplication;
   let modelsService: ModelsService;
   let passportMetricService: PassportMetricService;
-  let controller: PassportMetricController;
   let module: TestingModule;
   let mongoConnection: Connection;
   const userId = randomUUID();
@@ -87,8 +90,6 @@ describe('PassportMetricController', () => {
       PassportMetricService,
     );
     modelsService = module.get<ModelsService>(ModelsService);
-
-    controller = module.get<PassportMetricController>(PassportMetricController);
     app = module.createNestApplication();
     await app.init();
     await passportMetricService.findOne(
@@ -172,7 +173,9 @@ describe('PassportMetricController', () => {
     await modelsService.save(model);
 
     const page = 'http://example.com/page';
-    const response = await request(getApp(app))
+    const response: { status: number; body: { id: string } } = await request(
+      getApp(app),
+    )
       .post(`/passport-metrics/page-views`)
       .send({
         page,
@@ -194,104 +197,104 @@ describe('PassportMetricController', () => {
     ]);
   });
 
-  // it(`/GET passport metrics`, async () => {
-  //   const templateId = randomUUID();
-  //   const date1 = new Date('2025-01-01T13:00:00Z');
-  //   const date2 = new Date('2025-01-01T14:00:00Z');
-  //   const source = {
-  //     templateId,
-  //     organizationId,
-  //     modelId: randomUUID(),
-  //   };
-  //   const page = 'http://example.com/page1';
-  //   const pageView1 = PassportMetric.createPageView({
-  //     source,
-  //     page,
-  //     date: date1,
-  //   });
-  //   const pageView2 = PassportMetric.createPageView({
-  //     source,
-  //     page,
-  //     date: date2,
-  //   });
+  it(`/GET passport metrics`, async () => {
+    const templateId = randomUUID();
+    const date1 = new Date('2025-01-01T13:00:00Z');
+    const date2 = new Date('2025-01-01T14:00:00Z');
+    const source = {
+      templateId,
+      organizationId,
+      modelId: randomUUID(),
+    };
+    const page = 'http://example.com/page1';
+    const pageView1 = PassportMetric.createPageView({
+      source,
+      page,
+      date: date1,
+    });
+    const pageView2 = PassportMetric.createPageView({
+      source,
+      page,
+      date: date2,
+    });
+
+    await passportMetricService.create(pageView1);
+    await passportMetricService.create(pageView2);
+
+    const response = await request(getApp(app))
+      .get(
+        `/organizations/${organizationId}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T12:00:00Z&endDate=2025-03-01T13:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send();
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual([
+      {
+        datetime: '2025-01-01T00:00:00.000Z',
+        sum: 2,
+      },
+    ]);
+  });
   //
-  //   await passportMetricService.create(pageView1);
-  //   await passportMetricService.create(pageView2);
-  //
-  //   const response = await request(app.getHttpServer())
-  //     .get(
-  //       `/organizations/${organizationId}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T12:00:00Z&endDate=2025-03-01T13:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
-  //     )
-  //     .set(
-  //       'Authorization',
-  //       getKeycloakAuthToken(
-  //         userId,
-  //         [organizationId],
-  //         keycloakAuthTestingGuard,
-  //       ),
-  //     )
-  //     .send();
-  //   expect(response.status).toEqual(200);
-  //   expect(response.body).toEqual([
-  //     {
-  //       datetime: '2025-01-01T00:00:00.000Z',
-  //       sum: 2,
-  //     },
-  //   ]);
-  // });
-  // //
-  // it(`/GET passport returns empty array if template is not part of organization`, async () => {
-  //   const templateId = randomUUID();
-  //   const date = new Date('2025-01-01T13:00:00Z');
-  //   const source = {
-  //     templateId,
-  //     organizationId,
-  //     modelId: randomUUID(),
-  //   };
-  //
-  //   const page = 'http://example.com/page1';
-  //   const pageView = PassportMetric.createPageView({
-  //     source,
-  //     page,
-  //     date: date,
-  //   });
-  //
-  //   await passportMetricService.create(pageView);
-  //   const otherOrganizationId = randomUUID();
-  //   const response = await request(app.getHttpServer())
-  //     .get(
-  //       `/organizations/${otherOrganizationId}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T12:00:00Z&endDate=2025-01-01T13:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
-  //     )
-  //     .set(
-  //       'Authorization',
-  //       getKeycloakAuthToken(
-  //         userId,
-  //         [otherOrganizationId],
-  //         keycloakAuthTestingGuard,
-  //       ),
-  //     )
-  //     .send();
-  //   expect(response.status).toEqual(200);
-  //   expect(response.body).toEqual([]);
-  // });
-  //
-  // it(`/GET passport metrics fails if user is not member of organization`, async () => {
-  //   const otherOrganizationId = randomUUID();
-  //   const response = await request(app.getHttpServer())
-  //     .get(
-  //       `/organizations/${otherOrganizationId}/passport-metrics?templateId=${randomUUID()}&modelId=${randomUUID()}&startDate=2025-01-01T12:00:00Z&endDate=2025-01-01T13:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
-  //     )
-  //     .set(
-  //       'Authorization',
-  //       getKeycloakAuthToken(
-  //         userId,
-  //         [organizationId],
-  //         keycloakAuthTestingGuard,
-  //       ),
-  //     )
-  //     .send();
-  //   expect(response.status).toEqual(403);
-  // });
+  it(`/GET passport returns empty array if template is not part of organization`, async () => {
+    const templateId = randomUUID();
+    const date = new Date('2025-01-01T13:00:00Z');
+    const source = {
+      templateId,
+      organizationId,
+      modelId: randomUUID(),
+    };
+
+    const page = 'http://example.com/page1';
+    const pageView = PassportMetric.createPageView({
+      source,
+      page,
+      date: date,
+    });
+
+    await passportMetricService.create(pageView);
+    const otherOrganizationId = randomUUID();
+    const response = await request(getApp(app))
+      .get(
+        `/organizations/${otherOrganizationId}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T12:00:00Z&endDate=2025-01-01T13:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [otherOrganizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send();
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual([]);
+  });
+
+  it(`/GET passport metrics fails if user is not member of organization`, async () => {
+    const otherOrganizationId = randomUUID();
+    const response = await request(getApp(app))
+      .get(
+        `/organizations/${otherOrganizationId}/passport-metrics?templateId=${randomUUID()}&modelId=${randomUUID()}&startDate=2025-01-01T12:00:00Z&endDate=2025-01-01T13:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
+      )
+      .set(
+        'Authorization',
+        getKeycloakAuthToken(
+          userId,
+          [organizationId],
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send();
+    expect(response.status).toEqual(403);
+  });
 
   afterAll(async () => {
     await mongoConnection.close();
