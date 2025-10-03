@@ -46,7 +46,7 @@
     "@nestjs/swagger": "^11.2.0",
     "@nestjs/typeorm": "^11.0.0",
     "@nestjs/websockets": "^11.1.6",
-    "@open-dpp/api-client": "^2.2.0",
+    "@open-dpp/api-client": "workspace:*",
     "@open-dpp/auth": "workspace:*",
     "@open-dpp/exception": "workspace:*",
     "@open-dpp/testing": "workspace:*",
