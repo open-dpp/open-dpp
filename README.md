@@ -4,17 +4,14 @@ open-dpp is an open-source platform for managing digital product passports (DPPs
 
 > **Note:** This repository is under active development and is rapidly evolving. Features, APIs, and architecture may change frequently, and a stable release has not yet been established. We recommend using open-dpp for testing and experimentation purposes only at this stage.
 
-# Deployment
-
-## Local Development
-
-### Install
+# Local Development
+## Install dependencies
 
 ```shell
 npm run install:all
 ```
 
-### Build and run with docker
+## Build and run with docker
 
 ```shell
 docker build -t ghcr.io/open-dpp/open-dpp .
@@ -27,7 +24,7 @@ For email verification go to https://mail.open-dpp.localhost:20080.
 
 // TODO: timing issue. open-dpp seems not to wait for keycloak such that the syncing fails for first docker compose up.
 
-### Run tests
+## Run tests
 
 To run the backend tests you have to run
 
@@ -48,4 +45,19 @@ To run frontend component tests
 ```shell
 cd apps/main/client
 npm run cypress:headless
+```
+
+# Deployment
+// TODO curl command to download all files for deployment
+
+* Create a directory for the project
+* Download docker-compose.yml
+* Download .env-example and rename it to .env
+* Download Caddyfile
+* Download keycloak-realm.json
+* Create secrets with your favorite secret generator and replace all secrets in .env
+* Adapt all urls to your domain
+
+```
+docker compose up
 ```
