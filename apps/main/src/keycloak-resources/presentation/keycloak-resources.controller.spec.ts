@@ -2,10 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { KeycloakResourcesController } from './keycloak-resources.controller';
 import { KeycloakResourcesService } from '../infrastructure/keycloak-resources.service';
 import { HttpModule } from '@nestjs/axios';
-import { ConfigModule } from '@nestjs/config';
 import { expect } from '@jest/globals';
 import { AuthContext } from '@app/auth/auth-request';
 import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
+import { EnvModule } from '@app/env';
 
 jest.mock('@keycloak/keycloak-admin-client', () => {
   return {
@@ -28,7 +28,7 @@ describe('KeycloakResourcesController', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [HttpModule, ConfigModule],
+      imports: [HttpModule, EnvModule],
       providers: [
         {
           provide: KeycloakResourcesService,

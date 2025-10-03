@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MediaService } from './media.service';
-import { ConfigModule } from '@nestjs/config';
 import { getModelToken } from '@nestjs/mongoose';
 import { MediaDoc } from './media.schema';
 import { Media } from '../domain/media';
 import { expect } from '@jest/globals';
 import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import { EnvModule, EnvService } from '@app/env';
 
 // Mocks for external modules
 const mockMinioClient = {
@@ -70,19 +70,28 @@ describe('MediaService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    // Ensure config values exist
-    process.env.S3_ENDPOINT = 's3.local';
-    process.env.S3_PORT = '9000';
-    process.env.S3_SSL = 'false';
-    process.env.S3_ACCESS_KEY = 'ak';
-    process.env.S3_SECRET_KEY = 'sk';
-    process.env.S3_BUCKET_NAME_DEFAULT = 'bucket-default';
-    process.env.S3_BUCKET_NAME_PROFILE_PICTURES = 'bucket-profile';
+    const mockConfigService = {
+      get: jest.fn((key) => {
+        if (key === 'OPEN_DPP_S3_ENDPOINT') return 's3.local';
+        if (key === 'OPEN_DPP_S3_PORT') return '9000';
+        if (key === 'OPEN_DPP_S3_SSL') return 'false';
+        if (key === 'OPEN_DPP_S3_ACCESS_KEY') return 'ak';
+        if (key === 'OPEN_DPP_S3_SECRET_KEY') return 'sk';
+        if (key === 'OPEN_DPP_S3_DEFAULT_BUCKET') return 'bucket-default';
+        if (key === 'OPEN_DPP_S3_PROFILE_PICTURE_BUCKET')
+          return 'bucket-profile';
+        return null;
+      }),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [ConfigModule.forRoot({ isGlobal: true })],
+      imports: [EnvModule],
       providers: [
         MediaService,
+        {
+          provide: EnvService,
+          useValue: mockConfigService,
+        },
         {
           provide: getModelToken(MediaDoc.name),
           useValue: mockModel,

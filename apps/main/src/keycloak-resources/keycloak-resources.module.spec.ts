@@ -2,8 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { KeycloakResourcesModule } from './keycloak-resources.module';
 import { KeycloakResourcesService } from './infrastructure/keycloak-resources.service';
 import { KeycloakResourcesController } from './presentation/keycloak-resources.controller';
-import { ConfigModule } from '@nestjs/config';
 import { expect } from '@jest/globals';
+import { EnvModule } from '@app/env';
 
 // Mock the Keycloak admin client
 jest.mock('@keycloak/keycloak-admin-client', () => {
@@ -26,10 +26,7 @@ describe('KeycloakResourcesModule', () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
-        KeycloakResourcesModule,
-      ],
+      imports: [EnvModule, KeycloakResourcesModule],
     }).compile();
   });
 

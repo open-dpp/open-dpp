@@ -35,6 +35,7 @@ import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
 import { ignoreIds } from '@app/testing/utils';
 
 import { Sector } from '../../data-modelling/domain/sectors';
+import { EnvModule } from '@app/env';
 
 describe('ItemsService', () => {
   let itemService: ItemsService;
@@ -50,6 +51,7 @@ describe('ItemsService', () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
+        EnvModule,
         MongooseTestingModule,
         MongooseModule.forFeature([
           {

@@ -11,7 +11,8 @@
     "ui:install": "npm --prefix apps/main/client install",
     "ui:dev": "npm --prefix apps/main/client run dev",
     "ui:build": "npm --prefix apps/main/client run build",
-    "ui:preview": "npm --prefix ui run preview",
+    "ui:test": "npm --prefix apps/main/client run test",
+    "ui:cypress": "npm --prefix apps/main/client run cypress:headless",
     "dev:all": "concurrently -k \"npm:start:dev\" \"npm:ui:dev\"",
     "install:all": "npm install && npm run ui:install",
     "start": "nest start main",
@@ -131,6 +132,7 @@
     "moduleNameMapper": {
       "^@app/analytics(|/.*)$": "<rootDir>/libs/analytics/src/$1",
       "^@app/auth(|/.*)$": "<rootDir>/libs/auth/src/$1",
+      "^@app/env(|/.*)$": "<rootDir>/libs/env/src/$1",
       "^@app/exception(|/.*)$": "<rootDir>/libs/exception/src/$1",
       "^@app/mcp-module(|/.*)$": "<rootDir>/libs/mcp-module/src/$1",
       "^@app/media-module(|/.*)$": "<rootDir>/libs/media-module/src/$1",
