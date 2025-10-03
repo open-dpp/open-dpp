@@ -12,13 +12,6 @@ import { applyBodySizeHandler } from './BodySizeHandler';
 import * as bodyParser from 'body-parser';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { createProxyMiddleware } from 'http-proxy-middleware';
-import { AuthContext } from '@app/auth/auth-request';
-
-declare module 'express-serve-static-core' {
-  interface Request {
-    authContext: AuthContext;
-  }
-}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
