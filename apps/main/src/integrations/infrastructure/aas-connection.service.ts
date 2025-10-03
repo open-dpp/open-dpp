@@ -10,10 +10,14 @@ import {
 
 @Injectable()
 export class AasConnectionService {
+  private aasConnectionDoc: MongooseModel<AasConnectionDoc>
+
   constructor(
     @InjectModel(AasConnectionDoc.name)
-    private aasConnectionDoc: MongooseModel<AasConnectionDoc>,
-  ) {}
+    aasConnectionDoc: MongooseModel<AasConnectionDoc>,
+  ) {
+    this.aasConnectionDoc = aasConnectionDoc
+  }
 
   convertToDomain(aasConnectionDoc: AasConnectionDoc) {
     return AasConnection.loadFromDb({

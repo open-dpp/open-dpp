@@ -14,11 +14,14 @@ import {
 
 @Injectable()
 export class KeycloakResourcesService {
+  private configService: ConfigService
+
   private readonly logger = new Logger(KeycloakResourcesService.name)
   private readonly kcAdminClient
   private readonly realm: string
 
-  constructor(private configService: ConfigService) {
+  constructor(configService: ConfigService) {
+    this.configService = configService
     this.kcAdminClient = new KcAdminClient({
       baseUrl: this.configService.get<string>('KEYCLOAK_NETWORK_URL', ''),
     })
@@ -191,7 +194,7 @@ export class KeycloakResourcesService {
     const keycloakGroup = keycloakGroups[0]
     await this.kcAdminClient.users.addToGroup({
       id: userId,
-      groupId: keycloakGroup.id,
+      groupId: keycloakGroup.id ?? '',
       realm: this.realm,
     })
   }

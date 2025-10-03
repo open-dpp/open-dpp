@@ -3,9 +3,12 @@ import { OpenDppEventData } from '../open-dpp-event-data'
 import { OpenDppEventType } from '../open-dpp-event-type.enum'
 
 export class UniqueProductIdentifierCreatedEventData extends OpenDppEventData {
-  private constructor(public readonly uniqueProductIdentifierId: string) {
+  public readonly uniqueProductIdentifierId: string
+
+  private constructor(uniqueProductIdentifierId: string) {
     super()
     this.type = OpenDppEventType.UNIQUE_PRODUCT_IDENTIFIER_CREATED
+    this.uniqueProductIdentifierId = uniqueProductIdentifierId
   }
 
   static createWithWrapper(data: {

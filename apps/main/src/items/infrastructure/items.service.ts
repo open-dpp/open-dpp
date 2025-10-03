@@ -10,11 +10,17 @@ import { migrateItemDoc } from './migrations'
 
 @Injectable()
 export class ItemsService {
+  private itemDoc: MongooseModel<ItemDoc>
+  private uniqueProductIdentifierService: UniqueProductIdentifierService
+
   constructor(
     @InjectModel(ItemDoc.name)
-    private itemDoc: MongooseModel<ItemDoc>,
-    private uniqueProductIdentifierService: UniqueProductIdentifierService,
-  ) {}
+    itemDoc: MongooseModel<ItemDoc>,
+    uniqueProductIdentifierService: UniqueProductIdentifierService,
+  ) {
+    this.itemDoc = itemDoc
+    this.uniqueProductIdentifierService = uniqueProductIdentifierService
+  }
 
   convertToDomain(
     itemDoc: ItemDoc,

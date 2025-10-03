@@ -1,3 +1,6 @@
+/// <reference types="cypress" />
+/// <reference path="./cypress.d.ts" />
+
 // ***********************************************************
 // This example support/component.ts is processed and
 // loaded automatically before your test files.
@@ -13,12 +16,14 @@
 // https://on.cypress.io/configuration
 // ***********************************************************
 
+import type { CyMountOptions } from "cypress/vue";
 // Augment the Cypress namespace to include type definitions for
 // your custom command.
 // Alternatively, can be defined in cypress/support/component.d.ts
 // with a <reference path="./component" /> at the top of your spec.
 import type { Pinia } from "pinia";
-
+import type { App, Component, DefineComponent, FunctionalComponent } from "vue";
+import type { Router } from "vue-router";
 import {
   createAutoAnimatePlugin,
   createMultiStepPlugin,
@@ -46,52 +51,76 @@ beforeEach(() => {
   setActivePinia(pinia);
 });
 
-Cypress.Commands.add("mountWithPinia", (component, options = {}) => {
-  options.global = options.global || {};
-  options.global.plugins = options.global.plugins || [];
+type VueMountable = DefineComponent<any, any, any, any, any> | FunctionalComponent<any>;
 
-  if (options.router) {
-    options.global.plugins.push({
-      install(app) {
-        app.use(options.router);
-      },
-    });
-  }
+type MountWithRouterOptions<C extends Component> = CyMountOptions<C> & {
+  router?: Router;
+};
 
-  // const RootWithSafelist = defineComponent({
-  //   render() {
-  //     return h("div", {}, [
-  //       h(SafelistTailwindCss, { key: "safelist" }),
-  //       h(component, { key: "component" }),
-  //     ]);
-  //   },
-  // });
+Cypress.Commands.add(
+  "mountWithPinia",
+  <C extends VueMountable>(
+    component: C,
+    options: MountWithRouterOptions<C> = {} as MountWithRouterOptions<C>,
+  ) => {
+    const baseGlobal = (options.global ?? {}) as Exclude<
+      CyMountOptions<C>["global"],
+      undefined
+    >;
+    const basePlugins = (baseGlobal.plugins ?? []) as Exclude<
+      Exclude<CyMountOptions<C>["global"], undefined>["plugins"],
+      undefined
+    >;
 
-  return mount(component, {
-    ...options,
-    global: {
-      ...options?.global,
-      plugins: [
-        ...options.global.plugins,
-        pinia,
-        [
-          FormKit,
-          defaultConfig({
-            config: {
-              rootClasses,
-            },
-            icons: {
-              ...genesisIcons,
-            },
-            locales: { de },
-            locale: "de",
-            plugins: [createMultiStepPlugin(), createAutoAnimatePlugin()],
-          }),
-        ],
+    const routerPlugin
+      = options.router
+        && ({
+          install(app: App) {
+            app.use(options.router as Router);
+          },
+        } as const);
+
+    // Build a typed plugins array to avoid complex unions
+    const plugins = [
+      ...basePlugins,
+      ...(routerPlugin ? [routerPlugin] : []),
+      pinia,
+      [
+        FormKit,
+        defaultConfig({
+          config: { rootClasses },
+          icons: { ...genesisIcons },
+          locales: { de },
+          locale: "de",
+          plugins: [createMultiStepPlugin(), createAutoAnimatePlugin()],
+        }),
       ],
-    },
-  });
-});
+    ] as Exclude<
+      Exclude<CyMountOptions<C>["global"], undefined>["plugins"],
+      undefined
+    >;
+
+    // Normalize options to a concrete MountingOptions to prevent union explosion
+    const normalized = {
+      ...(options as CyMountOptions<C>),
+      global: {
+        ...(baseGlobal as NonNullable<CyMountOptions<C>["global"]>),
+        plugins,
+      },
+    } satisfies CyMountOptions<C>;
+
+    // const RootWithSafelist = defineComponent({
+    //   render() {
+    //     return h("div", {}, [
+    //       h(SafelistTailwindCss, { key: "safelist" }),
+    //       h(component, { key: "component" }),
+    //     ]);
+    //   },
+    // });
+
+    return mount(component, normalized);
+  },
+);
 Cypress.Commands.add("mount", mount);
 
 Cypress.Commands.add("expectDeepEqualWithDiff", (actual, expected) => {

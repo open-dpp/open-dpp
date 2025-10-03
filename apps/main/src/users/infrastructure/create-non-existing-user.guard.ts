@@ -5,7 +5,11 @@ import { Injectable } from '@nestjs/common'
 
 @Injectable()
 export class CreateNonExistingUserGuard implements CanActivate {
-  constructor(private readonly usersService: UsersService) {}
+  private readonly usersService: UsersService
+
+  constructor(usersService: UsersService) {
+    this.usersService = usersService
+  }
 
   async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest()

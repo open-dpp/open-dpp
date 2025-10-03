@@ -24,7 +24,7 @@ const subSections = computed(() =>
         :key="dataField.id"
         :field-view="{
           dataField,
-          value: props.dataSection.dataValues[rowIndex][dataField.id],
+          value: (props.dataSection.dataValues[rowIndex] as Record<string, unknown>)[dataField.id],
         }"
       />
     </dl>

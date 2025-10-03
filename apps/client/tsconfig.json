@@ -1,40 +1,11 @@
 {
-  "compilerOptions": {
-    "target": "esnext",
-    "jsx": "preserve",
-    "lib": [
-      "esnext",
-      "es2016",
-      "dom",
-      "DOM.Iterable",
-      "WebWorker"
-    ],
-    "useDefineForClassFields": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "baseUrl": "./",
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "types": [
-      "cypress",
-      "@cypress/vue",
-      "vite/client"
-    ],
-    "allowJs": true,
-    "strict": true,
-    "strictPropertyInitialization": false,
-    "noImplicitAny": true,
-    "sourceMap": false,
-    "esModuleInterop": true,
-    "skipLibCheck": true
-  },
+  "extends": "@vue/tsconfig/tsconfig.json",
   "include": [
-    "src/**/*.ts",
-    "src/**/*.d.ts",
-    "src/**/*.tsx",
-    "src/**/*.vue",
-    "src/global.d.ts",
-    "cypress.d.ts"
-  ]
+    "**/*.ts",
+    "**/*.vue",
+    "./support/cypress.d.ts"
+  ],
+  "compilerOptions": {
+    "types": ["cypress", "@cypress/vue"]
+  }
 }

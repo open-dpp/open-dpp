@@ -7,10 +7,14 @@ import { AiConfigurationDoc } from './ai-configuration.schema'
 
 @Injectable()
 export class AiConfigurationService {
+  private aiConfigurationDoc: Model<AiConfigurationDoc>
+
   constructor(
     @InjectModel(AiConfigurationDoc.name)
-    private aiConfigurationDoc: Model<AiConfigurationDoc>,
-  ) {}
+    aiConfigurationDoc: Model<AiConfigurationDoc>,
+  ) {
+    this.aiConfigurationDoc = aiConfigurationDoc
+  }
 
   convertToDomain(aiConfigurationDoc: AiConfigurationDoc): AiConfiguration {
     return AiConfiguration.loadFromDb({

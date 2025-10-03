@@ -11,12 +11,22 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
     KeycloakSyncOnStartupService.name,
   )
 
+  private readonly usersService: UsersService
+  private readonly keycloakResourcesServices: KeycloakResourcesService
+  private readonly organizationsService: OrganizationsService
+  private readonly configService: ConfigService
+
   constructor(
-    private readonly usersService: UsersService,
-    private readonly keycloakResourcesServices: KeycloakResourcesService,
-    private readonly organizationsService: OrganizationsService,
-    private readonly configService: ConfigService,
-  ) {}
+    usersService: UsersService,
+    keycloakResourcesServices: KeycloakResourcesService,
+    organizationsService: OrganizationsService,
+    configService: ConfigService,
+  ) {
+    this.usersService = usersService
+    this.keycloakResourcesServices = keycloakResourcesServices
+    this.organizationsService = organizationsService
+    this.configService = configService
+  }
 
   async onApplicationBootstrap() {
     if (this.configService.get('NODE_ENV') === 'test') {
@@ -29,19 +39,21 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
     this.logger.log('Syncing users from Keycloak to database')
     const keycloakUsers = await this.keycloakResourcesServices.getUsers()
     for (const keycloakUser of keycloakUsers) {
-      const user = await this.usersService.findOne(keycloakUser.id)
-      if (!user) {
-        await this.usersService.create(
-          {
-            sub: keycloakUser.id,
-            name: `${keycloakUser.firstName} ${keycloakUser.lastName}`,
-            email: keycloakUser.email,
-            email_verified: keycloakUser.emailVerified,
-            preferred_username: keycloakUser.username,
-            memberships: [],
-          },
-          true,
-        )
+      if (keycloakUser.id && keycloakUser.email && keycloakUser.username) {
+        const user = await this.usersService.findOne(keycloakUser.id)
+        if (!user) {
+          await this.usersService.create(
+            {
+              sub: keycloakUser.id,
+              name: `${keycloakUser.firstName} ${keycloakUser.lastName}`,
+              email: keycloakUser.email,
+              email_verified: !!keycloakUser.emailVerified,
+              preferred_username: keycloakUser.username,
+              memberships: [],
+            },
+            true,
+          )
+        }
       }
     }
     /* this.logger.log('Syncing users from DB to Keycloak');

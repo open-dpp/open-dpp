@@ -22,7 +22,11 @@ import { VirusScanFileValidator } from './virus-scan.file-validator'
 
 @Controller('media')
 export class MediaController {
-  constructor(private readonly filesService: MediaService) {}
+  private readonly filesService: MediaService
+
+  constructor(filesService: MediaService) {
+    this.filesService = filesService
+  }
 
   @Post('profileImage')
   @UseInterceptors(

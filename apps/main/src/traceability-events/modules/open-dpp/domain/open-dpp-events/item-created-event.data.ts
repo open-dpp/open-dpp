@@ -3,9 +3,12 @@ import { OpenDppEventData } from '../open-dpp-event-data'
 import { OpenDppEventType } from '../open-dpp-event-type.enum'
 
 export class ItemCreatedEventData extends OpenDppEventData {
-  private constructor(public readonly itemId: string) {
+  public readonly itemId: string
+
+  private constructor(itemId: string) {
     super()
     this.type = OpenDppEventType.ITEM_CREATED
+    this.itemId = itemId
   }
 
   static createWithWrapper(data: {

@@ -17,8 +17,8 @@ const rows = computed(() => {
     return dataValues;
   }
   const subSections = productPassportStore.findSubSections(props.section.id);
-  if (subSections.length > 0 && subSections[0].dataValues.length > 0) {
-    return subSections[0].dataValues;
+  if (subSections.length > 0 && (subSections[0] as DataSectionDto).dataValues.length > 0) {
+    return (subSections[0] as DataSectionDto).dataValues;
   }
   return [];
 });

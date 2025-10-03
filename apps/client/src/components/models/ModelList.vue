@@ -1,4 +1,7 @@
 <script lang="ts" setup>
+import type {
+  UniqueProductIdentifierDto,
+} from "@open-dpp/api-client";
 import { computed, onMounted } from "vue";
 import { useIndexStore } from "../../stores";
 import { useModelsStore } from "../../stores/models";
@@ -11,7 +14,7 @@ const modelsStore = useModelsStore();
 const rows = computed(() => {
   return modelsStore.models.map(m => ({
     id: m.id,
-    uuid: m.uniqueProductIdentifiers[0].uuid,
+    uuid: (m.uniqueProductIdentifiers[0] as UniqueProductIdentifierDto).uuid,
     name: m.name,
   }));
 });

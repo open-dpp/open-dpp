@@ -4,10 +4,12 @@ import {
   PassportDoc,
 } from '../../product-passport-data/infrastructure/product-passport-data.schema'
 
-export enum ModelDocSchemaVersion {
-  v1_0_0 = '1.0.0',
-  v1_0_1 = '1.0.1',
-}
+export const ModelDocSchemaVersion = {
+  v1_0_0: '1.0.0',
+  v1_0_1: '1.0.1',
+} as const
+
+export type ModelDocSchemaVersion_TYPE = (typeof ModelDocSchemaVersion)[keyof typeof ModelDocSchemaVersion]
 
 @Schema({ collection: 'models', timestamps: true })
 export class ModelDoc extends PassportDoc {
@@ -18,7 +20,7 @@ export class ModelDoc extends PassportDoc {
     default: ModelDocSchemaVersion.v1_0_1,
     enum: ModelDocSchemaVersion,
   }) // Track schema version
-  _schemaVersion: ModelDocSchemaVersion
+  _schemaVersion: ModelDocSchemaVersion_TYPE
 
   @Prop({ required: false })
   description?: string

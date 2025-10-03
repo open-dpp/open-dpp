@@ -1,5 +1,6 @@
 import type {
   AasConnectionDto,
+  AasFieldAssignmentDto,
   AasPropertyDto,
   ModelDto,
   TemplateDto,
@@ -226,7 +227,7 @@ export const useAasConnectionFormStore = defineStore(
             {
               name: aasConnection.value.name,
               modelId: aasConnection.value.modelId,
-              fieldAssignments,
+              fieldAssignments: fieldAssignments as AasFieldAssignmentDto[],
             },
           );
           aasConnection.value = response.data;

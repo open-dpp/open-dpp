@@ -58,7 +58,7 @@ function openFileInput() {
 async function selectFile(event: Event) {
   const target = event.target as HTMLInputElement;
   if (target.files && target.files.length > 0) {
-    selectedLocalFile.value = target.files[0];
+    selectedLocalFile.value = target.files[0] as File;
     await uploadFile();
   }
   else {
@@ -102,7 +102,7 @@ async function selectFile(event: Event) {
       v-if="sidebarOpen"
       class="flex flex-col gap-4 w-sm shadow-sm p-4 h-full shrink"
     >
-      <MediaDetailsSidebar :media="selected[0]" @close="sidebarOpen = false" />
+      <MediaDetailsSidebar v-if="selected.length > 0" :media="selected[0] as MediaInfo" @close="sidebarOpen = false" />
     </div>
   </div>
 </template>

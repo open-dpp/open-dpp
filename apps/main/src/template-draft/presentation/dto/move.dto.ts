@@ -1,9 +1,11 @@
 import { z } from 'zod'
 import { MoveDirection } from '../../domain/template-draft'
 
-export enum MoveType {
-  POSITION = 'Position',
-}
+export const MoveType = {
+  POSITION: 'Position',
+} as const
+
+export type MoveType_TYPE = (typeof MoveType)[keyof typeof MoveType]
 
 export const MoveDtoSchema = z.object({
   type: z.enum(MoveType),

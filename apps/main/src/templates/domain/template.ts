@@ -1,5 +1,5 @@
 import type { Sector } from '@open-dpp/api-client'
-import type { GranularityLevel } from '../../data-modelling/domain/granularity-level'
+import type { GranularityLevel_TYPE } from '../../data-modelling/domain/granularity-level'
 import type { DataFieldValidationResult } from './data-field'
 import type {
   Section,
@@ -57,17 +57,37 @@ export type TemplateDbProps = TemplateCreateProps & {
 }
 
 export class Template {
+  public readonly id: string
+  public readonly name: string
+  public description: string
+  public sectors: Sector[]
+  public readonly version: string
+  private _createdByUserId: string
+  private _ownedByOrganizationId: string
+  public readonly sections: Section[]
+  public marketplaceResourceId: string | null
+
   private constructor(
-    public readonly id: string,
-    public readonly name: string,
-    public description: string,
-    public sectors: Sector[],
-    public readonly version: string,
-    private _createdByUserId: string,
-    private _ownedByOrganizationId: string,
-    public readonly sections: Section[],
-    public marketplaceResourceId: string | null,
-  ) {}
+    id: string,
+    name: string,
+    description: string,
+    sectors: Sector[],
+    version: string,
+    _createdByUserId: string,
+    _ownedByOrganizationId: string,
+    sections: Section[],
+    marketplaceResourceId: string | null,
+  ) {
+    this.id = id
+    this.name = name
+    this.description = description
+    this.sectors = sectors
+    this.version = version
+    this._createdByUserId = _createdByUserId
+    this._ownedByOrganizationId = _ownedByOrganizationId
+    this.sections = sections
+    this.marketplaceResourceId = marketplaceResourceId
+  }
 
   static create(plain: {
     name: string
@@ -136,7 +156,7 @@ export class Template {
 
   validate(
     values: DataValue[],
-    granularity: GranularityLevel,
+    granularity: GranularityLevel_TYPE,
     includeSectionIds: string[] = [],
   ): ValidationResult {
     const validationOutput = new ValidationResult()
@@ -166,7 +186,7 @@ export class Template {
     })
   }
 
-  public createInitialDataValues(granularity: GranularityLevel): DataValue[] {
+  public createInitialDataValues(granularity: GranularityLevel_TYPE): DataValue[] {
     const rootGroupSections = this.sections
       .filter(s => s.parentId === undefined)
       .filter(s => s.type === SectionType.GROUP)

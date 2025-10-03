@@ -1,7 +1,6 @@
 import type { Server } from 'socket.io'
 import type { ChatService } from './chat.service'
 import { Logger, UseFilters } from '@nestjs/common'
-// agent-server/src/chat.gateway.ts
 import {
   MessageBody,
   SubscribeMessage,
@@ -19,7 +18,11 @@ export class ChatGateway {
   @WebSocketServer()
   server: Server
 
-  constructor(private chatService: ChatService) {}
+  private chatService: ChatService
+
+  constructor(chatService: ChatService) {
+    this.chatService = chatService
+  }
 
   @Public()
   @SubscribeMessage('userMessage')

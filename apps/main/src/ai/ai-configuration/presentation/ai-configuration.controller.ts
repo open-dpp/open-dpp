@@ -9,10 +9,16 @@ import { AiConfigurationUpsertDtoSchema } from './dto/ai-configuration.dto'
 
 @Controller('organizations/:organizationId/configurations')
 export class AiConfigurationController {
+  private readonly aiConfigurationService: AiConfigurationService
+  private readonly permissionsService: PermissionService
+
   constructor(
-    private aiConfigurationService: AiConfigurationService,
-    private permissionsService: PermissionService,
-  ) {}
+    aiConfigurationService: AiConfigurationService,
+    permissionsService: PermissionService,
+  ) {
+    this.aiConfigurationService = aiConfigurationService
+    this.permissionsService = permissionsService
+  }
 
   @Put()
   async upsertConfiguration(

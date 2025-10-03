@@ -1,19 +1,32 @@
-import type { GranularityLevel } from '../../data-modelling/domain/granularity-level'
+import type { GranularityLevel_TYPE } from '../../data-modelling/domain/granularity-level'
 import type { Template } from '../../templates/domain/template'
 import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier'
 import { DataValue } from './data-value'
 
 export abstract class ProductPassportData {
-  abstract granularityLevel: GranularityLevel
+  public readonly id: string
+  private readonly _ownedByOrganizationId: string
+  private readonly _createdByUserId: string
+  public readonly uniqueProductIdentifiers: UniqueProductIdentifier[] = []
+  private readonly _templateId: string
+  private _dataValues: DataValue[] = []
+  abstract granularityLevel: GranularityLevel_TYPE
 
   protected constructor(
-    public readonly id: string,
-    private _ownedByOrganizationId: string,
-    private _createdByUserId: string,
-    public readonly uniqueProductIdentifiers: UniqueProductIdentifier[] = [],
-    private _templateId: string,
-    private _dataValues: DataValue[] = [],
-  ) {}
+    id: string,
+    _ownedByOrganizationId: string,
+    _createdByUserId: string,
+    uniqueProductIdentifiers: UniqueProductIdentifier[] = [],
+    _templateId: string,
+    _dataValues: DataValue[] = [],
+  ) {
+    this.id = id
+    this._ownedByOrganizationId = _ownedByOrganizationId
+    this._createdByUserId = _createdByUserId
+    this.uniqueProductIdentifiers = uniqueProductIdentifiers
+    this._templateId = _templateId
+    this._dataValues = _dataValues
+  }
 
   public get createdByUserId() {
     return this._createdByUserId

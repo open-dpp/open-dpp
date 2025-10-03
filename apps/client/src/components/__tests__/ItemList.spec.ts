@@ -1,4 +1,4 @@
-import type { ItemDto } from "@open-dpp/api-client";
+import type { ItemDto, UniqueProductIdentifierDto } from "@open-dpp/api-client";
 import { fireEvent, render, screen, within } from "@testing-library/vue";
 import { createPinia } from "pinia";
 import { describe, expect } from "vitest";
@@ -41,15 +41,15 @@ describe("itemList.vue", () => {
 
     const rows = screen.getAllByRole("row");
     expect(rows).toHaveLength(3);
-    const headerCells = within(rows[0]).getAllByRole("columnheader");
+    const headerCells = within(rows[0] as HTMLElement).getAllByRole("columnheader");
     expect(headerCells.map(h => h.textContent)).toEqual(["ID", "Aktionen"]);
 
     rows.slice(1).forEach((row, index) => {
       const cells = within(row).getAllByRole("cell");
-      expect(cells[0].textContent).toEqual(
-        items[index].uniqueProductIdentifiers[0].uuid,
+      expect((cells[0] as HTMLElement).textContent).toEqual(
+        ((items[index] as ItemDto).uniqueProductIdentifiers[0] as UniqueProductIdentifierDto).uuid,
       );
-      expect(cells[1].textContent).toEqual("EditierenQR-Code");
+      expect((cells[1] as HTMLElement).textContent).toEqual("EditierenQR-Code");
     });
   });
   it("should create item", async () => {
@@ -80,6 +80,8 @@ describe("itemList.vue", () => {
     });
     await fireEvent.click(createButton);
 
-    expect(emitted().add[0]).toEqual([]);
+    const addEvents = emitted().add;
+    expect(addEvents).toBeDefined();
+    expect(addEvents![0]).toEqual([]);
   });
 });

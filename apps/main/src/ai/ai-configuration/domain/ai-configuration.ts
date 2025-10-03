@@ -1,16 +1,18 @@
 import { randomUUID } from 'node:crypto'
 import { ValueError } from '@open-dpp/exception'
 
-export enum AiProvider {
-  Ollama = 'ollama',
-  Mistral = 'mistral',
-}
+export const AiProvider = {
+  Ollama: 'ollama',
+  Mistral: 'mistral',
+} as const
+
+export type AiProvider_TYPE = (typeof AiProvider)[keyof typeof AiProvider]
 
 const mistralModels = ['codestral-latest']
 const ollamaModels = ['qwen3:0.6b']
 
 export interface AiConfigurationCreationProps {
-  provider: AiProvider
+  provider: AiProvider_TYPE
   model: string
   ownedByOrganizationId: string
   createdByUserId: string
@@ -24,23 +26,40 @@ export type AiConfigurationProps = AiConfigurationCreationProps & {
 }
 
 interface AiConfigurationUpdate {
-  provider: AiProvider
+  provider: AiProvider_TYPE
   model: string
   isEnabled: boolean
 }
 
 export class AiConfiguration {
+  public readonly id: string
+  public readonly ownedByOrganizationId: string
+  public readonly createdByUserId: string
+  public provider: AiProvider_TYPE
+  public model: string
+  public isEnabled: boolean
+  public readonly createdAt: Date
+  public readonly updatedAt: Date
+
   private constructor(
-    public readonly id: string,
-    public readonly ownedByOrganizationId: string,
-    public readonly createdByUserId: string,
-    public provider: AiProvider,
-    public model: string,
-    public isEnabled: boolean,
-    public readonly createdAt: Date,
-    public readonly updatedAt: Date,
+    id: string,
+    ownedByOrganizationId: string,
+    createdByUserId: string,
+    provider: AiProvider_TYPE,
+    model: string,
+    isEnabled: boolean,
+    createdAt: Date,
+    updatedAt: Date,
   ) {
     this.assertValidModelForProvider(provider, model)
+    this.id = id
+    this.ownedByOrganizationId = ownedByOrganizationId
+    this.createdByUserId = createdByUserId
+    this.provider = provider
+    this.model = model
+    this.isEnabled = isEnabled
+    this.createdAt = createdAt
+    this.updatedAt = updatedAt
   }
 
   static create(data: AiConfigurationCreationProps): AiConfiguration {
@@ -81,7 +100,7 @@ export class AiConfiguration {
     this.isEnabled = data.isEnabled
   }
 
-  private assertValidModelForProvider(provider: AiProvider, model: string) {
+  private assertValidModelForProvider(provider: AiProvider_TYPE, model: string) {
     const valid = provider === AiProvider.Ollama ? ollamaModels : mistralModels
     if (!valid.includes(model)) {
       throw new ValueError(`Invalid model ${model} for provider ${provider}`)

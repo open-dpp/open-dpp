@@ -1,5 +1,6 @@
-import { createMemoryHistory, createRouter } from "vue-router";
+import type { OrganizationDto } from "@open-dpp/api-client";
 
+import { createMemoryHistory, createRouter } from "vue-router";
 import { API_URL } from "../../const";
 import { routes } from "../../router";
 import { useIndexStore } from "../../stores";
@@ -15,7 +16,7 @@ describe("<SelectOrganization />", () => {
     id: "member1",
     email: "m1@example.com",
   };
-  const organizations = [
+  const organizations: Array<OrganizationDto> = [
     {
       id: "orga1",
       name: "Meine erste Orga",
@@ -38,13 +39,13 @@ describe("<SelectOrganization />", () => {
       body: organizations, // Mock response
     }).as("getOrganizations");
     const indexStore = useIndexStore();
-    indexStore.selectOrganization(organizations[0].id);
+    indexStore.selectOrganization((organizations[0] as OrganizationDto).id);
 
     cy.mountWithPinia(SelectOrganization, { router });
     const organizationsStore = useOrganizationsStore();
 
     cy.wrap(organizationsStore.fetchOrganizations());
-    cy.contains(organizations[0].name).should("be.visible");
+    cy.contains((organizations[0] as OrganizationDto).name).should("be.visible");
     cy.wait("@getOrganizations").its("response.statusCode").should("eq", 200);
     cy.get("[data-cy=\"organizationSelect\"]").click();
     cy.get("[data-cy=\"orga2\"]").click();

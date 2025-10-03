@@ -38,13 +38,25 @@ import { itemToDto } from './dto/item.dto'
 
 @Controller('organizations/:orgaId/models/:modelId/items')
 export class ItemsController {
+  private readonly itemsService: ItemsService
+  private readonly permissionsService: PermissionService
+  private readonly itemsApplicationService: ItemsApplicationService
+  private readonly modelsService: ModelsService
+  private readonly templateService: TemplateService
+
   constructor(
-    private readonly itemsService: ItemsService,
-    private readonly permissionsService: PermissionService,
-    private readonly itemsApplicationService: ItemsApplicationService,
-    private readonly modelsService: ModelsService,
-    private readonly templateService: TemplateService,
-  ) {}
+    itemsService: ItemsService,
+    permissionsService: PermissionService,
+    itemsApplicationService: ItemsApplicationService,
+    modelsService: ModelsService,
+    templateService: TemplateService,
+  ) {
+    this.itemsService = itemsService
+    this.permissionsService = permissionsService
+    this.itemsApplicationService = itemsApplicationService
+    this.modelsService = modelsService
+    this.templateService = templateService
+  }
 
   @ApiOperation({
     summary: 'Create a new item',

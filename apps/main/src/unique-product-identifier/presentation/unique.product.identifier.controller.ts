@@ -12,12 +12,22 @@ import {
 
 @Controller()
 export class UniqueProductIdentifierController {
+  private readonly modelsService: ModelsService
+  private readonly uniqueProductIdentifierService: UniqueProductIdentifierService
+  private readonly itemService: ItemsService
+  private readonly permissionsService: PermissionService
+
   constructor(
-    private readonly modelsService: ModelsService,
-    private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
-    private readonly itemService: ItemsService,
-    private readonly permissionsService: PermissionService,
-  ) {}
+    modelsService: ModelsService,
+    uniqueProductIdentifierService: UniqueProductIdentifierService,
+    itemService: ItemsService,
+    permissionsService: PermissionService,
+  ) {
+    this.modelsService = modelsService
+    this.uniqueProductIdentifierService = uniqueProductIdentifierService
+    this.itemService = itemService
+    this.permissionsService = permissionsService
+  }
 
   @Get('organizations/:orgaId/unique-product-identifiers/:id/reference')
   async getReferencedProductPassport(

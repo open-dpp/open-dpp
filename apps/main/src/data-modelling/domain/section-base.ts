@@ -1,21 +1,37 @@
-import type { GranularityLevel } from './granularity-level'
+import type { GranularityLevel_TYPE } from './granularity-level'
 
-export enum SectionType {
-  GROUP = 'Group',
-  REPEATABLE = 'Repeatable',
-}
+export const SectionType = {
+  GROUP: 'Group',
+  REPEATABLE: 'Repeatable',
+} as const
+
+export type SectionType_TYPE = (typeof SectionType)[keyof typeof SectionType]
 
 export abstract class SectionBase {
-  protected constructor(
-    public readonly id: string,
-    protected _name: string,
-    public readonly type: SectionType,
-    protected _subSections: string[],
-    protected _parentId?: string,
-    public granularityLevel?: GranularityLevel,
-  ) {}
+  public readonly id: string
+  protected _name: string
+  public readonly type: SectionType_TYPE
+  protected _subSections: string[]
+  protected _parentId?: string
+  public granularityLevel?: GranularityLevel_TYPE
 
-  public setGranularityLevel(level: GranularityLevel): void {
+  protected constructor(
+    id: string,
+    _name: string,
+    type: SectionType_TYPE,
+    _subSections: string[],
+    _parentId?: string,
+    granularityLevel?: GranularityLevel_TYPE,
+  ) {
+    this.id = id
+    this._name = _name
+    this.type = type
+    this._subSections = _subSections
+    this._parentId = _parentId
+    this.granularityLevel = granularityLevel
+  }
+
+  public setGranularityLevel(level: GranularityLevel_TYPE): void {
     this.granularityLevel = level
   }
 

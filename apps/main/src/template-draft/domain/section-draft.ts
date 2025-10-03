@@ -1,6 +1,8 @@
-import type { GranularityLevel } from '../../data-modelling/domain/granularity-level'
+import type { GranularityLevel_TYPE } from '../../data-modelling/domain/granularity-level'
+import type { SectionType_TYPE } from '../../data-modelling/domain/section-base'
 import type { SectionDbProps } from '../../templates/domain/section'
 import type { DataFieldDraftDbProps } from './data-field-draft'
+import type { MoveDirection_TYPE } from './template-draft'
 import { randomUUID } from 'node:crypto'
 import { NotFoundError, ValueError } from '@open-dpp/exception'
 import {
@@ -12,8 +14,8 @@ import { MoveDirection } from './template-draft'
 
 export interface SectionDraftCreateProps {
   name: string
-  type: SectionType
-  granularityLevel?: GranularityLevel
+  type: SectionType_TYPE
+  granularityLevel?: GranularityLevel_TYPE
 }
 
 export type SectionDraftDbProps = SectionDraftCreateProps & {
@@ -24,16 +26,19 @@ export type SectionDraftDbProps = SectionDraftCreateProps & {
 }
 
 export class SectionDraft extends SectionBase {
+  public readonly dataFields: DataFieldDraft[]
+
   private constructor(
-    public readonly id: string,
-    protected _name: string,
-    public readonly type: SectionType,
-    protected _subSections: string[],
-    protected _parentId: string | undefined,
-    public granularityLevel: GranularityLevel | undefined,
-    public readonly dataFields: DataFieldDraft[],
+    id: string,
+    _name: string,
+    type: SectionType_TYPE,
+    _subSections: string[],
+    _parentId: string | undefined,
+    granularityLevel: GranularityLevel_TYPE | undefined,
+    dataFields: DataFieldDraft[],
   ) {
     super(id, _name, type, _subSections, _parentId, granularityLevel)
+    this.dataFields = dataFields
   }
 
   static create(data: SectionDraftCreateProps) {
@@ -122,7 +127,7 @@ export class SectionDraft extends SectionBase {
     }
   }
 
-  moveDataField(dataFieldId: string, direction: MoveDirection) {
+  moveDataField(dataFieldId: string, direction: MoveDirection_TYPE) {
     const fromIndex = this.dataFields.findIndex(d => d.id === dataFieldId)
     if (fromIndex < 0) {
       throw new NotFoundError(DataFieldDraft.name, dataFieldId)

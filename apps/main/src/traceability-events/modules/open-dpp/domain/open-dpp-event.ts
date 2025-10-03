@@ -4,7 +4,9 @@ import { TraceabilityEventType } from '../../../domain/traceability-event-type.e
 import { TraceabilityEventWrapper } from '../../../domain/traceability-event-wrapper'
 
 export class OpenDppEvent extends TraceabilityEvent {
-  private constructor(public readonly data: OpenDppEventData) {
+  public readonly data: OpenDppEventData
+
+  private constructor(data: OpenDppEventData) {
     super(TraceabilityEventType.OPEN_DPP)
     this.data = data
   }

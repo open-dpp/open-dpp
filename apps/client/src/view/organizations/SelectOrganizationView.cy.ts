@@ -1,5 +1,6 @@
-import { createMemoryHistory, createRouter } from "vue-router";
+import type { OrganizationDto } from "@open-dpp/api-client";
 
+import { createMemoryHistory, createRouter } from "vue-router";
 import { API_URL } from "../../const";
 import { routes } from "../../router";
 import { useIndexStore } from "../../stores";
@@ -16,7 +17,7 @@ describe("<SelectOrganizationView />", () => {
     id: "member1",
     email: "m1@example.com",
   };
-  const organizations = [
+  const organizations: Array<OrganizationDto> = [
     {
       id: "orga1",
       name: "Meine erste Orga",
@@ -43,15 +44,16 @@ describe("<SelectOrganizationView />", () => {
 
     cy.mountWithPinia(SelectOrganizationView, { router });
     const organizationsStore = useOrganizationsStore();
+    const organization = organizations[0] as OrganizationDto;
 
     cy.wrap(organizationsStore.fetchOrganizations());
     cy.wrap(useIndexStore()).its("selectedOrganization").should("be.null");
     cy.wait("@getOrganizations").its("response.statusCode").should("eq", 200);
     cy.contains("Alle zugewiesenen Organisationen.").should("be.visible");
-    cy.get(`[data-cy="${organizations[0].id}"]`).click();
+    cy.get(`[data-cy="${organization.id}"]`).click();
     cy.wrap(useIndexStore())
       .its("selectedOrganization")
-      .should("equal", organizations[0].id);
+      .should("equal", organization.id);
     cy.spy(router, "push").as("pushSpy");
     cy.get("@pushSpy").should("have.been.calledWith", "/");
   });

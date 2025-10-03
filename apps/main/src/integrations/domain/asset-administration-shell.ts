@@ -4,11 +4,15 @@ import { semitrailerAas } from './semitrailer'
 import { semitrailerTruckAas } from './semitrailer-truck-aas'
 import { truckAas } from './truck'
 
-export enum AssetAdministrationShellType {
-  Truck = 'Truck',
-  Semitrailer = 'Semitrailer',
-  Semitrailer_Truck = 'Semitrailer_Truck',
-}
+export const AssetAdministrationShellType = {
+  Truck: 'Truck',
+  Semitrailer: 'Semitrailer',
+  Semitrailer_Truck: 'Semitrailer_Truck',
+} as const
+
+export type AssetAdministrationShellType_TYPE = (
+  typeof AssetAdministrationShellType
+)[keyof typeof AssetAdministrationShellType]
 
 const AASPropertySchema = z.object({
   idShort: z.string(),
@@ -39,10 +43,16 @@ export const AssetAdministrationShellsSchema = z.object({
 export type AASPropertyWithParent = z.infer<typeof AASPropertyWithParentSchema>
 
 export class AssetAdministrationShell {
+  public readonly globalAssetId: string
+  public readonly propertiesWithParent: AASPropertyWithParent[]
+
   private constructor(
-    public readonly globalAssetId: string,
-    public readonly propertiesWithParent: AASPropertyWithParent[],
-  ) {}
+    globalAssetId: string,
+    propertiesWithParent: AASPropertyWithParent[],
+  ) {
+    this.globalAssetId = globalAssetId
+    this.propertiesWithParent = propertiesWithParent
+  }
 
   static create(data: { content: any }) {
     const collectedProperties = flatMap(data.content.submodels, submodel =>
@@ -117,7 +127,7 @@ const AssetAdministrationShellData = {
   [AssetAdministrationShellType.Semitrailer_Truck]: semitrailerTruckAas,
 }
 
-export function createAasForType(aasType: AssetAdministrationShellType) {
+export function createAasForType(aasType: AssetAdministrationShellType_TYPE) {
   return AssetAdministrationShell.create({
     content: AssetAdministrationShellData[aasType],
   })

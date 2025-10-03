@@ -10,11 +10,17 @@ import { ModelDoc, ModelDocSchemaVersion } from './model.schema'
 
 @Injectable()
 export class ModelsService {
+  private modelDoc: MongooseModel<ModelDoc>
+  private uniqueProductIdentifierService: UniqueProductIdentifierService
+
   constructor(
     @InjectModel(ModelDoc.name)
-    private modelDoc: MongooseModel<ModelDoc>,
-    private uniqueProductIdentifierService: UniqueProductIdentifierService,
-  ) {}
+    modelDoc: MongooseModel<ModelDoc>,
+    uniqueProductIdentifierService: UniqueProductIdentifierService,
+  ) {
+    this.modelDoc = modelDoc
+    this.uniqueProductIdentifierService = uniqueProductIdentifierService
+  }
 
   convertToDomain(
     modelDoc: ModelDoc,

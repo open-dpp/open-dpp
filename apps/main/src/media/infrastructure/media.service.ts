@@ -12,9 +12,9 @@ import { Media } from '../domain/media'
 import { fileTypeFromBuffer } from './file-type-util'
 import { MediaDoc } from './media.schema'
 
-enum BucketDefaultPaths {
-  PRODUCT_PASSPORT_FILES = 'product-passport-files',
-}
+const BucketDefaultPaths = {
+  PRODUCT_PASSPORT_FILES: 'product-passport-files',
+} as const
 
 @Injectable()
 export class MediaService {
@@ -23,11 +23,16 @@ export class MediaService {
   private readonly bucketNameProfilePictures: string
   private readonly pathDelimiter = '/'
 
+  private readonly configService: ConfigService
+  private mediaDoc: Model<MediaDoc>
+
   constructor(
-    private readonly configService: ConfigService,
+    configService: ConfigService,
     @InjectModel(MediaDoc.name)
-    private mediaDoc: Model<MediaDoc>,
+    mediaDoc: Model<MediaDoc>,
   ) {
+    this.configService = configService
+    this.mediaDoc = mediaDoc
     this.client = new Minio.Client({
       endPoint: configService.get<string>('S3_ENDPOINT', ''),
       port: configService.get<number>('S3_PORT'),

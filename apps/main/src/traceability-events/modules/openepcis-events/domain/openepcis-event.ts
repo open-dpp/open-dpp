@@ -3,7 +3,9 @@ import { TraceabilityEventType } from '../../../domain/traceability-event-type.e
 import { TraceabilityEventWrapper } from '../../../domain/traceability-event-wrapper'
 
 export class OpenEpcisEvent extends TraceabilityEvent {
-  private constructor(public readonly data: any) {
+  public readonly data: any
+
+  private constructor(data: any) {
     super(TraceabilityEventType.OPENEPCIS)
     this.data = data
   }

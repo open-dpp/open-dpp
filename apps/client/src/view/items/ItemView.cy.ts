@@ -1,7 +1,9 @@
 import type {
   DataFieldDto,
   DataSectionDto,
+  ItemDto,
   ProductPassportDto,
+  UniqueProductIdentifierDto,
 } from "@open-dpp/api-client";
 import {
   DataFieldType,
@@ -116,7 +118,9 @@ describe("<ItemView />", () => {
       description: "Laptop neu desc",
       dataSections: [section1OtherPassport, section2, section3],
     };
-    const item = {
+    const item: ItemDto = {
+      dataValues: [],
+      templateId: "",
       id: "someId",
       uniqueProductIdentifiers: [
         {
@@ -153,10 +157,11 @@ describe("<ItemView />", () => {
 
     cy.intercept("GET", `${API_URL}/product-passports/*`, (req) => {
       const uuid = req.url.split("/").pop();
+      const uqi = item.uniqueProductIdentifiers[0] as UniqueProductIdentifierDto;
       req.reply({
         statusCode: 200,
         body:
-          uuid === item.uniqueProductIdentifiers[0].uuid
+          uuid === uqi.uuid
             ? productPassport
             : productPassportOther, // Mock response
       });

@@ -8,7 +8,7 @@ import type { OrganizationsService } from '../../organizations/infrastructure/or
 import type { TemplateService } from '../../templates/infrastructure/template.service'
 import type { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service'
 import type {
-  AssetAdministrationShellType,
+  AssetAdministrationShellType_TYPE,
 } from '../domain/asset-administration-shell'
 import type { AasConnectionService } from '../infrastructure/aas-connection.service'
 import {
@@ -36,17 +36,37 @@ import * as updateAasConnectionDto from './dto/update-aas-connection.dto'
 
 @Controller('organizations/:orgaId/integration/aas')
 export class AasConnectionController {
+  private readonly modelsService: ModelsService
+  private readonly itemService: ItemsService
+  private readonly organizationService: OrganizationsService
+  private readonly itemsApplicationService: ItemsApplicationService
+  private aasConnectionService: AasConnectionService
+  private templateService: TemplateService
+  private configService: ConfigService
+  private permissionsService: PermissionService
+  private uniqueProductIdentifierService: UniqueProductIdentifierService
+
   constructor(
-    private readonly modelsService: ModelsService,
-    private readonly itemService: ItemsService,
-    private readonly organizationService: OrganizationsService,
-    private readonly itemsApplicationService: ItemsApplicationService,
-    private aasConnectionService: AasConnectionService,
-    private templateService: TemplateService,
-    private configService: ConfigService,
-    private permissionsService: PermissionService,
-    private uniqueProductIdentifierService: UniqueProductIdentifierService,
-  ) {}
+    modelsService: ModelsService,
+    itemService: ItemsService,
+    organizationService: OrganizationsService,
+    itemsApplicationService: ItemsApplicationService,
+    aasConnectionService: AasConnectionService,
+    templateService: TemplateService,
+    configService: ConfigService,
+    permissionsService: PermissionService,
+    uniqueProductIdentifierService: UniqueProductIdentifierService,
+  ) {
+    this.modelsService = modelsService
+    this.itemService = itemService
+    this.organizationService = organizationService
+    this.itemsApplicationService = itemsApplicationService
+    this.aasConnectionService = aasConnectionService
+    this.templateService = templateService
+    this.configService = configService
+    this.permissionsService = permissionsService
+    this.uniqueProductIdentifierService = uniqueProductIdentifierService
+  }
 
   @Public()
   @Post('/connections/:connectionId/items/')
@@ -210,7 +230,7 @@ export class AasConnectionController {
   @Get(':aasType/properties')
   async getProperties(
     @Param('orgaId') organizationId: string,
-    @Param('aasType') aasType: AssetAdministrationShellType,
+    @Param('aasType') aasType: AssetAdministrationShellType_TYPE,
     @Request() req: authRequest.AuthRequest,
   ) {
     await this.permissionsService.canAccessOrganizationOrFail(

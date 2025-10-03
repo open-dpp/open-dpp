@@ -1,12 +1,13 @@
 {
   "extends": ["@tsconfig/node-lts/tsconfig.json", "@tsconfig/node-ts/tsconfig.json"],
   "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "outDir": "dist",
-    "verbatimModuleSyntax": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
     "strictPropertyInitialization": false,
+    "outDir": "dist",
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true
   }
 }

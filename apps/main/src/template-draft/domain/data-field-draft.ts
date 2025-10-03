@@ -1,7 +1,7 @@
 import type {
-  DataFieldType,
+  DataFieldType_TYPE,
 } from '../../data-modelling/domain/data-field-base'
-import type { GranularityLevel } from '../../data-modelling/domain/granularity-level'
+import type { GranularityLevel_TYPE } from '../../data-modelling/domain/granularity-level'
 import type { DataFieldDbProps } from '../../templates/domain/data-field'
 import { randomUUID } from 'node:crypto'
 import { merge } from 'lodash'
@@ -11,9 +11,9 @@ import {
 
 export interface DataFieldDraftCreateProps {
   name: string
-  type: DataFieldType
+  type: DataFieldType_TYPE
   options?: Record<string, unknown>
-  granularityLevel: GranularityLevel
+  granularityLevel: GranularityLevel_TYPE
 }
 
 export type DataFieldDraftDbProps = DataFieldDraftCreateProps & {
@@ -21,12 +21,14 @@ export type DataFieldDraftDbProps = DataFieldDraftCreateProps & {
 }
 
 export class DataFieldDraft extends DataFieldBase {
+  public readonly options: Record<string, unknown> = {}
+
   private constructor(
-    public readonly id: string,
-    protected _name: string,
-    public readonly type: DataFieldType,
-    public readonly options: Record<string, unknown> = {},
-    public readonly granularityLevel: GranularityLevel,
+    id: string,
+    _name: string,
+    type: DataFieldType_TYPE,
+    options: Record<string, unknown> = {},
+    granularityLevel: GranularityLevel_TYPE,
   ) {
     super(id, _name, type, options, granularityLevel)
   }

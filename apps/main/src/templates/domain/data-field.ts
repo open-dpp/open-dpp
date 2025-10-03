@@ -1,4 +1,5 @@
-import type { GranularityLevel } from '../../data-modelling/domain/granularity-level'
+import type { DataFieldType_TYPE } from '../../data-modelling/domain/data-field-base'
+import type { GranularityLevel_TYPE } from '../../data-modelling/domain/granularity-level'
 import { randomUUID } from 'node:crypto'
 import { NotSupportedError } from '@open-dpp/exception'
 import { z } from 'zod'
@@ -8,13 +9,25 @@ import {
 } from '../../data-modelling/domain/data-field-base'
 
 export class DataFieldValidationResult {
+  public readonly dataFieldId: string
+  public readonly dataFieldName: string
+  public readonly isValid: boolean
+  public readonly row?: number
+  public readonly errorMessage?: string
+
   private constructor(
-    public readonly dataFieldId: string,
-    public readonly dataFieldName: string,
-    public readonly isValid: boolean,
-    public readonly row?: number,
-    public readonly errorMessage?: string,
-  ) {}
+    dataFieldId: string,
+    dataFieldName: string,
+    isValid: boolean,
+    row?: number,
+    errorMessage?: string,
+  ) {
+    this.dataFieldId = dataFieldId
+    this.dataFieldName = dataFieldName
+    this.isValid = isValid
+    this.row = row
+    this.errorMessage = errorMessage
+  }
 
   static create(data: {
     dataFieldId: string
@@ -45,19 +58,19 @@ export class DataFieldValidationResult {
 interface DataFieldProps {
   name: string
   options?: Record<string, unknown>
-  granularityLevel: GranularityLevel
+  granularityLevel: GranularityLevel_TYPE
 }
 
 export type DataFieldDbProps = DataFieldProps & {
   id: string
-  type: DataFieldType
+  type: DataFieldType_TYPE
 }
 
 export abstract class DataField extends DataFieldBase {
   protected static createInstance<T extends DataFieldBase>(
     Ctor: new (...args: any[]) => T,
     data: DataFieldProps,
-    type: DataFieldType,
+    type: DataFieldType_TYPE,
   ): T {
     return new Ctor(
       randomUUID(),
@@ -199,7 +212,7 @@ const dataFieldSubtypes = [
   { value: FileField, name: DataFieldType.FILE_FIELD },
 ]
 
-export function findDataFieldClassByTypeOrFail(type: DataFieldType) {
+export function findDataFieldClassByTypeOrFail(type: DataFieldType_TYPE) {
   const foundDataFieldType = dataFieldSubtypes.find(st => st.name === type)
   if (!foundDataFieldType) {
     throw new NotSupportedError(`Data field type ${type} is not supported`)

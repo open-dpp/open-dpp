@@ -13,10 +13,12 @@ export interface Publication {
   version: string
 }
 
-export enum MoveDirection {
-  UP = 'up',
-  DOWN = 'down',
-}
+export const MoveDirection = {
+  UP: 'up',
+  DOWN: 'down',
+} as const
+
+export type MoveDirection_TYPE = (typeof MoveDirection)[keyof typeof MoveDirection]
 
 export interface TemplateDraftCreateProps {
   name: string
@@ -34,17 +36,37 @@ export type TemplateDraftDbProps = TemplateDraftCreateProps & {
 }
 
 export class TemplateDraft {
+  public readonly id: string
+  private _name: string
+  public readonly description: string
+  public readonly sectors: Sector[]
+  public readonly version: string
+  private readonly _publications: Publication[]
+  private readonly _ownedByOrganizationId: string | undefined
+  private readonly _createdByUserId: string | undefined
+  private _sections: SectionDraft[]
+
   private constructor(
-    public readonly id: string,
-    private _name: string,
-    public readonly description: string,
-    public readonly sectors: Sector[],
-    public readonly version: string,
-    private readonly _publications: Publication[],
-    private _ownedByOrganizationId: string | undefined,
-    private _createdByUserId: string | undefined,
-    private _sections: SectionDraft[],
-  ) {}
+    id: string,
+    _name: string,
+    description: string,
+    sectors: Sector[],
+    version: string,
+    _publications: Publication[],
+    _ownedByOrganizationId: string | undefined,
+    _createdByUserId: string | undefined,
+    _sections: SectionDraft[],
+  ) {
+    this.id = id
+    this._name = _name
+    this.description = description
+    this.sectors = sectors
+    this.version = version
+    this._publications = _publications
+    this._ownedByOrganizationId = _ownedByOrganizationId
+    this._createdByUserId = _createdByUserId
+    this._sections = _sections
+  }
 
   static create(data: {
     name: string
@@ -161,12 +183,12 @@ export class TemplateDraft {
   public moveDataField(
     sectionId: string,
     dataFieldId: string,
-    direction: MoveDirection,
+    direction: MoveDirection_TYPE,
   ) {
     this.findSectionOrFail(sectionId).moveDataField(dataFieldId, direction)
   }
 
-  public moveSection(sectionId: string, direction: MoveDirection) {
+  public moveSection(sectionId: string, direction: MoveDirection_TYPE) {
     const section = this.findSectionOrFail(sectionId)
     const siblingSections = this.findSectionsOfParent(section.parentId)
     const siblingIndex = siblingSections.findIndex(s => s.id === sectionId)
@@ -238,7 +260,7 @@ export class TemplateDraft {
 
     const versionToPublish
       = lastPublished.length > 0
-        ? semver.inc(lastPublished[0].version, 'major')
+        ? (semver.inc(lastPublished[0].version, 'major') ?? '1.0.0')
         : '1.0.0'
 
     const published = Template.loadFromDb({

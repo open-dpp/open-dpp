@@ -23,13 +23,15 @@ export type ItemDbProps = Omit<ItemCreateProps, 'template' | 'model'> & {
 }
 
 export class Item extends ProductPassportData {
+  private readonly _modelId: string
   granularityLevel = GranularityLevel.ITEM
+
   private constructor(
     id: string,
     ownedByOrganizationId: string,
     createdByUserId: string,
     uniqueProductIdentifiers: UniqueProductIdentifier[],
-    private _modelId: string,
+    _modelId: string,
     templateId: string,
     dataValues: DataValue[],
   ) {
@@ -41,6 +43,7 @@ export class Item extends ProductPassportData {
       templateId,
       dataValues,
     )
+    this._modelId = _modelId
   }
 
   public static create(data: ItemCreateProps) {

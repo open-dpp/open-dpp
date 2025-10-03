@@ -16,11 +16,19 @@ import { Organization } from '../domain/organization'
 
 @Controller('organizations')
 export class OrganizationsController {
+  private readonly userService: UsersService
+  private readonly organizationsService: OrganizationsService
+  private readonly permissionsService: PermissionService
+
   constructor(
-    private readonly userService: UsersService,
-    private readonly organizationsService: OrganizationsService,
-    private readonly permissionsService: PermissionService,
-  ) {}
+    userService: UsersService,
+    organizationsService: OrganizationsService,
+    permissionsService: PermissionService,
+  ) {
+    this.userService = userService
+    this.organizationsService = organizationsService
+    this.permissionsService = permissionsService
+  }
 
   @Post()
   async create(

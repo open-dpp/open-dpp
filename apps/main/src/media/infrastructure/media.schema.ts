@@ -1,9 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Document } from 'mongoose'
 
-export enum MediaSchemaVersion {
-  v1_0_0 = '1.0.0',
-}
+export const MediaSchemaVersion = {
+  v1_0_0: '1.0.0',
+} as const
+
+export type MediaSchemaVersion_TYPE = (typeof MediaSchemaVersion)[keyof typeof MediaSchemaVersion]
 
 @Schema({ collection: 'media' })
 export class MediaDoc extends Document {
@@ -11,7 +13,7 @@ export class MediaDoc extends Document {
     default: MediaSchemaVersion.v1_0_0,
     enum: MediaSchemaVersion,
   }) // Track schema version
-  _schemaVersion: MediaSchemaVersion
+  _schemaVersion: MediaSchemaVersion_TYPE
 
   @Prop({ required: true })
   // @ts-expect-error uses mongo id

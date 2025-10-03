@@ -1,3 +1,6 @@
+import type { DataFieldType_TYPE } from '../domain/data-field-base'
+import type { GranularityLevel_TYPE } from '../domain/granularity-level'
+import type { SectionType_TYPE } from '../domain/section-base'
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Sector } from '@open-dpp/api-client'
 import { Document, Schema as MongooseSchema } from 'mongoose'
@@ -14,7 +17,7 @@ export class DataFieldDoc {
   name: string
 
   @Prop({ required: true, enum: DataFieldType, type: String })
-  type: DataFieldType
+  type: DataFieldType_TYPE
 
   @Prop({ required: true, type: MongooseSchema.Types.Mixed }) // Accepts any JSON object
   options: Record<string, unknown>
@@ -25,7 +28,7 @@ export class DataFieldDoc {
     default: GranularityLevel.MODEL,
     type: String,
   })
-  granularityLevel: GranularityLevel
+  granularityLevel: GranularityLevel_TYPE
 
   /** @deprecated Since template and template draft version 1.0.2. Use templateId instead */
   @Prop({ required: false, type: MongooseSchema.Types.Mixed })
@@ -43,7 +46,7 @@ export class SectionDoc {
   name: string
 
   @Prop({ required: true, enum: SectionType, type: String })
-  type: SectionType
+  type: SectionType_TYPE
 
   @Prop({ type: [DataFieldSchema], default: [] })
   dataFields: DataFieldDoc[]
@@ -62,7 +65,7 @@ export class SectionDoc {
     enum: GranularityLevel,
     type: String,
   })
-  granularityLevel?: GranularityLevel
+  granularityLevel?: GranularityLevel_TYPE
 }
 
 const SectionSchema = SchemaFactory.createForClass(SectionDoc)

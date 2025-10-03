@@ -17,10 +17,16 @@ import { templateParamDocumentation, templateToDto } from './dto/template.dto'
 
 @Controller('/organizations/:organizationId/templates')
 export class TemplateController {
+  private readonly templateService: TemplateService
+  private readonly permissionsService: PermissionService
+
   constructor(
-    private readonly templateService: TemplateService,
-    private readonly permissionsService: PermissionService,
-  ) {}
+    templateService: TemplateService,
+    permissionsService: PermissionService,
+  ) {
+    this.templateService = templateService
+    this.permissionsService = permissionsService
+  }
 
   @ApiOperation({
     summary: 'Find template by id',

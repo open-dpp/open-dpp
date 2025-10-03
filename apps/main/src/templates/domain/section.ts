@@ -1,4 +1,5 @@
-import type { GranularityLevel } from '../../data-modelling/domain/granularity-level'
+import type { GranularityLevel_TYPE } from '../../data-modelling/domain/granularity-level'
+import type { SectionType_TYPE } from '../../data-modelling/domain/section-base'
 import type { DataValue } from '../../product-passport-data/domain/data-value'
 import type {
   DataField,
@@ -18,34 +19,37 @@ import {
 
 interface SectionProps {
   name: string
-  granularityLevel?: GranularityLevel // Required for repeater sections
+  granularityLevel?: GranularityLevel_TYPE // Required for repeater sections
 }
 
 export type SectionDbProps = SectionProps & {
   id: string
-  type: SectionType
+  type: SectionType_TYPE
   parentId: string | undefined
   subSections: string[]
   dataFields: DataFieldDbProps[]
 }
 
 export abstract class Section extends SectionBase {
+  public readonly dataFields: DataField[]
+
   public constructor(
-    public readonly id: string,
-    protected _name: string,
-    public readonly type: SectionType,
-    protected _subSections: string[],
-    protected _parentId: string | undefined,
-    public granularityLevel: GranularityLevel | undefined,
-    public readonly dataFields: DataField[],
+    id: string,
+    _name: string,
+    type: SectionType_TYPE,
+    _subSections: string[],
+    _parentId: string | undefined,
+    granularityLevel: GranularityLevel_TYPE | undefined,
+    dataFields: DataField[],
   ) {
     super(id, _name, type, _subSections, _parentId, granularityLevel)
+    this.dataFields = dataFields
   }
 
   protected static createInstance<T extends Section>(
     Ctor: new (...args: any[]) => T,
     data: SectionProps,
-    type: SectionType,
+    type: SectionType_TYPE,
   ): T {
     return new Ctor(
       randomUUID(),
@@ -62,7 +66,7 @@ export abstract class Section extends SectionBase {
   protected static loadFromDbInstance<T extends Section>(
     Ctor: new (...args: any[]) => T,
     data: SectionDbProps,
-    type: SectionType,
+    type: SectionType_TYPE,
   ): T {
     return new Ctor(
       data.id,
@@ -81,7 +85,7 @@ export abstract class Section extends SectionBase {
   validate(
     version: string,
     values: DataValue[],
-    granularity: GranularityLevel,
+    granularity: GranularityLevel_TYPE,
   ): DataFieldValidationResult[] {
     const validations: Array<DataFieldValidationResult> = []
     const sectionValues = groupBy(
@@ -157,7 +161,7 @@ const sectionSubTypes = [
   { value: GroupSection, name: SectionType.GROUP },
 ]
 
-export function findSectionClassByTypeOrFail(type: SectionType) {
+export function findSectionClassByTypeOrFail(type: SectionType_TYPE) {
   const foundSectionType = sectionSubTypes.find(st => st.name === type)
   if (!foundSectionType) {
     throw new NotSupportedError(`Section type ${type} is not supported`)

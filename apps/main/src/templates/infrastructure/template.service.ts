@@ -11,10 +11,14 @@ import { TemplateDoc } from './template.schema'
 
 @Injectable()
 export class TemplateService {
+  private templateDoc: Model<TemplateDoc>
+
   constructor(
     @InjectModel(TemplateDoc.name)
-    private templateDoc: Model<TemplateDoc>,
-  ) {}
+    templateDoc: Model<TemplateDoc>,
+  ) {
+    this.templateDoc = templateDoc
+  }
 
   convertToDomain(templateDoc: TemplateDoc): Template {
     const plain = templateDoc.toObject()

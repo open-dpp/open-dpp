@@ -5,19 +5,28 @@ import type { PassportService } from './passports/passport.service'
 import { StringOutputParser } from '@langchain/core/output_parsers'
 import { ChatPromptTemplate } from '@langchain/core/prompts'
 import { RunnableSequence } from '@langchain/core/runnables'
-// agent-server/src/chat.service.ts
 import { Injectable, Logger } from '@nestjs/common'
 
 @Injectable()
 export class ChatService {
   private readonly logger: Logger = new Logger(ChatService.name)
 
+  private mcpClientService: McpClientService
+  private aiService: AiService
+  private passportService: PassportService
+  private aiConfigurationService: AiConfigurationService
+
   constructor(
-    private mcpClientService: McpClientService,
-    private aiService: AiService,
-    private passportService: PassportService,
-    private aiConfigurationService: AiConfigurationService,
-  ) {}
+    mcpClientService: McpClientService,
+    aiService: AiService,
+    passportService: PassportService,
+    aiConfigurationService: AiConfigurationService,
+  ) {
+    this.mcpClientService = mcpClientService
+    this.aiService = aiService
+    this.passportService = passportService
+    this.aiConfigurationService = aiConfigurationService
+  }
 
   async askAgent(query: string, passportUuid: string) {
     this.logger.log(`Find passport with UUID: ${passportUuid}`)

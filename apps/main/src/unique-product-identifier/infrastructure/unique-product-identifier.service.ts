@@ -8,10 +8,14 @@ import { UniqueProductIdentifierDoc } from './unique-product-identifier.schema'
 
 @Injectable()
 export class UniqueProductIdentifierService {
+  private uniqueProductIdentifierDoc: MongooseModel<UniqueProductIdentifierDoc>
+
   constructor(
     @InjectModel(UniqueProductIdentifierDoc.name)
-    private uniqueProductIdentifierDoc: MongooseModel<UniqueProductIdentifierDoc>,
-  ) {}
+    uniqueProductIdentifierDoc: MongooseModel<UniqueProductIdentifierDoc>,
+  ) {
+    this.uniqueProductIdentifierDoc = uniqueProductIdentifierDoc
+  }
 
   convertToDomain(uniqueProductIdentifierDoc: UniqueProductIdentifierDoc) {
     return UniqueProductIdentifier.loadFromDb({

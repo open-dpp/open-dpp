@@ -9,9 +9,12 @@ import { SectionType } from '../../data-modelling/domain/section-base'
 import { Section } from '../../templates/domain/section'
 
 export class DataSection extends Section {
+  section: Section
+  public readonly dataValues: { [key: string]: string }[]
+
   private constructor(
     section: Section,
-    public readonly dataValues: { [key: string]: string }[],
+    dataValues: { [key: string]: string }[],
   ) {
     super(
       section.id,
@@ -22,6 +25,7 @@ export class DataSection extends Section {
       section.granularityLevel,
       section.dataFields,
     )
+    this.dataValues = dataValues
   }
 
   static create(data: { section: Section, model: Model, item?: Item }) {
@@ -80,7 +84,7 @@ export class DataSection extends Section {
       )
       // for model view: filter out data fields that are not in the model
       if (item || dataField.granularityLevel !== GranularityLevel.ITEM) {
-        result[dataField.id] = dataValue?.value
+        (result as any)[dataField.id] = dataValue?.value
       }
     }
     return result
@@ -88,12 +92,22 @@ export class DataSection extends Section {
 }
 
 export class ProductPassport {
+  public readonly id: string
+  public readonly name: string
+  public description: string
+  public readonly dataSections: DataSection[]
+
   private constructor(
-    public readonly id: string,
-    public readonly name: string,
-    public description: string,
-    public readonly dataSections: DataSection[],
-  ) {}
+    id: string,
+    name: string,
+    description: string,
+    dataSections: DataSection[],
+  ) {
+    this.id = id
+    this.name = name
+    this.description = description
+    this.dataSections = dataSections
+  }
 
   static create(data: {
     template: Template

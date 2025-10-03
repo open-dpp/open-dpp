@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { ItemDto } from "@open-dpp/api-client";
+import type { ItemDto, UniqueProductIdentifierDto } from "@open-dpp/api-client";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 import { useIndexStore } from "../../stores";
@@ -21,7 +21,7 @@ const route = useRoute();
 const rows = computed(() => {
   return props.items.map(i => ({
     id: i.id,
-    uuid: i.uniqueProductIdentifiers[0].uuid,
+    uuid: (i.uniqueProductIdentifiers[0] as UniqueProductIdentifierDto).uuid,
   }));
 });
 

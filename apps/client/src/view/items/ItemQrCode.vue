@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { UniqueProductIdentifierDto } from "@open-dpp/api-client";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import QrCode from "../../components/QrCode.vue";
@@ -14,8 +15,9 @@ onMounted(async () => {
     String(route.params.itemId),
   );
   const item = response.data;
-  link.value = `/presentation/${item.uniqueProductIdentifiers[0].uuid}`;
-  content.value = `/presentation/${item.uniqueProductIdentifiers[0].uuid}`;
+  const uqi = item.uniqueProductIdentifiers[0] as UniqueProductIdentifierDto;
+  link.value = `/presentation/${uqi.uuid}`;
+  content.value = `/presentation/${uqi.uuid}`;
 });
 </script>
 

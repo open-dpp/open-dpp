@@ -1,3 +1,4 @@
+import type { Notification } from "../../stores/notification";
 import { useNotificationStore } from "../../stores/notification";
 import NotificationHandler from "./NotificationHandler.vue";
 
@@ -12,7 +13,7 @@ describe("<NotificationHandler />", () => {
     notificationStore.notifications.forEach((n) => {
       cy.contains(n.message).should("be.visible");
     });
-    const notification2 = notificationStore.notifications[1];
+    const notification2 = notificationStore.notifications[1] as Notification;
     cy.get(`[data-cy="closeNotification-${notification2.id}"]`).click();
     cy.contains(notification2.message).should("not.exist");
   });

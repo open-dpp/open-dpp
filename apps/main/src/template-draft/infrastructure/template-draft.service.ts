@@ -18,10 +18,14 @@ import {
 
 @Injectable()
 export class TemplateDraftService {
+  private templateDraftDocModel: Model<TemplateDraftDoc>
+
   constructor(
     @InjectModel(TemplateDraftDoc.name)
-    private templateDraftDocModel: Model<TemplateDraftDoc>,
-  ) {}
+    templateDraftDocModel: Model<TemplateDraftDoc>,
+  ) {
+    this.templateDraftDocModel = templateDraftDocModel
+  }
 
   async save(
     templateDraft: TemplateDraft,
@@ -102,7 +106,7 @@ export class TemplateDraftService {
       description: plainDoc.description,
       sectors: plainDoc.sectors,
       version: plainDoc.version,
-      sections: plainDoc.sections.map(s => this.createSection(s)),
+      sections: plainDoc.sections.map((s: unknown) => this.createSection(s as SectionDoc)),
       publications: plainDoc.publications,
       userId: plainDoc.createdByUserId,
       organizationId: plainDoc.ownedByOrganizationId,

@@ -42,12 +42,22 @@ import * as updateModelDto_1 from './dto/update-model.dto'
 
 @Controller('/organizations/:orgaId/models')
 export class ModelsController {
+  private readonly modelsService: ModelsService
+  private readonly templateService: TemplateService
+  private readonly permissionsService: PermissionService
+  private readonly marketplaceService: MarketplaceService
+
   constructor(
-    private readonly modelsService: ModelsService,
-    private readonly templateService: TemplateService,
-    private readonly permissionsService: PermissionService,
-    private readonly marketplaceService: MarketplaceService,
-  ) {}
+    modelsService: ModelsService,
+    templateService: TemplateService,
+    permissionsService: PermissionService,
+    marketplaceService: MarketplaceService,
+  ) {
+    this.modelsService = modelsService
+    this.templateService = templateService
+    this.permissionsService = permissionsService
+    this.marketplaceService = marketplaceService
+  }
 
   @ApiOperation({
     summary: 'Create model',

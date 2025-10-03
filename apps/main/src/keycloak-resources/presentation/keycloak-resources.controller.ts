@@ -4,7 +4,11 @@ import { Controller, Post, Request } from '@nestjs/common'
 
 @Controller('keycloak-resources')
 export class KeycloakResourcesController {
-  constructor(private keycloakResourcesService: KeycloakResourcesService) {}
+  private keycloakResourcesService: KeycloakResourcesService
+
+  constructor(keycloakResourcesService: KeycloakResourcesService) {
+    this.keycloakResourcesService = keycloakResourcesService
+  }
 
   @Post()
   async create(@Request() req: authRequest.AuthRequest) {

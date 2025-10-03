@@ -33,12 +33,22 @@ import * as updateTemplateDraftDto_1 from './dto/update-template-draft.dto'
 
 @Controller('/organizations/:orgaId/template-drafts')
 export class TemplateDraftController {
+  private readonly permissionsService: PermissionService
+  private readonly templateService: TemplateService
+  private readonly templateDraftService: TemplateDraftService
+  private readonly marketplaceService: MarketplaceService
+
   constructor(
-    private readonly permissionsService: PermissionService,
-    private readonly templateService: TemplateService,
-    private readonly templateDraftService: TemplateDraftService,
-    private readonly marketplaceService: MarketplaceService,
-  ) {}
+    permissionsService: PermissionService,
+    templateService: TemplateService,
+    templateDraftService: TemplateDraftService,
+    marketplaceService: MarketplaceService,
+  ) {
+    this.permissionsService = permissionsService
+    this.templateService = templateService
+    this.templateDraftService = templateDraftService
+    this.marketplaceService = marketplaceService
+  }
 
   @Post()
   async create(

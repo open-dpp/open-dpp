@@ -1,7 +1,9 @@
 import type {
   DataFieldDto,
   DataSectionDto,
+  ModelDto,
   ProductPassportDto,
+  UniqueProductIdentifierDto,
 } from "@open-dpp/api-client";
 import {
   DataFieldType,
@@ -81,7 +83,11 @@ describe("<ModelView />", () => {
       .addDataSection(section3)
       .build({ name: "Other laptop" });
 
-    const model = {
+    const model: ModelDto = {
+      dataValues: [],
+      name: "",
+      owner: "",
+      templateId: "",
       id: "someId",
       uniqueProductIdentifiers: [
         {
@@ -115,12 +121,13 @@ describe("<ModelView />", () => {
       },
     ).as("getModel");
 
+    const upi = model.uniqueProductIdentifiers[0] as UniqueProductIdentifierDto;
     cy.intercept("GET", `${API_URL}/product-passports/*`, (req) => {
       const uuid = req.url.split("/").pop();
       req.reply({
         statusCode: 200,
         body:
-          uuid === model.uniqueProductIdentifiers[0].uuid
+          uuid === upi.uuid
             ? productPassportDto
             : otherProductPassportDto,
       }); // Mock response
@@ -293,9 +300,10 @@ describe("<ModelView />", () => {
       },
     ).as("getModel");
 
+    const upi = model.uniqueProductIdentifiers[0] as UniqueProductIdentifierDto;
     cy.intercept(
       "GET",
-      `${API_URL}/product-passports/${model.uniqueProductIdentifiers[0].uuid}`,
+      `${API_URL}/product-passports/${upi.uuid}`,
       {
         statusCode: 200,
         body: productPassport,

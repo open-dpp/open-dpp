@@ -192,9 +192,10 @@ describe("<DraftView />", () => {
       },
     ).as("getDraft");
 
+    const dataField1 = section.dataFields[1] as DataFieldDto;
     cy.intercept(
       "POST",
-      `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}/sections/${section.id}/data-fields/${section.dataFields[1].id}/move`,
+      `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}/sections/${section.id}/data-fields/${dataField1.id}/move`,
       {
         statusCode: 200,
         body: {
@@ -202,7 +203,7 @@ describe("<DraftView />", () => {
           sections: [
             {
               ...section,
-              dataFields: [section.dataFields[1], section.dataFields[0]],
+              dataFields: [dataField1, section.dataFields[0]],
             },
             repeatableSection,
           ],
@@ -220,7 +221,7 @@ describe("<DraftView />", () => {
 
     cy.wait("@getDraft").its("response.statusCode").should("eq", 200);
     cy.get(
-      `[data-cy="move-data-field-${section.dataFields[1].id}-up"]`,
+      `[data-cy="move-data-field-${dataField1.id}-up"]`,
     ).click();
     cy.wait("@moveDataField").then(({ request }) => {
       const expected = {
@@ -518,7 +519,7 @@ describe("<DraftView />", () => {
 
   it("renders draft and modifies a data field", () => {
     const orgaId = "orgaId";
-    const dataFieldToModify = section.dataFields[0];
+    const dataFieldToModify = section.dataFields[0] as DataFieldDto;
 
     cy.intercept(
       "GET",
@@ -576,7 +577,7 @@ describe("<DraftView />", () => {
 
   it("renders draft and deletes data field", () => {
     const orgaId = "orgaId";
-    const dataFieldToDelete = section.dataFields[0];
+    const dataFieldToDelete = section.dataFields[0] as DataFieldDto;
 
     cy.intercept(
       "GET",

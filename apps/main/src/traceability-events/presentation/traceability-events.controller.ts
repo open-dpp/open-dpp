@@ -4,7 +4,11 @@ import { Body, Controller, Get, Param, Post, Request } from '@nestjs/common'
 
 @Controller('dpp-events')
 export class TraceabilityEventsController {
-  constructor(private readonly dppEventsService: TraceabilityEventsService) {}
+  private readonly dppEventsService: TraceabilityEventsService
+
+  constructor(dppEventsService: TraceabilityEventsService) {
+    this.dppEventsService = dppEventsService
+  }
 
   @Post()
   async create(@Body() body: any, @Request() req: authRequest.AuthRequest) {

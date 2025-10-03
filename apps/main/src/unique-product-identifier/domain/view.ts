@@ -1,4 +1,4 @@
-import type { DataFieldType } from '../../data-modelling/domain/data-field-base'
+import type { DataFieldType_TYPE } from '../../data-modelling/domain/data-field-base'
 import type { Item } from '../../items/domain/item'
 import type { Model } from '../../models/domain/model'
 import type { DataValue } from '../../product-passport-data/domain/data-value'
@@ -16,11 +16,19 @@ import {
 } from '../../templates/domain/section'
 
 export class View {
+  private readonly template: Template
+  private readonly model: Model
+  private readonly item: Item | undefined
+
   private constructor(
-    private readonly template: Template,
-    private readonly model: Model,
-    private readonly item: Item | undefined,
-  ) {}
+    template: Template,
+    model: Model,
+    item: Item | undefined,
+  ) {
+    this.template = template
+    this.model = model
+    this.item = item
+  }
 
   static create(data: { template: Template, model: Model, item?: Item }) {
     return new View(data.template, data.model, data.item)
@@ -40,11 +48,9 @@ export class View {
         )
     for (const section of rootSectionsFilteredByLevel) {
       if (isRepeaterSection(section)) {
-        // @ts-expect-error uses never at the moment, should get typed
         nodes.push(this.processRepeaterSection(section))
       }
       else if (isGroupSection(section)) {
-        // @ts-expect-error uses never at the moment, should get typed
         nodes.push(this.processSection(section))
       }
     }
@@ -65,7 +71,6 @@ export class View {
 
     const rows = []
     for (let rowIndex = minRow; rowIndex <= maxRow; rowIndex++) {
-      // @ts-expect-error uses mongo id
       rows.push(this.processSection(section, rowIndex))
     }
     return {
@@ -105,7 +110,7 @@ export class View {
 
   processDataFields(section: Section, dataValuesOfSection: DataValue[]) {
     const result: Array<{
-      type: DataFieldType
+      type: DataFieldType_TYPE
       name: string
       value: unknown
     }> = []

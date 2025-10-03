@@ -18,13 +18,23 @@ import { OrganizationEntity } from './organization.entity'
 
 @Injectable()
 export class OrganizationsService {
+  private organizationRepository: Repository<OrganizationEntity>
+  private readonly dataSource: DataSource
+  private readonly keycloakResourcesService: KeycloakResourcesService
+  private readonly usersService: UsersService
+
   constructor(
     @InjectRepository(OrganizationEntity)
-    private organizationRepository: Repository<OrganizationEntity>,
-    private readonly dataSource: DataSource,
-    private readonly keycloakResourcesService: KeycloakResourcesService,
-    private readonly usersService: UsersService,
-  ) {}
+    organizationRepository: Repository<OrganizationEntity>,
+    dataSource: DataSource,
+    keycloakResourcesService: KeycloakResourcesService,
+    usersService: UsersService,
+  ) {
+    this.organizationRepository = organizationRepository
+    this.dataSource = dataSource
+    this.keycloakResourcesService = keycloakResourcesService
+    this.usersService = usersService
+  }
 
   convertUserToEntity(user: User) {
     const userEntity = new UserEntity()
@@ -120,6 +130,9 @@ export class OrganizationsService {
     if (users.length === 0) {
       const keycloakUser
         = await this.keycloakResourcesService.findKeycloakUserByEmail(email)
+      if (!keycloakUser || !keycloakUser.id || !keycloakUser.email) {
+        throw new NotFoundException()
+      }
       userToInvite = new User(keycloakUser.id, keycloakUser.email)
     }
     else if (users.length === 1) {

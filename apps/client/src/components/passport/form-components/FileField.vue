@@ -69,7 +69,7 @@ function openFileInput() {
 function selectFile(event: Event) {
   const target = event.target as HTMLInputElement;
   if (target.files && target.files.length > 0) {
-    selectedLocalFile.value = target.files[0];
+    selectedLocalFile.value = target.files[0] as File;
   }
   else {
     selectedLocalFile.value = null;
@@ -172,7 +172,7 @@ async function updateFileFromModal(items: Array<MediaInfo>) {
     return;
   }
   if (items.length > 0) {
-    uploadedMediaId.value = items[0].id;
+    uploadedMediaId.value = (items[0] as MediaInfo).id;
     openFileModal.value = false;
     await loadFile();
   }

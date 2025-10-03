@@ -1,4 +1,3 @@
-// mcp-client.service.ts
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import type { ConfigService } from '@nestjs/config'
 import { MultiServerMCPClient } from '@langchain/mcp-adapters'
@@ -7,8 +6,11 @@ import { Injectable } from '@nestjs/common'
 @Injectable()
 export class McpClientService implements OnModuleInit, OnModuleDestroy {
   private client: MultiServerMCPClient
+  private readonly configService: ConfigService
 
-  constructor(private configService: ConfigService) {}
+  constructor(configService: ConfigService) {
+    this.configService = configService
+  }
 
   async onModuleInit() {
     // Initialize the client when the module is initialized

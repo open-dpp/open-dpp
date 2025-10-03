@@ -20,7 +20,7 @@ const headers = computed(() =>
 
 const rowKeys = computed(() => {
   return props.rows.length > 0
-    ? Object.keys(props.rows[0]).filter(
+    ? Object.keys((props.rows[0] as Record<string, string>)).filter(
         key => !props.ignoreRowKeys?.includes(key),
       )
     : [];
@@ -66,7 +66,7 @@ function copyIdentifierToClipboard(key: string, text: string) {
               key === 'uuid' || key === 'id',
           }"
           class="whitespace-nowrap py-4 text-sm text-gray-500"
-          @click="copyIdentifierToClipboard(key, row[key])"
+          @click="copyIdentifierToClipboard(key, row[key] as string)"
         >
           {{ row[key] }}
         </td>

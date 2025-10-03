@@ -66,7 +66,7 @@ function openFileInput() {
 async function selectFile(event: Event) {
   const target = event.target as HTMLInputElement;
   if (target.files && target.files.length > 0) {
-    selectedLocalFile.value = target.files[0];
+    selectedLocalFile.value = target.files[0] as File;
     await uploadFile();
   }
   else {

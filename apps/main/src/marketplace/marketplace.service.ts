@@ -22,13 +22,22 @@ export class MarketplaceService {
   private readonly marketplaceClient: MarketplaceApiClient
   private readonly logger = new Logger(MarketplaceService.name)
 
+  private TemplateModel: Model<TemplateDoc>
+  private templateService: TemplateService
+  configService: ConfigService
+  private organizationService: OrganizationsService
+
   constructor(
     configService: ConfigService,
-    private organizationService: OrganizationsService,
+    organizationService: OrganizationsService,
     @InjectModel(TemplateDoc.name)
-    private TemplateModel: Model<TemplateDoc>,
-    private templateService: TemplateService,
+    TemplateModel: Model<TemplateDoc>,
+    templateService: TemplateService,
   ) {
+    this.configService = configService
+    this.organizationService = organizationService
+    this.TemplateModel = TemplateModel
+    this.templateService = templateService
     const baseURL = configService.get<string>('MARKETPLACE_URL')
     if (!baseURL) {
       throw new Error('MARKETPLACE_URL is not set')
@@ -58,12 +67,15 @@ export class MarketplaceService {
       return response.data
     }
     catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      const errorStack = error instanceof Error ? error.stack : undefined
+
       this.logger.error(
-        `Failed to upload template to marketplace: ${error.message}`,
-        error.stack,
+        `Failed to upload template to marketplace: ${errorMessage}`,
+        errorStack,
       )
       throw new Error(
-        `Failed to upload template to marketplace: ${error.message}`,
+        `Failed to upload template to marketplace: ${errorMessage}`,
       )
     }
   }

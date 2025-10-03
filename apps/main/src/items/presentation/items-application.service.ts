@@ -8,11 +8,19 @@ import { Item } from '../domain/item'
 
 @Injectable()
 export class ItemsApplicationService {
+  private readonly modelsService: ModelsService
+  private readonly templateService: TemplateService
+  private readonly traceabilityEventsService: TraceabilityEventsService
+
   constructor(
-    private readonly modelsService: ModelsService,
-    private readonly templateService: TemplateService,
-    private readonly traceabilityEventsService: TraceabilityEventsService,
-  ) {}
+    modelsService: ModelsService,
+    templateService: TemplateService,
+    traceabilityEventsService: TraceabilityEventsService,
+  ) {
+    this.modelsService = modelsService
+    this.templateService = templateService
+    this.traceabilityEventsService = traceabilityEventsService
+  }
 
   async createItem(
     organizationId: string,

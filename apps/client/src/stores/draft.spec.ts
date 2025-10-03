@@ -1,4 +1,6 @@
 import type {
+  DataFieldDto,
+  SectionDto,
   TemplateDraftDto,
 } from "@open-dpp/api-client";
 import {
@@ -59,7 +61,7 @@ describe("draftStore", () => {
     setActivePinia(createPinia());
   });
 
-  const section = {
+  const section: SectionDto = {
     id: "s1",
     name: "Tech Specs",
     type: SectionType.GROUP,
@@ -247,7 +249,7 @@ describe("draftStore", () => {
     const draftStore = useDraftStore();
     mocks.deleteDataField.mockResolvedValue({ data: draft });
     draftStore.draft = draft;
-    const dataFieldId = section.dataFields[0].id;
+    const dataFieldId = (section.dataFields[0] as DataFieldDto).id;
     await draftStore.deleteDataField(dataFieldId);
     await waitFor(() =>
       expect(apiClient.dpp.templateDrafts.deleteDataField).toHaveBeenCalledWith(
@@ -263,7 +265,7 @@ describe("draftStore", () => {
     const draftStore = useDraftStore();
     mocks.modifyDataField.mockResolvedValue({ data: draft });
     draftStore.draft = draft;
-    const dataFieldId = section.dataFields[0].id;
+    const dataFieldId = (section.dataFields[0] as DataFieldDto).id;
     const modification = {
       name: "new name",
       options: { min: 2 },
