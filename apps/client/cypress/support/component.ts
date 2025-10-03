@@ -16,13 +16,13 @@
 // https://on.cypress.io/configuration
 // ***********************************************************
 
-import type { CyMountOptions } from "cypress/vue";
+import type { MountingOptions } from "@vue/test-utils";
 // Augment the Cypress namespace to include type definitions for
 // your custom command.
-// Alternatively, can be defined in cypress/support/component.d.ts
+// Alternatively, it can be defined in cypress/support/component.d.ts
 // with a <reference path="./component" /> at the top of your spec.
 import type { Pinia } from "pinia";
-import type { App, Component, DefineComponent, FunctionalComponent } from "vue";
+import type { App, Component } from "vue";
 import type { Router } from "vue-router";
 import {
   createAutoAnimatePlugin,
@@ -51,9 +51,9 @@ beforeEach(() => {
   setActivePinia(pinia);
 });
 
-type VueMountable = DefineComponent<any, any, any, any, any> | FunctionalComponent<any>;
+type VueMountable = Component;
 
-type MountWithRouterOptions<C extends Component> = CyMountOptions<C> & {
+type MountWithRouterOptions = MountingOptions<any> & {
   router?: Router;
 };
 
@@ -61,15 +61,13 @@ Cypress.Commands.add(
   "mountWithPinia",
   <C extends VueMountable>(
     component: C,
-    options: MountWithRouterOptions<C> = {} as MountWithRouterOptions<C>,
+    options: MountWithRouterOptions = {} as MountWithRouterOptions,
   ) => {
-    const baseGlobal = (options.global ?? {}) as Exclude<
-      CyMountOptions<C>["global"],
-      undefined
+    const baseGlobal = (options.global ?? {}) as NonNullable<
+      MountingOptions<any>["global"]
     >;
-    const basePlugins = (baseGlobal.plugins ?? []) as Exclude<
-      Exclude<CyMountOptions<C>["global"], undefined>["plugins"],
-      undefined
+    const basePlugins = (baseGlobal.plugins ?? []) as NonNullable<
+      NonNullable<MountingOptions<any>["global"]>["plugins"]
     >;
 
     const routerPlugin
@@ -95,19 +93,18 @@ Cypress.Commands.add(
           plugins: [createMultiStepPlugin(), createAutoAnimatePlugin()],
         }),
       ],
-    ] as Exclude<
-      Exclude<CyMountOptions<C>["global"], undefined>["plugins"],
-      undefined
+    ] as NonNullable<
+      NonNullable<MountingOptions<any>["global"]>["plugins"]
     >;
 
     // Normalize options to a concrete MountingOptions to prevent union explosion
-    const normalized = {
-      ...(options as CyMountOptions<C>),
+    const normalized: MountingOptions<any> = {
+      ...(options as MountingOptions<any>),
       global: {
-        ...(baseGlobal as NonNullable<CyMountOptions<C>["global"]>),
+        ...(baseGlobal as NonNullable<MountingOptions<any>["global"]>),
         plugins,
       },
-    } satisfies CyMountOptions<C>;
+    };
 
     // const RootWithSafelist = defineComponent({
     //   render() {
@@ -118,7 +115,7 @@ Cypress.Commands.add(
     //   },
     // });
 
-    return mount(component, normalized);
+    return (mount as any)(component as Component, normalized as any);
   },
 );
 Cypress.Commands.add("mount", mount);

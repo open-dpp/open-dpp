@@ -1,11 +1,11 @@
 {
   "extends": "@vue/tsconfig/tsconfig.json",
+  "compilerOptions": {
+    "types": ["cypress", "@cypress/vue"]
+  },
   "include": [
     "**/*.ts",
     "**/*.vue",
     "./support/cypress.d.ts"
-  ],
-  "compilerOptions": {
-    "types": ["cypress", "@cypress/vue"]
-  }
+  ]
 }

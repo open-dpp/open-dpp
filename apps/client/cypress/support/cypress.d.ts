@@ -1,10 +1,10 @@
 /// <reference types="cypress" />
 
-import type { MountingOptions } from "cypress/vue";
-import type { Component, DefineComponent, FunctionalComponent } from "vue";
+import type { MountingOptions } from "@vue/test-utils";
+import type { Component } from "vue";
 import type { Router } from "vue-router";
 
-type VueMountable = DefineComponent<any, any, any, any, any> | FunctionalComponent<any>;
+type VueMountable = Component;
 
 declare global {
   namespace Cypress {
@@ -19,6 +19,7 @@ declare global {
       /**
        * Mount a Vue component with Pinia (and optional Vue Router) preconfigured.
        */
+      // eslint-disable-next-line ts/method-signature-style
       mountWithPinia(
         component: VueMountable,
         options?: MountWithPiniaOptions
@@ -27,11 +28,13 @@ declare global {
       /**
        * Assert deep equality and print a Jest-like diff when it fails.
        */
+      // eslint-disable-next-line ts/method-signature-style
       expectDeepEqualWithDiff<T>(actual: T, expected: T): Chainable<void>;
 
       /**
        * Mount a Vue component using cypress/vue mount helper.
        */
+      // eslint-disable-next-line ts/method-signature-style
       mount(
         component: Component,
         options?: MountingOptions<Component>
