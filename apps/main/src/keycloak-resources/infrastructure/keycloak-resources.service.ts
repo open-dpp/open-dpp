@@ -6,11 +6,11 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import KcAdminClient from '@keycloak/keycloak-admin-client';
 import { Organization } from '../../organizations/domain/organization';
 import { User } from '../../users/domain/user';
 import { AuthContext } from '@app/auth/auth-request';
+import { EnvService } from '@app/env/env.service';
 
 @Injectable()
 export class KeycloakResourcesService {
@@ -18,19 +18,19 @@ export class KeycloakResourcesService {
   private readonly kcAdminClient;
   private readonly realm: string;
 
-  constructor(private configService: ConfigService) {
+  constructor(private configService: EnvService) {
     this.kcAdminClient = new KcAdminClient({
-      baseUrl: this.configService.get<string>('KEYCLOAK_NETWORK_URL', ''),
+      baseUrl: this.configService.get('OPEN_DPP_KEYCLOAK_URL'),
     });
-    this.realm = this.configService.get<string>('KEYCLOAK_REALM', '');
+    this.realm = this.configService.get('OPEN_DPP_KEYCLOAK_REALM');
   }
 
   async reloadToken() {
     await this.kcAdminClient.auth({
       grantType: 'password',
       clientId: 'admin-cli',
-      username: this.configService.get('KEYCLOAK_ADMIN_USERNAME'),
-      password: this.configService.get('KEYCLOAK_ADMIN_PASSWORD'),
+      username: this.configService.get('OPEN_DPP_KEYCLOAK_USER'),
+      password: this.configService.get('OPEN_DPP_KEYCLOAK_PASSWORD'),
     });
   }
 

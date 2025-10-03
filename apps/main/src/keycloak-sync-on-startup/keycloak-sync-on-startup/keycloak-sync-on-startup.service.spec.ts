@@ -4,7 +4,6 @@ import { UsersService } from '../../users/infrastructure/users.service';
 import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
 import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
 import { Logger } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from '../../users/users.module';
 import { DataSource } from 'typeorm';
 import { expect } from '@jest/globals';
@@ -16,6 +15,7 @@ import {
   user2org1,
 } from '@app/testing/users-and-orgs';
 import { User } from '../../users/domain/user';
+import { EnvModule } from '@app/env';
 
 describe('UsersSyncOnStartupService', () => {
   let service: KeycloakSyncOnStartupService;
@@ -26,7 +26,7 @@ describe('UsersSyncOnStartupService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [ConfigModule, TypeOrmTestingModule, UsersModule],
+      imports: [EnvModule, TypeOrmTestingModule, UsersModule],
       providers: [
         KeycloakSyncOnStartupService,
         KeycloakResourcesService,

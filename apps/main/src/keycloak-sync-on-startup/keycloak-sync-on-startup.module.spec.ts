@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigModule } from '@nestjs/config';
 import { KeycloakSyncOnStartupModule } from './keycloak-sync-on-startup.module';
 import { KeycloakSyncOnStartupService } from './keycloak-sync-on-startup/keycloak-sync-on-startup.service';
 import { DataSource } from 'typeorm';
 import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
 import { expect } from '@jest/globals';
+import { EnvModule } from '@app/env';
 
 describe('KeycloakSyncOnStartupModule', () => {
   let module: TestingModule;
@@ -12,11 +12,7 @@ describe('KeycloakSyncOnStartupModule', () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
-        TypeOrmTestingModule,
-        KeycloakSyncOnStartupModule,
-      ],
+      imports: [EnvModule, TypeOrmTestingModule, KeycloakSyncOnStartupModule],
     }).compile();
     dataSource = module.get<DataSource>(DataSource);
   });

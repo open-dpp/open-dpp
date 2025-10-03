@@ -3,14 +3,14 @@ import { KeycloakSyncOnStartupService } from './keycloak-sync-on-startup/keycloa
 import { OrganizationsModule } from '../organizations/organizations.module';
 import { UsersModule } from '../users/users.module';
 import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
-import { ConfigModule } from '@nestjs/config';
+import { EnvModule } from '@app/env/env.module';
 
 @Module({
   imports: [
     OrganizationsModule,
     UsersModule,
     KeycloakResourcesModule,
-    ConfigModule,
+    EnvModule,
   ],
   providers: [KeycloakSyncOnStartupService],
 })

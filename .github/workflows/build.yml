@@ -17,23 +17,43 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: npm install
+      - name: Run linter
+        run: npm run lint
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests
+        env:
+          VITE_KEYCLOAK_ROOT: "http://auth.open-dpp.localhost.20080"
+        run: npm run test
+
   build-and-push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Set up Node
-        uses: actions/setup-node@v5
-        with:
-          node-version: 24
-      - name: Install dependencies and build
-        run: |
-          cp -f public-env .env
-          set -a; [ -f .env ] && . ./.env; set +a; \
-          export VITE_API_ROOT='https://app.demo1.open-dpp.de/api'; \
-          export VITE_KEYCLOAK_ROOT='https://auth.demo1.open-dpp.de'; \
-          cd apps/main/client && npm i && npm run build
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3

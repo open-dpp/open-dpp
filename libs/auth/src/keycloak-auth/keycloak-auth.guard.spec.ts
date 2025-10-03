@@ -12,6 +12,7 @@ import { IS_PUBLIC } from '../public/public.decorator';
 import { KeycloakUserInToken } from './KeycloakUserInToken';
 import { HttpModule } from '@nestjs/axios';
 import { expect } from '@jest/globals';
+import { EnvModule } from '@app/env';
 
 describe('KeycloakAuthGuard', () => {
   let guard: KeycloakAuthGuard;
@@ -28,7 +29,7 @@ describe('KeycloakAuthGuard', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [HttpModule],
+      imports: [HttpModule, EnvModule],
       providers: [
         KeycloakAuthGuard,
         {
