@@ -14,7 +14,8 @@ export enum Sector {
   OTHER = 'Other',
 }
 
-export interface PassportTemplateCreateDto {
+export interface PassportTemplateDto {
+  id: string
   version: string
   name: string
   description: string
@@ -22,10 +23,6 @@ export interface PassportTemplateCreateDto {
   website?: string | null
   organizationName: string
   templateData: Record<string, unknown>
-}
-
-export interface PassportTemplateDto extends PassportTemplateCreateDto {
-  id: string
   ownedByOrganizationId: string
   createdByUserId: string
   contactEmail: string
@@ -35,5 +32,6 @@ export interface PassportTemplateDto extends PassportTemplateCreateDto {
   marketplaceResourceId?: string
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface PassportTemplateGetAllDto
   extends Omit<PassportTemplateDto, 'templateData'> {}

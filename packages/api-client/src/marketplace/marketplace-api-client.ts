@@ -28,9 +28,6 @@ export class MarketplaceApiClient implements IApiClient {
       this.options,
       'https://api.cloud.open-dpp.de',
     )
-    this.passportTemplates = new PassportTemplatesNamespace(
-      this.axiosInstance,
-      this.options.activeOrganizationId,
-    )
+    this.passportTemplates = new PassportTemplatesNamespace(this.axiosInstance)
   }
 }

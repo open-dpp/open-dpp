@@ -1,7 +1,7 @@
 {
   "name": "@open-dpp/api-client",
   "type": "module",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "A client for my API",
   "author": "open-dpp",
   "license": "ISC",

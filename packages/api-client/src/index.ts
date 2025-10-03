@@ -89,7 +89,6 @@ export { MarketplaceApiClient } from './marketplace/marketplace-api-client'
 
 export { Sector } from './marketplace/passport-templates/passport-templates.dtos'
 export type {
-  PassportTemplateCreateDto,
   PassportTemplateDto,
   PassportTemplateGetAllDto,
 } from './marketplace/passport-templates/passport-templates.dtos'
