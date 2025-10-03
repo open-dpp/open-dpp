@@ -24,6 +24,7 @@ import { MediaModule } from './media/media.module';
 import { AiModule } from './ai/ai.module';
 import { CreateNonExistingUserGuard } from './users/infrastructure/create-non-existing-user.guard';
 import { MarketplaceModule } from './marketplace/marketplace.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import { MarketplaceModule } from './marketplace/marketplace.module';
     MediaModule,
     MarketplaceModule,
     AiModule,
+    AnalyticsModule,
   ],
   controllers: [],
   providers: [

@@ -15,7 +15,10 @@ export const UniqueProductIdentifierReferenceDtoSchema = z.object({
 });
 
 export const UniqueProductIdentifierMetadataDtoSchema = z.object({
-  organizationId: z.string(),
+  passportId: z.uuid(),
+  organizationId: z.uuid(),
+  templateId: z.uuid(),
+  modelId: z.uuid(),
 });
 
 export function uniqueProductIdentifierToDto(

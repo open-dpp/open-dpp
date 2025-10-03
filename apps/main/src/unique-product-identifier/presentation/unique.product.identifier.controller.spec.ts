@@ -126,7 +126,7 @@ describe('UniqueProductIdentifierController', () => {
     const model = Model.create({
       name: 'model',
       userId: randomUUID(),
-      organizationId: randomUUID(),
+      organizationId,
       template,
     });
     const item = Item.create({
@@ -136,6 +136,7 @@ describe('UniqueProductIdentifierController', () => {
       model,
     });
     const { uuid } = item.createUniqueProductIdentifier('externalId');
+    await modelsService.save(model);
     await itemsService.save(item);
 
     const response = await request(getApp(app))
@@ -145,6 +146,9 @@ describe('UniqueProductIdentifierController', () => {
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
       organizationId,
+      modelId: model.id,
+      passportId: item.id,
+      templateId: template.id,
     });
   });
 
