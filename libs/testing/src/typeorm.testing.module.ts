@@ -3,8 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import * as path from 'path';
 import { generateConfig } from '../../../apps/main/src/database/config';
-import { EnvModule } from 'libs/env/src/env.module';
-import { EnvService } from 'libs/env/src/env.service';
+import { EnvModule } from '@app/env/env.module';
+import { EnvService } from '@app/env/env.service';
 
 @Module({
   imports: [

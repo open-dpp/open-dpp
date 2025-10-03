@@ -11,7 +11,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { applyBodySizeHandler } from './BodySizeHandler';
 import * as bodyParser from 'body-parser';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { EnvService } from 'libs/env/src/env.service';
+import { EnvService } from '@app/env/env.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

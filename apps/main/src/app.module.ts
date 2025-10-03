@@ -24,9 +24,9 @@ import { MediaModule } from './media/media.module';
 import { AiModule } from './ai/ai.module';
 import { CreateNonExistingUserGuard } from './users/infrastructure/create-non-existing-user.guard';
 import { MarketplaceModule } from './marketplace/marketplace.module';
-import { EnvModule } from 'libs/env/src/env.module';
-import { EnvService } from 'libs/env/src/env.service';
-import { validateEnv } from 'libs/env/src/env';
+import { EnvModule } from '@app/env/env.module';
+import { EnvService } from '@app/env/env.service';
+import { validateEnv } from '@app/env/env';
 
 @Module({
   imports: [

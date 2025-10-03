@@ -1,4 +1,4 @@
-import { EnvService } from 'libs/env/src/env.service';
+import { EnvService } from '@app/env/env.service';
 import { DataSourceOptions } from 'typeorm';
 
 export function generateConfig(

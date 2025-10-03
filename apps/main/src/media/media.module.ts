@@ -4,7 +4,7 @@ import { MediaController } from './presentation/media.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MediaDbSchema, MediaDoc } from './infrastructure/media.schema';
 import { HttpModule } from '@nestjs/axios';
-import { EnvModule } from 'libs/env/src/env.module';
+import { EnvModule } from '@app/env/env.module';
 
 @Module({
   imports: [

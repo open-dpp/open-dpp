@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { json, NextFunction, Request, Response } from 'express';
-import { EnvService } from 'libs/env/src/env.service';
+import { EnvService } from '@app/env/env.service';
 
 /**
  * Applies body size handling and JSON parsing middleware to the provided Nest application.

@@ -3,8 +3,8 @@ import { FileValidator } from '@nestjs/common';
 import FormData from 'form-data';
 import { existsSync, readFileSync, unlinkSync } from 'fs';
 import { firstValueFrom } from 'rxjs';
-import { EnvService } from 'libs/env/src/env.service';
 import { ConfigService } from '@nestjs/config';
+import { EnvService } from '@app/env/env.service';
 
 interface VirusScanValidatorOptions {
   storageType: 'disk' | 'memory';

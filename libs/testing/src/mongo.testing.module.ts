@@ -2,8 +2,8 @@ import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { generateMongoConfig } from '../../../apps/main/src/database/config';
-import { EnvService } from 'libs/env/src/env.service';
-import { EnvModule } from 'libs/env/src/env.module';
+import { EnvService } from '@app/env/env.service';
+import { EnvModule } from '@app/env/env.module';
 
 @Module({
   imports: [

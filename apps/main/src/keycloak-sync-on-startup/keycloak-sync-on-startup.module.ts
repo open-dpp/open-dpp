@@ -3,7 +3,7 @@ import { KeycloakSyncOnStartupService } from './keycloak-sync-on-startup/keycloa
 import { OrganizationsModule } from '../organizations/organizations.module';
 import { UsersModule } from '../users/users.module';
 import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
-import { EnvModule } from 'libs/env/src/env.module';
+import { EnvModule } from '@app/env/env.module';
 
 @Module({
   imports: [

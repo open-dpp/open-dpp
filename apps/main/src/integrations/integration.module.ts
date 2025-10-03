@@ -16,7 +16,7 @@ import { TraceabilityEventsModule } from '../traceability-events/traceability-ev
 import { ItemsApplicationService } from '../items/presentation/items-application.service';
 import { OrganizationsModule } from '../organizations/organizations.module';
 import { PermissionModule } from '@app/permission';
-import { EnvModule } from 'libs/env/src/env.module';
+import { EnvModule } from '@app/env/env.module';
 
 @Module({
   imports: [

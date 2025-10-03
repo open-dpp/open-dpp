@@ -1,7 +1,7 @@
 // mcp-client.service.ts
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { MultiServerMCPClient } from '@langchain/mcp-adapters';
-import { EnvService } from 'libs/env/src/env.service';
+import { EnvService } from '@app/env/env.service';
 
 @Injectable()
 export class McpClientService implements OnModuleInit, OnModuleDestroy {

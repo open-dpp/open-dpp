@@ -10,7 +10,7 @@ import KcAdminClient from '@keycloak/keycloak-admin-client';
 import { Organization } from '../../organizations/domain/organization';
 import { User } from '../../users/domain/user';
 import { AuthContext } from '@app/auth/auth-request';
-import { EnvService } from 'libs/env/src/env.service';
+import { EnvService } from '@app/env/env.service';
 
 @Injectable()
 export class KeycloakResourcesService {

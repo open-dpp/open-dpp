@@ -30,7 +30,7 @@ import { OrganizationsService } from '../../organizations/infrastructure/organiz
 import { PermissionService } from '@app/permission';
 import { Public } from '@app/auth/public/public.decorator';
 import * as authRequest from '@app/auth/auth-request';
-import { EnvService } from 'libs/env/src/env.service';
+import { EnvService } from '@app/env/env.service';
 
 @Controller('organizations/:orgaId/integration/aas')
 export class AasConnectionController {

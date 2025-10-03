@@ -9,7 +9,7 @@ import { Media } from '../domain/media';
 import { fileTypeFromBuffer } from './file-type-util';
 import { randomUUID } from 'crypto';
 import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
-import { EnvService } from 'libs/env/src/env.service';
+import { EnvService } from '@app/env/env.service';
 
 enum BucketDefaultPaths {
   PRODUCT_PASSPORT_FILES = 'product-passport-files',
