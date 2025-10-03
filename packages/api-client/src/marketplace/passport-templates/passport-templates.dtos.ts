@@ -32,6 +32,5 @@ export interface PassportTemplateDto {
   marketplaceResourceId?: string
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface PassportTemplateGetAllDto
   extends Omit<PassportTemplateDto, 'templateData'> {}
