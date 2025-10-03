@@ -1,16 +1,16 @@
-import type { AiConfiguration } from '../../domain/ai-configuration'
-import { z } from 'zod/v4'
-import { AiProvider } from '../../domain/ai-configuration'
+import type { AiConfiguration } from "../../domain/ai-configuration";
+import { z } from "zod/v4";
+import { AiProvider } from "../../domain/ai-configuration";
 
 export const AiConfigurationUpsertDtoSchema = z.object({
   provider: z.enum(AiProvider),
   model: z.string(),
   isEnabled: z.boolean(),
-})
+});
 
 export type AiConfigurationUpsertDto = z.infer<
   typeof AiConfigurationUpsertDtoSchema
->
+>;
 
 export const AiConfigurationDtoSchema = z.object({
   id: z.string(),
@@ -21,9 +21,9 @@ export const AiConfigurationDtoSchema = z.object({
   provider: z.enum(AiProvider),
   model: z.string(),
   isEnabled: z.boolean(),
-})
+});
 
-export type AiConfigurationDto = z.infer<typeof AiConfigurationDtoSchema>
+export type AiConfigurationDto = z.infer<typeof AiConfigurationDtoSchema>;
 
 export function aiConfigurationToDto(
   aiConfiguration: AiConfiguration,
@@ -41,5 +41,5 @@ export function aiConfigurationToDto(
     provider: aiConfiguration.provider,
     model: aiConfiguration.model,
     isEnabled: aiConfiguration.isEnabled,
-  })
+  });
 }

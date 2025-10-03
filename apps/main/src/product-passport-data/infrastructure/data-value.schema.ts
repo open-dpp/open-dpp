@@ -1,19 +1,19 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { Schema as MongooseSchema } from 'mongoose'
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Schema as MongooseSchema } from "mongoose";
 
 @Schema({ _id: false })
 export class DataValueDoc {
   @Prop({ type: MongooseSchema.Types.Mixed, required: false })
-  value?: unknown
+  value?: unknown;
 
   @Prop({ required: true, default: 0 })
-  row: number
+  row: number;
 
   @Prop({ required: true })
-  dataSectionId: string
+  dataSectionId: string;
 
   @Prop({ required: true })
-  dataFieldId: string
+  dataFieldId: string;
 }
 
-export const DataValueSchema = SchemaFactory.createForClass(DataValueDoc)
+export const DataValueSchema = SchemaFactory.createForClass(DataValueDoc);

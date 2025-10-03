@@ -1,19 +1,19 @@
-import type { Model } from 'mongoose'
-import { Injectable } from '@nestjs/common'
-import { InjectModel } from '@nestjs/mongoose'
-import { NotFoundInDatabaseException } from '@open-dpp/exception'
-import { AiConfiguration } from '../domain/ai-configuration'
-import { AiConfigurationDoc } from './ai-configuration.schema'
+import type { Model } from "mongoose";
+import { Injectable } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { AiConfiguration } from "../domain/ai-configuration";
+import { AiConfigurationDoc } from "./ai-configuration.schema";
 
 @Injectable()
 export class AiConfigurationService {
-  private aiConfigurationDoc: Model<AiConfigurationDoc>
+  private aiConfigurationDoc: Model<AiConfigurationDoc>;
 
   constructor(
     @InjectModel(AiConfigurationDoc.name)
     aiConfigurationDoc: Model<AiConfigurationDoc>,
   ) {
-    this.aiConfigurationDoc = aiConfigurationDoc
+    this.aiConfigurationDoc = aiConfigurationDoc;
   }
 
   convertToDomain(aiConfigurationDoc: AiConfigurationDoc): AiConfiguration {
@@ -26,7 +26,7 @@ export class AiConfigurationService {
       model: aiConfigurationDoc.aiModel,
       updatedAt: new Date(Date.now()),
       isEnabled: aiConfigurationDoc.isEnabled,
-    })
+    });
   }
 
   async save(aiConfiguration: AiConfiguration) {
@@ -50,25 +50,25 @@ export class AiConfigurationService {
         upsert: true, // Create a new document if none found
         runValidators: true,
       },
-    )
+    );
 
-    return this.convertToDomain(dataModelDoc)
+    return this.convertToDomain(dataModelDoc);
   }
 
   async findOneOrFail(id: string) {
-    const aiConfigurationDocument = await this.aiConfigurationDoc.findById(id)
+    const aiConfigurationDocument = await this.aiConfigurationDoc.findById(id);
     if (!aiConfigurationDocument) {
-      throw new NotFoundInDatabaseException(AiConfiguration.name)
+      throw new NotFoundInDatabaseException(AiConfiguration.name);
     }
-    return this.convertToDomain(aiConfigurationDocument)
+    return this.convertToDomain(aiConfigurationDocument);
   }
 
   async findOneByOrganizationIdOrFail(id: string) {
-    const aiConfiguration = await this.findOneByOrganizationId(id)
+    const aiConfiguration = await this.findOneByOrganizationId(id);
     if (!aiConfiguration) {
-      throw new NotFoundInDatabaseException(AiConfiguration.name)
+      throw new NotFoundInDatabaseException(AiConfiguration.name);
     }
-    return aiConfiguration
+    return aiConfiguration;
   }
 
   async findOneByOrganizationId(
@@ -76,9 +76,9 @@ export class AiConfigurationService {
   ): Promise<AiConfiguration | undefined> {
     const aiConfigurationDocument = await this.aiConfigurationDoc.findOne({
       ownedByOrganizationId: id,
-    })
+    });
     return aiConfigurationDocument
       ? this.convertToDomain(aiConfigurationDocument)
-      : undefined
+      : undefined;
   }
 }

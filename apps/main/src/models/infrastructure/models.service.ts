@@ -1,32 +1,32 @@
-import type { Model as MongooseModel } from 'mongoose'
-import type { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier'
-import type { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service'
-import { Injectable } from '@nestjs/common'
-import { InjectModel } from '@nestjs/mongoose'
-import { NotFoundInDatabaseException } from '@open-dpp/exception'
-import { Model } from '../domain/model'
-import { migrateModelDoc } from './migrations'
-import { ModelDoc, ModelDocSchemaVersion } from './model.schema'
+import type { Model as MongooseModel } from "mongoose";
+import type { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
+import type { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { Injectable } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { Model } from "../domain/model";
+import { migrateModelDoc } from "./migrations";
+import { ModelDoc, ModelDocSchemaVersion } from "./model.schema";
 
 @Injectable()
 export class ModelsService {
-  private modelDoc: MongooseModel<ModelDoc>
-  private uniqueProductIdentifierService: UniqueProductIdentifierService
+  private modelDoc: MongooseModel<ModelDoc>;
+  private uniqueProductIdentifierService: UniqueProductIdentifierService;
 
   constructor(
     @InjectModel(ModelDoc.name)
     modelDoc: MongooseModel<ModelDoc>,
     uniqueProductIdentifierService: UniqueProductIdentifierService,
   ) {
-    this.modelDoc = modelDoc
-    this.uniqueProductIdentifierService = uniqueProductIdentifierService
+    this.modelDoc = modelDoc;
+    this.uniqueProductIdentifierService = uniqueProductIdentifierService;
   }
 
   convertToDomain(
     modelDoc: ModelDoc,
     uniqueProductIdentifiers: UniqueProductIdentifier[],
   ) {
-    migrateModelDoc(modelDoc)
+    migrateModelDoc(modelDoc);
     return Model.loadFromDb({
       id: modelDoc._id,
       name: modelDoc.name,
@@ -43,7 +43,7 @@ export class ModelsService {
           }))
         : [],
       description: modelDoc.description ?? undefined,
-    })
+    });
   }
 
   async save(model: Model) {
@@ -73,19 +73,19 @@ export class ModelsService {
         upsert: true, // Create a new document if none found
         runValidators: true,
       },
-    )
+    );
 
     for (const uniqueProductIdentifier of model.uniqueProductIdentifiers) {
-      await this.uniqueProductIdentifierService.save(uniqueProductIdentifier)
+      await this.uniqueProductIdentifierService.save(uniqueProductIdentifier);
     }
-    return this.convertToDomain(dataModelDoc, model.uniqueProductIdentifiers)
+    return this.convertToDomain(dataModelDoc, model.uniqueProductIdentifiers);
   }
 
   async findAllByOrganization(organizationId: string) {
     const modelDocs = await this.modelDoc
       .find({ ownedByOrganizationId: organizationId })
       .sort({ name: 1 })
-      .exec()
+      .exec();
     return await Promise.all(
       modelDocs.map(async (modelDoc: ModelDoc) => {
         return this.convertToDomain(
@@ -93,29 +93,29 @@ export class ModelsService {
           await this.uniqueProductIdentifierService.findAllByReferencedId(
             modelDoc._id,
           ),
-        )
+        );
       }),
-    )
+    );
   }
 
   async findOneOrFail(id: string): Promise<Model> {
-    const model = await this.findOne(id)
+    const model = await this.findOne(id);
     if (!model) {
-      throw new NotFoundInDatabaseException(Model.name)
+      throw new NotFoundInDatabaseException(Model.name);
     }
-    return model
+    return model;
   }
 
   async findOne(id: string): Promise<Model | undefined> {
-    const modelDoc = await this.modelDoc.findById(id)
+    const modelDoc = await this.modelDoc.findById(id);
     if (!modelDoc) {
-      return undefined
+      return undefined;
     }
     return this.convertToDomain(
       modelDoc,
       await this.uniqueProductIdentifierService.findAllByReferencedId(
         modelDoc._id,
       ),
-    )
+    );
   }
 }

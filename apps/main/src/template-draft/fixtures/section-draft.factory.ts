@@ -1,17 +1,17 @@
-import type { BuildOptions, DeepPartialObject } from 'fishery'
-import type { DataFieldDraftDbProps } from '../domain/data-field-draft'
-import type { SectionDraftDbProps } from '../domain/section-draft'
-import { randomUUID } from 'node:crypto'
-import { Factory } from 'fishery'
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
-import { SectionType } from '../../data-modelling/domain/section-base'
+import type { BuildOptions, DeepPartialObject } from "fishery";
+import type { DataFieldDraftDbProps } from "../domain/data-field-draft";
+import type { SectionDraftDbProps } from "../domain/section-draft";
+import { randomUUID } from "node:crypto";
+import { Factory } from "fishery";
+import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { SectionType } from "../../data-modelling/domain/section-base";
 
 export class SectionDraftFactory extends Factory<SectionDraftDbProps> {
-  private _dataFields: DataFieldDraftDbProps[] = []
+  private _dataFields: DataFieldDraftDbProps[] = [];
 
   addDataField(dataField: DataFieldDraftDbProps) {
-    this._dataFields.push(dataField)
-    return this
+    this._dataFields.push(dataField);
+    return this;
   }
 
   override build(
@@ -25,15 +25,15 @@ export class SectionDraftFactory extends Factory<SectionDraftDbProps> {
         dataFields: this._dataFields,
       },
       options,
-    )
-    this._dataFields = []
-    return result
+    );
+    this._dataFields = [];
+    return result;
   }
 }
 
 export const sectionDraftDbPropsFactory = SectionDraftFactory.define(
   ({ params }) => {
-    const id = params.id ?? randomUUID()
+    const id = params.id ?? randomUUID();
     return {
       id,
       parentId: undefined,
@@ -42,6 +42,6 @@ export const sectionDraftDbPropsFactory = SectionDraftFactory.define(
       dataFields: [],
       subSections: [],
       granularityLevel: GranularityLevel.MODEL,
-    }
+    };
   },
-)
+);

@@ -1,36 +1,32 @@
-import type { INestApplication } from '@nestjs/common'
-import type { Connection } from 'mongoose'
-import type { TemplateDbProps } from '../domain/template'
-import { randomUUID } from 'node:crypto'
-import { expect } from '@jest/globals'
-import { APP_GUARD } from '@nestjs/core'
-import { getConnectionToken, MongooseModule } from '@nestjs/mongoose'
-import { Test } from '@nestjs/testing'
-import { AuthContext } from '@open-dpp/auth/auth-request'
-import getKeycloakAuthToken from '@open-dpp/testing/auth-token-helper.testing'
-import { KeycloakAuthTestingGuard } from '@open-dpp/testing/keycloak-auth.guard.testing'
-import { KeycloakResourcesServiceTesting } from '@open-dpp/testing/keycloak.resources.service.testing'
-import { MongooseTestingModule } from '@open-dpp/testing/mongo.testing.module'
-import { createKeycloakUserInToken } from '@open-dpp/testing/users-and-orgs'
-import request from 'supertest'
-import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service'
-import { Template } from '../domain/template'
-import { laptopFactory } from '../fixtures/laptop.factory'
-import { templateCreatePropsFactory } from '../fixtures/template.factory'
-import { TemplateDoc, TemplateSchema } from '../infrastructure/template.schema'
-import { TemplateService } from '../infrastructure/template.service'
-import { TemplateModule } from '../template.module'
-import { templateToDto } from './dto/template.dto'
+import type { INestApplication } from "@nestjs/common";
+import type { Connection } from "mongoose";
+import type { TemplateDbProps } from "../domain/template";
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { APP_GUARD } from "@nestjs/core";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { Test } from "@nestjs/testing";
+import { AuthContext } from "@open-dpp/auth";
+import getKeycloakAuthToken, { createKeycloakUserInToken, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
+import request from "supertest";
+import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
+import { Template } from "../domain/template";
+import { laptopFactory } from "../fixtures/laptop.factory";
+import { templateCreatePropsFactory } from "../fixtures/template.factory";
+import { TemplateDoc, TemplateSchema } from "../infrastructure/template.schema";
+import { TemplateService } from "../infrastructure/template.service";
+import { TemplateModule } from "../template.module";
+import { templateToDto } from "./dto/template.dto";
 
-describe('templateController', () => {
-  let app: INestApplication
-  let service: TemplateService
-  let mongoConnection: Connection
+describe("templateController", () => {
+  let app: INestApplication;
+  let service: TemplateService;
+  let mongoConnection: Connection;
 
-  const authContext = new AuthContext()
-  authContext.keycloakUser = createKeycloakUserInToken()
-  const organizationId = randomUUID()
-  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map())
+  const authContext = new AuthContext();
+  authContext.keycloakUser = createKeycloakUserInToken();
+  const organizationId = randomUUID();
+  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
@@ -61,93 +57,93 @@ describe('templateController', () => {
           ],
         }),
       )
-      .compile()
+      .compile();
 
-    service = moduleRef.get<TemplateService>(TemplateService)
-    mongoConnection = moduleRef.get<Connection>(getConnectionToken())
-    app = moduleRef.createNestApplication()
+    service = moduleRef.get<TemplateService>(TemplateService);
+    mongoConnection = moduleRef.get<Connection>(getConnectionToken());
+    app = moduleRef.createNestApplication();
 
-    await app.init()
-  })
+    await app.init();
+  });
 
   const laptopPlain: TemplateDbProps = laptopFactory
     .addSections()
-    .build({ organizationId })
+    .build({ organizationId });
 
-  const userHasNotThePermissionsTxt = `fails if user has not the permissions`
+  const userHasNotThePermissionsTxt = `fails if user has not the permissions`;
 
   it(`/GET template`, async () => {
-    const template = Template.loadFromDb({ ...laptopPlain })
+    const template = Template.loadFromDb({ ...laptopPlain });
 
-    await service.save(template)
+    await service.save(template);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organizationId}/templates/${template.id}`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           authContext.keycloakUser.sub,
           [organizationId],
           keycloakAuthTestingGuard,
         ),
       )
-      .send()
-    expect(response.status).toEqual(200)
-    expect(response.body).toEqual(templateToDto(template))
-  })
+      .send();
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual(templateToDto(template));
+  });
 
   it(`/GET template ${userHasNotThePermissionsTxt}`, async () => {
-    const otherOrganizationId = randomUUID()
+    const otherOrganizationId = randomUUID();
     const template = Template.create(
       templateCreatePropsFactory.build({
         organizationId: otherOrganizationId,
       }),
-    )
-    await service.save(template)
+    );
+    await service.save(template);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${otherOrganizationId}/templates/${template.id}`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           authContext.keycloakUser.sub,
           [organizationId],
           keycloakAuthTestingGuard,
         ),
       )
-      .send()
-    expect(response.status).toEqual(403)
-  })
+      .send();
+    expect(response.status).toEqual(403);
+  });
 
   it(`/GET all templates which belong to the organization`, async () => {
-    const otherOrganizationId = randomUUID()
+    const otherOrganizationId = randomUUID();
     const laptopTemplate = Template.loadFromDb({
       ...laptopPlain,
-    })
+    });
     const phoneTemplate = Template.loadFromDb({
       ...laptopPlain,
       id: randomUUID(),
-      name: 'phone',
-    })
+      name: "phone",
+    });
     const notAccessibleTemplate = Template.create(
       templateCreatePropsFactory.build({
-        name: 'privateModel',
+        name: "privateModel",
         organizationId: otherOrganizationId,
       }),
-    )
+    );
 
-    await service.save(laptopTemplate)
-    await service.save(phoneTemplate)
-    await service.save(notAccessibleTemplate)
+    await service.save(laptopTemplate);
+    await service.save(phoneTemplate);
+    await service.save(notAccessibleTemplate);
     const response = await request(app.getHttpServer())
       .get(`/organizations/${organizationId}/templates`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           authContext.keycloakUser.sub,
           [organizationId],
           keycloakAuthTestingGuard,
         ),
-      )
-    expect(response.status).toEqual(200)
+      );
+    expect(response.status).toEqual(200);
 
     expect(response.body).toContainEqual({
       id: laptopTemplate.id,
@@ -155,40 +151,40 @@ describe('templateController', () => {
       version: laptopTemplate.version,
       description: laptopTemplate.description,
       sectors: laptopTemplate.sectors,
-    })
+    });
     expect(response.body).toContainEqual({
       id: phoneTemplate.id,
       name: phoneTemplate.name,
       version: phoneTemplate.version,
       description: phoneTemplate.description,
       sectors: phoneTemplate.sectors,
-    })
+    });
     expect(response.body).not.toContainEqual({
       id: notAccessibleTemplate.id,
       name: notAccessibleTemplate.name,
       version: notAccessibleTemplate.version,
       description: notAccessibleTemplate.description,
       sectors: notAccessibleTemplate.sectors,
-    })
-  })
+    });
+  });
 
   it(`/GET all templates which belong to the organization ${userHasNotThePermissionsTxt}`, async () => {
-    const otherOrganizationId = randomUUID()
+    const otherOrganizationId = randomUUID();
     const response = await request(app.getHttpServer())
       .get(`/organizations/${otherOrganizationId}/templates`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           authContext.keycloakUser.sub,
           [organizationId],
           keycloakAuthTestingGuard,
         ),
-      )
-    expect(response.status).toEqual(403)
-  })
+      );
+    expect(response.status).toEqual(403);
+  });
 
   afterAll(async () => {
-    await app.close()
-    await mongoConnection.close()
-  })
-})
+    await app.close();
+    await mongoConnection.close();
+  });
+});

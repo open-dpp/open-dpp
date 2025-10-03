@@ -7,8 +7,9 @@ onlyBuiltDependencies:
   - '@nestjs/core'
   - '@scarf/scarf'
   - '@tailwindcss/oxide'
-  - 'core-js'
-  - 'cypress'
-  - 'esbuild'
-  - 'sharp'
-  - 'unrs-resolver'
+  - core-js
+  - cypress
+  - esbuild
+  - msw
+  - sharp
+  - unrs-resolver

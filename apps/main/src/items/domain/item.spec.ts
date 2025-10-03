@@ -1,42 +1,42 @@
-import type { TemplateDbProps } from '../../templates/domain/template'
-import { randomUUID } from 'node:crypto'
-import { expect } from '@jest/globals'
-import { ignoreIds } from '../../../test/utils'
-import { Model } from '../../models/domain/model'
-import { DataValue } from '../../product-passport-data/domain/data-value'
-import { Template } from '../../templates/domain/template'
+import type { TemplateDbProps } from "../../templates/domain/template";
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { ignoreIds } from "../../../test/utils";
+import { Model } from "../../models/domain/model";
+import { DataValue } from "../../product-passport-data/domain/data-value";
+import { Template } from "../../templates/domain/template";
 import {
   LaptopFactory,
   laptopFactory,
-} from '../../templates/fixtures/laptop.factory'
-import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory'
-import { Item } from './item'
+} from "../../templates/fixtures/laptop.factory";
+import { templateCreatePropsFactory } from "../../templates/fixtures/template.factory";
+import { Item } from "./item";
 
-describe('item', () => {
-  const organizationId = randomUUID()
-  const userId = randomUUID()
+describe("item", () => {
+  const organizationId = randomUUID();
+  const userId = randomUUID();
 
   const laptopModel: TemplateDbProps = laptopFactory
     .addSections()
-    .build({ organizationId, userId })
+    .build({ organizationId, userId });
 
-  it('should create an item and defines model', () => {
-    const template = Template.loadFromDb(laptopModel)
+  it("should create an item and defines model", () => {
+    const template = Template.loadFromDb(laptopModel);
 
     const model = Model.create({
-      name: 'name',
+      name: "name",
       userId,
       organizationId,
       template,
-    })
-    const item = Item.create({ organizationId, userId, template, model })
+    });
+    const item = Item.create({ organizationId, userId, template, model });
 
-    expect(item.id).toBeDefined()
-    expect(item.modelId).toEqual(model.id)
-    expect(item.ownedByOrganizationId).toEqual(organizationId)
-    expect(item.createdByUserId).toEqual(userId)
-    expect(item.templateId).toEqual(model.templateId)
-    expect(item.uniqueProductIdentifiers).toEqual([])
+    expect(item.id).toBeDefined();
+    expect(item.modelId).toEqual(model.id);
+    expect(item.ownedByOrganizationId).toEqual(organizationId);
+    expect(item.createdByUserId).toEqual(userId);
+    expect(item.templateId).toEqual(model.templateId);
+    expect(item.uniqueProductIdentifiers).toEqual([]);
     expect(item.dataValues).toEqual([
       DataValue.create({
         dataSectionId: LaptopFactory.ids.techSpecs.id,
@@ -56,94 +56,94 @@ describe('item', () => {
         value: undefined,
         row: 0,
       }),
-    ])
-  })
+    ]);
+  });
 
-  it('should create unique product identifier on item creation', () => {
-    const template = Template.loadFromDb(laptopModel)
+  it("should create unique product identifier on item creation", () => {
+    const template = Template.loadFromDb(laptopModel);
 
     const model = Model.create({
-      name: 'name',
+      name: "name",
       userId,
       organizationId,
       template,
-    })
-    const item = Item.create({ organizationId, userId, model, template })
-    const uniqueProductIdentifier1 = item.createUniqueProductIdentifier()
-    const uniqueProductIdentifier2 = item.createUniqueProductIdentifier()
+    });
+    const item = Item.create({ organizationId, userId, model, template });
+    const uniqueProductIdentifier1 = item.createUniqueProductIdentifier();
+    const uniqueProductIdentifier2 = item.createUniqueProductIdentifier();
 
-    expect(item.id).toBeDefined()
+    expect(item.id).toBeDefined();
     expect(item.uniqueProductIdentifiers).toEqual([
       uniqueProductIdentifier1,
       uniqueProductIdentifier2,
-    ])
-    expect(uniqueProductIdentifier1.referenceId).toEqual(item.id)
-    expect(uniqueProductIdentifier2.referenceId).toEqual(item.id)
-  })
+    ]);
+    expect(uniqueProductIdentifier1.referenceId).toEqual(item.id);
+    expect(uniqueProductIdentifier2.referenceId).toEqual(item.id);
+  });
 
-  it('add data values', () => {
-    const template = Template.create(templateCreatePropsFactory.build())
+  it("add data values", () => {
+    const template = Template.create(templateCreatePropsFactory.build());
 
     const model = Model.create({
-      name: 'name',
+      name: "name",
       userId,
       organizationId,
       template,
-    })
-    const item = Item.create({ organizationId, userId, template, model })
+    });
+    const item = Item.create({ organizationId, userId, template, model });
     item.addDataValues([
       DataValue.create({
-        dataFieldId: 'fieldId2',
-        dataSectionId: 'sid2',
-        value: 'value 2',
+        dataFieldId: "fieldId2",
+        dataSectionId: "sid2",
+        value: "value 2",
         row: 0,
       }),
       DataValue.create({
-        dataFieldId: 'fieldId3',
-        dataSectionId: 'sid2',
-        value: 'value 3',
+        dataFieldId: "fieldId3",
+        dataSectionId: "sid2",
+        value: "value 3",
         row: 0,
       }),
       DataValue.create({
-        dataFieldId: 'fieldId2',
-        dataSectionId: 'sid2',
-        value: 'value 4',
+        dataFieldId: "fieldId2",
+        dataSectionId: "sid2",
+        value: "value 4",
         row: 1,
       }),
       DataValue.create({
-        dataFieldId: 'fieldId3',
-        dataSectionId: 'sid2',
-        value: 'value 5',
+        dataFieldId: "fieldId3",
+        dataSectionId: "sid2",
+        value: "value 5",
         row: 1,
       }),
-    ])
+    ]);
     expect(item.dataValues).toEqual(
       ignoreIds([
         DataValue.create({
-          dataSectionId: 'sid2',
-          dataFieldId: 'fieldId2',
-          value: 'value 2',
+          dataSectionId: "sid2",
+          dataFieldId: "fieldId2",
+          value: "value 2",
           row: 0,
         }),
         DataValue.create({
-          dataSectionId: 'sid2',
-          dataFieldId: 'fieldId3',
-          value: 'value 3',
+          dataSectionId: "sid2",
+          dataFieldId: "fieldId3",
+          value: "value 3",
           row: 0,
         }),
         DataValue.create({
-          dataSectionId: 'sid2',
-          dataFieldId: 'fieldId2',
-          value: 'value 4',
+          dataSectionId: "sid2",
+          dataFieldId: "fieldId2",
+          value: "value 4",
           row: 1,
         }),
         DataValue.create({
-          dataSectionId: 'sid2',
-          dataFieldId: 'fieldId3',
-          value: 'value 5',
+          dataSectionId: "sid2",
+          dataFieldId: "fieldId3",
+          value: "value 5",
           row: 1,
         }),
       ]),
-    )
-  })
-})
+    );
+  });
+});

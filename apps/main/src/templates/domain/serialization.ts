@@ -1,18 +1,18 @@
 import type {
   DataFieldDoc,
   SectionDoc,
-} from '../../data-modelling/infrastructure/template-base.schema'
+} from "../../data-modelling/infrastructure/template-base.schema";
 import type {
   TemplateDoc,
-} from '../infrastructure/template.schema'
-import type { DataFieldDbProps } from './data-field'
-import type { SectionDbProps } from './section'
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
-import { SectionType } from '../../data-modelling/domain/section-base'
+} from "../infrastructure/template.schema";
+import type { DataFieldDbProps } from "./data-field";
+import type { SectionDbProps } from "./section";
+import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { SectionType } from "../../data-modelling/domain/section-base";
 import {
   TemplateDocSchemaVersion,
-} from '../infrastructure/template.schema'
-import { Template } from './template'
+} from "../infrastructure/template.schema";
+import { Template } from "./template";
 
 export function serializeTemplate(t: Template) {
   return {
@@ -40,7 +40,7 @@ export function serializeTemplate(t: Template) {
     createdByUserId: t.createdByUserId,
     ownedByOrganizationId: t.ownedByOrganizationId,
     marketplaceResourceId: t.marketplaceResourceId,
-  }
+  };
 }
 
 export function deserializeTemplate(plain: TemplateDoc) {
@@ -54,8 +54,8 @@ export function deserializeTemplate(plain: TemplateDoc) {
     userId: plain.createdByUserId,
     organizationId: plain.ownedByOrganizationId,
     sections: plain.sections.map((s: SectionDoc) => createSection(s)),
-  }
-  return Template.loadFromDb(tmp)
+  };
+  return Template.loadFromDb(tmp);
 }
 
 function createSection(sectionDoc: SectionDoc): SectionDbProps {
@@ -71,7 +71,7 @@ function createSection(sectionDoc: SectionDoc): SectionDbProps {
       : sectionDoc.type === SectionType.REPEATABLE
         ? GranularityLevel.MODEL
         : undefined,
-  }
+  };
 }
 
 function createDataField(dataFieldDoc: DataFieldDoc): DataFieldDbProps {
@@ -81,5 +81,5 @@ function createDataField(dataFieldDoc: DataFieldDoc): DataFieldDbProps {
     granularityLevel: dataFieldDoc.granularityLevel,
     options: dataFieldDoc.options,
     name: dataFieldDoc.name,
-  }
+  };
 }

@@ -1,27 +1,27 @@
 import type {
   DataFieldType_TYPE,
-} from '../../data-modelling/domain/data-field-base'
-import type { GranularityLevel_TYPE } from '../../data-modelling/domain/granularity-level'
-import type { DataFieldDbProps } from '../../templates/domain/data-field'
-import { randomUUID } from 'node:crypto'
-import { merge } from 'lodash'
+} from "../../data-modelling/domain/data-field-base";
+import type { GranularityLevel_TYPE } from "../../data-modelling/domain/granularity-level";
+import type { DataFieldDbProps } from "../../templates/domain/data-field";
+import { randomUUID } from "node:crypto";
+import { merge } from "lodash";
 import {
   DataFieldBase,
-} from '../../data-modelling/domain/data-field-base'
+} from "../../data-modelling/domain/data-field-base";
 
 export interface DataFieldDraftCreateProps {
-  name: string
-  type: DataFieldType_TYPE
-  options?: Record<string, unknown>
-  granularityLevel: GranularityLevel_TYPE
+  name: string;
+  type: DataFieldType_TYPE;
+  options?: Record<string, unknown>;
+  granularityLevel: GranularityLevel_TYPE;
 }
 
 export type DataFieldDraftDbProps = DataFieldDraftCreateProps & {
-  id: string
-}
+  id: string;
+};
 
 export class DataFieldDraft extends DataFieldBase {
-  public readonly options: Record<string, unknown> = {}
+  public readonly options: Record<string, unknown> = {};
 
   private constructor(
     id: string,
@@ -30,7 +30,7 @@ export class DataFieldDraft extends DataFieldBase {
     options: Record<string, unknown> = {},
     granularityLevel: GranularityLevel_TYPE,
   ) {
-    super(id, _name, type, options, granularityLevel)
+    super(id, _name, type, options, granularityLevel);
   }
 
   static create(data: DataFieldDraftCreateProps): DataFieldDraft {
@@ -40,7 +40,7 @@ export class DataFieldDraft extends DataFieldBase {
       data.type,
       data.options,
       data.granularityLevel,
-    )
+    );
   }
 
   static loadFromDb(data: DataFieldDraftDbProps) {
@@ -50,15 +50,15 @@ export class DataFieldDraft extends DataFieldBase {
       data.type,
       data.options,
       data.granularityLevel,
-    )
+    );
   }
 
   mergeOptions(newOptions: Record<string, unknown>) {
-    merge(this.options, newOptions)
+    merge(this.options, newOptions);
   }
 
   rename(newName: string) {
-    this._name = newName
+    this._name = newName;
   }
 
   publish(): DataFieldDbProps {
@@ -68,6 +68,6 @@ export class DataFieldDraft extends DataFieldBase {
       granularityLevel: this.granularityLevel,
       options: this.options,
       name: this.name,
-    }
+    };
   }
 }

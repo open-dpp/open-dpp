@@ -1,25 +1,25 @@
-import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common'
-import type { ConfigService } from '@nestjs/config'
-import { MultiServerMCPClient } from '@langchain/mcp-adapters'
-import { Injectable } from '@nestjs/common'
+import type { OnModuleDestroy, OnModuleInit } from "@nestjs/common";
+import type { ConfigService } from "@nestjs/config";
+import { MultiServerMCPClient } from "@langchain/mcp-adapters";
+import { Injectable } from "@nestjs/common";
 
 @Injectable()
 export class McpClientService implements OnModuleInit, OnModuleDestroy {
-  private client: MultiServerMCPClient
-  private readonly configService: ConfigService
+  private client: MultiServerMCPClient;
+  private readonly configService: ConfigService;
 
   constructor(configService: ConfigService) {
-    this.configService = configService
+    this.configService = configService;
   }
 
   async onModuleInit() {
     // Initialize the client when the module is initialized
-    await this.connect()
+    await this.connect();
   }
 
   async onModuleDestroy() {
     // Clean up connections when the module is destroyed
-    await this.disconnect()
+    await this.disconnect();
   }
 
   private async connect() {
@@ -27,11 +27,11 @@ export class McpClientService implements OnModuleInit, OnModuleDestroy {
     this.client = new MultiServerMCPClient({
       throwOnLoadError: true,
       prefixToolNameWithServerName: false,
-      additionalToolNamePrefix: '',
+      additionalToolNamePrefix: "",
       mcpServers: {
         productPassport: {
-          transport: 'http',
-          url: this.configService.get<string>('MCP_URL') || '',
+          transport: "http",
+          url: this.configService.get<string>("MCP_URL") || "",
           reconnect: {
             enabled: true,
             maxAttempts: 5,
@@ -39,27 +39,27 @@ export class McpClientService implements OnModuleInit, OnModuleDestroy {
           },
         },
       },
-    })
-    await this.client.initializeConnections()
+    });
+    await this.client.initializeConnections();
 
-    return this.client
+    return this.client;
   }
 
   async getClient() {
     if (!this.client) {
-      await this.connect()
+      await this.connect();
     }
 
-    return this.client
+    return this.client;
   }
 
   async disconnect() {
     if (this.client) {
-      await this.client.close()
+      await this.client.close();
     }
   }
 
   async getTools(...servers: string[]) {
-    return await this.client.getTools(...servers)
+    return await this.client.getTools(...servers);
   }
 }

@@ -1,49 +1,49 @@
-import { expect } from '@jest/globals'
-import { replaceIdByUnderscoreId, replaceUnderscoreIdToId } from './utils'
+import { expect } from "@jest/globals";
+import { replaceIdByUnderscoreId, replaceUnderscoreIdToId } from "./utils";
 
-describe('replaceIdWithUnderscoreId', () => {
-  it('replace id with _id and back', () => {
+describe("replaceIdWithUnderscoreId", () => {
+  it("replace id with _id and back", () => {
     const originalObject = {
-      id: '123',
-      name: 'Sample Object',
+      id: "123",
+      name: "Sample Object",
       nested: {
-        id: '456',
-        title: 'Nested Object',
+        id: "456",
+        title: "Nested Object",
         content: {
-          id: '789',
-          text: 'Content Text',
+          id: "789",
+          text: "Content Text",
         },
         array: [
-          { id: '111', name: 'Array Item 1' },
-          { id: '222', name: 'Array Item 2' },
+          { id: "111", name: "Array Item 1" },
+          { id: "222", name: "Array Item 2" },
         ],
       },
       array: [
-        { id: '111', name: 'Array Item 1' },
-        { id: '222', name: 'Array Item 2' },
+        { id: "111", name: "Array Item 1" },
+        { id: "222", name: "Array Item 2" },
       ],
-    }
-    const updatedObject = replaceIdByUnderscoreId(originalObject)
+    };
+    const updatedObject = replaceIdByUnderscoreId(originalObject);
     expect(updatedObject).toEqual({
-      _id: '123',
-      name: 'Sample Object',
+      _id: "123",
+      name: "Sample Object",
       nested: {
-        _id: '456',
-        title: 'Nested Object',
+        _id: "456",
+        title: "Nested Object",
         content: {
-          _id: '789',
-          text: 'Content Text',
+          _id: "789",
+          text: "Content Text",
         },
         array: [
-          { _id: '111', name: 'Array Item 1' },
-          { _id: '222', name: 'Array Item 2' },
+          { _id: "111", name: "Array Item 1" },
+          { _id: "222", name: "Array Item 2" },
         ],
       },
       array: [
-        { _id: '111', name: 'Array Item 1' },
-        { _id: '222', name: 'Array Item 2' },
+        { _id: "111", name: "Array Item 1" },
+        { _id: "222", name: "Array Item 2" },
       ],
-    })
-    expect(replaceUnderscoreIdToId(updatedObject)).toEqual(originalObject)
-  })
-})
+    });
+    expect(replaceUnderscoreIdToId(updatedObject)).toEqual(originalObject);
+  });
+});

@@ -1,34 +1,34 @@
-import type { Sector } from '@open-dpp/api-client'
-import type { GranularityLevel_TYPE } from '../../data-modelling/domain/granularity-level'
-import type { DataFieldValidationResult } from './data-field'
+import type { Sector } from "@open-dpp/api-client";
+import type { GranularityLevel_TYPE } from "../../data-modelling/domain/granularity-level";
+import type { DataFieldValidationResult } from "./data-field";
 import type {
   Section,
   SectionDbProps,
-} from './section'
-import { randomUUID } from 'node:crypto'
-import { SectionType } from '../../data-modelling/domain/section-base'
-import { DataValue } from '../../product-passport-data/domain/data-value'
+} from "./section";
+import { randomUUID } from "node:crypto";
+import { SectionType } from "../../data-modelling/domain/section-base";
+import { DataValue } from "../../product-passport-data/domain/data-value";
 import {
   findSectionClassByTypeOrFail,
-} from './section'
+} from "./section";
 
 export class ValidationResult {
-  private readonly _validationResults: DataFieldValidationResult[] = []
-  private _isValid: boolean = true
+  private readonly _validationResults: DataFieldValidationResult[] = [];
+  private _isValid: boolean = true;
 
   public get isValid() {
-    return this._isValid
+    return this._isValid;
   }
 
   public get validationResults() {
-    return this._validationResults
+    return this._validationResults;
   }
 
   public addValidationResult(validationResult: DataFieldValidationResult) {
     if (!validationResult.isValid) {
-      this._isValid = false
+      this._isValid = false;
     }
-    this._validationResults.push(validationResult)
+    this._validationResults.push(validationResult);
   }
 
   public toJson() {
@@ -37,35 +37,35 @@ export class ValidationResult {
       errors: this.validationResults
         .filter(v => !v.isValid)
         .map(v => v.toJson()),
-    }
+    };
   }
 }
 
 export interface TemplateCreateProps {
-  name: string
-  description: string
-  sectors: Sector[]
-  userId: string
-  organizationId: string
+  name: string;
+  description: string;
+  sectors: Sector[];
+  userId: string;
+  organizationId: string;
 }
 
 export type TemplateDbProps = TemplateCreateProps & {
-  id: string
-  version: string
-  sections: SectionDbProps[]
-  marketplaceResourceId: string | null
-}
+  id: string;
+  version: string;
+  sections: SectionDbProps[];
+  marketplaceResourceId: string | null;
+};
 
 export class Template {
-  public readonly id: string
-  public readonly name: string
-  public description: string
-  public sectors: Sector[]
-  public readonly version: string
-  private _createdByUserId: string
-  private _ownedByOrganizationId: string
-  public readonly sections: Section[]
-  public marketplaceResourceId: string | null
+  public readonly id: string;
+  public readonly name: string;
+  public description: string;
+  public sectors: Sector[];
+  public readonly version: string;
+  private _createdByUserId: string;
+  private _ownedByOrganizationId: string;
+  public readonly sections: Section[];
+  public marketplaceResourceId: string | null;
 
   private constructor(
     id: string,
@@ -78,35 +78,35 @@ export class Template {
     sections: Section[],
     marketplaceResourceId: string | null,
   ) {
-    this.id = id
-    this.name = name
-    this.description = description
-    this.sectors = sectors
-    this.version = version
-    this._createdByUserId = _createdByUserId
-    this._ownedByOrganizationId = _ownedByOrganizationId
-    this.sections = sections
-    this.marketplaceResourceId = marketplaceResourceId
+    this.id = id;
+    this.name = name;
+    this.description = description;
+    this.sectors = sectors;
+    this.version = version;
+    this._createdByUserId = _createdByUserId;
+    this._ownedByOrganizationId = _ownedByOrganizationId;
+    this.sections = sections;
+    this.marketplaceResourceId = marketplaceResourceId;
   }
 
   static create(plain: {
-    name: string
-    description: string
-    sectors: Sector[]
-    userId: string
-    organizationId: string
+    name: string;
+    description: string;
+    sectors: Sector[];
+    userId: string;
+    organizationId: string;
   }) {
     return new Template(
       randomUUID(),
       plain.name,
       plain.description,
       plain.sectors,
-      '1.0.0',
+      "1.0.0",
       plain.userId,
       plain.organizationId,
       [],
       null,
-    )
+    );
   }
 
   static loadFromDb(data: TemplateDbProps) {
@@ -119,39 +119,39 @@ export class Template {
       data.userId,
       data.organizationId,
       data.sections.map((s) => {
-        const SectionClass = findSectionClassByTypeOrFail(s.type)
-        return SectionClass.loadFromDb(s)
+        const SectionClass = findSectionClassByTypeOrFail(s.type);
+        return SectionClass.loadFromDb(s);
       }),
       data.marketplaceResourceId,
-    )
+    );
   }
 
   public isOwnedBy(organizationId: string) {
-    return this.ownedByOrganizationId === organizationId
+    return this.ownedByOrganizationId === organizationId;
   }
 
   public get createdByUserId() {
-    return this._createdByUserId
+    return this._createdByUserId;
   }
 
   public get ownedByOrganizationId() {
-    return this._ownedByOrganizationId
+    return this._ownedByOrganizationId;
   }
 
   findSectionByIdOrFail(id: string): Section {
-    const section = this.findSectionById(id)
+    const section = this.findSectionById(id);
     if (!section) {
-      throw new Error(`Section with id ${id} not found`)
+      throw new Error(`Section with id ${id} not found`);
     }
-    return section
+    return section;
   }
 
   findSectionById(id: string): Section | undefined {
-    return this.sections.find(s => s.id === id)
+    return this.sections.find(s => s.id === id);
   }
 
   assignMarketplaceResource(marketplaceResourceId: string) {
-    this.marketplaceResourceId = marketplaceResourceId
+    this.marketplaceResourceId = marketplaceResourceId;
   }
 
   validate(
@@ -159,17 +159,17 @@ export class Template {
     granularity: GranularityLevel_TYPE,
     includeSectionIds: string[] = [],
   ): ValidationResult {
-    const validationOutput = new ValidationResult()
+    const validationOutput = new ValidationResult();
     const sectionsToValidate
       = includeSectionIds.length === 0
         ? this.sections
-        : this.sections.filter(s => includeSectionIds.includes(s.id))
+        : this.sections.filter(s => includeSectionIds.includes(s.id));
     for (const section of sectionsToValidate) {
       section
         .validate(this.version, values, granularity)
-        .map(v => validationOutput.addValidationResult(v))
+        .map(v => validationOutput.addValidationResult(v));
     }
-    return validationOutput
+    return validationOutput;
   }
 
   copy(organizationId: string, userId: string) {
@@ -183,18 +183,18 @@ export class Template {
       organizationId,
       sections: this.sections.map(s => s.toDbProps()),
       marketplaceResourceId: this.marketplaceResourceId,
-    })
+    });
   }
 
   public createInitialDataValues(granularity: GranularityLevel_TYPE): DataValue[] {
     const rootGroupSections = this.sections
       .filter(s => s.parentId === undefined)
-      .filter(s => s.type === SectionType.GROUP)
+      .filter(s => s.type === SectionType.GROUP);
     const relevantGroupSections = rootGroupSections.concat(
       rootGroupSections
         .map(g => g.subSections.map(s => this.findSectionByIdOrFail(s)))
         .flat(),
-    )
+    );
 
     return relevantGroupSections
       .map(s =>
@@ -209,6 +209,6 @@ export class Template {
             }),
           ),
       )
-      .flat()
+      .flat();
   }
 }

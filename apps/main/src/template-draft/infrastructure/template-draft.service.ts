@@ -1,30 +1,30 @@
-import type { Model } from 'mongoose'
+import type { Model } from "mongoose";
 import type {
   DataFieldDoc,
   SectionDoc,
-} from '../../data-modelling/infrastructure/template-base.schema'
-import { Injectable } from '@nestjs/common'
-import { InjectModel } from '@nestjs/mongoose'
-import { NotFoundInDatabaseException } from '@open-dpp/exception'
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level'
-import { SectionType } from '../../data-modelling/domain/section-base'
-import { DataFieldDraft } from '../domain/data-field-draft'
-import { SectionDraft } from '../domain/section-draft'
-import { TemplateDraft } from '../domain/template-draft'
+} from "../../data-modelling/infrastructure/template-base.schema";
+import { Injectable } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { SectionType } from "../../data-modelling/domain/section-base";
+import { DataFieldDraft } from "../domain/data-field-draft";
+import { SectionDraft } from "../domain/section-draft";
+import { TemplateDraft } from "../domain/template-draft";
 import {
   TemplateDraftDoc,
   TemplateDraftDocSchemaVersion,
-} from './template-draft.schema'
+} from "./template-draft.schema";
 
 @Injectable()
 export class TemplateDraftService {
-  private templateDraftDocModel: Model<TemplateDraftDoc>
+  private templateDraftDocModel: Model<TemplateDraftDoc>;
 
   constructor(
     @InjectModel(TemplateDraftDoc.name)
     templateDraftDocModel: Model<TemplateDraftDoc>,
   ) {
-    this.templateDraftDocModel = templateDraftDocModel
+    this.templateDraftDocModel = templateDraftDocModel;
   }
 
   async save(
@@ -65,9 +65,9 @@ export class TemplateDraftService {
         upsert: true,
         runValidators: true,
       },
-    )
+    );
 
-    return this.convertToDomain(draftDoc)
+    return this.convertToDomain(draftDoc);
   }
 
   createDataField(dataFieldDoc: DataFieldDoc) {
@@ -78,7 +78,7 @@ export class TemplateDraftService {
       options: dataFieldDoc.options,
 
       granularityLevel: dataFieldDoc.granularityLevel,
-    })
+    });
   }
 
   createSection(sectionDoc: SectionDoc) {
@@ -94,11 +94,11 @@ export class TemplateDraftService {
         : sectionDoc.type === SectionType.REPEATABLE
           ? GranularityLevel.MODEL
           : undefined,
-    })
+    });
   }
 
   convertToDomain(templateDraftDocModel: TemplateDraftDoc) {
-    const plainDoc = templateDraftDocModel.toObject()
+    const plainDoc = templateDraftDocModel.toObject();
 
     return TemplateDraft.loadFromDb({
       id: plainDoc._id,
@@ -110,26 +110,26 @@ export class TemplateDraftService {
       publications: plainDoc.publications,
       userId: plainDoc.createdByUserId,
       organizationId: plainDoc.ownedByOrganizationId,
-    })
+    });
   }
 
   async findOneOrFail(id: string) {
-    const draftDoc = await this.templateDraftDocModel.findById(id).exec()
+    const draftDoc = await this.templateDraftDocModel.findById(id).exec();
     if (!draftDoc) {
-      throw new NotFoundInDatabaseException(TemplateDraft.name)
+      throw new NotFoundInDatabaseException(TemplateDraft.name);
     }
-    return this.convertToDomain(draftDoc)
+    return this.convertToDomain(draftDoc);
   }
 
   async findAllByOrganization(organizationId: string) {
     return (
       await this.templateDraftDocModel
-        .find({ ownedByOrganizationId: organizationId }, '_id name')
+        .find({ ownedByOrganizationId: organizationId }, "_id name")
         .sort({ name: 1 })
         .exec()
     ).map((p) => {
-      const plain = p.toObject()
-      return { id: plain._id, name: plain.name }
-    })
+      const plain = p.toObject();
+      return { id: plain._id, name: plain.name };
+    });
   }
 }

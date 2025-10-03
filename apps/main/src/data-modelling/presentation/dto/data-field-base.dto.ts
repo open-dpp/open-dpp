@@ -1,7 +1,7 @@
-import type { DataFieldBase } from '../../domain/data-field-base'
-import { z } from 'zod'
-import { DataFieldType } from '../../domain/data-field-base'
-import { GranularityLevel } from '../../domain/granularity-level'
+import type { DataFieldBase } from "../../domain/data-field-base";
+import { z } from "zod";
+import { DataFieldType } from "../../domain/data-field-base";
+import { GranularityLevel } from "../../domain/granularity-level";
 
 export const DataFieldBaseSchema = z.object({
   id: z.uuid(),
@@ -9,7 +9,7 @@ export const DataFieldBaseSchema = z.object({
   type: z.enum(DataFieldType),
   options: z.record(z.string(), z.unknown()).optional(),
   granularityLevel: z.enum(GranularityLevel),
-})
+});
 
 export function dataFieldToDto(dataField: DataFieldBase) {
   return DataFieldBaseSchema.parse({
@@ -18,5 +18,5 @@ export function dataFieldToDto(dataField: DataFieldBase) {
     type: dataField.type,
     options: dataField.options,
     granularityLevel: dataField.granularityLevel,
-  })
+  });
 }

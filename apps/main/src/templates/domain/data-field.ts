@@ -1,19 +1,19 @@
-import type { DataFieldType_TYPE } from '../../data-modelling/domain/data-field-base'
-import type { GranularityLevel_TYPE } from '../../data-modelling/domain/granularity-level'
-import { randomUUID } from 'node:crypto'
-import { NotSupportedError } from '@open-dpp/exception'
-import { z } from 'zod'
+import type { DataFieldType_TYPE } from "../../data-modelling/domain/data-field-base";
+import type { GranularityLevel_TYPE } from "../../data-modelling/domain/granularity-level";
+import { randomUUID } from "node:crypto";
+import { NotSupportedError } from "@open-dpp/exception";
+import { z } from "zod";
 import {
   DataFieldBase,
   DataFieldType,
-} from '../../data-modelling/domain/data-field-base'
+} from "../../data-modelling/domain/data-field-base";
 
 export class DataFieldValidationResult {
-  public readonly dataFieldId: string
-  public readonly dataFieldName: string
-  public readonly isValid: boolean
-  public readonly row?: number
-  public readonly errorMessage?: string
+  public readonly dataFieldId: string;
+  public readonly dataFieldName: string;
+  public readonly isValid: boolean;
+  public readonly row?: number;
+  public readonly errorMessage?: string;
 
   private constructor(
     dataFieldId: string,
@@ -22,19 +22,19 @@ export class DataFieldValidationResult {
     row?: number,
     errorMessage?: string,
   ) {
-    this.dataFieldId = dataFieldId
-    this.dataFieldName = dataFieldName
-    this.isValid = isValid
-    this.row = row
-    this.errorMessage = errorMessage
+    this.dataFieldId = dataFieldId;
+    this.dataFieldName = dataFieldName;
+    this.isValid = isValid;
+    this.row = row;
+    this.errorMessage = errorMessage;
   }
 
   static create(data: {
-    dataFieldId: string
-    dataFieldName: string
-    isValid: boolean
-    row?: number
-    errorMessage?: string
+    dataFieldId: string;
+    dataFieldName: string;
+    isValid: boolean;
+    row?: number;
+    errorMessage?: string;
   }): DataFieldValidationResult {
     return new DataFieldValidationResult(
       data.dataFieldId,
@@ -42,7 +42,7 @@ export class DataFieldValidationResult {
       data.isValid,
       data.row,
       data.errorMessage,
-    )
+    );
   }
 
   toJson() {
@@ -51,20 +51,20 @@ export class DataFieldValidationResult {
       name: this.dataFieldName,
       ...(this.row ? { row: this.row } : {}),
       message: this.errorMessage,
-    }
+    };
   }
 }
 
 interface DataFieldProps {
-  name: string
-  options?: Record<string, unknown>
-  granularityLevel: GranularityLevel_TYPE
+  name: string;
+  options?: Record<string, unknown>;
+  granularityLevel: GranularityLevel_TYPE;
 }
 
 export type DataFieldDbProps = DataFieldProps & {
-  id: string
-  type: DataFieldType_TYPE
-}
+  id: string;
+  type: DataFieldType_TYPE;
+};
 
 export abstract class DataField extends DataFieldBase {
   protected static createInstance<T extends DataFieldBase>(
@@ -78,7 +78,7 @@ export abstract class DataField extends DataFieldBase {
       type,
       data.options ?? {},
       data.granularityLevel,
-    )
+    );
   }
 
   // Add static factory method for loadFromDb
@@ -92,10 +92,10 @@ export abstract class DataField extends DataFieldBase {
       data.type,
       data.options ?? {},
       data.granularityLevel,
-    )
+    );
   }
 
-  abstract validate(version: string, value: unknown): DataFieldValidationResult
+  abstract validate(version: string, value: unknown): DataFieldValidationResult;
   toDbProps(): DataFieldDbProps {
     return {
       id: this.id,
@@ -103,7 +103,7 @@ export abstract class DataField extends DataFieldBase {
       name: this._name,
       options: this.options,
       granularityLevel: this.granularityLevel,
-    }
+    };
   }
 }
 
@@ -112,29 +112,29 @@ function validateString(
   name: string,
   value: unknown,
 ): DataFieldValidationResult {
-  const result = z.string().optional().safeParse(value)
+  const result = z.string().optional().safeParse(value);
   return DataFieldValidationResult.create({
     dataFieldId: id,
     dataFieldName: name,
     isValid: result.success,
     errorMessage: !result.success ? result.error.issues[0].message : undefined,
-  })
+  });
 }
 
 export class TextField extends DataField {
   static create(data: DataFieldProps): TextField {
-    return DataField.createInstance(TextField, data, DataFieldType.TEXT_FIELD)
+    return DataField.createInstance(TextField, data, DataFieldType.TEXT_FIELD);
   }
 
   static loadFromDb(data: DataFieldDbProps): TextField {
     return DataField.loadFromDbInstance(TextField, {
       ...data,
       type: DataFieldType.TEXT_FIELD,
-    })
+    });
   }
 
   validate(version: string, value: unknown): DataFieldValidationResult {
-    return validateString(this.id, this.name, value)
+    return validateString(this.id, this.name, value);
   }
 }
 
@@ -144,18 +144,18 @@ export class ProductPassportLink extends DataField {
       ProductPassportLink,
       data,
       DataFieldType.PRODUCT_PASSPORT_LINK,
-    )
+    );
   }
 
   static loadFromDb(data: DataFieldDbProps): ProductPassportLink {
     return DataField.loadFromDbInstance(ProductPassportLink, {
       ...data,
       type: DataFieldType.PRODUCT_PASSPORT_LINK,
-    })
+    });
   }
 
   validate(version: string, value: unknown): DataFieldValidationResult {
-    return validateString(this.id, this.name, value)
+    return validateString(this.id, this.name, value);
   }
 }
 
@@ -165,18 +165,18 @@ export class NumericField extends DataField {
       NumericField,
       data,
       DataFieldType.NUMERIC_FIELD,
-    )
+    );
   }
 
   static loadFromDb(data: DataFieldDbProps): NumericField {
     return DataField.loadFromDbInstance(NumericField, {
       ...data,
       type: DataFieldType.NUMERIC_FIELD,
-    })
+    });
   }
 
   validate(version: string, value: unknown): DataFieldValidationResult {
-    const result = z.number().optional().safeParse(value)
+    const result = z.number().optional().safeParse(value);
     return DataFieldValidationResult.create({
       dataFieldId: this.id,
       dataFieldName: this.name,
@@ -184,24 +184,24 @@ export class NumericField extends DataField {
       errorMessage: !result.success
         ? result.error.issues[0].message
         : undefined,
-    })
+    });
   }
 }
 
 export class FileField extends DataField {
   static create(data: DataFieldProps): FileField {
-    return DataField.createInstance(FileField, data, DataFieldType.FILE_FIELD)
+    return DataField.createInstance(FileField, data, DataFieldType.FILE_FIELD);
   }
 
   static loadFromDb(data: DataFieldDbProps): FileField {
     return DataField.loadFromDbInstance(FileField, {
       ...data,
       type: DataFieldType.FILE_FIELD,
-    })
+    });
   }
 
   validate(version: string, value: unknown): DataFieldValidationResult {
-    return validateString(this.id, this.name, value)
+    return validateString(this.id, this.name, value);
   }
 }
 
@@ -210,12 +210,12 @@ const dataFieldSubtypes = [
   { value: ProductPassportLink, name: DataFieldType.PRODUCT_PASSPORT_LINK },
   { value: NumericField, name: DataFieldType.NUMERIC_FIELD },
   { value: FileField, name: DataFieldType.FILE_FIELD },
-]
+];
 
 export function findDataFieldClassByTypeOrFail(type: DataFieldType_TYPE) {
-  const foundDataFieldType = dataFieldSubtypes.find(st => st.name === type)
+  const foundDataFieldType = dataFieldSubtypes.find(st => st.name === type);
   if (!foundDataFieldType) {
-    throw new NotSupportedError(`Data field type ${type} is not supported`)
+    throw new NotSupportedError(`Data field type ${type} is not supported`);
   }
-  return foundDataFieldType.value
+  return foundDataFieldType.value;
 }

@@ -1,20 +1,20 @@
-import { TraceabilityEvent } from '../../../domain/traceability-event'
-import { TraceabilityEventType } from '../../../domain/traceability-event-type.enum'
-import { TraceabilityEventWrapper } from '../../../domain/traceability-event-wrapper'
+import { TraceabilityEvent } from "../../../domain/traceability-event";
+import { TraceabilityEventType } from "../../../domain/traceability-event-type.enum";
+import { TraceabilityEventWrapper } from "../../../domain/traceability-event-wrapper";
 
 export class OpenEpcisEvent extends TraceabilityEvent {
-  public readonly data: any
+  public readonly data: any;
 
   private constructor(data: any) {
-    super(TraceabilityEventType.OPENEPCIS)
-    this.data = data
+    super(TraceabilityEventType.OPENEPCIS);
+    this.data = data;
   }
 
   static create(data: {
-    userId: string
-    itemId: string
-    organizationId: string
-    childData: any
+    userId: string;
+    itemId: string;
+    organizationId: string;
+    childData: any;
   }): TraceabilityEventWrapper<OpenEpcisEvent> {
     return TraceabilityEventWrapper.create({
       type: TraceabilityEventType.OPENEPCIS,
@@ -25,6 +25,6 @@ export class OpenEpcisEvent extends TraceabilityEvent {
       chargeId: null,
       geolocation: null,
       data: new OpenEpcisEvent(data.childData),
-    })
+    });
   }
 }

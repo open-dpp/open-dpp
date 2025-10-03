@@ -80,16 +80,16 @@ is created.
 To create a new event type:
 
 1. Add the new event type to the appropriate enum:
-    - For a new DPP event type, add it to `DppEventType`
-    - For a new Open DPP event type, add it to `OpenDppEventType`
+   - For a new DPP event type, add it to `DppEventType`
+   - For a new Open DPP event type, add it to `OpenDppEventType`
 
 2. Create a new class for the event type if needed:
-    - For a new Open DPP event sub-type, create a new class in the `open-dpp-events` directory
-    - Follow the pattern of existing event classes like `UniqueProductIdentifierCreatedEventDocument`
+   - For a new Open DPP event sub-type, create a new class in the `open-dpp-events` directory
+   - Follow the pattern of existing event classes like `UniqueProductIdentifierCreatedEventDocument`
 
 3. Update the service layer to handle the new event type:
-    - Update the appropriate service class to handle the new event type
-    - Add any necessary methods for creating, finding, and processing the new event type
+   - Update the appropriate service class to handle the new event type
+   - Add any necessary methods for creating, finding, and processing the new event type
 
 ## Using Events in the System
 
@@ -102,23 +102,23 @@ To create and save an event:
 // Create a new event
 const event = TraceabilityEventWrapper.create({
   type: DppEventType.OPEN_DPP,
-  source: 'source-identifier',
+  source: "source-identifier",
   eventJsonData: JSON.stringify(data),
-})
+});
 
 // Save the event
-await dppEventsService.save(event)
+await dppEventsService.save(event);
 ```
 
 To find events:
 
 ```typescript
 // Find events by ID
-const events = await dppEventsService.findById('event-id')
+const events = await dppEventsService.findById("event-id");
 
 // Find events by source
-const events = await dppEventsService.findByDppId('source-identifier')
+const events = await dppEventsService.findByDppId("source-identifier");
 
 // Find events by type
-const events = await dppEventsService.findByType(DppEventType.OPEN_DPP)
+const events = await dppEventsService.findByType(DppEventType.OPEN_DPP);
 ```

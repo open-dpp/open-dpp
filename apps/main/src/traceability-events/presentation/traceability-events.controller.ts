@@ -1,13 +1,13 @@
-import type * as authRequest from '@open-dpp/auth'
-import type { TraceabilityEventsService } from '../infrastructure/traceability-events.service'
-import { Body, Controller, Get, Param, Post, Request } from '@nestjs/common'
+import type * as authRequest from "@open-dpp/auth";
+import type { TraceabilityEventsService } from "../infrastructure/traceability-events.service";
+import { Body, Controller, Get, Param, Post, Request } from "@nestjs/common";
 
-@Controller('dpp-events')
+@Controller("dpp-events")
 export class TraceabilityEventsController {
-  private readonly dppEventsService: TraceabilityEventsService
+  private readonly dppEventsService: TraceabilityEventsService;
 
   constructor(dppEventsService: TraceabilityEventsService) {
-    this.dppEventsService = dppEventsService
+    this.dppEventsService = dppEventsService;
   }
 
   @Post()
@@ -15,11 +15,11 @@ export class TraceabilityEventsController {
     return await this.dppEventsService.create({
       ...body,
       userId: req.authContext.keycloakUser.sub,
-    })
+    });
   }
 
-  @Get(':id')
-  async get(@Param('id') id: string) {
-    return await this.dppEventsService.findById(id)
+  @Get(":id")
+  async get(@Param("id") id: string) {
+    return await this.dppEventsService.findById(id);
   }
 }

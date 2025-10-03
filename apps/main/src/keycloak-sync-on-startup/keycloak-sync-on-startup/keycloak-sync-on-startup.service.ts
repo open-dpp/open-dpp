@@ -1,20 +1,20 @@
-import type { OnApplicationBootstrap } from '@nestjs/common'
-import type { ConfigService } from '@nestjs/config'
-import type { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service'
-import type { OrganizationsService } from '../../organizations/infrastructure/organizations.service'
-import type { UsersService } from '../../users/infrastructure/users.service'
-import { Injectable, Logger } from '@nestjs/common'
+import type { OnApplicationBootstrap } from "@nestjs/common";
+import type { ConfigService } from "@nestjs/config";
+import type { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
+import type { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
+import type { UsersService } from "../../users/infrastructure/users.service";
+import { Injectable, Logger } from "@nestjs/common";
 
 @Injectable()
 export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
   private readonly logger: Logger = new Logger(
     KeycloakSyncOnStartupService.name,
-  )
+  );
 
-  private readonly usersService: UsersService
-  private readonly keycloakResourcesServices: KeycloakResourcesService
-  private readonly organizationsService: OrganizationsService
-  private readonly configService: ConfigService
+  private readonly usersService: UsersService;
+  private readonly keycloakResourcesServices: KeycloakResourcesService;
+  private readonly organizationsService: OrganizationsService;
+  private readonly configService: ConfigService;
 
   constructor(
     usersService: UsersService,
@@ -22,25 +22,25 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
     organizationsService: OrganizationsService,
     configService: ConfigService,
   ) {
-    this.usersService = usersService
-    this.keycloakResourcesServices = keycloakResourcesServices
-    this.organizationsService = organizationsService
-    this.configService = configService
+    this.usersService = usersService;
+    this.keycloakResourcesServices = keycloakResourcesServices;
+    this.organizationsService = organizationsService;
+    this.configService = configService;
   }
 
   async onApplicationBootstrap() {
-    if (this.configService.get('NODE_ENV') === 'test') {
-      return
+    if (this.configService.get("NODE_ENV") === "test") {
+      return;
     }
-    await this.sync()
+    await this.sync();
   }
 
   async sync() {
-    this.logger.log('Syncing users from Keycloak to database')
-    const keycloakUsers = await this.keycloakResourcesServices.getUsers()
+    this.logger.log("Syncing users from Keycloak to database");
+    const keycloakUsers = await this.keycloakResourcesServices.getUsers();
     for (const keycloakUser of keycloakUsers) {
       if (keycloakUser.id && keycloakUser.email && keycloakUser.username) {
-        const user = await this.usersService.findOne(keycloakUser.id)
+        const user = await this.usersService.findOne(keycloakUser.id);
         if (!user) {
           await this.usersService.create(
             {
@@ -52,7 +52,7 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
               memberships: [],
             },
             true,
-          )
+          );
         }
       }
     }
@@ -98,6 +98,6 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
         }
       }
     } */
-    this.logger.log('Finished syncing users from Keycloak to database')
+    this.logger.log("Finished syncing users from Keycloak to database");
   }
 }

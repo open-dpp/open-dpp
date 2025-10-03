@@ -1,28 +1,28 @@
-import type { PermissionService } from '@open-dpp/auth'
-import type * as authRequest from '@open-dpp/auth'
-import type { AiConfigurationService } from '../infrastructure/ai-configuration.service'
-import { Body, Controller, Get, Param, Put, Request } from '@nestjs/common'
-import { ZodValidationPipe } from '@open-dpp/exception'
-import { AiConfiguration } from '../domain/ai-configuration'
-import * as aiConfigurationDto from './dto/ai-configuration.dto'
-import { AiConfigurationUpsertDtoSchema } from './dto/ai-configuration.dto'
+import type { PermissionService } from "@open-dpp/auth";
+import type * as authRequest from "@open-dpp/auth";
+import type { AiConfigurationService } from "../infrastructure/ai-configuration.service";
+import { Body, Controller, Get, Param, Put, Request } from "@nestjs/common";
+import { ZodValidationPipe } from "@open-dpp/exception";
+import { AiConfiguration } from "../domain/ai-configuration";
+import * as aiConfigurationDto from "./dto/ai-configuration.dto";
+import { AiConfigurationUpsertDtoSchema } from "./dto/ai-configuration.dto";
 
-@Controller('organizations/:organizationId/configurations')
+@Controller("organizations/:organizationId/configurations")
 export class AiConfigurationController {
-  private readonly aiConfigurationService: AiConfigurationService
-  private readonly permissionsService: PermissionService
+  private readonly aiConfigurationService: AiConfigurationService;
+  private readonly permissionsService: PermissionService;
 
   constructor(
     aiConfigurationService: AiConfigurationService,
     permissionsService: PermissionService,
   ) {
-    this.aiConfigurationService = aiConfigurationService
-    this.permissionsService = permissionsService
+    this.aiConfigurationService = aiConfigurationService;
+    this.permissionsService = permissionsService;
   }
 
   @Put()
   async upsertConfiguration(
-    @Param('organizationId') organizationId: string,
+    @Param("organizationId") organizationId: string,
     @Request() req: authRequest.AuthRequest,
     @Body(new ZodValidationPipe(AiConfigurationUpsertDtoSchema))
     aiConfigurationUpsertDto: aiConfigurationDto.AiConfigurationUpsertDto,
@@ -30,13 +30,13 @@ export class AiConfigurationController {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    )
+    );
 
     let aiConfiguration
-      = await this.aiConfigurationService.findOneByOrganizationId(organizationId)
+      = await this.aiConfigurationService.findOneByOrganizationId(organizationId);
 
     if (aiConfiguration) {
-      aiConfiguration.update(aiConfigurationUpsertDto)
+      aiConfiguration.update(aiConfigurationUpsertDto);
     }
     else {
       aiConfiguration = AiConfiguration.create({
@@ -45,27 +45,27 @@ export class AiConfigurationController {
         provider: aiConfigurationUpsertDto.provider,
         model: aiConfigurationUpsertDto.model,
         isEnabled: aiConfigurationUpsertDto.isEnabled,
-      })
+      });
     }
 
     return aiConfigurationDto.aiConfigurationToDto(
       await this.aiConfigurationService.save(aiConfiguration),
-    )
+    );
   }
 
   @Get()
   async findConfigurationByOrganization(
-    @Param('organizationId') organizationId: string,
+    @Param("organizationId") organizationId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
     await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
-    )
+    );
     return aiConfigurationDto.aiConfigurationToDto(
       await this.aiConfigurationService.findOneByOrganizationIdOrFail(
         organizationId,
       ),
-    )
+    );
   }
 }

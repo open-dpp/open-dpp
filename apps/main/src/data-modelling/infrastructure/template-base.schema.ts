@@ -1,26 +1,26 @@
-import type { DataFieldType_TYPE } from '../domain/data-field-base'
-import type { GranularityLevel_TYPE } from '../domain/granularity-level'
-import type { SectionType_TYPE } from '../domain/section-base'
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { Sector } from '@open-dpp/api-client'
-import { Document, Schema as MongooseSchema } from 'mongoose'
-import { DataFieldType } from '../domain/data-field-base'
-import { GranularityLevel } from '../domain/granularity-level'
-import { SectionType } from '../domain/section-base'
+import type { DataFieldType_TYPE } from "../domain/data-field-base";
+import type { GranularityLevel_TYPE } from "../domain/granularity-level";
+import type { SectionType_TYPE } from "../domain/section-base";
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Sector } from "@open-dpp/api-client";
+import { Document, Schema as MongooseSchema } from "mongoose";
+import { DataFieldType } from "../domain/data-field-base";
+import { GranularityLevel } from "../domain/granularity-level";
+import { SectionType } from "../domain/section-base";
 
 @Schema()
 export class DataFieldDoc {
   @Prop({ required: true })
-  _id: string
+  _id: string;
 
   @Prop({ required: true })
-  name: string
+  name: string;
 
   @Prop({ required: true, enum: DataFieldType, type: String })
-  type: DataFieldType_TYPE
+  type: DataFieldType_TYPE;
 
   @Prop({ required: true, type: MongooseSchema.Types.Mixed }) // Accepts any JSON object
-  options: Record<string, unknown>
+  options: Record<string, unknown>;
 
   @Prop({
     required: true,
@@ -28,61 +28,61 @@ export class DataFieldDoc {
     default: GranularityLevel.MODEL,
     type: String,
   })
-  granularityLevel: GranularityLevel_TYPE
+  granularityLevel: GranularityLevel_TYPE;
 
   /** @deprecated Since template and template draft version 1.0.2. Use templateId instead */
   @Prop({ required: false, type: MongooseSchema.Types.Mixed })
-  layout: Record<string, unknown>
+  layout: Record<string, unknown>;
 }
 
-const DataFieldSchema = SchemaFactory.createForClass(DataFieldDoc)
+const DataFieldSchema = SchemaFactory.createForClass(DataFieldDoc);
 
 @Schema()
 export class SectionDoc {
   @Prop({ required: true })
-  _id: string
+  _id: string;
 
   @Prop({ required: true })
-  name: string
+  name: string;
 
   @Prop({ required: true, enum: SectionType, type: String })
-  type: SectionType_TYPE
+  type: SectionType_TYPE;
 
   @Prop({ type: [DataFieldSchema], default: [] })
-  dataFields: DataFieldDoc[]
+  dataFields: DataFieldDoc[];
 
   /** @deprecated Since template version and template draft 1.0.2. Use templateId instead */
   @Prop({ required: false, type: MongooseSchema.Types.Mixed })
-  layout: Record<string, unknown>
+  layout: Record<string, unknown>;
 
   @Prop({ required: false })
-  parentId?: string
+  parentId?: string;
 
   @Prop({ default: [] })
-  subSections: string[]
+  subSections: string[];
 
   @Prop({
     enum: GranularityLevel,
     type: String,
   })
-  granularityLevel?: GranularityLevel_TYPE
+  granularityLevel?: GranularityLevel_TYPE;
 }
 
-const SectionSchema = SchemaFactory.createForClass(SectionDoc)
+const SectionSchema = SchemaFactory.createForClass(SectionDoc);
 
 export abstract class TemplateBaseDoc extends Document {
   @Prop({ required: true })
   // @ts-expect-error uses mongo id
-  _id: string
+  _id: string;
 
   @Prop({ required: true })
-  name: string
+  name: string;
 
   @Prop({
     required: true,
-    default: 'Passvorlage',
+    default: "Passvorlage",
   })
-  description: string
+  description: string;
 
   @Prop({
     required: true,
@@ -90,21 +90,21 @@ export abstract class TemplateBaseDoc extends Document {
     enum: Sector,
     default: [Sector.OTHER],
   })
-  sectors: Sector[]
+  sectors: Sector[];
 
   @Prop({ required: true })
-  version: string
+  version: string;
 
   @Prop({ type: [SectionSchema], default: [] })
-  sections: SectionDoc[]
+  sections: SectionDoc[];
 
   @Prop({ required: true })
-  createdByUserId: string
+  createdByUserId: string;
 
   @Prop({ required: true })
-  ownedByOrganizationId: string
+  ownedByOrganizationId: string;
 }
 
 export function createCommonIndexesForTemplate(schema: MongooseSchema) {
-  schema.index({ ownedByOrganizationId: 1 })
+  schema.index({ ownedByOrganizationId: 1 });
 }

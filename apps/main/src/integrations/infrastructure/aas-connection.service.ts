@@ -1,22 +1,22 @@
-import type { Model as MongooseModel } from 'mongoose'
-import { Injectable } from '@nestjs/common'
-import { InjectModel } from '@nestjs/mongoose'
-import { NotFoundInDatabaseException } from '@open-dpp/exception'
-import { AasConnection, AasFieldAssignment } from '../domain/aas-connection'
+import type { Model as MongooseModel } from "mongoose";
+import { Injectable } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { AasConnection, AasFieldAssignment } from "../domain/aas-connection";
 import {
   AasConnectionDoc,
   AasConnectionDocSchemaVersion,
-} from './aas-connection.schema'
+} from "./aas-connection.schema";
 
 @Injectable()
 export class AasConnectionService {
-  private aasConnectionDoc: MongooseModel<AasConnectionDoc>
+  private aasConnectionDoc: MongooseModel<AasConnectionDoc>;
 
   constructor(
     @InjectModel(AasConnectionDoc.name)
     aasConnectionDoc: MongooseModel<AasConnectionDoc>,
   ) {
-    this.aasConnectionDoc = aasConnectionDoc
+    this.aasConnectionDoc = aasConnectionDoc;
   }
 
   convertToDomain(aasConnectionDoc: AasConnectionDoc) {
@@ -36,7 +36,7 @@ export class AasConnectionService {
           idShort: fieldMapping.idShort,
         }),
       ),
-    })
+    });
   }
 
   async save(aasConnection: AasConnection) {
@@ -64,17 +64,17 @@ export class AasConnectionService {
         upsert: true, // Create a new document if none found
         runValidators: true,
       },
-    )
+    );
 
-    return this.convertToDomain(aasMappingDoc)
+    return this.convertToDomain(aasMappingDoc);
   }
 
   async findById(id: string) {
-    const aasMappingDoc = await this.aasConnectionDoc.findById(id)
+    const aasMappingDoc = await this.aasConnectionDoc.findById(id);
     if (!aasMappingDoc) {
-      throw new NotFoundInDatabaseException(AasConnection.name)
+      throw new NotFoundInDatabaseException(AasConnection.name);
     }
-    return this.convertToDomain(aasMappingDoc)
+    return this.convertToDomain(aasMappingDoc);
   }
 
   async findAllByOrganization(organizationId: string) {
@@ -83,9 +83,9 @@ export class AasConnectionService {
         ownedByOrganizationId: organizationId,
       })
       .sort({ name: 1 })
-      .exec()
+      .exec();
     return aasConnectionDocs.map(aasConnectionDoc =>
       this.convertToDomain(aasConnectionDoc),
-    )
+    );
   }
 }

@@ -1,18 +1,18 @@
-import { Module } from '@nestjs/common'
-import { MongooseModule } from '@nestjs/mongoose'
-import { PermissionModule } from '@open-dpp/auth'
-import { MarketplaceModule } from '../marketplace/marketplace.module'
+import { Module } from "@nestjs/common";
+import { MongooseModule } from "@nestjs/mongoose";
+import { PermissionModule } from "@open-dpp/auth";
+import { MarketplaceModule } from "../marketplace/marketplace.module";
 import {
   TemplateDoc,
   TemplateSchema,
-} from '../templates/infrastructure/template.schema'
-import { TemplateService } from '../templates/infrastructure/template.service'
+} from "../templates/infrastructure/template.schema";
+import { TemplateService } from "../templates/infrastructure/template.service";
 import {
   TemplateDraftDoc,
   TemplateDraftSchema,
-} from './infrastructure/template-draft.schema'
-import { TemplateDraftService } from './infrastructure/template-draft.service'
-import { TemplateDraftController } from './presentation/template-draft.controller'
+} from "./infrastructure/template-draft.schema";
+import { TemplateDraftService } from "./infrastructure/template-draft.service";
+import { TemplateDraftController } from "./presentation/template-draft.controller";
 
 @Module({
   imports: [

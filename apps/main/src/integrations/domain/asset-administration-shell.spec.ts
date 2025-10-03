@@ -1,87 +1,87 @@
-import { expect } from '@jest/globals'
+import { expect } from "@jest/globals";
 import {
   AssetAdministrationShellType,
   createAasForType,
-} from './asset-administration-shell'
+} from "./asset-administration-shell";
 
-describe('assetAdministrationShell', () => {
-  it('should be create from truck', () => {
-    const truck = createAasForType(AssetAdministrationShellType.Truck)
+describe("assetAdministrationShell", () => {
+  it("should be create from truck", () => {
+    const truck = createAasForType(AssetAdministrationShellType.Truck);
 
     expect(
       truck.findPropertyByIdShorts(
-        'Nameplate',
-        'ManufacturerProductDesignation',
+        "Nameplate",
+        "ManufacturerProductDesignation",
       ),
     ).toEqual({
       property: {
-        value: 'Truck',
-        valueType: 'xs:string',
-        idShort: 'ManufacturerProductDesignation',
-        modelType: 'Property',
+        value: "Truck",
+        valueType: "xs:string",
+        idShort: "ManufacturerProductDesignation",
+        modelType: "Property",
       },
-      parentIdShort: 'Nameplate',
-    })
+      parentIdShort: "Nameplate",
+    });
 
     expect(
-      truck.findPropertyByIdShorts('Semitrailer', 'GlobalAssetId'),
+      truck.findPropertyByIdShorts("Semitrailer", "GlobalAssetId"),
     ).toEqual({
       property: {
-        idShort: 'GlobalAssetId',
-        valueType: 'xs:string',
-        modelType: 'Property',
-        value: 'Semitrailer_-10204004-0010-01',
+        idShort: "GlobalAssetId",
+        valueType: "xs:string",
+        modelType: "Property",
+        value: "Semitrailer_-10204004-0010-01",
       },
-      parentIdShort: 'Semitrailer',
-    })
-  })
+      parentIdShort: "Semitrailer",
+    });
+  });
 
-  it('should be create from semitrailer', () => {
+  it("should be create from semitrailer", () => {
     const semitrailer = createAasForType(
       AssetAdministrationShellType.Semitrailer,
-    )
+    );
     expect(
       semitrailer.findPropertyByIdShorts(
-        'Nameplate',
-        'ManufacturerProductDesignation',
+        "Nameplate",
+        "ManufacturerProductDesignation",
       ),
     ).toEqual({
       property: {
-        value: 'Semitrailer',
-        valueType: 'xs:string',
-        idShort: 'ManufacturerProductDesignation',
-        modelType: 'Property',
+        value: "Semitrailer",
+        valueType: "xs:string",
+        idShort: "ManufacturerProductDesignation",
+        modelType: "Property",
       },
-      parentIdShort: 'Nameplate',
-    })
-  })
+      parentIdShort: "Nameplate",
+    });
+  });
 
-  it('should be create from semitrailer truck', () => {
+  it("should be create from semitrailer truck", () => {
     const semitrailerTruck = createAasForType(
       AssetAdministrationShellType.Semitrailer_Truck,
-    )
+    );
     expect(
       semitrailerTruck.findPropertyByIdShorts(
-        'Nameplate',
-        'ManufacturerProductDesignation',
+        "Nameplate",
+        "ManufacturerProductDesignation",
       ),
     ).toEqual({
       property: {
-        value: 'Semitrailer_Truck',
-        valueType: 'xs:string',
-        idShort: 'ManufacturerProductDesignation',
-        modelType: 'Property',
+        value: "Semitrailer_Truck",
+        valueType: "xs:string",
+        idShort: "ManufacturerProductDesignation",
+        modelType: "Property",
       },
-      parentIdShort: 'Nameplate',
-    })
-  })
+      parentIdShort: "Nameplate",
+    });
+  });
 
-  it('should be create from semitrailer truck with globalAssetId', () => {
+  it("should be create from semitrailer truck with globalAssetId", () => {
     const semitrailerTruck = createAasForType(
       AssetAdministrationShellType.Semitrailer_Truck,
-    )
+    );
     expect(semitrailerTruck.globalAssetId).toEqual(
-      'Semitrailer_Truck_-10204004-0010-02',
-    )
-  })
-})
+      "Semitrailer_Truck_-10204004-0010-02",
+    );
+  });
+});

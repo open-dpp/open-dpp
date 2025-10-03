@@ -1,7 +1,7 @@
-import type * as authRequest from '@open-dpp/auth'
-import type express from 'express'
-import type { Media } from '../domain/media'
-import type { MediaService } from '../infrastructure/media.service'
+import type * as authRequest from "@open-dpp/auth";
+import type express from "express";
+import type { Media } from "../domain/media";
+import type { MediaService } from "../infrastructure/media.service";
 import {
   Controller,
   FileTypeValidator,
@@ -14,23 +14,23 @@ import {
   Res,
   UploadedFile,
   UseInterceptors,
-} from '@nestjs/common'
-import { FileInterceptor } from '@nestjs/platform-express'
-import { Public } from '@open-dpp/auth'
-import { memoryStorage } from 'multer'
-import { VirusScanFileValidator } from './virus-scan.file-validator'
+} from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { Public } from "@open-dpp/auth";
+import { memoryStorage } from "multer";
+import { VirusScanFileValidator } from "./virus-scan.file-validator";
 
-@Controller('media')
+@Controller("media")
 export class MediaController {
-  private readonly filesService: MediaService
+  private readonly filesService: MediaService;
 
   constructor(filesService: MediaService) {
-    this.filesService = filesService
+    this.filesService = filesService;
   }
 
-  @Post('profileImage')
+  @Post("profileImage")
   @UseInterceptors(
-    FileInterceptor('file', {
+    FileInterceptor("file", {
       storage: memoryStorage(),
     }),
   )
@@ -44,7 +44,7 @@ export class MediaController {
           new FileTypeValidator({
             fileType: /(image\/(jpeg|jpg|png|heic|webp))$/,
           }),
-          new VirusScanFileValidator({ storageType: 'memory' }),
+          new VirusScanFileValidator({ storageType: "memory" }),
         ],
       }),
     )
@@ -54,12 +54,12 @@ export class MediaController {
     await this.filesService.uploadProfilePicture(
       file.buffer,
       req.authContext.keycloakUser.sub,
-    )
+    );
   }
 
-  @Post('dpp/:orgId/:upi/:dataFieldId')
+  @Post("dpp/:orgId/:upi/:dataFieldId")
   @UseInterceptors(
-    FileInterceptor('file', {
+    FileInterceptor("file", {
       storage: memoryStorage(),
     }),
   )
@@ -73,17 +73,17 @@ export class MediaController {
           new FileTypeValidator({
             fileType: /(image\/(jpeg|jpg|png|heic|webp)|application\/pdf)$/,
           }),
-          new VirusScanFileValidator({ storageType: 'memory' }),
+          new VirusScanFileValidator({ storageType: "memory" }),
         ],
       }),
     )
     file: Express.Multer.File,
-    @Param('orgId') orgId: string,
-    @Param('upi') upi: string,
-    @Param('dataFieldId') dataFieldId: string,
+    @Param("orgId") orgId: string,
+    @Param("upi") upi: string,
+    @Param("dataFieldId") dataFieldId: string,
     @Req() req: authRequest.AuthRequest,
   ): Promise<{
-    mediaId: string
+    mediaId: string;
   }> {
     const media = await this.filesService.uploadFileOfProductPassport(
       file.originalname,
@@ -92,26 +92,26 @@ export class MediaController {
       upi,
       req.authContext.keycloakUser.sub,
       orgId,
-    )
+    );
     return {
       mediaId: media.id,
-    }
+    };
   }
 
-  @Get('dpp/:upi/:dataFieldId/info')
+  @Get("dpp/:upi/:dataFieldId/info")
   @Public()
   async getDppFileInfo(
-    @Param('upi') upi: string,
-    @Param('dataFieldId') dataFieldId: string,
+    @Param("upi") upi: string,
+    @Param("dataFieldId") dataFieldId: string,
   ): Promise<Media> {
-    return this.filesService.findOneDppFileOrFail(dataFieldId, upi)
+    return this.filesService.findOneDppFileOrFail(dataFieldId, upi);
   }
 
-  @Get('dpp/:upi/:dataFieldId/download')
+  @Get("dpp/:upi/:dataFieldId/download")
   @Public()
   async streamDppFile(
-    @Param('upi') upi: string,
-    @Param('dataFieldId') dataFieldId: string,
+    @Param("upi") upi: string,
+    @Param("dataFieldId") dataFieldId: string,
     @Req() req: authRequest.AuthRequest,
     @Res() res: express.Response,
   ): Promise<void> {
@@ -119,68 +119,68 @@ export class MediaController {
       const result = await this.filesService.getFilestreamOfProductPassport(
         dataFieldId,
         upi,
-      )
-      res.setHeader('Content-Type', result.media.mimeType)
-      res.setHeader('Cross-Origin-Resource-Policy', 'same-site')
+      );
+      res.setHeader("Content-Type", result.media.mimeType);
+      res.setHeader("Cross-Origin-Resource-Policy", "same-site");
       if (result.media.updatedAt) {
-        res.setHeader('Last-Modified', result.media.updatedAt.toUTCString())
+        res.setHeader("Last-Modified", result.media.updatedAt.toUTCString());
       }
-      res.setHeader('Cache-Control', 'private, max-age=31536000')
-      result.stream.pipe(res)
-      result.stream.on('error', () => {
+      res.setHeader("Cache-Control", "private, max-age=31536000");
+      result.stream.pipe(res);
+      result.stream.on("error", () => {
         if (!res.headersSent) {
-          res.status(500).json({ error: 'Failed to retrieve file' })
+          res.status(500).json({ error: "Failed to retrieve file" });
         }
-      })
+      });
     }
     catch {
-      res.status(404).json({ error: 'File not found' })
+      res.status(404).json({ error: "File not found" });
     }
   }
 
-  @Get('by-organization/:organizationId')
+  @Get("by-organization/:organizationId")
   async getFileInfoByOrganization(
-    @Param('organizationId') organizationId: string,
+    @Param("organizationId") organizationId: string,
   ): Promise<Array<Media>> {
-    return this.filesService.findAllByOrganizationId(organizationId)
+    return this.filesService.findAllByOrganizationId(organizationId);
   }
 
-  @Get(':id/download')
+  @Get(":id/download")
   @Public()
   async streamFile(
-    @Param('id') id: string,
+    @Param("id") id: string,
     @Req() req: authRequest.AuthRequest,
     @Res() res: express.Response,
   ): Promise<void> {
     try {
-      const result = await this.filesService.getFilestreamById(id)
-      res.setHeader('Content-Type', result.media.mimeType)
-      res.setHeader('Cross-Origin-Resource-Policy', 'same-site')
+      const result = await this.filesService.getFilestreamById(id);
+      res.setHeader("Content-Type", result.media.mimeType);
+      res.setHeader("Cross-Origin-Resource-Policy", "same-site");
       if (result.media.updatedAt) {
-        res.setHeader('Last-Modified', result.media.updatedAt.toUTCString())
+        res.setHeader("Last-Modified", result.media.updatedAt.toUTCString());
       }
-      res.setHeader('Cache-Control', 'private, max-age=31536000')
-      result.stream.pipe(res)
-      result.stream.on('error', () => {
+      res.setHeader("Cache-Control", "private, max-age=31536000");
+      result.stream.pipe(res);
+      result.stream.on("error", () => {
         if (!res.headersSent) {
-          res.status(500).json({ error: 'Failed to retrieve file' })
+          res.status(500).json({ error: "Failed to retrieve file" });
         }
-      })
+      });
     }
     catch {
-      res.status(404).json({ error: 'File not found' })
+      res.status(404).json({ error: "File not found" });
     }
   }
 
-  @Get(':id/info')
+  @Get(":id/info")
   @Public()
-  async getMediaInfo(@Param('id') id: string): Promise<Media> {
-    return await this.filesService.findOneOrFail(id)
+  async getMediaInfo(@Param("id") id: string): Promise<Media> {
+    return await this.filesService.findOneOrFail(id);
   }
 
-  @Post(':orgId')
+  @Post(":orgId")
   @UseInterceptors(
-    FileInterceptor('file', {
+    FileInterceptor("file", {
       storage: memoryStorage(),
     }),
   )
@@ -194,24 +194,24 @@ export class MediaController {
           new FileTypeValidator({
             fileType: /(image\/(jpeg|jpg|png|heic|webp)|application\/pdf)$/,
           }),
-          new VirusScanFileValidator({ storageType: 'memory' }),
+          new VirusScanFileValidator({ storageType: "memory" }),
         ],
       }),
     )
     file: Express.Multer.File,
-    @Param('orgId') orgId: string,
+    @Param("orgId") orgId: string,
     @Req() req: authRequest.AuthRequest,
   ): Promise<{
-    mediaId: string
+    mediaId: string;
   }> {
     const media = await this.filesService.uploadMedia(
       file.originalname,
       file.buffer,
       req.authContext.keycloakUser.sub,
       orgId,
-    )
+    );
     return {
       mediaId: media.id,
-    }
+    };
   }
 }

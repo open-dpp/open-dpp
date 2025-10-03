@@ -1,15 +1,15 @@
-import type { TestingModule } from '@nestjs/testing'
-import { expect } from '@jest/globals'
-import { ConfigModule } from '@nestjs/config'
-import { MongooseModule } from '@nestjs/mongoose'
-import { Test } from '@nestjs/testing'
-import { MongooseTestingModule } from 'packages/testing/src/mongo.testing.module'
-import { MediaDbSchema, MediaDoc } from '../infrastructure/media.schema'
-import { MediaService } from '../infrastructure/media.service'
-import { MediaController } from './media.controller'
+import type { TestingModule } from "@nestjs/testing";
+import { expect } from "@jest/globals";
+import { ConfigModule } from "@nestjs/config";
+import { MongooseModule } from "@nestjs/mongoose";
+import { Test } from "@nestjs/testing";
+import { MongooseTestingModule } from "packages/testing/src/mongo.testing.module";
+import { MediaDbSchema, MediaDoc } from "../infrastructure/media.schema";
+import { MediaService } from "../infrastructure/media.service";
+import { MediaController } from "./media.controller";
 
-describe('mediaController', () => {
-  let controller: MediaController
+describe("mediaController", () => {
+  let controller: MediaController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -25,12 +25,12 @@ describe('mediaController', () => {
       ],
       providers: [MediaService],
       controllers: [MediaController],
-    }).compile()
+    }).compile();
 
-    controller = module.get<MediaController>(MediaController)
-  })
+    controller = module.get<MediaController>(MediaController);
+  });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined()
-  })
-})
+  it("should be defined", () => {
+    expect(controller).toBeDefined();
+  });
+});

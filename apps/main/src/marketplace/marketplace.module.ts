@@ -1,37 +1,49 @@
-import { Module } from '@nestjs/common'
-import { MongooseModule } from '@nestjs/mongoose'
-import { TypeOrmModule } from '@nestjs/typeorm'
-import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module'
-import { OrganizationEntity } from '../organizations/infrastructure/organization.entity'
-import { OrganizationsService } from '../organizations/infrastructure/organizations.service'
+import { Module } from "@nestjs/common";
+import { MongooseModule } from "@nestjs/mongoose";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { PermissionModule } from "@open-dpp/auth";
+import { KeycloakResourcesModule } from "../keycloak-resources/keycloak-resources.module";
+import { OrganizationEntity } from "../organizations/infrastructure/organization.entity";
+import { OrganizationsService } from "../organizations/infrastructure/organizations.service";
 import {
   TemplateDoc,
   TemplateSchema,
-} from '../templates/infrastructure/template.schema'
-import { TemplateService } from '../templates/infrastructure/template.service'
-import { UserEntity } from '../users/infrastructure/user.entity'
-import { UsersService } from '../users/infrastructure/users.service'
-import { MarketplaceService } from './marketplace.service'
+} from "../templates/infrastructure/template.schema";
+import { TemplateService } from "../templates/infrastructure/template.service";
+import { UserEntity } from "../users/infrastructure/user.entity";
+import { UsersService } from "../users/infrastructure/users.service";
+import {
+  PassportTemplatePublicationDbSchema,
+  PassportTemplatePublicationDoc,
+} from "./infrastructure/passport-template-publication.schema";
+import { PassportTemplatePublicationService } from "./infrastructure/passport-template-publication.service";
+import { MarketplaceApplicationService } from "./presentation/marketplace.application.service";
+import { PassportTemplatePublicationController } from "./presentation/passport-template-publication.controller";
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
     MongooseModule.forFeature([
       {
+        name: PassportTemplatePublicationDoc.name,
+        schema: PassportTemplatePublicationDbSchema,
+      },
+      {
         name: TemplateDoc.name,
         schema: TemplateSchema,
       },
     ]),
     KeycloakResourcesModule,
+    PermissionModule,
   ],
-  controllers: [],
+  controllers: [PassportTemplatePublicationController],
   providers: [
-    MarketplaceService,
+    PassportTemplatePublicationService,
+    MarketplaceApplicationService,
     OrganizationsService,
     UsersService,
     TemplateService,
   ],
-
-  exports: [MarketplaceService],
+  exports: [MarketplaceApplicationService],
 })
 export class MarketplaceModule {}

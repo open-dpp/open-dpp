@@ -3,11 +3,11 @@
   "compilerOptions": {
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "module": "CommonJS",
+    "moduleResolution": "node",
     "declaration": true,
     "declarationMap": true,
     "outDir": "dist",
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": false
   }
 }

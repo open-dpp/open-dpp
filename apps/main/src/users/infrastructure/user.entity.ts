@@ -8,46 +8,46 @@ import {
   OneToMany,
   PrimaryColumn,
   UpdateDateColumn,
-} from 'typeorm'
-import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity'
+} from "typeorm";
+import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
 
-@Entity('user')
+@Entity("user")
 export class UserEntity {
   @PrimaryColumn()
-  id: string
+  id: string;
 
   @CreateDateColumn()
-  createdAt: Date
+  createdAt: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date
+  updatedAt: Date;
 
   @DeleteDateColumn({ nullable: true })
-  deletedAt: Date | null
+  deletedAt: Date | null;
 
   @Column()
-  email: string
+  email: string;
 
   @ManyToMany(
     () => OrganizationEntity,
     organization => organization.members,
     {
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
   )
   @JoinTable({
-    name: 'organization_user',
-    joinColumns: [{ name: 'user_id', referencedColumnName: 'id' }],
+    name: "organization_user",
+    joinColumns: [{ name: "user_id", referencedColumnName: "id" }],
     inverseJoinColumns: [
-      { name: 'organization_id', referencedColumnName: 'id' },
+      { name: "organization_id", referencedColumnName: "id" },
     ],
   })
-  organizations: OrganizationEntity[]
+  organizations: OrganizationEntity[];
 
   @OneToMany(() => OrganizationEntity, org => org.createdByUserId)
-  creatorOfOrganizations: OrganizationEntity[]
+  creatorOfOrganizations: OrganizationEntity[];
 
   @OneToMany(() => OrganizationEntity, org => org.ownedByUserId)
-  ownerOfOrganizations: OrganizationEntity[]
+  ownerOfOrganizations: OrganizationEntity[];
 }

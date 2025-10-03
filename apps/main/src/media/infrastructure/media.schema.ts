@@ -1,72 +1,72 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { Document } from 'mongoose'
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Document } from "mongoose";
 
 export const MediaSchemaVersion = {
-  v1_0_0: '1.0.0',
-} as const
+  v1_0_0: "1.0.0",
+} as const;
 
-export type MediaSchemaVersion_TYPE = (typeof MediaSchemaVersion)[keyof typeof MediaSchemaVersion]
+export type MediaSchemaVersion_TYPE = (typeof MediaSchemaVersion)[keyof typeof MediaSchemaVersion];
 
-@Schema({ collection: 'media' })
+@Schema({ collection: "media" })
 export class MediaDoc extends Document {
   @Prop({
     default: MediaSchemaVersion.v1_0_0,
     enum: MediaSchemaVersion,
   }) // Track schema version
-  _schemaVersion: MediaSchemaVersion_TYPE
+  _schemaVersion: MediaSchemaVersion_TYPE;
 
   @Prop({ required: true })
   // @ts-expect-error uses mongo id
-  _id: string
+  _id: string;
 
   @Prop({ required: true })
-  title: string
+  title: string;
 
   @Prop({ required: true })
-  description: string
+  description: string;
 
   @Prop({ required: true })
-  mimeType: string
+  mimeType: string;
 
   @Prop({ required: true })
-  fileExtension: string
+  fileExtension: string;
 
   @Prop({ required: true })
-  size: number
+  size: number;
 
   @Prop({ required: true })
-  originalFilename: string
+  originalFilename: string;
 
   @Prop({ required: true })
-  ownedByOrganizationId: string
+  ownedByOrganizationId: string;
 
   @Prop({ required: true })
-  createdByUserId: string
+  createdByUserId: string;
 
-  @Prop({ type: 'string', required: false })
-  uniqueProductIdentifier: string | null
+  @Prop({ type: "string", required: false })
+  uniqueProductIdentifier: string | null;
 
-  @Prop({ type: 'string', required: false })
-  dataFieldId: string | null
-
-  @Prop({ required: true })
-  bucket: string
+  @Prop({ type: "string", required: false })
+  dataFieldId: string | null;
 
   @Prop({ required: true })
-  objectName: string
+  bucket: string;
 
   @Prop({ required: true })
-  eTag: string
+  objectName: string;
 
   @Prop({ required: true })
-  versionId: string
+  eTag: string;
 
   @Prop({ required: true })
-  createdAt: Date
+  versionId: string;
 
   @Prop({ required: true })
-  updatedAt: Date
+  createdAt: Date;
+
+  @Prop({ required: true })
+  updatedAt: Date;
 }
-export const MediaDbSchema = SchemaFactory.createForClass(MediaDoc)
+export const MediaDbSchema = SchemaFactory.createForClass(MediaDoc);
 
-MediaDbSchema.index({ organizationName: 1, sectors: 1 })
+MediaDbSchema.index({ organizationName: 1, sectors: 1 });
