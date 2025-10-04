@@ -1,6 +1,5 @@
 import type { KeycloakUserInToken } from '@open-dpp/auth'
 import { randomUUID } from 'node:crypto'
-import { Organization } from '../../../apps/main/src/organizations/domain/organization'
 
 function createKeycloakUserInToken(id: string = randomUUID()): KeycloakUserInToken {
   const email = `${id}@test.test`
@@ -25,29 +24,29 @@ const user1org3 = createKeycloakUserInToken()
 const keycloakUsers = [user1org1, user2org1, user1org2, user2org2, user1org3]
 
 // Organization domain objects
-const org1 = Organization.fromPlain({
+const org1 = {
   id: 'org1',
   name: 'Organization 1',
   members: [], // [userObj1, userObj2],
   createdByUserId: user1org1.sub,
   ownedByUserId: user1org1.sub,
-})
+}
 
-const org2 = Organization.fromPlain({
+const org2 = {
   id: 'org2',
   name: 'Organization 2',
   members: [], // [userObj3, userObj4],
   createdByUserId: user1org2.sub,
   ownedByUserId: user1org2.sub,
-})
+}
 
-const org3 = Organization.fromPlain({
+const org3 = {
   id: 'org3',
   name: 'Organization 3',
   members: [], // [userObj5],
   createdByUserId: user1org3.sub,
   ownedByUserId: user1org3.sub,
-})
+}
 
 // Array of all organizations
 const organizations = [org1, org2, org3]

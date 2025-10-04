@@ -1,11 +1,10 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
-import { MongooseTestingModule } from "@app/testing/mongo.testing.module";
-import { TypeOrmTestingModule } from "@app/testing/typeorm.testing.module";
 import { expect, jest } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { TypeOrmModule } from "@nestjs/typeorm";
+import { MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import { DataSource } from "typeorm";
 import { KeycloakResourcesModule } from "../../keycloak-resources/keycloak-resources.module";
 import { Organization } from "../../organizations/domain/organization";

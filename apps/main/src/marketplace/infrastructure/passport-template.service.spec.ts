@@ -7,7 +7,7 @@ import { Test } from "@nestjs/testing";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { MongooseTestingModule } from "@open-dpp/testing";
 import { PassportTemplatePublication } from "../domain/passport-template-publication";
-import { passportTemplatePublicationPropsFactory } from "../fixtures/passport-template-publication-props.factory";
+import { passportTemplatePublicationPropsFactory } from "../fixtures/passport.template.factory";
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,

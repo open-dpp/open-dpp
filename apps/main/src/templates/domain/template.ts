@@ -1,4 +1,3 @@
-import type { Sector } from "@open-dpp/api-client";
 import type { GranularityLevel_TYPE } from "../../data-modelling/domain/granularity-level";
 import type { DataFieldValidationResult } from "./data-field";
 import type {
@@ -7,6 +6,7 @@ import type {
 } from "./section";
 import { randomUUID } from "node:crypto";
 import { SectionType } from "../../data-modelling/domain/section-base";
+import { Sector_TYPE } from "../../data-modelling/domain/sectors";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import {
   findSectionClassByTypeOrFail,
@@ -44,7 +44,7 @@ export class ValidationResult {
 export interface TemplateCreateProps {
   name: string;
   description: string;
-  sectors: Sector[];
+  sectors: Sector_TYPE[];
   userId: string;
   organizationId: string;
 }
@@ -60,7 +60,7 @@ export class Template {
   public readonly id: string;
   public readonly name: string;
   public description: string;
-  public sectors: Sector[];
+  public sectors: Sector_TYPE[];
   public readonly version: string;
   private _createdByUserId: string;
   private _ownedByOrganizationId: string;
@@ -71,7 +71,7 @@ export class Template {
     id: string,
     name: string,
     description: string,
-    sectors: Sector[],
+    sectors: Sector_TYPE[],
     version: string,
     _createdByUserId: string,
     _ownedByOrganizationId: string,
@@ -92,7 +92,7 @@ export class Template {
   static create(plain: {
     name: string;
     description: string;
-    sectors: Sector[];
+    sectors: Sector_TYPE[];
     userId: string;
     organizationId: string;
   }) {

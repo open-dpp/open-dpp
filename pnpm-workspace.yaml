@@ -10,6 +10,7 @@ onlyBuiltDependencies:
   - core-js
   - cypress
   - esbuild
+  - fsevents
   - msw
   - sharp
   - unrs-resolver

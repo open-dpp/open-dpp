@@ -1,6 +1,7 @@
 import { expect } from "@jest/globals";
 import { Item } from "../../items/domain/item";
 import { Model } from "../../models/domain/model";
+import { Section } from "../../templates/domain/section";
 import { Template } from "../../templates/domain/template";
 import {
   PhoneFactory,
@@ -26,12 +27,12 @@ describe("productPassport", () => {
     const sharedProps = { template, model, item };
     const dataSection1 = DataSection.create({
       ...sharedProps,
-      section: template.findSectionById(PhoneFactory.ids.section1.id),
+      section: template.findSectionById(PhoneFactory.ids.section1.id) as Section,
     });
 
     expect(dataSection1).toEqual(
       expect.objectContaining(
-        template.findSectionById(PhoneFactory.ids.section1.id),
+        { ...(template.findSectionById(PhoneFactory.ids.section1.id) as Section) },
       ),
     );
     expect(dataSection1.dataValues).toEqual([
@@ -46,11 +47,11 @@ describe("productPassport", () => {
     ]);
     const dataSection2 = DataSection.create({
       ...sharedProps,
-      section: template.findSectionById(PhoneFactory.ids.section2.id),
+      section: template.findSectionById(PhoneFactory.ids.section2.id) as Section,
     });
     expect(dataSection2).toEqual(
       expect.objectContaining(
-        template.findSectionById(PhoneFactory.ids.section2.id),
+        { ...(template.findSectionById(PhoneFactory.ids.section2.id) as Section) },
       ),
     );
     expect(dataSection2.dataValues).toEqual([
@@ -65,11 +66,11 @@ describe("productPassport", () => {
     ]);
     const dataSection3 = DataSection.create({
       ...sharedProps,
-      section: template.findSectionById(PhoneFactory.ids.section3.id),
+      section: template.findSectionById(PhoneFactory.ids.section3.id) as Section,
     });
     expect(dataSection3).toEqual(
       expect.objectContaining(
-        template.findSectionById(PhoneFactory.ids.section3.id),
+        { ...(template.findSectionById(PhoneFactory.ids.section3.id) as Section) },
       ),
     );
     expect(dataSection3.dataValues).toEqual([
@@ -80,11 +81,11 @@ describe("productPassport", () => {
     ]);
     const dataSectionForItem1 = DataSection.create({
       ...sharedProps,
-      section: template.findSectionById(PhoneFactory.ids.sectionForItem1.id),
+      section: template.findSectionById(PhoneFactory.ids.sectionForItem1.id) as Section,
     });
     expect(dataSectionForItem1).toEqual(
       expect.objectContaining(
-        template.findSectionById(PhoneFactory.ids.sectionForItem1.id),
+        { ...(template.findSectionById(PhoneFactory.ids.sectionForItem1.id) as Section) },
       ),
     );
     expect(dataSectionForItem1.dataValues).toEqual([
@@ -103,11 +104,11 @@ describe("productPassport", () => {
     ]);
     const dataSectionForItem2 = DataSection.create({
       ...sharedProps,
-      section: template.findSectionById(PhoneFactory.ids.sectionForItem2.id),
+      section: template.findSectionById(PhoneFactory.ids.sectionForItem2.id) as Section,
     });
     expect(dataSectionForItem2).toEqual(
       expect.objectContaining(
-        template.findSectionById(PhoneFactory.ids.sectionForItem2.id),
+        { ...(template.findSectionById(PhoneFactory.ids.sectionForItem2.id)) },
       ),
     );
     expect(dataSectionForItem2.dataValues).toEqual([
@@ -148,7 +149,7 @@ describe("productPassport", () => {
     const sharedProps = { template, model };
     const dataSection1 = DataSection.create({
       ...sharedProps,
-      section: template.findSectionById(PhoneFactory.ids.section1.id),
+      section: template.findSectionById(PhoneFactory.ids.section1.id) as Section,
     });
     expect(dataSection1.dataValues).toEqual([
       {
@@ -163,7 +164,7 @@ describe("productPassport", () => {
 
     const dataSection3 = DataSection.create({
       ...sharedProps,
-      section: template.findSectionById(PhoneFactory.ids.section3.id),
+      section: template.findSectionById(PhoneFactory.ids.section3.id) as Section,
     });
     expect(dataSection3.dataValues).toEqual([
       {
@@ -172,7 +173,7 @@ describe("productPassport", () => {
     ]);
     const dataSectionForItem1 = DataSection.create({
       ...sharedProps,
-      section: template.findSectionById(PhoneFactory.ids.sectionForItem1.id),
+      section: template.findSectionById(PhoneFactory.ids.sectionForItem1.id) as Section,
     });
     expect(dataSectionForItem1.dataValues).toEqual([]);
   });
@@ -181,7 +182,7 @@ describe("productPassport", () => {
     const emptyModel = Model.loadFromDb(phoneModelFactory.build());
     const dataSection1 = DataSection.create({
       model: emptyModel,
-      section: template.findSectionById(PhoneFactory.ids.section1.id),
+      section: template.findSectionById(PhoneFactory.ids.section1.id) as Section,
     });
     expect(dataSection1.dataValues).toEqual([]);
   });

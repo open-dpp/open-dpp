@@ -1,10 +1,9 @@
-import type { TemplateDbProps } from "../../templates/domain/template";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
-import { ignoreIds } from "../../../test/utils";
+import { ignoreIds } from "@open-dpp/testing";
 import { Model } from "../../models/domain/model";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import { Template } from "../../templates/domain/template";
+import { Template, TemplateDbProps } from "../../templates/domain/template";
 import {
   LaptopFactory,
   laptopFactory,

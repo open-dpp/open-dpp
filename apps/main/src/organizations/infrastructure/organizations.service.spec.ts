@@ -1,17 +1,15 @@
-import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import {
   BadRequestException,
   InternalServerErrorException,
 } from "@nestjs/common";
-import { Test } from "@nestjs/testing";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { AuthContext } from "@open-dpp/auth";
+import { Test, TestingModule } from "@nestjs/testing";
+import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm";
+import { AuthContext, PermissionModule } from "@open-dpp/auth";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { PermissionModule } from "@open-dpp/permission";
-import { KeycloakResourcesServiceTesting, TypeOrmTestingModule } from "@open-dpp/testing";
-import { DataSource } from "typeorm";
+import { createKeycloakUserInToken, KeycloakResourcesServiceTesting, TypeOrmTestingModule } from "@open-dpp/testing";
+import { DataSource, Repository } from "typeorm";
 import { v4 as uuid4 } from "uuid";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import { User } from "../../users/domain/user";
@@ -23,12 +21,16 @@ import { OrganizationsService } from "./organizations.service";
 
 describe("organizationsService", () => {
   let organizationsService: OrganizationsService;
+  let organizationRepository: Repository<OrganizationEntity>;
   let usersService: UsersService;
   let keycloakResourcesService: KeycloakResourcesServiceTesting;
   let dataSource: DataSource;
   const authContext = new AuthContext();
-  const userId = randomUUID();
-  authContext.user = new User(userId, "test@test.test");
+  authContext.keycloakUser = createKeycloakUserInToken();
+  const user = new User(
+    authContext.keycloakUser.sub,
+    authContext.keycloakUser.email,
+  );
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -43,7 +45,7 @@ describe("organizationsService", () => {
       .useValue(
         KeycloakResourcesServiceTesting.fromPlain({
           users: [
-            { id: authContext.user.id, email: authContext.user.email },
+            { id: user.id, email: user.email },
             { id: randomUUID(), email: "other@test.test" },
           ],
         }),
@@ -63,6 +65,9 @@ describe("organizationsService", () => {
       KeycloakResourcesService,
     ) as unknown as KeycloakResourcesServiceTesting;
     dataSource = module.get<DataSource>(DataSource);
+    organizationRepository = module.get<Repository<OrganizationEntity>>(
+      getRepositoryToken(OrganizationEntity),
+    );
   });
 
   describe("convertUserToEntity", () => {
@@ -114,7 +119,7 @@ describe("organizationsService", () => {
       orgEntity.name = "Test Organization";
       orgEntity.createdByUserId = "creator-id";
       orgEntity.ownedByUserId = "owner-id";
-      orgEntity.members = undefined;
+      orgEntity.members = [];
 
       const organization = organizationsService.convertToDomain(orgEntity);
 
@@ -127,7 +132,7 @@ describe("organizationsService", () => {
       const name = `My Organization ${uuid4()}`;
       const organization = Organization.create({
         name,
-        user: authContext.user,
+        user,
       });
       const { id } = await organizationsService.save(organization);
       const found = await organizationsService.findOneOrFail(id);
@@ -140,24 +145,24 @@ describe("organizationsService", () => {
       const name = `My Organization ${uuid4()}`;
       const organization = Organization.create({
         name,
-        user: authContext.user,
+        user,
       });
 
       // Mock the keycloakResourcesService to throw an error
       jest
         .spyOn(keycloakResourcesService, "createGroup")
-        .mockRejectedValueOnce(new Error("Test error"));
+        .mockRejectedValueOnce(new Error("Test error") as never);
 
       await expect(organizationsService.save(organization)).rejects.toThrow(
         "Test error",
       );
     });
 
-    it("should add one member to organization", async () => {
+    it("should create one organization with one member", async () => {
       const name = `My Organization ${uuid4()}`;
       Organization.create({
         name,
-        user: authContext.user,
+        user,
       });
     });
 
@@ -171,17 +176,17 @@ describe("organizationsService", () => {
       const name = `My Organization ${uuid4()}`;
       const organization = Organization.create({
         name,
-        user: authContext.user,
+        user,
       });
 
       const user2 = new User(randomUUID(), "test2@test.test");
-      organization.join(authContext.user);
+      organization.join(user);
       organization.join(user2);
       await organizationsService.save(organization);
       const found = await organizationsService.findOneOrFail(organization.id);
 
       expect(found.members).toHaveLength(2);
-      expect(found.members.map(m => m.id)).toContain(authContext.user.id);
+      expect(found.members.map(m => m.id)).toContain(user.id);
       expect(found.members.map(m => m.id)).toContain(user2.id);
     });
 
@@ -189,7 +194,7 @@ describe("organizationsService", () => {
       const name = `My Organization ${uuid4()}`;
       const organization = Organization.create({
         name,
-        user: authContext.user,
+        user,
       });
 
       // Create spy for transaction methods
@@ -205,7 +210,7 @@ describe("organizationsService", () => {
 
       // Mock the repository to throw an error
       jest
-        .spyOn(organizationsService.organizationRepository, "save")
+        .spyOn(organizationRepository, "save")
         .mockRejectedValueOnce(new Error("Database error"));
 
       await expect(organizationsService.save(organization)).rejects.toThrow(
@@ -225,11 +230,11 @@ describe("organizationsService", () => {
         // Create some test organizations
         const org1 = Organization.create({
           name: "Org 1",
-          user: authContext.user,
+          user,
         });
         const org2 = Organization.create({
           name: "Org 2",
-          user: authContext.user,
+          user,
         });
 
         await organizationsService.save(org1);
@@ -243,9 +248,9 @@ describe("organizationsService", () => {
       });
 
       it("should return empty array when no organizations exist", async () => {
-        // Mock repository to return empty array
+        // Mock repository to return an empty array
         jest
-          .spyOn(organizationsService.organizationRepository, "find")
+          .spyOn(organizationRepository, "find")
           .mockResolvedValueOnce([]);
 
         const organizations = await organizationsService.findAll();
@@ -256,7 +261,7 @@ describe("organizationsService", () => {
       it("should handle database error", async () => {
         // Mock repository to throw an error
         jest
-          .spyOn(organizationsService.organizationRepository, "find")
+          .spyOn(organizationRepository, "find")
           .mockRejectedValueOnce(new Error("Database connection error"));
 
         await expect(organizationsService.findAll()).rejects.toThrow(
@@ -270,7 +275,7 @@ describe("organizationsService", () => {
         const name = `organization-${uuid4()}`;
         const organization = Organization.create({
           name,
-          user: authContext.user,
+          user,
         });
         const saved = await organizationsService.save(organization);
 
@@ -285,7 +290,7 @@ describe("organizationsService", () => {
         const name = `Test Org with Models ${uuid4()}`;
         const organization = Organization.create({
           name,
-          user: authContext.user,
+          user,
         });
         const saved = await organizationsService.save(organization);
 
@@ -296,7 +301,7 @@ describe("organizationsService", () => {
         orgEntity.members = [];
 
         jest
-          .spyOn(organizationsService.organizationRepository, "findOne")
+          .spyOn(organizationRepository, "findOne")
           .mockResolvedValueOnce(orgEntity);
 
         const found = await organizationsService.findOneOrFail(saved.id);
@@ -317,7 +322,7 @@ describe("organizationsService", () => {
 
       beforeEach(async () => {
         const name = `tobeset`;
-        organization = Organization.create({ name, user: authContext.user });
+        organization = Organization.create({ name, user });
         await organizationsService.save(organization);
         keycloakResourcesService.groups.push({
           id: organization.id,
@@ -331,7 +336,7 @@ describe("organizationsService", () => {
           organizationsService.inviteUser(
             authContext,
             organization.id,
-            authContext.user.email,
+            user.email,
           ),
         ).rejects.toThrow(BadRequestException);
       });
@@ -363,7 +368,7 @@ describe("organizationsService", () => {
         // Mock group retrieval for the invite
         jest
           .spyOn(keycloakResourcesService, "inviteUserToGroup")
-          .mockResolvedValueOnce(undefined);
+          .mockResolvedValueOnce([] as never);
 
         await organizationsService.inviteUser(
           authContext,
@@ -444,7 +449,7 @@ describe("organizationsService", () => {
         const mockError = new Error("Test error");
         jest
           .spyOn(keycloakResourcesService, "inviteUserToGroup")
-          .mockRejectedValueOnce(mockError);
+          .mockRejectedValueOnce(mockError as never);
 
         // Mock console.log to verify it's called
         const consoleSpy = jest.spyOn(console, "log").mockImplementation();
@@ -471,8 +476,8 @@ describe("organizationsService", () => {
           id: organization.id,
           name: "Test Org",
           members: [],
-          createdByUserId: authContext.user.id,
-          ownedByUserId: authContext.user.id,
+          createdByUserId: user.id,
+          ownedByUserId: user.id,
         });
         jest
           .spyOn(organizationsService, "findOneOrFail")
@@ -544,7 +549,7 @@ describe("organizationsService", () => {
         // Create test organizations with different members
         const org1 = Organization.create({
           name: "Member Org",
-          user: authContext.user,
+          user,
         });
         const org2 = Organization.create({
           name: "Non-Member Org",
@@ -570,11 +575,11 @@ describe("organizationsService", () => {
         // Create a new auth context with a user that's not a member of any org
         const newAuthContext = new AuthContext();
         const newUserId = randomUUID();
-        newAuthContext.user = new User(newUserId, "nonmember@test.test");
+        newAuthContext.keycloakUser = createKeycloakUserInToken(newUserId);
 
-        // Mock repository to return empty array
+        // Mock repository to return an empty array
         jest
-          .spyOn(organizationsService.organizationRepository, "find")
+          .spyOn(organizationRepository, "find")
           .mockResolvedValueOnce([]);
 
         const userOrganizations
@@ -586,7 +591,7 @@ describe("organizationsService", () => {
       it("should handle database error", async () => {
         // Mock repository to throw an error
         jest
-          .spyOn(organizationsService.organizationRepository, "find")
+          .spyOn(organizationRepository, "find")
           .mockRejectedValueOnce(new Error("Database connection error"));
 
         await expect(
@@ -598,20 +603,20 @@ describe("organizationsService", () => {
         // Create multiple organizations
         const org1 = Organization.create({
           name: "Org 1",
-          user: authContext.user,
+          user,
         });
         const org2 = Organization.create({
           name: "Org 2",
-          user: authContext.user,
+          user,
         });
         const org3 = Organization.create({
           name: "Org 3",
           user: new User(randomUUID(), "other@test.test"),
         });
 
-        // Add current user to org1 and org2 but not org3
-        org1.join(authContext.user);
-        org2.join(authContext.user);
+        // Add the current user to org1 and org2 but not org3
+        org1.join(user);
+        org2.join(user);
 
         await organizationsService.save(org1);
         await organizationsService.save(org2);

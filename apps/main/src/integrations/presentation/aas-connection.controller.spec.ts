@@ -1,19 +1,14 @@
-import type { INestApplication } from "@nestjs/common";
-import type { TemplateDbProps } from "../../templates/domain/template";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
+import { INestApplication } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { APP_GUARD, Reflector } from "@nestjs/core";
 import { Test } from "@nestjs/testing";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthContext, PermissionModule } from "@open-dpp/auth";
+import getKeycloakAuthToken, { getApp, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import { json } from "express";
 import request from "supertest";
-import getKeycloakAuthToken from "../../../test/auth-token-helper.testing";
-import { KeycloakAuthTestingGuard } from "../../../test/keycloak-auth.guard.testing";
-import { KeycloakResourcesServiceTesting } from "../../../test/keycloak.resources.service.testing";
-import { MongooseTestingModule } from "../../../test/mongo.testing.module";
-import { TypeOrmTestingModule } from "../../../test/typeorm.testing.module";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
@@ -22,12 +17,13 @@ import { ModelsService } from "../../models/infrastructure/models.service";
 import { Organization } from "../../organizations/domain/organization";
 import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
-import { Template } from "../../templates/domain/template";
+import { Template, TemplateDbProps } from "../../templates/domain/template";
 import { dataFieldDbPropsFactory } from "../../templates/fixtures/data-field.factory";
 import { laptopFactory } from "../../templates/fixtures/laptop.factory";
 import { sectionDbPropsFactory } from "../../templates/fixtures/section.factory";
 import { TemplateService } from "../../templates/infrastructure/template.service";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { User } from "../../users/domain/user";
 import { UserEntity } from "../../users/infrastructure/user.entity";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { AasConnection, AasFieldAssignment } from "../domain/aas-connection";
@@ -59,6 +55,10 @@ describe("aasConnectionController", () => {
     email_verified: true,
     memberships: [],
   };
+  const user = new User(
+    authContext.keycloakUser.sub,
+    authContext.keycloakUser.email,
+  );
   const organizationId = randomUUID();
 
   beforeAll(async () => {
@@ -119,7 +119,7 @@ describe("aasConnectionController", () => {
       Organization.fromPlain({
         id: organizationId,
         name: "orga name",
-        members: [authContext.user],
+        members: [user],
         createdByUserId: authContext.keycloakUser.sub,
         ownedByUserId: authContext.keycloakUser.sub,
       }),
@@ -185,11 +185,11 @@ describe("aasConnectionController", () => {
     await aasConnectionService.save(aasMapping);
 
     const globalAssetId = `Semitrailer_Truck_-10204004-0010-02_${randomUUID()}`;
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${organizationId}/integration/aas/connections/${aasMapping.id}/items`,
       )
-      .set("API_TOKEN", configService.get("API_TOKEN"))
+      .set("API_TOKEN", configService.get("API_TOKEN")!)
       .send({
         ...semitrailerTruckAas,
         assetAdministrationShells: [
@@ -247,7 +247,7 @@ describe("aasConnectionController", () => {
       ],
     };
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organizationId}/integration/aas/connections`)
       .set(
         "Authorization",
@@ -302,7 +302,7 @@ describe("aasConnectionController", () => {
       ],
     };
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${organizationId}/integration/aas/connections/${aasConnection.id}`,
       )
@@ -325,7 +325,7 @@ describe("aasConnectionController", () => {
   it(`/GET all properties of aas`, async () => {
     jest.spyOn(reflector, "get").mockReturnValue(false);
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(
         `/organizations/${organizationId}/integration/aas/${AssetAdministrationShellType.Semitrailer_Truck}/properties`,
       )
@@ -380,7 +380,7 @@ describe("aasConnectionController", () => {
     await aasConnectionService.save(aasConnection1);
     await aasConnectionService.save(aasConnection2);
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/integration/aas/connections`)
       .set(
         "Authorization",

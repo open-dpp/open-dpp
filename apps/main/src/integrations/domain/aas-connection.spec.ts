@@ -1,12 +1,11 @@
-import type { TemplateDbProps } from "../../templates/domain/template";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
-import { ignoreIds } from "../../../test/utils";
+import { ignoreIds } from "@open-dpp/testing";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { Model } from "../../models/domain/model";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import { Template } from "../../templates/domain/template";
+import { Template, TemplateDbProps } from "../../templates/domain/template";
 import { dataFieldDbPropsFactory } from "../../templates/fixtures/data-field.factory";
 import { laptopFactory } from "../../templates/fixtures/laptop.factory";
 import { sectionDbPropsFactory } from "../../templates/fixtures/section.factory";

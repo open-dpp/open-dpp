@@ -1,5 +1,4 @@
 import type { AuthContext } from '@open-dpp/auth'
-import type { Organization } from '../../../apps/main/src/organizations/domain/organization'
 import { randomUUID } from 'node:crypto'
 import { Injectable } from '@nestjs/common'
 import { plainToInstance } from 'class-transformer'
@@ -33,11 +32,11 @@ export class KeycloakResourcesServiceTesting {
     return this.users
   }
 
-  createGroup(organization: Organization) {
+  createGroup(name: string, members: Array<{ id: string, email: string }> = []) {
     const group = {
       id: randomUUID(),
-      name: organization.name,
-      members: organization.members.map(m => ({ id: m.id, email: m.email })),
+      name,
+      members,
     }
     this.groups.push(group)
   }
@@ -78,21 +77,8 @@ export class KeycloakResourcesServiceTesting {
     // No-op for testing
   }
 
-  getGroupForOrganization(param: Organization | string) {
-    if (typeof param === 'string') {
-      // Handle string parameter (organizationId)
-      const group = this.groups.find(g => g.name === `organization-${param}`)
-      return group || null
-    }
-    else {
-      // Handle Organization parameter
-      return {
-        id: randomUUID(),
-        name: param.name,
-        members: param.members
-          ? param.members.map(m => ({ id: m.id, email: m.email }))
-          : [],
-      }
-    }
+  getGroupForOrganization(param: string) {
+    const group = this.groups.find(g => g.name === `organization-${param}`)
+    return group || null
   }
 }

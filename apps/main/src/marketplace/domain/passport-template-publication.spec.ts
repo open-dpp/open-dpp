@@ -1,6 +1,6 @@
 import { expect } from "@jest/globals";
 import { Sector } from "../../data-modelling/domain/sectors";
-import { passportTemplatePublicationPropsFactory } from "../fixtures/passport-template-publication-props.factory";
+import { passportTemplatePublicationPropsFactory } from "../fixtures/passport.template.factory";
 import { PassportTemplatePublication } from "./passport-template-publication";
 
 describe("passportTemplate", () => {

@@ -1,16 +1,13 @@
-import type { INestApplication } from "@nestjs/common";
-import type { TestingModule } from "@nestjs/testing";
-import type { Connection } from "mongoose";
 import { randomUUID } from "node:crypto";
+import { INestApplication } from "@nestjs/common";
 import { APP_GUARD, Reflector } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
-import { Test } from "@nestjs/testing";
-import * as request from "supertest";
-import getKeycloakAuthToken from "../../../test/auth-token-helper.testing";
-import { KeycloakAuthTestingGuard } from "../../../test/keycloak-auth.guard.testing";
-import { MongooseTestingModule } from "../../../test/mongo.testing.module";
-import { NotFoundInDatabaseExceptionFilter } from "../../exceptions/exception.handler";
-import { AiConfigurationModule } from "../ai-configuration.module";
+import { Test, TestingModule } from "@nestjs/testing";
+import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
+import getKeycloakAuthToken, { getApp, KeycloakAuthTestingGuard, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import { Connection } from "mongoose";
+import request from "supertest";
+import { AiModule } from "../../ai.module";
 import { AiConfiguration, AiProvider } from "../domain/ai-configuration";
 import { aiConfigurationFactory } from "../fixtures/ai-configuration-props.factory";
 import {
@@ -38,6 +35,7 @@ describe("aiConfigurationController", () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
+        TypeOrmTestingModule,
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -45,7 +43,7 @@ describe("aiConfigurationController", () => {
             schema: AiConfigurationDbSchema,
           },
         ]),
-        AiConfigurationModule,
+        AiModule,
       ],
       providers: [
         {
@@ -66,6 +64,7 @@ describe("aiConfigurationController", () => {
     jest.spyOn(Date, "now").mockImplementation(() => mockNow.getTime());
     jest.spyOn(reflector, "get").mockReturnValue(false);
   });
+
   afterEach(() => {
     jest.restoreAllMocks();
   });
@@ -77,7 +76,7 @@ describe("aiConfigurationController", () => {
       provider: AiProvider.Mistral,
       model: "codestral-latest",
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .put(`/organizations/${orgaId}/configurations`)
       .set(
         "Authorization",
@@ -85,7 +84,8 @@ describe("aiConfigurationController", () => {
       )
       .send(body);
     expect(response.status).toEqual(200);
-    const found = await aiConfigurationService.findOneByOrganizationId(orgaId);
+    const found
+      = await aiConfigurationService.findOneByOrganizationIdOrFail(orgaId);
     expect(found).toBeDefined();
     expect(found.isEnabled).toEqual(body.isEnabled);
     expect(found.provider).toEqual(body.provider);
@@ -99,7 +99,7 @@ describe("aiConfigurationController", () => {
       provider: AiProvider.Mistral,
       model: "codestral-latest",
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .put(`/organizations/${orgaId}/configurations`)
       .set(
         "Authorization",
@@ -122,7 +122,7 @@ describe("aiConfigurationController", () => {
       provider: AiProvider.Ollama,
       model: "qwen3:0.6b",
     };
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .put(`/organizations/${orgaId}/configurations`)
       .set(
         "Authorization",
@@ -130,7 +130,8 @@ describe("aiConfigurationController", () => {
       )
       .send(body);
     expect(response.status).toEqual(200);
-    const found = await aiConfigurationService.findOneByOrganizationId(orgaId);
+    const found
+      = await aiConfigurationService.findOneByOrganizationIdOrFail(orgaId);
     expect(found.id).toEqual(id);
     expect(found.isEnabled).toEqual(body.isEnabled);
     expect(found.provider).toEqual(body.provider);
@@ -144,7 +145,7 @@ describe("aiConfigurationController", () => {
       aiConfigurationFactory.build({ ownedByOrganizationId: organizationId }),
     );
     await aiConfigurationService.save(aiConfiguration);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${organizationId}/configurations`)
       .set(
         "Authorization",
@@ -165,7 +166,7 @@ describe("aiConfigurationController", () => {
       aiConfigurationFactory.build({ ownedByOrganizationId: organizationId }),
     );
     await aiConfigurationService.save(aiConfiguration);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${organizationId}/configurations`)
       .set(
         "Authorization",
@@ -176,7 +177,7 @@ describe("aiConfigurationController", () => {
 
   it(`/GET cannot find configuration`, async () => {
     const orgaId = randomUUID();
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${orgaId}/configurations`)
       .set(
         "Authorization",
@@ -186,8 +187,8 @@ describe("aiConfigurationController", () => {
   });
 
   afterAll(async () => {
-    await app.close();
     await mongoConnection.close();
     await module.close();
+    await app.close();
   });
 });

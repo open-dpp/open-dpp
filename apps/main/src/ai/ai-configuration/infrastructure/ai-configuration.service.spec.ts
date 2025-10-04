@@ -1,10 +1,10 @@
-import type { TestingModule } from "@nestjs/testing";
-import type { Connection } from "mongoose";
 import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
-import { Test } from "@nestjs/testing";
-import { MongooseTestingModule } from "../../../test/mongo.testing.module";
-import { NotFoundInDatabaseException } from "../../exceptions/service.exceptions";
+import { Test, TestingModule } from "@nestjs/testing";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { MongooseTestingModule } from "@open-dpp/testing";
+import { Connection } from "mongoose";
 import { AiConfiguration } from "../domain/ai-configuration";
 import { aiConfigurationFactory } from "../fixtures/ai-configuration-props.factory";
 import {

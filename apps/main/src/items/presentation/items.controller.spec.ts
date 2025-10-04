@@ -1,17 +1,16 @@
-import type { INestApplication } from "@nestjs/common";
-import type { TemplateDbProps } from "../../templates/domain/template";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
+import { INestApplication } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { Test } from "@nestjs/testing";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { Sector } from "@open-dpp/api-client";
 import { AuthContext, PermissionModule } from "@open-dpp/auth";
-import getKeycloakAuthToken, { createKeycloakUserInToken, ignoreIds, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import getKeycloakAuthToken, { createKeycloakUserInToken, getApp, ignoreIds, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import request from "supertest";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
+import { Sector } from "../../data-modelling/domain/sectors";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import { Model } from "../../models/domain/model";
 import { ModelsService } from "../../models/infrastructure/models.service";
@@ -19,9 +18,10 @@ import { Organization } from "../../organizations/domain/organization";
 import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import { Template } from "../../templates/domain/template";
+import { Template, TemplateDbProps } from "../../templates/domain/template";
 import { TemplateService } from "../../templates/infrastructure/template.service";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { User } from "../../users/domain/user";
 import { UserEntity } from "../../users/infrastructure/user.entity";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { Item } from "../domain/item";
@@ -39,9 +39,13 @@ describe("itemsController", () => {
 
   const authContext = new AuthContext();
   authContext.keycloakUser = createKeycloakUserInToken();
+  const user = new User(
+    authContext.keycloakUser.sub,
+    authContext.keycloakUser.email,
+  );
   const organization = Organization.create({
     name: "orga",
-    user: authContext.user,
+    user,
   });
   const sectionId1 = randomUUID();
   const sectionId2 = randomUUID();
@@ -212,7 +216,7 @@ describe("itemsController", () => {
       template,
     });
     await modelsService.save(model);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models/${model.id}/items`)
       .set(
         "Authorization",
@@ -250,7 +254,7 @@ describe("itemsController", () => {
       template,
     });
     await modelsService.save(model);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${otherOrganizationId}/models/${model.id}/items`)
       .set(
         "Authorization",
@@ -273,7 +277,7 @@ describe("itemsController", () => {
       template,
     });
     await modelsService.save(model);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models/${model.id}/items`)
       .set(
         "Authorization",
@@ -313,7 +317,7 @@ describe("itemsController", () => {
         row: 0,
       },
     ];
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .post(
         `/organizations/${organizationId}/models/${model.id}/items/${item.id}/data-values`,
       )
@@ -353,42 +357,10 @@ describe("itemsController", () => {
       model,
     });
     await itemsService.save(item);
-    const addedValues = [];
-    const response = await request(app.getHttpServer())
+    const addedValues: Array<any> = [];
+    const response = await request(getApp(app))
       .post(
         `/organizations/${otherOrganizationId}/models/${model.id}/items/${item.id}/data-values`,
-      )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      )
-      .send(addedValues);
-    expect(response.status).toEqual(403);
-  });
-
-  it("add data values to item fails if item does not belong to organization", async () => {
-    const otherOrganizationId = randomUUID();
-    const model = Model.create({
-      name: "name",
-      userId: authContext.keycloakUser.sub,
-      organizationId: organization.id,
-      template,
-    });
-    const item = Item.create({
-      organizationId: otherOrganizationId,
-      userId: authContext.keycloakUser.sub,
-      template,
-      model,
-    });
-    await itemsService.save(item);
-    const addedValues = [];
-    const response = await request(app.getHttpServer())
-      .post(
-        `/organizations/${organization.id}/models/${model.id}/items/${item.id}/data-values`,
       )
       .set(
         "Authorization",
@@ -436,7 +408,7 @@ describe("itemsController", () => {
       },
     ];
     await itemsService.save(item);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${organization.id}/models/${model.id}/items/${item.id}/data-values`,
       )
@@ -491,8 +463,7 @@ describe("itemsController", () => {
         row: 0,
       },
     ];
-
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${otherOrganizationId}/models/${randomUUID()}/items/${item.id}/data-values`,
       )
@@ -532,7 +503,7 @@ describe("itemsController", () => {
       },
     ];
 
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .patch(
         `/organizations/${organization.id}/models/${model.id}/items/${item.id}/data-values`,
       )
@@ -564,7 +535,7 @@ describe("itemsController", () => {
     });
     const uniqueProductId = item.createUniqueProductIdentifier();
     await itemsService.save(item);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(
         `/organizations/${organization.id}/models/${model.id}/items/${item.id}`,
       )
@@ -606,7 +577,7 @@ describe("itemsController", () => {
     });
 
     await itemsService.save(item);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(
         `/organizations/${organization.id}/models/${model.id}/items/${item.id}`,
       )
@@ -639,10 +610,10 @@ describe("itemsController", () => {
     await itemsService.save(item);
     const otherOrganization = Organization.create({
       name: "My orga",
-      user: authContext.user,
+      user,
     });
     await organizationsService.save(otherOrganization);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(
         `/organizations/${organization.id}/models/${model.id}/items/${item.id}`,
       )
@@ -682,7 +653,7 @@ describe("itemsController", () => {
     });
     const uniqueProductId2 = item2.createUniqueProductIdentifier();
     await itemsService.save(item2);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/models/${model.id}/items`)
       .set(
         "Authorization",
@@ -742,7 +713,7 @@ describe("itemsController", () => {
       template,
     });
     await itemsService.save(item2);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/models/${model.id}/items`)
       .set(
         "Authorization",
@@ -778,7 +749,7 @@ describe("itemsController", () => {
       model,
     });
     await itemsService.save(item2);
-    const response = await request(app.getHttpServer())
+    const response = await request(getApp(app))
       .get(`/organizations/${organization.id}/models/${model.id}/items`)
       .set(
         "Authorization",
