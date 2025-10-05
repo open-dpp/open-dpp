@@ -1,18 +1,18 @@
 import type { Model } from "mongoose";
-import type { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import type { Template } from "../../templates/domain/template";
-import type { TemplateService } from "../../templates/infrastructure/template.service";
 import type { User } from "../../users/domain/user";
-import type { PassportTemplatePublicationService } from "../infrastructure/passport-template-publication.service";
 import { randomUUID } from "node:crypto";
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import {
   deserializeTemplate,
   serializeTemplate,
 } from "../../templates/domain/serialization";
 import { TemplateDoc } from "../../templates/infrastructure/template.schema";
+import { TemplateService } from "../../templates/infrastructure/template.service";
 import { PassportTemplatePublication } from "../domain/passport-template-publication";
+import { PassportTemplatePublicationService } from "../infrastructure/passport-template-publication.service";
 
 @Injectable()
 export class MarketplaceApplicationService {

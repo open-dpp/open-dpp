@@ -4,14 +4,13 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { PermissionModule } from "@open-dpp/auth";
 import { KeycloakResourcesModule } from "../keycloak-resources/keycloak-resources.module";
 import { OrganizationEntity } from "../organizations/infrastructure/organization.entity";
-import { OrganizationsService } from "../organizations/infrastructure/organizations.service";
+import { OrganizationsModule } from "../organizations/organizations.module";
 import {
   TemplateDoc,
   TemplateSchema,
 } from "../templates/infrastructure/template.schema";
 import { TemplateService } from "../templates/infrastructure/template.service";
 import { UserEntity } from "../users/infrastructure/user.entity";
-import { UsersService } from "../users/infrastructure/users.service";
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,
@@ -35,13 +34,12 @@ import { PassportTemplatePublicationController } from "./presentation/passport-t
     ]),
     KeycloakResourcesModule,
     PermissionModule,
+    OrganizationsModule,
   ],
   controllers: [PassportTemplatePublicationController],
   providers: [
     PassportTemplatePublicationService,
     MarketplaceApplicationService,
-    OrganizationsService,
-    UsersService,
     TemplateService,
   ],
   exports: [MarketplaceApplicationService],

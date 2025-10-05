@@ -1,5 +1,5 @@
-import type { ConfigService } from "@nestjs/config";
 import type { DataSourceOptions } from "typeorm";
+import { ConfigService } from "@nestjs/config";
 
 export function generateConfig(
   configService: ConfigService,

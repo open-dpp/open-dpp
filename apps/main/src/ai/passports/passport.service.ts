@@ -1,5 +1,5 @@
-import type { ConfigService } from "@nestjs/config";
 import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { DppApiClient } from "@open-dpp/api-client";
 import { Passport } from "./domain/passport";
 

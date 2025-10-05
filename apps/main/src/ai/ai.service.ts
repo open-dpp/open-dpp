@@ -1,10 +1,10 @@
 import type { StructuredToolInterface } from "@langchain/core/tools";
-import type { ConfigService } from "@nestjs/config";
 import type { AiProvider_TYPE } from "./ai-configuration/domain/ai-configuration";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatMistralAI } from "@langchain/mistralai";
 import { ChatOllama } from "@langchain/ollama";
 import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { AiProvider } from "./ai-configuration/domain/ai-configuration";
 
 @Injectable()

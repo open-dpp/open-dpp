@@ -1,9 +1,9 @@
 import type { OnApplicationBootstrap } from "@nestjs/common";
-import type { ConfigService } from "@nestjs/config";
-import type { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
-import type { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
-import type { UsersService } from "../../users/infrastructure/users.service";
 import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
+import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
+import { UsersService } from "../../users/infrastructure/users.service";
 
 @Injectable()
 export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {

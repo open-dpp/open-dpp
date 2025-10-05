@@ -1,5 +1,6 @@
 {
   "$schema": "https://turborepo.com/schema.json",
+  "globalDependencies": [".env"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -17,6 +18,10 @@
     },
     "lint:fix": {
       "cache": true
+    },
+    "test": {
+      "inputs": ["$TURBO_DEFAULT$", ".env"],
+      "cache": false
     }
   }
 }

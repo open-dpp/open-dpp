@@ -1,5 +1,3 @@
-import type { Server } from "socket.io";
-import type { ChatService } from "./chat.service";
 import { Logger, UseFilters } from "@nestjs/common";
 import {
   MessageBody,
@@ -9,6 +7,8 @@ import {
 } from "@nestjs/websockets";
 import { Public } from "@open-dpp/auth";
 import { SocketIoExceptionFilter } from "@open-dpp/exception";
+import { Server } from "socket.io";
+import { ChatService } from "./chat.service";
 
 @WebSocketGateway({ cors: true, path: "/api/ai-socket" })
 @UseFilters(new SocketIoExceptionFilter())

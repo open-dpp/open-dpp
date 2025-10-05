@@ -1,33 +1,32 @@
-import type { TestingModule } from "@nestjs/testing";
 import type { Connection, Model as MongooseModel } from "mongoose";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
-import { Test } from "@nestjs/testing";
-import { TypeOrmModule } from "@nestjs/typeorm";
+import { Test, TestingModule } from "@nestjs/testing";
 import { Sector } from "@open-dpp/api-client";
-import { AuthContext, PermissionModule } from "@open-dpp/auth";
+import { AuthContext } from "@open-dpp/auth";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { ignoreIds, MongooseTestingModule, TypeOrmTestingModule, user1org1 } from "@open-dpp/testing";
+import {
+  ignoreIds,
+  KeycloakResourcesServiceTesting,
+  MongooseTestingModule,
+  user1org1,
+} from "@open-dpp/testing";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
-import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import { Model } from "../../models/domain/model";
-import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import { Template } from "../../templates/domain/template";
 import { templateCreatePropsFactory } from "../../templates/fixtures/template.factory";
-import { TraceabilityEventsModule } from "../../traceability-events/traceability-events.module";
 import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
-import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
-import { UserEntity } from "../../users/infrastructure/user.entity";
-import { UsersService } from "../../users/infrastructure/users.service";
+import {
+  UniqueProductIdentifierService,
+} from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { Item } from "../domain/item";
 import { ItemDoc, ItemDocSchemaVersion, ItemSchema } from "./item.schema";
 import { ItemsService } from "./items.service";
@@ -57,17 +56,14 @@ describe("itemsService", () => {
             schema: UniqueProductIdentifierSchema,
           },
         ]),
-        PermissionModule,
-        TraceabilityEventsModule,
-        TypeOrmTestingModule,
-        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
       ],
       providers: [
         ItemsService,
         UniqueProductIdentifierService,
-        OrganizationsService,
-        KeycloakResourcesService,
-        UsersService,
+        {
+          provide: "KeycloakResourcesService",
+          useClass: KeycloakResourcesServiceTesting,
+        },
       ],
     }).compile();
     itemService = module.get<ItemsService>(ItemsService);

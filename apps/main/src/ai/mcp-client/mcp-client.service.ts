@@ -1,7 +1,7 @@
 import type { OnModuleDestroy, OnModuleInit } from "@nestjs/common";
-import type { ConfigService } from "@nestjs/config";
 import { MultiServerMCPClient } from "@langchain/mcp-adapters";
 import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class McpClientService implements OnModuleInit, OnModuleDestroy {

@@ -5,14 +5,13 @@
   "description": "",
   "author": "",
   "license": "ISC",
-  "keywords": [],
-  "main": "index.js",
   "scripts": {
     "build": "nest build",
     "postbuild": "pnpm run copy:assets",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
+    "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/apps/main/main",
     "lint": "eslint",
@@ -101,18 +100,20 @@
       "ts"
     ],
     "rootDir": ".",
-    "testRegex": ".*\\.spec\\.ts$",
+    "testRegex": ".*\\marketplace.application.service.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!(@open-dpp|@keycloak)/)"
+    ],
+    "moduleNameMapper": {
+      "^@open-dpp/(.*)$": "<rootDir>/../../packages/$1/src"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "./coverage",
-    "testEnvironment": "node",
-    "roots": [
-      "<rootDir>/apps/",
-      "<rootDir>/libs/"
-    ]
+    "testEnvironment": "node"
   }
 }

@@ -1,7 +1,7 @@
 import type { CanActivate, ExecutionContext } from "@nestjs/common";
 import type { AuthContext } from "@open-dpp/auth";
-import type { UsersService } from "./users.service";
 import { Injectable } from "@nestjs/common";
+import { UsersService } from "./users.service";
 
 @Injectable()
 export class CreateNonExistingUserGuard implements CanActivate {

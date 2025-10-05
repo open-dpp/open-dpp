@@ -1,12 +1,12 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import { KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
 import { DataSource } from "typeorm";
-import { KeycloakResourcesModule } from "../../keycloak-resources/keycloak-resources.module";
 import { Organization } from "../../organizations/domain/organization";
 import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
@@ -29,6 +29,11 @@ import {
 import { PassportTemplatePublicationService } from "../infrastructure/passport-template-publication.service";
 import { MarketplaceApplicationService } from "./marketplace.application.service";
 
+// Mock the KeycloakResourcesService module before any imports that use it
+jest.mock("../../keycloak-resources/infrastructure/keycloak-resources.service", () => ({
+  KeycloakResourcesService: jest.fn(),
+}));
+
 describe("marketplaceService", () => {
   let marketplaceService: MarketplaceApplicationService;
   const userId = randomUUID();
@@ -43,8 +48,6 @@ describe("marketplaceService", () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
-        TypeOrmTestingModule,
-        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -56,16 +59,37 @@ describe("marketplaceService", () => {
             schema: TemplateSchema,
           },
         ]),
-        KeycloakResourcesModule,
+        TypeOrmModule.forRootAsync({
+          imports: [ConfigModule],
+          useFactory: (configService: ConfigService) => ({
+            type: "postgres" as const,
+            host: configService.get<string>("DB_HOST"),
+            port: configService.get<number>("DB_PORT"),
+            username: configService.get<string>("DB_USERNAME"),
+            password: configService.get<string>("DB_PASSWORD"),
+            database: configService.get<string>("DB_DATABASE"),
+            synchronize: true,
+            dropSchema: false,
+            entities: [OrganizationEntity, UserEntity],
+            autoLoadEntities: true,
+          }),
+          inject: [ConfigService],
+        }),
+        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
       ],
       providers: [
         PassportTemplatePublicationService,
         MarketplaceApplicationService,
+        TemplateService,
         OrganizationsService,
         UsersService,
-        TemplateService,
+        {
+          provide: "KeycloakResourcesService",
+          useClass: KeycloakResourcesServiceTesting,
+        },
       ],
     }).compile();
+    dataSource = module.get<DataSource>(DataSource);
     marketplaceService = module.get<MarketplaceApplicationService>(
       MarketplaceApplicationService,
     );
@@ -84,7 +108,6 @@ describe("marketplaceService", () => {
         ownedByUserId: userId,
       }),
     );
-    dataSource = module.get<DataSource>(DataSource);
   });
 
   const laptopModelPlain = laptopFactory.build({

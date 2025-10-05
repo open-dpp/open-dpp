@@ -1,18 +1,17 @@
 import type { AuthContext } from "@open-dpp/auth";
-import type { DataSource, Repository } from "typeorm";
-import type { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
-import type { UsersService } from "../../users/infrastructure/users.service";
 import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
+import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { Equal } from "typeorm";
+import { DataSource, Equal, Repository } from "typeorm";
+import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import { User } from "../../users/domain/user";
 import { UserEntity } from "../../users/infrastructure/user.entity";
+import { UsersService } from "../../users/infrastructure/users.service";
 import { Organization } from "../domain/organization";
 import { OrganizationEntity } from "./organization.entity";
 
@@ -26,6 +25,7 @@ export class OrganizationsService {
   constructor(
     @InjectRepository(OrganizationEntity)
     organizationRepository: Repository<OrganizationEntity>,
+    @InjectDataSource()
     dataSource: DataSource,
     keycloakResourcesService: KeycloakResourcesService,
     usersService: UsersService,

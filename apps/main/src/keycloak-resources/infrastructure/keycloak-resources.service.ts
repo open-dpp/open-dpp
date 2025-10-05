@@ -1,4 +1,3 @@
-import type { ConfigService } from "@nestjs/config";
 import type { AuthContext } from "@open-dpp/auth";
 import type { Organization } from "../../organizations/domain/organization";
 import type { User } from "../../users/domain/user";
@@ -11,6 +10,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class KeycloakResourcesService {

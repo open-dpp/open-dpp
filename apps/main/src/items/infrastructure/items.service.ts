@@ -1,9 +1,9 @@
 import type { Model as MongooseModel } from "mongoose";
-import type { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
-import type { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
+import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { Item } from "../domain/item";
 import { ItemDoc, ItemDocSchemaVersion } from "./item.schema";
 import { migrateItemDoc } from "./migrations";

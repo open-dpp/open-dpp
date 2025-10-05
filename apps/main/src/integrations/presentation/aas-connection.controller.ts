@@ -1,4 +1,3 @@
-import type { ConfigService } from "@nestjs/config";
 import type * as authRequest from "@open-dpp/auth";
 import type { PermissionService } from "@open-dpp/auth";
 import type { ItemsService } from "../../items/infrastructure/items.service";
@@ -22,6 +21,7 @@ import {
   Post,
   Request,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { Public } from "@open-dpp/auth";
 import { itemToDto } from "../../items/presentation/dto/item.dto";
 import { AasConnection } from "../domain/aas-connection";
