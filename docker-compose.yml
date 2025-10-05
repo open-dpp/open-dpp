@@ -222,6 +222,8 @@ services:
 
   clamav-rest:
     image: ajilaag/clamav-rest
+    ports:
+      - "3310:9000"
     networks:
       - open-dpp-local
 

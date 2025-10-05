@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DataSectionDto } from "@open-dpp/api-client";
+import type { DataFieldDto, DataSectionDto } from "@open-dpp/api-client";
 import { FolderIcon } from "@heroicons/vue/16/solid";
 import { computed } from "vue";
 import { useProductPassportStore } from "../../stores/product-passport";
@@ -14,6 +14,14 @@ const productPassportStore = useProductPassportStore();
 const subSections = computed(() =>
   productPassportStore.findSubSections(props.dataSection.id),
 );
+
+function getDatafieldValue(rowIndex: number, dataField: DataFieldDto) {
+  const dataValues = props.dataSection.dataValues[rowIndex];
+  if (!dataValues) {
+    return undefined;
+  }
+  return dataValues[dataField.id];
+}
 </script>
 
 <template>
@@ -24,7 +32,7 @@ const subSections = computed(() =>
         :key="dataField.id"
         :field-view="{
           dataField,
-          value: (props.dataSection.dataValues[rowIndex] as Record<string, unknown>)[dataField.id],
+          value: getDatafieldValue(rowIndex, dataField),
         }"
       />
     </dl>

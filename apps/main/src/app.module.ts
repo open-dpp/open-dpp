@@ -6,7 +6,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { AuthModule } from "@open-dpp/auth";
+import { AuthModule, KeycloakAuthGuard } from "@open-dpp/auth";
 import { AiConfigurationModule } from "./ai/ai-configuration/ai-configuration.module";
 import { AiModule } from "./ai/ai.module";
 import { ChatGateway } from "./ai/chat.gateway";
@@ -89,6 +89,10 @@ import { UsersModule } from "./users/users.module";
   providers: [
     ChatGateway,
     ChatService,
+    {
+      provide: APP_GUARD,
+      useClass: KeycloakAuthGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: CreateNonExistingUserGuard,

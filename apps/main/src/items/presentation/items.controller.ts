@@ -1,12 +1,7 @@
-import type { PermissionService } from "@open-dpp/auth";
 import type * as authRequest from "@open-dpp/auth";
-import type { ModelsService } from "../../models/infrastructure/models.service";
 import type {
   DataValueDto,
 } from "../../product-passport-data/presentation/dto/data-value.dto";
-import type { TemplateService } from "../../templates/infrastructure/template.service";
-import type { ItemsService } from "../infrastructure/items.service";
-import type { ItemsApplicationService } from "./items-application.service";
 import {
   BadRequestException,
   Body,
@@ -19,8 +14,10 @@ import {
   Request,
 } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
+import { PermissionService } from "@open-dpp/auth";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { ModelsService } from "../../models/infrastructure/models.service";
 import {
   itemDocumentation,
   itemParamDocumentation,
@@ -34,7 +31,10 @@ import {
   dataValueDocumentation,
   orgaParamDocumentation,
 } from "../../product-passport-data/presentation/dto/docs/product-passport-data.doc";
+import { TemplateService } from "../../templates/infrastructure/template.service";
+import { ItemsService } from "../infrastructure/items.service";
 import { itemToDto } from "./dto/item.dto";
+import { ItemsApplicationService } from "./items-application.service";
 
 @Controller("organizations/:orgaId/models/:modelId/items")
 export class ItemsController {

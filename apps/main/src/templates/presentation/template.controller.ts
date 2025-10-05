@@ -1,6 +1,4 @@
-import type { PermissionService } from "@open-dpp/auth";
 import type * as authRequest from "@open-dpp/auth";
-import type { TemplateService } from "../infrastructure/template.service";
 import {
   Controller,
   ForbiddenException,
@@ -9,10 +7,12 @@ import {
   Request,
 } from "@nestjs/common";
 import { ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
+import { PermissionService } from "@open-dpp/auth";
 import {
   templateDocumentation,
   templateGetAllDocumentation,
 } from "../../open-api-docs/template.doc";
+import { TemplateService } from "../infrastructure/template.service";
 import { templateParamDocumentation, templateToDto } from "./dto/template.dto";
 
 @Controller("/organizations/:organizationId/templates")

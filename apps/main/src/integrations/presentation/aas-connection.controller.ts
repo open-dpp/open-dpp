@@ -1,15 +1,7 @@
 import type * as authRequest from "@open-dpp/auth";
-import type { PermissionService } from "@open-dpp/auth";
-import type { ItemsService } from "../../items/infrastructure/items.service";
-import type { ItemsApplicationService } from "../../items/presentation/items-application.service";
-import type { ModelsService } from "../../models/infrastructure/models.service";
-import type { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
-import type { TemplateService } from "../../templates/infrastructure/template.service";
-import type { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import type {
   AssetAdministrationShellType_TYPE,
 } from "../domain/asset-administration-shell";
-import type { AasConnectionService } from "../infrastructure/aas-connection.service";
 import {
   Body,
   Controller,
@@ -22,13 +14,20 @@ import {
   Request,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { Public } from "@open-dpp/auth";
+import { PermissionService, Public } from "@open-dpp/auth";
+import { ItemsService } from "../../items/infrastructure/items.service";
 import { itemToDto } from "../../items/presentation/dto/item.dto";
+import { ItemsApplicationService } from "../../items/presentation/items-application.service";
+import { ModelsService } from "../../models/infrastructure/models.service";
+import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
+import { TemplateService } from "../../templates/infrastructure/template.service";
+import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { AasConnection } from "../domain/aas-connection";
 import {
   AssetAdministrationShell,
   createAasForType,
 } from "../domain/asset-administration-shell";
+import { AasConnectionService } from "../infrastructure/aas-connection.service";
 import { aasConnectionToDto } from "./dto/aas-connection.dto";
 import * as createAasConnectionDto from "./dto/create-aas-connection.dto";
 import { GetAasConnectionCollectionSchema } from "./dto/get-aas-connection-collection.dto";

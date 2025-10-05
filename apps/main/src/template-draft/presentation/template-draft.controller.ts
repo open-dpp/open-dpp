@@ -1,4 +1,3 @@
-import type { PermissionService } from "@open-dpp/auth";
 import type * as authRequest from "@open-dpp/auth";
 import {
   Body,
@@ -11,6 +10,7 @@ import {
   Post,
   Request,
 } from "@nestjs/common";
+import { PermissionService } from "@open-dpp/auth";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { omit } from "lodash";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";

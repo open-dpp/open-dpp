@@ -1,9 +1,9 @@
-import type { PermissionService } from "@open-dpp/auth";
 import type * as authRequest from "@open-dpp/auth";
-import type { AiConfigurationService } from "../infrastructure/ai-configuration.service";
 import { Body, Controller, Get, Param, Put, Request } from "@nestjs/common";
+import { PermissionService } from "@open-dpp/auth";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { AiConfiguration } from "../domain/ai-configuration";
+import { AiConfigurationService } from "../infrastructure/ai-configuration.service";
 import * as aiConfigurationDto from "./dto/ai-configuration.dto";
 import { AiConfigurationUpsertDtoSchema } from "./dto/ai-configuration.dto";
 

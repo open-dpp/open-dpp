@@ -1,7 +1,6 @@
 import type * as authRequest from "@open-dpp/auth";
 import type express from "express";
 import type { Media } from "../domain/media";
-import type { MediaService } from "../infrastructure/media.service";
 import {
   Controller,
   FileTypeValidator,
@@ -18,6 +17,7 @@ import {
 import { FileInterceptor } from "@nestjs/platform-express";
 import { Public } from "@open-dpp/auth";
 import { memoryStorage } from "multer";
+import { MediaService } from "../infrastructure/media.service";
 import { VirusScanFileValidator } from "./virus-scan.file-validator";
 
 @Controller("media")

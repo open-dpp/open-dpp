@@ -1,10 +1,9 @@
-import type { PermissionService } from "@open-dpp/auth";
 import type * as authRequest from "@open-dpp/auth";
-import type { ItemsService } from "../../items/infrastructure/items.service";
-import type { ModelsService } from "../../models/infrastructure/models.service";
-import type { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
 import { Controller, Get, Param, Request } from "@nestjs/common";
-import { AllowServiceAccess } from "@open-dpp/auth";
+import { AllowServiceAccess, PermissionService } from "@open-dpp/auth";
+import { ItemsService } from "../../items/infrastructure/items.service";
+import { ModelsService } from "../../models/infrastructure/models.service";
+import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
 import {
   UniqueProductIdentifierMetadataDtoSchema,
   UniqueProductIdentifierReferenceDtoSchema,

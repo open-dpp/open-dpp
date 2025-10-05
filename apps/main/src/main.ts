@@ -1,5 +1,5 @@
 import type { MicroserviceOptions } from "@nestjs/microservices";
-import { ValidationPipe } from "@nestjs/common";
+import { Logger, ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import { Transport } from "@nestjs/microservices";
@@ -16,6 +16,7 @@ import { buildOpenApiDocumentation } from "./open-api-docs";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  const logger = new Logger("Bootstrap");
 
   // Proxy SPA routes in development before setting global prefix
   /* if (process.env.NODE_ENV !== 'production') {
@@ -56,6 +57,7 @@ async function bootstrap() {
   });
   await app.startAllMicroservices();
   const port = Number(configService.get("PORT", "3000"));
+  logger.log(`Application is running on: ${port}`);
   await app.listen(port);
 }
 bootstrap();

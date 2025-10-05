@@ -1,6 +1,6 @@
 import type * as authRequest from "@open-dpp/auth";
-import type { TraceabilityEventsService } from "../infrastructure/traceability-events.service";
 import { Body, Controller, Get, Param, Post, Request } from "@nestjs/common";
+import { TraceabilityEventsService } from "../infrastructure/traceability-events.service";
 
 @Controller("dpp-events")
 export class TraceabilityEventsController {

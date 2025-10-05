@@ -1,6 +1,6 @@
 import type * as authRequest from "@open-dpp/auth";
-import type { KeycloakResourcesService } from "../infrastructure/keycloak-resources.service";
 import { Controller, Post, Request } from "@nestjs/common";
+import { KeycloakResourcesService } from "../infrastructure/keycloak-resources.service";
 
 @Controller("keycloak-resources")
 export class KeycloakResourcesController {
