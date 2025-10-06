@@ -3,9 +3,9 @@ import { MediaController } from './media.controller';
 import { MediaService } from '../infrastructure/media.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MediaDbSchema, MediaDoc } from '../infrastructure/media.schema';
-import { ConfigModule } from '@nestjs/config';
 import { expect } from '@jest/globals';
 import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
+import { EnvModule } from '@app/env';
 
 describe('MediaController', () => {
   let controller: MediaController;
@@ -13,7 +13,7 @@ describe('MediaController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        ConfigModule,
+        EnvModule,
         MongooseTestingModule,
         MongooseModule.forFeature([
           {

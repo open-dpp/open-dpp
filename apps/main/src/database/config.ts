@@ -1,28 +1,28 @@
-import { ConfigService } from '@nestjs/config';
+import { EnvService } from '@app/env/env.service';
 import { DataSourceOptions } from 'typeorm';
 
 export function generateConfig(
-  configService: ConfigService,
+  configService: EnvService,
   migrationPath: string,
 ): DataSourceOptions {
   return {
     type: 'postgres',
-    host: configService.get('DB_HOST'),
-    port: configService.get('DB_PORT'),
-    username: configService.get('DB_USERNAME'),
-    password: configService.get('DB_PASSWORD'),
-    database: configService.get('DB_DATABASE'),
+    host: configService.get('OPEN_DPP_DB_HOST'),
+    port: configService.get('OPEN_DPP_DB_PORT'),
+    username: configService.get('OPEN_DPP_DB_USER'),
+    password: configService.get('OPEN_DPP_DB_PASSWORD'),
+    database: configService.get('OPEN_DPP_DB_DATABASE'),
     synchronize: true,
     dropSchema: false,
     migrations: [migrationPath],
   };
 }
 
-export function generateMongoConfig(configService: ConfigService) {
+export function generateMongoConfig(configService: EnvService) {
   return {
-    uri: `mongodb://${configService.get('MONGO_DB_HOST')}:${configService.get('MONGO_DB_PORT')}/`,
-    user: configService.get('DB_USERNAME'),
-    pass: configService.get('DB_PASSWORD'),
-    dbName: configService.get('DB_DATABASE'),
+    uri: `mongodb://${configService.get('OPEN_DPP_MONGODB_HOST')}:${configService.get('OPEN_DPP_MONGODB_PORT')}/`,
+    user: configService.get('OPEN_DPP_MONGODB_USER'),
+    pass: configService.get('OPEN_DPP_MONGODB_PASSWORD'),
+    dbName: configService.get('OPEN_DPP_DB_DATABASE'),
   };
 }

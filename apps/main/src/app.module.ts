@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import path, { join } from 'path';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { generateConfig, generateMongoConfig } from './database/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -24,24 +24,29 @@ import { MediaModule } from './media/media.module';
 import { AiModule } from './ai/ai.module';
 import { CreateNonExistingUserGuard } from './users/infrastructure/create-non-existing-user.guard';
 import { MarketplaceModule } from './marketplace/marketplace.module';
+import { EnvModule } from '@app/env/env.module';
+import { EnvService } from '@app/env/env.service';
+import { validateEnv } from '@app/env/env';
 import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
+      validate: (env) => validateEnv(env),
       isGlobal: true,
       expandVariables: true,
     }),
+    EnvModule,
     MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
+      imports: [EnvModule],
+      useFactory: (configService: EnvService) => ({
         ...generateMongoConfig(configService),
       }),
-      inject: [ConfigService],
+      inject: [EnvService],
     }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
+      imports: [EnvModule],
+      useFactory: (configService: EnvService) => ({
         ...generateConfig(
           configService,
           path.join(__dirname, '/migrations/**/*{.ts,.js}'),
@@ -51,7 +56,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
         migrationsRun: true,
         synchronize: true,
       }),
-      inject: [ConfigService],
+      inject: [EnvService],
     }),
     TemplateDraftModule,
     TemplateModule,

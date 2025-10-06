@@ -19,7 +19,6 @@ import { semitrailerTruckAas } from '../domain/semitrailer-truck-aas';
 import { AssetAdministrationShellType } from '../domain/asset-administration-shell';
 import { Model } from '../../models/domain/model';
 import { ModelsService } from '../../models/infrastructure/models.service';
-import { ConfigService } from '@nestjs/config';
 import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { Organization } from '../../organizations/domain/organization';
@@ -37,6 +36,7 @@ import request from 'supertest';
 import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
 import { User } from '../../users/domain/user';
 import { getApp } from '@app/testing/utils';
+import { EnvModule, EnvService } from '@app/env';
 
 describe('AasConnectionController', () => {
   let app: INestApplication;
@@ -50,7 +50,7 @@ describe('AasConnectionController', () => {
   let modelsService: ModelsService;
   let itemsSevice: ItemsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
-  let configService: ConfigService;
+  let configService: EnvService;
 
   const authContext = new AuthContext();
   authContext.keycloakUser = {
@@ -74,6 +74,7 @@ describe('AasConnectionController', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
+        EnvModule,
         TypeOrmTestingModule,
         TypeOrmModule.forFeature([UserEntity, OrganizationEntity]),
         MongooseTestingModule,
@@ -137,7 +138,7 @@ describe('AasConnectionController', () => {
     uniqueProductIdentifierService = moduleRef.get(
       UniqueProductIdentifierService,
     );
-    configService = moduleRef.get(ConfigService);
+    configService = moduleRef.get<EnvService>(EnvService);
 
     await app.init();
   });
@@ -196,7 +197,7 @@ describe('AasConnectionController', () => {
       .post(
         `/organizations/${organizationId}/integration/aas/connections/${aasMapping.id}/items`,
       )
-      .set('API_TOKEN', configService.get('API_TOKEN')!)
+      .set('API_TOKEN', configService.get('OPEN_DPP_AAS_TOKEN'))
       .send({
         ...semitrailerTruckAas,
         assetAdministrationShells: [

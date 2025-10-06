@@ -40,6 +40,12 @@
       "@app/exception/*": [
         "libs/exception/src/*"
       ],
+      "@app/env": [
+        "libs/env/src"
+      ],
+      "@app/env/*": [
+        "libs/env/src/*"
+      ],
       "@app/mcp-module": [
         "libs/mcp-module/src"
       ],
