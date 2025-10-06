@@ -27,6 +27,7 @@
     "test:main": "dotenvx run -f .env.dev -f .env -- turbo test --filter=./apps/main --env-mode=loose",
     "test:mcp": "dotenvx run -f .env.dev -f .env -- turbo test --filter=./apps/mcp --env-mode=loose",
     "test:client": "dotenvx run -f .env.dev -f .env -- turbo test --filter=./apps/client --env-mode=loose",
+    "test:api-client": "dotenvx run -f .env.dev -f .env -- turbo test --filter=./packages/api-client --env-mode=loose",
     "test:cypress:headless": "dotenvx run -f .env.dev -f .env -- turbo cypress:headless --filter=./apps/client --env-mode=loose",
     "dev:main": "dotenvx run -- turbo dev --filter=./apps/main --env-mode=loose"
   }
