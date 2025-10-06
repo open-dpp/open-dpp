@@ -3,11 +3,11 @@ services:
     container_name: keycloak
     image: ghcr.io/open-dpp/open-dpp-auth:main
     environment:
-      - KC_BOOTSTRAP_ADMIN_USERNAME=${AUTH_ADMIN_USERNAME}
-      - KC_BOOTSTRAP_ADMIN_PASSWORD=${AUTH_ADMIN_PWD}
+      - KC_BOOTSTRAP_ADMIN_USERNAME=${OPEN_DPP_KEYCLOAK_USER}
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=${OPEN_DPP_KEYCLOAK_PASSWORD}
       - KC_HEALTH_ENABLED=true
       - KC_HOSTNAME_STRICT=false
-      - KC_HOSTNAME=${KEYCLOAK_PUBLIC_URL}
+      - KC_HOSTNAME=${OPEN_DPP_KEYCLOAK_URL}
       - KC_HTTP_ENABLED=true
       - PROXY_ADDRESS_FORWARDING=true
       - KC_PROXY_HEADERS=xforwarded
@@ -27,7 +27,7 @@ services:
       start_period: 30s
     command: start
     ports:
-      - 20081:8080
+      - 20001:8080
     depends_on:
       - auth-db
     networks:
@@ -48,11 +48,13 @@ services:
   mcp-server:
     container_name: mcp-server
     image: ghcr.io/open-dpp/mcp-server:main
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
-      - "3002:3001"
+      - "3002:3000"
     environment:
       - DPP_API_URL=http://host.docker.internal:3000/api
-      - PORT=3001
+      - PORT=3000
     networks:
       - open-dpp-local
 
@@ -60,19 +62,19 @@ services:
     container_name: api-db
     image: postgres:17-alpine
     environment:
-      - POSTGRES_USER=${DB_USERNAME}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_DATABASE}
+      - POSTGRES_USER=${OPEN_DPP_DB_USER}
+      - POSTGRES_PASSWORD=${OPEN_DPP_DB_PASSWORD}
+      - POSTGRES_DB=${OPEN_DPP_DB_DATABASE}
     volumes:
       - api_db:/var/lib/postgresql/data/
     ports:
-      - ${DB_PORT}:5432
+      - ${OPEN_DPP_DB_PORT}:5432
     networks:
       - open-dpp-local
 
   api-mongo-db:
     ports:
-      - ${MONGO_DB_PORT}:27017
+      - ${OPEN_DPP_MONGODB_PORT}:27017
     container_name: api-mongo-db
     logging:
       options:
@@ -81,9 +83,9 @@ services:
       - mongo_db:/data/db
       - mongo_config:/data/configdb
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_DB_USERNAME}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_DB_PASSWORD}
-      - MONGO_INITDB_DATABASE=${MONGO_DB_DATABASE}
+      - MONGO_INITDB_ROOT_USERNAME=${OPEN_DPP_MONGODB_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${OPEN_DPP_MONGODB_PASSWORD}
+      - MONGO_INITDB_DATABASE=${OPEN_DPP_MONGODB_DATABASE}
     image: mongo:6.0
     networks:
       - open-dpp-local
@@ -93,8 +95,8 @@ services:
     image: adorsys/keycloak-config-cli:latest-26.1.0 # ensure this is equal to keycloak version
     environment:
       - KEYCLOAK_URL=http://keycloak:8080/
-      - KEYCLOAK_USER=${AUTH_ADMIN_USERNAME}
-      - KEYCLOAK_PASSWORD=${AUTH_ADMIN_PWD}
+      - KEYCLOAK_USER=${OPEN_DPP_KEYCLOAK_USER}
+      - KEYCLOAK_PASSWORD=${OPEN_DPP_KEYCLOAK_PASSWORD}
       - KEYCLOAK_AVAILABILITYCHECK_ENABLED=true
       - KEYCLOAK_AVAILABILITYCHECK_TIMEOUT=120s
       - IMPORT_FILES_LOCATIONS=/config/*.json
@@ -127,12 +129,12 @@ services:
     image: quay.io/minio/minio:latest
     command: minio server /data --console-address ":9001"
     environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_ROOT_USER=${OPEN_DPP_S3_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${OPEN_DPP_S3_SECRET_KEY}
     volumes:
       - minio_data:/data
     ports:
-      - "9000:9000" # MinIO API
+      - "${OPEN_DPP_S3_PORT}:9000" # MinIO API
       - "9001:9001" # MinIO Console (Web UI)
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
@@ -141,6 +143,7 @@ services:
       retries: 3
     networks:
       - open-dpp-local
+
   minio-init:
     image: minio/mc:latest
     depends_on:
@@ -148,13 +151,13 @@ services:
     entrypoint: >
       /bin/sh -c "
       sleep 10;
-      /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin};
-      /usr/bin/mc mb myminio/${MINIO_DEFAULT_BUCKET:-dpp} --ignore-existing;
-      /usr/bin/mc anonymous set public myminio/${MINIO_DEFAULT_BUCKET:-dpp};
-      /usr/bin/mc mb myminio/${MINIO_DEFAULT_BUCKET:-profile-pictures} --ignore-existing;
-      /usr/bin/mc anonymous set public myminio/${MINIO_DEFAULT_BUCKET:-profile-pictures};
-      /usr/bin/mc version enable myminio/dpp;
-      /usr/bin/mc version enable myminio/profile-pictures;
+      /usr/bin/mc alias set myminio http://minio:9000 ${OPEN_DPP_S3_ACCESS_KEY} ${OPEN_DPP_S3_SECRET_KEY};
+      /usr/bin/mc mb myminio/${OPEN_DPP_S3_DEFAULT_BUCKET} --ignore-existing;
+      /usr/bin/mc anonymous set public myminio/${OPEN_DPP_S3_DEFAULT_BUCKET};
+      /usr/bin/mc mb myminio/${OPEN_DPP_S3_PROFILE_PICTURE_BUCKET} --ignore-existing;
+      /usr/bin/mc anonymous set public myminio/${OPEN_DPP_S3_PROFILE_PICTURE_BUCKET};
+      /usr/bin/mc version enable myminio/${OPEN_DPP_S3_DEFAULT_BUCKET};
+      /usr/bin/mc version enable myminio/${OPEN_DPP_S3_PROFILE_PICTURE_BUCKET};
       exit 0;
       "
     networks:
@@ -163,7 +166,7 @@ services:
   clamav-rest:
     image: ajilaag/clamav-rest
     ports:
-      - ${CLAMAV_PORT}:9000
+      - ${OPEN_DPP_CLAMAV_PORT}:9000
     networks:
       - open-dpp-local
 

@@ -20,6 +20,7 @@ import request from 'supertest';
 import { AiModule } from '../ai.module';
 import { getApp } from '@app/testing/utils';
 import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
+import { EnvModule } from '@app/env';
 
 describe('AiConfigurationController', () => {
   let app: INestApplication;
@@ -48,6 +49,7 @@ describe('AiConfigurationController', () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
+        EnvModule,
         TypeOrmTestingModule,
         MongooseTestingModule,
         MongooseModule.forFeature([

@@ -12,6 +12,7 @@ import { AiConfigurationService } from './infrastructure/ai-configuration.servic
 import { ChatGateway } from './presentation/chat.gateway';
 import { ChatService } from './infrastructure/chat.service';
 import { UniqueProductIdentifierModule } from '../unique-product-identifier/unique.product.identifier.module';
+import { EnvModule } from '@app/env/env.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { UniqueProductIdentifierModule } from '../unique-product-identifier/uniq
     ]),
     UniqueProductIdentifierModule,
     PermissionModule,
+    EnvModule,
   ],
   controllers: [AiConfigurationController],
   providers: [

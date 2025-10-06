@@ -12,7 +12,6 @@ import {
 import { ModelsService } from '../../models/infrastructure/models.service';
 import { AasConnectionService } from '../infrastructure/aas-connection.service';
 import { TemplateService } from '../../templates/infrastructure/template.service';
-import { ConfigService } from '@nestjs/config';
 import { itemToDto } from '../../items/presentation/dto/item.dto';
 import { ItemsService } from '../../items/infrastructure/items.service';
 import { aasConnectionToDto } from './dto/aas-connection.dto';
@@ -31,6 +30,7 @@ import { OrganizationsService } from '../../organizations/infrastructure/organiz
 import { PermissionService } from '@app/permission';
 import { Public } from '@app/auth/public/public.decorator';
 import * as authRequest from '@app/auth/auth-request';
+import { EnvService } from '@app/env/env.service';
 
 @Controller('organizations/:orgaId/integration/aas')
 export class AasConnectionController {
@@ -41,7 +41,7 @@ export class AasConnectionController {
     private readonly itemsApplicationService: ItemsApplicationService,
     private aasConnectionService: AasConnectionService,
     private templateService: TemplateService,
-    private configService: ConfigService,
+    private configService: EnvService,
     private permissionsService: PermissionService,
     private uniqueProductIdentifierService: UniqueProductIdentifierService,
   ) {}
@@ -54,7 +54,7 @@ export class AasConnectionController {
     @Param('connectionId') connectionId: string,
     @Body() aasJson: any,
   ) {
-    if (apiToken !== this.configService.get('API_TOKEN')) {
+    if (apiToken !== this.configService.get('OPEN_DPP_AAS_TOKEN')) {
       throw new ForbiddenException('Wrong api token');
     }
     const aasConnection =

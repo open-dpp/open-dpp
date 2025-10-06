@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { KeycloakResourcesService } from './keycloak-resources.service';
 import { HttpModule } from '@nestjs/axios';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { User } from '../../users/domain/user';
 import { Organization } from '../../organizations/domain/organization';
@@ -14,6 +14,7 @@ import {
 import { expect } from '@jest/globals';
 import { AuthContext } from '@app/auth/auth-request';
 import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
+import { EnvModule, EnvService } from '@app/env';
 
 jest.mock('@keycloak/keycloak-admin-client', () => {
   return {
@@ -50,20 +51,20 @@ describe('KeycloakResourcesService', () => {
   beforeEach(async () => {
     mockConfigService = {
       get: jest.fn((key) => {
-        if (key === 'KEYCLOAK_NETWORK_URL') return 'http://localhost:8080';
-        if (key === 'KEYCLOAK_REALM') return 'master';
-        if (key === 'KEYCLOAK_ADMIN_USERNAME') return 'admin';
-        if (key === 'KEYCLOAK_ADMIN_PASSWORD') return 'admin';
+        if (key === 'OPEN_DPP_KEYCLOAK_URL') return 'http://localhost:8080';
+        if (key === 'OPEN_DPP_KEYCLOAK_REALM') return 'master';
+        if (key === 'OPEN_DPP_KEYCLOAK_USER') return 'admin';
+        if (key === 'OPEN_DPP_KEYCLOAK_PASSWORD') return 'admin';
         return null;
       }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [HttpModule, ConfigModule],
+      imports: [HttpModule, EnvModule],
       providers: [
         KeycloakResourcesService,
         {
-          provide: ConfigService,
+          provide: EnvService,
           useValue: mockConfigService,
         },
       ],
