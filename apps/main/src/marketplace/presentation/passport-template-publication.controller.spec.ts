@@ -6,8 +6,11 @@ import { expect } from "@jest/globals";
 import { APP_GUARD, Reflector } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
+import { PermissionModule } from "@open-dpp/auth";
 import { getApp, KeycloakAuthTestingGuard, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import request from "supertest";
+import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
+import { UserEntity } from "../../users/infrastructure/user.entity";
 import { PassportTemplatePublication } from "../domain/passport-template-publication";
 import { passportTemplatePublicationPropsFactory } from "../fixtures/passport.template.factory";
 import {
@@ -15,8 +18,8 @@ import {
   PassportTemplatePublicationDoc,
 } from "../infrastructure/passport-template-publication.schema";
 import { PassportTemplatePublicationService } from "../infrastructure/passport-template-publication.service";
-import { MarketplaceModule } from "../marketplace.module";
 import { passportTemplatePublicationToDto } from "./dto/passport-template-publication.dto";
+import { PassportTemplatePublicationController } from "./passport-template-publication.controller";
 
 describe("passportTemplateController", () => {
   let app: INestApplication;
@@ -36,6 +39,7 @@ describe("passportTemplateController", () => {
     module = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
+        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -43,14 +47,16 @@ describe("passportTemplateController", () => {
             schema: PassportTemplatePublicationDbSchema,
           },
         ]),
-        MarketplaceModule,
+        PermissionModule,
       ],
       providers: [
+        PassportTemplatePublicationService,
         {
           provide: APP_GUARD,
           useValue: keycloakAuthTestingGuard,
         },
       ],
+      controllers: [PassportTemplatePublicationController],
     }).compile();
 
     app = module.createNestApplication();

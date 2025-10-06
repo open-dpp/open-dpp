@@ -47,7 +47,7 @@ describe("templateDraft", () => {
       = productDataModelDraft.publish(otherUserId);
 
     const expected: TemplateDbProps = {
-      id: randomUUID(),
+      id: publishedProductDataModel.id,
       marketplaceResourceId: null,
       name: productDataModelDraft.name,
       description: productDataModelDraft.description,

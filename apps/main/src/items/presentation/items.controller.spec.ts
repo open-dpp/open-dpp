@@ -2,8 +2,8 @@ import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { INestApplication } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthContext, PermissionModule } from "@open-dpp/auth";
 import getKeycloakAuthToken, { createKeycloakUserInToken, getApp, ignoreIds, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import request from "supertest";
@@ -11,22 +11,44 @@ import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
 import { Sector } from "../../data-modelling/domain/sectors";
+import { AasConnectionDoc, AasConnectionSchema } from "../../integrations/infrastructure/aas-connection.schema";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
+import {
+  PassportTemplatePublicationDbSchema,
+  PassportTemplatePublicationDoc,
+} from "../../marketplace/infrastructure/passport-template-publication.schema";
+import {
+  PassportTemplatePublicationService,
+} from "../../marketplace/infrastructure/passport-template-publication.service";
+import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { Model } from "../../models/domain/model";
+import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { Organization } from "../../organizations/domain/organization";
 import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import { Template, TemplateDbProps } from "../../templates/domain/template";
+import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
 import { TemplateService } from "../../templates/infrastructure/template.service";
+import {
+  DppEventSchema,
+  TraceabilityEventDocument,
+} from "../../traceability-events/infrastructure/traceability-event.document";
+import { TraceabilityEventsService } from "../../traceability-events/infrastructure/traceability-events.service";
+import {
+  UniqueProductIdentifierDoc,
+  UniqueProductIdentifierSchema,
+} from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { User } from "../../users/domain/user";
 import { UserEntity } from "../../users/infrastructure/user.entity";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { Item } from "../domain/item";
+import { ItemDoc, ItemSchema } from "../infrastructure/item.schema";
 import { ItemsService } from "../infrastructure/items.service";
-import { ItemsModule } from "../items.module";
+import { ItemsApplicationService } from "./items-application.service";
+import { ItemsController } from "./items.controller";
 
 describe("itemsController", () => {
   let app: INestApplication;
@@ -136,14 +158,52 @@ describe("itemsController", () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([UserEntity, OrganizationEntity]),
-        MongooseTestingModule,
-        ItemsModule,
+        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         PermissionModule,
+        MongooseTestingModule,
+        MongooseModule.forFeature([
+          {
+            name: ModelDoc.name,
+            schema: ModelSchema,
+          },
+          {
+            name: UniqueProductIdentifierDoc.name,
+            schema: UniqueProductIdentifierSchema,
+          },
+          {
+            name: ItemDoc.name,
+            schema: ItemSchema,
+          },
+          {
+            name: TemplateDoc.name,
+            schema: TemplateSchema,
+          },
+          {
+            name: AasConnectionDoc.name,
+            schema: AasConnectionSchema,
+          },
+          {
+            name: TraceabilityEventDocument.name,
+            schema: DppEventSchema,
+          },
+          {
+            name: PassportTemplatePublicationDoc.name,
+            schema: PassportTemplatePublicationDbSchema,
+          },
+        ]),
       ],
       providers: [
         OrganizationsService,
         UsersService,
+        KeycloakResourcesService,
+        ModelsService,
+        ItemsService,
+        UniqueProductIdentifierService,
+        TemplateService,
+        MarketplaceApplicationService,
+        PassportTemplatePublicationService,
+        ItemsApplicationService,
+        TraceabilityEventsService,
         {
           provide: APP_GUARD,
           useValue: keycloakAuthTestingGuard,
@@ -160,6 +220,7 @@ describe("itemsController", () => {
           }),
         },
       ],
+      controllers: [ItemsController],
     })
       .overrideProvider(KeycloakResourcesService)
       .useValue(

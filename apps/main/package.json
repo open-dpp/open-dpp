@@ -95,7 +95,7 @@
     "typescript-eslint": "^8.20.0"
   },
   "jest": {
-    "testRegex": ".*\\.service.spec\\.ts$",
+    "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": ["@swc/jest", {
         "jsc": {

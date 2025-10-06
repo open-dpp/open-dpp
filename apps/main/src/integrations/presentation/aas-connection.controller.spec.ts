@@ -3,16 +3,19 @@ import { expect } from "@jest/globals";
 import { INestApplication } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { APP_GUARD, Reflector } from "@nestjs/core";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthContext, PermissionModule } from "@open-dpp/auth";
 import getKeycloakAuthToken, { getApp, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import { json } from "express";
 import request from "supertest";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
 import { ItemsService } from "../../items/infrastructure/items.service";
+import { ItemsApplicationService } from "../../items/presentation/items-application.service";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import { Model } from "../../models/domain/model";
+import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { Organization } from "../../organizations/domain/organization";
 import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
@@ -21,7 +24,17 @@ import { Template, TemplateDbProps } from "../../templates/domain/template";
 import { dataFieldDbPropsFactory } from "../../templates/fixtures/data-field.factory";
 import { laptopFactory } from "../../templates/fixtures/laptop.factory";
 import { sectionDbPropsFactory } from "../../templates/fixtures/section.factory";
+import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
 import { TemplateService } from "../../templates/infrastructure/template.service";
+import {
+  DppEventSchema,
+  TraceabilityEventDocument,
+} from "../../traceability-events/infrastructure/traceability-event.document";
+import { TraceabilityEventsService } from "../../traceability-events/infrastructure/traceability-events.service";
+import {
+  UniqueProductIdentifierDoc,
+  UniqueProductIdentifierSchema,
+} from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { User } from "../../users/domain/user";
 import { UserEntity } from "../../users/infrastructure/user.entity";
@@ -29,8 +42,9 @@ import { UsersService } from "../../users/infrastructure/users.service";
 import { AasConnection, AasFieldAssignment } from "../domain/aas-connection";
 import { AssetAdministrationShellType } from "../domain/asset-administration-shell";
 import { semitrailerTruckAas } from "../domain/semitrailer-truck-aas";
+import { AasConnectionDoc, AasConnectionSchema } from "../infrastructure/aas-connection.schema";
 import { AasConnectionService } from "../infrastructure/aas-connection.service";
-import { IntegrationModule } from "../integration.module";
+import { AasConnectionController } from "./aas-connection.controller";
 
 describe("aasConnectionController", () => {
   let app: INestApplication;
@@ -65,14 +79,46 @@ describe("aasConnectionController", () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([UserEntity, OrganizationEntity]),
+        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         MongooseTestingModule,
-        IntegrationModule,
+        MongooseModule.forFeature([
+          {
+            name: ModelDoc.name,
+            schema: ModelSchema,
+          },
+          {
+            name: UniqueProductIdentifierDoc.name,
+            schema: UniqueProductIdentifierSchema,
+          },
+          {
+            name: ItemDoc.name,
+            schema: ItemSchema,
+          },
+          {
+            name: TemplateDoc.name,
+            schema: TemplateSchema,
+          },
+          {
+            name: AasConnectionDoc.name,
+            schema: AasConnectionSchema,
+          },
+          {
+            name: TraceabilityEventDocument.name,
+            schema: DppEventSchema,
+          },
+        ]),
         PermissionModule,
       ],
       providers: [
         OrganizationsService,
         UsersService,
+        TemplateService,
+        AasConnectionService,
+        ModelsService,
+        ItemsService,
+        UniqueProductIdentifierService,
+        ItemsApplicationService,
+        TraceabilityEventsService,
         {
           provide: APP_GUARD,
           useValue: keycloakAuthTestingGuard,
@@ -89,6 +135,7 @@ describe("aasConnectionController", () => {
           }),
         },
       ],
+      controllers: [AasConnectionController],
     })
       .overrideProvider(KeycloakResourcesService)
       .useValue(

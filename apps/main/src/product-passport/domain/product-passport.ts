@@ -58,7 +58,7 @@ export class DataSection extends Section {
     const maxFound = maxBy(dataValuesOfSection, "row")?.row;
 
     const minRow = minBy(dataValuesOfSection, "row")?.row ?? 0;
-    const maxRow = maxFound && Number.isFinite(maxFound) ? maxFound + 1 : 0;
+    const maxRow = maxFound !== undefined && Number.isFinite(maxFound) ? maxFound + 1 : 0;
     const dataValues: Array<any> = [];
     for (let rowIndex = minRow; rowIndex < maxRow; rowIndex++) {
       dataValues.push(

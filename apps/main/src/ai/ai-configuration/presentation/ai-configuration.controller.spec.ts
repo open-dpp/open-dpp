@@ -3,11 +3,11 @@ import { INestApplication } from "@nestjs/common";
 import { APP_GUARD, Reflector } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
+import { PermissionModule } from "@open-dpp/auth";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
-import getKeycloakAuthToken, { getApp, KeycloakAuthTestingGuard, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import getKeycloakAuthToken, { getApp, KeycloakAuthTestingGuard, MongooseTestingModule } from "@open-dpp/testing";
 import { Connection } from "mongoose";
 import request from "supertest";
-import { AiModule } from "../../ai.module";
 import { AiConfiguration, AiProvider } from "../domain/ai-configuration";
 import { aiConfigurationFactory } from "../fixtures/ai-configuration-props.factory";
 import {
@@ -15,6 +15,7 @@ import {
   AiConfigurationDoc,
 } from "../infrastructure/ai-configuration.schema";
 import { AiConfigurationService } from "../infrastructure/ai-configuration.service";
+import { AiConfigurationController } from "./ai-configuration.controller";
 import { aiConfigurationToDto } from "./dto/ai-configuration.dto";
 
 describe("aiConfigurationController", () => {
@@ -35,7 +36,6 @@ describe("aiConfigurationController", () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
-        TypeOrmTestingModule,
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -43,14 +43,16 @@ describe("aiConfigurationController", () => {
             schema: AiConfigurationDbSchema,
           },
         ]),
-        AiModule,
+        PermissionModule,
       ],
       providers: [
+        AiConfigurationService,
         {
           provide: APP_GUARD,
           useValue: keycloakAuthTestingGuard,
         },
       ],
+      controllers: [AiConfigurationController],
     }).compile();
 
     app = module.createNestApplication();
@@ -99,7 +101,7 @@ describe("aiConfigurationController", () => {
       provider: AiProvider.Mistral,
       model: "codestral-latest",
     };
-    const response = await request(getApp(app))
+    const response = await request(app.getHttpServer())
       .put(`/organizations/${orgaId}/configurations`)
       .set(
         "Authorization",

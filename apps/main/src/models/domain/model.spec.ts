@@ -194,7 +194,7 @@ describe("model", () => {
           row: 0,
         }),
       ]),
-    ).toThrowError(
+    ).toThrow(
       "Data value for section sid1, field fieldId1, row 0 already exists",
     );
   });

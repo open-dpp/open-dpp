@@ -3,22 +3,40 @@ import type { TemplateDbProps } from "../../templates/domain/template";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { APP_GUARD, Reflector } from "@nestjs/core";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { ALLOW_SERVICE_ACCESS, AuthContext } from "@open-dpp/auth";
-import getKeycloakAuthToken, { createKeycloakUserInToken, KeycloakAuthTestingGuard, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import { ALLOW_SERVICE_ACCESS, AuthContext, PermissionModule } from "@open-dpp/auth";
+import getKeycloakAuthToken, {
+  createKeycloakUserInToken,
+  KeycloakAuthTestingGuard,
+  KeycloakResourcesServiceTesting,
+  MongooseTestingModule,
+  TypeOrmTestingModule,
+} from "@open-dpp/testing";
 import request from "supertest";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { Item } from "../../items/domain/item";
+import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
 import { ItemsService } from "../../items/infrastructure/items.service";
+
+import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import { Model } from "../../models/domain/model";
+import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
+import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
+import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { phoneFactory } from "../../product-passport/fixtures/product-passport.factory";
 import { Template } from "../../templates/domain/template";
+import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
 import { TemplateService } from "../../templates/infrastructure/template.service";
-import { TemplateModule } from "../../templates/template.module";
 import { UserEntity } from "../../users/infrastructure/user.entity";
-import { UniqueProductIdentifierModule } from "../unique.product.identifier.module";
+import { UsersService } from "../../users/infrastructure/users.service";
+import {
+  UniqueProductIdentifierDoc,
+  UniqueProductIdentifierSchema,
+} from "../infrastructure/unique-product-identifier.schema";
+import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
+import { UniqueProductIdentifierController } from "./unique.product.identifier.controller";
 
 describe("uniqueProductIdentifierController", () => {
   let app: INestApplication;
@@ -41,18 +59,55 @@ describe("uniqueProductIdentifierController", () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([UserEntity]),
+        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
+        PermissionModule,
         MongooseTestingModule,
-        UniqueProductIdentifierModule,
-        TemplateModule,
+        MongooseModule.forFeature([
+          {
+            name: ModelDoc.name,
+            schema: ModelSchema,
+          },
+          {
+            name: UniqueProductIdentifierDoc.name,
+            schema: UniqueProductIdentifierSchema,
+          },
+          {
+            name: ItemDoc.name,
+            schema: ItemSchema,
+          },
+          {
+            name: TemplateDoc.name,
+            schema: TemplateSchema,
+          },
+        ]),
       ],
       providers: [
+        UsersService,
+        OrganizationsService,
+        KeycloakResourcesService,
+        ModelsService,
+        UniqueProductIdentifierService,
+        ItemsService,
+        TemplateService,
         {
           provide: APP_GUARD,
           useValue: keycloakAuthTestingGuard,
         },
       ],
-    }).compile();
+      controllers: [UniqueProductIdentifierController],
+    })
+      .overrideProvider(KeycloakResourcesService)
+      .useValue(
+        KeycloakResourcesServiceTesting.fromPlain({
+          users: [
+            {
+              id: authContext.keycloakUser.sub,
+              email: authContext.keycloakUser.email,
+            },
+          ],
+        }),
+      )
+      .compile();
 
     modelsService = moduleRef.get(ModelsService);
     itemsService = moduleRef.get(ItemsService);

@@ -6,7 +6,7 @@ import { expect } from "@jest/globals";
 import { APP_GUARD } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { AuthContext } from "@open-dpp/auth";
+import { AuthContext, PermissionModule } from "@open-dpp/auth";
 import getKeycloakAuthToken, { createKeycloakUserInToken, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
 import request from "supertest";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
@@ -15,8 +15,8 @@ import { laptopFactory } from "../fixtures/laptop.factory";
 import { templateCreatePropsFactory } from "../fixtures/template.factory";
 import { TemplateDoc, TemplateSchema } from "../infrastructure/template.schema";
 import { TemplateService } from "../infrastructure/template.service";
-import { TemplateModule } from "../template.module";
 import { templateToDto } from "./dto/template.dto";
+import { TemplateController } from "./template.controller";
 
 describe("templateController", () => {
   let app: INestApplication;
@@ -37,14 +37,16 @@ describe("templateController", () => {
             schema: TemplateSchema,
           },
         ]),
-        TemplateModule,
+        PermissionModule,
       ],
       providers: [
+        TemplateService,
         {
           provide: APP_GUARD,
           useValue: keycloakAuthTestingGuard,
         },
       ],
+      controllers: [TemplateController],
     })
       .overrideProvider(KeycloakResourcesService)
       .useValue(

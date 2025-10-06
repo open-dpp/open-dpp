@@ -4,8 +4,7 @@ import { expect, jest } from "@jest/globals";
 import { INestApplication, NotFoundException } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { Test } from "@nestjs/testing";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { AuthContext, PermissionService } from "@open-dpp/auth";
+import { AuthContext, PermissionModule, PermissionService } from "@open-dpp/auth";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
 import { createKeycloakUserInToken, getApp, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, TypeOrmTestingModule } from "@open-dpp/testing";
 import request from "supertest";
@@ -16,7 +15,7 @@ import { UsersService } from "../../users/infrastructure/users.service";
 import { Organization } from "../domain/organization";
 import { OrganizationEntity } from "../infrastructure/organization.entity";
 import { OrganizationsService } from "../infrastructure/organizations.service";
-import { OrganizationsModule } from "../organizations.module";
+import { OrganizationsController } from "./organizations.controller";
 
 describe("organizationController", () => {
   let app: INestApplication;
@@ -43,10 +42,13 @@ describe("organizationController", () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
-        OrganizationsModule,
+        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
+        PermissionModule,
       ],
       providers: [
+        UsersService,
+        OrganizationsService,
+        KeycloakResourcesService,
         {
           provide: APP_GUARD,
           useValue: new KeycloakAuthTestingGuard(
@@ -54,6 +56,7 @@ describe("organizationController", () => {
           ),
         },
       ],
+      controllers: [OrganizationsController],
     })
       .overrideProvider(KeycloakResourcesService)
       .useValue(

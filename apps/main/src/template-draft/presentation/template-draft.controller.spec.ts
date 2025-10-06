@@ -4,8 +4,7 @@ import { INestApplication } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { AuthContext } from "@open-dpp/auth";
+import { AuthContext, PermissionModule } from "@open-dpp/auth";
 import getKeycloakAuthToken, { createKeycloakUserInToken, getApp, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import request from "supertest";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
@@ -14,6 +13,13 @@ import { SectionType } from "../../data-modelling/domain/section-base";
 import { Sector } from "../../data-modelling/domain/sectors";
 import { sectionToDto } from "../../data-modelling/presentation/dto/section-base.dto";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
+import {
+  PassportTemplatePublicationDbSchema,
+  PassportTemplatePublicationDoc,
+} from "../../marketplace/infrastructure/passport-template-publication.schema";
+import {
+  PassportTemplatePublicationService,
+} from "../../marketplace/infrastructure/passport-template-publication.service";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { Organization } from "../../organizations/domain/organization";
 import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
@@ -25,9 +31,11 @@ import {
 import { TemplateService } from "../../templates/infrastructure/template.service";
 import { User } from "../../users/domain/user";
 import { UserEntity } from "../../users/infrastructure/user.entity";
+import { UsersService } from "../../users/infrastructure/users.service";
 import { DataFieldDraft } from "../domain/data-field-draft";
 import { SectionDraft } from "../domain/section-draft";
 import { MoveDirection, TemplateDraft } from "../domain/template-draft";
+
 import { dataFieldDraftDbPropsFactory } from "../fixtures/data-field-draft.factory";
 import { sectionDraftDbPropsFactory } from "../fixtures/section-draft.factory";
 import {
@@ -39,11 +47,10 @@ import {
   TemplateDraftSchema,
 } from "../infrastructure/template-draft.schema";
 import { TemplateDraftService } from "../infrastructure/template-draft.service";
-import { TemplateDraftModule } from "../template-draft.module";
 import { MoveType } from "./dto/move.dto";
 import { VisibilityLevel } from "./dto/publish.dto";
-
 import { templateDraftToDto } from "./dto/template-draft.dto";
+import { TemplateDraftController } from "./template-draft.controller";
 
 describe("templateDraftController", () => {
   let app: INestApplication;
@@ -62,9 +69,9 @@ describe("templateDraftController", () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
-        MongooseTestingModule,
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
+        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
+        MongooseTestingModule,
         MongooseModule.forFeature([
           {
             name: TemplateDraftDoc.name,
@@ -74,15 +81,27 @@ describe("templateDraftController", () => {
             name: TemplateDoc.name,
             schema: TemplateSchema,
           },
+          {
+            name: PassportTemplatePublicationDoc.name,
+            schema: PassportTemplatePublicationDbSchema,
+          },
         ]),
-        TemplateDraftModule,
+        PermissionModule,
       ],
       providers: [
+        TemplateService,
+        TemplateDraftService,
+        MarketplaceApplicationService,
+        PassportTemplatePublicationService,
+        OrganizationsService,
+        UsersService,
+        KeycloakResourcesService,
         {
           provide: APP_GUARD,
           useValue: keycloakAuthTestingGuard,
         },
       ],
+      controllers: [TemplateDraftController],
     })
       .overrideProvider(KeycloakResourcesService)
       .useValue(

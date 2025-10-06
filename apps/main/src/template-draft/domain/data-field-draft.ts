@@ -21,8 +21,6 @@ export type DataFieldDraftDbProps = DataFieldDraftCreateProps & {
 };
 
 export class DataFieldDraft extends DataFieldBase {
-  public readonly options: Record<string, unknown> = {};
-
   private constructor(
     id: string,
     _name: string,
