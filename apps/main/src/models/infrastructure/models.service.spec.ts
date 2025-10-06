@@ -6,7 +6,6 @@ import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { TypeOrmModule } from "@nestjs/typeorm";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { ignoreIds, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
@@ -51,7 +50,7 @@ describe("modelsService", () => {
           },
         ]),
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
+        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
       ],
       providers: [
         ModelsService,

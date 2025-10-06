@@ -1,12 +1,11 @@
+import type { DynamicModule, Type } from '@nestjs/common'
 import type { DataSourceOptions } from 'typeorm'
-import * as path from 'node:path'
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 
 export function generateConfig(
   configService: ConfigService,
-  migrationPath: string,
 ): DataSourceOptions {
   return {
     type: 'postgres',
@@ -17,26 +16,31 @@ export function generateConfig(
     database: configService.get('DB_DATABASE'),
     synchronize: true,
     dropSchema: false,
-    migrations: [migrationPath],
   }
 }
 
-@Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        ...generateConfig(
-          configService,
-          path.join(__dirname, '../src/migrations/**/*{.ts,.js}'),
-        ),
-        entities: [path.join(__dirname, '../src/**/*.entity{.ts,.js}')],
-      }),
-      inject: [ConfigService],
-    }),
-  ],
-})
-export class TypeOrmTestingModule {}
+@Module({})
+export class TypeOrmTestingModule {
+  static forFeature(entities: Type[]): DynamicModule {
+    return {
+      module: TypeOrmTestingModule,
+      imports: [
+        ConfigModule.forRoot({
+          isGlobal: true,
+        }),
+        TypeOrmModule.forRootAsync({
+          imports: [ConfigModule],
+          useFactory: (configService: ConfigService) => ({
+            ...generateConfig(
+              configService,
+            ),
+            entities,
+          }),
+          inject: [ConfigService],
+        }),
+        TypeOrmModule.forFeature(entities),
+      ],
+      exports: [TypeOrmModule],
+    }
+  }
+}

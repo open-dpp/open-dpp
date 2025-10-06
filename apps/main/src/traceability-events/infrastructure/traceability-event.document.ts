@@ -21,7 +21,8 @@ export class TraceabilityEventDocument extends Document {
 
   @Prop({
     default: TraceabilityEventSchemaVersion.v1_0_0,
-    enum: TraceabilityEventSchemaVersion,
+    enum: Object.values(TraceabilityEventSchemaVersion),
+    type: String,
   })
   _schemaVersion: TraceabilityEventSchemaVersion_TYPE;
 

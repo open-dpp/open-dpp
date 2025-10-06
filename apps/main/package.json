@@ -17,6 +17,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "test": "jest",
+    "test:clear-cache": "jest --clearCache",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
@@ -94,26 +95,23 @@
     "typescript-eslint": "^8.20.0"
   },
   "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": ".",
-    "testRegex": ".*\\marketplace.application.service.spec\\.ts$",
+    "testRegex": ".*\\.service.spec\\.ts$",
     "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
+      "^.+\\.(t|j)s$": ["@swc/jest", {
+        "jsc": {
+          "target": "es2022",
+          "parser": { "syntax": "typescript", "decorators": true },
+          "transform": { "decoratorMetadata": true }
+        },
+        "module": { "type": "commonjs" }
+      }]
     },
     "transformIgnorePatterns": [
-      "node_modules/(?!(@open-dpp|@keycloak)/)"
+      "node_modules/(?!((?:\\.pnpm/.*?/)?(?:@(?:open-dpp|keycloak)|url-join|url-template|camelize-ts|uuid))(?:/|$))"
     ],
     "moduleNameMapper": {
       "^@open-dpp/(.*)$": "<rootDir>/../../packages/$1/src"
     },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "./coverage",
     "testEnvironment": "node"
   }
 }

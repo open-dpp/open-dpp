@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
 } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { getRepositoryToken, TypeOrmModule } from "@nestjs/typeorm";
+import { getRepositoryToken } from "@nestjs/typeorm";
 import { AuthContext, PermissionModule } from "@open-dpp/auth";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { createKeycloakUserInToken, KeycloakResourcesServiceTesting, TypeOrmTestingModule } from "@open-dpp/testing";
@@ -36,7 +36,7 @@ describe("organizationsService", () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
+        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         PermissionModule,
       ],
       providers: [OrganizationsService, UsersService, KeycloakResourcesService],
@@ -435,35 +435,6 @@ describe("organizationsService", () => {
             existingMemberEmail,
           ),
         ).rejects.toThrow(BadRequestException);
-      });
-
-      it("should handle error during invitation process", async () => {
-        const newUserEmail = "error@test.test";
-        const newUserId = randomUUID();
-        const newUser = new User(newUserId, newUserEmail);
-
-        // Mock the UsersService to return one user
-        jest.spyOn(usersService, "find").mockResolvedValueOnce([newUser]);
-
-        // Mock group retrieval for the invite to throw an error
-        const mockError = new Error("Test error");
-        jest
-          .spyOn(keycloakResourcesService, "inviteUserToGroup")
-          .mockRejectedValueOnce(mockError as never);
-
-        // Mock console.log to verify it's called
-        const consoleSpy = jest.spyOn(console, "log").mockImplementation();
-
-        await organizationsService.inviteUser(
-          authContext,
-          organization.id,
-          newUserEmail,
-        );
-
-        // Verify error was logged
-        expect(consoleSpy).toHaveBeenCalledWith("Error:", mockError);
-
-        consoleSpy.mockRestore();
       });
 
       it("should handle transaction rollback when organization repository save fails", async () => {

@@ -13,7 +13,8 @@ export type PassportTemplatePublicationSchemaVersion_TYPE = keyof typeof Passpor
 export class PassportTemplatePublicationDoc extends Document {
   @Prop({
     default: PassportTemplatePublicationSchemaVersion.v1_0_0,
-    enum: PassportTemplatePublicationSchemaVersion,
+    enum: Object.values(PassportTemplatePublicationSchemaVersion),
+    type: String,
   }) // Track schema version
   _schemaVersion: PassportTemplatePublicationSchemaVersion_TYPE;
 

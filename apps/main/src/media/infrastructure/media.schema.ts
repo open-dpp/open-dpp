@@ -11,7 +11,8 @@ export type MediaSchemaVersion_TYPE = (typeof MediaSchemaVersion)[keyof typeof M
 export class MediaDoc extends Document {
   @Prop({
     default: MediaSchemaVersion.v1_0_0,
-    enum: MediaSchemaVersion,
+    enum: Object.values(MediaSchemaVersion),
+    type: String,
   }) // Track schema version
   _schemaVersion: MediaSchemaVersion_TYPE;
 

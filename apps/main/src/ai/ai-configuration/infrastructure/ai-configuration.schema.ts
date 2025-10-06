@@ -13,7 +13,8 @@ export type AiConfigurationSchemaVersion_TYPE = (typeof AiConfigurationSchemaVer
 export class AiConfigurationDoc extends Document {
   @Prop({
     default: AiConfigurationSchemaVersion.v1_0_0,
-    enum: AiConfigurationSchemaVersion,
+    enum: Object.values(AiConfigurationSchemaVersion),
+    type: String,
   }) // Track schema version
   _schemaVersion: AiConfigurationSchemaVersion_TYPE;
 

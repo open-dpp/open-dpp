@@ -6,6 +6,7 @@ packages:
 onlyBuiltDependencies:
   - '@nestjs/core'
   - '@scarf/scarf'
+  - '@swc/core'
   - '@tailwindcss/oxide'
   - core-js
   - cypress

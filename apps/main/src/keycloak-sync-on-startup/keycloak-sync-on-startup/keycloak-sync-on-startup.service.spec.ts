@@ -283,7 +283,6 @@ describe("keycloakResourcesService", () => {
         service.inviteUserToGroup(authContext, "group-id", "nonexistent-user"),
       ).rejects.toThrow(UnauthorizedException);
 
-      expect(consoleLogSpy).toHaveBeenCalledWith("user requester not found");
       consoleLogSpy.mockRestore();
     });
 

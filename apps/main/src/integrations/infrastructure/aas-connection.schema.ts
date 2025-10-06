@@ -39,7 +39,8 @@ export class AasConnectionDoc extends Document {
 
   @Prop({
     default: AasConnectionDocSchemaVersion.v1_0_0,
-    enum: AasConnectionDocSchemaVersion,
+    enum: Object.values(AasConnectionDocSchemaVersion),
+    type: String,
   }) // Track schema version
   _schemaVersion: AasConnectionDocSchemaVersion_TYPE;
 

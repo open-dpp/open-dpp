@@ -1,12 +1,11 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
-import { ConfigModule, ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
+import { KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import { DataSource } from "typeorm";
+import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import { Organization } from "../../organizations/domain/organization";
 import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
@@ -30,9 +29,9 @@ import { PassportTemplatePublicationService } from "../infrastructure/passport-t
 import { MarketplaceApplicationService } from "./marketplace.application.service";
 
 // Mock the KeycloakResourcesService module before any imports that use it
-jest.mock("../../keycloak-resources/infrastructure/keycloak-resources.service", () => ({
+/* jest.mock("../../keycloak-resources/infrastructure/keycloak-resources.service", () => ({
   KeycloakResourcesService: jest.fn(),
-}));
+})); */
 
 describe("marketplaceService", () => {
   let marketplaceService: MarketplaceApplicationService;
@@ -59,23 +58,8 @@ describe("marketplaceService", () => {
             schema: TemplateSchema,
           },
         ]),
-        TypeOrmModule.forRootAsync({
-          imports: [ConfigModule],
-          useFactory: (configService: ConfigService) => ({
-            type: "postgres" as const,
-            host: configService.get<string>("DB_HOST"),
-            port: configService.get<number>("DB_PORT"),
-            username: configService.get<string>("DB_USERNAME"),
-            password: configService.get<string>("DB_PASSWORD"),
-            database: configService.get<string>("DB_DATABASE"),
-            synchronize: true,
-            dropSchema: false,
-            entities: [OrganizationEntity, UserEntity],
-            autoLoadEntities: true,
-          }),
-          inject: [ConfigService],
-        }),
-        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
+        TypeOrmTestingModule,
+        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
       ],
       providers: [
         PassportTemplatePublicationService,
@@ -84,7 +68,7 @@ describe("marketplaceService", () => {
         OrganizationsService,
         UsersService,
         {
-          provide: "KeycloakResourcesService",
+          provide: KeycloakResourcesService,
           useClass: KeycloakResourcesServiceTesting,
         },
       ],

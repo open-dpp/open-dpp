@@ -17,7 +17,8 @@ export type TemplateDocSchemaVersion_TYPE = (typeof TemplateDocSchemaVersion)[ke
 export class TemplateDoc extends TemplateBaseDoc {
   @Prop({
     default: TemplateDocSchemaVersion.v1_0_3,
-    enum: TemplateDocSchemaVersion,
+    enum: Object.values(TemplateDocSchemaVersion),
+    type: String,
   }) // Track schema version
   _schemaVersion: TemplateDocSchemaVersion_TYPE;
 

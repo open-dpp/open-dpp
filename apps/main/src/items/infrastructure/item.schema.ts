@@ -16,7 +16,8 @@ export type ItemDocSchemaVersion_TYPE = (typeof ItemDocSchemaVersion)[keyof type
 export class ItemDoc extends PassportDoc {
   @Prop({
     default: ItemDocSchemaVersion.v1_0_2,
-    enum: ItemDocSchemaVersion,
+    enum: Object.values(ItemDocSchemaVersion),
+    type: String,
   }) // Track schema version
   _schemaVersion: ItemDocSchemaVersion_TYPE;
 

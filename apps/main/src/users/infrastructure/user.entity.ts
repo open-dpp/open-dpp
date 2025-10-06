@@ -7,6 +7,7 @@ import {
   ManyToMany,
   OneToMany,
   PrimaryColumn,
+  Relation,
   UpdateDateColumn,
 } from "typeorm";
 import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
@@ -43,11 +44,11 @@ export class UserEntity {
       { name: "organization_id", referencedColumnName: "id" },
     ],
   })
-  organizations: OrganizationEntity[];
+  organizations: Relation<OrganizationEntity>[];
 
-  @OneToMany(() => OrganizationEntity, org => org.createdByUserId)
-  creatorOfOrganizations: OrganizationEntity[];
+  @OneToMany(() => OrganizationEntity, org => org.createdByUser)
+  creatorOfOrganizations: Relation<OrganizationEntity>[];
 
-  @OneToMany(() => OrganizationEntity, org => org.ownedByUserId)
-  ownerOfOrganizations: OrganizationEntity[];
+  @OneToMany(() => OrganizationEntity, org => org.ownedByUser)
+  ownerOfOrganizations: Relation<OrganizationEntity>[];
 }

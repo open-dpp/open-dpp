@@ -22,7 +22,8 @@ export class UniqueProductIdentifierDoc extends Document {
 
   @Prop({
     default: UniqueProductIdentifierSchemaVersion.v1_0_0,
-    enum: UniqueProductIdentifierSchemaVersion,
+    enum: Object.values(UniqueProductIdentifierSchemaVersion),
+    type: String,
   }) // Track schema version
   _schemaVersion: UniqueProductIdentifierSchemaVersion_TYPE;
 
