@@ -34,17 +34,17 @@ export class MediaService {
     this.configService = configService;
     this.mediaDoc = mediaDoc;
     this.client = new Minio.Client({
-      endPoint: configService.get('OPEN_DPP_S3_ENDPOINT'),
-      port: configService.get('OPEN_DPP_S3_PORT'),
-      useSSL: configService.get('OPEN_DPP_S3_SSL'),
-      accessKey: configService.get('OPEN_DPP_S3_ACCESS_KEY'),
-      secretKey: configService.get('OPEN_DPP_S3_SECRET_KEY'),
-      region: 'nbg1',
+      endPoint: configService.get("OPEN_DPP_S3_ENDPOINT") as string,
+      port: configService.get("OPEN_DPP_S3_PORT"),
+      useSSL: configService.get("OPEN_DPP_S3_SSL"),
+      accessKey: configService.get("OPEN_DPP_S3_ACCESS_KEY"),
+      secretKey: configService.get("OPEN_DPP_S3_SECRET_KEY"),
+      region: "nbg1",
     });
-    this.bucketNameDefault = configService.get('OPEN_DPP_S3_DEFAULT_BUCKET');
+    this.bucketNameDefault = configService.get("OPEN_DPP_S3_DEFAULT_BUCKET") as string;
     this.bucketNameProfilePictures = configService.get(
-      'OPEN_DPP_S3_PROFILE_PICTURE_BUCKET',
-    );
+      "OPEN_DPP_S3_PROFILE_PICTURE_BUCKET",
+    ) as string;
   }
 
   buildBucketPath(objectName: string, remoteFolders: string[] = []) {

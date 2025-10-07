@@ -1,4 +1,5 @@
 import type { RouteLocationNormalizedGeneric, RouteRecordRaw } from "vue-router";
+import { localizedBreadcrumb } from "../../lib/breadcrumbs.ts";
 import { useLayoutStore } from "../../stores/layout";
 import { ORGANIZATION_INTEGRATIONS_PARENT } from "./integrations";
 import { ORGANIZATION_MODELS_PARENT } from "./models/models";
@@ -18,7 +19,7 @@ export const ORGANIZATION_LIST: RouteRecordRaw = {
 
 function organizationListBreadCrumbs(to: RouteLocationNormalizedGeneric) {
   return [
-    { name: localizedBreadcrumb('organizations.organizations'), route: ORGANIZATION_LIST, params: to.params },
+    { name: localizedBreadcrumb("organizations.organizations"), route: ORGANIZATION_LIST, params: to.params },
   ];
 }
 
@@ -50,7 +51,7 @@ export const ORGANIZATION_MEMBERS: RouteRecordRaw = {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = [
       {
-        name: localizedBreadcrumb('members.members'),
+        name: localizedBreadcrumb("members.members"),
         route: ORGANIZATION_MEMBERS,
         params: to.params,
       },

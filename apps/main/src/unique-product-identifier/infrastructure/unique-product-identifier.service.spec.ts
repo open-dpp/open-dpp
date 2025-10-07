@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import { v4 as uuid4 } from "uuid";
@@ -22,6 +23,7 @@ describe("uniqueProductIdentifierService", () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        EnvModule,
         TypeOrmTestingModule,
         MongooseTestingModule,
         TraceabilityEventsModule,

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { useAasConnectionFormStore } from "../../stores/aas.connection.form";
 
 const { t } = useI18n();

@@ -1,7 +1,7 @@
 import type { TestingModule } from "@nestjs/testing";
 import { expect } from "@jest/globals";
-import { ConfigModule } from "@nestjs/config";
 import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
 import { KeycloakResourcesService } from "./infrastructure/keycloak-resources.service";
 import { KeycloakResourcesModule } from "./keycloak-resources.module";
 import { KeycloakResourcesController } from "./presentation/keycloak-resources.controller";

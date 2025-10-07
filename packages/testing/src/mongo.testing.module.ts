@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common'
-import { ConfigModule, ConfigService } from '@nestjs/config'
+import { ConfigModule } from '@nestjs/config'
 import { MongooseModule } from '@nestjs/mongoose'
+import { EnvModule, EnvService } from '@open-dpp/env'
 
-export function generateMongoConfig(configService: ConfigService) {
+export function generateMongoConfig(configService: EnvService) {
   return {
-    uri: `mongodb://${configService.get('MONGO_DB_HOST')}:${configService.get('MONGO_DB_PORT')}/`,
-    user: configService.get('DB_USERNAME'),
-    pass: configService.get('DB_PASSWORD'),
-    dbName: configService.get('DB_DATABASE'),
+    uri: `mongodb://${configService.get('OPEN_DPP_MONGODB_HOST')}:${configService.get('OPEN_DPP_MONGODB_PORT')}/`,
+    user: configService.get('OPEN_DPP_MONGODB_USER'),
+    pass: configService.get('OPEN_DPP_MONGODB_PASSWORD'),
+    dbName: configService.get('OPEN_DPP_DB_DATABASE'),
   }
 }
 
@@ -17,11 +18,11 @@ export function generateMongoConfig(configService: ConfigService) {
       isGlobal: true,
     }),
     MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
+      imports: [EnvModule],
+      useFactory: (configService: EnvService) => ({
         ...generateMongoConfig(configService),
       }),
-      inject: [ConfigService],
+      inject: [EnvService],
     }),
   ],
 })

@@ -12,6 +12,7 @@ import { assign, keys, pick } from "lodash";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import apiClient from "../lib/api-client";
+import { i18n } from "../translations/i18n.ts";
 
 type FormKitSchemaNode
   = | string // Text content
@@ -40,8 +41,8 @@ export const usePassportFormStore = defineStore("passport.form", () => {
   const { t } = i18n.global;
 
   const VALUE_FOR_OTHER_GRANULARITY_LEVEL = {
-    [GranularityLevel.MODEL]: t('builder.granularity.setOnModel'),
-    [GranularityLevel.ITEM]: t('builder.granularity.setOnItem'),
+    [GranularityLevel.MODEL]: t("builder.granularity.setOnModel"),
+    [GranularityLevel.ITEM]: t("builder.granularity.setOnItem"),
   };
 
   const getValueForOtherGranularityLevel = () => {

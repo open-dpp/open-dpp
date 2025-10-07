@@ -8,7 +8,7 @@ import {
 import { Public } from "@open-dpp/auth";
 import { SocketIoExceptionFilter } from "@open-dpp/exception";
 import { Server } from "socket.io";
-import { ChatService } from "./chat.service";
+import { ChatService } from "../chat.service";
 
 @WebSocketGateway({ cors: true, path: "/api/ai-socket" })
 @UseFilters(new SocketIoExceptionFilter())

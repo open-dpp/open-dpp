@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { UniqueProductIdentifierService } from '../infrastructure/unique-product-identifier.service';
-import { UniqueProductIdentifierMetadataDtoSchema } from './dto/unique-product-identifier-dto.schema';
-import { ModelsService } from '../../models/infrastructure/models.service';
-import { ItemsService } from '../../items/infrastructure/items.service';
+import { Injectable } from "@nestjs/common";
+import { ItemsService } from "../../items/infrastructure/items.service";
+import { ModelsService } from "../../models/infrastructure/models.service";
+import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
+import { UniqueProductIdentifierMetadataDtoSchema } from "./dto/unique-product-identifier-dto.schema";
 
 @Injectable()
 export class UniqueProductIdentifierApplicationService {
@@ -15,8 +15,8 @@ export class UniqueProductIdentifierApplicationService {
   async getMetadataByUniqueProductIdentifier(
     uniqueProductIdentifierId: string,
   ) {
-    const uniqueProductIdentifier =
-      await this.uniqueProductIdentifierService.findOneOrFail(
+    const uniqueProductIdentifier
+      = await this.uniqueProductIdentifierService.findOneOrFail(
         uniqueProductIdentifierId,
       );
 
@@ -26,7 +26,8 @@ export class UniqueProductIdentifierApplicationService {
     let organizationId;
     if (item) {
       organizationId = item.ownedByOrganizationId;
-    } else {
+    }
+    else {
       const model = await this.modelsService.findOneOrFail(
         uniqueProductIdentifier.referenceId,
       );

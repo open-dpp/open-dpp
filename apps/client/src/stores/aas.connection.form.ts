@@ -13,6 +13,7 @@ import { groupBy } from "lodash";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import apiClient from "../lib/api-client";
+import { i18n } from "../translations/i18n.ts";
 import { useErrorHandlingStore } from "./error.handling";
 
 function aasDropdownValue(parentIdShort: string, idShort: string) {
@@ -119,9 +120,9 @@ export const useAasConnectionFormStore = defineStore(
               {
                 "$formkit": "select",
                 "required": true,
-                "label": t('integrations.connections.aas.field'),
+                "label": t("integrations.connections.aas.field"),
                 "name": aasFieldId(index),
-                "placeholder": t('integrations.connections.aas.selectField'),
+                "placeholder": t("integrations.connections.aas.selectField"),
                 "options": aasProperties.value,
                 "data-cy": `aas-select-${index}`,
               },
@@ -129,7 +130,7 @@ export const useAasConnectionFormStore = defineStore(
           },
           {
             $el: "div",
-            children: t('integrations.connections.aas.isLinked'),
+            children: t("integrations.connections.aas.isLinked"),
             attrs: {
               class: "flex",
             },
@@ -143,8 +144,8 @@ export const useAasConnectionFormStore = defineStore(
               {
                 "$formkit": "select",
                 "required": true,
-                "label": t('integrations.connections.aas.modelField'),
-                "placeholder": t('integrations.connections.aas.selectModelField'), // Add this line
+                "label": t("integrations.connections.aas.modelField"),
+                "placeholder": t("integrations.connections.aas.selectModelField"), // Add this line
                 "name": dppFieldId(index),
                 "options": templateOptions.value,
                 "data-cy": `dpp-select-${index}`,
@@ -235,7 +236,7 @@ export const useAasConnectionFormStore = defineStore(
       }
       catch (e) {
         errorHandlingStore.logErrorWithNotification(
-          t('integrations.connections.errorSave'),
+          t("integrations.connections.errorSave"),
           e,
         );
       }
@@ -297,7 +298,7 @@ export const useAasConnectionFormStore = defineStore(
       }
       catch (e) {
         errorHandlingStore.logErrorWithNotification(
-          t('integrations.connections.errorSwitch'),
+          t("integrations.connections.errorSwitch"),
           e,
         );
       }

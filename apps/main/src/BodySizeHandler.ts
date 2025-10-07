@@ -1,6 +1,6 @@
 import type { INestApplication } from "@nestjs/common";
 import type { NextFunction, Request, Response } from "express";
-import { ConfigService } from "@nestjs/config";
+import { EnvService } from "@open-dpp/env";
 import { json } from "express";
 
 /**
@@ -13,9 +13,9 @@ export function applyBodySizeHandler(app: INestApplication) {
 
   // Single JSON body parser selector based on a precise integration route match
   const integrationRouteRegex = /^\/organizations\/[^/]+\/integration(?:\/|$)/;
-  const defaultJsonLimit = configService.get('OPEN_DPP_JSON_LIMIT_DEFAULT');
+  const defaultJsonLimit = configService.get("OPEN_DPP_JSON_LIMIT_DEFAULT");
   const integrationJsonLimit = configService.get(
-    'OPEN_DPP_JSON_LIMIT_INTEGRATION',
+    "OPEN_DPP_JSON_LIMIT_INTEGRATION",
   );
   const defaultJsonParser = json({ limit: defaultJsonLimit });
   const integrationJsonParser = json({ limit: integrationJsonLimit });

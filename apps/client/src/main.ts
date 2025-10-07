@@ -2,7 +2,7 @@ import {
   createAutoAnimatePlugin,
   createMultiStepPlugin,
 } from "@formkit/addons";
-import { de } from "@formkit/i18n";
+import { de, en } from "@formkit/i18n";
 import { genesisIcons } from "@formkit/icons";
 import { defaultConfig, plugin } from "@formkit/vue";
 import { createPinia } from "pinia";
@@ -14,6 +14,7 @@ import keycloakIns, { initializeKeycloak } from "./lib/keycloak";
 import { router } from "./router";
 import { useIndexStore } from "./stores";
 import { useOrganizationsStore } from "./stores/organizations";
+import { i18n } from "./translations/i18n.ts";
 import "./index.css";
 import "@formkit/addons/css/multistep";
 

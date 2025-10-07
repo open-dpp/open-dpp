@@ -5,6 +5,7 @@ import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Sector } from "@open-dpp/api-client";
 import { AuthContext } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import {
   ignoreIds,

@@ -2,6 +2,7 @@
 import type { DataFieldDto, DataSectionDto } from "@open-dpp/api-client";
 import { FolderIcon } from "@heroicons/vue/16/solid";
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import { useProductPassportStore } from "../../stores/product-passport";
 import DataFieldView from "./DataFieldView.vue";
 
@@ -9,7 +10,7 @@ const props = defineProps<{
   dataSection: DataSectionDto;
   rowIndex: number;
 }>();
-
+const { t } = useI18n();
 const productPassportStore = useProductPassportStore();
 const subSections = computed(() =>
   productPassportStore.findSubSections(props.dataSection.id),
@@ -69,8 +70,9 @@ function getDatafieldValue(rowIndex: number, dataField: DataFieldDto) {
                 :to="`?sectionId=${subSection.id}&row=${props.rowIndex}&parentSectionId=${dataSection.id}`"
                 :data-cy="subSection.id"
                 class="font-medium text-indigo-600 hover:text-indigo-500"
-                >{{ t('presentation.moreInfo') }}</router-link
               >
+                {{ t('presentation.moreInfo') }}
+              </router-link>
             </div>
           </li>
         </ul>

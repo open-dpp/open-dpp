@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import type { TemplateGetAllDto } from "@open-dpp/api-client";
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import ModelTemplateList from "../../components/models/ModelTemplateList.vue";
 import apiClient from "../../lib/api-client";
 import { useNotificationStore } from "../../stores/notification";
-import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{
   organizationId: string;
@@ -20,12 +20,12 @@ const isMarketplaceSelected = ref<boolean>(false);
 
 async function onSubmit() {
   if (!name.value) {
-    notificationStore.addErrorNotification(t('models.form.name.error')));
+    notificationStore.addErrorNotification(t("models.form.name.error"));
     return;
   }
   if (!selectedTemplate.value) {
     notificationStore.addErrorNotification(
-        t('models.form.passportDraft.error'),
+      t("models.form.passportDraft.error"),
     );
     return;
   }

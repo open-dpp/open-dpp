@@ -5,11 +5,12 @@ import type {
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import apiClient from "../lib/api-client";
+import { i18n } from "../translations/i18n.ts";
 import { useErrorHandlingStore } from "./error.handling";
 
 export const useAasConnectionStore = defineStore("aas-integration", () => {
-    const { t } = i18n.global;
-    const aasConnections = ref<AasConnectionGetAllDto[]>([]);
+  const { t } = i18n.global;
+  const aasConnections = ref<AasConnectionGetAllDto[]>([]);
   const errorHandlingStore = useErrorHandlingStore();
   const fetchConnections = async () => {
     try {
@@ -18,7 +19,7 @@ export const useAasConnectionStore = defineStore("aas-integration", () => {
     }
     catch (error) {
       errorHandlingStore.logErrorWithNotification(
-          t('integrations.connections.errorLoad'),
+        t("integrations.connections.errorLoad"),
         error,
       );
     }

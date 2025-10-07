@@ -48,6 +48,7 @@
     "@nestjs/websockets": "^11.1.6",
     "@open-dpp/api-client": "workspace:*",
     "@open-dpp/auth": "workspace:*",
+    "@open-dpp/env": "workspace:*",
     "@open-dpp/exception": "workspace:*",
     "axios": "^1.12.2",
     "class-transformer": "^0.5.1",

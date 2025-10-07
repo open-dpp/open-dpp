@@ -3,6 +3,7 @@ import process from "node:process";
 import { HttpService } from "@nestjs/axios";
 import { FileValidator } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { EnvService } from "@open-dpp/env";
 import FormData from "form-data";
 import { firstValueFrom } from "rxjs";
 
@@ -15,7 +16,7 @@ export class VirusScanFileValidator extends FileValidator<VirusScanValidatorOpti
   private readonly configService = new EnvService(new ConfigService());
 
   async isValid(file?: Express.Multer.File): Promise<boolean> {
-    const clamAvUrl = `${this.configService.get("CLAMAV_URL")}:${this.configService.get("CLAMAV_PORT")}`;
+    const clamAvUrl = `${this.configService.get("OPEN_DPP_CLAMAV_URL")}:${this.configService.get("OPEN_DPP_CLAMAV_PORT")}`;
     try {
       const form = new FormData();
 

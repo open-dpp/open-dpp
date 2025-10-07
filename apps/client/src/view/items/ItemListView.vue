@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import type { ItemDto } from "@open-dpp/api-client";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import ItemList from "../../components/items/ItemList.vue";
 import apiClient from "../../lib/api-client";
-import { useI18n } from 'vue-i18n';
 
-const route = useRoute();
 const { t } = useI18n();
-const buttonLabel = computed(() => t('items.new'));
+const route = useRoute();
+const buttonLabel = computed(() => t("items.new"));
 
 const items = ref<ItemDto[]>([]);
 

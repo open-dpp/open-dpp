@@ -3,7 +3,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { Injectable, Logger } from "@nestjs/common";
 import { AiConfigurationService } from "./ai-configuration/infrastructure/ai-configuration.service";
-import { AiService } from "./ai.service";
+import { AiService } from "./infrastructure/ai.service";
 import { McpClientService } from "./mcp-client/mcp-client.service";
 import { PassportService } from "./passports/passport.service";
 

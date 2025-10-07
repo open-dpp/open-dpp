@@ -1,6 +1,6 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
-const asBoolean = z.string().transform((val) => val.toLowerCase() === 'true');
+const asBoolean = z.string().transform(val => val.toLowerCase() === 'true')
 
 const envSchema = z.object({
   // Common
@@ -54,19 +54,19 @@ const envSchema = z.object({
     .or(z.number())
     .optional()
     .default('50mb'),
-});
+})
 
 export function validateEnv(env: Record<string, any>): Record<string, any> {
-  const result = envSchema.safeParse(env);
+  const result = envSchema.safeParse(env)
 
   if (result.error) {
     throw new Error(
-      'Environment is not properly configured: \n' +
-        z.prettifyError(result.error),
-    );
+      `Environment is not properly configured: \n${
+        z.prettifyError(result.error)}`,
+    )
   }
 
-  return result.data;
+  return result.data
 }
 
-export type Env = z.infer<typeof envSchema>;
+export type Env = z.infer<typeof envSchema>

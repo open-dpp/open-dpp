@@ -1,4 +1,5 @@
 import type { RouteLocationNormalizedGeneric, RouteRecordRaw } from "vue-router";
+import { localizedBreadcrumb } from "../../lib/breadcrumbs.ts";
 import { useLayoutStore } from "../../stores/layout";
 
 export const STATISTICS: RouteRecordRaw = {
@@ -15,7 +16,7 @@ export const STATISTICS: RouteRecordRaw = {
 export function statisticBreadcrumbs(to: RouteLocationNormalizedGeneric) {
   return [
     {
-      name: "Auswertungen",
+      name: localizedBreadcrumb("statistics.statistics"),
       route: STATISTICS,
       params: to.params,
     },

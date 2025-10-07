@@ -4,9 +4,11 @@ import {
   UserCircleIcon,
 } from "@heroicons/vue/16/solid";
 import { onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import BaseButton from "../../components/presentation-components/BaseButton.vue";
 import { MsgStatus, Sender, useAiAgentStore } from "../../stores/ai-agent";
 
+const { t } = useI18n();
 const aiAgentStore = useAiAgentStore();
 
 const input = ref("");
@@ -70,9 +72,11 @@ function sendMessage() {
         @keydown.enter.exact.prevent="sendMessage"
         @keydown.shift.enter.exact.prevent="input += '\n'"
       />
-      <BaseButton variant="primary" @click="sendMessage">{{
-        t('common.send')
-      }}</BaseButton>
+      <BaseButton variant="primary" @click="sendMessage">
+        {{
+          t('common.send')
+        }}
+      </BaseButton>
     </div>
   </div>
 </template>

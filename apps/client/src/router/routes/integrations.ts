@@ -1,5 +1,6 @@
 import type { RouteLocationNormalizedGeneric, RouteRecordRaw } from "vue-router";
 import { PRO_ALPHA_INTEGRATION_ID } from "../../const";
+import { localizedBreadcrumb, textOrLocalizedFallback } from "../../lib/breadcrumbs.ts";
 import { useLayoutStore } from "../../stores/layout";
 
 export const INTEGRATIONS: RouteRecordRaw = {
@@ -15,7 +16,10 @@ export const INTEGRATIONS: RouteRecordRaw = {
 export function integrationBreadcrumbs(to: RouteLocationNormalizedGeneric) {
   return [
     {
-      name: "Integrationen",
+      name: {
+        text: "integrations.integrations",
+        localized: true,
+      },
       route: INTEGRATIONS,
       params: to.params,
     },
@@ -36,7 +40,10 @@ function aasConnectionListBreadcrumbs(to: RouteLocationNormalizedGeneric) {
   return [
     ...integrationBreadcrumbs(to),
     {
-      name: "Proalpha",
+      name: {
+        text: "Proalpha",
+        localized: false,
+      },
       route: AAS_CONNECTION_LIST,
       params: to.params,
     },
@@ -57,7 +64,10 @@ export function aasConnectionBreadcrumbs(to: RouteLocationNormalizedGeneric) {
   return [
     ...aasConnectionListBreadcrumbs(to),
     {
-      name: `${to.params.connectionId as string}` || "Verbindung",
+      name: textOrLocalizedFallback(
+        `${to.params.connectionId as string}`,
+        "integrations.connections.label",
+      ),
       route: AAS_CONNECTION,
       params: to.params,
     },
@@ -78,7 +88,7 @@ export function aiIntegrationBreadcrumbs(to: RouteLocationNormalizedGeneric) {
   return [
     ...integrationBreadcrumbs(to),
     {
-      name: "KI-Integrationen",
+      name: localizedBreadcrumb("integrations.ai.label"),
       route: AI_INTEGRATION,
       params: to.params,
     },
@@ -94,7 +104,7 @@ export const AAS_CONNECTION_CREATE: RouteRecordRaw = {
     layoutStore.breadcrumbs = [
       ...aasConnectionListBreadcrumbs(to),
       {
-        name: "Erstellen",
+        name: localizedBreadcrumb("common.create"),
         route: AAS_CONNECTION_CREATE,
         params: to.params,
       },

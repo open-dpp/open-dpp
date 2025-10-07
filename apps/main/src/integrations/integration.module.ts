@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { PermissionModule } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
 import { ItemDoc, ItemSchema } from "../items/infrastructure/item.schema";
 import { ItemsService } from "../items/infrastructure/items.service";
 import { ItemsApplicationService } from "../items/presentation/items-application.service";

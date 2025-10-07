@@ -5,9 +5,9 @@ import { ItemsService } from "../../items/infrastructure/items.service";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
 import {
-  UniqueProductIdentifierMetadataDtoSchema,
   UniqueProductIdentifierReferenceDtoSchema,
 } from "./dto/unique-product-identifier-dto.schema";
+import { UniqueProductIdentifierApplicationService } from "./unique.product.identifier.application.service";
 
 @Controller()
 export class UniqueProductIdentifierController {
@@ -15,17 +15,20 @@ export class UniqueProductIdentifierController {
   private readonly uniqueProductIdentifierService: UniqueProductIdentifierService;
   private readonly itemService: ItemsService;
   private readonly permissionsService: PermissionService;
+  private readonly uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService;
 
   constructor(
     modelsService: ModelsService,
     uniqueProductIdentifierService: UniqueProductIdentifierService,
     itemService: ItemsService,
     permissionsService: PermissionService,
+    uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
   ) {
     this.modelsService = modelsService;
     this.uniqueProductIdentifierService = uniqueProductIdentifierService;
     this.itemService = itemService;
     this.permissionsService = permissionsService;
+    this.uniqueProductIdentifierApplicationService = uniqueProductIdentifierApplicationService;
   }
 
   @Get("organizations/:orgaId/unique-product-identifiers/:id/reference")

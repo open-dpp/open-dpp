@@ -1,4 +1,5 @@
 import type { RouteLocationNormalizedGeneric, RouteRecordRaw } from "vue-router";
+import { localizedBreadcrumb, textOrLocalizedFallback } from "../../../lib/breadcrumbs.ts";
 import { useDraftStore } from "../../../stores/draft";
 import { useLayoutStore } from "../../../stores/layout";
 
@@ -15,7 +16,7 @@ export const DRAFT_LIST: RouteRecordRaw = {
 function draftListBreadcrumbs(to: RouteLocationNormalizedGeneric) {
   return [
     {
-      name: localizedBreadcrumb('draft.passTemplates'),
+      name: localizedBreadcrumb("draft.passTemplates"),
       route: DRAFT_LIST,
       params: to.params,
     },
@@ -43,7 +44,7 @@ export async function draftBreadcrumbs(to: RouteLocationNormalizedGeneric) {
   return [
     ...draftListBreadcrumbs(to),
     {
-      name: textOrLocalizedFallback(draftName || draftId, 'draft.draft'),
+      name: textOrLocalizedFallback(draftName || draftId, "draft.draft"),
       route: DRAFT,
       params: to.params,
     },
@@ -60,7 +61,7 @@ export const DRAFT_CREATE: RouteRecordRaw = {
     layoutStore.breadcrumbs = [
       ...draftListBreadcrumbs(to),
       {
-        name: localizedBreadcrumb('common.create'),
+        name: localizedBreadcrumb("common.create"),
         route: DRAFT_CREATE,
         params: to.params,
       },

@@ -2,6 +2,7 @@ import type { ModelCreateDto, ModelDto } from "@open-dpp/api-client";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import apiClient from "../lib/api-client";
+import { i18n } from "../translations/i18n.ts";
 import { useErrorHandlingStore } from "./error.handling";
 
 export const useModelsStore = defineStore("models", () => {
@@ -13,8 +14,9 @@ export const useModelsStore = defineStore("models", () => {
     try {
       const response = await apiClient.dpp.models.getAll();
       models.value = response.data;
-    } catch (e) {
-      errorHandlingStore.logErrorWithNotification(t('notifications.error'), e);
+    }
+    catch (e) {
+      errorHandlingStore.logErrorWithNotification(t("notifications.error"), e);
     }
   };
 

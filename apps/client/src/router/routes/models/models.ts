@@ -1,4 +1,5 @@
 import type { RouteLocationNormalizedGeneric, RouteRecordRaw } from "vue-router";
+import { localizedBreadcrumb } from "../../../lib/breadcrumbs.ts";
 import { useLayoutStore } from "../../../stores/layout";
 import { useModelsStore } from "../../../stores/models";
 import { ITEMS_PARENT } from "./items";
@@ -13,15 +14,16 @@ export const MODEL_LIST: RouteRecordRaw = {
   },
 };
 
-function modelListBreadcrumbs(to: RouteLocationNormalizedGeneric) {
+export function modelListBreadcrumbs(to: RouteLocationNormalizedGeneric) {
   return [
-  // ...organizationBreadcrumbs(to),
-  {
-    name: localizedBreadcrumb('models.list.title'),
-    route: MODEL_LIST,
-    params: to.params,
-  },
-];
+    // ...organizationBreadcrumbs(to),
+    {
+      name: localizedBreadcrumb("models.list.title"),
+      route: MODEL_LIST,
+      params: to.params,
+    },
+  ];
+}
 
 export const MODEL: RouteRecordRaw = {
   path: "",
@@ -58,7 +60,7 @@ export async function modelBreadcrumbs(to: RouteLocationNormalizedGeneric) {
     ...modelListBreadcrumbs(to),
     {
       name: {
-        text: 'models.pass',
+        text: "models.pass",
         localized: true,
       },
       route: MODEL,
@@ -76,7 +78,7 @@ export const MODEL_QRCODE: RouteRecordRaw = {
     layoutStore.breadcrumbs = [
       ...(await modelBreadcrumbs(to)),
       {
-        name: localizedBreadcrumb('common.qrCode'),
+        name: localizedBreadcrumb("common.qrCode"),
         route: MODEL_QRCODE,
         params: to.params,
       },
@@ -99,7 +101,7 @@ export const MODEL_CREATE: RouteRecordRaw = {
     layoutStore.breadcrumbs = [
       ...modelListBreadcrumbs(to),
       {
-        name: localizedBreadcrumb('common.create'),
+        name: localizedBreadcrumb("common.create"),
         route: MODEL_CREATE,
         params: to.params,
       },

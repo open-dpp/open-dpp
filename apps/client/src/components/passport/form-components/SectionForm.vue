@@ -5,6 +5,7 @@ import type {
 } from "../../../stores/passport.form";
 import { FolderIcon } from "@heroicons/vue/24/outline";
 import { ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { useErrorHandlingStore } from "../../../stores/error.handling";
 import { useNotificationStore } from "../../../stores/notification";
@@ -62,11 +63,12 @@ async function onSubmit() {
       props.row,
     );
     notificationStore.addSuccessNotification(
-      t('models.form.section.saveSuccess'),
+      t("models.form.section.saveSuccess"),
     );
-  } catch (e) {
+  }
+  catch (e) {
     errorHandlingStore.logErrorWithNotification(
-      t('models.form.section.saveError'),
+      t("models.form.section.saveError"),
       e,
     );
   }

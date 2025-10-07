@@ -13,6 +13,7 @@ import {
   PlusCircleIcon,
 } from "@heroicons/vue/20/solid";
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { useIndexStore } from "../../stores";
 import { useOrganizationsStore } from "../../stores/organizations";
@@ -20,6 +21,7 @@ import { useOrganizationsStore } from "../../stores/organizations";
 const organizationsStore = useOrganizationsStore();
 const indexStore = useIndexStore();
 const router = useRouter();
+const { t } = useI18n();
 
 const nameOfSelectedOrganization = computed(() => {
   if (indexStore.selectedOrganization) {
@@ -42,9 +44,11 @@ function setOrganization(organizationId: string) {
     :model-value="indexStore.selectedOrganization"
     @update:model-value="(org) => setOrganization(org.id)"
   >
-    <ListboxLabel class="block text-sm/6 font-medium text-gray-900">{{
-      t('organizations.select')
-    }}</ListboxLabel>
+    <ListboxLabel class="block text-sm/6 font-medium text-gray-900">
+      {{
+        t('organizations.select')
+      }}
+    </ListboxLabel>
     <div class="relative flex flex-row gap-2">
       <div
         v-if="organizationsStore.organizations.length > 0"
@@ -113,8 +117,7 @@ function setOrganization(organizationId: string) {
           <span
             v-if="organizationsStore.organizations.length === 0"
             class="text-md pl-1"
-            >{{ t('organizations.new') }}</span
-          >
+          >{{ t('organizations.new') }}</span>
         </button>
       </router-link>
       <router-link v-if="false" to="/organizations">

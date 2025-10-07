@@ -1,19 +1,20 @@
 import type { DynamicModule, Type } from '@nestjs/common'
 import type { DataSourceOptions } from 'typeorm'
 import { Module } from '@nestjs/common'
-import { ConfigModule, ConfigService } from '@nestjs/config'
+import { ConfigModule } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
+import { EnvModule, EnvService } from '@open-dpp/env'
 
 export function generateConfig(
-  configService: ConfigService,
+  configService: EnvService,
 ): DataSourceOptions {
   return {
     type: 'postgres',
-    host: configService.get('DB_HOST'),
-    port: configService.get('DB_PORT'),
-    username: configService.get('DB_USERNAME'),
-    password: configService.get('DB_PASSWORD'),
-    database: configService.get('DB_DATABASE'),
+    host: configService.get('OPEN_DPP_DB_HOST'),
+    port: configService.get('OPEN_DPP_DB_PORT'),
+    username: configService.get('OPEN_DPP_DB_USER'),
+    password: configService.get('OPEN_DPP_DB_PASSWORD'),
+    database: configService.get('OPEN_DPP_DB_DATABASE'),
     synchronize: true,
     dropSchema: false,
   }
@@ -29,14 +30,14 @@ export class TypeOrmTestingModule {
           isGlobal: true,
         }),
         TypeOrmModule.forRootAsync({
-          imports: [ConfigModule],
-          useFactory: (configService: ConfigService) => ({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
             ...generateConfig(
               configService,
             ),
             entities,
           }),
-          inject: [ConfigService],
+          inject: [EnvService],
         }),
         TypeOrmModule.forFeature(entities),
       ],

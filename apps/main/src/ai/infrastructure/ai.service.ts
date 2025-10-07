@@ -1,11 +1,11 @@
 import type { StructuredToolInterface } from "@langchain/core/tools";
-import type { AiProvider_TYPE } from "./ai-configuration/domain/ai-configuration";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatMistralAI } from "@langchain/mistralai";
 import { ChatOllama } from "@langchain/ollama";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { AiProvider } from "./ai-configuration/domain/ai-configuration";
+import { AiProvider } from "@open-dpp/api-client";
+import { AiProvider_TYPE } from "../ai-configuration/domain/ai-configuration";
 
 @Injectable()
 export class AiService {
@@ -20,13 +20,13 @@ export class AiService {
       return new ChatMistralAI({
         model,
         temperature: 0,
-        apiKey: this.configService.get('OPEN_DPP_MISTRAL_API_KEY'),
+        apiKey: this.configService.get("OPEN_DPP_MISTRAL_API_KEY"),
       });
     }
 
     return new ChatOllama({
       model,
-      baseUrl: this.configService.get('OPEN_DPP_OLLAMA_URL'),
+      baseUrl: this.configService.get("OPEN_DPP_OLLAMA_URL"),
     });
   }
 

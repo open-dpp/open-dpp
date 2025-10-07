@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
+import { EnvModule } from "@open-dpp/env";
 import { KeycloakResourcesModule } from "../keycloak-resources/keycloak-resources.module";
 import { OrganizationsModule } from "../organizations/organizations.module";
 import { UsersModule } from "../users/users.module";

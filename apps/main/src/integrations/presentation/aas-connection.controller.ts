@@ -13,8 +13,8 @@ import {
   Post,
   Request,
 } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { PermissionService, Public } from "@open-dpp/auth";
+import { EnvService } from "@open-dpp/env";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { itemToDto } from "../../items/presentation/dto/item.dto";
 import { ItemsApplicationService } from "../../items/presentation/items-application.service";
@@ -75,8 +75,8 @@ export class AasConnectionController {
     @Param("connectionId") connectionId: string,
     @Body() aasJson: any,
   ) {
-    if (apiToken !== this.configService.get('OPEN_DPP_AAS_TOKEN')) {
-      throw new ForbiddenException('Wrong api token');
+    if (apiToken !== this.configService.get("OPEN_DPP_AAS_TOKEN")) {
+      throw new ForbiddenException("Wrong api token");
     }
     const aasConnection
       = await this.aasConnectionService.findById(connectionId);

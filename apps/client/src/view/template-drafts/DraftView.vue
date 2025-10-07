@@ -2,6 +2,7 @@
 import type { SectionDto, VisibilityLevel } from "@open-dpp/api-client";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/vue/20/solid";
 import { computed, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import BaseButton from "../../components/BaseButton.vue";
 import BaseSectionHeader from "../../components/BaseSectionHeader.vue";
@@ -17,6 +18,7 @@ import {
 } from "../../stores/draftSidebar";
 import { useNotificationStore } from "../../stores/notification";
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 
@@ -98,10 +100,10 @@ onMounted(async () => {
       >
         <div>
           <h3 class="text-base/7 font-semibold text-gray-900">
-            {{ t('draft.passportDraft') + ' ' + draftStore.draft.name }}
+            {{ `${t('draft.passportDraft')} ${draftStore.draft.name}` }}
           </h3>
           <p class="mt-1 max-w-2xl text-sm/6 text-gray-500">
-            {{ t('draft.version') + ' ' + draftStore.draft.version }}
+            {{ `${t('draft.version')} ${draftStore.draft.version}` }}
           </p>
         </div>
         <div class="">
@@ -115,15 +117,17 @@ onMounted(async () => {
           <BaseButton
             v-if="currentSections.parentSection"
             @click="navigateBackToParent"
-            >{{ t('common.toHome') }}</BaseButton
           >
+            {{ t('common.toHome') }}
+          </BaseButton>
           <BaseButton
             v-if="currentSections.parentSection?.parentId"
             @click="navigateBackToParent"
-            >{{
-              t('common.backTo', { link: currentSections.parentSection.name })
-            }}</BaseButton
           >
+            {{
+              t('common.backTo', { link: currentSections.parentSection.name })
+            }}
+          </BaseButton>
         </div>
         <AddSection
           :parent-granularity-level="

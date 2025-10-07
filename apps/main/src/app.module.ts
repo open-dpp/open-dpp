@@ -1,18 +1,19 @@
 import path, { join } from "node:path";
 import { HttpModule } from "@nestjs/axios";
 import { Module } from "@nestjs/common";
-import { ConfigModule, ConfigService } from "@nestjs/config";
+import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthModule, KeycloakAuthGuard } from "@open-dpp/auth";
+import { EnvModule, EnvService, validateEnv } from "@open-dpp/env";
 import { AiConfigurationModule } from "./ai/ai-configuration/ai-configuration.module";
 import { AiModule } from "./ai/ai.module";
-import { ChatGateway } from "./ai/chat.gateway";
 import { ChatService } from "./ai/chat.service";
 import { McpClientModule } from "./ai/mcp-client/mcp-client.module";
 import { PassportModule } from "./ai/passports/passport.module";
+import { ChatGateway } from "./ai/presentation/chat.gateway";
 import { generateConfig, generateMongoConfig } from "./database/config";
 import { IntegrationModule } from "./integrations/integration.module";
 import { ItemsModule } from "./items/items.module";
@@ -33,7 +34,7 @@ import { UsersModule } from "./users/users.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
-      validate: (env) => validateEnv(env),
+      validate: env => validateEnv(env),
       isGlobal: true,
       expandVariables: true,
     }),

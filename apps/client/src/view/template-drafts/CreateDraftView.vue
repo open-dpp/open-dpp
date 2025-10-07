@@ -1,9 +1,11 @@
 <script lang="ts" setup>
 import type { TemplateDraftCreateDto } from "@open-dpp/api-client";
+import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import CreateDraftForm from "../../components/template-drafts/CreateDraftForm.vue";
 import { useDraftStore } from "../../stores/draft";
 
+const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
 

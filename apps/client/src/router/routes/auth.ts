@@ -1,4 +1,5 @@
 import type { RouteRecordRaw } from "vue-router";
+import { localizedBreadcrumb } from "../../lib/breadcrumbs.ts";
 import { useLayoutStore } from "../../stores/layout";
 
 export const PROFILE: RouteRecordRaw = {
@@ -7,7 +8,7 @@ export const PROFILE: RouteRecordRaw = {
   component: () => import("../../view/Profile.vue"),
   beforeEnter: () => {
     const layoutStore = useLayoutStore();
-    layoutStore.breadcrumbs = [{ name: "Profile", route: PROFILE }];
+    layoutStore.breadcrumbs = [{ name: localizedBreadcrumb("user.profile"), route: PROFILE }];
   },
 };
 

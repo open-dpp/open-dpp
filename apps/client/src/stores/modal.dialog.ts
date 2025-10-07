@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { i18n } from "../translations/i18n.ts";
 import { useNotificationStore } from "./notification";
 
 type ConfirmAction = () => Promise<void>;
@@ -43,7 +44,7 @@ export const useModelDialogStore = defineStore("model-dialog-store", () => {
       }
       catch {
         const notificationStore = useNotificationStore();
-        notificationStore.addErrorNotification(t('common.unknownErrorOccured'));
+        notificationStore.addErrorNotification(t("common.unknownErrorOccured"));
       }
     }
     close();

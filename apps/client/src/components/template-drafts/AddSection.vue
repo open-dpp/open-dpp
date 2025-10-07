@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { GranularityLevel } from "@open-dpp/api-client";
+import { useI18n } from "vue-i18n";
 import {
   SidebarContentType,
   useDraftSidebarStore,
