@@ -36,6 +36,7 @@ import { diff } from "jest-diff";
 import _ from "lodash";
 import { createPinia, setActivePinia } from "pinia";
 import { rootClasses } from "../../formkit.theme.js";
+import { i18n } from "../../src/translations/i18n.ts";
 // Import commands.js using ES2015 syntax:
 import "./commands.js";
 import "../plugins/tailwind.js";
@@ -83,6 +84,7 @@ Cypress.Commands.add(
       ...basePlugins,
       ...(routerPlugin ? [routerPlugin] : []),
       pinia,
+      i18n,
       [
         FormKit,
         defaultConfig({

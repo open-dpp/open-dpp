@@ -28,7 +28,7 @@ describe("<Chat />", () => {
     cy.mountWithPinia(Chat, { router });
     cy.contains("Hello from ai agent").should("exist");
     cy.get("#question").type("Wie viel CO2 steckt in dem Produkt?");
-    cy.contains("Abschicken").click();
+    cy.contains("Senden").click();
     cy.get("@sendMessage").should(
       "have.been.calledWith",
       "Wie viel CO2 steckt in dem Produkt?",
