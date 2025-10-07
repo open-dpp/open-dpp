@@ -61,23 +61,23 @@ const envSchema = z.object({
     .optional()
     .default("50mb"),
 }).superRefine((val, ctx) => {
-    const hasUri = !!val.OPEN_DPP_MONGODB_URI;
-    const hasHostPort = !!val.OPEN_DPP_MONGODB_HOST && !!val.OPEN_DPP_MONGODB_PORT;
-    if (!hasUri && !hasHostPort) {
-      ctx.addIssue({
-        code: "custom",
-        message: 'Provide either OPEN_DPP_MONGODB_URI or both OPEN_DPP_MONGODB_HOST and OPEN_DPP_MONGODB_PORT.',
-        path: ['OPEN_DPP_MONGODB_URI'],
-      });
-    }
-    if (hasUri && hasHostPort) {
-      ctx.addIssue({
-        code: "custom",
-        message: 'Specify only one: OPEN_DPP_MONGODB_URI or host/port pair, not both.',
-        path: ['OPEN_DPP_MONGODB_URI'],
-      });
-    }
-})
+  const hasUri = !!val.OPEN_DPP_MONGODB_URI;
+  const hasHostPort = !!val.OPEN_DPP_MONGODB_HOST && !!val.OPEN_DPP_MONGODB_PORT;
+  if (!hasUri && !hasHostPort) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Provide either OPEN_DPP_MONGODB_URI or both OPEN_DPP_MONGODB_HOST and OPEN_DPP_MONGODB_PORT.",
+      path: ["OPEN_DPP_MONGODB_URI"],
+    });
+  }
+  if (hasUri && hasHostPort) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Specify only one: OPEN_DPP_MONGODB_URI or host/port pair, not both.",
+      path: ["OPEN_DPP_MONGODB_URI"],
+    });
+  }
+});
 
 export function validateEnv(env: Record<string, any>): Record<string, any> {
   const result = envSchema.safeParse(env);
