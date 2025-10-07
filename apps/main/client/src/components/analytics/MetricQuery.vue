@@ -41,6 +41,7 @@ import {
   DataFieldType,
   MeasurementType,
   TimePeriod,
+  DataSectionDto,
 } from '@open-dpp/api-client';
 import { useAnalyticsStore } from '../../stores/analytics';
 import { useModelsStore } from '../../stores/models';
@@ -49,7 +50,6 @@ import apiClient from '../../lib/api-client';
 import { VIEW_ROOT_URL } from '../../const';
 import Select from '../basics/Select.vue';
 import { z } from 'zod/v4';
-import { DataSection } from '../../../../src/product-passport/domain/product-passport';
 
 const modelStore = useModelsStore();
 const analyticsStore = useAnalyticsStore();
@@ -113,7 +113,7 @@ watch(
       const model = await modelStore.getModelById(newModelId);
       const response = await apiClient.dpp.templates.getById(model.templateId);
       dataFieldOptions.value = response.data.sections
-        .map((s: DataSection) =>
+        .map((s: DataSectionDto) =>
           s.dataFields
             .filter((d) => d.type === DataFieldType.NUMERIC_FIELD)
             .map((f) => ({ label: f.name, id: f.id })),
