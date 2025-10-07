@@ -21,6 +21,7 @@ import { KeycloakSyncOnStartupModule } from "./keycloak-sync-on-startup/keycloak
 import { MarketplaceModule } from "./marketplace/marketplace.module";
 import { MediaModule } from "./media/media.module";
 import { ModelsModule } from "./models/models.module";
+import { OrganizationEntity } from "./organizations/infrastructure/organization.entity";
 import { OrganizationsModule } from "./organizations/organizations.module";
 import { ProductPassportModule } from "./product-passport/product-passport.module";
 import { TemplateDraftModule } from "./template-draft/template-draft.module";
@@ -28,6 +29,7 @@ import { TemplateModule } from "./templates/template.module";
 import { TraceabilityEventsModule } from "./traceability-events/traceability-events.module";
 import { UniqueProductIdentifierModule } from "./unique-product-identifier/unique.product.identifier.module";
 import { CreateNonExistingUserGuard } from "./users/infrastructure/create-non-existing-user.guard";
+import { UserEntity } from "./users/infrastructure/user.entity";
 import { UsersModule } from "./users/users.module";
 
 @Module({
@@ -51,6 +53,7 @@ import { UsersModule } from "./users/users.module";
         migrationsTransactionMode: "each",
         migrationsRun: true,
         synchronize: true,
+        entities: [OrganizationEntity, UserEntity],
       }),
       inject: [EnvService],
     }),

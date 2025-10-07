@@ -1,4 +1,13 @@
+import { randomUUID } from "node:crypto";
 import { Expose } from "class-transformer";
+
+export interface UserCreateProps {
+  email: string;
+}
+export type UserDbProps = Omit<UserCreateProps, "template" | "model"> & {
+  id: string;
+  email: string;
+};
 
 export class User {
   @Expose()
@@ -7,12 +16,25 @@ export class User {
   @Expose()
   public readonly email: string;
 
-  constructor(id: string, email: string) {
+  private constructor(
+    id: string,
+    email: string,
+  ) {
     this.id = id;
     this.email = email;
   }
 
-  static create(data: { id: string; email: string }): User {
-    return new User(data.id, data.email);
+  public static create(data: UserCreateProps) {
+    return new User(
+      randomUUID(),
+      data.email,
+    );
+  }
+
+  public static loadFromDb(data: UserDbProps) {
+    return new User(
+      data.id,
+      data.email,
+    );
   }
 }

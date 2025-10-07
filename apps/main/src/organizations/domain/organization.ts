@@ -1,6 +1,20 @@
 import type { User } from "../../users/domain/user";
 import { randomUUID } from "node:crypto";
-import { Expose, instanceToPlain, plainToInstance } from "class-transformer";
+import { Expose } from "class-transformer";
+
+export interface OrganizationCreateProps {
+  name: string;
+  createdByUserId: string;
+  ownedByUserId: string;
+  members: User[];
+}
+export type OrganizationDbProps = Omit<OrganizationCreateProps, "template" | "model"> & {
+  id: string;
+  name: string;
+  createdByUserId: string;
+  ownedByUserId: string;
+  members: User[];
+};
 
 export class Organization {
   @Expose()
@@ -18,20 +32,38 @@ export class Organization {
   @Expose()
   readonly ownedByUserId: string = "";
 
-  static fromPlain(plain: Partial<Organization>) {
-    return plainToInstance(Organization, plain, {
-      excludeExtraneousValues: true,
-      exposeDefaultValues: true,
-    });
+  private constructor(
+    id: string,
+    name: string,
+    createdByUserId: string,
+    ownedByUserId: string,
+    members: User[],
+  ) {
+    this.id = id;
+    this.name = name;
+    this.createdByUserId = createdByUserId;
+    this.ownedByUserId = ownedByUserId;
+    this.members = members;
   }
 
-  static create(data: { name: string; user: User }) {
-    return Organization.fromPlain({
-      name: data.name,
-      createdByUserId: data.user.id,
-      ownedByUserId: data.user.id,
-      members: [data.user],
-    });
+  public static create(data: OrganizationCreateProps) {
+    return new Organization(
+      randomUUID(),
+      data.name,
+      data.createdByUserId,
+      data.ownedByUserId,
+      data.members,
+    );
+  }
+
+  public static loadFromDb(data: OrganizationDbProps) {
+    return new Organization(
+      data.id,
+      data.name,
+      data.createdByUserId,
+      data.ownedByUserId,
+      data.members,
+    );
   }
 
   join(user: User) {
@@ -42,9 +74,5 @@ export class Organization {
 
   isMember(user: User) {
     return this.members.some(m => m.id === user.id);
-  }
-
-  public toPlain() {
-    return instanceToPlain(this);
   }
 }

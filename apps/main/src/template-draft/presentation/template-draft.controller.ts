@@ -186,7 +186,6 @@ export class TemplateDraftController {
         publishedProductDataModel,
         User.create({
           email: req.authContext.keycloakUser.email,
-          id: req.authContext.keycloakUser.sub,
         }),
       );
       publishedProductDataModel.assignMarketplaceResource(

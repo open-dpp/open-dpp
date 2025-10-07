@@ -43,7 +43,9 @@ export class OrganizationsController {
     }
     const organization = Organization.create({
       name: createOrganizationDto.name,
-      user,
+      createdByUserId: user.id,
+      ownedByUserId: user.id,
+      members: [user],
     });
 
     return this.organizationsService.save(organization);

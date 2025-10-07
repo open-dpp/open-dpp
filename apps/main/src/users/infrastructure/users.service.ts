@@ -19,7 +19,9 @@ export class UsersService {
   }
 
   convertToDomain(userEntity: UserEntity) {
-    return new User(userEntity.id, userEntity.email);
+    return User.create({
+      email: userEntity.email,
+    });
   }
 
   async findOne(id: string) {
