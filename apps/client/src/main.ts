@@ -21,6 +21,10 @@ const pinia = createPinia();
 
 async function startApp() {
   const app = createApp(App).use(pinia);
+  app.use(i18n);
+
+  const indexStore = useIndexStore();
+
   app.use(
     plugin,
     defaultConfig({
@@ -30,12 +34,11 @@ async function startApp() {
       icons: {
         ...genesisIcons,
       },
-      locales: { de },
-      locale: "de",
+      locales: { de, en },
+      locale: indexStore.formkitLocale,
       plugins: [createMultiStepPlugin(), createAutoAnimatePlugin()],
     }),
   );
-  const indexStore = useIndexStore();
   if (!keycloakDisabled) {
     app.provide("$keycloak", keycloakIns);
     await initializeKeycloak(keycloakIns);

@@ -4,10 +4,11 @@ import { computed, ref, useAttrs } from "vue";
 import { useRouter } from "vue-router";
 import { useErrorHandlingStore } from "../../../stores/error.handling";
 import { useUniqueProductIdentifierStore } from "../../../stores/unique.product.identifier";
-
-const props = defineProps<{ id: string; className?: string }>();
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
+const { t } = useI18n();
+const props = defineProps<{ id: string; className?: string }>();
 
 const inputValue = ref<string>("");
 
@@ -26,8 +27,8 @@ async function onLinkClick() {
     }
     catch (e) {
       errorHandlingStore.logErrorWithNotification(
-        "Navigation zu Produktpass fehlgeschlagen",
-        e,
+          t('models.form.link.navigationError'),
+          e,
       );
     }
   }

@@ -5,7 +5,9 @@ import EmptyState from "../../components/models/EmptyState.vue";
 import { PRO_ALPHA_INTEGRATION_ID } from "../../const";
 import { useIndexStore } from "../../stores";
 import { useAasConnectionStore } from "../../stores/aas.connection";
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const fetchInFlight = ref(true);
 
 const aasIntegrationStore = useAasConnectionStore();
@@ -25,7 +27,7 @@ onMounted(async () => {
       <EmptyState
         v-else
         :button-link="`/organizations/${indexStore.selectedOrganization}/integrations/${PRO_ALPHA_INTEGRATION_ID}/connections/create`"
-        button-label="Neue Verbindung hinzufügen"
+        :button-label="t('integrations.connections.new')"
       />
     </div>
   </section>

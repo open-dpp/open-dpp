@@ -9,7 +9,9 @@ import {
 import { onMounted, onUnmounted, ref } from "vue";
 import { useMediaStore } from "../../stores/media";
 import RingLoader from "../RingLoader.vue";
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const props = defineProps<{
   media: MediaInfo;
   showType?: boolean;
@@ -62,7 +64,7 @@ onUnmounted(() => {
     >
       <div class="flex flex-row gap-2 w-fit mx-auto">
         <ExclamationTriangleIcon class="w-4 h-4 my-auto" />
-        <span>Datei nicht vorhanden</span>
+        <span>{{ t('file.notFound') }}</span>
       </div>
     </div>
     <div

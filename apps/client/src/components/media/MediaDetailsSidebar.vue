@@ -2,6 +2,9 @@
 import type { MediaInfo } from "./MediaInfo.interface";
 import { XMarkIcon } from "@heroicons/vue/24/outline";
 import MediaPreview from "./MediaPreview.vue";
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 defineProps<{
   media: MediaInfo;
@@ -29,7 +32,7 @@ const emits = defineEmits<{
     <dl class="flex flex-col gap-4">
       <div class="flex-auto">
         <dt class="font-semibold text-gray-900 dark:text-gray-100">
-          ID
+          {{ t('common.id') }}
         </dt>
         <dd class="text-sm/6 mt-1 text-gray-900 dark:text-white">
           {{ media.id }}
@@ -37,7 +40,7 @@ const emits = defineEmits<{
       </div>
       <div class="flex-auto">
         <dt class="font-semibold text-gray-900 dark:text-gray-100">
-          Vorschau
+          {{ t('media.preview') }}
         </dt>
         <dd class="text-sm/6 mt-1 text-gray-900 dark:text-white">
           <MediaPreview :media="media" />
@@ -45,7 +48,7 @@ const emits = defineEmits<{
       </div>
       <div class="flex-auto">
         <dt class="font-semibold text-gray-900 dark:text-gray-100">
-          Dateityp
+          {{ t('file.type') }}
         </dt>
         <dd class="text-sm/6 mt-1 text-gray-900 dark:text-white">
           {{ media.mimeType }}
@@ -53,7 +56,7 @@ const emits = defineEmits<{
       </div>
       <div class="flex-auto">
         <dt class="font-semibold text-gray-900 dark:text-gray-100">
-          Größe
+          {{ t('file.size') }}
         </dt>
         <dd class="text-sm/6 mt-1 text-gray-900 dark:text-white">
           {{ (media.size / 1024 / 1024).toFixed(1) }} MB
@@ -65,7 +68,7 @@ const emits = defineEmits<{
         class="bg-[#6BAD87] p-2 rounded text-white text-sm hover:cursor-pointer"
         @click="emits('close')"
       >
-        Schließen
+        {{ t('common.close') }}
       </button>
     </div>
   </div>

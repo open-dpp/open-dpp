@@ -9,14 +9,14 @@ import { json } from "express";
  * robust error handling for payload too large and invalid JSON parsing errors.
  */
 export function applyBodySizeHandler(app: INestApplication) {
-  const configService = app.get(ConfigService);
+  const configService = app.get(EnvService);
 
   // Single JSON body parser selector based on a precise integration route match
   const integrationRouteRegex = /^\/organizations\/[^/]+\/integration(?:\/|$)/;
-  const defaultJsonLimit
-    = configService.get<string>("JSON_LIMIT_DEFAULT") || "10mb";
-  const integrationJsonLimit
-    = configService.get<string>("JSON_LIMIT_INTEGRATION") || "50mb";
+  const defaultJsonLimit = configService.get('OPEN_DPP_JSON_LIMIT_DEFAULT');
+  const integrationJsonLimit = configService.get(
+    'OPEN_DPP_JSON_LIMIT_INTEGRATION',
+  );
   const defaultJsonParser = json({ limit: defaultJsonLimit });
   const integrationJsonParser = json({ limit: integrationJsonLimit });
 

@@ -14,6 +14,7 @@ import { MediaController } from "./presentation/media.controller";
       },
     ]),
     HttpModule,
+    EnvModule,
   ],
   providers: [MediaService],
   controllers: [MediaController],

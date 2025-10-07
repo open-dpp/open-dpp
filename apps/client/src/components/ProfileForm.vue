@@ -1,7 +1,19 @@
 <script lang="ts" setup>
-import { useProfileStore } from "../stores/profile";
+import { useI18n } from 'vue-i18n';
+import { useProfileStore } from '../stores/profile';
+import { inject, watch } from 'vue';
+import { LAST_SELECTED_LANGUAGE } from '../const';
 
+const { t, locale } = useI18n();
 const profileStore = useProfileStore();
+const config = inject<{ locale: string }>(Symbol.for('FormKitConfig'));
+
+watch(locale, (newLocale) => {
+  localStorage.setItem(LAST_SELECTED_LANGUAGE, newLocale as string);
+  if (config) {
+    config.locale = newLocale.split('-')[0];
+  }
+});
 </script>
 
 <template>
@@ -10,7 +22,7 @@ const profileStore = useProfileStore();
       <div class="grid grid-cols-1 gap-x-8 gap-y-10 pb-12 md:grid-cols-3">
         <div>
           <h2 class="text-base font-semibold leading-7 text-gray-900">
-            Persönliche Informationen
+            {{ t('user.personalInformation') }}
           </h2>
         </div>
 
@@ -21,7 +33,8 @@ const profileStore = useProfileStore();
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="first-name"
-            >Vorname</label>
+              >{{ t('user.firstName') }}</label
+            >
             <div class="mt-2">
               <input
                 id="first-name"
@@ -39,7 +52,8 @@ const profileStore = useProfileStore();
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="last-name"
-            >Nachname</label>
+              >{{ t('user.lastName') }}</label
+            >
             <div class="mt-2">
               <input
                 id="last-name"
@@ -57,7 +71,8 @@ const profileStore = useProfileStore();
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="email"
-            >Email-Adresse</label>
+              >{{ t('common.form.email.label') }}</label
+            >
             <div class="mt-2">
               <input
                 id="email"
@@ -67,7 +82,36 @@ const profileStore = useProfileStore();
                 type="email"
                 disabled
                 :value="profileStore.profile?.email"
+              />
+            </div>
+          </div>
+        </div>
+        <div>
+          <h2 class="text-base font-semibold leading-7 text-gray-900">
+            {{ t('user.displaySettings') }}
+          </h2>
+        </div>
+
+        <div
+          class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2"
+        >
+          <div class="sm:col-span-6">
+            <label
+              class="block text-sm font-medium leading-6 text-gray-900"
+              for="email"
+              >{{ t('user.language') }}</label
+            >
+            <div class="mt-2">
+              <select
+                id="email"
+                autocomplete="email"
+                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                name="language"
+                v-model="locale"
               >
+                <option value="de-DE">Deutsch</option>
+                <option value="en-US">English</option>
+              </select>
             </div>
           </div>
         </div>

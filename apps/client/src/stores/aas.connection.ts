@@ -8,7 +8,8 @@ import apiClient from "../lib/api-client";
 import { useErrorHandlingStore } from "./error.handling";
 
 export const useAasConnectionStore = defineStore("aas-integration", () => {
-  const aasConnections = ref<AasConnectionGetAllDto[]>([]);
+    const { t } = i18n.global;
+    const aasConnections = ref<AasConnectionGetAllDto[]>([]);
   const errorHandlingStore = useErrorHandlingStore();
   const fetchConnections = async () => {
     try {
@@ -17,7 +18,7 @@ export const useAasConnectionStore = defineStore("aas-integration", () => {
     }
     catch (error) {
       errorHandlingStore.logErrorWithNotification(
-        "Laden der Verbindungen fehlgeschlagen:",
+          t('integrations.connections.errorLoad'),
         error,
       );
     }

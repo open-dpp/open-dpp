@@ -8,7 +8,9 @@ import { useNotificationStore } from "../../../stores/notification";
 import { usePassportFormStore } from "../../../stores/passport.form";
 import MediaModal from "../../media/MediaModal.vue";
 import MediaPreview from "../../media/MediaPreview.vue";
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const props = defineProps<{
   id: string;
   label: string;
@@ -88,16 +90,16 @@ async function uploadFile() {
       selectedLocalFile.value,
       progress => (uploadProgress.value = progress),
     );
-    notificationStore.addSuccessNotification("Datei erfolgreich hochgeladen.");
+    notificationStore.addSuccessNotification(
+      t('models.form.file.uploadSuccess'),
+    );
     selectedLocalFile.value = null;
     await loadFile();
   }
   catch (error: unknown) {
     console.error("Fehler beim Hochladen der Datei:", error);
     uploadedMediaId.value = undefined;
-    notificationStore.addErrorNotification(
-      "Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.",
-    );
+    notificationStore.addErrorNotification(t('models.form.file.uploadError'));
     selectedFile.value = null;
   }
   finally {
@@ -153,7 +155,7 @@ async function loadFile() {
     // Notify user via the existing notification store if available
     try {
       notificationStore.addErrorNotification(
-        "Die Datei konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
+        t('models.form.file.downloadError'),
       );
     }
     catch {
@@ -248,13 +250,13 @@ onUnmounted(() => {
             class="bg-[#6BAD87] rounded-sm p-2 hover:cursor-pointer h-12 my-auto"
             @click="openFileInput"
           >
-            Datei ändern
+            {{ t('models.form.file.change') }}
           </button>
           <button
             class="bg-[#6BAD87] rounded-sm p-2 hover:cursor-pointer h-12 my-auto"
             @click="uploadFile"
           >
-            Datei hochladen
+            {{ t('models.form.file.upload') }}
           </button>
         </div>
         <div v-else-if="uploadedMedia" class="max-w-full flex flex-col gap-4">
@@ -273,7 +275,7 @@ onUnmounted(() => {
         </div>
         <div v-else class="flex flex-row gap-4 w-full justify-between">
           <div class="text-gray-600 my-auto">
-            Keine Datei ausgewählt
+            {{ t('models.form.file.noSelection') }}
           </div>
           <div class="my-auto">
             <button

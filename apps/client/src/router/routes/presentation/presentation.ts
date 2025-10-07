@@ -17,7 +17,7 @@ export const PRESENTATION_VIEW: RouteRecordRaw = {
 function presentationBreadcrumbs(to: RouteLocationNormalizedGeneric) {
   return [
     {
-      name: "Produktpass",
+      name: localizedBreadcrumb('presentation.productpass'),
       route: PRESENTATION_VIEW,
       params: to.params,
     },

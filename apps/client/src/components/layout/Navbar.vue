@@ -4,7 +4,9 @@ import { ChatBubbleOvalLeftEllipsisIcon } from "@heroicons/vue/16/solid";
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import BaseButton from "../presentation-components/BaseButton.vue";
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const permalink = computed(() => String(route.params.permalink ?? ""));
@@ -45,13 +47,16 @@ function backToApp() {
             @click="navigateToAiChat"
           >
             <ChatBubbleOvalLeftEllipsisIcon class="size-5 mr-2 inline-block" />
-            Mit KI chatten
+            {{ t('presentation.chatWithAI') }}
           </BaseButton>
-          <BaseButton v-else variant="primary" @click="navigateToPassportView">
-            Zur Passansicht
-          </BaseButton>
+          <BaseButton
+            variant="primary"
+            v-else
+            @click="navigateToPassportView"
+            >{{ t('presentation.toPass') }}</BaseButton
+          >
           <BaseButton class="hidden md:flex" @click="backToApp">
-            <span>Zurück zur App</span>
+            <span>{{ t('presentation.backToApp') }}</span>
           </BaseButton>
         </div>
       </div>

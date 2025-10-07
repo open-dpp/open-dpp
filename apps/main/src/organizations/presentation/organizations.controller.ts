@@ -66,10 +66,7 @@ export class OrganizationsController {
     @Param("id") id: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      id,
-      req.authContext,
-    );
+    this.permissionsService.canAccessOrganizationOrFail(id, req.authContext);
     return this.organizationsService.findOneOrFail(id);
   }
 
@@ -79,7 +76,7 @@ export class OrganizationsController {
     @Param("organizationId") organizationId: string,
     @Body() body: { email: string },
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
+    this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
@@ -95,10 +92,7 @@ export class OrganizationsController {
     @Param("id") id: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      id,
-      req.authContext,
-    );
+    this.permissionsService.canAccessOrganizationOrFail(id, req.authContext);
     const organization = await this.findOne(id, req);
     if (!organization) {
       throw new NotFoundException();

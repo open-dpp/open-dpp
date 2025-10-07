@@ -33,19 +33,21 @@ import { UsersModule } from "./users/users.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
+      validate: (env) => validateEnv(env),
       isGlobal: true,
       expandVariables: true,
     }),
+    EnvModule,
     MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
+      imports: [EnvModule],
+      useFactory: (configService: EnvService) => ({
         ...generateMongoConfig(configService),
       }),
-      inject: [ConfigService],
+      inject: [EnvService],
     }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
+      imports: [EnvModule],
+      useFactory: (configService: EnvService) => ({
         ...generateConfig(
           configService,
           path.join(__dirname, "/migrations/**/*{.ts,.js}"),
@@ -55,7 +57,7 @@ import { UsersModule } from "./users/users.module";
         migrationsRun: true,
         synchronize: true,
       }),
-      inject: [ConfigService],
+      inject: [EnvService],
     }),
     TemplateDraftModule,
     TemplateModule,

@@ -5,7 +5,7 @@ import { KeycloakResourcesService } from "./infrastructure/keycloak-resources.se
 import { KeycloakResourcesController } from "./presentation/keycloak-resources.controller";
 
 @Module({
-  imports: [HttpModule, ConfigModule],
+  imports: [HttpModule, EnvModule],
   controllers: [KeycloakResourcesController],
   providers: [KeycloakResourcesService],
   exports: [KeycloakResourcesService],

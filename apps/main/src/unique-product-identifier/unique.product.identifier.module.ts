@@ -18,6 +18,7 @@ import {
   UniqueProductIdentifierSchema,
 } from "./infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "./infrastructure/unique-product-identifier.service";
+import { UniqueProductIdentifierApplicationService } from "./presentation/unique.product.identifier.application.service";
 import { UniqueProductIdentifierController } from "./presentation/unique.product.identifier.controller";
 
 @Module({
@@ -47,11 +48,15 @@ import { UniqueProductIdentifierController } from "./presentation/unique.product
   ],
   controllers: [UniqueProductIdentifierController],
   providers: [
+    UniqueProductIdentifierApplicationService,
     UniqueProductIdentifierService,
     ModelsService,
     TemplateService,
     ItemsService,
   ],
-  exports: [UniqueProductIdentifierService],
+  exports: [
+    UniqueProductIdentifierService,
+    UniqueProductIdentifierApplicationService,
+  ],
 })
 export class UniqueProductIdentifierModule {}

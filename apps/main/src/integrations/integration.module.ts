@@ -33,6 +33,7 @@ import { AasConnectionController } from "./presentation/aas-connection.controlle
         schema: AasConnectionSchema,
       },
     ]),
+    EnvModule,
     OrganizationsModule,
     TemplateModule,
     UniqueProductIdentifierModule,

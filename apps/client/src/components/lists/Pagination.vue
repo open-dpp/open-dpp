@@ -1,6 +1,9 @@
 <script lang="ts" setup>
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/vue/20/solid";
 import { computed } from "vue";
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   currentPage: number;
@@ -87,21 +90,15 @@ const actions = computed<
     <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
       <div>
         <p class="text-sm text-gray-700">
-          Zeigt
-          {{ ' ' }}
+          {{ t('lists.shows') }}
           <span class="font-medium">{{ currentPage * itemsPerPage + 1 }}</span>
-          {{ ' ' }}
-          bis
-          {{ ' ' }}
+          {{ t('lists.to') }}
           <span class="font-medium">{{
             Math.min((currentPage + 1) * itemsPerPage, totalItems)
           }}</span>
-          {{ ' ' }}
-          von
-          {{ ' ' }}
+          {{ t('lists.of') }}
           <span class="font-medium">{{ totalItems }}</span>
-          {{ ' ' }}
-          Elementen
+          {{ t('lists.elements') }}
         </p>
       </div>
       <div>

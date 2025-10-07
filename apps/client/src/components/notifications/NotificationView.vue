@@ -14,6 +14,9 @@ import {
   NotificationType,
   useNotificationStore,
 } from "../../stores/notification";
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{ notification: Notification }>();
 
@@ -25,12 +28,12 @@ function onDelete() {
 
 const title = computed<string>(() => {
   const titleMap = {
-    [NotificationType.SUCCESS]: "Erfolg",
-    [NotificationType.ERROR]: "Fehler",
-    [NotificationType.WARNING]: "Warnung",
-    [NotificationType.INFO]: "Information",
+    [NotificationType.SUCCESS]: t('notifications.success'),
+    [NotificationType.ERROR]: t('notifications.error'),
+    [NotificationType.WARNING]: t('notifications.warning'),
+    [NotificationType.INFO]: t('notifications.info'),
   };
-  return titleMap[props.notification.type] || "Information";
+  return titleMap[props.notification.type] || t('notifications.info');
 });
 </script>
 

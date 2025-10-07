@@ -42,9 +42,9 @@ function setOrganization(organizationId: string) {
     :model-value="indexStore.selectedOrganization"
     @update:model-value="(org) => setOrganization(org.id)"
   >
-    <ListboxLabel class="block text-sm/6 font-medium text-gray-900">
-      Organisation wählen
-    </ListboxLabel>
+    <ListboxLabel class="block text-sm/6 font-medium text-gray-900">{{
+      t('organizations.select')
+    }}</ListboxLabel>
     <div class="relative flex flex-row gap-2">
       <div
         v-if="organizationsStore.organizations.length > 0"
@@ -113,7 +113,8 @@ function setOrganization(organizationId: string) {
           <span
             v-if="organizationsStore.organizations.length === 0"
             class="text-md pl-1"
-          >Organisation erstellen</span>
+            >{{ t('organizations.new') }}</span
+          >
         </button>
       </router-link>
       <router-link v-if="false" to="/organizations">

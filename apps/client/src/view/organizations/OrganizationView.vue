@@ -41,17 +41,17 @@ onMounted(async () => {
   <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
     <div class="px-4 py-6 sm:px-6">
       <h3 class="text-base/7 font-semibold text-gray-900">
-        Organisation Informationen
+        {{ t('organizations.info') }}
       </h3>
       <p class="mt-1 max-w-2xl text-sm/6 text-gray-500">
-        Details und User der Organisation.
+        {{ t('organizations.details') }}
       </p>
     </div>
     <div v-if="organization" class="border-t border-gray-100">
       <dl class="divide-y divide-gray-100">
         <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
           <dt class="text-sm font-medium text-gray-900">
-            ID
+            {{ t('organizations.form.id') }}
           </dt>
           <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
             {{ organization.id }}
@@ -59,7 +59,7 @@ onMounted(async () => {
         </div>
         <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
           <dt class="text-sm font-medium text-gray-900">
-            Name
+            {{ t('organizations.form.name.label') }}
           </dt>
           <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
             {{ organization.name }}
@@ -67,7 +67,7 @@ onMounted(async () => {
         </div>
         <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
           <dt class="text-sm font-medium text-gray-900">
-            Erstellt von
+            {{ t('organizations.form.createdBy') }}
           </dt>
           <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
             {{ organization.createdByUserId }}
@@ -75,7 +75,7 @@ onMounted(async () => {
         </div>
         <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
           <dt class="text-sm font-medium text-gray-900">
-            Administriert von
+            {{ t('organizations.form.administeredBy') }}
           </dt>
           <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
             {{ organization.ownedByUserId }}
@@ -83,7 +83,7 @@ onMounted(async () => {
         </div>
         <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
           <dt class="text-sm font-medium text-gray-900">
-            Beschreibung
+            {{ t('organizations.form.description') }}
           </dt>
           <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
             Fugiat ipsum ipsum deserunt culpa aute sint do nostrud anim
@@ -117,18 +117,22 @@ onMounted(async () => {
                     <span
                       v-if="organization.ownedByUserId === member.id"
                       class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
-                    >Admin</span>
+                      >{{ t('organizations.memberAdmin') }}</span
+                    >
                     <span
                       v-if="organization.createdByUserId === member.id"
                       class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
-                    >Ersteller</span>
+                      >{{ t('organizations.memberCreator') }}</span
+                    >
                   </div>
                 </div>
                 <div class="ml-4 shrink-0">
                   <a
                     class="font-medium text-red-600 hover:text-red-500"
                     href="#"
-                  >Entfernen</a>
+                  >
+                    {{ t('common.remove') }}
+                  </a>
                 </div>
               </li>
             </ul>
@@ -136,16 +140,15 @@ onMounted(async () => {
               <input
                 v-model="userEmailToAdd"
                 class="block rounded-md border-gray-300 min-w-80"
-                placeholder="E-Mail"
+                :placeholder="t('common.form.email.label')"
                 type="text"
               >
               <BaseButton
                 variant="primary"
                 type="button"
                 @click="inviteUserToOrg"
+                >{{ t('organizations.addUser') }}</BaseButton
               >
-                User hinzufügen
-              </BaseButton>
             </div>
           </dd>
         </div>

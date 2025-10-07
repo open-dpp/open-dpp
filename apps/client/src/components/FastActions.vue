@@ -1,25 +1,25 @@
 <script lang="ts" setup>
 import { CubeIcon, UsersIcon } from "@heroicons/vue/24/outline";
 import { computed } from "vue";
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const props = defineProps<{
   organizationId: string;
 }>();
 
 const actions = computed(() => [
   {
-    title: "Mitglieder hinzufügen",
-    description:
-      "Mitglieder der Organisation ansehen, um dort ein neues Mitglieder hinzuzufügen.",
+    title: t('actions.member.title'),
+    description: t('actions.member.description'),
     to: `/organizations/${props.organizationId}/members`,
     icon: UsersIcon,
     iconForeground: "text-sky-700",
     iconBackground: "bg-sky-50",
   },
   {
-    title: "Modell hinzufügen",
-    description:
-      "Modelle der Organisation ansehen, um dort ein neues Modell hinzuzufügen.",
+    title: t('actions.model.title'),
+    description: t('actions.model.description'),
     to: `/organizations/${props.organizationId}/models`,
     icon: CubeIcon,
     iconForeground: "text-yellow-700",

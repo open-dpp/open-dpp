@@ -12,7 +12,9 @@ import { useDraftStore } from "../../stores/draft";
 import { useDraftSidebarStore } from "../../stores/draftSidebar";
 import { useModelDialogStore } from "../../stores/modal.dialog";
 import BaseButton from "../BaseButton.vue";
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const props = defineProps<{
   type: SectionType;
   parentId?: string;
@@ -29,25 +31,25 @@ const modelDialogStore = useModelDialogStore();
 
 function formSchemaFromType(type: SectionType, existingGranularityLevel: GranularityLevel | undefined) {
   const granularityOptions = {
-    [GranularityLevel.MODEL]: "Produktmodellebene",
-    [GranularityLevel.ITEM]: "Artikelebene",
+    [GranularityLevel.MODEL]: t('builder.granularity.model'),
+    [GranularityLevel.ITEM]: t('builder.granularity.item'),
   };
 
   const dataSectionFormkitSchema = [];
   dataSectionFormkitSchema.push({
-    "$formkit": "text",
-    "name": "name",
-    "label": "Name des Abschnitts",
-    "data-cy": "name",
+    $formkit: 'text',
+    name: 'name',
+    label: t('builder.name'),
+    'data-cy': 'name',
   });
 
   if (!existingGranularityLevel && type === SectionType.REPEATABLE) {
     dataSectionFormkitSchema.push({
-      "$formkit": "select",
-      "name": "granularityLevel",
-      "label": "Granularitätsebene",
-      "options": granularityOptions,
-      "data-cy": "select-granularity-level",
+      $formkit: 'select',
+      name: 'granularityLevel',
+      label: t('builder.granularityLevel'),
+      options: granularityOptions,
+      'data-cy': 'select-granularity-level',
     });
   }
   return dataSectionFormkitSchema;
@@ -75,9 +77,9 @@ watch(
 async function onDelete() {
   modelDialogStore.open(
     {
-      title: "Abschnitt löschen",
-      description: "Sind Sie sicher, dass Sie diesen Abschnitt löschen wollen?",
-      type: "warning",
+      title: t('builder.delete.label'),
+      description: t('builder.delete.description'),
+      type: 'warning',
     },
     async () => {
       if (sectionToModify.value) {
@@ -127,7 +129,7 @@ async function onSubmit() {
       <FormKitSchema v-if="formSchema" :schema="formSchema" />
       <div class="flex gap-1">
         <BaseButton variant="primary" data-cy="submit" type="submit">
-          {{ sectionToModify ? 'Ändern' : 'Hinzufügen' }}
+          {{ sectionToModify ? t('common.edit') : t('common.add') }}
         </BaseButton>
         <BaseButton
           v-if="sectionToModify"
@@ -136,7 +138,7 @@ async function onSubmit() {
           variant="error"
           @click="onDelete"
         >
-          Abschnitt löschen
+          {{ t('builder.delete.label') }}
         </BaseButton>
       </div>
     </FormKit>

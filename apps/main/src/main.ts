@@ -19,7 +19,8 @@ async function bootstrap() {
   const logger = new Logger("Bootstrap");
 
   // Proxy SPA routes in development before setting global prefix
-  /* if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Proxy established for routes / except /api');
     app.use(
       '/',
       createProxyMiddleware({
@@ -27,10 +28,10 @@ async function bootstrap() {
         changeOrigin: true,
         ws: true,
         // Only proxy requests NOT starting with /api
-        pathFilter: (pathname, _req) => !pathname.startsWith('/api'),
+        pathFilter: (pathname) => !pathname.startsWith('/api'),
       }),
     );
-  } */
+  }
 
   app.setGlobalPrefix("api");
   app.enableCors();
@@ -46,18 +47,17 @@ async function bootstrap() {
   );
 
   app.useGlobalPipes(new ValidationPipe());
-  if (configService.get<string>("BUILD_OPEN_API_DOCUMENTATION") === "true") {
+  if (configService.get('OPEN_DPP_BUILD_API_DOC')) {
     buildOpenApiDocumentation(app);
   }
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.TCP,
     options: {
-      port: Number(configService.get("MSG_PORT", "5002")), // Microservice port
+      port: Number(configService.get('OPEN_DPP_MSG_PORT')), // Microservice port
     },
   });
   await app.startAllMicroservices();
-  const port = Number(configService.get("PORT", "3000"));
-  logger.log(`Application is running on: ${port}`);
+  const port = Number(configService.get('OPEN_DPP_PORT'));
   await app.listen(port);
 }
 bootstrap();

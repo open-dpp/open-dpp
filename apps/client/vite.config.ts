@@ -12,5 +12,8 @@ export default defineConfig({
     setupFiles: "./setupTest.ts",
     environment: "jsdom",
   },
+  build: {
+    target: "es2022",
+  },
   envDir: path.resolve(__dirname, "../../../"),
 });

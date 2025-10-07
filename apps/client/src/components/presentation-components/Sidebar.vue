@@ -1,8 +1,11 @@
 <script lang="ts" setup>
 import type { DataSectionDto } from "@open-dpp/api-client";
 import { ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { useProductPassportStore } from "../../stores/product-passport";
+
+const { t } = useI18n();
 
 const route = useRoute();
 
@@ -41,7 +44,7 @@ watch(
     aria-label="Sidebar"
   >
     <div class="font-bold py-3 text-xl">
-      Navigation
+      {{ t('presentation.navigation') }}
     </div>
     <ul role="list" class="-mx-2 space-y-1 pt-2">
       <li v-if="section" key="back">
@@ -53,7 +56,7 @@ watch(
           "
           class="text-gray-700 hover:bg-gray-50 hover:text-indigo-600 group flex gap-x-3 rounded-md p-2 pl-3 text-sm/6 font-semibold"
         >
-          Zurück
+          {{ t('common.back') }}
         </router-link>
       </li>
       <li

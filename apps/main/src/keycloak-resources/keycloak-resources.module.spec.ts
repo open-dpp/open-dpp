@@ -27,10 +27,7 @@ describe("keycloakResourcesModule", () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
-        KeycloakResourcesModule,
-      ],
+      imports: [EnvModule, KeycloakResourcesModule],
     }).compile();
   });
 

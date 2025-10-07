@@ -67,24 +67,8 @@ export class UniqueProductIdentifierController {
   @AllowServiceAccess()
   @Get("unique-product-identifiers/:id/metadata")
   async get(@Param("id") id: string) {
-    const uniqueProductIdentifier
-      = await this.uniqueProductIdentifierService.findOneOrFail(id);
-
-    const item = await this.itemService.findOne(
-      uniqueProductIdentifier.referenceId,
+    return this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifier(
+      id,
     );
-    let organizationId;
-    if (item) {
-      organizationId = item.ownedByOrganizationId;
-    }
-    else {
-      const model = await this.modelsService.findOneOrFail(
-        uniqueProductIdentifier.referenceId,
-      );
-      organizationId = model.ownedByOrganizationId;
-    }
-    return UniqueProductIdentifierMetadataDtoSchema.parse({
-      organizationId,
-    });
   }
 }

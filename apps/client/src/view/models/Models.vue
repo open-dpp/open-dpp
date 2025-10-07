@@ -4,9 +4,11 @@ import EmptyState from "../../components/models/EmptyState.vue";
 import ModelList from "../../components/models/ModelList.vue";
 import { useIndexStore } from "../../stores";
 import { useModelsStore } from "../../stores/models";
+import { useI18n } from 'vue-i18n';
 
 const modelsStore = useModelsStore();
 const indexStore = useIndexStore();
+const { t } = useI18n();
 const fetchInFlight = ref(true);
 const selectedProductId = ref<string>();
 
@@ -28,7 +30,7 @@ onMounted(async () => {
       <EmptyState
         v-else
         :button-link="`/organizations/${indexStore.selectedOrganization}/models/create`"
-        button-label="Neuen Modellpass hinzufügen"
+        :button-label="t('models.createPass')"
       />
     </div>
   </section>

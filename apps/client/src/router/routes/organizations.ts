@@ -18,7 +18,7 @@ export const ORGANIZATION_LIST: RouteRecordRaw = {
 
 function organizationListBreadCrumbs(to: RouteLocationNormalizedGeneric) {
   return [
-    { name: "Organisationen", route: ORGANIZATION_LIST, params: to.params },
+    { name: localizedBreadcrumb('organizations.organizations'), route: ORGANIZATION_LIST, params: to.params },
   ];
 }
 
@@ -50,7 +50,7 @@ export const ORGANIZATION_MEMBERS: RouteRecordRaw = {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = [
       {
-        name: "Mitglieder",
+        name: localizedBreadcrumb('members.members'),
         route: ORGANIZATION_MEMBERS,
         params: to.params,
       },

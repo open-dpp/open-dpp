@@ -13,7 +13,9 @@ import { useDraftSidebarStore } from "../../stores/draftSidebar";
 import { useModelDialogStore } from "../../stores/modal.dialog";
 import { useNotificationStore } from "../../stores/notification";
 import BaseButton from "../BaseButton.vue";
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const props = defineProps<{
   type: DataFieldType;
   parentId?: string;
@@ -30,54 +32,54 @@ const modelDialogStore = useModelDialogStore();
 
 function formSchemaFromType(type: DataFieldType, existingGranularityLevel: GranularityLevel | undefined) {
   const granularityOptions = {
-    [GranularityLevel.MODEL]: "Produktmodellebene",
-    [GranularityLevel.ITEM]: "Artikelebene",
+    [GranularityLevel.MODEL]: t('builder.granularity.model'),
+    [GranularityLevel.ITEM]: t('builder.granularity.item'),
   };
   const dataFieldFormkitSchema = [];
 
   switch (type) {
     case DataFieldType.TEXT_FIELD:
       dataFieldFormkitSchema.push({
-        "$formkit": "text",
-        "name": "name",
-        "label": "Name des Textfeldes",
-        "data-cy": "name",
+        $formkit: 'text',
+        name: 'name',
+        label: t('builder.textField.name'),
+        'data-cy': 'name',
       });
       break;
     case DataFieldType.PRODUCT_PASSPORT_LINK:
       dataFieldFormkitSchema.push({
-        "$formkit": "text",
-        "name": "name",
-        "label": "Name der Produktpass Verlinkung",
-        "data-cy": "name",
+        $formkit: 'text',
+        name: 'name',
+        label: t('builder.passportLink.name'),
+        'data-cy': 'name',
       });
       break;
     case DataFieldType.NUMERIC_FIELD:
       dataFieldFormkitSchema.push({
-        "$formkit": "text",
-        "name": "name",
-        "label": "Name des numerischen Feldes",
-        "data-cy": "name",
+        $formkit: 'text',
+        name: 'name',
+        label: t('builder.numeric.name'),
+        'data-cy': 'name',
       });
       dataFieldFormkitSchema.push({
-        "$formkit": "number",
-        "name": "min",
-        "label": "Minimum",
-        "data-cy": "min",
+        $formkit: 'number',
+        name: 'min',
+        label: t('builder.numeric.min'),
+        'data-cy': 'min',
       });
       dataFieldFormkitSchema.push({
-        "$formkit": "number",
-        "name": "max",
-        "label": "Maximum",
-        "data-cy": "max",
+        $formkit: 'number',
+        name: 'max',
+        label: t('builder.numeric.max'),
+        'data-cy': 'max',
       });
       break;
     case DataFieldType.FILE_FIELD:
       dataFieldFormkitSchema.push({
-        "$formkit": "text",
-        "name": "name",
-        "label": "Name des Dateifeldes",
-        "data-cy": "name",
+        $formkit: 'text',
+        name: 'name',
+        label: t('builder.file.name'),
+        'data-cy': 'name',
       });
       break;
     default:
@@ -87,11 +89,11 @@ function formSchemaFromType(type: DataFieldType, existingGranularityLevel: Granu
   }
   if (!existingGranularityLevel) {
     dataFieldFormkitSchema.push({
-      "$formkit": "select",
-      "name": "granularityLevel",
-      "label": "Granularitätsebene",
-      "options": granularityOptions,
-      "data-cy": "select-granularity-level",
+      $formkit: 'select',
+      name: 'granularityLevel',
+      label: t('builder.granularityLevel'),
+      options: granularityOptions,
+      'data-cy': 'select-granularity-level',
     });
   }
   return dataFieldFormkitSchema;
@@ -129,9 +131,9 @@ watch(
 async function onDelete() {
   modelDialogStore.open(
     {
-      title: "Datenfeld löschen",
-      description: "Sind Sie sicher, dass Sie dieses Datenfeld löschen wollen?",
-      type: "warning",
+      title: t('draft.deleteDataField'),
+      description: t('draft.deleteDataFieldDescription'),
+      type: 'warning',
     },
     async () => {
       if (dataFieldToModify.value) {
@@ -180,9 +182,7 @@ async function onSubmit() {
   }
   else {
     const notificationStore = useNotificationStore();
-    notificationStore.addErrorNotification(
-      "Datenfeld konnte nicht hinzugefügt werden.",
-    );
+    notificationStore.addErrorNotification(t('draft.errorAddingDataField'));
   }
 
   draftSidebarStore.close();
@@ -201,7 +201,7 @@ async function onSubmit() {
       <FormKitSchema v-if="formSchema" :schema="formSchema" />
       <div class="flex gap-1">
         <BaseButton data-cy="submit" type="submit" variant="primary">
-          {{ dataFieldToModify ? 'Ändern' : 'Hinzufügen' }}
+          {{ dataFieldToModify ? t('common.change') : t('common.add') }}
         </BaseButton>
         <BaseButton
           v-if="dataFieldToModify"
@@ -210,7 +210,7 @@ async function onSubmit() {
           variant="error"
           @click="onDelete"
         >
-          Datenfeld löschen
+          {{ t('draft.deleteDataField') }}
         </BaseButton>
       </div>
     </FormKit>

@@ -6,7 +6,9 @@ import { useIndexStore } from "../../stores";
 import { useAasConnectionStore } from "../../stores/aas.connection";
 import ListHeader from "../lists/ListHeader.vue";
 import SimpleTable from "../lists/SimpleTable.vue";
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const aasIntegrationStore = useAasConnectionStore();
 const indexStore = useIndexStore();
 const rows = computed(() => {
@@ -18,13 +20,13 @@ const rows = computed(() => {
   );
 });
 
-const actions = [
+const actions = computed(() => [
   {
-    name: "Editieren",
+    name: t('integrations.edit'),
     actionLinkBuilder: (row: Record<string, string>) =>
       `/organizations/${indexStore.selectedOrganization}/integrations/pro-alpha/connections/${row.id}`,
   },
-];
+]);
 
 onMounted(async () => {
   await aasIntegrationStore.fetchConnections();
@@ -33,9 +35,9 @@ onMounted(async () => {
 
 <template>
   <ListHeader
-    title="Verbindungen"
-    description="Alle Ihre Verbindungen"
-    creation-label="Verbindung erstellen"
+      :title="t('integrations.connections.label', 2)"
+      :description="t('integrations.connections.description')"
+      :creation-label="t('integrations.connections.add')"
     :creation-link="`/organizations/${indexStore.selectedOrganization}/integrations/${PRO_ALPHA_INTEGRATION_ID}/connections/create`"
   />
   <SimpleTable :headers="['ID', 'Name']" :rows="rows" :row-actions="actions" />

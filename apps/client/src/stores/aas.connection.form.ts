@@ -63,6 +63,7 @@ function isFieldAssignmentRow(item: unknown): item is FieldAssignmentRow {
 export const useAasConnectionFormStore = defineStore(
   "aas-connection-form",
   () => {
+    const { t } = i18n.global;
     const formData = ref<Record<string, string>>({});
     const formSchema = ref();
     const errorHandlingStore = useErrorHandlingStore();
@@ -118,10 +119,9 @@ export const useAasConnectionFormStore = defineStore(
               {
                 "$formkit": "select",
                 "required": true,
-                "label": `Feld aus der Asset Administration Shell`,
+                "label": t('integrations.connections.aas.field'),
                 "name": aasFieldId(index),
-                "placeholder":
-                  "Wählen Sie ein Feld aus der Asset Administration Shell",
+                "placeholder": t('integrations.connections.aas.selectField'),
                 "options": aasProperties.value,
                 "data-cy": `aas-select-${index}`,
               },
@@ -129,7 +129,7 @@ export const useAasConnectionFormStore = defineStore(
           },
           {
             $el: "div",
-            children: "ist verknüpft mit",
+            children: t('integrations.connections.aas.isLinked'),
             attrs: {
               class: "flex",
             },
@@ -143,8 +143,8 @@ export const useAasConnectionFormStore = defineStore(
               {
                 "$formkit": "select",
                 "required": true,
-                "label": `Feld aus dem Produktdatenmodell`,
-                "placeholder": "Wählen Sie ein Feld aus dem Produktdatenmodell", // Add this line
+                "label": t('integrations.connections.aas.modelField'),
+                "placeholder": t('integrations.connections.aas.selectModelField'), // Add this line
                 "name": dppFieldId(index),
                 "options": templateOptions.value,
                 "data-cy": `dpp-select-${index}`,
@@ -235,7 +235,7 @@ export const useAasConnectionFormStore = defineStore(
       }
       catch (e) {
         errorHandlingStore.logErrorWithNotification(
-          "Speichern der Verbindung fehlgeschlagen",
+          t('integrations.connections.errorSave'),
           e,
         );
       }
@@ -297,7 +297,7 @@ export const useAasConnectionFormStore = defineStore(
       }
       catch (e) {
         errorHandlingStore.logErrorWithNotification(
-          "Wechsel des Modellpasses fehlgeschlagen",
+          t('integrations.connections.errorSwitch'),
           e,
         );
       }

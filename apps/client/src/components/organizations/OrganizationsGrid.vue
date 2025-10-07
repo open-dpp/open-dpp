@@ -4,7 +4,9 @@ import { useRouter } from "vue-router";
 import { useIndexStore } from "../../stores";
 import { useOrganizationsStore } from "../../stores/organizations";
 import EmptyState from "./EmptyState.vue";
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const indexStore = useIndexStore();
 const organizationsStore = useOrganizationsStore();
 const router = useRouter();
@@ -20,10 +22,10 @@ function setOrganization(organizationId: string) {
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
         <h1 class="text-base font-semibold text-gray-900">
-          Organisationen
+          {{ t('organizations.organizations', 2) }}
         </h1>
         <p class="mt-2 text-sm text-gray-700">
-          Alle zugewiesenen Organisationen.
+          {{ t('organizations.assignedOrganizations') }}
         </p>
       </div>
       <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
@@ -31,9 +33,9 @@ function setOrganization(organizationId: string) {
           class="block rounded-md bg-indigo-600 px-3 py-1.5 text-center text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           type="button"
         >
-          <router-link to="/organizations/create">
-            Organisation erstellen
-          </router-link>
+          <router-link to="/organizations/create">{{
+            t('organizations.new')
+          }}</router-link>
         </button>
       </div>
     </div>
@@ -58,8 +60,8 @@ function setOrganization(organizationId: string) {
                 :disabled="organization.id === indexStore.selectedOrganization"
                 :label="
                   organization.id === indexStore.selectedOrganization
-                    ? 'Ausgewählt'
-                    : 'Auswählen'
+                    ? t('common.selected')
+                    : t('common.select')
                 "
                 :value="organization.id === indexStore.selectedOrganization"
                 name="terms"
@@ -76,7 +78,8 @@ function setOrganization(organizationId: string) {
                 </h3>
                 <span
                   class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
-                >Admin</span>
+                  >{{ t('organizations.memberAdmin') }}</span
+                >
               </div>
               <p class="mt-1 truncate text-sm text-gray-500">
                 {{ organization.id }}
@@ -106,7 +109,7 @@ function setOrganization(organizationId: string) {
                   @click="setOrganization(organization.id)"
                 >
                   <CheckIcon aria-hidden="true" class="size-5 text-gray-400" />
-                  Auswählen
+                  {{ t('common.select') }}
                 </button>
               </div>
             </div>

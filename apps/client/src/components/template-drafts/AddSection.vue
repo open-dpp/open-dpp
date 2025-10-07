@@ -11,6 +11,7 @@ const props = defineProps<{
   parentGranularityLevel?: GranularityLevel;
 }>();
 
+const { t } = useI18n();
 const draftSidebarStore = useDraftSidebarStore();
 
 function open() {
@@ -23,6 +24,6 @@ function open() {
 
 <template>
   <BaseButton type="button" variant="primary" @click="open">
-    Abschnitt hinzufügen
+    {{ t('draft.addSection') }}
   </BaseButton>
 </template>

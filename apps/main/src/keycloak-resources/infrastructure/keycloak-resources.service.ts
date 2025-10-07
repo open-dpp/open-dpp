@@ -23,17 +23,17 @@ export class KeycloakResourcesService {
   constructor(configService: ConfigService) {
     this.configService = configService;
     this.kcAdminClient = new KcAdminClient({
-      baseUrl: this.configService.get<string>("KEYCLOAK_NETWORK_URL", ""),
+      baseUrl: this.configService.get('OPEN_DPP_KEYCLOAK_URL'),
     });
-    this.realm = this.configService.get<string>("KEYCLOAK_REALM", "");
+    this.realm = this.configService.get('OPEN_DPP_KEYCLOAK_REALM');
   }
 
   async reloadToken() {
     await this.kcAdminClient.auth({
-      grantType: "password",
-      clientId: "admin-cli",
-      username: this.configService.get("KEYCLOAK_ADMIN_USERNAME"),
-      password: this.configService.get("KEYCLOAK_ADMIN_PASSWORD"),
+      grantType: 'password',
+      clientId: 'admin-cli',
+      username: this.configService.get('OPEN_DPP_KEYCLOAK_USER'),
+      password: this.configService.get('OPEN_DPP_KEYCLOAK_PASSWORD'),
     });
   }
 

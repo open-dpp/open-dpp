@@ -12,6 +12,9 @@ import {
 } from "@heroicons/vue/24/outline";
 import { useModelDialogStore } from "../stores/modal.dialog";
 import BaseButton from "./BaseButton.vue";
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const modelDialogStore = useModelDialogStore();
 </script>
@@ -86,10 +89,10 @@ const modelDialogStore = useModelDialogStore();
                   type="button"
                   @click="modelDialogStore.confirm"
                 >
-                  Bestätigen
+                  {{ t('common.submit') }}
                 </BaseButton>
                 <BaseButton type="button" @click="modelDialogStore.cancel">
-                  Abbrechen
+                  {{ t('common.abort') }}
                 </BaseButton>
               </div>
             </DialogPanel>

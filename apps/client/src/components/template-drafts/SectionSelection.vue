@@ -6,24 +6,25 @@ import { SectionType } from "@open-dpp/api-client";
 import { ref, watch } from "vue";
 import { SidebarContentType } from "../../stores/draftSidebar";
 import ItemSelection from "./ItemSelection.vue";
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const props = defineProps<{
   parentId?: string;
   parentGranularityLevel?: GranularityLevel;
 }>();
 
 const repeater: SelectOption = {
-  title: "Repeater",
-  description:
-    "Fügen Sie einen Repeater Abschnitt hinzu, um eine Gruppe von Feldern beliebig oft hinzuzufügen zu können.",
+  title: t('builder.repeater.label'),
+  description: t('builder.repeater.description'),
   icon: ArrowPathIcon,
   background: "bg-pink-500",
   type: SectionType.REPEATABLE,
   sidebarType: SidebarContentType.SECTION_FORM,
 };
 const group: SelectOption = {
-  title: "Gruppierung",
-  description: "Fügen Sie einen Abschnitt hinzu, der mehrere Felder gruppiert",
+  title: t('builder.group.label'),
+  description: t('builder.group.description'),
   icon: TableCellsIcon,
   background: "bg-indigo-500",
   type: SectionType.GROUP,

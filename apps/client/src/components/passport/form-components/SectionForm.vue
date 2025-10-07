@@ -23,6 +23,7 @@ const props = defineProps<{
   row: number;
 }>();
 
+const { t } = useI18n();
 const passportFormStore = usePassportFormStore();
 const router = useRouter();
 
@@ -60,11 +61,12 @@ async function onSubmit() {
       formData.value,
       props.row,
     );
-    notificationStore.addSuccessNotification("Daten erfolgreich gespeichert");
-  }
-  catch (e) {
+    notificationStore.addSuccessNotification(
+      t('models.form.section.saveSuccess'),
+    );
+  } catch (e) {
     errorHandlingStore.logErrorWithNotification(
-      "Daten konnten nicht gespeichert werden",
+      t('models.form.section.saveError'),
       e,
     );
   }
@@ -90,7 +92,7 @@ async function onSubmit() {
     v-if="passportFormStore.findSubSections(section.id).length > 0"
     class="text-base/7 font-semibold text-gray-900"
   >
-    Weiterführende Abschnitte
+    {{ t('models.form.section.additional') }}
   </h3>
   <div class="flex">
     <BaseButton

@@ -23,10 +23,10 @@ async function onSubmit(draftData: TemplateDraftCreateDto) {
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
         <h1 class="text-base font-semibold text-gray-900">
-          Passvorlagen Entwurf
+          {{ t('draft.passTemplate') }}
         </h1>
         <p class="mt-2 text-sm text-gray-700">
-          Entwerfen Sie eine neue Passvorlage.
+          {{ t('draft.createNewPassTemplate') }}
         </p>
       </div>
     </div>

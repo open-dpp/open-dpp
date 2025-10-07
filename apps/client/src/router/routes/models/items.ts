@@ -42,7 +42,7 @@ export const ITEM_QRCODE: RouteRecordRaw = {
     layoutStore.breadcrumbs = [
       ...(await itemListBreadcrumbs(to)),
       {
-        name: "Artikel",
+        name: localizedBreadcrumb('items.item'),
         route: ITEM_QRCODE,
         params: to.params,
       },

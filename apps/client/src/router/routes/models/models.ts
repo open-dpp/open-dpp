@@ -16,13 +16,12 @@ export const MODEL_LIST: RouteRecordRaw = {
 function modelListBreadcrumbs(to: RouteLocationNormalizedGeneric) {
   return [
   // ...organizationBreadcrumbs(to),
-    {
-      name: "Modellpässe",
-      route: MODEL_LIST,
-      params: to.params,
-    },
-  ];
-}
+  {
+    name: localizedBreadcrumb('models.list.title'),
+    route: MODEL_LIST,
+    params: to.params,
+  },
+];
 
 export const MODEL: RouteRecordRaw = {
   path: "",
@@ -46,7 +45,10 @@ export async function modelBreadcrumbs(to: RouteLocationNormalizedGeneric) {
     return [
       ...modelListBreadcrumbs(to),
       {
-        name: modelName || modelId,
+        name: {
+          text: modelName || modelId,
+          localized: false,
+        },
         route: MODEL,
         params: to.params,
       },
@@ -55,7 +57,10 @@ export async function modelBreadcrumbs(to: RouteLocationNormalizedGeneric) {
   return [
     ...modelListBreadcrumbs(to),
     {
-      name: "Modellpass",
+      name: {
+        text: 'models.pass',
+        localized: true,
+      },
       route: MODEL,
       params: to.params,
     },
@@ -71,7 +76,7 @@ export const MODEL_QRCODE: RouteRecordRaw = {
     layoutStore.breadcrumbs = [
       ...(await modelBreadcrumbs(to)),
       {
-        name: "QR Code",
+        name: localizedBreadcrumb('common.qrCode'),
         route: MODEL_QRCODE,
         params: to.params,
       },
@@ -94,7 +99,7 @@ export const MODEL_CREATE: RouteRecordRaw = {
     layoutStore.breadcrumbs = [
       ...modelListBreadcrumbs(to),
       {
-        name: "Erstellen",
+        name: localizedBreadcrumb('common.create'),
         route: MODEL_CREATE,
         params: to.params,
       },

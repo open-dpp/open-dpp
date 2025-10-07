@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import type { TemplateGetAllDto } from "@open-dpp/api-client";
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const props = defineProps<{ templates: TemplateGetAllDto[] }>();
 const emits = defineEmits<{
   (e: "submit", selectedProductDataModelId: string, modelName: string): void;
@@ -43,14 +45,14 @@ async function create(fields: {
     >
       <form-kit
         :wrapper-class="{ 'w-full': true }"
-        label="Allgemein"
+        :label="t('models.general')"
         name="generalInfo"
         type="step"
       >
         <form-kit
           data-cy="name"
-          help="Geben Sie Ihrem Modellpass einen Namen"
-          label="Name"
+          :help="t('models.form.name.help')"
+          :label="t('models.form.name.label')"
           name="name"
           type="text"
           validation="required"
@@ -58,14 +60,14 @@ async function create(fields: {
         <form-kit
           :options="selectableDataModels"
           data-cy="productDataModelId"
-          help="Wählen Sie die passende Passvorlage aus"
-          label="Passvorlage"
+          :help="t('models.form.passportDraft.help')"
+          :label="t('models.form.passportDraft.label')"
           name="productDataModelId"
           type="select"
           validation="required"
         />
         <template #stepNext>
-          <FormKit label="Erstellen" type="submit" />
+          <FormKit :label="t('common.create')" type="submit" />
         </template>
       </form-kit>
     </form-kit>

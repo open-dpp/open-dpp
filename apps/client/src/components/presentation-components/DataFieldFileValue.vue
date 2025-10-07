@@ -5,7 +5,9 @@ import { ArrowDownTrayIcon } from "@heroicons/vue/24/outline";
 import { onMounted, ref } from "vue";
 import { useMediaStore } from "../../stores/media";
 import MediaPreview from "../media/MediaPreview.vue";
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const props = defineProps<{ fieldView: FieldView }>();
 
 const mediaStore = useMediaStore();
@@ -23,12 +25,8 @@ async function loadFile() {
     if (uploadedFileUrl.value) {
       try {
         URL.revokeObjectURL(uploadedFileUrl.value);
-      }
-      catch (revokeErr) {
-        console.error(
-          "Fehler beim Freigeben der vorherigen Objekt-URL:",
-          revokeErr,
-        );
+      } catch (revokeErr) {
+        console.error(t('file.errorRevokingUrl'), revokeErr);
       }
     }
 
@@ -43,12 +41,8 @@ async function loadFile() {
     if (uploadedFileUrl.value) {
       try {
         URL.revokeObjectURL(uploadedFileUrl.value);
-      }
-      catch (revokeErr) {
-        console.error(
-          "Fehler beim Freigeben der Objekt-URL nach Fehler:",
-          revokeErr,
-        );
+      } catch (revokeErr) {
+        console.error(t('file.errorRevokingUrlError'), revokeErr);
       }
     }
     uploadedFileUrl.value = undefined;
@@ -93,6 +87,6 @@ onMounted(async () => {
     </div>
   </div>
   <div v-else class="flex flex-row gap-4">
-    Datei konnte nicht geladen werden.
+    {{ t('file.couldNotBeLoaded') }}
   </div>
 </template>

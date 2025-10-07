@@ -34,20 +34,16 @@ export class MediaService {
     this.configService = configService;
     this.mediaDoc = mediaDoc;
     this.client = new Minio.Client({
-      endPoint: configService.get<string>("S3_ENDPOINT", ""),
-      port: configService.get<number>("S3_PORT"),
-      useSSL: configService.get<string>("S3_SSL") === "true",
-      accessKey: configService.get<string>("S3_ACCESS_KEY"),
-      secretKey: configService.get<string>("S3_SECRET_KEY"),
-      region: "nbg1",
+      endPoint: configService.get('OPEN_DPP_S3_ENDPOINT'),
+      port: configService.get('OPEN_DPP_S3_PORT'),
+      useSSL: configService.get('OPEN_DPP_S3_SSL'),
+      accessKey: configService.get('OPEN_DPP_S3_ACCESS_KEY'),
+      secretKey: configService.get('OPEN_DPP_S3_SECRET_KEY'),
+      region: 'nbg1',
     });
-    this.bucketNameDefault = configService.get<string>(
-      "S3_BUCKET_NAME_DEFAULT",
-      "",
-    );
-    this.bucketNameProfilePictures = configService.get<string>(
-      "S3_BUCKET_NAME_PROFILE_PICTURES",
-      "",
+    this.bucketNameDefault = configService.get('OPEN_DPP_S3_DEFAULT_BUCKET');
+    this.bucketNameProfilePictures = configService.get(
+      'OPEN_DPP_S3_PROFILE_PICTURE_BUCKET',
     );
   }
 

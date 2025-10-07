@@ -98,10 +98,10 @@ onMounted(async () => {
       >
         <div>
           <h3 class="text-base/7 font-semibold text-gray-900">
-            Passvorlagen Entwurf {{ draftStore.draft.name }}
+            {{ t('draft.passportDraft') + ' ' + draftStore.draft.name }}
           </h3>
           <p class="mt-1 max-w-2xl text-sm/6 text-gray-500">
-            Version {{ draftStore.draft.version }}
+            {{ t('draft.version') + ' ' + draftStore.draft.version }}
           </p>
         </div>
         <div class="">
@@ -115,15 +115,15 @@ onMounted(async () => {
           <BaseButton
             v-if="currentSections.parentSection"
             @click="navigateBackToParent"
+            >{{ t('common.toHome') }}</BaseButton
           >
-            Zur Startseite
-          </BaseButton>
           <BaseButton
             v-if="currentSections.parentSection?.parentId"
             @click="navigateBackToParent"
+            >{{
+              t('common.backTo', { link: currentSections.parentSection.name })
+            }}</BaseButton
           >
-            Zurück zu {{ currentSections.parentSection.name }}
-          </BaseButton>
         </div>
         <AddSection
           :parent-granularity-level="
@@ -144,19 +144,19 @@ onMounted(async () => {
                 variant="primary"
                 @click="onEditSectionClicked(section)"
               >
-                Editieren
+                {{ t('draft.edit') }}
               </BaseButton>
               <BaseButton
                 variant="primary"
                 @click="onAddDataFieldClicked(section)"
               >
-                Datenfeld hinzufügen
+                {{ t('draft.addDataField') }}
               </BaseButton>
               <BaseButton
                 variant="primary"
                 @click="onAddSubSectionClicked(section)"
               >
-                Abschnitt hinzufügen
+                {{ t('draft.addSection') }}
               </BaseButton>
               <div class="flex items-center rounded-md">
                 <button

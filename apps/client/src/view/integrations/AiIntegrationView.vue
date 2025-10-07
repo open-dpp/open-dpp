@@ -2,7 +2,9 @@
 import { AiProvider } from "@open-dpp/api-client";
 import { ref, watch } from "vue";
 import { useAiIntegrationStore } from "../../stores/ai.integration";
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const aiIntegrationStore = useAiIntegrationStore();
 const formData = ref<{ isEnabled: boolean }>({ isEnabled: false });
 
@@ -36,10 +38,10 @@ async function onSubmit() {
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
         <h1 class="text-base font-semibold text-gray-900">
-          KI Konfiguration
+          {{ t('integrations.ai.configuration') }}
         </h1>
         <p class="mt-2 text-sm text-gray-700">
-          Konfigurieren Sie die KI-Integration
+          {{ t('integrations.ai.configurationDesc') }}
         </p>
       </div>
     </div>
@@ -53,10 +55,10 @@ async function onSubmit() {
         <FormKit
           data-cy="toggle-integration"
           type="checkbox"
-          label="KI-Integration aktivieren"
+          :label="t('integrations.ai.activate')"
           name="isEnabled"
         />
-        <form-kit label="Speichern" type="submit" />
+        <form-kit :label="t('common.save')" type="submit" />
       </form-kit>
     </div>
   </div>

@@ -15,7 +15,7 @@ export const DRAFT_LIST: RouteRecordRaw = {
 function draftListBreadcrumbs(to: RouteLocationNormalizedGeneric) {
   return [
     {
-      name: "Passvorlagen Entwürfe",
+      name: localizedBreadcrumb('draft.passTemplates'),
       route: DRAFT_LIST,
       params: to.params,
     },
@@ -43,7 +43,7 @@ export async function draftBreadcrumbs(to: RouteLocationNormalizedGeneric) {
   return [
     ...draftListBreadcrumbs(to),
     {
-      name: draftName || draftId || "Datenmodellentwurf",
+      name: textOrLocalizedFallback(draftName || draftId, 'draft.draft'),
       route: DRAFT,
       params: to.params,
     },
@@ -60,7 +60,7 @@ export const DRAFT_CREATE: RouteRecordRaw = {
     layoutStore.breadcrumbs = [
       ...draftListBreadcrumbs(to),
       {
-        name: "Erstellen",
+        name: localizedBreadcrumb('common.create'),
         route: DRAFT_CREATE,
         params: to.params,
       },

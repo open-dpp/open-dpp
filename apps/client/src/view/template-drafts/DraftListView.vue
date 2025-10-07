@@ -25,7 +25,7 @@ onMounted(async () => {
       <EmptyState
         v-else
         :button-link="`/organizations/${indexStore.selectedOrganization}/data-model-drafts/create`"
-        button-label="Neue Passvorlage entwerfen"
+        :button-label="t('draft.createNewShort')"
       />
     </div>
   </section>

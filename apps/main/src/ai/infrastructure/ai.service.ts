@@ -20,13 +20,13 @@ export class AiService {
       return new ChatMistralAI({
         model,
         temperature: 0,
-        apiKey: this.configService.get("MISTRAL_API_KEY"),
+        apiKey: this.configService.get('OPEN_DPP_MISTRAL_API_KEY'),
       });
     }
 
     return new ChatOllama({
       model,
-      baseUrl: this.configService.get("OLLAMA_URL"),
+      baseUrl: this.configService.get('OPEN_DPP_OLLAMA_URL'),
     });
   }
 

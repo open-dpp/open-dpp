@@ -41,7 +41,7 @@ export class AasConnectionController {
   private readonly itemsApplicationService: ItemsApplicationService;
   private aasConnectionService: AasConnectionService;
   private templateService: TemplateService;
-  private configService: ConfigService;
+  private configService: EnvService;
   private permissionsService: PermissionService;
   private uniqueProductIdentifierService: UniqueProductIdentifierService;
 
@@ -52,7 +52,7 @@ export class AasConnectionController {
     itemsApplicationService: ItemsApplicationService,
     aasConnectionService: AasConnectionService,
     templateService: TemplateService,
-    configService: ConfigService,
+    configService: EnvService,
     permissionsService: PermissionService,
     uniqueProductIdentifierService: UniqueProductIdentifierService,
   ) {
@@ -75,8 +75,8 @@ export class AasConnectionController {
     @Param("connectionId") connectionId: string,
     @Body() aasJson: any,
   ) {
-    if (apiToken !== this.configService.get("API_TOKEN")) {
-      throw new ForbiddenException("Wrong api token");
+    if (apiToken !== this.configService.get('OPEN_DPP_AAS_TOKEN')) {
+      throw new ForbiddenException('Wrong api token');
     }
     const aasConnection
       = await this.aasConnectionService.findById(connectionId);

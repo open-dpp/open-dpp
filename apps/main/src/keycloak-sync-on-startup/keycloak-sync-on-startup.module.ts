@@ -10,7 +10,7 @@ import { KeycloakSyncOnStartupService } from "./keycloak-sync-on-startup/keycloa
     OrganizationsModule,
     UsersModule,
     KeycloakResourcesModule,
-    ConfigModule,
+    EnvModule,
   ],
   providers: [KeycloakSyncOnStartupService],
 })

@@ -1,0 +1,369 @@
+{
+  "common": {
+    "actions": "Actions",
+    "clipboardSuccess": "Copied to clipboard.",
+    "edit": "Edit",
+    "qrCode": "QR code",
+    "add": "Add",
+    "save": "Save",
+    "create": "Create",
+    "change": "Change",
+    "close": "Close",
+    "cancel": "Cancel",
+    "select": "Select",
+    "selected": "Selected",
+    "submit": "Submit",
+    "abort": "Abort",
+    "general": "General",
+    "remove": "Remove",
+    "errorOccured": "An error occurred",
+    "unknownErrorOccured": "An unexpected error occurred. Please try again.",
+    "toHome": "To home",
+    "home": "Home",
+    "backTo": "Back to { link }",
+    "presentationMode": "Presentation mode",
+    "form": {
+      "email": {
+        "help": "Enter an email address.",
+        "label": "Email address",
+        "error": "Please enter an email address."
+      }
+    },
+    "id": "ID",
+    "identification": "Identification",
+    "name": "Name",
+    "send": "Send",
+    "back": "Back",
+    "call": "Call",
+    "website": "Website",
+    "contact": "Contact"
+  },
+  "builder": {
+    "repeater": {
+      "label": "Repeater",
+      "description": "Add a repeater section to allow a group of fields to be added multiple times."
+    },
+    "group": {
+      "label": "Grouping",
+      "description": "Add a section that groups multiple fields"
+    },
+    "granularity": {
+      "model": "Passport draft level",
+      "item": "Model level",
+      "setOnModel": "Set at item level",
+      "setOnItem": "Set at model level"
+    },
+    "delete": {
+      "label": "Delete section",
+      "description": "Are you sure you want to delete this section?"
+    },
+    "textField": {
+      "name": "Text field name"
+    },
+    "passportLink": {
+      "name": "Passport link name"
+    },
+    "numeric": {
+      "name": "Numeric field name",
+      "min": "Minimum",
+      "max": "Maximum"
+    },
+    "file": {
+      "name": "File field name"
+    },
+    "name": "Section name",
+    "granularityLevel": "Granularity level"
+  },
+  "draft": {
+    "drafts": "Passport templates",
+    "draft": "Passport template",
+    "edit": "Edit",
+    "publish": "Publish",
+    "visibility": {
+      "private": "Visible only to organization",
+      "public": "Visible to everyone"
+    },
+    "passTemplate": "Passport Draft",
+    "passTemplates": "Passport Drafts",
+    "createNewPassTemplate": "Draft a new pass template.",
+    "createNewShort": "Draft a new pass template",
+    "create": "Create",
+    "createDraft": "Create Passport Draft",
+    "createPassTemplateSuccess": "Your draft has been successfully published. You can now create models based on it.",
+    "createModel": "Create model",
+    "form": {
+      "name": {
+        "label": "Name",
+        "help": "Give your pass template a name"
+      },
+      "description": {
+        "label": "Description",
+        "help": "Give your pass template a description"
+      },
+      "sectors": {
+        "label": "Sectors",
+        "help": "Select at least one sector for which your pass template can be applied.",
+        "battery": "Battery",
+        "construction": "Construction",
+        "mining": "Mining",
+        "electronics": "Electronics",
+        "trade": "Trade",
+        "healthcare": "Healthcare",
+        "agriculture": "Agriculture",
+        "education": "Education",
+        "aerospace": "Aerospace",
+        "machinery": "Machinery",
+        "medical": "Medical",
+        "textile": "Textile",
+        "other": "Other"
+      }
+    },
+    "version": "Version",
+    "selection": "Selection",
+    "section": "Section",
+    "addSection": "Add Section",
+    "configuration": "Configuration",
+    "dataField": "Data field",
+    "addDataField": "Add data field",
+    "deleteDataField": "Delete data field",
+    "deleteDataFieldDescription": "Are you sure you want to delete this data field?",
+    "errorAddingDataField": "Could not add data field.",
+    "textField": "Text field",
+    "addTextField": "Add a text field",
+    "passportLink": "Passport link",
+    "addPassportLink": "Add a link to a passport",
+    "numberField": "Numeric field",
+    "addNumberField": "Add numeric field",
+    "fileField": "File",
+    "addFileField": "Add file upload",
+    "passportDraft": "Passport draft | Passport drafts",
+    "passportDraftDescription": "All passport drafts"
+  },
+  "integrations": {
+    "integrations": "Integrations",
+    "allIntegrations": "All your integrations",
+    "proAlpha": "ProAlpha Integration",
+    "ai": {
+      "label": "AI Integration",
+      "configuration": "AI Configuration",
+      "configurationDesc": "Configure the AI integration",
+      "activate": "Activate AI integration",
+      "errorLoadingConfiguration": "Failed to load configuration: ",
+      "savedConfigurationSuccess": "Configuration saved successfully.",
+      "modifyConfigurationError": "Failed to modify configuration:"
+    },
+    "connections": {
+      "label": "Connection | Connections",
+      "info": "Connection information",
+      "description": "All your connections",
+      "new": "Add new connection",
+      "create": "Create a new connection.",
+      "errorSave": "Failed to save connection",
+      "errorSwitch": "Failed to switch model passport",
+      "errorLoad": "Failed to load connections:",
+      "add": "Create connection",
+      "id": "ID",
+      "name": {
+        "label": "Name",
+        "help": "Give your connection a name"
+      },
+      "model": {
+        "help": "Select a model passport for which you want to create item passports via this connection",
+        "label": "Model passport selection",
+        "linked": "Linked model passport",
+        "noModelFound": "No model passport available for which item passports can be automatically created via a connection. Please",
+        "noModelFoundLink": "create a model passport first."
+      },
+      "aas": {
+        "linked": "Linked Asset Administration Shell",
+        "isLinked": "is linked with",
+        "field": "Field from the Asset Administration Shell",
+        "modelField": "Field from the product data model",
+        "selectModelField": "Select a field from the product data model",
+        "selectField": "Select a field from the Asset Administration Shell",
+        "help": "Select an Asset Administration Shell",
+        "label": "Asset Administration Shell selection",
+        "truck": "Truck",
+        "semitrailer": "Semitrailer",
+        "semitrailerTruck": "Semitrailer truck"
+      },
+      "status": {
+        "label": "Status",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "fieldAssignments": "Field assignments",
+      "addFieldAssignments": "Add new field assignment"
+    },
+    "apiKey": {
+      "create": "Create API Key",
+      "createSuccess": "API Key was created successfully. Please copy the key: { key }",
+      "createError": "Error creating API Key. Please try again."
+    },
+    "edit": "Edit",
+    "errorCreate": "Failed to create connection"
+  },
+  "statistics": {
+    "statistics": "Statistics"
+  },
+  "members": {
+    "members": "Members"
+  },
+  "organizations": {
+    "organizations": "Organization | Organizations",
+    "select": "Select organization",
+    "info": "Organization information",
+    "details": "Organization details and users.",
+    "create": "Create a new organization.",
+    "assignedOrganizations": "All assigned organizations",
+    "pick": "Select organization",
+    "new": "Create new organization",
+    "invite": "Invite",
+    "inviteUser": "Invite user",
+    "inviteUserSuccess": "The user has been successfully invited.",
+    "member": "Members",
+    "memberListDescription": "A list of all members in this organization.",
+    "memberName": "Name",
+    "memberRole": "Role",
+    "memberAdmin": "Admin",
+    "memberCreator": "Creator",
+    "addUser": "Add user",
+    "form": {
+      "id": "ID",
+      "createdBy": "Created by",
+      "administeredBy": "Administered by",
+      "description": "Description",
+      "name": {
+        "help": "Give your organization a name",
+        "label": "Name"
+      }
+    }
+  },
+  "marketplace": {
+    "marketplace": "Marketplace"
+  },
+  "models": {
+    "models": "Passports",
+    "pass": "Model passport",
+    "info": "Model passport information",
+    "errorLoad": "Failed to load model passports",
+    "createPass": "Create a new model passport.",
+    "submitCreatePass": "Create model passport",
+    "general": "General",
+    "myDrafts": "My templates",
+    "form": {
+      "id": "ID",
+      "name": {
+        "help": "Give your model passport a name",
+        "label": "Name",
+        "error": "Please enter a name."
+      },
+      "passportDraft": {
+        "help": "Select the appropriate passport template",
+        "label": "Passport template",
+        "error": "Please select a template."
+      },
+      "file": {
+        "change": "Change file",
+        "upload": "Upload file",
+        "uploadSuccess": "File uploaded successfully.",
+        "uploadError": "An unexpected error occurred while uploading the file. Please try again.",
+        "download": "Download file",
+        "downloadError": "The file could not be loaded. Please try again.",
+        "select": "Select file",
+        "noSelection": "No file selected"
+      },
+      "link": {
+        "navigationError": "Navigation to passport failed"
+      },
+      "repeater": {
+        "series": "Data series",
+        "addSeries": "Add data series"
+      },
+      "section": {
+        "additional": "Additional sections",
+        "saveSuccess": "Data saved successfully",
+        "saveError": "Data could not be saved"
+      }
+    },
+    "list": {
+      "creation-label": "Add model passport",
+      "description": "All passports at the product model level. A product model is, for example, the Galaxy S22 Ultra.",
+      "title": "Model passports"
+    }
+  },
+  "actions": {
+    "member": {
+      "title": "Add members",
+      "description": "View organization members to add a new member there."
+    },
+    "model": {
+      "title": "Add model",
+      "description": "View organization models to add a new model there."
+    }
+  },
+  "items": {
+    "info": "Item passport information",
+    "add": "Add item passport",
+    "new": "New item passport",
+    "description": "All passports at item level.",
+    "label": "Item passports",
+    "item": "Item"
+  },
+  "user": {
+    "profile": "Your profile",
+    "personalInformation": "Personal information",
+    "logout": "Logout",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "language": "Language",
+    "displaySettings": "Display settings"
+  },
+  "notifications": {
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Information"
+  },
+  "lists": {
+    "editAll": "Edit all",
+    "deleteAll": "Delete all",
+    "noElements": "No elements found",
+    "shows": "Shows ",
+    "to": " to ",
+    "of": " of ",
+    "elements": "elements"
+  },
+  "media": {
+    "media": "Media",
+    "preview": "Preview"
+  },
+  "file": {
+    "type": "File type",
+    "size": "File size",
+    "upload": "Upload file",
+    "uploadSuccess": "File uploaded successfully.",
+    "uploadError": "An unexpected error occurred while uploading the file. Please try again.",
+    "change": "Change file",
+    "download": "Download file",
+    "downloadError": "The file could not be loaded. Please try again.",
+    "select": "Select file",
+    "noSelection": "No file selected",
+    "notFound": "File not found",
+    "couldNotBeLoaded": "File could not be loaded.",
+    "errorRevokingUrl": "Error revoking previous object URL:",
+    "errorRevokingUrlError": "Error revoking object URL after error:"
+  },
+  "presentation": {
+    "productDetails": "Product details",
+    "productDetailsDesc": "General information about the product.",
+    "additionalSections": "Additional sections",
+    "moreInfo": "More information",
+    "navigation": "Navigation",
+    "backToApp": "Back to app",
+    "toPass": "To pass view",
+    "chatWithAI": "Chat with AI",
+    "productpass": "Product passport",
+    "askQuestion": "Ask your question..."
+  }
+}

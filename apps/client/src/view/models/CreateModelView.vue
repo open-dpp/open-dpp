@@ -5,12 +5,14 @@ import { useRouter } from "vue-router";
 import ModelTemplateList from "../../components/models/ModelTemplateList.vue";
 import apiClient from "../../lib/api-client";
 import { useNotificationStore } from "../../stores/notification";
+import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{
   organizationId: string;
 }>();
 const router = useRouter();
 const notificationStore = useNotificationStore();
+const { t } = useI18n();
 
 const name = ref<string>("");
 const selectedTemplate = ref<TemplateGetAllDto | null>(null);
@@ -18,12 +20,12 @@ const isMarketplaceSelected = ref<boolean>(false);
 
 async function onSubmit() {
   if (!name.value) {
-    notificationStore.addErrorNotification("Bitte geben Sie einen Namen ein.");
+    notificationStore.addErrorNotification(t('models.form.name.error')));
     return;
   }
   if (!selectedTemplate.value) {
     notificationStore.addErrorNotification(
-      "Bitte wählen Sie eine Vorlage aus.",
+        t('models.form.passportDraft.error'),
     );
     return;
   }
@@ -49,10 +51,10 @@ async function onSubmit() {
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
         <h1 class="text-base font-semibold text-gray-900">
-          Modellpass
+          {{ t('models.pass') }}
         </h1>
         <p class="mt-2 text-sm text-gray-700">
-          Erstellen Sie einen neuen Modellpass.
+          {{ t('models.createPass') }}
         </p>
       </div>
     </div>
@@ -62,8 +64,8 @@ async function onSubmit() {
           <form-kit
             v-model="name"
             data-cy="name"
-            help="Geben Sie Ihrem Modellpass einen Namen"
-            label="Name"
+            :help="t('models.form.name.help')"
+            :label="t('models.form.name.label')"
             name="name"
             type="text"
             validation="required"
@@ -75,7 +77,7 @@ async function onSubmit() {
             type="button"
             @click="onSubmit"
           >
-            Modelpass erstellen
+            {{ t('models.submitCreatePass') }}
           </button>
         </div>
       </div>

@@ -7,17 +7,14 @@ import { useErrorHandlingStore } from "./error.handling";
 export const useModelsStore = defineStore("models", () => {
   const models = ref<ModelDto[]>([]);
   const errorHandlingStore = useErrorHandlingStore();
+  const { t } = i18n.global;
 
   const getModels = async () => {
     try {
       const response = await apiClient.dpp.models.getAll();
       models.value = response.data;
-    }
-    catch (e) {
-      errorHandlingStore.logErrorWithNotification(
-        "Laden der Modellpässe fehlgeschlagen",
-        e,
-      );
+    } catch (e) {
+      errorHandlingStore.logErrorWithNotification(t('notifications.error'), e);
     }
   };
 

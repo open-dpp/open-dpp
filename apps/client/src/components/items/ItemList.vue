@@ -5,6 +5,11 @@ import { useRoute } from "vue-router";
 import { useIndexStore } from "../../stores";
 import ListHeader from "../lists/ListHeader.vue";
 import SimpleTable from "../lists/SimpleTable.vue";
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
+
+const indexStore = useIndexStore();
+const route = useRoute();
 
 const props = defineProps<{
   items: ItemDto[];
@@ -13,10 +18,6 @@ const props = defineProps<{
 const emits = defineEmits<{
   (e: "add"): void;
 }>();
-
-const indexStore = useIndexStore();
-
-const route = useRoute();
 
 const rows = computed(() => {
   return props.items.map(i => ({
@@ -27,12 +28,12 @@ const rows = computed(() => {
 
 const actions = [
   {
-    name: "Editieren",
+    name: t('common.edit'),
     actionLinkBuilder: (row: Record<string, string>) =>
       `/organizations/${indexStore.selectedOrganization}/models/${route.params.modelId as string}/items/${row.id}`,
   },
   {
-    name: "QR-Code",
+    name: t('common.qrCode'),
     actionLinkBuilder: (row: Record<string, string>) =>
       `/organizations/${indexStore.selectedOrganization}/models/${route.params.modelId as string}/items/${row.id}/qr-code`,
   },

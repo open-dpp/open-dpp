@@ -13,7 +13,9 @@ import { useIndexStore } from "../../stores";
 import { useMediaStore } from "../../stores/media";
 import { useNotificationStore } from "../../stores/notification";
 import MediaGrid from "./MediaGrid.vue";
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const props = defineProps<{
   open: boolean;
 }>();
@@ -122,9 +124,8 @@ watch(
                   <DialogTitle
                     as="h3"
                     class="text-base font-semibold text-gray-900"
+                    >{{ t('file.select') }}</DialogTitle
                   >
-                    Datei auswählen
-                  </DialogTitle>
                 </div>
                 <div>
                   <button
@@ -170,14 +171,14 @@ watch(
                   type="button"
                   @click="emits('confirm', selected)"
                 >
-                  Auswählen
+                  {{ t('common.select') }}
                 </button>
                 <button
                   class="bg-[#6BAD87]/20 p-2 rounded text-[#6BAD87]/80 hover:cursor-pointer"
                   type="button"
                   @click="emits('cancel')"
                 >
-                  Abbrechen
+                  {{ t('common.abort') }}
                 </button>
               </div>
             </DialogPanel>

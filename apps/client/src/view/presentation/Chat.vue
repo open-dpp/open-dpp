@@ -66,13 +66,13 @@ function sendMessage() {
         rows="2"
         name="question"
         class="flex-1 overflow-hidden outline-gray-300 rounded-lg pb-12 outline-1 -outline-offset-1 focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-indigo-600 dark:bg-white/5 dark:outline-white/10 dark:focus-within:outline-indigo-500"
-        placeholder="Stellen Sie Ihre Frage..."
+        placeholder="t('presentation.askQuestion')"
         @keydown.enter.exact.prevent="sendMessage"
         @keydown.shift.enter.exact.prevent="input += '\n'"
       />
-      <BaseButton variant="primary" @click="sendMessage">
-        Abschicken
-      </BaseButton>
+      <BaseButton variant="primary" @click="sendMessage">{{
+        t('common.send')
+      }}</BaseButton>
     </div>
   </div>
 </template>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAasConnectionFormStore } from "../../stores/aas.connection.form";
 
+const { t } = useI18n();
 const aasConnectionFormStore = useAasConnectionFormStore();
 
 async function onSubmit() {
@@ -19,6 +20,6 @@ async function onSubmit() {
       v-if="aasConnectionFormStore.formSchema"
       :schema="aasConnectionFormStore.formSchema"
     />
-    <FormKit label="Speichern" type="submit" />
+    <FormKit :label="t('common.save')" type="submit" />
   </FormKit>
 </template>
