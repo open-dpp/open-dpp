@@ -1,35 +1,31 @@
-import { Test } from '@nestjs/testing';
-import { INestApplication, NotFoundException } from '@nestjs/common';
-import request from 'supertest';
-import { UserEntity } from '../../users/infrastructure/user.entity';
-import { OrganizationEntity } from '../infrastructure/organization.entity';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { APP_GUARD } from '@nestjs/core';
-import { OrganizationsService } from '../infrastructure/organizations.service';
-import { OrganizationsModule } from '../organizations.module';
-import { User } from '../../users/domain/user';
-import { randomUUID } from 'crypto';
-import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { Organization } from '../domain/organization';
-import { expect, jest } from '@jest/globals';
-import { PermissionService } from '@app/permission';
-import { AuthContext } from '@app/auth/auth-request';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
-import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
-import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
-import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
-import { NotFoundInDatabaseExceptionFilter } from '@app/exception/exception.handler';
-import { UsersService } from '../../users/infrastructure/users.service';
-import { getApp } from '@app/testing/utils';
+import { Buffer } from "node:buffer";
+import { randomUUID } from "node:crypto";
+import { expect, jest } from "@jest/globals";
+import { INestApplication, NotFoundException } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
+import { Test } from "@nestjs/testing";
+import { AuthContext, PermissionModule, PermissionService } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
+import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
+import { createKeycloakUserInToken, getApp, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, TypeOrmTestingModule } from "@open-dpp/testing";
+import request from "supertest";
+import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
+import { User } from "../../users/domain/user";
+import { UserEntity } from "../../users/infrastructure/user.entity";
+import { UsersService } from "../../users/infrastructure/users.service";
+import { Organization } from "../domain/organization";
+import { OrganizationEntity } from "../infrastructure/organization.entity";
+import { OrganizationsService } from "../infrastructure/organizations.service";
+import { OrganizationsController } from "./organizations.controller";
 
-describe('OrganizationController', () => {
+describe("organizationController", () => {
   let app: INestApplication;
   let service: OrganizationsService;
   let permissionService: PermissionService;
   const authContext = new AuthContext();
   authContext.keycloakUser = createKeycloakUserInToken();
-  const orgaId = 'testOrgId';
-  const token = Buffer.from(`[${orgaId}]`).toString('base64');
+  const orgaId = "testOrgId";
+  const token = Buffer.from(`[${orgaId}]`).toString("base64");
   authContext.token = token;
   const userId = authContext.keycloakUser.sub;
   const user = new User(userId, authContext.keycloakUser.email);
@@ -37,20 +33,24 @@ describe('OrganizationController', () => {
   // Mock for permissions
   authContext.permissions = [
     {
-      type: 'organization',
+      type: "organization",
       resource: orgaId,
-      scopes: ['organization:access'],
+      scopes: ["organization:access"],
     },
   ];
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
-        OrganizationsModule,
+        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
+        PermissionModule,
       ],
       providers: [
+        UsersService,
+        OrganizationsService,
+        KeycloakResourcesService,
         {
           provide: APP_GUARD,
           useValue: new KeycloakAuthTestingGuard(
@@ -58,6 +58,7 @@ describe('OrganizationController', () => {
           ),
         },
       ],
+      controllers: [OrganizationsController],
     })
       .overrideProvider(KeycloakResourcesService)
       .useValue(
@@ -83,12 +84,12 @@ describe('OrganizationController', () => {
     await app.init();
   });
 
-  describe('POST /organizations', () => {
-    it('should create a new organization', async () => {
-      const body = { name: 'Test Organization' };
+  describe("pOST /organizations", () => {
+    it("should create a new organization", async () => {
+      const body = { name: "Test Organization" };
       const response = await request(getApp(app))
-        .post('/organizations')
-        .set('Authorization', `Bearer ${token}`)
+        .post("/organizations")
+        .set("Authorization", `Bearer ${token}`)
         .send(body);
 
       expect(response.status).toEqual(201);
@@ -100,181 +101,181 @@ describe('OrganizationController', () => {
     });
   });
 
-  describe('GET /organizations', () => {
-    it('should return all organizations the user is a member of', async () => {
+  describe("gET /organizations", () => {
+    it("should return all organizations the user is a member of", async () => {
       // Get existing orgs to avoid conflicts with other tests
       const response1 = await request(getApp(app))
-        .get('/organizations')
-        .set('Authorization', `Bearer ${token}`);
+        .get("/organizations")
+        .set("Authorization", `Bearer ${token}`);
 
       const initialCount = response1.body.length;
 
       // Create a new org for this test
       const org = Organization.create({
-        name: 'Org for Access Test',
-        user: user,
+        name: "Org for Access Test",
+        user,
       });
       const savedOrg = await service.save(org);
 
       // For future calls, make sure all permissions are pre-authorized for this test
       jest
-        .spyOn(permissionService, 'canAccessOrganization')
+        .spyOn(permissionService, "canAccessOrganization")
         .mockReturnValue(true);
 
       // Verify we can get all orgs including the new one
       const response2 = await request(getApp(app))
-        .get('/organizations')
-        .set('Authorization', `Bearer ${token}`);
+        .get("/organizations")
+        .set("Authorization", `Bearer ${token}`);
 
       expect(response2.status).toEqual(200);
       expect(response2.body).toBeInstanceOf(Array);
       expect(response2.body.length).toBeGreaterThan(initialCount);
 
       // Verify the new org is in the response
-      const foundOrg = response2.body.find((o) => o.id === savedOrg.id);
+      const foundOrg = response2.body.find((o: Organization) => o.id === savedOrg.id);
       expect(foundOrg).toBeDefined();
       expect(foundOrg.name).toEqual(org.name);
     });
   });
 
-  describe('GET /organizations/:id', () => {
-    it('should return a single organization when user has access', async () => {
+  describe("gET /organizations/:id", () => {
+    it("should return a single organization when user has access", async () => {
       // Setup: Create an organization
       const org = Organization.create({
-        name: 'Test Org for Finding',
-        user: user,
+        name: "Test Org for Finding",
+        user,
       });
       await service.save(org);
 
       // Mock permissions to allow access
       jest
-        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .spyOn(permissionService, "canAccessOrganizationOrFail")
         .mockReturnValue(true);
 
       const response = await request(getApp(app))
         .get(`/organizations/${org.id}`)
-        .set('Authorization', `Bearer ${token}`);
+        .set("Authorization", `Bearer ${token}`);
 
       expect(response.status).toEqual(200);
       expect(response.body.id).toEqual(org.id);
       expect(response.body.name).toEqual(org.name);
     });
 
-    it('should return 403 when user has no access to the organization', async () => {
+    it("should return 403 when user has no access to the organization", async () => {
       const orgId = randomUUID();
 
       // Mock permissions to deny access
       jest
-        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .spyOn(permissionService, "canAccessOrganizationOrFail")
         .mockImplementation(() => {
           throw new NotFoundException();
         });
 
       const response = await request(getApp(app))
         .get(`/organizations/${orgId}`)
-        .set('Authorization', `Bearer ${token}`);
+        .set("Authorization", `Bearer ${token}`);
 
       expect(response.status).toEqual(404);
     });
   });
 
-  describe('POST /organizations/:organizationId/invite', () => {
-    it('should successfully invite a user to an organization', async () => {
+  describe("pOST /organizations/:organizationId/invite", () => {
+    it("should successfully invite a user to an organization", async () => {
       // Setup: Create an organization and a user to invite
       const org = Organization.create({
-        name: 'Test Org for Invites',
-        user: user,
+        name: "Test Org for Invites",
+        user,
       });
       const savedOrg = await service.save(org);
 
       // Mock permissions to allow access
       jest
-        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .spyOn(permissionService, "canAccessOrganizationOrFail")
         .mockReturnValue(true);
 
       // Mock service methods
       const inviteUserSpy = jest
-        .spyOn(service, 'inviteUser')
+        .spyOn(service, "inviteUser")
         .mockImplementation(async () => {});
 
       const response = await request(getApp(app))
         .post(`/organizations/${savedOrg.id}/invite`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ email: 'invited@example.com' });
+        .set("Authorization", `Bearer ${token}`)
+        .send({ email: "invited@example.com" });
 
       expect(response.status).toEqual(201);
       expect(inviteUserSpy).toHaveBeenCalledWith(
         authContext,
         savedOrg.id,
-        'invited@example.com',
+        "invited@example.com",
       );
     });
 
-    it('should return 403 when user has no access to invite to the organization', async () => {
+    it("should return 403 when user has no access to invite to the organization", async () => {
       const orgId = randomUUID();
 
       // Mock permissions to deny access
       jest
-        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .spyOn(permissionService, "canAccessOrganizationOrFail")
         .mockImplementation(() => {
           throw new NotFoundException();
         });
 
       const response = await request(getApp(app))
         .post(`/organizations/${orgId}/invite`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ email: 'invited@example.com' });
+        .set("Authorization", `Bearer ${token}`)
+        .send({ email: "invited@example.com" });
 
       expect(response.status).toEqual(404);
     });
   });
 
-  describe('GET /organizations/:id/members', () => {
-    it('should return the members of an organization', async () => {
+  describe("gET /organizations/:id/members", () => {
+    it("should return the members of an organization", async () => {
       // Setup: Create an organization with members
       const org = Organization.create({
-        name: 'Test Org with Members',
+        name: "Test Org with Members",
         user,
       });
-      const member2 = new User(randomUUID(), 'member2@example.com');
+      const member2 = new User(randomUUID(), "member2@example.com");
       org.join(member2);
       const savedOrg = await service.save(org);
 
       // Mock permissions to allow access
       jest
-        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .spyOn(permissionService, "canAccessOrganizationOrFail")
         .mockReturnValue(true);
 
       const response = await request(getApp(app))
         .get(`/organizations/${savedOrg.id}/members`)
-        .set('Authorization', `Bearer ${token}`);
+        .set("Authorization", `Bearer ${token}`);
 
       expect(response.status).toEqual(200);
       expect(response.body).toBeInstanceOf(Array);
       expect(response.body.length).toEqual(2);
       expect(
         response.body.some(
-          (member) => member.id === authContext.keycloakUser.sub,
+          (member: User) => member.id === authContext.keycloakUser.sub,
         ),
       ).toBe(true);
-      expect(response.body.some((member) => member.id === member2.id)).toBe(
+      expect(response.body.some((member: User) => member.id === member2.id)).toBe(
         true,
       );
     });
 
-    it('should return 403 when user has no access to view organization members', async () => {
+    it("should return 403 when user has no access to view organization members", async () => {
       const orgId = randomUUID();
 
       // Mock permissions to deny access
       jest
-        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .spyOn(permissionService, "canAccessOrganizationOrFail")
         .mockImplementation(() => {
           throw new NotFoundException();
         });
 
       const response = await request(getApp(app))
         .get(`/organizations/${orgId}/members`)
-        .set('Authorization', `Bearer ${token}`);
+        .set("Authorization", `Bearer ${token}`);
 
       expect(response.status).toEqual(404);
     });

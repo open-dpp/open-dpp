@@ -1,40 +1,56 @@
-import { Test } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import { ModelsModule } from '../models.module';
-import request from 'supertest';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
-import { APP_GUARD } from '@nestjs/core';
-import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
-import { ModelsService } from '../infrastructure/models.service';
-import { AuthContext } from '@app/auth/auth-request';
-import { Model } from '../domain/model';
-import { User } from '../../users/domain/user';
-import { randomUUID } from 'crypto';
-import { Template, TemplateDbProps } from '../../templates/domain/template';
-import { TemplateService } from '../../templates/infrastructure/template.service';
-import { TemplateModule } from '../../templates/template.module';
-import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
-import { Organization } from '../../organizations/domain/organization';
-import { OrganizationsModule } from '../../organizations/organizations.module';
-import { NotFoundInDatabaseExceptionFilter } from '@app/exception/exception.handler';
-import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
-import { modelToDto } from './dto/model.dto';
-import { getApp, ignoreIds } from '@app/testing/utils';
-import { DataValue } from '../../product-passport-data/domain/data-value';
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { INestApplication } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
+import { MongooseModule } from "@nestjs/mongoose";
+import { Test } from "@nestjs/testing";
+import { AuthContext, PermissionModule } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
+import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
+import getKeycloakAuthToken, { createKeycloakUserInToken, getApp, ignoreIds, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import request from "supertest";
+import { AasConnectionDoc, AasConnectionSchema } from "../../integrations/infrastructure/aas-connection.schema";
+import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
+import { ItemsService } from "../../items/infrastructure/items.service";
+import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
+import {
+  PassportTemplatePublicationDbSchema,
+  PassportTemplatePublicationDoc,
+} from "../../marketplace/infrastructure/passport-template-publication.schema";
+import {
+  PassportTemplatePublicationService,
+} from "../../marketplace/infrastructure/passport-template-publication.service";
+import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
+import { Organization } from "../../organizations/domain/organization";
+import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
+import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
+import { DataValue } from "../../product-passport-data/domain/data-value";
+import { Template, TemplateDbProps } from "../../templates/domain/template";
 import {
   LaptopFactory,
   laptopFactory,
-} from '../../templates/fixtures/laptop.factory';
-import { MarketplaceModule } from '../../marketplace/marketplace.module';
-import { MarketplaceApplicationService } from '../../marketplace/presentation/marketplace.application.service';
-import { expect } from '@jest/globals';
-import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
+} from "../../templates/fixtures/laptop.factory";
+import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
+import { TemplateService } from "../../templates/infrastructure/template.service";
+import {
+  DppEventSchema,
+  TraceabilityEventDocument,
+} from "../../traceability-events/infrastructure/traceability-event.document";
+import {
+  UniqueProductIdentifierDoc,
+  UniqueProductIdentifierSchema,
+} from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
+import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { User } from "../../users/domain/user";
+import { UserEntity } from "../../users/infrastructure/user.entity";
+import { UsersService } from "../../users/infrastructure/users.service";
+import { Model } from "../domain/model";
+import { ModelDoc, ModelSchema } from "../infrastructure/model.schema";
+import { ModelsService } from "../infrastructure/models.service";
+import { modelToDto } from "./dto/model.dto";
+import { ModelsController } from "./models.controller";
 
-describe('ModelsController', () => {
+describe("modelsController", () => {
   let app: INestApplication;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
   let modelsService: ModelsService;
@@ -47,7 +63,7 @@ describe('ModelsController', () => {
     authContext.keycloakUser.email,
   );
   const organization = Organization.create({
-    name: 'orga',
+    name: "orga",
     user,
   });
   let marketplaceService: MarketplaceApplicationService;
@@ -55,19 +71,58 @@ describe('ModelsController', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         TypeOrmTestingModule,
+        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
+        PermissionModule,
         MongooseTestingModule,
-        ModelsModule,
-        OrganizationsModule,
-        TemplateModule,
-        MarketplaceModule,
+        MongooseModule.forFeature([
+          {
+            name: ModelDoc.name,
+            schema: ModelSchema,
+          },
+          {
+            name: UniqueProductIdentifierDoc.name,
+            schema: UniqueProductIdentifierSchema,
+          },
+          {
+            name: ItemDoc.name,
+            schema: ItemSchema,
+          },
+          {
+            name: TemplateDoc.name,
+            schema: TemplateSchema,
+          },
+          {
+            name: AasConnectionDoc.name,
+            schema: AasConnectionSchema,
+          },
+          {
+            name: TraceabilityEventDocument.name,
+            schema: DppEventSchema,
+          },
+          {
+            name: PassportTemplatePublicationDoc.name,
+            schema: PassportTemplatePublicationDbSchema,
+          },
+        ]),
       ],
       providers: [
+        UsersService,
+        OrganizationsService,
+        KeycloakResourcesService,
+        ModelsService,
+        ItemsService,
+        UniqueProductIdentifierService,
+        TemplateService,
+        MarketplaceApplicationService,
+        PassportTemplatePublicationService,
         {
           provide: APP_GUARD,
           useValue: keycloakAuthTestingGuard,
         },
       ],
+      controllers: [ModelsController],
     })
       .overrideProvider(KeycloakResourcesService)
       .useValue(
@@ -85,8 +140,8 @@ describe('ModelsController', () => {
     marketplaceService = moduleRef.get<MarketplaceApplicationService>(
       MarketplaceApplicationService,
     );
-    const organizationService =
-      moduleRef.get<OrganizationsService>(OrganizationsService);
+    const organizationService
+      = moduleRef.get<OrganizationsService>(OrganizationsService);
     await organizationService.save(organization);
 
     app = moduleRef.createNestApplication();
@@ -107,14 +162,14 @@ describe('ModelsController', () => {
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
     const body = {
-      name: 'My name',
-      description: 'My desc',
+      name: "My name",
+      description: "My desc",
       templateId: template.id,
     };
     const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           user.id,
           [organization.id],
@@ -127,8 +182,8 @@ describe('ModelsController', () => {
     expect(response.body.id).toEqual(found.id);
     expect(found.isOwnedBy(organization.id)).toBeTruthy();
     expect(found.templateId).toEqual(template.id);
-    const foundUniqueProductIdentifiers =
-      await uniqueProductIdentifierService.findAllByReferencedId(found.id);
+    const foundUniqueProductIdentifiers
+      = await uniqueProductIdentifierService.findAllByReferencedId(found.id);
     for (const uniqueProductIdentifier of foundUniqueProductIdentifiers) {
       expect(uniqueProductIdentifier.referenceId).toEqual(found.id);
     }
@@ -150,13 +205,13 @@ describe('ModelsController', () => {
     );
 
     const body = {
-      name: 'My name',
-      description: 'My desc',
+      name: "My name",
+      description: "My desc",
       marketplaceResourceId,
     };
     const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models`)
-      .set('Authorization', token)
+      .set("Authorization", token)
       .send(body);
     expect(response.status).toEqual(201);
     const found = await modelsService.findOneOrFail(response.body.id);
@@ -168,15 +223,15 @@ describe('ModelsController', () => {
 
   it(`/CREATE model fails if user is not member of organization`, async () => {
     const body = {
-      name: 'My name',
-      description: 'My desc',
+      name: "My name",
+      description: "My desc",
       templateId: randomUUID(),
     };
     const otherOrganizationId = randomUUID();
     const response = await request(getApp(app))
       .post(`/organizations/${otherOrganizationId}/models`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           user.id,
           [organization.id],
@@ -195,14 +250,14 @@ describe('ModelsController', () => {
     });
     await templateService.save(template);
     const body = {
-      name: 'My name',
-      description: 'My desc',
+      name: "My name",
+      description: "My desc",
       templateId: template.id,
     };
     const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           user.id,
           [organization.id],
@@ -215,15 +270,15 @@ describe('ModelsController', () => {
 
   it(`/CREATE model fails if template and marketplace resource id are provided`, async () => {
     const body = {
-      name: 'My name',
-      description: 'My desc',
+      name: "My name",
+      description: "My desc",
       templateId: randomUUID(),
       marketplaceResourceId: randomUUID(),
     };
     const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           user.id,
           [organization.id],
@@ -234,8 +289,8 @@ describe('ModelsController', () => {
     expect(response.status).toEqual(400);
     expect(response.body.errors).toEqual([
       {
-        code: 'custom',
-        message: 'marketplaceResourceId and templateId are mutually exclusive',
+        code: "custom",
+        message: "marketplaceResourceId and templateId are mutually exclusive",
         path: [],
       },
     ]);
@@ -243,13 +298,13 @@ describe('ModelsController', () => {
 
   it(`/CREATE model fails if neither template nor marketplace resource id are provided`, async () => {
     const body = {
-      name: 'My name',
-      description: 'My desc',
+      name: "My name",
+      description: "My desc",
     };
     const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           user.id,
           [organization.id],
@@ -260,15 +315,15 @@ describe('ModelsController', () => {
     expect(response.status).toEqual(400);
     expect(response.body.errors).toEqual([
       {
-        code: 'custom',
-        message: 'marketplaceResourceId or templateId must be provided',
+        code: "custom",
+        message: "marketplaceResourceId or templateId must be provided",
         path: [],
       },
     ]);
   });
 
   it(`/GET models of organization`, async () => {
-    const modelNames = ['P1', 'P2'];
+    const modelNames = ["P1", "P2"];
     const otherOrganizationId = randomUUID();
     const template = Template.loadFromDb(laptopModel);
 
@@ -285,7 +340,7 @@ describe('ModelsController', () => {
     );
     await modelsService.save(
       Model.create({
-        name: 'Other Orga',
+        name: "Other Orga",
         organizationId: organization.id,
         userId: user.id,
         template,
@@ -295,7 +350,7 @@ describe('ModelsController', () => {
     const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/models`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           user.id,
           [organization.id, otherOrganizationId],
@@ -304,7 +359,7 @@ describe('ModelsController', () => {
       );
     expect(response.status).toEqual(200);
 
-    expect(response.body).toEqual(models.map((m) => modelToDto(m)));
+    expect(response.body).toEqual(models.map(m => modelToDto(m)));
   });
 
   it(`/GET models of organization fails if user is not part of organization`, async () => {
@@ -312,7 +367,7 @@ describe('ModelsController', () => {
     const template = Template.loadFromDb(laptopModel);
 
     const model = Model.create({
-      name: 'Model',
+      name: "Model",
       organizationId: otherOrganizationId,
       userId: user.id,
       template,
@@ -322,7 +377,7 @@ describe('ModelsController', () => {
     const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/models`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           user.id,
           [organization.id],
@@ -336,7 +391,7 @@ describe('ModelsController', () => {
     const template = Template.loadFromDb(laptopModel);
 
     const model = Model.create({
-      name: 'Model',
+      name: "Model",
       organizationId: organization.id,
       userId: user.id,
       template,
@@ -345,7 +400,7 @@ describe('ModelsController', () => {
     const response = await request(getApp(app))
       .get(`/organizations/${organization.id}/models/${model.id}`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           user.id,
           [organization.id],
@@ -361,7 +416,7 @@ describe('ModelsController', () => {
     const template = Template.loadFromDb(laptopModel);
 
     const model = Model.create({
-      name: 'Model',
+      name: "Model",
       organizationId: otherOrganizationId,
       userId: user.id,
       template,
@@ -370,7 +425,7 @@ describe('ModelsController', () => {
     const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/models/${model.id}`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           user.id,
           [organization.id],
@@ -385,7 +440,7 @@ describe('ModelsController', () => {
     const template = Template.loadFromDb(laptopModel);
 
     const model = Model.create({
-      name: 'Model',
+      name: "Model",
       organizationId: otherOrganizationId,
       userId: user.id,
       template,
@@ -394,7 +449,7 @@ describe('ModelsController', () => {
     const response = await request(getApp(app))
       .get(`/organizations/${organization.id}/models/${model.id}`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           user.id,
           [organization.id],
@@ -405,11 +460,11 @@ describe('ModelsController', () => {
   });
 
   //
-  it('update data values of model', async () => {
+  it("update data values of model", async () => {
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
     const model = Model.create({
-      name: 'My name',
+      name: "My name",
       organizationId: organization.id,
       userId: user.id,
       template,
@@ -424,7 +479,7 @@ describe('ModelsController', () => {
       {
         dataFieldId: LaptopFactory.ids.techSpecs.fields.processor,
         dataSectionId: LaptopFactory.ids.techSpecs.id,
-        value: 'AMD 8',
+        value: "AMD 8",
         row: 0,
       },
       {
@@ -437,7 +492,7 @@ describe('ModelsController', () => {
     const response = await request(getApp(app))
       .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           user.id,
           [organization.id],
@@ -449,7 +504,7 @@ describe('ModelsController', () => {
     const expectedDataValues = [
       {
         ...dataValue1,
-        value: 'AMD 8',
+        value: "AMD 8",
         row: 0,
       },
       {
@@ -467,12 +522,12 @@ describe('ModelsController', () => {
     expect(foundModel.dataValues).toEqual(expectedDataValues);
   });
 
-  it('update data values fails if user is not member of organization', async () => {
+  it("update data values fails if user is not member of organization", async () => {
     const otherOrganizationId = randomUUID();
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
     const model = Model.create({
-      name: 'My name',
+      name: "My name",
       organizationId: organization.id,
       userId: user.id,
       template,
@@ -484,7 +539,7 @@ describe('ModelsController', () => {
       {
         dataFieldId: dataValue1.dataFieldId,
         dataSectionId: dataValue1.dataSectionId,
-        value: 'value 1',
+        value: "value 1",
         row: 0,
       },
     ];
@@ -493,7 +548,7 @@ describe('ModelsController', () => {
         `/organizations/${otherOrganizationId}/models/${model.id}/data-values`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           user.id,
           [organization.id],
@@ -504,12 +559,12 @@ describe('ModelsController', () => {
     expect(response.status).toEqual(403);
   });
 
-  it('update data values fails if model does not belong to organization', async () => {
+  it("update data values fails if model does not belong to organization", async () => {
     const otherOrganizationId = randomUUID();
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
     const model = Model.create({
-      name: 'My name',
+      name: "My name",
       organizationId: otherOrganizationId,
       userId: user.id,
       template,
@@ -521,14 +576,14 @@ describe('ModelsController', () => {
       {
         dataFieldId: dataValue1.dataFieldId,
         dataSectionId: dataValue1.dataSectionId,
-        value: 'value 1',
+        value: "value 1",
         row: 0,
       },
     ];
     const response = await request(getApp(app))
       .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           user.id,
           [organization.id],
@@ -540,11 +595,11 @@ describe('ModelsController', () => {
   });
 
   //
-  it('update data values fails caused by validation', async () => {
+  it("update data values fails caused by validation", async () => {
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
     const model = Model.create({
-      name: 'My name',
+      name: "My name",
       organizationId: organization.id,
       userId: user.id,
       template,
@@ -555,7 +610,7 @@ describe('ModelsController', () => {
       {
         dataFieldId: LaptopFactory.ids.techSpecs.fields.processor,
         dataSectionId: LaptopFactory.ids.techSpecs.id,
-        value: { wrongValue: 'value 1' },
+        value: { wrongValue: "value 1" },
         row: 0,
       },
       {
@@ -568,7 +623,7 @@ describe('ModelsController', () => {
     const response = await request(getApp(app))
       .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           user.id,
           [organization.id],
@@ -581,19 +636,19 @@ describe('ModelsController', () => {
       errors: [
         {
           id: LaptopFactory.ids.techSpecs.fields.processor,
-          message: 'Invalid input: expected string, received object',
-          name: 'Processor',
+          message: "Invalid input: expected string, received object",
+          name: "Processor",
         },
       ],
       isValid: false,
     });
   });
   //
-  it('add data values to model', async () => {
+  it("add data values to model", async () => {
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
     const model = Model.create({
-      name: 'My name',
+      name: "My name",
       organizationId: organization.id,
       userId: user.id,
       template,
@@ -606,20 +661,20 @@ describe('ModelsController', () => {
       {
         dataSectionId: sectionId3,
         dataFieldId: dataFieldId4,
-        value: 'value 4',
+        value: "value 4",
         row: 0,
       },
       {
         dataSectionId: sectionId3,
         dataFieldId: dataFieldId5,
-        value: 'value 5',
+        value: "value 5",
         row: 0,
       },
     ];
     const response = await request(getApp(app))
       .post(`/organizations/${organization.id}/models/${model.id}/data-values`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           user.id,
           [organization.id],
@@ -630,7 +685,7 @@ describe('ModelsController', () => {
     expect(response.status).toEqual(201);
     const expected = [
       ...existingDataValues,
-      ...addedValues.map((d) => DataValue.create(d)),
+      ...addedValues.map(d => DataValue.create(d)),
     ];
     expect(response.body.dataValues).toEqual(ignoreIds(expected));
 
@@ -639,52 +694,25 @@ describe('ModelsController', () => {
     expect(foundModel.dataValues).toEqual(response.body.dataValues);
   });
 
-  it('add data values to model fails if user is not member of organization', async () => {
+  it("add data values to model fails if user is not member of organization", async () => {
     const otherOrganizationId = randomUUID();
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
     const model = Model.create({
-      name: 'My name',
+      name: "My name",
       organizationId: otherOrganizationId,
       userId: user.id,
       template,
     });
 
     await modelsService.save(model);
-    const addedValues = [];
+    const addedValues: Array<any> = [];
     const response = await request(getApp(app))
       .post(
         `/organizations/${otherOrganizationId}/models/${model.id}/data-values`,
       )
       .set(
-        'Authorization',
-        getKeycloakAuthToken(
-          user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      )
-      .send(addedValues);
-    expect(response.status).toEqual(403);
-  });
-
-  it('add data values to model fails if model does not belong to organization', async () => {
-    const otherOrganizationId = randomUUID();
-    const template = Template.loadFromDb(laptopModel);
-    await templateService.save(template);
-    const model = Model.create({
-      name: 'My name',
-      organizationId: otherOrganizationId,
-      userId: user.id,
-      template,
-    });
-
-    await modelsService.save(model);
-    const addedValues = [];
-    const response = await request(getApp(app))
-      .post(`/organizations/${organization.id}/models/${model.id}/data-values`)
-      .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           user.id,
           [organization.id],

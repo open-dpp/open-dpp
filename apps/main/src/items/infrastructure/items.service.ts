@@ -1,20 +1,26 @@
-import { Injectable } from '@nestjs/common';
-import { Item } from '../domain/item';
-import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model as MongooseModel } from 'mongoose';
-import { ItemDoc, ItemDocSchemaVersion } from './item.schema';
-import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
-import { migrateItemDoc } from './migrations';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import type { Model as MongooseModel } from "mongoose";
+import { Injectable } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
+import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { Item } from "../domain/item";
+import { ItemDoc, ItemDocSchemaVersion } from "./item.schema";
+import { migrateItemDoc } from "./migrations";
 
 @Injectable()
 export class ItemsService {
+  private itemDoc: MongooseModel<ItemDoc>;
+  private uniqueProductIdentifierService: UniqueProductIdentifierService;
+
   constructor(
     @InjectModel(ItemDoc.name)
-    private itemDoc: MongooseModel<ItemDoc>,
-    private uniqueProductIdentifierService: UniqueProductIdentifierService,
-  ) {}
+    itemDoc: MongooseModel<ItemDoc>,
+    uniqueProductIdentifierService: UniqueProductIdentifierService,
+  ) {
+    this.itemDoc = itemDoc;
+    this.uniqueProductIdentifierService = uniqueProductIdentifierService;
+  }
 
   convertToDomain(
     itemDoc: ItemDoc,
@@ -28,7 +34,7 @@ export class ItemsService {
       userId: itemDoc.createdByUserId,
       modelId: itemDoc.modelId,
       dataValues: itemDoc.dataValues
-        ? itemDoc.dataValues.map((dv) => ({
+        ? itemDoc.dataValues.map(dv => ({
             value: dv.value ?? undefined,
             dataSectionId: dv.dataSectionId,
             dataFieldId: dv.dataFieldId,
@@ -49,7 +55,7 @@ export class ItemsService {
           templateId: item.templateId,
           ownedByOrganizationId: item.ownedByOrganizationId,
           createdByUserId: item.createdByUserId,
-          dataValues: item.dataValues.map((d) => ({
+          dataValues: item.dataValues.map(d => ({
             value: d.value,
             dataSectionId: d.dataSectionId,
             dataFieldId: d.dataFieldId,
@@ -95,10 +101,10 @@ export class ItemsService {
 
   async findAllByModel(modelId: string) {
     const itemDocs = await this.itemDoc.find({
-      modelId: modelId,
+      modelId,
     });
     return await Promise.all(
-      itemDocs.map(async (idocs) =>
+      itemDocs.map(async idocs =>
         this.convertToDomain(
           idocs,
           await this.uniqueProductIdentifierService.findAllByReferencedId(

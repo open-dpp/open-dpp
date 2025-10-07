@@ -1,17 +1,17 @@
-import { Item } from './item';
-import { randomUUID } from 'crypto';
-import { ignoreIds } from '@app/testing/utils';
-import { Template, TemplateDbProps } from '../../templates/domain/template';
-import { Model } from '../../models/domain/model';
-import { DataValue } from '../../product-passport-data/domain/data-value';
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { ignoreIds } from "@open-dpp/testing";
+import { Model } from "../../models/domain/model";
+import { DataValue } from "../../product-passport-data/domain/data-value";
+import { Template, TemplateDbProps } from "../../templates/domain/template";
 import {
   LaptopFactory,
   laptopFactory,
-} from '../../templates/fixtures/laptop.factory';
-import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
-import { expect } from '@jest/globals';
+} from "../../templates/fixtures/laptop.factory";
+import { templateCreatePropsFactory } from "../../templates/fixtures/template.factory";
+import { Item } from "./item";
 
-describe('Item', () => {
+describe("item", () => {
   const organizationId = randomUUID();
   const userId = randomUUID();
 
@@ -19,13 +19,13 @@ describe('Item', () => {
     .addSections()
     .build({ organizationId, userId });
 
-  it('should create an item and defines model', () => {
+  it("should create an item and defines model", () => {
     const template = Template.loadFromDb(laptopModel);
 
     const model = Model.create({
-      name: 'name',
-      userId: userId,
-      organizationId: organizationId,
+      name: "name",
+      userId,
+      organizationId,
       template,
     });
     const item = Item.create({ organizationId, userId, template, model });
@@ -58,13 +58,13 @@ describe('Item', () => {
     ]);
   });
 
-  it('should create unique product identifier on item creation', () => {
+  it("should create unique product identifier on item creation", () => {
     const template = Template.loadFromDb(laptopModel);
 
     const model = Model.create({
-      name: 'name',
-      userId: userId,
-      organizationId: organizationId,
+      name: "name",
+      userId,
+      organizationId,
       template,
     });
     const item = Item.create({ organizationId, userId, model, template });
@@ -80,66 +80,66 @@ describe('Item', () => {
     expect(uniqueProductIdentifier2.referenceId).toEqual(item.id);
   });
 
-  it('add data values', () => {
+  it("add data values", () => {
     const template = Template.create(templateCreatePropsFactory.build());
 
     const model = Model.create({
-      name: 'name',
-      userId: userId,
-      organizationId: organizationId,
+      name: "name",
+      userId,
+      organizationId,
       template,
     });
     const item = Item.create({ organizationId, userId, template, model });
     item.addDataValues([
       DataValue.create({
-        dataFieldId: 'fieldId2',
-        dataSectionId: 'sid2',
-        value: 'value 2',
+        dataFieldId: "fieldId2",
+        dataSectionId: "sid2",
+        value: "value 2",
         row: 0,
       }),
       DataValue.create({
-        dataFieldId: 'fieldId3',
-        dataSectionId: 'sid2',
-        value: 'value 3',
+        dataFieldId: "fieldId3",
+        dataSectionId: "sid2",
+        value: "value 3",
         row: 0,
       }),
       DataValue.create({
-        dataFieldId: 'fieldId2',
-        dataSectionId: 'sid2',
-        value: 'value 4',
+        dataFieldId: "fieldId2",
+        dataSectionId: "sid2",
+        value: "value 4",
         row: 1,
       }),
       DataValue.create({
-        dataFieldId: 'fieldId3',
-        dataSectionId: 'sid2',
-        value: 'value 5',
+        dataFieldId: "fieldId3",
+        dataSectionId: "sid2",
+        value: "value 5",
         row: 1,
       }),
     ]);
     expect(item.dataValues).toEqual(
       ignoreIds([
         DataValue.create({
-          dataSectionId: 'sid2',
-          dataFieldId: 'fieldId2',
-          value: 'value 2',
+          dataSectionId: "sid2",
+          dataFieldId: "fieldId2",
+          value: "value 2",
           row: 0,
         }),
         DataValue.create({
-          dataSectionId: 'sid2',
-          dataFieldId: 'fieldId3',
-          value: 'value 3',
+          dataSectionId: "sid2",
+          dataFieldId: "fieldId3",
+          value: "value 3",
           row: 0,
         }),
         DataValue.create({
-          dataSectionId: 'sid2',
-          dataFieldId: 'fieldId2',
-          value: 'value 4',
+          dataSectionId: "sid2",
+          dataFieldId: "fieldId2",
+          value: "value 4",
           row: 1,
         }),
         DataValue.create({
-          dataSectionId: 'sid2',
-          dataFieldId: 'fieldId3',
-          value: 'value 5',
+          dataSectionId: "sid2",
+          dataFieldId: "fieldId3",
+          value: "value 5",
           row: 1,
         }),
       ]),

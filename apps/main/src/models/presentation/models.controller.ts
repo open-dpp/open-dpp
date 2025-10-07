@@ -1,3 +1,7 @@
+import type * as authRequest from "@open-dpp/auth";
+import type {
+  DataValueDto,
+} from "../../product-passport-data/presentation/dto/data-value.dto";
 import {
   BadRequestException,
   Body,
@@ -8,48 +12,56 @@ import {
   Patch,
   Post,
   Request,
-} from '@nestjs/common';
-import { ModelsService } from '../infrastructure/models.service';
-import * as createModelDto_1 from './dto/create-model.dto';
-import * as updateModelDto_1 from './dto/update-model.dto';
-import { Model } from '../domain/model';
-import { TemplateService } from '../../templates/infrastructure/template.service';
+} from "@nestjs/common";
+import { ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
+import { PermissionService } from "@open-dpp/auth";
 
-import { modelToDto } from './dto/model.dto';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import {
-  DataValueDto,
-  DataValueDtoSchema,
-} from '../../product-passport-data/presentation/dto/data-value.dto';
-import { DataValue } from '../../product-passport-data/domain/data-value';
-import { ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { ZodValidationPipe } from "@open-dpp/exception";
+import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
+import { modelParamDocumentation } from "../../open-api-docs/item.doc";
 import {
   createModelDocumentation,
   modelDocumentation,
   updateModelDocumentation,
-} from '../../open-api-docs/model.doc';
+} from "../../open-api-docs/model.doc";
+import { DataValue } from "../../product-passport-data/domain/data-value";
+import {
+  DataValueDtoSchema,
+} from "../../product-passport-data/presentation/dto/data-value.dto";
 import {
   dataValueDocumentation,
   orgaParamDocumentation,
-} from '../../product-passport-data/presentation/dto/docs/product-passport-data.doc';
-import { modelParamDocumentation } from '../../open-api-docs/item.doc';
-import { MarketplaceApplicationService } from '../../marketplace/presentation/marketplace.application.service';
-import { PermissionService } from '@app/permission';
-import { ZodValidationPipe } from '@app/exception/zod-validation.pipeline';
-import * as authRequest from '@app/auth/auth-request';
+} from "../../product-passport-data/presentation/dto/docs/product-passport-data.doc";
+import { TemplateService } from "../../templates/infrastructure/template.service";
+import { Model } from "../domain/model";
+import { ModelsService } from "../infrastructure/models.service";
+import * as createModelDto_1 from "./dto/create-model.dto";
+import { modelToDto } from "./dto/model.dto";
+import * as updateModelDto_1 from "./dto/update-model.dto";
 
-@Controller('/organizations/:orgaId/models')
+@Controller("/organizations/:orgaId/models")
 export class ModelsController {
+  private readonly modelsService: ModelsService;
+  private readonly templateService: TemplateService;
+  private readonly permissionsService: PermissionService;
+  private readonly marketplaceService: MarketplaceApplicationService;
+
   constructor(
-    private readonly modelsService: ModelsService,
-    private readonly templateService: TemplateService,
-    private readonly permissionsService: PermissionService,
-    private readonly marketplaceService: MarketplaceApplicationService,
-  ) {}
+    modelsService: ModelsService,
+    templateService: TemplateService,
+    permissionsService: PermissionService,
+    marketplaceService: MarketplaceApplicationService,
+  ) {
+    this.modelsService = modelsService;
+    this.templateService = templateService;
+    this.permissionsService = permissionsService;
+    this.marketplaceService = marketplaceService;
+  }
 
   @ApiOperation({
-    summary: 'Create model',
-    description: 'Create a model',
+    summary: "Create model",
+    description: "Create a model",
   })
   @ApiParam(orgaParamDocumentation)
   @ApiBody({
@@ -60,7 +72,7 @@ export class ModelsController {
   })
   @Post()
   async create(
-    @Param('orgaId') organizationId: string,
+    @Param("orgaId") organizationId: string,
     @Body(new ZodValidationPipe(createModelDto_1.CreateModelDtoSchema))
     createModelDto: createModelDto_1.CreateModelDto,
     @Request() req: authRequest.AuthRequest,
@@ -73,13 +85,13 @@ export class ModelsController {
     // Validate that only one of templateId or marketplaceResourceId is provided
     if (!createModelDto.templateId && !createModelDto.marketplaceResourceId) {
       throw new BadRequestException(
-        'Either templateId or marketplaceResourceId must be provided',
+        "Either templateId or marketplaceResourceId must be provided",
       );
     }
 
     if (createModelDto.templateId && createModelDto.marketplaceResourceId) {
       throw new BadRequestException(
-        'Only one of templateId or marketplaceResourceId can be provided, not both',
+        "Only one of templateId or marketplaceResourceId can be provided, not both",
       );
     }
 
@@ -89,11 +101,13 @@ export class ModelsController {
       template = await this.templateService.findOneOrFail(
         createModelDto.templateId,
       );
-    } else if (!createModelDto.marketplaceResourceId) {
+    }
+    else if (!createModelDto.marketplaceResourceId) {
       throw new BadRequestException(
-        'One of templateId or marketplaceResourceId must be provided, but not both',
+        "One of templateId or marketplaceResourceId must be provided, but not both",
       );
-    } else {
+    }
+    else {
       template = await this.marketplaceService.download(
         organizationId,
         req.authContext.keycloakUser.sub,
@@ -107,7 +121,7 @@ export class ModelsController {
       name: createModelDto.name,
       description: createModelDto.description,
       userId: req.authContext.keycloakUser.sub,
-      organizationId: organizationId,
+      organizationId,
       template,
     });
     model.createUniqueProductIdentifier();
@@ -115,16 +129,16 @@ export class ModelsController {
   }
 
   @ApiOperation({
-    summary: 'Find models of organization',
-    description: 'Find all models which belong to the provided organization.',
+    summary: "Find models of organization",
+    description: "Find all models which belong to the provided organization.",
   })
   @ApiParam(orgaParamDocumentation)
   @ApiResponse({
-    schema: { type: 'array', items: modelDocumentation },
+    schema: { type: "array", items: modelDocumentation },
   })
   @Get()
   async findAll(
-    @Param('orgaId') organizationId: string,
+    @Param("orgaId") organizationId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
     this.permissionsService.canAccessOrganizationOrFail(
@@ -132,23 +146,23 @@ export class ModelsController {
       req.authContext,
     );
     return (await this.modelsService.findAllByOrganization(organizationId)).map(
-      (m) => modelToDto(m),
+      m => modelToDto(m),
     );
   }
 
   @ApiOperation({
-    summary: 'Find model by id',
-    description: 'Find model by id.',
+    summary: "Find model by id",
+    description: "Find model by id.",
   })
   @ApiParam(orgaParamDocumentation)
   @ApiParam(modelParamDocumentation)
   @ApiResponse({
     schema: modelDocumentation,
   })
-  @Get(':modelId')
+  @Get(":modelId")
   async findOne(
-    @Param('orgaId') organizationId: string,
-    @Param('modelId') id: string,
+    @Param("orgaId") organizationId: string,
+    @Param("modelId") id: string,
     @Request() req: authRequest.AuthRequest,
   ) {
     this.permissionsService.canAccessOrganizationOrFail(
@@ -163,7 +177,7 @@ export class ModelsController {
   }
 
   @ApiOperation({
-    summary: 'Update model',
+    summary: "Update model",
     description: "Update model's name and description.",
   })
   @ApiParam(orgaParamDocumentation)
@@ -174,10 +188,10 @@ export class ModelsController {
   @ApiResponse({
     schema: modelDocumentation,
   })
-  @Patch(':modelId')
+  @Patch(":modelId")
   async update(
-    @Param('orgaId') organizationId: string,
-    @Param('modelId') modelId: string,
+    @Param("orgaId") organizationId: string,
+    @Param("modelId") modelId: string,
     @Body(new ZodValidationPipe(updateModelDto_1.UpdateModelDtoSchema))
     updateModelDto: updateModelDto_1.UpdateModelDto,
     @Request() req: authRequest.AuthRequest,
@@ -201,21 +215,21 @@ export class ModelsController {
   }
 
   @ApiOperation({
-    summary: 'Modify data values of model',
-    description: 'Modify data values of model.',
+    summary: "Modify data values of model",
+    description: "Modify data values of model.",
   })
   @ApiParam(orgaParamDocumentation)
   @ApiParam(modelParamDocumentation)
   @ApiBody({
-    schema: { type: 'array', items: { ...dataValueDocumentation } },
+    schema: { type: "array", items: { ...dataValueDocumentation } },
   })
   @ApiResponse({
     schema: modelDocumentation,
   })
-  @Patch(':modelId/data-values')
+  @Patch(":modelId/data-values")
   async updateDataValues(
-    @Param('orgaId') organizationId: string,
-    @Param('modelId') modelId: string,
+    @Param("orgaId") organizationId: string,
+    @Param("modelId") modelId: string,
     @Body(new ZodValidationPipe(DataValueDtoSchema.array()))
     updateDataValues: DataValueDto[],
     @Request() req: authRequest.AuthRequest,
@@ -229,7 +243,7 @@ export class ModelsController {
       throw new ForbiddenException();
     }
 
-    model.modifyDataValues(updateDataValues.map((d) => DataValue.create(d)));
+    model.modifyDataValues(updateDataValues.map(d => DataValue.create(d)));
     const template = await this.templateService.findOneOrFail(model.templateId);
     const validationResult = template.validate(
       model.dataValues,
@@ -242,22 +256,22 @@ export class ModelsController {
   }
 
   @ApiOperation({
-    summary: 'Add data values to model',
+    summary: "Add data values to model",
     description:
-      'Add data values to model. This method is used in the context of a repeater where a user can add new data rows resulting in data values.',
+      "Add data values to model. This method is used in the context of a repeater where a user can add new data rows resulting in data values.",
   })
   @ApiParam(orgaParamDocumentation)
   @ApiParam(modelParamDocumentation)
   @ApiBody({
-    schema: { type: 'array', items: { ...dataValueDocumentation } },
+    schema: { type: "array", items: { ...dataValueDocumentation } },
   })
   @ApiResponse({
     schema: modelDocumentation,
   })
-  @Post(':modelId/data-values')
+  @Post(":modelId/data-values")
   async addDataValues(
-    @Param('orgaId') organizationId: string,
-    @Param('modelId') modelId: string,
+    @Param("orgaId") organizationId: string,
+    @Param("modelId") modelId: string,
     @Body(new ZodValidationPipe(DataValueDtoSchema.array()))
     addDataValues: DataValueDto[],
     @Request() req: authRequest.AuthRequest,
@@ -270,7 +284,7 @@ export class ModelsController {
     if (model.ownedByOrganizationId !== organizationId) {
       throw new ForbiddenException();
     }
-    model.addDataValues(addDataValues.map((d) => DataValue.create(d)));
+    model.addDataValues(addDataValues.map(d => DataValue.create(d)));
     const template = await this.templateService.findOneOrFail(model.templateId);
     const validationResult = template.validate(
       model.dataValues,

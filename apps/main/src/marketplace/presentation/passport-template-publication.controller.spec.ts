@@ -1,26 +1,28 @@
-import { INestApplication } from '@nestjs/common';
-import { randomUUID } from 'crypto';
-import { Test, TestingModule } from '@nestjs/testing';
-import { APP_GUARD, Reflector } from '@nestjs/core';
-import request from 'supertest';
-import { Connection } from 'mongoose';
-import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
-import { passportTemplatePublicationPropsFactory } from '../fixtures/passport-template-publication-props.factory';
-import { PassportTemplatePublicationService } from '../infrastructure/passport-template-publication.service';
+import type { INestApplication } from "@nestjs/common";
+import type { TestingModule } from "@nestjs/testing";
+import type { Connection } from "mongoose";
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { APP_GUARD, Reflector } from "@nestjs/core";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { Test } from "@nestjs/testing";
+import { PermissionModule } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
+import { getApp, KeycloakAuthTestingGuard, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import request from "supertest";
+import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
+import { UserEntity } from "../../users/infrastructure/user.entity";
+import { PassportTemplatePublication } from "../domain/passport-template-publication";
+import { passportTemplatePublicationPropsFactory } from "../fixtures/passport.template.factory";
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,
-} from '../infrastructure/passport-template-publication.schema';
-import { PassportTemplatePublication } from '../domain/passport-template-publication';
-import { passportTemplatePublicationToDto } from './dto/passport-template-publication.dto';
-import { expect } from '@jest/globals';
-import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { MarketplaceModule } from '../marketplace.module';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
-import { getApp } from '@app/testing/utils';
+} from "../infrastructure/passport-template-publication.schema";
+import { PassportTemplatePublicationService } from "../infrastructure/passport-template-publication.service";
+import { passportTemplatePublicationToDto } from "./dto/passport-template-publication.dto";
+import { PassportTemplatePublicationController } from "./passport-template-publication.controller";
 
-describe('PassportTemplateController', () => {
+describe("passportTemplateController", () => {
   let app: INestApplication;
   const reflector: Reflector = new Reflector();
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(
@@ -32,21 +34,14 @@ describe('PassportTemplateController', () => {
   let module: TestingModule;
   let passportTemplateService: PassportTemplatePublicationService;
 
-  const mockNow = new Date('2025-01-01T12:00:00Z');
-
-  beforeEach(() => {
-    jest.spyOn(Date, 'now').mockImplementation(() => mockNow.getTime());
-    jest.spyOn(reflector, 'get').mockReturnValue(false);
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
+  const mockNow = new Date("2025-01-01T12:00:00Z");
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         TypeOrmTestingModule,
+        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -54,14 +49,16 @@ describe('PassportTemplateController', () => {
             schema: PassportTemplatePublicationDbSchema,
           },
         ]),
-        MarketplaceModule,
+        PermissionModule,
       ],
       providers: [
+        PassportTemplatePublicationService,
         {
           provide: APP_GUARD,
           useValue: keycloakAuthTestingGuard,
         },
       ],
+      controllers: [PassportTemplatePublicationController],
     }).compile();
 
     app = module.createNestApplication();
@@ -70,9 +67,17 @@ describe('PassportTemplateController', () => {
 
     await app.init();
   });
+  beforeEach(() => {
+    jest.spyOn(Date, "now").mockImplementation(() => mockNow.getTime());
+    jest.spyOn(reflector, "get").mockReturnValue(false);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 
   it(`/GET find all passport templates`, async () => {
-    jest.spyOn(reflector, 'get').mockReturnValue(true);
+    jest.spyOn(reflector, "get").mockReturnValue(true);
     const passportTemplate = PassportTemplatePublication.loadFromDb(
       passportTemplatePublicationPropsFactory.build(),
     );

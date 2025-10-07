@@ -1,27 +1,32 @@
-import { Injectable } from '@nestjs/common';
-import { ChatOllama } from '@langchain/ollama';
-import { createReactAgent } from '@langchain/langgraph/prebuilt';
-import { StructuredToolInterface } from '@langchain/core/tools';
-import { ChatMistralAI } from '@langchain/mistralai';
-import { AiProvider } from '../domain/ai-configuration';
-import { EnvService } from '@app/env/env.service';
+import type { StructuredToolInterface } from "@langchain/core/tools";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { ChatMistralAI } from "@langchain/mistralai";
+import { ChatOllama } from "@langchain/ollama";
+import { Injectable } from "@nestjs/common";
+import { AiProvider } from "@open-dpp/api-client";
+import { EnvService } from "@open-dpp/env";
+import { AiProvider_TYPE } from "../ai-configuration/domain/ai-configuration";
 
 @Injectable()
 export class AiService {
-  constructor(private readonly configService: EnvService) {}
+  private readonly configService: EnvService;
 
-  getLLM(aiModel: AiProvider, model: string) {
+  constructor(configService: EnvService) {
+    this.configService = configService;
+  }
+
+  getLLM(aiModel: AiProvider_TYPE, model: string) {
     if (aiModel === AiProvider.Mistral) {
       return new ChatMistralAI({
         model,
         temperature: 0,
-        apiKey: this.configService.get('OPEN_DPP_MISTRAL_API_KEY'),
+        apiKey: this.configService.get("OPEN_DPP_MISTRAL_API_KEY"),
       });
     }
 
     return new ChatOllama({
       model,
-      baseUrl: this.configService.get('OPEN_DPP_OLLAMA_URL'),
+      baseUrl: this.configService.get("OPEN_DPP_OLLAMA_URL"),
     });
   }
 

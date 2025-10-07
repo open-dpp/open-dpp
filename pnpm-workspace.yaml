@@ -1,0 +1,17 @@
+packages:
+  - apps/*/*
+  - apps/*
+  - packages/*
+
+onlyBuiltDependencies:
+  - '@nestjs/core'
+  - '@scarf/scarf'
+  - '@swc/core'
+  - '@tailwindcss/oxide'
+  - core-js
+  - cypress
+  - esbuild
+  - fsevents
+  - msw
+  - sharp
+  - unrs-resolver

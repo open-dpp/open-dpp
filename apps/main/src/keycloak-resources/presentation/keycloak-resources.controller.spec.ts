@@ -1,13 +1,14 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { KeycloakResourcesController } from './keycloak-resources.controller';
-import { KeycloakResourcesService } from '../infrastructure/keycloak-resources.service';
-import { HttpModule } from '@nestjs/axios';
-import { expect } from '@jest/globals';
-import { AuthContext } from '@app/auth/auth-request';
-import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
-import { EnvModule } from '@app/env';
+import type { TestingModule } from "@nestjs/testing";
+import { expect } from "@jest/globals";
+import { HttpModule } from "@nestjs/axios";
+import { ConfigModule } from "@nestjs/config";
+import { Test } from "@nestjs/testing";
+import { AuthContext } from "@open-dpp/auth";
+import { createKeycloakUserInToken } from "@open-dpp/testing";
+import { KeycloakResourcesService } from "../infrastructure/keycloak-resources.service";
+import { KeycloakResourcesController } from "./keycloak-resources.controller";
 
-jest.mock('@keycloak/keycloak-admin-client', () => {
+jest.mock("@keycloak/keycloak-admin-client", () => {
   return {
     __esModule: true, // Ensure Jest understands it's an ES module
     default: jest.fn(() => ({
@@ -22,13 +23,13 @@ jest.mock('@keycloak/keycloak-admin-client', () => {
   };
 });
 
-describe('KeycloakResourcesController', () => {
+describe("keycloakResourcesController", () => {
   let controller: KeycloakResourcesController;
   let service: KeycloakResourcesService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [HttpModule, EnvModule],
+      imports: [HttpModule, ConfigModule],
       providers: [
         {
           provide: KeycloakResourcesService,
@@ -46,12 +47,12 @@ describe('KeycloakResourcesController', () => {
     service = module.get<KeycloakResourcesService>(KeycloakResourcesService);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(controller).toBeDefined();
   });
 
-  describe('create', () => {
-    it('should call createResource with correct parameters', async () => {
+  describe("create", () => {
+    it("should call createResource with correct parameters", async () => {
       // Arrange
       const mockAuthContext = new AuthContext();
       mockAuthContext.keycloakUser = createKeycloakUserInToken();
@@ -60,7 +61,7 @@ describe('KeycloakResourcesController', () => {
         authContext: mockAuthContext,
       };
 
-      jest.spyOn(service, 'createResource').mockResolvedValue(undefined);
+      jest.spyOn(service, "createResource").mockResolvedValue(undefined);
 
       // Act
       await controller.create(mockRequest as any);
@@ -68,8 +69,8 @@ describe('KeycloakResourcesController', () => {
       // Assert
       expect(service.createResource).toHaveBeenCalledWith(
         mockAuthContext,
-        'organization123',
-        ['/organizations/123'],
+        "organization123",
+        ["/organizations/123"],
       );
     });
   });

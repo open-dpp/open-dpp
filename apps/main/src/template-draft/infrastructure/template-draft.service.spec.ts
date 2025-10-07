@@ -1,26 +1,29 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { randomUUID } from 'crypto';
-import { SectionType } from '../../data-modelling/domain/section-base';
-import { TemplateDraft, TemplateDraftDbProps } from '../domain/template-draft';
-import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
-import { Connection, Model as MongooseModel } from 'mongoose';
-import { TemplateDraftService } from './template-draft.service';
-import { TemplateDraftDoc, TemplateDraftSchema } from './template-draft.schema';
-import { SectionDraft } from '../domain/section-draft';
-import { DataFieldDraft } from '../domain/data-field-draft';
-import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+import type { TestingModule } from "@nestjs/testing";
+import type { Connection, Model as MongooseModel } from "mongoose";
+import type { TemplateDraftDbProps } from "../domain/template-draft";
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { MongooseTestingModule } from "@open-dpp/testing";
+import { DataFieldType } from "../../data-modelling/domain/data-field-base";
+import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { SectionType } from "../../data-modelling/domain/section-base";
+import { TemplateDocSchemaVersion } from "../../templates/infrastructure/template.schema";
+import { DataFieldDraft } from "../domain/data-field-draft";
+import { SectionDraft } from "../domain/section-draft";
+import { TemplateDraft } from "../domain/template-draft";
+import { sectionDraftDbPropsFactory } from "../fixtures/section-draft.factory";
 import {
   templateDraftCreatePropsFactory,
   templateDraftDbFactory,
-} from '../fixtures/template-draft.factory';
-import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
-import { TemplateDocSchemaVersion } from '../../templates/infrastructure/template.schema';
-import { expect } from '@jest/globals';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+} from "../fixtures/template-draft.factory";
+import { TemplateDraftDoc, TemplateDraftSchema } from "./template-draft.schema";
+import { TemplateDraftService } from "./template-draft.service";
 
-describe('TemplateDraftService', () => {
+describe("templateDraftService", () => {
   let service: TemplateDraftService;
   let mongoConnection: Connection;
   let module: TestingModule;
@@ -29,6 +32,7 @@ describe('TemplateDraftService', () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -51,16 +55,16 @@ describe('TemplateDraftService', () => {
     publications: [
       {
         id: randomUUID(),
-        version: '1.0.0',
+        version: "1.0.0",
       },
       {
         id: randomUUID(),
-        version: '2.0.0',
+        version: "2.0.0",
       },
     ],
   });
 
-  it('saves draft', async () => {
+  it("saves draft", async () => {
     const templateDraft = TemplateDraft.loadFromDb({
       ...laptopModelPlain,
     });
@@ -69,22 +73,22 @@ describe('TemplateDraftService', () => {
     expect(found).toEqual(templateDraft);
   });
 
-  it('fails if requested template draft could not be found', async () => {
+  it("fails if requested template draft could not be found", async () => {
     await expect(service.findOneOrFail(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(TemplateDraft.name),
     );
   });
 
-  it('sets correct default granularity level', async () => {
+  it("sets correct default granularity level", async () => {
     const laptopModel: TemplateDraftDbProps = templateDraftDbFactory.build({
       sections: [
         sectionDraftDbPropsFactory.build({
-          id: 's1',
+          id: "s1",
           type: SectionType.GROUP,
           granularityLevel: undefined,
         }),
         sectionDraftDbPropsFactory.build({
-          id: 's2',
+          id: "s2",
           type: SectionType.REPEATABLE,
         }),
       ],
@@ -97,28 +101,28 @@ describe('TemplateDraftService', () => {
     });
     const { id } = await service.save(templateDraft);
     const found = await service.findOneOrFail(id);
-    expect(found.findSectionOrFail('s1').granularityLevel).toBeUndefined();
-    expect(found.findSectionOrFail('s2').granularityLevel).toEqual(
+    expect(found.findSectionOrFail("s1").granularityLevel).toBeUndefined();
+    expect(found.findSectionOrFail("s2").granularityLevel).toEqual(
       GranularityLevel.MODEL,
     );
   });
 
-  it('should delete section on template draft', async () => {
+  it("should delete section on template draft", async () => {
     const templateDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build(),
     );
     const section1 = SectionDraft.create({
-      name: 'Technical Specs',
+      name: "Technical Specs",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.ITEM,
     });
     const section11 = SectionDraft.create({
-      name: 'Dimensions',
+      name: "Dimensions",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.ITEM,
     });
     const section2 = SectionDraft.create({
-      name: 'Traceability',
+      name: "Traceability",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.ITEM,
     });
@@ -126,7 +130,7 @@ describe('TemplateDraftService', () => {
     templateDraft.addSubSection(section1.id, section11);
     templateDraft.addSection(section2);
     const dataField = DataFieldDraft.create({
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
       granularityLevel: GranularityLevel.ITEM,
     });
@@ -139,23 +143,23 @@ describe('TemplateDraftService', () => {
     expect(found.sections).toEqual([section2]);
   });
 
-  it('should delete data fields of template draft', async () => {
+  it("should delete data fields of template draft", async () => {
     const templateDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build(),
     );
     const section = SectionDraft.create({
-      name: 'Tech specs',
+      name: "Tech specs",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     templateDraft.addSection(section);
     const dataField1 = DataFieldDraft.create({
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
       granularityLevel: GranularityLevel.MODEL,
     });
     const dataField2 = DataFieldDraft.create({
-      name: 'Memory',
+      name: "Memory",
       type: DataFieldType.TEXT_FIELD,
       granularityLevel: GranularityLevel.MODEL,
     });
@@ -169,18 +173,18 @@ describe('TemplateDraftService', () => {
     expect(found.sections[0].dataFields).toEqual([dataField1]);
   });
 
-  it('should return all template drafts by organization', async () => {
+  it("should return all template drafts by organization", async () => {
     const organizationId = randomUUID();
 
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        name: 'laptop',
+        name: "laptop",
         organizationId,
       }),
     );
     const phoneDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        name: 'phone',
+        name: "phone",
         organizationId,
       }),
     );
@@ -209,14 +213,14 @@ describe('TemplateDraftService', () => {
       {
         $set: {
           _schemaVersion: TemplateDocSchemaVersion.v1_0_2,
-          name: 'name',
-          version: '1.0.0',
+          name: "name",
+          version: "1.0.0",
           createdByUserId: randomUUID(),
           ownedByOrganizationId: randomUUID(),
           sections: [
             {
               _id: randomUUID(),
-              name: 's1',
+              name: "s1",
               type: SectionType.GROUP,
               layout: {
                 colSpan: {
@@ -238,7 +242,7 @@ describe('TemplateDraftService', () => {
               dataFields: [
                 {
                   _id: randomUUID(),
-                  name: 'f1',
+                  name: "f1",
                   type: DataFieldType.TEXT_FIELD,
                   granularityLevel: GranularityLevel.MODEL,
                   layout: {

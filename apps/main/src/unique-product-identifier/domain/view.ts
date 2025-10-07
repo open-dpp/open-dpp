@@ -1,24 +1,34 @@
-import { maxBy, minBy } from 'lodash';
-import { Template } from '../../templates/domain/template';
-import { Model } from '../../models/domain/model';
+import type { DataFieldType_TYPE } from "../../data-modelling/domain/data-field-base";
+import type { Item } from "../../items/domain/item";
+import type { Model } from "../../models/domain/model";
+import type { DataValue } from "../../product-passport-data/domain/data-value";
+import type {
+  RepeaterSection,
+  Section,
+} from "../../templates/domain/section";
+import type { Template } from "../../templates/domain/template";
+import { maxBy, minBy } from "lodash";
+import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { SectionType } from "../../data-modelling/domain/section-base";
 import {
   isGroupSection,
   isRepeaterSection,
-  RepeaterSection,
-  Section,
-} from '../../templates/domain/section';
-import { Item } from '../../items/domain/item';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { SectionType } from '../../data-modelling/domain/section-base';
-import { DataValue } from '../../product-passport-data/domain/data-value';
-import { DataFieldType } from '../../data-modelling/domain/data-field-base';
+} from "../../templates/domain/section";
 
 export class View {
+  private readonly template: Template;
+  private readonly model: Model;
+  private readonly item: Item | undefined;
+
   private constructor(
-    private readonly template: Template,
-    private readonly model: Model,
-    private readonly item: Item | undefined,
-  ) {}
+    template: Template,
+    model: Model,
+    item: Item | undefined,
+  ) {
+    this.template = template;
+    this.model = model;
+    this.item = item;
+  }
 
   static create(data: { template: Template; model: Model; item?: Item }) {
     return new View(data.template, data.model, data.item);
@@ -27,42 +37,40 @@ export class View {
   build() {
     const nodes = [];
     const rootSections = this.template.sections.filter(
-      (s) => s.parentId === undefined,
+      s => s.parentId === undefined,
     );
     const rootSectionsFilteredByLevel = this.item
       ? rootSections // at the item level we show all root sections
       : rootSections.filter(
-          (s) =>
-            s.granularityLevel === GranularityLevel.MODEL ||
-            s.granularityLevel === undefined,
+          s =>
+            s.granularityLevel === GranularityLevel.MODEL
+            || s.granularityLevel === undefined,
         );
     for (const section of rootSectionsFilteredByLevel) {
       if (isRepeaterSection(section)) {
-        // @ts-expect-error uses never at the moment, should get typed
         nodes.push(this.processRepeaterSection(section));
-      } else if (isGroupSection(section)) {
-        // @ts-expect-error uses never at the moment, should get typed
+      }
+      else if (isGroupSection(section)) {
         nodes.push(this.processSection(section));
       }
     }
     return {
       name: this.model.name,
       description: this.model.description,
-      nodes: nodes,
+      nodes,
     };
   }
 
   processRepeaterSection(section: RepeaterSection) {
-    const dataValuesOfSectionAllRows =
-      section.granularityLevel === GranularityLevel.MODEL
+    const dataValuesOfSectionAllRows
+      = section.granularityLevel === GranularityLevel.MODEL
         ? this.model.getDataValuesBySectionId(section.id)
         : (this.item?.getDataValuesBySectionId(section.id) ?? []);
-    const minRow = minBy(dataValuesOfSectionAllRows, 'row')?.row ?? 0;
-    const maxRow = maxBy(dataValuesOfSectionAllRows, 'row')?.row ?? 0;
+    const minRow = minBy(dataValuesOfSectionAllRows, "row")?.row ?? 0;
+    const maxRow = maxBy(dataValuesOfSectionAllRows, "row")?.row ?? 0;
 
     const rows = [];
     for (let rowIndex = minRow; rowIndex <= maxRow; rowIndex++) {
-      // @ts-expect-error uses mongo id
       rows.push(this.processSection(section, rowIndex));
     }
     return {
@@ -74,11 +82,12 @@ export class View {
   processSection(section: Section, rowIndex?: number) {
     let dataValuesOfSection: DataValue[];
     if (section.type === SectionType.REPEATABLE) {
-      dataValuesOfSection =
-        section.granularityLevel === GranularityLevel.MODEL
+      dataValuesOfSection
+        = section.granularityLevel === GranularityLevel.MODEL
           ? this.model.getDataValuesBySectionId(section.id, rowIndex)
           : (this.item?.getDataValuesBySectionId(section.id, rowIndex) ?? []);
-    } else {
+    }
+    else {
       dataValuesOfSection = this.model
         .getDataValuesBySectionId(section.id, rowIndex)
         .concat(
@@ -101,13 +110,13 @@ export class View {
 
   processDataFields(section: Section, dataValuesOfSection: DataValue[]) {
     const result: Array<{
-      type: DataFieldType;
+      type: DataFieldType_TYPE;
       name: string;
       value: unknown;
     }> = [];
     for (const dataField of section.dataFields) {
       const dataValue = dataValuesOfSection.find(
-        (v) => v.dataFieldId === dataField.id,
+        v => v.dataFieldId === dataField.id,
       );
       // for model view: filter out data fields that are not in the model
       if (this.item || dataField.granularityLevel !== GranularityLevel.ITEM) {

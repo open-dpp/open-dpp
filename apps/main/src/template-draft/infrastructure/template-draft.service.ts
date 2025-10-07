@@ -1,27 +1,31 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import type { Model } from "mongoose";
+import type {
+  DataFieldDoc,
+  SectionDoc,
+} from "../../data-modelling/infrastructure/template-base.schema";
+import { Injectable } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { SectionType } from "../../data-modelling/domain/section-base";
+import { DataFieldDraft } from "../domain/data-field-draft";
+import { SectionDraft } from "../domain/section-draft";
+import { TemplateDraft } from "../domain/template-draft";
 import {
   TemplateDraftDoc,
   TemplateDraftDocSchemaVersion,
-} from './template-draft.schema';
-import { TemplateDraft } from '../domain/template-draft';
-import { SectionType } from '../../data-modelling/domain/section-base';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import {
-  DataFieldDoc,
-  SectionDoc,
-} from '../../data-modelling/infrastructure/template-base.schema';
-import { DataFieldDraft } from '../domain/data-field-draft';
-import { SectionDraft } from '../domain/section-draft';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+} from "./template-draft.schema";
 
 @Injectable()
 export class TemplateDraftService {
+  private templateDraftDocModel: Model<TemplateDraftDoc>;
+
   constructor(
     @InjectModel(TemplateDraftDoc.name)
-    private templateDraftDocModel: Model<TemplateDraftDoc>,
-  ) {}
+    templateDraftDocModel: Model<TemplateDraftDoc>,
+  ) {
+    this.templateDraftDocModel = templateDraftDocModel;
+  }
 
   async save(
     templateDraft: TemplateDraft,
@@ -36,11 +40,11 @@ export class TemplateDraftService {
         version: newVersion || templateDraft.version,
         _schemaVersion: TemplateDraftDocSchemaVersion.v1_0_3,
         publications: templateDraft.publications,
-        sections: templateDraft.sections.map((s) => ({
+        sections: templateDraft.sections.map(s => ({
           _id: s.id,
           name: s.name,
           type: s.type,
-          dataFields: s.dataFields.map((d) => ({
+          dataFields: s.dataFields.map(d => ({
             _id: d.id,
             name: d.name,
             type: d.type,
@@ -84,7 +88,7 @@ export class TemplateDraftService {
       type: sectionDoc.type,
       subSections: sectionDoc.subSections,
       parentId: sectionDoc.parentId,
-      dataFields: sectionDoc.dataFields.map((d) => this.createDataField(d)),
+      dataFields: sectionDoc.dataFields.map(d => this.createDataField(d)),
       granularityLevel: sectionDoc.granularityLevel
         ? sectionDoc.granularityLevel
         : sectionDoc.type === SectionType.REPEATABLE
@@ -102,7 +106,7 @@ export class TemplateDraftService {
       description: plainDoc.description,
       sectors: plainDoc.sectors,
       version: plainDoc.version,
-      sections: plainDoc.sections.map((s) => this.createSection(s)),
+      sections: plainDoc.sections.map((s: unknown) => this.createSection(s as SectionDoc)),
       publications: plainDoc.publications,
       userId: plainDoc.createdByUserId,
       organizationId: plainDoc.ownedByOrganizationId,
@@ -120,7 +124,7 @@ export class TemplateDraftService {
   async findAllByOrganization(organizationId: string) {
     return (
       await this.templateDraftDocModel
-        .find({ ownedByOrganizationId: organizationId }, '_id name')
+        .find({ ownedByOrganizationId: organizationId }, "_id name")
         .sort({ name: 1 })
         .exec()
     ).map((p) => {

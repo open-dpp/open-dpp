@@ -1,19 +1,20 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { MediaController } from './media.controller';
-import { MediaService } from '../infrastructure/media.service';
-import { MongooseModule } from '@nestjs/mongoose';
-import { MediaDbSchema, MediaDoc } from '../infrastructure/media.schema';
-import { expect } from '@jest/globals';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { EnvModule } from '@app/env';
+import type { TestingModule } from "@nestjs/testing";
+import { expect } from "@jest/globals";
+import { MongooseModule } from "@nestjs/mongoose";
+import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
+import { MongooseTestingModule } from "@open-dpp/testing";
+import { MediaDbSchema, MediaDoc } from "../infrastructure/media.schema";
+import { MediaService } from "../infrastructure/media.service";
+import { MediaController } from "./media.controller";
 
-describe('MediaController', () => {
+describe("mediaController", () => {
   let controller: MediaController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        EnvModule,
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -29,7 +30,7 @@ describe('MediaController', () => {
     controller = module.get<MediaController>(MediaController);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(controller).toBeDefined();
   });
 });

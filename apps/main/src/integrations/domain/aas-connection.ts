@@ -1,27 +1,46 @@
-import { randomUUID } from 'crypto';
-import { DataValue } from '../../product-passport-data/domain/data-value';
-import {
+import type { DataFieldType_TYPE } from "../../data-modelling/domain/data-field-base";
+import type { Model } from "../../models/domain/model";
+import type { Template } from "../../templates/domain/template";
+import type {
   AasProperty,
   AssetAdministrationShell,
-  AssetAdministrationShellType,
-} from './asset-administration-shell';
-import { Model } from '../../models/domain/model';
-import { Template } from '../../templates/domain/template';
-import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { z } from 'zod';
-import { ValueError } from '@app/exception/domain.errors';
+  AssetAdministrationShellType_TYPE,
+} from "./asset-administration-shell";
+import { randomUUID } from "node:crypto";
+import { ValueError } from "@open-dpp/exception";
+import { z } from "zod";
+import { DataFieldType } from "../../data-modelling/domain/data-field-base";
+import { DataValue } from "../../product-passport-data/domain/data-value";
 
 export class AasConnection {
+  public readonly id: string;
+  public name: string;
+  public ownedByOrganizationId: string;
+  public createdByUserId: string;
+  private _dataModelId: string;
+  public readonly aasType: AssetAdministrationShellType_TYPE;
+  private _modelId: string | null;
+  private _fieldAssignments: AasFieldAssignment[];
+
   private constructor(
-    public readonly id: string,
-    public name: string,
-    public ownedByOrganizationId: string,
-    public createdByUserId: string,
-    private _dataModelId: string,
-    public readonly aasType: AssetAdministrationShellType,
-    private _modelId: string | null,
-    private _fieldAssignments: AasFieldAssignment[],
-  ) {}
+    id: string,
+    name: string,
+    ownedByOrganizationId: string,
+    createdByUserId: string,
+    _dataModelId: string,
+    aasType: AssetAdministrationShellType_TYPE,
+    _modelId: string | null,
+    _fieldAssignments: AasFieldAssignment[],
+  ) {
+    this.id = id;
+    this.name = name;
+    this.ownedByOrganizationId = ownedByOrganizationId;
+    this.createdByUserId = createdByUserId;
+    this._dataModelId = _dataModelId;
+    this.aasType = aasType;
+    this._modelId = _modelId;
+    this._fieldAssignments = _fieldAssignments;
+  }
 
   get fieldAssignments() {
     return this._fieldAssignments;
@@ -40,7 +59,7 @@ export class AasConnection {
     organizationId: string;
     userId: string;
     dataModelId: string;
-    aasType: AssetAdministrationShellType;
+    aasType: AssetAdministrationShellType_TYPE;
     modelId: string | null;
   }) {
     return new AasConnection(
@@ -61,7 +80,7 @@ export class AasConnection {
     organizationId: string;
     userId: string;
     dataModelId: string;
-    aasType: AssetAdministrationShellType;
+    aasType: AssetAdministrationShellType_TYPE;
     modelId: string | null;
     fieldAssignments: AasFieldAssignment[];
   }) {
@@ -92,15 +111,16 @@ export class AasConnection {
     return assetAdministrationShell.propertiesWithParent
       .map(({ parentIdShort, property }) => {
         const field = this.fieldAssignments.find(
-          (fieldMapping) =>
-            fieldMapping.idShort === property.idShort &&
-            fieldMapping.idShortParent === parentIdShort,
+          fieldMapping =>
+            fieldMapping.idShort === property.idShort
+            && fieldMapping.idShortParent === parentIdShort,
         );
 
         if (field) {
           const dataFieldOfTemplate = template
             .findSectionById(field.sectionId)
-            ?.dataFields.find((d) => d.id === field.dataFieldId);
+            ?.dataFields
+            .find(d => d.id === field.dataFieldId);
           if (dataFieldOfTemplate) {
             return DataValue.create({
               dataSectionId: field.sectionId,
@@ -112,10 +132,10 @@ export class AasConnection {
         }
         return undefined;
       })
-      .filter((value) => value !== undefined);
+      .filter(value => value !== undefined);
   }
 
-  private parseValue(property: AasProperty, dataFieldType: DataFieldType) {
+  private parseValue(property: AasProperty, dataFieldType: DataFieldType_TYPE) {
     switch (dataFieldType) {
       case DataFieldType.NUMERIC_FIELD:
         return z.number().parse(Number(property.value));
@@ -144,12 +164,22 @@ export class AasConnection {
 }
 
 export class AasFieldAssignment {
+  public readonly dataFieldId: string;
+  public readonly sectionId: string;
+  public readonly idShortParent: string;
+  public readonly idShort: string;
+
   private constructor(
-    public readonly dataFieldId: string,
-    public readonly sectionId: string,
-    public readonly idShortParent: string,
-    public readonly idShort: string,
-  ) {}
+    dataFieldId: string,
+    sectionId: string,
+    idShortParent: string,
+    idShort: string,
+  ) {
+    this.dataFieldId = dataFieldId;
+    this.sectionId = sectionId;
+    this.idShortParent = idShortParent;
+    this.idShort = idShort;
+  }
 
   public static create(data: {
     dataFieldId: string;

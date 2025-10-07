@@ -1,23 +1,23 @@
-import { SectionDraft } from './section-draft';
-import { DataFieldDraft } from './data-field-draft';
-import { SectionType } from '../../data-modelling/domain/section-base';
-import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { MoveDirection } from './template-draft';
-import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
-import { dataFieldDraftDbPropsFactory } from '../fixtures/data-field-draft.factory';
-import { expect } from '@jest/globals';
-import { NotFoundError, ValueError } from '@app/exception/domain.errors';
+import { expect } from "@jest/globals";
+import { NotFoundError, ValueError } from "@open-dpp/exception";
+import { DataFieldType } from "../../data-modelling/domain/data-field-base";
+import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { SectionType } from "../../data-modelling/domain/section-base";
+import { dataFieldDraftDbPropsFactory } from "../fixtures/data-field-draft.factory";
+import { sectionDraftDbPropsFactory } from "../fixtures/section-draft.factory";
+import { DataFieldDraft } from "./data-field-draft";
+import { SectionDraft } from "./section-draft";
+import { MoveDirection } from "./template-draft";
 
-describe('DataSectionDraft', () => {
-  it('is created', () => {
+describe("dataSectionDraft", () => {
+  it("is created", () => {
     const section1 = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const section2 = SectionDraft.create({
-      name: 'Material',
+      name: "Material",
       type: SectionType.REPEATABLE,
       granularityLevel: GranularityLevel.MODEL,
     });
@@ -32,39 +32,39 @@ describe('DataSectionDraft', () => {
     expect(section2.granularityLevel).toEqual(GranularityLevel.MODEL);
   });
 
-  it('fails on creation if no granularity level is set for repeater section', () => {
+  it("fails on creation if no granularity level is set for repeater section", () => {
     expect(() =>
       SectionDraft.create({
-        name: 'Material',
+        name: "Material",
         type: SectionType.REPEATABLE,
       }),
-    ).toThrow(new ValueError('Repeatable must have a granularity level'));
+    ).toThrow(new ValueError("Repeatable must have a granularity level"));
   });
 
-  it('is renamed', () => {
+  it("is renamed", () => {
     const section = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
-    section.rename('Tracebility');
-    expect(section.name).toEqual('Tracebility');
+    section.rename("Tracebility");
+    expect(section.name).toEqual("Tracebility");
   });
 
-  it('should add data field', () => {
+  it("should add data field", () => {
     const section = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const dataField1 = DataFieldDraft.create({
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
       options: { max: 2 },
       granularityLevel: GranularityLevel.MODEL,
     });
     const dataField2 = DataFieldDraft.create({
-      name: 'Memory',
+      name: "Memory",
       type: DataFieldType.TEXT_FIELD,
       granularityLevel: GranularityLevel.MODEL,
     });
@@ -73,14 +73,14 @@ describe('DataSectionDraft', () => {
     expect(section.dataFields).toEqual([dataField1, dataField2]);
   });
 
-  it('fails to add data field if granularity level of section and data field do not match', () => {
+  it("fails to add data field if granularity level of section and data field do not match", () => {
     const section = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const dataField = DataFieldDraft.create({
-      name: 'Memory',
+      name: "Memory",
       type: DataFieldType.TEXT_FIELD,
       granularityLevel: GranularityLevel.ITEM,
     });
@@ -91,27 +91,27 @@ describe('DataSectionDraft', () => {
     );
   });
 
-  it('should modify data field', () => {
+  it("should modify data field", () => {
     const section = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const dataField1 = DataFieldDraft.create({
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
       options: { max: 2 },
       granularityLevel: GranularityLevel.MODEL,
     });
     const dataField2 = DataFieldDraft.create({
-      name: 'Memory',
+      name: "Memory",
       type: DataFieldType.TEXT_FIELD,
       granularityLevel: GranularityLevel.MODEL,
     });
     section.addDataField(dataField1);
     section.addDataField(dataField2);
     section.modifyDataField(dataField1.id, {
-      name: 'newName',
+      name: "newName",
       options: { min: 3 },
     });
     expect(section.dataFields).toEqual([
@@ -119,46 +119,46 @@ describe('DataSectionDraft', () => {
         id: dataField1.id,
         type: dataField1.type,
         granularityLevel: dataField1.granularityLevel,
-        name: 'newName',
+        name: "newName",
         options: { min: 3, max: 2 },
       }),
       dataField2,
     ]);
   });
 
-  it('should modify data field fails if not found', () => {
+  it("should modify data field fails if not found", () => {
     const section = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const dataField1 = DataFieldDraft.create({
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
       options: { max: 2 },
       granularityLevel: GranularityLevel.MODEL,
     });
     section.addDataField(dataField1);
     expect(() =>
-      section.modifyDataField('unknown-id', {
-        name: 'newName',
+      section.modifyDataField("unknown-id", {
+        name: "newName",
         options: { min: 3 },
       }),
-    ).toThrow(new NotFoundError(DataFieldDraft.name, 'unknown-id'));
+    ).toThrow(new NotFoundError(DataFieldDraft.name, "unknown-id"));
   });
 
-  it('should move data field', () => {
+  it("should move data field", () => {
     const dataField1 = DataFieldDraft.loadFromDb(
-      dataFieldDraftDbPropsFactory.build({ id: 'f1' }),
+      dataFieldDraftDbPropsFactory.build({ id: "f1" }),
     );
     const dataField2 = DataFieldDraft.loadFromDb(
-      dataFieldDraftDbPropsFactory.build({ id: 'f2' }),
+      dataFieldDraftDbPropsFactory.build({ id: "f2" }),
     );
     const dataField3 = DataFieldDraft.loadFromDb(
-      dataFieldDraftDbPropsFactory.build({ id: 'f3' }),
+      dataFieldDraftDbPropsFactory.build({ id: "f3" }),
     );
     const dataField4 = DataFieldDraft.loadFromDb(
-      dataFieldDraftDbPropsFactory.build({ id: 'f4' }),
+      dataFieldDraftDbPropsFactory.build({ id: "f4" }),
     );
     const section = SectionDraft.loadFromDb(
       sectionDraftDbPropsFactory
@@ -199,24 +199,24 @@ describe('DataSectionDraft', () => {
     ]);
   });
 
-  it('should delete data field', () => {
+  it("should delete data field", () => {
     const section = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const dataField1 = DataFieldDraft.create({
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
       granularityLevel: GranularityLevel.MODEL,
     });
     const dataField2 = DataFieldDraft.create({
-      name: 'Memory',
+      name: "Memory",
       type: DataFieldType.TEXT_FIELD,
       granularityLevel: GranularityLevel.MODEL,
     });
     const dataField3 = DataFieldDraft.create({
-      name: 'Storage',
+      name: "Storage",
       type: DataFieldType.TEXT_FIELD,
       granularityLevel: GranularityLevel.MODEL,
     });
@@ -227,37 +227,37 @@ describe('DataSectionDraft', () => {
     expect(section.dataFields).toEqual([dataField1, dataField3]);
   });
 
-  it('should fail to delete data field if id not exists', () => {
+  it("should fail to delete data field if id not exists", () => {
     const section = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const dataField1 = DataFieldDraft.create({
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
       granularityLevel: GranularityLevel.MODEL,
     });
     section.addDataField(dataField1);
 
-    expect(() => section.deleteDataField('no-id')).toThrow(
-      new NotFoundError(DataFieldDraft.name, 'no-id'),
+    expect(() => section.deleteDataField("no-id")).toThrow(
+      new NotFoundError(DataFieldDraft.name, "no-id"),
     );
   });
 
-  it('should add child section', () => {
+  it("should add child section", () => {
     const section = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const childSection1 = SectionDraft.create({
-      name: 'Sub specification 1',
+      name: "Sub specification 1",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const childSection2 = SectionDraft.create({
-      name: 'Sub specification 2',
+      name: "Sub specification 2",
       type: SectionType.REPEATABLE,
       granularityLevel: GranularityLevel.MODEL,
     });
@@ -268,19 +268,19 @@ describe('DataSectionDraft', () => {
     expect(childSection2.parentId).toEqual(section.id);
   });
 
-  it('should delete sub section', () => {
+  it("should delete sub section", () => {
     const section = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const childSection1 = SectionDraft.create({
-      name: 'Sub specification 1',
+      name: "Sub specification 1",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const childSection2 = SectionDraft.create({
-      name: 'Sub specification 2',
+      name: "Sub specification 2",
       type: SectionType.REPEATABLE,
       granularityLevel: GranularityLevel.MODEL,
     });
@@ -298,20 +298,20 @@ describe('DataSectionDraft', () => {
     );
   });
 
-  it('should publish section draft', () => {
+  it("should publish section draft", () => {
     const section = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const subSection = SectionDraft.create({
-      name: 'Dimensions',
+      name: "Dimensions",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     section.addSubSection(subSection);
     const dataField1 = DataFieldDraft.create({
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
       options: { max: 2 },
       granularityLevel: GranularityLevel.MODEL,
@@ -322,7 +322,7 @@ describe('DataSectionDraft', () => {
       id: section.id,
       type: SectionType.GROUP,
       parentId: undefined,
-      name: 'Technical specification',
+      name: "Technical specification",
       dataFields: [dataField1.publish()],
       subSections: [subSection.id],
       granularityLevel: GranularityLevel.MODEL,
@@ -332,7 +332,7 @@ describe('DataSectionDraft', () => {
     expect(publishedSubSection).toEqual({
       id: subSection.id,
       type: SectionType.GROUP,
-      name: 'Dimensions',
+      name: "Dimensions",
       dataFields: [],
       subSections: [],
       parentId: section.id,

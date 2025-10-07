@@ -1,20 +1,26 @@
-import { Injectable } from '@nestjs/common';
-import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
-import { InjectModel } from '@nestjs/mongoose';
-import { ModelDoc, ModelDocSchemaVersion } from './model.schema';
-import { Model as MongooseModel } from 'mongoose';
-import { Model } from '../domain/model';
-import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
-import { migrateModelDoc } from './migrations';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import type { Model as MongooseModel } from "mongoose";
+import type { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
+import { Injectable } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { Model } from "../domain/model";
+import { migrateModelDoc } from "./migrations";
+import { ModelDoc, ModelDocSchemaVersion } from "./model.schema";
 
 @Injectable()
 export class ModelsService {
+  private modelDoc: MongooseModel<ModelDoc>;
+  private uniqueProductIdentifierService: UniqueProductIdentifierService;
+
   constructor(
     @InjectModel(ModelDoc.name)
-    private modelDoc: MongooseModel<ModelDoc>,
-    private uniqueProductIdentifierService: UniqueProductIdentifierService,
-  ) {}
+    modelDoc: MongooseModel<ModelDoc>,
+    uniqueProductIdentifierService: UniqueProductIdentifierService,
+  ) {
+    this.modelDoc = modelDoc;
+    this.uniqueProductIdentifierService = uniqueProductIdentifierService;
+  }
 
   convertToDomain(
     modelDoc: ModelDoc,
@@ -29,7 +35,7 @@ export class ModelsService {
       uniqueProductIdentifiers,
       templateId: modelDoc.templateId,
       dataValues: modelDoc.dataValues
-        ? modelDoc.dataValues.map((dv) => ({
+        ? modelDoc.dataValues.map(dv => ({
             value: dv.value ?? undefined,
             dataSectionId: dv.dataSectionId,
             dataFieldId: dv.dataFieldId,
@@ -49,7 +55,7 @@ export class ModelsService {
           name: model.name,
           description: model.description,
           templateId: model.templateId,
-          dataValues: model.dataValues.map((d) => ({
+          dataValues: model.dataValues.map(d => ({
             value: d.value,
             dataSectionId: d.dataSectionId,
             dataFieldId: d.dataFieldId,

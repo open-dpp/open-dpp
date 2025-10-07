@@ -1,11 +1,10 @@
-import { z } from 'zod';
+import type { TemplateDraft } from "../../domain/template-draft";
+import { Sector } from "@open-dpp/api-client";
+import { z } from "zod";
 import {
   SectionBaseDtoSchema,
   sectionToDto,
-} from '../../../data-modelling/presentation/dto/section-base.dto';
-import { TemplateDraft } from '../../domain/template-draft';
-
-import { Sector } from '../../../data-modelling/domain/sectors';
+} from "../../../data-modelling/presentation/dto/section-base.dto";
 
 const PublicationDtoSchema = z.object({
   id: z.string(),
@@ -35,13 +34,13 @@ export function templateDraftToDto(
     description: templateDraft.description,
     sectors: templateDraft.sectors,
     version: templateDraft.version,
-    publications: templateDraft.publications.map((publication) =>
+    publications: templateDraft.publications.map(publication =>
       PublicationDtoSchema.parse({
         id: publication.id,
         version: publication.version,
       }),
     ),
-    sections: templateDraft.sections.map((section) => sectionToDto(section)),
+    sections: templateDraft.sections.map(section => sectionToDto(section)),
     createdByUserId: templateDraft.createdByUserId,
     ownedByOrganizationId: templateDraft.ownedByOrganizationId,
   });

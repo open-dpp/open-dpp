@@ -1,29 +1,39 @@
+import type { AuthContext } from "@open-dpp/auth";
 import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Equal, Repository } from 'typeorm';
-import { OrganizationEntity } from './organization.entity';
-import { UserEntity } from '../../users/infrastructure/user.entity';
-import { Organization } from '../domain/organization';
-import { User } from '../../users/domain/user';
-import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { UsersService } from '../../users/infrastructure/users.service';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
-import { AuthContext } from '@app/auth/auth-request';
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { DataSource, Equal, Repository } from "typeorm";
+import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
+import { User } from "../../users/domain/user";
+import { UserEntity } from "../../users/infrastructure/user.entity";
+import { UsersService } from "../../users/infrastructure/users.service";
+import { Organization } from "../domain/organization";
+import { OrganizationEntity } from "./organization.entity";
 
 @Injectable()
 export class OrganizationsService {
+  private organizationRepository: Repository<OrganizationEntity>;
+  private readonly dataSource: DataSource;
+  private readonly keycloakResourcesService: KeycloakResourcesService;
+  private readonly usersService: UsersService;
+
   constructor(
     @InjectRepository(OrganizationEntity)
-    private organizationRepository: Repository<OrganizationEntity>,
-    private readonly dataSource: DataSource,
-    private readonly keycloakResourcesService: KeycloakResourcesService,
-    private readonly usersService: UsersService,
-  ) {}
+    organizationRepository: Repository<OrganizationEntity>,
+    dataSource: DataSource,
+    keycloakResourcesService: KeycloakResourcesService,
+    usersService: UsersService,
+  ) {
+    this.organizationRepository = organizationRepository;
+    this.dataSource = dataSource;
+    this.keycloakResourcesService = keycloakResourcesService;
+    this.usersService = usersService;
+  }
 
   convertUserToEntity(user: User) {
     const userEntity = new UserEntity();
@@ -34,7 +44,7 @@ export class OrganizationsService {
 
   convertToDomain(organizationEntity: OrganizationEntity) {
     const members = organizationEntity.members
-      ? organizationEntity.members.map((u) => new User(u.id, u.email))
+      ? organizationEntity.members.map(u => new User(u.id, u.email))
       : [];
     return Organization.fromPlain({
       id: organizationEntity.id,
@@ -52,7 +62,7 @@ export class OrganizationsService {
     let result: Organization | null = null;
     try {
       await this.keycloakResourcesService.createGroup(organization);
-      const members: Array<UserEntity> = organization.members.map((u) =>
+      const members: Array<UserEntity> = organization.members.map(u =>
         this.convertUserToEntity(u),
       );
       const entity: Partial<OrganizationEntity> = {
@@ -65,10 +75,12 @@ export class OrganizationsService {
       const savedEntity = await this.organizationRepository.save(entity);
       await queryRunner.commitTransaction();
       result = this.convertToDomain(savedEntity);
-    } catch (err) {
+    }
+    catch (err) {
       await queryRunner.rollbackTransaction();
       throw err;
-    } finally {
+    }
+    finally {
       await queryRunner.release();
     }
     return result;
@@ -81,7 +93,7 @@ export class OrganizationsService {
           members: true,
         },
       })
-    ).map((o) => this.convertToDomain(o));
+    ).map(o => this.convertToDomain(o));
   }
 
   async findOneOrFail(id: string) {
@@ -115,16 +127,20 @@ export class OrganizationsService {
     }
     let userToInvite: User | null = null;
     if (users.length === 0) {
-      const keycloakUser =
-        await this.keycloakResourcesService.findKeycloakUserByEmail(email);
+      const keycloakUser
+        = await this.keycloakResourcesService.findKeycloakUserByEmail(email);
+      if (!keycloakUser || !keycloakUser.id || !keycloakUser.email) {
+        throw new NotFoundException();
+      }
       userToInvite = new User(keycloakUser.id, keycloakUser.email);
-    } else if (users.length === 1) {
+    }
+    else if (users.length === 1) {
       userToInvite = users[0];
     }
     if (!userToInvite) {
       throw new NotFoundException(); // TODO: Fix user enumeration
     }
-    if (org.members.find((member) => member.id === userToInvite.id)) {
+    if (org.members.find(member => member.id === userToInvite.id)) {
       throw new BadRequestException();
     }
     try {
@@ -137,11 +153,12 @@ export class OrganizationsService {
           userToInvite.id,
         );
         await queryRunner.commitTransaction();
-      } catch (err) {
-        console.log('Error:', err);
+      }
+      catch {
         await queryRunner.rollbackTransaction();
       }
-    } finally {
+    }
+    finally {
       await queryRunner.release();
     }
   }
@@ -158,6 +175,6 @@ export class OrganizationsService {
           members: true,
         },
       })
-    ).map((o) => this.convertToDomain(o));
+    ).map(o => this.convertToDomain(o));
   }
 }

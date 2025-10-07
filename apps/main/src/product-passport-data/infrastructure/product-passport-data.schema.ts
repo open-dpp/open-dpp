@@ -1,6 +1,8 @@
-import { Prop } from '@nestjs/mongoose';
-import { Document, Schema } from 'mongoose';
-import { DataValueDoc, DataValueSchema } from './data-value.schema';
+import type { Schema } from "mongoose";
+import type { DataValueDoc } from "./data-value.schema";
+import { Prop } from "@nestjs/mongoose";
+import { Document } from "mongoose";
+import { DataValueSchema } from "./data-value.schema";
 
 export abstract class PassportDoc extends Document {
   @Prop({ required: true })

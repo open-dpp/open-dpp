@@ -1,20 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { Template } from '../domain/template';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { TemplateDoc } from './template.schema';
+import type { Model } from "mongoose";
+import { Injectable } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import {
   deserializeTemplate,
   serializeTemplate,
-} from '../domain/serialization';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+} from "../domain/serialization";
+import { Template } from "../domain/template";
+import { TemplateDoc } from "./template.schema";
 
 @Injectable()
 export class TemplateService {
+  private templateDoc: Model<TemplateDoc>;
+
   constructor(
     @InjectModel(TemplateDoc.name)
-    private templateDoc: Model<TemplateDoc>,
-  ) {}
+    templateDoc: Model<TemplateDoc>,
+  ) {
+    this.templateDoc = templateDoc;
+  }
 
   convertToDomain(templateDoc: TemplateDoc): Template {
     const plain = templateDoc.toObject();
@@ -38,10 +42,10 @@ export class TemplateService {
 
   async findByName(name: string) {
     const foundDataModelDocs = await this.templateDoc
-      .find({ name: name }, '_id name version')
+      .find({ name }, "_id name version")
       .sort({ name: 1 })
       .exec();
-    return foundDataModelDocs.map((dm) => ({
+    return foundDataModelDocs.map(dm => ({
       id: dm._id,
       name: dm.name,
       version: dm.version,
@@ -70,11 +74,11 @@ export class TemplateService {
         {
           $or: [{ ownedByOrganizationId: organizationId }],
         },
-        '_id name version description sectors',
+        "_id name version description sectors",
       )
       .sort({ name: 1 })
       .exec();
-    return foundDataModelDocs.map((dm) => ({
+    return foundDataModelDocs.map(dm => ({
       id: dm._id,
       name: dm.name,
       version: dm.version,

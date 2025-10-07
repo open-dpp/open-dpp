@@ -1,16 +1,18 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { randomUUID } from 'crypto';
-import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
-import { Connection } from 'mongoose';
-import { AasConnectionService } from './aas-connection.service';
-import { AasConnectionDoc, AasConnectionSchema } from './aas-connection.schema';
-import { AasConnection } from '../domain/aas-connection';
-import { AssetAdministrationShellType } from '../domain/asset-administration-shell';
-import { expect } from '@jest/globals';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import type { TestingModule } from "@nestjs/testing";
+import type { Connection } from "mongoose";
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { MongooseTestingModule } from "@open-dpp/testing";
+import { AasConnection } from "../domain/aas-connection";
+import { AssetAdministrationShellType } from "../domain/asset-administration-shell";
+import { AasConnectionDoc, AasConnectionSchema } from "./aas-connection.schema";
+import { AasConnectionService } from "./aas-connection.service";
 
-describe('AasMappingService', () => {
+describe("aasMappingService", () => {
   let aasConnectionService: AasConnectionService;
   const userId = randomUUID();
   const organizationId = randomUUID();
@@ -19,6 +21,7 @@ describe('AasMappingService', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -29,35 +32,35 @@ describe('AasMappingService', () => {
       ],
       providers: [AasConnectionService],
     }).compile();
-    aasConnectionService =
-      module.get<AasConnectionService>(AasConnectionService);
+    aasConnectionService
+      = module.get<AasConnectionService>(AasConnectionService);
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
-  it('fails if requested item could not be found', async () => {
+  it("fails if requested item could not be found", async () => {
     await expect(aasConnectionService.findById(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(AasConnection.name),
     );
   });
 
-  it('should create and find aas connection', async () => {
+  it("should create and find aas connection", async () => {
     const dataModelId = randomUUID();
     const modelId = randomUUID();
     const fieldMappings = [
       {
-        idShortParent: 'ProductCarbonFootprint_A1A3',
-        idShort: 'PCFCO2eq',
-        sectionId: 'internalSectionId',
-        dataFieldId: 'internalField',
+        idShortParent: "ProductCarbonFootprint_A1A3",
+        idShort: "PCFCO2eq",
+        sectionId: "internalSectionId",
+        dataFieldId: "internalField",
       },
       {
-        idShortParent: 'ProductCarbonFootprint_A1A3',
-        idShort: 'CCFCO2eq',
-        sectionId: 'internalSectionId',
-        dataFieldId: 'internalField2',
+        idShortParent: "ProductCarbonFootprint_A1A3",
+        idShort: "CCFCO2eq",
+        sectionId: "internalSectionId",
+        dataFieldId: "internalField2",
       },
     ];
-    const name = 'Connection Name';
+    const name = "Connection Name";
     const aasMapping = AasConnection.create({
       name,
       organizationId,
@@ -83,10 +86,10 @@ describe('AasMappingService', () => {
     expect(foundAasMapping.createdByUserId).toEqual(userId);
   });
 
-  it('should find all aas connections of organization', async () => {
+  it("should find all aas connections of organization", async () => {
     const dataModelId = randomUUID();
     const modelId = randomUUID();
-    const name1 = 'Connection Name 1';
+    const name1 = "Connection Name 1";
     const otherOrganizationId = randomUUID();
     const aasConnection1 = AasConnection.create({
       name: name1,
@@ -96,7 +99,7 @@ describe('AasMappingService', () => {
       modelId,
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
     });
-    const name2 = 'Connection Name 2';
+    const name2 = "Connection Name 2";
     const aasConnection2 = AasConnection.create({
       name: name2,
       organizationId: otherOrganizationId,
@@ -105,7 +108,7 @@ describe('AasMappingService', () => {
       modelId,
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
     });
-    const name3 = 'Connection of other organization';
+    const name3 = "Connection of other organization";
     const aasConnection3 = AasConnection.create({
       name: name3,
       organizationId: randomUUID(),
@@ -117,8 +120,8 @@ describe('AasMappingService', () => {
     await aasConnectionService.save(aasConnection1);
     await aasConnectionService.save(aasConnection2);
     await aasConnectionService.save(aasConnection3);
-    const aasConnections =
-      await aasConnectionService.findAllByOrganization(otherOrganizationId);
+    const aasConnections
+      = await aasConnectionService.findAllByOrganization(otherOrganizationId);
     expect(aasConnections).toEqual([aasConnection1, aasConnection2]);
   });
 

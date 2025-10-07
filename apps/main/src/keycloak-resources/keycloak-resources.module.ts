@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
-import { KeycloakResourcesController } from './presentation/keycloak-resources.controller';
-import { KeycloakResourcesService } from './infrastructure/keycloak-resources.service';
-import { HttpModule } from '@nestjs/axios';
-import { EnvModule } from '@app/env/env.module';
+import { HttpModule } from "@nestjs/axios";
+import { Module } from "@nestjs/common";
+import { EnvModule } from "@open-dpp/env";
+import { KeycloakResourcesService } from "./infrastructure/keycloak-resources.service";
+import { KeycloakResourcesController } from "./presentation/keycloak-resources.controller";
 
 @Module({
   imports: [HttpModule, EnvModule],

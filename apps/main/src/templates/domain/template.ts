@@ -1,14 +1,16 @@
-import { randomUUID } from 'crypto';
-import { SectionType } from '../../data-modelling/domain/section-base';
-import { DataFieldValidationResult } from './data-field';
-import {
-  findSectionClassByTypeOrFail,
+import type { GranularityLevel_TYPE } from "../../data-modelling/domain/granularity-level";
+import type { DataFieldValidationResult } from "./data-field";
+import type {
   Section,
   SectionDbProps,
-} from './section';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { DataValue } from '../../product-passport-data/domain/data-value';
-import { Sector } from '../../data-modelling/domain/sectors';
+} from "./section";
+import { randomUUID } from "node:crypto";
+import { SectionType } from "../../data-modelling/domain/section-base";
+import { Sector_TYPE } from "../../data-modelling/domain/sectors";
+import { DataValue } from "../../product-passport-data/domain/data-value";
+import {
+  findSectionClassByTypeOrFail,
+} from "./section";
 
 export class ValidationResult {
   private readonly _validationResults: DataFieldValidationResult[] = [];
@@ -17,6 +19,7 @@ export class ValidationResult {
   public get isValid() {
     return this._isValid;
   }
+
   public get validationResults() {
     return this._validationResults;
   }
@@ -27,23 +30,24 @@ export class ValidationResult {
     }
     this._validationResults.push(validationResult);
   }
+
   public toJson() {
     return {
       isValid: this.isValid,
       errors: this.validationResults
-        .filter((v) => !v.isValid)
-        .map((v) => v.toJson()),
+        .filter(v => !v.isValid)
+        .map(v => v.toJson()),
     };
   }
 }
 
-export type TemplateCreateProps = {
+export interface TemplateCreateProps {
   name: string;
   description: string;
-  sectors: Sector[];
+  sectors: Sector_TYPE[];
   userId: string;
   organizationId: string;
-};
+}
 
 export type TemplateDbProps = TemplateCreateProps & {
   id: string;
@@ -53,22 +57,42 @@ export type TemplateDbProps = TemplateCreateProps & {
 };
 
 export class Template {
+  public readonly id: string;
+  public readonly name: string;
+  public description: string;
+  public sectors: Sector_TYPE[];
+  public readonly version: string;
+  private _createdByUserId: string;
+  private _ownedByOrganizationId: string;
+  public readonly sections: Section[];
+  public marketplaceResourceId: string | null;
+
   private constructor(
-    public readonly id: string,
-    public readonly name: string,
-    public description: string,
-    public sectors: Sector[],
-    public readonly version: string,
-    private _createdByUserId: string,
-    private _ownedByOrganizationId: string,
-    public readonly sections: Section[],
-    public marketplaceResourceId: string | null,
-  ) {}
+    id: string,
+    name: string,
+    description: string,
+    sectors: Sector_TYPE[],
+    version: string,
+    _createdByUserId: string,
+    _ownedByOrganizationId: string,
+    sections: Section[],
+    marketplaceResourceId: string | null,
+  ) {
+    this.id = id;
+    this.name = name;
+    this.description = description;
+    this.sectors = sectors;
+    this.version = version;
+    this._createdByUserId = _createdByUserId;
+    this._ownedByOrganizationId = _ownedByOrganizationId;
+    this.sections = sections;
+    this.marketplaceResourceId = marketplaceResourceId;
+  }
 
   static create(plain: {
     name: string;
     description: string;
-    sectors: Sector[];
+    sectors: Sector_TYPE[];
     userId: string;
     organizationId: string;
   }) {
@@ -77,7 +101,7 @@ export class Template {
       plain.name,
       plain.description,
       plain.sectors,
-      '1.0.0',
+      "1.0.0",
       plain.userId,
       plain.organizationId,
       [],
@@ -123,7 +147,7 @@ export class Template {
   }
 
   findSectionById(id: string): Section | undefined {
-    return this.sections.find((s) => s.id === id);
+    return this.sections.find(s => s.id === id);
   }
 
   assignMarketplaceResource(marketplaceResourceId: string) {
@@ -132,18 +156,18 @@ export class Template {
 
   validate(
     values: DataValue[],
-    granularity: GranularityLevel,
+    granularity: GranularityLevel_TYPE,
     includeSectionIds: string[] = [],
   ): ValidationResult {
     const validationOutput = new ValidationResult();
-    const sectionsToValidate =
-      includeSectionIds.length === 0
+    const sectionsToValidate
+      = includeSectionIds.length === 0
         ? this.sections
-        : this.sections.filter((s) => includeSectionIds.includes(s.id));
+        : this.sections.filter(s => includeSectionIds.includes(s.id));
     for (const section of sectionsToValidate) {
       section
         .validate(this.version, values, granularity)
-        .map((v) => validationOutput.addValidationResult(v));
+        .map(v => validationOutput.addValidationResult(v));
     }
     return validationOutput;
   }
@@ -157,26 +181,26 @@ export class Template {
       version: this.version,
       userId,
       organizationId,
-      sections: this.sections.map((s) => s.toDbProps()),
+      sections: this.sections.map(s => s.toDbProps()),
       marketplaceResourceId: this.marketplaceResourceId,
     });
   }
 
-  public createInitialDataValues(granularity: GranularityLevel): DataValue[] {
+  public createInitialDataValues(granularity: GranularityLevel_TYPE): DataValue[] {
     const rootGroupSections = this.sections
-      .filter((s) => s.parentId === undefined)
-      .filter((s) => s.type === SectionType.GROUP);
+      .filter(s => s.parentId === undefined)
+      .filter(s => s.type === SectionType.GROUP);
     const relevantGroupSections = rootGroupSections.concat(
       rootGroupSections
-        .map((g) => g.subSections.map((s) => this.findSectionByIdOrFail(s)))
+        .map(g => g.subSections.map(s => this.findSectionByIdOrFail(s)))
         .flat(),
     );
 
     return relevantGroupSections
-      .map((s) =>
+      .map(s =>
         s.dataFields
-          .filter((f) => f.granularityLevel === granularity)
-          .map((f) =>
+          .filter(f => f.granularityLevel === granularity)
+          .map(f =>
             DataValue.create({
               dataSectionId: s.id,
               dataFieldId: f.id,

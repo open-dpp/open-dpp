@@ -1,36 +1,31 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { PassportTemplatePublicationService } from './passport-template-publication.service';
-import { Connection } from 'mongoose';
-import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
+import type { TestingModule } from "@nestjs/testing";
+import type { Connection } from "mongoose";
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { MongooseTestingModule } from "@open-dpp/testing";
+import { PassportTemplatePublication } from "../domain/passport-template-publication";
+import { passportTemplatePublicationPropsFactory } from "../fixtures/passport.template.factory";
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,
-} from './passport-template-publication.schema';
-import { PassportTemplatePublication } from '../domain/passport-template-publication';
-import { passportTemplatePublicationPropsFactory } from '../fixtures/passport-template-publication-props.factory';
-import { randomUUID } from 'crypto';
-import { expect } from '@jest/globals';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
+} from "./passport-template-publication.schema";
+import { PassportTemplatePublicationService } from "./passport-template-publication.service";
 
-describe('PassportTemplateService', () => {
+describe("passportTemplateService", () => {
   let service: PassportTemplatePublicationService;
   let mongoConnection: Connection;
   let module: TestingModule;
 
-  const mockNow = new Date('2025-01-01T12:00:00Z').getTime();
-
-  beforeEach(() => {
-    jest.spyOn(Date, 'now').mockImplementation(() => mockNow);
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
+  const mockNow = new Date("2025-01-01T12:00:00Z").getTime();
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -46,14 +41,21 @@ describe('PassportTemplateService', () => {
     );
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
+  beforeEach(() => {
+    jest.spyOn(Date, "now").mockImplementation(() => mockNow);
+  });
 
-  it('fails if requested passport template could not be found', async () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it("fails if requested passport template could not be found", async () => {
     await expect(service.findOneOrFail(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(PassportTemplatePublication.name),
     );
   });
 
-  it('should create passport template', async () => {
+  it("should create passport template", async () => {
     const passportTemplate = PassportTemplatePublication.loadFromDb(
       passportTemplatePublicationPropsFactory.build(),
     );
@@ -63,7 +65,7 @@ describe('PassportTemplateService', () => {
     expect(found).toEqual(passportTemplate);
   });
 
-  it('should find all passport templates', async () => {
+  it("should find all passport templates", async () => {
     const passportTemplate = PassportTemplatePublication.loadFromDb(
       passportTemplatePublicationPropsFactory.build(),
     );

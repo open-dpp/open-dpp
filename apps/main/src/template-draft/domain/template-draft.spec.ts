@@ -1,29 +1,30 @@
-import {
-  MoveDirection,
-  TemplateDraft,
+import type { TemplateDbProps } from "../../templates/domain/template";
+import type {
   TemplateDraftDbProps,
-} from './template-draft';
-import { DataFieldDraft } from './data-field-draft';
-import { SectionDraft } from './section-draft';
-import { SectionType } from '../../data-modelling/domain/section-base';
-import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { randomUUID } from 'crypto';
-import { Template, TemplateDbProps } from '../../templates/domain/template';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
+} from "./template-draft";
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { Sector } from "@open-dpp/api-client";
+import { NotFoundError, ValueError } from "@open-dpp/exception";
+import { DataFieldType } from "../../data-modelling/domain/data-field-base";
+import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { SectionType } from "../../data-modelling/domain/section-base";
+import { Template } from "../../templates/domain/template";
+import { textFieldProps } from "../fixtures/data-field-draft.factory";
+import { sectionDraftDbPropsFactory } from "../fixtures/section-draft.factory";
 import {
   sectionDraftEnvironment,
   templateDraftCreatePropsFactory,
   templateDraftDbFactory,
-} from '../fixtures/template-draft.factory';
-import { textFieldProps } from '../fixtures/data-field-draft.factory';
-import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
-import { expect } from '@jest/globals';
-import { NotFoundError, ValueError } from '@app/exception/domain.errors';
-import { ignoreIds } from '@app/testing/utils';
+} from "../fixtures/template-draft.factory";
+import { DataFieldDraft } from "./data-field-draft";
+import { SectionDraft } from "./section-draft";
+import {
+  MoveDirection,
+  TemplateDraft,
+} from "./template-draft";
 
-import { Sector } from '../../data-modelling/domain/sectors';
-
-describe('TemplateDraft', () => {
+describe("templateDraft", () => {
   const userId = randomUUID();
   const organizationId = randomUUID();
   const laptopModel: TemplateDraftDbProps = templateDraftDbFactory.build({
@@ -31,28 +32,28 @@ describe('TemplateDraft', () => {
     organizationId,
   });
 
-  it('is renamed', () => {
+  it("is renamed", () => {
     const productDataModelDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build(),
     );
-    productDataModelDraft.rename('Final Draft');
-    expect(productDataModelDraft.name).toEqual('Final Draft');
+    productDataModelDraft.rename("Final Draft");
+    expect(productDataModelDraft.name).toEqual("Final Draft");
   });
 
-  it('is published', () => {
+  it("is published", () => {
     const productDataModelDraft = TemplateDraft.loadFromDb(laptopModel);
     const otherUserId = randomUUID();
-    const publishedProductDataModel =
-      productDataModelDraft.publish(otherUserId);
+    const publishedProductDataModel
+      = productDataModelDraft.publish(otherUserId);
 
     const expected: TemplateDbProps = {
-      id: randomUUID(),
+      id: publishedProductDataModel.id,
       marketplaceResourceId: null,
       name: productDataModelDraft.name,
       description: productDataModelDraft.description,
       sectors: [Sector.ELECTRONICS],
-      version: '1.0.0',
-      organizationId: organizationId,
+      version: "1.0.0",
+      organizationId,
       userId: otherUserId,
       sections: [
         {
@@ -61,12 +62,12 @@ describe('TemplateDraft', () => {
           subSections: [],
           id: productDataModelDraft.sections[0].id,
           granularityLevel: GranularityLevel.MODEL,
-          name: 'Umwelt',
+          name: "Umwelt",
           dataFields: [
             {
               type: DataFieldType.TEXT_FIELD,
               id: productDataModelDraft.sections[0].dataFields[0].id,
-              name: 'Title 1',
+              name: "Title 1",
               options: { max: 2 },
 
               granularityLevel: GranularityLevel.MODEL,
@@ -74,7 +75,7 @@ describe('TemplateDraft', () => {
             {
               type: DataFieldType.TEXT_FIELD,
               id: productDataModelDraft.sections[0].dataFields[1].id,
-              name: 'Title 2',
+              name: "Title 2",
               options: { max: 2 },
 
               granularityLevel: GranularityLevel.MODEL,
@@ -85,7 +86,7 @@ describe('TemplateDraft', () => {
           type: SectionType.REPEATABLE,
           parentId: undefined,
           subSections: [productDataModelDraft.sections[2].id],
-          name: 'Material',
+          name: "Material",
           granularityLevel: GranularityLevel.MODEL,
           id: productDataModelDraft.sections[1].id,
 
@@ -93,7 +94,7 @@ describe('TemplateDraft', () => {
             {
               type: DataFieldType.TEXT_FIELD,
               id: productDataModelDraft.sections[1].dataFields[0].id,
-              name: 'Material Title 1',
+              name: "Material Title 1",
               options: { max: 2 },
 
               granularityLevel: GranularityLevel.MODEL,
@@ -101,7 +102,7 @@ describe('TemplateDraft', () => {
             {
               type: DataFieldType.TEXT_FIELD,
               id: productDataModelDraft.sections[1].dataFields[1].id,
-              name: 'Material Title 2',
+              name: "Material Title 2",
               options: { max: 2 },
               granularityLevel: GranularityLevel.MODEL,
             },
@@ -111,21 +112,21 @@ describe('TemplateDraft', () => {
           type: SectionType.GROUP,
           parentId: productDataModelDraft.sections[1].id,
           subSections: [],
-          name: 'Measurement',
+          name: "Measurement",
           granularityLevel: GranularityLevel.MODEL,
           id: productDataModelDraft.sections[2].id,
           dataFields: [
             {
               type: DataFieldType.TEXT_FIELD,
               id: productDataModelDraft.sections[2].dataFields[0].id,
-              name: 'Measurement Title 1',
+              name: "Measurement Title 1",
               options: { max: 2 },
               granularityLevel: GranularityLevel.MODEL,
             },
             {
               type: DataFieldType.TEXT_FIELD,
               id: productDataModelDraft.sections[2].dataFields[1].id,
-              name: 'Measurement Title 2',
+              name: "Measurement Title 2",
               options: { max: 2 },
               granularityLevel: GranularityLevel.MODEL,
             },
@@ -133,63 +134,61 @@ describe('TemplateDraft', () => {
         },
       ],
     };
-    expect(publishedProductDataModel).toEqual(
-      ignoreIds(Template.loadFromDb(expected)),
-    );
+    expect(publishedProductDataModel).toEqual(Template.loadFromDb(expected));
     expect(publishedProductDataModel.id).not.toEqual(productDataModelDraft.id);
     expect(productDataModelDraft.publications).toEqual([
       {
         id: publishedProductDataModel.id,
-        version: '1.0.0',
+        version: "1.0.0",
       },
     ]);
     const againPublished = productDataModelDraft.publish(otherUserId);
-    expect(againPublished.version).toEqual('2.0.0');
+    expect(againPublished.version).toEqual("2.0.0");
     expect(productDataModelDraft.publications).toEqual([
       {
         id: publishedProductDataModel.id,
-        version: '1.0.0',
+        version: "1.0.0",
       },
       {
         id: againPublished.id,
-        version: '2.0.0',
+        version: "2.0.0",
       },
     ]);
     const parentSection = publishedProductDataModel.sections.find(
-      (s) => s.name === 'Material',
+      s => s.name === "Material",
     );
     const childSection = publishedProductDataModel.sections.find(
-      (s) => s.name === 'Measurement',
+      s => s.name === "Measurement",
     );
     expect(parentSection?.subSections).toEqual([childSection?.id]);
     expect(childSection?.parentId).toEqual(parentSection?.id);
   });
 
-  it('should be created', () => {
+  it("should be created", () => {
     const userId = randomUUID();
     const organizationId = randomUUID();
     const productDataModelDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     expect(productDataModelDraft.id).toBeDefined();
-    expect(productDataModelDraft.version).toEqual('1.0.0');
+    expect(productDataModelDraft.version).toEqual("1.0.0");
     expect(productDataModelDraft.sections).toEqual([]);
     expect(productDataModelDraft.isOwnedBy(organizationId)).toBeTruthy();
     expect(productDataModelDraft.createdByUserId).toEqual(userId);
     expect(productDataModelDraft.publications).toEqual([]);
   });
 
-  it('should add sections', () => {
+  it("should add sections", () => {
     const productDataModelDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const section1 = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const section2 = SectionDraft.create({
-      name: 'Material',
+      name: "Material",
       type: SectionType.REPEATABLE,
       granularityLevel: GranularityLevel.MODEL,
     });
@@ -199,38 +198,38 @@ describe('TemplateDraft', () => {
     expect(productDataModelDraft.sections).toEqual([section1, section2]);
   });
 
-  it('should fail to add repeater section with parent', () => {
+  it("should fail to add repeater section with parent", () => {
     const productDataModelDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const section1 = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const section2 = SectionDraft.create({
-      name: 'Material',
+      name: "Material",
       type: SectionType.REPEATABLE,
       granularityLevel: GranularityLevel.MODEL,
     });
     section2.assignParent(section1);
     productDataModelDraft.addSection(section1);
     expect(() => productDataModelDraft.addSection(section2)).toThrow(
-      new ValueError('Repeater section can only be added as root section'),
+      new ValueError("Repeater section can only be added as root section"),
     );
   });
 
-  it('should add subSection', () => {
+  it("should add subSection", () => {
     const productDataModelDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const section1 = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const section2 = SectionDraft.create({
-      name: 'Material',
+      name: "Material",
       type: SectionType.REPEATABLE,
       granularityLevel: GranularityLevel.MODEL,
     });
@@ -243,33 +242,33 @@ describe('TemplateDraft', () => {
     expect(productDataModelDraft.sections[1].parentId).toEqual(section1.id);
   });
 
-  it('should fail to add subSection if parent id not found', () => {
+  it("should fail to add subSection if parent id not found", () => {
     const templateDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const section1 = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
 
-    expect(() => templateDraft.addSubSection('some id', section1)).toThrow(
-      new NotFoundError(SectionDraft.name, 'some id'),
+    expect(() => templateDraft.addSubSection("some id", section1)).toThrow(
+      new NotFoundError(SectionDraft.name, "some id"),
     );
   });
 
-  it('should fail to add subSection if its granularity level differs from parent', () => {
+  it("should fail to add subSection if its granularity level differs from parent", () => {
     const productDataModelDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const parentSection = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     productDataModelDraft.addSection(parentSection);
     const section = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.ITEM,
     });
@@ -283,18 +282,18 @@ describe('TemplateDraft', () => {
     );
   });
 
-  it('should set subSection granularity level to parent one if undefined', () => {
+  it("should set subSection granularity level to parent one if undefined", () => {
     const productDataModelDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const parentSection = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     productDataModelDraft.addSection(parentSection);
     const section = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
     });
     productDataModelDraft.addSubSection(parentSection.id, section);
@@ -304,23 +303,23 @@ describe('TemplateDraft', () => {
     ).toEqual(parentSection.granularityLevel);
   });
 
-  it('should modify section', () => {
+  it("should modify section", () => {
     const productDataModelDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const section = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     productDataModelDraft.addSection(section);
     productDataModelDraft.modifySection(section.id, {
-      name: 'Tracebility',
+      name: "Tracebility",
     });
 
     expect(productDataModelDraft.sections).toEqual([
       SectionDraft.loadFromDb({
-        name: 'Tracebility',
+        name: "Tracebility",
         id: section.id,
         type: section.type,
         subSections: section.subSections,
@@ -331,29 +330,29 @@ describe('TemplateDraft', () => {
     ]);
   });
 
-  it('should move section', () => {
+  it("should move section", () => {
     const productDataModelDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const section1 = SectionDraft.create(
-      sectionDraftDbPropsFactory.build({ id: 'section-1' }),
+      sectionDraftDbPropsFactory.build({ id: "section-1" }),
     );
     const subSection11 = SectionDraft.create(
-      sectionDraftDbPropsFactory.build({ id: 'sub-section-1-1' }),
+      sectionDraftDbPropsFactory.build({ id: "sub-section-1-1" }),
     );
     const section2 = SectionDraft.create(
-      sectionDraftDbPropsFactory.build({ id: 'section-2' }),
+      sectionDraftDbPropsFactory.build({ id: "section-2" }),
     );
     const subSection12 = SectionDraft.create(
-      sectionDraftDbPropsFactory.build({ id: 'sub-section-1-2' }),
+      sectionDraftDbPropsFactory.build({ id: "sub-section-1-2" }),
     );
     const subSection21 = SectionDraft.create(
       sectionDraftDbPropsFactory.build({
-        id: 'sub-section-2-1',
+        id: "sub-section-2-1",
       }),
     );
     const section3 = SectionDraft.create(
-      sectionDraftDbPropsFactory.build({ id: 'section-3' }),
+      sectionDraftDbPropsFactory.build({ id: "section-3" }),
     );
 
     productDataModelDraft.addSection(section1);
@@ -423,37 +422,37 @@ describe('TemplateDraft', () => {
     expect(productDataModelDraft.sections).toEqual(final);
   });
 
-  it('should delete a section', () => {
+  it("should delete a section", () => {
     const productDataModelDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const section1 = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const section11 = SectionDraft.create({
-      name: 'Dimensions',
+      name: "Dimensions",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const section12 = SectionDraft.create({
-      name: 'section12',
+      name: "section12",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const section111 = SectionDraft.create({
-      name: 'Measurement',
+      name: "Measurement",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const section112 = SectionDraft.create({
-      name: 'Measurement 2',
+      name: "Measurement 2",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     const section2 = SectionDraft.create({
-      name: 'section2',
+      name: "section2",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
@@ -472,33 +471,33 @@ describe('TemplateDraft', () => {
     expect(productDataModelDraft.sections).toEqual([section2]);
   });
 
-  it('should fail to delete a section if it could not be found', () => {
+  it("should fail to delete a section if it could not be found", () => {
     const productDataModelDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({ organizationId, userId }),
     );
     const section = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     productDataModelDraft.addSection(section);
 
-    expect(() => productDataModelDraft.deleteSection('unknown-id')).toThrow(
-      new ValueError('Could not found and delete section with id unknown-id'),
+    expect(() => productDataModelDraft.deleteSection("unknown-id")).toThrow(
+      new ValueError("Could not found and delete section with id unknown-id"),
     );
   });
 
-  it('should add field', () => {
+  it("should add field", () => {
     const productDataModelDraft = TemplateDraft.loadFromDb({
       ...templateDraftDbFactory.build(),
     });
     const dataField1 = DataFieldDraft.create({
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
       granularityLevel: GranularityLevel.MODEL,
     });
     const dataField2 = DataFieldDraft.create({
-      name: 'Memory',
+      name: "Memory",
       type: DataFieldType.TEXT_FIELD,
       granularityLevel: GranularityLevel.MODEL,
     });
@@ -512,7 +511,7 @@ describe('TemplateDraft', () => {
       dataField2,
     );
 
-    const existingFields = sectionDraftEnvironment.dataFields.map((d) =>
+    const existingFields = sectionDraftEnvironment.dataFields.map(d =>
       DataFieldDraft.loadFromDb(d),
     );
     expect(
@@ -522,15 +521,15 @@ describe('TemplateDraft', () => {
 
     expect(() =>
       productDataModelDraft.addDataFieldToSection(
-        'not-found-section',
+        "not-found-section",
         dataField1,
       ),
-    ).toThrow(new NotFoundError(SectionDraft.name, 'not-found-section'));
+    ).toThrow(new NotFoundError(SectionDraft.name, "not-found-section"));
   });
 
-  it('should delete data field', () => {
-    const dataFieldProps1 = textFieldProps.build({ name: 'Processor' });
-    const dataFieldProps2 = textFieldProps.build({ name: 'Memory' });
+  it("should delete data field", () => {
+    const dataFieldProps1 = textFieldProps.build({ name: "Processor" });
+    const dataFieldProps2 = textFieldProps.build({ name: "Memory" });
     const productDataModelDraft = TemplateDraft.loadFromDb(
       templateDraftDbFactory.build({
         sections: [
@@ -538,8 +537,8 @@ describe('TemplateDraft', () => {
             .addDataField(dataFieldProps1)
             .addDataField(dataFieldProps2)
             .build({
-              id: 'section-1',
-              name: 'section-1',
+              id: "section-1",
+              name: "section-1",
             }),
           sectionDraftEnvironment,
         ],
@@ -547,11 +546,11 @@ describe('TemplateDraft', () => {
     );
 
     productDataModelDraft.deleteDataFieldOfSection(
-      'section-1',
+      "section-1",
       dataFieldProps1.id,
     );
     expect(
-      productDataModelDraft.findSectionOrFail('section-1').dataFields,
+      productDataModelDraft.findSectionOrFail("section-1").dataFields,
     ).toEqual([DataFieldDraft.loadFromDb(dataFieldProps2)]);
   });
 });

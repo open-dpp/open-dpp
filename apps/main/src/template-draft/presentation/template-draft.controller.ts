@@ -1,3 +1,4 @@
+import type * as authRequest from "@open-dpp/auth";
 import {
   Body,
   Controller,
@@ -8,43 +9,52 @@ import {
   Patch,
   Post,
   Request,
-} from '@nestjs/common';
-import { TemplateDraft } from '../domain/template-draft';
-import { SectionDraft } from '../domain/section-draft';
-import { DataFieldDraft } from '../domain/data-field-draft';
-import { TemplateService } from '../../templates/infrastructure/template.service';
-import * as createTemplateDraftDto_1 from './dto/create-template-draft.dto';
-import * as createSectionDraftDto_1 from './dto/create-section-draft.dto';
-import { CreateSectionDraftDtoSchema } from './dto/create-section-draft.dto';
-import * as createDataFieldDraftDto_1 from './dto/create-data-field-draft.dto';
-import * as updateTemplateDraftDto_1 from './dto/update-template-draft.dto';
-import * as publishDto_1 from './dto/publish.dto';
-import * as updateDataFieldDraftDto from './dto/update-data-field-draft.dto';
+} from "@nestjs/common";
+import { PermissionService } from "@open-dpp/auth";
+import { ZodValidationPipe } from "@open-dpp/exception";
+import { omit } from "lodash";
+import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
+import { TemplateService } from "../../templates/infrastructure/template.service";
+import { User } from "../../users/domain/user";
+import { DataFieldDraft } from "../domain/data-field-draft";
+import { SectionDraft } from "../domain/section-draft";
 
-import { TemplateDraftService } from '../infrastructure/template-draft.service';
-import { omit } from 'lodash';
+import { TemplateDraft } from "../domain/template-draft";
+import { TemplateDraftService } from "../infrastructure/template-draft.service";
 
-import * as updateSectionDraftDto from './dto/update-section-draft.dto';
-import { templateDraftToDto } from './dto/template-draft.dto';
-import { MarketplaceApplicationService } from '../../marketplace/presentation/marketplace.application.service';
-import * as moveDto_1 from './dto/move.dto';
-import { PermissionService } from '@app/permission';
-import * as authRequest from '@app/auth/auth-request';
-import { ZodValidationPipe } from '@app/exception/zod-validation.pipeline';
-import { User } from '../../users/domain/user';
+import * as createDataFieldDraftDto_1 from "./dto/create-data-field-draft.dto";
+import * as createSectionDraftDto_1 from "./dto/create-section-draft.dto";
+import { CreateSectionDraftDtoSchema } from "./dto/create-section-draft.dto";
+import * as createTemplateDraftDto_1 from "./dto/create-template-draft.dto";
+import * as moveDto_1 from "./dto/move.dto";
+import * as publishDto_1 from "./dto/publish.dto";
+import { templateDraftToDto } from "./dto/template-draft.dto";
+import * as updateDataFieldDraftDto from "./dto/update-data-field-draft.dto";
+import * as updateSectionDraftDto from "./dto/update-section-draft.dto";
+import * as updateTemplateDraftDto_1 from "./dto/update-template-draft.dto";
 
-@Controller('/organizations/:orgaId/template-drafts')
+@Controller("/organizations/:orgaId/template-drafts")
 export class TemplateDraftController {
+  private readonly permissionsService: PermissionService;
+  private readonly templateService: TemplateService;
+  private readonly templateDraftService: TemplateDraftService;
+  private readonly marketplaceService: MarketplaceApplicationService;
+
   constructor(
-    private readonly permissionsService: PermissionService,
-    private readonly templateService: TemplateService,
-    private readonly templateDraftService: TemplateDraftService,
-    private readonly marketplaceService: MarketplaceApplicationService,
-  ) {}
+    permissionsService: PermissionService,
+    templateService: TemplateService,
+    templateDraftService: TemplateDraftService,
+    marketplaceService: MarketplaceApplicationService,
+  ) {
+    this.permissionsService = permissionsService;
+    this.templateService = templateService;
+    this.templateDraftService = templateDraftService;
+    this.marketplaceService = marketplaceService;
+  }
 
   @Post()
   async create(
-    @Param('orgaId') organizationId: string,
+    @Param("orgaId") organizationId: string,
     @Request() req: authRequest.AuthRequest,
     @Body(
       new ZodValidationPipe(
@@ -68,28 +78,28 @@ export class TemplateDraftController {
     );
   }
 
-  @Get(':draftId')
+  @Get(":draftId")
   async get(
-    @Param('orgaId') organizationId: string,
-    @Param('draftId') draftId: string,
+    @Param("orgaId") organizationId: string,
+    @Param("draftId") draftId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
     this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     return templateDraftToDto(foundProductDataModelDraft);
   }
 
-  @Patch(':draftId')
+  @Patch(":draftId")
   async modify(
-    @Param('orgaId') organizationId: string,
-    @Param('draftId') draftId: string,
+    @Param("orgaId") organizationId: string,
+    @Param("draftId") draftId: string,
     @Request() req: authRequest.AuthRequest,
     @Body(
       new ZodValidationPipe(
@@ -102,8 +112,8 @@ export class TemplateDraftController {
       organizationId,
       req.authContext,
     );
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
@@ -113,10 +123,10 @@ export class TemplateDraftController {
     return templateDraftToDto(foundProductDataModelDraft);
   }
 
-  @Post(':draftId/sections')
+  @Post(":draftId/sections")
   async addSection(
-    @Param('orgaId') organizationId: string,
-    @Param('draftId') draftId: string,
+    @Param("orgaId") organizationId: string,
+    @Param("draftId") draftId: string,
     @Request() req: authRequest.AuthRequest,
     @Body(new ZodValidationPipe(CreateSectionDraftDtoSchema))
     createSectionDraftDto: createSectionDraftDto_1.CreateSectionDraftDto,
@@ -126,13 +136,13 @@ export class TemplateDraftController {
       req.authContext,
     );
 
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     const section = SectionDraft.create({
-      ...omit(createSectionDraftDto, ['parentSectionId']),
+      ...omit(createSectionDraftDto, ["parentSectionId"]),
     });
 
     if (createSectionDraftDto.parentSectionId) {
@@ -140,7 +150,8 @@ export class TemplateDraftController {
         createSectionDraftDto.parentSectionId,
         section,
       );
-    } else {
+    }
+    else {
       foundProductDataModelDraft.addSection(section);
     }
     return templateDraftToDto(
@@ -148,10 +159,10 @@ export class TemplateDraftController {
     );
   }
 
-  @Post(':draftId/publish')
+  @Post(":draftId/publish")
   async publish(
-    @Param('orgaId') organizationId: string,
-    @Param('draftId') draftId: string,
+    @Param("orgaId") organizationId: string,
+    @Param("draftId") draftId: string,
     @Request() req: authRequest.AuthRequest,
     @Body(new ZodValidationPipe(publishDto_1.PublishDtoSchema))
     publishDto: publishDto_1.PublishDto,
@@ -161,8 +172,8 @@ export class TemplateDraftController {
       req.authContext,
     );
 
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
@@ -192,11 +203,11 @@ export class TemplateDraftController {
     return templateDraftToDto(draft);
   }
 
-  @Post(':draftId/sections/:sectionId/data-fields')
+  @Post(":draftId/sections/:sectionId/data-fields")
   async addDataFieldToSection(
-    @Param('orgaId') organizationId: string,
-    @Param('sectionId') sectionId: string,
-    @Param('draftId') draftId: string,
+    @Param("orgaId") organizationId: string,
+    @Param("sectionId") sectionId: string,
+    @Param("draftId") draftId: string,
     @Request() req: authRequest.AuthRequest,
     @Body(
       new ZodValidationPipe(
@@ -210,8 +221,8 @@ export class TemplateDraftController {
       req.authContext,
     );
 
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
@@ -224,19 +235,19 @@ export class TemplateDraftController {
     );
   }
 
-  @Delete(':draftId/sections/:sectionId')
+  @Delete(":draftId/sections/:sectionId")
   async deleteSection(
-    @Param('orgaId') organizationId: string,
-    @Param('sectionId') sectionId: string,
-    @Param('draftId') draftId: string,
+    @Param("orgaId") organizationId: string,
+    @Param("sectionId") sectionId: string,
+    @Param("draftId") draftId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
     this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
@@ -247,11 +258,11 @@ export class TemplateDraftController {
     );
   }
 
-  @Patch(':draftId/sections/:sectionId')
+  @Patch(":draftId/sections/:sectionId")
   async modifySection(
-    @Param('orgaId') organizationId: string,
-    @Param('sectionId') sectionId: string,
-    @Param('draftId') draftId: string,
+    @Param("orgaId") organizationId: string,
+    @Param("sectionId") sectionId: string,
+    @Param("draftId") draftId: string,
     @Body(
       new ZodValidationPipe(updateSectionDraftDto.UpdateSectionDraftDtoSchema),
     )
@@ -263,8 +274,8 @@ export class TemplateDraftController {
       req.authContext,
     );
 
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
@@ -278,11 +289,11 @@ export class TemplateDraftController {
     );
   }
 
-  @Post(':draftId/sections/:sectionId/move')
+  @Post(":draftId/sections/:sectionId/move")
   async moveSection(
-    @Param('orgaId') organizationId: string,
-    @Param('sectionId') sectionId: string,
-    @Param('draftId') draftId: string,
+    @Param("orgaId") organizationId: string,
+    @Param("sectionId") sectionId: string,
+    @Param("draftId") draftId: string,
     @Body(new ZodValidationPipe(moveDto_1.MoveDtoSchema))
     moveDto: moveDto_1.MoveDto,
     @Request() req: authRequest.AuthRequest,
@@ -292,8 +303,8 @@ export class TemplateDraftController {
       req.authContext,
     );
 
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
@@ -304,12 +315,12 @@ export class TemplateDraftController {
     );
   }
 
-  @Patch(':draftId/sections/:sectionId/data-fields/:fieldId')
+  @Patch(":draftId/sections/:sectionId/data-fields/:fieldId")
   async modifyDataFieldOfSection(
-    @Param('orgaId') organizationId: string,
-    @Param('sectionId') sectionId: string,
-    @Param('draftId') draftId: string,
-    @Param('fieldId') fieldId: string,
+    @Param("orgaId") organizationId: string,
+    @Param("sectionId") sectionId: string,
+    @Param("draftId") draftId: string,
+    @Param("fieldId") fieldId: string,
     @Body(
       new ZodValidationPipe(
         updateDataFieldDraftDto.UpdateDataFieldDraftDtoSchema,
@@ -323,15 +334,15 @@ export class TemplateDraftController {
       req.authContext,
     );
 
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     foundProductDataModelDraft.modifyDataField(
       sectionId,
       fieldId,
-      omit(modifyDataFieldDraftDto, 'view'),
+      omit(modifyDataFieldDraftDto, "view"),
     );
 
     return templateDraftToDto(
@@ -339,12 +350,12 @@ export class TemplateDraftController {
     );
   }
 
-  @Post(':draftId/sections/:sectionId/data-fields/:fieldId/move')
+  @Post(":draftId/sections/:sectionId/data-fields/:fieldId/move")
   async moveDataField(
-    @Param('orgaId') organizationId: string,
-    @Param('sectionId') sectionId: string,
-    @Param('fieldId') fieldId: string,
-    @Param('draftId') draftId: string,
+    @Param("orgaId") organizationId: string,
+    @Param("sectionId") sectionId: string,
+    @Param("fieldId") fieldId: string,
+    @Param("draftId") draftId: string,
     @Body(new ZodValidationPipe(moveDto_1.MoveDtoSchema))
     moveDto: moveDto_1.MoveDto,
     @Request() req: authRequest.AuthRequest,
@@ -354,8 +365,8 @@ export class TemplateDraftController {
       req.authContext,
     );
 
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
@@ -370,12 +381,12 @@ export class TemplateDraftController {
     );
   }
 
-  @Delete(':draftId/sections/:sectionId/data-fields/:fieldId')
+  @Delete(":draftId/sections/:sectionId/data-fields/:fieldId")
   async deleteDataFieldOfSection(
-    @Param('orgaId') organizationId: string,
-    @Param('sectionId') sectionId: string,
-    @Param('draftId') draftId: string,
-    @Param('fieldId') fieldId: string,
+    @Param("orgaId") organizationId: string,
+    @Param("sectionId") sectionId: string,
+    @Param("draftId") draftId: string,
+    @Param("fieldId") fieldId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
     this.permissionsService.canAccessOrganizationOrFail(
@@ -383,8 +394,8 @@ export class TemplateDraftController {
       req.authContext,
     );
 
-    const foundProductDataModelDraft =
-      await this.templateDraftService.findOneOrFail(draftId);
+    const foundProductDataModelDraft
+      = await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
@@ -397,7 +408,7 @@ export class TemplateDraftController {
 
   @Get()
   async findAllOfOrganization(
-    @Param('orgaId') organizationId: string,
+    @Param("orgaId") organizationId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
     this.permissionsService.canAccessOrganizationOrFail(

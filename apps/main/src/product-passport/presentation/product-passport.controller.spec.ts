@@ -1,29 +1,30 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { randomUUID } from 'crypto';
-import { TemplateService } from '../../templates/infrastructure/template.service';
-import { INestApplication } from '@nestjs/common';
-import { ModelsService } from '../../models/infrastructure/models.service';
-import { APP_GUARD, Reflector } from '@nestjs/core';
-import { Model } from '../../models/domain/model';
-import request from 'supertest';
-import { Template, TemplateDbProps } from '../../templates/domain/template';
-import { Item } from '../../items/domain/item';
-import { ItemsService } from '../../items/infrastructure/items.service';
+import type { INestApplication } from "@nestjs/common";
+import type { TestingModule } from "@nestjs/testing";
+import type { TemplateDbProps } from "../../templates/domain/template";
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { APP_GUARD, Reflector } from "@nestjs/core";
+import { Test } from "@nestjs/testing";
+import { IS_PUBLIC } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
+import { KeycloakAuthTestingGuard, MongooseTestingModule } from "@open-dpp/testing";
+import request from "supertest";
+import { Item } from "../../items/domain/item";
+import { ItemsService } from "../../items/infrastructure/items.service";
+import { Model } from "../../models/domain/model";
+import { ModelsService } from "../../models/infrastructure/models.service";
+import { Template } from "../../templates/domain/template";
+import { TemplateService } from "../../templates/infrastructure/template.service";
+import { ProductPassport } from "../domain/product-passport";
 import {
   phoneFactory,
   phoneItemFactory,
   phoneModelFactory,
-} from '../fixtures/product-passport.factory';
-import { ProductPassport } from '../domain/product-passport';
-import { ProductPassportModule } from '../product-passport.module';
-import { productPassportToDto } from './dto/product-passport.dto';
-import { expect } from '@jest/globals';
-import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { IS_PUBLIC } from '@app/auth/public/public.decorator';
-import { getApp } from '@app/testing/utils';
+} from "../fixtures/product-passport.factory";
+import { ProductPassportModule } from "../product-passport.module";
+import { productPassportToDto } from "./dto/product-passport.dto";
 
-describe('ProductPassportController', () => {
+describe("productPassportController", () => {
   let app: INestApplication;
   let modelsService: ModelsService;
   let itemsService: ItemsService;
@@ -38,13 +39,9 @@ describe('ProductPassportController', () => {
   const organizationId = randomUUID();
   let module: TestingModule;
 
-  beforeEach(() => {
-    jest.spyOn(reflector, 'get').mockReturnValue(false);
-  });
-
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [MongooseTestingModule, ProductPassportModule],
+      imports: [EnvModule.forRoot(), MongooseTestingModule, ProductPassportModule],
       providers: [
         {
           provide: APP_GUARD,
@@ -60,6 +57,9 @@ describe('ProductPassportController', () => {
     app = module.createNestApplication();
 
     await app.init();
+  });
+  beforeEach(() => {
+    jest.spyOn(reflector, "get").mockReturnValue(false);
   });
   const authProps = { userId, organizationId };
   const phoneTemplate: TemplateDbProps = phoneFactory
@@ -85,17 +85,18 @@ describe('ProductPassportController', () => {
     const uuid = item.uniqueProductIdentifiers[0].uuid;
     await itemsService.save(item);
     await modelsService.save(model);
-    jest.spyOn(reflector, 'get').mockImplementation((key) => key === IS_PUBLIC);
-    const response = await request(getApp(app)).get(
+    jest.spyOn(reflector, "get").mockImplementation(key => key === IS_PUBLIC);
+
+    const response = await request(app.getHttpServer()).get(
       `/product-passports/${uuid}`,
     );
     expect(response.status).toEqual(200);
 
     const productPassport = ProductPassport.create({
       uniqueProductIdentifier: item.uniqueProductIdentifiers[0],
-      template: template,
-      model: model,
-      item: item,
+      template,
+      model,
+      item,
     });
     expect(response.body).toEqual(productPassportToDto(productPassport));
   });

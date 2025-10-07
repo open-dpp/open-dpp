@@ -1,39 +1,45 @@
+import type * as authRequest from "@open-dpp/auth";
 import {
   Controller,
   ForbiddenException,
   Get,
   Param,
   Request,
-} from '@nestjs/common';
-import { TemplateService } from '../infrastructure/template.service';
-import { templateParamDocumentation, templateToDto } from './dto/template.dto';
-import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+} from "@nestjs/common";
+import { ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
+import { PermissionService } from "@open-dpp/auth";
 import {
   templateDocumentation,
   templateGetAllDocumentation,
-} from '../../open-api-docs/template.doc';
-import { PermissionService } from '@app/permission';
-import * as authRequest from '@app/auth/auth-request';
+} from "../../open-api-docs/template.doc";
+import { TemplateService } from "../infrastructure/template.service";
+import { templateParamDocumentation, templateToDto } from "./dto/template.dto";
 
-@Controller('/organizations/:organizationId/templates')
+@Controller("/organizations/:organizationId/templates")
 export class TemplateController {
+  private readonly templateService: TemplateService;
+  private readonly permissionsService: PermissionService;
+
   constructor(
-    private readonly templateService: TemplateService,
-    private readonly permissionsService: PermissionService,
-  ) {}
+    templateService: TemplateService,
+    permissionsService: PermissionService,
+  ) {
+    this.templateService = templateService;
+    this.permissionsService = permissionsService;
+  }
 
   @ApiOperation({
-    summary: 'Find template by id',
-    description: 'Find template by id.',
+    summary: "Find template by id",
+    description: "Find template by id.",
   })
   @ApiParam(templateParamDocumentation)
   @ApiResponse({
     schema: templateDocumentation,
   })
-  @Get(':templateId')
+  @Get(":templateId")
   async get(
-    @Param('organizationId') organizationId: string,
-    @Param('templateId') id: string,
+    @Param("organizationId") organizationId: string,
+    @Param("templateId") id: string,
     @Request() req: authRequest.AuthRequest,
   ) {
     const found = await this.templateService.findOneOrFail(id);
@@ -51,7 +57,7 @@ export class TemplateController {
   }
 
   @ApiOperation({
-    summary: 'Find all templates',
+    summary: "Find all templates",
     description: "Find all templates which belong to the user's organization.",
   })
   @ApiResponse({
@@ -59,7 +65,7 @@ export class TemplateController {
   })
   @Get()
   async getAll(
-    @Param('organizationId') organizationId: string,
+    @Param("organizationId") organizationId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
     this.permissionsService.canAccessOrganizationOrFail(

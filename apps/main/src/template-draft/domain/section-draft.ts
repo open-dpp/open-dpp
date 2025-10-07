@@ -1,19 +1,22 @@
-import { DataFieldDraft, DataFieldDraftDbProps } from './data-field-draft';
+import type { GranularityLevel_TYPE } from "../../data-modelling/domain/granularity-level";
+import type { SectionType_TYPE } from "../../data-modelling/domain/section-base";
+import type { SectionDbProps } from "../../templates/domain/section";
+import type { DataFieldDraftDbProps } from "./data-field-draft";
+import type { MoveDirection_TYPE } from "./template-draft";
+import { randomUUID } from "node:crypto";
+import { NotFoundError, ValueError } from "@open-dpp/exception";
 import {
   SectionBase,
   SectionType,
-} from '../../data-modelling/domain/section-base';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { randomUUID } from 'crypto';
-import { SectionDbProps } from '../../templates/domain/section';
-import { MoveDirection } from './template-draft';
-import { NotFoundError, ValueError } from '@app/exception/domain.errors';
+} from "../../data-modelling/domain/section-base";
+import { DataFieldDraft } from "./data-field-draft";
+import { MoveDirection } from "./template-draft";
 
-export type SectionDraftCreateProps = {
+export interface SectionDraftCreateProps {
   name: string;
-  type: SectionType;
-  granularityLevel?: GranularityLevel;
-};
+  type: SectionType_TYPE;
+  granularityLevel?: GranularityLevel_TYPE;
+}
 
 export type SectionDraftDbProps = SectionDraftCreateProps & {
   id: string;
@@ -23,16 +26,19 @@ export type SectionDraftDbProps = SectionDraftCreateProps & {
 };
 
 export class SectionDraft extends SectionBase {
+  public readonly dataFields: DataFieldDraft[];
+
   private constructor(
-    public readonly id: string,
-    protected _name: string,
-    public readonly type: SectionType,
-    protected _subSections: string[],
-    protected _parentId: string | undefined,
-    public granularityLevel: GranularityLevel | undefined,
-    public readonly dataFields: DataFieldDraft[],
+    id: string,
+    _name: string,
+    type: SectionType_TYPE,
+    _subSections: string[],
+    _parentId: string | undefined,
+    granularityLevel: GranularityLevel_TYPE | undefined,
+    dataFields: DataFieldDraft[],
   ) {
     super(id, _name, type, _subSections, _parentId, granularityLevel);
+    this.dataFields = dataFields;
   }
 
   static create(data: SectionDraftCreateProps) {
@@ -58,7 +64,7 @@ export class SectionDraft extends SectionBase {
       data.subSections,
       data.parentId,
       data.granularityLevel,
-      data.dataFields.map((d) => DataFieldDraft.loadFromDb(d)),
+      data.dataFields.map(d => DataFieldDraft.loadFromDb(d)),
     );
   }
 
@@ -76,8 +82,8 @@ export class SectionDraft extends SectionBase {
 
   addDataField(dataField: DataFieldDraft) {
     if (
-      this.granularityLevel &&
-      this.granularityLevel !== dataField.granularityLevel
+      this.granularityLevel
+      && this.granularityLevel !== dataField.granularityLevel
     ) {
       throw new ValueError(
         `Data field ${dataField.id} has a granularity level of ${dataField.granularityLevel} which does not match the section's granularity level of ${this.granularityLevel}`,
@@ -92,12 +98,12 @@ export class SectionDraft extends SectionBase {
   }
 
   deleteSubSection(subSection: SectionDraft) {
-    if (!this.subSections.find((id) => id === subSection.id)) {
+    if (!this.subSections.find(id => id === subSection.id)) {
       throw new ValueError(
         `Could not found and delete sub section ${subSection.id} from ${this.id}`,
       );
     }
-    this._subSections = this.subSections.filter((n) => n !== subSection.id);
+    this._subSections = this.subSections.filter(n => n !== subSection.id);
     subSection.removeParent();
     return subSection;
   }
@@ -109,7 +115,7 @@ export class SectionDraft extends SectionBase {
       options?: Record<string, unknown>;
     },
   ) {
-    const found = this.dataFields.find((d) => d.id === dataFieldId);
+    const found = this.dataFields.find(d => d.id === dataFieldId);
     if (!found) {
       throw new NotFoundError(DataFieldDraft.name, dataFieldId);
     }
@@ -121,8 +127,8 @@ export class SectionDraft extends SectionBase {
     }
   }
 
-  moveDataField(dataFieldId: string, direction: MoveDirection) {
-    const fromIndex = this.dataFields.findIndex((d) => d.id === dataFieldId);
+  moveDataField(dataFieldId: string, direction: MoveDirection_TYPE) {
+    const fromIndex = this.dataFields.findIndex(d => d.id === dataFieldId);
     if (fromIndex < 0) {
       throw new NotFoundError(DataFieldDraft.name, dataFieldId);
     }
@@ -138,7 +144,7 @@ export class SectionDraft extends SectionBase {
   }
 
   deleteDataField(dataFieldId: string) {
-    const foundIndex = this.dataFields.findIndex((d) => d.id === dataFieldId);
+    const foundIndex = this.dataFields.findIndex(d => d.id === dataFieldId);
     if (foundIndex < 0) {
       throw new NotFoundError(DataFieldDraft.name, dataFieldId);
     }
@@ -152,7 +158,7 @@ export class SectionDraft extends SectionBase {
       name: this.name,
       parentId: this.parentId,
       subSections: this.subSections,
-      dataFields: this.dataFields.map((d) => d.publish()),
+      dataFields: this.dataFields.map(d => d.publish()),
       granularityLevel: this.granularityLevel,
     };
   }

@@ -1,38 +1,41 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import type { MicroserviceOptions } from "@nestjs/microservices";
+import process from "node:process";
+import { Logger, ValidationPipe } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { NestFactory } from "@nestjs/core";
+import { Transport } from "@nestjs/microservices";
 import {
   NotFoundExceptionFilter,
   NotFoundInDatabaseExceptionFilter,
   ValueErrorFilter,
-} from '@app/exception/exception.handler';
-import { buildOpenApiDocumentation } from './open-api-docs';
-import { createProxyMiddleware } from 'http-proxy-middleware';
-import { ValidationPipe } from '@nestjs/common';
-import { applyBodySizeHandler } from './BodySizeHandler';
-import * as bodyParser from 'body-parser';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { EnvService } from '@app/env/env.service';
+} from "@open-dpp/exception";
+import * as bodyParser from "body-parser";
+import { createProxyMiddleware } from "http-proxy-middleware";
+import { AppModule } from "./app.module";
+import { applyBodySizeHandler } from "./BodySizeHandler";
+import { buildOpenApiDocumentation } from "./open-api-docs";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const configService = app.get(EnvService);
+  const configService = app.get(ConfigService);
+  const logger = new Logger("Bootstrap");
 
   // Proxy SPA routes in development before setting global prefix
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('Proxy established for routes / except /api');
+  if (process.env.NODE_ENV !== "production") {
+    logger.log("Proxy established for routes / except /api");
     app.use(
-      '/',
+      "/",
       createProxyMiddleware({
-        target: 'http://localhost:5173',
+        target: "http://localhost:5173",
         changeOrigin: true,
         ws: true,
         // Only proxy requests NOT starting with /api
-        pathFilter: (pathname) => !pathname.startsWith('/api'),
+        pathFilter: pathname => !pathname.startsWith("/api"),
       }),
     );
   }
 
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix("api");
   app.enableCors();
   app.useGlobalFilters(
     new NotFoundInDatabaseExceptionFilter(),
@@ -41,23 +44,23 @@ async function bootstrap() {
   );
   applyBodySizeHandler(app);
   app.use(
-    '/media/upload-dpp-file/:upi',
-    bodyParser.urlencoded({ limit: '50mb', extended: true }),
+    "/media/upload-dpp-file/:upi",
+    bodyParser.urlencoded({ limit: "50mb", extended: true }),
   );
 
   app.useGlobalPipes(new ValidationPipe());
-  if (configService.get('OPEN_DPP_BUILD_API_DOC')) {
+  if (configService.get("OPEN_DPP_BUILD_API_DOC")) {
     buildOpenApiDocumentation(app);
   }
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.TCP,
     options: {
-      port: Number(configService.get('OPEN_DPP_MSG_PORT')), // Microservice port
+      port: Number(configService.get("OPEN_DPP_MSG_PORT")), // Microservice port
     },
   });
   await app.startAllMicroservices();
-  const port = Number(configService.get('OPEN_DPP_PORT'));
+  const port = Number(configService.get("OPEN_DPP_PORT"));
+  logger.log(`Application is running on: ${port}`);
   await app.listen(port);
-  console.log(`Application is running on port: ${port}`);
 }
 bootstrap();

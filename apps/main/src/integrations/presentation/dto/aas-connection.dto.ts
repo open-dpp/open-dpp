@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { AssetAdministrationShellType } from '../../domain/asset-administration-shell';
+import { z } from "zod";
+import { AssetAdministrationShellType } from "../../domain/asset-administration-shell";
 
 export const AasFieldAssignmentSchema = z.object({
   dataFieldId: z.uuid(),
@@ -28,7 +28,7 @@ export function aasConnectionToDto(
     dataModelId: aasMapping.dataModelId,
     aasType: aasMapping.aasType,
     modelId: aasMapping.modelId,
-    fieldAssignments: aasMapping.fieldAssignments.map((fieldAssignment) => ({
+    fieldAssignments: aasMapping.fieldAssignments.map(fieldAssignment => ({
       dataFieldId: fieldAssignment.dataFieldId,
       sectionId: fieldAssignment.sectionId,
       idShort: fieldAssignment.idShort,

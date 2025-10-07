@@ -1,11 +1,10 @@
-import { z } from 'zod';
+import type { Template } from "../../domain/template";
+import { Sector } from "@open-dpp/api-client";
+import { z } from "zod";
 import {
   SectionBaseDtoSchema,
   sectionToDto,
-} from '../../../data-modelling/presentation/dto/section-base.dto';
-import { Template } from '../../domain/template';
-
-import { Sector } from '../../../data-modelling/domain/sectors';
+} from "../../../data-modelling/presentation/dto/section-base.dto";
 
 const TemplateDtoSchema = z.object({
   id: z.uuid(),
@@ -28,7 +27,7 @@ export function templateToDto(template: Template): TemplateDto {
     description: template.description,
     sectors: template.sectors,
     version: template.version,
-    sections: template.sections.map((section) => sectionToDto(section)),
+    sections: template.sections.map(section => sectionToDto(section)),
     createdByUserId: template.createdByUserId,
     ownedByOrganizationId: template.ownedByOrganizationId,
     marketplaceResourceId: template.marketplaceResourceId,
@@ -36,9 +35,9 @@ export function templateToDto(template: Template): TemplateDto {
 }
 
 export const templateParamDocumentation = {
-  name: 'templateId',
-  description: 'The id of the template.',
+  name: "templateId",
+  description: "The id of the template.",
   required: true,
-  type: 'string',
-  format: 'uuid',
+  type: "string",
+  format: "uuid",
 };

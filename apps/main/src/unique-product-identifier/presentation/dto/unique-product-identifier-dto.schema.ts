@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { UniqueProductIdentifier } from '../../domain/unique.product.identifier';
-import { GranularityLevel } from '../../../data-modelling/domain/granularity-level';
+import type { UniqueProductIdentifier } from "../../domain/unique.product.identifier";
+import { z } from "zod";
+import { GranularityLevel } from "../../../data-modelling/domain/granularity-level";
 
 export const UniqueProductIdentifierDtoSchema = z.object({
   uuid: z.string(),

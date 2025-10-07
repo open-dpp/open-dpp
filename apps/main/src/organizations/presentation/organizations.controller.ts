@@ -1,3 +1,5 @@
+import type * as authRequest from "@open-dpp/auth";
+import type { CreateOrganizationDto } from "./dto/create-organization.dto";
 import {
   Body,
   Controller,
@@ -6,21 +8,27 @@ import {
   Param,
   Post,
   Request,
-} from '@nestjs/common';
-import { OrganizationsService } from '../infrastructure/organizations.service';
-import { CreateOrganizationDto } from './dto/create-organization.dto';
-import { Organization } from '../domain/organization';
-import { PermissionService } from '@app/permission';
-import * as authRequest from '@app/auth/auth-request';
-import { UsersService } from '../../users/infrastructure/users.service';
+} from "@nestjs/common";
+import { PermissionService } from "@open-dpp/auth";
+import { UsersService } from "../../users/infrastructure/users.service";
+import { Organization } from "../domain/organization";
+import { OrganizationsService } from "../infrastructure/organizations.service";
 
-@Controller('organizations')
+@Controller("organizations")
 export class OrganizationsController {
+  private readonly userService: UsersService;
+  private readonly organizationsService: OrganizationsService;
+  private readonly permissionsService: PermissionService;
+
   constructor(
-    private readonly userService: UsersService,
-    private readonly organizationsService: OrganizationsService,
-    private readonly permissionsService: PermissionService,
-  ) {}
+    userService: UsersService,
+    organizationsService: OrganizationsService,
+    permissionsService: PermissionService,
+  ) {
+    this.userService = userService;
+    this.organizationsService = organizationsService;
+    this.permissionsService = permissionsService;
+  }
 
   @Post()
   async create(
@@ -35,7 +43,7 @@ export class OrganizationsController {
     }
     const organization = Organization.create({
       name: createOrganizationDto.name,
-      user: user,
+      user,
     });
 
     return this.organizationsService.save(organization);
@@ -45,7 +53,7 @@ export class OrganizationsController {
   async findAll(@Request() req: authRequest.AuthRequest) {
     return (
       await this.organizationsService.findAllWhereMember(req.authContext)
-    ).filter((organization) =>
+    ).filter(organization =>
       this.permissionsService.canAccessOrganization(
         organization.id,
         req.authContext,
@@ -53,19 +61,19 @@ export class OrganizationsController {
     );
   }
 
-  @Get(':id')
+  @Get(":id")
   async findOne(
-    @Param('id') id: string,
+    @Param("id") id: string,
     @Request() req: authRequest.AuthRequest,
   ) {
     this.permissionsService.canAccessOrganizationOrFail(id, req.authContext);
     return this.organizationsService.findOneOrFail(id);
   }
 
-  @Post(':organizationId/invite')
+  @Post(":organizationId/invite")
   async inviteUser(
     @Request() req: authRequest.AuthRequest,
-    @Param('organizationId') organizationId: string,
+    @Param("organizationId") organizationId: string,
     @Body() body: { email: string },
   ) {
     this.permissionsService.canAccessOrganizationOrFail(
@@ -79,9 +87,9 @@ export class OrganizationsController {
     );
   }
 
-  @Get(':id/members')
+  @Get(":id/members")
   async getMembers(
-    @Param('id') id: string,
+    @Param("id") id: string,
     @Request() req: authRequest.AuthRequest,
   ) {
     this.permissionsService.canAccessOrganizationOrFail(id, req.authContext);

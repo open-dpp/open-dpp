@@ -1,26 +1,28 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { TemplateService } from './template.service';
-import { Template } from '../domain/template';
-import { randomUUID } from 'crypto';
-import { Connection, Model as MongooseModel } from 'mongoose';
-import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
+import type { TestingModule } from "@nestjs/testing";
+import type { Connection, Model as MongooseModel } from "mongoose";
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { MongooseTestingModule } from "@open-dpp/testing";
+import { DataFieldType } from "../../data-modelling/domain/data-field-base";
+import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { SectionType } from "../../data-modelling/domain/section-base";
+import { KeycloakResourcesModule } from "../../keycloak-resources/keycloak-resources.module";
+import { Template } from "../domain/template";
+import { laptopFactory } from "../fixtures/laptop.factory";
+import { sectionDbPropsFactory } from "../fixtures/section.factory";
+import { templateCreatePropsFactory } from "../fixtures/template.factory";
 import {
   TemplateDoc,
   TemplateDocSchemaVersion,
   TemplateSchema,
-} from './template.schema';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { KeycloakResourcesModule } from '../../keycloak-resources/keycloak-resources.module';
-import { templateCreatePropsFactory } from '../fixtures/template.factory';
-import { laptopFactory } from '../fixtures/laptop.factory';
-import { sectionDbPropsFactory } from '../fixtures/section.factory';
-import { SectionType } from '../../data-modelling/domain/section-base';
-import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { expect } from '@jest/globals';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+} from "./template.schema";
+import { TemplateService } from "./template.service";
 
-describe('TemplateService', () => {
+describe("templateService", () => {
   let service: TemplateService;
   const userId = randomUUID();
   const organizationId = randomUUID();
@@ -31,6 +33,7 @@ describe('TemplateService', () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -52,13 +55,13 @@ describe('TemplateService', () => {
     userId,
   });
 
-  it('fails if requested template could not be found', async () => {
+  it("fails if requested template could not be found", async () => {
     await expect(service.findOneOrFail(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(Template.name),
     );
   });
 
-  it('should create template', async () => {
+  it("should create template", async () => {
     const template = Template.loadFromDb({
       ...laptopModelPlain,
     });
@@ -68,7 +71,7 @@ describe('TemplateService', () => {
     expect(found).toEqual(template);
   });
 
-  it('finds template by marketplaceResourceId', async () => {
+  it("finds template by marketplaceResourceId", async () => {
     const laptop = Template.loadFromDb(laptopModelPlain);
     const marketplaceResourceId = randomUUID();
     laptop.assignMarketplaceResource(marketplaceResourceId);
@@ -97,16 +100,16 @@ describe('TemplateService', () => {
     expect(found).toEqual(laptopOtherOrganization);
   });
 
-  it('sets correct default granularity level', async () => {
+  it("sets correct default granularity level", async () => {
     const laptopModel = laptopFactory.build({
       sections: [
         sectionDbPropsFactory.build({
-          name: 'Environment',
+          name: "Environment",
           granularityLevel: undefined,
         }),
         sectionDbPropsFactory.build({
           type: SectionType.REPEATABLE,
-          name: 'Materials',
+          name: "Materials",
           granularityLevel: undefined,
         }),
       ],
@@ -119,7 +122,7 @@ describe('TemplateService', () => {
     expect(found.sections[1].granularityLevel).toEqual(GranularityLevel.MODEL);
   });
 
-  it('should return templates by name', async () => {
+  it("should return templates by name", async () => {
     const template = Template.loadFromDb({
       ...laptopModelPlain,
       name: `${randomUUID()}-data-model`,
@@ -136,19 +139,19 @@ describe('TemplateService', () => {
     ]);
   });
 
-  it('should return all templates belonging to organization', async () => {
+  it("should return all templates belonging to organization", async () => {
     const laptopModel = Template.loadFromDb({
       ...laptopModelPlain,
     });
     const phoneModel = Template.loadFromDb({
       ...laptopModelPlain,
       id: randomUUID(),
-      name: 'phone',
+      name: "phone",
     });
     const otherOrganizationId = randomUUID();
     const privateModel = Template.create(
       templateCreatePropsFactory.build({
-        name: 'privateModel',
+        name: "privateModel",
         organizationId: otherOrganizationId,
       }),
     );
@@ -188,14 +191,14 @@ describe('TemplateService', () => {
       {
         $set: {
           _schemaVersion: TemplateDocSchemaVersion.v1_0_2,
-          name: 'name',
-          version: '1.0.0',
+          name: "name",
+          version: "1.0.0",
           createdByUserId: randomUUID(),
           ownedByOrganizationId: randomUUID(),
           sections: [
             {
               _id: randomUUID(),
-              name: 's1',
+              name: "s1",
               type: SectionType.GROUP,
               layout: {
                 colSpan: {
@@ -217,7 +220,7 @@ describe('TemplateService', () => {
               dataFields: [
                 {
                   _id: randomUUID(),
-                  name: 'f1',
+                  name: "f1",
                   type: DataFieldType.TEXT_FIELD,
                   granularityLevel: GranularityLevel.MODEL,
                   layout: {

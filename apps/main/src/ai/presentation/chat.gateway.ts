@@ -1,17 +1,16 @@
-// agent-server/src/chat.gateway.ts
+import { Logger, UseFilters } from "@nestjs/common";
 import {
+  MessageBody,
+  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
-  SubscribeMessage,
-  MessageBody,
-} from '@nestjs/websockets';
-import { Server } from 'socket.io';
-import { ChatService } from '../infrastructure/chat.service';
-import { Logger, UseFilters } from '@nestjs/common';
-import { SocketIoExceptionFilter } from '@app/exception/websocket-exception.filter';
-import { Public } from '@app/auth/public/public.decorator';
+} from "@nestjs/websockets";
+import { Public } from "@open-dpp/auth";
+import { SocketIoExceptionFilter } from "@open-dpp/exception";
+import { Server } from "socket.io";
+import { ChatService } from "../chat.service";
 
-@WebSocketGateway({ cors: true, path: '/api/ai-socket' })
+@WebSocketGateway({ cors: true, path: "/api/ai-socket" })
 @UseFilters(new SocketIoExceptionFilter())
 export class ChatGateway {
   private readonly logger: Logger = new Logger(ChatGateway.name);
@@ -19,22 +18,26 @@ export class ChatGateway {
   @WebSocketServer()
   server: Server;
 
-  constructor(private chatService: ChatService) {}
+  private chatService: ChatService;
+
+  constructor(chatService: ChatService) {
+    this.chatService = chatService;
+  }
 
   @Public()
-  @SubscribeMessage('userMessage')
+  @SubscribeMessage("userMessage")
   async handleMessage(
     @MessageBody() message: { msg: string; passportUUID: string },
   ) {
     const startTime = Date.now();
-    this.logger.log('Start to process message:', message);
+    this.logger.log("Start to process message:", message);
     const reply = await this.chatService.askAgent(
       message.msg,
       message.passportUUID,
     );
-    this.server.emit('botMessage', reply);
+    this.server.emit("botMessage", reply);
     const endTime = Date.now();
     const executionTime = endTime - startTime;
-    this.logger.log('Processing time:', executionTime, 'ms');
+    this.logger.log("Processing time:", executionTime, "ms");
   }
 }

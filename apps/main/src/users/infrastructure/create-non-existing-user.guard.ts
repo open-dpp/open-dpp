@@ -1,10 +1,15 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { AuthContext } from '@app/auth/auth-request';
+import type { CanActivate, ExecutionContext } from "@nestjs/common";
+import type { AuthContext } from "@open-dpp/auth";
+import { Injectable } from "@nestjs/common";
+import { UsersService } from "./users.service";
 
 @Injectable()
 export class CreateNonExistingUserGuard implements CanActivate {
-  constructor(private readonly usersService: UsersService) {}
+  private readonly usersService: UsersService;
+
+  constructor(usersService: UsersService) {
+    this.usersService = usersService;
+  }
 
   async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();

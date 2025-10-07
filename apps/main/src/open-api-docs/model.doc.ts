@@ -1,18 +1,18 @@
 import {
   dataValueDocumentation,
   uniqueProductIdentifierDocumentation,
-} from '../product-passport-data/presentation/dto/docs/product-passport-data.doc';
+} from "../product-passport-data/presentation/dto/docs/product-passport-data.doc";
 
 export const createModelDocumentation = {
-  type: 'object',
+  type: "object",
   properties: {
-    name: { type: 'string' },
-    description: { type: 'string' },
-    templateId: { type: 'string', format: 'uuid' },
-    marketplaceResourceId: { type: 'string', format: 'uuid' },
+    name: { type: "string" },
+    description: { type: "string" },
+    templateId: { type: "string", format: "uuid" },
+    marketplaceResourceId: { type: "string", format: "uuid" },
   },
-  description: 'Either templateId or marketplaceResourceId must be provided.',
-  required: ['name'],
+  description: "Either templateId or marketplaceResourceId must be provided.",
+  required: ["name"],
 };
 
 export const updateModelDocumentation = {
@@ -21,18 +21,18 @@ export const updateModelDocumentation = {
 };
 
 export const modelDocumentation = {
-  type: 'object',
+  type: "object",
   properties: {
-    id: { type: 'string', format: 'uuid' },
-    name: { type: 'string' },
-    description: { type: 'string' },
+    id: { type: "string", format: "uuid" },
+    name: { type: "string" },
+    description: { type: "string" },
     uniqueProductIdentifiers: {
-      type: 'array',
+      type: "array",
       items: { ...uniqueProductIdentifierDocumentation },
     },
-    templateId: { type: 'string', format: 'uuid' },
-    dataValues: { type: 'array', items: { ...dataValueDocumentation } },
-    owner: { type: 'string', format: 'uuid' },
+    templateId: { type: "string", format: "uuid" },
+    dataValues: { type: "array", items: { ...dataValueDocumentation } },
+    owner: { type: "string", format: "uuid" },
   },
-  required: ['id', 'name', 'uniqueProductIdentifiers', 'dataValues', 'owner'],
+  required: ["id", "name", "uniqueProductIdentifiers", "dataValues", "owner"],
 };

@@ -1,6 +1,6 @@
-import { PassportTemplatePublication } from '../../domain/passport-template-publication';
-import { z } from 'zod';
-import { Sector } from '../../../data-modelling/domain/sectors';
+import type { PassportTemplatePublication } from "../../domain/passport-template-publication";
+import { z } from "zod";
+import { Sector } from "../../../data-modelling/domain/sectors";
 
 export const PassportTemplatePublicationSchema = z.object({
   id: z.uuid(),
@@ -18,7 +18,7 @@ export const PassportTemplatePublicationSchema = z.object({
 });
 
 export type PassportTemplatePublicationDto = z.infer<
-  typeof PassportTemplatePublicationSchema
+    typeof PassportTemplatePublicationSchema
 >;
 
 export function passportTemplatePublicationToDto(

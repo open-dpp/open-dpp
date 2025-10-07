@@ -1,17 +1,22 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Equal, FindManyOptions, Repository } from 'typeorm';
-import { UserEntity } from './user.entity';
-import { User } from '../domain/user';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
-import { KeycloakUserInToken } from '@app/auth/keycloak-auth/KeycloakUserInToken';
+import type { KeycloakUserInToken } from "@open-dpp/auth";
+import type { FindManyOptions, Repository } from "typeorm";
+import { BadRequestException, Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { Equal } from "typeorm";
+import { User } from "../domain/user";
+import { UserEntity } from "./user.entity";
 
 @Injectable()
 export class UsersService {
+  private userRepository: Repository<UserEntity>;
+
   constructor(
     @InjectRepository(UserEntity)
-    private userRepository: Repository<UserEntity>,
-  ) {}
+    userRepository: Repository<UserEntity>,
+  ) {
+    this.userRepository = userRepository;
+  }
 
   convertToDomain(userEntity: UserEntity) {
     return new User(userEntity.id, userEntity.email);
@@ -36,7 +41,7 @@ export class UsersService {
 
   async find(options?: FindManyOptions<UserEntity>) {
     const entities = await this.userRepository.find(options);
-    return entities.map((entity) => this.convertToDomain(entity));
+    return entities.map(entity => this.convertToDomain(entity));
   }
 
   async save(user: User) {

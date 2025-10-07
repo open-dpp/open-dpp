@@ -1,20 +1,19 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { OrganizationsController } from './organizations.controller';
-import { OrganizationsService } from '../infrastructure/organizations.service';
-import { Organization } from '../domain/organization';
-import { randomUUID } from 'crypto';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { CreateOrganizationDto } from './dto/create-organization.dto';
-import { expect } from '@jest/globals';
-import { PermissionService } from '@app/permission';
-import { AuthContext, AuthRequest } from '@app/auth/auth-request';
-import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
-import { UsersService } from '../../users/infrastructure/users.service';
-import { User } from '../../users/domain/user';
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { ForbiddenException, NotFoundException } from "@nestjs/common";
+import { Test, TestingModule } from "@nestjs/testing";
+import { AuthContext, AuthRequest, PermissionService } from "@open-dpp/auth";
+import { createKeycloakUserInToken } from "@open-dpp/testing";
+import { User } from "../../users/domain/user";
+import { UsersService } from "../../users/infrastructure/users.service";
+import { Organization } from "../domain/organization";
+import { OrganizationsService } from "../infrastructure/organizations.service";
+import { CreateOrganizationDto } from "./dto/create-organization.dto";
+import { OrganizationsController } from "./organizations.controller";
 
 // We'll mock the implementation directly instead of extending the controller
 
-describe('OrganizationsController (Unit)', () => {
+describe("organizationsController (Unit)", () => {
   let controller: OrganizationsController;
   let organizationsService: OrganizationsService;
   let usersService: UsersService;
@@ -57,20 +56,20 @@ describe('OrganizationsController (Unit)', () => {
     }).compile();
 
     controller = module.get<OrganizationsController>(OrganizationsController);
-    organizationsService =
-      module.get<OrganizationsService>(OrganizationsService);
+    organizationsService
+      = module.get<OrganizationsService>(OrganizationsService);
     permissionService = module.get<PermissionService>(PermissionService);
     usersService = module.get<UsersService>(UsersService);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(controller).toBeDefined();
   });
 
-  describe('create', () => {
-    it('should create an organization', async () => {
+  describe("create", () => {
+    it("should create an organization", async () => {
       // Setup
-      const createDto: CreateOrganizationDto = { name: 'Test Organization' };
+      const createDto: CreateOrganizationDto = { name: "Test Organization" };
       const organizationId = randomUUID();
       const expectedOrg = {
         id: organizationId,
@@ -81,11 +80,11 @@ describe('OrganizationsController (Unit)', () => {
 
       // Mock
       jest
-        .spyOn(organizationsService, 'save')
+        .spyOn(organizationsService, "save")
         .mockResolvedValue(expectedOrg as Organization);
 
       jest
-        .spyOn(usersService, 'findOne')
+        .spyOn(usersService, "findOne")
         .mockResolvedValue(new User(mockUser.sub, mockUser.email));
 
       // Execute
@@ -103,22 +102,22 @@ describe('OrganizationsController (Unit)', () => {
     });
   });
 
-  describe('findAll', () => {
+  describe("findAll", () => {
     // Since we can't mock filter directly, we'll test that the service's findAllWhereMember
     // is called with the correct arguments
-    it('should call findAllWhereMember with the correct auth context', async () => {
+    it("should call findAllWhereMember with the correct auth context", async () => {
       // Setup
       const mockOrgs = [
-        { id: randomUUID(), name: 'Org 1' },
-        { id: randomUUID(), name: 'Org 2' },
+        { id: randomUUID(), name: "Org 1" },
+        { id: randomUUID(), name: "Org 2" },
       ] as Organization[];
 
       // Mock
       jest
-        .spyOn(organizationsService, 'findAllWhereMember')
+        .spyOn(organizationsService, "findAllWhereMember")
         .mockResolvedValue(mockOrgs);
       jest
-        .spyOn(permissionService, 'canAccessOrganization')
+        .spyOn(permissionService, "canAccessOrganization")
         .mockReturnValue(true);
 
       // Execute
@@ -130,21 +129,21 @@ describe('OrganizationsController (Unit)', () => {
       );
     });
 
-    it('should call canAccessOrganization for each organization', async () => {
+    it("should call canAccessOrganization for each organization", async () => {
       // Setup
       const orgId1 = randomUUID();
       const orgId2 = randomUUID();
       const mockOrgs = [
-        { id: orgId1, name: 'Org 1' },
-        { id: orgId2, name: 'Org 2' },
+        { id: orgId1, name: "Org 1" },
+        { id: orgId2, name: "Org 2" },
       ] as Organization[];
 
       // Mock
       jest
-        .spyOn(organizationsService, 'findAllWhereMember')
+        .spyOn(organizationsService, "findAllWhereMember")
         .mockResolvedValue(mockOrgs);
       const permissionsSpy = jest
-        .spyOn(permissionService, 'canAccessOrganization')
+        .spyOn(permissionService, "canAccessOrganization")
         .mockReturnValue(true);
 
       // Execute
@@ -156,18 +155,18 @@ describe('OrganizationsController (Unit)', () => {
     });
   });
 
-  describe('findOne', () => {
-    it('should return an organization when user has access', async () => {
+  describe("findOne", () => {
+    it("should return an organization when user has access", async () => {
       // Setup
       const orgId = randomUUID();
-      const mockOrg = { id: orgId, name: 'Test Org' } as Organization;
+      const mockOrg = { id: orgId, name: "Test Org" } as Organization;
 
       // Mock
       jest
-        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .spyOn(permissionService, "canAccessOrganizationOrFail")
         .mockReturnValue(true);
       jest
-        .spyOn(organizationsService, 'findOneOrFail')
+        .spyOn(organizationsService, "findOneOrFail")
         .mockResolvedValue(mockOrg);
 
       // Execute
@@ -180,13 +179,13 @@ describe('OrganizationsController (Unit)', () => {
       ).toHaveBeenCalledWith(orgId, authContext);
     });
 
-    it('should throw ForbiddenException when user has no access', async () => {
+    it("should throw ForbiddenException when user has no access", async () => {
       // Setup
       const orgId = randomUUID();
 
       // Mock
       jest
-        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .spyOn(permissionService, "canAccessOrganizationOrFail")
         .mockImplementation(() => {
           throw new ForbiddenException();
         });
@@ -198,18 +197,18 @@ describe('OrganizationsController (Unit)', () => {
     });
   });
 
-  describe('inviteUser', () => {
-    it('should invite a user to an organization', async () => {
+  describe("inviteUser", () => {
+    it("should invite a user to an organization", async () => {
       // Setup
       const orgId = randomUUID();
-      const email = 'invite@example.com';
+      const email = "invite@example.com";
 
       // Mock
       jest
-        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .spyOn(permissionService, "canAccessOrganizationOrFail")
         .mockReturnValue(true);
       jest
-        .spyOn(organizationsService, 'inviteUser')
+        .spyOn(organizationsService, "inviteUser")
         .mockResolvedValue(undefined);
 
       // Execute
@@ -226,14 +225,14 @@ describe('OrganizationsController (Unit)', () => {
       );
     });
 
-    it('should throw ForbiddenException when user has no access', async () => {
+    it("should throw ForbiddenException when user has no access", async () => {
       // Setup
       const orgId = randomUUID();
-      const email = 'invite@example.com';
+      const email = "invite@example.com";
 
       // Mock
       jest
-        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .spyOn(permissionService, "canAccessOrganizationOrFail")
         .mockImplementation(() => {
           throw new ForbiddenException();
         });
@@ -245,25 +244,25 @@ describe('OrganizationsController (Unit)', () => {
     });
   });
 
-  describe('getMembers', () => {
-    it('should return the members of an organization', async () => {
+  describe("getMembers", () => {
+    it("should return the members of an organization", async () => {
       // Setup
       const orgId = randomUUID();
       const mockOrg = {
         id: orgId,
-        name: 'Test Org',
+        name: "Test Org",
         members: [
           { id: mockUser.sub, email: mockUser.email },
-          { id: randomUUID(), email: 'member2@example.com' },
+          { id: randomUUID(), email: "member2@example.com" },
         ],
       } as Organization;
 
       // Mock
       jest
-        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .spyOn(permissionService, "canAccessOrganizationOrFail")
         .mockReturnValue(true);
       jest
-        .spyOn(organizationsService, 'findOneOrFail')
+        .spyOn(organizationsService, "findOneOrFail")
         .mockResolvedValue(mockOrg);
 
       // Execute
@@ -276,13 +275,13 @@ describe('OrganizationsController (Unit)', () => {
       ).toHaveBeenCalledWith(orgId, authContext);
     });
 
-    it('should throw ForbiddenException when user has no access', async () => {
+    it("should throw ForbiddenException when user has no access", async () => {
       // Setup
       const orgId = randomUUID();
 
       // Mock
       jest
-        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .spyOn(permissionService, "canAccessOrganizationOrFail")
         .mockImplementation(() => {
           throw new ForbiddenException();
         });
@@ -293,16 +292,16 @@ describe('OrganizationsController (Unit)', () => {
       );
     });
 
-    it('should throw NotFoundException when organization is not found', async () => {
+    it("should throw NotFoundException when organization is not found", async () => {
       // Setup
       const orgId = randomUUID();
 
       // Mock
       jest
-        .spyOn(permissionService, 'canAccessOrganizationOrFail')
+        .spyOn(permissionService, "canAccessOrganizationOrFail")
         .mockReturnValue(true);
       jest
-        .spyOn(organizationsService, 'findOneOrFail')
+        .spyOn(organizationsService, "findOneOrFail")
         .mockRejectedValue(new NotFoundException());
 
       // Execute & Verify

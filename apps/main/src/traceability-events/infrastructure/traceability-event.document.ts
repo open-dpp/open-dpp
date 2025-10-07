@@ -1,16 +1,19 @@
-import { Document } from 'mongoose';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { TraceabilityEvent } from '../domain/traceability-event';
-import { TraceabilityEventType } from '../domain/traceability-event-type.enum';
+import type { TraceabilityEvent } from "../domain/traceability-event";
+import type { TraceabilityEventType_TYPE } from "../domain/traceability-event-type.enum";
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Document } from "mongoose";
+import { TraceabilityEventType } from "../domain/traceability-event-type.enum";
 
-export enum TraceabilityEventSchemaVersion {
-  v1_0_0 = '1.0.0',
-}
+export const TraceabilityEventSchemaVersion = {
+  v1_0_0: "1.0.0",
+} as const;
+
+export type TraceabilityEventSchemaVersion_TYPE = (typeof TraceabilityEventSchemaVersion)[keyof typeof TraceabilityEventSchemaVersion];
 
 /**
  * TraceabilityEvent schema
  */
-@Schema({ collection: 'traceability_events', timestamps: true })
+@Schema({ collection: "traceability_events", timestamps: true })
 export class TraceabilityEventDocument extends Document {
   @Prop({ required: true })
   // @ts-expect-error uses mongo id
@@ -18,9 +21,10 @@ export class TraceabilityEventDocument extends Document {
 
   @Prop({
     default: TraceabilityEventSchemaVersion.v1_0_0,
-    enum: TraceabilityEventSchemaVersion,
+    enum: Object.values(TraceabilityEventSchemaVersion),
+    type: String,
   })
-  _schemaVersion: TraceabilityEventSchemaVersion;
+  _schemaVersion: TraceabilityEventSchemaVersion_TYPE;
 
   @Prop({ required: true })
   createdAt: Date;
@@ -54,7 +58,7 @@ export class TraceabilityEventDocument extends Document {
     enum: TraceabilityEventType,
     type: String,
   })
-  type: TraceabilityEventType;
+  type: TraceabilityEventType_TYPE;
 
   @Prop({
     type: Object,

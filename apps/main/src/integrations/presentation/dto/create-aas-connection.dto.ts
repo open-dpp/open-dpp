@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { AssetAdministrationShellType } from '../../domain/asset-administration-shell';
-import { AasFieldAssignmentSchema } from './aas-connection.dto';
+import { z } from "zod";
+import { AssetAdministrationShellType } from "../../domain/asset-administration-shell";
+import { AasFieldAssignmentSchema } from "./aas-connection.dto";
 
 export const CreateAasConnectionSchema = z.object({
   name: z.string(),

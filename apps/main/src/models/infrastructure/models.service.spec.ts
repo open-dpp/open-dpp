@@ -1,46 +1,45 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { ModelsService } from './models.service';
-import { randomUUID } from 'crypto';
-import { Template } from '../../templates/domain/template';
-import { Organization } from '../../organizations/domain/organization';
-import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
-import { TraceabilityEventWrapper } from '../../traceability-events/domain/traceability-event-wrapper';
-import { TraceabilityEvent } from '../../traceability-events/domain/traceability-event';
-import { Connection, Model as MongooseModel } from 'mongoose';
-import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
+import type { TestingModule } from "@nestjs/testing";
+import type { Connection, Model as MongooseModel } from "mongoose";
+import type { TraceabilityEvent } from "../../traceability-events/domain/traceability-event";
+import type { TraceabilityEventWrapper } from "../../traceability-events/domain/traceability-event-wrapper";
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { ignoreIds, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
+import { Organization } from "../../organizations/domain/organization";
+import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
+import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
+import { DataValue } from "../../product-passport-data/domain/data-value";
+import { Template } from "../../templates/domain/template";
+import { laptopFactory } from "../../templates/fixtures/laptop.factory";
+import { TraceabilityEventsService } from "../../traceability-events/infrastructure/traceability-events.service";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
-} from '../../unique-product-identifier/infrastructure/unique-product-identifier.schema';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
-import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { User } from '../../users/domain/user';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
-import { UserEntity } from '../../users/infrastructure/user.entity';
-import { UsersService } from '../../users/infrastructure/users.service';
-import { ModelDoc, ModelDocSchemaVersion, ModelSchema } from './model.schema';
-import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
-import { DataValue } from '../../product-passport-data/domain/data-value';
-import { laptopFactory } from '../../templates/fixtures/laptop.factory';
-import { Model } from '../domain/model';
-import { expect } from '@jest/globals';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
-import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
-import { ignoreIds } from '@app/testing/utils';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+} from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
+import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { User } from "../../users/domain/user";
+import { UserEntity } from "../../users/infrastructure/user.entity";
+import { UsersService } from "../../users/infrastructure/users.service";
+import { Model } from "../domain/model";
+import { ModelDoc, ModelDocSchemaVersion, ModelSchema } from "./model.schema";
+import { ModelsService } from "./models.service";
 
-describe('ModelsService', () => {
+describe("modelsService", () => {
   let modelsService: ModelsService;
-  const user = new User(randomUUID(), 'test@example.com');
-  const organization = Organization.create({ name: 'Firma Y', user });
+  const user = new User(randomUUID(), "test@example.com");
+  const organization = Organization.create({ name: "Firma Y", user });
   let mongoConnection: Connection;
   let modelDoc: MongooseModel<ModelDoc>;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -53,7 +52,7 @@ describe('ModelsService', () => {
           },
         ]),
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
+        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
       ],
       providers: [
         ModelsService,
@@ -83,14 +82,14 @@ describe('ModelsService', () => {
     modelDoc = mongoConnection.model(ModelDoc.name, ModelSchema);
   });
 
-  it('should create a model', async () => {
+  it("should create a model", async () => {
     const template = Template.loadFromDb(
       laptopFactory
         .addSections()
         .build({ organizationId: organization.id, userId: user.id }),
     );
     const model = Model.create({
-      name: 'My product',
+      name: "My product",
       userId: user.id,
       organizationId: organization.id,
       template,
@@ -141,13 +140,13 @@ describe('ModelsService', () => {
     expect(foundModel.isOwnedBy(organization.id)).toBeTruthy();
   });
 
-  it('fails if requested model could not be found', async () => {
+  it("fails if requested model could not be found", async () => {
     await expect(modelsService.findOneOrFail(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(Model.name),
     );
   });
 
-  it('should find all models of organization', async () => {
+  it("should find all models of organization", async () => {
     const otherOrganizationId = randomUUID();
     const template = Template.loadFromDb(
       laptopFactory
@@ -156,19 +155,19 @@ describe('ModelsService', () => {
     );
 
     const model1 = Model.create({
-      name: 'Product A',
+      name: "Product A",
       userId: user.id,
       organizationId: otherOrganizationId,
       template,
     });
     const model2 = Model.create({
-      name: 'Product B',
+      name: "Product B",
       userId: user.id,
       organizationId: otherOrganizationId,
       template,
     });
     const model3 = Model.create({
-      name: 'Product C',
+      name: "Product C",
       userId: user.id,
       organizationId: otherOrganizationId,
       template,
@@ -177,10 +176,10 @@ describe('ModelsService', () => {
     await modelsService.save(model2);
     await modelsService.save(model3);
 
-    const foundModels =
-      await modelsService.findAllByOrganization(otherOrganizationId);
-    expect(foundModels.map((m) => m)).toEqual(
-      [model1, model2, model3].map((m) => m),
+    const foundModels
+      = await modelsService.findAllByOrganization(otherOrganizationId);
+    expect(foundModels.map(m => m)).toEqual(
+      [model1, model2, model3].map(m => m),
     );
   });
 
@@ -191,20 +190,20 @@ describe('ModelsService', () => {
       {
         $set: {
           _schemaVersion: ModelDocSchemaVersion.v1_0_0,
-          name: 'Migration Name',
-          description: 'desc',
-          productDataModelId: 'templateId',
+          name: "Migration Name",
+          description: "desc",
+          productDataModelId: "templateId",
           dataValues: [],
-          createdByUserId: 'userId',
-          ownedByOrganizationId: 'orgId',
+          createdByUserId: "userId",
+          ownedByOrganizationId: "orgId",
         },
       },
       { upsert: true },
     );
     const found = await modelsService.findOneOrFail(id); // or _id: new ObjectId(idAsString)
-    expect(found.templateId).toEqual('templateId');
+    expect(found.templateId).toEqual("templateId");
     const saved = await modelsService.save(found);
-    expect(saved.templateId).toEqual('templateId');
+    expect(saved.templateId).toEqual("templateId");
   });
 
   afterAll(async () => {

@@ -1,17 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import { UniqueProductIdentifier } from '../domain/unique.product.identifier';
-import { InjectModel } from '@nestjs/mongoose';
-import { ModelDocSchemaVersion } from '../../models/infrastructure/model.schema';
-import { Model as MongooseModel } from 'mongoose';
-import { UniqueProductIdentifierDoc } from './unique-product-identifier.schema';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import type { Model as MongooseModel } from "mongoose";
+import { Injectable } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { ModelDocSchemaVersion } from "../../models/infrastructure/model.schema";
+import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
+import { UniqueProductIdentifierDoc } from "./unique-product-identifier.schema";
 
 @Injectable()
 export class UniqueProductIdentifierService {
+  private uniqueProductIdentifierDoc: MongooseModel<UniqueProductIdentifierDoc>;
+
   constructor(
     @InjectModel(UniqueProductIdentifierDoc.name)
-    private uniqueProductIdentifierDoc: MongooseModel<UniqueProductIdentifierDoc>,
-  ) {}
+    uniqueProductIdentifierDoc: MongooseModel<UniqueProductIdentifierDoc>,
+  ) {
+    this.uniqueProductIdentifierDoc = uniqueProductIdentifierDoc;
+  }
 
   convertToDomain(uniqueProductIdentifierDoc: UniqueProductIdentifierDoc) {
     return UniqueProductIdentifier.loadFromDb({
@@ -38,8 +42,8 @@ export class UniqueProductIdentifierService {
   }
 
   async findOne(uuid: string) {
-    const uniqueProductIdentifierDoc =
-      await this.uniqueProductIdentifierDoc.findById(uuid);
+    const uniqueProductIdentifierDoc
+      = await this.uniqueProductIdentifierDoc.findById(uuid);
     if (!uniqueProductIdentifierDoc) {
       return undefined;
     }
@@ -58,7 +62,7 @@ export class UniqueProductIdentifierService {
     const uniqueProductIdentifiers = await this.uniqueProductIdentifierDoc.find(
       { referenceId },
     );
-    return uniqueProductIdentifiers.map((permalink) =>
+    return uniqueProductIdentifiers.map(permalink =>
       this.convertToDomain(permalink),
     );
   }

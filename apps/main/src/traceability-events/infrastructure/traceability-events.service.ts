@@ -1,17 +1,21 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { TraceabilityEventDocument } from './traceability-event.document';
-import { TraceabilityEventWrapper } from '../domain/traceability-event-wrapper';
-import { TraceabilityEventType } from '../domain/traceability-event-type.enum';
-import { TraceabilityEvent } from '../domain/traceability-event';
+import type { Model } from "mongoose";
+import type { TraceabilityEvent } from "../domain/traceability-event";
+import type { TraceabilityEventType_TYPE } from "../domain/traceability-event-type.enum";
+import { Injectable } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { TraceabilityEventWrapper } from "../domain/traceability-event-wrapper";
+import { TraceabilityEventDocument } from "./traceability-event.document";
 
 @Injectable()
 export class TraceabilityEventsService {
+  private traceabilityEventDocument: Model<TraceabilityEventDocument>;
+
   constructor(
     @InjectModel(TraceabilityEventDocument.name)
-    private traceabilityEventDocument: Model<TraceabilityEventDocument>,
-  ) {}
+    traceabilityEventDocument: Model<TraceabilityEventDocument>,
+  ) {
+    this.traceabilityEventDocument = traceabilityEventDocument;
+  }
 
   async create<T extends TraceabilityEvent>(
     dppEvent: TraceabilityEventWrapper<T>,
@@ -56,15 +60,15 @@ export class TraceabilityEventsService {
         },
       )
       .exec();
-    return foundDocs.map((dm) => TraceabilityEventWrapper.loadFromDb(dm));
+    return foundDocs.map(dm => TraceabilityEventWrapper.loadFromDb(dm));
   }
 
-  async findByDataType(type: TraceabilityEventType) {
+  async findByDataType(type: TraceabilityEventType_TYPE) {
     const foundData = await this.traceabilityEventDocument
       .find({
-        'data.type': type,
+        "data.type": type,
       })
       .exec();
-    return foundData.map((dm) => TraceabilityEventWrapper.loadFromDb(dm));
+    return foundData.map(dm => TraceabilityEventWrapper.loadFromDb(dm));
   }
 }

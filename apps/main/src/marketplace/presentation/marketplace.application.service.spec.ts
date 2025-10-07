@@ -1,35 +1,40 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { Template } from '../../templates/domain/template';
-import { randomUUID } from 'crypto';
+import type { TestingModule } from "@nestjs/testing";
+import { randomUUID } from "node:crypto";
+import { expect, jest } from "@jest/globals";
+import { MongooseModule } from "@nestjs/mongoose";
+import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
+import { KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import { DataSource } from "typeorm";
+import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
+import { Organization } from "../../organizations/domain/organization";
+import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
+import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
+import { Template } from "../../templates/domain/template";
+import { laptopFactory } from "../../templates/fixtures/laptop.factory";
+import { templateCreatePropsFactory } from "../../templates/fixtures/template.factory";
 import {
   TemplateDoc,
   TemplateDocSchemaVersion,
   TemplateSchema,
-} from '../../templates/infrastructure/template.schema';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
-import { Organization } from '../../organizations/domain/organization';
-import { User } from '../../users/domain/user';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
-import { UserEntity } from '../../users/infrastructure/user.entity';
-import { KeycloakResourcesModule } from '../../keycloak-resources/keycloak-resources.module';
-import { UsersService } from '../../users/infrastructure/users.service';
-import { MarketplaceApplicationService } from './marketplace.application.service';
-import { DataSource } from 'typeorm';
-import { MongooseModule } from '@nestjs/mongoose';
-import { laptopFactory } from '../../templates/fixtures/laptop.factory';
-import { TemplateService } from '../../templates/infrastructure/template.service';
-import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
-import { expect, jest } from '@jest/globals';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { PassportTemplatePublicationService } from '../infrastructure/passport-template-publication.service';
+} from "../../templates/infrastructure/template.schema";
+import { TemplateService } from "../../templates/infrastructure/template.service";
+import { User } from "../../users/domain/user";
+import { UserEntity } from "../../users/infrastructure/user.entity";
+import { UsersService } from "../../users/infrastructure/users.service";
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,
-} from '../infrastructure/passport-template-publication.schema';
+} from "../infrastructure/passport-template-publication.schema";
+import { PassportTemplatePublicationService } from "../infrastructure/passport-template-publication.service";
+import { MarketplaceApplicationService } from "./marketplace.application.service";
 
-describe('MarketplaceService', () => {
+// Mock the KeycloakResourcesService module before any imports that use it
+/* jest.mock("../../keycloak-resources/infrastructure/keycloak-resources.service", () => ({
+  KeycloakResourcesService: jest.fn(),
+})); */
+
+describe("marketplaceService", () => {
   let marketplaceService: MarketplaceApplicationService;
   const userId = randomUUID();
   const organizationId = randomUUID();
@@ -43,8 +48,7 @@ describe('MarketplaceService', () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
-        TypeOrmTestingModule,
-        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -56,16 +60,22 @@ describe('MarketplaceService', () => {
             schema: TemplateSchema,
           },
         ]),
-        KeycloakResourcesModule,
+        TypeOrmTestingModule,
+        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
       ],
       providers: [
         PassportTemplatePublicationService,
         MarketplaceApplicationService,
+        TemplateService,
         OrganizationsService,
         UsersService,
-        TemplateService,
+        {
+          provide: KeycloakResourcesService,
+          useClass: KeycloakResourcesServiceTesting,
+        },
       ],
     }).compile();
+    dataSource = module.get<DataSource>(DataSource);
     marketplaceService = module.get<MarketplaceApplicationService>(
       MarketplaceApplicationService,
     );
@@ -73,18 +83,17 @@ describe('MarketplaceService', () => {
     passportTemplateService = module.get<PassportTemplatePublicationService>(
       PassportTemplatePublicationService,
     );
-    organizationService =
-      module.get<OrganizationsService>(OrganizationsService);
+    organizationService
+      = module.get<OrganizationsService>(OrganizationsService);
     organization = await organizationService.save(
       Organization.fromPlain({
         id: organizationId,
-        name: 'orga name',
+        name: "orga name",
         members: [new User(userId, `${userId}@example.com`)],
         createdByUserId: userId,
         ownedByUserId: userId,
       }),
     );
-    dataSource = module.get<DataSource>(DataSource);
   });
 
   const laptopModelPlain = laptopFactory.build({
@@ -92,14 +101,14 @@ describe('MarketplaceService', () => {
     userId,
   });
 
-  it('should upload template to marketplace', async () => {
+  it("should upload template to marketplace", async () => {
     const template = Template.loadFromDb({
       ...laptopModelPlain,
       name: `${randomUUID()}-data-model`,
     });
     const { id } = await marketplaceService.upload(
       template,
-      User.create({ id: randomUUID(), email: 'test@example.com' }),
+      User.create({ id: randomUUID(), email: "test@example.com" }),
     );
     const expected = {
       version: template.version,
@@ -116,12 +125,12 @@ describe('MarketplaceService', () => {
       sectors: template.sectors,
       version: template.version,
       _schemaVersion: TemplateDocSchemaVersion.v1_0_3,
-      sections: template.sections.map((s) => ({
+      sections: template.sections.map(s => ({
         _id: s.id,
         name: s.name,
         type: s.type,
         granularityLevel: s.granularityLevel,
-        dataFields: s.dataFields.map((d) => ({
+        dataFields: s.dataFields.map(d => ({
           _id: d.id,
           name: d.name,
           type: d.type,
@@ -142,19 +151,19 @@ describe('MarketplaceService', () => {
     expect(foundUpload.organizationName).toEqual(expected.organizationName);
   });
 
-  it('should return already downloaded template instead of fetching it from the marketplace', async () => {
+  it("should return already downloaded template instead of fetching it from the marketplace", async () => {
     const template = Template.create(
-      templateCreatePropsFactory.build({ organizationId: organizationId }),
+      templateCreatePropsFactory.build({ organizationId }),
     );
     const { id } = await marketplaceService.upload(
       template,
-      User.create({ id: randomUUID(), email: 'test@example.com' }),
+      User.create({ id: randomUUID(), email: "test@example.com" }),
     );
     template.marketplaceResourceId = id;
     await templateService.save(template);
     const findTemplateAtMarketplace = jest.spyOn(
       passportTemplateService,
-      'findOneOrFail',
+      "findOneOrFail",
     );
 
     const downloadedTemplate = await marketplaceService.download(
@@ -167,19 +176,19 @@ describe('MarketplaceService', () => {
     expect(findTemplateAtMarketplace).not.toHaveBeenCalled();
   });
 
-  it('should download template from marketplace', async () => {
+  it("should download template from marketplace", async () => {
     const template = Template.create(
-      templateCreatePropsFactory.build({ organizationId: organizationId }),
+      templateCreatePropsFactory.build({ organizationId }),
     );
     const userId = randomUUID();
     const { id, name, version } = await marketplaceService.upload(
       template,
-      User.create({ id: userId, email: 'test@example.com' }),
+      User.create({ id: userId, email: "test@example.com" }),
     );
 
     const findTemplateAtMarketplace = jest.spyOn(
       passportTemplateService,
-      'findOneOrFail',
+      "findOneOrFail",
     );
 
     const productDataModel = await marketplaceService.download(

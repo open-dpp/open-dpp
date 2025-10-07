@@ -1,19 +1,23 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model as MongooseModel } from 'mongoose';
+import type { Model as MongooseModel } from "mongoose";
+import { Injectable } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { AasConnection, AasFieldAssignment } from "../domain/aas-connection";
 import {
   AasConnectionDoc,
   AasConnectionDocSchemaVersion,
-} from './aas-connection.schema';
-import { AasConnection, AasFieldAssignment } from '../domain/aas-connection';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+} from "./aas-connection.schema";
 
 @Injectable()
 export class AasConnectionService {
+  private aasConnectionDoc: MongooseModel<AasConnectionDoc>;
+
   constructor(
     @InjectModel(AasConnectionDoc.name)
-    private aasConnectionDoc: MongooseModel<AasConnectionDoc>,
-  ) {}
+    aasConnectionDoc: MongooseModel<AasConnectionDoc>,
+  ) {
+    this.aasConnectionDoc = aasConnectionDoc;
+  }
 
   convertToDomain(aasConnectionDoc: AasConnectionDoc) {
     return AasConnection.loadFromDb({
@@ -24,7 +28,7 @@ export class AasConnectionService {
       organizationId: aasConnectionDoc.ownedByOrganizationId,
       userId: aasConnectionDoc.createdByUserId,
       name: aasConnectionDoc.name,
-      fieldAssignments: aasConnectionDoc.fieldAssignments.map((fieldMapping) =>
+      fieldAssignments: aasConnectionDoc.fieldAssignments.map(fieldMapping =>
         AasFieldAssignment.create({
           sectionId: fieldMapping.sectionId,
           dataFieldId: fieldMapping.dataFieldId,
@@ -47,7 +51,7 @@ export class AasConnectionService {
         ownedByOrganizationId: aasConnection.ownedByOrganizationId,
         createdByUserId: aasConnection.createdByUserId,
         fieldAssignments: aasConnection.fieldAssignments.map(
-          (fieldMapping) => ({
+          fieldMapping => ({
             dataFieldId: fieldMapping.dataFieldId,
             sectionId: fieldMapping.sectionId,
             idShortParent: fieldMapping.idShortParent,
@@ -80,7 +84,7 @@ export class AasConnectionService {
       })
       .sort({ name: 1 })
       .exec();
-    return aasConnectionDocs.map((aasConnectionDoc) =>
+    return aasConnectionDocs.map(aasConnectionDoc =>
       this.convertToDomain(aasConnectionDoc),
     );
   }

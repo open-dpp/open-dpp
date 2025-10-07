@@ -7,13 +7,14 @@ import {
   ManyToMany,
   ManyToOne,
   PrimaryColumn,
+  Relation,
   UpdateDateColumn,
-} from 'typeorm';
-import { UserEntity } from '../../users/infrastructure/user.entity';
+} from "typeorm";
+import { UserEntity } from "../../users/infrastructure/user.entity";
 
-@Entity('Organization')
+@Entity("Organization")
 export class OrganizationEntity {
-  @PrimaryColumn('uuid')
+  @PrimaryColumn("uuid")
   id: string;
 
   @CreateDateColumn()
@@ -28,36 +29,36 @@ export class OrganizationEntity {
   @Column()
   name: string;
 
-  @Column('char', {
-    name: 'createdByUserId',
+  @Column("char", {
+    name: "createdByUserId",
   })
   createdByUserId: string;
 
-  @ManyToOne(() => UserEntity, (user) => user.creatorOfOrganizations, {
-    cascade: ['insert'],
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
+  @ManyToOne(() => UserEntity, user => user.creatorOfOrganizations, {
+    cascade: ["insert"],
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
   })
-  @JoinColumn([{ name: 'createdByUserId', referencedColumnName: 'id' }])
-  createdByUser: UserEntity;
+  @JoinColumn([{ name: "createdByUserId", referencedColumnName: "id" }])
+  createdByUser: Relation<UserEntity>;
 
-  @Column('char', {
-    name: 'ownedByUserId',
+  @Column("char", {
+    name: "ownedByUserId",
   })
   ownedByUserId: string;
 
-  @ManyToOne(() => UserEntity, (user) => user.ownerOfOrganizations, {
-    cascade: ['insert'],
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
+  @ManyToOne(() => UserEntity, user => user.ownerOfOrganizations, {
+    cascade: ["insert"],
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
   })
-  @JoinColumn([{ name: 'ownedByUserId', referencedColumnName: 'id' }])
-  ownedByUser: UserEntity;
+  @JoinColumn([{ name: "ownedByUserId", referencedColumnName: "id" }])
+  ownedByUser: Relation<UserEntity>;
 
-  @ManyToMany(() => UserEntity, (user) => user.organizations, {
-    cascade: ['insert'],
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
+  @ManyToMany(() => UserEntity, user => user.organizations, {
+    cascade: ["insert"],
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
   })
-  members: UserEntity[];
+  members: Relation<UserEntity>[];
 }

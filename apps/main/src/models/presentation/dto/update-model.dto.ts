@@ -1,5 +1,5 @@
-import { CreateModelDtoSchema } from './create-model.dto';
-import { z } from 'zod';
+import type { z } from "zod";
+import { CreateModelDtoSchema } from "./create-model.dto";
 
 export const UpdateModelDtoSchema = CreateModelDtoSchema.partial();
 

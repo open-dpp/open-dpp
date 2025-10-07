@@ -1,26 +1,36 @@
-import { Controller, Get, Param } from '@nestjs/common';
-import { ModelsService } from '../../models/infrastructure/models.service';
-import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
-import { TemplateService } from '../../templates/infrastructure/template.service';
-import { ItemsService } from '../../items/infrastructure/items.service';
-import { ProductPassport } from '../domain/product-passport';
-import { productPassportToDto } from './dto/product-passport.dto';
-import { Public } from '@app/auth/public/public.decorator';
+import { Controller, Get, Param } from "@nestjs/common";
+import { Public } from "@open-dpp/auth";
+import { ItemsService } from "../../items/infrastructure/items.service";
+import { ModelsService } from "../../models/infrastructure/models.service";
+import { TemplateService } from "../../templates/infrastructure/template.service";
+import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { ProductPassport } from "../domain/product-passport";
+import { productPassportToDto } from "./dto/product-passport.dto";
 
 @Controller()
 export class ProductPassportController {
+  private readonly modelsService: ModelsService;
+  private readonly uniqueProductIdentifierService: UniqueProductIdentifierService;
+  private readonly templateService: TemplateService;
+  private readonly itemService: ItemsService;
+
   constructor(
-    private readonly modelsService: ModelsService,
-    private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
-    private readonly templateService: TemplateService,
-    private readonly itemService: ItemsService,
-  ) {}
+    modelsService: ModelsService,
+    uniqueProductIdentifierService: UniqueProductIdentifierService,
+    templateService: TemplateService,
+    itemService: ItemsService,
+  ) {
+    this.modelsService = modelsService;
+    this.uniqueProductIdentifierService = uniqueProductIdentifierService;
+    this.templateService = templateService;
+    this.itemService = itemService;
+  }
 
   @Public()
-  @Get('product-passports/:id')
-  async getProductPassport(@Param('id') id: string) {
-    const uniqueProductIdentifier =
-      await this.uniqueProductIdentifierService.findOneOrFail(id);
+  @Get("product-passports/:id")
+  async getProductPassport(@Param("id") id: string) {
+    const uniqueProductIdentifier
+      = await this.uniqueProductIdentifierService.findOneOrFail(id);
     const item = await this.itemService.findOne(
       uniqueProductIdentifier.referenceId,
     );

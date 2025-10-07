@@ -1,27 +1,29 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { v4 as uuid4 } from 'uuid';
-import { UniqueProductIdentifier } from '../domain/unique.product.identifier';
-import { randomUUID } from 'crypto';
-import { TraceabilityEventsModule } from '../../traceability-events/traceability-events.module';
-import { Connection } from 'mongoose';
-import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
+import type { TestingModule } from "@nestjs/testing";
+import type { Connection } from "mongoose";
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import { v4 as uuid4 } from "uuid";
+import { TraceabilityEventsModule } from "../../traceability-events/traceability-events.module";
+import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
-} from './unique-product-identifier.schema';
-import { UniqueProductIdentifierService } from './unique-product-identifier.service';
-import { expect } from '@jest/globals';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+} from "./unique-product-identifier.schema";
+import { UniqueProductIdentifierService } from "./unique-product-identifier.service";
 
-describe('UniqueProductIdentifierService', () => {
+describe("uniqueProductIdentifierService", () => {
   let service: UniqueProductIdentifierService;
   let mongoConnection: Connection;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         TypeOrmTestingModule,
         MongooseTestingModule,
         TraceabilityEventsModule,
@@ -41,7 +43,7 @@ describe('UniqueProductIdentifierService', () => {
     mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
-  it('should create unique product identifier with external id', async () => {
+  it("should create unique product identifier with external id", async () => {
     const referenceId = uuid4();
     const externalUUID = uuid4();
     const uniqueProductIdentifier = UniqueProductIdentifier.create({
@@ -53,13 +55,13 @@ describe('UniqueProductIdentifierService', () => {
     expect(found.referenceId).toEqual(referenceId);
   });
 
-  it('fails if requested unique product identifier model could not be found', async () => {
+  it("fails if requested unique product identifier model could not be found", async () => {
     await expect(service.findOneOrFail(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(UniqueProductIdentifier.name),
     );
   });
 
-  it('should find all unique product identifiers with given referenced id', async () => {
+  it("should find all unique product identifiers with given referenced id", async () => {
     const referenceId = uuid4();
     const uniqueProductIdentifier1 = UniqueProductIdentifier.create({
       referenceId,

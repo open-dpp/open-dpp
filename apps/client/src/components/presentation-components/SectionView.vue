@@ -1,0 +1,82 @@
+<script setup lang="ts">
+import type { DataFieldDto, DataSectionDto } from "@open-dpp/api-client";
+import { FolderIcon } from "@heroicons/vue/16/solid";
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
+import { useProductPassportStore } from "../../stores/product-passport";
+import DataFieldView from "./DataFieldView.vue";
+
+const props = defineProps<{
+  dataSection: DataSectionDto;
+  rowIndex: number;
+}>();
+const { t } = useI18n();
+const productPassportStore = useProductPassportStore();
+const subSections = computed(() =>
+  productPassportStore.findSubSections(props.dataSection.id),
+);
+
+function getDatafieldValue(rowIndex: number, dataField: DataFieldDto) {
+  const dataValues = props.dataSection.dataValues[rowIndex];
+  if (!dataValues) {
+    return undefined;
+  }
+  return dataValues[dataField.id];
+}
+</script>
+
+<template>
+  <div class="mt-6">
+    <dl class="grid grid-cols-1 sm:grid-cols-2">
+      <DataFieldView
+        v-for="dataField in props.dataSection.dataFields"
+        :key="dataField.id"
+        :field-view="{
+          dataField,
+          value: getDatafieldValue(rowIndex, dataField),
+        }"
+      />
+    </dl>
+    <dl
+      v-if="subSections && subSections.length > 0"
+      class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0 border-t border-gray-100"
+    >
+      <dt class="text-sm/6 font-medium text-gray-900">
+        {{ t('presentation.additionalSections') }}
+      </dt>
+      <dd class="mt-2 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+        <ul
+          role="list"
+          class="divide-y divide-gray-100 rounded-md border border-gray-200"
+        >
+          <li
+            v-for="subSection in subSections"
+            :key="subSection.id"
+            class="flex items-center justify-between py-4 pr-5 pl-4 text-sm/6"
+          >
+            <div class="flex w-0 flex-1 items-center">
+              <FolderIcon
+                class="size-5 shrink-0 text-gray-400"
+                aria-hidden="true"
+              />
+              <div class="ml-4 flex min-w-0 flex-1 gap-2">
+                <span class="truncate font-medium text-gray-900">{{
+                  subSection.name
+                }}</span>
+              </div>
+            </div>
+            <div class="ml-4 shrink-0">
+              <router-link
+                :to="`?sectionId=${subSection.id}&row=${props.rowIndex}&parentSectionId=${dataSection.id}`"
+                :data-cy="subSection.id"
+                class="font-medium text-indigo-600 hover:text-indigo-500"
+              >
+                {{ t('presentation.moreInfo') }}
+              </router-link>
+            </div>
+          </li>
+        </ul>
+      </dd>
+    </dl>
+  </div>
+</template>

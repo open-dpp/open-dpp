@@ -1,9 +1,9 @@
-import { randomUUID } from 'crypto';
-import { DataValue } from './data-value';
-import { expect } from '@jest/globals';
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { DataValue } from "./data-value";
 
-describe('DataValue', () => {
-  it('should be created', () => {
+describe("dataValue", () => {
+  it("should be created", () => {
     const dataSectionId = randomUUID();
     const dataFieldId = randomUUID();
     const dataValue = DataValue.create({

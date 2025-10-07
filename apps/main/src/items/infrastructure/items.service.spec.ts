@@ -1,43 +1,38 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { Model } from '../../models/domain/model';
-import { randomUUID } from 'crypto';
-import { Item } from '../domain/item';
-import { ItemsService } from './items.service';
-import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
-import { TraceabilityEventsModule } from '../../traceability-events/traceability-events.module';
-import { Connection, Model as MongooseModel } from 'mongoose';
-import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
-import { ItemDoc, ItemDocSchemaVersion, ItemSchema } from './item.schema';
+import type { Connection, Model as MongooseModel } from "mongoose";
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { Test, TestingModule } from "@nestjs/testing";
+import { Sector } from "@open-dpp/api-client";
+import { AuthContext } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import {
+  ignoreIds,
+  KeycloakResourcesServiceTesting,
+  MongooseTestingModule,
+  user1org1,
+} from "@open-dpp/testing";
+import { DataFieldType } from "../../data-modelling/domain/data-field-base";
+import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { SectionType } from "../../data-modelling/domain/section-base";
+import { Model } from "../../models/domain/model";
+import { DataValue } from "../../product-passport-data/domain/data-value";
+import { Template } from "../../templates/domain/template";
+import { templateCreatePropsFactory } from "../../templates/fixtures/template.factory";
+import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
-} from '../../unique-product-identifier/infrastructure/unique-product-identifier.schema';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
-import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { UsersService } from '../../users/infrastructure/users.service';
-import { UserEntity } from '../../users/infrastructure/user.entity';
-import { UniqueProductIdentifierService } from '../../unique-product-identifier/infrastructure/unique-product-identifier.service';
-import { Template } from '../../templates/domain/template';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { DataValue } from '../../product-passport-data/domain/data-value';
-import { SectionType } from '../../data-modelling/domain/section-base';
-import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { templateCreatePropsFactory } from '../../templates/fixtures/template.factory';
-import { expect } from '@jest/globals';
-import { PermissionModule } from '@app/permission';
-import { AuthContext } from '@app/auth/auth-request';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { user1org1 } from '@app/testing/users-and-orgs';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
-import { ignoreIds } from '@app/testing/utils';
+} from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
+import {
+  UniqueProductIdentifierService,
+} from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { Item } from "../domain/item";
+import { ItemDoc, ItemDocSchemaVersion, ItemSchema } from "./item.schema";
+import { ItemsService } from "./items.service";
 
-import { Sector } from '../../data-modelling/domain/sectors';
-import { EnvModule } from '@app/env';
-
-describe('ItemsService', () => {
+describe("itemsService", () => {
   let itemService: ItemsService;
   const userId = randomUUID();
   const organizationId = randomUUID();
@@ -51,7 +46,7 @@ describe('ItemsService', () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
-        EnvModule,
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -63,17 +58,14 @@ describe('ItemsService', () => {
             schema: UniqueProductIdentifierSchema,
           },
         ]),
-        PermissionModule,
-        TraceabilityEventsModule,
-        TypeOrmTestingModule,
-        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
       ],
       providers: [
         ItemsService,
         UniqueProductIdentifierService,
-        OrganizationsService,
-        KeycloakResourcesService,
-        UsersService,
+        {
+          provide: "KeycloakResourcesService",
+          useClass: KeycloakResourcesServiceTesting,
+        },
       ],
     }).compile();
     itemService = module.get<ItemsService>(ItemsService);
@@ -81,23 +73,23 @@ describe('ItemsService', () => {
     itemDoc = mongoConnection.model(ItemDoc.name, ItemSchema);
   });
 
-  it('fails if requested item could not be found', async () => {
+  it("fails if requested item could not be found", async () => {
     await expect(itemService.findOneOrFail(randomUUID())).rejects.toThrow(
       new NotFoundInDatabaseException(Item.name),
     );
   });
 
-  it('should create and find item for a model', async () => {
+  it("should create and find item for a model", async () => {
     const model = Model.create({
-      name: 'name',
-      userId: userId,
+      name: "name",
+      userId,
       organizationId,
       template,
     });
 
     const item = Item.create({
-      userId: userId,
-      organizationId: organizationId,
+      userId,
+      organizationId,
       template,
       model,
     });
@@ -107,35 +99,35 @@ describe('ItemsService', () => {
     expect(foundItem.modelId).toEqual(model.id);
   });
 
-  it('should create an item with template', async () => {
+  it("should create an item with template", async () => {
     const template1 = Template.loadFromDb({
       marketplaceResourceId: null,
       id: randomUUID(),
-      name: 'Laptop',
-      description: 'My Laptop',
+      name: "Laptop",
+      description: "My Laptop",
       sectors: [Sector.ELECTRONICS],
-      version: '1.0',
-      organizationId: organizationId,
-      userId: userId,
+      version: "1.0",
+      organizationId,
+      userId,
       sections: [
         {
           type: SectionType.GROUP,
           id: randomUUID(),
           parentId: undefined,
           subSections: [],
-          name: 'Section 1',
+          name: "Section 1",
           dataFields: [
             {
               id: randomUUID(),
               type: DataFieldType.TEXT_FIELD,
-              name: 'Title',
+              name: "Title",
               options: { min: 2 },
               granularityLevel: GranularityLevel.ITEM,
             },
             {
               id: randomUUID(),
               type: DataFieldType.TEXT_FIELD,
-              name: 'Title 2',
+              name: "Title 2",
               options: { min: 7 },
               granularityLevel: GranularityLevel.ITEM,
             },
@@ -144,14 +136,14 @@ describe('ItemsService', () => {
         {
           type: SectionType.GROUP,
           id: randomUUID(),
-          name: 'Section 2',
+          name: "Section 2",
           parentId: undefined,
           subSections: [],
           dataFields: [
             {
               id: randomUUID(),
               type: DataFieldType.TEXT_FIELD,
-              name: 'Title 3',
+              name: "Title 3",
               options: { min: 8 },
               granularityLevel: GranularityLevel.ITEM,
             },
@@ -162,12 +154,12 @@ describe('ItemsService', () => {
           id: randomUUID(),
           parentId: undefined,
           subSections: [],
-          name: 'Section 3',
+          name: "Section 3",
           dataFields: [
             {
               id: randomUUID(),
               type: DataFieldType.TEXT_FIELD,
-              name: 'Title 4',
+              name: "Title 4",
               options: { min: 8 },
               granularityLevel: GranularityLevel.ITEM,
             },
@@ -176,14 +168,14 @@ describe('ItemsService', () => {
       ],
     });
     const model = Model.create({
-      name: 'name',
-      userId: userId,
-      organizationId: organizationId,
+      name: "name",
+      userId,
+      organizationId,
       template: template1,
     });
     const item = Item.create({
-      userId: userId,
-      organizationId: organizationId,
+      userId,
+      organizationId,
       template: template1,
       model,
     });
@@ -229,28 +221,28 @@ describe('ItemsService', () => {
     );
   });
 
-  it('should create multiple items for a model and find them by model', async () => {
+  it("should create multiple items for a model and find them by model", async () => {
     const model1 = Model.create({
-      name: 'name',
-      userId: userId,
-      organizationId: organizationId,
+      name: "name",
+      userId,
+      organizationId,
       template,
     });
     const model2 = Model.create({
-      name: 'name',
-      userId: userId,
-      organizationId: organizationId,
+      name: "name",
+      userId,
+      organizationId,
       template,
     });
     const item1 = Item.create({
-      userId: userId,
-      organizationId: organizationId,
+      userId,
+      organizationId,
       template,
       model: model1,
     });
     const item2 = Item.create({
-      userId: userId,
-      organizationId: organizationId,
+      userId,
+      organizationId,
       template,
       model: model1,
     });
@@ -258,8 +250,8 @@ describe('ItemsService', () => {
     await itemService.save(item1);
     await itemService.save(item2);
     const item3 = Item.create({
-      userId: userId,
-      organizationId: organizationId,
+      userId,
+      organizationId,
       model: model2,
       template,
     });
@@ -268,17 +260,17 @@ describe('ItemsService', () => {
     expect(foundItems).toEqual([item1, item2]);
   });
 
-  it('should save item with unique product identifiers', async () => {
+  it("should save item with unique product identifiers", async () => {
     const model = Model.create({
-      name: 'Model with UPIs',
-      userId: userId,
-      organizationId: organizationId,
+      name: "Model with UPIs",
+      userId,
+      organizationId,
       template,
     });
     // Create item with unique product identifiers
     const item = Item.create({
-      userId: userId,
-      organizationId: organizationId,
+      userId,
+      organizationId,
       model,
       template,
     });
@@ -304,13 +296,13 @@ describe('ItemsService', () => {
     expect(foundItem.uniqueProductIdentifiers).toHaveLength(2);
   });
 
-  it('should correctly convert item entity to domain object', () => {
+  it("should correctly convert item entity to domain object", () => {
     // Create a mock ItemEntity
     const itemId = randomUUID();
     const modelId = randomUUID();
     const itemEntity = {
       id: itemId,
-      modelId: modelId,
+      modelId,
     } as ItemDoc;
 
     // Create mock UPIs
@@ -335,19 +327,19 @@ describe('ItemsService', () => {
       { _id: id },
       {
         _schemaVersion: ItemDocSchemaVersion.v1_0_0,
-        name: 'Migration Name',
-        description: 'desc',
-        templateId: 'templateId',
+        name: "Migration Name",
+        description: "desc",
+        templateId: "templateId",
         dataValues: [],
-        createdByUserId: 'userId',
-        ownedByOrganizationId: 'orgId',
+        createdByUserId: "userId",
+        ownedByOrganizationId: "orgId",
       },
       { upsert: true },
     );
     const found = await itemService.findOneOrFail(id); // or _id: new ObjectId(idAsString)
-    expect(found.templateId).toEqual('templateId');
+    expect(found.templateId).toEqual("templateId");
     const saved = await itemService.save(found);
-    expect(saved.templateId).toEqual('templateId');
+    expect(saved.templateId).toEqual("templateId");
   });
 
   afterAll(async () => {

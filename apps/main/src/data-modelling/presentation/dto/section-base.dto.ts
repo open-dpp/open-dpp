@@ -1,9 +1,9 @@
-import { z } from 'zod';
-import { SectionType } from '../../domain/section-base';
-import { GranularityLevel } from '../../domain/granularity-level';
-import { DataFieldBaseSchema, dataFieldToDto } from './data-field-base.dto';
-import { SectionDraft } from '../../../template-draft/domain/section-draft';
-import { Section } from '../../../templates/domain/section';
+import type { SectionDraft } from "../../../template-draft/domain/section-draft";
+import type { Section } from "../../../templates/domain/section";
+import { z } from "zod";
+import { GranularityLevel } from "../../domain/granularity-level";
+import { SectionType } from "../../domain/section-base";
+import { DataFieldBaseSchema, dataFieldToDto } from "./data-field-base.dto";
 
 export const SectionBaseDtoSchema = z.object({
   id: z.uuid(),
@@ -20,7 +20,7 @@ export function sectionToDto(section: Section | SectionDraft) {
     id: section.id,
     name: section.name,
     type: section.type,
-    dataFields: section.dataFields.map((dataField) =>
+    dataFields: section.dataFields.map(dataField =>
       dataFieldToDto(dataField),
     ),
     parentId: section.parentId,

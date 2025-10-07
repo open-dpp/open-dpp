@@ -1,8 +1,8 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import {
   createCommonIndexesForTemplate,
   TemplateBaseDoc,
-} from '../../data-modelling/infrastructure/template-base.schema';
+} from "../../data-modelling/infrastructure/template-base.schema";
 
 @Schema({ _id: false }) // No separate _id for embedded documents
 class PublicationDoc {
@@ -15,26 +15,29 @@ class PublicationDoc {
 
 const PublicationSchema = SchemaFactory.createForClass(PublicationDoc);
 
-export enum TemplateDraftDocSchemaVersion {
-  v1_0_0 = '1.0.0',
-  v1_0_1 = '1.0.1',
-  v1_0_2 = '1.0.2',
-  v1_0_3 = '1.0.3',
-}
+export const TemplateDraftDocSchemaVersion = {
+  v1_0_0: "1.0.0",
+  v1_0_1: "1.0.1",
+  v1_0_2: "1.0.2",
+  v1_0_3: "1.0.3",
+} as const;
 
-@Schema({ collection: 'product_data_model_drafts' })
+export type TemplateDraftDocSchemaVersion_TYPE = (typeof TemplateDraftDocSchemaVersion)[keyof typeof TemplateDraftDocSchemaVersion];
+
+@Schema({ collection: "product_data_model_drafts" })
 export class TemplateDraftDoc extends TemplateBaseDoc {
   @Prop({
     default: TemplateDraftDocSchemaVersion.v1_0_3,
-    enum: TemplateDraftDocSchemaVersion,
+    enum: Object.values(TemplateDraftDocSchemaVersion),
+    type: String,
   }) // Track schema version
-  _schemaVersion: TemplateDraftDocSchemaVersion;
+  _schemaVersion: TemplateDraftDocSchemaVersion_TYPE;
 
   @Prop({ type: [PublicationSchema], default: [] })
   publications: PublicationDoc[];
 }
 
-export const TemplateDraftSchema =
-  SchemaFactory.createForClass(TemplateDraftDoc);
+export const TemplateDraftSchema
+  = SchemaFactory.createForClass(TemplateDraftDoc);
 
 createCommonIndexesForTemplate(TemplateDraftSchema);

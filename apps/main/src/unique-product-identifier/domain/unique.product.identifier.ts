@@ -1,10 +1,16 @@
-import { randomUUID } from 'crypto';
+import { randomUUID } from "node:crypto";
 
 export class UniqueProductIdentifier {
+  public readonly uuid: string;
+  public readonly referenceId: string;
+
   private constructor(
-    public readonly uuid: string,
-    public readonly referenceId: string,
-  ) {}
+    uuid: string,
+    referenceId: string,
+  ) {
+    this.uuid = uuid;
+    this.referenceId = referenceId;
+  }
 
   static create(data: {
     externalUUID?: string;

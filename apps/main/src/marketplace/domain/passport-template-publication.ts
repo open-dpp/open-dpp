@@ -1,23 +1,23 @@
-import { randomUUID } from 'crypto';
-import { Sector } from '../../data-modelling/domain/sectors';
+import type { Sector_TYPE } from "../../data-modelling/domain/sectors";
+import { randomUUID } from "node:crypto";
 
 type JsonObject = Record<string, unknown>;
 
-type PassportTemplatePublicationCreationProps = {
+interface PassportTemplatePublicationCreationProps {
   ownedByOrganizationId: string;
   createdByUserId: string;
   version: string;
   name: string;
   description: string;
   isOfficial: boolean;
-  sectors: Sector[];
+  sectors: Sector_TYPE[];
   website: string | null;
   contactEmail: string;
   organizationName: string;
   templateData: JsonObject;
-};
-export type PassportTemplatePublicationProps =
-  PassportTemplatePublicationCreationProps & {
+}
+export type PassportTemplatePublicationProps
+  = PassportTemplatePublicationCreationProps & {
     id: string;
     createdAt?: Date;
     updatedAt?: Date;
@@ -32,7 +32,7 @@ export class PassportTemplatePublication {
     public readonly name: string,
     public readonly description: string,
     public readonly isOfficial: boolean,
-    public readonly sectors: Sector[],
+    public readonly sectors: Sector_TYPE[],
     public readonly website: string | null,
     public readonly contactEmail: string,
     public readonly organizationName: string,

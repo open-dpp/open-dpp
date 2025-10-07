@@ -1,3 +1,6 @@
+import type * as authRequest from "@open-dpp/auth";
+import type express from "express";
+import type { Media } from "../domain/media";
 import {
   Controller,
   FileTypeValidator,
@@ -10,23 +13,24 @@ import {
   Res,
   UploadedFile,
   UseInterceptors,
-} from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
-import { VirusScanFileValidator } from './virus-scan.file-validator';
-import { MediaService } from '../infrastructure/media.service';
-import express from 'express';
-import { Media } from '../domain/media';
-import * as authRequest from '@app/auth/auth-request';
-import { Public } from '@app/auth/public/public.decorator';
+} from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { Public } from "@open-dpp/auth";
+import { memoryStorage } from "multer";
+import { MediaService } from "../infrastructure/media.service";
+import { VirusScanFileValidator } from "./virus-scan.file-validator";
 
-@Controller('media')
+@Controller("media")
 export class MediaController {
-  constructor(private readonly filesService: MediaService) {}
+  private readonly filesService: MediaService;
 
-  @Post('profileImage')
+  constructor(filesService: MediaService) {
+    this.filesService = filesService;
+  }
+
+  @Post("profileImage")
   @UseInterceptors(
-    FileInterceptor('file', {
+    FileInterceptor("file", {
       storage: memoryStorage(),
     }),
   )
@@ -40,7 +44,7 @@ export class MediaController {
           new FileTypeValidator({
             fileType: /(image\/(jpeg|jpg|png|heic|webp))$/,
           }),
-          new VirusScanFileValidator({ storageType: 'memory' }),
+          new VirusScanFileValidator({ storageType: "memory" }),
         ],
       }),
     )
@@ -53,9 +57,9 @@ export class MediaController {
     );
   }
 
-  @Post('dpp/:orgId/:upi/:dataFieldId')
+  @Post("dpp/:orgId/:upi/:dataFieldId")
   @UseInterceptors(
-    FileInterceptor('file', {
+    FileInterceptor("file", {
       storage: memoryStorage(),
     }),
   )
@@ -69,14 +73,14 @@ export class MediaController {
           new FileTypeValidator({
             fileType: /(image\/(jpeg|jpg|png|heic|webp)|application\/pdf)$/,
           }),
-          new VirusScanFileValidator({ storageType: 'memory' }),
+          new VirusScanFileValidator({ storageType: "memory" }),
         ],
       }),
     )
     file: Express.Multer.File,
-    @Param('orgId') orgId: string,
-    @Param('upi') upi: string,
-    @Param('dataFieldId') dataFieldId: string,
+    @Param("orgId") orgId: string,
+    @Param("upi") upi: string,
+    @Param("dataFieldId") dataFieldId: string,
     @Req() req: authRequest.AuthRequest,
   ): Promise<{
     mediaId: string;
@@ -94,20 +98,20 @@ export class MediaController {
     };
   }
 
-  @Get('dpp/:upi/:dataFieldId/info')
+  @Get("dpp/:upi/:dataFieldId/info")
   @Public()
   async getDppFileInfo(
-    @Param('upi') upi: string,
-    @Param('dataFieldId') dataFieldId: string,
+    @Param("upi") upi: string,
+    @Param("dataFieldId") dataFieldId: string,
   ): Promise<Media> {
     return this.filesService.findOneDppFileOrFail(dataFieldId, upi);
   }
 
-  @Get('dpp/:upi/:dataFieldId/download')
+  @Get("dpp/:upi/:dataFieldId/download")
   @Public()
   async streamDppFile(
-    @Param('upi') upi: string,
-    @Param('dataFieldId') dataFieldId: string,
+    @Param("upi") upi: string,
+    @Param("dataFieldId") dataFieldId: string,
     @Req() req: authRequest.AuthRequest,
     @Res() res: express.Response,
   ): Promise<void> {
@@ -116,66 +120,67 @@ export class MediaController {
         dataFieldId,
         upi,
       );
-      res.setHeader('Content-Type', result.media.mimeType);
-      res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
+      res.setHeader("Content-Type", result.media.mimeType);
+      res.setHeader("Cross-Origin-Resource-Policy", "same-site");
       if (result.media.updatedAt) {
-        res.setHeader('Last-Modified', result.media.updatedAt.toUTCString());
+        res.setHeader("Last-Modified", result.media.updatedAt.toUTCString());
       }
-      res.setHeader('Cache-Control', 'private, max-age=31536000');
+      res.setHeader("Cache-Control", "private, max-age=31536000");
       result.stream.pipe(res);
-      result.stream.on('error', () => {
+      result.stream.on("error", () => {
         if (!res.headersSent) {
-          res.status(500).json({ error: 'Failed to retrieve file' });
+          res.status(500).json({ error: "Failed to retrieve file" });
         }
       });
-    } catch {
-      res.status(404).json({ error: 'File not found' });
+    }
+    catch {
+      res.status(404).json({ error: "File not found" });
     }
   }
 
-  @Get('by-organization/:organizationId')
+  @Get("by-organization/:organizationId")
   async getFileInfoByOrganization(
-    @Param('organizationId') organizationId: string,
+    @Param("organizationId") organizationId: string,
   ): Promise<Array<Media>> {
     return this.filesService.findAllByOrganizationId(organizationId);
   }
 
-  @Get(':id/download')
+  @Get(":id/download")
   @Public()
   async streamFile(
-    @Param('id') id: string,
+    @Param("id") id: string,
     @Req() req: authRequest.AuthRequest,
     @Res() res: express.Response,
   ): Promise<void> {
     try {
       const result = await this.filesService.getFilestreamById(id);
-      res.setHeader('Content-Type', result.media.mimeType);
-      res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
+      res.setHeader("Content-Type", result.media.mimeType);
+      res.setHeader("Cross-Origin-Resource-Policy", "same-site");
       if (result.media.updatedAt) {
-        res.setHeader('Last-Modified', result.media.updatedAt.toUTCString());
+        res.setHeader("Last-Modified", result.media.updatedAt.toUTCString());
       }
-      res.setHeader('Cache-Control', 'private, max-age=31536000');
+      res.setHeader("Cache-Control", "private, max-age=31536000");
       result.stream.pipe(res);
-      result.stream.on('error', () => {
+      result.stream.on("error", () => {
         if (!res.headersSent) {
-          res.status(500).json({ error: 'Failed to retrieve file' });
+          res.status(500).json({ error: "Failed to retrieve file" });
         }
       });
-    } catch (error) {
-      console.log(error);
-      res.status(404).json({ error: 'File not found' });
+    }
+    catch {
+      res.status(404).json({ error: "File not found" });
     }
   }
 
-  @Get(':id/info')
+  @Get(":id/info")
   @Public()
-  async getMediaInfo(@Param('id') id: string): Promise<Media> {
+  async getMediaInfo(@Param("id") id: string): Promise<Media> {
     return await this.filesService.findOneOrFail(id);
   }
 
-  @Post(':orgId')
+  @Post(":orgId")
   @UseInterceptors(
-    FileInterceptor('file', {
+    FileInterceptor("file", {
       storage: memoryStorage(),
     }),
   )
@@ -189,12 +194,12 @@ export class MediaController {
           new FileTypeValidator({
             fileType: /(image\/(jpeg|jpg|png|heic|webp)|application\/pdf)$/,
           }),
-          new VirusScanFileValidator({ storageType: 'memory' }),
+          new VirusScanFileValidator({ storageType: "memory" }),
         ],
       }),
     )
     file: Express.Multer.File,
-    @Param('orgId') orgId: string,
+    @Param("orgId") orgId: string,
     @Req() req: authRequest.AuthRequest,
   ): Promise<{
     mediaId: string;

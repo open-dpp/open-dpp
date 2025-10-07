@@ -7,11 +7,12 @@ import {
   ManyToMany,
   OneToMany,
   PrimaryColumn,
+  Relation,
   UpdateDateColumn,
-} from 'typeorm';
-import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
+} from "typeorm";
+import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
 
-@Entity('user')
+@Entity("user")
 export class UserEntity {
   @PrimaryColumn()
   id: string;
@@ -30,24 +31,24 @@ export class UserEntity {
 
   @ManyToMany(
     () => OrganizationEntity,
-    (organization) => organization.members,
+    organization => organization.members,
     {
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
     },
   )
   @JoinTable({
-    name: 'organization_user',
-    joinColumns: [{ name: 'user_id', referencedColumnName: 'id' }],
+    name: "organization_user",
+    joinColumns: [{ name: "user_id", referencedColumnName: "id" }],
     inverseJoinColumns: [
-      { name: 'organization_id', referencedColumnName: 'id' },
+      { name: "organization_id", referencedColumnName: "id" },
     ],
   })
-  organizations: OrganizationEntity[];
+  organizations: Relation<OrganizationEntity>[];
 
-  @OneToMany(() => OrganizationEntity, (org) => org.createdByUserId)
-  creatorOfOrganizations: OrganizationEntity[];
+  @OneToMany(() => OrganizationEntity, org => org.createdByUser)
+  creatorOfOrganizations: Relation<OrganizationEntity>[];
 
-  @OneToMany(() => OrganizationEntity, (org) => org.ownedByUserId)
-  ownerOfOrganizations: OrganizationEntity[];
+  @OneToMany(() => OrganizationEntity, org => org.ownedByUser)
+  ownerOfOrganizations: Relation<OrganizationEntity>[];
 }

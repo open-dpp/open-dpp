@@ -1,9 +1,11 @@
-import { TraceabilityEventType } from '../../../domain/traceability-event-type.enum';
-import { TraceabilityEvent } from '../../../domain/traceability-event';
-import { TraceabilityEventWrapper } from '../../../domain/traceability-event-wrapper';
+import { TraceabilityEvent } from "../../../domain/traceability-event";
+import { TraceabilityEventType } from "../../../domain/traceability-event-type.enum";
+import { TraceabilityEventWrapper } from "../../../domain/traceability-event-wrapper";
 
 export class OpenEpcisEvent extends TraceabilityEvent {
-  private constructor(public readonly data: any) {
+  public readonly data: any;
+
+  private constructor(data: any) {
     super(TraceabilityEventType.OPENEPCIS);
     this.data = data;
   }

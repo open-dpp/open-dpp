@@ -1,9 +1,9 @@
-import { Model } from 'mongoose';
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { PassportTemplatePublicationDoc } from './passport-template-publication.schema';
-import { PassportTemplatePublication } from '../domain/passport-template-publication';
-import { NotFoundInDatabaseException } from '@app/exception/service.exceptions';
+import type { Model } from "mongoose";
+import { Injectable } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { PassportTemplatePublication } from "../domain/passport-template-publication";
+import { PassportTemplatePublicationDoc } from "./passport-template-publication.schema";
 
 @Injectable()
 export class PassportTemplatePublicationService {
@@ -18,7 +18,7 @@ export class PassportTemplatePublicationService {
     return PassportTemplatePublication.loadFromDb({
       id: passportTemplatePublicationDoc._id,
       ownedByOrganizationId:
-        passportTemplatePublicationDoc.ownedByOrganizationId,
+            passportTemplatePublicationDoc.ownedByOrganizationId,
       createdByUserId: passportTemplatePublicationDoc.createdByUserId,
       version: passportTemplatePublicationDoc.version,
       name: passportTemplatePublicationDoc.name,
@@ -35,8 +35,8 @@ export class PassportTemplatePublicationService {
   }
 
   async save(passportTemplate: PassportTemplatePublication) {
-    const dataModelDoc =
-      await this.passportTemplatePublicationDoc.findOneAndUpdate(
+    const dataModelDoc
+      = await this.passportTemplatePublicationDoc.findOneAndUpdate(
         { _id: passportTemplate.id },
         {
           version: passportTemplate.version,
@@ -64,8 +64,8 @@ export class PassportTemplatePublicationService {
   }
 
   async findOneOrFail(id: string) {
-    const passportTemplateDocument =
-      await this.passportTemplatePublicationDoc.findById(id);
+    const passportTemplateDocument
+      = await this.passportTemplatePublicationDoc.findById(id);
     if (!passportTemplateDocument) {
       throw new NotFoundInDatabaseException(PassportTemplatePublication.name);
     }
@@ -73,9 +73,9 @@ export class PassportTemplatePublicationService {
   }
 
   async findAll() {
-    const passportTemplateDocuments =
-      await this.passportTemplatePublicationDoc.find();
-    return passportTemplateDocuments.map((passportTemplateDocument) =>
+    const passportTemplateDocuments
+      = await this.passportTemplatePublicationDoc.find();
+    return passportTemplateDocuments.map(passportTemplateDocument =>
       this.convertToDomain(passportTemplateDocument),
     );
   }

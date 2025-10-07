@@ -1,41 +1,38 @@
-import { Module } from '@nestjs/common';
-import path, { join } from 'path';
-import { ConfigModule } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
-import { generateConfig, generateMongoConfig } from './database/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { TemplateDraftModule } from './template-draft/template-draft.module';
-import { TemplateModule } from './templates/template.module';
-import { ItemsModule } from './items/items.module';
-import { ModelsModule } from './models/models.module';
-import { OrganizationsModule } from './organizations/organizations.module';
-import { UsersModule } from './users/users.module';
-import { UniqueProductIdentifierModule } from './unique-product-identifier/unique.product.identifier.module';
-import { HttpModule } from '@nestjs/axios';
-import { KeycloakResourcesModule } from './keycloak-resources/keycloak-resources.module';
-import { TraceabilityEventsModule } from './traceability-events/traceability-events.module';
-import { KeycloakSyncOnStartupModule } from './keycloak-sync-on-startup/keycloak-sync-on-startup.module';
-import { IntegrationModule } from './integrations/integration.module';
-import { ProductPassportModule } from './product-passport/product-passport.module';
-import { APP_GUARD } from '@nestjs/core';
-import { KeycloakAuthGuard } from '@app/auth/keycloak-auth/keycloak-auth.guard';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { MediaModule } from './media/media.module';
-import { AiModule } from './ai/ai.module';
-import { CreateNonExistingUserGuard } from './users/infrastructure/create-non-existing-user.guard';
-import { MarketplaceModule } from './marketplace/marketplace.module';
-import { EnvModule } from '@app/env/env.module';
-import { EnvService } from '@app/env/env.service';
-import { validateEnv } from '@app/env/env';
+import path, { join } from "node:path";
+import { HttpModule } from "@nestjs/axios";
+import { Module } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
+import { MongooseModule } from "@nestjs/mongoose";
+import { ServeStaticModule } from "@nestjs/serve-static";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { AuthModule, KeycloakAuthGuard } from "@open-dpp/auth";
+import { EnvModule, EnvService } from "@open-dpp/env";
+import { AiConfigurationModule } from "./ai/ai-configuration/ai-configuration.module";
+import { AiModule } from "./ai/ai.module";
+import { ChatService } from "./ai/chat.service";
+import { McpClientModule } from "./ai/mcp-client/mcp-client.module";
+import { PassportModule } from "./ai/passports/passport.module";
+import { ChatGateway } from "./ai/presentation/chat.gateway";
+import { generateConfig, generateMongoConfig } from "./database/config";
+import { IntegrationModule } from "./integrations/integration.module";
+import { ItemsModule } from "./items/items.module";
+import { KeycloakResourcesModule } from "./keycloak-resources/keycloak-resources.module";
+import { KeycloakSyncOnStartupModule } from "./keycloak-sync-on-startup/keycloak-sync-on-startup.module";
+import { MarketplaceModule } from "./marketplace/marketplace.module";
+import { MediaModule } from "./media/media.module";
+import { ModelsModule } from "./models/models.module";
+import { OrganizationsModule } from "./organizations/organizations.module";
+import { ProductPassportModule } from "./product-passport/product-passport.module";
+import { TemplateDraftModule } from "./template-draft/template-draft.module";
+import { TemplateModule } from "./templates/template.module";
+import { TraceabilityEventsModule } from "./traceability-events/traceability-events.module";
+import { UniqueProductIdentifierModule } from "./unique-product-identifier/unique.product.identifier.module";
+import { CreateNonExistingUserGuard } from "./users/infrastructure/create-non-existing-user.guard";
+import { UsersModule } from "./users/users.module";
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      validate: (env) => validateEnv(env),
-      isGlobal: true,
-      expandVariables: true,
-    }),
-    EnvModule,
+    EnvModule.forRoot(),
     MongooseModule.forRootAsync({
       imports: [EnvModule],
       useFactory: (configService: EnvService) => ({
@@ -48,10 +45,10 @@ import { validateEnv } from '@app/env/env';
       useFactory: (configService: EnvService) => ({
         ...generateConfig(
           configService,
-          path.join(__dirname, '/migrations/**/*{.ts,.js}'),
+          path.join(__dirname, "/migrations/**/*{.ts,.js}"),
         ),
         autoLoadEntities: true,
-        migrationsTransactionMode: 'each',
+        migrationsTransactionMode: "each",
         migrationsRun: true,
         synchronize: true,
       }),
@@ -71,18 +68,24 @@ import { validateEnv } from '@app/env/env';
     IntegrationModule,
     ProductPassportModule,
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, 'client', 'dist'),
-      exclude: ['/api', '/api/{*test}'],
+      rootPath: join(__dirname, "client", "dist"),
+      exclude: ["/api", "/api/{*test}"],
       serveStaticOptions: {
         fallthrough: true,
       },
     }),
     MediaModule,
     MarketplaceModule,
+    AiConfigurationModule,
     AiModule,
+    McpClientModule,
+    PassportModule,
+    AuthModule.forRoot(),
   ],
   controllers: [],
   providers: [
+    ChatGateway,
+    ChatService,
     {
       provide: APP_GUARD,
       useClass: KeycloakAuthGuard,

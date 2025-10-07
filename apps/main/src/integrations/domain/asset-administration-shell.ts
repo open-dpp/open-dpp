@@ -1,20 +1,24 @@
-import { z } from 'zod';
-import { flatMap, get } from 'lodash';
-import { semitrailerTruckAas } from './semitrailer-truck-aas';
-import { truckAas } from './truck';
-import { semitrailerAas } from './semitrailer';
+import { flatMap, get } from "lodash";
+import { z } from "zod";
+import { semitrailerAas } from "./semitrailer";
+import { semitrailerTruckAas } from "./semitrailer-truck-aas";
+import { truckAas } from "./truck";
 
-export enum AssetAdministrationShellType {
-  Truck = 'Truck',
-  Semitrailer = 'Semitrailer',
-  Semitrailer_Truck = 'Semitrailer_Truck',
-}
+export const AssetAdministrationShellType = {
+  Truck: "Truck",
+  Semitrailer: "Semitrailer",
+  Semitrailer_Truck: "Semitrailer_Truck",
+} as const;
+
+export type AssetAdministrationShellType_TYPE = (
+  typeof AssetAdministrationShellType
+)[keyof typeof AssetAdministrationShellType];
 
 const AASPropertySchema = z.object({
   idShort: z.string(),
   value: z.string().optional(),
-  valueType: z.string().prefault('xs:string'),
-  modelType: z.literal('Property'),
+  valueType: z.string().prefault("xs:string"),
+  modelType: z.literal("Property"),
 });
 
 export type AasProperty = z.infer<typeof AASPropertySchema>;
@@ -39,28 +43,35 @@ export const AssetAdministrationShellsSchema = z.object({
 export type AASPropertyWithParent = z.infer<typeof AASPropertyWithParentSchema>;
 
 export class AssetAdministrationShell {
+  public readonly globalAssetId: string;
+  public readonly propertiesWithParent: AASPropertyWithParent[];
+
   private constructor(
-    public readonly globalAssetId: string,
-    public readonly propertiesWithParent: AASPropertyWithParent[],
-  ) {}
+    globalAssetId: string,
+    propertiesWithParent: AASPropertyWithParent[],
+  ) {
+    this.globalAssetId = globalAssetId;
+    this.propertiesWithParent = propertiesWithParent;
+  }
 
   static create(data: { content: any }) {
-    const collectedProperties = flatMap(data.content.submodels, (submodel) =>
+    const collectedProperties = flatMap(data.content.submodels, submodel =>
       AssetAdministrationShell.collectElementsWithParent(
         submodel.submodelElements || [],
         submodel.idShort,
-      ),
-    );
-    const allProperties =
-      AASPropertyWithParentSchema.array().parse(collectedProperties);
+      ));
+    const allProperties
+      = AASPropertyWithParentSchema.array().parse(collectedProperties);
     const globalAssetId = AssetAdministrationShellsSchema.parse(data.content)
-      .assetAdministrationShells[0].assetInformation.globalAssetId;
+      .assetAdministrationShells[0]
+      .assetInformation
+      .globalAssetId;
     return new AssetAdministrationShell(globalAssetId, allProperties);
   }
 
   private static parseElement(el: any) {
-    const modelType = get(el, 'modelType');
-    if (modelType === 'Property') {
+    const modelType = get(el, "modelType");
+    if (modelType === "Property") {
       const property = AASPropertySchema.parse(el);
       return AASPropertySchema.parse({
         idShort: property.idShort,
@@ -89,8 +100,8 @@ export class AssetAdministrationShell {
     return flatMap(elements, (el) => {
       const property = AssetAdministrationShell.parseElement(el);
       const subElements = AssetAdministrationShell.getSubElements(el);
-      const nested =
-        subElements.length > 0
+      const nested
+        = subElements.length > 0
           ? this.collectElementsWithParent(
               subElements,
               el.idShort || el.globalAssetID || null,
@@ -103,9 +114,9 @@ export class AssetAdministrationShell {
 
   findPropertyByIdShorts(parentIdShort: string, idShort: string) {
     return this.propertiesWithParent.find(
-      (propertyWithParent) =>
-        propertyWithParent.property.idShort === idShort &&
-        propertyWithParent.parentIdShort === parentIdShort,
+      propertyWithParent =>
+        propertyWithParent.property.idShort === idShort
+        && propertyWithParent.parentIdShort === parentIdShort,
     );
   }
 }
@@ -116,7 +127,7 @@ const AssetAdministrationShellData = {
   [AssetAdministrationShellType.Semitrailer_Truck]: semitrailerTruckAas,
 };
 
-export function createAasForType(aasType: AssetAdministrationShellType) {
+export function createAasForType(aasType: AssetAdministrationShellType_TYPE) {
   return AssetAdministrationShell.create({
     content: AssetAdministrationShellData[aasType],
   });

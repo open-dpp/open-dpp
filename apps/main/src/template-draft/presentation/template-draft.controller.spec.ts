@@ -1,57 +1,59 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
-import { APP_GUARD } from '@nestjs/core';
-import { User } from '../../users/domain/user';
-import { randomUUID } from 'crypto';
-import { TemplateDraftModule } from '../template-draft.module';
-import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { MoveDirection, TemplateDraft } from '../domain/template-draft';
-import { SectionType } from '../../data-modelling/domain/section-base';
-import { SectionDraft } from '../domain/section-draft';
-import { DataFieldDraft } from '../domain/data-field-draft';
-import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { TemplateService } from '../../templates/infrastructure/template.service';
-import { MongooseModule } from '@nestjs/mongoose';
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { INestApplication } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
+import { MongooseModule } from "@nestjs/mongoose";
+import { Test, TestingModule } from "@nestjs/testing";
+import { AuthContext, PermissionModule } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
+import getKeycloakAuthToken, { createKeycloakUserInToken, getApp, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import request from "supertest";
+import { DataFieldType } from "../../data-modelling/domain/data-field-base";
+import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { SectionType } from "../../data-modelling/domain/section-base";
+import { Sector } from "../../data-modelling/domain/sectors";
+import { sectionToDto } from "../../data-modelling/presentation/dto/section-base.dto";
+import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import {
-  TemplateDraftDoc,
-  TemplateDraftSchema,
-} from '../infrastructure/template-draft.schema';
-import { TemplateDraftService } from '../infrastructure/template-draft.service';
+  PassportTemplatePublicationDbSchema,
+  PassportTemplatePublicationDoc,
+} from "../../marketplace/infrastructure/passport-template-publication.schema";
+import {
+  PassportTemplatePublicationService,
+} from "../../marketplace/infrastructure/passport-template-publication.service";
+import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
+import { Organization } from "../../organizations/domain/organization";
+import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
+import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import {
   TemplateDoc,
   TemplateSchema,
-} from '../../templates/infrastructure/template.schema';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { templateDraftToDto } from './dto/template-draft.dto';
-import { sectionToDto } from '../../data-modelling/presentation/dto/section-base.dto';
-import { Organization } from '../../organizations/domain/organization';
-import { OrganizationsService } from '../../organizations/infrastructure/organizations.service';
-import { MarketplaceApplicationService } from '../../marketplace/presentation/marketplace.application.service';
+} from "../../templates/infrastructure/template.schema";
+import { TemplateService } from "../../templates/infrastructure/template.service";
+import { User } from "../../users/domain/user";
+import { UserEntity } from "../../users/infrastructure/user.entity";
+import { UsersService } from "../../users/infrastructure/users.service";
+import { DataFieldDraft } from "../domain/data-field-draft";
+import { SectionDraft } from "../domain/section-draft";
+
+import { MoveDirection, TemplateDraft } from "../domain/template-draft";
+import { dataFieldDraftDbPropsFactory } from "../fixtures/data-field-draft.factory";
+import { sectionDraftDbPropsFactory } from "../fixtures/section-draft.factory";
 import {
   templateDraftCreateDtoFactory,
   templateDraftCreatePropsFactory,
-} from '../fixtures/template-draft.factory';
-import { VisibilityLevel } from './dto/publish.dto';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { OrganizationEntity } from '../../organizations/infrastructure/organization.entity';
-import { UserEntity } from '../../users/infrastructure/user.entity';
-import { sectionDraftDbPropsFactory } from '../fixtures/section-draft.factory';
-import { MoveType } from './dto/move.dto';
-import { dataFieldDraftDbPropsFactory } from '../fixtures/data-field-draft.factory';
-import { expect } from '@jest/globals';
-import { AuthContext } from '@app/auth/auth-request';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
-import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
-import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
-import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
-import { getApp } from '@app/testing/utils';
+} from "../fixtures/template-draft.factory";
+import {
+  TemplateDraftDoc,
+  TemplateDraftSchema,
+} from "../infrastructure/template-draft.schema";
+import { TemplateDraftService } from "../infrastructure/template-draft.service";
+import { MoveType } from "./dto/move.dto";
+import { VisibilityLevel } from "./dto/publish.dto";
+import { templateDraftToDto } from "./dto/template-draft.dto";
+import { TemplateDraftController } from "./template-draft.controller";
 
-import { Sector } from '../../data-modelling/domain/sectors';
-
-describe('TemplateDraftController', () => {
+describe("templateDraftController", () => {
   let app: INestApplication;
   const authContext = new AuthContext();
   let templateDraftService: TemplateDraftService;
@@ -68,9 +70,10 @@ describe('TemplateDraftController', () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
-        MongooseTestingModule,
+        EnvModule.forRoot(),
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
+        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
+        MongooseTestingModule,
         MongooseModule.forFeature([
           {
             name: TemplateDraftDoc.name,
@@ -80,15 +83,27 @@ describe('TemplateDraftController', () => {
             name: TemplateDoc.name,
             schema: TemplateSchema,
           },
+          {
+            name: PassportTemplatePublicationDoc.name,
+            schema: PassportTemplatePublicationDbSchema,
+          },
         ]),
-        TemplateDraftModule,
+        PermissionModule,
       ],
       providers: [
+        TemplateService,
+        TemplateDraftService,
+        MarketplaceApplicationService,
+        PassportTemplatePublicationService,
+        OrganizationsService,
+        UsersService,
+        KeycloakResourcesService,
         {
           provide: APP_GUARD,
           useValue: keycloakAuthTestingGuard,
         },
       ],
+      controllers: [TemplateDraftController],
     })
       .overrideProvider(KeycloakResourcesService)
       .useValue(
@@ -106,14 +121,14 @@ describe('TemplateDraftController', () => {
     app = module.createNestApplication();
 
     templateService = module.get<TemplateService>(TemplateService);
-    templateDraftService =
-      module.get<TemplateDraftService>(TemplateDraftService);
+    templateDraftService
+      = module.get<TemplateDraftService>(TemplateDraftService);
     marketplaceService = module.get<MarketplaceApplicationService>(
       MarketplaceApplicationService,
     );
 
-    organizationService =
-      module.get<OrganizationsService>(OrganizationsService);
+    organizationService
+      = module.get<OrganizationsService>(OrganizationsService);
 
     await app.init();
   });
@@ -126,7 +141,7 @@ describe('TemplateDraftController', () => {
     const response = await request(getApp(app))
       .post(`/organizations/${organizationId}/template-drafts`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -146,7 +161,7 @@ describe('TemplateDraftController', () => {
     const response = await request(getApp(app))
       .post(`/organizations/${otherOrganizationId}/template-drafts`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -172,7 +187,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -202,7 +217,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${otherOrganizationId}/template-drafts/${laptopDraft.id}`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -227,7 +242,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId, otherOrganizationId],
@@ -247,14 +262,14 @@ describe('TemplateDraftController', () => {
     );
 
     const section = SectionDraft.create({
-      name: 'Technical Specs',
+      name: "Technical Specs",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
 
     const dataField = DataFieldDraft.create({
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
       granularityLevel: GranularityLevel.MODEL,
     });
@@ -264,7 +279,7 @@ describe('TemplateDraftController', () => {
     await organizationService.save(
       Organization.fromPlain({
         id: organizationId,
-        name: 'orga name',
+        name: "orga name",
         members: [new User(userId, `${userId}@example.com`)],
         createdByUserId: userId,
         ownedByUserId: userId,
@@ -274,7 +289,7 @@ describe('TemplateDraftController', () => {
     const body = {
       visibility: VisibilityLevel.PUBLIC,
     };
-    const spyUpload = jest.spyOn(marketplaceService, 'upload');
+    const spyUpload = jest.spyOn(marketplaceService, "upload");
 
     const token = getKeycloakAuthToken(
       userId,
@@ -286,14 +301,14 @@ describe('TemplateDraftController', () => {
       .post(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/publish`,
       )
-      .set('Authorization', token)
+      .set("Authorization", token)
       .send(body);
     expect(response.status).toEqual(201);
     const foundDraft = await templateDraftService.findOneOrFail(
       response.body.id,
     );
     expect(foundDraft.publications).toEqual([
-      { id: expect.any(String), version: '1.0.0' },
+      { id: expect.any(String), version: "1.0.0" },
     ]);
     const foundTemplate = await templateService.findOneOrFail(
       foundDraft.publications[0].id,
@@ -321,7 +336,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${otherOrganizationId}/template-drafts/${laptopDraft.id}/publish`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -349,7 +364,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/publish`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId, otherOrganizationId],
@@ -379,7 +394,7 @@ describe('TemplateDraftController', () => {
     const response = await request(getApp(app))
       .get(`/organizations/${myOrgaId}/template-drafts`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(userId, [myOrgaId], keycloakAuthTestingGuard),
       );
 
@@ -394,7 +409,7 @@ describe('TemplateDraftController', () => {
     const response = await request(getApp(app))
       .get(`/organizations/${otherOrganizationId}/template-drafts`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -413,7 +428,7 @@ describe('TemplateDraftController', () => {
     );
     await templateDraftService.save(laptopDraft);
     const body = {
-      name: 'Technical Specs',
+      name: "Technical Specs",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     };
@@ -422,7 +437,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -434,7 +449,7 @@ describe('TemplateDraftController', () => {
     expect(response.body.id).toBeDefined();
     expect(response.body.sections).toEqual([
       {
-        name: 'Technical Specs',
+        name: "Technical Specs",
         type: SectionType.GROUP,
         granularityLevel: GranularityLevel.MODEL,
         id: expect.any(String),
@@ -457,7 +472,7 @@ describe('TemplateDraftController', () => {
     );
 
     const section = SectionDraft.create({
-      name: 'Technical specification',
+      name: "Technical specification",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
@@ -466,7 +481,7 @@ describe('TemplateDraftController', () => {
     await templateDraftService.save(laptopDraft);
 
     const body = {
-      name: 'Dimensions',
+      name: "Dimensions",
       type: SectionType.GROUP,
       parentSectionId: section.id,
 
@@ -477,7 +492,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -490,7 +505,7 @@ describe('TemplateDraftController', () => {
     const expectedSectionsBody = [
       { ...sectionToDto(section), subSections: [expect.any(String)] },
       {
-        name: 'Dimensions',
+        name: "Dimensions",
         type: SectionType.GROUP,
         id: expect.any(String),
         dataFields: [],
@@ -507,7 +522,7 @@ describe('TemplateDraftController', () => {
 
   it(`/CREATE section draft ${userNotMemberTxt}`, async () => {
     const body = {
-      name: 'Dimensions',
+      name: "Dimensions",
       type: SectionType.GROUP,
       parentSectionId: undefined,
       granularityLevel: GranularityLevel.MODEL,
@@ -517,7 +532,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -537,7 +552,7 @@ describe('TemplateDraftController', () => {
     );
     await templateDraftService.save(laptopDraft);
     const body = {
-      name: 'Dimensions',
+      name: "Dimensions",
       type: SectionType.GROUP,
       parentSectionId: undefined,
 
@@ -548,7 +563,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId, otherOrganizationId],
@@ -568,7 +583,7 @@ describe('TemplateDraftController', () => {
     );
 
     const section = SectionDraft.create({
-      name: 'Tecs',
+      name: "Tecs",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
@@ -578,7 +593,7 @@ describe('TemplateDraftController', () => {
     const response = await request(getApp(app))
       .get(`/organizations/${organizationId}/template-drafts/${laptopDraft.id}`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -596,7 +611,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -618,7 +633,7 @@ describe('TemplateDraftController', () => {
     const response = await request(getApp(app))
       .get(`/organizations/${organizationId}/template-drafts/${laptopDraft.id}`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId, otherOrganizationId],
@@ -637,7 +652,7 @@ describe('TemplateDraftController', () => {
     );
 
     const section = SectionDraft.create({
-      name: 'Tecs',
+      name: "Tecs",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
@@ -646,14 +661,14 @@ describe('TemplateDraftController', () => {
     await templateDraftService.save(laptopDraft);
 
     const body = {
-      name: 'Technical Specs',
+      name: "Technical Specs",
     };
     const response = await request(getApp(app))
       .patch(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -671,14 +686,14 @@ describe('TemplateDraftController', () => {
 
   it(`/PATCH section draft ${userNotMemberTxt}`, async () => {
     const body = {
-      name: 'Technical Specs',
+      name: "Technical Specs",
     };
     const response = await request(getApp(app))
       .patch(
         `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -698,14 +713,14 @@ describe('TemplateDraftController', () => {
     );
     await templateDraftService.save(laptopDraft);
     const body = {
-      name: 'Technical Specs',
+      name: "Technical Specs",
     };
     const response = await request(getApp(app))
       .patch(
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId, otherOrganizationId],
@@ -743,7 +758,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section2.id}/move`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -773,7 +788,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [otherOrganizationId],
@@ -801,7 +816,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId, otherOrganizationId],
@@ -848,7 +863,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section1.id}/data-fields/${dataField3.id}/move`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -882,7 +897,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}/move`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [otherOrganizationId],
@@ -910,7 +925,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}/move`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId, otherOrganizationId],
@@ -930,7 +945,7 @@ describe('TemplateDraftController', () => {
     );
 
     const section = SectionDraft.create({
-      name: 'Tecs',
+      name: "Tecs",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
@@ -941,7 +956,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId, otherOrganizationId],
@@ -959,7 +974,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -983,7 +998,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId, otherOrganizationId],
@@ -1001,7 +1016,7 @@ describe('TemplateDraftController', () => {
       }),
     );
     const section = SectionDraft.create({
-      name: 'Technical Specs',
+      name: "Technical Specs",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
@@ -1010,7 +1025,7 @@ describe('TemplateDraftController', () => {
     await templateDraftService.save(laptopDraft);
 
     const body = {
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
       options: { min: 2 },
       granularityLevel: GranularityLevel.MODEL,
@@ -1020,7 +1035,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -1032,7 +1047,7 @@ describe('TemplateDraftController', () => {
     expect(response.body.id).toBeDefined();
     expect(response.body.sections[0].dataFields).toEqual([
       {
-        name: 'Processor',
+        name: "Processor",
         type: DataFieldType.TEXT_FIELD,
         id: expect.any(String),
         options: { min: 2 },
@@ -1047,7 +1062,7 @@ describe('TemplateDraftController', () => {
 
   it(`/CREATE data field draft ${userNotMemberTxt}`, async () => {
     const body = {
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
       options: { min: 2 },
 
@@ -1058,7 +1073,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}/data-fields`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -1078,7 +1093,7 @@ describe('TemplateDraftController', () => {
     );
     await templateDraftService.save(laptopDraft);
     const body = {
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
       options: { min: 2 },
 
@@ -1089,7 +1104,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId, otherOrganizationId],
@@ -1108,13 +1123,13 @@ describe('TemplateDraftController', () => {
       }),
     );
     const section = SectionDraft.create({
-      name: 'Technical Specs',
+      name: "Technical Specs",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
     const dataField = DataFieldDraft.create({
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
       granularityLevel: GranularityLevel.MODEL,
     });
@@ -1123,7 +1138,7 @@ describe('TemplateDraftController', () => {
     await templateDraftService.save(laptopDraft);
 
     const body = {
-      name: 'Memory',
+      name: "Memory",
       options: { max: 8 },
     };
     const response = await request(getApp(app))
@@ -1131,7 +1146,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields/${dataField.id}`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -1152,7 +1167,7 @@ describe('TemplateDraftController', () => {
 
   it(`/PATCH data field draft ${userNotMemberTxt}`, async () => {
     const body = {
-      name: 'Memory',
+      name: "Memory",
       options: { max: 8 },
     };
     const response = await request(getApp(app))
@@ -1160,7 +1175,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/someId/data-fields/someId`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -1180,7 +1195,7 @@ describe('TemplateDraftController', () => {
     );
     await templateDraftService.save(laptopDraft);
     const body = {
-      name: 'Memory',
+      name: "Memory",
       options: { max: 8 },
     };
     const response = await request(getApp(app))
@@ -1188,7 +1203,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/someId/data-fields/someId`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId, otherOrganizationId],
@@ -1208,14 +1223,14 @@ describe('TemplateDraftController', () => {
     );
 
     const section = SectionDraft.create({
-      name: 'Technical Specs',
+      name: "Technical Specs",
       type: SectionType.GROUP,
       granularityLevel: GranularityLevel.MODEL,
     });
     laptopDraft.addSection(section);
 
     const dataField = DataFieldDraft.create({
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
       granularityLevel: GranularityLevel.MODEL,
     });
@@ -1227,7 +1242,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields/${dataField.id}`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -1247,7 +1262,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}/data-fields/${randomUUID()}`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId],
@@ -1271,7 +1286,7 @@ describe('TemplateDraftController', () => {
         `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           userId,
           [organizationId, otherOrganizationId],

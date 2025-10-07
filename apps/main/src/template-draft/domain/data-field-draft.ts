@@ -1,18 +1,20 @@
+import type {
+  DataFieldType_TYPE,
+} from "../../data-modelling/domain/data-field-base";
+import type { GranularityLevel_TYPE } from "../../data-modelling/domain/granularity-level";
+import type { DataFieldDbProps } from "../../templates/domain/data-field";
+import { randomUUID } from "node:crypto";
+import { merge } from "lodash";
 import {
   DataFieldBase,
-  DataFieldType,
-} from '../../data-modelling/domain/data-field-base';
-import { merge } from 'lodash';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { randomUUID } from 'crypto';
-import { DataFieldDbProps } from '../../templates/domain/data-field';
+} from "../../data-modelling/domain/data-field-base";
 
-export type DataFieldDraftCreateProps = {
+export interface DataFieldDraftCreateProps {
   name: string;
-  type: DataFieldType;
+  type: DataFieldType_TYPE;
   options?: Record<string, unknown>;
-  granularityLevel: GranularityLevel;
-};
+  granularityLevel: GranularityLevel_TYPE;
+}
 
 export type DataFieldDraftDbProps = DataFieldDraftCreateProps & {
   id: string;
@@ -20,14 +22,15 @@ export type DataFieldDraftDbProps = DataFieldDraftCreateProps & {
 
 export class DataFieldDraft extends DataFieldBase {
   private constructor(
-    public readonly id: string,
-    protected _name: string,
-    public readonly type: DataFieldType,
-    public readonly options: Record<string, unknown> = {},
-    public readonly granularityLevel: GranularityLevel,
+    id: string,
+    _name: string,
+    type: DataFieldType_TYPE,
+    options: Record<string, unknown> = {},
+    granularityLevel: GranularityLevel_TYPE,
   ) {
     super(id, _name, type, options, granularityLevel);
   }
+
   static create(data: DataFieldDraftCreateProps): DataFieldDraft {
     return new DataFieldDraft(
       randomUUID(),

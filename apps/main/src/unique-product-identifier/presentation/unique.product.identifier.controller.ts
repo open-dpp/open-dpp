@@ -1,35 +1,48 @@
-import { Controller, Get, Param, Request } from '@nestjs/common';
-import { ModelsService } from '../../models/infrastructure/models.service';
-import { ItemsService } from '../../items/infrastructure/items.service';
-import { UniqueProductIdentifierService } from '../infrastructure/unique-product-identifier.service';
-import { UniqueProductIdentifierReferenceDtoSchema } from './dto/unique-product-identifier-dto.schema';
-import { PermissionService } from '@app/permission';
-import * as authRequest from '@app/auth/auth-request';
-import { AllowServiceAccess } from '@app/auth/allow-service-access.decorator';
-import { UniqueProductIdentifierApplicationService } from './unique.product.identifier.application.service';
+import type * as authRequest from "@open-dpp/auth";
+import { Controller, Get, Param, Request } from "@nestjs/common";
+import { AllowServiceAccess, PermissionService } from "@open-dpp/auth";
+import { ItemsService } from "../../items/infrastructure/items.service";
+import { ModelsService } from "../../models/infrastructure/models.service";
+import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
+import {
+  UniqueProductIdentifierReferenceDtoSchema,
+} from "./dto/unique-product-identifier-dto.schema";
+import { UniqueProductIdentifierApplicationService } from "./unique.product.identifier.application.service";
 
 @Controller()
 export class UniqueProductIdentifierController {
-  constructor(
-    private readonly modelsService: ModelsService,
-    private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
-    private readonly itemService: ItemsService,
-    private readonly permissionsService: PermissionService,
-    private readonly uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
-  ) {}
+  private readonly modelsService: ModelsService;
+  private readonly uniqueProductIdentifierService: UniqueProductIdentifierService;
+  private readonly itemService: ItemsService;
+  private readonly permissionsService: PermissionService;
+  private readonly uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService;
 
-  @Get('organizations/:orgaId/unique-product-identifiers/:id/reference')
+  constructor(
+    modelsService: ModelsService,
+    uniqueProductIdentifierService: UniqueProductIdentifierService,
+    itemService: ItemsService,
+    permissionsService: PermissionService,
+    uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
+  ) {
+    this.modelsService = modelsService;
+    this.uniqueProductIdentifierService = uniqueProductIdentifierService;
+    this.itemService = itemService;
+    this.permissionsService = permissionsService;
+    this.uniqueProductIdentifierApplicationService = uniqueProductIdentifierApplicationService;
+  }
+
+  @Get("organizations/:orgaId/unique-product-identifiers/:id/reference")
   async getReferencedProductPassport(
-    @Param('orgaId') organizationId: string,
-    @Param('id') id: string,
+    @Param("orgaId") organizationId: string,
+    @Param("id") id: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
+    await this.permissionsService.canAccessOrganizationOrFail(
       organizationId,
       req.authContext,
     );
-    const uniqueProductIdentifier =
-      await this.uniqueProductIdentifierService.findOneOrFail(id);
+    const uniqueProductIdentifier
+      = await this.uniqueProductIdentifierService.findOneOrFail(id);
 
     const item = await this.itemService.findOne(
       uniqueProductIdentifier.referenceId,
@@ -41,7 +54,8 @@ export class UniqueProductIdentifierController {
         modelId: item.modelId,
         granularityLevel: item.granularityLevel,
       });
-    } else {
+    }
+    else {
       const model = await this.modelsService.findOneOrFail(
         uniqueProductIdentifier.referenceId,
       );
@@ -54,8 +68,8 @@ export class UniqueProductIdentifierController {
   }
 
   @AllowServiceAccess()
-  @Get('unique-product-identifiers/:id/metadata')
-  async get(@Param('id') id: string) {
+  @Get("unique-product-identifiers/:id/metadata")
+  async get(@Param("id") id: string) {
     return this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifier(
       id,
     );

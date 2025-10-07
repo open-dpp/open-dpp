@@ -1,29 +1,32 @@
-import { randomUUID } from 'crypto';
-import { DataFieldDraft } from './data-field-draft';
-import { SectionDraft, SectionDraftDbProps } from './section-draft';
-import { Template } from '../../templates/domain/template';
-import * as semver from 'semver';
-import { SectionType } from '../../data-modelling/domain/section-base';
-import { NotFoundError, ValueError } from '@app/exception/domain.errors';
-import { Sector } from '../../data-modelling/domain/sectors';
+import type { Sector } from "@open-dpp/api-client";
+import type { DataFieldDraft } from "./data-field-draft";
+import type { SectionDraftDbProps } from "./section-draft";
+import { randomUUID } from "node:crypto";
+import { NotFoundError, ValueError } from "@open-dpp/exception";
+import * as semver from "semver";
+import { SectionType } from "../../data-modelling/domain/section-base";
+import { Template } from "../../templates/domain/template";
+import { SectionDraft } from "./section-draft";
 
-export type Publication = {
+export interface Publication {
   id: string;
   version: string;
-};
-
-export enum MoveDirection {
-  UP = 'up',
-  DOWN = 'down',
 }
 
-export type TemplateDraftCreateProps = {
+export const MoveDirection = {
+  UP: "up",
+  DOWN: "down",
+} as const;
+
+export type MoveDirection_TYPE = (typeof MoveDirection)[keyof typeof MoveDirection];
+
+export interface TemplateDraftCreateProps {
   name: string;
   sectors: Sector[];
   description: string;
   userId: string;
   organizationId: string;
-};
+}
 
 export type TemplateDraftDbProps = TemplateDraftCreateProps & {
   id: string;
@@ -33,17 +36,37 @@ export type TemplateDraftDbProps = TemplateDraftCreateProps & {
 };
 
 export class TemplateDraft {
+  public readonly id: string;
+  private _name: string;
+  public readonly description: string;
+  public readonly sectors: Sector[];
+  public readonly version: string;
+  private readonly _publications: Publication[];
+  private readonly _ownedByOrganizationId: string | undefined;
+  private readonly _createdByUserId: string | undefined;
+  private _sections: SectionDraft[];
+
   private constructor(
-    public readonly id: string,
-    private _name: string,
-    public readonly description: string,
-    public readonly sectors: Sector[],
-    public readonly version: string,
-    private readonly _publications: Publication[],
-    private _ownedByOrganizationId: string | undefined,
-    private _createdByUserId: string | undefined,
-    private _sections: SectionDraft[],
-  ) {}
+    id: string,
+    _name: string,
+    description: string,
+    sectors: Sector[],
+    version: string,
+    _publications: Publication[],
+    _ownedByOrganizationId: string | undefined,
+    _createdByUserId: string | undefined,
+    _sections: SectionDraft[],
+  ) {
+    this.id = id;
+    this._name = _name;
+    this.description = description;
+    this.sectors = sectors;
+    this.version = version;
+    this._publications = _publications;
+    this._ownedByOrganizationId = _ownedByOrganizationId;
+    this._createdByUserId = _createdByUserId;
+    this._sections = _sections;
+  }
 
   static create(data: {
     name: string;
@@ -57,7 +80,7 @@ export class TemplateDraft {
       data.name,
       data.description,
       data.sectors,
-      '1.0.0',
+      "1.0.0",
       [],
       data.organizationId,
       data.userId,
@@ -99,7 +122,7 @@ export class TemplateDraft {
       data.publications,
       data.organizationId,
       data.userId,
-      data.sections.map((s) => SectionDraft.loadFromDb(s)),
+      data.sections.map(s => SectionDraft.loadFromDb(s)),
     );
   }
 
@@ -120,7 +143,7 @@ export class TemplateDraft {
     for (const childSectionId of section.subSections) {
       this.deleteSection(childSectionId);
     }
-    this._sections = this.sections.filter((s) => s.id !== section.id);
+    this._sections = this.sections.filter(s => s.id !== section.id);
   }
 
   modifySection(sectionId: string, data: { name?: string }) {
@@ -160,15 +183,15 @@ export class TemplateDraft {
   public moveDataField(
     sectionId: string,
     dataFieldId: string,
-    direction: MoveDirection,
+    direction: MoveDirection_TYPE,
   ) {
     this.findSectionOrFail(sectionId).moveDataField(dataFieldId, direction);
   }
 
-  public moveSection(sectionId: string, direction: MoveDirection) {
+  public moveSection(sectionId: string, direction: MoveDirection_TYPE) {
     const section = this.findSectionOrFail(sectionId);
     const siblingSections = this.findSectionsOfParent(section.parentId);
-    const siblingIndex = siblingSections.findIndex((s) => s.id === sectionId);
+    const siblingIndex = siblingSections.findIndex(s => s.id === sectionId);
     const shiftIndex = direction === MoveDirection.UP ? -1 : 1;
     const newSiblingIndex = siblingIndex + shiftIndex;
 
@@ -181,8 +204,8 @@ export class TemplateDraft {
     const targetSibling = siblingSections[newSiblingIndex];
 
     // Find global indices
-    const fromIndex = this._sections.findIndex((s) => s.id === sectionId);
-    const toIndex = this._sections.findIndex((s) => s.id === targetSibling.id);
+    const fromIndex = this._sections.findIndex(s => s.id === sectionId);
+    const toIndex = this._sections.findIndex(s => s.id === targetSibling.id);
 
     // Remove and reinsert
     const [removed] = this._sections.splice(fromIndex, 1);
@@ -190,23 +213,23 @@ export class TemplateDraft {
   }
 
   findSectionWithParent(sectionId: string) {
-    const section = this.sections.find((s) => s.id === sectionId);
+    const section = this.sections.find(s => s.id === sectionId);
     const parent = section?.parentId
-      ? this.sections.find((s) => s.id === section.parentId)
+      ? this.sections.find(s => s.id === section.parentId)
       : undefined;
     return { section, parent };
   }
 
   findSectionsOfParent(parentSectionId?: string) {
-    return this.sections.filter((s) => s.parentId === parentSectionId);
+    return this.sections.filter(s => s.parentId === parentSectionId);
   }
 
   addSubSection(parentSectionId: string, section: SectionDraft) {
     const parentSection = this.findSectionOrFail(parentSectionId);
     if (
-      section.granularityLevel &&
-      parentSection.granularityLevel &&
-      section.granularityLevel !== parentSection.granularityLevel
+      section.granularityLevel
+      && parentSection.granularityLevel
+      && section.granularityLevel !== parentSection.granularityLevel
     ) {
       throw new ValueError(
         `Sub section ${section.id} has a granularity level of ${section.granularityLevel} which does not match the parent section's  granularity level of ${parentSection.granularityLevel}`,
@@ -235,10 +258,10 @@ export class TemplateDraft {
     }
     const lastPublished = this.publications.slice(-1);
 
-    const versionToPublish =
-      lastPublished.length > 0
-        ? semver.inc(lastPublished[0].version, 'major')
-        : '1.0.0';
+    const versionToPublish
+      = lastPublished.length > 0
+        ? (semver.inc(lastPublished[0].version, "major") ?? "1.0.0")
+        : "1.0.0";
 
     const published = Template.loadFromDb({
       id: randomUUID(),
@@ -249,7 +272,7 @@ export class TemplateDraft {
       version: versionToPublish,
       userId: createdByUserId,
       organizationId: this.ownedByOrganizationId,
-      sections: this.sections.map((s) => s.publish()),
+      sections: this.sections.map(s => s.publish()),
     });
     this.publications.push({ id: published.id, version: published.version });
     return published;

@@ -1,11 +1,14 @@
-import { OpenDppEventType } from '../open-dpp-event-type.enum';
-import { OpenDppEventData } from '../open-dpp-event-data';
-import { OpenDppEvent } from '../open-dpp-event';
+import { OpenDppEvent } from "../open-dpp-event";
+import { OpenDppEventData } from "../open-dpp-event-data";
+import { OpenDppEventType } from "../open-dpp-event-type.enum";
 
 export class ItemCreatedEventData extends OpenDppEventData {
-  private constructor(public readonly itemId: string) {
+  public readonly itemId: string;
+
+  private constructor(itemId: string) {
     super();
     this.type = OpenDppEventType.ITEM_CREATED;
+    this.itemId = itemId;
   }
 
   static createWithWrapper(data: {

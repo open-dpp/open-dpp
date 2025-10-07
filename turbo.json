@@ -1,0 +1,32 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "tui",
+  "globalDependencies": [".env"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "check-ts": {
+      "dependsOn": ["^check-ts"]
+    },
+    "dev": {
+      "persistent": true,
+      "cache": false
+    },
+    "lint": {
+      "cache": true
+    },
+    "lint:fix": {
+      "cache": true
+    },
+    "test": {
+      "inputs": ["$TURBO_DEFAULT$", ".env"],
+      "cache": false
+    },
+    "cypress:headless": {
+      "inputs": ["$TURBO_DEFAULT$", ".env"],
+      "cache": false
+    }
+  }
+}

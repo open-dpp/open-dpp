@@ -1,24 +1,26 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { TraceabilityEventsService } from './traceability-events.service';
+import type { TestingModule } from "@nestjs/testing";
+import type { Connection, Model } from "mongoose";
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
 import {
   getConnectionToken,
   getModelToken,
   MongooseModule,
-} from '@nestjs/mongoose';
-import { Connection, Model } from 'mongoose';
+} from "@nestjs/mongoose";
+import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
+import { MongooseTestingModule } from "@open-dpp/testing";
+import { TraceabilityEventType } from "../domain/traceability-event-type.enum";
+import { TraceabilityEventWrapper } from "../domain/traceability-event-wrapper";
+import { OpenEpcisEvent } from "../modules/openepcis-events/domain/openepcis-event";
+import { UntpEvent } from "../modules/untp-events/domain/untp-event";
 import {
   DppEventSchema,
   TraceabilityEventDocument,
-} from './traceability-event.document';
-import { TraceabilityEventWrapper } from '../domain/traceability-event-wrapper';
-import { TraceabilityEventType } from '../domain/traceability-event-type.enum';
-import { randomUUID } from 'crypto';
-import { OpenEpcisEvent } from '../modules/openepcis-events/domain/openepcis-event';
-import { UntpEvent } from '../modules/untp-events/domain/untp-event';
-import { expect } from '@jest/globals';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
+} from "./traceability-event.document";
+import { TraceabilityEventsService } from "./traceability-events.service";
 
-describe('TraceabilityEventsService', () => {
+describe("traceabilityEventsService", () => {
   let service: TraceabilityEventsService;
   let mongoConnection: Connection;
   let dppEventModel: Model<TraceabilityEventDocument>;
@@ -26,6 +28,7 @@ describe('TraceabilityEventsService', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -53,12 +56,12 @@ describe('TraceabilityEventsService', () => {
     await mongoConnection.close(); // Close connection after tests
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(service).toBeDefined();
   });
 
-  describe('TraceabilityEventWrapper.loadFromDb', () => {
-    it('should convert a TraceabilityEventDocument to a TraceabilityEventWrapper domain object', () => {
+  describe("traceabilityEventWrapper.loadFromDb", () => {
+    it("should convert a TraceabilityEventDocument to a TraceabilityEventWrapper domain object", () => {
       // Arrange
       const id = randomUUID();
       const dppEventDoc = {
@@ -77,11 +80,11 @@ describe('TraceabilityEventsService', () => {
       expect(result.data.type).toBe(TraceabilityEventType.OPENEPCIS);
     });
 
-    it('should convert a TraceabilityEventDocument with createdAt and updatedAt to a TraceabilityEventWrapper domain object', () => {
+    it("should convert a TraceabilityEventDocument with createdAt and updatedAt to a TraceabilityEventWrapper domain object", () => {
       // Arrange
       const id = randomUUID();
-      const createdAt = new Date('2023-01-01');
-      const updatedAt = new Date('2023-01-02');
+      const createdAt = new Date("2023-01-01");
+      const updatedAt = new Date("2023-01-02");
       const dppEventDoc = {
         _id: id,
         createdAt,
@@ -103,20 +106,20 @@ describe('TraceabilityEventsService', () => {
     });
   });
 
-  describe('create', () => {
-    it('should save a TraceabilityEventWrapper and return the saved domain object', async () => {
+  describe("create", () => {
+    it("should save a TraceabilityEventWrapper and return the saved domain object", async () => {
       // Arrange
       const id = randomUUID();
-      const createdAt = new Date('2023-01-01');
-      const updatedAt = new Date('2023-01-02');
-      const ip = '192.168.1.1';
-      const userId = 'user123';
-      const itemId = 'article123';
-      const chargeId = 'charge123';
-      const organizationId = 'org123';
+      const createdAt = new Date("2023-01-01");
+      const updatedAt = new Date("2023-01-02");
+      const ip = "192.168.1.1";
+      const userId = "user123";
+      const itemId = "article123";
+      const chargeId = "charge123";
+      const organizationId = "org123";
       const geolocation = {
-        latitude: '52.5200',
-        longitude: '13.4050',
+        latitude: "52.5200",
+        longitude: "13.4050",
       };
       const dppEvent = TraceabilityEventWrapper.loadFromDb({
         _id: id,
@@ -151,19 +154,19 @@ describe('TraceabilityEventsService', () => {
       }
     });
 
-    it('should save a TraceabilityEventWrapper with custom createdAt and updatedAt dates', async () => {
+    it("should save a TraceabilityEventWrapper with custom createdAt and updatedAt dates", async () => {
       // Arrange
       const id = randomUUID();
-      const createdAt = new Date('2023-01-01');
-      const updatedAt = new Date('2023-01-02');
-      const ip = '192.168.1.1';
-      const userId = 'user123';
-      const itemId = 'article123';
-      const chargeId = 'charge123';
-      const organizationId = 'org123';
+      const createdAt = new Date("2023-01-01");
+      const updatedAt = new Date("2023-01-02");
+      const ip = "192.168.1.1";
+      const userId = "user123";
+      const itemId = "article123";
+      const chargeId = "charge123";
+      const organizationId = "org123";
       const geolocation = {
-        latitude: '52.5200',
-        longitude: '13.4050',
+        latitude: "52.5200",
+        longitude: "13.4050",
       };
       const dppEvent = TraceabilityEventWrapper.loadFromDb({
         _id: id,
@@ -204,19 +207,19 @@ describe('TraceabilityEventsService', () => {
       }
     });
 
-    it('should save a TraceabilityEventWrapper with all metadata fields', async () => {
+    it("should save a TraceabilityEventWrapper with all metadata fields", async () => {
       // Arrange
       const id = randomUUID();
-      const createdAt = new Date('2023-01-01');
-      const updatedAt = new Date('2023-01-02');
-      const ip = '192.168.1.1';
-      const userId = 'user123';
-      const itemId = 'article123';
-      const chargeId = 'charge123';
-      const organizationId = 'org123';
+      const createdAt = new Date("2023-01-01");
+      const updatedAt = new Date("2023-01-02");
+      const ip = "192.168.1.1";
+      const userId = "user123";
+      const itemId = "article123";
+      const chargeId = "charge123";
+      const organizationId = "org123";
       const geolocation = {
-        latitude: '52.5200',
-        longitude: '13.4050',
+        latitude: "52.5200",
+        longitude: "13.4050",
       };
       const type = TraceabilityEventType.OPENEPCIS;
 
@@ -266,8 +269,8 @@ describe('TraceabilityEventsService', () => {
     });
   });
 
-  describe('findById', () => {
-    it('should find TraceabilityEvents by id', async () => {
+  describe("findById", () => {
+    it("should find TraceabilityEvents by id", async () => {
       // Arrange
       const id = randomUUID();
       await dppEventModel.create({
@@ -288,17 +291,17 @@ describe('TraceabilityEventsService', () => {
       expect(result[0].data.type).toBe(TraceabilityEventType.OPENEPCIS);
     });
 
-    it('should return an empty array if no TraceabilityEvents are found by id', async () => {
+    it("should return an empty array if no TraceabilityEvents are found by id", async () => {
       // Act
-      const result = await service.findById('non-existent-id');
+      const result = await service.findById("non-existent-id");
 
       // Assert
       expect(result).toHaveLength(0);
     });
   });
 
-  describe('findByDataType', () => {
-    it('should find TraceabilityEvents by data type', async () => {
+  describe("findByDataType", () => {
+    it("should find TraceabilityEvents by data type", async () => {
       // Arrange
       const id1 = randomUUID();
       const id2 = randomUUID();
@@ -331,15 +334,15 @@ describe('TraceabilityEventsService', () => {
       expect(result[1].data.type).toBe(dataType);
 
       // Verify both events were found
-      const ids = result.map((event) => event.id);
+      const ids = result.map(event => event.id);
       expect(ids).toContain(id1);
       expect(ids).toContain(id2);
     });
   });
 
-  describe('TraceabilityEvent Discriminators', () => {
-    describe('OpenDppEvent discriminator', () => {
-      it('should save and retrieve an OpenDppEvent with proper discriminator', async () => {
+  describe("traceabilityEvent Discriminators", () => {
+    describe("openDppEvent discriminator", () => {
+      it("should save and retrieve an OpenDppEvent with proper discriminator", async () => {
         // Arrange
         const userId = randomUUID();
         const itemId = randomUUID();
@@ -382,8 +385,8 @@ describe('TraceabilityEventsService', () => {
       });
     });
 
-    describe('OpenepcisEvent discriminator', () => {
-      it('should save and retrieve an OpenepcisEvent with proper discriminator', async () => {
+    describe("openepcisEvent discriminator", () => {
+      it("should save and retrieve an OpenepcisEvent with proper discriminator", async () => {
         // Arrange
         const userId = randomUUID();
         const itemId = randomUUID();
@@ -424,10 +427,10 @@ describe('TraceabilityEventsService', () => {
         }
       });
 
-      describe('OpenEpcisEvent class', () => {
-        it('should create an OpenEpcisEvent with the correct type', () => {
+      describe("openEpcisEvent class", () => {
+        it("should create an OpenEpcisEvent with the correct type", () => {
           // Arrange & Act
-          const eventData = { key: 'value' };
+          const eventData = { key: "value" };
           const userId = randomUUID();
           const itemId = randomUUID();
           const organizationId = randomUUID();
@@ -444,12 +447,12 @@ describe('TraceabilityEventsService', () => {
           expect(wrapper.data.data).toEqual(eventData);
         });
 
-        it('should store and retrieve OpenEpcisEvent data correctly', async () => {
+        it("should store and retrieve OpenEpcisEvent data correctly", async () => {
           // Arrange
           const eventData = {
             productId: randomUUID(),
             quantity: 10,
-            location: 'Warehouse A',
+            location: "Warehouse A",
           };
           const userId = randomUUID();
           const itemId = randomUUID();
@@ -482,8 +485,8 @@ describe('TraceabilityEventsService', () => {
       });
     });
 
-    describe('UntpEvent discriminator', () => {
-      it('should save and retrieve a UntpEvent with proper discriminator', async () => {
+    describe("untpEvent discriminator", () => {
+      it("should save and retrieve a UntpEvent with proper discriminator", async () => {
         // Arrange
         const userId = randomUUID();
         const itemId = randomUUID();
@@ -518,10 +521,10 @@ describe('TraceabilityEventsService', () => {
         }
       });
 
-      describe('UntpEvent class', () => {
-        it('should create a UntpEvent with the correct type', () => {
+      describe("untpEvent class", () => {
+        it("should create a UntpEvent with the correct type", () => {
           // Arrange & Act
-          const eventData = { key: 'value' };
+          const eventData = { key: "value" };
           const userId = randomUUID();
           const itemId = randomUUID();
           const organizationId = randomUUID();
@@ -538,13 +541,13 @@ describe('TraceabilityEventsService', () => {
           expect(wrapper.data.data).toEqual(eventData);
         });
 
-        it('should store and retrieve UntpEvent data correctly', async () => {
+        it("should store and retrieve UntpEvent data correctly", async () => {
           // Arrange
           const eventData = {
             transactionId: randomUUID(),
             amount: 500,
-            currency: 'USD',
-            status: 'completed',
+            currency: "USD",
+            status: "completed",
           };
 
           const userId = randomUUID();
@@ -575,8 +578,8 @@ describe('TraceabilityEventsService', () => {
       });
     });
 
-    describe('Mixed discriminators', () => {
-      it('should correctly retrieve events by their discriminator type', async () => {
+    describe("mixed discriminators", () => {
+      it("should correctly retrieve events by their discriminator type", async () => {
         // Arrange
         const openDppId = randomUUID();
         const openepcisId = randomUUID();

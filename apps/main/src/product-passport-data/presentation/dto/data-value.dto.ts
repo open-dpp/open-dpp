@@ -1,6 +1,6 @@
-import { z } from 'zod';
+import type { DataValue } from "../../domain/data-value";
 
-import { DataValue } from '../../domain/data-value';
+import { z } from "zod";
 
 export const DataValueDtoSchema = z.object({
   value: z.unknown(),

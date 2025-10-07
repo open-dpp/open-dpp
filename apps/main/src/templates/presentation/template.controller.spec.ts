@@ -1,28 +1,25 @@
-import { Test } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
-import { APP_GUARD } from '@nestjs/core';
-import { randomUUID } from 'crypto';
-import { TemplateService } from '../infrastructure/template.service';
-import { TemplateModule } from '../template.module';
-import { Template, TemplateDbProps } from '../domain/template';
-import { KeycloakResourcesService } from '../../keycloak-resources/infrastructure/keycloak-resources.service';
-import { getConnectionToken, MongooseModule } from '@nestjs/mongoose';
-import { TemplateDoc, TemplateSchema } from '../infrastructure/template.schema';
-import { Connection } from 'mongoose';
-import { templateToDto } from './dto/template.dto';
-import { templateCreatePropsFactory } from '../fixtures/template.factory';
-import { laptopFactory } from '../fixtures/laptop.factory';
-import { expect } from '@jest/globals';
-import { AuthContext } from '@app/auth/auth-request';
-import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import { KeycloakResourcesServiceTesting } from '@app/testing/keycloak.resources.service.testing';
-import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
-import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
-import { getApp } from '@app/testing/utils';
+import type { INestApplication } from "@nestjs/common";
+import type { Connection } from "mongoose";
+import type { TemplateDbProps } from "../domain/template";
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { APP_GUARD } from "@nestjs/core";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { Test } from "@nestjs/testing";
+import { AuthContext, PermissionModule } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
+import getKeycloakAuthToken, { createKeycloakUserInToken, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
+import request from "supertest";
+import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
+import { Template } from "../domain/template";
+import { laptopFactory } from "../fixtures/laptop.factory";
+import { templateCreatePropsFactory } from "../fixtures/template.factory";
+import { TemplateDoc, TemplateSchema } from "../infrastructure/template.schema";
+import { TemplateService } from "../infrastructure/template.service";
+import { templateToDto } from "./dto/template.dto";
+import { TemplateController } from "./template.controller";
 
-describe('TemplateController', () => {
+describe("templateController", () => {
   let app: INestApplication;
   let service: TemplateService;
   let mongoConnection: Connection;
@@ -34,6 +31,7 @@ describe('TemplateController', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -41,14 +39,16 @@ describe('TemplateController', () => {
             schema: TemplateSchema,
           },
         ]),
-        TemplateModule,
+        PermissionModule,
       ],
       providers: [
+        TemplateService,
         {
           provide: APP_GUARD,
           useValue: keycloakAuthTestingGuard,
         },
       ],
+      controllers: [TemplateController],
     })
       .overrideProvider(KeycloakResourcesService)
       .useValue(
@@ -80,10 +80,10 @@ describe('TemplateController', () => {
     const template = Template.loadFromDb({ ...laptopPlain });
 
     await service.save(template);
-    const response = await request(getApp(app))
+    const response = await request(app.getHttpServer())
       .get(`/organizations/${organizationId}/templates/${template.id}`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           authContext.keycloakUser.sub,
           [organizationId],
@@ -103,10 +103,10 @@ describe('TemplateController', () => {
       }),
     );
     await service.save(template);
-    const response = await request(getApp(app))
+    const response = await request(app.getHttpServer())
       .get(`/organizations/${otherOrganizationId}/templates/${template.id}`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           authContext.keycloakUser.sub,
           [organizationId],
@@ -125,11 +125,11 @@ describe('TemplateController', () => {
     const phoneTemplate = Template.loadFromDb({
       ...laptopPlain,
       id: randomUUID(),
-      name: 'phone',
+      name: "phone",
     });
     const notAccessibleTemplate = Template.create(
       templateCreatePropsFactory.build({
-        name: 'privateModel',
+        name: "privateModel",
         organizationId: otherOrganizationId,
       }),
     );
@@ -137,10 +137,10 @@ describe('TemplateController', () => {
     await service.save(laptopTemplate);
     await service.save(phoneTemplate);
     await service.save(notAccessibleTemplate);
-    const response = await request(getApp(app))
+    const response = await request(app.getHttpServer())
       .get(`/organizations/${organizationId}/templates`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           authContext.keycloakUser.sub,
           [organizationId],
@@ -174,10 +174,10 @@ describe('TemplateController', () => {
 
   it(`/GET all templates which belong to the organization ${userHasNotThePermissionsTxt}`, async () => {
     const otherOrganizationId = randomUUID();
-    const response = await request(getApp(app))
+    const response = await request(app.getHttpServer())
       .get(`/organizations/${otherOrganizationId}/templates`)
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           authContext.keycloakUser.sub,
           [organizationId],

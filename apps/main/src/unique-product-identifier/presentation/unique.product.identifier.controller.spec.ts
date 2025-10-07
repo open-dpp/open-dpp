@@ -1,67 +1,117 @@
-import { Test } from '@nestjs/testing';
-import { randomUUID } from 'crypto';
-import { TemplateService } from '../../templates/infrastructure/template.service';
-import { TemplateModule } from '../../templates/template.module';
-import { INestApplication } from '@nestjs/common';
-import { ModelsService } from '../../models/infrastructure/models.service';
-import { APP_GUARD, Reflector } from '@nestjs/core';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { UniqueProductIdentifierModule } from '../unique.product.identifier.module';
-import { Model } from '../../models/domain/model';
-import request from 'supertest';
-import { UserEntity } from '../../users/infrastructure/user.entity';
-import { Template, TemplateDbProps } from '../../templates/domain/template';
-import { Item } from '../../items/domain/item';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { ItemsService } from '../../items/infrastructure/items.service';
-import { phoneFactory } from '../../product-passport/fixtures/product-passport.factory';
-import { expect } from '@jest/globals';
-import { KeycloakAuthTestingGuard } from '@app/testing/keycloak-auth.guard.testing';
-import { AuthContext } from '@app/auth/auth-request';
-import { TypeOrmTestingModule } from '@app/testing/typeorm.testing.module';
-import { MongooseTestingModule } from '@app/testing/mongo.testing.module';
-import getKeycloakAuthToken from '@app/testing/auth-token-helper.testing';
-import { ALLOW_SERVICE_ACCESS } from '@app/auth/allow-service-access.decorator';
-import { createKeycloakUserInToken } from '@app/testing/users-and-orgs';
-import { getApp } from '@app/testing/utils';
+import type { INestApplication } from "@nestjs/common";
+import type { TemplateDbProps } from "../../templates/domain/template";
+import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { APP_GUARD, Reflector } from "@nestjs/core";
+import { MongooseModule } from "@nestjs/mongoose";
+import { Test } from "@nestjs/testing";
+import { ALLOW_SERVICE_ACCESS, AuthContext, PermissionModule } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
+import getKeycloakAuthToken, {
+  createKeycloakUserInToken,
+  KeycloakAuthTestingGuard,
+  KeycloakResourcesServiceTesting,
+  MongooseTestingModule,
+  TypeOrmTestingModule,
+} from "@open-dpp/testing";
+import request from "supertest";
+import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { Item } from "../../items/domain/item";
+import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
 
-describe('UniqueProductIdentifierController', () => {
+import { ItemsService } from "../../items/infrastructure/items.service";
+import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
+import { Model } from "../../models/domain/model";
+import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
+import { ModelsService } from "../../models/infrastructure/models.service";
+import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
+import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
+import { phoneFactory } from "../../product-passport/fixtures/product-passport.factory";
+import { Template } from "../../templates/domain/template";
+import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
+import { TemplateService } from "../../templates/infrastructure/template.service";
+import { UserEntity } from "../../users/infrastructure/user.entity";
+import { UsersService } from "../../users/infrastructure/users.service";
+import {
+  UniqueProductIdentifierDoc,
+  UniqueProductIdentifierSchema,
+} from "../infrastructure/unique-product-identifier.schema";
+import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
+import { UniqueProductIdentifierApplicationService } from "./unique.product.identifier.application.service";
+import { UniqueProductIdentifierController } from "./unique.product.identifier.controller";
+
+describe("uniqueProductIdentifierController", () => {
   let app: INestApplication;
   let modelsService: ModelsService;
   let itemsService: ItemsService;
-  const serviceToken = 'serviceToken';
+  const serviceToken = "serviceToken";
 
   let templateService: TemplateService;
   const reflector: Reflector = new Reflector();
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(
     new Map(),
     reflector,
-    new Map([['SERVICE_TOKEN', serviceToken]]),
+    new Map([["SERVICE_TOKEN", serviceToken]]),
   );
   const authContext = new AuthContext();
   authContext.keycloakUser = createKeycloakUserInToken();
   const organizationId = randomUUID();
 
-  beforeEach(() => {
-    jest.spyOn(reflector, 'get').mockReturnValue(false);
-  });
-
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         TypeOrmTestingModule,
-        TypeOrmModule.forFeature([UserEntity]),
+        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
+        PermissionModule,
         MongooseTestingModule,
-        UniqueProductIdentifierModule,
-        TemplateModule,
+        MongooseModule.forFeature([
+          {
+            name: ModelDoc.name,
+            schema: ModelSchema,
+          },
+          {
+            name: UniqueProductIdentifierDoc.name,
+            schema: UniqueProductIdentifierSchema,
+          },
+          {
+            name: ItemDoc.name,
+            schema: ItemSchema,
+          },
+          {
+            name: TemplateDoc.name,
+            schema: TemplateSchema,
+          },
+        ]),
       ],
       providers: [
+        UsersService,
+        OrganizationsService,
+        KeycloakResourcesService,
+        ModelsService,
+        UniqueProductIdentifierService,
+        UniqueProductIdentifierApplicationService,
+        ItemsService,
+        TemplateService,
         {
           provide: APP_GUARD,
           useValue: keycloakAuthTestingGuard,
         },
       ],
-    }).compile();
+      controllers: [UniqueProductIdentifierController],
+    })
+      .overrideProvider(KeycloakResourcesService)
+      .useValue(
+        KeycloakResourcesServiceTesting.fromPlain({
+          users: [
+            {
+              id: authContext.keycloakUser.sub,
+              email: authContext.keycloakUser.email,
+            },
+          ],
+        }),
+      )
+      .compile();
 
     modelsService = moduleRef.get(ModelsService);
     itemsService = moduleRef.get(ItemsService);
@@ -71,6 +121,10 @@ describe('UniqueProductIdentifierController', () => {
 
     await app.init();
   });
+  beforeEach(() => {
+    jest.spyOn(reflector, "get").mockReturnValue(false);
+  });
+
   const authProps = { userId: authContext.keycloakUser.sub, organizationId };
   const phoneTemplate: TemplateDbProps = phoneFactory
     .addSections()
@@ -80,7 +134,7 @@ describe('UniqueProductIdentifierController', () => {
     const template = Template.loadFromDb({ ...phoneTemplate });
     await templateService.save(template);
     const model = Model.create({
-      name: 'model',
+      name: "model",
       userId: randomUUID(),
       organizationId: randomUUID(),
       template,
@@ -91,15 +145,15 @@ describe('UniqueProductIdentifierController', () => {
       template,
       model,
     });
-    const { uuid } = item.createUniqueProductIdentifier('externalId');
+    const { uuid } = item.createUniqueProductIdentifier("externalId");
     await itemsService.save(item);
 
-    const response = await request(getApp(app))
+    const response = await request(app.getHttpServer())
       .get(
         `/organizations/${organizationId}/unique-product-identifiers/${uuid}/reference`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           authContext.keycloakUser.sub,
           [organizationId],
@@ -118,13 +172,13 @@ describe('UniqueProductIdentifierController', () => {
 
   it(`/GET organizationId of unique product identifier`, async () => {
     jest
-      .spyOn(reflector, 'get')
-      .mockImplementation((key) => key === ALLOW_SERVICE_ACCESS);
+      .spyOn(reflector, "get")
+      .mockImplementation(key => key === ALLOW_SERVICE_ACCESS);
 
     const template = Template.loadFromDb({ ...phoneTemplate });
     await templateService.save(template);
     const model = Model.create({
-      name: 'model',
+      name: "model",
       userId: randomUUID(),
       organizationId: randomUUID(),
       template,
@@ -135,12 +189,12 @@ describe('UniqueProductIdentifierController', () => {
       template,
       model,
     });
-    const { uuid } = item.createUniqueProductIdentifier('externalId');
+    const { uuid } = item.createUniqueProductIdentifier("externalId");
     await itemsService.save(item);
 
-    const response = await request(getApp(app))
+    const response = await request(app.getHttpServer())
       .get(`/unique-product-identifiers/${uuid}/metadata`)
-      .set('service_token', serviceToken);
+      .set("service_token", serviceToken);
 
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
@@ -150,12 +204,12 @@ describe('UniqueProductIdentifierController', () => {
 
   it(`/GET fails to return organizationId of unique product identifier if service token invalid`, async () => {
     jest
-      .spyOn(reflector, 'get')
-      .mockImplementation((key) => key === ALLOW_SERVICE_ACCESS);
+      .spyOn(reflector, "get")
+      .mockImplementation(key => key === ALLOW_SERVICE_ACCESS);
 
-    const response = await request(getApp(app))
+    const response = await request(app.getHttpServer())
       .get(`/unique-product-identifiers/${randomUUID()}/metadata`)
-      .set('service_token', 'invalid_token');
+      .set("service_token", "invalid_token");
     expect(response.status).toEqual(401);
   });
 
@@ -163,19 +217,19 @@ describe('UniqueProductIdentifierController', () => {
     const template = Template.loadFromDb({ ...phoneTemplate });
     await templateService.save(template);
     const model = Model.create({
-      name: 'model',
+      name: "model",
       userId: randomUUID(),
-      organizationId: organizationId,
+      organizationId,
       template,
     });
     const { uuid } = model.createUniqueProductIdentifier();
     await modelsService.save(model);
-    const response = await request(getApp(app))
+    const response = await request(app.getHttpServer())
       .get(
         `/organizations/${organizationId}/unique-product-identifiers/${uuid}/reference`,
       )
       .set(
-        'Authorization',
+        "Authorization",
         getKeycloakAuthToken(
           authContext.keycloakUser.sub,
           [organizationId],

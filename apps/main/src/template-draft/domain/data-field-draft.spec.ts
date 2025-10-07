@@ -1,12 +1,12 @@
-import { DataFieldDraft } from './data-field-draft';
-import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { expect } from '@jest/globals';
+import { expect } from "@jest/globals";
+import { DataFieldType } from "../../data-modelling/domain/data-field-base";
+import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { DataFieldDraft } from "./data-field-draft";
 
-describe('DataField', () => {
-  it('is created', () => {
+describe("dataField", () => {
+  it("is created", () => {
     const field = DataFieldDraft.create({
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
       options: { max: 2 },
       granularityLevel: GranularityLevel.MODEL,
@@ -17,30 +17,30 @@ describe('DataField', () => {
     expect(field.granularityLevel).toEqual(GranularityLevel.MODEL);
   });
 
-  it('is renamed', () => {
+  it("is renamed", () => {
     const field = DataFieldDraft.create({
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
       granularityLevel: GranularityLevel.MODEL,
     });
-    field.rename('Memory');
-    expect(field.name).toEqual('Memory');
+    field.rename("Memory");
+    expect(field.name).toEqual("Memory");
   });
 
-  it('overrides options', () => {
+  it("overrides options", () => {
     const field = DataFieldDraft.create({
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
-      options: { min: 7, regex: '/d' },
+      options: { min: 7, regex: "/d" },
       granularityLevel: GranularityLevel.MODEL,
     });
     field.mergeOptions({ max: 3, min: 9 });
-    expect(field.options).toEqual({ min: 9, max: 3, regex: '/d' });
+    expect(field.options).toEqual({ min: 9, max: 3, regex: "/d" });
   });
 
-  it('should publish data field draft', () => {
+  it("should publish data field draft", () => {
     const field = DataFieldDraft.create({
-      name: 'Processor',
+      name: "Processor",
       type: DataFieldType.TEXT_FIELD,
       options: { max: 2 },
 

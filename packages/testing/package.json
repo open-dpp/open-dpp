@@ -1,0 +1,40 @@
+{
+  "name": "@open-dpp/testing",
+  "version": "1.0.0",
+  "packageManager": "pnpm@10.17.1",
+  "description": "",
+  "author": "",
+  "license": "ISC",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "pnpm run clean && tsc",
+    "check-ts": "tsc --noEmit",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix"
+  },
+  "dependencies": {
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/mongoose": "^11.0.3",
+    "@nestjs/typeorm": "^11.0.0",
+    "@open-dpp/auth": "workspace:*",
+    "@open-dpp/env": "workspace:*",
+    "class-transformer": "^0.5.1"
+  },
+  "devDependencies": {
+    "@open-dpp/config-eslint": "workspace:*",
+    "@tsconfig/node-lts": "^22.0.2",
+    "@tsconfig/node-ts": "^23.6.1",
+    "rimraf": "^6.0.1"
+  }
+}

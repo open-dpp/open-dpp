@@ -1,12 +1,13 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { KeycloakResourcesModule } from './keycloak-resources.module';
-import { KeycloakResourcesService } from './infrastructure/keycloak-resources.service';
-import { KeycloakResourcesController } from './presentation/keycloak-resources.controller';
-import { expect } from '@jest/globals';
-import { EnvModule } from '@app/env';
+import type { TestingModule } from "@nestjs/testing";
+import { expect } from "@jest/globals";
+import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
+import { KeycloakResourcesService } from "./infrastructure/keycloak-resources.service";
+import { KeycloakResourcesModule } from "./keycloak-resources.module";
+import { KeycloakResourcesController } from "./presentation/keycloak-resources.controller";
 
 // Mock the Keycloak admin client
-jest.mock('@keycloak/keycloak-admin-client', () => {
+jest.mock("@keycloak/keycloak-admin-client", () => {
   return {
     __esModule: true,
     default: jest.fn(() => ({
@@ -21,27 +22,27 @@ jest.mock('@keycloak/keycloak-admin-client', () => {
   };
 });
 
-describe('KeycloakResourcesModule', () => {
+describe("keycloakResourcesModule", () => {
   let module: TestingModule;
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [EnvModule, KeycloakResourcesModule],
+      imports: [EnvModule.forRoot(), KeycloakResourcesModule],
     }).compile();
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(module).toBeDefined();
   });
 
-  it('should provide KeycloakResourcesService', () => {
+  it("should provide KeycloakResourcesService", () => {
     const service = module.get<KeycloakResourcesService>(
       KeycloakResourcesService,
     );
     expect(service).toBeDefined();
   });
 
-  it('should provide KeycloakResourcesController', () => {
+  it("should provide KeycloakResourcesController", () => {
     const controller = module.get<KeycloakResourcesController>(
       KeycloakResourcesController,
     );

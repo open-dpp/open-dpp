@@ -1,18 +1,26 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
-import { Item } from '../domain/item';
-import { ItemCreatedEventData } from '../../traceability-events/modules/open-dpp/domain/open-dpp-events/item-created-event.data';
-import { UniqueProductIdentifierCreatedEventData } from '../../traceability-events/modules/open-dpp/domain/open-dpp-events/unique-product-identifier-created-event.data';
-import { ModelsService } from '../../models/infrastructure/models.service';
-import { TemplateService } from '../../templates/infrastructure/template.service';
-import { TraceabilityEventsService } from '../../traceability-events/infrastructure/traceability-events.service';
+import { ForbiddenException, Injectable } from "@nestjs/common";
+import { ModelsService } from "../../models/infrastructure/models.service";
+import { TemplateService } from "../../templates/infrastructure/template.service";
+import { TraceabilityEventsService } from "../../traceability-events/infrastructure/traceability-events.service";
+import { ItemCreatedEventData } from "../../traceability-events/modules/open-dpp/domain/open-dpp-events/item-created-event.data";
+import { UniqueProductIdentifierCreatedEventData } from "../../traceability-events/modules/open-dpp/domain/open-dpp-events/unique-product-identifier-created-event.data";
+import { Item } from "../domain/item";
 
 @Injectable()
 export class ItemsApplicationService {
+  private readonly modelsService: ModelsService;
+  private readonly templateService: TemplateService;
+  private readonly traceabilityEventsService: TraceabilityEventsService;
+
   constructor(
-    private readonly modelsService: ModelsService,
-    private readonly templateService: TemplateService,
-    private readonly traceabilityEventsService: TraceabilityEventsService,
-  ) {}
+    modelsService: ModelsService,
+    templateService: TemplateService,
+    traceabilityEventsService: TraceabilityEventsService,
+  ) {
+    this.modelsService = modelsService;
+    this.templateService = templateService;
+    this.traceabilityEventsService = traceabilityEventsService;
+  }
 
   async createItem(
     organizationId: string,
@@ -33,7 +41,7 @@ export class ItemsApplicationService {
 
     const item = Item.create({
       organizationId,
-      userId: userId,
+      userId,
       template,
       model,
     });
@@ -43,16 +51,16 @@ export class ItemsApplicationService {
     await this.traceabilityEventsService.create(
       ItemCreatedEventData.createWithWrapper({
         itemId: item.id,
-        userId: userId,
-        organizationId: organizationId,
+        userId,
+        organizationId,
       }),
     );
     for (const uniqueProductIdentifier of item.uniqueProductIdentifiers) {
       await this.traceabilityEventsService.create(
         UniqueProductIdentifierCreatedEventData.createWithWrapper({
           itemId: item.id,
-          userId: userId,
-          organizationId: organizationId,
+          userId,
+          organizationId,
           uniqueProductIdentifierId: uniqueProductIdentifier.uuid,
         }),
       );

@@ -1,24 +1,23 @@
-import { Module } from '@nestjs/common';
-import { KeycloakResourcesModule } from '../keycloak-resources/keycloak-resources.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { OrganizationEntity } from '../organizations/infrastructure/organization.entity';
-import { UserEntity } from '../users/infrastructure/user.entity';
-import { MarketplaceApplicationService } from './presentation/marketplace.application.service';
-import { OrganizationsService } from '../organizations/infrastructure/organizations.service';
-import { UsersService } from '../users/infrastructure/users.service';
-import { MongooseModule } from '@nestjs/mongoose';
+import { Module } from "@nestjs/common";
+import { MongooseModule } from "@nestjs/mongoose";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { PermissionModule } from "@open-dpp/auth";
+import { KeycloakResourcesModule } from "../keycloak-resources/keycloak-resources.module";
+import { OrganizationEntity } from "../organizations/infrastructure/organization.entity";
+import { OrganizationsModule } from "../organizations/organizations.module";
 import {
   TemplateDoc,
   TemplateSchema,
-} from '../templates/infrastructure/template.schema';
-import { TemplateService } from '../templates/infrastructure/template.service';
+} from "../templates/infrastructure/template.schema";
+import { TemplateService } from "../templates/infrastructure/template.service";
+import { UserEntity } from "../users/infrastructure/user.entity";
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,
-} from './infrastructure/passport-template-publication.schema';
-import { PassportTemplatePublicationService } from './infrastructure/passport-template-publication.service';
-import { PermissionModule } from '@app/permission';
-import { PassportTemplatePublicationController } from './presentation/passport-template-publication.controller';
+} from "./infrastructure/passport-template-publication.schema";
+import { PassportTemplatePublicationService } from "./infrastructure/passport-template-publication.service";
+import { MarketplaceApplicationService } from "./presentation/marketplace.application.service";
+import { PassportTemplatePublicationController } from "./presentation/passport-template-publication.controller";
 
 @Module({
   imports: [
@@ -35,13 +34,12 @@ import { PassportTemplatePublicationController } from './presentation/passport-t
     ]),
     KeycloakResourcesModule,
     PermissionModule,
+    OrganizationsModule,
   ],
   controllers: [PassportTemplatePublicationController],
   providers: [
     PassportTemplatePublicationService,
     MarketplaceApplicationService,
-    OrganizationsService,
-    UsersService,
     TemplateService,
   ],
   exports: [MarketplaceApplicationService],

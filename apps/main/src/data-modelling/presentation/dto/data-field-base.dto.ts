@@ -1,6 +1,7 @@
-import { z } from 'zod';
-import { DataFieldBase, DataFieldType } from '../../domain/data-field-base';
-import { GranularityLevel } from '../../domain/granularity-level';
+import type { DataFieldBase } from "../../domain/data-field-base";
+import { z } from "zod";
+import { DataFieldType } from "../../domain/data-field-base";
+import { GranularityLevel } from "../../domain/granularity-level";
 
 export const DataFieldBaseSchema = z.object({
   id: z.uuid(),

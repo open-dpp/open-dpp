@@ -1,6 +1,7 @@
-import { INestApplication } from '@nestjs/common';
-import { json, NextFunction, Request, Response } from 'express';
-import { EnvService } from '@app/env/env.service';
+import type { INestApplication } from "@nestjs/common";
+import type { NextFunction, Request, Response } from "express";
+import { EnvService } from "@open-dpp/env";
+import { json } from "express";
 
 /**
  * Applies body size handling and JSON parsing middleware to the provided Nest application.
@@ -12,9 +13,9 @@ export function applyBodySizeHandler(app: INestApplication) {
 
   // Single JSON body parser selector based on a precise integration route match
   const integrationRouteRegex = /^\/organizations\/[^/]+\/integration(?:\/|$)/;
-  const defaultJsonLimit = configService.get('OPEN_DPP_JSON_LIMIT_DEFAULT');
+  const defaultJsonLimit = configService.get("OPEN_DPP_JSON_LIMIT_DEFAULT");
   const integrationJsonLimit = configService.get(
-    'OPEN_DPP_JSON_LIMIT_INTEGRATION',
+    "OPEN_DPP_JSON_LIMIT_INTEGRATION",
   );
   const defaultJsonParser = json({ limit: defaultJsonLimit });
   const integrationJsonParser = json({ limit: integrationJsonLimit });
@@ -27,23 +28,23 @@ export function applyBodySizeHandler(app: INestApplication) {
   });
 
   app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    if (err?.type === 'entity.too.large') {
+    if (err?.type === "entity.too.large") {
       return res.status(413).json({
         statusCode: 413,
-        message: 'Payload Too Large',
-        error: 'PayloadTooLargeError',
+        message: "Payload Too Large",
+        error: "PayloadTooLargeError",
         path: req.path,
         timestamp: new Date().toISOString(),
       });
     }
     if (
-      err?.type === 'entity.parse.failed' ||
-      (err instanceof SyntaxError && 'body' in err)
+      err?.type === "entity.parse.failed"
+      || (err instanceof SyntaxError && "body" in err)
     ) {
       return res.status(400).json({
         statusCode: 400,
-        message: 'Invalid JSON payload',
-        error: 'BadRequest',
+        message: "Invalid JSON payload",
+        error: "BadRequest",
         path: req.path,
         timestamp: new Date().toISOString(),
       });

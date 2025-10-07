@@ -1,13 +1,13 @@
-import {
-  UniqueProductIdentifierDtoSchema,
-  uniqueProductIdentifierToDto,
-} from '../../../unique-product-identifier/presentation/dto/unique-product-identifier-dto.schema';
-import { z } from 'zod';
-import { Model } from '../../domain/model';
+import type { Model } from "../../domain/model";
+import { z } from "zod";
 import {
   DataValueDtoSchema,
   dataValueToDto,
-} from '../../../product-passport-data/presentation/dto/data-value.dto';
+} from "../../../product-passport-data/presentation/dto/data-value.dto";
+import {
+  UniqueProductIdentifierDtoSchema,
+  uniqueProductIdentifierToDto,
+} from "../../../unique-product-identifier/presentation/dto/unique-product-identifier-dto.schema";
 
 export const ModelDtoSchema = z.object({
   id: z.uuid(),
@@ -26,9 +26,9 @@ export function modelToDto(model: Model): ModelDto {
     id: model.id,
     name: model.name,
     description: model.description,
-    dataValues: model.dataValues.map((d) => dataValueToDto(d)),
+    dataValues: model.dataValues.map(d => dataValueToDto(d)),
     owner: model.createdByUserId,
-    uniqueProductIdentifiers: model.uniqueProductIdentifiers.map((u) =>
+    uniqueProductIdentifiers: model.uniqueProductIdentifiers.map(u =>
       uniqueProductIdentifierToDto(u),
     ),
     templateId: model.templateId,

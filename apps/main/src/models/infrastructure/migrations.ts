@@ -1,5 +1,6 @@
-import { ModelDoc, ModelDocSchemaVersion } from './model.schema';
-import { migratePassportDocToTemplateId } from '../../product-passport-data/infrastructure/migrations';
+import type { ModelDoc } from "./model.schema";
+import { migratePassportDocToTemplateId } from "../../product-passport-data/infrastructure/migrations";
+import { ModelDocSchemaVersion } from "./model.schema";
 
 function migrateToVersion_1_0_1(modelDoc: ModelDoc) {
   migratePassportDocToTemplateId(modelDoc);

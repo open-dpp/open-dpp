@@ -1,0 +1,99 @@
+<script lang="ts" setup>
+import type { TemplateGetAllDto } from "@open-dpp/api-client";
+import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+import { useRouter } from "vue-router";
+import ModelTemplateList from "../../components/models/ModelTemplateList.vue";
+import apiClient from "../../lib/api-client";
+import { useNotificationStore } from "../../stores/notification";
+
+const props = defineProps<{
+  organizationId: string;
+}>();
+const router = useRouter();
+const notificationStore = useNotificationStore();
+const { t } = useI18n();
+
+const name = ref<string>("");
+const selectedTemplate = ref<TemplateGetAllDto | null>(null);
+const isMarketplaceSelected = ref<boolean>(false);
+
+async function onSubmit() {
+  if (!name.value) {
+    notificationStore.addErrorNotification(t("models.form.name.error"));
+    return;
+  }
+  if (!selectedTemplate.value) {
+    notificationStore.addErrorNotification(
+      t("models.form.passportDraft.error"),
+    );
+    return;
+  }
+
+  const response = await apiClient.dpp.models.create({
+    name: name.value,
+    templateId: isMarketplaceSelected.value
+      ? undefined
+      : selectedTemplate.value.id,
+    marketplaceResourceId: isMarketplaceSelected.value
+      ? selectedTemplate.value.id
+      : undefined,
+  });
+
+  await router.push(
+    `/organizations/${props.organizationId}/models/${response.data.id}`,
+  );
+}
+</script>
+
+<template>
+  <div class="">
+    <div class="sm:flex sm:items-center">
+      <div class="sm:flex-auto">
+        <h1 class="text-base font-semibold text-gray-900">
+          {{ t('models.pass') }}
+        </h1>
+        <p class="mt-2 text-sm text-gray-700">
+          {{ t('models.createPass') }}
+        </p>
+      </div>
+    </div>
+    <div class="mt-8 flex flex-col gap-10">
+      <div class="flex items-center">
+        <div class="flex-auto">
+          <form-kit
+            v-model="name"
+            data-cy="name"
+            :help="t('models.form.name.help')"
+            :label="t('models.form.name.label')"
+            name="name"
+            type="text"
+            validation="required"
+          />
+        </div>
+        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+          <button
+            class="block rounded-md bg-indigo-600 px-3 py-1.5 text-center text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 hover:cursor-pointer"
+            type="button"
+            @click="onSubmit"
+          >
+            {{ t('models.submitCreatePass') }}
+          </button>
+        </div>
+      </div>
+      <div>
+        <ModelTemplateList
+          :is-marketplace-selected="isMarketplaceSelected"
+          :selected="selectedTemplate ? [selectedTemplate] : []"
+          :show-tabs="true"
+          @update-selected-items="
+            (items) => (selectedTemplate = items[0] ? items[0] : null)
+          "
+          @update-is-marketplace-selected="
+            (isSelected) => (isMarketplaceSelected = isSelected)
+          "
+        />
+      </div>
+    </div>
+  </div>
+</template>

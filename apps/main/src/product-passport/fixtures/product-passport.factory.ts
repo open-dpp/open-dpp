@@ -1,14 +1,14 @@
-import { randomUUID } from 'crypto';
-import { TemplateDbProps } from '../../templates/domain/template';
-import { SectionType } from '../../data-modelling/domain/section-base';
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { DataFieldType } from '../../data-modelling/domain/data-field-base';
-import { ModelDbProps } from '../../models/domain/model';
-import { DataValue } from '../../product-passport-data/domain/data-value';
-import { ItemDbProps } from '../../items/domain/item';
-import { Factory } from 'fishery';
-import { sectionDbPropsFactory } from '../../templates/fixtures/section.factory';
-import { Sector } from '../../data-modelling/domain/sectors';
+import type { ItemDbProps } from "../../items/domain/item";
+import type { ModelDbProps } from "../../models/domain/model";
+import type { TemplateDbProps } from "../../templates/domain/template";
+import { randomUUID } from "node:crypto";
+import { Sector } from "@open-dpp/api-client";
+import { Factory } from "fishery";
+import { DataFieldType } from "../../data-modelling/domain/data-field-base";
+import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { SectionType } from "../../data-modelling/domain/section-base";
+import { DataValue } from "../../product-passport-data/domain/data-value";
+import { sectionDbPropsFactory } from "../../templates/fixtures/section.factory";
 
 export class PhoneFactory extends Factory<TemplateDbProps> {
   static ids = {
@@ -54,21 +54,21 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
       type: SectionType.REPEATABLE,
       id: PhoneFactory.ids.section1.id,
       parentId: undefined,
-      name: 'Repeating Section',
+      name: "Repeating Section",
       granularityLevel: GranularityLevel.MODEL,
       subSections: [],
       dataFields: [
         {
           type: DataFieldType.TEXT_FIELD,
           id: PhoneFactory.ids.section1.fields.dataField1,
-          name: 'Title 1',
+          name: "Title 1",
           options: { min: 2 },
           granularityLevel: GranularityLevel.MODEL,
         },
         {
           type: DataFieldType.TEXT_FIELD,
           id: PhoneFactory.ids.section1.fields.dataField2,
-          name: 'Title 2',
+          name: "Title 2",
           options: { min: 7 },
           granularityLevel: GranularityLevel.MODEL,
         },
@@ -80,21 +80,21 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
     return sectionDbPropsFactory.params({
       id: PhoneFactory.ids.section2.id,
       type: SectionType.GROUP,
-      name: 'Group Section',
+      name: "Group Section",
       subSections: [],
       granularityLevel: GranularityLevel.MODEL,
       dataFields: [
         {
           type: DataFieldType.TEXT_FIELD,
           id: PhoneFactory.ids.section2.fields.dataField3,
-          name: 'Title 3',
+          name: "Title 3",
           options: { min: 8 },
           granularityLevel: GranularityLevel.MODEL,
         },
         {
           type: DataFieldType.TEXT_FIELD,
           id: PhoneFactory.ids.section2.fields.dataField4,
-          name: 'Title 4',
+          name: "Title 4",
           options: { min: 8 },
           granularityLevel: GranularityLevel.MODEL,
         },
@@ -106,20 +106,20 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
     return sectionDbPropsFactory.params({
       type: SectionType.GROUP,
       id: PhoneFactory.ids.section3.id,
-      name: 'Group Section 2',
+      name: "Group Section 2",
       subSections: [],
       dataFields: [
         {
           type: DataFieldType.TEXT_FIELD,
           id: PhoneFactory.ids.section3.fields.dataFieldId5,
-          name: 'Title sg21',
+          name: "Title sg21",
           options: { min: 8 },
           granularityLevel: GranularityLevel.MODEL,
         },
         {
           type: DataFieldType.TEXT_FIELD,
           id: PhoneFactory.ids.section3.fields.dataFieldIdForItem5,
-          name: 'Title sg21 for item',
+          name: "Title sg21 for item",
           options: { min: 8 },
           granularityLevel: GranularityLevel.ITEM,
         },
@@ -131,21 +131,21 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
     return sectionDbPropsFactory.params({
       type: SectionType.REPEATABLE,
       id: PhoneFactory.ids.sectionForItem1.id,
-      name: 'Repeating Section for item',
+      name: "Repeating Section for item",
       granularityLevel: GranularityLevel.ITEM,
       subSections: [],
       dataFields: [
         {
           type: DataFieldType.TEXT_FIELD,
           id: PhoneFactory.ids.sectionForItem1.fields.dataFieldIdForItem1,
-          name: 'Title 1 for item',
+          name: "Title 1 for item",
           options: { min: 7 },
           granularityLevel: GranularityLevel.ITEM,
         },
         {
           type: DataFieldType.TEXT_FIELD,
           id: PhoneFactory.ids.sectionForItem1.fields.dataFieldIdForItem2,
-          name: 'Title 2 for item',
+          name: "Title 2 for item",
           options: { min: 7 },
           granularityLevel: GranularityLevel.ITEM,
         },
@@ -157,21 +157,21 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
     return sectionDbPropsFactory.params({
       type: SectionType.GROUP,
       id: PhoneFactory.ids.sectionForItem2.id,
-      name: 'Group Section for item',
+      name: "Group Section for item",
       subSections: [],
       granularityLevel: GranularityLevel.ITEM,
       dataFields: [
         {
           type: DataFieldType.TEXT_FIELD,
           id: PhoneFactory.ids.sectionForItem2.fields.dataFieldIdForItem3,
-          name: 'Title 3 for item',
+          name: "Title 3 for item",
           options: { min: 8 },
           granularityLevel: GranularityLevel.ITEM,
         },
         {
           type: DataFieldType.TEXT_FIELD,
           id: PhoneFactory.ids.sectionForItem2.fields.dataFieldIdForItem4,
-          name: 'Title 4 for item',
+          name: "Title 4 for item",
           options: { min: 8 },
           granularityLevel: GranularityLevel.ITEM,
         },
@@ -201,10 +201,10 @@ export class PhoneFactory extends Factory<TemplateDbProps> {
 export const phoneFactory = PhoneFactory.define(() => ({
   id: randomUUID(),
   marketplaceResourceId: null,
-  description: 'My phone',
+  description: "My phone",
   sectors: [Sector.ELECTRONICS],
-  name: 'Phone',
-  version: '1.0.0',
+  name: "Phone",
+  version: "1.0.0",
   organizationId: randomUUID(),
   userId: randomUUID(),
   sections: [],
@@ -216,25 +216,25 @@ export class PhoneModelFactory extends Factory<ModelDbProps> {
       DataValue.create({
         dataFieldId: PhoneFactory.ids.section1.fields.dataField1,
         dataSectionId: PhoneFactory.ids.section1.id,
-        value: 'val1,0',
+        value: "val1,0",
         row: 0,
       }),
       DataValue.create({
         dataFieldId: PhoneFactory.ids.section1.fields.dataField2,
         dataSectionId: PhoneFactory.ids.section1.id,
-        value: 'val2,0',
+        value: "val2,0",
         row: 0,
       }),
       DataValue.create({
         dataFieldId: PhoneFactory.ids.section1.fields.dataField1,
         dataSectionId: PhoneFactory.ids.section1.id,
-        value: 'val1,1',
+        value: "val1,1",
         row: 1,
       }),
       DataValue.create({
         dataFieldId: PhoneFactory.ids.section1.fields.dataField2,
         dataSectionId: PhoneFactory.ids.section1.id,
-        value: 'val2,1',
+        value: "val2,1",
         row: 1,
       }),
     ];
@@ -245,25 +245,25 @@ export class PhoneModelFactory extends Factory<ModelDbProps> {
       DataValue.create({
         dataFieldId: PhoneFactory.ids.section2.fields.dataField3,
         dataSectionId: PhoneFactory.ids.section2.id,
-        value: 'val3,0',
+        value: "val3,0",
         row: 0,
       }),
       DataValue.create({
         dataFieldId: PhoneFactory.ids.section2.fields.dataField4,
         dataSectionId: PhoneFactory.ids.section2.id,
-        value: 'val4,0',
+        value: "val4,0",
         row: 0,
       }),
       DataValue.create({
         dataFieldId: PhoneFactory.ids.section2.fields.dataField3,
         dataSectionId: PhoneFactory.ids.section2.id,
-        value: 'val3,1',
+        value: "val3,1",
         row: 1,
       }),
       DataValue.create({
         dataFieldId: PhoneFactory.ids.section2.fields.dataField4,
         dataSectionId: PhoneFactory.ids.section2.id,
-        value: 'val4,1',
+        value: "val4,1",
         row: 1,
       }),
     ];
@@ -274,7 +274,7 @@ export class PhoneModelFactory extends Factory<ModelDbProps> {
       DataValue.create({
         dataFieldId: PhoneFactory.ids.section3.fields.dataFieldId5,
         dataSectionId: PhoneFactory.ids.section3.id,
-        value: 'val5,0',
+        value: "val5,0",
         row: 0,
       }),
     ];
@@ -293,8 +293,8 @@ export class PhoneModelFactory extends Factory<ModelDbProps> {
 
 export const phoneModelFactory = PhoneModelFactory.define(() => ({
   id: randomUUID(),
-  name: 'Model Y',
-  description: 'My desc',
+  name: "Model Y",
+  description: "My desc",
   templateId: randomUUID(),
   organizationId: randomUUID(),
   userId: randomUUID(),
@@ -309,28 +309,28 @@ export class PhoneItemFactory extends Factory<ItemDbProps> {
         dataFieldId:
           PhoneFactory.ids.sectionForItem1.fields.dataFieldIdForItem1,
         dataSectionId: PhoneFactory.ids.sectionForItem1.id,
-        value: 'val1,0,item',
+        value: "val1,0,item",
         row: 0,
       }),
       DataValue.create({
         dataFieldId:
           PhoneFactory.ids.sectionForItem1.fields.dataFieldIdForItem2,
         dataSectionId: PhoneFactory.ids.sectionForItem1.id,
-        value: 'val2,0,item',
+        value: "val2,0,item",
         row: 0,
       }),
       DataValue.create({
         dataFieldId:
           PhoneFactory.ids.sectionForItem1.fields.dataFieldIdForItem1,
         dataSectionId: PhoneFactory.ids.sectionForItem1.id,
-        value: 'val1,1,item',
+        value: "val1,1,item",
         row: 1,
       }),
       DataValue.create({
         dataFieldId:
           PhoneFactory.ids.sectionForItem1.fields.dataFieldIdForItem2,
         dataSectionId: PhoneFactory.ids.sectionForItem1.id,
-        value: 'val2,1,item',
+        value: "val2,1,item",
         row: 1,
       }),
     ];
@@ -342,38 +342,39 @@ export class PhoneItemFactory extends Factory<ItemDbProps> {
         dataFieldId:
           PhoneFactory.ids.sectionForItem2.fields.dataFieldIdForItem3,
         dataSectionId: PhoneFactory.ids.sectionForItem2.id,
-        value: 'val3,0,item',
+        value: "val3,0,item",
         row: 0,
       }),
       DataValue.create({
         dataFieldId:
           PhoneFactory.ids.sectionForItem2.fields.dataFieldIdForItem4,
         dataSectionId: PhoneFactory.ids.sectionForItem2.id,
-        value: 'val4,0,item',
+        value: "val4,0,item",
         row: 0,
       }),
       DataValue.create({
         dataFieldId:
           PhoneFactory.ids.sectionForItem2.fields.dataFieldIdForItem3,
         dataSectionId: PhoneFactory.ids.sectionForItem2.id,
-        value: 'val3,1,item',
+        value: "val3,1,item",
         row: 1,
       }),
       DataValue.create({
         dataFieldId:
           PhoneFactory.ids.sectionForItem2.fields.dataFieldIdForItem4,
         dataSectionId: PhoneFactory.ids.sectionForItem2.id,
-        value: 'val4,1,item',
+        value: "val4,1,item",
         row: 1,
       }),
     ];
   }
+
   dataValuesSection3() {
     return [
       DataValue.create({
         dataFieldId: PhoneFactory.ids.section3.fields.dataFieldIdForItem5,
         dataSectionId: PhoneFactory.ids.section3.id,
-        value: 'val5,0,item',
+        value: "val5,0,item",
         row: 0,
       }),
     ];

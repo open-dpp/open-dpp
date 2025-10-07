@@ -1,18 +1,22 @@
-import { randomUUID } from 'crypto';
-import { User } from '../../users/domain/user';
-import { Expose, instanceToPlain, plainToInstance } from 'class-transformer';
+import type { User } from "../../users/domain/user";
+import { randomUUID } from "node:crypto";
+import { Expose, instanceToPlain, plainToInstance } from "class-transformer";
 
 export class Organization {
   @Expose()
   readonly id: string = randomUUID();
+
   @Expose()
-  readonly name: string = '';
+  readonly name: string = "";
+
   @Expose()
   readonly members: User[] = [];
+
   @Expose()
-  readonly createdByUserId: string;
+  readonly createdByUserId: string = "";
+
   @Expose()
-  readonly ownedByUserId: string = '';
+  readonly ownedByUserId: string = "";
 
   static fromPlain(plain: Partial<Organization>) {
     return plainToInstance(Organization, plain, {
@@ -31,13 +35,13 @@ export class Organization {
   }
 
   join(user: User) {
-    if (!this.members.find((m) => m.id === user.id)) {
+    if (!this.members.find(m => m.id === user.id)) {
       this.members.push(user);
     }
   }
 
   isMember(user: User) {
-    return this.members.some((m) => m.id === user.id);
+    return this.members.some(m => m.id === user.id);
   }
 
   public toPlain() {

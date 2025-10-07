@@ -1,20 +1,20 @@
-import { randomUUID } from 'crypto';
-import { UniqueProductIdentifier } from '../../unique-product-identifier/domain/unique.product.identifier';
+import type { Model } from "../../models/domain/model";
+import type { DataValue } from "../../product-passport-data/domain/data-value";
 
-import { GranularityLevel } from '../../data-modelling/domain/granularity-level';
-import { ProductPassportData } from '../../product-passport-data/domain/product-passport-data';
-import { Model } from '../../models/domain/model';
-import { Template } from '../../templates/domain/template';
-import { DataValue } from '../../product-passport-data/domain/data-value';
-import { ValueError } from '@app/exception/domain.errors';
+import type { Template } from "../../templates/domain/template";
+import type { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
+import { randomUUID } from "node:crypto";
+import { ValueError } from "@open-dpp/exception";
+import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { ProductPassportData } from "../../product-passport-data/domain/product-passport-data";
 
-export type ItemCreateProps = {
+export interface ItemCreateProps {
   organizationId: string;
   userId: string;
   template: Template;
   model: Model;
-};
-export type ItemDbProps = Omit<ItemCreateProps, 'template' | 'model'> & {
+}
+export type ItemDbProps = Omit<ItemCreateProps, "template" | "model"> & {
   id: string;
   uniqueProductIdentifiers: UniqueProductIdentifier[];
   templateId: string;
@@ -23,13 +23,15 @@ export type ItemDbProps = Omit<ItemCreateProps, 'template' | 'model'> & {
 };
 
 export class Item extends ProductPassportData {
+  private readonly _modelId: string;
   granularityLevel = GranularityLevel.ITEM;
+
   private constructor(
     id: string,
     ownedByOrganizationId: string,
     createdByUserId: string,
     uniqueProductIdentifiers: UniqueProductIdentifier[],
-    private _modelId: string,
+    _modelId: string,
     templateId: string,
     dataValues: DataValue[],
   ) {
@@ -41,11 +43,12 @@ export class Item extends ProductPassportData {
       templateId,
       dataValues,
     );
+    this._modelId = _modelId;
   }
 
   public static create(data: ItemCreateProps) {
     if (data.model.templateId !== data.template.id) {
-      throw new ValueError('Model and template do not match');
+      throw new ValueError("Model and template do not match");
     }
     const item = new Item(
       randomUUID(),

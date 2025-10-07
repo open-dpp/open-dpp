@@ -1,0 +1,36 @@
+<script setup lang="ts">
+import { computed } from "vue";
+
+const props = defineProps<{
+  type?: "button" | "submit" | "reset";
+  disabled?: boolean;
+  variant?: "primary" | "error";
+}>();
+
+const emits = defineEmits<{
+  click: [event: MouseEvent];
+}>();
+const colorClasses = computed(() => {
+  const defaultColors = "bg-white text-gray-900 hover:bg-gray-50";
+  switch (props.variant) {
+    case "primary":
+      return "bg-indigo-600 hover:bg-indigo-500 focus-visible:outline-indigo-600 text-white";
+    case "error":
+      return "bg-red-600 hover:bg-red-500 focus-visible:outline-red-600 text-white";
+    default:
+      return defaultColors;
+  }
+});
+</script>
+
+<template>
+  <button
+    v-bind="props"
+    class="m-2 block rounded-md px-3 py-1.5 text-center text-sm/6 font-semibold shadow-xs focus-visible:outline focus-visible:outline-offset-2" :class="[
+      colorClasses,
+    ]"
+    @click="emits('click', $event)"
+  >
+    <slot />
+  </button>
+</template>
