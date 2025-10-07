@@ -10,8 +10,9 @@ const envSchema = z.object({
   OPEN_DPP_AAS_TOKEN: z.coerce.string().min(16),
   OPEN_DPP_MSG_PORT: z.coerce.number().optional().default(5002),
   // MongoDB
-  OPEN_DPP_MONGODB_PORT: z.coerce.number().max(65535).min(0),
-  OPEN_DPP_MONGODB_HOST: z.coerce.string(),
+  OPEN_DPP_MONGODB_URI: z.coerce.string().optional(),
+  OPEN_DPP_MONGODB_PORT: z.coerce.number().max(65535).min(0).optional(),
+  OPEN_DPP_MONGODB_HOST: z.coerce.string().optional(),
   OPEN_DPP_MONGODB_USER: z.coerce.string(),
   OPEN_DPP_MONGODB_PASSWORD: z.coerce.string(),
   OPEN_DPP_MONGODB_DATABASE: z.coerce.string(),
@@ -54,7 +55,24 @@ const envSchema = z.object({
     .or(z.number())
     .optional()
     .default('50mb'),
-});
+}).superRefine((val, ctx) => {
+    const hasUri = !!val.OPEN_DPP_MONGODB_URI;
+    const hasHostPort = !!val.OPEN_DPP_MONGODB_HOST && !!val.OPEN_DPP_MONGODB_PORT;
+    if (!hasUri && !hasHostPort) {
+      ctx.addIssue({
+        code: "custom",
+        message: 'Provide either OPEN_DPP_MONGODB_URI or both OPEN_DPP_MONGODB_HOST and OPEN_DPP_MONGODB_PORT.',
+        path: ['OPEN_DPP_MONGODB_URI'],
+      });
+    }
+    if (hasUri && hasHostPort) {
+      ctx.addIssue({
+        code: "custom",
+        message: 'Specify only one: OPEN_DPP_MONGODB_URI or host/port pair, not both.',
+        path: ['OPEN_DPP_MONGODB_URI'],
+      });
+    }
+})
 
 export function validateEnv(env: Record<string, any>): Record<string, any> {
   const result = envSchema.safeParse(env);
