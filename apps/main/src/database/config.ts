@@ -12,6 +12,7 @@ export function generateConfig(
     username: configService.get('OPEN_DPP_DB_USER'),
     password: configService.get('OPEN_DPP_DB_PASSWORD'),
     database: configService.get('OPEN_DPP_DB_DATABASE'),
+    ssl: configService.get('OPEN_DPP_DB_SSL'),
     synchronize: true,
     dropSchema: false,
     migrations: [migrationPath],
