@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { MongooseTestingModule } from "@open-dpp/testing";
 import { AasConnection } from "../domain/aas-connection";
@@ -20,6 +21,7 @@ describe("aasMappingService", () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        EnvModule,
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
