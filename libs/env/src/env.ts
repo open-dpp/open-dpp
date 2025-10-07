@@ -19,6 +19,7 @@ const envSchema = z.object({
   // Postgres
   OPEN_DPP_DB_PORT: z.coerce.number().max(65535).min(0),
   OPEN_DPP_DB_SSL: asBoolean.optional(),
+  OPEN_DPP_DB_SSL_SERVERNAME: z.coerce.string().optional(),
   OPEN_DPP_DB_HOST: z.coerce.string(),
   OPEN_DPP_DB_USER: z.coerce.string(),
   OPEN_DPP_DB_PASSWORD: z.coerce.string(),
