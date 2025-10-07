@@ -50,7 +50,7 @@ import NumericField from './NumericField.vue';
 import FileField from './FileField.vue';
 import { useNotificationStore } from '../../../stores/notification';
 import { useErrorHandlingStore } from '../../../stores/error.handling';
-import BaseButton from '../../BaseButton.vue';
+import BaseButton from '../../basics/BaseButton.vue';
 import { useRouter } from 'vue-router';
 import { FolderIcon } from '@heroicons/vue/24/outline';
 import { useI18n } from 'vue-i18n';

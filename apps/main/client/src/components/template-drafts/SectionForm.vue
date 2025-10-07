@@ -36,7 +36,7 @@ import {
 import { useDraftStore } from '../../stores/draft';
 import { z } from 'zod/v4';
 import { useDraftSidebarStore } from '../../stores/draftSidebar';
-import BaseButton from '../BaseButton.vue';
+import BaseButton from '../basics/BaseButton.vue';
 import { useModelDialogStore } from '../../stores/modal.dialog';
 import { useI18n } from 'vue-i18n';
 

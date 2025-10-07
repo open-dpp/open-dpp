@@ -113,7 +113,7 @@ import { useNotificationStore } from '../../stores/notification';
 import { useIndexStore } from '../../stores';
 import DraftSidebar from '../../components/template-drafts/DraftSidebar.vue';
 import BaseSectionHeader from '../../components/BaseSectionHeader.vue';
-import BaseButton from '../../components/BaseButton.vue';
+import BaseButton from '../../components/basics/BaseButton.vue';
 import {
   SidebarContentType,
   useDraftSidebarStore,

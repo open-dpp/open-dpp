@@ -22,7 +22,7 @@ import { DataSectionDto, SectionType } from '@open-dpp/api-client';
 import { usePassportFormStore } from '../stores/passport.form';
 import BaseSectionHeader from './BaseSectionHeader.vue';
 import { computed } from 'vue';
-import BaseButton from './BaseButton.vue';
+import BaseButton from './basics/BaseButton.vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();

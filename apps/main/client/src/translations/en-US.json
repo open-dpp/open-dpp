@@ -203,8 +203,8 @@
     "edit": "Edit",
     "errorCreate": "Failed to create connection"
   },
-  "statistics": {
-    "statistics": "Statistics"
+  "analytics": {
+    "analytics": "Analytics"
   },
   "members": {
     "members": "Members"

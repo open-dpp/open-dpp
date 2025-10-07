@@ -24,7 +24,7 @@
 <script setup lang="ts">
 import { DataSectionDto } from '@open-dpp/api-client';
 import { computed, ref } from 'vue';
-import BaseButton from '../../BaseButton.vue';
+import BaseButton from '../../basics/BaseButton.vue';
 import SectionForm from './SectionForm.vue';
 import { usePassportFormStore } from '../../../stores/passport.form';
 import { useI18n } from 'vue-i18n';

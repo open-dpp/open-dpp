@@ -121,7 +121,7 @@ import { onMounted, ref } from 'vue';
 import { OrganizationDto } from '@open-dpp/api-client';
 import apiClient from '../../lib/api-client';
 import { UserCircleIcon } from '@heroicons/vue/20/solid';
-import BaseButton from '../../components/BaseButton.vue';
+import BaseButton from '../../components/basics/BaseButton.vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
