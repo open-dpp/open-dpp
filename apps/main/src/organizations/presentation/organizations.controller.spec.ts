@@ -5,6 +5,7 @@ import { INestApplication, NotFoundException } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { Test } from "@nestjs/testing";
 import { AuthContext, PermissionModule, PermissionService } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
 import { createKeycloakUserInToken, getApp, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, TypeOrmTestingModule } from "@open-dpp/testing";
 import request from "supertest";
@@ -41,6 +42,7 @@ describe("organizationController", () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         TypeOrmTestingModule,
         TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         PermissionModule,

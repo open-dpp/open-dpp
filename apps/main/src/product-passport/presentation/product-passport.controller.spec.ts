@@ -6,6 +6,7 @@ import { expect } from "@jest/globals";
 import { APP_GUARD, Reflector } from "@nestjs/core";
 import { Test } from "@nestjs/testing";
 import { IS_PUBLIC } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
 import { KeycloakAuthTestingGuard, MongooseTestingModule } from "@open-dpp/testing";
 import request from "supertest";
 import { Item } from "../../items/domain/item";
@@ -40,7 +41,7 @@ describe("productPassportController", () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [MongooseTestingModule, ProductPassportModule],
+      imports: [EnvModule.forRoot(), MongooseTestingModule, ProductPassportModule],
       providers: [
         {
           provide: APP_GUARD,

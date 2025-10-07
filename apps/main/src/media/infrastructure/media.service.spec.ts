@@ -1,9 +1,9 @@
 import type { TestingModule } from "@nestjs/testing";
 import { Buffer } from "node:buffer";
 import { expect } from "@jest/globals";
-import { ConfigModule } from "@nestjs/config";
 import { getModelToken } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { Media } from "../domain/media";
 import { MediaDoc } from "./media.schema";
@@ -78,11 +78,11 @@ describe("mediaService", () => {
     process.env.S3_SSL = "false";
     process.env.S3_ACCESS_KEY = "ak";
     process.env.S3_SECRET_KEY = "sk";
-    process.env.S3_BUCKET_NAME_DEFAULT = "bucket-default";
-    process.env.S3_BUCKET_NAME_PROFILE_PICTURES = "bucket-profile";
+    process.env.S3_BUCKET_NAME_DEFAULT = "dpp";
+    process.env.S3_BUCKET_NAME_PROFILE_PICTURES = "profile-pictures";
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [ConfigModule.forRoot({ isGlobal: true })],
+      imports: [EnvModule.forRoot()],
       providers: [
         MediaService,
         {
@@ -116,7 +116,7 @@ describe("mediaService", () => {
       const uploadInfo = { etag: "e", versionId: "v" };
       mockMinioClient.putObject.mockResolvedValue(uploadInfo);
       const res = await service.uploadFile(
-        "bucket-default",
+        "dpp",
         Buffer.from("abc"),
         "base",
         ["dir"],
@@ -124,10 +124,10 @@ describe("mediaService", () => {
         "text/plain",
       );
       expect(mockMinioClient.bucketExists).toHaveBeenCalledWith(
-        "bucket-default",
+        "dpp",
       );
       expect(mockMinioClient.putObject).toHaveBeenCalledWith(
-        "bucket-default",
+        "dpp",
         "dir/base",
         expect.any(Buffer),
         3,
@@ -135,7 +135,7 @@ describe("mediaService", () => {
       );
       expect(res).toEqual({
         info: uploadInfo,
-        location: { bucket: "bucket-default", objectName: "dir/base" },
+        location: { bucket: "dpp", objectName: "dir/base" },
       });
     });
 
@@ -151,12 +151,12 @@ describe("mediaService", () => {
     it("delegates to uploadFile with profile bucket and webp", async () => {
       const spy = jest.spyOn(service, "uploadFile").mockResolvedValue({
         info: {},
-        location: { bucket: "bucket-profile", objectName: "user-1" },
+        location: { bucket: "profile-pictures", objectName: "user-1" },
       } as any);
       const buf = Buffer.from("img");
       await service.uploadProfilePicture(buf, "user-1");
       expect(spy).toHaveBeenCalledWith(
-        "bucket-profile",
+        "profile-pictures",
         buf,
         "user-1",
         [],
@@ -176,7 +176,7 @@ describe("mediaService", () => {
       jest.spyOn(service, "uploadFile").mockResolvedValue({
         info: { etag: "e1", versionId: "v1" },
         location: {
-          bucket: "bucket-default",
+          bucket: "dpp",
           objectName: "product-passport-files/upi-9/df-9",
         },
       } as any);
@@ -186,7 +186,7 @@ describe("mediaService", () => {
         _id: "new-id",
         dataFieldId: "df-9",
         uniqueProductIdentifier: "upi-9",
-        bucket: "bucket-default",
+        bucket: "dpp",
         objectName: "product-passport-files/upi-9/df-9",
         eTag: "e1",
         versionId: "v1",
@@ -226,7 +226,7 @@ describe("mediaService", () => {
 
       // upload called with transformed buffer and path
       expect(service.uploadFile).toHaveBeenCalledWith(
-        "bucket-default",
+        "dpp",
         sharpToBufferResult,
         "df-9",
         ["product-passport-files", "upi-9"],
@@ -253,7 +253,7 @@ describe("mediaService", () => {
       mockModel.find.mockResolvedValue([]);
       jest.spyOn(service, "uploadFile").mockResolvedValue({
         info: {},
-        location: { bucket: "bucket-default", objectName: "x" },
+        location: { bucket: "dpp", objectName: "x" },
       } as any);
       mockModel.findOneAndUpdate.mockResolvedValue(makeMediaDoc());
 
@@ -275,10 +275,10 @@ describe("mediaService", () => {
       mockMinioClient.bucketExists.mockResolvedValue(true);
       const fakeStream = {} as any;
       mockMinioClient.getObject.mockResolvedValue(fakeStream);
-      const res = await service.getFileStream("bucket-default", "file", ["a"]);
+      const res = await service.getFileStream("dpp", "file", ["a"]);
       expect(res).toBe(fakeStream);
       expect(mockMinioClient.getObject).toHaveBeenCalledWith(
-        "bucket-default",
+        "dpp",
         "a/file",
       );
     });

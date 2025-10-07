@@ -8,6 +8,7 @@ import {
   MongooseModule,
 } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
 import { MongooseTestingModule } from "@open-dpp/testing";
 import { TraceabilityEventType } from "../domain/traceability-event-type.enum";
 import { TraceabilityEventWrapper } from "../domain/traceability-event-wrapper";
@@ -27,6 +28,7 @@ describe("traceabilityEventsService", () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {

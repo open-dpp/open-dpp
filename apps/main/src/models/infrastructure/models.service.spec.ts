@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { ignoreIds, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
@@ -38,6 +39,7 @@ describe("modelsService", () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {

@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
 import { KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import { DataSource } from "typeorm";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
@@ -47,6 +48,7 @@ describe("marketplaceService", () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {

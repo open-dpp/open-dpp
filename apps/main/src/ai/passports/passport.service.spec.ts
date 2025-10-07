@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { ConfigService } from "@nestjs/config";
 import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
 import { Passport } from "./domain/passport";
 import { PassportService } from "./passport.service";
 
@@ -23,7 +24,7 @@ describe("passportService", () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [],
+      imports: [EnvModule.forRoot()],
       providers: [
         PassportService,
         {

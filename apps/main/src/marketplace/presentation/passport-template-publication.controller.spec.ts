@@ -7,6 +7,7 @@ import { APP_GUARD, Reflector } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { PermissionModule } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
 import { getApp, KeycloakAuthTestingGuard, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import request from "supertest";
 import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
@@ -38,6 +39,7 @@ describe("passportTemplateController", () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         TypeOrmTestingModule,
         TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         MongooseTestingModule,

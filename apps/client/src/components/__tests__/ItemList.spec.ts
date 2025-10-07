@@ -4,6 +4,7 @@ import { createPinia } from "pinia";
 import { describe, expect } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 import { routes } from "../../router";
+import { i18n } from "../../translations/i18n.ts";
 import ItemList from "../items/ItemList.vue";
 
 const pinia = createPinia();
@@ -33,7 +34,7 @@ describe("itemList.vue", () => {
         items,
       },
       global: {
-        plugins: [pinia, router],
+        plugins: [pinia, router, i18n],
       },
     });
     expect(screen.getByText("Artikelpässe")).toBeTruthy();
@@ -72,7 +73,7 @@ describe("itemList.vue", () => {
         items,
       },
       global: {
-        plugins: [pinia, router],
+        plugins: [pinia, router, i18n],
       },
     });
     const createButton = screen.getByRole("button", {

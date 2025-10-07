@@ -1,11 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { INestApplication } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { APP_GUARD, Reflector } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { AuthContext, PermissionModule } from "@open-dpp/auth";
+import { EnvModule, EnvService } from "@open-dpp/env";
 import getKeycloakAuthToken, { getApp, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import { json } from "express";
 import request from "supertest";
@@ -58,7 +58,7 @@ describe("aasConnectionController", () => {
   let modelsService: ModelsService;
   let itemsSevice: ItemsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
-  let configService: ConfigService;
+  let configService: EnvService;
 
   const authContext = new AuthContext();
   authContext.keycloakUser = {
@@ -78,6 +78,7 @@ describe("aasConnectionController", () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         TypeOrmTestingModule,
         TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         MongooseTestingModule,
@@ -174,7 +175,7 @@ describe("aasConnectionController", () => {
     uniqueProductIdentifierService = moduleRef.get(
       UniqueProductIdentifierService,
     );
-    configService = moduleRef.get(ConfigService);
+    configService = moduleRef.get(EnvService);
 
     await app.init();
   });
@@ -236,7 +237,7 @@ describe("aasConnectionController", () => {
       .post(
         `/organizations/${organizationId}/integration/aas/connections/${aasMapping.id}/items`,
       )
-      .set("API_TOKEN", configService.get("API_TOKEN")!)
+      .set("API_TOKEN", configService.get("OPEN_DPP_AAS_TOKEN")!)
       .send({
         ...semitrailerTruckAas,
         assetAdministrationShells: [

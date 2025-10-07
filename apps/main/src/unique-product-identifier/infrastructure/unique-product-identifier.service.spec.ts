@@ -23,7 +23,7 @@ describe("uniqueProductIdentifierService", () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        EnvModule,
+        EnvModule.forRoot(),
         TypeOrmTestingModule,
         MongooseTestingModule,
         TraceabilityEventsModule,

@@ -2,6 +2,7 @@ import type { TestingModule } from "@nestjs/testing";
 import { expect } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
 import { MongooseTestingModule } from "@open-dpp/testing";
 import {
   DppEventSchema,
@@ -16,6 +17,7 @@ describe("dppEventsController", () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {

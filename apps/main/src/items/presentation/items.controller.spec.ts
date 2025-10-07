@@ -5,6 +5,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { AuthContext, PermissionModule } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
 import getKeycloakAuthToken, { createKeycloakUserInToken, getApp, ignoreIds, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import request from "supertest";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
@@ -157,6 +158,7 @@ describe("itemsController", () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         TypeOrmTestingModule,
         TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         PermissionModule,

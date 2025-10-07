@@ -8,9 +8,10 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
-import { ConfigModule, ConfigService } from "@nestjs/config";
+import { ConfigService } from "@nestjs/config";
 import { Test } from "@nestjs/testing";
 import { AuthContext } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
 import { createKeycloakUserInToken } from "@open-dpp/testing";
 import { Organization } from "../../organizations/domain/organization";
 import { User } from "../../users/domain/user";
@@ -54,7 +55,7 @@ describe("keycloakResourcesService", () => {
         if (key === "KEYCLOAK_NETWORK_URL")
           return "http://localhost:8080";
         if (key === "KEYCLOAK_REALM")
-          return "master";
+          return "open-dpp";
         if (key === "KEYCLOAK_ADMIN_USERNAME")
           return "admin";
         if (key === "KEYCLOAK_ADMIN_PASSWORD")
@@ -64,7 +65,7 @@ describe("keycloakResourcesService", () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [HttpModule, ConfigModule],
+      imports: [HttpModule, EnvModule.forRoot()],
       providers: [
         KeycloakResourcesService,
         {
@@ -106,7 +107,7 @@ describe("keycloakResourcesService", () => {
       expect(mockKcAdminClient.clients.createResource).toHaveBeenCalledWith(
         {
           id: "backend",
-          realm: "master",
+          realm: "open-dpp",
         },
         {
           name: resourceName,
@@ -141,7 +142,7 @@ describe("keycloakResourcesService", () => {
       expect(mockKcAdminClient.auth).toHaveBeenCalled();
       expect(mockKcAdminClient.groups.create).toHaveBeenCalledWith({
         name: `organization-${organization.id}`,
-        realm: "master",
+        realm: "open-dpp",
       });
 
       // The addToGroup would be called for members
@@ -172,13 +173,13 @@ describe("keycloakResourcesService", () => {
       expect(mockKcAdminClient.users.addToGroup).toHaveBeenCalledWith({
         id: creatorId,
         groupId: "group-id",
-        realm: "master",
+        realm: "open-dpp",
       });
 
       expect(mockKcAdminClient.users.addToGroup).toHaveBeenCalledWith({
         id: ownerId,
         groupId: "group-id",
-        realm: "master",
+        realm: "open-dpp",
       });
     });
   });
@@ -192,7 +193,7 @@ describe("keycloakResourcesService", () => {
       expect(mockKcAdminClient.auth).toHaveBeenCalled();
       expect(mockKcAdminClient.groups.del).toHaveBeenCalledWith({
         id: groupId,
-        realm: "master",
+        realm: "open-dpp",
       });
     });
   });
@@ -305,7 +306,7 @@ describe("keycloakResourcesService", () => {
       expect(mockKcAdminClient.users.addToGroup).toHaveBeenCalledWith({
         id: "user-id",
         groupId: "found-group-id",
-        realm: "master",
+        realm: "open-dpp",
       });
     });
   });
@@ -322,7 +323,7 @@ describe("keycloakResourcesService", () => {
 
       expect(mockKcAdminClient.auth).toHaveBeenCalled();
       expect(mockKcAdminClient.users.find).toHaveBeenCalledWith({
-        realm: "master",
+        realm: "open-dpp",
       });
       expect(result).toEqual(mockUsers);
     });
@@ -414,7 +415,7 @@ describe("keycloakResourcesService", () => {
 
       expect(mockKcAdminClient.auth).toHaveBeenCalled();
       expect(mockKcAdminClient.users.create).toHaveBeenCalledWith({
-        realm: "master",
+        realm: "open-dpp",
         username: user.email,
         email: user.email,
         emailVerified: true,

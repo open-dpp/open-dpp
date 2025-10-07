@@ -46,7 +46,7 @@ describe("itemsService", () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
-        EnvModule,
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {

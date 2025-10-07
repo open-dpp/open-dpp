@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { MongooseTestingModule } from "@open-dpp/testing";
 import { PassportTemplatePublication } from "../domain/passport-template-publication";
@@ -24,6 +25,7 @@ describe("passportTemplateService", () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {

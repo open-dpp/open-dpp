@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { MongooseTestingModule } from "@open-dpp/testing";
 import { Connection } from "mongoose";
@@ -23,6 +24,7 @@ describe("aiConfigurationService", () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {

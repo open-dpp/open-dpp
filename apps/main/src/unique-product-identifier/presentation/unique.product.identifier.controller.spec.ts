@@ -6,6 +6,7 @@ import { APP_GUARD, Reflector } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { ALLOW_SERVICE_ACCESS, AuthContext, PermissionModule } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
 import getKeycloakAuthToken, {
   createKeycloakUserInToken,
   KeycloakAuthTestingGuard,
@@ -17,8 +18,8 @@ import request from "supertest";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { Item } from "../../items/domain/item";
 import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
-import { ItemsService } from "../../items/infrastructure/items.service";
 
+import { ItemsService } from "../../items/infrastructure/items.service";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
@@ -36,6 +37,7 @@ import {
   UniqueProductIdentifierSchema,
 } from "../infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
+import { UniqueProductIdentifierApplicationService } from "./unique.product.identifier.application.service";
 import { UniqueProductIdentifierController } from "./unique.product.identifier.controller";
 
 describe("uniqueProductIdentifierController", () => {
@@ -58,6 +60,7 @@ describe("uniqueProductIdentifierController", () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         TypeOrmTestingModule,
         TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         PermissionModule,
@@ -87,6 +90,7 @@ describe("uniqueProductIdentifierController", () => {
         KeycloakResourcesService,
         ModelsService,
         UniqueProductIdentifierService,
+        UniqueProductIdentifierApplicationService,
         ItemsService,
         TemplateService,
         {

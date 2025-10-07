@@ -5,6 +5,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { AuthContext, PermissionModule } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
 import getKeycloakAuthToken, { createKeycloakUserInToken, getApp, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import request from "supertest";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
@@ -34,8 +35,8 @@ import { UserEntity } from "../../users/infrastructure/user.entity";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { DataFieldDraft } from "../domain/data-field-draft";
 import { SectionDraft } from "../domain/section-draft";
-import { MoveDirection, TemplateDraft } from "../domain/template-draft";
 
+import { MoveDirection, TemplateDraft } from "../domain/template-draft";
 import { dataFieldDraftDbPropsFactory } from "../fixtures/data-field-draft.factory";
 import { sectionDraftDbPropsFactory } from "../fixtures/section-draft.factory";
 import {
@@ -69,6 +70,7 @@ describe("templateDraftController", () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         TypeOrmTestingModule,
         TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         MongooseTestingModule,

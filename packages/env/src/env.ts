@@ -4,7 +4,7 @@ const asBoolean = z.string().transform(val => val.toLowerCase() === "true");
 
 const envSchema = z.object({
   // Misc
-  NODE_ENV: z.coerce.string().min(16).optional(),
+  NODE_ENV: z.coerce.string().optional(),
   // Common
   OPEN_DPP_PORT: z.coerce.number().max(65535).min(0).optional().default(3000),
   OPEN_DPP_URL: z.url(),

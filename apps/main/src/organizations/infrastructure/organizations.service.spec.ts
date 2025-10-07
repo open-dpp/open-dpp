@@ -7,6 +7,7 @@ import {
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { AuthContext, PermissionModule } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { createKeycloakUserInToken, KeycloakResourcesServiceTesting, TypeOrmTestingModule } from "@open-dpp/testing";
 import { DataSource, Repository } from "typeorm";
@@ -35,6 +36,7 @@ describe("organizationsService", () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         TypeOrmTestingModule,
         TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         PermissionModule,

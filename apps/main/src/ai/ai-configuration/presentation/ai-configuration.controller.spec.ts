@@ -4,6 +4,7 @@ import { APP_GUARD, Reflector } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { PermissionModule } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
 import getKeycloakAuthToken, { getApp, KeycloakAuthTestingGuard, MongooseTestingModule } from "@open-dpp/testing";
 import { Connection } from "mongoose";
@@ -36,6 +37,7 @@ describe("aiConfigurationController", () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {

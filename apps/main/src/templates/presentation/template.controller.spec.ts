@@ -7,6 +7,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { AuthContext, PermissionModule } from "@open-dpp/auth";
+import { EnvModule } from "@open-dpp/env";
 import getKeycloakAuthToken, { createKeycloakUserInToken, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
 import request from "supertest";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
@@ -30,6 +31,7 @@ describe("templateController", () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
