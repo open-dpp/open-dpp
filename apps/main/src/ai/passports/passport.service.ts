@@ -1,15 +1,15 @@
 import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { DppApiClient } from "@open-dpp/api-client";
+import { EnvService } from "@open-dpp/env";
 import { Passport } from "./domain/passport";
 
 @Injectable()
 export class PassportService {
   private readonly dppApiClient: DppApiClient;
 
-  constructor(configService: ConfigService) {
-    const baseURL = configService.get<string>("DPP_API_URL");
-    const serviceToken = configService.get<string>("API_SERVICE_TOKEN");
+  constructor(configService: EnvService) {
+    const baseURL = configService.get("OPEN_DPP_URL");
+    const serviceToken = configService.get("OPEN_DPP_SERVICE_TOKEN");
     if (!baseURL) {
       throw new Error("DPP_API_URL is not set");
     }

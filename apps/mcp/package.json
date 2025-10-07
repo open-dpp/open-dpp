@@ -24,11 +24,11 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.2",
     "@nestjs/common": "^11.1.3",
-    "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.3",
     "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.1.3",
     "@open-dpp/api-client": "^2.1.4",
+    "@open-dpp/env": "workspace:*",
     "@rekog/mcp-nest": "^1.8.0",
     "zod": "^3.25.76"
   },

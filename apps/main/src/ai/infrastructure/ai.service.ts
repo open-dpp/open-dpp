@@ -3,15 +3,15 @@ import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { ChatMistralAI } from "@langchain/mistralai";
 import { ChatOllama } from "@langchain/ollama";
 import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { AiProvider } from "@open-dpp/api-client";
+import { EnvService } from "@open-dpp/env";
 import { AiProvider_TYPE } from "../ai-configuration/domain/ai-configuration";
 
 @Injectable()
 export class AiService {
-  private readonly configService: ConfigService;
+  private readonly configService: EnvService;
 
-  constructor(configService: ConfigService) {
+  constructor(configService: EnvService) {
     this.configService = configService;
   }
 

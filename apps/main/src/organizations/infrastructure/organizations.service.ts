@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
+import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { DataSource, Equal, Repository } from "typeorm";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
@@ -25,6 +25,7 @@ export class OrganizationsService {
   constructor(
     @InjectRepository(OrganizationEntity)
     organizationRepository: Repository<OrganizationEntity>,
+    @InjectDataSource()
     dataSource: DataSource,
     keycloakResourcesService: KeycloakResourcesService,
     usersService: UsersService,

@@ -9,6 +9,7 @@ import { AiConfigurationController } from "./ai-configuration/presentation/ai-co
 import { ChatService } from "./chat.service";
 import { AiService } from "./infrastructure/ai.service";
 import { McpClientService } from "./mcp-client/mcp-client.service";
+import { PassportService } from "./passports/passport.service";
 import { ChatGateway } from "./presentation/chat.gateway";
 
 @Module({
@@ -30,6 +31,7 @@ import { ChatGateway } from "./presentation/chat.gateway";
     AiConfigurationService,
     AiService,
     McpClientService,
+    PassportService,
   ],
   exports: [AiService, McpClientService],
 })

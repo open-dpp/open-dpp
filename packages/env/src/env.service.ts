@@ -6,8 +6,10 @@ import { ConfigService } from "@nestjs/config";
 export class EnvService {
   private configService: ConfigService<Env, true>;
 
-  constructor(configService: ConfigService<Env, true>) {
-    this.configService = configService;
+  constructor(
+    configService: ConfigService,
+  ) {
+    this.configService = configService as unknown as ConfigService<Env, true>;
   }
 
   get<T extends keyof Env>(key: T) {

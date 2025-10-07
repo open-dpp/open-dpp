@@ -1,6 +1,6 @@
 import type { OnApplicationBootstrap } from "@nestjs/common";
 import { Injectable, Logger } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+import { EnvService } from "@open-dpp/env";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { UsersService } from "../../users/infrastructure/users.service";
@@ -14,13 +14,13 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
   private readonly usersService: UsersService;
   private readonly keycloakResourcesServices: KeycloakResourcesService;
   private readonly organizationsService: OrganizationsService;
-  private readonly configService: ConfigService;
+  private readonly configService: EnvService;
 
   constructor(
     usersService: UsersService,
     keycloakResourcesServices: KeycloakResourcesService,
     organizationsService: OrganizationsService,
-    configService: ConfigService,
+    configService: EnvService,
   ) {
     this.usersService = usersService;
     this.keycloakResourcesServices = keycloakResourcesServices;

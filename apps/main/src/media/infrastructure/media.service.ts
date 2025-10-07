@@ -2,8 +2,8 @@ import type { Model } from "mongoose";
 import type { Buffer } from "node:buffer";
 import { randomUUID } from "node:crypto";
 import { Injectable } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { InjectModel } from "@nestjs/mongoose";
+import { EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { join } from "lodash";
 import * as Minio from "minio";
@@ -23,11 +23,11 @@ export class MediaService {
   private readonly bucketNameProfilePictures: string;
   private readonly pathDelimiter = "/";
 
-  private readonly configService: ConfigService;
+  private readonly configService: EnvService;
   private mediaDoc: Model<MediaDoc>;
 
   constructor(
-    configService: ConfigService,
+    configService: EnvService,
     @InjectModel(MediaDoc.name)
     mediaDoc: Model<MediaDoc>,
   ) {

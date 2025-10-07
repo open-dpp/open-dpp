@@ -1,8 +1,10 @@
-import { z } from 'zod'
+import { z } from "zod";
 
-const asBoolean = z.string().transform(val => val.toLowerCase() === 'true')
+const asBoolean = z.string().transform(val => val.toLowerCase() === "true");
 
 const envSchema = z.object({
+  // Misc
+  NODE_ENV: z.coerce.string().min(16).optional(),
   // Common
   OPEN_DPP_PORT: z.coerce.number().max(65535).min(0).optional().default(3000),
   OPEN_DPP_URL: z.url(),
@@ -42,31 +44,33 @@ const envSchema = z.object({
   // ClamAV
   OPEN_DPP_CLAMAV_URL: z.coerce.string(),
   OPEN_DPP_CLAMAV_PORT: z.coerce.number().max(65535).min(0),
+  // MCP
+  OPEN_DPP_MCP_PORT: z.coerce.number().max(65535).min(0),
   // Misc
   OPEN_DPP_BUILD_API_DOC: asBoolean.optional().default(false),
   OPEN_DPP_JSON_LIMIT_DEFAULT: z.coerce
     .string()
     .or(z.number())
     .optional()
-    .default('10mb'),
+    .default("10mb"),
   OPEN_DPP_JSON_LIMIT_INTEGRATION: z.coerce
     .string()
     .or(z.number())
     .optional()
-    .default('50mb'),
-})
+    .default("50mb"),
+});
 
 export function validateEnv(env: Record<string, any>): Record<string, any> {
-  const result = envSchema.safeParse(env)
+  const result = envSchema.safeParse(env);
 
   if (result.error) {
     throw new Error(
       `Environment is not properly configured: \n${
         z.prettifyError(result.error)}`,
-    )
+    );
   }
 
-  return result.data
+  return result.data;
 }
 
-export type Env = z.infer<typeof envSchema>
+export type Env = z.infer<typeof envSchema>;

@@ -1,13 +1,12 @@
 import path, { join } from "node:path";
 import { HttpModule } from "@nestjs/axios";
 import { Module } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthModule, KeycloakAuthGuard } from "@open-dpp/auth";
-import { EnvModule, EnvService, validateEnv } from "@open-dpp/env";
+import { EnvModule, EnvService } from "@open-dpp/env";
 import { AiConfigurationModule } from "./ai/ai-configuration/ai-configuration.module";
 import { AiModule } from "./ai/ai.module";
 import { ChatService } from "./ai/chat.service";
@@ -33,12 +32,7 @@ import { UsersModule } from "./users/users.module";
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      validate: env => validateEnv(env),
-      isGlobal: true,
-      expandVariables: true,
-    }),
-    EnvModule,
+    EnvModule.forRoot(),
     MongooseModule.forRootAsync({
       imports: [EnvModule],
       useFactory: (configService: EnvService) => ({

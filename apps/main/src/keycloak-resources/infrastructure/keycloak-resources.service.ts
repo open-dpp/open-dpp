@@ -10,17 +10,17 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+import { EnvService } from "@open-dpp/env";
 
 @Injectable()
 export class KeycloakResourcesService {
-  private configService: ConfigService;
+  private configService: EnvService;
 
   private readonly logger = new Logger(KeycloakResourcesService.name);
   private readonly kcAdminClient;
   private readonly realm: string;
 
-  constructor(configService: ConfigService) {
+  constructor(configService: EnvService) {
     this.configService = configService;
     this.kcAdminClient = new KcAdminClient({
       baseUrl: this.configService.get("OPEN_DPP_KEYCLOAK_URL"),
