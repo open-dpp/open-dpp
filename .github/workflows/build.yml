@@ -87,8 +87,6 @@ jobs:
       # Step 2: Install pnpm
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       # Step 3: Set up Node.js
       - name: Set up Node.js
@@ -163,7 +161,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           target: production
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-production.outputs.tags }}
@@ -176,7 +174,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           target: mcpserver
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-mcp.outputs.tags }}
