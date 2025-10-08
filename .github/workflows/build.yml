@@ -36,6 +36,7 @@ jobs:
     permissions:
       contents: read
     env:
+      NODE_VERSION: 24
       # Common
       OPEN_DPP_PORT: "3000"
       OPEN_DPP_MCP_PORT: "3001"
@@ -83,15 +84,18 @@ jobs:
         run: |
           docker compose -f docker-compose-test.yml up -d
 
-      # Step 2: Set up Node.js
+      # Step 2: Install pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      # Step 3: Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-
-      # Step 3: Install pnpm
-      - name: Install pnpm
-        run: npm install -g pnpm
+          cache: "pnpm"
 
       # Step 4: Install dependencies
       - name: Install dependencies
