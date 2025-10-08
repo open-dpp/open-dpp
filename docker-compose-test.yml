@@ -1,16 +1,16 @@
 services:
-  api-db:
+  api-db-test:
     image: postgres:17-alpine
     ports:
       - ${OPEN_DPP_DB_PORT}:5432
     volumes:
-      - api_db:/var/lib/postgresql/data/
+      - api_db_test:/var/lib/postgresql/data/
     environment:
       - POSTGRES_USER=${OPEN_DPP_DB_USER}
       - POSTGRES_PASSWORD=${OPEN_DPP_DB_PASSWORD}
       - POSTGRES_DB=${OPEN_DPP_DB_DATABASE}
 
-  api-mongo-db:
+  api-mongo-db-test:
     image: mongo:6.0
     logging:
       options:
@@ -18,14 +18,14 @@ services:
     ports:
       - ${OPEN_DPP_MONGODB_PORT}:27017
     volumes:
-      - mongo_db:/data/db
-      - mongo_config:/data/configdb
+      - mongo_db_test:/data/db
+      - mongo_config_test:/data/configdb
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${OPEN_DPP_MONGODB_USER}
       - MONGO_INITDB_ROOT_PASSWORD=${OPEN_DPP_MONGODB_PASSWORD}
       - MONGO_INITDB_DATABASE=${OPEN_DPP_MONGODB_DATABASE}
 
-  mcp-server:
+  mcp-server-test:
     image: ghcr.io/open-dpp/mcp-server:main
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -36,6 +36,6 @@ services:
       - PORT=3000
 
 volumes:
-  api_db:
-  mongo_db:
-  mongo_config:
+  api_db_test:
+  mongo_db_test:
+  mongo_config_test:
