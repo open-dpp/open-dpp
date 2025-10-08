@@ -14,6 +14,7 @@ export enum TimePeriod {
   MONTH = 'month',
   WEEK = 'week',
   DAY = 'day',
+  HOUR = 'hour',
 }
 
 @Injectable()

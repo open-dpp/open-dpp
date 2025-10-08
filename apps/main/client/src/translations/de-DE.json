@@ -204,7 +204,10 @@
     "errorCreate": "Erstellen der Verbindung fehlgeschlagen"
   },
   "analytics": {
-    "analytics": "Auswertungen"
+    "analytics": "Auswertungen",
+    "loadingMetricError": "Laden der Analyse fehlgeschlagen",
+    "passportSelection": "Passauswahl",
+    "timePeriodSelection": "Ansicht"
   },
   "members": {
     "members": "Mitglieder"

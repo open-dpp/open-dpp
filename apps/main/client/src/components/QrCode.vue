@@ -8,7 +8,7 @@
         <canvas ref="canvas" class="mx-auto h-12 w-12 text-gray-400" />
       </div>
       <div class="flex flex-row gap-1 px-4 py-4 sm:px-6 text-blue-600">
-        <router-link :to="props.link" class="mt-2 text-sm font-semibold"
+        <router-link :to="relativePath" class="mt-2 text-sm font-semibold"
           >{{ props.link }}
         </router-link>
         <ArrowTopRightOnSquareIcon class="w-5 mt-auto" />
@@ -19,7 +19,7 @@
 
 <script lang="ts" setup>
 import { toCanvas } from 'qrcode';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/16/solid';
 import { useI18n } from 'vue-i18n';
 
@@ -27,10 +27,12 @@ const { t } = useI18n();
 
 const canvas = ref<HTMLCanvasElement>();
 const props = defineProps<{
-  content: string;
   link: string;
 }>();
+
+const relativePath = computed(() => new URL(props.link).pathname);
+
 onMounted(async () => {
-  toCanvas(canvas.value, props.content, () => {});
+  toCanvas(canvas.value, props.link, () => {});
 });
 </script>

@@ -1,30 +1,14 @@
 <template>
   <div class="flex items-center gap-2">
     <Combobox
-      v-model="selectedMeasurementType"
-      label-position="left"
-      label="Metrik"
-      :options="measurementTypeOptions"
-    />
-    <Combobox
       v-model="selectedModel"
       label-position="left"
-      label="Modellpass"
+      :label="t('analytics.passportSelection')"
       :options="modelOptions"
-    />
-    <div v-if="dataFieldOptions && dataFieldOptions.length === 0">
-      Kein numerisches Feld vorhanden
-    </div>
-    <Combobox
-      v-else-if="dataFieldOptions && dataFieldOptions.length > 0"
-      v-model="selectedDataField"
-      label-position="left"
-      label="Datenfeld"
-      :options="dataFieldOptions"
     />
     <Select
       label-position="left"
-      label="Ansicht"
+      :label="t('analytics.timePeriodSelection')"
       :options="timePeriodOptions"
       v-model="selectedTimePeriod"
     />
@@ -37,50 +21,34 @@
 import BaseButton from '../basics/BaseButton.vue';
 import Combobox from '../basics/Combobox.vue';
 import { computed, onMounted, ref, watch } from 'vue';
-import {
-  DataFieldType,
-  MeasurementType,
-  TimePeriod,
-  DataSectionDto,
-} from '@open-dpp/api-client';
+import { MeasurementType, TimePeriod } from '@open-dpp/api-client';
 import { useAnalyticsStore } from '../../stores/analytics';
 import { useModelsStore } from '../../stores/models';
 import { Option } from '../../lib/combobox';
-import apiClient from '../../lib/api-client';
 import { VIEW_ROOT_URL } from '../../const';
 import Select from '../basics/Select.vue';
 import { z } from 'zod/v4';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const modelStore = useModelsStore();
 const analyticsStore = useAnalyticsStore();
 
-const measurementTypeOptions = [
-  {
-    id: MeasurementType.PAGE_VIEWS,
-    label: 'Seitenaufrufe',
-  },
-  {
-    id: MeasurementType.FIELD_AGGREGATE,
-    label: 'Datenfeldwert aggregieren',
-  },
-];
-const selectedMeasurementType = ref<Option | null>(null);
-
 const timePeriodOptions = [
   {
-    id: TimePeriod.DAY,
+    id: TimePeriod.HOUR,
     label: 'Tagesansicht',
   },
   {
-    id: TimePeriod.WEEK,
+    id: TimePeriod.DAY,
     label: 'Wochensansicht',
   },
   {
-    id: TimePeriod.MONTH,
+    id: TimePeriod.WEEK,
     label: 'Monatsansicht',
   },
   {
-    id: TimePeriod.YEAR,
+    id: TimePeriod.MONTH,
     label: 'Jahresansicht',
   },
 ];
@@ -93,53 +61,39 @@ const modelOptions = computed(() =>
   modelStore.models.map((m) => ({ label: `${m.name}`, id: m.id })),
 );
 const selectedModel = ref<Option | null>(null);
-
-const selectedDataField = ref<Option | null>(null);
+const selectedTemplate = ref<string | null>(null);
 
 const isQueryValid = computed(() => {
-  if (!selectedMeasurementType.value || !selectedModel.value) return false;
-
-  if (selectedMeasurementType.value.id === MeasurementType.FIELD_AGGREGATE) {
-    return !!selectedDataField.value;
-  }
-
-  return true;
+  return selectedModel.value;
 });
 
 watch(
-  [() => selectedMeasurementType.value?.id, () => selectedModel.value?.id], // The store property to watch
-  async ([newType, newModelId]) => {
-    if (newType === MeasurementType.FIELD_AGGREGATE && newModelId) {
+  () => selectedModel.value?.id, // The store property to watch
+  async (newModelId) => {
+    if (newModelId) {
       const model = await modelStore.getModelById(newModelId);
-      const response = await apiClient.dpp.templates.getById(model.templateId);
-      dataFieldOptions.value = response.data.sections
-        .map((s: DataSectionDto) =>
-          s.dataFields
-            .filter((d) => d.type === DataFieldType.NUMERIC_FIELD)
-            .map((f) => ({ label: f.name, id: f.id })),
-        )
-        .flat();
-      selectedDataField.value = null;
-    } else {
       dataFieldOptions.value = null;
+      selectedTemplate.value = model.templateId;
     }
   },
   { immediate: true },
 );
+
+const getViewDomain = () => {
+  const url = new URL(VIEW_ROOT_URL);
+  return `${url.protocol}//${url.hostname}`;
+};
 
 const applyQuery = async () => {
   if (isQueryValid.value) {
     const metricQuery = {
       startDate: new Date('2025-01-01T00:00:00Z'),
       endDate: new Date('2025-12-01T00:00:00Z'),
-      templateId: 'c58122ed-962f-48e7-8727-fecae253a270',
+      templateId: selectedTemplate.value!,
       modelId: selectedModel.value!.id,
-      valueKey:
-        selectedMeasurementType.value!.id === MeasurementType.PAGE_VIEWS
-          ? VIEW_ROOT_URL
-          : selectedDataField.value!.id,
-      type: z.enum(MeasurementType).parse(selectedMeasurementType.value!.id),
-      period: z.enum(TimePeriod).parse(selectedTimePeriod.value.id),
+      valueKey: getViewDomain(),
+      type: MeasurementType.PAGE_VIEWS,
+      period: z.enum(TimePeriod).parse(selectedTimePeriod.value!.id),
     };
     await analyticsStore.queryMetric(metricQuery);
   }

@@ -204,7 +204,10 @@
     "errorCreate": "Failed to create connection"
   },
   "analytics": {
-    "analytics": "Analytics"
+    "analytics": "Analytics",
+    "loadingMetricError": "Failed to load the analysis",
+    "passportSelection": "Passport selection",
+    "timePeriodSelection": "View"
   },
   "members": {
     "members": "Members"

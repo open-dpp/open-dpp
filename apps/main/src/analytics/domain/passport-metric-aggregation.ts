@@ -8,8 +8,8 @@ type PassportMetricAggregationProps = {
   templateId: string;
   modelId?: string;
   organizationId: string;
-  startDate?: Date;
-  endDate?: Date;
+  startDate: Date;
+  endDate: Date;
 };
 
 export class PassportMetricAggregation {
@@ -19,8 +19,8 @@ export class PassportMetricAggregation {
     private readonly templateId: string,
     private readonly modelId: string | null,
     private readonly organizationId: string,
-    private readonly startDate: Date | null,
-    private readonly endDate: Date | null,
+    private readonly startDate: Date,
+    private readonly endDate: Date,
   ) {}
   static create(
     data: PassportMetricAggregationProps,
@@ -31,8 +31,8 @@ export class PassportMetricAggregation {
       data.templateId,
       data.modelId ?? null,
       data.organizationId,
-      data.startDate ?? null,
-      data.endDate ?? null,
+      data.startDate,
+      data.endDate,
     );
   }
 
@@ -47,14 +47,12 @@ export class PassportMetricAggregation {
       matchStage['source.modelId'] = this.modelId;
     }
 
-    if (this.startDate || this.endDate) {
-      matchStage['date'] = {};
-      if (this.startDate) {
-        matchStage['date']['$gte'] = this.startDate;
-      }
-      if (this.endDate) {
-        matchStage['date']['$lte'] = this.endDate;
-      }
+    matchStage['date'] = {};
+    if (this.startDate) {
+      matchStage['date']['$gte'] = this.startDate;
+    }
+    if (this.endDate) {
+      matchStage['date']['$lte'] = this.endDate;
     }
 
     return [
@@ -126,6 +124,23 @@ export class PassportMetricAggregation {
           _id: 0, // Exclude the _id field
           datetime: '$_id', // Create a new field 'date' with the value of _id
           sum: 1, // Keep the sum field
+        },
+      },
+      {
+        $densify: {
+          field: 'datetime',
+          range: {
+            step: 1,
+            unit: timePeriod,
+            bounds: [this.startDate, this.endDate],
+          },
+        },
+      },
+      {
+        $set: {
+          sum: {
+            $ifNull: ['$sum', 0], // Fill missing values with 0
+          },
         },
       },
       {

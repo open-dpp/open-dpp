@@ -10,16 +10,20 @@ import { watch } from 'vue';
 import ViewInformation from '../../components/presentation-components/ViewInformation.vue';
 import { useProductPassportStore } from '../../stores/product-passport';
 import apiClient from '../../lib/api-client';
+import { useAnalyticsStore } from '../../stores/analytics';
 
 const route = useRoute();
 const router = useRouter();
 
 const viewStore = useProductPassportStore();
+const analyticsStore = useAnalyticsStore();
 
 watch(
   () => route.params.permalink,
   async () => {
     const permalink = String(route.params.permalink);
+    await analyticsStore.addPageView();
+
     try {
       const response = await apiClient.dpp.productPassports.getById(permalink);
 

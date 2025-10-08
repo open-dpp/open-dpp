@@ -11,5 +11,8 @@ const apiClient = new OpenDppClient({
   agentServer: {
     baseURL: AGENT_SERVER_URL,
   },
+  analytics: {
+    baseURL: API_URL,
+  },
 });
 export default apiClient;
