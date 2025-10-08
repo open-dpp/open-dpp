@@ -103,7 +103,11 @@ jobs:
       - name: Build project
         run: pnpm build
 
-      # Step 6: Wait for Databases to be ready
+      # Step 6: Build testing support package
+      - name: Build project
+        run: cd packages/testing && pnpm build
+
+      # Step 7: Wait for Databases to be ready
       - name: Wait for Databases to be ready
         run: |
           echo "Waiting for MongoDB to start..."
@@ -111,7 +115,7 @@ jobs:
             sleep 1
           done
 
-      # Step 7: Run tests
+      # Step 8: Run tests
       - name: Run tests
         run: pnpm test:ci
 
