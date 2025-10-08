@@ -26,6 +26,7 @@
     "@nestjs/axios": "^4.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
+    "@open-dpp/env": "workspace:*",
     "axios": "^1.12.2",
     "jsonwebtoken": "^9.0.2",
     "jwks-rsa": "^3.2.0",

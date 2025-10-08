@@ -7,13 +7,10 @@
   "license": "ISC",
   "scripts": {
     "build": "nest build",
-    "postbuild": "pnpm run copy:assets",
-    "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/apps/main/main",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "test": "jest",
@@ -22,7 +19,6 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config apps/main/test/jest-e2e.json",
-    "copy:assets": "cpx 'apps/client/dist/**' 'dist/apps/main/client/dist'",
     "check-ts": "tsc --noEmit"
   },
   "dependencies": {
@@ -96,14 +92,24 @@
   "jest": {
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
-      "^.+\\.(t|j)s$": ["@swc/jest", {
-        "jsc": {
-          "target": "es2022",
-          "parser": { "syntax": "typescript", "decorators": true },
-          "transform": { "decoratorMetadata": true }
-        },
-        "module": { "type": "commonjs" }
-      }]
+      "^.+\\.(t|j)s$": [
+        "@swc/jest",
+        {
+          "jsc": {
+            "target": "es2022",
+            "parser": {
+              "syntax": "typescript",
+              "decorators": true
+            },
+            "transform": {
+              "decoratorMetadata": true
+            }
+          },
+          "module": {
+            "type": "commonjs"
+          }
+        }
+      ]
     },
     "transformIgnorePatterns": [
       "node_modules/(?!((?:\\.pnpm/.*?/)?(?:@(?:open-dpp|keycloak)|url-join|url-template|camelize-ts|uuid))(?:/|$))"

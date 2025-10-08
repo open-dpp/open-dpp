@@ -2,7 +2,6 @@ packages:
   - apps/*/*
   - apps/*
   - packages/*
-
 onlyBuiltDependencies:
   - '@nestjs/core'
   - '@scarf/scarf'
@@ -15,3 +14,4 @@ onlyBuiltDependencies:
   - msw
   - sharp
   - unrs-resolver
+injectWorkspacePackages: true

@@ -2,10 +2,10 @@ name: Build and push Docker image
 
 on:
   push:
-    branches: [ main ]
-    tags: [ 'v*' ]
+    branches: [main]
+    tags: ["v*"]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -17,7 +17,6 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-
   # lint:
   #   runs-on: ubuntu-latest
   #   steps:
@@ -32,13 +31,14 @@ jobs:
   #     - name: Run linter
   #       run: npm run lint
 
-  test-backend:
+  test:
     runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
       # Common
       OPEN_DPP_PORT: "3000"
+      OPEN_DPP_MCP_PORT: "3001"
       OPEN_DPP_URL: "http://dpp.example.de"
       OPEN_DPP_SERVICE_TOKEN: "test-servivce-token"
       OPEN_DPP_AAS_TOKEN: "test-servivce-token"
@@ -69,6 +69,10 @@ jobs:
       # ClamAV
       OPEN_DPP_CLAMAV_URL: "http://clamav"
       OPEN_DPP_CLAMAV_PORT: "3310"
+      # Frontend
+      KEYCLOAK_DISABLED: "true"
+      VITE_API_ROOT: "http://localhost"
+      VITE_KEYCLOAK_ROOT: "http://localhost"
 
     steps:
       # Step 1: Checkout code
@@ -85,11 +89,19 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      # Step 3: Install dependencies
-      - name: Install dependencies
-        run: npm install
+      # Step 3: Install pnpm
+      - name: Install pnpm
+        run: npm install -g pnpm
 
-      # Step 4: Wait for Databases to be ready
+      # Step 4: Install dependencies
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Step 5: Build project
+      - name: Build project
+        run: pnpm build
+
+      # Step 6: Wait for Databases to be ready
       - name: Wait for Databases to be ready
         run: |
           echo "Waiting for MongoDB to start..."
@@ -97,28 +109,9 @@ jobs:
             sleep 1
           done
 
-      # Step 5: Run tests
+      # Step 7: Run tests
       - name: Run tests
-        run: npm run test
-
-  test-frontend:
-    runs-on: ubuntu-latest
-    env:
-      KEYCLOAK_DISABLED: "true"
-      VITE_API_ROOT: "http://localhost"
-      VITE_KEYCLOAK_ROOT: "http://localhost"
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      - name: Install dependencies
-        run: npm run ui:install
-      - name: Run tests
-        run: npm run ui:test
+        run: pnpm test:ci
 
   build-and-push:
     runs-on: ubuntu-latest
@@ -139,8 +132,8 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Extract Docker metadata
-        id: meta
+      - name: Extract Docker production metadata
+        id: meta-production
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
@@ -150,16 +143,39 @@ jobs:
             type=ref,event=tag
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
-      - name: Build and push
+      - name: Extract Docker mcp metadata
+        id: meta-mcp
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/mcp
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=ref,event=tag
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and push Production
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
-          build-args: |
-            APP_NAME=main
+          target: production
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta-production.outputs.tags }}
+          labels: ${{ steps.meta-production.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push MCP Server
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          target: mcpserver
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-mcp.outputs.tags }}
+          labels: ${{ steps.meta-mcp.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
