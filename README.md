@@ -6,23 +6,52 @@ open-dpp is an open-source platform for managing digital product passports (DPPs
 
 # Local Development
 ## Install dependencies
-
 ```shell
-npm run install:all
+pnpm install
 ```
 
-## Build and run with docker
-
+## Configure environment
 ```shell
-docker build -t ghcr.io/open-dpp/open-dpp .
-docker compose up
+cp .env.dev.example .env.dev
+```
+Replace the secrets and api tokens marked with:
+* change-to-secure-mongo-password
+* change-to-a-secret-key
+* your-mistral-key
+* secure-keycloak-password
+
+## Build
+Build packages
+```shell
+cd packages
+pnpm run build
+```
+Build frontend, backend, mcp
+```shell
+pnpm run build
+```
+
+## Run
+Download all necessary docker images
+```shell
+docker compose -f docker-compose.dev.yml pull
+```
+Start all containers with
+```shell
+docker compose -f docker-compose.dev.yml up
+```
+Run ui with
+```shell
+pnpm run dev
+```
+Run backend with
+```shell
+pnpm run dev:main
 ```
 
 Now navigate to http://open-dpp.localhost:20080
 
 For email verification go to https://mail.open-dpp.localhost:20080.
-
-// TODO: timing issue. open-dpp seems not to wait for keycloak such that the syncing fails for first docker compose up.
 
 ## Run tests
 
