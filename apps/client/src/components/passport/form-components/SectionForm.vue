@@ -12,7 +12,7 @@ import { useNotificationStore } from "../../../stores/notification";
 import {
   usePassportFormStore,
 } from "../../../stores/passport.form";
-import BaseButton from "../../BaseButton.vue";
+import BaseButton from "../../basics/BaseButton.vue";
 import FakeField from "./FakeField.vue";
 import FileField from "./FileField.vue";
 import NumericField from "./NumericField.vue";

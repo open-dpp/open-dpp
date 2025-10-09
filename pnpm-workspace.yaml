@@ -15,3 +15,5 @@ onlyBuiltDependencies:
   - msw
   - sharp
   - unrs-resolver
+
+injectWorkspacePackages: true

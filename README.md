@@ -21,12 +21,6 @@ Replace the secrets and api tokens marked with:
 * secure-keycloak-password
 
 ## Build
-Build packages
-```shell
-cd packages
-pnpm run build
-```
-Build frontend, backend, mcp
 ```shell
 pnpm run build
 ```
@@ -40,40 +34,20 @@ Start all containers with
 ```shell
 docker compose -f docker-compose.dev.yml up
 ```
-Run ui with
+Run application with
 ```shell
 pnpm run dev
 ```
-Run backend with
-```shell
-pnpm run dev:main
-```
-
-Now navigate to http://open-dpp.localhost:20080
-
-For email verification go to https://mail.open-dpp.localhost:20080.
-
+Now navigate to http://localhost:3000
+For email verification go to http://localhost:8025.
 ## Run tests
-
-To run the backend tests you have to run
-
+To run the tests you have to run
 ```shell
-docker compose up
-npm run test
-```
-
-To run frontend unit tests:
-
-```shell
-cd apps/main/client
-npm run test
-```
-
-To run frontend component tests
-
-```shell
-cd apps/main/client
-npm run cypress:headless
+docker compose -f docker-compose-test.yml up
+cd packages/testing
+pnpm build
+cd ../../
+pnpm test
 ```
 
 # Deployment

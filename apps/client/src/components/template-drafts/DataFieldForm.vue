@@ -7,22 +7,21 @@ import {
   GranularityLevel,
 } from "@open-dpp/api-client";
 import { ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { z } from "zod/v4";
 import { useDraftStore } from "../../stores/draft";
 import { useDraftSidebarStore } from "../../stores/draftSidebar";
 import { useModelDialogStore } from "../../stores/modal.dialog";
 import { useNotificationStore } from "../../stores/notification";
-import BaseButton from "../BaseButton.vue";
-import { useI18n } from 'vue-i18n';
+import BaseButton from "../basics/BaseButton.vue";
 
-const { t } = useI18n();
 const props = defineProps<{
   type: DataFieldType;
   parentId?: string;
   parentGranularityLevel?: GranularityLevel;
   id?: string;
 }>();
-
+const { t } = useI18n();
 const formData = ref<Record<string, unknown>>({});
 const formSchema = ref();
 const dataFieldToModify = ref<DataFieldDto | undefined>();
@@ -32,54 +31,54 @@ const modelDialogStore = useModelDialogStore();
 
 function formSchemaFromType(type: DataFieldType, existingGranularityLevel: GranularityLevel | undefined) {
   const granularityOptions = {
-    [GranularityLevel.MODEL]: t('builder.granularity.model'),
-    [GranularityLevel.ITEM]: t('builder.granularity.item'),
+    [GranularityLevel.MODEL]: t("builder.granularity.model"),
+    [GranularityLevel.ITEM]: t("builder.granularity.item"),
   };
   const dataFieldFormkitSchema = [];
 
   switch (type) {
     case DataFieldType.TEXT_FIELD:
       dataFieldFormkitSchema.push({
-        $formkit: 'text',
-        name: 'name',
-        label: t('builder.textField.name'),
-        'data-cy': 'name',
+        "$formkit": "text",
+        "name": "name",
+        "label": t("builder.textField.name"),
+        "data-cy": "name",
       });
       break;
     case DataFieldType.PRODUCT_PASSPORT_LINK:
       dataFieldFormkitSchema.push({
-        $formkit: 'text',
-        name: 'name',
-        label: t('builder.passportLink.name'),
-        'data-cy': 'name',
+        "$formkit": "text",
+        "name": "name",
+        "label": t("builder.passportLink.name"),
+        "data-cy": "name",
       });
       break;
     case DataFieldType.NUMERIC_FIELD:
       dataFieldFormkitSchema.push({
-        $formkit: 'text',
-        name: 'name',
-        label: t('builder.numeric.name'),
-        'data-cy': 'name',
+        "$formkit": "text",
+        "name": "name",
+        "label": t("builder.numeric.name"),
+        "data-cy": "name",
       });
       dataFieldFormkitSchema.push({
-        $formkit: 'number',
-        name: 'min',
-        label: t('builder.numeric.min'),
-        'data-cy': 'min',
+        "$formkit": "number",
+        "name": "min",
+        "label": t("builder.numeric.min"),
+        "data-cy": "min",
       });
       dataFieldFormkitSchema.push({
-        $formkit: 'number',
-        name: 'max',
-        label: t('builder.numeric.max'),
-        'data-cy': 'max',
+        "$formkit": "number",
+        "name": "max",
+        "label": t("builder.numeric.max"),
+        "data-cy": "max",
       });
       break;
     case DataFieldType.FILE_FIELD:
       dataFieldFormkitSchema.push({
-        $formkit: 'text',
-        name: 'name',
-        label: t('builder.file.name'),
-        'data-cy': 'name',
+        "$formkit": "text",
+        "name": "name",
+        "label": t("builder.file.name"),
+        "data-cy": "name",
       });
       break;
     default:
@@ -89,11 +88,11 @@ function formSchemaFromType(type: DataFieldType, existingGranularityLevel: Granu
   }
   if (!existingGranularityLevel) {
     dataFieldFormkitSchema.push({
-      $formkit: 'select',
-      name: 'granularityLevel',
-      label: t('builder.granularityLevel'),
-      options: granularityOptions,
-      'data-cy': 'select-granularity-level',
+      "$formkit": "select",
+      "name": "granularityLevel",
+      "label": t("builder.granularityLevel"),
+      "options": granularityOptions,
+      "data-cy": "select-granularity-level",
     });
   }
   return dataFieldFormkitSchema;
@@ -131,9 +130,9 @@ watch(
 async function onDelete() {
   modelDialogStore.open(
     {
-      title: t('draft.deleteDataField'),
-      description: t('draft.deleteDataFieldDescription'),
-      type: 'warning',
+      title: t("draft.deleteDataField"),
+      description: t("draft.deleteDataFieldDescription"),
+      type: "warning",
     },
     async () => {
       if (dataFieldToModify.value) {
@@ -182,7 +181,7 @@ async function onSubmit() {
   }
   else {
     const notificationStore = useNotificationStore();
-    notificationStore.addErrorNotification(t('draft.errorAddingDataField'));
+    notificationStore.addErrorNotification(t("draft.errorAddingDataField"));
   }
 
   draftSidebarStore.close();

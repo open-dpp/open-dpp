@@ -203,8 +203,11 @@
     "edit": "Editieren",
     "errorCreate": "Erstellen der Verbindung fehlgeschlagen"
   },
-  "statistics": {
-    "statistics": "Auswertungen"
+  "analytics": {
+    "analytics": "Auswertungen",
+    "loadingMetricError": "Laden der Analyse fehlgeschlagen",
+    "passportSelection": "Passauswahl",
+    "timePeriodSelection": "Ansicht"
   },
   "members": {
     "members": "Mitglieder"

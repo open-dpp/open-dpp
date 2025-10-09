@@ -37,7 +37,7 @@ importers:
         version: 16.4.0
       jest:
         specifier: ^30.0.0
-        version: 30.2.0(@types/node@24.6.2)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@24.6.2)(typescript@5.9.2))
+        version: 30.2.0(@types/node@22.18.6)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.18.6)(typescript@5.9.2))
       turbo:
         specifier: ^2.5.8
         version: 2.5.8
@@ -80,6 +80,9 @@ importers:
       axios:
         specifier: ^1.8.1
         version: 1.12.2
+      chart.js:
+        specifier: ^4.5.0
+        version: 4.5.0
       keycloak-js:
         specifier: ^26.1.3
         version: 26.2.0
@@ -101,6 +104,9 @@ importers:
       vue:
         specifier: ^3.5.13
         version: 3.5.22(typescript@5.9.2)
+      vue-chartjs:
+        specifier: ^5.3.2
+        version: 5.3.2(chart.js@4.5.0)(vue@3.5.22(typescript@5.9.2))
       vue-i18n:
         specifier: ^11.1.12
         version: 11.1.12(vue@3.5.22(typescript@5.9.2))
@@ -579,6 +585,9 @@ importers:
       '@nestjs/core':
         specifier: ^11.0.1
         version: 11.1.6(@nestjs/common@11.1.6(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.6)(@nestjs/platform-express@11.1.6)(@nestjs/websockets@11.1.6)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@open-dpp/env':
+        specifier: workspace:*
+        version: link:../env
       axios:
         specifier: ^1.12.2
         version: 1.12.2
@@ -1835,6 +1844,9 @@ packages:
   '@keycloak/keycloak-admin-client@26.3.5':
     resolution: {integrity: sha512-gSVyKmL4FU52adIBtT3bennsvRgSYOfQh2JRgV89OE3UMw3ZB0ooVAvMoPvhHhqXLXIXjC1H4ai0R8iVRxLXbg==}
     engines: {node: '>=18'}
+
+  '@kurkle/color@0.3.4':
+    resolution: {integrity: sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w==}
 
   '@langchain/core@0.3.77':
     resolution: {integrity: sha512-aqXHea9xfpVn6VoCq9pjujwFqrh3vw3Fgm9KFUZJ1cF7Bx5HI62DvQPw8LlRB3NB4dhwBBA1ldAVkkkd1du8nA==}
@@ -3603,6 +3615,10 @@ packages:
 
   chardet@2.1.0:
     resolution: {integrity: sha512-bNFETTG/pM5ryzQ9Ad0lJOTa6HWD/YsScAR3EnCPZRPlQh77JocYktSHOUHelyhm8IARL+o4c4F1bP5KVOjiRA==}
+
+  chart.js@4.5.0:
+    resolution: {integrity: sha512-aYeC/jDgSEx8SHWZvANYMioYMZ2KX02W6f6uVfyteuCGcadDLcYVHdfdygsTQkQ4TKn5lghoojAsPj5pu0SnvQ==}
+    engines: {pnpm: '>=8'}
 
   check-error@2.1.1:
     resolution: {integrity: sha512-OAlb+T7V4Op9OwdkjmguYRqncdlx5JiofwOAUkmTF+jNdHwzTaTs4sRAGpzLF3oOz5xAyDGrPgeIDFQmDOTiJw==}
@@ -8107,6 +8123,12 @@ packages:
   vscode-uri@3.1.0:
     resolution: {integrity: sha512-/BpdSx+yCQGnCvecbyXdxHDkuk55/G3xwnC0GqY4gmQ3j+A+g8kzzgB4Nk/SINjqn6+waqw3EgbVF2QKExkRxQ==}
 
+  vue-chartjs@5.3.2:
+    resolution: {integrity: sha512-NrkbRRoYshbXbWqJkTN6InoDVwVb90C0R7eAVgMWcB9dPikbruaOoTFjFYHE/+tNPdIe6qdLCDjfjPHQ0fw4jw==}
+    peerDependencies:
+      chart.js: ^4.1.1
+      vue: ^3.0.0-0 || ^2.7.0
+
   vue-component-type-helpers@2.2.12:
     resolution: {integrity: sha512-YbGqHZ5/eW4SnkPNR44mKVc6ZKQoRs/Rux1sxC6rdwXb4qpbOSYfDr9DsTHolOTGmIKgM9j141mZbBeg05R1pw==}
 
@@ -9528,6 +9550,42 @@ snapshots:
       - supports-color
       - ts-node
 
+  '@jest/core@30.2.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.18.6)(typescript@5.9.2))':
+    dependencies:
+      '@jest/console': 30.2.0
+      '@jest/pattern': 30.0.1
+      '@jest/reporters': 30.2.0
+      '@jest/test-result': 30.2.0
+      '@jest/transform': 30.2.0
+      '@jest/types': 30.2.0
+      '@types/node': 22.18.6
+      ansi-escapes: 4.3.2
+      chalk: 4.1.2
+      ci-info: 4.3.0
+      exit-x: 0.2.2
+      graceful-fs: 4.2.11
+      jest-changed-files: 30.2.0
+      jest-config: 30.2.0(@types/node@22.18.6)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.18.6)(typescript@5.9.2))
+      jest-haste-map: 30.2.0
+      jest-message-util: 30.2.0
+      jest-regex-util: 30.0.1
+      jest-resolve: 30.2.0
+      jest-resolve-dependencies: 30.2.0
+      jest-runner: 30.2.0
+      jest-runtime: 30.2.0
+      jest-snapshot: 30.2.0
+      jest-util: 30.2.0
+      jest-validate: 30.2.0
+      jest-watcher: 30.2.0
+      micromatch: 4.0.8
+      pretty-format: 30.2.0
+      slash: 3.0.0
+    transitivePeerDependencies:
+      - babel-plugin-macros
+      - esbuild-register
+      - supports-color
+      - ts-node
+
   '@jest/core@30.2.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@24.6.2)(typescript@5.9.2))':
     dependencies:
       '@jest/console': 30.2.0
@@ -9854,6 +9912,8 @@ snapshots:
       camelize-ts: 3.0.0
       url-join: 5.0.0
       url-template: 3.1.1
+
+  '@kurkle/color@0.3.4': {}
 
   '@langchain/core@0.3.77(openai@5.12.2(ws@8.18.3)(zod@4.1.11))':
     dependencies:
@@ -11748,6 +11808,10 @@ snapshots:
   character-entities@2.0.2: {}
 
   chardet@2.1.0: {}
+
+  chart.js@4.5.0:
+    dependencies:
+      '@kurkle/color': 0.3.4
 
   check-error@2.1.1: {}
 
@@ -13772,6 +13836,25 @@ snapshots:
       - supports-color
       - ts-node
 
+  jest-cli@30.2.0(@types/node@22.18.6)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.18.6)(typescript@5.9.2)):
+    dependencies:
+      '@jest/core': 30.2.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.18.6)(typescript@5.9.2))
+      '@jest/test-result': 30.2.0
+      '@jest/types': 30.2.0
+      chalk: 4.1.2
+      exit-x: 0.2.2
+      import-local: 3.2.0
+      jest-config: 30.2.0(@types/node@22.18.6)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.18.6)(typescript@5.9.2))
+      jest-util: 30.2.0
+      jest-validate: 30.2.0
+      yargs: 17.7.2
+    transitivePeerDependencies:
+      - '@types/node'
+      - babel-plugin-macros
+      - esbuild-register
+      - supports-color
+      - ts-node
+
   jest-cli@30.2.0(@types/node@24.6.2)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@24.6.2)(typescript@5.9.2)):
     dependencies:
       '@jest/core': 30.2.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@24.6.2)(typescript@5.9.2))
@@ -13813,6 +13896,39 @@ snapshots:
       micromatch: 4.0.8
       parse-json: 5.2.0
       pretty-format: 29.7.0
+      slash: 3.0.0
+      strip-json-comments: 3.1.1
+    optionalDependencies:
+      '@types/node': 22.18.6
+      ts-node: 10.9.2(@swc/core@1.13.5)(@types/node@22.18.6)(typescript@5.9.2)
+    transitivePeerDependencies:
+      - babel-plugin-macros
+      - supports-color
+
+  jest-config@30.2.0(@types/node@22.18.6)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.18.6)(typescript@5.9.2)):
+    dependencies:
+      '@babel/core': 7.28.4
+      '@jest/get-type': 30.1.0
+      '@jest/pattern': 30.0.1
+      '@jest/test-sequencer': 30.2.0
+      '@jest/types': 30.2.0
+      babel-jest: 30.2.0(@babel/core@7.28.4)
+      chalk: 4.1.2
+      ci-info: 4.3.0
+      deepmerge: 4.3.1
+      glob: 10.4.5
+      graceful-fs: 4.2.11
+      jest-circus: 30.2.0
+      jest-docblock: 30.2.0
+      jest-environment-node: 30.2.0
+      jest-regex-util: 30.0.1
+      jest-resolve: 30.2.0
+      jest-runner: 30.2.0
+      jest-util: 30.2.0
+      jest-validate: 30.2.0
+      micromatch: 4.0.8
+      parse-json: 5.2.0
+      pretty-format: 30.2.0
       slash: 3.0.0
       strip-json-comments: 3.1.1
     optionalDependencies:
@@ -14333,6 +14449,19 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
       - babel-plugin-macros
+      - supports-color
+      - ts-node
+
+  jest@30.2.0(@types/node@22.18.6)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.18.6)(typescript@5.9.2)):
+    dependencies:
+      '@jest/core': 30.2.0(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.18.6)(typescript@5.9.2))
+      '@jest/types': 30.2.0
+      import-local: 3.2.0
+      jest-cli: 30.2.0(@types/node@22.18.6)(ts-node@10.9.2(@swc/core@1.13.5)(@types/node@22.18.6)(typescript@5.9.2))
+    transitivePeerDependencies:
+      - '@types/node'
+      - babel-plugin-macros
+      - esbuild-register
       - supports-color
       - ts-node
 
@@ -17102,6 +17231,11 @@ snapshots:
       - yaml
 
   vscode-uri@3.1.0: {}
+
+  vue-chartjs@5.3.2(chart.js@4.5.0)(vue@3.5.22(typescript@5.9.2)):
+    dependencies:
+      chart.js: 4.5.0
+      vue: 3.5.22(typescript@5.9.2)
 
   vue-component-type-helpers@2.2.12: {}
 

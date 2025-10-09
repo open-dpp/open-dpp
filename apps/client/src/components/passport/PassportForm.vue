@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { SectionType } from "@open-dpp/api-client";
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { usePassportFormStore } from "../../stores/passport.form";
-import BaseButton from "../BaseButton.vue";
+import BaseButton from "../basics/BaseButton.vue";
 import SectionHeader from "../SectionHeader.vue";
 import RepeatableSection from "./form-components/RepeatableSection.vue";
 import SectionForm from "./form-components/SectionForm.vue";
-import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const passportFormStore = usePassportFormStore();
@@ -50,18 +50,21 @@ function navigateBackToHome() {
     class="mb-4 grid grid-cols-1 gap-4"
   >
     <div v-if="!currentSections.isRootLevel" class="flex items-center gap-2">
-      <div>{{ t('models.form.repeater.series') + ' ' + row }}</div>
-      <BaseButton variant="primary" @click="navigateBackToHome">{{
-        t('common.toHome')
-      }}</BaseButton>
+      <div>{{ `${t('models.form.repeater.series')} ${row}` }}</div>
+      <BaseButton variant="primary" @click="navigateBackToHome">
+        {{
+          t('common.toHome')
+        }}
+      </BaseButton>
       <BaseButton
         v-if="currentSections.parentSection"
         variant="primary"
         @click="navigateBackToParent"
-        >{{
-          t('common.backTo', { link: currentSections.parentSection.name })
-        }}</BaseButton
       >
+        {{
+          t('common.backTo', { link: currentSections.parentSection.name })
+        }}
+      </BaseButton>
     </div>
     <div
       v-for="section of currentSections.sections"
