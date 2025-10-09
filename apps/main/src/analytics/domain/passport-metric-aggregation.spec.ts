@@ -12,6 +12,7 @@ describe("passportMetricAggregation", () => {
       organizationId: "orga1",
       startDate: new Date("2025-01-03T12:00:00Z"),
       endDate: new Date("2025-01-07T12:00:00Z"),
+      timezone: "UTC",
     };
     const passportMetricAggregation = PassportMetricAggregation.create(props);
     expect(passportMetricAggregation.getFilterQuery()).toEqual([
@@ -72,6 +73,7 @@ describe("passportMetricAggregation", () => {
             $dateTrunc: {
               date: "$date",
               unit: "day",
+              timezone: "UTC",
             },
           },
           sum: {
@@ -84,6 +86,23 @@ describe("passportMetricAggregation", () => {
           _id: 0, // Exclude the _id field
           datetime: "$_id", // Create a new field 'date' with the value of _id
           sum: 1, // Keep the sum field
+        },
+      },
+      {
+        $densify: {
+          field: "datetime",
+          range: {
+            step: 1,
+            unit: "day",
+            bounds: [new Date("2025-01-03T12:00:00Z"), new Date("2025-01-07T12:00:00Z")],
+          },
+        },
+      },
+      {
+        $set: {
+          sum: {
+            $ifNull: ["$sum", 0], // Fill missing values with 0
+          },
         },
       },
       {

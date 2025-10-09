@@ -7,12 +7,13 @@ export let API_URL = import.meta.env.VITE_API_ROOT as string;
 if (!API_URL && !KEYCLOAK_URL) {
   // Get runtime configuration
   try {
-    const response = await fetch('/config.json');
+    const response = await fetch("/config.json");
     const config = await response.json();
-    API_URL = config.API_URL || '';
-    KEYCLOAK_URL = config.KEYCLOAK_URL || '';
-  } catch (error) {
-    console.error('Failed to fetch runtime configuration:', error);
+    API_URL = config.API_URL || "";
+    KEYCLOAK_URL = config.KEYCLOAK_URL || "";
+  }
+  catch (error) {
+    console.error("Failed to fetch runtime configuration:", error);
   }
 }
 
@@ -20,6 +21,8 @@ export const MARKETPLACE_URL = API_URL; // import.meta.env.VITE_MARKETPLACE_ROOT
 export const VIEW_ROOT_URL = API_URL; // import.meta.env.VITE_VIEW_ROOT_URL;
 export const MEDIA_SERVICE_URL = API_URL; // import.meta.env.VITE_MEDIA_SERVICE_ROOT;
 export const AGENT_SERVER_URL = API_URL;
+export const ANALYTICS_URL = API_URL;
+
 export const AGENT_WEBSOCKET_URL = API_URL.substring(
   0,
   API_URL.lastIndexOf("/"),

@@ -66,6 +66,7 @@ export class PassportMetricController {
     @Query("type") type: string,
     @Query("valueKey") valueKey: string,
     @Query("period") period: string,
+    @Query("timezone") timezone: string,
     @Request() req: AuthRequest,
   ) {
     const query = PassportMetricQuerySchema.parse({
@@ -76,6 +77,7 @@ export class PassportMetricController {
       type,
       valueKey,
       period,
+      timezone,
     });
     this.logger.log(
       `Start processing passport metric query for organization ${organizationId} with query ${JSON.stringify(

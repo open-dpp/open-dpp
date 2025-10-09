@@ -13,6 +13,7 @@ import { ChatService } from "./ai/chat.service";
 import { McpClientModule } from "./ai/mcp-client/mcp-client.module";
 import { PassportModule } from "./ai/passports/passport.module";
 import { ChatGateway } from "./ai/presentation/chat.gateway";
+import { AnalyticsModule } from "./analytics/analytics.module";
 import { generateConfig, generateMongoConfig } from "./database/config";
 import { IntegrationModule } from "./integrations/integration.module";
 import { ItemsModule } from "./items/items.module";
@@ -79,6 +80,7 @@ import { UsersModule } from "./users/users.module";
     AiConfigurationModule,
     AiModule,
     McpClientModule,
+    AnalyticsModule,
     PassportModule,
     AuthModule.forRoot(),
   ],

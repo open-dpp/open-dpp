@@ -4,6 +4,8 @@ import type {
 } from "@open-dpp/api-client";
 import { TimePeriod } from "@open-dpp/api-client";
 import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useRoute } from "vue-router";
@@ -12,6 +14,8 @@ import apiClient from "../lib/api-client";
 import { i18n } from "../translations/i18n";
 import { useErrorHandlingStore } from "./error.handling";
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
 export const useAnalyticsStore = defineStore("analytics", () => {
   const route = useRoute();
   const { t } = i18n.global;
@@ -20,12 +24,15 @@ export const useAnalyticsStore = defineStore("analytics", () => {
   const passportMeasurements = ref<PassportMeasurementDto[]>([]);
   const errorHandlingStore = useErrorHandlingStore();
 
-  const queryMetric = async (query: PassportMetricQueryDto) => {
+  const queryMetric = async (query: Omit<PassportMetricQueryDto, "timezone">) => {
     requestedTimePeriod.value = z.enum(TimePeriod).parse(query.period);
     try {
-      const response = await apiClient.analytics.passportMetric.query(query);
+      const response = await apiClient.analytics.passportMetric.query(
+        { ...query, timezone: dayjs.tz.guess() },
+      );
       passportMeasurements.value = response.data;
-    } catch (error) {
+    }
+    catch (error) {
       errorHandlingStore.logErrorWithNotification(
         t("analytics.loadingMetricError"),
         error,
@@ -65,8 +72,9 @@ export const useAnalyticsStore = defineStore("analytics", () => {
   };
 
   const getMeasurementsAsTimeseries = () => {
-    return passportMeasurements.value.map((m) => ({
-      x: getXLabel(m.datetime),
+    console.log(dayjs.tz.guess());
+    return passportMeasurements.value.map(m => ({
+      x: dayjs(m.datetime).tz(dayjs.tz.guess()).format("YYYY-MM-DD HH:mm:ss"),
       y: m.sum,
     }));
   };

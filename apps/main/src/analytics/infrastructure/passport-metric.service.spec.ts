@@ -14,6 +14,7 @@ import {
   PassportMetricDoc,
   PassportMetricSchema,
 } from "./passport-metric.schema";
+
 import { PassportMetricService, TimePeriod } from "./passport-metric.service";
 
 describe("passportMetricService", () => {
@@ -165,6 +166,7 @@ describe("passportMetricService", () => {
         valueKey: "http://example.com",
         startDate: new Date("2025-01-01T00:00:00Z"),
         endDate: new Date("2025-03-01T13:00:00Z"),
+        timezone: "UTC",
       }),
       TimePeriod.MONTH,
     );
@@ -287,6 +289,7 @@ describe("passportMetricService", () => {
         valueKey: dataFieldId1,
         startDate: new Date("2025-01-01T00:00:00Z"),
         endDate: new Date("2025-03-01T13:00:00Z"),
+        timezone: "UTC",
       }),
       TimePeriod.MONTH,
     );
@@ -308,6 +311,7 @@ describe("passportMetricService", () => {
         valueKey: dataFieldId2,
         startDate: new Date("2025-01-01T00:00:00Z"),
         endDate: new Date("2025-03-01T13:00:00Z"),
+        timezone: "UTC",
       }),
       TimePeriod.MONTH,
     );

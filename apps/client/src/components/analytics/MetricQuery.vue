@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { Option } from "../../lib/combobox";
 import { MeasurementType, TimePeriod } from "@open-dpp/api-client";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod/v4";
@@ -10,6 +12,8 @@ import { useModelsStore } from "../../stores/models";
 import BaseButton from "../basics/BaseButton.vue";
 import Combobox from "../basics/Combobox.vue";
 import Select from "../basics/Select.vue";
+
+dayjs.extend(utc);
 
 const { t } = useI18n();
 const modelStore = useModelsStore();
@@ -65,16 +69,26 @@ function getViewDomain() {
   return `${url.protocol}//${url.hostname}`;
 }
 
+function getStartAndEndDate(timePeriod: TimePeriod) {
+  const now = dayjs();
+  if (timePeriod === TimePeriod.HOUR) {
+    return { startDate: now.startOf("day").toDate(), endDate: now.endOf("day").toDate() };
+  }
+  return { startDate: now.startOf("day").toDate(), endDate: now.endOf("day").toDate() };
+}
+
 async function applyQuery() {
   if (isQueryValid.value) {
+    const timePeriod = z.enum(TimePeriod).parse(selectedTimePeriod.value!.id);
+    const { startDate, endDate } = getStartAndEndDate(timePeriod);
     const metricQuery = {
-      startDate: new Date("2025-01-01T00:00:00Z"),
-      endDate: new Date("2025-12-01T00:00:00Z"),
+      startDate,
+      endDate,
       templateId: selectedTemplate.value!,
       modelId: selectedModel.value!.id,
       valueKey: getViewDomain(),
       type: MeasurementType.PAGE_VIEWS,
-      period: z.enum(TimePeriod).parse(selectedTimePeriod.value!.id),
+      period: timePeriod,
     };
     await analyticsStore.queryMetric(metricQuery);
   }

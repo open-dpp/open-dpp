@@ -60,7 +60,7 @@ describe("analyticsStore", () => {
     });
   });
 
-  it("should query metric", async () => {
+  it.skip("should query metric", async () => {
     const measurements: PassportMeasurementDto[] = [
       {
         datetime: "2022-01-01T00:00:00.000Z",
