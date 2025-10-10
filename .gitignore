@@ -77,3 +77,5 @@ packages/auth/node_modules
 packages/exception/node_modules
 packages/config-eslint/node_modules
 packages/env/node_modules
+packages/permssion/node_modules
+packages/permssion/dist

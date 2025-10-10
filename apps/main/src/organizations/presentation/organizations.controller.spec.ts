@@ -11,10 +11,8 @@ import { createKeycloakUserInToken, getApp, KeycloakAuthTestingGuard, KeycloakRe
 import request from "supertest";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import { User } from "../../users/domain/user";
-import { UserEntity } from "../../users/infrastructure/user.entity";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { Organization } from "../domain/organization";
-import { OrganizationEntity } from "../infrastructure/organization.entity";
 import { OrganizationsService } from "../infrastructure/organizations.service";
 import { OrganizationsController } from "./organizations.controller";
 
@@ -28,7 +26,7 @@ describe("organizationController", () => {
   const token = Buffer.from(`[${orgaId}]`).toString("base64");
   authContext.token = token;
   const userId = authContext.keycloakUser.sub;
-  const user = new User(userId, authContext.keycloakUser.email);
+  const user = User.loadFromDb({ id: userId, email: authContext.keycloakUser.email });
 
   // Mock for permissions
   authContext.permissions = [
@@ -43,8 +41,6 @@ describe("organizationController", () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        TypeOrmTestingModule,
-        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         PermissionModule,
       ],
       providers: [
@@ -237,7 +233,7 @@ describe("organizationController", () => {
         name: "Test Org with Members",
         user,
       });
-      const member2 = new User(randomUUID(), "member2@example.com");
+      const member2 = User.loadFromDb({ id: randomUUID(), email: "member2@example.com" });
       org.join(member2);
       const savedOrg = await service.save(org);
 

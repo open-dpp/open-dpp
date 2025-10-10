@@ -24,13 +24,11 @@ import { KeycloakResourcesService } from "../../keycloak-resources/infrastructur
 import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
-import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { phoneFactory } from "../../product-passport/fixtures/product-passport.factory";
 import { Template } from "../../templates/domain/template";
 import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
 import { TemplateService } from "../../templates/infrastructure/template.service";
-import { UserEntity } from "../../users/infrastructure/user.entity";
 import { UsersService } from "../../users/infrastructure/users.service";
 import {
   UniqueProductIdentifierDoc,
@@ -61,8 +59,6 @@ describe("uniqueProductIdentifierController", () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        TypeOrmTestingModule,
-        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         PermissionModule,
         MongooseTestingModule,
         MongooseModule.forFeature([

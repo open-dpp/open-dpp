@@ -128,9 +128,14 @@ describe("keycloakResourcesService", () => {
 
   describe("createGroup", () => {
     it("should create a group for an organization", async () => {
-      const user = new User(randomUUID(), "test@test.test");
-      const organization = Organization.create({ name: "Test Org", user });
-      const member1 = new User(randomUUID(), "member1@test.test");
+      const user = User.create({ email: "test@test.test" });
+      const organization = Organization.create({
+        name: "Test Org",
+        ownedByUserId: user.id,
+        createdByUserId: user.id,
+        members: [user],
+      });
+      const member1 = User.create({ email: "member1@test.test" });
       organization.join(member1);
 
       // Mock the createGroup response
@@ -397,7 +402,9 @@ describe("keycloakResourcesService", () => {
 
   describe("createUser", () => {
     it("should not create user if already exists", async () => {
-      const user = new User(randomUUID(), "existing@test.test");
+      const user = User.create({
+        email: "existing@test.test"
+      });
       mockKcAdminClient.users.find.mockResolvedValue([{ id: "existing-id" }]);
 
       await service.createUser(user);
@@ -407,7 +414,9 @@ describe("keycloakResourcesService", () => {
     });
 
     it("should create user if not exists", async () => {
-      const user = new User(randomUUID(), "new@test.test");
+      const user = User.create({
+        email: "new@test.test"
+      });
       mockKcAdminClient.users.find.mockResolvedValue([]);
 
       await service.createUser(user);

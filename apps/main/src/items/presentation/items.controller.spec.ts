@@ -26,7 +26,6 @@ import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { Organization } from "../../organizations/domain/organization";
-import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import { Template, TemplateDbProps } from "../../templates/domain/template";
@@ -43,7 +42,6 @@ import {
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { User } from "../../users/domain/user";
-import { UserEntity } from "../../users/infrastructure/user.entity";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { Item } from "../domain/item";
 import { ItemDoc, ItemSchema } from "../infrastructure/item.schema";
@@ -62,13 +60,14 @@ describe("itemsController", () => {
 
   const authContext = new AuthContext();
   authContext.keycloakUser = createKeycloakUserInToken();
-  const user = new User(
-    authContext.keycloakUser.sub,
-    authContext.keycloakUser.email,
-  );
+  const user = User.create({
+    email: authContext.keycloakUser.email,
+  });
   const organization = Organization.create({
     name: "orga",
-    user,
+    ownedByUserId: user.id,
+    createdByUserId: user.id,
+    members: [user],
   });
   const sectionId1 = randomUUID();
   const sectionId2 = randomUUID();
@@ -159,8 +158,6 @@ describe("itemsController", () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        TypeOrmTestingModule,
-        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         PermissionModule,
         MongooseTestingModule,
         MongooseModule.forFeature([
@@ -672,8 +669,10 @@ describe("itemsController", () => {
 
     await itemsService.save(item);
     const otherOrganization = Organization.create({
-      name: "My orga",
-      user,
+      name: "orga",
+      ownedByUserId: user.id,
+      createdByUserId: user.id,
+      members: [user],
     });
     await organizationsService.save(otherOrganization);
     const response = await request(getApp(app))

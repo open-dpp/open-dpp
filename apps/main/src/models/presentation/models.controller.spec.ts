@@ -7,7 +7,7 @@ import { Test } from "@nestjs/testing";
 import { AuthContext, PermissionModule } from "@open-dpp/auth";
 import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
-import getKeycloakAuthToken, { createKeycloakUserInToken, getApp, ignoreIds, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import getKeycloakAuthToken, { createKeycloakUserInToken, getApp, ignoreIds, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
 import request from "supertest";
 import { AasConnectionDoc, AasConnectionSchema } from "../../integrations/infrastructure/aas-connection.schema";
 import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
@@ -22,7 +22,6 @@ import {
 } from "../../marketplace/infrastructure/passport-template-publication.service";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { Organization } from "../../organizations/domain/organization";
-import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import { Template, TemplateDbProps } from "../../templates/domain/template";
@@ -42,7 +41,6 @@ import {
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { User } from "../../users/domain/user";
-import { UserEntity } from "../../users/infrastructure/user.entity";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { Model } from "../domain/model";
 import { ModelDoc, ModelSchema } from "../infrastructure/model.schema";
@@ -58,13 +56,12 @@ describe("modelsController", () => {
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
   const authContext = new AuthContext();
   authContext.keycloakUser = createKeycloakUserInToken();
-  const user = new User(
-    authContext.keycloakUser.sub,
-    authContext.keycloakUser.email,
-  );
+  const user = User.create({ email: "test@test.test" });
   const organization = Organization.create({
-    name: "orga",
-    user,
+    name: "Test Org",
+    ownedByUserId: user.id,
+    createdByUserId: user.id,
+    members: [user],
   });
   let marketplaceService: MarketplaceApplicationService;
 
@@ -72,8 +69,6 @@ describe("modelsController", () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        TypeOrmTestingModule,
-        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         PermissionModule,
         MongooseTestingModule,
         MongooseModule.forFeature([

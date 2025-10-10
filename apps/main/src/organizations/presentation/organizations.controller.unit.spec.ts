@@ -85,7 +85,7 @@ describe("organizationsController (Unit)", () => {
 
       jest
         .spyOn(usersService, "findOne")
-        .mockResolvedValue(new User(mockUser.sub, mockUser.email));
+        .mockResolvedValue(User.loadFromDb({ id: mockUser.sub, email: mockUser.email }));
 
       // Execute
       const result = await controller.create(mockRequest, createDto);

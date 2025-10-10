@@ -10,8 +10,6 @@ import { PermissionModule } from "@open-dpp/auth";
 import { EnvModule } from "@open-dpp/env";
 import { getApp, KeycloakAuthTestingGuard, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import request from "supertest";
-import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
-import { UserEntity } from "../../users/infrastructure/user.entity";
 import { PassportTemplatePublication } from "../domain/passport-template-publication";
 import { passportTemplatePublicationPropsFactory } from "../fixtures/passport.template.factory";
 import {
@@ -40,8 +38,6 @@ describe("passportTemplateController", () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        TypeOrmTestingModule,
-        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {

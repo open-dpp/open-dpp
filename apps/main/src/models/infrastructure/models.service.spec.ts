@@ -11,7 +11,6 @@ import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { ignoreIds, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import { Organization } from "../../organizations/domain/organization";
-import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import { Template } from "../../templates/domain/template";
@@ -23,7 +22,6 @@ import {
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { User } from "../../users/domain/user";
-import { UserEntity } from "../../users/infrastructure/user.entity";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { Model } from "../domain/model";
 import { ModelDoc, ModelDocSchemaVersion, ModelSchema } from "./model.schema";
@@ -31,8 +29,13 @@ import { ModelsService } from "./models.service";
 
 describe("modelsService", () => {
   let modelsService: ModelsService;
-  const user = new User(randomUUID(), "test@example.com");
-  const organization = Organization.create({ name: "Firma Y", user });
+  const user = User.create({ email: "test@test.test" });
+  const organization = Organization.create({
+    name: "Test Org",
+    ownedByUserId: user.id,
+    createdByUserId: user.id,
+    members: [user],
+  });
   let mongoConnection: Connection;
   let modelDoc: MongooseModel<ModelDoc>;
 
@@ -51,8 +54,6 @@ describe("modelsService", () => {
             schema: ModelSchema,
           },
         ]),
-        TypeOrmTestingModule,
-        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
       ],
       providers: [
         ModelsService,

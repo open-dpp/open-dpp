@@ -8,7 +8,6 @@ import { KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingM
 import { DataSource } from "typeorm";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import { Organization } from "../../organizations/domain/organization";
-import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { Template } from "../../templates/domain/template";
 import { laptopFactory } from "../../templates/fixtures/laptop.factory";
@@ -20,7 +19,6 @@ import {
 } from "../../templates/infrastructure/template.schema";
 import { TemplateService } from "../../templates/infrastructure/template.service";
 import { User } from "../../users/domain/user";
-import { UserEntity } from "../../users/infrastructure/user.entity";
 import { UsersService } from "../../users/infrastructure/users.service";
 import {
   PassportTemplatePublicationDbSchema,
@@ -60,8 +58,6 @@ describe("marketplaceService", () => {
             schema: TemplateSchema,
           },
         ]),
-        TypeOrmTestingModule,
-        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
       ],
       providers: [
         PassportTemplatePublicationService,
@@ -86,10 +82,10 @@ describe("marketplaceService", () => {
     organizationService
       = module.get<OrganizationsService>(OrganizationsService);
     organization = await organizationService.save(
-      Organization.fromPlain({
+      Organization.loadFromDb({
         id: organizationId,
         name: "orga name",
-        members: [new User(userId, `${userId}@example.com`)],
+        members: [User.create({ email: `${userId}@example.com` })],
         createdByUserId: userId,
         ownedByUserId: userId,
       }),
@@ -108,7 +104,7 @@ describe("marketplaceService", () => {
     });
     const { id } = await marketplaceService.upload(
       template,
-      User.create({ id: randomUUID(), email: "test@example.com" }),
+      User.create({ email: "test@example.com" }),
     );
     const expected = {
       version: template.version,
@@ -157,7 +153,7 @@ describe("marketplaceService", () => {
     );
     const { id } = await marketplaceService.upload(
       template,
-      User.create({ id: randomUUID(), email: "test@example.com" }),
+      User.create({ email: "test@example.com" }),
     );
     template.marketplaceResourceId = id;
     await templateService.save(template);
@@ -180,10 +176,10 @@ describe("marketplaceService", () => {
     const template = Template.create(
       templateCreatePropsFactory.build({ organizationId }),
     );
-    const userId = randomUUID();
+    const userTest = User.create({ email: "test@example.com" });
     const { id, name, version } = await marketplaceService.upload(
       template,
-      User.create({ id: userId, email: "test@example.com" }),
+      userTest,
     );
 
     const findTemplateAtMarketplace = jest.spyOn(
@@ -193,7 +189,7 @@ describe("marketplaceService", () => {
 
     const productDataModel = await marketplaceService.download(
       organizationId,
-      userId,
+      userTest.id,
       id,
     );
     expect(findTemplateAtMarketplace).toHaveBeenCalledWith(id);
@@ -202,7 +198,7 @@ describe("marketplaceService", () => {
     expect(productDataModel.name).toEqual(name);
     expect(productDataModel.version).toEqual(version);
     expect(productDataModel.ownedByOrganizationId).toEqual(organizationId);
-    expect(productDataModel.createdByUserId).toEqual(userId);
+    expect(productDataModel.createdByUserId).toEqual(userTest.id);
   });
 
   afterEach(() => {

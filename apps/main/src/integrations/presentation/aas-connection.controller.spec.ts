@@ -6,7 +6,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { AuthContext, PermissionModule } from "@open-dpp/auth";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import getKeycloakAuthToken, { getApp, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import getKeycloakAuthToken, { getApp, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
 import { json } from "express";
 import request from "supertest";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
@@ -18,7 +18,6 @@ import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { Organization } from "../../organizations/domain/organization";
-import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { Template, TemplateDbProps } from "../../templates/domain/template";
 import { dataFieldDbPropsFactory } from "../../templates/fixtures/data-field.factory";
@@ -37,7 +36,6 @@ import {
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { User } from "../../users/domain/user";
-import { UserEntity } from "../../users/infrastructure/user.entity";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { AasConnection, AasFieldAssignment } from "../domain/aas-connection";
 import { AssetAdministrationShellType } from "../domain/asset-administration-shell";
@@ -69,18 +67,13 @@ describe("aasConnectionController", () => {
     email_verified: true,
     memberships: [],
   };
-  const user = new User(
-    authContext.keycloakUser.sub,
-    authContext.keycloakUser.email,
-  );
+  const user = User.loadFromDb({ id: authContext.keycloakUser.sub, email: authContext.keycloakUser.email });
   const organizationId = randomUUID();
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        TypeOrmTestingModule,
-        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -164,7 +157,7 @@ describe("aasConnectionController", () => {
     itemsSevice = moduleRef.get(ItemsService);
     const organizationService = moduleRef.get(OrganizationsService);
     await organizationService.save(
-      Organization.fromPlain({
+      Organization.loadFromDb({
         id: organizationId,
         name: "orga name",
         members: [user],

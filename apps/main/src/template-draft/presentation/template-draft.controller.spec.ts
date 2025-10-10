@@ -6,7 +6,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { AuthContext, PermissionModule } from "@open-dpp/auth";
 import { EnvModule } from "@open-dpp/env";
-import getKeycloakAuthToken, { createKeycloakUserInToken, getApp, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import getKeycloakAuthToken, { createKeycloakUserInToken, getApp, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
 import request from "supertest";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
@@ -23,7 +23,6 @@ import {
 } from "../../marketplace/infrastructure/passport-template-publication.service";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { Organization } from "../../organizations/domain/organization";
-import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import {
   TemplateDoc,
@@ -31,7 +30,6 @@ import {
 } from "../../templates/infrastructure/template.schema";
 import { TemplateService } from "../../templates/infrastructure/template.service";
 import { User } from "../../users/domain/user";
-import { UserEntity } from "../../users/infrastructure/user.entity";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { DataFieldDraft } from "../domain/data-field-draft";
 import { SectionDraft } from "../domain/section-draft";
@@ -71,8 +69,6 @@ describe("templateDraftController", () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        TypeOrmTestingModule,
-        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -277,10 +273,10 @@ describe("templateDraftController", () => {
     await templateDraftService.save(laptopDraft);
 
     await organizationService.save(
-      Organization.fromPlain({
+      Organization.loadFromDb({
         id: organizationId,
         name: "orga name",
-        members: [new User(userId, `${userId}@example.com`)],
+        members: [User.loadFromDb({ id: userId, email: `${userId}@example.com`, keycloakUserId: userId })],
         createdByUserId: userId,
         ownedByUserId: userId,
       }),
@@ -316,7 +312,7 @@ describe("templateDraftController", () => {
     expect(foundTemplate.id).toEqual(foundDraft.publications[0].id);
 
     expect(foundTemplate.marketplaceResourceId).toBeDefined();
-    const user = User.create({ id: userId, email: `${userId}@test.test` });
+    const user = User.loadFromDb({ id: userId, email: `${userId}@test.test`, keycloakUserId: userId });
     expect(spyUpload).toHaveBeenCalledWith(foundTemplate, user);
   });
 

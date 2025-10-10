@@ -53,14 +53,15 @@ export class OrganizationsController {
 
   @Get()
   async findAll(@Request() req: authRequest.AuthRequest) {
-    return (
-      await this.organizationsService.findAllWhereMember(req.authContext)
-    ).filter(organization =>
-      this.permissionsService.canAccessOrganization(
-        organization.id,
-        req.authContext,
-      ),
-    );
+    const organizations = await this.organizationsService.findAllWhereMember(req.authContext);
+    const accessibleOrganizations = [];
+    for (const organization of organizations) {
+      const canAccess = this.permissionsService.canAccessOrganization(organization.id, req.authContext);
+      if (canAccess) {
+        accessibleOrganizations.push(organization);
+      }
+    }
+    return accessibleOrganizations;
   }
 
   @Get(":id")
