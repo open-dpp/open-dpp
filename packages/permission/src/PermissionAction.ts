@@ -1,5 +1,8 @@
 export const PermissionAction = {
-  ORGANIZATION: "ORGANIZATION",
+  CREATE: "CREATE",
+  READ: "READ",
+  UPDATE: "UPDATE",
+  DELETE: "DELETE",
 } as const;
 
-export type PermissionType_TYPE = (typeof PermissionType)[keyof typeof PermissionType];
+export type PermissionAction_TYPE = (typeof PermissionAction)[keyof typeof PermissionAction];
