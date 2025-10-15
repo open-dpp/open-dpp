@@ -16,7 +16,6 @@ import { OrganizationsController } from "./presentation/organizations.controller
     ]),
     KeycloakResourcesModule,
     forwardRef(() => UsersModule),
-    OrganizationsModule,
   ],
   controllers: [OrganizationsController],
   providers: [OrganizationsService],
