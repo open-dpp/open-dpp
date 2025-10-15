@@ -5,7 +5,7 @@ export interface UserCreateProps {
   email: string;
   keycloakUserId: string;
 }
-export type UserDbProps = Omit<UserCreateProps, "template" | "model"> & {
+export type UserDbProps = UserCreateProps & {
   id: string;
   email: string;
   keycloakUserId: string;
