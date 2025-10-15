@@ -7,7 +7,7 @@ export const OrganizationSchemaVersion = {
 
 export type OrganizationSchemaVersion_TYPE = (typeof OrganizationSchemaVersion)[keyof typeof OrganizationSchemaVersion];
 
-@Schema({ collection: "organization" })
+@Schema({ collection: "organization", timestamps: true })
 export class OrganizationDoc extends Document {
   @Prop({
     default: OrganizationSchemaVersion.v1_0_0,

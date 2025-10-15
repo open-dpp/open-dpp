@@ -7,7 +7,7 @@ export const UserSchemaVersion = {
 
 export type UserSchemaVersion_TYPE = (typeof UserSchemaVersion)[keyof typeof UserSchemaVersion];
 
-@Schema({ collection: "user" })
+@Schema({ collection: "user", timestamps: true })
 export class UserDoc extends Document {
   @Prop({
     default: UserSchemaVersion.v1_0_0,
