@@ -25,6 +25,7 @@ import {
   XMarkIcon,
 } from "@heroicons/vue/24/outline";
 import { computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import logo from "../../assets/logo-with-text.svg";
 import { useIndexStore } from "../../stores";
@@ -34,7 +35,6 @@ import Breadcrumbs from "../Breadcrumbs.vue";
 import NotificationHandler from "../notifications/NotificationHandler.vue";
 import SelectOrganization from "../organizations/SelectOrganization.vue";
 import RingLoader from "../RingLoader.vue";
-import { useI18n } from 'vue-i18n';
 
 const route = useRoute();
 const router = useRouter();
@@ -62,49 +62,49 @@ const initials = computed(() => {
 
 const unfilteredNavigation = computed<Array<MenuItemInterface>>(() => [
   {
-    name: t('models.models'),
+    name: t("models.models"),
     to: `/organizations/${indexStore.selectedOrganization}/models`,
     icon: CubeIcon,
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: t('draft.passportDraft', 2),
+    name: t("draft.passportDraft", 2),
     to: `/organizations/${indexStore.selectedOrganization}/data-model-drafts`,
     icon: Square3Stack3DIcon,
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: t('integrations.integrations'),
+    name: t("integrations.integrations"),
     to: `/organizations/${indexStore.selectedOrganization}/integrations`,
     icon: LinkIcon,
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: t('statistics.statistics'),
+    name: t("statistics.statistics"),
     to: `/organizations/${indexStore.selectedOrganization}/statistics`,
     icon: ChartBarIcon,
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: t('members.members'),
+    name: t("members.members"),
     to: `/organizations/${indexStore.selectedOrganization}/members`,
     icon: UsersIcon,
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: t('organizations.pick'),
+    name: t("organizations.pick"),
     to: "/organizations",
     icon: BuildingOfficeIcon,
     show: () => indexStore.selectedOrganization === null,
   },
   {
-    name: t('marketplace.marketplace'),
+    name: t("marketplace.marketplace"),
     to: "/marketplace",
     icon: Squares2X2Icon,
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: t('media.media'),
+    name: t("media.media"),
     to: "/media",
     icon: CloudIcon,
     show: () => indexStore.selectedOrganization !== null,
@@ -114,8 +114,8 @@ const navigation = computed<Array<MenuItemInterface>>(() =>
   unfilteredNavigation.value.filter(item => item.show()),
 );
 const userNavigation = [
-  { name: t('user.profile'), to: "/profile" },
-  { name: t('user.logout'), to: "/logout" },
+  { name: t("user.profile"), to: "/profile" },
+  { name: t("user.logout"), to: "/logout" },
 ];
 
 const sidebarOpen = ref(false);

@@ -2,12 +2,12 @@
 import type { MediaInfo } from "../../components/media/MediaInfo.interface";
 import { CloudArrowUpIcon } from "@heroicons/vue/24/outline";
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
 import MediaDetailsSidebar from "../../components/media/MediaDetailsSidebar.vue";
 import MediaGrid from "../../components/media/MediaGrid.vue";
 import { useIndexStore } from "../../stores";
 import { useMediaStore } from "../../stores/media";
 import { useNotificationStore } from "../../stores/notification";
-import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const mediaStore = useMediaStore();
@@ -36,13 +36,13 @@ async function uploadFile() {
       selectedLocalFile.value,
       progress => (uploadProgress.value = progress),
     );
-    notificationStore.addSuccessNotification(t('file.uploadSuccess'));
+    notificationStore.addSuccessNotification(t("file.uploadSuccess"));
     await mediaStore.fetchMedia(mediaId);
   }
   catch (error: unknown) {
     console.error("Fehler beim Hochladen der Datei:", error);
     notificationStore.addErrorNotification(
-        t('file.uploadError'),
+      t("file.uploadError"),
     );
     selectedFile.value = null;
   }

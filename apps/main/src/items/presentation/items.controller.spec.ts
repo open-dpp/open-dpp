@@ -4,10 +4,10 @@ import { INestApplication } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { AuthContext, PermissionModule } from "@open-dpp/auth";
 import { EnvModule } from "@open-dpp/env";
-import getKeycloakAuthToken, { createKeycloakUserInToken, getApp, ignoreIds, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import getKeycloakAuthToken, { getApp, ignoreIds, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
 import request from "supertest";
+import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
@@ -25,7 +25,7 @@ import { MarketplaceApplicationService } from "../../marketplace/presentation/ma
 import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
-import { Organization } from "../../organizations/domain/organization";
+import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import { Template, TemplateDbProps } from "../../templates/domain/template";
@@ -41,7 +41,8 @@ import {
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
-import { User } from "../../users/domain/user";
+import { InjectUserToAuthContextGuard } from "../../users/infrastructure/inject-user-to-auth-context.guard";
+import { UserDbSchema, UserDoc } from "../../users/infrastructure/user.schema";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { Item } from "../domain/item";
 import { ItemDoc, ItemSchema } from "../infrastructure/item.schema";
@@ -54,21 +55,9 @@ describe("itemsController", () => {
   let itemsService: ItemsService;
   let modelsService: ModelsService;
   let templateService: TemplateService;
-  let organizationsService: OrganizationsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
 
-  const authContext = new AuthContext();
-  authContext.keycloakUser = createKeycloakUserInToken();
-  const user = User.create({
-    email: authContext.keycloakUser.email,
-  });
-  const organization = Organization.create({
-    name: "orga",
-    ownedByUserId: user.id,
-    createdByUserId: user.id,
-    members: [user],
-  });
   const sectionId1 = randomUUID();
   const sectionId2 = randomUUID();
   const sectionId3 = randomUUID();
@@ -84,8 +73,8 @@ describe("itemsController", () => {
     description: "My laptop",
     sectors: [Sector.ELECTRONICS],
     version: "1.0",
-    organizationId: organization.id,
-    userId: authContext.keycloakUser.sub,
+    organizationId: TestUsersAndOrganizations.organizations.org1.id,
+    userId: TestUsersAndOrganizations.users.user1.id,
     sections: [
       {
         type: SectionType.GROUP,
@@ -158,7 +147,6 @@ describe("itemsController", () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        PermissionModule,
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -189,6 +177,14 @@ describe("itemsController", () => {
             name: PassportTemplatePublicationDoc.name,
             schema: PassportTemplatePublicationDbSchema,
           },
+          {
+            name: OrganizationDoc.name,
+            schema: OrganizationDbSchema,
+          },
+          {
+            name: UserDoc.name,
+            schema: UserDbSchema,
+          },
         ]),
       ],
       providers: [
@@ -208,15 +204,8 @@ describe("itemsController", () => {
           useValue: keycloakAuthTestingGuard,
         },
         {
-          provide: KeycloakResourcesService,
-          useValue: KeycloakResourcesServiceTesting.fromPlain({
-            users: [
-              {
-                id: authContext.keycloakUser.sub,
-                email: authContext.keycloakUser.email,
-              },
-            ],
-          }),
+          provide: APP_GUARD,
+          useClass: InjectUserToAuthContextGuard,
         },
       ],
       controllers: [ItemsController],
@@ -226,8 +215,8 @@ describe("itemsController", () => {
         KeycloakResourcesServiceTesting.fromPlain({
           users: [
             {
-              id: authContext.keycloakUser.sub,
-              email: authContext.keycloakUser.email,
+              id: TestUsersAndOrganizations.keycloakUsers.keycloakUser1.sub,
+              email: TestUsersAndOrganizations.keycloakUsers.keycloakUser1.email,
             },
           ],
         }),
@@ -240,11 +229,16 @@ describe("itemsController", () => {
     uniqueProductIdentifierService = moduleRef.get(
       UniqueProductIdentifierService,
     );
-    organizationsService = moduleRef.get(OrganizationsService);
+    const usersService = moduleRef.get(UsersService);
+    const organizationService = moduleRef.get(OrganizationsService);
 
     app = moduleRef.createNestApplication();
     await templateService.save(template);
     await app.init();
+
+    await usersService.save(TestUsersAndOrganizations.users.user1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
 
   const expectedDataValues = [
@@ -271,18 +265,17 @@ describe("itemsController", () => {
   it(`/CREATE item`, async () => {
     const model = Model.create({
       name: "name",
-      userId: authContext.keycloakUser.sub,
-      organizationId: organization.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
       template,
     });
     await modelsService.save(model);
     const response = await request(getApp(app))
-      .post(`/organizations/${organization.id}/models/${model.id}/items`)
+      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -305,22 +298,19 @@ describe("itemsController", () => {
   });
 
   it(`/CREATE item fails if user is not member of organization`, async () => {
-    const otherOrganizationId = randomUUID();
-
     const model = Model.create({
       name: "name",
-      userId: authContext.keycloakUser.sub,
-      organizationId: otherOrganizationId,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
       template,
     });
     await modelsService.save(model);
     const response = await request(getApp(app))
-      .post(`/organizations/${otherOrganizationId}/models/${model.id}/items`)
+      .post(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/models/${model.id}/items`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -328,22 +318,19 @@ describe("itemsController", () => {
   });
 
   it(`/CREATE item fails if model does not belong to organization`, async () => {
-    const otherOrganizationId = randomUUID();
-
     const model = Model.create({
       name: "name",
-      userId: authContext.keycloakUser.sub,
-      organizationId: otherOrganizationId,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
       template,
     });
     await modelsService.save(model);
     const response = await request(getApp(app))
-      .post(`/organizations/${organization.id}/models/${model.id}/items`)
+      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -351,15 +338,13 @@ describe("itemsController", () => {
   });
 
   it("add data values to item", async () => {
-    const organizationId = randomUUID();
-    const userId = randomUUID();
     const model = Model.create({
       name: "name",
-      userId: authContext.keycloakUser.sub,
-      organizationId: organization.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
       template,
     });
-    const item = Item.create({ organizationId, userId, model, template });
+    const item = Item.create({ organizationId: TestUsersAndOrganizations.organizations.org1.id, userId: TestUsersAndOrganizations.users.user1.id, model, template });
     item.createUniqueProductIdentifier();
     await itemsService.save(item);
     const existingDataValues = item.dataValues;
@@ -379,13 +364,12 @@ describe("itemsController", () => {
     ];
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/models/${model.id}/items/${item.id}/data-values`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items/${item.id}/data-values`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -403,16 +387,15 @@ describe("itemsController", () => {
   });
 
   it("add data values to item fails if user is not member of organization", async () => {
-    const otherOrganizationId = randomUUID();
     const model = Model.create({
       name: "name",
-      userId: authContext.keycloakUser.sub,
-      organizationId: organization.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
       template,
     });
     const item = Item.create({
-      organizationId: otherOrganizationId,
-      userId: authContext.keycloakUser.sub,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
       model,
     });
@@ -420,13 +403,12 @@ describe("itemsController", () => {
     const addedValues: Array<any> = [];
     const response = await request(getApp(app))
       .post(
-        `/organizations/${otherOrganizationId}/models/${model.id}/items/${item.id}/data-values`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/models/${model.id}/items/${item.id}/data-values`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -437,13 +419,13 @@ describe("itemsController", () => {
   it("update data values of item", async () => {
     const model = Model.create({
       name: "name",
-      userId: authContext.keycloakUser.sub,
-      organizationId: organization.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
       template,
     });
     const item = Item.create({
-      organizationId: organization.id,
-      userId: authContext.keycloakUser.sub,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
       model,
     });
@@ -470,13 +452,12 @@ describe("itemsController", () => {
     await itemsService.save(item);
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${organization.id}/models/${model.id}/items/${item.id}/data-values`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items/${item.id}/data-values`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -501,16 +482,15 @@ describe("itemsController", () => {
   });
 
   it("update data values fails if user is not member of organization", async () => {
-    const otherOrganizationId = randomUUID();
     const model = Model.create({
       name: "name",
-      userId: authContext.keycloakUser.sub,
-      organizationId: organization.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
       template,
     });
     const item = Item.create({
-      organizationId: otherOrganizationId,
-      userId: authContext.keycloakUser.sub,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
       model,
     });
@@ -525,13 +505,12 @@ describe("itemsController", () => {
     ];
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${otherOrganizationId}/models/${randomUUID()}/items/${item.id}/data-values`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/models/${model.id}/items/${item.id}/data-values`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -540,16 +519,15 @@ describe("itemsController", () => {
   });
 
   it("update data values fails if item does not belong to organization", async () => {
-    const otherOrganizationId = randomUUID();
     const model = Model.create({
       name: "name",
-      userId: authContext.keycloakUser.sub,
-      organizationId: organization.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
       template,
     });
     const item = Item.create({
-      organizationId: otherOrganizationId,
-      userId: authContext.keycloakUser.sub,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
       model,
     });
@@ -565,13 +543,12 @@ describe("itemsController", () => {
 
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${organization.id}/models/${model.id}/items/${item.id}/data-values`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items/${item.id}/data-values`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -582,14 +559,14 @@ describe("itemsController", () => {
   it(`/GET item`, async () => {
     const model = Model.create({
       name: "name",
-      userId: authContext.keycloakUser.sub,
-      organizationId: organization.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
       template,
     });
     await modelsService.save(model);
     const item = Item.create({
-      organizationId: organization.id,
-      userId: authContext.keycloakUser.sub,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       model,
       template,
     });
@@ -597,13 +574,12 @@ describe("itemsController", () => {
     await itemsService.save(item);
     const response = await request(getApp(app))
       .get(
-        `/organizations/${organization.id}/models/${model.id}/items/${item.id}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items/${item.id}`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -622,16 +598,15 @@ describe("itemsController", () => {
   });
   //
   it(`/GET item fails if user is not member of organization`, async () => {
-    const otherOrganizationId = randomUUID();
     const model = Model.create({
       name: "name",
-      userId: authContext.keycloakUser.sub,
-      organizationId: organization.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
       template,
     });
     const item = Item.create({
-      organizationId: otherOrganizationId,
-      userId: authContext.keycloakUser.sub,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
       model,
     });
@@ -639,13 +614,12 @@ describe("itemsController", () => {
     await itemsService.save(item);
     const response = await request(getApp(app))
       .get(
-        `/organizations/${organization.id}/models/${model.id}/items/${item.id}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items/${item.id}`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -653,37 +627,28 @@ describe("itemsController", () => {
   });
 
   it(`/GET item fails if item does not belong to organization`, async () => {
-    const otherOrganizationId = randomUUID();
     const model = Model.create({
       name: "name",
-      userId: authContext.keycloakUser.sub,
-      organizationId: organization.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
       template,
     });
     const item = Item.create({
-      organizationId: otherOrganizationId,
-      userId: authContext.keycloakUser.sub,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
       model,
     });
 
     await itemsService.save(item);
-    const otherOrganization = Organization.create({
-      name: "orga",
-      ownedByUserId: user.id,
-      createdByUserId: user.id,
-      members: [user],
-    });
-    await organizationsService.save(otherOrganization);
     const response = await request(getApp(app))
       .get(
-        `/organizations/${organization.id}/models/${model.id}/items/${item.id}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items/${item.id}`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -691,37 +656,35 @@ describe("itemsController", () => {
   });
 
   it(`/GET all item`, async () => {
-    const otherOrganizationId = randomUUID();
     const model = Model.create({
       name: "name",
-      userId: authContext.keycloakUser.sub,
-      organizationId: otherOrganizationId,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
       template,
     });
     await modelsService.save(model);
     const item = Item.create({
-      organizationId: otherOrganizationId,
-      userId: authContext.keycloakUser.sub,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
       model,
     });
     const uniqueProductId1 = item.createUniqueProductIdentifier();
     await itemsService.save(item);
     const item2 = Item.create({
-      organizationId: otherOrganizationId,
-      userId: authContext.keycloakUser.sub,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
       model,
     });
     const uniqueProductId2 = item2.createUniqueProductIdentifier();
     await itemsService.save(item2);
     const response = await request(getApp(app))
-      .get(`/organizations/${otherOrganizationId}/models/${model.id}/items`)
+      .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [otherOrganizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -753,35 +716,26 @@ describe("itemsController", () => {
   });
   //
   it(`/GET all item fails if user is not member of organization`, async () => {
-    const otherOrganizationId = randomUUID();
     const model = Model.create({
       name: "name",
-      userId: authContext.keycloakUser.sub,
-      organizationId: otherOrganizationId,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
       template,
     });
     await modelsService.save(model);
     const item = Item.create({
-      organizationId: otherOrganizationId,
-      userId: authContext.keycloakUser.sub,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
       model,
     });
     await itemsService.save(item);
-    const item2 = Item.create({
-      organizationId: otherOrganizationId,
-      userId: authContext.keycloakUser.sub,
-      model,
-      template,
-    });
-    await itemsService.save(item2);
     const response = await request(getApp(app))
-      .get(`/organizations/${otherOrganizationId}/models/${model.id}/items`)
+      .get(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/models/${model.id}/items`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -789,35 +743,26 @@ describe("itemsController", () => {
   });
 
   it(`/GET all item fails if model do not belong to organization`, async () => {
-    const otherOrganizationId = randomUUID();
     const model = Model.create({
       name: "name",
-      userId: authContext.keycloakUser.sub,
-      organizationId: otherOrganizationId,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
       template,
     });
     await modelsService.save(model);
     const item = Item.create({
-      organizationId: otherOrganizationId,
-      userId: authContext.keycloakUser.sub,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
       model,
     });
     await itemsService.save(item);
-    const item2 = Item.create({
-      organizationId: otherOrganizationId,
-      userId: authContext.keycloakUser.sub,
-      template,
-      model,
-    });
-    await itemsService.save(item2);
     const response = await request(getApp(app))
-      .get(`/organizations/${organization.id}/models/${model.id}/items`)
+      .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );

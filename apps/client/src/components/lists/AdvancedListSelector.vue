@@ -7,11 +7,9 @@ import {
   MagnifyingGlassIcon,
 } from "@heroicons/vue/16/solid";
 import { computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import Dropdown from "../Dropdown.vue";
 import Pagination from "./Pagination.vue";
-import { useI18n } from 'vue-i18n';
-
-const { t } = useI18n();
 
 const props = defineProps<{
   headers: string[];
@@ -44,6 +42,8 @@ const emits = defineEmits<{
   (e: "updateSearch", value: string): void;
   (e: "itemAction", itemId: string, actionIndex: number): void;
 }>();
+
+const { t } = useI18n();
 
 const defaults = {
   rowsPerPage: 5,

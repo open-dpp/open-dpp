@@ -119,7 +119,9 @@ export class OrganizationsService {
 
   async findAllWhereMember(authContext: AuthContext) {
     const organizations = await this.organizationDoc.find({
-      members: authContext.keycloakUser.sub,
+      members: {
+        $in: [authContext.user.id],
+      },
     }).populate("members");
     const domainOrganizations = [];
     for (const organization of organizations) {

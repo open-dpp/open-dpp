@@ -3,13 +3,12 @@ import type { FieldView } from "../../lib/field-view";
 import type { MediaInfo } from "../media/MediaInfo.interface";
 import { ArrowDownTrayIcon } from "@heroicons/vue/24/outline";
 import { onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { useMediaStore } from "../../stores/media";
 import MediaPreview from "../media/MediaPreview.vue";
-import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
 const props = defineProps<{ fieldView: FieldView }>();
-
+const { t } = useI18n();
 const mediaStore = useMediaStore();
 
 const uploadedFileUrl = ref<string | undefined>(undefined);
@@ -25,8 +24,9 @@ async function loadFile() {
     if (uploadedFileUrl.value) {
       try {
         URL.revokeObjectURL(uploadedFileUrl.value);
-      } catch (revokeErr) {
-        console.error(t('file.errorRevokingUrl'), revokeErr);
+      }
+      catch (revokeErr) {
+        console.error(t("file.errorRevokingUrl"), revokeErr);
       }
     }
 
@@ -41,8 +41,9 @@ async function loadFile() {
     if (uploadedFileUrl.value) {
       try {
         URL.revokeObjectURL(uploadedFileUrl.value);
-      } catch (revokeErr) {
-        console.error(t('file.errorRevokingUrlError'), revokeErr);
+      }
+      catch (revokeErr) {
+        console.error(t("file.errorRevokingUrlError"), revokeErr);
       }
     }
     uploadedFileUrl.value = undefined;

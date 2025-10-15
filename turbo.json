@@ -2,6 +2,10 @@
   "$schema": "https://turborepo.com/schema.json",
   "globalDependencies": [".env"],
   "tasks": {
+    "build-packages": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
@@ -26,6 +30,11 @@
     "cypress:headless": {
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "cache": false
+    },
+    "test:debug": {
+      "inputs": ["$TURBO_DEFAULT$", ".env"],
+      "cache": false,
+      "persistent": true
     }
   }
 }

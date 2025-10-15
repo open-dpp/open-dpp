@@ -3,21 +3,20 @@ import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/vue";
 import { ChevronDownIcon } from "@heroicons/vue/20/solid";
 import { VisibilityLevel } from "@open-dpp/api-client";
 import { ref } from "vue";
-import { useI18n } from 'vue-i18n';
+import { useI18n } from "vue-i18n";
 
-const { t } = useI18n();
 const emits = defineEmits<{
   (e: "onPublish", visibility: VisibilityLevel): void;
 }>();
-
+const { t } = useI18n();
 const selectedVisibility = ref<VisibilityLevel>(VisibilityLevel.PRIVATE);
 
 const items: { name: string; visibility: VisibilityLevel }[] = [
   {
-    name: t('draft.visibility.private'),
+    name: t("draft.visibility.private"),
     visibility: VisibilityLevel.PRIVATE,
   },
-  { name: t('draft.visibility.public'), visibility: VisibilityLevel.PUBLIC },
+  { name: t("draft.visibility.public"), visibility: VisibilityLevel.PUBLIC },
 ];
 </script>
 

@@ -1,18 +1,14 @@
 import type { User } from "../../users/domain/user";
 import { randomUUID } from "node:crypto";
+import { OrganizationSubject } from "@open-dpp/permission";
 import { Expose } from "class-transformer";
 
-export type OrganizationCreateProps =
-  | {
-      name: string;
-      user: User;
-    }
-  | {
-      name: string;
-      createdByUserId: string;
-      ownedByUserId: string;
-      members: User[];
-    };
+export interface OrganizationCreateProps {
+  name: string;
+  createdByUserId: string;
+  ownedByUserId: string;
+  members: User[];
+}
 
 export interface OrganizationDbProps {
   id: string;
@@ -53,16 +49,6 @@ export class Organization {
   }
 
   public static create(data: OrganizationCreateProps) {
-    if ("user" in data) {
-      const user = data.user;
-      return new Organization(
-        randomUUID(),
-        data.name,
-        user.id,
-        user.id,
-        [user],
-      );
-    }
     return new Organization(
       randomUUID(),
       data.name,
@@ -90,5 +76,13 @@ export class Organization {
 
   isMember(user: User) {
     return this.members.some(m => m.id === user.id);
+  }
+
+  toPermissionSubject() {
+    return new OrganizationSubject(
+      this.id,
+      this.ownedByUserId,
+      this.members.map(member => member.id),
+    );
   }
 }

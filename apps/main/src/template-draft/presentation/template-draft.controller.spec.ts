@@ -1,13 +1,19 @@
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { beforeAll, expect } from "@jest/globals";
 import { INestApplication } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { AuthContext, PermissionModule } from "@open-dpp/auth";
 import { EnvModule } from "@open-dpp/env";
-import getKeycloakAuthToken, { createKeycloakUserInToken, getApp, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
+import getKeycloakAuthToken, {
+  createKeycloakUserInToken,
+  getApp,
+  KeycloakAuthTestingGuard,
+  KeycloakResourcesServiceTesting,
+  MongooseTestingModule,
+} from "@open-dpp/testing";
 import request from "supertest";
+import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
@@ -23,6 +29,7 @@ import {
 } from "../../marketplace/infrastructure/passport-template-publication.service";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { Organization } from "../../organizations/domain/organization";
+import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import {
   TemplateDoc,
@@ -30,10 +37,12 @@ import {
 } from "../../templates/infrastructure/template.schema";
 import { TemplateService } from "../../templates/infrastructure/template.service";
 import { User } from "../../users/domain/user";
+
+import { InjectUserToAuthContextGuard } from "../../users/infrastructure/inject-user-to-auth-context.guard";
+import { UserDbSchema, UserDoc } from "../../users/infrastructure/user.schema";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { DataFieldDraft } from "../domain/data-field-draft";
 import { SectionDraft } from "../domain/section-draft";
-
 import { MoveDirection, TemplateDraft } from "../domain/template-draft";
 import { dataFieldDraftDbPropsFactory } from "../fixtures/data-field-draft.factory";
 import { sectionDraftDbPropsFactory } from "../fixtures/section-draft.factory";
@@ -53,15 +62,11 @@ import { TemplateDraftController } from "./template-draft.controller";
 
 describe("templateDraftController", () => {
   let app: INestApplication;
-  const authContext = new AuthContext();
   let templateDraftService: TemplateDraftService;
   let templateService: TemplateService;
-  authContext.keycloakUser = createKeycloakUserInToken();
-  const userId = authContext.keycloakUser.sub;
-  const organizationId = randomUUID();
-  const otherOrganizationId = randomUUID();
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
   let module: TestingModule;
+  let usersService: UsersService;
   let organizationService: OrganizationsService;
   let marketplaceService: MarketplaceApplicationService;
 
@@ -83,8 +88,15 @@ describe("templateDraftController", () => {
             name: PassportTemplatePublicationDoc.name,
             schema: PassportTemplatePublicationDbSchema,
           },
+          {
+            name: OrganizationDoc.name,
+            schema: OrganizationDbSchema,
+          },
+          {
+            name: UserDoc.name,
+            schema: UserDbSchema,
+          },
         ]),
-        PermissionModule,
       ],
       providers: [
         TemplateService,
@@ -98,6 +110,10 @@ describe("templateDraftController", () => {
           provide: APP_GUARD,
           useValue: keycloakAuthTestingGuard,
         },
+        {
+          provide: APP_GUARD,
+          useClass: InjectUserToAuthContextGuard,
+        },
       ],
       controllers: [TemplateDraftController],
     })
@@ -106,8 +122,8 @@ describe("templateDraftController", () => {
         KeycloakResourcesServiceTesting.fromPlain({
           users: [
             {
-              id: authContext.keycloakUser.sub,
-              email: authContext.keycloakUser.email,
+              id: TestUsersAndOrganizations.keycloakUsers.keycloakUser1.sub,
+              email: TestUsersAndOrganizations.keycloakUsers.keycloakUser1.email,
             },
           ],
         }),
@@ -123,10 +139,16 @@ describe("templateDraftController", () => {
       MarketplaceApplicationService,
     );
 
+    usersService
+      = module.get<UsersService>(UsersService);
     organizationService
       = module.get<OrganizationsService>(OrganizationsService);
 
     await app.init();
+
+    await usersService.save(TestUsersAndOrganizations.users.user1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
 
   const userNotMemberTxt = `fails if user is not member of organization`;
@@ -135,12 +157,11 @@ describe("templateDraftController", () => {
   it(`/CREATE template draft`, async () => {
     const body = templateDraftCreateDtoFactory.build();
     const response = await request(getApp(app))
-      .post(`/organizations/${organizationId}/template-drafts`)
+      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -155,12 +176,11 @@ describe("templateDraftController", () => {
     const body = templateDraftCreateDtoFactory.build();
 
     const response = await request(getApp(app))
-      .post(`/organizations/${otherOrganizationId}/template-drafts`)
+      .post(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/template-drafts`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -171,8 +191,8 @@ describe("templateDraftController", () => {
   it(`/PATCH template draft`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org1.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
 
@@ -180,13 +200,12 @@ describe("templateDraftController", () => {
     const body = templateDraftCreateDtoFactory.build();
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -201,8 +220,8 @@ describe("templateDraftController", () => {
   it(`/PATCH template draft ${userNotMemberTxt}`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org2.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
 
@@ -210,13 +229,12 @@ describe("templateDraftController", () => {
     const body = templateDraftCreateDtoFactory.build();
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${otherOrganizationId}/template-drafts/${laptopDraft.id}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/template-drafts/${laptopDraft.id}`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -227,21 +245,20 @@ describe("templateDraftController", () => {
   it(`/PATCH template draft ${draftDoesNotBelongToOrga}`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org2.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
     const body = templateDraftCreateDtoFactory.build();
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -252,8 +269,8 @@ describe("templateDraftController", () => {
   it(`/PUBLISH template draft`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org1.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
 
@@ -272,30 +289,19 @@ describe("templateDraftController", () => {
     laptopDraft.addDataFieldToSection(section.id, dataField);
     await templateDraftService.save(laptopDraft);
 
-    await organizationService.save(
-      Organization.loadFromDb({
-        id: organizationId,
-        name: "orga name",
-        members: [User.loadFromDb({ id: userId, email: `${userId}@example.com`, keycloakUserId: userId })],
-        createdByUserId: userId,
-        ownedByUserId: userId,
-      }),
-    );
-
     const body = {
       visibility: VisibilityLevel.PUBLIC,
     };
     const spyUpload = jest.spyOn(marketplaceService, "upload");
 
     const token = getKeycloakAuthToken(
-      userId,
-      [organizationId],
+      TestUsersAndOrganizations.users.user1.keycloakUserId,
       keycloakAuthTestingGuard,
     );
 
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/publish`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/publish`,
       )
       .set("Authorization", token)
       .send(body);
@@ -312,15 +318,14 @@ describe("templateDraftController", () => {
     expect(foundTemplate.id).toEqual(foundDraft.publications[0].id);
 
     expect(foundTemplate.marketplaceResourceId).toBeDefined();
-    const user = User.loadFromDb({ id: userId, email: `${userId}@test.test`, keycloakUserId: userId });
-    expect(spyUpload).toHaveBeenCalledWith(foundTemplate, user);
+    expect(spyUpload).toHaveBeenCalledWith(foundTemplate, TestUsersAndOrganizations.users.user1);
   });
 
   it(`/PUBLISH template draft ${userNotMemberTxt}`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org1.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     const body = {
@@ -329,13 +334,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${otherOrganizationId}/template-drafts/${laptopDraft.id}/publish`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/template-drafts/${laptopDraft.id}/publish`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -346,8 +350,8 @@ describe("templateDraftController", () => {
   it(`/PUBLISH template draft ${draftDoesNotBelongToOrga}`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org2.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -357,13 +361,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/publish`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/publish`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -372,26 +375,38 @@ describe("templateDraftController", () => {
   });
 
   it(`/GET template drafts of organization`, async () => {
-    const myOrgaId = randomUUID();
+    const keycloakUserTemp = createKeycloakUserInToken();
+    const userTemp = User.create({
+      email: keycloakUserTemp.email,
+      keycloakUserId: keycloakUserTemp.sub,
+    });
+    const orgTemp = Organization.create({
+      name: "organization-temp-test",
+      ownedByUserId: userTemp.id,
+      createdByUserId: userTemp.id,
+      members: [userTemp],
+    });
+    await usersService.save(userTemp);
+    await organizationService.save(orgTemp);
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: myOrgaId,
-        userId,
+        organizationId: orgTemp.id,
+        userId: userTemp.id,
       }),
     );
     const phoneDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: myOrgaId,
-        userId,
+        organizationId: orgTemp.id,
+        userId: userTemp.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
     await templateDraftService.save(phoneDraft);
     const response = await request(getApp(app))
-      .get(`/organizations/${myOrgaId}/template-drafts`)
+      .get(`/organizations/${orgTemp.id}/template-drafts`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(userId, [myOrgaId], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(userTemp.keycloakUserId, keycloakAuthTestingGuard),
       );
 
     expect(response.status).toEqual(200);
@@ -403,12 +418,11 @@ describe("templateDraftController", () => {
 
   it(`/GET template drafts of organization ${userNotMemberTxt}`, async () => {
     const response = await request(getApp(app))
-      .get(`/organizations/${otherOrganizationId}/template-drafts`)
+      .get(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/template-drafts`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -418,8 +432,8 @@ describe("templateDraftController", () => {
   it(`/CREATE section draft`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org1.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -430,13 +444,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/sections`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -462,8 +475,8 @@ describe("templateDraftController", () => {
   it(`/CREATE sub section draft`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org1.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
 
@@ -485,13 +498,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/sections`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -525,13 +537,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/template-drafts/${randomUUID()}/sections`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -542,8 +553,8 @@ describe("templateDraftController", () => {
   it(`/CREATE section draft ${draftDoesNotBelongToOrga}`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org2.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -556,13 +567,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/sections`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -573,8 +583,8 @@ describe("templateDraftController", () => {
   it(`/GET draft`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org1.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
 
@@ -587,12 +597,11 @@ describe("templateDraftController", () => {
 
     await templateDraftService.save(laptopDraft);
     const response = await request(getApp(app))
-      .get(`/organizations/${organizationId}/template-drafts/${laptopDraft.id}`)
+      .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -604,13 +613,12 @@ describe("templateDraftController", () => {
   it(`/GET draft ${userNotMemberTxt}`, async () => {
     const response = await request(getApp(app))
       .get(
-        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/template-drafts/${randomUUID()}`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -620,19 +628,18 @@ describe("templateDraftController", () => {
   it(`/GET draft ${draftDoesNotBelongToOrga}`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org2.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
 
     const response = await request(getApp(app))
-      .get(`/organizations/${organizationId}/template-drafts/${laptopDraft.id}`)
+      .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -642,8 +649,8 @@ describe("templateDraftController", () => {
   it(`/PATCH section draft`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org1.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
 
@@ -661,13 +668,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/sections/${section.id}`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -686,13 +692,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/template-drafts/${randomUUID()}/sections/${randomUUID()}`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -703,8 +708,8 @@ describe("templateDraftController", () => {
   it(`/PATCH section draft ${draftDoesNotBelongToOrga}`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org2.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -713,13 +718,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -730,8 +734,8 @@ describe("templateDraftController", () => {
   it(`/POST move section`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org1.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     const section1 = SectionDraft.create(sectionDraftDbPropsFactory.build());
@@ -751,13 +755,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section2.id}/move`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/sections/${section2.id}/move`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -770,8 +773,8 @@ describe("templateDraftController", () => {
   it(`/POST move section ${userNotMemberTxt}`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org2.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -781,13 +784,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [otherOrganizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -798,8 +800,8 @@ describe("templateDraftController", () => {
   it(`/POST move section ${draftDoesNotBelongToOrga}`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org2.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -809,13 +811,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -826,8 +827,8 @@ describe("templateDraftController", () => {
   it(`/POST move data field`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org1.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     const dataField1 = DataFieldDraft.loadFromDb(
@@ -856,13 +857,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section1.id}/data-fields/${dataField3.id}/move`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/sections/${section1.id}/data-fields/${dataField3.id}/move`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -879,8 +879,8 @@ describe("templateDraftController", () => {
   it(`/POST move data field ${userNotMemberTxt}`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org2.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -890,13 +890,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}/move`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}/move`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [otherOrganizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -907,8 +906,8 @@ describe("templateDraftController", () => {
   it(`/POST move data field ${draftDoesNotBelongToOrga}`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org2.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -918,13 +917,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}/move`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}/move`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -935,8 +933,8 @@ describe("templateDraftController", () => {
   it(`/DELETE section draft`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org1.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
 
@@ -949,13 +947,12 @@ describe("templateDraftController", () => {
     await templateDraftService.save(laptopDraft);
     const response = await request(getApp(app))
       .delete(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/sections/${section.id}`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -967,13 +964,12 @@ describe("templateDraftController", () => {
   it(`/DELETE section draft ${userNotMemberTxt}`, async () => {
     const response = await request(getApp(app))
       .delete(
-        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/template-drafts/${randomUUID()}/sections/${randomUUID()}`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -983,21 +979,20 @@ describe("templateDraftController", () => {
   it(`/DELETE section draft ${draftDoesNotBelongToOrga}`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org2.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
 
     const response = await request(getApp(app))
       .delete(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -1007,8 +1002,8 @@ describe("templateDraftController", () => {
   it(`/CREATE data field draft`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org1.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     const section = SectionDraft.create({
@@ -1028,13 +1023,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -1066,13 +1060,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}/data-fields`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/template-drafts/${randomUUID()}/sections/${randomUUID()}/data-fields`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -1083,8 +1076,8 @@ describe("templateDraftController", () => {
   it(`/CREATE data field draft ${draftDoesNotBelongToOrga}`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org2.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -1097,13 +1090,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -1114,8 +1106,8 @@ describe("templateDraftController", () => {
   it(`/PATCH data field draft`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org1.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     const section = SectionDraft.create({
@@ -1139,13 +1131,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields/${dataField.id}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields/${dataField.id}`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -1168,13 +1159,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/someId/data-fields/someId`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/template-drafts/${randomUUID()}/sections/someId/data-fields/someId`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -1185,8 +1175,8 @@ describe("templateDraftController", () => {
   it(`/PATCH data field draft ${draftDoesNotBelongToOrga}`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org2.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -1196,13 +1186,12 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/someId/data-fields/someId`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/sections/someId/data-fields/someId`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -1213,8 +1202,8 @@ describe("templateDraftController", () => {
   it(`/DELETE data field draft`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org1.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
 
@@ -1235,13 +1224,12 @@ describe("templateDraftController", () => {
     await templateDraftService.save(laptopDraft);
     const response = await request(getApp(app))
       .delete(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields/${dataField.id}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields/${dataField.id}`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -1255,13 +1243,12 @@ describe("templateDraftController", () => {
   it(`/DELETE data field ${userNotMemberTxt}`, async () => {
     const response = await request(getApp(app))
       .delete(
-        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}/data-fields/${randomUUID()}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/template-drafts/${randomUUID()}/sections/${randomUUID()}/data-fields/${randomUUID()}`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -1271,21 +1258,20 @@ describe("templateDraftController", () => {
   it(`/DELETE data field ${draftDoesNotBelongToOrga}`, async () => {
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: TestUsersAndOrganizations.organizations.org2.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
 
     const response = await request(getApp(app))
       .delete(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );

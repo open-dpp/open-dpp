@@ -1,6 +1,5 @@
 import { forwardRef, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { PermissionModule } from "@open-dpp/auth";
 import { KeycloakResourcesModule } from "../keycloak-resources/keycloak-resources.module";
 import { UsersModule } from "../users/users.module";
 import { OrganizationDbSchema, OrganizationDoc } from "./infrastructure/organization.schema";
@@ -17,7 +16,7 @@ import { OrganizationsController } from "./presentation/organizations.controller
     ]),
     KeycloakResourcesModule,
     forwardRef(() => UsersModule),
-    PermissionModule,
+    OrganizationsModule,
   ],
   controllers: [OrganizationsController],
   providers: [OrganizationsService],

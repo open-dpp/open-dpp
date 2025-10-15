@@ -1,4 +1,5 @@
 export const PermissionAction = {
+  MANAGE: "MANAGE", // all actions
   CREATE: "CREATE",
   READ: "READ",
   UPDATE: "UPDATE",

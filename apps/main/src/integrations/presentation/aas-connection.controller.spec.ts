@@ -4,11 +4,17 @@ import { INestApplication } from "@nestjs/common";
 import { APP_GUARD, Reflector } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { AuthContext, PermissionModule } from "@open-dpp/auth";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import getKeycloakAuthToken, { getApp, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
+import getKeycloakAuthToken, {
+  createKeycloakUserInToken,
+  getApp,
+  KeycloakAuthTestingGuard,
+  KeycloakResourcesServiceTesting,
+  MongooseTestingModule,
+} from "@open-dpp/testing";
 import { json } from "express";
 import request from "supertest";
+import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
 import { ItemsService } from "../../items/infrastructure/items.service";
@@ -18,6 +24,7 @@ import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { Organization } from "../../organizations/domain/organization";
+import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { Template, TemplateDbProps } from "../../templates/domain/template";
 import { dataFieldDbPropsFactory } from "../../templates/fixtures/data-field.factory";
@@ -36,6 +43,8 @@ import {
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { User } from "../../users/domain/user";
+import { InjectUserToAuthContextGuard } from "../../users/infrastructure/inject-user-to-auth-context.guard";
+import { UserDbSchema, UserDoc } from "../../users/infrastructure/user.schema";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { AasConnection, AasFieldAssignment } from "../domain/aas-connection";
 import { AssetAdministrationShellType } from "../domain/asset-administration-shell";
@@ -57,18 +66,8 @@ describe("aasConnectionController", () => {
   let itemsSevice: ItemsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
   let configService: EnvService;
-
-  const authContext = new AuthContext();
-  authContext.keycloakUser = {
-    sub: randomUUID(),
-    email: "test@test.test",
-    name: "Test",
-    preferred_username: "test@test.test",
-    email_verified: true,
-    memberships: [],
-  };
-  const user = User.loadFromDb({ id: authContext.keycloakUser.sub, email: authContext.keycloakUser.email });
-  const organizationId = randomUUID();
+  let organizationService: OrganizationsService;
+  let usersService: UsersService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -100,8 +99,15 @@ describe("aasConnectionController", () => {
             name: TraceabilityEventDocument.name,
             schema: DppEventSchema,
           },
+          {
+            name: OrganizationDoc.name,
+            schema: OrganizationDbSchema,
+          },
+          {
+            name: UserDoc.name,
+            schema: UserDbSchema,
+          },
         ]),
-        PermissionModule,
       ],
       providers: [
         OrganizationsService,
@@ -118,15 +124,8 @@ describe("aasConnectionController", () => {
           useValue: keycloakAuthTestingGuard,
         },
         {
-          provide: KeycloakResourcesService,
-          useValue: KeycloakResourcesServiceTesting.fromPlain({
-            users: [
-              {
-                id: authContext.keycloakUser.sub,
-                email: authContext.keycloakUser.email,
-              },
-            ],
-          }),
+          provide: APP_GUARD,
+          useClass: InjectUserToAuthContextGuard,
         },
       ],
       controllers: [AasConnectionController],
@@ -136,8 +135,8 @@ describe("aasConnectionController", () => {
         KeycloakResourcesServiceTesting.fromPlain({
           users: [
             {
-              id: authContext.keycloakUser.sub,
-              email: authContext.keycloakUser.email,
+              id: TestUsersAndOrganizations.keycloakUsers.keycloakUser1.sub,
+              email: TestUsersAndOrganizations.keycloakUsers.keycloakUser1.email,
             },
           ],
         }),
@@ -155,22 +154,19 @@ describe("aasConnectionController", () => {
     aasConnectionService = moduleRef.get(AasConnectionService);
     modelsService = moduleRef.get(ModelsService);
     itemsSevice = moduleRef.get(ItemsService);
-    const organizationService = moduleRef.get(OrganizationsService);
-    await organizationService.save(
-      Organization.loadFromDb({
-        id: organizationId,
-        name: "orga name",
-        members: [user],
-        createdByUserId: authContext.keycloakUser.sub,
-        ownedByUserId: authContext.keycloakUser.sub,
-      }),
-    );
+    organizationService = moduleRef.get(OrganizationsService);
+    usersService = moduleRef.get(UsersService);
+
     uniqueProductIdentifierService = moduleRef.get(
       UniqueProductIdentifierService,
     );
     configService = moduleRef.get(EnvService);
 
     await app.init();
+
+    await usersService.save(TestUsersAndOrganizations.users.user1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
   beforeEach(() => {
     jest.spyOn(reflector, "get").mockReturnValue(false);
@@ -180,8 +176,8 @@ describe("aasConnectionController", () => {
   const dataFieldId1 = randomUUID();
 
   const laptopModel: TemplateDbProps = laptopFactory.build({
-    organizationId,
-    userId: authContext.keycloakUser.sub,
+    organizationId: TestUsersAndOrganizations.organizations.org1.id,
+    userId: TestUsersAndOrganizations.users.user1.id,
     sections: [
       sectionDbPropsFactory.build({
         id: sectionId1,
@@ -202,15 +198,15 @@ describe("aasConnectionController", () => {
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
     const model = Model.create({
-      organizationId,
-      userId: authContext.keycloakUser.sub,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       name: "Laptop",
       template,
     });
     const aasMapping = AasConnection.create({
       name: "Connection Name",
-      organizationId,
-      userId: authContext.keycloakUser.sub,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       dataModelId: template.id,
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
       modelId: model.id,
@@ -228,7 +224,7 @@ describe("aasConnectionController", () => {
     const globalAssetId = `Semitrailer_Truck_-10204004-0010-02_${randomUUID()}`;
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/integration/aas/connections/${aasMapping.id}/items`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/integration/aas/connections/${aasMapping.id}/items`,
       )
       .set("API_TOKEN", configService.get("OPEN_DPP_AAS_TOKEN")!)
       .send({
@@ -266,8 +262,8 @@ describe("aasConnectionController", () => {
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
     const model = Model.create({
-      organizationId,
-      userId: authContext.keycloakUser.sub,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       name: "Laptop",
       template,
     });
@@ -289,12 +285,11 @@ describe("aasConnectionController", () => {
     };
 
     const response = await request(getApp(app))
-      .post(`/organizations/${organizationId}/integration/aas/connections`)
+      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/integration/aas/connections`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -312,8 +307,8 @@ describe("aasConnectionController", () => {
   it(`/UPDATE connection`, async () => {
     const aasConnection = AasConnection.create({
       name: "Connection Name",
-      organizationId,
-      userId: authContext.keycloakUser.sub,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       dataModelId: randomUUID(),
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
       modelId: randomUUID(),
@@ -323,8 +318,8 @@ describe("aasConnectionController", () => {
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
     const model = Model.create({
-      organizationId,
-      userId: authContext.keycloakUser.sub,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       name: "Laptop",
       template,
     });
@@ -345,13 +340,12 @@ describe("aasConnectionController", () => {
 
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${organizationId}/integration/aas/connections/${aasConnection.id}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/integration/aas/connections/${aasConnection.id}`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -368,13 +362,12 @@ describe("aasConnectionController", () => {
 
     const response = await request(getApp(app))
       .get(
-        `/organizations/${organizationId}/integration/aas/${AssetAdministrationShellType.Semitrailer_Truck}/properties`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/integration/aas/${AssetAdministrationShellType.Semitrailer_Truck}/properties`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -401,19 +394,31 @@ describe("aasConnectionController", () => {
   });
 
   it(`/GET all connections of organization`, async () => {
-    const otherOrganizationId = randomUUID();
+    const keycloakUserTemp = createKeycloakUserInToken();
+    const userTemp = User.create({
+      email: keycloakUserTemp.email,
+      keycloakUserId: keycloakUserTemp.sub,
+    });
+    const orgTemp = Organization.create({
+      name: "organization-temp-test",
+      ownedByUserId: userTemp.id,
+      createdByUserId: userTemp.id,
+      members: [userTemp],
+    });
+    await usersService.save(userTemp);
+    await organizationService.save(orgTemp);
     const aasConnection1 = AasConnection.create({
       name: "Connection Name 1",
-      organizationId: otherOrganizationId,
-      userId: authContext.keycloakUser.sub,
+      organizationId: orgTemp.id,
+      userId: userTemp.keycloakUserId,
       dataModelId: randomUUID(),
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
       modelId: randomUUID(),
     });
     const aasConnection2 = AasConnection.create({
       name: "Connection Name 2",
-      organizationId: otherOrganizationId,
-      userId: authContext.keycloakUser.sub,
+      organizationId: orgTemp.id,
+      userId: userTemp.keycloakUserId,
       dataModelId: randomUUID(),
       aasType: AssetAdministrationShellType.Semitrailer_Truck,
       modelId: randomUUID(),
@@ -422,12 +427,11 @@ describe("aasConnectionController", () => {
     await aasConnectionService.save(aasConnection2);
 
     const response = await request(getApp(app))
-      .get(`/organizations/${otherOrganizationId}/integration/aas/connections`)
+      .get(`/organizations/${orgTemp.id}/integration/aas/connections`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [otherOrganizationId],
+          userTemp.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );

@@ -8,9 +8,10 @@ import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { ignoreIds, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import { ignoreIds, KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
+import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
-import { Organization } from "../../organizations/domain/organization";
+import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import { Template } from "../../templates/domain/template";
@@ -21,7 +22,7 @@ import {
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
-import { User } from "../../users/domain/user";
+import { UserDbSchema, UserDoc } from "../../users/infrastructure/user.schema";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { Model } from "../domain/model";
 import { ModelDoc, ModelDocSchemaVersion, ModelSchema } from "./model.schema";
@@ -29,13 +30,6 @@ import { ModelsService } from "./models.service";
 
 describe("modelsService", () => {
   let modelsService: ModelsService;
-  const user = User.create({ email: "test@test.test" });
-  const organization = Organization.create({
-    name: "Test Org",
-    ownedByUserId: user.id,
-    createdByUserId: user.id,
-    members: [user],
-  });
   let mongoConnection: Connection;
   let modelDoc: MongooseModel<ModelDoc>;
 
@@ -52,6 +46,14 @@ describe("modelsService", () => {
           {
             name: ModelDoc.name,
             schema: ModelSchema,
+          },
+          {
+            name: OrganizationDoc.name,
+            schema: OrganizationDbSchema,
+          },
+          {
+            name: UserDoc.name,
+            schema: UserDbSchema,
           },
         ]),
       ],
@@ -81,18 +83,24 @@ describe("modelsService", () => {
     modelsService = module.get<ModelsService>(ModelsService);
     mongoConnection = module.get<Connection>(getConnectionToken());
     modelDoc = mongoConnection.model(ModelDoc.name, ModelSchema);
+
+    const usersService = module.get(UsersService);
+    const organizationService = module.get<OrganizationsService>(OrganizationsService);
+    await usersService.save(TestUsersAndOrganizations.users.user1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
 
   it("should create a model", async () => {
     const template = Template.loadFromDb(
       laptopFactory
         .addSections()
-        .build({ organizationId: organization.id, userId: user.id }),
+        .build({ organizationId: TestUsersAndOrganizations.organizations.org1.id, userId: TestUsersAndOrganizations.users.user1.id }),
     );
     const model = Model.create({
       name: "My product",
-      userId: user.id,
-      organizationId: organization.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
       template,
     });
 
@@ -137,8 +145,8 @@ describe("modelsService", () => {
         }),
       ]),
     );
-    expect(foundModel.createdByUserId).toEqual(user.id);
-    expect(foundModel.isOwnedBy(organization.id)).toBeTruthy();
+    expect(foundModel.createdByUserId).toEqual(TestUsersAndOrganizations.users.user1.id);
+    expect(foundModel.isOwnedBy(TestUsersAndOrganizations.organizations.org1.id)).toBeTruthy();
   });
 
   it("fails if requested model could not be found", async () => {
@@ -152,24 +160,24 @@ describe("modelsService", () => {
     const template = Template.loadFromDb(
       laptopFactory
         .addSections()
-        .build({ organizationId: organization.id, userId: user.id }),
+        .build({ organizationId: TestUsersAndOrganizations.organizations.org1.id, userId: TestUsersAndOrganizations.users.user1.id }),
     );
 
     const model1 = Model.create({
       name: "Product A",
-      userId: user.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       organizationId: otherOrganizationId,
       template,
     });
     const model2 = Model.create({
       name: "Product B",
-      userId: user.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       organizationId: otherOrganizationId,
       template,
     });
     const model3 = Model.create({
       name: "Product C",
-      userId: user.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       organizationId: otherOrganizationId,
       template,
     });

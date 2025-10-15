@@ -1,9 +1,7 @@
 <script lang="ts" setup>
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/vue/20/solid";
 import { computed } from "vue";
-import { useI18n } from 'vue-i18n';
-
-const { t } = useI18n();
+import { useI18n } from "vue-i18n";
 
 const props = defineProps<{
   currentPage: number;
@@ -14,6 +12,8 @@ const props = defineProps<{
 const emits = defineEmits<{
   (e: "pageChanged", page: number): void;
 }>();
+
+const { t } = useI18n();
 
 const totalPages = computed(() => {
   return Math.ceil(props.totalItems / props.itemsPerPage);

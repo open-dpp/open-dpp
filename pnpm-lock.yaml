@@ -273,6 +273,9 @@ importers:
       '@open-dpp/exception':
         specifier: workspace:*
         version: link:../../packages/exception
+      '@open-dpp/permission':
+        specifier: workspace:*
+        version: link:../../packages/permission
       axios:
         specifier: ^1.12.2
         version: 1.12.2

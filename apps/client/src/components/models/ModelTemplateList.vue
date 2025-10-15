@@ -1,23 +1,21 @@
 <script lang="ts" setup>
 import type { TemplateGetAllDto } from "@open-dpp/api-client";
 import { onMounted, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import apiClient from "../../lib/api-client";
 import AdvancedListSelector from "../lists/AdvancedListSelector.vue";
 import Tabs from "../lists/Tabs.vue";
-import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
 const props = defineProps<{
   selected: TemplateGetAllDto[];
   showTabs?: boolean;
   isMarketplaceSelected?: boolean;
 }>();
-
 const emits = defineEmits<{
   (e: "updateSelectedItems", items: TemplateGetAllDto[]): void;
   (e: "updateIsMarketplaceSelected", isSelected: boolean): void;
 }>();
-
+const { t } = useI18n();
 const localTemplates = ref<TemplateGetAllDto[]>([]);
 const marketplaceTemplates = ref<TemplateGetAllDto[]>([]);
 const selectedTabIndex = ref<number>(props.isMarketplaceSelected ? 1 : 0);

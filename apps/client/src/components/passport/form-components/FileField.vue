@@ -2,15 +2,14 @@
 import type { MediaInfo } from "../../media/MediaInfo.interface";
 import { DocumentIcon, PencilIcon } from "@heroicons/vue/16/solid";
 import { computed, onMounted, onUnmounted, ref, useAttrs } from "vue";
+import { useI18n } from "vue-i18n";
 import { useIndexStore } from "../../../stores";
 import { useMediaStore } from "../../../stores/media";
 import { useNotificationStore } from "../../../stores/notification";
 import { usePassportFormStore } from "../../../stores/passport.form";
 import MediaModal from "../../media/MediaModal.vue";
 import MediaPreview from "../../media/MediaPreview.vue";
-import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
 const props = defineProps<{
   id: string;
   label: string;
@@ -20,6 +19,7 @@ const props = defineProps<{
 const emits = defineEmits<{
   (e: "clicked"): void;
 }>();
+const { t } = useI18n();
 const passportFormStore = usePassportFormStore();
 const indexStore = useIndexStore();
 const notificationStore = useNotificationStore();
@@ -91,7 +91,7 @@ async function uploadFile() {
       progress => (uploadProgress.value = progress),
     );
     notificationStore.addSuccessNotification(
-      t('models.form.file.uploadSuccess'),
+      t("models.form.file.uploadSuccess"),
     );
     selectedLocalFile.value = null;
     await loadFile();
@@ -99,7 +99,7 @@ async function uploadFile() {
   catch (error: unknown) {
     console.error("Fehler beim Hochladen der Datei:", error);
     uploadedMediaId.value = undefined;
-    notificationStore.addErrorNotification(t('models.form.file.uploadError'));
+    notificationStore.addErrorNotification(t("models.form.file.uploadError"));
     selectedFile.value = null;
   }
   finally {
@@ -155,7 +155,7 @@ async function loadFile() {
     // Notify user via the existing notification store if available
     try {
       notificationStore.addErrorNotification(
-        t('models.form.file.downloadError'),
+        t("models.form.file.downloadError"),
       );
     }
     catch {

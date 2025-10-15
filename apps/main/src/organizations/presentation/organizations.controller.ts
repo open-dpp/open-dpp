@@ -3,31 +3,26 @@ import type { CreateOrganizationDto } from "./dto/create-organization.dto";
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   NotFoundException,
   Param,
   Post,
   Request,
 } from "@nestjs/common";
-import { PermissionService } from "@open-dpp/auth";
-import { UsersService } from "../../users/infrastructure/users.service";
+import { hasPermission, OrganizationSubject, PermissionAction } from "@open-dpp/permission";
+import { User } from "../../users/domain/user";
 import { Organization } from "../domain/organization";
 import { OrganizationsService } from "../infrastructure/organizations.service";
 
 @Controller("organizations")
 export class OrganizationsController {
-  private readonly userService: UsersService;
   private readonly organizationsService: OrganizationsService;
-  private readonly permissionsService: PermissionService;
 
   constructor(
-    userService: UsersService,
     organizationsService: OrganizationsService,
-    permissionsService: PermissionService,
   ) {
-    this.userService = userService;
     this.organizationsService = organizationsService;
-    this.permissionsService = permissionsService;
   }
 
   @Post()
@@ -35,11 +30,13 @@ export class OrganizationsController {
     @Request() req: authRequest.AuthRequest,
     @Body() createOrganizationDto: CreateOrganizationDto,
   ) {
-    const user = await this.userService.findOne(
-      req.authContext.keycloakUser.sub,
-    );
-    if (!user) {
-      throw new NotFoundException();
+    const user = req.authContext.user as User;
+    if (!hasPermission({
+      user: {
+        id: user.id,
+      },
+    }, PermissionAction.CREATE, OrganizationSubject)) {
+      throw new ForbiddenException();
     }
     const organization = Organization.create({
       name: createOrganizationDto.name,
@@ -56,8 +53,12 @@ export class OrganizationsController {
     const organizations = await this.organizationsService.findAllWhereMember(req.authContext);
     const accessibleOrganizations = [];
     for (const organization of organizations) {
-      const canAccess = this.permissionsService.canAccessOrganization(organization.id, req.authContext);
-      if (canAccess) {
+      const can = hasPermission({
+        user: {
+          id: (req.authContext.user as User).id,
+        },
+      }, PermissionAction.READ, organization.toPermissionSubject());
+      if (can) {
         accessibleOrganizations.push(organization);
       }
     }
@@ -69,8 +70,15 @@ export class OrganizationsController {
     @Param("id") id: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(id, req.authContext);
-    return this.organizationsService.findOneOrFail(id);
+    const organization = await this.organizationsService.findOneOrFail(id);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
+    return organization;
   }
 
   @Post(":organizationId/invite")
@@ -79,10 +87,14 @@ export class OrganizationsController {
     @Param("organizationId") organizationId: string,
     @Body() body: { email: string },
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     return this.organizationsService.inviteUser(
       req.authContext,
       organizationId,
@@ -95,8 +107,14 @@ export class OrganizationsController {
     @Param("id") id: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(id, req.authContext);
     const organization = await this.findOne(id, req);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     if (!organization) {
       throw new NotFoundException();
     }

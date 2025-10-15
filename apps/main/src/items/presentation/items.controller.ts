@@ -14,8 +14,8 @@ import {
   Request,
 } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
-import { PermissionService } from "@open-dpp/auth";
 import { ZodValidationPipe } from "@open-dpp/exception";
+import { hasPermission, PermissionAction } from "@open-dpp/permission";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import {
@@ -23,6 +23,7 @@ import {
   itemParamDocumentation,
   modelParamDocumentation,
 } from "../../open-api-docs/item.doc";
+import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import {
   DataValueDtoSchema,
@@ -32,6 +33,7 @@ import {
   orgaParamDocumentation,
 } from "../../product-passport-data/presentation/dto/docs/product-passport-data.doc";
 import { TemplateService } from "../../templates/infrastructure/template.service";
+import { User } from "../../users/domain/user";
 import { ItemsService } from "../infrastructure/items.service";
 import { itemToDto } from "./dto/item.dto";
 import { ItemsApplicationService } from "./items-application.service";
@@ -39,23 +41,23 @@ import { ItemsApplicationService } from "./items-application.service";
 @Controller("organizations/:orgaId/models/:modelId/items")
 export class ItemsController {
   private readonly itemsService: ItemsService;
-  private readonly permissionsService: PermissionService;
   private readonly itemsApplicationService: ItemsApplicationService;
   private readonly modelsService: ModelsService;
   private readonly templateService: TemplateService;
+  private readonly organizationsService: OrganizationsService;
 
   constructor(
     itemsService: ItemsService,
-    permissionsService: PermissionService,
     itemsApplicationService: ItemsApplicationService,
     modelsService: ModelsService,
     templateService: TemplateService,
+    organizationsService: OrganizationsService,
   ) {
     this.itemsService = itemsService;
-    this.permissionsService = permissionsService;
     this.itemsApplicationService = itemsApplicationService;
     this.modelsService = modelsService;
     this.templateService = templateService;
+    this.organizationsService = organizationsService;
   }
 
   @ApiOperation({
@@ -74,10 +76,14 @@ export class ItemsController {
     @Param("modelId") modelId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     const item = await this.itemsApplicationService.createItem(
       organizationId,
       modelId,
@@ -101,10 +107,14 @@ export class ItemsController {
     @Param("modelId") modelId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     const model = await this.modelsService.findOneOrFail(modelId);
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
@@ -131,10 +141,14 @@ export class ItemsController {
     @Param("itemId") itemId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     const item = await this.itemsService.findOneOrFail(itemId);
     if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
       throw new ForbiddenException();
@@ -165,10 +179,14 @@ export class ItemsController {
     addDataValues: DataValueDto[],
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     const item = await this.itemsService.findOneOrFail(itemId);
     if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
       throw new ForbiddenException();
@@ -214,10 +232,14 @@ export class ItemsController {
     updateDataValues: DataValueDto[],
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     const item = await this.itemsService.findOneOrFail(itemId);
     if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
       throw new ForbiddenException();

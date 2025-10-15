@@ -27,6 +27,7 @@ import { TemplateModule } from "./templates/template.module";
 import { TraceabilityEventsModule } from "./traceability-events/traceability-events.module";
 import { UniqueProductIdentifierModule } from "./unique-product-identifier/unique.product.identifier.module";
 import { CreateNonExistingUserGuard } from "./users/infrastructure/create-non-existing-user.guard";
+import { InjectUserToAuthContextGuard } from "./users/infrastructure/inject-user-to-auth-context.guard";
 import { UsersModule } from "./users/users.module";
 
 @Module({
@@ -78,6 +79,10 @@ import { UsersModule } from "./users/users.module";
     {
       provide: APP_GUARD,
       useClass: CreateNonExistingUserGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: InjectUserToAuthContextGuard,
     },
   ],
 })

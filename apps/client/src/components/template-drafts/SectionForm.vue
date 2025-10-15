@@ -7,21 +7,20 @@ import {
   SectionType,
 } from "@open-dpp/api-client";
 import { ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { z } from "zod/v4";
 import { useDraftStore } from "../../stores/draft";
 import { useDraftSidebarStore } from "../../stores/draftSidebar";
 import { useModelDialogStore } from "../../stores/modal.dialog";
 import BaseButton from "../BaseButton.vue";
-import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
 const props = defineProps<{
   type: SectionType;
   parentId?: string;
   parentGranularityLevel?: GranularityLevel;
   id?: string;
 }>();
-
+const { t } = useI18n();
 const formData = ref<Record<string, unknown>>({});
 const formSchema = ref();
 const sectionToModify = ref<SectionDto | undefined>();
@@ -31,25 +30,25 @@ const modelDialogStore = useModelDialogStore();
 
 function formSchemaFromType(type: SectionType, existingGranularityLevel: GranularityLevel | undefined) {
   const granularityOptions = {
-    [GranularityLevel.MODEL]: t('builder.granularity.model'),
-    [GranularityLevel.ITEM]: t('builder.granularity.item'),
+    [GranularityLevel.MODEL]: t("builder.granularity.model"),
+    [GranularityLevel.ITEM]: t("builder.granularity.item"),
   };
 
   const dataSectionFormkitSchema = [];
   dataSectionFormkitSchema.push({
-    $formkit: 'text',
-    name: 'name',
-    label: t('builder.name'),
-    'data-cy': 'name',
+    "$formkit": "text",
+    "name": "name",
+    "label": t("builder.name"),
+    "data-cy": "name",
   });
 
   if (!existingGranularityLevel && type === SectionType.REPEATABLE) {
     dataSectionFormkitSchema.push({
-      $formkit: 'select',
-      name: 'granularityLevel',
-      label: t('builder.granularityLevel'),
-      options: granularityOptions,
-      'data-cy': 'select-granularity-level',
+      "$formkit": "select",
+      "name": "granularityLevel",
+      "label": t("builder.granularityLevel"),
+      "options": granularityOptions,
+      "data-cy": "select-granularity-level",
     });
   }
   return dataSectionFormkitSchema;
@@ -77,9 +76,9 @@ watch(
 async function onDelete() {
   modelDialogStore.open(
     {
-      title: t('builder.delete.label'),
-      description: t('builder.delete.description'),
-      type: 'warning',
+      title: t("builder.delete.label"),
+      description: t("builder.delete.description"),
+      type: "warning",
     },
     async () => {
       if (sectionToModify.value) {

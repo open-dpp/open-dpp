@@ -48,10 +48,10 @@ export class UsersService {
   }
 
   async findByKeycloakUserId(keycloakUserId: string) {
-    const entities = await this.userDoc.find({
+    const entity = await this.userDoc.findOne({
       keycloakUserId,
     });
-    return entities.map(entity => this.convertToDomain(entity));
+    return entity === null ? null : this.convertToDomain(entity);
   }
 
   async save(user: User) {
@@ -76,9 +76,11 @@ export class UsersService {
 
   async create(keycloakUser: KeycloakUserInToken, ignoreIfExists?: boolean) {
     const find = await this.findByKeycloakUserId(keycloakUser.sub);
+    if (!find) {
+      return this.save(User.create({ email: keycloakUser.email, keycloakUserId: keycloakUser.sub }));
+    }
     if (find && !ignoreIfExists) {
       throw new BadRequestException();
     }
-    return this.save(User.create({ email: keycloakUser.email, keycloakUserId: keycloakUser.sub }));
   }
 }

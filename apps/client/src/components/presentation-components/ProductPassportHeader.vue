@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import { useProductPassportStore } from "../../stores/product-passport";
 import QrCode from "./QrCode.vue";
-import { useI18n } from 'vue-i18n';
 
 const productPassportStore = useProductPassportStore();
 
@@ -21,7 +21,7 @@ const url = computed(() => {
 <template>
   <div class="flex flex-row gap-5">
     <div class="grow bg-white shadow-sm">
-      <div class="px-4 py-6 sm:px-6" id="product-details">
+      <div id="product-details" class="px-4 py-6 sm:px-6">
         <h3 class="text-base/7 font-semibold text-gray-900">
           {{ t('presentation.productDetails') }}
         </h3>

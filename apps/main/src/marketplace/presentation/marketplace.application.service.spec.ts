@@ -4,10 +4,10 @@ import { expect, jest } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule } from "@open-dpp/env";
-import { KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
-import { DataSource } from "typeorm";
+import { KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
+import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
-import { Organization } from "../../organizations/domain/organization";
+import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { Template } from "../../templates/domain/template";
 import { laptopFactory } from "../../templates/fixtures/laptop.factory";
@@ -18,7 +18,7 @@ import {
   TemplateSchema,
 } from "../../templates/infrastructure/template.schema";
 import { TemplateService } from "../../templates/infrastructure/template.service";
-import { User } from "../../users/domain/user";
+import { UserDbSchema, UserDoc } from "../../users/infrastructure/user.schema";
 import { UsersService } from "../../users/infrastructure/users.service";
 import {
   PassportTemplatePublicationDbSchema,
@@ -34,14 +34,10 @@ import { MarketplaceApplicationService } from "./marketplace.application.service
 
 describe("marketplaceService", () => {
   let marketplaceService: MarketplaceApplicationService;
-  const userId = randomUUID();
-  const organizationId = randomUUID();
   let organizationService: OrganizationsService;
   let module: TestingModule;
-  let dataSource: DataSource;
   let templateService: TemplateService;
   let passportTemplateService: PassportTemplatePublicationService;
-  let organization: Organization;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -57,6 +53,14 @@ describe("marketplaceService", () => {
             name: TemplateDoc.name,
             schema: TemplateSchema,
           },
+          {
+            name: OrganizationDoc.name,
+            schema: OrganizationDbSchema,
+          },
+          {
+            name: UserDoc.name,
+            schema: UserDbSchema,
+          },
         ]),
       ],
       providers: [
@@ -71,7 +75,6 @@ describe("marketplaceService", () => {
         },
       ],
     }).compile();
-    dataSource = module.get<DataSource>(DataSource);
     marketplaceService = module.get<MarketplaceApplicationService>(
       MarketplaceApplicationService,
     );
@@ -79,22 +82,16 @@ describe("marketplaceService", () => {
     passportTemplateService = module.get<PassportTemplatePublicationService>(
       PassportTemplatePublicationService,
     );
-    organizationService
-      = module.get<OrganizationsService>(OrganizationsService);
-    organization = await organizationService.save(
-      Organization.loadFromDb({
-        id: organizationId,
-        name: "orga name",
-        members: [User.create({ email: `${userId}@example.com` })],
-        createdByUserId: userId,
-        ownedByUserId: userId,
-      }),
-    );
+    const usersService = module.get(UsersService);
+    organizationService = module.get<OrganizationsService>(OrganizationsService);
+    await usersService.save(TestUsersAndOrganizations.users.user1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
 
   const laptopModelPlain = laptopFactory.build({
-    organizationId,
-    userId,
+    organizationId: TestUsersAndOrganizations.organizations.org1.id,
+    userId: TestUsersAndOrganizations.users.user1.id,
   });
 
   it("should upload template to marketplace", async () => {
@@ -104,14 +101,14 @@ describe("marketplaceService", () => {
     });
     const { id } = await marketplaceService.upload(
       template,
-      User.create({ email: "test@example.com" }),
+      TestUsersAndOrganizations.users.user1,
     );
     const expected = {
       version: template.version,
       name: template.name,
       description: template.description,
       sectors: template.sectors,
-      organizationName: organization.name,
+      organizationName: TestUsersAndOrganizations.organizations.org1.name,
     };
     const foundUpload = await passportTemplateService.findOneOrFail(id);
     expect(foundUpload.templateData).toEqual({
@@ -149,11 +146,11 @@ describe("marketplaceService", () => {
 
   it("should return already downloaded template instead of fetching it from the marketplace", async () => {
     const template = Template.create(
-      templateCreatePropsFactory.build({ organizationId }),
+      templateCreatePropsFactory.build({ organizationId: TestUsersAndOrganizations.organizations.org1.id }),
     );
     const { id } = await marketplaceService.upload(
       template,
-      User.create({ email: "test@example.com" }),
+      TestUsersAndOrganizations.users.user1,
     );
     template.marketplaceResourceId = id;
     await templateService.save(template);
@@ -163,7 +160,7 @@ describe("marketplaceService", () => {
     );
 
     const downloadedTemplate = await marketplaceService.download(
-      organizationId,
+      TestUsersAndOrganizations.organizations.org1.id,
       randomUUID(),
       template.marketplaceResourceId,
     );
@@ -174,12 +171,11 @@ describe("marketplaceService", () => {
 
   it("should download template from marketplace", async () => {
     const template = Template.create(
-      templateCreatePropsFactory.build({ organizationId }),
+      templateCreatePropsFactory.build({ organizationId: TestUsersAndOrganizations.organizations.org1.id }),
     );
-    const userTest = User.create({ email: "test@example.com" });
     const { id, name, version } = await marketplaceService.upload(
       template,
-      userTest,
+      TestUsersAndOrganizations.users.user1,
     );
 
     const findTemplateAtMarketplace = jest.spyOn(
@@ -188,8 +184,8 @@ describe("marketplaceService", () => {
     );
 
     const productDataModel = await marketplaceService.download(
-      organizationId,
-      userTest.id,
+      TestUsersAndOrganizations.organizations.org1.id,
+      TestUsersAndOrganizations.users.user1.id,
       id,
     );
     expect(findTemplateAtMarketplace).toHaveBeenCalledWith(id);
@@ -197,8 +193,8 @@ describe("marketplaceService", () => {
     expect(productDataModel.marketplaceResourceId).toEqual(id);
     expect(productDataModel.name).toEqual(name);
     expect(productDataModel.version).toEqual(version);
-    expect(productDataModel.ownedByOrganizationId).toEqual(organizationId);
-    expect(productDataModel.createdByUserId).toEqual(userTest.id);
+    expect(productDataModel.ownedByOrganizationId).toEqual(TestUsersAndOrganizations.organizations.org1.id);
+    expect(productDataModel.createdByUserId).toEqual(TestUsersAndOrganizations.users.user1.id);
   });
 
   afterEach(() => {
@@ -206,7 +202,6 @@ describe("marketplaceService", () => {
   });
 
   afterAll(async () => {
-    await dataSource.destroy();
     await module.close();
   });
 });
