@@ -26,7 +26,6 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/mongoose": "^11.0.3",
-    "@nestjs/typeorm": "^11.0.0",
     "@open-dpp/auth": "workspace:*",
     "@open-dpp/env": "workspace:*",
     "class-transformer": "^0.5.1"
