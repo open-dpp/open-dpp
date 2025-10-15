@@ -62,7 +62,6 @@ export class UsersService {
           _schemaVersion: UserSchemaVersion.v1_0_0,
           email: user.email,
           keycloakUserId: user.keycloakUserId,
-          organizations: [],
         },
       },
       {
