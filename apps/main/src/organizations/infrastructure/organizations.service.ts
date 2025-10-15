@@ -79,12 +79,6 @@ export class OrganizationsService {
     return this.convertToDomain(entity);
   }
 
-  async findAll() {
-    return (
-      await this.organizationDoc.find().populate("members")
-    ).map(o => this.convertToDomain(o));
-  }
-
   async findOneOrFail(id: string) {
     const organizationEntity = await this.organizationDoc.findById(id).populate("members");
     if (!organizationEntity) {
