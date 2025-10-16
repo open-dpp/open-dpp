@@ -1,18 +1,21 @@
 import { forwardRef, Module } from "@nestjs/common";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { PermissionModule } from "@open-dpp/auth";
+import { MongooseModule } from "@nestjs/mongoose";
 import { KeycloakResourcesModule } from "../keycloak-resources/keycloak-resources.module";
 import { UsersModule } from "../users/users.module";
-import { OrganizationEntity } from "./infrastructure/organization.entity";
+import { OrganizationDbSchema, OrganizationDoc } from "./infrastructure/organization.schema";
 import { OrganizationsService } from "./infrastructure/organizations.service";
 import { OrganizationsController } from "./presentation/organizations.controller";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([OrganizationEntity]),
+    MongooseModule.forFeature([
+      {
+        name: OrganizationDoc.name,
+        schema: OrganizationDbSchema,
+      },
+    ]),
     KeycloakResourcesModule,
     forwardRef(() => UsersModule),
-    PermissionModule,
   ],
   controllers: [OrganizationsController],
   providers: [OrganizationsService],

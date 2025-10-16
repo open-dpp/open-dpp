@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
 import SimpleTable from "../../components/lists/SimpleTable.vue";
 import { AI_INTEGRATION_ID, PRO_ALPHA_INTEGRATION_ID } from "../../const";
 import axiosIns from "../../lib/axios";
@@ -7,7 +8,6 @@ import keycloakIns from "../../lib/keycloak";
 import { useIndexStore } from "../../stores";
 import { useAiIntegrationStore } from "../../stores/ai.integration";
 import { useNotificationStore } from "../../stores/notification";
-import { useI18n } from 'vue-i18n';
 
 const indexStore = useIndexStore();
 const notificationStore = useNotificationStore();
@@ -17,22 +17,22 @@ const { t } = useI18n();
 
 const rows = computed(() => [
   {
-    name: t('integrations.proAlpha'),
-    status: t('integrations.connections.status.active'),
+    name: t("integrations.proAlpha"),
+    status: t("integrations.connections.status.active"),
     id: PRO_ALPHA_INTEGRATION_ID,
   },
   {
-    name: t('integrations.ai.label'),
+    name: t("integrations.ai.label"),
     status: aiIntegrationStore.configuration?.isEnabled
-      ? t('integrations.connections.status.active')
-      : t('integrations.connections.status.inactive'),
+      ? t("integrations.connections.status.active")
+      : t("integrations.connections.status.inactive"),
     id: AI_INTEGRATION_ID,
   },
 ]);
 
 const actions = computed(() => [
   {
-    name: t('common.edit'),
+    name: t("common.edit"),
     actionLinkBuilder: (row: Record<string, string>) =>
       `/organizations/${indexStore.selectedOrganization}/integrations/${row.id}`,
   },
@@ -45,7 +45,7 @@ async function createApiKey() {
     );
     if (response.status === 200) {
       notificationStore.addSuccessNotification(
-        t('integrations.apiKey.createSuccess', { key: response.data }),
+        t("integrations.apiKey.createSuccess", { key: response.data }),
         undefined,
         24_000,
       );
@@ -53,7 +53,7 @@ async function createApiKey() {
   }
   catch {
     notificationStore.addErrorNotification(
-      t('integrations.apiKey.createError'),
+      t("integrations.apiKey.createError"),
     );
   }
 }

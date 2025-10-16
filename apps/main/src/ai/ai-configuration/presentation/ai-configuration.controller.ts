@@ -1,7 +1,9 @@
 import type * as authRequest from "@open-dpp/auth";
-import { Body, Controller, Get, Param, Put, Request } from "@nestjs/common";
-import { PermissionService } from "@open-dpp/auth";
+import { Body, Controller, ForbiddenException, Get, Param, Put, Request } from "@nestjs/common";
 import { ZodValidationPipe } from "@open-dpp/exception";
+import { hasPermission, PermissionAction } from "@open-dpp/permission";
+import { OrganizationsService } from "../../../organizations/infrastructure/organizations.service";
+import { User } from "../../../users/domain/user";
 import { AiConfiguration } from "../domain/ai-configuration";
 import { AiConfigurationService } from "../infrastructure/ai-configuration.service";
 import * as aiConfigurationDto from "./dto/ai-configuration.dto";
@@ -10,14 +12,14 @@ import { AiConfigurationUpsertDtoSchema } from "./dto/ai-configuration.dto";
 @Controller("organizations/:organizationId/configurations")
 export class AiConfigurationController {
   private readonly aiConfigurationService: AiConfigurationService;
-  private readonly permissionsService: PermissionService;
+  private readonly organizationsService: OrganizationsService;
 
   constructor(
     aiConfigurationService: AiConfigurationService,
-    permissionsService: PermissionService,
+    organizationsService: OrganizationsService,
   ) {
     this.aiConfigurationService = aiConfigurationService;
-    this.permissionsService = permissionsService;
+    this.organizationsService = organizationsService;
   }
 
   @Put()
@@ -27,10 +29,14 @@ export class AiConfigurationController {
     @Body(new ZodValidationPipe(AiConfigurationUpsertDtoSchema))
     aiConfigurationUpsertDto: aiConfigurationDto.AiConfigurationUpsertDto,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
 
     let aiConfiguration
       = await this.aiConfigurationService.findOneByOrganizationId(organizationId);
@@ -58,10 +64,14 @@ export class AiConfigurationController {
     @Param("organizationId") organizationId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     return aiConfigurationDto.aiConfigurationToDto(
       await this.aiConfigurationService.findOneByOrganizationIdOrFail(
         organizationId,

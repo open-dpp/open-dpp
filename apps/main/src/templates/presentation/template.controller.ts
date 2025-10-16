@@ -7,25 +7,27 @@ import {
   Request,
 } from "@nestjs/common";
 import { ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
-import { PermissionService } from "@open-dpp/auth";
+import { hasPermission, PermissionAction } from "@open-dpp/permission";
 import {
   templateDocumentation,
   templateGetAllDocumentation,
 } from "../../open-api-docs/template.doc";
+import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
+import { User } from "../../users/domain/user";
 import { TemplateService } from "../infrastructure/template.service";
 import { templateParamDocumentation, templateToDto } from "./dto/template.dto";
 
 @Controller("/organizations/:organizationId/templates")
 export class TemplateController {
   private readonly templateService: TemplateService;
-  private readonly permissionsService: PermissionService;
+  private readonly organizationsService: OrganizationsService;
 
   constructor(
     templateService: TemplateService,
-    permissionsService: PermissionService,
+    organizationsService: OrganizationsService,
   ) {
     this.templateService = templateService;
-    this.permissionsService = permissionsService;
+    this.organizationsService = organizationsService;
   }
 
   @ApiOperation({
@@ -42,12 +44,15 @@ export class TemplateController {
     @Param("templateId") id: string,
     @Request() req: authRequest.AuthRequest,
   ) {
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     const found = await this.templateService.findOneOrFail(id);
-
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
 
     if (!found.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
@@ -68,10 +73,14 @@ export class TemplateController {
     @Param("organizationId") organizationId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     return await this.templateService.findAllByOrganization(organizationId);
   }
 }

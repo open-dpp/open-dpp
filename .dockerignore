@@ -5,6 +5,10 @@ auth-db
 
 node_modules
 dist
+prod/
 apps/main/client/node_modules
 apps/main/client/dist
 apps/client/node_modules
+
+*/**/node_modules
+*/**/dist

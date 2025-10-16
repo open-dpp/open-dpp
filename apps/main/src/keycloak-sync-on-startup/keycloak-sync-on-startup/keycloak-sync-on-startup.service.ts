@@ -56,48 +56,6 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
         }
       }
     }
-    /* this.logger.log('Syncing users from DB to Keycloak');
-    const users = await this.usersService.find();
-    for (const user of users) {
-      await this.keycloakResourcesServices.createUser(user);
-    }
-    this.logger.log('Syncing organizations from DB to Keycloak');
-    const organizations = await this.organizationsService.findAll();
-    for (const organization of organizations) {
-      const keycloakGroup =
-        await this.keycloakResourcesServices.getGroupForOrganization(
-          organization.id,
-        );
-      if (!keycloakGroup) {
-        try {
-          await this.keycloakResourcesServices.createGroup(organization);
-        } catch (exception) {
-          // IGNORE
-          console.log(exception);
-        }
-      }
-      for (const member of organization.members) {
-        try {
-          const authContext = new AuthContext();
-          authContext.keycloakUser = {
-            sub: organization.createdByUserId,
-            email: '',
-            name: '',
-            preferred_username: '',
-            email_verified: true,
-          };
-          await this.keycloakResourcesServices.inviteUserToGroup(
-            authContext,
-            organization.id,
-            member.id,
-          );
-        } catch (exception) {
-          if (exception.status !== 400) {
-            console.warn(exception);
-          }
-        }
-      }
-    } */
     this.logger.log("Finished syncing users from Keycloak to database");
   }
 }

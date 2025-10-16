@@ -81,7 +81,6 @@ export class KeycloakAuthGuard implements CanActivate {
 
     const authContext = new AuthContext();
     authContext.token = accessToken;
-    authContext.permissions = [];
 
     let payload: KeycloakUserInToken & { memberships: string[] | undefined };
 
@@ -94,17 +93,6 @@ export class KeycloakAuthGuard implements CanActivate {
       );
     }
     authContext.keycloakUser = payload;
-    // await this.usersService.create(user, true);
-    const memberships = payload.memberships || ([] as string[]);
-    memberships.forEach((membership: string) => {
-      authContext.permissions.push({
-        type: "organization",
-        resource: membership.substring(
-          membership.lastIndexOf("organization-") + 13,
-        ),
-        scopes: ["organization:access"],
-      });
-    });
     request.authContext = authContext;
     return true;
   }

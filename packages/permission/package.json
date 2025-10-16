@@ -1,0 +1,39 @@
+{
+  "name": "@open-dpp/permission",
+  "version": "1.0.0",
+  "packageManager": "pnpm@10.17.1",
+  "description": "",
+  "author": "",
+  "license": "ISC",
+  "keywords": [],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "pnpm run clean && tsc",
+    "check-ts": "tsc --noEmit",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix"
+  },
+  "dependencies": {
+    "@casl/ability": "^6.7.3"
+  },
+  "devDependencies": {
+    "@open-dpp/config-eslint": "workspace:*",
+    "@tsconfig/node-lts": "^22.0.2",
+    "@tsconfig/node-ts": "^23.6.1",
+    "rimraf": "^6.0.1"
+  }
+}

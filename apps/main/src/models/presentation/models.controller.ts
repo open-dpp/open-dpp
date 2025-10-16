@@ -14,9 +14,9 @@ import {
   Request,
 } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
-import { PermissionService } from "@open-dpp/auth";
 
 import { ZodValidationPipe } from "@open-dpp/exception";
+import { hasPermission, PermissionAction } from "@open-dpp/permission";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { modelParamDocumentation } from "../../open-api-docs/item.doc";
@@ -25,6 +25,7 @@ import {
   modelDocumentation,
   updateModelDocumentation,
 } from "../../open-api-docs/model.doc";
+import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import {
   DataValueDtoSchema,
@@ -34,6 +35,7 @@ import {
   orgaParamDocumentation,
 } from "../../product-passport-data/presentation/dto/docs/product-passport-data.doc";
 import { TemplateService } from "../../templates/infrastructure/template.service";
+import { User } from "../../users/domain/user";
 import { Model } from "../domain/model";
 import { ModelsService } from "../infrastructure/models.service";
 import * as createModelDto_1 from "./dto/create-model.dto";
@@ -44,19 +46,19 @@ import * as updateModelDto_1 from "./dto/update-model.dto";
 export class ModelsController {
   private readonly modelsService: ModelsService;
   private readonly templateService: TemplateService;
-  private readonly permissionsService: PermissionService;
   private readonly marketplaceService: MarketplaceApplicationService;
+  private readonly organizationsService: OrganizationsService;
 
   constructor(
     modelsService: ModelsService,
     templateService: TemplateService,
-    permissionsService: PermissionService,
     marketplaceService: MarketplaceApplicationService,
+    organizationsService: OrganizationsService,
   ) {
     this.modelsService = modelsService;
     this.templateService = templateService;
-    this.permissionsService = permissionsService;
     this.marketplaceService = marketplaceService;
+    this.organizationsService = organizationsService;
   }
 
   @ApiOperation({
@@ -77,10 +79,14 @@ export class ModelsController {
     createModelDto: createModelDto_1.CreateModelDto,
     @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
 
     // Validate that only one of templateId or marketplaceResourceId is provided
     if (!createModelDto.templateId && !createModelDto.marketplaceResourceId) {
@@ -141,10 +147,14 @@ export class ModelsController {
     @Param("orgaId") organizationId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     return (await this.modelsService.findAllByOrganization(organizationId)).map(
       m => modelToDto(m),
     );
@@ -165,10 +175,14 @@ export class ModelsController {
     @Param("modelId") id: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     const model = await this.modelsService.findOneOrFail(id);
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
@@ -196,10 +210,14 @@ export class ModelsController {
     updateModelDto: updateModelDto_1.UpdateModelDto,
     @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     const model = await this.modelsService.findOneOrFail(modelId);
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
@@ -234,10 +252,14 @@ export class ModelsController {
     updateDataValues: DataValueDto[],
     @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     const model = await this.modelsService.findOneOrFail(modelId);
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
@@ -276,10 +298,14 @@ export class ModelsController {
     addDataValues: DataValueDto[],
     @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     const model = await this.modelsService.findOneOrFail(modelId);
     if (model.ownedByOrganizationId !== organizationId) {
       throw new ForbiddenException();

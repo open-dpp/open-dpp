@@ -3,12 +3,24 @@ import { INestApplication } from "@nestjs/common";
 import { APP_GUARD, Reflector } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { PermissionModule } from "@open-dpp/auth";
 import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
-import getKeycloakAuthToken, { getApp, KeycloakAuthTestingGuard, MongooseTestingModule } from "@open-dpp/testing";
+import getKeycloakAuthToken, {
+  createKeycloakUserInToken,
+  getApp,
+  KeycloakAuthTestingGuard,
+  MongooseTestingModule,
+} from "@open-dpp/testing";
 import { Connection } from "mongoose";
 import request from "supertest";
+import TestUsersAndOrganizations from "../../../../test/test-users-and-orgs";
+import { Organization } from "../../../organizations/domain/organization";
+import { OrganizationDbSchema, OrganizationDoc } from "../../../organizations/infrastructure/organization.schema";
+import { OrganizationsService } from "../../../organizations/infrastructure/organizations.service";
+import { User } from "../../../users/domain/user";
+import { InjectUserToAuthContextGuard } from "../../../users/infrastructure/inject-user-to-auth-context.guard";
+import { UserDbSchema, UserDoc } from "../../../users/infrastructure/user.schema";
+import { UsersService } from "../../../users/infrastructure/users.service";
 import { AiConfiguration, AiProvider } from "../domain/ai-configuration";
 import { aiConfigurationFactory } from "../fixtures/ai-configuration-props.factory";
 import {
@@ -30,7 +42,8 @@ describe("aiConfigurationController", () => {
   let mongoConnection: Connection;
   let module: TestingModule;
   let aiConfigurationService: AiConfigurationService;
-  const userId = randomUUID();
+  let usersService: UsersService;
+  let organizationService: OrganizationsService;
 
   const mockNow = new Date("2025-01-01T12:00:00Z");
 
@@ -44,14 +57,27 @@ describe("aiConfigurationController", () => {
             name: AiConfigurationDoc.name,
             schema: AiConfigurationDbSchema,
           },
+          {
+            name: OrganizationDoc.name,
+            schema: OrganizationDbSchema,
+          },
+          {
+            name: UserDoc.name,
+            schema: UserDbSchema,
+          },
         ]),
-        PermissionModule,
       ],
       providers: [
+        OrganizationsService,
+        UsersService,
         AiConfigurationService,
         {
           provide: APP_GUARD,
           useValue: keycloakAuthTestingGuard,
+        },
+        {
+          provide: APP_GUARD,
+          useClass: InjectUserToAuthContextGuard,
         },
       ],
       controllers: [AiConfigurationController],
@@ -61,8 +87,14 @@ describe("aiConfigurationController", () => {
     app.useGlobalFilters(new NotFoundInDatabaseExceptionFilter());
     mongoConnection = module.get(getConnectionToken());
     aiConfigurationService = module.get(AiConfigurationService);
+    usersService = module.get(UsersService);
+    organizationService = module.get(OrganizationsService);
 
     await app.init();
+
+    await usersService.save(TestUsersAndOrganizations.users.user1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
   beforeEach(() => {
     jest.spyOn(Date, "now").mockImplementation(() => mockNow.getTime());
@@ -74,22 +106,21 @@ describe("aiConfigurationController", () => {
   });
 
   it(`/PUT create configuration`, async () => {
-    const orgaId = randomUUID();
     const body = {
       isEnabled: true,
       provider: AiProvider.Mistral,
       model: "codestral-latest",
     };
     const response = await request(getApp(app))
-      .put(`/organizations/${orgaId}/configurations`)
+      .put(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/configurations`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(userId, [orgaId], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(TestUsersAndOrganizations.users.user1.keycloakUserId, keycloakAuthTestingGuard),
       )
       .send(body);
     expect(response.status).toEqual(200);
     const found
-      = await aiConfigurationService.findOneByOrganizationIdOrFail(orgaId);
+      = await aiConfigurationService.findOneByOrganizationIdOrFail(TestUsersAndOrganizations.organizations.org1.id);
     expect(found).toBeDefined();
     expect(found.isEnabled).toEqual(body.isEnabled);
     expect(found.provider).toEqual(body.provider);
@@ -97,27 +128,38 @@ describe("aiConfigurationController", () => {
   });
 
   it(`/PUT create configuration fails if user is no member of organization`, async () => {
-    const orgaId = randomUUID();
     const body = {
       isEnabled: true,
       provider: AiProvider.Mistral,
       model: "codestral-latest",
     };
     const response = await request(app.getHttpServer())
-      .put(`/organizations/${orgaId}/configurations`)
+      .put(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/configurations`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(userId, [randomUUID()], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(TestUsersAndOrganizations.users.user1.keycloakUserId, keycloakAuthTestingGuard),
       )
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/PUT update configuration`, async () => {
-    const orgaId = randomUUID();
+    const keycloakUserTemp = createKeycloakUserInToken();
+    const userTemp = User.create({
+      email: keycloakUserTemp.email,
+      keycloakUserId: keycloakUserTemp.sub,
+    });
+    const orgTemp = Organization.create({
+      name: `organization-temp-${randomUUID()}`,
+      ownedByUserId: userTemp.id,
+      createdByUserId: userTemp.id,
+      members: [userTemp],
+    });
+    await usersService.save(userTemp);
+    await organizationService.save(orgTemp);
     const configuration = AiConfiguration.loadFromDb(
       aiConfigurationFactory.build({
-        ownedByOrganizationId: orgaId,
+        ownedByOrganizationId: orgTemp.id,
       }),
     );
     const { id } = await aiConfigurationService.save(configuration);
@@ -127,15 +169,15 @@ describe("aiConfigurationController", () => {
       model: "qwen3:0.6b",
     };
     const response = await request(getApp(app))
-      .put(`/organizations/${orgaId}/configurations`)
+      .put(`/organizations/${orgTemp.id}/configurations`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(userId, [orgaId], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(userTemp.keycloakUserId, keycloakAuthTestingGuard),
       )
       .send(body);
     expect(response.status).toEqual(200);
     const found
-      = await aiConfigurationService.findOneByOrganizationIdOrFail(orgaId);
+      = await aiConfigurationService.findOneByOrganizationIdOrFail(orgTemp.id);
     expect(found.id).toEqual(id);
     expect(found.isEnabled).toEqual(body.isEnabled);
     expect(found.provider).toEqual(body.provider);
@@ -143,19 +185,29 @@ describe("aiConfigurationController", () => {
   });
 
   it(`/GET find configuration`, async () => {
-    const organizationId = randomUUID();
-
+    const keycloakUserTemp = createKeycloakUserInToken();
+    const userTemp = User.create({
+      email: keycloakUserTemp.email,
+      keycloakUserId: keycloakUserTemp.sub,
+    });
+    const orgTemp = Organization.create({
+      name: `organization-temp-${randomUUID()}`,
+      ownedByUserId: userTemp.id,
+      createdByUserId: userTemp.id,
+      members: [userTemp],
+    });
+    await usersService.save(userTemp);
+    await organizationService.save(orgTemp);
     const aiConfiguration = AiConfiguration.loadFromDb(
-      aiConfigurationFactory.build({ ownedByOrganizationId: organizationId }),
+      aiConfigurationFactory.build({ ownedByOrganizationId: orgTemp.id }),
     );
     await aiConfigurationService.save(aiConfiguration);
     const response = await request(getApp(app))
-      .get(`/organizations/${organizationId}/configurations`)
+      .get(`/organizations/${orgTemp.id}/configurations`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          userId,
-          [organizationId],
+          userTemp.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -164,28 +216,25 @@ describe("aiConfigurationController", () => {
   });
 
   it(`/GET find configuration fails if user is no member of organization`, async () => {
-    const organizationId = randomUUID();
-
     const aiConfiguration = AiConfiguration.loadFromDb(
-      aiConfigurationFactory.build({ ownedByOrganizationId: organizationId }),
+      aiConfigurationFactory.build({ ownedByOrganizationId: TestUsersAndOrganizations.organizations.org2.id }),
     );
     await aiConfigurationService.save(aiConfiguration);
     const response = await request(getApp(app))
-      .get(`/organizations/${organizationId}/configurations`)
+      .get(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/configurations`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(userId, [randomUUID()], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(TestUsersAndOrganizations.users.user1.keycloakUserId, keycloakAuthTestingGuard),
       );
     expect(response.status).toEqual(403);
   });
 
   it(`/GET cannot find configuration`, async () => {
-    const orgaId = randomUUID();
     const response = await request(getApp(app))
-      .get(`/organizations/${orgaId}/configurations`)
+      .get(`/organizations/${randomUUID()}/configurations`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(userId, [orgaId], keycloakAuthTestingGuard),
+        getKeycloakAuthToken(TestUsersAndOrganizations.users.user1.keycloakUserId, keycloakAuthTestingGuard),
       );
     expect(response.status).toEqual(404);
   });

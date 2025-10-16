@@ -31,7 +31,7 @@ export class McpClientService implements OnModuleInit, OnModuleDestroy {
       mcpServers: {
         productPassport: {
           transport: "http",
-          url: this.configService.get("OPEN_DPP_MCP_URL") || "",
+          url: this.configService.get("OPEN_DPP_MCP_URL"),
           reconnect: {
             enabled: true,
             maxAttempts: 5,

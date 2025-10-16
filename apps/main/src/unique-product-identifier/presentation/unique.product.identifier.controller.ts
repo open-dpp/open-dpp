@@ -1,8 +1,11 @@
 import type * as authRequest from "@open-dpp/auth";
-import { Controller, Get, Param, Request } from "@nestjs/common";
-import { AllowServiceAccess, PermissionService } from "@open-dpp/auth";
+import { Controller, ForbiddenException, Get, Param, Request } from "@nestjs/common";
+import { AllowServiceAccess } from "@open-dpp/auth";
+import { hasPermission, PermissionAction } from "@open-dpp/permission";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { ModelsService } from "../../models/infrastructure/models.service";
+import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
+import { User } from "../../users/domain/user";
 import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
 import {
   UniqueProductIdentifierReferenceDtoSchema,
@@ -14,21 +17,21 @@ export class UniqueProductIdentifierController {
   private readonly modelsService: ModelsService;
   private readonly uniqueProductIdentifierService: UniqueProductIdentifierService;
   private readonly itemService: ItemsService;
-  private readonly permissionsService: PermissionService;
   private readonly uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService;
+  private readonly organizationsService: OrganizationsService;
 
   constructor(
     modelsService: ModelsService,
     uniqueProductIdentifierService: UniqueProductIdentifierService,
     itemService: ItemsService,
-    permissionsService: PermissionService,
     uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
+    organizationsService: OrganizationsService,
   ) {
     this.modelsService = modelsService;
     this.uniqueProductIdentifierService = uniqueProductIdentifierService;
     this.itemService = itemService;
-    this.permissionsService = permissionsService;
     this.uniqueProductIdentifierApplicationService = uniqueProductIdentifierApplicationService;
+    this.organizationsService = organizationsService;
   }
 
   @Get("organizations/:orgaId/unique-product-identifiers/:id/reference")
@@ -37,10 +40,14 @@ export class UniqueProductIdentifierController {
     @Param("id") id: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     const uniqueProductIdentifier
       = await this.uniqueProductIdentifierService.findOneOrFail(id);
 

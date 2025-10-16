@@ -6,11 +6,23 @@ import { expect } from "@jest/globals";
 import { APP_GUARD } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { AuthContext, PermissionModule } from "@open-dpp/auth";
 import { EnvModule } from "@open-dpp/env";
-import getKeycloakAuthToken, { createKeycloakUserInToken, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
+import getKeycloakAuthToken, {
+  createKeycloakUserInToken,
+  KeycloakAuthTestingGuard,
+  KeycloakResourcesServiceTesting,
+  MongooseTestingModule,
+} from "@open-dpp/testing";
 import request from "supertest";
+import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
 import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
+import { Organization } from "../../organizations/domain/organization";
+import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
+import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
+import { User } from "../../users/domain/user";
+import { InjectUserToAuthContextGuard } from "../../users/infrastructure/inject-user-to-auth-context.guard";
+import { UserDbSchema, UserDoc } from "../../users/infrastructure/user.schema";
+import { UsersService } from "../../users/infrastructure/users.service";
 import { Template } from "../domain/template";
 import { laptopFactory } from "../fixtures/laptop.factory";
 import { templateCreatePropsFactory } from "../fixtures/template.factory";
@@ -23,10 +35,9 @@ describe("templateController", () => {
   let app: INestApplication;
   let service: TemplateService;
   let mongoConnection: Connection;
+  let organizationService: OrganizationsService;
+  let usersService: UsersService;
 
-  const authContext = new AuthContext();
-  authContext.keycloakUser = createKeycloakUserInToken();
-  const organizationId = randomUUID();
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -38,14 +49,27 @@ describe("templateController", () => {
             name: TemplateDoc.name,
             schema: TemplateSchema,
           },
+          {
+            name: OrganizationDoc.name,
+            schema: OrganizationDbSchema,
+          },
+          {
+            name: UserDoc.name,
+            schema: UserDbSchema,
+          },
         ]),
-        PermissionModule,
       ],
       providers: [
+        OrganizationsService,
+        UsersService,
         TemplateService,
         {
           provide: APP_GUARD,
           useValue: keycloakAuthTestingGuard,
+        },
+        {
+          provide: APP_GUARD,
+          useClass: InjectUserToAuthContextGuard,
         },
       ],
       controllers: [TemplateController],
@@ -55,24 +79,31 @@ describe("templateController", () => {
         KeycloakResourcesServiceTesting.fromPlain({
           users: [
             {
-              id: authContext.keycloakUser.sub,
-              email: authContext.keycloakUser.email,
+              id: TestUsersAndOrganizations.keycloakUsers.keycloakUser1.sub,
+              email: TestUsersAndOrganizations.keycloakUsers.keycloakUser1.email,
             },
           ],
         }),
       )
       .compile();
 
+    organizationService = moduleRef.get(OrganizationsService);
+    usersService = moduleRef.get(UsersService);
+
     service = moduleRef.get<TemplateService>(TemplateService);
     mongoConnection = moduleRef.get<Connection>(getConnectionToken());
     app = moduleRef.createNestApplication();
 
     await app.init();
+
+    await usersService.save(TestUsersAndOrganizations.users.user1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
 
   const laptopPlain: TemplateDbProps = laptopFactory
     .addSections()
-    .build({ organizationId });
+    .build({ organizationId: TestUsersAndOrganizations.organizations.org1.id });
 
   const userHasNotThePermissionsTxt = `fails if user has not the permissions`;
 
@@ -81,12 +112,11 @@ describe("templateController", () => {
 
     await service.save(template);
     const response = await request(app.getHttpServer())
-      .get(`/organizations/${organizationId}/templates/${template.id}`)
+      .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/templates/${template.id}`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -96,20 +126,18 @@ describe("templateController", () => {
   });
 
   it(`/GET template ${userHasNotThePermissionsTxt}`, async () => {
-    const otherOrganizationId = randomUUID();
     const template = Template.create(
       templateCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
+        organizationId: TestUsersAndOrganizations.organizations.org2.id,
       }),
     );
     await service.save(template);
     const response = await request(app.getHttpServer())
-      .get(`/organizations/${otherOrganizationId}/templates/${template.id}`)
+      .get(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/templates/${template.id}`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -118,19 +146,33 @@ describe("templateController", () => {
   });
 
   it(`/GET all templates which belong to the organization`, async () => {
-    const otherOrganizationId = randomUUID();
+    const keycloakUserTemp = createKeycloakUserInToken();
+    const userTemp = User.create({
+      email: keycloakUserTemp.email,
+      keycloakUserId: keycloakUserTemp.sub,
+    });
+    const orgTemp = Organization.create({
+      name: "organization-temp-test",
+      ownedByUserId: userTemp.id,
+      createdByUserId: userTemp.id,
+      members: [userTemp],
+    });
+    await usersService.save(userTemp);
+    await organizationService.save(orgTemp);
     const laptopTemplate = Template.loadFromDb({
       ...laptopPlain,
+      organizationId: orgTemp.id,
     });
     const phoneTemplate = Template.loadFromDb({
       ...laptopPlain,
       id: randomUUID(),
       name: "phone",
+      organizationId: orgTemp.id,
     });
     const notAccessibleTemplate = Template.create(
       templateCreatePropsFactory.build({
         name: "privateModel",
-        organizationId: otherOrganizationId,
+        organizationId: TestUsersAndOrganizations.organizations.org1.id,
       }),
     );
 
@@ -138,12 +180,11 @@ describe("templateController", () => {
     await service.save(phoneTemplate);
     await service.save(notAccessibleTemplate);
     const response = await request(app.getHttpServer())
-      .get(`/organizations/${organizationId}/templates`)
+      .get(`/organizations/${orgTemp.id}/templates`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organizationId],
+          keycloakUserTemp.sub,
           keycloakAuthTestingGuard,
         ),
       );
@@ -173,14 +214,12 @@ describe("templateController", () => {
   });
 
   it(`/GET all templates which belong to the organization ${userHasNotThePermissionsTxt}`, async () => {
-    const otherOrganizationId = randomUUID();
     const response = await request(app.getHttpServer())
-      .get(`/organizations/${otherOrganizationId}/templates`)
+      .get(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/templates`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );

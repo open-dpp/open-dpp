@@ -1,4 +1,15 @@
+import { randomUUID } from "node:crypto";
 import { Expose } from "class-transformer";
+
+export interface UserCreateProps {
+  email: string;
+  keycloakUserId: string;
+}
+export type UserDbProps = UserCreateProps & {
+  id: string;
+  email: string;
+  keycloakUserId: string;
+};
 
 export class User {
   @Expose()
@@ -7,12 +18,32 @@ export class User {
   @Expose()
   public readonly email: string;
 
-  constructor(id: string, email: string) {
+  @Expose()
+  public readonly keycloakUserId: string;
+
+  private constructor(
+    id: string,
+    email: string,
+    keycloakUserId: string,
+  ) {
     this.id = id;
     this.email = email;
+    this.keycloakUserId = keycloakUserId;
   }
 
-  static create(data: { id: string; email: string }): User {
-    return new User(data.id, data.email);
+  public static create(data: UserCreateProps) {
+    return new User(
+      randomUUID(),
+      data.email,
+      data.keycloakUserId,
+    );
+  }
+
+  public static loadFromDb(data: UserDbProps) {
+    return new User(
+      data.id,
+      data.email,
+      data.keycloakUserId,
+    );
   }
 }

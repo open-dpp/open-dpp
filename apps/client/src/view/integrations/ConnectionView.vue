@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import type { ModelDto } from "@open-dpp/api-client";
 import { ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import AasConnectionForm from "../../components/integrations/AasConnectionForm.vue";
 import { AAS_NAME_MAPPING } from "../../lib/aas-name-mapping";
 import { useAasConnectionFormStore } from "../../stores/aas.connection.form";
 import { useModelsStore } from "../../stores/models";
-import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const route = useRoute();

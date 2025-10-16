@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { reset } from "@formkit/core";
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import keycloakIns, { updateKeycloakToken } from "../../lib/keycloak";
 import { useIndexStore } from "../../stores";
-import { useOrganizationsStore } from "../../stores/organizations";
 
-import { useI18n } from 'vue-i18n';
+import { useOrganizationsStore } from "../../stores/organizations";
 
 const router = useRouter();
 

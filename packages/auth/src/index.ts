@@ -4,7 +4,4 @@ export * from "./auth.module";
 export * from "./auth.service";
 export * from "./keycloak-auth/keycloak-auth.guard";
 export * from "./keycloak-auth/KeycloakUserInToken";
-export * from "./permissions/permission.module";
-export * from "./permissions/permission.service";
-export * from "./permissions/resource-permission.interface";
 export * from "./public/public.decorator";
