@@ -52,13 +52,9 @@ export class OrganizationsService {
   }
 
   async save(organization: Organization) {
-    const members = [];
-    for (const member of organization.members) {
-      const user = await this.usersService.findOne(member.id);
-      if (user) {
-        members.push(user?.id);
-      }
-    }
+    const memberIds = organization.members.map(m => m.id);
+    const userDocs = await this.usersService.findAllByIds(memberIds);
+    const members = userDocs.map(u => u.id);
     const entity = await this.organizationDoc.findOneAndUpdate(
       { _id: organization.id },
       {

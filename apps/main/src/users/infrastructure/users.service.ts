@@ -47,6 +47,15 @@ export class UsersService {
     return entities.map(entity => this.convertToDomain(entity));
   }
 
+  async findAllByIds(ids: Array<string>) {
+    const entities = await this.userDoc.find({
+      _id: {
+        $in: ids,
+      },
+    });
+    return entities.map(entity => this.convertToDomain(entity));
+  }
+
   async findByKeycloakUserId(keycloakUserId: string) {
     const entity = await this.userDoc.findOne({
       keycloakUserId,
