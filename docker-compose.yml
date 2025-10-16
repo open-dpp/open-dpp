@@ -92,20 +92,6 @@ services:
     networks:
       - open-dpp-local
 
-  api-db:
-    container_name: api-db
-    image: postgres:17-alpine
-    environment:
-      - POSTGRES_USER=${OPEN_DPP_DB_USER}
-      - POSTGRES_PASSWORD=${OPEN_DPP_DB_PASSWORD}
-      - POSTGRES_DB=${OPEN_DPP_DB_DATABASE}
-    volumes:
-      - api_db:/var/lib/postgresql/data/
-    ports:
-      - ${SERVICE_APIDB_PORT}:5432
-    networks:
-      - open-dpp-local
-
   api-mongo-db:
     ports:
       - ${SERVICE_MONGODB_PORT}:27017

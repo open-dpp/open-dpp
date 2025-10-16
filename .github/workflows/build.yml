@@ -48,12 +48,6 @@ jobs:
       OPEN_DPP_MONGODB_USER: "admin"
       OPEN_DPP_MONGODB_PASSWORD: "test-mongo-password"
       OPEN_DPP_MONGODB_DATABASE: "management"
-      # Postgres
-      OPEN_DPP_DB_PORT: "5432"
-      OPEN_DPP_DB_HOST: "localhost"
-      OPEN_DPP_DB_USER: "admin"
-      OPEN_DPP_DB_PASSWORD: "test-postgres-password"
-      OPEN_DPP_DB_DATABASE: "management"
       # AI
       OPEN_DPP_MISTRAL_API_KEY: "your-mistral-key"
       OPEN_DPP_OLLAMA_URL: "https://ollama-url"
@@ -98,10 +92,6 @@ jobs:
       # Step 4: Wait for Databases to be ready
       - name: Wait for Databases to be ready
         run: |
-          echo "Waiting for PostgreSQL to start..."
-          until pg_isready -h ${{ env.OPEN_DPP_DB_HOST }} -p ${{ env.OPEN_DPP_DB_PORT}} -U ${{ env.OPEN_DPP_DB_DATABASE}}; do
-            sleep 1
-          done
           echo "Waiting for MongoDB to start..."
           until nc -z ${{ env.OPEN_DPP_MONGODB_HOST }} ${{ env.OPEN_DPP_MONGODB_PORT }}; do
             sleep 1

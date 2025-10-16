@@ -8,7 +8,7 @@ export function generateMongoConfig(configService: EnvService) {
     uri: `mongodb://${configService.get('OPEN_DPP_MONGODB_HOST')}:${configService.get('OPEN_DPP_MONGODB_PORT')}/`,
     user: configService.get('OPEN_DPP_MONGODB_USER'),
     pass: configService.get('OPEN_DPP_MONGODB_PASSWORD'),
-    dbName: configService.get('OPEN_DPP_DB_DATABASE'),
+    dbName: configService.get('OPEN_DPP_MONGODB_DATABASE'),
   }
 }
 
