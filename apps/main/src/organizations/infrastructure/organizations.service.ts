@@ -80,7 +80,7 @@ export class OrganizationsService {
   }
 
   async findOneOrFail(id: string) {
-    const organizationEntity = await this.organizationDoc.findById(id).populate("members");
+    const organizationEntity = await this.organizationDoc.findById(id);
     if (!organizationEntity) {
       throw new NotFoundInDatabaseException(Organization.name);
     }
@@ -116,7 +116,7 @@ export class OrganizationsService {
       members: {
         $in: [authContext.user.id],
       },
-    }).populate("members");
+    });
     const domainOrganizations = [];
     for (const organization of organizations) {
       const domain = await this.convertToDomain(organization);
