@@ -3,10 +3,6 @@
   "ui": "tui",
   "globalDependencies": [".env"],
   "tasks": {
-    "build-packages": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
-    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
