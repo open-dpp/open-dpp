@@ -1,9 +1,9 @@
 {
-  "name": "admin",
+  "name": "@open-dpp/client",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
-  "packageManager": "pnpm@10.17.1",
+  "packageManager": "pnpm@10.18.3",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b --noEmit && vite build",
@@ -35,7 +35,7 @@
     "vue": "^3.5.22",
     "vue-i18n": "^11.1.12",
     "vue-router": "^4.6.3",
-    "zod": "^3.25.76"
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@cypress/vue": "^6.0.2",
