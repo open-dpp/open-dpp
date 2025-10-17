@@ -27,8 +27,8 @@
     "lint:fix": "eslint --fix"
   },
   "dependencies": {
-    "@nestjs/core": "^11.0.1",
-    "zod": "^4.1.11"
+    "@nestjs/core": "^11.1.6",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@open-dpp/config-eslint": "workspace:*",
