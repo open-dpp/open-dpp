@@ -1,11 +1,4 @@
-FROM openjdk:21-slim AS healthcheck
-WORKDIR /opt/healthcheck
-COPY ./Healthcheck.java Healthcheck.java
-COPY ./Manifest.txt Manifest.txt
-RUN javac Healthcheck.java
-RUN jar cvfm healthcheck.jar Manifest.txt Healthcheck.class
-
-FROM maven:latest AS maven
+FROM maven:3.9.9 AS maven
 
 RUN mkdir /data
 WORKDIR /data
@@ -51,10 +44,6 @@ RUN chmod +x /opt/keycloak/bin/disable-ssl-for-master-realm.sh
 USER keycloak
 # Copy the custom .jar files
 COPY --from=maven /data/target/deploy/ /opt/keycloak/providers/
-
-# Create healthcheck script
-WORKDIR /opt/healthcheck
-COPY --from=healthcheck /opt/healthcheck/healthcheck.jar /opt/healthcheck/healthcheck.jar
 
 WORKDIR /opt/keycloak
 
