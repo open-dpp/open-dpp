@@ -42,5 +42,29 @@
     "jest": "^30.2.0",
     "rimraf": "^6.0.1",
     "typescript": "^5.9.3"
+  },
+  "jest": {
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": [
+        "@swc/jest",
+        {
+          "jsc": {
+            "target": "es2022",
+            "parser": {
+              "syntax": "typescript",
+              "decorators": true
+            },
+            "transform": {
+              "decoratorMetadata": true
+            }
+          },
+          "module": {
+            "type": "commonjs"
+          }
+        }
+      ]
+    },
+    "testEnvironment": "node"
   }
 }
