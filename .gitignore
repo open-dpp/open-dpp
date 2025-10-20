@@ -66,4 +66,4 @@ auth-db
 .turbo
 
 apps/keycloak/customization/target
-apps/keycloak/.idea/
+apps/keycloak/.idea
