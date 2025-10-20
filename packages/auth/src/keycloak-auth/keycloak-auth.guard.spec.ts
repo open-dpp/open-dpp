@@ -9,7 +9,6 @@ import {
   HttpStatus,
   UnauthorizedException,
 } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { Reflector } from "@nestjs/core";
 import { Test } from "@nestjs/testing";
 import { EnvModule } from "@open-dpp/env";
@@ -29,12 +28,6 @@ describe("keycloakAuthGuard", () => {
           provide: Reflector,
           useValue: {
             get: jest.fn(),
-          },
-        },
-        {
-          provide: ConfigService,
-          useValue: {
-            get: jest.fn().mockReturnValue("mock-public-key"),
           },
         },
       ],
