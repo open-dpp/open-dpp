@@ -53,6 +53,11 @@ const envSchema = z.object({
     .or(z.number())
     .optional()
     .default("50mb"),
+  // Mail
+  OPEN_DPP_MAIL_HOST: z.coerce.string(),
+  OPEN_DPP_MAIL_PORT: z.coerce.number().max(65535).min(0),
+  OPEN_DPP_MAIL_USER: z.coerce.string(),
+  OPEN_DPP_MAIL_PASSWORD: z.coerce.string(),
 }).superRefine((val, ctx) => {
   const hasUri = !!val.OPEN_DPP_MONGODB_URI;
   const hasHostPort = !!val.OPEN_DPP_MONGODB_HOST && !!val.OPEN_DPP_MONGODB_PORT;
