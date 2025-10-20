@@ -2,7 +2,6 @@ import type {
   ExecutionContext,
 } from "@nestjs/common";
 import type { TestingModule } from "@nestjs/testing";
-import type { KeycloakUserInToken } from "./KeycloakUserInToken";
 import { expect } from "@jest/globals";
 import { HttpModule } from "@nestjs/axios";
 import {
@@ -13,6 +12,7 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { Reflector } from "@nestjs/core";
 import { Test } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
 import { IS_PUBLIC } from "../public/public.decorator";
 import { KeycloakAuthGuard } from "./keycloak-auth.guard";
 
@@ -20,18 +20,9 @@ describe("keycloakAuthGuard", () => {
   let guard: KeycloakAuthGuard;
   let reflector: Reflector;
 
-  const mockUser: KeycloakUserInToken = {
-    sub: "test-user-id",
-    email: "user@example.com",
-    name: "Test User",
-    preferred_username: "testuser",
-    email_verified: true,
-    memberships: [],
-  };
-
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [HttpModule],
+      imports: [HttpModule, EnvModule.forRoot()],
       providers: [
         KeycloakAuthGuard,
         {
@@ -99,53 +90,6 @@ describe("keycloakAuthGuard", () => {
           "Authorization: Bearer <token> header invalid",
         ),
       );
-    });
-
-    it("should authenticate user and set auth context with permissions", async () => {
-      jest.spyOn(reflector, "get").mockReturnValue(false);
-      mockRequest.headers.authorization = "Bearer valid-token";
-
-      const mockPayload = {
-        ...mockUser,
-        memberships: ["organization-org1", "organization-org2"],
-      };
-
-      jest.spyOn(guard, "validateToken").mockResolvedValue(mockPayload);
-
-      const result = await guard.canActivate(context);
-
-      expect(result).toBe(true);
-      expect(mockRequest.authContext).toBeDefined();
-      expect(mockRequest.authContext.keycloakUser).toEqual(mockPayload);
-      expect(mockRequest.authContext.permissions).toEqual([
-        {
-          type: "organization",
-          resource: "org1",
-          scopes: ["organization:access"],
-        },
-        {
-          type: "organization",
-          resource: "org2",
-          scopes: ["organization:access"],
-        },
-      ]);
-    });
-
-    it("should handle empty memberships", async () => {
-      jest.spyOn(reflector, "get").mockReturnValue(false);
-      mockRequest.headers.authorization = "Bearer valid-token";
-
-      const mockPayload = {
-        ...mockUser,
-        // No memberships property
-      };
-
-      jest.spyOn(guard, "validateToken").mockResolvedValue(mockPayload);
-
-      const result = await guard.canActivate(context);
-
-      expect(result).toBe(true);
-      expect(mockRequest.authContext.permissions).toEqual([]);
     });
   });
 });

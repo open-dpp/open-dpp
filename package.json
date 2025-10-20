@@ -8,18 +8,7 @@
   "packageManager": "pnpm@10.18.3",
   "devDependencies": {
     "@dotenvx/dotenvx": "^1.51.0",
-    "@eslint/js": "^9.38.0",
-    "@swc/core": "^1.13.5",
-    "@swc/jest": "^0.2.39",
-    "@types/jest": "^30.0.0",
-    "eslint": "^9.38.0",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^5.5.4",
-    "globals": "^16.4.0",
-    "jest": "^30.2.0",
-    "turbo": "^2.5.8",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.1"
+    "turbo": "^2.5.8"
   },
   "scripts": {
     "build": "dotenvx run -f .env.dev -f .env -- turbo build --env-mode=loose",
@@ -29,6 +18,7 @@
     "test:ci": "turbo test --env-mode=loose",
     "test:main": "dotenvx run -f .env.dev -f .env -- turbo test --filter=./apps/main --env-mode=loose",
     "test:mcp": "dotenvx run -f .env.dev -f .env -- turbo test --filter=./apps/mcp --env-mode=loose",
+    "test:auth": "dotenvx run -f .env.dev -f .env -- turbo test --filter=./packages/auth --env-mode=loose",
     "test:client": "dotenvx run -f .env.dev -f .env -- turbo test --filter=./apps/client --env-mode=loose",
     "test:api-client": "dotenvx run -f .env.dev -f .env -- turbo test --filter=./packages/api-client --env-mode=loose",
     "test:cypress:headless": "dotenvx run -f .env.dev -f .env -- turbo cypress:headless --filter=./apps/client --env-mode=loose",
