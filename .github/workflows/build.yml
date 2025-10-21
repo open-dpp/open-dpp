@@ -74,6 +74,11 @@ jobs:
       KEYCLOAK_DISABLED: "true"
       VITE_API_ROOT: "http://localhost"
       VITE_KEYCLOAK_ROOT: "http://localhost"
+      # Mail
+      OPEN_DPP_MAIL_HOST: "localhost"
+      OPEN_DPP_MAIL_PORT: "8026"
+      OPEN_DPP_MAIL_USER: "admin"
+      OPEN_DPP_MAIL_PASSWORD: "admin"
 
     steps:
       # Step 1: Checkout code

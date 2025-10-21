@@ -157,6 +157,10 @@ services:
     image: axllent/mailpit:latest
     ports:
       - "8025:8025"
+      - "8026:1025"
+    environment:
+      - MP_SMTP_AUTH=admin:admin
+      - MP_SMTP_AUTH_ALLOW_INSECURE=true
     networks:
       - open-dpp-local
 

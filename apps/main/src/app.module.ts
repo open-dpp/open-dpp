@@ -13,6 +13,7 @@ import { McpClientModule } from "./ai/mcp-client/mcp-client.module";
 import { PassportModule } from "./ai/passports/passport.module";
 import { ChatGateway } from "./ai/presentation/chat.gateway";
 import { generateMongoConfig } from "./database/config";
+import { EmailModule } from "./email/email.module";
 import { IntegrationModule } from "./integrations/integration.module";
 import { ItemsModule } from "./items/items.module";
 import { KeycloakResourcesModule } from "./keycloak-resources/keycloak-resources.module";
@@ -67,6 +68,7 @@ import { UsersModule } from "./users/users.module";
     McpClientModule,
     PassportModule,
     AuthModule.forRoot(),
+    EmailModule,
   ],
   controllers: [],
   providers: [
