@@ -19,6 +19,7 @@ export function createAxiosClient(
   return axios.create({
     ...options,
     baseURL: options.baseURL ?? defaultBaseUrl,
+    withCredentials: true,
     headers: {
       ...options.headers,
       service_token: options.serviceToken ? options.serviceToken : '',

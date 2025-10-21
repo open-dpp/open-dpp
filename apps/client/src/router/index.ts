@@ -1,9 +1,8 @@
 import type { RouteRecordRaw } from "vue-router";
 import { createRouter, createWebHistory } from "vue-router";
-import { keycloakDisabled } from "../const";
-import keycloakIns from "../lib/keycloak";
-import { useIndexStore } from "../stores";
+import { authClient } from "../auth-client.ts";
 
+import { useIndexStore } from "../stores";
 import { useLayoutStore } from "../stores/layout";
 import { AUTH_ROUTES } from "./routes/auth";
 import { MARKETPLACE_ROUTES } from "./routes/marketplace";
@@ -28,6 +27,30 @@ export const routes: RouteRecordRaw[] = [
       }
     },
   },
+  {
+    path: "/signin",
+    name: "Signin",
+    component: () => import("../view/auth/Signin.vue"),
+    meta: {
+      layout: "none",
+    },
+  },
+  {
+    path: "/signout",
+    name: "Signout",
+    component: () => import("../view/Logout.vue"),
+    meta: {
+      layout: "none",
+    },
+  },
+  {
+    path: "/signup",
+    name: "Signup",
+    component: () => import("../view/auth/Signup.vue"),
+    meta: {
+      layout: "none",
+    },
+  },
   ...AUTH_ROUTES,
   ...ORGANIZATION_ROUTES,
   ...MARKETPLACE_ROUTES,
@@ -43,14 +66,10 @@ export const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const layoutStore = useLayoutStore();
   layoutStore.isPageLoading = true;
-  if (keycloakDisabled) {
-    next();
-  }
-  if (!keycloakIns.authenticated) {
-    await keycloakIns.login({
-      redirectUri: `${window.location.origin}${to.fullPath}`,
-    });
-    next();
+  const session = authClient.useSession();
+  const publicAuthRoutes = ["Signin", "Signup", "Signout"];
+  if (session.value.data === null && !publicAuthRoutes.includes(to.name as string)) {
+    next("/signin");
   }
   else {
     next();

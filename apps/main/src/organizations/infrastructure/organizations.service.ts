@@ -8,6 +8,8 @@ import {
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { AuthService } from "@thallesp/nestjs-better-auth";
+import { auth } from "../../auth";
 import { User } from "../../users/domain/user";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { Organization } from "../domain/organization";
@@ -17,14 +19,17 @@ import { OrganizationDoc, OrganizationSchemaVersion } from "./organization.schem
 export class OrganizationsService {
   private organizationDoc: MongooseModel<OrganizationDoc>;
   private readonly usersService: UsersService;
+  private readonly authService: AuthService<typeof auth>;
 
   constructor(
     @InjectModel(OrganizationDoc.name)
     organizationDoc: MongooseModel<OrganizationDoc>,
     usersService: UsersService,
+    authService: AuthService<typeof auth>,
   ) {
     this.organizationDoc = organizationDoc;
     this.usersService = usersService;
+    this.authService = authService;
   }
 
   async convertToDomain(
@@ -52,9 +57,7 @@ export class OrganizationsService {
   }
 
   async save(organization: Organization) {
-    const memberIds = organization.members.map(m => m.id);
-    const userDocs = await this.usersService.findAllByIds(memberIds);
-    const members = userDocs.map(u => u.id);
+    const members: string[] = organization.members.map(member => member.id);
     const entity = await this.organizationDoc.findOneAndUpdate(
       { _id: organization.id },
       {
@@ -107,10 +110,10 @@ export class OrganizationsService {
     await this.save(org);
   }
 
-  async findAllWhereMember(authContext: AuthContext) {
+  async findAllWhereMember(user: User) {
     const organizations = await this.organizationDoc.find({
       members: {
-        $in: [authContext.user.id],
+        $in: [user.id],
       },
     });
     const domainOrganizations = [];

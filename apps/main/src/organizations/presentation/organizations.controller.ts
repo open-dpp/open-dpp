@@ -11,6 +11,7 @@ import {
   Request,
 } from "@nestjs/common";
 import { hasPermission, OrganizationSubject, PermissionAction } from "@open-dpp/permission";
+import { Session, UserSession } from "@thallesp/nestjs-better-auth";
 import { User } from "../../users/domain/user";
 import { Organization } from "../domain/organization";
 import { OrganizationsService } from "../infrastructure/organizations.service";
@@ -27,21 +28,25 @@ export class OrganizationsController {
 
   @Post()
   async create(
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
     @Body() createOrganizationDto: CreateOrganizationDto,
   ) {
-    const user = req.authContext.user as User;
+    const user = User.loadFromDb({
+      id: session.user.id,
+      email: session.user.email,
+      keycloakUserId: session.user.id,
+    });
     if (!hasPermission({
       user: {
-        id: user.id,
+        id: session.user.id,
       },
     }, PermissionAction.CREATE, OrganizationSubject)) {
       throw new ForbiddenException();
     }
     const organization = Organization.create({
       name: createOrganizationDto.name,
-      createdByUserId: user.id,
-      ownedByUserId: user.id,
+      createdByUserId: session.user.id,
+      ownedByUserId: session.user.id,
       members: [user],
     });
 
@@ -49,13 +54,18 @@ export class OrganizationsController {
   }
 
   @Get()
-  async findAll(@Request() req: authRequest.AuthRequest) {
-    const organizations = await this.organizationsService.findAllWhereMember(req.authContext);
+  async findAll(@Session() session: UserSession) {
+    const user = User.loadFromDb({
+      id: session.user.id,
+      email: session.user.email,
+      keycloakUserId: session.user.id,
+    });
+    const organizations = await this.organizationsService.findAllWhereMember(user);
     const accessibleOrganizations = [];
     for (const organization of organizations) {
       const can = hasPermission({
         user: {
-          id: (req.authContext.user as User).id,
+          id: user.id,
         },
       }, PermissionAction.READ, organization.toPermissionSubject());
       if (can) {

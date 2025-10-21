@@ -16,7 +16,9 @@ import { applyBodySizeHandler } from "./BodySizeHandler";
 import { buildOpenApiDocumentation } from "./open-api-docs";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bodyParser: false,
+  });
   const configService = app.get(ConfigService);
   const logger = new Logger("Bootstrap");
 
@@ -36,7 +38,11 @@ async function bootstrap() {
   }
 
   app.setGlobalPrefix("api");
-  app.enableCors();
+  app.enableCors({
+    credentials: true,
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  });
   app.useGlobalFilters(
     new NotFoundInDatabaseExceptionFilter(),
     new NotFoundExceptionFilter(),

@@ -4,14 +4,15 @@ import { Module } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ServeStaticModule } from "@nestjs/serve-static";
-import { AuthModule, KeycloakAuthGuard } from "@open-dpp/auth";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { AuthGuard, AuthModule } from "@thallesp/nestjs-better-auth";
 import { AiConfigurationModule } from "./ai/ai-configuration/ai-configuration.module";
 import { AiModule } from "./ai/ai.module";
 import { ChatService } from "./ai/chat.service";
 import { McpClientModule } from "./ai/mcp-client/mcp-client.module";
 import { PassportModule } from "./ai/passports/passport.module";
 import { ChatGateway } from "./ai/presentation/chat.gateway";
+import { auth } from "./auth";
 import { generateMongoConfig } from "./database/config";
 import { EmailModule } from "./email/email.module";
 import { IntegrationModule } from "./integrations/integration.module";
@@ -27,8 +28,6 @@ import { TemplateDraftModule } from "./template-draft/template-draft.module";
 import { TemplateModule } from "./templates/template.module";
 import { TraceabilityEventsModule } from "./traceability-events/traceability-events.module";
 import { UniqueProductIdentifierModule } from "./unique-product-identifier/unique.product.identifier.module";
-import { CreateNonExistingUserGuard } from "./users/infrastructure/create-non-existing-user.guard";
-import { InjectUserToAuthContextGuard } from "./users/infrastructure/inject-user-to-auth-context.guard";
 import { UsersModule } from "./users/users.module";
 
 @Module({
@@ -67,7 +66,7 @@ import { UsersModule } from "./users/users.module";
     AiModule,
     McpClientModule,
     PassportModule,
-    AuthModule.forRoot(),
+    AuthModule.forRoot({ auth, disableGlobalAuthGuard: true }),
     EmailModule,
   ],
   controllers: [],
@@ -76,15 +75,7 @@ import { UsersModule } from "./users/users.module";
     ChatService,
     {
       provide: APP_GUARD,
-      useClass: KeycloakAuthGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: CreateNonExistingUserGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: InjectUserToAuthContextGuard,
+      useClass: AuthGuard,
     },
   ],
 })
