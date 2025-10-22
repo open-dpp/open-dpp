@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
+import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { MongooseTestingModule } from "@open-dpp/testing";
 import { Connection } from "mongoose";
@@ -10,11 +11,11 @@ import {
   dataFieldFactory,
   passportMetricFactory,
 } from "../fixtures/passport-metric.factory";
+
 import {
   PassportMetricDoc,
   PassportMetricSchema,
 } from "./passport-metric.schema";
-
 import { PassportMetricService, TimePeriod } from "./passport-metric.service";
 
 describe("passportMetricService", () => {
@@ -25,6 +26,7 @@ describe("passportMetricService", () => {
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
+        EnvModule.forRoot(),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -302,6 +304,10 @@ describe("passportMetricService", () => {
         datetime: new Date("2025-02-01T00:00:00.000Z"),
         sum: 2,
       },
+      {
+        datetime: new Date("2025-03-01T00:00:00.000Z"),
+        sum: 0,
+      },
     ]);
 
     statistic = await passportMetricService.computeStatistic(
@@ -323,6 +329,10 @@ describe("passportMetricService", () => {
       {
         datetime: new Date("2025-02-01T00:00:00.000Z"),
         sum: 4,
+      },
+      {
+        datetime: new Date("2025-03-01T00:00:00.000Z"),
+        sum: 0,
       },
     ]);
   });
