@@ -107,19 +107,30 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
 
-      # Step 4: Install dependencies
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      # Step 4: See https://docs.cypress.io/app/get-started/install-cypress#pnpm-configuration
+      - name: Disable pnpm side-effects cache
+        run: pnpm config set side-effects-cache false --location project
 
-      # Step 5: Build project
+      # Step 5: Install dependencies
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --allow-build=cypress
+
+      # Step 6: Cache cypress binaries (optional but helps CI performance)
+      - name: Cache Cypress binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      # Step 7: Build project
       - name: Build project
         run: pnpm build
 
-      # Step 6: Build testing support package
+      # Step 8: Build testing support package
       - name: Build project
         run: cd packages/testing && pnpm build
 
-      # Step 7: Wait for Databases to be ready
+      # Step 9: Wait for Databases to be ready
       - name: Wait for Databases to be ready
         run: |
           echo "Waiting for MongoDB to start..."
@@ -127,15 +138,19 @@ jobs:
             sleep 1
           done
 
-      # Step 8: Run tests
+      # Step 10: Run tests
       - name: Run tests
         run: pnpm test:ci
 
-      # Step 8: Run cypress tests
+      # Step 11: Verify Cypress binary
+      - name: Verify Cypress install
+        run: npx cypress verify
+
+      # Step 12: Run cypress tests
       - name: Run cypress tests
         run: pnpm test:ci:cypress
 
-      # Step 9: Upload Cypress artifacts (optional)
+      # Step 13: Upload Cypress artifacts (optional)
       - name: Upload Cypress Artifacts
         if: always() # This ensures artifacts are uploaded even if the tests fail
         uses: actions/upload-artifact@v4
