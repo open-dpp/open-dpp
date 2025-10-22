@@ -1,64 +1,94 @@
 import type { KeycloakUserInToken } from "@open-dpp/auth";
-import type { FindManyOptions, Repository } from "typeorm";
+import type { Model as MongooseModel } from "mongoose";
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
+import { InjectModel } from "@nestjs/mongoose";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { Equal } from "typeorm";
 import { User } from "../domain/user";
-import { UserEntity } from "./user.entity";
+import { UserDoc, UserSchemaVersion } from "./user.schema";
 
 @Injectable()
 export class UsersService {
-  private userRepository: Repository<UserEntity>;
+  private userDoc: MongooseModel<UserDoc>;
 
   constructor(
-    @InjectRepository(UserEntity)
-    userRepository: Repository<UserEntity>,
+    @InjectModel(UserDoc.name)
+    userDoc: MongooseModel<UserDoc>,
   ) {
-    this.userRepository = userRepository;
+    this.userDoc = userDoc;
   }
 
-  convertToDomain(userEntity: UserEntity) {
-    return new User(userEntity.id, userEntity.email);
+  convertToDomain(
+    userDoc: UserDoc,
+  ) {
+    return User.loadFromDb({
+      id: userDoc.id,
+      email: userDoc.email,
+      keycloakUserId: userDoc.keycloakUserId,
+    });
   }
 
   async findOne(id: string) {
-    const userFound = await this.userRepository.findOne({
-      where: { id: Equal(id) },
-    });
+    const userFound = await this.userDoc.findById(id);
     return userFound ? this.convertToDomain(userFound) : undefined;
   }
 
   async findOneAndFail(id: string) {
-    const userEntity = await this.userRepository.findOne({
-      where: { id: Equal(id) },
-    });
+    const userEntity = await this.userDoc.findById(id);
     if (!userEntity) {
       throw new NotFoundInDatabaseException(User.name);
     }
     return this.convertToDomain(userEntity);
   }
 
-  async find(options?: FindManyOptions<UserEntity>) {
-    const entities = await this.userRepository.find(options);
+  async findByEmail(email: string) {
+    const entities = await this.userDoc.find({
+      email,
+    });
     return entities.map(entity => this.convertToDomain(entity));
   }
 
+  async findAllByIds(ids: Array<string>) {
+    const entities = await this.userDoc.find({
+      _id: {
+        $in: ids,
+      },
+    });
+    return entities.map(entity => this.convertToDomain(entity));
+  }
+
+  async findByKeycloakUserId(keycloakUserId: string) {
+    const entity = await this.userDoc.findOne({
+      keycloakUserId,
+    });
+    return entity === null ? null : this.convertToDomain(entity);
+  }
+
   async save(user: User) {
-    const userEntity = new UserEntity();
-    userEntity.id = user.id;
-    userEntity.email = user.email;
-    return this.convertToDomain(await this.userRepository.save(user));
+    const entity = await this.userDoc.findOneAndUpdate(
+      { _id: user.id },
+      {
+        $set: {
+          _schemaVersion: UserSchemaVersion.v1_0_0,
+          email: user.email,
+          keycloakUserId: user.keycloakUserId,
+        },
+      },
+      {
+        new: true, // Return the updated document
+        upsert: true, // Create a new document if none found
+        runValidators: true,
+      },
+    );
+    return this.convertToDomain(entity);
   }
 
   async create(keycloakUser: KeycloakUserInToken, ignoreIfExists?: boolean) {
-    const find = await this.findOne(keycloakUser.sub);
+    const find = await this.findByKeycloakUserId(keycloakUser.sub);
+    if (!find) {
+      return this.save(User.create({ email: keycloakUser.email, keycloakUserId: keycloakUser.sub }));
+    }
     if (find && !ignoreIfExists) {
       throw new BadRequestException();
     }
-    const user = new UserEntity();
-    user.id = keycloakUser.sub;
-    user.email = keycloakUser.email;
-    return this.userRepository.save(user);
   }
 }

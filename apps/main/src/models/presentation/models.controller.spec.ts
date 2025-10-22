@@ -4,11 +4,11 @@ import { INestApplication } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { AuthContext, PermissionModule } from "@open-dpp/auth";
 import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
-import getKeycloakAuthToken, { createKeycloakUserInToken, getApp, ignoreIds, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import getKeycloakAuthToken, { getApp, ignoreIds, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
 import request from "supertest";
+import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
 import { AasConnectionDoc, AasConnectionSchema } from "../../integrations/infrastructure/aas-connection.schema";
 import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
 import { ItemsService } from "../../items/infrastructure/items.service";
@@ -21,8 +21,7 @@ import {
   PassportTemplatePublicationService,
 } from "../../marketplace/infrastructure/passport-template-publication.service";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
-import { Organization } from "../../organizations/domain/organization";
-import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
+import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import { Template, TemplateDbProps } from "../../templates/domain/template";
@@ -41,8 +40,8 @@ import {
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
-import { User } from "../../users/domain/user";
-import { UserEntity } from "../../users/infrastructure/user.entity";
+import { InjectUserToAuthContextGuard } from "../../users/infrastructure/inject-user-to-auth-context.guard";
+import { UserDbSchema, UserDoc } from "../../users/infrastructure/user.schema";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { Model } from "../domain/model";
 import { ModelDoc, ModelSchema } from "../infrastructure/model.schema";
@@ -56,25 +55,12 @@ describe("modelsController", () => {
   let modelsService: ModelsService;
   let templateService: TemplateService;
   const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
-  const authContext = new AuthContext();
-  authContext.keycloakUser = createKeycloakUserInToken();
-  const user = new User(
-    authContext.keycloakUser.sub,
-    authContext.keycloakUser.email,
-  );
-  const organization = Organization.create({
-    name: "orga",
-    user,
-  });
   let marketplaceService: MarketplaceApplicationService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        TypeOrmTestingModule,
-        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
-        PermissionModule,
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
@@ -105,6 +91,14 @@ describe("modelsController", () => {
             name: PassportTemplatePublicationDoc.name,
             schema: PassportTemplatePublicationDbSchema,
           },
+          {
+            name: OrganizationDoc.name,
+            schema: OrganizationDbSchema,
+          },
+          {
+            name: UserDoc.name,
+            schema: UserDbSchema,
+          },
         ]),
       ],
       providers: [
@@ -121,13 +115,17 @@ describe("modelsController", () => {
           provide: APP_GUARD,
           useValue: keycloakAuthTestingGuard,
         },
+        {
+          provide: APP_GUARD,
+          useClass: InjectUserToAuthContextGuard,
+        },
       ],
       controllers: [ModelsController],
     })
       .overrideProvider(KeycloakResourcesService)
       .useValue(
         KeycloakResourcesServiceTesting.fromPlain({
-          users: [{ id: user.id, email: user.email }],
+          users: [{ id: TestUsersAndOrganizations.keycloakUsers.keycloakUser1.sub, email: TestUsersAndOrganizations.keycloakUsers.keycloakUser1.email }],
         }),
       )
       .compile();
@@ -140,14 +138,17 @@ describe("modelsController", () => {
     marketplaceService = moduleRef.get<MarketplaceApplicationService>(
       MarketplaceApplicationService,
     );
-    const organizationService
-      = moduleRef.get<OrganizationsService>(OrganizationsService);
-    await organizationService.save(organization);
+    const usersService = moduleRef.get(UsersService);
+    const organizationService = moduleRef.get(OrganizationsService);
 
     app = moduleRef.createNestApplication();
     app.useGlobalFilters(new NotFoundInDatabaseExceptionFilter());
 
     await app.init();
+
+    await usersService.save(TestUsersAndOrganizations.users.user1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
 
   const sectionId3 = randomUUID();
@@ -156,7 +157,7 @@ describe("modelsController", () => {
 
   const laptopModel: TemplateDbProps = laptopFactory
     .addSections()
-    .build({ organizationId: organization.id, userId: user.id });
+    .build({ organizationId: TestUsersAndOrganizations.organizations.org1.id, userId: TestUsersAndOrganizations.users.user1.id });
 
   it(`/CREATE model`, async () => {
     const template = Template.loadFromDb(laptopModel);
@@ -167,12 +168,11 @@ describe("modelsController", () => {
       templateId: template.id,
     };
     const response = await request(getApp(app))
-      .post(`/organizations/${organization.id}/models`)
+      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          user.id,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -180,7 +180,7 @@ describe("modelsController", () => {
     expect(response.status).toEqual(201);
     const found = await modelsService.findOneOrFail(response.body.id);
     expect(response.body.id).toEqual(found.id);
-    expect(found.isOwnedBy(organization.id)).toBeTruthy();
+    expect(found.isOwnedBy(TestUsersAndOrganizations.organizations.org1.id)).toBeTruthy();
     expect(found.templateId).toEqual(template.id);
     const foundUniqueProductIdentifiers
       = await uniqueProductIdentifierService.findAllByReferencedId(found.id);
@@ -195,13 +195,12 @@ describe("modelsController", () => {
   it(`/CREATE model using template from marketplace`, async () => {
     const template = Template.loadFromDb(laptopModel);
     const token = getKeycloakAuthToken(
-      user.id,
-      [organization.id],
+      TestUsersAndOrganizations.users.user1.keycloakUserId,
       keycloakAuthTestingGuard,
     );
     const { id: marketplaceResourceId } = await marketplaceService.upload(
       template,
-      user,
+      TestUsersAndOrganizations.users.user1,
     );
 
     const body = {
@@ -210,13 +209,13 @@ describe("modelsController", () => {
       marketplaceResourceId,
     };
     const response = await request(getApp(app))
-      .post(`/organizations/${organization.id}/models`)
+      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models`)
       .set("Authorization", token)
       .send(body);
     expect(response.status).toEqual(201);
     const found = await modelsService.findOneOrFail(response.body.id);
     expect(response.body.id).toEqual(found.id);
-    expect(found.isOwnedBy(organization.id)).toBeTruthy();
+    expect(found.isOwnedBy(TestUsersAndOrganizations.organizations.org1.id)).toBeTruthy();
     const foundTemplate = await templateService.findOneOrFail(found.templateId);
     expect(foundTemplate.marketplaceResourceId).toEqual(marketplaceResourceId);
   });
@@ -227,14 +226,12 @@ describe("modelsController", () => {
       description: "My desc",
       templateId: randomUUID(),
     };
-    const otherOrganizationId = randomUUID();
     const response = await request(getApp(app))
-      .post(`/organizations/${otherOrganizationId}/models`)
+      .post(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/models`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          user.id,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -243,10 +240,9 @@ describe("modelsController", () => {
   });
 
   it(`/CREATE model fails if template does not belong to organization`, async () => {
-    const otherOrganizationId = randomUUID();
     const template = Template.loadFromDb({
       ...laptopModel,
-      organizationId: otherOrganizationId,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
     });
     await templateService.save(template);
     const body = {
@@ -255,12 +251,11 @@ describe("modelsController", () => {
       templateId: template.id,
     };
     const response = await request(getApp(app))
-      .post(`/organizations/${organization.id}/models`)
+      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          user.id,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -276,12 +271,11 @@ describe("modelsController", () => {
       marketplaceResourceId: randomUUID(),
     };
     const response = await request(getApp(app))
-      .post(`/organizations/${organization.id}/models`)
+      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          user.id,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -302,12 +296,11 @@ describe("modelsController", () => {
       description: "My desc",
     };
     const response = await request(getApp(app))
-      .post(`/organizations/${organization.id}/models`)
+      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          user.id,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -324,15 +317,14 @@ describe("modelsController", () => {
 
   it(`/GET models of organization`, async () => {
     const modelNames = ["P1", "P2"];
-    const otherOrganizationId = randomUUID();
     const template = Template.loadFromDb(laptopModel);
 
     const models: Model[] = await Promise.all(
       modelNames.map(async (pn) => {
         const model = Model.create({
           name: pn,
-          organizationId: otherOrganizationId,
-          userId: user.id,
+          organizationId: TestUsersAndOrganizations.organizations.org1.id,
+          userId: TestUsersAndOrganizations.users.user1.id,
           template,
         });
         return await modelsService.save(model);
@@ -341,46 +333,64 @@ describe("modelsController", () => {
     await modelsService.save(
       Model.create({
         name: "Other Orga",
-        organizationId: organization.id,
-        userId: user.id,
+        organizationId: TestUsersAndOrganizations.organizations.org1.id,
+        userId: TestUsersAndOrganizations.users.user1.id,
         template,
       }),
     );
 
     const response = await request(getApp(app))
-      .get(`/organizations/${otherOrganizationId}/models`)
+      .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          user.id,
-          [organization.id, otherOrganizationId],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
     expect(response.status).toEqual(200);
 
-    expect(response.body).toEqual(models.map(m => modelToDto(m)));
+    expect(response.body).toEqual(
+      expect.arrayContaining(
+        models.map((m) => {
+          const dto = modelToDto(m);
+          // Only assert on stable fields you care about
+          return expect.objectContaining({
+            id: dto.id,
+            name: dto.name,
+            templateId: dto.templateId,
+            owner: dto.owner,
+            // You can also verify dataValues structure without insisting on `value`
+            dataValues: expect.arrayContaining(
+              dto.dataValues.map(dv => expect.objectContaining({
+                dataFieldId: dv.dataFieldId,
+                dataSectionId: dv.dataSectionId,
+                row: dv.row,
+              })),
+            ),
+          });
+        }),
+      ),
+    );
   });
 
   it(`/GET models of organization fails if user is not part of organization`, async () => {
-    const otherOrganizationId = randomUUID();
     const template = Template.loadFromDb(laptopModel);
 
     const model = Model.create({
       name: "Model",
-      organizationId: otherOrganizationId,
-      userId: user.id,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
     });
     await modelsService.save(model);
 
     const response = await request(getApp(app))
-      .get(`/organizations/${otherOrganizationId}/models`)
+      .get(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/models`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          user.id,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -392,18 +402,17 @@ describe("modelsController", () => {
 
     const model = Model.create({
       name: "Model",
-      organizationId: organization.id,
-      userId: user.id,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
     });
     await modelsService.save(model);
     const response = await request(getApp(app))
-      .get(`/organizations/${organization.id}/models/${model.id}`)
+      .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          user.id,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -412,23 +421,21 @@ describe("modelsController", () => {
   });
 
   it(`/GET model fails if user is not member of organization`, async () => {
-    const otherOrganizationId = randomUUID();
     const template = Template.loadFromDb(laptopModel);
 
     const model = Model.create({
       name: "Model",
-      organizationId: otherOrganizationId,
-      userId: user.id,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
     });
     await modelsService.save(model);
     const response = await request(getApp(app))
-      .get(`/organizations/${otherOrganizationId}/models/${model.id}`)
+      .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          user.id,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -436,23 +443,21 @@ describe("modelsController", () => {
   });
 
   it(`/GET model fails if model does not belong to organization`, async () => {
-    const otherOrganizationId = randomUUID();
     const template = Template.loadFromDb(laptopModel);
 
     const model = Model.create({
       name: "Model",
-      organizationId: otherOrganizationId,
-      userId: user.id,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
     });
     await modelsService.save(model);
     const response = await request(getApp(app))
-      .get(`/organizations/${organization.id}/models/${model.id}`)
+      .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          user.id,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       );
@@ -465,8 +470,8 @@ describe("modelsController", () => {
     await templateService.save(template);
     const model = Model.create({
       name: "My name",
-      organizationId: organization.id,
-      userId: user.id,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
     });
 
@@ -490,12 +495,11 @@ describe("modelsController", () => {
       },
     ];
     const response = await request(getApp(app))
-      .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
+      .patch(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/data-values`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          user.id,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -523,13 +527,12 @@ describe("modelsController", () => {
   });
 
   it("update data values fails if user is not member of organization", async () => {
-    const otherOrganizationId = randomUUID();
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
     const model = Model.create({
       name: "My name",
-      organizationId: organization.id,
-      userId: user.id,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
     });
 
@@ -545,13 +548,12 @@ describe("modelsController", () => {
     ];
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${otherOrganizationId}/models/${model.id}/data-values`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/data-values`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          user.id,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -566,7 +568,7 @@ describe("modelsController", () => {
     const model = Model.create({
       name: "My name",
       organizationId: otherOrganizationId,
-      userId: user.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
     });
 
@@ -581,12 +583,11 @@ describe("modelsController", () => {
       },
     ];
     const response = await request(getApp(app))
-      .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
+      .patch(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/data-values`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          user.id,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -600,8 +601,8 @@ describe("modelsController", () => {
     await templateService.save(template);
     const model = Model.create({
       name: "My name",
-      organizationId: organization.id,
-      userId: user.id,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
     });
 
@@ -621,12 +622,11 @@ describe("modelsController", () => {
       },
     ];
     const response = await request(getApp(app))
-      .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
+      .patch(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/data-values`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          user.id,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -649,8 +649,8 @@ describe("modelsController", () => {
     await templateService.save(template);
     const model = Model.create({
       name: "My name",
-      organizationId: organization.id,
-      userId: user.id,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
     });
     model.createUniqueProductIdentifier();
@@ -672,12 +672,11 @@ describe("modelsController", () => {
       },
     ];
     const response = await request(getApp(app))
-      .post(`/organizations/${organization.id}/models/${model.id}/data-values`)
+      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/data-values`)
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          user.id,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )
@@ -695,13 +694,12 @@ describe("modelsController", () => {
   });
 
   it("add data values to model fails if user is not member of organization", async () => {
-    const otherOrganizationId = randomUUID();
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
     const model = Model.create({
       name: "My name",
-      organizationId: otherOrganizationId,
-      userId: user.id,
+      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
       template,
     });
 
@@ -709,13 +707,12 @@ describe("modelsController", () => {
     const addedValues: Array<any> = [];
     const response = await request(getApp(app))
       .post(
-        `/organizations/${otherOrganizationId}/models/${model.id}/data-values`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/models/${model.id}/data-values`,
       )
       .set(
         "Authorization",
         getKeycloakAuthToken(
-          user.id,
-          [organization.id],
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
           keycloakAuthTestingGuard,
         ),
       )

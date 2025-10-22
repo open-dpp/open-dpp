@@ -7,16 +7,15 @@ import {
   VideoCameraIcon,
 } from "@heroicons/vue/24/solid";
 import { onMounted, onUnmounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { useMediaStore } from "../../stores/media";
 import RingLoader from "../RingLoader.vue";
-import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
 const props = defineProps<{
   media: MediaInfo;
   showType?: boolean;
 }>();
-
+const { t } = useI18n();
 const mediaStore = useMediaStore();
 
 const url = ref<string | null>(null);

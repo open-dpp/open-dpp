@@ -6,12 +6,15 @@ import { expect } from "@jest/globals";
 import { APP_GUARD, Reflector } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { PermissionModule } from "@open-dpp/auth";
 import { EnvModule } from "@open-dpp/env";
-import { getApp, KeycloakAuthTestingGuard, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import { getApp, KeycloakAuthTestingGuard, MongooseTestingModule } from "@open-dpp/testing";
 import request from "supertest";
-import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
-import { UserEntity } from "../../users/infrastructure/user.entity";
+import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
+import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
+import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
+import { InjectUserToAuthContextGuard } from "../../users/infrastructure/inject-user-to-auth-context.guard";
+import { UserDbSchema, UserDoc } from "../../users/infrastructure/user.schema";
+import { UsersService } from "../../users/infrastructure/users.service";
 import { PassportTemplatePublication } from "../domain/passport-template-publication";
 import { passportTemplatePublicationPropsFactory } from "../fixtures/passport.template.factory";
 import {
@@ -40,22 +43,33 @@ describe("passportTemplateController", () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        TypeOrmTestingModule,
-        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
         MongooseTestingModule,
         MongooseModule.forFeature([
           {
             name: PassportTemplatePublicationDoc.name,
             schema: PassportTemplatePublicationDbSchema,
           },
+          {
+            name: OrganizationDoc.name,
+            schema: OrganizationDbSchema,
+          },
+          {
+            name: UserDoc.name,
+            schema: UserDbSchema,
+          },
         ]),
-        PermissionModule,
       ],
       providers: [
+        OrganizationsService,
+        UsersService,
         PassportTemplatePublicationService,
         {
           provide: APP_GUARD,
           useValue: keycloakAuthTestingGuard,
+        },
+        {
+          provide: APP_GUARD,
+          useClass: InjectUserToAuthContextGuard,
         },
       ],
       controllers: [PassportTemplatePublicationController],
@@ -64,8 +78,14 @@ describe("passportTemplateController", () => {
     app = module.createNestApplication();
     mongoConnection = module.get(getConnectionToken());
     passportTemplateService = module.get(PassportTemplatePublicationService);
+    const usersService = module.get(UsersService);
+    const organizationService = module.get(OrganizationsService);
 
     await app.init();
+
+    await usersService.save(TestUsersAndOrganizations.users.user1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
   beforeEach(() => {
     jest.spyOn(Date, "now").mockImplementation(() => mockNow.getTime());

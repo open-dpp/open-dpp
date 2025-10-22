@@ -10,18 +10,21 @@ import {
   Post,
   Request,
 } from "@nestjs/common";
-import { PermissionService } from "@open-dpp/auth";
+
 import { ZodValidationPipe } from "@open-dpp/exception";
+import {
+  hasPermission,
+  PermissionAction,
+} from "@open-dpp/permission";
 import { omit } from "lodash";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
+import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { TemplateService } from "../../templates/infrastructure/template.service";
 import { User } from "../../users/domain/user";
 import { DataFieldDraft } from "../domain/data-field-draft";
 import { SectionDraft } from "../domain/section-draft";
-
 import { TemplateDraft } from "../domain/template-draft";
 import { TemplateDraftService } from "../infrastructure/template-draft.service";
-
 import * as createDataFieldDraftDto_1 from "./dto/create-data-field-draft.dto";
 import * as createSectionDraftDto_1 from "./dto/create-section-draft.dto";
 import { CreateSectionDraftDtoSchema } from "./dto/create-section-draft.dto";
@@ -35,18 +38,18 @@ import * as updateTemplateDraftDto_1 from "./dto/update-template-draft.dto";
 
 @Controller("/organizations/:orgaId/template-drafts")
 export class TemplateDraftController {
-  private readonly permissionsService: PermissionService;
   private readonly templateService: TemplateService;
   private readonly templateDraftService: TemplateDraftService;
   private readonly marketplaceService: MarketplaceApplicationService;
+  private readonly organizationsService: OrganizationsService;
 
   constructor(
-    permissionsService: PermissionService,
+    organizationsService: OrganizationsService,
     templateService: TemplateService,
     templateDraftService: TemplateDraftService,
     marketplaceService: MarketplaceApplicationService,
   ) {
-    this.permissionsService = permissionsService;
+    this.organizationsService = organizationsService;
     this.templateService = templateService;
     this.templateDraftService = templateDraftService;
     this.marketplaceService = marketplaceService;
@@ -63,10 +66,14 @@ export class TemplateDraftController {
     )
     createTemplateDraftDto: createTemplateDraftDto_1.CreateTemplateDraftDto,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     return templateDraftToDto(
       await this.templateDraftService.save(
         TemplateDraft.create({
@@ -84,10 +91,14 @@ export class TemplateDraftController {
     @Param("draftId") draftId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -108,10 +119,14 @@ export class TemplateDraftController {
     )
     updateTemplateDraftDto: updateTemplateDraftDto_1.UpdateTemplateDraftDto,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -131,10 +146,14 @@ export class TemplateDraftController {
     @Body(new ZodValidationPipe(CreateSectionDraftDtoSchema))
     createSectionDraftDto: createSectionDraftDto_1.CreateSectionDraftDto,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
 
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
@@ -167,10 +186,14 @@ export class TemplateDraftController {
     @Body(new ZodValidationPipe(publishDto_1.PublishDtoSchema))
     publishDto: publishDto_1.PublishDto,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
 
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
@@ -184,10 +207,7 @@ export class TemplateDraftController {
     if (publishDto.visibility === publishDto_1.VisibilityLevel.PUBLIC) {
       const marketplaceResponse = await this.marketplaceService.upload(
         publishedProductDataModel,
-        User.create({
-          email: req.authContext.keycloakUser.email,
-          id: req.authContext.keycloakUser.sub,
-        }),
+        req.authContext.user as User,
       );
       publishedProductDataModel.assignMarketplaceResource(
         marketplaceResponse.id,
@@ -216,10 +236,14 @@ export class TemplateDraftController {
     )
     createDataFieldDraftDto: createDataFieldDraftDto_1.CreateDataFieldDraftDto,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
 
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
@@ -242,10 +266,14 @@ export class TemplateDraftController {
     @Param("draftId") draftId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -269,10 +297,14 @@ export class TemplateDraftController {
     modifySectionDraftDto: updateSectionDraftDto.UpdateSectionDraftDto,
     @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
 
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
@@ -298,10 +330,14 @@ export class TemplateDraftController {
     moveDto: moveDto_1.MoveDto,
     @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
 
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
@@ -329,10 +365,14 @@ export class TemplateDraftController {
     modifyDataFieldDraftDto: updateDataFieldDraftDto.UpdateDataFieldDraftDto,
     @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
 
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
@@ -360,10 +400,14 @@ export class TemplateDraftController {
     moveDto: moveDto_1.MoveDto,
     @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
 
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
@@ -389,10 +433,14 @@ export class TemplateDraftController {
     @Param("fieldId") fieldId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
 
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
@@ -411,10 +459,14 @@ export class TemplateDraftController {
     @Param("orgaId") organizationId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
 
     return await this.templateDraftService.findAllByOrganization(
       organizationId,

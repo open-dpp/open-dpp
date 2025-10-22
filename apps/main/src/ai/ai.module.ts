@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { PermissionModule } from "@open-dpp/auth";
 import { EnvModule } from "@open-dpp/env";
+import { OrganizationsModule } from "../organizations/organizations.module";
 import { UniqueProductIdentifierModule } from "../unique-product-identifier/unique.product.identifier.module";
 import { AiConfigurationDbSchema, AiConfigurationDoc } from "./ai-configuration/infrastructure/ai-configuration.schema";
 import { AiConfigurationService } from "./ai-configuration/infrastructure/ai-configuration.service";
@@ -21,8 +21,8 @@ import { ChatGateway } from "./presentation/chat.gateway";
       },
     ]),
     UniqueProductIdentifierModule,
-    PermissionModule,
     EnvModule,
+    OrganizationsModule,
   ],
   controllers: [AiConfigurationController],
   providers: [

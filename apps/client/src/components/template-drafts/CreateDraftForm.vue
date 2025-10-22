@@ -1,13 +1,12 @@
 <script lang="ts" setup>
 import type { TemplateDraftCreateDto } from "@open-dpp/api-client";
 import { Sector } from "@open-dpp/api-client";
-import { useI18n } from 'vue-i18n';
+import { useI18n } from "vue-i18n";
 
-const { t } = useI18n();
 const emits = defineEmits<{
   (e: "submit", draftData: TemplateDraftCreateDto): void;
 }>();
-
+const { t } = useI18n();
 async function create(fields: {
   name: string;
   description: string;

@@ -18,13 +18,6 @@ const envSchema = z.object({
   OPEN_DPP_MONGODB_USER: z.coerce.string(),
   OPEN_DPP_MONGODB_PASSWORD: z.coerce.string(),
   OPEN_DPP_MONGODB_DATABASE: z.coerce.string(),
-  // Postgres
-  OPEN_DPP_DB_PORT: z.coerce.number().max(65535).min(0),
-  OPEN_DPP_DB_SSL: asBoolean.optional(),
-  OPEN_DPP_DB_HOST: z.coerce.string(),
-  OPEN_DPP_DB_USER: z.coerce.string(),
-  OPEN_DPP_DB_PASSWORD: z.coerce.string(),
-  OPEN_DPP_DB_DATABASE: z.coerce.string(),
   // AI
   OPEN_DPP_MISTRAL_API_KEY: z.coerce.string(),
   OPEN_DPP_OLLAMA_URL: z.url(),

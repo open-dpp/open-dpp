@@ -1,106 +1,82 @@
 import type { AuthContext } from "@open-dpp/auth";
+import type { Model as MongooseModel } from "mongoose";
 import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
+import { InjectModel } from "@nestjs/mongoose";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { DataSource, Equal, Repository } from "typeorm";
-import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import { User } from "../../users/domain/user";
-import { UserEntity } from "../../users/infrastructure/user.entity";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { Organization } from "../domain/organization";
-import { OrganizationEntity } from "./organization.entity";
+import { OrganizationDoc, OrganizationSchemaVersion } from "./organization.schema";
 
 @Injectable()
 export class OrganizationsService {
-  private organizationRepository: Repository<OrganizationEntity>;
-  private readonly dataSource: DataSource;
-  private readonly keycloakResourcesService: KeycloakResourcesService;
+  private organizationDoc: MongooseModel<OrganizationDoc>;
   private readonly usersService: UsersService;
 
   constructor(
-    @InjectRepository(OrganizationEntity)
-    organizationRepository: Repository<OrganizationEntity>,
-    dataSource: DataSource,
-    keycloakResourcesService: KeycloakResourcesService,
+    @InjectModel(OrganizationDoc.name)
+    organizationDoc: MongooseModel<OrganizationDoc>,
     usersService: UsersService,
   ) {
-    this.organizationRepository = organizationRepository;
-    this.dataSource = dataSource;
-    this.keycloakResourcesService = keycloakResourcesService;
+    this.organizationDoc = organizationDoc;
     this.usersService = usersService;
   }
 
-  convertUserToEntity(user: User) {
-    const userEntity = new UserEntity();
-    userEntity.id = user.id;
-    userEntity.email = user.email;
-    return userEntity;
-  }
-
-  convertToDomain(organizationEntity: OrganizationEntity) {
-    const members = organizationEntity.members
-      ? organizationEntity.members.map(u => new User(u.id, u.email))
-      : [];
-    return Organization.fromPlain({
-      id: organizationEntity.id,
-      name: organizationEntity.name,
+  async convertToDomain(
+    orgDoc: OrganizationDoc,
+  ) {
+    // migrateItemDoc(itemDoc);
+    const members = [];
+    for (const member of orgDoc.members) {
+      const user = await this.usersService.findOne(member);
+      if (user) {
+        members.push(User.loadFromDb({
+          id: user.id,
+          email: user.email,
+          keycloakUserId: user.keycloakUserId,
+        }));
+      }
+    }
+    return Organization.loadFromDb({
+      id: orgDoc.id,
+      name: orgDoc.name,
+      createdByUserId: orgDoc.createdByUserId,
+      ownedByUserId: orgDoc.ownedByUserId,
       members,
-      createdByUserId: organizationEntity.createdByUserId,
-      ownedByUserId: organizationEntity.ownedByUserId,
     });
   }
 
   async save(organization: Organization) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    let result: Organization | null = null;
-    try {
-      await this.keycloakResourcesService.createGroup(organization);
-      const members: Array<UserEntity> = organization.members.map(u =>
-        this.convertUserToEntity(u),
-      );
-      const entity: Partial<OrganizationEntity> = {
-        id: organization.id,
-        name: organization.name,
-        members,
-        createdByUserId: organization.createdByUserId,
-        ownedByUserId: organization.ownedByUserId,
-      };
-      const savedEntity = await this.organizationRepository.save(entity);
-      await queryRunner.commitTransaction();
-      result = this.convertToDomain(savedEntity);
-    }
-    catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    }
-    finally {
-      await queryRunner.release();
-    }
-    return result;
-  }
-
-  async findAll() {
-    return (
-      await this.organizationRepository.find({
-        relations: {
-          members: true,
+    const memberIds = organization.members.map(m => m.id);
+    const userDocs = await this.usersService.findAllByIds(memberIds);
+    const members = userDocs.map(u => u.id);
+    const entity = await this.organizationDoc.findOneAndUpdate(
+      { _id: organization.id },
+      {
+        $set: {
+          _schemaVersion: OrganizationSchemaVersion.v1_0_0,
+          name: organization.name,
+          createdByUserId: organization.createdByUserId,
+          ownedByUserId: organization.ownedByUserId,
+          members,
         },
-      })
-    ).map(o => this.convertToDomain(o));
+      },
+      {
+        new: true, // Return the updated document
+        upsert: true, // Create a new document if none found
+        runValidators: true,
+      },
+    );
+    return this.convertToDomain(entity);
   }
 
   async findOneOrFail(id: string) {
-    const organizationEntity = await this.organizationRepository.findOne({
-      where: { id: Equal(id) },
-      relations: { members: true },
-    });
+    const organizationEntity = await this.organizationDoc.findById(id);
     if (!organizationEntity) {
       throw new NotFoundInDatabaseException(Organization.name);
     }
@@ -115,66 +91,33 @@ export class OrganizationsService {
     if (authContext.keycloakUser.email === email) {
       throw new BadRequestException();
     }
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
     const org = await this.findOneOrFail(organizationId);
-    const users = await this.usersService.find({
-      where: { email: Equal(email) },
-    });
+    const users = await this.usersService.findByEmail(email);
     if (users.length > 1) {
       throw new InternalServerErrorException();
     }
-    let userToInvite: User | null = null;
-    if (users.length === 0) {
-      const keycloakUser
-        = await this.keycloakResourcesService.findKeycloakUserByEmail(email);
-      if (!keycloakUser || !keycloakUser.id || !keycloakUser.email) {
-        throw new NotFoundException();
-      }
-      userToInvite = new User(keycloakUser.id, keycloakUser.email);
-    }
-    else if (users.length === 1) {
-      userToInvite = users[0];
-    }
+    const userToInvite: User = users[0];
     if (!userToInvite) {
       throw new NotFoundException(); // TODO: Fix user enumeration
     }
     if (org.members.find(member => member.id === userToInvite.id)) {
       throw new BadRequestException();
     }
-    try {
-      org.members.push({ id: userToInvite.id, email: userToInvite.email });
-      try {
-        await queryRunner.manager.save(OrganizationEntity, org);
-        await this.keycloakResourcesService.inviteUserToGroup(
-          authContext,
-          organizationId,
-          userToInvite.id,
-        );
-        await queryRunner.commitTransaction();
-      }
-      catch {
-        await queryRunner.rollbackTransaction();
-      }
-    }
-    finally {
-      await queryRunner.release();
-    }
+    org.members.push(userToInvite);
+    await this.save(org);
   }
 
   async findAllWhereMember(authContext: AuthContext) {
-    return (
-      await this.organizationRepository.find({
-        where: {
-          members: {
-            id: Equal(authContext.keycloakUser.sub),
-          },
-        },
-        relations: {
-          members: true,
-        },
-      })
-    ).map(o => this.convertToDomain(o));
+    const organizations = await this.organizationDoc.find({
+      members: {
+        $in: [authContext.user.id],
+      },
+    });
+    const domainOrganizations = [];
+    for (const organization of organizations) {
+      const domain = await this.convertToDomain(organization);
+      domainOrganizations.push(domain);
+    }
+    return domainOrganizations;
   }
 }

@@ -33,42 +33,54 @@
     "major": "git fetch --tags && npm version major && git push --follow-tags"
   },
   "dependencies": {
-    "axios": "^1.8.1"
+    "axios": "^1.12.2"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.0",
-    "@eslint/js": "^9.21.0",
-    "@rollup/plugin-typescript": "^12.1.2",
-    "@types/jest": "^29.5.14",
-    "@types/node": "^22.13.9",
-    "@typescript-eslint/eslint-plugin": "^8.26.0",
-    "@typescript-eslint/parser": "^8.26.0",
-    "eslint": "^9.21.0",
-    "eslint-config-prettier": "^10.0.2",
-    "eslint-plugin-jest": "^28.11.0",
-    "eslint-plugin-prettier": "^5.2.3",
-    "globals": "^16.0.0",
-    "jest": "^29.7.0",
-    "msw": "^2.7.3",
-    "prettier": "^3.5.3",
-    "rollup": "^4.34.9",
-    "rollup-plugin-dts": "^6.1.1",
-    "ts-jest": "^29.2.6",
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.38.0",
+    "@rollup/plugin-typescript": "^12.1.4",
+    "@swc/core": "^1.13.5",
+    "@swc/jest": "^0.2.39",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.8.1",
+    "@typescript-eslint/eslint-plugin": "^8.46.1",
+    "@typescript-eslint/parser": "^8.46.1",
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-jest": "^29.0.1",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.4.0",
+    "jest": "^30.2.0",
+    "msw": "^2.11.6",
+    "prettier": "^3.6.2",
+    "rollup": "^4.52.5",
+    "rollup-plugin-dts": "^6.2.3",
+    "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
-    "typescript": "^5.8.2"
+    "typescript": "^5.9.3"
   },
   "jest": {
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
-      "^.+\\.(t|j)s$": ["@swc/jest", {
-        "jsc": {
-          "target": "es2022",
-          "parser": { "syntax": "typescript", "decorators": true },
-          "transform": { "decoratorMetadata": true }
-        },
-        "module": { "type": "commonjs" }
-      }]
+      "^.+\\.(t|j)s$": [
+        "@swc/jest",
+        {
+          "jsc": {
+            "target": "es2022",
+            "parser": {
+              "syntax": "typescript",
+              "decorators": true
+            },
+            "transform": {
+              "decoratorMetadata": true
+            }
+          },
+          "module": {
+            "type": "commonjs"
+          }
+        }
+      ]
     },
     "transformIgnorePatterns": [
       "node_modules/(?!((?:\\.pnpm/.*?/)?(?:@(?:open-dpp|keycloak)|until-async))(?:/|$))"

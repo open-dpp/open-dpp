@@ -7,13 +7,10 @@
   "license": "ISC",
   "scripts": {
     "build": "nest build",
-    "postbuild": "pnpm run copy:assets",
-    "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/apps/main/main",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "test": "jest",
@@ -22,33 +19,32 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config apps/main/test/jest-e2e.json",
-    "copy:assets": "cpx 'apps/client/dist/**' 'dist/apps/main/client/dist'",
     "check-ts": "tsc --noEmit"
   },
   "dependencies": {
-    "@keycloak/keycloak-admin-client": "^26.3.4",
-    "@langchain/core": "^0.3.77",
+    "@keycloak/keycloak-admin-client": "^26.4.1",
+    "@langchain/core": "^0.3.78",
     "@langchain/langgraph": "^0.4.9",
     "@langchain/mcp-adapters": "^0.6.0",
-    "@langchain/mistralai": "^0.2.1",
+    "@langchain/mistralai": "^0.2.3",
     "@langchain/ollama": "^0.2.4",
-    "@modelcontextprotocol/sdk": "^1.18.1",
+    "@modelcontextprotocol/sdk": "^1.20.1",
     "@nestjs/axios": "^4.0.1",
-    "@nestjs/common": "^11.0.1",
-    "@nestjs/core": "^11.0.1",
+    "@nestjs/common": "^11.1.6",
+    "@nestjs/core": "^11.1.6",
     "@nestjs/mapped-types": "^2.1.0",
     "@nestjs/microservices": "^11.1.6",
     "@nestjs/mongoose": "^11.0.3",
     "@nestjs/platform-express": "^11.1.6",
     "@nestjs/platform-socket.io": "^11.1.6",
-    "@nestjs/serve-static": "^5.0.3",
-    "@nestjs/swagger": "^11.2.0",
-    "@nestjs/typeorm": "^11.0.0",
+    "@nestjs/serve-static": "^5.0.4",
+    "@nestjs/swagger": "^11.2.1",
     "@nestjs/websockets": "^11.1.6",
     "@open-dpp/api-client": "workspace:*",
     "@open-dpp/auth": "workspace:*",
     "@open-dpp/env": "workspace:*",
     "@open-dpp/exception": "workspace:*",
+    "@open-dpp/permission": "workspace:*",
     "axios": "^1.12.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
@@ -57,54 +53,67 @@
     "file-type": "^21.0.0",
     "form-data": "^4.0.4",
     "http-proxy-middleware": "^3.0.5",
-    "langchain": "^0.3.34",
+    "langchain": "^0.3.36",
     "minio": "^8.0.6",
-    "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1",
-    "semver": "^7.7.2",
-    "sharp": "^0.34.3",
+    "rxjs": "^7.8.2",
+    "semver": "^7.7.3",
+    "sharp": "^0.34.4",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
-    "zod": "^4.1.9"
+    "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.2.0",
-    "@eslint/js": "^9.18.0",
-    "@nestjs/cli": "^11.0.0",
-    "@nestjs/schematics": "^11.0.0",
-    "@nestjs/testing": "^11.0.1",
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.38.0",
+    "@nestjs/cli": "^11.0.10",
+    "@nestjs/schematics": "^11.0.9",
+    "@nestjs/testing": "^11.1.6",
     "@open-dpp/testing": "workspace:*",
+    "@swc/core": "^1.13.5",
+    "@swc/jest": "^0.2.39",
     "@tsconfig/node-lts": "^22.0.2",
     "@tsconfig/node-ts": "^23.6.1",
     "@types/express": "^5.0.3",
     "@types/multer": "^2.0.0",
-    "@types/node": "^22.10.7",
+    "@types/node": "^24.8.1",
     "@types/semver": "^7.7.1",
-    "@types/supertest": "^6.0.2",
-    "eslint-config-prettier": "^10.0.1",
-    "eslint-plugin-prettier": "^5.2.2",
-    "eslint-plugin-vue": "^9.32.0",
+    "@types/supertest": "^6.0.3",
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
     "fishery": "^2.3.1",
-    "globals": "^16.0.0",
+    "globals": "^16.4.0",
+    "jest": "^30.2.0",
     "source-map-support": "^0.5.21",
-    "supertest": "^7.0.0",
-    "ts-loader": "^9.5.2",
+    "supertest": "^7.1.4",
+    "ts-loader": "^9.5.4",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript-eslint": "^8.20.0"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.1"
   },
   "jest": {
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
-      "^.+\\.(t|j)s$": ["@swc/jest", {
-        "jsc": {
-          "target": "es2022",
-          "parser": { "syntax": "typescript", "decorators": true },
-          "transform": { "decoratorMetadata": true }
-        },
-        "module": { "type": "commonjs" }
-      }]
+      "^.+\\.(t|j)s$": [
+        "@swc/jest",
+        {
+          "jsc": {
+            "target": "es2022",
+            "parser": {
+              "syntax": "typescript",
+              "decorators": true
+            },
+            "transform": {
+              "decoratorMetadata": true
+            }
+          },
+          "module": {
+            "type": "commonjs"
+          }
+        }
+      ]
     },
     "transformIgnorePatterns": [
       "node_modules/(?!((?:\\.pnpm/.*?/)?(?:@(?:open-dpp|keycloak)|url-join|url-template|camelize-ts|uuid))(?:/|$))"

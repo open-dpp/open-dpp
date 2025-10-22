@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { PermissionModule } from "@open-dpp/auth";
 import { ItemDoc, ItemSchema } from "../items/infrastructure/item.schema";
 import { ItemsService } from "../items/infrastructure/items.service";
 import { ModelDoc, ModelSchema } from "../models/infrastructure/model.schema";
@@ -42,7 +41,6 @@ import { UniqueProductIdentifierController } from "./presentation/unique.product
       },
     ]),
     OrganizationsModule,
-    PermissionModule,
     UsersModule,
     TraceabilityEventsModule,
   ],

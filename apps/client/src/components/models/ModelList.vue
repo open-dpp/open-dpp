@@ -3,11 +3,11 @@ import type {
   UniqueProductIdentifierDto,
 } from "@open-dpp/api-client";
 import { computed, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
 import { useIndexStore } from "../../stores";
 import { useModelsStore } from "../../stores/models";
 import ListHeader from "../lists/ListHeader.vue";
 import SimpleTable from "../lists/SimpleTable.vue";
-import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const indexStore = useIndexStore();
@@ -23,17 +23,17 @@ const rows = computed(() => {
 
 const actions = [
   {
-    name: t('items.label'),
+    name: t("items.label"),
     actionLinkBuilder: (row: Record<string, string>) =>
       `/organizations/${indexStore.selectedOrganization}/models/${row.id}/items`,
   },
   {
-    name: t('common.edit'),
+    name: t("common.edit"),
     actionLinkBuilder: (row: Record<string, string>) =>
       `/organizations/${indexStore.selectedOrganization}/models/${row.id}`,
   },
   {
-    name: t('common.qrCode'),
+    name: t("common.qrCode"),
     actionLinkBuilder: (row: Record<string, string>) =>
       `/organizations/${indexStore.selectedOrganization}/models/${row.id}/qr-code`,
   },
@@ -53,7 +53,7 @@ onMounted(async () => {
       :title="t('models.list.title')"
     />
     <SimpleTable
-        :headers="[t('models.form.id'), t('models.form.name.label')]"
+      :headers="[t('models.form.id'), t('models.form.name.label')]"
       :ignore-row-keys="['id']"
       :row-actions="actions"
       :rows="rows"

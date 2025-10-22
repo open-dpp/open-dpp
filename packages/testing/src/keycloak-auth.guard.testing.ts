@@ -4,7 +4,6 @@ import type {
 } from '@nestjs/common'
 import type { Reflector } from '@nestjs/core'
 import type { KeycloakUserInToken } from '@open-dpp/auth'
-import { Buffer } from 'node:buffer'
 import {
   UnauthorizedException,
 } from '@nestjs/common'
@@ -67,9 +66,7 @@ export class KeycloakAuthTestingGuard implements CanActivate {
       )
     }
 
-    const accessToken = parts[1] // uses [organizationOneId, organizationTwoId, ...] as permissions
-    const decoded = Buffer.from(accessToken, 'base64').toString()
-    const permissions = decoded.substring(1, decoded.length - 1).split(',')
+    const accessToken = parts[1]
 
     if (this.tokenToUserMap.has(accessToken)) {
       const authContext = new AuthContext()
@@ -79,20 +76,11 @@ export class KeycloakAuthTestingGuard implements CanActivate {
         throw new UnauthorizedException('Invalid token.')
       }
       authContext.keycloakUser = user
-      authContext.permissions = permissions.map((permission) => {
-        return {
-          type: 'organization',
-          resource: permission,
-          scopes: ['organization:access'],
-        }
-      })
       request.authContext = authContext
       return true
     }
     else {
       return false
     }
-
-    // const authContext: AuthContext = await this.keycloakAuthService.getAuthContextFromKeycloakUser(req.user, isPublic);
   }
 }

@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { AiProvider } from "@open-dpp/api-client";
 import { ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { useAiIntegrationStore } from "../../stores/ai.integration";
-import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const aiIntegrationStore = useAiIntegrationStore();

@@ -8,20 +8,18 @@ import {
 } from "@headlessui/vue";
 import { EnvelopeIcon, XMarkIcon } from "@heroicons/vue/24/outline";
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
 import apiClient from "../../lib/api-client";
 import RingLoader from "../RingLoader.vue";
-import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
 const props = defineProps<{
   organizationId: string;
 }>();
-
 const emit = defineEmits<{
   (e: "close"): void;
   (e: "invitedUser"): void;
 }>();
-
+const { t } = useI18n();
 const loading = ref<boolean>(false);
 const errors = ref<Array<string>>([]);
 const success = ref<boolean>(false);
@@ -111,8 +109,9 @@ async function inviteUser(fields: { email: string }) {
                   <DialogTitle
                     as="h3"
                     class="text-base font-semibold text-gray-900"
-                    >{{ t('organizations.inviteUser') }}</DialogTitle
                   >
+                    {{ t('organizations.inviteUser') }}
+                  </DialogTitle>
                   <div v-if="success" class="mt-3">
                     <div class="text-sm text-green-600">
                       {{ t('organizations.inviteUserSuccess') }}

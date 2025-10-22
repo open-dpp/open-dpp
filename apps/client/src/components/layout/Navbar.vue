@@ -2,9 +2,9 @@
 import { Disclosure } from "@headlessui/vue";
 import { ChatBubbleOvalLeftEllipsisIcon } from "@heroicons/vue/16/solid";
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import BaseButton from "../presentation-components/BaseButton.vue";
-import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -50,11 +50,12 @@ function backToApp() {
             {{ t('presentation.chatWithAI') }}
           </BaseButton>
           <BaseButton
-            variant="primary"
             v-else
+            variant="primary"
             @click="navigateToPassportView"
-            >{{ t('presentation.toPass') }}</BaseButton
           >
+            {{ t('presentation.toPass') }}
+          </BaseButton>
           <BaseButton class="hidden md:flex" @click="backToApp">
             <span>{{ t('presentation.backToApp') }}</span>
           </BaseButton>

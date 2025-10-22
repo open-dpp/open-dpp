@@ -2,10 +2,12 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { Injectable, Logger } from "@nestjs/common";
+import {
+  UniqueProductIdentifierApplicationService,
+} from "../unique-product-identifier/presentation/unique.product.identifier.application.service";
 import { AiConfigurationService } from "./ai-configuration/infrastructure/ai-configuration.service";
 import { AiService } from "./infrastructure/ai.service";
 import { McpClientService } from "./mcp-client/mcp-client.service";
-import { PassportService } from "./passports/passport.service";
 
 @Injectable()
 export class ChatService {
@@ -13,31 +15,33 @@ export class ChatService {
 
   private mcpClientService: McpClientService;
   private aiService: AiService;
-  private passportService: PassportService;
+  private uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService;
   private aiConfigurationService: AiConfigurationService;
 
   constructor(
     mcpClientService: McpClientService,
     aiService: AiService,
-    passportService: PassportService,
+    uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
     aiConfigurationService: AiConfigurationService,
   ) {
     this.mcpClientService = mcpClientService;
     this.aiService = aiService;
-    this.passportService = passportService;
+    this.uniqueProductIdentifierApplicationService = uniqueProductIdentifierApplicationService;
     this.aiConfigurationService = aiConfigurationService;
   }
 
   async askAgent(query: string, passportUuid: string) {
     this.logger.log(`Find passport with UUID: ${passportUuid}`);
-    const passport = await this.passportService.findOneOrFail(passportUuid);
+    const passport = await this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifier(
+      passportUuid,
+    );
     if (!passport) {
       throw new Error("Passport not found");
     }
     this.logger.log(`Fetch ai configuration`);
     const aiConfiguration
       = await this.aiConfigurationService.findOneByOrganizationId(
-        passport.ownedByOrganizationId,
+        passport.organizationId,
       );
 
     if (!aiConfiguration?.isEnabled) {

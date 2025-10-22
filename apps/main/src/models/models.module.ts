@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { PermissionModule } from "@open-dpp/auth";
 import { MarketplaceModule } from "../marketplace/marketplace.module";
 import { OrganizationsModule } from "../organizations/organizations.module";
 import {
@@ -31,7 +30,6 @@ import { ModelsController } from "./presentation/models.controller";
     OrganizationsModule,
     UniqueProductIdentifierModule,
     UsersModule,
-    PermissionModule,
     TraceabilityEventsModule,
     MarketplaceModule,
   ],

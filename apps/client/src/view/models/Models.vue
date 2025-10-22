@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import EmptyState from "../../components/models/EmptyState.vue";
 import ModelList from "../../components/models/ModelList.vue";
 import { useIndexStore } from "../../stores";
 import { useModelsStore } from "../../stores/models";
-import { useI18n } from 'vue-i18n';
 
 const modelsStore = useModelsStore();
 const indexStore = useIndexStore();

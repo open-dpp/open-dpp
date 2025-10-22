@@ -13,8 +13,9 @@ import {
   Post,
   Request,
 } from "@nestjs/common";
-import { PermissionService, Public } from "@open-dpp/auth";
+import { Public } from "@open-dpp/auth";
 import { EnvService } from "@open-dpp/env";
+import { hasPermission, PermissionAction } from "@open-dpp/permission";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { itemToDto } from "../../items/presentation/dto/item.dto";
 import { ItemsApplicationService } from "../../items/presentation/items-application.service";
@@ -22,6 +23,7 @@ import { ModelsService } from "../../models/infrastructure/models.service";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { TemplateService } from "../../templates/infrastructure/template.service";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { User } from "../../users/domain/user";
 import { AasConnection } from "../domain/aas-connection";
 import {
   AssetAdministrationShell,
@@ -37,33 +39,30 @@ import * as updateAasConnectionDto from "./dto/update-aas-connection.dto";
 export class AasConnectionController {
   private readonly modelsService: ModelsService;
   private readonly itemService: ItemsService;
-  private readonly organizationService: OrganizationsService;
+  private readonly organizationsService: OrganizationsService;
   private readonly itemsApplicationService: ItemsApplicationService;
   private aasConnectionService: AasConnectionService;
   private templateService: TemplateService;
   private configService: EnvService;
-  private permissionsService: PermissionService;
   private uniqueProductIdentifierService: UniqueProductIdentifierService;
 
   constructor(
     modelsService: ModelsService,
     itemService: ItemsService,
-    organizationService: OrganizationsService,
+    organizationsService: OrganizationsService,
     itemsApplicationService: ItemsApplicationService,
     aasConnectionService: AasConnectionService,
     templateService: TemplateService,
     configService: EnvService,
-    permissionsService: PermissionService,
     uniqueProductIdentifierService: UniqueProductIdentifierService,
   ) {
     this.modelsService = modelsService;
     this.itemService = itemService;
-    this.organizationService = organizationService;
+    this.organizationsService = organizationsService;
     this.itemsApplicationService = itemsApplicationService;
     this.aasConnectionService = aasConnectionService;
     this.templateService = templateService;
     this.configService = configService;
-    this.permissionsService = permissionsService;
     this.uniqueProductIdentifierService = uniqueProductIdentifierService;
   }
 
@@ -97,7 +96,7 @@ export class AasConnectionController {
       );
 
     const organization
-      = await this.organizationService.findOneOrFail(organizationId);
+      = await this.organizationsService.findOneOrFail(organizationId);
 
     const item = uniqueProductIdentifier
       ? await this.itemService.findOneOrFail(
@@ -130,10 +129,14 @@ export class AasConnectionController {
   ) {
     const createAasMapping
       = createAasConnectionDto.CreateAasConnectionSchema.parse(body);
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     if (!createAasMapping.modelId) {
       throw new ForbiddenException();
     }
@@ -167,10 +170,14 @@ export class AasConnectionController {
   ) {
     const updateAasConnection
       = updateAasConnectionDto.UpdateAasConnectionSchema.parse(body);
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
 
     const aasConnection
       = await this.aasConnectionService.findById(connectionId);
@@ -200,10 +207,14 @@ export class AasConnectionController {
     @Param("connectionId") connectionId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     const aasConnection
       = await this.aasConnectionService.findById(connectionId);
     if (!aasConnection.isOwnedBy(organizationId)) {
@@ -217,10 +228,14 @@ export class AasConnectionController {
     @Param("orgaId") organizationId: string,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     const aasConnections
       = await this.aasConnectionService.findAllByOrganization(organizationId);
     return GetAasConnectionCollectionSchema.parse(aasConnections);
@@ -232,10 +247,14 @@ export class AasConnectionController {
     @Param("aasType") aasType: AssetAdministrationShellType_TYPE,
     @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
     const assetAdministrationShell = createAasForType(aasType);
     return assetAdministrationShell.propertiesWithParent;
   }

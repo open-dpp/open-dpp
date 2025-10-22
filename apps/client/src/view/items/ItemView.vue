@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import PassportForm from "../../components/passport/PassportForm.vue";
 import { usePassportFormStore } from "../../stores/passport.form";
-import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const route = useRoute();

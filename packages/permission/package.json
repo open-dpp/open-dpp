@@ -1,0 +1,70 @@
+{
+  "name": "@open-dpp/permission",
+  "version": "1.0.0",
+  "packageManager": "pnpm@10.17.1",
+  "description": "",
+  "author": "",
+  "license": "ISC",
+  "keywords": [],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "pnpm run clean && tsc",
+    "check-ts": "tsc --noEmit",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "test": "jest --passWithNoTests"
+  },
+  "dependencies": {
+    "@casl/ability": "^6.7.3"
+  },
+  "devDependencies": {
+    "@open-dpp/config-eslint": "workspace:*",
+    "@swc/core": "^1.13.5",
+    "@swc/jest": "^0.2.39",
+    "@tsconfig/node-lts": "^22.0.2",
+    "@tsconfig/node-ts": "^23.6.1",
+    "eslint": "^9.38.0",
+    "globals": "^16.4.0",
+    "jest": "^30.2.0",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.9.3"
+  },
+  "jest": {
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": [
+        "@swc/jest",
+        {
+          "jsc": {
+            "target": "es2022",
+            "parser": {
+              "syntax": "typescript",
+              "decorators": true
+            },
+            "transform": {
+              "decoratorMetadata": true
+            }
+          },
+          "module": {
+            "type": "commonjs"
+          }
+        }
+      ]
+    },
+    "testEnvironment": "node"
+  }
+}

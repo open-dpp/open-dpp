@@ -1,7 +1,8 @@
 services:
   keycloak:
     container_name: keycloak
-    image: ghcr.io/open-dpp/open-dpp-auth:main
+    build:
+      context: apps/keycloak
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=${OPEN_DPP_KEYCLOAK_USER}
       - KC_BOOTSTRAP_ADMIN_PASSWORD=${OPEN_DPP_KEYCLOAK_PASSWORD}
@@ -16,15 +17,10 @@ services:
       - KC_DB_USERNAME=admin
       - KC_DB_PASSWORD=admin
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "java -jar /opt/healthcheck/healthcheck.jar http://127.0.0.1:8080/realms/open-dpp",
-        ]
-      interval: 30s
-      timeout: 30s
+      test: /opt/keycloak/bin/healthcheck.sh || exit 1
+      start_period: 15s
+      interval: 15s
       retries: 10
-      start_period: 30s
     command: start
     ports:
       - 20001:8080
@@ -55,20 +51,6 @@ services:
     environment:
       - DPP_API_URL=http://host.docker.internal:3000/api
       - PORT=3000
-    networks:
-      - open-dpp-local
-
-  api-db:
-    container_name: api-db
-    image: postgres:17-alpine
-    environment:
-      - POSTGRES_USER=${OPEN_DPP_DB_USER}
-      - POSTGRES_PASSWORD=${OPEN_DPP_DB_PASSWORD}
-      - POSTGRES_DB=${OPEN_DPP_DB_DATABASE}
-    volumes:
-      - api_db:/var/lib/postgresql/data/
-    ports:
-      - ${OPEN_DPP_DB_PORT}:5432
     networks:
       - open-dpp-local
 
