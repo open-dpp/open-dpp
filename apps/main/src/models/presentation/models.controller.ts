@@ -84,7 +84,7 @@ export class ModelsController {
       user: {
         id: (req.authContext.user as User).id,
       },
-    }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
       throw new ForbiddenException();
     }
 
@@ -152,7 +152,7 @@ export class ModelsController {
       user: {
         id: (req.authContext.user as User).id,
       },
-    }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
       throw new ForbiddenException();
     }
     return (await this.modelsService.findAllByOrganization(organizationId)).map(
@@ -180,7 +180,7 @@ export class ModelsController {
       user: {
         id: (req.authContext.user as User).id,
       },
-    }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
       throw new ForbiddenException();
     }
     const model = await this.modelsService.findOneOrFail(id);
@@ -215,7 +215,7 @@ export class ModelsController {
       user: {
         id: (req.authContext.user as User).id,
       },
-    }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
       throw new ForbiddenException();
     }
     const model = await this.modelsService.findOneOrFail(modelId);
@@ -257,7 +257,7 @@ export class ModelsController {
       user: {
         id: (req.authContext.user as User).id,
       },
-    }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
       throw new ForbiddenException();
     }
     const model = await this.modelsService.findOneOrFail(modelId);
@@ -303,7 +303,7 @@ export class ModelsController {
       user: {
         id: (req.authContext.user as User).id,
       },
-    }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
       throw new ForbiddenException();
     }
     const model = await this.modelsService.findOneOrFail(modelId);
