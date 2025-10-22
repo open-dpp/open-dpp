@@ -1,5 +1,7 @@
+import { Socket } from "node:net";
 import { Logger, UseFilters } from "@nestjs/common";
 import {
+  ConnectedSocket,
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
@@ -28,6 +30,7 @@ export class ChatGateway {
   @SubscribeMessage("userMessage")
   async handleMessage(
     @MessageBody() message: { msg: string; passportUUID: string },
+    @ConnectedSocket() client: Socket,
   ) {
     const startTime = Date.now();
     this.logger.log("Start to process message:", message);
@@ -35,9 +38,9 @@ export class ChatGateway {
       message.msg,
       message.passportUUID,
     );
-    this.server.emit("botMessage", reply);
+    client.emit("botMessage", reply);
     const endTime = Date.now();
     const executionTime = endTime - startTime;
-    this.logger.log("Processing time:", executionTime, "ms");
+    this.logger.log(`Processing time: ${executionTime}ms`);
   }
 }
