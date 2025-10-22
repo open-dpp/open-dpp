@@ -22,6 +22,7 @@ export class MediaService {
   private readonly bucketNameDefault: string;
   private readonly bucketNameProfilePictures: string;
   private readonly pathDelimiter = "/";
+  private readonly fallbackMediaVersionId = "unversioned";
 
   private readonly configService: EnvService;
   private mediaDoc: Model<MediaDoc>;
@@ -147,7 +148,7 @@ export class MediaService {
       bucket: uploadInfo.location.bucket,
       objectName: uploadInfo.location.objectName,
       eTag: uploadInfo.info.etag,
-      versionId: uploadInfo.info.versionId || "",
+      versionId: uploadInfo.info.versionId || this.fallbackMediaVersionId,
     });
     await this.save(media);
     return media;
@@ -195,7 +196,7 @@ export class MediaService {
       bucket: uploadInfo.location.bucket,
       objectName: uploadInfo.location.objectName,
       eTag: uploadInfo.info.etag,
-      versionId: uploadInfo.info.versionId || "",
+      versionId: uploadInfo.info.versionId || this.fallbackMediaVersionId,
     });
     await this.save(media);
     return media;
