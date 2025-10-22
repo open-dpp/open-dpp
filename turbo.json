@@ -28,6 +28,10 @@
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "cache": false
     },
+    "cypress": {
+      "inputs": ["$TURBO_DEFAULT$", ".env"],
+      "cache": false
+    },
     "test:debug": {
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "cache": false,

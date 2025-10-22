@@ -157,8 +157,8 @@ jobs:
         with:
           name: cypress-artifacts
           path: |
-            cypress/videos/
-            cypress/screenshots/
+            apps/client/cypress/videos/
+            apps/client/cypress/screenshots/
 
   build-and-push:
     runs-on: ubuntu-latest
