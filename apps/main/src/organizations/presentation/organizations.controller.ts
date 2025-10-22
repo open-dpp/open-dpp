@@ -1,4 +1,3 @@
-import type * as authRequest from "@open-dpp/auth";
 import type { CreateOrganizationDto } from "./dto/create-organization.dto";
 import {
   Body,
@@ -8,7 +7,6 @@ import {
   NotFoundException,
   Param,
   Post,
-  Request,
 } from "@nestjs/common";
 import { hasPermission, OrganizationSubject, PermissionAction } from "@open-dpp/permission";
 import { Session, UserSession } from "@thallesp/nestjs-better-auth";
@@ -78,12 +76,12 @@ export class OrganizationsController {
   @Get(":id")
   async findOne(
     @Param("id") id: string,
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
   ) {
     const organization = await this.organizationsService.findOneOrFail(id);
     if (!hasPermission({
       user: {
-        id: (req.authContext.user as User).id,
+        id: session.user.id,
       },
     }, PermissionAction.READ, organization.toPermissionSubject())) {
       throw new ForbiddenException();
@@ -93,20 +91,20 @@ export class OrganizationsController {
 
   @Post(":organizationId/invite")
   async inviteUser(
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
     @Param("organizationId") organizationId: string,
     @Body() body: { email: string },
   ) {
     const organization = await this.organizationsService.findOneOrFail(organizationId);
     if (!hasPermission({
       user: {
-        id: (req.authContext.user as User).id,
+        id: session.user.id,
       },
     }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
       throw new ForbiddenException();
     }
     return this.organizationsService.inviteUser(
-      req.authContext,
+      session,
       organizationId,
       body.email,
     );
@@ -115,12 +113,12 @@ export class OrganizationsController {
   @Get(":id/members")
   async getMembers(
     @Param("id") id: string,
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
   ) {
-    const organization = await this.findOne(id, req);
+    const organization = await this.organizationsService.findOneOrFail(id);
     if (!hasPermission({
       user: {
-        id: (req.authContext.user as User).id,
+        id: session.user.id,
       },
     }, PermissionAction.READ, organization.toPermissionSubject())) {
       throw new ForbiddenException();

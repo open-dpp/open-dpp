@@ -1,4 +1,3 @@
-import type { AuthContext } from "@open-dpp/auth";
 import type { Model as MongooseModel } from "mongoose";
 import {
   BadRequestException,
@@ -8,7 +7,7 @@ import {
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { AuthService } from "@thallesp/nestjs-better-auth";
+import { AuthService, UserSession } from "@thallesp/nestjs-better-auth";
 import { auth } from "../../auth";
 import { User } from "../../users/domain/user";
 import { UsersService } from "../../users/infrastructure/users.service";
@@ -87,11 +86,11 @@ export class OrganizationsService {
   }
 
   async inviteUser(
-    authContext: AuthContext,
+    session: UserSession,
     organizationId: string,
     email: string,
   ): Promise<void> {
-    if (authContext.keycloakUser.email === email) {
+    if (session.user.email === email) {
       throw new BadRequestException();
     }
     const org = await this.findOneOrFail(organizationId);

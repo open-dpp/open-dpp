@@ -1,4 +1,3 @@
-import type * as authRequest from "@open-dpp/auth";
 import type {
   DataValueDto,
 } from "../../product-passport-data/presentation/dto/data-value.dto";
@@ -11,12 +10,12 @@ import {
   Param,
   Patch,
   Post,
-  Request,
 } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
 
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { hasPermission, PermissionAction } from "@open-dpp/permission";
+import { Session, UserSession } from "@thallesp/nestjs-better-auth";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { modelParamDocumentation } from "../../open-api-docs/item.doc";
@@ -35,7 +34,6 @@ import {
   orgaParamDocumentation,
 } from "../../product-passport-data/presentation/dto/docs/product-passport-data.doc";
 import { TemplateService } from "../../templates/infrastructure/template.service";
-import { User } from "../../users/domain/user";
 import { Model } from "../domain/model";
 import { ModelsService } from "../infrastructure/models.service";
 import * as createModelDto_1 from "./dto/create-model.dto";
@@ -77,12 +75,12 @@ export class ModelsController {
     @Param("orgaId") organizationId: string,
     @Body(new ZodValidationPipe(createModelDto_1.CreateModelDtoSchema))
     createModelDto: createModelDto_1.CreateModelDto,
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
   ) {
     const organization = await this.organizationsService.findOneOrFail(organizationId);
     if (!hasPermission({
       user: {
-        id: (req.authContext.user as User).id,
+        id: session.user.id,
       },
     }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
       throw new ForbiddenException();
@@ -116,7 +114,7 @@ export class ModelsController {
     else {
       template = await this.marketplaceService.download(
         organizationId,
-        req.authContext.keycloakUser.sub,
+        session.user.id,
         createModelDto.marketplaceResourceId,
       );
     }
@@ -126,7 +124,7 @@ export class ModelsController {
     const model = Model.create({
       name: createModelDto.name,
       description: createModelDto.description,
-      userId: req.authContext.keycloakUser.sub,
+      userId: session.user.id,
       organizationId,
       template,
     });
@@ -145,12 +143,12 @@ export class ModelsController {
   @Get()
   async findAll(
     @Param("orgaId") organizationId: string,
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
   ) {
     const organization = await this.organizationsService.findOneOrFail(organizationId);
     if (!hasPermission({
       user: {
-        id: (req.authContext.user as User).id,
+        id: session.user.id,
       },
     }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
       throw new ForbiddenException();
@@ -173,12 +171,12 @@ export class ModelsController {
   async findOne(
     @Param("orgaId") organizationId: string,
     @Param("modelId") id: string,
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
   ) {
     const organization = await this.organizationsService.findOneOrFail(organizationId);
     if (!hasPermission({
       user: {
-        id: (req.authContext.user as User).id,
+        id: session.user.id,
       },
     }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
       throw new ForbiddenException();
@@ -208,12 +206,12 @@ export class ModelsController {
     @Param("modelId") modelId: string,
     @Body(new ZodValidationPipe(updateModelDto_1.UpdateModelDtoSchema))
     updateModelDto: updateModelDto_1.UpdateModelDto,
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
   ) {
     const organization = await this.organizationsService.findOneOrFail(organizationId);
     if (!hasPermission({
       user: {
-        id: (req.authContext.user as User).id,
+        id: session.user.id,
       },
     }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
       throw new ForbiddenException();
@@ -250,12 +248,12 @@ export class ModelsController {
     @Param("modelId") modelId: string,
     @Body(new ZodValidationPipe(DataValueDtoSchema.array()))
     updateDataValues: DataValueDto[],
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
   ) {
     const organization = await this.organizationsService.findOneOrFail(organizationId);
     if (!hasPermission({
       user: {
-        id: (req.authContext.user as User).id,
+        id: session.user.id,
       },
     }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
       throw new ForbiddenException();
@@ -296,12 +294,12 @@ export class ModelsController {
     @Param("modelId") modelId: string,
     @Body(new ZodValidationPipe(DataValueDtoSchema.array()))
     addDataValues: DataValueDto[],
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
   ) {
     const organization = await this.organizationsService.findOneOrFail(organizationId);
     if (!hasPermission({
       user: {
-        id: (req.authContext.user as User).id,
+        id: session.user.id,
       },
     }, PermissionAction.UPDATE, organization.toPermissionSubject())) {
       throw new ForbiddenException();

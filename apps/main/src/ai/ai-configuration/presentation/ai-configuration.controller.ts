@@ -1,9 +1,8 @@
-import type * as authRequest from "@open-dpp/auth";
-import { Body, Controller, ForbiddenException, Get, Param, Put, Request } from "@nestjs/common";
+import { Body, Controller, ForbiddenException, Get, Param, Put } from "@nestjs/common";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { hasPermission, PermissionAction } from "@open-dpp/permission";
+import { Session, UserSession } from "@thallesp/nestjs-better-auth";
 import { OrganizationsService } from "../../../organizations/infrastructure/organizations.service";
-import { User } from "../../../users/domain/user";
 import { AiConfiguration } from "../domain/ai-configuration";
 import { AiConfigurationService } from "../infrastructure/ai-configuration.service";
 import * as aiConfigurationDto from "./dto/ai-configuration.dto";
@@ -25,14 +24,14 @@ export class AiConfigurationController {
   @Put()
   async upsertConfiguration(
     @Param("organizationId") organizationId: string,
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
     @Body(new ZodValidationPipe(AiConfigurationUpsertDtoSchema))
     aiConfigurationUpsertDto: aiConfigurationDto.AiConfigurationUpsertDto,
   ) {
     const organization = await this.organizationsService.findOneOrFail(organizationId);
     if (!hasPermission({
       user: {
-        id: (req.authContext.user as User).id,
+        id: session.user.id,
       },
     }, PermissionAction.READ, organization.toPermissionSubject())) {
       throw new ForbiddenException();
@@ -47,7 +46,7 @@ export class AiConfigurationController {
     else {
       aiConfiguration = AiConfiguration.create({
         ownedByOrganizationId: organizationId,
-        createdByUserId: req.authContext.keycloakUser.sub,
+        createdByUserId: session.user.id,
         provider: aiConfigurationUpsertDto.provider,
         model: aiConfigurationUpsertDto.model,
         isEnabled: aiConfigurationUpsertDto.isEnabled,
@@ -62,12 +61,12 @@ export class AiConfigurationController {
   @Get()
   async findConfigurationByOrganization(
     @Param("organizationId") organizationId: string,
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
   ) {
     const organization = await this.organizationsService.findOneOrFail(organizationId);
     if (!hasPermission({
       user: {
-        id: (req.authContext.user as User).id,
+        id: session.user.id,
       },
     }, PermissionAction.READ, organization.toPermissionSubject())) {
       throw new ForbiddenException();

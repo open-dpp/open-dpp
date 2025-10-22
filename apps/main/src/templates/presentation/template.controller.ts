@@ -1,19 +1,17 @@
-import type * as authRequest from "@open-dpp/auth";
 import {
   Controller,
   ForbiddenException,
   Get,
   Param,
-  Request,
 } from "@nestjs/common";
 import { ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
 import { hasPermission, PermissionAction } from "@open-dpp/permission";
+import { Session, UserSession } from "@thallesp/nestjs-better-auth";
 import {
   templateDocumentation,
   templateGetAllDocumentation,
 } from "../../open-api-docs/template.doc";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
-import { User } from "../../users/domain/user";
 import { TemplateService } from "../infrastructure/template.service";
 import { templateParamDocumentation, templateToDto } from "./dto/template.dto";
 
@@ -42,12 +40,12 @@ export class TemplateController {
   async get(
     @Param("organizationId") organizationId: string,
     @Param("templateId") id: string,
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
   ) {
     const organization = await this.organizationsService.findOneOrFail(organizationId);
     if (!hasPermission({
       user: {
-        id: (req.authContext.user as User).id,
+        id: session.user.id,
       },
     }, PermissionAction.READ, organization.toPermissionSubject())) {
       throw new ForbiddenException();
@@ -71,12 +69,12 @@ export class TemplateController {
   @Get()
   async getAll(
     @Param("organizationId") organizationId: string,
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
   ) {
     const organization = await this.organizationsService.findOneOrFail(organizationId);
     if (!hasPermission({
       user: {
-        id: (req.authContext.user as User).id,
+        id: session.user.id,
       },
     }, PermissionAction.READ, organization.toPermissionSubject())) {
       throw new ForbiddenException();

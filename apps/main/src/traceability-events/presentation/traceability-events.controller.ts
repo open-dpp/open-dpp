@@ -1,5 +1,5 @@
-import type * as authRequest from "@open-dpp/auth";
-import { Body, Controller, Get, Param, Post, Request } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { Session, UserSession } from "@thallesp/nestjs-better-auth";
 import { TraceabilityEventsService } from "../infrastructure/traceability-events.service";
 
 @Controller("dpp-events")
@@ -11,10 +11,10 @@ export class TraceabilityEventsController {
   }
 
   @Post()
-  async create(@Body() body: any, @Request() req: authRequest.AuthRequest) {
+  async create(@Body() body: any, @Session() session: UserSession) {
     return await this.dppEventsService.create({
       ...body,
-      userId: req.authContext.keycloakUser.sub,
+      userId: session.user.id,
     });
   }
 

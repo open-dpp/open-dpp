@@ -10,20 +10,20 @@ const email = ref<string>("");
 const password = ref<string>("");
 
 async function signup() {
-  const { data, error } = await authClient.signUp.email({
+  await authClient.signUp.email({
     email: email.value, // user email address
     password: password.value, // user password -> min 8 characters by default
     name: name.value, // user display name
     callbackURL: "/", // A URL to redirect to after the user verifies their email (optional)
   }, {
-    onRequest: (ctx) => {
+    onRequest: () => {
       // show loading
     },
-    onSuccess: (ctx) => {
+    onSuccess: () => {
       // redirect to the dashboard or sign in page
       router.push("/signin");
     },
-    onError: (ctx) => {
+    onError: () => {
       // display the error message
       // alert(ctx.error.message);
     },
@@ -47,21 +47,21 @@ async function signup() {
           <div>
             <label for="name" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Name</label>
             <div class="mt-2">
-              <input id="name" v-model="name" type="text" name="name" autocomplete="name" required="" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
+              <input id="name" v-model="name" type="text" name="name" autocomplete="name" required="true" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
             </div>
           </div>
 
           <div>
             <label for="email" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Email address</label>
             <div class="mt-2">
-              <input id="email" v-model="email" type="email" name="email" autocomplete="email" required="" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
+              <input id="email" v-model="email" type="email" name="email" autocomplete="email" required="true" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
             </div>
           </div>
 
           <div>
             <label for="password" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Password</label>
             <div class="mt-2">
-              <input id="password" v-model="password" type="password" name="password" autocomplete="current-password" required="" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
+              <input id="password" v-model="password" type="password" name="password" autocomplete="current-password" required="true" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
             </div>
           </div>
 
