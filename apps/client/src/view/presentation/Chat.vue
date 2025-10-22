@@ -3,6 +3,7 @@ import {
   ChatBubbleOvalLeftEllipsisIcon,
   UserCircleIcon,
 } from "@heroicons/vue/16/solid";
+import DOMPurify from "dompurify";
 import { marked } from "marked";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
@@ -32,6 +33,11 @@ function sendMessage() {
   aiAgentStore.sendMessage(input.value);
   input.value = "";
 }
+
+function sanitizeMarkdown(text: string): string {
+  const parsed = marked.parse(text, { breaks: true, gfm: true });
+  return DOMPurify.sanitize(parsed as string);
+}
 </script>
 
 <template>
@@ -56,7 +62,7 @@ function sendMessage() {
             class="flex-1 rounded-md p-3 ring-1 ring-inset dark:ring-white/15"
             :class="[getMessageColor(message.status)]"
           >
-            <p class="text-sm/6 text-gray-500 dark:text-gray-400" v-html="marked.parse(message.text, { breaks: true, gfm: true })" />
+            <p class="text-sm/6 text-gray-500 dark:text-gray-400" v-html="sanitizeMarkdown(message.text)" />
           </div>
         </div>
       </li>
