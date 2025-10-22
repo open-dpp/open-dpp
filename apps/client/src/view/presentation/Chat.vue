@@ -46,9 +46,8 @@ function sendMessage() {
             aria-hidden="true"
           />
           <div
-            class="flex-1 rounded-md p-3 ring-1 ring-inset dark:ring-white/15" :class="[
-              getMessageColor(message.status),
-            ]"
+            class="flex-1 rounded-md p-3 ring-1 ring-inset dark:ring-white/15"
+            :class="[getMessageColor(message.status)]"
           >
             <p class="text-sm/6 text-gray-500 dark:text-gray-400">
               {{ message.text }}
@@ -68,14 +67,12 @@ function sendMessage() {
         rows="2"
         name="question"
         class="flex-1 overflow-hidden outline-gray-300 rounded-lg pb-12 outline-1 -outline-offset-1 focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-indigo-600 dark:bg-white/5 dark:outline-white/10 dark:focus-within:outline-indigo-500"
-        placeholder="t('presentation.askQuestion')"
+        :placeholder="t('presentation.askQuestion')"
         @keydown.enter.exact.prevent="sendMessage"
         @keydown.shift.enter.exact.prevent="input += '\n'"
       />
       <BaseButton variant="primary" @click="sendMessage">
-        {{
-          t('common.send')
-        }}
+        {{ t("common.send") }}
       </BaseButton>
     </div>
   </div>
