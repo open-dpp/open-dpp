@@ -3,6 +3,7 @@ import {
   ChatBubbleOvalLeftEllipsisIcon,
   UserCircleIcon,
 } from "@heroicons/vue/16/solid";
+import { marked } from "marked";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import BaseButton from "../../components/presentation-components/BaseButton.vue";
@@ -55,9 +56,7 @@ function sendMessage() {
             class="flex-1 rounded-md p-3 ring-1 ring-inset dark:ring-white/15"
             :class="[getMessageColor(message.status)]"
           >
-            <p class="text-sm/6 text-gray-500 dark:text-gray-400">
-              {{ message.text }}
-            </p>
+            <p class="text-sm/6 text-gray-500 dark:text-gray-400" v-html="marked.parse(message.text, { breaks: true, gfm: true })" />
           </div>
         </div>
       </li>
