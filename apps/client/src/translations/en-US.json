@@ -364,6 +364,7 @@
     "toPass": "To pass view",
     "chatWithAI": "Chat with AI",
     "productpass": "Product passport",
-    "askQuestion": "Ask your question..."
+    "askQuestion": "Ask your question...",
+    "answerPending": "Processing answer..."
   }
 }
