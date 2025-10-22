@@ -11,36 +11,42 @@ const email = ref<string>("");
 const password = ref<string>("");
 
 async function signin() {
-  await authClient.signIn.email({
-    /**
-     * The user email
-     */
-    email: email.value,
-    /**
-     * The user password
-     */
-    password: password.value,
-    /**
-     * A URL to redirect to after the user verifies their email (optional)
-     */
-    callbackURL: "/",
-    /**
-     * remember the user session after the browser is closed.
-     * @default true
-     */
-    rememberMe: false,
-  }, {
-    // callbacks
-  });
-  await organizationsStore.fetchOrganizations();
-  const lastSelectedOrganization = indexStore.selectedOrganization;
-  if (
-    !organizationsStore.organizations.find(
-      organization => organization.id === lastSelectedOrganization,
-    )
-  ) {
-    indexStore.selectOrganization(null);
+  try {
+    await authClient.signIn.email({
+      /**
+       * The user email
+       */
+      email: email.value,
+      /**
+       * The user password
+       */
+      password: password.value,
+      /**
+       * A URL to redirect to after the user verifies their email (optional)
+       */
+      callbackURL: "/",
+      /**
+       * remember the user session after the browser is closed.
+       * @default true
+       */
+      rememberMe: false,
+    }, {
+      // callbacks
+    });
+    await organizationsStore.fetchOrganizations();
+    const lastSelectedOrganization = indexStore.selectedOrganization;
+    if (
+      !organizationsStore.organizations.find(
+        organization => organization.id === lastSelectedOrganization,
+      )
+    ) {
+      indexStore.selectOrganization(null);
+    }
   }
+  catch (error) {
+    console.log(error);
+  }
+  password.value = "";
 }
 
 async function signInWithKeycloak() {

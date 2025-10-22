@@ -55,22 +55,9 @@ export class EmailService implements OnApplicationBootstrap {
     });
   }
 
-  async sendTestMail() {
-    await this.send(VerifyEmailMail.create({
-      to: "test@test.test",
-      subject: "E-Mail Verifizierung",
-      templateProperties: {
-        link: "https://open-dpp.de",
-        firstName: "Test User",
-      },
-    }));
-  }
-
   async onApplicationBootstrap() {
     await this.setupTransporter();
-    await this.sendTestMail();
 
-    console.log("Subscribe to sendEmailSubject");
     sendEmailSubject.subscribe(async (subject) => {
       const verifyMail = VerifyEmailMail.create({
         to: subject.to.email,
@@ -80,7 +67,6 @@ export class EmailService implements OnApplicationBootstrap {
           firstName: subject.to.name,
         },
       });
-      console.log(verifyMail);
       await this.send(verifyMail);
     });
   }

@@ -2,13 +2,14 @@ import type { Model as MongooseModel } from "mongoose";
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { AuthService, UserSession } from "@thallesp/nestjs-better-auth";
-import { auth } from "../../auth";
+import { auth, getUserByEmail, getUserById } from "../../auth";
+import { InviteUserToOrganizationMail } from "../../email/domain/invite-user-to-organization-mail";
+import { EmailService } from "../../email/email.service";
 import { User } from "../../users/domain/user";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { Organization } from "../domain/organization";
@@ -19,16 +20,19 @@ export class OrganizationsService {
   private organizationDoc: MongooseModel<OrganizationDoc>;
   private readonly usersService: UsersService;
   private readonly authService: AuthService<typeof auth>;
+  private readonly emailService: EmailService;
 
   constructor(
     @InjectModel(OrganizationDoc.name)
     organizationDoc: MongooseModel<OrganizationDoc>,
     usersService: UsersService,
     authService: AuthService<typeof auth>,
+    emailService: EmailService,
   ) {
     this.organizationDoc = organizationDoc;
     this.usersService = usersService;
     this.authService = authService;
+    this.emailService = emailService;
   }
 
   async convertToDomain(
@@ -37,12 +41,14 @@ export class OrganizationsService {
     // migrateItemDoc(itemDoc);
     const members = [];
     for (const member of orgDoc.members) {
-      const user = await this.usersService.findOne(member);
+      // const user = await this.usersService.findOne(member);
+      const user = await getUserById(member);
+      const userId = (user as unknown as { _id: string })._id;
       if (user) {
         members.push(User.loadFromDb({
-          id: user.id,
+          id: userId,
           email: user.email,
-          keycloakUserId: user.keycloakUserId,
+          keycloakUserId: userId,
         }));
       }
     }
@@ -94,19 +100,29 @@ export class OrganizationsService {
       throw new BadRequestException();
     }
     const org = await this.findOneOrFail(organizationId);
-    const users = await this.usersService.findByEmail(email);
-    if (users.length > 1) {
-      throw new InternalServerErrorException();
-    }
-    const userToInvite: User = users[0];
+    const userToInvite = await getUserByEmail(email);
+    const userToInviteId = (userToInvite as unknown as { _id: string })._id;
     if (!userToInvite) {
       throw new NotFoundException(); // TODO: Fix user enumeration
     }
-    if (org.members.find(member => member.id === userToInvite.id)) {
+    if (org.members.find(member => member.id === userToInviteId)) {
       throw new BadRequestException();
     }
-    org.members.push(userToInvite);
+    org.members.push(User.loadFromDb({
+      id: userToInviteId,
+      email: userToInvite.email,
+      keycloakUserId: userToInviteId,
+    }));
     await this.save(org);
+    await this.emailService.send(InviteUserToOrganizationMail.create({
+      to: userToInvite.email,
+      subject: "You've been invited to join an organization",
+      templateProperties: {
+        link: `http://localhost:5173/organizations/${org.id}`,
+        organizationName: org.name,
+        firstName: userToInvite.name,
+      },
+    }));
   }
 
   async findAllWhereMember(user: User) {

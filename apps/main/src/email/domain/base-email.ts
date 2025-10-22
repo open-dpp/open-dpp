@@ -1,4 +1,4 @@
-export type BaseEmailType = "VERIFY_EMAIL";
+export type BaseEmailType = "VERIFY_EMAIL" | "INVITE_USER_TO_ORGANIZATION";
 
 export interface BaseEmailCreateProps {
   type: BaseEmailType;
