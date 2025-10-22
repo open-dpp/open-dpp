@@ -17,19 +17,31 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # lint:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v3
-  #     - name: Set up Node.js
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: ${{ env.NODE_VERSION }}
-  #     - name: Install dependencies
-  #       run: npm install
-  #     - name: Run linter
-  #       run: npm run lint
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+       # Step 1: Checkout code
+       - name: Checkout code
+         uses: actions/checkout@v4
+
+       # Step 2: Install pnpm
+       - name: Install pnpm
+         uses: pnpm/action-setup@v4
+
+       # Step 3: Set up Node.js
+       - name: Set up Node.js
+         uses: actions/setup-node@v4
+         with:
+           node-version: ${{ env.NODE_VERSION }}
+           cache: "pnpm"
+
+       # Step 4: Install dependencies
+       - name: Install dependencies
+         run: pnpm install --frozen-lockfile
+
+       # Step 5: Run linting
+       - name: Run linter
+         run: pnpm run lint
 
   test:
     runs-on: ubuntu-latest
@@ -118,6 +130,10 @@ jobs:
       # Step 8: Run tests
       - name: Run tests
         run: pnpm test:ci
+
+      # Step 8: Run cypress tests
+      - name: Run cypress tests
+        run: pnpm test:cypress:headless
 
   build-and-push:
     runs-on: ubuntu-latest
