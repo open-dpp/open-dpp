@@ -1,11 +1,18 @@
 import type { User } from "better-auth";
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { admin } from "better-auth/plugins";
+import { genericOAuth } from "better-auth/plugins";
 import { MongoClient, ObjectId } from "mongodb";
+import { Subject } from "rxjs";
 
 const client = new MongoClient("mongodb://admin:change-to-secure-mongo-password@localhost:20005/management?authSource=admin");
 const db = client.db();
+
+export interface SendEmailData {
+  to: User;
+  url: string;
+}
+export const sendEmailSubject = new Subject<SendEmailData>();
 
 export const auth = betterAuth({
   basePath: "/api/auth",
@@ -13,7 +20,31 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  plugins: [admin()],
+  emailVerification: {
+    sendOnSignUp: true,
+    sendVerificationEmail: async ({ user, url, token }: { user: User; url: string; token: string }, request: any) => {
+      console.log("Sending verification email to", user.email);
+      sendEmailSubject.next({
+        to: user,
+        url,
+      });
+    },
+  },
+  hooks: {},
+  plugins: [
+    genericOAuth({
+      config: [
+        {
+          providerId: "auth.demo1.open-dpp.de",
+          clientId: "local-better-auth",
+          clientSecret: "n3WtPDDbZ95qY2wmO91XXk2oTbAdhyKW",
+          discoveryUrl: "https://auth.demo1.open-dpp.de/realms/open-dpp/.well-known/openid-configuration",
+          // ... other config options
+        },
+        // Add more providers as needed
+      ],
+    }),
+  ],
   database: mongodbAdapter(db, {
     // Optional: if you don't provide a client, database transactions won't be enabled.
     client,
