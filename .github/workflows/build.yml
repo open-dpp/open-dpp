@@ -133,10 +133,13 @@ jobs:
 
       # Step 8: Run cypress tests
       - name: Run cypress tests
-        run: pnpm test:cypress:headless
+        run: pnpm test:ci:cypress
 
   build-and-push:
     runs-on: ubuntu-latest
+    needs:
+      - lint
+      - test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
