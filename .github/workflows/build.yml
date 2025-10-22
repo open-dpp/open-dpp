@@ -113,7 +113,7 @@ jobs:
 
       # Step 5: Install dependencies
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --allow-build=cypress
+        run: pnpm install --frozen-lockfile
 
       # Step 6: Cache cypress binaries (optional but helps CI performance)
       - name: Cache Cypress binary
