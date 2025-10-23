@@ -12,10 +12,12 @@ import {
 
 import { computed, ref } from "vue";
 import { Line } from "vue-chartjs";
+import { useI18n } from "vue-i18n";
 import MetricQuery from "../../components/analytics/MetricQuery.vue";
 import { useAnalyticsStore } from "../../stores/analytics";
 
 const analyticsStore = useAnalyticsStore();
+const { t } = useI18n();
 
 const data = computed(() => {
   const timeseries = analyticsStore.getMeasurementsAsTimeseries();
@@ -23,8 +25,10 @@ const data = computed(() => {
     labels: timeseries.map(t => t.x),
     datasets: [
       {
-        label: "Seitenaufrufe",
-        backgroundColor: "#f87979",
+        label: t("analytics.pageViews"),
+        // Sets the line color
+        borderColor: "#0095C8",
+        backgroundColor: "#0095C8",
         data: timeseries.map(t => t.y),
       },
     ],

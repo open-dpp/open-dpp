@@ -6,16 +6,9 @@ import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { MongooseTestingModule } from "@open-dpp/testing";
 import { Connection } from "mongoose";
 import { MeasurementType, PassportMetric } from "../domain/passport-metric";
-import { PassportMetricAggregation } from "../domain/passport-metric-aggregation";
-import {
-  dataFieldFactory,
-  passportMetricFactory,
-} from "../fixtures/passport-metric.factory";
+import { dataFieldFactory, passportMetricFactory } from "../fixtures/passport-metric.factory";
 
-import {
-  PassportMetricDoc,
-  PassportMetricSchema,
-} from "./passport-metric.schema";
+import { PassportMetricDoc, PassportMetricSchema } from "./passport-metric.schema";
 import { PassportMetricService, TimePeriod } from "./passport-metric.service";
 
 describe("passportMetricService", () => {
@@ -142,7 +135,7 @@ describe("passportMetricService", () => {
       date: date5,
     });
 
-    const date6 = new Date("2025-03-01T12:00:00Z");
+    const date6 = new Date("2025-03-01T00:00:00Z");
     const passportMetric6 = PassportMetric.createPageView({
       source,
       page,
@@ -162,52 +155,32 @@ describe("passportMetricService", () => {
     await passportMetricService.create(passportMetric6Updated);
 
     const statistic = await passportMetricService.computeStatistic(
-      PassportMetricAggregation.create({
-        ...source,
+      source.organizationId,
+      {
+        templateId: source.templateId,
+        modelId: source.modelId,
         type: MeasurementType.PAGE_VIEWS,
         valueKey: "http://example.com",
         startDate: new Date("2025-01-01T00:00:00Z"),
-        endDate: new Date("2025-03-01T13:00:00Z"),
+        endDate: new Date("2025-03-01T00:00:00Z"),
         timezone: "UTC",
-      }),
-      TimePeriod.MONTH,
+        period: TimePeriod.MONTH,
+      },
     );
     expect(statistic).toEqual([
       {
-        datetime: new Date("2025-01-01T00:00:00.000Z"),
+        datetime: "2024-12-31T23:00:00.000Z",
         sum: 3,
       },
       {
-        datetime: new Date("2025-02-01T00:00:00.000Z"),
+        datetime: "2025-01-31T23:00:00.000Z",
         sum: 2,
       },
       {
-        datetime: new Date("2025-03-01T00:00:00.000Z"),
+        datetime: "2025-02-28T23:00:00.000Z",
         sum: 1,
       },
     ]);
-
-    // statistic = await passportMetricService.computeStatistic(
-    //   PassportMetricFilter.create({
-    //     type: MeasurementType.PAGE_VIEWS,
-    //     valueKey: page,
-    //     templateId,
-    //     organizationId: ownedByOrganizationId,
-    //     startDate: new Date('2025-01-01T12:00:00Z'),
-    //     endDate: new Date('2025-02-01T13:00:00Z'),
-    //   }),
-    //   TimePeriod.MONTH,
-    // );
-    // expect(statistic).toEqual([
-    //   {
-    //     datetime: new Date('2025-01-01T00:00:00.000Z'),
-    //     sum: 3,
-    //   },
-    //   {
-    //     datetime: new Date('2025-02-01T00:00:00.000Z'),
-    //     sum: 2,
-    //   },
-    // ]);
   });
 
   it("get passport field value statistic", async () => {
@@ -285,15 +258,17 @@ describe("passportMetricService", () => {
     await passportMetricService.create(passportMetric3);
 
     let statistic = await passportMetricService.computeStatistic(
-      PassportMetricAggregation.create({
-        ...source,
-        type: MeasurementType.FIELD_AGGREGATE,
-        valueKey: dataFieldId1,
+      source.organizationId,
+      {
+        templateId: source.templateId,
+        modelId: source.modelId,
+        type: MeasurementType.PAGE_VIEWS,
+        valueKey: "http://example.com",
         startDate: new Date("2025-01-01T00:00:00Z"),
         endDate: new Date("2025-03-01T13:00:00Z"),
         timezone: "UTC",
-      }),
-      TimePeriod.MONTH,
+        period: TimePeriod.MONTH,
+      },
     );
     expect(statistic).toEqual([
       {
@@ -311,15 +286,17 @@ describe("passportMetricService", () => {
     ]);
 
     statistic = await passportMetricService.computeStatistic(
-      PassportMetricAggregation.create({
-        ...source,
-        type: MeasurementType.FIELD_AGGREGATE,
-        valueKey: dataFieldId2,
+      source.organizationId,
+      {
+        templateId: source.templateId,
+        modelId: source.modelId,
+        type: MeasurementType.PAGE_VIEWS,
+        valueKey: "http://example.com",
         startDate: new Date("2025-01-01T00:00:00Z"),
         endDate: new Date("2025-03-01T13:00:00Z"),
         timezone: "UTC",
-      }),
-      TimePeriod.MONTH,
+        period: TimePeriod.MONTH,
+      },
     );
     expect(statistic).toEqual([
       {

@@ -4,6 +4,8 @@ import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { Model as MongooseModel } from "mongoose";
 import { MetricSourceProps, PassportMetric } from "../domain/passport-metric";
 import { PassportMetricAggregation } from "../domain/passport-metric-aggregation";
+import { Timeseries } from "../domain/timeseries";
+import { PassportMetricQueryDto } from "../presentation/dto/passport-metric-query.dto";
 import { PassportMetricDoc, PassportMetricSchemaVersion } from "./passport-metric.schema";
 
 export enum TimePeriod {
@@ -102,13 +104,24 @@ export class PassportMetricService {
   }
 
   async computeStatistic(
-    aggregation: PassportMetricAggregation,
-    timePeriodToGroupBy: TimePeriod,
+    organizationId: string,
+    query: PassportMetricQueryDto,
   ): Promise<{ datetime: string; sum: number }[]> {
-    return this.passportMetricDoc.aggregate([
+    const aggregation = PassportMetricAggregation.create({ ...query, organizationId });
+    const dataPoints: { datetime: string; sum: number }[] = await this.passportMetricDoc.aggregate([
       ...aggregation.getFilterQuery(),
       ...aggregation.filterForLatestVersion(),
-      ...aggregation.getAggregateQueryForTimePeriod(timePeriodToGroupBy),
+      ...aggregation.getAggregateQueryForTimePeriod(query.period),
     ]);
+    const timeseries = Timeseries.create({ dataPoints });
+    return timeseries.densify(
+      {
+        start: query.startDate,
+        end: query.endDate,
+        step: 1,
+        unit: query.period,
+        timezone: query.timezone,
+      },
+    );
   }
 }

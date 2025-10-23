@@ -205,9 +205,15 @@
   },
   "analytics": {
     "analytics": "Auswertungen",
+    "startAnalysis": "Analyse starten",
     "loadingMetricError": "Laden der Analyse fehlgeschlagen",
     "passportSelection": "Passauswahl",
-    "timePeriodSelection": "Ansicht"
+    "timeViewSelection": "Ansicht",
+    "pageViews": "Seitenaufrufe",
+    "daylyView": "Tagesansicht",
+    "weeklyView": "Wochenansicht",
+    "monthlyView": "Monatsansicht",
+    "yearlyView": "Jahresansicht"
   },
   "members": {
     "members": "Mitglieder"

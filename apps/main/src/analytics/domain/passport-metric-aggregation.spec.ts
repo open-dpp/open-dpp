@@ -89,23 +89,6 @@ describe("passportMetricAggregation", () => {
         },
       },
       {
-        $densify: {
-          field: "datetime",
-          range: {
-            step: 1,
-            unit: "day",
-            bounds: [new Date("2025-01-03T12:00:00Z"), new Date("2025-01-07T12:00:00Z")],
-          },
-        },
-      },
-      {
-        $set: {
-          sum: {
-            $ifNull: ["$sum", 0], // Fill missing values with 0
-          },
-        },
-      },
-      {
         $sort: {
           datetime: 1,
         },

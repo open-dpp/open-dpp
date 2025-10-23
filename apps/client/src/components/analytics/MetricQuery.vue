@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import type { Option } from "../../lib/combobox";
-import { MeasurementType, TimePeriod } from "@open-dpp/api-client";
+import { MeasurementType } from "@open-dpp/api-client";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod/v4";
 import { VIEW_ROOT_URL } from "../../const";
-import { useAnalyticsStore } from "../../stores/analytics";
+import { TimeView, useAnalyticsStore } from "../../stores/analytics";
 import { useModelsStore } from "../../stores/models";
 import BaseButton from "../basics/BaseButton.vue";
 import Combobox from "../basics/Combobox.vue";
@@ -18,27 +18,13 @@ dayjs.extend(utc);
 const { t } = useI18n();
 const modelStore = useModelsStore();
 const analyticsStore = useAnalyticsStore();
-const defaultOption = {
-  id: TimePeriod.HOUR,
-  label: "Tagesansicht",
-};
-const timePeriodOptions = [
-  defaultOption,
-  {
-    id: TimePeriod.DAY,
-    label: "Wochensansicht",
-  },
-  {
-    id: TimePeriod.WEEK,
-    label: "Monatsansicht",
-  },
-  {
-    id: TimePeriod.MONTH,
-    label: "Jahresansicht",
-  },
-];
 
-const selectedTimePeriod = ref<Option>(defaultOption);
+const timeViewOptions = Object.values(TimeView).map(value => ({
+  id: value,
+  label: t(`analytics.${value}`),
+}));
+
+const selectedView = ref<Option>(timeViewOptions[0]!);
 
 const dataFieldOptions = ref<Option[] | null>(null);
 
@@ -69,32 +55,14 @@ function getViewDomain() {
   return `${url.protocol}//${url.hostname}`;
 }
 
-function getStartAndEndDate(timePeriod: TimePeriod) {
-  const now = dayjs();
-  const units: { [key in TimePeriod]: dayjs.OpUnitType } = {
-    [TimePeriod.HOUR]: "day",
-    [TimePeriod.DAY]: "week",
-    [TimePeriod.WEEK]: "month",
-    [TimePeriod.MONTH]: "year",
-    [TimePeriod.YEAR]: "year",
-  };
-
-  const unit = units[timePeriod];
-  return { startDate: now.startOf(unit).toDate(), endDate: now.endOf(unit).toDate() };
-}
-
 async function applyQuery() {
   if (isQueryValid.value) {
-    const timePeriod = z.enum(TimePeriod).parse(selectedTimePeriod.value!.id);
-    const { startDate, endDate } = getStartAndEndDate(timePeriod);
     const metricQuery = {
-      startDate,
-      endDate,
       templateId: selectedTemplate.value!,
       modelId: selectedModel.value!.id,
       valueKey: getViewDomain(),
       type: MeasurementType.PAGE_VIEWS,
-      period: timePeriod,
+      selectedView: z.enum(TimeView).parse(selectedView.value.id),
     };
     await analyticsStore.queryMetric(metricQuery);
   }
@@ -114,13 +82,13 @@ onMounted(async () => {
       :options="modelOptions"
     />
     <Select
-      v-model="selectedTimePeriod"
+      v-model="selectedView"
       label-position="left"
-      :label="t('analytics.timePeriodSelection')"
-      :options="timePeriodOptions"
+      :label="t('analytics.timeViewSelection')"
+      :options="timeViewOptions"
     />
     <BaseButton variant="primary" :disabled="!isQueryValid" @click="applyQuery">
-      Analyse starten
+      {{ t('analytics.startAnalysis') }}
     </BaseButton>
   </div>
 </template>

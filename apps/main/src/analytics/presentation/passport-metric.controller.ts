@@ -19,7 +19,6 @@ import { OrganizationsService } from "../../organizations/infrastructure/organiz
 import { UniqueProductIdentifierApplicationService } from "../../unique-product-identifier/presentation/unique.product.identifier.application.service";
 import { User } from "../../users/domain/user";
 import { PassportMetric } from "../domain/passport-metric";
-import { PassportMetricAggregation } from "../domain/passport-metric-aggregation";
 import { PassportMetricService } from "../infrastructure/passport-metric.service";
 import { PassportMetricQuerySchema } from "./dto/passport-metric-query.dto";
 import { PassportPageViewSchema } from "./dto/passport-page-view.dto";
@@ -100,8 +99,8 @@ export class PassportMetricController {
     }
 
     return this.passportMetricService.computeStatistic(
-      PassportMetricAggregation.create({ ...query, organizationId }),
-      query.period,
+      organizationId,
+      query,
     );
   }
 }

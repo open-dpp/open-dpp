@@ -23,7 +23,8 @@ const selectedOption = defineModel<Option | null>();
 <template>
   <Listbox v-model="selectedOption" :data-cy="props.dataCy" as="div">
     <div
-      class="flex" :class="[
+      class="flex"
+      :class="[
         props.labelPosition === 'left'
           ? 'flex-row items-center gap-2'
           : 'flex-col gap-2',
@@ -32,7 +33,7 @@ const selectedOption = defineModel<Option | null>();
       <ListboxLabel
         class="block text-sm/6 font-medium text-gray-900 dark:text-white"
       >
-        Assigned to
+        {{ props.label }}
       </ListboxLabel>
       <div class="relative">
         <ListboxButton
@@ -62,20 +63,21 @@ const selectedOption = defineModel<Option | null>();
               :value="option"
             >
               <li
-                class="relative cursor-default py-2 pr-9 pl-3 select-none" :class="[
+                class="relative cursor-default py-2 pr-9 pl-3 select-none"
+                :class="[
                   active
                     ? 'bg-indigo-600 text-white outline-hidden dark:bg-indigo-500'
                     : 'text-gray-900 dark:text-white',
                 ]"
               >
                 <span
-                  class="block truncate" :class="[
-                    selected ? 'font-semibold' : 'font-normal',
-                  ]"
+                  class="block truncate"
+                  :class="[selected ? 'font-semibold' : 'font-normal']"
                 >{{ option.label }}</span>
                 <span
                   v-if="selected"
-                  class="absolute inset-y-0 right-0 flex items-center pr-4" :class="[
+                  class="absolute inset-y-0 right-0 flex items-center pr-4"
+                  :class="[
                     active
                       ? 'text-white'
                       : 'text-indigo-600 dark:text-indigo-400',
