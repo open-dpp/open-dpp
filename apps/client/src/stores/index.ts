@@ -1,5 +1,6 @@
 import type { ComputedRef } from "vue";
 import type { Composer } from "vue-i18n";
+import dayjs from "dayjs";
 import { defineStore } from "pinia";
 import { computed, ref, watch } from "vue";
 import { LAST_SELECTED_LANGUAGE, LAST_SELECTED_ORGANIZATION_ID_KEY } from "../const";
@@ -21,7 +22,7 @@ export const useIndexStore = defineStore("index", () => {
   // Hack to make typescript happy
   (i18n.global as unknown as Composer).locale.value = initialLocale;
 
-  const formkitLocale: ComputedRef<"en" | "de"> = computed(() => {
+  const locale: ComputedRef<"en" | "de"> = computed(() => {
     const code = initialLocale.toLowerCase();
     if (code.startsWith("de"))
       return "de";
@@ -42,6 +43,16 @@ export const useIndexStore = defineStore("index", () => {
   };
 
   watch(
+    () => locale,
+    (newVal) => {
+      dayjs.locale(newVal.value);
+    },
+    {
+      immediate: true,
+    },
+  );
+
+  watch(
     () => selectedOrganization.value,
     (newVal) => {
       if (newVal) {
@@ -53,5 +64,5 @@ export const useIndexStore = defineStore("index", () => {
     },
   );
 
-  return { selectedOrganization, formkitLocale, selectOrganization };
+  return { selectedOrganization, locale, selectOrganization };
 });

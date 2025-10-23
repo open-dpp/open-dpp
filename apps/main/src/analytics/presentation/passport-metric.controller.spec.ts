@@ -10,6 +10,9 @@ import getKeycloakAuthToken, {
   KeycloakResourcesServiceTesting,
   MongooseTestingModule,
 } from "@open-dpp/testing";
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
 import { Connection } from "mongoose";
 import request from "supertest";
 import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
@@ -40,6 +43,9 @@ import { AnalyticsModule } from "../analytics.module";
 import { MeasurementType, PassportMetric } from "../domain/passport-metric";
 import { PassportMetricService, TimePeriod } from "../infrastructure/passport-metric.service";
 import { PassportMetricController } from "./passport-metric.controller";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 describe("passportMetricController", () => {
   let app: INestApplication;
@@ -212,9 +218,10 @@ describe("passportMetricController", () => {
     await passportMetricService.create(pageView1);
     await passportMetricService.create(pageView2);
 
+    const timezone = encodeURIComponent("Europe/Berlin");
     const response = await request(getApp(app))
       .get(
-        `/organizations/${organization.id}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T00:00:00Z&endDate=2025-03-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}&timezone=UTC`,
+        `/organizations/${organization.id}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T00:00:00Z&endDate=2025-03-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}&timezone=${timezone}`,
       )
       .set(
         "Authorization",
@@ -226,16 +233,20 @@ describe("passportMetricController", () => {
       .send();
 
     expect(response.status).toEqual(200);
-    expect(response.body).toEqual([
-      {
-        datetime: "2025-01-01T00:00:00.000Z",
-        sum: 2,
-      },
-      {
-        datetime: "2025-02-01T00:00:00.000Z",
-        sum: 0,
-      },
-    ]);
+    // console.log(response.body[1].datetime);
+    // console.log(dayjs(response.body[1].datetime, "YYYY-MM-DD HH:mm:ss.SSS", "Europe/Berlin").toISOString());
+    // console.log(dayjs(response.body[1].datetime).tz("Europe/Berlin").format("YYYY-MM-DD HH:mm:ss.SSS"));
+    expect(response.body)
+      .toEqual([
+        {
+          datetime: "2025-01-01T00:00:00.000Z",
+          sum: 2,
+        },
+        {
+          datetime: "2025-02-01T00:00:00.000Z",
+          sum: 0,
+        },
+      ]);
   });
   //
   it(`/GET passport returns metric results with sum value equal to zero if template is not part of organization`, async () => {

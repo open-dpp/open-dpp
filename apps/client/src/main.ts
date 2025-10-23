@@ -17,6 +17,7 @@ import { useOrganizationsStore } from "./stores/organizations";
 import { i18n } from "./translations/i18n.ts";
 import "./index.css";
 import "@formkit/addons/css/multistep";
+import "dayjs/locale/de";
 
 const pinia = createPinia();
 
@@ -36,7 +37,7 @@ async function startApp() {
         ...genesisIcons,
       },
       locales: { de, en },
-      locale: indexStore.formkitLocale,
+      locale: indexStore.locale,
       plugins: [createMultiStepPlugin(), createAutoAnimatePlugin()],
     }),
   );

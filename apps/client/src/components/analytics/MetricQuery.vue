@@ -71,10 +71,16 @@ function getViewDomain() {
 
 function getStartAndEndDate(timePeriod: TimePeriod) {
   const now = dayjs();
-  if (timePeriod === TimePeriod.HOUR) {
-    return { startDate: now.startOf("day").toDate(), endDate: now.endOf("day").toDate() };
-  }
-  return { startDate: now.startOf("day").toDate(), endDate: now.endOf("day").toDate() };
+  const units: { [key in TimePeriod]: dayjs.OpUnitType } = {
+    [TimePeriod.HOUR]: "day",
+    [TimePeriod.DAY]: "week",
+    [TimePeriod.WEEK]: "month",
+    [TimePeriod.MONTH]: "year",
+    [TimePeriod.YEAR]: "year",
+  };
+
+  const unit = units[timePeriod];
+  return { startDate: now.startOf(unit).toDate(), endDate: now.endOf(unit).toDate() };
 }
 
 async function applyQuery() {

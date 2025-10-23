@@ -143,9 +143,29 @@ export class PassportMetricAggregation {
       },
       {
         $set: {
+          datetime: {
+            $dateTrunc: {
+              date: "$datetime",
+              unit: timePeriod,
+              timezone: this.timezone,
+            },
+          },
           sum: {
             $ifNull: ["$sum", 0], // Fill missing values with 0
           },
+        },
+      },
+      {
+        $group: {
+          _id: "$datetime",
+          sum: { $max: "$sum" }, // use max to keep non-zero values if they exist
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          datetime: "$_id",
+          sum: 1,
         },
       },
       {
