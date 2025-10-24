@@ -92,7 +92,6 @@ volumes:
   caddy_data:
   caddy_config:
   minio_data:
-  etcd_data:
   mongo_db:
   mongo_config:
   api_db:

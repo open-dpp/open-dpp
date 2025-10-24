@@ -5,7 +5,6 @@ import { expect } from "@jest/globals";
 import { APP_GUARD, Reflector } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { ALLOW_SERVICE_ACCESS } from "@open-dpp/auth";
 import { EnvModule } from "@open-dpp/env";
 import {
   MongooseTestingModule,
@@ -13,6 +12,7 @@ import {
 import request from "supertest";
 import { BetterAuthTestingGuard, getBetterAuthToken } from "../../../test/better-auth-testing.guard";
 import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
+import { ALLOW_SERVICE_ACCESS } from "../../auth/allow-service-access.decorator";
 import { AuthService } from "../../auth/auth.service";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { EmailService } from "../../email/email.service";

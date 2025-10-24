@@ -1,7 +1,7 @@
 // better-auth-testing.guard.ts
 import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { ALLOW_SERVICE_ACCESS } from "@open-dpp/auth";
+import { ALLOW_SERVICE_ACCESS } from "../src/auth/allow-service-access.decorator";
 import { User } from "../src/users/domain/user";
 
 export interface BetterAuthTestUser {

@@ -22,12 +22,6 @@ const envSchema = z.object({
   OPEN_DPP_MISTRAL_API_KEY: z.coerce.string(),
   OPEN_DPP_OLLAMA_URL: z.url(),
   OPEN_DPP_MCP_URL: z.url(),
-  // Keycloak
-  OPEN_DPP_KEYCLOAK_URL: z.url(),
-  OPEN_DPP_KEYCLOAK_REALM: z.coerce.string(),
-  OPEN_DPP_KEYCLOAK_USER: z.coerce.string(),
-  OPEN_DPP_KEYCLOAK_PASSWORD: z.coerce.string(),
-  OPEN_DPP_KEYCLOAK_JWT_AUDIENCE: z.coerce.string(),
   // S3
   OPEN_DPP_S3_ENDPOINT: z.coerce.string(),
   OPEN_DPP_S3_PORT: z.coerce.number().max(65535).min(0),

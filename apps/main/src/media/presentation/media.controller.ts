@@ -13,8 +13,8 @@ import {
   UseInterceptors,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { Public } from "@open-dpp/auth";
 import { memoryStorage } from "multer";
+import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
 import { UserSession } from "../../auth/auth.guard";
 import { Session } from "../../auth/session.decorator";
 import { MediaService } from "../infrastructure/media.service";
@@ -99,7 +99,7 @@ export class MediaController {
   }
 
   @Get("dpp/:upi/:dataFieldId/info")
-  @Public()
+  @AllowAnonymous()
   async getDppFileInfo(
     @Param("upi") upi: string,
     @Param("dataFieldId") dataFieldId: string,
@@ -108,7 +108,7 @@ export class MediaController {
   }
 
   @Get("dpp/:upi/:dataFieldId/download")
-  @Public()
+  @AllowAnonymous()
   async streamDppFile(
     @Param("upi") upi: string,
     @Param("dataFieldId") dataFieldId: string,
@@ -145,7 +145,7 @@ export class MediaController {
   }
 
   @Get(":id/download")
-  @Public()
+  @AllowAnonymous()
   async streamFile(
     @Param("id") id: string,
     @Res() res: express.Response,
@@ -171,7 +171,7 @@ export class MediaController {
   }
 
   @Get(":id/info")
-  @Public()
+  @AllowAnonymous()
   async getMediaInfo(@Param("id") id: string): Promise<Media> {
     return await this.filesService.findOneOrFail(id);
   }

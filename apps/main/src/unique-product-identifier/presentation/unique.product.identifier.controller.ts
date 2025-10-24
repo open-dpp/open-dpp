@@ -1,6 +1,6 @@
 import { Controller, ForbiddenException, Get, Param } from "@nestjs/common";
-import { AllowServiceAccess } from "@open-dpp/auth";
 import { hasPermission, PermissionAction } from "@open-dpp/permission";
+import { AllowServiceAccess } from "../../auth/allow-service-access.decorator";
 import { UserSession } from "../../auth/auth.guard";
 import { Session } from "../../auth/session.decorator";
 import { ItemsService } from "../../items/infrastructure/items.service";
