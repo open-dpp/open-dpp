@@ -262,8 +262,8 @@ describe("passportMetricService", () => {
       {
         templateId: source.templateId,
         modelId: source.modelId,
-        type: MeasurementType.PAGE_VIEWS,
-        valueKey: "http://example.com",
+        type: MeasurementType.FIELD_AGGREGATE,
+        valueKey: dataFieldId1,
         startDate: new Date("2025-01-01T00:00:00Z"),
         endDate: new Date("2025-03-01T13:00:00Z"),
         timezone: "UTC",
@@ -272,15 +272,15 @@ describe("passportMetricService", () => {
     );
     expect(statistic).toEqual([
       {
-        datetime: new Date("2025-01-01T00:00:00.000Z"),
+        datetime: "2024-12-31T23:00:00.000Z",
         sum: 110,
       },
       {
-        datetime: new Date("2025-02-01T00:00:00.000Z"),
+        datetime: "2025-01-31T23:00:00.000Z",
         sum: 2,
       },
       {
-        datetime: new Date("2025-03-01T00:00:00.000Z"),
+        datetime: "2025-02-28T23:00:00.000Z",
         sum: 0,
       },
     ]);
@@ -290,8 +290,8 @@ describe("passportMetricService", () => {
       {
         templateId: source.templateId,
         modelId: source.modelId,
-        type: MeasurementType.PAGE_VIEWS,
-        valueKey: "http://example.com",
+        type: MeasurementType.FIELD_AGGREGATE,
+        valueKey: dataFieldId2,
         startDate: new Date("2025-01-01T00:00:00Z"),
         endDate: new Date("2025-03-01T13:00:00Z"),
         timezone: "UTC",
@@ -300,15 +300,15 @@ describe("passportMetricService", () => {
     );
     expect(statistic).toEqual([
       {
-        datetime: new Date("2025-01-01T00:00:00.000Z"),
+        datetime: "2024-12-31T23:00:00.000Z",
         sum: 3,
       },
       {
-        datetime: new Date("2025-02-01T00:00:00.000Z"),
+        datetime: "2025-01-31T23:00:00.000Z",
         sum: 4,
       },
       {
-        datetime: new Date("2025-03-01T00:00:00.000Z"),
+        datetime: "2025-02-28T23:00:00.000Z",
         sum: 0,
       },
     ]);
