@@ -4,6 +4,7 @@ import { logout } from "./keycloak";
 
 const axiosIns = axios.create({
   baseURL: API_URL,
+  withCredentials: true,
 });
 
 axiosIns.interceptors.response.use(

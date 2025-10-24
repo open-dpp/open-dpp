@@ -11,8 +11,8 @@ export const PassportTemplatePublicationSchema = z.object({
   website: z.string().nullable().default(null),
   organizationName: z.string(),
   templateData: z.record(z.string(), z.unknown()),
-  ownedByOrganizationId: z.uuid(),
-  createdByUserId: z.uuid(),
+  ownedByOrganizationId: z.string(),
+  createdByUserId: z.string(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });

@@ -1,11 +1,11 @@
-import type * as authRequest from "@open-dpp/auth";
-import { Controller, ForbiddenException, Get, Param, Request } from "@nestjs/common";
-import { AllowServiceAccess } from "@open-dpp/auth";
+import { Controller, ForbiddenException, Get, Param } from "@nestjs/common";
 import { hasPermission, PermissionAction } from "@open-dpp/permission";
+import { AllowServiceAccess } from "../../auth/allow-service-access.decorator";
+import { UserSession } from "../../auth/auth.guard";
+import { Session } from "../../auth/session.decorator";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
-import { User } from "../../users/domain/user";
 import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
 import {
   UniqueProductIdentifierReferenceDtoSchema,
@@ -38,12 +38,12 @@ export class UniqueProductIdentifierController {
   async getReferencedProductPassport(
     @Param("orgaId") organizationId: string,
     @Param("id") id: string,
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
   ) {
     const organization = await this.organizationsService.findOneOrFail(organizationId);
     if (!hasPermission({
       user: {
-        id: (req.authContext.user as User).id,
+        id: session.user.id,
       },
     }, PermissionAction.READ, organization.toPermissionSubject())) {
       throw new ForbiddenException();

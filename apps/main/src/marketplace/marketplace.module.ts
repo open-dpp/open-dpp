@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { KeycloakResourcesModule } from "../keycloak-resources/keycloak-resources.module";
 import { OrganizationsModule } from "../organizations/organizations.module";
 import {
   TemplateDoc,
@@ -27,7 +26,6 @@ import { PassportTemplatePublicationController } from "./presentation/passport-t
         schema: TemplateSchema,
       },
     ]),
-    KeycloakResourcesModule,
     OrganizationsModule,
   ],
   controllers: [PassportTemplatePublicationController],

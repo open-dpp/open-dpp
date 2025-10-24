@@ -1,25 +1,25 @@
 import { randomUUID } from "node:crypto";
 import { beforeAll, expect } from "@jest/globals";
 import { INestApplication } from "@nestjs/common";
-import { APP_GUARD } from "@nestjs/core";
+import { APP_GUARD, Reflector } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule } from "@open-dpp/env";
-import getKeycloakAuthToken, {
+import {
   createKeycloakUserInToken,
   getApp,
-  KeycloakAuthTestingGuard,
-  KeycloakResourcesServiceTesting,
   MongooseTestingModule,
 } from "@open-dpp/testing";
 import request from "supertest";
+import { BetterAuthTestingGuard, getBetterAuthToken } from "../../../test/better-auth-testing.guard";
 import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
+import { AuthService } from "../../auth/auth.service";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
 import { Sector } from "../../data-modelling/domain/sectors";
 import { sectionToDto } from "../../data-modelling/presentation/dto/section-base.dto";
-import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
+import { EmailService } from "../../email/email.service";
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,
@@ -29,6 +29,7 @@ import {
 } from "../../marketplace/infrastructure/passport-template-publication.service";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { Organization } from "../../organizations/domain/organization";
+
 import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import {
@@ -37,9 +38,6 @@ import {
 } from "../../templates/infrastructure/template.schema";
 import { TemplateService } from "../../templates/infrastructure/template.service";
 import { User } from "../../users/domain/user";
-
-import { InjectUserToAuthContextGuard } from "../../users/infrastructure/inject-user-to-auth-context.guard";
-import { UserDbSchema, UserDoc } from "../../users/infrastructure/user.schema";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { DataFieldDraft } from "../domain/data-field-draft";
 import { SectionDraft } from "../domain/section-draft";
@@ -64,11 +62,12 @@ describe("templateDraftController", () => {
   let app: INestApplication;
   let templateDraftService: TemplateDraftService;
   let templateService: TemplateService;
-  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
   let module: TestingModule;
-  let usersService: UsersService;
   let organizationService: OrganizationsService;
   let marketplaceService: MarketplaceApplicationService;
+
+  const betterAuthTestingGuard = new BetterAuthTestingGuard(new Reflector());
+  betterAuthTestingGuard.loadUsers([TestUsersAndOrganizations.users.user1, TestUsersAndOrganizations.users.user2]);
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -92,10 +91,6 @@ describe("templateDraftController", () => {
             name: OrganizationDoc.name,
             schema: OrganizationDbSchema,
           },
-          {
-            name: UserDoc.name,
-            schema: UserDbSchema,
-          },
         ]),
       ],
       providers: [
@@ -105,29 +100,26 @@ describe("templateDraftController", () => {
         PassportTemplatePublicationService,
         OrganizationsService,
         UsersService,
-        KeycloakResourcesService,
         {
-          provide: APP_GUARD,
-          useValue: keycloakAuthTestingGuard,
+          provide: EmailService,
+          useValue: {
+            send: jest.fn(),
+          },
+        },
+        {
+          provide: AuthService,
+          useValue: {
+            getSession: jest.fn(),
+            getUserById: jest.fn(),
+          },
         },
         {
           provide: APP_GUARD,
-          useClass: InjectUserToAuthContextGuard,
+          useValue: betterAuthTestingGuard,
         },
       ],
       controllers: [TemplateDraftController],
     })
-      .overrideProvider(KeycloakResourcesService)
-      .useValue(
-        KeycloakResourcesServiceTesting.fromPlain({
-          users: [
-            {
-              id: TestUsersAndOrganizations.keycloakUsers.keycloakUser1.sub,
-              email: TestUsersAndOrganizations.keycloakUsers.keycloakUser1.email,
-            },
-          ],
-        }),
-      )
       .compile();
 
     app = module.createNestApplication();
@@ -138,15 +130,11 @@ describe("templateDraftController", () => {
     marketplaceService = module.get<MarketplaceApplicationService>(
       MarketplaceApplicationService,
     );
-
-    usersService
-      = module.get<UsersService>(UsersService);
     organizationService
       = module.get<OrganizationsService>(OrganizationsService);
 
     await app.init();
 
-    await usersService.save(TestUsersAndOrganizations.users.user1);
     await organizationService.save(TestUsersAndOrganizations.organizations.org1);
     await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
@@ -160,9 +148,8 @@ describe("templateDraftController", () => {
       .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -179,9 +166,8 @@ describe("templateDraftController", () => {
       .post(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/template-drafts`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -204,9 +190,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -233,9 +218,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -257,9 +241,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -294,9 +277,8 @@ describe("templateDraftController", () => {
     };
     const spyUpload = jest.spyOn(marketplaceService, "upload");
 
-    const token = getKeycloakAuthToken(
-      TestUsersAndOrganizations.users.user1.keycloakUserId,
-      keycloakAuthTestingGuard,
+    const token = getBetterAuthToken(
+      TestUsersAndOrganizations.users.user1.id,
     );
 
     const response = await request(getApp(app))
@@ -338,9 +320,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -365,9 +346,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -378,7 +358,6 @@ describe("templateDraftController", () => {
     const keycloakUserTemp = createKeycloakUserInToken();
     const userTemp = User.create({
       email: keycloakUserTemp.email,
-      keycloakUserId: keycloakUserTemp.sub,
     });
     const orgTemp = Organization.create({
       name: "organization-temp-test",
@@ -386,7 +365,7 @@ describe("templateDraftController", () => {
       createdByUserId: userTemp.id,
       members: [userTemp],
     });
-    await usersService.save(userTemp);
+    betterAuthTestingGuard.addUser(userTemp);
     await organizationService.save(orgTemp);
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
@@ -406,7 +385,7 @@ describe("templateDraftController", () => {
       .get(`/organizations/${orgTemp.id}/template-drafts`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(userTemp.keycloakUserId, keycloakAuthTestingGuard),
+        getBetterAuthToken(userTemp.id),
       );
 
     expect(response.status).toEqual(200);
@@ -421,9 +400,8 @@ describe("templateDraftController", () => {
       .get(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/template-drafts`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       );
     expect(response.status).toEqual(403);
@@ -448,9 +426,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -502,9 +479,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -541,9 +517,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -571,9 +546,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -600,9 +574,8 @@ describe("templateDraftController", () => {
       .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       );
     expect(response.status).toEqual(200);
@@ -617,9 +590,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       );
     expect(response.status).toEqual(403);
@@ -638,9 +610,8 @@ describe("templateDraftController", () => {
       .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/template-drafts/${laptopDraft.id}`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       );
     expect(response.status).toEqual(403);
@@ -672,9 +643,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -696,9 +666,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -722,9 +691,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -759,9 +727,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -788,9 +755,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -815,9 +781,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -861,9 +826,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -894,9 +858,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -921,9 +884,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -951,9 +913,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       );
     expect(response.status).toEqual(200);
@@ -968,9 +929,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       );
     expect(response.status).toEqual(403);
@@ -991,9 +951,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       );
     expect(response.status).toEqual(403);
@@ -1027,9 +986,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -1064,9 +1022,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -1094,9 +1051,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -1135,9 +1091,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -1163,9 +1118,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -1190,9 +1144,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -1228,9 +1181,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       );
     expect(response.status).toEqual(200);
@@ -1247,9 +1199,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       );
     expect(response.status).toEqual(403);
@@ -1270,9 +1221,8 @@ describe("templateDraftController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       );
     expect(response.status).toEqual(403);

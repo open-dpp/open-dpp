@@ -10,7 +10,6 @@ import { MongooseTestingModule } from "@open-dpp/testing";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
-import { KeycloakResourcesModule } from "../../keycloak-resources/keycloak-resources.module";
 import { Template } from "../domain/template";
 import { laptopFactory } from "../fixtures/laptop.factory";
 import { sectionDbPropsFactory } from "../fixtures/section.factory";
@@ -41,7 +40,6 @@ describe("templateService", () => {
             schema: TemplateSchema,
           },
         ]),
-        KeycloakResourcesModule,
       ],
       providers: [TemplateService],
     }).compile();

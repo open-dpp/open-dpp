@@ -5,10 +5,13 @@ import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { APP_GUARD, Reflector } from "@nestjs/core";
 import { Test } from "@nestjs/testing";
-import { IS_PUBLIC } from "@open-dpp/auth";
 import { EnvModule } from "@open-dpp/env";
-import { KeycloakAuthTestingGuard, MongooseTestingModule } from "@open-dpp/testing";
+import { MongooseTestingModule } from "@open-dpp/testing";
 import request from "supertest";
+import { BetterAuthTestingGuard, getBetterAuthToken } from "../../../test/better-auth-testing.guard";
+import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
+import { AuthService } from "../../auth/auth.service";
+import { EmailService } from "../../email/email.service";
 import { Item } from "../../items/domain/item";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { Model } from "../../models/domain/model";
@@ -30,11 +33,9 @@ describe("productPassportController", () => {
   let itemsService: ItemsService;
 
   let templateService: TemplateService;
-  const reflector: Reflector = new Reflector();
-  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(
-    new Map(),
-    reflector,
-  );
+  const betterAuthTestingGuard = new BetterAuthTestingGuard(new Reflector());
+  betterAuthTestingGuard.loadUsers([TestUsersAndOrganizations.users.user1, TestUsersAndOrganizations.users.user2]);
+
   const userId = randomUUID();
   const organizationId = randomUUID();
   let module: TestingModule;
@@ -44,8 +45,21 @@ describe("productPassportController", () => {
       imports: [EnvModule.forRoot(), MongooseTestingModule, ProductPassportModule],
       providers: [
         {
+          provide: EmailService,
+          useValue: {
+            send: jest.fn(),
+          },
+        },
+        {
+          provide: AuthService,
+          useValue: {
+            getSession: jest.fn(),
+            getUserById: jest.fn(),
+          },
+        },
+        {
           provide: APP_GUARD,
-          useValue: keycloakAuthTestingGuard,
+          useValue: betterAuthTestingGuard,
         },
       ],
     }).compile();
@@ -57,9 +71,6 @@ describe("productPassportController", () => {
     app = module.createNestApplication();
 
     await app.init();
-  });
-  beforeEach(() => {
-    jest.spyOn(reflector, "get").mockReturnValue(false);
   });
   const authProps = { userId, organizationId };
   const phoneTemplate: TemplateDbProps = phoneFactory
@@ -85,10 +96,14 @@ describe("productPassportController", () => {
     const uuid = item.uniqueProductIdentifiers[0].uuid;
     await itemsService.save(item);
     await modelsService.save(model);
-    jest.spyOn(reflector, "get").mockImplementation(key => key === IS_PUBLIC);
 
     const response = await request(app.getHttpServer()).get(
       `/product-passports/${uuid}`,
+    ).set(
+      "Authorization",
+      getBetterAuthToken(
+        TestUsersAndOrganizations.users.user1.id,
+      ),
     );
     expect(response.status).toEqual(200);
 

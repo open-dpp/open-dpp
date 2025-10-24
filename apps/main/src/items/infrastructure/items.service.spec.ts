@@ -4,14 +4,12 @@ import { expect } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Sector } from "@open-dpp/api-client";
-import { AuthContext } from "@open-dpp/auth";
 import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import {
   ignoreIds,
   KeycloakResourcesServiceTesting,
   MongooseTestingModule,
-  user1org1,
 } from "@open-dpp/testing";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
@@ -37,8 +35,6 @@ describe("itemsService", () => {
   const userId = randomUUID();
   const organizationId = randomUUID();
   let mongoConnection: Connection;
-  const authContext = new AuthContext();
-  authContext.keycloakUser = user1org1;
   let itemDoc: MongooseModel<ItemDoc>;
   const template = Template.create(templateCreatePropsFactory.build());
   let module: TestingModule;

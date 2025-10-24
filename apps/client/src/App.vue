@@ -12,10 +12,15 @@ const LayoutDefault = defineAsyncComponent(
 const LayoutPresentation = defineAsyncComponent(
   () => import("./components/layout/LayoutPresentation.vue"),
 );
+const LayoutNone = defineAsyncComponent(
+  () => import("./components/layout/LayoutNone.vue"),
+);
 
 const layout = computed(() => {
   if (route.meta.layout === "presentation")
     return LayoutPresentation;
+  else if (route.meta.layout === "none")
+    return LayoutNone;
   return LayoutDefault;
 });
 </script>

@@ -5,12 +5,10 @@ import { User } from "../src/users/domain/user";
 const keycloakUser1 = createKeycloakUserInToken();
 const user1 = User.create({
   email: keycloakUser1.email,
-  keycloakUserId: keycloakUser1.sub,
 });
 const keycloakUser2 = createKeycloakUserInToken();
 const user2 = User.create({
   email: keycloakUser2.email,
-  keycloakUserId: keycloakUser2.sub,
 });
 const org1 = Organization.create({
   name: "organization-1-test",

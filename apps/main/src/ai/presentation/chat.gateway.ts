@@ -6,9 +6,9 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from "@nestjs/websockets";
-import { Public } from "@open-dpp/auth";
 import { SocketIoExceptionFilter } from "@open-dpp/exception";
 import { Server, Socket } from "socket.io";
+import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
 import { ChatService } from "../chat.service";
 
 @WebSocketGateway({ cors: true, path: "/api/ai-socket" })
@@ -25,7 +25,7 @@ export class ChatGateway {
     this.chatService = chatService;
   }
 
-  @Public()
+  @AllowAnonymous()
   @SubscribeMessage("userMessage")
   async handleMessage(
     @MessageBody() message: { msg: string; passportUUID: string },

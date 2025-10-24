@@ -5,21 +5,21 @@ import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
-import getKeycloakAuthToken, {
+import {
   createKeycloakUserInToken,
   getApp,
-  KeycloakAuthTestingGuard,
   MongooseTestingModule,
 } from "@open-dpp/testing";
 import { Connection } from "mongoose";
 import request from "supertest";
+import { BetterAuthTestingGuard, getBetterAuthToken } from "../../../../test/better-auth-testing.guard";
 import TestUsersAndOrganizations from "../../../../test/test-users-and-orgs";
+import { AuthService } from "../../../auth/auth.service";
+import { EmailService } from "../../../email/email.service";
 import { Organization } from "../../../organizations/domain/organization";
 import { OrganizationDbSchema, OrganizationDoc } from "../../../organizations/infrastructure/organization.schema";
 import { OrganizationsService } from "../../../organizations/infrastructure/organizations.service";
 import { User } from "../../../users/domain/user";
-import { InjectUserToAuthContextGuard } from "../../../users/infrastructure/inject-user-to-auth-context.guard";
-import { UserDbSchema, UserDoc } from "../../../users/infrastructure/user.schema";
 import { UsersService } from "../../../users/infrastructure/users.service";
 import { AiConfiguration, AiProvider } from "../domain/ai-configuration";
 import { aiConfigurationFactory } from "../fixtures/ai-configuration-props.factory";
@@ -34,15 +34,12 @@ import { aiConfigurationToDto } from "./dto/ai-configuration.dto";
 describe("aiConfigurationController", () => {
   let app: INestApplication;
   const reflector: Reflector = new Reflector();
-  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(
-    new Map(),
-    reflector,
-  );
+  const betterAuthTestingGuard = new BetterAuthTestingGuard(new Reflector());
+  betterAuthTestingGuard.loadUsers([TestUsersAndOrganizations.users.user1, TestUsersAndOrganizations.users.user2]);
 
   let mongoConnection: Connection;
   let module: TestingModule;
   let aiConfigurationService: AiConfigurationService;
-  let usersService: UsersService;
   let organizationService: OrganizationsService;
 
   const mockNow = new Date("2025-01-01T12:00:00Z");
@@ -61,10 +58,6 @@ describe("aiConfigurationController", () => {
             name: OrganizationDoc.name,
             schema: OrganizationDbSchema,
           },
-          {
-            name: UserDoc.name,
-            schema: UserDbSchema,
-          },
         ]),
       ],
       providers: [
@@ -72,12 +65,21 @@ describe("aiConfigurationController", () => {
         UsersService,
         AiConfigurationService,
         {
-          provide: APP_GUARD,
-          useValue: keycloakAuthTestingGuard,
+          provide: EmailService,
+          useValue: {
+            send: jest.fn(),
+          },
+        },
+        {
+          provide: AuthService,
+          useValue: {
+            getSession: jest.fn(),
+            getUserById: jest.fn(),
+          },
         },
         {
           provide: APP_GUARD,
-          useClass: InjectUserToAuthContextGuard,
+          useValue: betterAuthTestingGuard,
         },
       ],
       controllers: [AiConfigurationController],
@@ -87,12 +89,10 @@ describe("aiConfigurationController", () => {
     app.useGlobalFilters(new NotFoundInDatabaseExceptionFilter());
     mongoConnection = module.get(getConnectionToken());
     aiConfigurationService = module.get(AiConfigurationService);
-    usersService = module.get(UsersService);
     organizationService = module.get(OrganizationsService);
 
     await app.init();
 
-    await usersService.save(TestUsersAndOrganizations.users.user1);
     await organizationService.save(TestUsersAndOrganizations.organizations.org1);
     await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
@@ -115,7 +115,9 @@ describe("aiConfigurationController", () => {
       .put(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/configurations`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(TestUsersAndOrganizations.users.user1.keycloakUserId, keycloakAuthTestingGuard),
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
+        ),
       )
       .send(body);
     expect(response.status).toEqual(200);
@@ -137,7 +139,9 @@ describe("aiConfigurationController", () => {
       .put(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/configurations`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(TestUsersAndOrganizations.users.user1.keycloakUserId, keycloakAuthTestingGuard),
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
+        ),
       )
       .send(body);
     expect(response.status).toEqual(403);
@@ -147,7 +151,6 @@ describe("aiConfigurationController", () => {
     const keycloakUserTemp = createKeycloakUserInToken();
     const userTemp = User.create({
       email: keycloakUserTemp.email,
-      keycloakUserId: keycloakUserTemp.sub,
     });
     const orgTemp = Organization.create({
       name: `organization-temp-${randomUUID()}`,
@@ -155,7 +158,7 @@ describe("aiConfigurationController", () => {
       createdByUserId: userTemp.id,
       members: [userTemp],
     });
-    await usersService.save(userTemp);
+    betterAuthTestingGuard.addUser(userTemp);
     await organizationService.save(orgTemp);
     const configuration = AiConfiguration.loadFromDb(
       aiConfigurationFactory.build({
@@ -172,7 +175,9 @@ describe("aiConfigurationController", () => {
       .put(`/organizations/${orgTemp.id}/configurations`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(userTemp.keycloakUserId, keycloakAuthTestingGuard),
+        getBetterAuthToken(
+          userTemp.id,
+        ),
       )
       .send(body);
     expect(response.status).toEqual(200);
@@ -188,7 +193,6 @@ describe("aiConfigurationController", () => {
     const keycloakUserTemp = createKeycloakUserInToken();
     const userTemp = User.create({
       email: keycloakUserTemp.email,
-      keycloakUserId: keycloakUserTemp.sub,
     });
     const orgTemp = Organization.create({
       name: `organization-temp-${randomUUID()}`,
@@ -196,7 +200,7 @@ describe("aiConfigurationController", () => {
       createdByUserId: userTemp.id,
       members: [userTemp],
     });
-    await usersService.save(userTemp);
+    betterAuthTestingGuard.addUser(userTemp);
     await organizationService.save(orgTemp);
     const aiConfiguration = AiConfiguration.loadFromDb(
       aiConfigurationFactory.build({ ownedByOrganizationId: orgTemp.id }),
@@ -206,9 +210,8 @@ describe("aiConfigurationController", () => {
       .get(`/organizations/${orgTemp.id}/configurations`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          userTemp.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          userTemp.id,
         ),
       );
     expect(response.status).toEqual(200);
@@ -224,7 +227,9 @@ describe("aiConfigurationController", () => {
       .get(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/configurations`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(TestUsersAndOrganizations.users.user1.keycloakUserId, keycloakAuthTestingGuard),
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
+        ),
       );
     expect(response.status).toEqual(403);
   });
@@ -234,7 +239,9 @@ describe("aiConfigurationController", () => {
       .get(`/organizations/${randomUUID()}/configurations`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(TestUsersAndOrganizations.users.user1.keycloakUserId, keycloakAuthTestingGuard),
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
+        ),
       );
     expect(response.status).toEqual(404);
   });
