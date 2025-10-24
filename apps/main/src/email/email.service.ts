@@ -6,9 +6,7 @@ import { compile } from "handlebars";
 import mjml2html from "mjml";
 import { createTransport, Transporter } from "nodemailer";
 import SMTPTransport from "nodemailer/lib/smtp-transport";
-import { sendEmailSubject } from "../auth";
 import { BaseEmail } from "./domain/base-email";
-import { VerifyEmailMail } from "./domain/verify-email-mail";
 
 @Injectable()
 export class EmailService implements OnApplicationBootstrap {
@@ -57,17 +55,5 @@ export class EmailService implements OnApplicationBootstrap {
 
   async onApplicationBootstrap() {
     await this.setupTransporter();
-
-    sendEmailSubject.subscribe(async (subject) => {
-      const verifyMail = VerifyEmailMail.create({
-        to: subject.to.email,
-        subject: "Verify E-Mail address",
-        templateProperties: {
-          link: subject.url,
-          firstName: subject.to.name,
-        },
-      });
-      await this.send(verifyMail);
-    });
   }
 }

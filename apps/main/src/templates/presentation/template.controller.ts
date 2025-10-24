@@ -6,7 +6,8 @@ import {
 } from "@nestjs/common";
 import { ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
 import { hasPermission, PermissionAction } from "@open-dpp/permission";
-import { Session, UserSession } from "@thallesp/nestjs-better-auth";
+import { UserSession } from "../../auth/auth.guard";
+import { Session } from "../../auth/session.decorator";
 import {
   templateDocumentation,
   templateGetAllDocumentation,

@@ -7,13 +7,14 @@ import { APP_GUARD, Reflector } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule } from "@open-dpp/env";
-import { getApp, KeycloakAuthTestingGuard, MongooseTestingModule } from "@open-dpp/testing";
+import { getApp, MongooseTestingModule } from "@open-dpp/testing";
 import request from "supertest";
+import { BetterAuthTestingGuard } from "../../../test/better-auth-testing.guard";
 import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
+import { AuthService } from "../../auth/auth.service";
+import { EmailService } from "../../email/email.service";
 import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
-import { InjectUserToAuthContextGuard } from "../../users/infrastructure/inject-user-to-auth-context.guard";
-import { UserDbSchema, UserDoc } from "../../users/infrastructure/user.schema";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { PassportTemplatePublication } from "../domain/passport-template-publication";
 import { passportTemplatePublicationPropsFactory } from "../fixtures/passport.template.factory";
@@ -27,11 +28,8 @@ import { PassportTemplatePublicationController } from "./passport-template-publi
 
 describe("passportTemplateController", () => {
   let app: INestApplication;
-  const reflector: Reflector = new Reflector();
-  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(
-    new Map(),
-    reflector,
-  );
+  const betterAuthTestingGuard = new BetterAuthTestingGuard(new Reflector());
+  betterAuthTestingGuard.loadUsers([TestUsersAndOrganizations.users.user1, TestUsersAndOrganizations.users.user2]);
 
   let mongoConnection: Connection;
   let module: TestingModule;
@@ -53,10 +51,6 @@ describe("passportTemplateController", () => {
             name: OrganizationDoc.name,
             schema: OrganizationDbSchema,
           },
-          {
-            name: UserDoc.name,
-            schema: UserDbSchema,
-          },
         ]),
       ],
       providers: [
@@ -64,12 +58,21 @@ describe("passportTemplateController", () => {
         UsersService,
         PassportTemplatePublicationService,
         {
-          provide: APP_GUARD,
-          useValue: keycloakAuthTestingGuard,
+          provide: EmailService,
+          useValue: {
+            send: jest.fn(),
+          },
+        },
+        {
+          provide: AuthService,
+          useValue: {
+            getSession: jest.fn(),
+            getUserById: jest.fn(),
+          },
         },
         {
           provide: APP_GUARD,
-          useClass: InjectUserToAuthContextGuard,
+          useValue: betterAuthTestingGuard,
         },
       ],
       controllers: [PassportTemplatePublicationController],
@@ -78,18 +81,15 @@ describe("passportTemplateController", () => {
     app = module.createNestApplication();
     mongoConnection = module.get(getConnectionToken());
     passportTemplateService = module.get(PassportTemplatePublicationService);
-    const usersService = module.get(UsersService);
     const organizationService = module.get(OrganizationsService);
 
     await app.init();
 
-    await usersService.save(TestUsersAndOrganizations.users.user1);
     await organizationService.save(TestUsersAndOrganizations.organizations.org1);
     await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
   beforeEach(() => {
     jest.spyOn(Date, "now").mockImplementation(() => mockNow.getTime());
-    jest.spyOn(reflector, "get").mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -97,7 +97,6 @@ describe("passportTemplateController", () => {
   });
 
   it(`/GET find all passport templates`, async () => {
-    jest.spyOn(reflector, "get").mockReturnValue(true);
     const passportTemplate = PassportTemplatePublication.loadFromDb(
       passportTemplatePublicationPropsFactory.build(),
     );

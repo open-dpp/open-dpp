@@ -41,11 +41,9 @@
     "@nestjs/swagger": "^11.2.1",
     "@nestjs/websockets": "^11.1.6",
     "@open-dpp/api-client": "workspace:*",
-    "@open-dpp/auth": "workspace:*",
     "@open-dpp/env": "workspace:*",
     "@open-dpp/exception": "workspace:*",
     "@open-dpp/permission": "workspace:*",
-    "@thallesp/nestjs-better-auth": "^2.1.0",
     "axios": "^1.12.2",
     "better-auth": "^1.3.28",
     "class-transformer": "^0.5.1",
@@ -126,11 +124,14 @@
       ]
     },
     "transformIgnorePatterns": [
-      "node_modules/(?!((?:\\.pnpm/.*?/)?(?:@(?:open-dpp|keycloak)|url-join|url-template|camelize-ts|uuid))(?:/|$))"
+      "node_modules/(?!((?:\\.pnpm/.*?/)?(?:@(?:open-dpp)|jose|@noble|uuid))(?:/|$))"
     ],
     "moduleNameMapper": {
       "^@open-dpp/(.*)$": "<rootDir>/../../packages/$1/src"
     },
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "setupFiles": [
+      "<rootDir>/test/setup-jest.ts"
+    ]
   }
 }

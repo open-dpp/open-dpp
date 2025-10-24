@@ -14,8 +14,9 @@ import {
   hasPermission,
   PermissionAction,
 } from "@open-dpp/permission";
-import { Session, UserSession } from "@thallesp/nestjs-better-auth";
 import { omit } from "lodash";
+import { UserSession } from "../../auth/auth.guard";
+import { Session } from "../../auth/session.decorator";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { TemplateService } from "../../templates/infrastructure/template.service";
@@ -207,7 +208,6 @@ export class TemplateDraftController {
       const user = User.loadFromDb({
         id: session.user.id,
         email: session.user.email,
-        keycloakUserId: session.user.id,
       });
       const marketplaceResponse = await this.marketplaceService.upload(
         publishedProductDataModel,

@@ -6,33 +6,29 @@ import {
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { AuthService, UserSession } from "@thallesp/nestjs-better-auth";
-import { auth, getUserByEmail, getUserById } from "../../auth";
+import { UserSession } from "../../auth/auth.guard";
+import { AuthService } from "../../auth/auth.service";
 import { InviteUserToOrganizationMail } from "../../email/domain/invite-user-to-organization-mail";
 import { EmailService } from "../../email/email.service";
 import { User } from "../../users/domain/user";
-import { UsersService } from "../../users/infrastructure/users.service";
 import { Organization } from "../domain/organization";
 import { OrganizationDoc, OrganizationSchemaVersion } from "./organization.schema";
 
 @Injectable()
 export class OrganizationsService {
   private organizationDoc: MongooseModel<OrganizationDoc>;
-  private readonly usersService: UsersService;
-  private readonly authService: AuthService<typeof auth>;
   private readonly emailService: EmailService;
+  private readonly authService: AuthService;
 
   constructor(
     @InjectModel(OrganizationDoc.name)
     organizationDoc: MongooseModel<OrganizationDoc>,
-    usersService: UsersService,
-    authService: AuthService<typeof auth>,
     emailService: EmailService,
+    authService: AuthService,
   ) {
     this.organizationDoc = organizationDoc;
-    this.usersService = usersService;
-    this.authService = authService;
     this.emailService = emailService;
+    this.authService = authService;
   }
 
   async convertToDomain(
@@ -42,13 +38,12 @@ export class OrganizationsService {
     const members = [];
     for (const member of orgDoc.members) {
       // const user = await this.usersService.findOne(member);
-      const user = await getUserById(member);
-      const userId = (user as unknown as { _id: string })._id;
+      const user = await this.authService.getUserById(member);
       if (user) {
+        const userId = (user as unknown as { _id: string })._id;
         members.push(User.loadFromDb({
           id: userId,
           email: user.email,
-          keycloakUserId: userId,
         }));
       }
     }
@@ -100,7 +95,7 @@ export class OrganizationsService {
       throw new BadRequestException();
     }
     const org = await this.findOneOrFail(organizationId);
-    const userToInvite = await getUserByEmail(email);
+    const userToInvite = await this.authService.getUserByEmail(email);
     const userToInviteId = (userToInvite as unknown as { _id: string })._id;
     if (!userToInvite) {
       throw new NotFoundException(); // TODO: Fix user enumeration
@@ -111,7 +106,6 @@ export class OrganizationsService {
     org.members.push(User.loadFromDb({
       id: userToInviteId,
       email: userToInvite.email,
-      keycloakUserId: userToInviteId,
     }));
     await this.save(org);
     await this.emailService.send(InviteUserToOrganizationMail.create({

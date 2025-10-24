@@ -9,7 +9,8 @@ import {
   Post,
 } from "@nestjs/common";
 import { hasPermission, OrganizationSubject, PermissionAction } from "@open-dpp/permission";
-import { Session, UserSession } from "@thallesp/nestjs-better-auth";
+import { UserSession } from "../../auth/auth.guard";
+import { Session } from "../../auth/session.decorator";
 import { User } from "../../users/domain/user";
 import { Organization } from "../domain/organization";
 import { OrganizationsService } from "../infrastructure/organizations.service";
@@ -32,7 +33,6 @@ export class OrganizationsController {
     const user = User.loadFromDb({
       id: session.user.id,
       email: session.user.email,
-      keycloakUserId: session.user.id,
     });
     if (!hasPermission({
       user: {
@@ -56,7 +56,6 @@ export class OrganizationsController {
     const user = User.loadFromDb({
       id: session.user.id,
       email: session.user.email,
-      keycloakUserId: session.user.id,
     });
     const organizations = await this.organizationsService.findAllWhereMember(user);
     const accessibleOrganizations = [];

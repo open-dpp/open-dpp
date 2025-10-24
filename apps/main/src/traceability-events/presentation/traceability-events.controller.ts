@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
-import { Session, UserSession } from "@thallesp/nestjs-better-auth";
+import { UserSession } from "../../auth/auth.guard";
+import { Session } from "../../auth/session.decorator";
 import { TraceabilityEventsService } from "../infrastructure/traceability-events.service";
 
 @Controller("dpp-events")

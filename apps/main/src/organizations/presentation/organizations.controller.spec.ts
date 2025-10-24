@@ -1,25 +1,22 @@
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { INestApplication } from "@nestjs/common";
-import { APP_GUARD } from "@nestjs/core";
+import { APP_GUARD, Reflector } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
-import getKeycloakAuthToken, {
+import {
   createKeycloakUserInToken,
   getApp,
-  KeycloakAuthTestingGuard,
-  KeycloakResourcesServiceTesting,
   MongooseTestingModule,
 } from "@open-dpp/testing";
 import request from "supertest";
+import { BetterAuthTestingGuard, getBetterAuthToken } from "../../../test/better-auth-testing.guard";
 import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
-import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
-
+import { AuthService } from "../../auth/auth.service";
+import { EmailService } from "../../email/email.service";
 import { User } from "../../users/domain/user";
-import { InjectUserToAuthContextGuard } from "../../users/infrastructure/inject-user-to-auth-context.guard";
-import { UserDbSchema, UserDoc } from "../../users/infrastructure/user.schema";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { Organization } from "../domain/organization";
 import { OrganizationDbSchema, OrganizationDoc } from "../infrastructure/organization.schema";
@@ -29,11 +26,10 @@ import { OrganizationsController } from "./organizations.controller";
 describe("organizationController", () => {
   let app: INestApplication;
   let service: OrganizationsService;
-  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(
-    new Map(),
-  );
   let organizationService: OrganizationsService;
-  let usersService: UsersService;
+
+  const betterAuthTestingGuard = new BetterAuthTestingGuard(new Reflector());
+  betterAuthTestingGuard.loadUsers([TestUsersAndOrganizations.users.user1, TestUsersAndOrganizations.users.user2]);
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -45,50 +41,41 @@ describe("organizationController", () => {
             name: OrganizationDoc.name,
             schema: OrganizationDbSchema,
           },
-          {
-            name: UserDoc.name,
-            schema: UserDbSchema,
-          },
         ]),
       ],
       providers: [
         UsersService,
         OrganizationsService,
-        KeycloakResourcesService,
         {
-          provide: APP_GUARD,
-          useValue: keycloakAuthTestingGuard,
+          provide: EmailService,
+          useValue: {
+            send: jest.fn(),
+          },
+        },
+        {
+          provide: AuthService,
+          useValue: {
+            getSession: jest.fn(),
+            getUserById: betterAuthTestingGuard.getUserById.bind(betterAuthTestingGuard),
+          },
         },
         {
           provide: APP_GUARD,
-          useClass: InjectUserToAuthContextGuard,
+          useValue: betterAuthTestingGuard,
         },
       ],
       controllers: [OrganizationsController],
     })
-      .overrideProvider(KeycloakResourcesService)
-      .useValue(
-        KeycloakResourcesServiceTesting.fromPlain({
-          users: [
-            {
-              id: TestUsersAndOrganizations.keycloakUsers.keycloakUser1.sub,
-              email: TestUsersAndOrganizations.keycloakUsers.keycloakUser1.email,
-            },
-          ],
-        }),
-      )
       .compile();
 
     service = moduleRef.get<OrganizationsService>(OrganizationsService);
     organizationService = moduleRef.get(OrganizationsService);
-    usersService = moduleRef.get(UsersService);
 
     app = moduleRef.createNestApplication();
     app.useGlobalFilters(new NotFoundInDatabaseExceptionFilter());
 
     await app.init();
 
-    await usersService.save(TestUsersAndOrganizations.users.user1);
     await organizationService.save(TestUsersAndOrganizations.organizations.org1);
     await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
@@ -100,9 +87,8 @@ describe("organizationController", () => {
         .post("/organizations")
         .set(
           "Authorization",
-          getKeycloakAuthToken(
-            TestUsersAndOrganizations.users.user1.keycloakUserId,
-            keycloakAuthTestingGuard,
+          getBetterAuthToken(
+            TestUsersAndOrganizations.users.user1.id,
           ),
         )
         .send(body);
@@ -123,9 +109,8 @@ describe("organizationController", () => {
         .get("/organizations")
         .set(
           "Authorization",
-          getKeycloakAuthToken(
-            TestUsersAndOrganizations.users.user1.keycloakUserId,
-            keycloakAuthTestingGuard,
+          getBetterAuthToken(
+            TestUsersAndOrganizations.users.user1.id,
           ),
         );
 
@@ -145,9 +130,8 @@ describe("organizationController", () => {
         .get("/organizations")
         .set(
           "Authorization",
-          getKeycloakAuthToken(
-            TestUsersAndOrganizations.users.user1.keycloakUserId,
-            keycloakAuthTestingGuard,
+          getBetterAuthToken(
+            TestUsersAndOrganizations.users.user1.id,
           ),
         );
 
@@ -177,9 +161,8 @@ describe("organizationController", () => {
         .get(`/organizations/${org.id}`)
         .set(
           "Authorization",
-          getKeycloakAuthToken(
-            TestUsersAndOrganizations.users.user1.keycloakUserId,
-            keycloakAuthTestingGuard,
+          getBetterAuthToken(
+            TestUsersAndOrganizations.users.user1.id,
           ),
         );
 
@@ -195,9 +178,8 @@ describe("organizationController", () => {
         .get(`/organizations/${orgId}`)
         .set(
           "Authorization",
-          getKeycloakAuthToken(
-            TestUsersAndOrganizations.users.user1.keycloakUserId,
-            keycloakAuthTestingGuard,
+          getBetterAuthToken(
+            TestUsersAndOrganizations.users.user1.id,
           ),
         );
 
@@ -217,9 +199,8 @@ describe("organizationController", () => {
       const keycloakUserTemp = createKeycloakUserInToken();
       const userTemp = User.create({
         email: keycloakUserTemp.email,
-        keycloakUserId: keycloakUserTemp.sub,
       });
-      await usersService.save(userTemp);
+      betterAuthTestingGuard.addUser(userTemp);
       org.join(userTemp);
       const savedOrg = await service.save(org);
 
@@ -227,9 +208,8 @@ describe("organizationController", () => {
         .get(`/organizations/${savedOrg.id}/members`)
         .set(
           "Authorization",
-          getKeycloakAuthToken(
-            TestUsersAndOrganizations.users.user1.keycloakUserId,
-            keycloakAuthTestingGuard,
+          getBetterAuthToken(
+            userTemp.id,
           ),
         );
 
@@ -253,9 +233,8 @@ describe("organizationController", () => {
         .get(`/organizations/${orgId}/members`)
         .set(
           "Authorization",
-          getKeycloakAuthToken(
-            TestUsersAndOrganizations.users.user1.keycloakUserId,
-            keycloakAuthTestingGuard,
+          getBetterAuthToken(
+            TestUsersAndOrganizations.users.user1.id,
           ),
         );
 

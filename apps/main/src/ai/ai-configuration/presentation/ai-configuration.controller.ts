@@ -1,7 +1,8 @@
 import { Body, Controller, ForbiddenException, Get, Param, Put } from "@nestjs/common";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { hasPermission, PermissionAction } from "@open-dpp/permission";
-import { Session, UserSession } from "@thallesp/nestjs-better-auth";
+import { UserSession } from "../../../auth/auth.guard";
+import { Session } from "../../../auth/session.decorator";
 import { OrganizationsService } from "../../../organizations/infrastructure/organizations.service";
 import { AiConfiguration } from "../domain/ai-configuration";
 import { AiConfigurationService } from "../infrastructure/ai-configuration.service";

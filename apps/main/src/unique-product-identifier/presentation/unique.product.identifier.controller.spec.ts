@@ -7,19 +7,18 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { ALLOW_SERVICE_ACCESS } from "@open-dpp/auth";
 import { EnvModule } from "@open-dpp/env";
-import getKeycloakAuthToken, {
-  KeycloakAuthTestingGuard,
-  KeycloakResourcesServiceTesting,
+import {
   MongooseTestingModule,
 } from "@open-dpp/testing";
 import request from "supertest";
+import { BetterAuthTestingGuard, getBetterAuthToken } from "../../../test/better-auth-testing.guard";
 import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
+import { AuthService } from "../../auth/auth.service";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { EmailService } from "../../email/email.service";
 import { Item } from "../../items/domain/item";
-
 import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
 import { ItemsService } from "../../items/infrastructure/items.service";
-import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
@@ -29,8 +28,6 @@ import { phoneFactory } from "../../product-passport/fixtures/product-passport.f
 import { Template } from "../../templates/domain/template";
 import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
 import { TemplateService } from "../../templates/infrastructure/template.service";
-import { InjectUserToAuthContextGuard } from "../../users/infrastructure/inject-user-to-auth-context.guard";
-import { UserDbSchema, UserDoc } from "../../users/infrastructure/user.schema";
 import { UsersService } from "../../users/infrastructure/users.service";
 import {
   UniqueProductIdentifierDoc,
@@ -48,13 +45,11 @@ describe("uniqueProductIdentifierController", () => {
 
   let templateService: TemplateService;
   const reflector: Reflector = new Reflector();
-  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(
-    new Map(),
-    reflector,
-    new Map([["SERVICE_TOKEN", serviceToken]]),
-  );
   let organizationService: OrganizationsService;
-  let usersService: UsersService;
+
+  const betterAuthTestingGuard = new BetterAuthTestingGuard(new Reflector());
+  betterAuthTestingGuard.loadUsers([TestUsersAndOrganizations.users.user1, TestUsersAndOrganizations.users.user2]);
+  betterAuthTestingGuard.addServiceToken(serviceToken, TestUsersAndOrganizations.users.user1);
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -82,56 +77,47 @@ describe("uniqueProductIdentifierController", () => {
             name: OrganizationDoc.name,
             schema: OrganizationDbSchema,
           },
-          {
-            name: UserDoc.name,
-            schema: UserDbSchema,
-          },
         ]),
       ],
       providers: [
         UsersService,
         OrganizationsService,
-        KeycloakResourcesService,
         ModelsService,
         UniqueProductIdentifierService,
         UniqueProductIdentifierApplicationService,
         ItemsService,
         TemplateService,
         {
-          provide: APP_GUARD,
-          useValue: keycloakAuthTestingGuard,
+          provide: EmailService,
+          useValue: {
+            send: jest.fn(),
+          },
+        },
+        {
+          provide: AuthService,
+          useValue: {
+            getSession: jest.fn(),
+            getUserById: jest.fn(),
+          },
         },
         {
           provide: APP_GUARD,
-          useClass: InjectUserToAuthContextGuard,
+          useValue: betterAuthTestingGuard,
         },
       ],
       controllers: [UniqueProductIdentifierController],
     })
-      .overrideProvider(KeycloakResourcesService)
-      .useValue(
-        KeycloakResourcesServiceTesting.fromPlain({
-          users: [
-            {
-              id: TestUsersAndOrganizations.keycloakUsers.keycloakUser1.sub,
-              email: TestUsersAndOrganizations.keycloakUsers.keycloakUser1.email,
-            },
-          ],
-        }),
-      )
       .compile();
 
     modelsService = moduleRef.get(ModelsService);
     itemsService = moduleRef.get(ItemsService);
     templateService = moduleRef.get<TemplateService>(TemplateService);
     organizationService = moduleRef.get(OrganizationsService);
-    usersService = moduleRef.get(UsersService);
 
     app = moduleRef.createNestApplication();
 
     await app.init();
 
-    await usersService.save(TestUsersAndOrganizations.users.user1);
     await organizationService.save(TestUsersAndOrganizations.organizations.org1);
     await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
@@ -170,9 +156,8 @@ describe("uniqueProductIdentifierController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       );
 
@@ -225,7 +210,7 @@ describe("uniqueProductIdentifierController", () => {
     const response = await request(app.getHttpServer())
       .get(`/unique-product-identifiers/${randomUUID()}/metadata`)
       .set("service_token", "invalid_token");
-    expect(response.status).toEqual(401);
+    expect(response.status).toEqual(403);
   });
 
   it(`/GET model reference of unique product identifier`, async () => {
@@ -245,9 +230,8 @@ describe("uniqueProductIdentifierController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       );
     expect(response.status).toEqual(200);

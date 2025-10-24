@@ -1,18 +1,21 @@
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { INestApplication } from "@nestjs/common";
-import { APP_GUARD } from "@nestjs/core";
+import { APP_GUARD, Reflector } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
-import getKeycloakAuthToken, { getApp, ignoreIds, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
+import { getApp, ignoreIds, MongooseTestingModule } from "@open-dpp/testing";
 import request from "supertest";
+import { BetterAuthTestingGuard, getBetterAuthToken } from "../../../test/better-auth-testing.guard";
 import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
+import { AuthService } from "../../auth/auth.service";
+import { EmailModule } from "../../email/email.module";
+import { EmailService } from "../../email/email.service";
 import { AasConnectionDoc, AasConnectionSchema } from "../../integrations/infrastructure/aas-connection.schema";
 import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
 import { ItemsService } from "../../items/infrastructure/items.service";
-import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,
@@ -40,8 +43,6 @@ import {
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
-import { InjectUserToAuthContextGuard } from "../../users/infrastructure/inject-user-to-auth-context.guard";
-import { UserDbSchema, UserDoc } from "../../users/infrastructure/user.schema";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { Model } from "../domain/model";
 import { ModelDoc, ModelSchema } from "../infrastructure/model.schema";
@@ -54,8 +55,10 @@ describe("modelsController", () => {
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
   let modelsService: ModelsService;
   let templateService: TemplateService;
-  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
   let marketplaceService: MarketplaceApplicationService;
+
+  const betterAuthTestingGuard = new BetterAuthTestingGuard(new Reflector());
+  betterAuthTestingGuard.loadUsers([TestUsersAndOrganizations.users.user1, TestUsersAndOrganizations.users.user2]);
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -95,16 +98,12 @@ describe("modelsController", () => {
             name: OrganizationDoc.name,
             schema: OrganizationDbSchema,
           },
-          {
-            name: UserDoc.name,
-            schema: UserDbSchema,
-          },
         ]),
+        EmailModule,
       ],
       providers: [
         UsersService,
         OrganizationsService,
-        KeycloakResourcesService,
         ModelsService,
         ItemsService,
         UniqueProductIdentifierService,
@@ -112,22 +111,25 @@ describe("modelsController", () => {
         MarketplaceApplicationService,
         PassportTemplatePublicationService,
         {
-          provide: APP_GUARD,
-          useValue: keycloakAuthTestingGuard,
+          provide: EmailService,
+          useValue: {
+            send: jest.fn(),
+          },
+        },
+        {
+          provide: AuthService,
+          useValue: {
+            getSession: jest.fn(),
+            getUserById: jest.fn(),
+          },
         },
         {
           provide: APP_GUARD,
-          useClass: InjectUserToAuthContextGuard,
+          useValue: betterAuthTestingGuard,
         },
       ],
       controllers: [ModelsController],
     })
-      .overrideProvider(KeycloakResourcesService)
-      .useValue(
-        KeycloakResourcesServiceTesting.fromPlain({
-          users: [{ id: TestUsersAndOrganizations.keycloakUsers.keycloakUser1.sub, email: TestUsersAndOrganizations.keycloakUsers.keycloakUser1.email }],
-        }),
-      )
       .compile();
 
     uniqueProductIdentifierService = moduleRef.get(
@@ -138,7 +140,6 @@ describe("modelsController", () => {
     marketplaceService = moduleRef.get<MarketplaceApplicationService>(
       MarketplaceApplicationService,
     );
-    const usersService = moduleRef.get(UsersService);
     const organizationService = moduleRef.get(OrganizationsService);
 
     app = moduleRef.createNestApplication();
@@ -146,7 +147,6 @@ describe("modelsController", () => {
 
     await app.init();
 
-    await usersService.save(TestUsersAndOrganizations.users.user1);
     await organizationService.save(TestUsersAndOrganizations.organizations.org1);
     await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
@@ -171,9 +171,8 @@ describe("modelsController", () => {
       .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -194,9 +193,8 @@ describe("modelsController", () => {
 
   it(`/CREATE model using template from marketplace`, async () => {
     const template = Template.loadFromDb(laptopModel);
-    const token = getKeycloakAuthToken(
-      TestUsersAndOrganizations.users.user1.keycloakUserId,
-      keycloakAuthTestingGuard,
+    const token = getBetterAuthToken(
+      TestUsersAndOrganizations.users.user1.id,
     );
     const { id: marketplaceResourceId } = await marketplaceService.upload(
       template,
@@ -230,9 +228,8 @@ describe("modelsController", () => {
       .post(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/models`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -254,9 +251,8 @@ describe("modelsController", () => {
       .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -274,9 +270,8 @@ describe("modelsController", () => {
       .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -299,9 +294,8 @@ describe("modelsController", () => {
       .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(body);
@@ -343,9 +337,8 @@ describe("modelsController", () => {
       .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       );
     expect(response.status).toEqual(200);
@@ -389,9 +382,8 @@ describe("modelsController", () => {
       .get(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/models`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       );
     expect(response.status).toEqual(403);
@@ -411,9 +403,8 @@ describe("modelsController", () => {
       .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       );
     expect(response.status).toEqual(200);
@@ -434,9 +425,8 @@ describe("modelsController", () => {
       .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       );
     expect(response.status).toEqual(403);
@@ -456,9 +446,8 @@ describe("modelsController", () => {
       .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       );
     expect(response.status).toEqual(403);
@@ -498,9 +487,8 @@ describe("modelsController", () => {
       .patch(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/data-values`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(updatedValues);
@@ -552,9 +540,8 @@ describe("modelsController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(updatedValues);
@@ -586,9 +573,8 @@ describe("modelsController", () => {
       .patch(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/data-values`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(updatedValues);
@@ -625,9 +611,8 @@ describe("modelsController", () => {
       .patch(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/data-values`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(updatedValues);
@@ -675,9 +660,8 @@ describe("modelsController", () => {
       .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/data-values`)
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(addedValues);
@@ -711,9 +695,8 @@ describe("modelsController", () => {
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          TestUsersAndOrganizations.users.user1.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send(addedValues);

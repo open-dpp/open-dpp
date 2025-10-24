@@ -15,7 +15,8 @@ import { ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
 
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { hasPermission, PermissionAction } from "@open-dpp/permission";
-import { Session, UserSession } from "@thallesp/nestjs-better-auth";
+import { UserSession } from "../../auth/auth.guard";
+import { Session } from "../../auth/session.decorator";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { modelParamDocumentation } from "../../open-api-docs/item.doc";

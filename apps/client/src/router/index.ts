@@ -51,6 +51,14 @@ export const routes: RouteRecordRaw[] = [
       layout: "none",
     },
   },
+  {
+    path: "/password-reset",
+    name: "PasswordReset",
+    component: () => import("../view/auth/PasswordReset.vue"),
+    meta: {
+      layout: "none",
+    },
+  },
   ...AUTH_ROUTES,
   ...ORGANIZATION_ROUTES,
   ...MARKETPLACE_ROUTES,
@@ -67,7 +75,7 @@ router.beforeEach(async (to, from, next) => {
   const layoutStore = useLayoutStore();
   layoutStore.isPageLoading = true;
   const session = authClient.useSession();
-  const publicAuthRoutes = ["Signin", "Signup", "Signout"];
+  const publicAuthRoutes = ["Signin", "Signup", "Signout", "PasswordReset"];
   if (session.value.data === null && !publicAuthRoutes.includes(to.name as string)) {
     next("/signin");
   }

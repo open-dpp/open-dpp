@@ -11,10 +11,11 @@ import {
   Patch,
   Post,
 } from "@nestjs/common";
-import { Public } from "@open-dpp/auth";
 import { EnvService } from "@open-dpp/env";
 import { hasPermission, PermissionAction } from "@open-dpp/permission";
-import { Session, UserSession } from "@thallesp/nestjs-better-auth";
+import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
+import { UserSession } from "../../auth/auth.guard";
+import { Session } from "../../auth/session.decorator";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { itemToDto } from "../../items/presentation/dto/item.dto";
 import { ItemsApplicationService } from "../../items/presentation/items-application.service";
@@ -64,8 +65,8 @@ export class AasConnectionController {
     this.uniqueProductIdentifierService = uniqueProductIdentifierService;
   }
 
-  @Public()
-  @Post("/connections/:connectionId/items/")
+  @AllowAnonymous()
+  @Post("/connections/:connectionId/items")
   async upsertItem(
     @Headers("API_TOKEN") apiToken: string,
     @Param("orgaId") organizationId: string,

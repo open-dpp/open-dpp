@@ -1,28 +1,25 @@
 import type { TestingModule } from "@nestjs/testing";
 import type { Connection, Model as MongooseModel } from "mongoose";
-import type { TraceabilityEvent } from "../../traceability-events/domain/traceability-event";
-import type { TraceabilityEventWrapper } from "../../traceability-events/domain/traceability-event-wrapper";
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { expect, jest } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { ignoreIds, KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
+import { ignoreIds, MongooseTestingModule } from "@open-dpp/testing";
 import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
-import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
+import { AuthService } from "../../auth/auth.service";
+import { EmailService } from "../../email/email.service";
 import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import { Template } from "../../templates/domain/template";
 import { laptopFactory } from "../../templates/fixtures/laptop.factory";
-import { TraceabilityEventsService } from "../../traceability-events/infrastructure/traceability-events.service";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
-import { UserDbSchema, UserDoc } from "../../users/infrastructure/user.schema";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { Model } from "../domain/model";
 import { ModelDoc, ModelDocSchemaVersion, ModelSchema } from "./model.schema";
@@ -51,10 +48,6 @@ describe("modelsService", () => {
             name: OrganizationDoc.name,
             schema: OrganizationDbSchema,
           },
-          {
-            name: UserDoc.name,
-            schema: UserDbSchema,
-          },
         ]),
       ],
       providers: [
@@ -62,31 +55,28 @@ describe("modelsService", () => {
         UniqueProductIdentifierService,
         OrganizationsService,
         UsersService,
-        KeycloakResourcesService,
         {
-          provide: TraceabilityEventsService,
+          provide: EmailService,
           useValue: {
-            save: jest
-              .fn()
-              .mockImplementation(
-                (event: TraceabilityEventWrapper<TraceabilityEvent>) =>
-                  Promise.resolve(event),
-              ),
+            send: jest.fn(),
+          },
+        },
+        {
+          provide: AuthService,
+          useValue: {
+            getSession: jest.fn(),
+            getUserById: jest.fn(),
           },
         },
       ],
     })
-      .overrideProvider(KeycloakResourcesService)
-      .useClass(KeycloakResourcesServiceTesting)
       .compile();
 
     modelsService = module.get<ModelsService>(ModelsService);
     mongoConnection = module.get<Connection>(getConnectionToken());
     modelDoc = mongoConnection.model(ModelDoc.name, ModelSchema);
 
-    const usersService = module.get(UsersService);
     const organizationService = module.get<OrganizationsService>(OrganizationsService);
-    await usersService.save(TestUsersAndOrganizations.users.user1);
     await organizationService.save(TestUsersAndOrganizations.organizations.org1);
     await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });

@@ -1,7 +1,8 @@
 import { Controller, ForbiddenException, Get, Param } from "@nestjs/common";
 import { AllowServiceAccess } from "@open-dpp/auth";
 import { hasPermission, PermissionAction } from "@open-dpp/permission";
-import { Session, UserSession } from "@thallesp/nestjs-better-auth";
+import { UserSession } from "../../auth/auth.guard";
+import { Session } from "../../auth/session.decorator";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
