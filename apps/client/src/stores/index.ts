@@ -1,39 +1,14 @@
-import type { ComputedRef } from "vue";
-import type { Composer } from "vue-i18n";
-import dayjs from "dayjs";
 import { defineStore } from "pinia";
-import { usePrimeVue } from "primevue";
-import { computed, ref, watch } from "vue";
-import { LAST_SELECTED_LANGUAGE, LAST_SELECTED_ORGANIZATION_ID_KEY } from "../const";
+import { ref, watch } from "vue";
+import { LAST_SELECTED_ORGANIZATION_ID_KEY } from "../const";
 import apiClient from "../lib/api-client";
-import { i18n } from "../translations/i18n.ts";
-import { dePrimeVue } from "../translations/primevue/de.ts";
-import { enPrimeVue } from "../translations/primevue/en.ts";
 
 export const useIndexStore = defineStore("index", () => {
-  const primevue = usePrimeVue();
   const selectedOrganization = ref<string | null>(
     localStorage.getItem(LAST_SELECTED_ORGANIZATION_ID_KEY)
       ? localStorage.getItem(LAST_SELECTED_ORGANIZATION_ID_KEY)
       : null,
   );
-
-  const initialLocale
-    = localStorage.getItem(LAST_SELECTED_LANGUAGE)
-      || (i18n.global as unknown as Composer).locale.value
-      || "en-US"; // Hack to make typescript happy
-
-  // Hack to make typescript happy
-  (i18n.global as unknown as Composer).locale.value = initialLocale;
-
-  const locale: ComputedRef<"en" | "de"> = computed(() => {
-    const code = initialLocale.toLowerCase();
-    if (code.startsWith("de"))
-      return "de";
-    if (code.startsWith("en"))
-      return "en";
-    return "en"; // fallback
-  });
 
   const selectOrganization = (organizationId: string | null) => {
     if (!organizationId) {
@@ -47,17 +22,6 @@ export const useIndexStore = defineStore("index", () => {
   };
 
   watch(
-    () => locale,
-    (newVal) => {
-      dayjs.locale(newVal.value);
-      primevue.config.locale = newVal.value === "de" ? dePrimeVue : enPrimeVue;
-    },
-    {
-      immediate: true,
-    },
-  );
-
-  watch(
     () => selectedOrganization.value,
     (newVal) => {
       if (newVal) {
@@ -69,5 +33,5 @@ export const useIndexStore = defineStore("index", () => {
     },
   );
 
-  return { selectedOrganization, locale, selectOrganization };
+  return { selectedOrganization, selectOrganization };
 });

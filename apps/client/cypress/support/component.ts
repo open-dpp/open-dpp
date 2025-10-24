@@ -80,15 +80,6 @@ Cypress.Commands.add(
           },
         } as const);
 
-    // const primeVuePlugin
-    //   = {
-    //     install(app: App) {
-    //       app.use(PrimeVue, { theme: {
-    //         preset: Aura,
-    //       } });
-    //     },
-    //   } as const;
-
     // Build a typed plugins array to avoid complex unions
     const plugins = [
       ...basePlugins,
