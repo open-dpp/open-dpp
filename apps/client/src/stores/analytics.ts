@@ -13,6 +13,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useRoute } from "vue-router";
 import apiClient from "../lib/api-client";
+import { getCurrentTimezone, getNowInCurrentTimezone } from "../lib/time.ts";
 import { i18n } from "../translations/i18n";
 import { useErrorHandlingStore } from "./error.handling";
 
@@ -37,7 +38,8 @@ export const useAnalyticsStore = defineStore("analytics", () => {
   const errorHandlingStore = useErrorHandlingStore();
 
   const getStartAndEndDate = (timeView: TimeView) => {
-    const now = dayjs();
+    const dateNow = getNowInCurrentTimezone();
+    const now = dayjs(dateNow);
     const units: { [key in TimeView]: dayjs.OpUnitType } = {
       [TimeView.DAYLY]: "day",
       [TimeView.WEEKLY]: "week",
@@ -68,12 +70,13 @@ export const useAnalyticsStore = defineStore("analytics", () => {
       [TimeView.YEARLY]: TimePeriod.MONTH,
     };
 
+    const timezone = getCurrentTimezone();
     try {
       const response = await apiClient.analytics.passportMetric.query({
         ...omit(query, "selectedView"),
         startDate,
         endDate,
-        timezone: dayjs.tz.guess(),
+        timezone,
         period: timePeriods[requestedTimeView.value],
       });
       passportMeasurements.value = response.data;
@@ -102,7 +105,7 @@ export const useAnalyticsStore = defineStore("analytics", () => {
       [TimeView.MONTHLY]: "DD.MM",
       [TimeView.YEARLY]: "MMMM",
     };
-    return dayjs(isoDateString, undefined, dayjs.tz.guess()).format(
+    return dayjs(isoDateString, undefined, getCurrentTimezone()).format(
       format[requestedTimeView.value],
     );
   };

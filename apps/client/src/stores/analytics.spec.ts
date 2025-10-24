@@ -1,14 +1,17 @@
 import type { PassportMeasurementDto } from "@open-dpp/api-client";
 import { MeasurementType, TimePeriod } from "@open-dpp/api-client";
+import { omit } from "lodash";
 import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useAnalyticsStore } from "./analytics";
+import { TimeView, useAnalyticsStore } from "./analytics";
 
 const mocks = vi.hoisted(() => {
   return {
     addPageView: vi.fn(),
     queryMetric: vi.fn(),
     route: vi.fn(),
+    getCurrentTimezone: vi.fn(),
+    getNow: vi.fn(),
   };
 });
 
@@ -22,6 +25,11 @@ vi.mock("../lib/api-client", () => ({
       },
     },
   },
+}));
+
+vi.mock("../lib/time", () => ({
+  getCurrentTimezone: mocks.getCurrentTimezone,
+  getNowInCurrentTimezone: mocks.getNow,
 }));
 
 const passportUUID = "p1-uuid";
@@ -60,37 +68,43 @@ describe("analyticsStore", () => {
     });
   });
 
-  it.skip("should query metric", async () => {
+  it("should query metric", async () => {
+    mocks.getNow.mockReturnValueOnce(new Date("2022-01-03T12:00:00Z"));
+    mocks.getCurrentTimezone.mockReturnValue("Europe/Berlin");
     const measurements: PassportMeasurementDto[] = [
       {
-        datetime: "2022-01-01T00:00:00.000Z",
+        datetime: "2022-01-03T00:00:00.000Z",
         sum: 2,
       },
       {
-        datetime: "2022-01-02T00:00:00.000Z",
+        datetime: "2022-01-04T00:00:00.000Z",
         sum: 5,
       },
     ];
     mocks.queryMetric.mockResolvedValue({ data: measurements });
     const analyticsStore = useAnalyticsStore();
     const query = {
-      startDate: new Date("2022-01-01T00:00:00.000Z"),
-      endDate: new Date("2022-12-01T00:00:00.000Z"),
       templateId: "t1",
       modelId: "m1",
       valueKey: "http://example.com/",
       type: MeasurementType.PAGE_VIEWS,
-      period: TimePeriod.DAY,
+      selectedView: TimeView.WEEKLY,
     };
     await analyticsStore.queryMetric(query);
-    expect(mocks.queryMetric).toHaveBeenCalledWith(query);
+    expect(mocks.queryMetric).toHaveBeenCalledWith({
+      ...omit(query, "selectedView"),
+      startDate: new Date("2022-01-01T23:00:00.000Z"),
+      endDate: new Date("2022-01-08T22:59:59.999Z"),
+      period: TimePeriod.DAY,
+      timezone: "Europe/Berlin",
+    });
     expect(analyticsStore.getMeasurementsAsTimeseries()).toEqual([
       {
-        x: "01.01",
+        x: "Monday",
         y: 2,
       },
       {
-        x: "02.01",
+        x: "Tuesday",
         y: 5,
       },
     ]);
