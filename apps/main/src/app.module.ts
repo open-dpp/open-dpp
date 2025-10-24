@@ -8,8 +8,6 @@ import { AuthModule, KeycloakAuthGuard } from "@open-dpp/auth";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { AiConfigurationModule } from "./ai/ai-configuration/ai-configuration.module";
 import { AiModule } from "./ai/ai.module";
-import { ChatService } from "./ai/chat.service";
-import { McpClientModule } from "./ai/mcp-client/mcp-client.module";
 import { PassportModule } from "./ai/passports/passport.module";
 import { ChatGateway } from "./ai/presentation/chat.gateway";
 import { AnalyticsModule } from "./analytics/analytics.module";
@@ -65,7 +63,6 @@ import { UsersModule } from "./users/users.module";
     MarketplaceModule,
     AiConfigurationModule,
     AiModule,
-    McpClientModule,
     AnalyticsModule,
     PassportModule,
     AuthModule.forRoot(),
@@ -73,7 +70,6 @@ import { UsersModule } from "./users/users.module";
   controllers: [],
   providers: [
     ChatGateway,
-    ChatService,
     {
       provide: APP_GUARD,
       useClass: KeycloakAuthGuard,

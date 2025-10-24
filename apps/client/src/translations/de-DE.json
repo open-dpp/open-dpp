@@ -281,7 +281,8 @@
     "toPass": "Zur Passansicht",
     "chatWithAI": "Mit KI chatten",
     "productpass": "Produktpass",
-    "askQuestion": "Stellen Sie Ihre Frage..."
+    "askQuestion": "Stellen Sie Ihre Frage...",
+    "answerPending": "Wird verarbeitet..."
   },
   "models": {
     "models": "Produktpässe",
