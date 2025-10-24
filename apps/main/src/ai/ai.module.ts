@@ -8,9 +8,8 @@ import { AiConfigurationService } from "./ai-configuration/infrastructure/ai-con
 import { AiConfigurationController } from "./ai-configuration/presentation/ai-configuration.controller";
 import { ChatService } from "./chat.service";
 import { AiService } from "./infrastructure/ai.service";
-import { McpClientService } from "./mcp-client/mcp-client.service";
+import { McpClientModule } from "./mcp-client/mcp-client.module";
 import { PassportService } from "./passports/passport.service";
-import { ChatGateway } from "./presentation/chat.gateway";
 
 @Module({
   imports: [
@@ -23,16 +22,15 @@ import { ChatGateway } from "./presentation/chat.gateway";
     UniqueProductIdentifierModule,
     EnvModule,
     OrganizationsModule,
+    McpClientModule,
   ],
   controllers: [AiConfigurationController],
   providers: [
-    ChatGateway,
     ChatService,
     AiConfigurationService,
     AiService,
-    McpClientService,
     PassportService,
   ],
-  exports: [AiService, McpClientService],
+  exports: [AiService, ChatService],
 })
 export class AiModule {}

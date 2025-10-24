@@ -7,8 +7,6 @@ import { ServeStaticModule } from "@nestjs/serve-static";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { AiConfigurationModule } from "./ai/ai-configuration/ai-configuration.module";
 import { AiModule } from "./ai/ai.module";
-import { ChatService } from "./ai/chat.service";
-import { McpClientModule } from "./ai/mcp-client/mcp-client.module";
 import { PassportModule } from "./ai/passports/passport.module";
 import { ChatGateway } from "./ai/presentation/chat.gateway";
 import { AuthGuard } from "./auth/auth.guard";
@@ -60,7 +58,6 @@ import { UsersModule } from "./users/users.module";
     MarketplaceModule,
     AiConfigurationModule,
     AiModule,
-    McpClientModule,
     PassportModule,
     AuthModule,
     EmailModule,
@@ -68,7 +65,6 @@ import { UsersModule } from "./users/users.module";
   controllers: [],
   providers: [
     ChatGateway,
-    ChatService,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,

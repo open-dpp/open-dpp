@@ -7,4 +7,9 @@ test:
 full:
 	docker compose up -d
 
-.PHONY: dev test full
+clean-pnpm:
+	find . -name "node_modules" -type d -prune -exec rm -rf '{}' +
+	find . -name "pnpm-lock.yaml" -type f -delete
+	pnpm i
+
+.PHONY: dev test full clean-pnpm
