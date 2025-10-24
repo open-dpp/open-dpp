@@ -1,6 +1,7 @@
 import type { ItemDto, UniqueProductIdentifierDto } from "@open-dpp/api-client";
 import { fireEvent, render, screen, within } from "@testing-library/vue";
 import { createPinia } from "pinia";
+import PrimeVue from "primevue/config";
 import { describe, expect } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 import { routes } from "../../router";
@@ -34,7 +35,7 @@ describe("itemList.vue", () => {
         items,
       },
       global: {
-        plugins: [pinia, router, i18n],
+        plugins: [PrimeVue, pinia, router, i18n],
       },
     });
     expect(screen.getByText("Artikelpässe")).toBeTruthy();

@@ -13,7 +13,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useRoute } from "vue-router";
 import apiClient from "../lib/api-client";
-import { getCurrentTimezone, getNowInCurrentTimezone } from "../lib/time.ts";
+import { getCurrentTimezone } from "../lib/time.ts";
 import { i18n } from "../translations/i18n";
 import { useErrorHandlingStore } from "./error.handling";
 
@@ -37,24 +37,9 @@ export const useAnalyticsStore = defineStore("analytics", () => {
   const passportMeasurements = ref<PassportMeasurementDto[]>([]);
   const errorHandlingStore = useErrorHandlingStore();
 
-  const getStartAndEndDate = (timeView: TimeView) => {
-    const dateNow = getNowInCurrentTimezone();
-    const now = dayjs(dateNow);
-    const units: { [key in TimeView]: dayjs.OpUnitType } = {
-      [TimeView.DAYLY]: "day",
-      [TimeView.WEEKLY]: "week",
-      [TimeView.MONTHLY]: "month",
-      [TimeView.YEARLY]: "year",
-    };
-
-    const unit = units[timeView];
-    return {
-      startDate: now.startOf(unit).toDate(),
-      endDate: now.endOf(unit).toDate(),
-    };
-  };
-
   const queryMetric = async (query: {
+    startDate: Date;
+    endDate: Date;
     templateId: string;
     modelId: string;
     valueKey: string;
@@ -62,7 +47,6 @@ export const useAnalyticsStore = defineStore("analytics", () => {
     selectedView: TimeView;
   }) => {
     requestedTimeView.value = query.selectedView;
-    const { startDate, endDate } = getStartAndEndDate(requestedTimeView.value);
     const timePeriods: { [key in TimeView]: TimePeriod } = {
       [TimeView.DAYLY]: TimePeriod.HOUR,
       [TimeView.WEEKLY]: TimePeriod.DAY,
@@ -74,8 +58,6 @@ export const useAnalyticsStore = defineStore("analytics", () => {
     try {
       const response = await apiClient.analytics.passportMetric.query({
         ...omit(query, "selectedView"),
-        startDate,
-        endDate,
         timezone,
         period: timePeriods[requestedTimeView.value],
       });

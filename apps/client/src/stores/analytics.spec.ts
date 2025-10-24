@@ -69,7 +69,6 @@ describe("analyticsStore", () => {
   });
 
   it("should query metric", async () => {
-    mocks.getNow.mockReturnValueOnce(new Date("2022-01-03T12:00:00Z"));
     mocks.getCurrentTimezone.mockReturnValue("Europe/Berlin");
     const measurements: PassportMeasurementDto[] = [
       {
@@ -84,6 +83,8 @@ describe("analyticsStore", () => {
     mocks.queryMetric.mockResolvedValue({ data: measurements });
     const analyticsStore = useAnalyticsStore();
     const query = {
+      startDate: new Date("2022-01-01T23:00:00.000Z"),
+      endDate: new Date("2022-01-08T22:59:59.999Z"),
       templateId: "t1",
       modelId: "m1",
       valueKey: "http://example.com/",

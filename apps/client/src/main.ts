@@ -5,7 +5,9 @@ import {
 import { de, en } from "@formkit/i18n";
 import { genesisIcons } from "@formkit/icons";
 import { defaultConfig, plugin } from "@formkit/vue";
+import Aura from "@primeuix/themes/aura";
 import { createPinia } from "pinia";
+import PrimeVue from "primevue/config";
 import { createApp } from "vue";
 import { rootClasses } from "../formkit.theme";
 import App from "./App.vue";
@@ -24,6 +26,9 @@ const pinia = createPinia();
 async function startApp() {
   const app = createApp(App).use(pinia);
   app.use(i18n);
+  app.use(PrimeVue, { theme: {
+    preset: Aura,
+  } });
 
   const indexStore = useIndexStore();
 

@@ -4,11 +4,20 @@ import { expect, it, vi } from "vitest";
 import { LAST_SELECTED_ORGANIZATION_ID_KEY } from "../const";
 import apiClient from "../lib/api-client";
 import { useIndexStore } from "./index";
+import "primevue";
 
 vi.mock("../lib/api-client", () => ({
   default: {
     setActiveOrganizationId: vi.fn(),
   },
+}));
+
+vi.mock("primevue", () => ({
+  usePrimeVue: vi.fn().mockReturnValue({
+    config: {
+      locale: "en",
+    },
+  }),
 }));
 
 describe("indexStore", () => {

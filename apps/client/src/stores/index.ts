@@ -2,12 +2,16 @@ import type { ComputedRef } from "vue";
 import type { Composer } from "vue-i18n";
 import dayjs from "dayjs";
 import { defineStore } from "pinia";
+import { usePrimeVue } from "primevue";
 import { computed, ref, watch } from "vue";
 import { LAST_SELECTED_LANGUAGE, LAST_SELECTED_ORGANIZATION_ID_KEY } from "../const";
 import apiClient from "../lib/api-client";
 import { i18n } from "../translations/i18n.ts";
+import { dePrimeVue } from "../translations/primevue/de.ts";
+import { enPrimeVue } from "../translations/primevue/en.ts";
 
 export const useIndexStore = defineStore("index", () => {
+  const primevue = usePrimeVue();
   const selectedOrganization = ref<string | null>(
     localStorage.getItem(LAST_SELECTED_ORGANIZATION_ID_KEY)
       ? localStorage.getItem(LAST_SELECTED_ORGANIZATION_ID_KEY)
@@ -46,6 +50,7 @@ export const useIndexStore = defineStore("index", () => {
     () => locale,
     (newVal) => {
       dayjs.locale(newVal.value);
+      primevue.config.locale = newVal.value === "de" ? dePrimeVue : enPrimeVue;
     },
     {
       immediate: true,
