@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { UserSession } from "../../auth/auth.guard";
 import { AuthService } from "../../auth/auth.service";
@@ -19,16 +20,19 @@ export class OrganizationsService {
   private organizationDoc: MongooseModel<OrganizationDoc>;
   private readonly emailService: EmailService;
   private readonly authService: AuthService;
+  private readonly configService: EnvService;
 
   constructor(
     @InjectModel(OrganizationDoc.name)
     organizationDoc: MongooseModel<OrganizationDoc>,
     emailService: EmailService,
     authService: AuthService,
+    configService: EnvService,
   ) {
     this.organizationDoc = organizationDoc;
     this.emailService = emailService;
     this.authService = authService;
+    this.configService = configService;
   }
 
   async convertToDomain(
@@ -112,7 +116,7 @@ export class OrganizationsService {
       to: userToInvite.email,
       subject: "You've been invited to join an organization",
       templateProperties: {
-        link: `http://localhost:5173/organizations/${org.id}`,
+        link: `${this.configService.get("OPEN_DPP_FRONTEND_URL")}/organizations/${org.id}`,
         organizationName: org.name,
         firstName: userToInvite.name,
       },
