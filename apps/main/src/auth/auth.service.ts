@@ -65,7 +65,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
             subject: "Verify E-Mail address",
             templateProperties: {
               link: url,
-              firstName: user.name,
+              firstName: user.name ?? "User",
             },
           }));
         },
