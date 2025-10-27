@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { BaseEmail } from "./base-email";
+import { BaseEmailTemplateProperties } from "./base-email-template-properties";
 
-export interface VerifyEmailTemplateProps {
+export interface VerifyEmailTemplateProps extends BaseEmailTemplateProperties {
   link: string;
   firstName: string;
 }

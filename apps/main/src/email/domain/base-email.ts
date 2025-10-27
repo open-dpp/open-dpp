@@ -1,3 +1,5 @@
+import { BaseEmailTemplateProperties } from "./base-email-template-properties";
+
 export type BaseEmailType = "VERIFY_EMAIL" | "INVITE_USER_TO_ORGANIZATION";
 
 export interface BaseEmailCreateProps {
@@ -5,7 +7,7 @@ export interface BaseEmailCreateProps {
   template: string;
   to: string;
   subject: string;
-  templateProperties: string;
+  templateProperties: BaseEmailTemplateProperties;
 }
 
 export class BaseEmail {
@@ -14,7 +16,7 @@ export class BaseEmail {
   public readonly template: string;
   public readonly to: string;
   public readonly subject: string;
-  public readonly templateProperties: any;
+  public readonly templateProperties: BaseEmailTemplateProperties;
 
   constructor(
     id: string,
@@ -22,7 +24,7 @@ export class BaseEmail {
     template: string,
     to: string,
     subject: string,
-    templateProperties: any,
+    templateProperties: BaseEmailTemplateProperties,
   ) {
     this.id = id;
     this.type = type;
