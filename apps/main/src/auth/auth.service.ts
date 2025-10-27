@@ -51,9 +51,26 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     await this.client.connect();
     this.db = this.client.db();
 
+    const isCloudAuthEnabled = !!this.configService.get("OPEN_DPP_AUTH_CLOUD_ENABLED");
+    let genericOAuthPlugin;
+    if (isCloudAuthEnabled) {
+      genericOAuthPlugin = genericOAuth({
+        config: [
+          {
+            providerId: this.configService.get("OPEN_DPP_AUTH_CLOUD_PROVIDER") as string,
+            clientId: this.configService.get("OPEN_DPP_AUTH_CLOUD_CLIENT_ID") as string,
+            clientSecret: this.configService.get("OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET") as string,
+            discoveryUrl: this.configService.get("OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL") as string,
+          },
+        ],
+      });
+    }
+
     this.auth = betterAuth({
+      baseURL: this.configService.get("OPEN_DPP_AUTH_URL"),
       basePath: "/api/auth",
-      trustedOrigins: ["http://localhost:5173"],
+      secret: this.configService.get("OPEN_DPP_AUTH_SECRET"),
+      trustedOrigins: [this.configService.get("OPEN_DPP_FRONTEND_URL")],
       emailAndPassword: {
         enabled: true,
       },
@@ -71,20 +88,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         },
       },
       hooks: {},
-      plugins: [
-        genericOAuth({
-          config: [
-            {
-              providerId: "auth.demo1.open-dpp.de",
-              clientId: "local-better-auth",
-              clientSecret: "n3WtPDDbZ95qY2wmO91XXk2oTbAdhyKW",
-              discoveryUrl: "https://auth.demo1.open-dpp.de/realms/open-dpp/.well-known/openid-configuration",
-              // ... other config options
-            },
-            // Add more providers as needed
-          ],
-        }),
-      ],
+      plugins: genericOAuthPlugin ? [genericOAuthPlugin] : [],
       database: mongodbAdapter(this.db, {
         client: this.client,
       }),
