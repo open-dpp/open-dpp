@@ -6,8 +6,9 @@ import * as express from "express";
 @Injectable()
 export class SkipBodyParsingMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction): void {
-    // skip body parsing for better-auth routes
-    if (req.baseUrl.startsWith("/api/auth")) {
+    // skip body parsing for better-auth routes (supports with/without /api prefix)
+    const url = (req.originalUrl || req.url || req.baseUrl || "") as string;
+    if (url.startsWith("/api/auth") || url.startsWith("/auth")) {
       next();
       return;
     }
