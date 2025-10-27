@@ -1,4 +1,4 @@
-import { z } from 'zod/v4';
+import { z } from "zod/v4";
 
 export const ItemUpdateEventSchema = z.object({
   modelId: z.uuid(),

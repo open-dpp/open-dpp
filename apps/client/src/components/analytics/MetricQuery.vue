@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import type { AutoCompleteCompleteEvent } from "primevue";
 import type { Option } from "../../lib/combobox";
 import { MeasurementType } from "@open-dpp/api-client";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { DatePicker } from "primevue";
+import { AutoComplete, DatePicker, Select } from "primevue";
 import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod/v4";
@@ -12,8 +13,6 @@ import { getNowInCurrentTimezone } from "../../lib/time.ts";
 import { TimeView, useAnalyticsStore } from "../../stores/analytics";
 import { useModelsStore } from "../../stores/models";
 import BaseButton from "../basics/BaseButton.vue";
-import Combobox from "../basics/Combobox.vue";
-import Select from "../basics/Select.vue";
 
 dayjs.extend(utc);
 
@@ -28,13 +27,14 @@ const timeViewOptions = Object.values(TimeView).map(value => ({
 
 const selectedDate = ref<Date>();
 const range = ref<Date[]>();
-const selectedView = ref<Option>(timeViewOptions[0]!);
+const selectedView = ref<string>(timeViewOptions[0]!.id);
 
 const modelOptions = computed(() =>
   modelStore.models.map(m => ({ label: `${m.name}`, id: m.id })),
 );
 const selectedModel = ref<Option | null>(null);
 const selectedTemplate = ref<string | null>(null);
+const items = ref<Option[]>([]);
 
 const isQueryValid = computed(() => {
   return selectedModel.value && selectedView.value && selectedTemplate.value && range.value && range.value.length === 2;
@@ -49,12 +49,12 @@ function selectRange(date: Date) {
     [TimeView.YEARLY]: "year",
   };
 
-  const unit = units[z.enum(TimeView).parse(selectedView.value.id)];
+  const unit = units[z.enum(TimeView).parse(selectedView.value)];
   range.value = [currentDate.startOf(unit).toDate(), currentDate.endOf(unit).toDate()];
 }
 
 watch(
-  () => selectedView.value?.id, // The store property to watch
+  () => selectedView.value, // The store property to watch
   async (newView) => {
     if (newView) {
       selectedDate.value = getNowInCurrentTimezone();
@@ -90,10 +90,18 @@ async function applyQuery() {
       modelId: selectedModel.value!.id,
       valueKey: getViewDomain(),
       type: MeasurementType.PAGE_VIEWS,
-      selectedView: z.enum(TimeView).parse(selectedView.value.id),
+      selectedView: z.enum(TimeView).parse(selectedView.value),
     };
     await analyticsStore.queryMetric(metricQuery);
   }
+}
+
+function search(event: AutoCompleteCompleteEvent) {
+  items.value = event.query
+    ? modelOptions.value.filter((option: Option) => {
+        return option.label.toLowerCase().includes(event.query.toLowerCase());
+      })
+    : modelOptions.value;
 }
 
 onMounted(async () => {
@@ -103,24 +111,14 @@ onMounted(async () => {
 
 <template>
   <div class="flex items-center gap-2">
-    <Combobox
-      v-model="selectedModel"
-      label-position="left"
-      :label="t('analytics.passportSelection')"
-      :options="modelOptions"
-    />
-    <Select
-      v-model="selectedView"
-      label-position="left"
-      :label="t('analytics.timeViewSelection')"
-      :options="timeViewOptions"
-    />
+    <AutoComplete v-model="selectedModel" option-value="id" option-label="label" :placeholder="t('analytics.passportSelection')" dropdown :suggestions="items" @complete="search" />
+    <Select v-model="selectedView" :options="timeViewOptions" option-value="id" option-label="label" :placeholder="t('analytics.timeViewSelection')" class="w-full md:w-56" />
     <DatePicker
-      v-if="selectedView.id === TimeView.DAYLY" v-model="selectedDate"
+      v-if="selectedView === TimeView.DAYLY" v-model="selectedDate"
       show-icon date-format="dd/mm/yy" @date-select="selectRange"
     />
     <DatePicker
-      v-else-if="selectedView.id === TimeView.WEEKLY"
+      v-else-if="selectedView === TimeView.WEEKLY"
       v-model="range"
       selection-mode="range"
       show-icon
@@ -130,11 +128,11 @@ onMounted(async () => {
       @date-select="selectRange"
     />
     <DatePicker
-      v-else-if="selectedView.id === TimeView.MONTHLY"
+      v-else-if="selectedView === TimeView.MONTHLY"
       v-model="selectedDate" show-icon view="month" date-format="mm/yy" @date-select="selectRange"
     />
     <DatePicker
-      v-else-if="selectedView.id === TimeView.YEARLY"
+      v-else-if="selectedView === TimeView.YEARLY"
       v-model="selectedDate" show-icon view="year" date-format="yy" @date-select="selectRange"
     />
     <BaseButton variant="primary" :disabled="!isQueryValid" @click="applyQuery">
