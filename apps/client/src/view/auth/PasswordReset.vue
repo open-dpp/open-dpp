@@ -47,7 +47,7 @@ async function requestPasswordReset() {
       <p class="mt-10 text-center text-sm/6 text-gray-500 dark:text-gray-400">
         Remember your login?
         {{ ' ' }}
-        <router-link to="/signup" class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
+        <router-link to="/signin" class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
           Sign in now
         </router-link>
       </p>
