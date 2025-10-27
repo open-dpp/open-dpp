@@ -33,6 +33,7 @@ export const routes: RouteRecordRaw[] = [
     component: () => import("../view/auth/Signin.vue"),
     meta: {
       layout: "none",
+      public: true,
     },
   },
   {
@@ -41,6 +42,7 @@ export const routes: RouteRecordRaw[] = [
     component: () => import("../view/Logout.vue"),
     meta: {
       layout: "none",
+      public: true,
     },
   },
   {
@@ -49,6 +51,7 @@ export const routes: RouteRecordRaw[] = [
     component: () => import("../view/auth/Signup.vue"),
     meta: {
       layout: "none",
+      public: true,
     },
   },
   {
@@ -57,6 +60,7 @@ export const routes: RouteRecordRaw[] = [
     component: () => import("../view/auth/PasswordReset.vue"),
     meta: {
       layout: "none",
+      public: true,
     },
   },
   ...AUTH_ROUTES,
@@ -75,13 +79,14 @@ router.beforeEach(async (to, from, next) => {
   const layoutStore = useLayoutStore();
   layoutStore.isPageLoading = true;
   const session = authClient.useSession();
-  const publicAuthRoutes = ["Signin", "Signup", "Signout", "PasswordReset"];
-  if (session.value.data === null && !publicAuthRoutes.includes(to.name as string)) {
+
+  // Redirect unauthenticated users away from non-public routes
+  if (session.value.data === null && !to.meta?.public) {
     next("/signin");
+    return;
   }
-  else {
-    next();
-  }
+
+  next();
 });
 
 router.afterEach(async () => {
