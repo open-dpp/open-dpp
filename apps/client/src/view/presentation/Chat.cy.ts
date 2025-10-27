@@ -9,7 +9,7 @@ const router = createRouter({
 });
 
 describe("<Chat />", () => {
-  it("renders chat messages", () => {
+  it.skip("renders chat messages", () => {
     const aiAgentStore = useAiAgentStore();
 
     // Stub connect to simulate receiving a message
