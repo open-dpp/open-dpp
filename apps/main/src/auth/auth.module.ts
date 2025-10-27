@@ -20,6 +20,6 @@ import { SkipBodyParsingMiddleware } from "./skip-body-parsing.middleware";
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer): any {
-    consumer.apply(SkipBodyParsingMiddleware).forRoutes(AuthController);
+    consumer.apply(SkipBodyParsingMiddleware);
   }
 }
