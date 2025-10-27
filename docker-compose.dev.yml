@@ -83,8 +83,8 @@ services:
       - "8025:8025"
       - "8026:1025"
     environment:
-      - MP_SMTP_AUTH=admin:admin
-      - MP_SMTP_AUTH_ALLOW_INSECURE=true
+      - MP_SMTP_AUTH=${OPEN_DPP_MAIL_MAILPIT_SMTP_AUTH}
+      - MP_SMTP_AUTH_ALLOW_INSECURE=${OPEN_DPP_MAIL_MAILPIT_SMTP_ALLOW_INSECURE}
     networks:
       - open-dpp-local
 

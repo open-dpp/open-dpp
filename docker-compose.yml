@@ -60,6 +60,12 @@ services:
   mailpit:
     container_name: mailpit
     image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"
+      - "8026:1025"
+    environment:
+      - MP_SMTP_AUTH=${OPEN_DPP_MAIL_MAILPIT_SMTP_AUTH}
+      - MP_SMTP_AUTH_ALLOW_INSECURE=${OPEN_DPP_MAIL_MAILPIT_SMTP_ALLOW_INSECURE}
 
   minio:
     container_name: minio
