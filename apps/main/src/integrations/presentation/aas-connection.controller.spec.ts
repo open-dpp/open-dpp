@@ -349,8 +349,7 @@ describe("aasConnectionController", () => {
         getBetterAuthToken(
           TestUsersAndOrganizations.users.user1.id,
         ),
-      )
-      .send(semitrailerTruckAas);
+      );
     expect(response.status).toEqual(200);
     expect(response.body).toContainEqual({
       parentIdShort: "Nameplate",
