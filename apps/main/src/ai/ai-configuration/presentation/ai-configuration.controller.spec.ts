@@ -6,7 +6,6 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
 import {
-  createKeycloakUserInToken,
   getApp,
   MongooseTestingModule,
 } from "@open-dpp/testing";
@@ -34,7 +33,7 @@ import { aiConfigurationToDto } from "./dto/ai-configuration.dto";
 describe("aiConfigurationController", () => {
   let app: INestApplication;
   const reflector: Reflector = new Reflector();
-  const betterAuthTestingGuard = new BetterAuthTestingGuard(new Reflector());
+  const betterAuthTestingGuard = new BetterAuthTestingGuard(reflector);
   betterAuthTestingGuard.loadUsers([TestUsersAndOrganizations.users.user1, TestUsersAndOrganizations.users.user2]);
 
   let mongoConnection: Connection;
@@ -148,9 +147,8 @@ describe("aiConfigurationController", () => {
   });
 
   it(`/PUT update configuration`, async () => {
-    const keycloakUserTemp = createKeycloakUserInToken();
     const userTemp = User.create({
-      email: keycloakUserTemp.email,
+      email: `${randomUUID()}@test.test`,
     });
     const orgTemp = Organization.create({
       name: `organization-temp-${randomUUID()}`,
@@ -190,9 +188,8 @@ describe("aiConfigurationController", () => {
   });
 
   it(`/GET find configuration`, async () => {
-    const keycloakUserTemp = createKeycloakUserInToken();
     const userTemp = User.create({
-      email: keycloakUserTemp.email,
+      email: `${randomUUID()}@test.test`,
     });
     const orgTemp = Organization.create({
       name: `organization-temp-${randomUUID()}`,
