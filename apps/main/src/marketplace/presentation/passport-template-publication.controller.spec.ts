@@ -2,7 +2,7 @@ import type { INestApplication } from "@nestjs/common";
 import type { TestingModule } from "@nestjs/testing";
 import type { Connection } from "mongoose";
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { expect, jest } from "@jest/globals";
 import { APP_GUARD, Reflector } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
@@ -67,7 +67,12 @@ describe("passportTemplateController", () => {
           provide: AuthService,
           useValue: {
             getSession: jest.fn(),
-            getUserById: jest.fn(),
+            getUserById: jest.fn((userId) => {
+              // Return the appropriate test user based on userId
+              return TestUsersAndOrganizations.users.user1.id === userId
+                ? TestUsersAndOrganizations.users.user1
+                : TestUsersAndOrganizations.users.user2;
+            }),
           },
         },
         {

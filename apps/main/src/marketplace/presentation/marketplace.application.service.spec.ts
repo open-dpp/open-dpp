@@ -75,7 +75,12 @@ describe("marketplaceService", () => {
           provide: AuthService,
           useValue: {
             getSession: jest.fn(),
-            getUserById: jest.fn(),
+            getUserById: jest.fn((userId) => {
+              // Return the appropriate test user based on userId
+              return TestUsersAndOrganizations.users.user1.id === userId
+                ? TestUsersAndOrganizations.users.user1
+                : TestUsersAndOrganizations.users.user2;
+            }),
           },
         },
       ],
