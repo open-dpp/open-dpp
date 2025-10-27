@@ -1,9 +1,8 @@
-import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import { EnvModule } from "@open-dpp/env";
 import { EmailModule } from "../email/email.module";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
-import { SkipBodyParsingMiddleware } from "./skip-body-parsing.middleware";
 
 @Module({
   imports: [
@@ -18,8 +17,4 @@ import { SkipBodyParsingMiddleware } from "./skip-body-parsing.middleware";
   ],
   exports: [AuthService],
 })
-export class AuthModule implements NestModule {
-  configure(consumer: MiddlewareConsumer): any {
-    consumer.apply(SkipBodyParsingMiddleware);
-  }
-}
+export class AuthModule {}

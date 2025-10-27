@@ -13,6 +13,7 @@ export function applyBodySizeHandler(app: INestApplication) {
 
   // Single JSON body parser selector based on a precise integration route match
   const integrationRouteRegex = /^\/organizations\/[^/]+\/integration(?:\/|$)/;
+  const betterAuthRouteRegex = /^(?:\/api)?\/auth(?:\/|$)/;
   const defaultJsonLimit = configService.get("OPEN_DPP_JSON_LIMIT_DEFAULT");
   const integrationJsonLimit = configService.get(
     "OPEN_DPP_JSON_LIMIT_INTEGRATION",
@@ -21,6 +22,9 @@ export function applyBodySizeHandler(app: INestApplication) {
   const integrationJsonParser = json({ limit: integrationJsonLimit });
 
   app.use((req: Request, res: Response, next: NextFunction) => {
+    if (betterAuthRouteRegex.test(req.path)) {
+      return next();
+    }
     const parser = integrationRouteRegex.test(req.path)
       ? integrationJsonParser
       : defaultJsonParser;

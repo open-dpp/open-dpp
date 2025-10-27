@@ -12,7 +12,7 @@ import {
 import * as bodyParser from "body-parser";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import { AppModule } from "./app.module";
-import { applyBodySizeHandler } from "./BodySizeHandler";
+import { applyBodySizeHandler } from "./body-handler";
 import { buildOpenApiDocumentation } from "./open-api-docs";
 
 async function bootstrap() {
