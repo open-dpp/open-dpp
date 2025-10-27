@@ -6,7 +6,6 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import {
-  createKeycloakUserInToken,
   getApp,
   MongooseTestingModule,
 } from "@open-dpp/testing";
@@ -56,7 +55,7 @@ describe("aasConnectionController", () => {
   let templateService: TemplateService;
   let aasConnectionService: AasConnectionService;
   let modelsService: ModelsService;
-  let itemsSevice: ItemsService;
+  let itemsService: ItemsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
   let organizationService: OrganizationsService;
 
@@ -141,7 +140,7 @@ describe("aasConnectionController", () => {
     templateService = moduleRef.get(TemplateService);
     aasConnectionService = moduleRef.get(AasConnectionService);
     modelsService = moduleRef.get(ModelsService);
-    itemsSevice = moduleRef.get(ItemsService);
+    itemsService = moduleRef.get(ItemsService);
     organizationService = moduleRef.get(OrganizationsService);
     const configService = moduleRef.get(EnvService);
 
@@ -153,7 +152,8 @@ describe("aasConnectionController", () => {
 
     await organizationService.save(TestUsersAndOrganizations.organizations.org1);
     await organizationService.save(TestUsersAndOrganizations.organizations.org2);
-    jest.spyOn(configService, "get").mockReturnValue("api-token-user-1");
+    const originalGet = configService.get.bind(configService);
+    jest.spyOn(configService, "get").mockImplementation((key: string) => key === "OPEN_DPP_AAS_TOKEN" ? apiTokenUser1 : originalGet(key as any));
     betterAuthTestingGuard.addApiToken(configService.get("OPEN_DPP_AAS_TOKEN"), TestUsersAndOrganizations.users.user1);
   });
 
@@ -235,7 +235,7 @@ describe("aasConnectionController", () => {
     ]);
     const foundUniqueProductIdentifier
       = await uniqueProductIdentifierService.findOneOrFail(globalAssetId);
-    const item = await itemsSevice.findOneOrFail(
+    const item = await itemsService.findOneOrFail(
       foundUniqueProductIdentifier.referenceId,
     );
     expect(item.modelId).toEqual(model.id);
@@ -373,9 +373,8 @@ describe("aasConnectionController", () => {
   });
 
   it(`/GET all connections of organization`, async () => {
-    const keycloakUserTemp = createKeycloakUserInToken();
     const userTemp = User.create({
-      email: keycloakUserTemp.email,
+      email: `${randomUUID()}@test.test`,
     });
     betterAuthTestingGuard.addUser(userTemp);
     const orgTemp = Organization.create({
