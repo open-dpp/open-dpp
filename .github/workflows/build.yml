@@ -17,19 +17,31 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # lint:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v3
-  #     - name: Set up Node.js
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: ${{ env.NODE_VERSION }}
-  #     - name: Install dependencies
-  #       run: npm install
-  #     - name: Run linter
-  #       run: npm run lint
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Install pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      # Step 3: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      # Step 4: Install dependencies
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Step 5: Run linting
+      - name: Run linter
+        run: pnpm run lint
 
   test:
     runs-on: ubuntu-latest
@@ -95,19 +107,30 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
 
-      # Step 4: Install dependencies
+      # Step 4: See https://docs.cypress.io/app/get-started/install-cypress#pnpm-configuration
+      - name: Disable pnpm side-effects cache
+        run: pnpm config set side-effects-cache false --location project
+
+      # Step 5: Install dependencies
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Step 5: Build project
+      # Step 6: Cache cypress binaries (optional but helps CI performance)
+      - name: Cache Cypress binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      # Step 7: Build project
       - name: Build project
         run: pnpm build
 
-      # Step 6: Build testing support package
+      # Step 8: Build testing support package
       - name: Build project
         run: cd packages/testing && pnpm build
 
-      # Step 7: Wait for Databases to be ready
+      # Step 9: Wait for Databases to be ready
       - name: Wait for Databases to be ready
         run: |
           echo "Waiting for MongoDB to start..."
@@ -115,12 +138,33 @@ jobs:
             sleep 1
           done
 
-      # Step 8: Run tests
+      # Step 10: Run tests
       - name: Run tests
         run: pnpm test:ci
 
+      # Step 11: Verify Cypress binary
+      - name: Verify Cypress install
+        run: npx cypress verify
+
+      # Step 12: Run cypress tests
+      - name: Run cypress tests
+        run: pnpm test:ci:cypress
+
+      # Step 13: Upload Cypress artifacts (optional)
+      - name: Upload Cypress Artifacts
+        if: always() # This ensures artifacts are uploaded even if the tests fail
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-artifacts
+          path: |
+            apps/client/cypress/videos/
+            apps/client/cypress/screenshots/
+
   build-and-push:
     runs-on: ubuntu-latest
+    needs:
+      - lint
+      - test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -160,6 +204,17 @@ jobs:
             type=ref,event=tag
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
+      - name: Extract Docker keycloak metadata
+        id: meta-keycloak
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/keycloak
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=ref,event=tag
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
       - name: Build and push Production
         uses: docker/build-push-action@v6
         with:
@@ -183,5 +238,17 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-mcp.outputs.tags }}
           labels: ${{ steps.meta-mcp.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push Keycloak
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/keycloak
+          file: ./apps/keycloak/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-keycloak.outputs.tags }}
+          labels: ${{ steps.meta-keycloak.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

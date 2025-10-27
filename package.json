@@ -11,11 +11,13 @@
     "turbo": "^2.5.8"
   },
   "scripts": {
+    "lint": "turbo lint",
     "build": "dotenvx run -f .env.dev -f .env -- turbo build --env-mode=loose",
     "build:main": "dotenvx run -f .env.dev -f .env -- turbo build --filter=./apps/main --env-mode=loose",
     "dev": "dotenvx run -f .env.dev -f .env -- turbo dev --env-mode=loose",
     "test": "dotenvx run -f .env.dev -f .env -- turbo test --env-mode=loose",
     "test:ci": "turbo test --env-mode=loose",
+    "test:ci:cypress": "turbo cypress:headless --filter=./apps/client --env-mode=loose",
     "test:main": "dotenvx run -f .env.dev -f .env -- turbo test --filter=./apps/main --env-mode=loose",
     "test:mcp": "dotenvx run -f .env.dev -f .env -- turbo test --filter=./apps/mcp --env-mode=loose",
     "test:auth": "dotenvx run -f .env.dev -f .env -- turbo test --filter=./packages/auth --env-mode=loose",
