@@ -1,7 +1,9 @@
 // better-auth-testing.guard.ts
 import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
+import { ALLOW_ANONYMOUS } from "../src/auth/allow-anonymous.decorator";
 import { ALLOW_SERVICE_ACCESS } from "../src/auth/allow-service-access.decorator";
+import { OPTIONAL_AUTH } from "../src/auth/optional-auth.decorator";
 import { User } from "../src/users/domain/user";
 
 export interface BetterAuthTestUser {
@@ -28,7 +30,7 @@ export class BetterAuthTestingGuard implements CanActivate {
     const serviceToken = request.headers.service_token;
     const apiToken = request.headers.api_token;
 
-    const isPublic = this.reflector.getAllAndOverride<boolean>("PUBLIC", [
+    const isPublic = this.reflector.getAllAndOverride<boolean>(ALLOW_ANONYMOUS, [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -36,14 +38,10 @@ export class BetterAuthTestingGuard implements CanActivate {
     if (isPublic)
       return true;
 
-    const isOptional = this.reflector.getAllAndOverride<boolean>("OPTIONAL", [
+    const isOptional = this.reflector.getAllAndOverride<boolean>(OPTIONAL_AUTH, [
       context.getHandler(),
       context.getClass(),
     ]);
-
-    if (isOptional) {
-      return true;
-    }
 
     const isAllowServiceAccess = this.reflector.getAllAndOverride<boolean>(ALLOW_SERVICE_ACCESS, [
       context.getHandler(),
@@ -71,18 +69,18 @@ export class BetterAuthTestingGuard implements CanActivate {
         };
         return true;
       }
-      return false;
+      return isOptional;
     }
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return false;
+      return isOptional;
     }
 
     const token = authHeader.substring(7);
     const user = this.userMap.get(token);
 
     if (!user) {
-      return false;
+      return isOptional;
     }
 
     request.user = user;
