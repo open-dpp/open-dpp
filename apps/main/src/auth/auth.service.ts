@@ -1,5 +1,5 @@
 import type { Auth } from "better-auth";
-import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
 import { betterAuth, User } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
@@ -9,13 +9,14 @@ import { VerifyEmailMail } from "../email/domain/verify-email-mail";
 import { EmailService } from "../email/email.service";
 
 @Injectable()
-export class AuthService implements OnModuleInit {
+export class AuthService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(AuthService.name);
   private readonly configService: EnvService;
   private readonly emailService: EmailService;
 
   public auth: Auth | undefined;
   private db: Db | undefined;
+  private client: MongoClient | undefined;
 
   constructor(
     configService: EnvService,
@@ -39,9 +40,16 @@ export class AuthService implements OnModuleInit {
     });
   }
 
-  onModuleInit() {
-    const client = new MongoClient("mongodb://admin:change-to-secure-mongo-password@localhost:20005/management?authSource=admin");
-    this.db = client.db();
+  async onModuleInit() {
+    const mongoUser = this.configService.get("OPEN_DPP_MONGODB_USER");
+    const mongoPassword = this.configService.get("OPEN_DPP_MONGODB_PASSWORD");
+    const mongoHost = this.configService.get("OPEN_DPP_MONGODB_HOST");
+    const mongoPort = this.configService.get("OPEN_DPP_MONGODB_PORT");
+    const mongoDb = this.configService.get("OPEN_DPP_MONGODB_DATABASE");
+    const mongoUri = `mongodb://${encodeURIComponent(mongoUser)}:${encodeURIComponent(mongoPassword)}@${mongoHost}:${mongoPort}/${mongoDb}?authSource=${mongoUser}`;
+    this.client = new MongoClient(mongoUri);
+    await this.client.connect();
+    this.db = this.client.db();
 
     this.auth = betterAuth({
       basePath: "/api/auth",
@@ -78,10 +86,16 @@ export class AuthService implements OnModuleInit {
         }),
       ],
       database: mongodbAdapter(this.db, {
-        // Optional: if you don't provide a client, database transactions won't be enabled.
-        client,
+        client: this.client,
       }),
     });
     this.logger.log("Auth initialized");
+  }
+
+  async onModuleDestroy() {
+    if (this.client) {
+      await this.client.close();
+      this.logger.log("Auth Mongo client closed");
+    }
   }
 }
