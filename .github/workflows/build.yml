@@ -20,28 +20,28 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-       # Step 1: Checkout code
-       - name: Checkout code
-         uses: actions/checkout@v4
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-       # Step 2: Install pnpm
-       - name: Install pnpm
-         uses: pnpm/action-setup@v4
+      # Step 2: Install pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
 
-       # Step 3: Set up Node.js
-       - name: Set up Node.js
-         uses: actions/setup-node@v4
-         with:
-           node-version: ${{ env.NODE_VERSION }}
-           cache: "pnpm"
+      # Step 3: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
 
-       # Step 4: Install dependencies
-       - name: Install dependencies
-         run: pnpm install --frozen-lockfile
+      # Step 4: Install dependencies
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-       # Step 5: Run linting
-       - name: Run linter
-         run: pnpm run lint
+      # Step 5: Run linting
+      - name: Run linter
+        run: pnpm run lint
 
   test:
     runs-on: ubuntu-latest
@@ -204,6 +204,17 @@ jobs:
             type=ref,event=tag
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
+      - name: Extract Docker keycloak metadata
+        id: meta-keycloak
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/keycloak
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=ref,event=tag
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
       - name: Build and push Production
         uses: docker/build-push-action@v6
         with:
@@ -227,5 +238,17 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-mcp.outputs.tags }}
           labels: ${{ steps.meta-mcp.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push Keycloak
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/keycloak
+          file: ./apps/keycloak/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-keycloak.outputs.tags }}
+          labels: ${{ steps.meta-keycloak.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
