@@ -56,7 +56,7 @@ const envSchema = z.object({
   // Auth
   OPEN_DPP_AUTH_URL: z.coerce.string(),
   OPEN_DPP_AUTH_SECRET: z.coerce.string(),
-  OPEN_DPP_AUTH_CLOUD_ENABLED: z.boolean().optional(),
+  OPEN_DPP_AUTH_CLOUD_ENABLED: asBoolean.optional(),
   OPEN_DPP_AUTH_CLOUD_PROVIDER: z.string().optional(),
   OPEN_DPP_AUTH_CLOUD_CLIENT_ID: z.string().optional(),
   OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET: z.string().optional(),

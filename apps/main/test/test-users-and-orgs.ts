@@ -1,14 +1,12 @@
-import { createKeycloakUserInToken } from "@open-dpp/testing";
+import { randomUUID } from "node:crypto";
 import { Organization } from "../src/organizations/domain/organization";
 import { User } from "../src/users/domain/user";
 
-const keycloakUser1 = createKeycloakUserInToken();
 const user1 = User.create({
-  email: keycloakUser1.email,
+  email: `${randomUUID()}@test.test`,
 });
-const keycloakUser2 = createKeycloakUserInToken();
 const user2 = User.create({
-  email: keycloakUser2.email,
+  email: `${randomUUID()}@test.test`,
 });
 const org1 = Organization.create({
   name: "organization-1-test",
@@ -23,10 +21,6 @@ const org2 = Organization.create({
   members: [user2],
 });
 const TestUsersAndOrganizations = {
-  keycloakUsers: {
-    keycloakUser1,
-    keycloakUser2,
-  },
   users: {
     user1,
     user2,

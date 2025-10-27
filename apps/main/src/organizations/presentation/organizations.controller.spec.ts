@@ -7,7 +7,6 @@ import { Test } from "@nestjs/testing";
 import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
 import {
-  createKeycloakUserInToken,
   getApp,
   MongooseTestingModule,
 } from "@open-dpp/testing";
@@ -196,9 +195,8 @@ describe("organizationController", () => {
         ownedByUserId: TestUsersAndOrganizations.users.user1.id,
         members: [TestUsersAndOrganizations.users.user1],
       });
-      const keycloakUserTemp = createKeycloakUserInToken();
       const userTemp = User.create({
-        email: keycloakUserTemp.email,
+        email: `${randomUUID()}@test.test`,
       });
       betterAuthTestingGuard.addUser(userTemp);
       org.join(userTemp);

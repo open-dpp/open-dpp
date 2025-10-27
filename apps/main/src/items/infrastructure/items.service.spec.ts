@@ -8,7 +8,6 @@ import { EnvModule } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import {
   ignoreIds,
-  KeycloakResourcesServiceTesting,
   MongooseTestingModule,
 } from "@open-dpp/testing";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
@@ -58,10 +57,6 @@ describe("itemsService", () => {
       providers: [
         ItemsService,
         UniqueProductIdentifierService,
-        {
-          provide: "KeycloakResourcesService",
-          useClass: KeycloakResourcesServiceTesting,
-        },
       ],
     }).compile();
     itemService = module.get<ItemsService>(ItemsService);

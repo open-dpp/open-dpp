@@ -6,7 +6,6 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule } from "@open-dpp/env";
 import {
-  createKeycloakUserInToken,
   getApp,
   MongooseTestingModule,
 } from "@open-dpp/testing";
@@ -355,9 +354,8 @@ describe("templateDraftController", () => {
   });
 
   it(`/GET template drafts of organization`, async () => {
-    const keycloakUserTemp = createKeycloakUserInToken();
     const userTemp = User.create({
-      email: keycloakUserTemp.email,
+      email: `${randomUUID()}@test.test`,
     });
     const orgTemp = Organization.create({
       name: "organization-temp-test",

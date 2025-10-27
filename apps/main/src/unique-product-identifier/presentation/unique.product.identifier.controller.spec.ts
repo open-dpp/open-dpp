@@ -47,7 +47,7 @@ describe("uniqueProductIdentifierController", () => {
   const reflector: Reflector = new Reflector();
   let organizationService: OrganizationsService;
 
-  const betterAuthTestingGuard = new BetterAuthTestingGuard(new Reflector());
+  const betterAuthTestingGuard = new BetterAuthTestingGuard(reflector);
   betterAuthTestingGuard.loadUsers([TestUsersAndOrganizations.users.user1, TestUsersAndOrganizations.users.user2]);
   betterAuthTestingGuard.addServiceToken(serviceToken, TestUsersAndOrganizations.users.user1);
 
@@ -123,6 +123,9 @@ describe("uniqueProductIdentifierController", () => {
   });
   beforeEach(() => {
     jest.spyOn(reflector, "get").mockReturnValue(false);
+  });
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   const phoneTemplate: TemplateDbProps = phoneFactory

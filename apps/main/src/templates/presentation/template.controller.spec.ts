@@ -8,7 +8,6 @@ import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule } from "@open-dpp/env";
 import {
-  createKeycloakUserInToken,
   MongooseTestingModule,
 } from "@open-dpp/testing";
 import request from "supertest";
@@ -135,9 +134,8 @@ describe("templateController", () => {
   });
 
   it(`/GET all templates which belong to the organization`, async () => {
-    const keycloakUserTemp = createKeycloakUserInToken();
     const userTemp = User.create({
-      email: keycloakUserTemp.email,
+      email: `${randomUUID()}@test.test`,
     });
     const orgTemp = Organization.create({
       name: "organization-temp-test",
