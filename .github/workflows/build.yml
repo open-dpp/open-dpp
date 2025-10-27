@@ -51,7 +51,6 @@ jobs:
       NODE_VERSION: 24
       # Common
       OPEN_DPP_PORT: "3000"
-      OPEN_DPP_MCP_PORT: "3001"
       OPEN_DPP_URL: "http://dpp.example.de"
       OPEN_DPP_SERVICE_TOKEN: "test-servivce-token"
       OPEN_DPP_AAS_TOKEN: "test-servivce-token"
@@ -65,12 +64,6 @@ jobs:
       OPEN_DPP_MISTRAL_API_KEY: "your-mistral-key"
       OPEN_DPP_OLLAMA_URL: "https://ollama-url"
       OPEN_DPP_MCP_URL: "http://localhost:3002/sse"
-      # Keycloak
-      OPEN_DPP_KEYCLOAK_URL: "https://auth.example.de"
-      OPEN_DPP_KEYCLOAK_REALM: "open-dpp"
-      OPEN_DPP_KEYCLOAK_USER: "admin"
-      OPEN_DPP_KEYCLOAK_PASSWORD: "test-keycloak-password"
-      OPEN_DPP_KEYCLOAK_JWT_AUDIENCE: "account"
       # S3
       OPEN_DPP_S3_ENDPOINT: "minio"
       OPEN_DPP_S3_PORT: "9000"
@@ -80,8 +73,25 @@ jobs:
       OPEN_DPP_S3_DEFAULT_BUCKET: "dpp"
       OPEN_DPP_S3_PROFILE_PICTURE_BUCKET: "profile-pictures"
       # ClamAV
-      OPEN_DPP_CLAMAV_URL: "http://clamav"
-      OPEN_DPP_CLAMAV_PORT: "3310"
+      OPEN_DPP_CLAMAV_URL: "http://clamav-rest"
+      OPEN_DPP_CLAMAV_PORT: "9000"
+      # MCP
+      OPEN_DPP_MCP_PORT: "3001"
+      # Mail
+      OPEN_DPP_MAIL_HOST=: localhost"
+      OPEN_DPP_MAIL_PORT: "8026"
+      OPEN_DPP_MAIL_USER: "admin"
+      OPEN_DPP_MAIL_PASSWORD: "admin"
+      OPEN_DPP_MAIL_MAILPIT_SMTP_AUTH: "admin:admin"
+      OPEN_DPP_MAIL_MAILPIT_SMTP_ALLOW_INSECURE: "true"
+      # Auth
+      OPEN_DPP_AUTH_URL: "http://localhost:3000"
+      OPEN_DPP_AUTH_SECRET: "change-this-to-a-good-secret"
+      OPEN_DPP_AUTH_CLOUD_ENABLED: "false"
+      OPEN_DPP_AUTH_CLOUD_PROVIDER: ""
+      OPEN_DPP_AUTH_CLOUD_CLIENT_ID: ""
+      OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET: ""
+      OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL: ""
       # Frontend
       KEYCLOAK_DISABLED: "true"
       VITE_API_ROOT: "http://localhost"
