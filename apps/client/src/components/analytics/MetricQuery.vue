@@ -124,7 +124,6 @@ onMounted(async () => {
       show-icon
       date-format="dd.mm.yy"
       :manual-input="false"
-      placeholder="Pick a week"
       @date-select="selectRange"
     />
     <DatePicker
