@@ -24,7 +24,6 @@ export interface PassportMetricQueryDto {
   type: MeasurementType
   valueKey: string
   period: string
-  timezone: string
 }
 
 export interface PageViewCreateDto {

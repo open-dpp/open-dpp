@@ -1,6 +1,6 @@
-import { TimePeriod } from "../infrastructure/passport-metric.service";
 import { MeasurementType } from "./passport-metric";
 import { PassportMetricAggregation } from "./passport-metric-aggregation";
+import { TimePeriod } from "./time-period";
 
 describe("passportMetricAggregation", () => {
   it("is create and return correct mongo query", () => {
@@ -12,7 +12,6 @@ describe("passportMetricAggregation", () => {
       organizationId: "orga1",
       startDate: new Date("2025-01-03T12:00:00Z"),
       endDate: new Date("2025-01-07T12:00:00Z"),
-      timezone: "UTC",
     };
     const passportMetricAggregation = PassportMetricAggregation.create(props);
     expect(passportMetricAggregation.getFilterQuery()).toEqual([
@@ -73,7 +72,6 @@ describe("passportMetricAggregation", () => {
             $dateTrunc: {
               date: "$date",
               unit: "day",
-              timezone: "UTC",
             },
           },
           sum: {

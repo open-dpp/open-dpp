@@ -29,10 +29,9 @@ export class PassportMetricNamespace {
   }
 
   public async query(query: PassportMetricQueryDto) {
-    const encodedParams = { ...query, timezone: encodeURIComponent(query.timezone) }
     return this.axiosInstance.get<PassportMeasurementDto[]>(
       this.configurationsEndpoint,
-      { params: encodedParams },
+      { params: query },
     )
   }
 }

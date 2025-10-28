@@ -1,7 +1,8 @@
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
-import { TimePeriod } from "../infrastructure/passport-metric.service";
+
+import { TimePeriod } from "./time-period";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -19,23 +20,24 @@ export class Timeseries {
 
   densify(
     options: {
-      start: string | Date;
-      end: string | Date;
+      startIsoString: string;
+      endIsoString: string;
       step: number; // step size (e.g. 1 for 1 hour, 1 day, etc.)
       unit: TimePeriod;
-      timezone?: string;
       fillValue?: number; // default 0
     },
   ): DataPoint[] {
-    const { start, end, step, unit, timezone = "UTC", fillValue = 0 } = options;
+    const { startIsoString, endIsoString, step, unit, fillValue = 0 } = options;
 
-    const startDate = dayjs(start, undefined, timezone);
-    const endDate = dayjs(end, undefined, timezone);
+    const startDate = dayjs.utc(startIsoString);
+    const endDate = dayjs.utc(endIsoString);
 
     // Convert data to a map for fast lookup
     const dataMap = new Map<string, number>();
     for (const point of this.dataPoints) {
-      const key = dayjs(point.datetime, undefined, timezone).startOf(unit).toISOString();
+      // console.log(dayjs.tz(point.datetime, timezone).format());
+      // console.log(dayjs.tz(point.datetime, timezone).startOf(unit).format(), dayjs.tz(point.datetime, timezone).startOf(unit).toISOString());
+      const key = dayjs.utc(point.datetime).startOf(unit).toISOString();
       dataMap.set(key, point.sum);
     }
 

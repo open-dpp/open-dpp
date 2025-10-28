@@ -97,7 +97,6 @@ describe("analyticsStore", () => {
       startDate: new Date("2022-01-01T23:00:00.000Z"),
       endDate: new Date("2022-01-08T22:59:59.999Z"),
       period: TimePeriod.DAY,
-      timezone: "Europe/Berlin",
     });
     expect(analyticsStore.getMeasurementsAsTimeseries()).toEqual([
       {

@@ -8,14 +8,6 @@ import { Timeseries } from "../domain/timeseries";
 import { PassportMetricQueryDto } from "../presentation/dto/passport-metric-query.dto";
 import { PassportMetricDoc, PassportMetricSchemaVersion } from "./passport-metric.schema";
 
-export enum TimePeriod {
-  YEAR = "year",
-  MONTH = "month",
-  WEEK = "week",
-  DAY = "day",
-  HOUR = "hour",
-}
-
 @Injectable()
 export class PassportMetricService {
   constructor(
@@ -116,11 +108,10 @@ export class PassportMetricService {
     const timeseries = Timeseries.create({ dataPoints });
     return timeseries.densify(
       {
-        start: query.startDate,
-        end: query.endDate,
+        startIsoString: query.startDate.toISOString(),
+        endIsoString: query.endDate.toISOString(),
         step: 1,
         unit: query.period,
-        timezone: query.timezone,
       },
     );
   }

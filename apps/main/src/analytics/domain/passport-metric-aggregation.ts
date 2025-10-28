@@ -1,6 +1,6 @@
 import * as mongoose from "mongoose";
-import { TimePeriod } from "../infrastructure/passport-metric.service";
 import { MeasurementType } from "./passport-metric";
+import { TimePeriod } from "./time-period";
 
 interface PassportMetricAggregationProps {
   type: MeasurementType;
@@ -10,7 +10,6 @@ interface PassportMetricAggregationProps {
   organizationId: string;
   startDate: Date;
   endDate: Date;
-  timezone: string;
 }
 
 export class PassportMetricAggregation {
@@ -22,7 +21,6 @@ export class PassportMetricAggregation {
     private readonly organizationId: string,
     private readonly startDate: Date,
     private readonly endDate: Date,
-    private readonly timezone: string,
   ) {}
 
   static create(
@@ -36,7 +34,6 @@ export class PassportMetricAggregation {
       data.organizationId,
       data.startDate,
       data.endDate,
-      data.timezone,
     );
   }
 
@@ -116,7 +113,6 @@ export class PassportMetricAggregation {
             $dateTrunc: {
               date: "$date",
               unit: timePeriod,
-              timezone: this.timezone,
             },
           },
           sum: {

@@ -1,6 +1,7 @@
 import { z } from "zod/v4";
 import { MeasurementType } from "../../domain/passport-metric";
-import { TimePeriod } from "../../infrastructure/passport-metric.service";
+
+import { TimePeriod } from "../../domain/time-period";
 
 export const PassportMetricQuerySchema = z.object({
   startDate: z.iso.datetime().transform(v => new Date(v)),
@@ -10,7 +11,6 @@ export const PassportMetricQuerySchema = z.object({
   type: z.enum(MeasurementType),
   valueKey: z.string(),
   period: z.enum(TimePeriod),
-  timezone: z.string().transform(t => decodeURIComponent(t)),
 });
 
 export type PassportMetricQueryDto = z.infer<typeof PassportMetricQuerySchema>;

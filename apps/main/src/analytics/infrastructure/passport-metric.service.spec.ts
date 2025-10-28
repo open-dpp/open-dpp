@@ -6,10 +6,11 @@ import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { MongooseTestingModule } from "@open-dpp/testing";
 import { Connection } from "mongoose";
 import { MeasurementType, PassportMetric } from "../domain/passport-metric";
-import { dataFieldFactory, passportMetricFactory } from "../fixtures/passport-metric.factory";
+import { TimePeriod } from "../domain/time-period";
 
+import { dataFieldFactory, passportMetricFactory } from "../fixtures/passport-metric.factory";
 import { PassportMetricDoc, PassportMetricSchema } from "./passport-metric.schema";
-import { PassportMetricService, TimePeriod } from "./passport-metric.service";
+import { PassportMetricService } from "./passport-metric.service";
 
 describe("passportMetricService", () => {
   let passportMetricService: PassportMetricService;
@@ -163,21 +164,20 @@ describe("passportMetricService", () => {
         valueKey: "http://example.com",
         startDate: new Date("2025-01-01T00:00:00Z"),
         endDate: new Date("2025-03-01T00:00:00Z"),
-        timezone: "UTC",
         period: TimePeriod.MONTH,
       },
     );
     expect(statistic).toEqual([
       {
-        datetime: "2024-12-31T23:00:00.000Z",
+        datetime: "2025-01-01T00:00:00.000Z",
         sum: 3,
       },
       {
-        datetime: "2025-01-31T23:00:00.000Z",
+        datetime: "2025-02-01T00:00:00.000Z",
         sum: 2,
       },
       {
-        datetime: "2025-02-28T23:00:00.000Z",
+        datetime: "2025-03-01T00:00:00.000Z",
         sum: 1,
       },
     ]);
@@ -210,7 +210,7 @@ describe("passportMetricService", () => {
         dataFieldId: dataFieldId3,
       }),
     ];
-    const date1 = new Date("2025-01-01T12:00:00Z");
+    const date1 = new Date("2025-01-01T12:00:00.000Z");
     const passportMetric1 = PassportMetric.createFieldAggregate({
       source,
       fieldValues: fieldValues1,
@@ -228,7 +228,7 @@ describe("passportMetricService", () => {
         dataFieldId: dataFieldId2,
       }),
     ];
-    const date2 = new Date("2025-02-01T12:00:00Z");
+    const date2 = new Date("2025-02-01T12:00:00.000Z");
     const passportMetric2 = PassportMetric.createFieldAggregate({
       source,
       fieldValues: fieldValues2,
@@ -246,7 +246,7 @@ describe("passportMetricService", () => {
         dataFieldId: dataFieldId3,
       }),
     ];
-    const date3 = new Date("2025-01-01T13:00:00Z");
+    const date3 = new Date("2025-01-01T13:00:00.000Z");
     const passportMetric3 = PassportMetric.createFieldAggregate({
       source,
       fieldValues: fieldValues3,
@@ -264,23 +264,22 @@ describe("passportMetricService", () => {
         modelId: source.modelId,
         type: MeasurementType.FIELD_AGGREGATE,
         valueKey: dataFieldId1,
-        startDate: new Date("2025-01-01T00:00:00Z"),
-        endDate: new Date("2025-03-01T13:00:00Z"),
-        timezone: "UTC",
+        startDate: new Date("2025-01-01T00:00:00.000Z"),
+        endDate: new Date("2025-03-01T13:00:00.000Z"),
         period: TimePeriod.MONTH,
       },
     );
     expect(statistic).toEqual([
       {
-        datetime: "2024-12-31T23:00:00.000Z",
+        datetime: "2025-01-01T00:00:00.000Z",
         sum: 110,
       },
       {
-        datetime: "2025-01-31T23:00:00.000Z",
+        datetime: "2025-02-01T00:00:00.000Z",
         sum: 2,
       },
       {
-        datetime: "2025-02-28T23:00:00.000Z",
+        datetime: "2025-03-01T00:00:00.000Z",
         sum: 0,
       },
     ]);
@@ -294,21 +293,20 @@ describe("passportMetricService", () => {
         valueKey: dataFieldId2,
         startDate: new Date("2025-01-01T00:00:00Z"),
         endDate: new Date("2025-03-01T13:00:00Z"),
-        timezone: "UTC",
         period: TimePeriod.MONTH,
       },
     );
     expect(statistic).toEqual([
       {
-        datetime: "2024-12-31T23:00:00.000Z",
+        datetime: "2025-01-01T00:00:00.000Z",
         sum: 3,
       },
       {
-        datetime: "2025-01-31T23:00:00.000Z",
+        datetime: "2025-02-01T00:00:00.000Z",
         sum: 4,
       },
       {
-        datetime: "2025-02-28T23:00:00.000Z",
+        datetime: "2025-03-01T00:00:00.000Z",
         sum: 0,
       },
     ]);

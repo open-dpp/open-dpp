@@ -38,7 +38,8 @@ import { UserDbSchema, UserDoc } from "../../users/infrastructure/user.schema";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { AnalyticsModule } from "../analytics.module";
 import { MeasurementType, PassportMetric } from "../domain/passport-metric";
-import { PassportMetricService, TimePeriod } from "../infrastructure/passport-metric.service";
+import { TimePeriod } from "../domain/time-period";
+import { PassportMetricService } from "../infrastructure/passport-metric.service";
 import { PassportMetricController } from "./passport-metric.controller";
 
 describe("passportMetricController", () => {
@@ -212,10 +213,9 @@ describe("passportMetricController", () => {
     await passportMetricService.create(pageView1);
     await passportMetricService.create(pageView2);
 
-    const timezone = "UTC";
     const response = await request(getApp(app))
       .get(
-        `/organizations/${organization.id}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T00:00:00Z&endDate=2025-03-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}&timezone=${timezone}`,
+        `/organizations/${organization.id}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T00:00:00Z&endDate=2025-03-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
       )
       .set(
         "Authorization",
@@ -230,15 +230,15 @@ describe("passportMetricController", () => {
     expect(response.body)
       .toEqual([
         {
-          datetime: "2024-12-31T23:00:00.000Z",
+          datetime: "2025-01-01T00:00:00.000Z",
           sum: 2,
         },
         {
-          datetime: "2025-01-31T23:00:00.000Z",
+          datetime: "2025-02-01T00:00:00.000Z",
           sum: 0,
         },
         {
-          datetime: "2025-02-28T23:00:00.000Z",
+          datetime: "2025-03-01T00:00:00.000Z",
           sum: 0,
         },
       ]);
@@ -263,7 +263,7 @@ describe("passportMetricController", () => {
     await passportMetricService.create(pageView);
     const response = await request(getApp(app))
       .get(
-        `/organizations/${otherOrganization.id}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T00:00:00Z&endDate=2025-02-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}&timezone=UTC`,
+        `/organizations/${otherOrganization.id}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T00:00:00Z&endDate=2025-02-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
       )
       .set(
         "Authorization",
@@ -275,10 +275,10 @@ describe("passportMetricController", () => {
       .send();
     expect(response.status).toEqual(200);
     expect(response.body).toEqual([{
-      datetime: "2024-12-31T23:00:00.000Z",
+      datetime: "2025-01-01T00:00:00.000Z",
       sum: 0,
     }, {
-      datetime: "2025-01-31T23:00:00.000Z",
+      datetime: "2025-02-01T00:00:00.000Z",
       sum: 0,
     }]);
   });
@@ -286,7 +286,7 @@ describe("passportMetricController", () => {
   it(`/GET passport metrics fails if user is not member of organization`, async () => {
     const response = await request(getApp(app))
       .get(
-        `/organizations/${otherOrganization.id}/passport-metrics?templateId=${randomUUID()}&modelId=${randomUUID()}&startDate=2025-01-01T12:00:00Z&endDate=2025-01-01T13:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}&timezone=UTC`,
+        `/organizations/${otherOrganization.id}/passport-metrics?templateId=${randomUUID()}&modelId=${randomUUID()}&startDate=2025-01-01T12:00:00Z&endDate=2025-01-01T13:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
       )
       .set(
         "Authorization",

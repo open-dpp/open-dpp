@@ -54,11 +54,9 @@ export const useAnalyticsStore = defineStore("analytics", () => {
       [TimeView.YEARLY]: TimePeriod.MONTH,
     };
 
-    const timezone = getCurrentTimezone();
     try {
       const response = await apiClient.analytics.passportMetric.query({
         ...omit(query, "selectedView"),
-        timezone,
         period: timePeriods[requestedTimeView.value],
       });
       passportMeasurements.value = response.data;
@@ -87,7 +85,7 @@ export const useAnalyticsStore = defineStore("analytics", () => {
       [TimeView.MONTHLY]: "DD.MM",
       [TimeView.YEARLY]: "MMMM",
     };
-    return dayjs(isoDateString, undefined, getCurrentTimezone()).format(
+    return dayjs(isoDateString).tz(getCurrentTimezone()).format(
       format[requestedTimeView.value],
     );
   };
