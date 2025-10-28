@@ -121,6 +121,7 @@
     "version": "Version",
     "selection": "Auswahl",
     "section": "Abschnitt",
+    "subsections": "Unterabschnitte",
     "addSection": "Abschnitt hinzufügen",
     "configuration": "Konfiguration",
     "dataField": "Datenfeld",
