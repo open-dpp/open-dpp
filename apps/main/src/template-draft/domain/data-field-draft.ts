@@ -59,6 +59,11 @@ export class DataFieldDraft extends DataFieldBase {
     this._name = newName;
   }
 
+  changeType(dataFieldType: DataFieldType_TYPE) {
+    this._type = dataFieldType;
+    this._options = {};
+  }
+
   publish(): DataFieldDbProps {
     return {
       type: this.type,

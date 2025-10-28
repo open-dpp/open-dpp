@@ -5,10 +5,8 @@ import type { DataFieldDraftDbProps } from "./data-field-draft";
 import type { MoveDirection_TYPE } from "./template-draft";
 import { randomUUID } from "node:crypto";
 import { NotFoundError, ValueError } from "@open-dpp/exception";
-import {
-  SectionBase,
-  SectionType,
-} from "../../data-modelling/domain/section-base";
+import { DataFieldType_TYPE } from "../../data-modelling/domain/data-field-base";
+import { SectionBase, SectionType } from "../../data-modelling/domain/section-base";
 import { DataFieldDraft } from "./data-field-draft";
 import { MoveDirection } from "./template-draft";
 
@@ -112,6 +110,7 @@ export class SectionDraft extends SectionBase {
     dataFieldId: string,
     data: {
       name?: string;
+      type?: DataFieldType_TYPE;
       options?: Record<string, unknown>;
     },
   ) {
@@ -121,6 +120,9 @@ export class SectionDraft extends SectionBase {
     }
     if (data.name) {
       found.rename(data.name);
+    }
+    if (data.type) {
+      found.changeType(data.type);
     }
     if (data.options) {
       found.mergeOptions(data.options);
