@@ -268,6 +268,7 @@ describe("draftStore", () => {
     const dataFieldId = (section.dataFields[0] as DataFieldDto).id;
     const modification = {
       name: "new name",
+      type: DataFieldType.NUMERIC_FIELD,
       options: { min: 2 },
     };
     await draftStore.modifyDataField(dataFieldId, modification);
