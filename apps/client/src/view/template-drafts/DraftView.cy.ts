@@ -394,8 +394,10 @@ describe("<DraftView />", () => {
         });
 
         cy.get(`[data-cy="${dataFieldToCreate.id}"]`)
-          .find("input")
-          .should("have.attr", "placeholder", dataFieldToCreate.name);
+          .within(() => {
+            cy.contains(dataFieldToCreate.name)
+              .should("be.visible");
+          });
       });
     },
   );
@@ -555,7 +557,7 @@ describe("<DraftView />", () => {
 
     cy.wait("@getDraft").its("response.statusCode").should("eq", 200);
 
-    cy.get(`[data-cy="${dataFieldToModify.id}"]`).click();
+    cy.get(`[data-cy="edit-${dataFieldToModify.id}"]`).click();
     cy.get("[data-cy=\"select-granularity-level\"]").should("not.exist");
     const newFieldName = "New Name";
     const nameField = cy.get("[data-cy=\"name\"]");

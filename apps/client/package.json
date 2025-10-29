@@ -33,6 +33,7 @@
     "marked": "^16.4.1",
     "motion": "^12.23.24",
     "pinia": "^3.0.3",
+    "primeicons": "^7.0.0",
     "primevue": "^4.4.1",
     "qrcode": "^1.5.4",
     "socket.io-client": "^4.8.1",

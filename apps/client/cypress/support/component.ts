@@ -42,6 +42,7 @@ import { i18n } from "../../src/translations/i18n.ts";
 // Import commands.js using ES2015 syntax:
 import "./commands.js";
 import "../plugins/tailwind.js";
+import "primeicons/primeicons.css";
 
 let pinia: Pinia;
 
