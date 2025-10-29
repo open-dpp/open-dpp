@@ -115,7 +115,7 @@ describe("<DraftView />", () => {
     cy.contains(`Passvorlagen Entwurf ${draft.name}`).should("be.visible");
     cy.contains(`Version ${draft.version}`).should("be.visible");
     cy.contains("button", "Abschnitt hinzufügen").click();
-    cy.contains(`Abschnitt hinzufügen`).should("be.visible");
+
     cy.contains(`Auswahl`).should("be.visible");
     // Check that no data fields are selectable
     cy.contains("li", "Textfeld").should("not.exist");
@@ -476,7 +476,7 @@ describe("<DraftView />", () => {
     );
     cy.spy(router, "push").as("pushSpy");
 
-    actionsOfSection.within(() => cy.contains("Abschnitt hinzufügen").click());
+    actionsOfSection.within(() => cy.contains("Unterabschnitte").click());
     cy.get("@pushSpy").should(
       "have.been.calledWith",
       `?sectionId=${repeatableSection.id}`,

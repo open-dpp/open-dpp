@@ -160,7 +160,7 @@ onMounted(async () => {
                 variant="primary"
                 @click="onAddSubSectionClicked(section)"
               >
-                {{ t('draft.addSection') }}
+                {{ t('draft.subsections') }}
               </BaseButton>
               <div class="flex items-center rounded-md">
                 <button
