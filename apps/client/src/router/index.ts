@@ -34,6 +34,7 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       layout: "none",
       public: true,
+      onlyAnonymous: true,
     },
   },
   {
@@ -52,6 +53,7 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       layout: "none",
       public: true,
+      onlyAnonymous: true,
     },
   },
   {
@@ -61,6 +63,17 @@ export const routes: RouteRecordRaw[] = [
     meta: {
       layout: "none",
       public: true,
+      onlyAnonymous: true,
+    },
+  },
+  {
+    path: "/password-reset-request",
+    name: "PasswordResetRequest",
+    component: () => import("../view/auth/PasswordResetRequest.vue"),
+    meta: {
+      layout: "none",
+      public: true,
+      onlyAnonymous: true,
     },
   },
   ...AUTH_ROUTES,
@@ -79,9 +92,13 @@ router.beforeEach(async (to, from, next) => {
   const layoutStore = useLayoutStore();
   layoutStore.isPageLoading = true;
   const session = authClient.useSession();
+  const isSignedIn = session.value.data !== null;
 
-  // Redirect unauthenticated users away from non-public routes
-  if (session.value.data === null && !to.meta?.public) {
+  if (isSignedIn && to.meta?.onlyAnonymous) {
+    next("/");
+    return;
+  }
+  if (!isSignedIn && !to.meta?.public) {
     next("/signin");
     return;
   }

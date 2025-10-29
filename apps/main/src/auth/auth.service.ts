@@ -5,6 +5,7 @@ import { betterAuth, User } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { genericOAuth } from "better-auth/plugins";
 import { Db, MongoClient, ObjectId } from "mongodb";
+import { PasswordResetMail } from "../email/domain/password-reset-mail";
 import { VerifyEmailMail } from "../email/domain/verify-email-mail";
 import { EmailService } from "../email/email.service";
 
@@ -73,6 +74,16 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       trustedOrigins: [this.configService.get("OPEN_DPP_URL")],
       emailAndPassword: {
         enabled: true,
+        sendResetPassword: async ({ user, url, token }) => {
+          await this.emailService.send(PasswordResetMail.create({
+            to: user.email,
+            subject: "Password reset",
+            templateProperties: {
+              link: `${this.configService.get("OPEN_DPP_URL")}/password-reset?token=${token}`,
+              firstName: user.name ?? "User",
+            },
+          }));
+        },
       },
       emailVerification: {
         sendOnSignUp: true,

@@ -20,6 +20,7 @@ export class AuthController {
     @Req() request: Request,
     @Res() response: Response,
   ) {
+    console.log(request.body);
     const handler = toNodeHandler(this.authService.auth!);
     await handler(request, response);
   }

@@ -105,7 +105,7 @@ async function signInWithOpenDppCloud() {
             </div>
 
             <div class="text-sm/6">
-              <router-link to="/password-reset" class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
+              <router-link to="/password-reset-request" class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
                 Forgot password?
               </router-link>
             </div>

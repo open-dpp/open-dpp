@@ -19,6 +19,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bodyParser: false,
   });
+  app.useLogger(["log", "error", "warn", "debug", "verbose"]);
   const configService = app.get(ConfigService);
   const logger = new Logger("Bootstrap");
 

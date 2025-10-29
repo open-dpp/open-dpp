@@ -7,5 +7,6 @@ declare module "vue-router" {
   interface RouteMeta {
     layout: layout;
     public?: boolean;
+    onlyAnonymous?: boolean;
   }
 }
