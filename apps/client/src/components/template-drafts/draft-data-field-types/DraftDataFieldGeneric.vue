@@ -1,13 +1,16 @@
 <script lang="ts" setup>
 import type { DataFieldDto, SectionDto } from "@open-dpp/api-client";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/vue/20/solid";
+import { useI18n } from "vue-i18n";
+import { DraftDataFieldVisualization } from "../../../lib/draft.ts";
 import { useDraftStore } from "../../../stores/draft";
 
 const props = defineProps<{ dataField: DataFieldDto; section: SectionDto }>();
-
 const emits = defineEmits<{
   (e: "clicked"): void;
 }>();
+
+const { t } = useI18n();
 
 const draftStore = useDraftStore();
 
@@ -22,7 +25,22 @@ function isLast(id: string) {
 </script>
 
 <template>
-  <div class="flex gap-2">
+  <div class="flex gap-2 items-center">
+    <div
+      class="flex size-8 w-48 gap-1 p-1 items-center justify-center rounded-md" :class="[
+        DraftDataFieldVisualization[props.dataField.type].background,
+      ]"
+    >
+      <component
+        :is="DraftDataFieldVisualization[props.dataField.type].icon"
+        aria-hidden="true"
+        class="size-6 text-white"
+      />
+      <div class="w-40 text-white cursor-pointer" @mousedown.prevent="emits('clicked')">
+        {{ t(DraftDataFieldVisualization[props.dataField.type].label) }}
+      </div>
+    </div>
+
     <input
       :placeholder="dataField.name"
       class="block w-full cursor-pointer select-none rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
@@ -40,7 +58,7 @@ function isLast(id: string) {
         @click="draftStore.moveDataFieldUp(dataField.id)"
       >
         <span class="sr-only">Datenfeld nach oben verschieben</span>
-        <ChevronUpIcon class="size-5" aria-hidden="true" />
+        <ChevronUpIcon class="size-7" aria-hidden="true" />
       </button>
       <button
         type="button"
@@ -51,7 +69,7 @@ function isLast(id: string) {
         @click="draftStore.moveDataFieldDown(dataField.id)"
       >
         <span class="sr-only">Datenfeld nach unten verschieben</span>
-        <ChevronDownIcon class="size-5" aria-hidden="true" />
+        <ChevronDownIcon class="size-7" aria-hidden="true" />
       </button>
     </div>
   </div>

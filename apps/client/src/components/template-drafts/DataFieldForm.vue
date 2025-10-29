@@ -88,15 +88,14 @@ function formSchemaFromType(
         `[DataFieldForm] Unsupported node type: ${type as string}, using generic form. Please implement a form schema for this type.`,
       );
   }
-  if (!existingGranularityLevel) {
-    dataFieldFormkitSchema.push({
-      "$formkit": "select",
-      "name": "granularityLevel",
-      "label": t("builder.granularityLevel"),
-      "options": granularityOptions,
-      "data-cy": "select-granularity-level",
-    });
-  }
+  dataFieldFormkitSchema.push({
+    "$formkit": "select",
+    "name": "granularityLevel",
+    "label": t("builder.granularityLevel"),
+    "disabled": !!existingGranularityLevel,
+    "options": granularityOptions,
+    "data-cy": "select-granularity-level",
+  });
   return dataFieldFormkitSchema;
 }
 
