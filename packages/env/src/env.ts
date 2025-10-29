@@ -11,7 +11,6 @@ const envSchema = z.object({
   OPEN_DPP_SERVICE_TOKEN: z.coerce.string().min(16),
   OPEN_DPP_AAS_TOKEN: z.coerce.string().min(16),
   OPEN_DPP_MSG_PORT: z.coerce.number().optional().default(5002),
-  OPEN_DPP_FRONTEND_URL: z.coerce.string(),
   // MongoDB
   OPEN_DPP_MONGODB_URI: z.coerce.string().optional(),
   OPEN_DPP_MONGODB_PORT: z.coerce.number().max(65535).min(0).optional(),
@@ -53,6 +52,8 @@ const envSchema = z.object({
   OPEN_DPP_MAIL_PORT: z.coerce.number().max(65535).min(0),
   OPEN_DPP_MAIL_USER: z.coerce.string(),
   OPEN_DPP_MAIL_PASSWORD: z.coerce.string(),
+  OPEN_DPP_MAIL_MAILPIT_SMTP_AUTH: z.coerce.string().optional(),
+  OPEN_DPP_MAIL_MAILPIT_SMTP_ALLOW_INSECURE: z.coerce.string().optional(),
   // Auth
   OPEN_DPP_AUTH_URL: z.coerce.string(),
   OPEN_DPP_AUTH_SECRET: z.coerce.string(),

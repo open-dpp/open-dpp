@@ -70,7 +70,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       baseURL: this.configService.get("OPEN_DPP_AUTH_URL"),
       basePath: "/api/auth",
       secret: this.configService.get("OPEN_DPP_AUTH_SECRET"),
-      trustedOrigins: [this.configService.get("OPEN_DPP_FRONTEND_URL")],
+      trustedOrigins: [this.configService.get("OPEN_DPP_URL")],
       emailAndPassword: {
         enabled: true,
       },

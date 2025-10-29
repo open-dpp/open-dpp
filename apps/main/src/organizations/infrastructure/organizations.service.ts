@@ -116,7 +116,7 @@ export class OrganizationsService {
       to: userToInvite.email,
       subject: "You've been invited to join an organization",
       templateProperties: {
-        link: `${this.configService.get("OPEN_DPP_FRONTEND_URL")}/organizations/${org.id}`,
+        link: `${this.configService.get("OPEN_DPP_URL")}/organizations/${org.id}`,
         organizationName: org.name,
         firstName: userToInvite.name,
       },
