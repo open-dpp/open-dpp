@@ -635,6 +635,74 @@ describe("<DraftView />", () => {
     // Trigger command of a specific item
   });
 
+  it("renders draft and change data field type", async () => {
+    const orgaId = "orgaId";
+    const dataFieldToModify = section.dataFields[0] as DataFieldDto;
+
+    cy.intercept(
+      "GET",
+      `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}`,
+      {
+        statusCode: 200,
+        body: draft,
+      },
+    ).as("getDraft");
+
+    cy.intercept(
+      "PATCH",
+      `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}/sections/${section.id}/data-fields/${dataFieldToModify.id}`,
+      {
+        statusCode: 200,
+        body: {
+          ...draft,
+          sections: [
+            {
+              ...section,
+              dataFields: section.dataFields.map(
+                df => df.id === dataFieldToModify.id ? { ...df, type: DataFieldType.NUMERIC_FIELD } : df,
+              ),
+            },
+          ],
+        },
+      },
+    ).as("modifyDataField");
+
+    const indexStore = useIndexStore();
+    indexStore.selectOrganization(orgaId);
+
+    cy.wrap(
+      router.push(`/organizations/${orgaId}/data-model-drafts/${draft.id}`),
+    );
+
+    cy.mountWithPinia(TestWrapper, {
+      slots: {
+        default: DraftView,
+      },
+      router,
+    });
+
+    cy.wait("@getDraft").its("response.statusCode").should("eq", 200);
+
+    cy.get(`[data-cy="${dataFieldToModify.id}"]`).click();
+    cy.get(".p-button-icon-only").click();
+
+    cy.contains("Datenfeldtyp ändern").click();
+
+    cy.contains("li", "Numerisches Feld").click();
+
+    cy.get("[data-cy=\"submit\"]").click();
+
+    cy.wait("@modifyDataField").then(({ request }) => {
+      const expected = {
+        name: dataFieldToModify.name,
+        type: DataFieldType.NUMERIC_FIELD,
+        options: { min: null, max: null },
+      };
+      cy.expectDeepEqualWithDiff(request.body, expected);
+    });
+    // Trigger command of a specific item
+  });
+
   //
   // it("renders nested view", () => {
   //   const dataField: DataFieldDto = {

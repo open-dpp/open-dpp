@@ -138,7 +138,8 @@
     "fileField": "File",
     "addFileField": "Add file upload",
     "passportDraft": "Passport draft | Passport drafts",
-    "passportDraftDescription": "All passport drafts"
+    "passportDraftDescription": "All passport drafts",
+    "changeDataFieldType": "Change datafield type"
   },
   "integrations": {
     "integrations": "Integrations",

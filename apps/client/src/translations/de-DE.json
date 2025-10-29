@@ -138,7 +138,8 @@
     "fileField": "Datei",
     "addFileField": "Fügen Sie einen Dateiupload hinzu",
     "passportDraft": "Passvorlagen Entwurf | Passvorlagen Entwürfe",
-    "passportDraftDescription": "Alle Passvorlagen Entwürfe"
+    "passportDraftDescription": "Alle Passvorlagen Entwürfe",
+    "changeDataFieldType": "Datenfeldtyp ändern"
   },
   "integrations": {
     "integrations": "Integrationen",

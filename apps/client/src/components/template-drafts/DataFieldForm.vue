@@ -209,7 +209,7 @@ async function submitForm() {
 
 const buttonActions = [
   {
-    label: "Update",
+    label: t("draft.changeDataFieldType"),
     command: onChangeDataFieldType,
   },
   {
