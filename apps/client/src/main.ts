@@ -39,12 +39,7 @@ async function startApp() {
   );
 
   const session = authClient.useSession();
-  await new Promise((resolve) => {
-    while (session.value.isPending || session.value.isRefetching) {
-      // IGNORE
-    }
-    resolve(null);
-  });
+  await new Promise(resolve => setTimeout(() => resolve(null), 500));
   if (session.value.data !== null) {
     const organizationStore = useOrganizationsStore();
     await organizationStore.fetchOrganizations();
