@@ -78,7 +78,7 @@ jobs:
       # MCP
       OPEN_DPP_MCP_PORT: "3001"
       # Mail
-      OPEN_DPP_MAIL_HOST=: localhost"
+      OPEN_DPP_MAIL_HOST=: "localhost"
       OPEN_DPP_MAIL_PORT: "8026"
       OPEN_DPP_MAIL_USER: "admin"
       OPEN_DPP_MAIL_PASSWORD: "admin"
