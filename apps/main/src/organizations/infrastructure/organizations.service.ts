@@ -100,10 +100,10 @@ export class OrganizationsService {
     }
     const org = await this.findOneOrFail(organizationId);
     const userToInvite = await this.authService.getUserByEmail(email);
-    const userToInviteId = (userToInvite as unknown as { _id: string })._id;
     if (!userToInvite) {
       throw new NotFoundException(); // TODO: Fix user enumeration
     }
+    const userToInviteId = (userToInvite as unknown as { _id: string })._id;
     if (org.members.find(member => member.id === userToInviteId)) {
       throw new BadRequestException();
     }
