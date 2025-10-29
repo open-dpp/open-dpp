@@ -16,6 +16,7 @@ import ItemSelection from "./ItemSelection.vue";
 const props = defineProps<{
   parentId?: string;
   parentGranularityLevel?: GranularityLevel;
+  dataFieldId?: string;
 }>();
 
 const { t } = useI18n();
@@ -61,5 +62,6 @@ const itemsToSelect = ref<SelectOption[]>([
     :items-to-select="itemsToSelect"
     :parent-granularity-level="props.parentGranularityLevel"
     :parent-id="props.parentId"
+    :data-field-id="props.dataFieldId"
   />
 </template>

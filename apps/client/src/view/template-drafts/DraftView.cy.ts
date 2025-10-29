@@ -220,9 +220,7 @@ describe("<DraftView />", () => {
     cy.mountWithPinia(DraftView, { router });
 
     cy.wait("@getDraft").its("response.statusCode").should("eq", 200);
-    cy.get(
-      `[data-cy="move-data-field-${dataField1.id}-up"]`,
-    ).click();
+    cy.get(`[data-cy="move-data-field-${dataField1.id}-up"]`).click();
     cy.wait("@moveDataField").then(({ request }) => {
       const expected = {
         type: MoveType.POSITION,
@@ -570,12 +568,13 @@ describe("<DraftView />", () => {
     cy.wait("@modifyDataField").then(({ request }) => {
       const expected = {
         name: newFieldName,
+        type: DataFieldType.TEXT_FIELD,
       };
       cy.expectDeepEqualWithDiff(request.body, expected);
     });
   });
 
-  it("renders draft and deletes data field", () => {
+  it("renders draft and deletes data field", async () => {
     const orgaId = "orgaId";
     const dataFieldToDelete = section.dataFields[0] as DataFieldDto;
 
@@ -613,6 +612,7 @@ describe("<DraftView />", () => {
     cy.wrap(
       router.push(`/organizations/${orgaId}/data-model-drafts/${draft.id}`),
     );
+
     cy.mountWithPinia(TestWrapper, {
       slots: {
         default: DraftView,
@@ -623,12 +623,16 @@ describe("<DraftView />", () => {
     cy.wait("@getDraft").its("response.statusCode").should("eq", 200);
 
     cy.get(`[data-cy="${dataFieldToDelete.id}"]`).click();
-    cy.get("[data-cy=\"delete\"]").click();
+    cy.get(".p-button-icon-only").click();
+
+    cy.contains("Datenfeld löschen").click();
 
     cy.contains("button", "Bestätigen").click();
 
     cy.wait("@deleteDataField").its("response.statusCode").should("eq", 200);
     cy.get(`[data-cy="${dataFieldToDelete.id}"]`).should("not.exist");
+
+    // Trigger command of a specific item
   });
 
   //

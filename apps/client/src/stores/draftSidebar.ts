@@ -33,7 +33,7 @@ export const useDraftSidebarStore = defineStore("draftSidebar", () => {
     },
     {
       type: SidebarContentType.DATA_FIELD_SELECTION,
-      title: t("draft.addDataField"),
+      title: t("draft.dataField"),
       subTitle: t("draft.selection"),
       content: DataFieldSelection,
     },
