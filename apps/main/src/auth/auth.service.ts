@@ -67,7 +67,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     }
 
     this.auth = betterAuth({
-      baseURL: this.configService.get("OPEN_DPP_AUTH_URL"),
+      baseURL: this.configService.get("OPEN_DPP_URL"),
       basePath: "/api/auth",
       secret: this.configService.get("OPEN_DPP_AUTH_SECRET"),
       trustedOrigins: [this.configService.get("OPEN_DPP_URL")],
