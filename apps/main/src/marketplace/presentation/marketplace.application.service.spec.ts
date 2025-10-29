@@ -19,7 +19,6 @@ import {
   TemplateSchema,
 } from "../../templates/infrastructure/template.schema";
 import { TemplateService } from "../../templates/infrastructure/template.service";
-import { UsersService } from "../../users/infrastructure/users.service";
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,
@@ -59,7 +58,6 @@ describe("marketplaceService", () => {
         MarketplaceApplicationService,
         TemplateService,
         OrganizationsService,
-        UsersService,
         {
           provide: EmailService,
           useValue: {
