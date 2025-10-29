@@ -12,4 +12,7 @@ clean-pnpm:
 	find . -name "pnpm-lock.yaml" -type f -delete
 	pnpm i
 
-.PHONY: dev test full clean-pnpm
+clean-turbo:
+	find . -name ".turbo" -type d -prune -exec rm -rf '{}' +
+
+.PHONY: dev test full clean-pnpm remove-turbo-logs

@@ -22,8 +22,6 @@ Now navigate to http://open-dpp.localhost:20080
 
 For email verification go to https://mail.open-dpp.localhost:20080.
 
-// TODO: timing issue. open-dpp seems not to wait for keycloak such that the syncing fails for first docker compose up.
-
 ## Run tests
 
 To run the backend tests you have to run
@@ -54,7 +52,6 @@ npm run cypress:headless
 * Download docker-compose.yml
 * Download .env-example and rename it to .env
 * Download Caddyfile
-* Download keycloak-realm.json
 * Create secrets with your favorite secret generator and replace all secrets in .env
 * Adapt all urls to your domain
 

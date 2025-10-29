@@ -27,11 +27,6 @@ import {
 import { PassportTemplatePublicationService } from "../infrastructure/passport-template-publication.service";
 import { MarketplaceApplicationService } from "./marketplace.application.service";
 
-// Mock the KeycloakResourcesService module before any imports that use it
-/* jest.mock("../../keycloak-resources/infrastructure/keycloak-resources.service", () => ({
-  KeycloakResourcesService: jest.fn(),
-})); */
-
 describe("marketplaceService", () => {
   let marketplaceService: MarketplaceApplicationService;
   let organizationService: OrganizationsService;

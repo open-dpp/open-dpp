@@ -3,8 +3,6 @@ import { computed, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import SimpleTable from "../../components/lists/SimpleTable.vue";
 import { AI_INTEGRATION_ID, PRO_ALPHA_INTEGRATION_ID } from "../../const";
-import axiosIns from "../../lib/axios";
-import keycloakIns from "../../lib/keycloak";
 import { useIndexStore } from "../../stores";
 import { useAiIntegrationStore } from "../../stores/ai.integration";
 import { useNotificationStore } from "../../stores/notification";
@@ -39,23 +37,9 @@ const actions = computed(() => [
 ]);
 
 async function createApiKey() {
-  try {
-    const response = await axiosIns.post(
-      `${keycloakIns.authServerUrl}/realms/open-dpp/api-key/create`,
-    );
-    if (response.status === 200) {
-      notificationStore.addSuccessNotification(
-        t("integrations.apiKey.createSuccess", { key: response.data }),
-        undefined,
-        24_000,
-      );
-    }
-  }
-  catch {
-    notificationStore.addErrorNotification(
-      t("integrations.apiKey.createError"),
-    );
-  }
+  notificationStore.addErrorNotification(
+    t("integrations.apiKey.createError"),
+  );
 }
 
 onMounted(async () => {

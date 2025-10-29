@@ -93,9 +93,7 @@ jobs:
       OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET: ""
       OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL: ""
       # Frontend
-      KEYCLOAK_DISABLED: "true"
       VITE_API_ROOT: "http://localhost"
-      VITE_KEYCLOAK_ROOT: "http://localhost"
 
     steps:
       # Step 1: Checkout code
@@ -214,17 +212,6 @@ jobs:
             type=ref,event=tag
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
-      - name: Extract Docker keycloak metadata
-        id: meta-keycloak
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/keycloak
-          tags: |
-            type=sha
-            type=ref,event=branch
-            type=ref,event=tag
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-
       - name: Build and push Production
         uses: docker/build-push-action@v6
         with:
@@ -248,17 +235,5 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta-mcp.outputs.tags }}
           labels: ${{ steps.meta-mcp.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push Keycloak
-        uses: docker/build-push-action@v6
-        with:
-          context: ./apps/keycloak
-          file: ./apps/keycloak/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta-keycloak.outputs.tags }}
-          labels: ${{ steps.meta-keycloak.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

@@ -10,7 +10,6 @@ services:
     ports:
       - ${SERVICE_CADDY_PORT}:${SERVICE_CADDY_PORT}
     environment:
-      - SERVICE_KEYCLOAK_URL=${SERVICE_KEYCLOAK_URL}
       - SERVICE_APP_URL=${SERVICE_APP_URL}
       - SERVICE_MAILPIT_URL=${SERVICE_MAILPIT_URL}
       - SERVICE_MCP_SERVER_URL=${SERVICE_MCP_SERVER_URL}
@@ -24,13 +23,8 @@ services:
     container_name: open-dpp
     restart: unless-stopped
     image: ghcr.io/open-dpp/open-dpp:local
-    extra_hosts:
-      - "${SERVICE_KEYCLOAK_HOST}:host-gateway"
     env_file:
       - .env
-    depends_on:
-      keycloak:
-        condition: service_healthy
 
   mcp-server:
     container_name: mcp-server

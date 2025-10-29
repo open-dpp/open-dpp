@@ -54,9 +54,6 @@ importers:
       dompurify:
         specifier: ^3.3.0
         version: 3.3.0
-      keycloak-js:
-        specifier: ^26.2.1
-        version: 26.2.1
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -184,9 +181,6 @@ importers:
 
   apps/main:
     dependencies:
-      '@keycloak/keycloak-admin-client':
-        specifier: ^26.4.1
-        version: 26.4.1
       '@langchain/core':
         specifier: ^0.3.78
         version: 0.3.78(openai@5.12.2(ws@8.18.3)(zod@4.1.12))
@@ -2003,10 +1997,6 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
-
-  '@keycloak/keycloak-admin-client@26.4.1':
-    resolution: {integrity: sha512-xJkU4eNkVaHBolNMnR5lWWEX3nXBjGUJblGnRSOpzn4QKr3HDu67s590a7db4CCQYHzyTj21kuD/i6DqNTxXbQ==}
-    engines: {node: '>=18'}
 
   '@langchain/core@0.3.78':
     resolution: {integrity: sha512-Nn0x9erQlK3zgtRU1Z8NUjLuyW0gzdclMsvLQ6wwLeDqV91pE+YKl6uQb+L2NUDs4F0N7c2Zncgz46HxrvPzuA==}
@@ -4112,10 +4102,6 @@ packages:
   camelcase@6.3.0:
     resolution: {integrity: sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==}
     engines: {node: '>=10'}
-
-  camelize-ts@3.0.0:
-    resolution: {integrity: sha512-cgRwKKavoDKLTjO4FQTs3dRBePZp/2Y9Xpud0FhuCOTE86M2cniKN4CCXgRnsyXNMmQMifVHcv6SPaMtTx6ofQ==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   caniuse-lite@1.0.30001751:
     resolution: {integrity: sha512-A0QJhug0Ly64Ii3eIqHu5X51ebln3k4yTUkY1j8drqpWHVreg/VLijN48cZ1bYPiqOQuqpkIKnzr/Ul8V+p6Cw==}
@@ -6307,9 +6293,6 @@ packages:
   kareem@2.6.3:
     resolution: {integrity: sha512-C3iHfuGUXK2u8/ipq9LfjFfXFxAZMQJJq7vLS45r3D9Y2xQ/m4S8zaR4zMLFWh9AsNPXmcFfUDhTEO8UIC/V6Q==}
     engines: {node: '>=12.0.0'}
-
-  keycloak-js@26.2.1:
-    resolution: {integrity: sha512-bZt6fQj/TLBAmivXSxSlqAJxBx/knNZDQGJIW4ensGYGN4N6tUKV8Zj3Y7/LOV8eIpvWsvqV70fbACihK8Ze0Q==}
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
@@ -8673,14 +8656,6 @@ packages:
     resolution: {integrity: sha512-Am1ousAhSLBeB9cG/7k7r2R0zj50uDRlZHPGbazid5s9rlF1F/QKYObEKSIunSjIOkJZqwRRLpvewjEkM7pSqg==}
     deprecated: Please see https://github.com/lydell/urix#deprecated
 
-  url-join@5.0.0:
-    resolution: {integrity: sha512-n2huDr9h9yzd6exQVnH/jU5mr+Pfx08LRXXZhkLLetAMESRj+anQsTAh940iMrIetKAmry9coFuZQ2jY8/p3WA==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
-
-  url-template@3.1.1:
-    resolution: {integrity: sha512-4oszoaEKE/mQOtAmdMWqIRHmkxWkUZMnXFnjQ5i01CuRSK3uluxcH1MRVVVWmhlnzT1SCDfKxxficm2G37qzCA==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
-
   use@3.1.1:
     resolution: {integrity: sha512-cwESVXlO3url9YWlFW/TA9cshCEhtu7IKJ/p5soJ/gGpj7vbvFrAY/eIioQ6Dw23KjZhYgiIo8HOs1nQ2vr/oQ==}
     engines: {node: '>=0.10.0'}
@@ -10676,12 +10651,6 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
-
-  '@keycloak/keycloak-admin-client@26.4.1':
-    dependencies:
-      camelize-ts: 3.0.0
-      url-join: 5.0.0
-      url-template: 3.1.1
 
   '@langchain/core@0.3.78(openai@5.12.2(ws@8.18.3)(zod@4.1.12))':
     dependencies:
@@ -13046,8 +13015,6 @@ snapshots:
   camelcase@5.3.1: {}
 
   camelcase@6.3.0: {}
-
-  camelize-ts@3.0.0: {}
 
   caniuse-lite@1.0.30001751: {}
 
@@ -15676,8 +15643,6 @@ snapshots:
       safe-buffer: 5.2.1
 
   kareem@2.6.3: {}
-
-  keycloak-js@26.2.1: {}
 
   keyv@4.5.4:
     dependencies:
@@ -18428,10 +18393,6 @@ snapshots:
       punycode: 2.3.1
 
   urix@0.1.0: {}
-
-  url-join@5.0.0: {}
-
-  url-template@3.1.1: {}
 
   use@3.1.1: {}
 

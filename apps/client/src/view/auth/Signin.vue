@@ -50,7 +50,7 @@ async function signin() {
   password.value = "";
 }
 
-async function signInWithKeycloak() {
+async function signInWithOpenDppCloud() {
   await authClient.signIn.oauth2({
     providerId: "auth.demo1.open-dpp.de", // required
     callbackURL: "/",
@@ -128,7 +128,7 @@ async function signInWithKeycloak() {
           </div>
 
           <div class="mt-6">
-            <button :disabled="true" type="button" class="flex w-full items-center justify-center gap-3 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs inset-ring inset-ring-gray-300 hover:bg-gray-50 focus-visible:inset-ring-transparent dark:bg-white/10 dark:text-white dark:shadow-none dark:inset-ring-white/5 dark:hover:bg-white/20" @click="signInWithKeycloak">
+            <button :disabled="true" type="button" class="flex w-full items-center justify-center gap-3 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs inset-ring inset-ring-gray-300 hover:bg-gray-50 focus-visible:inset-ring-transparent dark:bg-white/10 dark:text-white dark:shadow-none dark:inset-ring-white/5 dark:hover:bg-white/20" @click="signInWithOpenDppCloud">
               <img class="h-5 w-5" src="https://open-dpp.de/favicon.ico">
               <span class="text-sm/6 font-semibold">open-dpp Cloud</span>
             </button>
