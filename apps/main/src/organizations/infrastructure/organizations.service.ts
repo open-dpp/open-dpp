@@ -118,7 +118,7 @@ export class OrganizationsService {
       templateProperties: {
         link: `${this.configService.get("OPEN_DPP_URL")}/organizations/${org.id}`,
         organizationName: org.name,
-        firstName: userToInvite.name,
+        firstName: userToInvite.name ?? "User",
       },
     }));
   }
