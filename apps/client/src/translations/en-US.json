@@ -314,8 +314,7 @@
     "profile": "Your profile",
     "personalInformation": "Personal information",
     "logout": "Logout",
-    "firstName": "First name",
-    "lastName": "Last name",
+    "name": "Name",
     "language": "Language",
     "displaySettings": "Display settings"
   },

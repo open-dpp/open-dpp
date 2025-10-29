@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import { inject, watch } from "vue";
 import { useI18n } from "vue-i18n";
+import { authClient } from "../auth-client.ts";
 import { LAST_SELECTED_LANGUAGE } from "../const";
-import { useProfileStore } from "../stores/profile";
 
 const { t, locale } = useI18n();
-const profileStore = useProfileStore();
 const config = inject<{ locale: string }>(Symbol.for("FormKitConfig"));
+
+const session = authClient.useSession();
 
 watch(locale, (newLocale) => {
   localStorage.setItem(LAST_SELECTED_LANGUAGE, newLocale as string);
@@ -29,11 +30,11 @@ watch(locale, (newLocale) => {
         <div
           class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2"
         >
-          <div class="sm:col-span-3">
+          <div class="sm:col-span-6">
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="first-name"
-            >{{ t('user.firstName') }}</label>
+            >{{ t('user.name') }}</label>
             <div class="mt-2">
               <input
                 id="first-name"
@@ -42,25 +43,7 @@ watch(locale, (newLocale) => {
                 name="first-name"
                 type="text"
                 disabled
-                :value="profileStore.profile?.firstName"
-              >
-            </div>
-          </div>
-
-          <div class="sm:col-span-3">
-            <label
-              class="block text-sm font-medium leading-6 text-gray-900"
-              for="last-name"
-            >{{ t('user.lastName') }}</label>
-            <div class="mt-2">
-              <input
-                id="last-name"
-                autocomplete="family-name"
-                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                name="last-name"
-                type="text"
-                disabled
-                :value="profileStore.profile?.lastName"
+                :value="session.data?.user.name"
               >
             </div>
           </div>
@@ -78,7 +61,7 @@ watch(locale, (newLocale) => {
                 name="email"
                 type="email"
                 disabled
-                :value="profileStore.profile?.email"
+                :value="session.data?.user.email"
               >
             </div>
           </div>
