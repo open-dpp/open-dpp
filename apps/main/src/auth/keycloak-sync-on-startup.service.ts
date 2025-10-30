@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import KcAdminClient from "@keycloak/keycloak-admin-client";
 import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
@@ -47,7 +48,7 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
             body: {
               name: `${user.firstName} ${user.lastName}`,
               email: user.email as string,
-              password: "#Test1234",
+              password: randomUUID(),
             },
           });
           await this.authService.setUserEmailVerified(user.email as string, true);
