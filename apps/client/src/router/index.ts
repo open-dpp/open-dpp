@@ -95,7 +95,6 @@ router.beforeEach(async (to, from, next) => {
   const isSignedIn = session !== null;
 
   if (isSignedIn && to.meta?.onlyAnonymous) {
-    console.log("Not anonymous");
     next("/");
     return;
   }
