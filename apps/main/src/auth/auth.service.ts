@@ -86,7 +86,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       trustedOrigins: [this.configService.get("OPEN_DPP_URL")],
       emailAndPassword: {
         enabled: true,
-        sendResetPassword: async ({ user, url, token }) => {
+        sendResetPassword: async ({ user, token }) => {
           await this.emailService.send(PasswordResetMail.create({
             to: user.email,
             subject: "Password reset",
