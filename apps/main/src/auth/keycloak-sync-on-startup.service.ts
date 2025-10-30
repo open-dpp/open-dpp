@@ -41,23 +41,29 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
       const users = await client.users.find({ realm });
       for (const user of users) {
         this.logger.log(`Processing user: ${user.username}`);
-        const dbUser = await this.authService.getUserByEmail(user.email as string);
-        if (!dbUser) {
-          this.logger.log(`User ${user.username} not found in database`);
-          const data = await this.authService.auth?.api.signUpEmail({
-            body: {
-              name: `${user.firstName} ${user.lastName}`,
-              email: user.email as string,
-              password: randomUUID(),
-            },
-          });
-          await this.authService.setUserEmailVerified(user.email as string, true);
-          if (data && data.user) {
-            this.logger.log(`User ${user.id}->${data.user.id} created successfully`);
+        const userEmail = user.email;
+        if (userEmail) {
+          const dbUser = await this.authService.getUserByEmail(user.email as string);
+          if (!dbUser) {
+            this.logger.log(`User ${user.username} not found in database`);
+            const data = await this.authService.auth?.api.signUpEmail({
+              body: {
+                name: `${user.firstName} ${user.lastName}`,
+                email: user.email as string,
+                password: randomUUID(),
+              },
+            });
+            await this.authService.setUserEmailVerified(user.email as string, true);
+            if (data && data.user) {
+              this.logger.log(`User ${user.id}->${data.user.id} created successfully`);
+            }
+          }
+          else {
+            this.logger.log(`User with email ${user.email} already found in database`);
           }
         }
         else {
-          this.logger.log(`User with email ${user.email} already found in database`);
+          this.logger.log(`Cannot process user with id ${user.id} without email`);
         }
       }
     }
