@@ -65,6 +65,7 @@ jobs:
       OPEN_DPP_MISTRAL_API_KEY: "your-mistral-key"
       OPEN_DPP_OLLAMA_URL: "https://ollama-url"
       OPEN_DPP_MCP_URL: "http://localhost:3002/sse"
+      DPP_API_URL: "http://dpp.example.de/api"
       # Keycloak
       OPEN_DPP_KEYCLOAK_URL: "https://auth.example.de"
       OPEN_DPP_KEYCLOAK_REALM: "open-dpp"
