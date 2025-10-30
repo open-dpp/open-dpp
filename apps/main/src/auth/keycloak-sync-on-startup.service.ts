@@ -28,7 +28,7 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
     if (migrationEnabled && !allSet) {
       throw new Error("Keycloak migration enabled but not all env variables set.");
     }
-    if (allSet) {
+    if (migrationEnabled && allSet) {
       const client = new KcAdminClient({
         baseUrl,
         realmName: realm,
