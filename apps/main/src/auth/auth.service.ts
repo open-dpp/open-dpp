@@ -35,6 +35,16 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     return await this.db!.collection<User>("user").findOne({ email });
   }
 
+  async setUserEmailVerified(email: string, emailVerified: boolean): Promise<void> {
+    await this.db!.collection<User>("user").updateOne({
+      email,
+    }, {
+      $set: {
+        emailVerified,
+      },
+    });
+  }
+
   async getSession(headers: Headers) {
     return this.auth!.api.getSession({
       headers,
@@ -67,6 +77,8 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       });
     }
 
+    const migrationEnabled = !!this.configService.get("OPEN_DPP_MIGRATE_KEYCLOAK_ENABLED");
+
     this.auth = betterAuth({
       baseURL: this.configService.get("OPEN_DPP_URL"),
       basePath: "/api/auth",
@@ -86,7 +98,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         },
       },
       emailVerification: {
-        sendOnSignUp: true,
+        sendOnSignUp: !migrationEnabled,
         sendVerificationEmail: async ({ user, url }: { user: User; url: string; token: string }) => {
           await this.emailService.send(VerifyEmailMail.create({
             to: user.email,

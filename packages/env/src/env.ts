@@ -61,6 +61,12 @@ const envSchema = z.object({
   OPEN_DPP_AUTH_CLOUD_CLIENT_ID: z.string().optional(),
   OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET: z.string().optional(),
   OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL: z.string().optional(),
+  // Migrate
+  OPEN_DPP_MIGRATE_KEYCLOAK_ENABLED: asBoolean.optional(),
+  OPEN_DPP_MIGRATE_KEYCLOAK_BASEURL: z.string().optional(),
+  OPEN_DPP_MIGRATE_KEYCLOAK_REALM: z.string().optional(),
+  OPEN_DPP_MIGRATE_KEYCLOAK_CLIENTID: z.string().optional(),
+  OPEN_DPP_MIGRATE_KEYCLOAK_CLIENTSECRET: z.string().optional(),
 }).superRefine((val, ctx) => {
   const hasUri = !!val.OPEN_DPP_MONGODB_URI;
   const hasHostPort = !!val.OPEN_DPP_MONGODB_HOST && !!val.OPEN_DPP_MONGODB_PORT;

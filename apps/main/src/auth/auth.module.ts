@@ -3,6 +3,7 @@ import { EnvModule } from "@open-dpp/env";
 import { EmailModule } from "../email/email.module";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
+import { KeycloakSyncOnStartupService } from "./keycloak-sync-on-startup.service";
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AuthService } from "./auth.service";
   ],
   providers: [
     AuthService,
+    KeycloakSyncOnStartupService,
   ],
   exports: [AuthService],
 })
