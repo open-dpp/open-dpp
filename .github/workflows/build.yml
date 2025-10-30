@@ -169,12 +169,24 @@ jobs:
 
   build-and-push:
     runs-on: ubuntu-latest
-    needs:
-      - lint
-      - test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Check which folders changed
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            keycloak:
+              - 'apps/keycloak/**'
+            mcp:
+              - 'apps/mcp/**'
+              - 'packages/**'
+            main:
+              - 'apps/main/**'
+              - 'apps/client/**'
+              - 'packages/**'
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
@@ -190,6 +202,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Extract Docker production metadata
+        if: steps.changes.outputs.main == 'true'
         id: meta-production
         uses: docker/metadata-action@v5
         with:
@@ -201,6 +214,7 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Extract Docker mcp metadata
+        if: steps.changes.outputs.mcp == 'true'
         id: meta-mcp
         uses: docker/metadata-action@v5
         with:
@@ -213,6 +227,7 @@ jobs:
 
       - name: Build and push Production
         uses: docker/build-push-action@v6
+        if: steps.changes.outputs.main == 'true'
         with:
           context: .
           file: ./Dockerfile
@@ -226,6 +241,7 @@ jobs:
 
       - name: Build and push MCP Server
         uses: docker/build-push-action@v6
+        if: steps.changes.outputs.mcp == 'true'
         with:
           context: .
           file: ./Dockerfile
