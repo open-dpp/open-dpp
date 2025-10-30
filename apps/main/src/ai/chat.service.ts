@@ -60,7 +60,7 @@ export class ChatService {
       llm,
       tools,
     });
-    const systemPrompt = `Create prompt You are a helpful assistant. The current product passport has the passportId: <${passportUuid}>`;
+    const systemPrompt = `You are a helpful assistant. The current product passport has the passportId: <${passportUuid}>`;
     this.logger.log(systemPrompt);
     const prompt = ChatPromptTemplate.fromMessages([
       [

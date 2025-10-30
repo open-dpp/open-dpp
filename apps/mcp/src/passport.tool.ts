@@ -20,12 +20,12 @@ export class PassportTool {
       passportId: z
         .string()
         .regex(
-          /<([^>])*>/,
+          /<([^>]+)>/,
           "Must be a valid id",
         )
         .transform((val) => {
           // Extract the content between < and >
-          const match = val.match(/<([^>]*)>/);
+          const match = val.match(/<([^>]+)>/);
           return match ? match[1] : val;
         })
         .describe(
