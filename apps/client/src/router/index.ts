@@ -91,10 +91,11 @@ export const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const layoutStore = useLayoutStore();
   layoutStore.isPageLoading = true;
-  const session = authClient.useSession();
-  const isSignedIn = session.value.data !== null;
+  const { data: session } = await authClient.getSession();
+  const isSignedIn = session !== null;
 
   if (isSignedIn && to.meta?.onlyAnonymous) {
+    console.log("Not anonymous");
     next("/");
     return;
   }

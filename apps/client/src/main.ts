@@ -38,9 +38,9 @@ async function startApp() {
     }),
   );
 
-  const session = authClient.useSession();
-  await new Promise(resolve => setTimeout(() => resolve(null), 500));
-  if (session.value.data !== null) {
+  const { data: session } = await authClient.getSession();
+  const isSignedIn = session !== null;
+  if (isSignedIn) {
     const organizationStore = useOrganizationsStore();
     await organizationStore.fetchOrganizations();
   }
