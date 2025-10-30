@@ -1,7 +1,7 @@
 import type { Socket } from "socket.io-client";
 import { defineStore } from "pinia";
 import { io } from "socket.io-client";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { AGENT_WEBSOCKET_URL } from "../const";
@@ -78,6 +78,23 @@ export const useAiAgentStore = defineStore("socket", () => {
     }
   };
 
+  const clearMessages = () => {
+    messages.value = [];
+    isLastMessagePendingFromBot.value = false;
+  };
+
+  watch(
+    () => route.params.permalink,
+    (newPermalink, oldPermalink) => {
+      if (oldPermalink !== newPermalink) {
+        clearMessages();
+      }
+    },
+    {
+      immediate: true,
+    },
+  );
+
   const sendMessage = (msg: string) => {
     if (socket.value && !isLastMessagePendingFromBot.value) {
       socket.value.emit("userMessage", {
@@ -103,6 +120,7 @@ export const useAiAgentStore = defineStore("socket", () => {
   return {
     messages,
     connect,
+    clearMessages,
     sendMessage,
     isLastMessagePendingFromBot,
   };

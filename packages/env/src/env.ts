@@ -40,6 +40,7 @@ const envSchema = z.object({
   OPEN_DPP_CLAMAV_URL: z.coerce.string(),
   OPEN_DPP_CLAMAV_PORT: z.coerce.number().max(65535).min(0),
   // MCP
+  DPP_API_URL: z.url(),
   OPEN_DPP_MCP_PORT: z.coerce.number().max(65535).min(0),
   // Misc
   OPEN_DPP_BUILD_API_DOC: asBoolean.optional().default(false),

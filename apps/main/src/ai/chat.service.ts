@@ -56,16 +56,16 @@ export class ChatService {
     );
     this.logger.log(`Get tools`);
     const tools = await this.mcpClientService.getTools();
-    this.logger.log(`Get agent with llm and tools`);
     const agent = this.aiService.getAgent({
       llm,
       tools,
     });
-
+    const systemPrompt = `Create prompt You are a helpful assistant. The current product passport has the passportId: <${passportUuid}>`;
+    this.logger.log(systemPrompt);
     const prompt = ChatPromptTemplate.fromMessages([
       [
         "system",
-        `You are a helpful assistant. The current product passport has the UUID: ${passportUuid}`,
+        systemPrompt,
       ],
       ["human", "{input}"],
     ]);
