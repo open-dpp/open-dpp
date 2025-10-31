@@ -21,6 +21,12 @@ importers:
       '@formkit/addons':
         specifier: ^1.6.9
         version: 1.6.9
+      '@formkit/core':
+        specifier: ^1.6.9
+        version: 1.6.9
+      '@formkit/i18n':
+        specifier: ^1.6.9
+        version: 1.6.9
       '@formkit/icons':
         specifier: ^1.6.9
         version: 1.6.9
@@ -51,6 +57,12 @@ importers:
       axios:
         specifier: ^1.12.2
         version: 1.12.2
+      chart.js:
+        specifier: ^4.5.1
+        version: 4.5.1
+      dayjs:
+        specifier: ^1.11.18
+        version: 1.11.18
       dompurify:
         specifier: ^3.3.0
         version: 3.3.0
@@ -84,6 +96,9 @@ importers:
       vue:
         specifier: ^3.5.22
         version: 3.5.22(typescript@5.9.3)
+      vue-chartjs:
+        specifier: ^5.3.2
+        version: 5.3.2(chart.js@4.5.1)(vue@3.5.22(typescript@5.9.3))
       vue-i18n:
         specifier: ^11.1.12
         version: 11.1.12(vue@3.5.22(typescript@5.9.3))
@@ -217,6 +232,9 @@ importers:
       '@nestjs/common':
         specifier: ^11.1.6
         version: 11.1.7(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/config':
+        specifier: ^4.0.2
+        version: 4.0.2(@nestjs/common@11.1.7(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
       '@nestjs/core':
         specifier: ^11.1.6
         version: 11.1.7(@nestjs/common@11.1.7(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.7)(@nestjs/platform-express@11.1.7)(@nestjs/websockets@11.1.7)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -262,6 +280,9 @@ importers:
       axios:
         specifier: ^1.12.2
         version: 1.12.2
+      body-parser:
+        specifier: ^2.2.0
+        version: 2.2.0
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
@@ -286,6 +307,9 @@ importers:
       langchain:
         specifier: ^0.3.36
         version: 0.3.36(@langchain/core@0.3.78(openai@5.12.2(ws@8.18.3)(zod@4.1.12)))(@langchain/mistralai@0.2.3(@langchain/core@0.3.78(openai@5.12.2(ws@8.18.3)(zod@4.1.12))))(@langchain/ollama@0.2.4(@langchain/core@0.3.78(openai@5.12.2(ws@8.18.3)(zod@4.1.12))))(axios@1.12.2)(handlebars@4.7.8)(openai@5.12.2(ws@8.18.3)(zod@4.1.12))(ws@8.18.3)
+      load-esm:
+        specifier: ^1.0.3
+        version: 1.0.3
       minio:
         specifier: ^8.0.6
         version: 8.0.6
@@ -341,9 +365,15 @@ importers:
       '@tsconfig/node-ts':
         specifier: ^23.6.1
         version: 23.6.1
+      '@types/body-parser':
+        specifier: ^1.19.6
+        version: 1.19.6
       '@types/express':
         specifier: ^5.0.3
         version: 5.0.3
+      '@types/lodash':
+        specifier: ^4.17.20
+        version: 4.17.20
       '@types/multer':
         specifier: ^2.0.0
         version: 2.0.0
@@ -395,6 +425,9 @@ importers:
       typescript-eslint:
         specifier: ^8.46.1
         version: 8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3)
+      uuid:
+        specifier: ^13.0.0
+        version: 13.0.0
 
   apps/mcp:
     dependencies:
@@ -577,6 +610,9 @@ importers:
       '@nestjs/axios':
         specifier: ^4.0.1
         version: 4.0.1(@nestjs/common@11.1.7(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.12.2)(rxjs@7.8.2)
+      '@nestjs/common':
+        specifier: ^11.1.6
+        version: 11.1.7(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/config':
         specifier: ^4.0.2
         version: 4.0.2(@nestjs/common@11.1.7(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
@@ -589,6 +625,9 @@ importers:
       axios:
         specifier: ^1.12.2
         version: 1.12.2
+      express:
+        specifier: ^5.1.0
+        version: 5.1.0
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
@@ -599,6 +638,9 @@ importers:
         specifier: ^7.8.2
         version: 7.8.2
     devDependencies:
+      '@nestjs/testing':
+        specifier: ^11.1.6
+        version: 11.1.7(@nestjs/common@11.1.7(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.7)(@nestjs/microservices@11.1.7)(@nestjs/platform-express@11.1.7)
       '@open-dpp/config-eslint':
         specifier: workspace:*
         version: link:../config-eslint
@@ -614,6 +656,12 @@ importers:
       '@tsconfig/node-ts':
         specifier: ^23.6.1
         version: 23.6.1
+      '@types/express':
+        specifier: ^5.0.5
+        version: 5.0.5
+      '@types/jsonwebtoken':
+        specifier: 9.0.10
+        version: 9.0.10
       eslint:
         specifier: ^9.38.0
         version: 9.38.0(jiti@2.6.1)
@@ -641,6 +689,12 @@ importers:
 
   packages/env:
     dependencies:
+      '@nestjs/common':
+        specifier: ^11.1.6
+        version: 11.1.7(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/config':
+        specifier: ^4.0.2
+        version: 4.0.2(@nestjs/common@11.1.7(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
       '@nestjs/core':
         specifier: ^11.1.6
         version: 11.1.7(@nestjs/common@11.1.7(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.7)(@nestjs/platform-express@11.1.7)(@nestjs/websockets@11.1.7)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -688,6 +742,9 @@ importers:
         specifier: ^11.1.6
         version: 11.1.7(@nestjs/common@11.1.7(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.7)(@nestjs/platform-express@11.1.7)(@nestjs/websockets@11.1.7)(reflect-metadata@0.2.2)(rxjs@7.8.2)
     devDependencies:
+      '@nestjs/testing':
+        specifier: ^11.1.6
+        version: 11.1.7(@nestjs/common@11.1.7(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.7)(@nestjs/microservices@11.1.7)(@nestjs/platform-express@11.1.7)
       '@open-dpp/config-eslint':
         specifier: workspace:*
         version: link:../config-eslint
@@ -761,6 +818,9 @@ importers:
 
   packages/testing:
     dependencies:
+      '@nestjs/common':
+        specifier: ^11.1.6
+        version: 11.1.7(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/config':
         specifier: ^4.0.2
         version: 4.0.2(@nestjs/common@11.1.7(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
@@ -780,6 +840,9 @@ importers:
         specifier: ^0.5.1
         version: 0.5.1
     devDependencies:
+      '@jest/globals':
+        specifier: ^30.2.0
+        version: 30.2.0
       '@open-dpp/config-eslint':
         specifier: workspace:*
         version: link:../config-eslint
@@ -795,6 +858,12 @@ importers:
       '@tsconfig/node-ts':
         specifier: ^23.6.1
         version: 23.6.1
+      '@types/lodash':
+        specifier: ^4.17.20
+        version: 4.17.20
+      '@types/supertest':
+        specifier: ^6.0.3
+        version: 6.0.3
       eslint:
         specifier: ^9.38.0
         version: 9.38.0(jiti@2.6.1)
@@ -1911,6 +1980,9 @@ packages:
     resolution: {integrity: sha512-xJkU4eNkVaHBolNMnR5lWWEX3nXBjGUJblGnRSOpzn4QKr3HDu67s590a7db4CCQYHzyTj21kuD/i6DqNTxXbQ==}
     engines: {node: '>=18'}
 
+  '@kurkle/color@0.3.4':
+    resolution: {integrity: sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w==}
+
   '@langchain/core@0.3.78':
     resolution: {integrity: sha512-Nn0x9erQlK3zgtRU1Z8NUjLuyW0gzdclMsvLQ6wwLeDqV91pE+YKl6uQb+L2NUDs4F0N7c2Zncgz46HxrvPzuA==}
     engines: {node: '>=18'}
@@ -2755,6 +2827,9 @@ packages:
 
   '@types/express@5.0.3':
     resolution: {integrity: sha512-wGA0NX93b19/dZC1J18tKWVIYWyyF2ZjT9vin/NRu0qzzvfVzWjs04iq2rQ3H65vCTQYlRqs3YHfY7zjdV+9Kw==}
+
+  '@types/express@5.0.5':
+    resolution: {integrity: sha512-LuIQOcb6UmnF7C1PCFmEU1u2hmiHL43fgFQX67sN3H4Z+0Yk0Neo++mFsBjhOAuLzvlQeqAAkeDOZrJs9rzumQ==}
 
   '@types/http-errors@2.0.5':
     resolution: {integrity: sha512-r8Tayk8HJnX0FztbZN7oVqGccWgw98T/0neJphO91KkmOzug1KkofZURD4UaD5uH8AqcFLfdPErnBod0u71/qg==}
@@ -3671,6 +3746,10 @@ packages:
 
   chardet@2.1.0:
     resolution: {integrity: sha512-bNFETTG/pM5ryzQ9Ad0lJOTa6HWD/YsScAR3EnCPZRPlQh77JocYktSHOUHelyhm8IARL+o4c4F1bP5KVOjiRA==}
+
+  chart.js@4.5.1:
+    resolution: {integrity: sha512-GIjfiT9dbmHRiYi6Nl2yFCq7kkwdkp1W/lp2J99rX0yo9tgJGn3lKQATztIjb5tVtevcBtIdICNWqlq5+E8/Pw==}
+    engines: {pnpm: '>=8'}
 
   check-error@2.1.1:
     resolution: {integrity: sha512-OAlb+T7V4Op9OwdkjmguYRqncdlx5JiofwOAUkmTF+jNdHwzTaTs4sRAGpzLF3oOz5xAyDGrPgeIDFQmDOTiJw==}
@@ -7833,6 +7912,12 @@ packages:
   vscode-uri@3.1.0:
     resolution: {integrity: sha512-/BpdSx+yCQGnCvecbyXdxHDkuk55/G3xwnC0GqY4gmQ3j+A+g8kzzgB4Nk/SINjqn6+waqw3EgbVF2QKExkRxQ==}
 
+  vue-chartjs@5.3.2:
+    resolution: {integrity: sha512-NrkbRRoYshbXbWqJkTN6InoDVwVb90C0R7eAVgMWcB9dPikbruaOoTFjFYHE/+tNPdIe6qdLCDjfjPHQ0fw4jw==}
+    peerDependencies:
+      chart.js: ^4.1.1
+      vue: ^3.0.0-0 || ^2.7.0
+
   vue-component-type-helpers@2.2.12:
     resolution: {integrity: sha512-YbGqHZ5/eW4SnkPNR44mKVc6ZKQoRs/Rux1sxC6rdwXb4qpbOSYfDr9DsTHolOTGmIKgM9j141mZbBeg05R1pw==}
 
@@ -9299,6 +9384,8 @@ snapshots:
       url-join: 5.0.0
       url-template: 3.1.1
 
+  '@kurkle/color@0.3.4': {}
+
   '@langchain/core@0.3.78(openai@5.12.2(ws@8.18.3)(zod@4.1.12))':
     dependencies:
       '@cfworker/json-schema': 4.1.1
@@ -10125,6 +10212,12 @@ snapshots:
       '@types/serve-static': 1.15.9
 
   '@types/express@5.0.3':
+    dependencies:
+      '@types/body-parser': 1.19.6
+      '@types/express-serve-static-core': 5.1.0
+      '@types/serve-static': 1.15.9
+
+  '@types/express@5.0.5':
     dependencies:
       '@types/body-parser': 1.19.6
       '@types/express-serve-static-core': 5.1.0
@@ -11129,6 +11222,10 @@ snapshots:
   character-entities@2.0.2: {}
 
   chardet@2.1.0: {}
+
+  chart.js@4.5.1:
+    dependencies:
+      '@kurkle/color': 0.3.4
 
   check-error@2.1.1: {}
 
@@ -15846,6 +15943,11 @@ snapshots:
       - yaml
 
   vscode-uri@3.1.0: {}
+
+  vue-chartjs@5.3.2(chart.js@4.5.1)(vue@3.5.22(typescript@5.9.3)):
+    dependencies:
+      chart.js: 4.5.1
+      vue: 3.5.22(typescript@5.9.3)
 
   vue-component-type-helpers@2.2.12: {}
 
