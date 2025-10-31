@@ -1,4 +1,5 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+</script>
 
 <template>
   <!--  Ensure that the css classes are loaded for the dynamic grid. See https://tailwindcss.com/docs/detecting-classes-in-source-files -->
@@ -89,5 +90,9 @@
     xl:row-span-11 xl:row-span-12 2xl:row-span-1 2xl:row-span-2 2xl:row-span-3
     2xl:row-span-4 2xl:row-span-5 2xl:row-span-6 2xl:row-span-7 2xl:row-span-8
     2xl:row-span-9 2xl:row-span-10 2xl:row-span-11 2xl:row-span-12
+  </div>
+  <!-- draft data field type colors -->
+  <div class="hidden">
+    !bg-pink-500 !bg-green-500 !bg-teal-500 !bg-orange-500
   </div>
 </template>

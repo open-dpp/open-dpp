@@ -6,45 +6,48 @@ open-dpp is an open-source platform for managing digital product passports (DPPs
 
 # Local Development
 ## Install dependencies
-
 ```shell
-npm run install:all
+pnpm install
 ```
 
-## Build and run with docker
-
+## Configure environment
 ```shell
-docker build -t ghcr.io/open-dpp/open-dpp .
-docker compose up
+cp .env.dev.example .env.dev
+```
+Replace the secrets and api tokens marked with:
+* change-to-secure-mongo-password
+* change-to-a-secret-key
+* your-mistral-key
+* secure-keycloak-password
+
+## Build
+```shell
+pnpm run build
 ```
 
-Now navigate to http://open-dpp.localhost:20080
-
-For email verification go to https://mail.open-dpp.localhost:20080.
-
-// TODO: timing issue. open-dpp seems not to wait for keycloak such that the syncing fails for first docker compose up.
-
+## Run
+Download all necessary docker images
+```shell
+docker compose -f docker-compose.dev.yml pull
+```
+Start all containers with
+```shell
+docker compose -f docker-compose.dev.yml up
+```
+Run application with
+```shell
+pnpm run dev
+```
+Now navigate to http://localhost:3000
+For email verification go to http://localhost:8025.
 ## Run tests
-
-To run the backend tests you have to run
-
+To run the tests you have to run
 ```shell
-docker compose up
-npm run test
-```
-
-To run frontend unit tests:
-
-```shell
-cd apps/main/client
-npm run test
-```
-
-To run frontend component tests
-
-```shell
-cd apps/main/client
-npm run cypress:headless
+docker compose -f docker-compose-test.yml up
+cd packages/testing
+pnpm build
+cd ../../
+pnpm test
 ```
 
 # Deployment

@@ -31,15 +31,18 @@ import {
 import { de } from "@formkit/i18n";
 import { genesisIcons } from "@formkit/icons";
 import { defaultConfig, plugin as FormKit } from "@formkit/vue";
+import Aura from "@primeuix/themes/aura";
 import { mount } from "cypress/vue";
 import { diff } from "jest-diff";
 import _ from "lodash";
 import { createPinia, setActivePinia } from "pinia";
+import PrimeVue from "primevue/config";
 import { rootClasses } from "../../formkit.theme.js";
 import { i18n } from "../../src/translations/i18n.ts";
 // Import commands.js using ES2015 syntax:
 import "./commands.js";
 import "../plugins/tailwind.js";
+import "primeicons/primeicons.css";
 
 let pinia: Pinia;
 
@@ -83,7 +86,14 @@ Cypress.Commands.add(
     const plugins = [
       ...basePlugins,
       ...(routerPlugin ? [routerPlugin] : []),
+      PrimeVue,
       pinia,
+      [PrimeVue, {
+        ripple: false,
+        theme: {
+          preset: Aura,
+        },
+      }],
       i18n,
       [
         FormKit,

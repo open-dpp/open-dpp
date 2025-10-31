@@ -4,8 +4,8 @@ import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/vue/20/solid";
 import { computed, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
-import BaseButton from "../../components/BaseButton.vue";
 import BaseSectionHeader from "../../components/BaseSectionHeader.vue";
+import BaseButton from "../../components/basics/BaseButton.vue";
 import AddSection from "../../components/template-drafts/AddSection.vue";
 import DraftSidebar from "../../components/template-drafts/DraftSidebar.vue";
 import PublishDraftButton from "../../components/template-drafts/PublishDraftButton.vue";
@@ -160,7 +160,7 @@ onMounted(async () => {
                 variant="primary"
                 @click="onAddSubSectionClicked(section)"
               >
-                {{ t('draft.addSection') }}
+                {{ t('draft.subsections') }}
               </BaseButton>
               <div class="flex items-center rounded-md">
                 <button

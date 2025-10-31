@@ -13,6 +13,7 @@ const props = defineProps<{
   parentId?: string;
   parentGranularityLevel?: GranularityLevel;
   itemsToSelect: SelectOption[];
+  dataFieldId?: string;
 }>();
 
 const selectedType = ref<string | undefined>(undefined);
@@ -25,6 +26,7 @@ function onSelect(type: string, sidebarType: SidebarContentType) {
     type,
     parentId: props.parentId,
     parentGranularityLevel: props.parentGranularityLevel,
+    id: props.dataFieldId,
   });
 }
 </script>

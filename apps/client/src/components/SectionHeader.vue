@@ -4,8 +4,8 @@ import { SectionType } from "@open-dpp/api-client";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { usePassportFormStore } from "../stores/passport.form";
-import BaseButton from "./BaseButton.vue";
 import BaseSectionHeader from "./BaseSectionHeader.vue";
+import BaseButton from "./basics/BaseButton.vue";
 
 const props = defineProps<{
   section: DataSectionDto;
