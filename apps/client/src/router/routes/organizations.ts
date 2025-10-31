@@ -1,10 +1,13 @@
-import type { RouteLocationNormalizedGeneric, RouteRecordRaw } from "vue-router";
+import type {
+  RouteLocationNormalizedGeneric,
+  RouteRecordRaw,
+} from "vue-router";
 import { localizedBreadcrumb } from "../../lib/breadcrumbs.ts";
 import { useLayoutStore } from "../../stores/layout";
+import { ORGANIZATION_ANALYTICS_PARENT } from "./analytics.ts";
 import { ORGANIZATION_INTEGRATIONS_PARENT } from "./integrations";
 import { ORGANIZATION_MODELS_PARENT } from "./models/models";
 import { ORGANIZATION_DRAFTS_PARENT } from "./product-data-model-drafts/drafts";
-import { ORGANIZATION_STATISTICS_PARENT } from "./statistics";
 
 export const ORGANIZATION_LIST: RouteRecordRaw = {
   path: "",
@@ -19,7 +22,11 @@ export const ORGANIZATION_LIST: RouteRecordRaw = {
 
 function organizationListBreadCrumbs(to: RouteLocationNormalizedGeneric) {
   return [
-    { name: localizedBreadcrumb("organizations.organizations"), route: ORGANIZATION_LIST, params: to.params },
+    {
+      name: localizedBreadcrumb("organizations.organizations"),
+      route: ORGANIZATION_LIST,
+      params: to.params,
+    },
   ];
 }
 
@@ -67,7 +74,7 @@ export const ORGANIZATION_PARENT: RouteRecordRaw = {
     ORGANIZATION_MODELS_PARENT,
     ORGANIZATION_DRAFTS_PARENT,
     ORGANIZATION_INTEGRATIONS_PARENT,
-    ORGANIZATION_STATISTICS_PARENT,
+    ORGANIZATION_ANALYTICS_PARENT,
   ],
 };
 

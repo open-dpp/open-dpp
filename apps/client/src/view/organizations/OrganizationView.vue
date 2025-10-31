@@ -3,7 +3,7 @@ import type { OrganizationDto } from "@open-dpp/api-client";
 import { UserCircleIcon } from "@heroicons/vue/20/solid";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import BaseButton from "../../components/BaseButton.vue";
+import BaseButton from "../../components/basics/BaseButton.vue";
 import apiClient from "../../lib/api-client";
 
 const props = defineProps<{

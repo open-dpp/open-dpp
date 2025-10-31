@@ -206,8 +206,17 @@
     "edit": "Editieren",
     "errorCreate": "Erstellen der Verbindung fehlgeschlagen"
   },
-  "statistics": {
-    "statistics": "Auswertungen"
+  "analytics": {
+    "analytics": "Auswertungen",
+    "startAnalysis": "Analyse starten",
+    "loadingMetricError": "Laden der Analyse fehlgeschlagen",
+    "passportSelection": "Passauswahl",
+    "timeViewSelection": "Ansicht",
+    "pageViews": "Seitenaufrufe",
+    "daylyView": "Tagesansicht",
+    "weeklyView": "Wochenansicht",
+    "monthlyView": "Monatsansicht",
+    "yearlyView": "Jahresansicht"
   },
   "members": {
     "members": "Mitglieder"

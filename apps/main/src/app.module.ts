@@ -10,6 +10,7 @@ import { AiConfigurationModule } from "./ai/ai-configuration/ai-configuration.mo
 import { AiModule } from "./ai/ai.module";
 import { PassportModule } from "./ai/passports/passport.module";
 import { ChatGateway } from "./ai/presentation/chat.gateway";
+import { AnalyticsModule } from "./analytics/analytics.module";
 import { generateMongoConfig } from "./database/config";
 import { IntegrationModule } from "./integrations/integration.module";
 import { ItemsModule } from "./items/items.module";
@@ -62,6 +63,7 @@ import { UsersModule } from "./users/users.module";
     MarketplaceModule,
     AiConfigurationModule,
     AiModule,
+    AnalyticsModule,
     PassportModule,
     AuthModule.forRoot(),
   ],

@@ -20,6 +20,7 @@ export const passportMetricQueryDto: PassportMetricQueryDto = {
   type: MeasurementType.PAGE_VIEWS,
   valueKey: 'https://example.com/passport',
   period: TimePeriod.MONTH,
+  timezone: 'Europe/Berlin',
 }
 
 export const passportMeasurementDto: PassportMeasurementDto = {

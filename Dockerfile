@@ -5,11 +5,25 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
+RUN pnpm install -g rimraf
+
 WORKDIR /build
 
-COPY --chown=node:node . .
+COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY --chown=node:node apps/main/package.json apps/main/
+COPY --chown=node:node apps/mcp/package.json apps/mcp/
+COPY --chown=node:node apps/client/package.json apps/client/
+COPY --chown=node:node packages/auth/package.json packages/auth/
+COPY --chown=node:node packages/api-client/package.json packages/api-client/
+COPY --chown=node:node packages/env/package.json packages/env/
+COPY --chown=node:node packages/config-eslint/package.json packages/config-eslint/
+COPY --chown=node:node packages/exception/package.json packages/exception/
+COPY --chown=node:node packages/permission/package.json packages/permission/
+COPY --chown=node:node packages/testing/package.json packages/testing/
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+
+COPY --chown=node:node . .
 
 RUN pnpm build
 

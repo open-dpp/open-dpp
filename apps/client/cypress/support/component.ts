@@ -86,6 +86,7 @@ Cypress.Commands.add(
     const plugins = [
       ...basePlugins,
       ...(routerPlugin ? [routerPlugin] : []),
+      PrimeVue,
       pinia,
       [PrimeVue, {
         ripple: false,

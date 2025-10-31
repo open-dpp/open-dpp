@@ -80,8 +80,8 @@ const unfilteredNavigation = computed<Array<MenuItemInterface>>(() => [
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: t("statistics.statistics"),
-    to: `/organizations/${indexStore.selectedOrganization}/statistics`,
+    name: t("analytics.analytics"),
+    to: `/organizations/${indexStore.selectedOrganization}/analytics`,
     icon: ChartBarIcon,
     show: () => indexStore.selectedOrganization !== null,
   },
