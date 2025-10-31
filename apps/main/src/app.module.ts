@@ -9,9 +9,9 @@ import { AiConfigurationModule } from "./ai/ai-configuration/ai-configuration.mo
 import { AiModule } from "./ai/ai.module";
 import { PassportModule } from "./ai/passports/passport.module";
 import { ChatGateway } from "./ai/presentation/chat.gateway";
+import { AnalyticsModule } from "./analytics/analytics.module";
 import { AuthGuard } from "./auth/auth.guard";
 import { AuthModule } from "./auth/auth.module";
-import { AnalyticsModule } from "./analytics/analytics.module";
 import { generateMongoConfig } from "./database/config";
 import { EmailModule } from "./email/email.module";
 import { IntegrationModule } from "./integrations/integration.module";

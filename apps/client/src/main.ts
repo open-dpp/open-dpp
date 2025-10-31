@@ -14,7 +14,6 @@ import { rootClasses } from "../formkit.theme";
 import App from "./App.vue";
 import { authClient } from "./auth-client.ts";
 import { router } from "./router";
-import { useIndexStore } from "./stores";
 import { useLanguageStore } from "./stores/language.ts";
 import { useOrganizationsStore } from "./stores/organizations";
 import { i18n } from "./translations/i18n.ts";
@@ -34,7 +33,6 @@ async function startApp() {
     },
   });
 
-  const indexStore = useIndexStore();
   const { shortLocale, onI18nLocaleChange } = useLanguageStore();
   watch(
     () => (i18n.global.locale as unknown as { value: Locale })

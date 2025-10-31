@@ -1,5 +1,3 @@
-import type * as authRequest from "@open-dpp/auth";
-
 import type { PassportPageViewDto } from "./dto/passport-page-view.dto";
 import {
   Body,
@@ -10,14 +8,14 @@ import {
   Param,
   Post,
   Query,
-  Request,
 } from "@nestjs/common";
-import { Public } from "@open-dpp/auth";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { hasPermission, PermissionAction } from "@open-dpp/permission";
+import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
+import { UserSession } from "../../auth/auth.guard";
+import { Session } from "../../auth/session.decorator";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { UniqueProductIdentifierApplicationService } from "../../unique-product-identifier/presentation/unique.product.identifier.application.service";
-import { User } from "../../users/domain/user";
 import { PassportMetric } from "../domain/passport-metric";
 import { PassportMetricService } from "../infrastructure/passport-metric.service";
 import { PassportMetricQuerySchema } from "./dto/passport-metric-query.dto";
@@ -33,7 +31,7 @@ export class PassportMetricController {
     private readonly organizationsService: OrganizationsService,
   ) {}
 
-  @Public()
+  @AllowAnonymous()
   @Post("/passport-metrics/page-views")
   async handlePassportPageViewed(
     @Body(new ZodValidationPipe(PassportPageViewSchema))
@@ -71,7 +69,7 @@ export class PassportMetricController {
     @Query("valueKey") valueKey: string,
     @Query("period") period: string,
     @Query("timezone") timezone: string,
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
   ) {
     const query = PassportMetricQuerySchema.parse({
       startDate,
@@ -92,7 +90,7 @@ export class PassportMetricController {
 
     if (!hasPermission({
       user: {
-        id: (req.authContext.user as User).id,
+        id: session.user.id,
       },
     }, PermissionAction.READ, organization.toPermissionSubject())) {
       throw new ForbiddenException();

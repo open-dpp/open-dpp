@@ -130,7 +130,7 @@
       ]
     },
     "transformIgnorePatterns": [
-      "node_modules/(?!((?:\\.pnpm/.*?/)?(?:@(?:open-dpp)|jose|@noble|uuid))(?:/|$))"
+      "node_modules/(?!((?:\\.pnpm/.*?/)?(?:@(?:open-dpp)|jose|@noble|uuid|@keycloak|url-join|url-template|camelize-ts))(?:/|$))"
     ],
     "moduleNameMapper": {
       "^@open-dpp/(.*)$": "<rootDir>/../../packages/$1/src"

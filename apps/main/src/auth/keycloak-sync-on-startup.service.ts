@@ -19,6 +19,10 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap() {
+    const isTestNodeEnv = this.configService.get("NODE_ENV") === "test";
+    if (isTestNodeEnv) {
+      return;
+    }
     const migrationEnabled = !!this.configService.get("OPEN_DPP_MIGRATE_KEYCLOAK_ENABLED");
     const baseUrl = this.configService.get("OPEN_DPP_MIGRATE_KEYCLOAK_BASEURL");
     const realm = this.configService.get("OPEN_DPP_MIGRATE_KEYCLOAK_REALM");
