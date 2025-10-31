@@ -31,7 +31,7 @@ describe("passportService", () => {
           provide: ConfigService,
           useValue: {
             get: jest.fn().mockImplementation((key) => {
-              if (key === "DPP_API_URL") {
+              if (key === "OPEN_DPP_URL") {
                 return "http://api.url";
               }
               else if (key === "API_SERVICE_TOKEN") {

@@ -12,7 +12,6 @@ import { MsgStatus, Sender, useAiAgentStore } from "../../stores/ai-agent";
 
 const { t } = useI18n();
 const aiAgentStore = useAiAgentStore();
-
 const input = ref("");
 
 onMounted(() => {
@@ -62,7 +61,10 @@ function sanitizeMarkdown(text: string): string {
             class="flex-1 rounded-md p-3 ring-1 ring-inset dark:ring-white/15"
             :class="[getMessageColor(message.status)]"
           >
-            <p class="text-sm/6 text-gray-500 dark:text-gray-400" v-html="sanitizeMarkdown(message.text)" />
+            <p
+              class="text-sm/6 text-gray-500 dark:text-gray-400"
+              v-html="sanitizeMarkdown(message.text)"
+            />
           </div>
         </div>
       </li>
@@ -83,7 +85,11 @@ function sanitizeMarkdown(text: string): string {
         @keydown.enter.exact.prevent="sendMessage"
         @keydown.shift.enter.exact.prevent="input += '\n'"
       />
-      <BaseButton variant="primary" :disabled="aiAgentStore.isLastMessagePendingFromBot" @click="sendMessage">
+      <BaseButton
+        variant="primary"
+        :disabled="aiAgentStore.isLastMessagePendingFromBot"
+        @click="sendMessage"
+      >
         {{ t("common.send") }}
       </BaseButton>
     </div>
