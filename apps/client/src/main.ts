@@ -21,6 +21,7 @@ import { useOrganizationsStore } from "./stores/organizations";
 import { i18n } from "./translations/i18n.ts";
 import "./index.css";
 import "@formkit/addons/css/multistep";
+import "primeicons/primeicons.css";
 import "dayjs/locale/de";
 
 const pinia = createPinia();

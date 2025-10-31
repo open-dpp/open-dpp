@@ -27,6 +27,20 @@ describe("dataField", () => {
     expect(field.name).toEqual("Memory");
   });
 
+  it("changes the type", () => {
+    const field = DataFieldDraft.create({
+      name: "Processor",
+      type: DataFieldType.NUMERIC_FIELD,
+      granularityLevel: GranularityLevel.MODEL,
+      options: { max: 2 },
+    });
+    field.changeType(DataFieldType.TEXT_FIELD);
+    expect(field.name).toEqual("Processor");
+    expect(field.type).toEqual(DataFieldType.TEXT_FIELD);
+    expect(field.granularityLevel).toEqual(GranularityLevel.MODEL);
+    expect(field.options).toEqual({ });
+  });
+
   it("overrides options", () => {
     const field = DataFieldDraft.create({
       name: "Processor",

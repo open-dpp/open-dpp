@@ -1,19 +1,15 @@
 <script lang="ts" setup>
-import type {
-  DataFieldDto,
-} from "@open-dpp/api-client";
-import {
-  DataFieldType,
-  GranularityLevel,
-} from "@open-dpp/api-client";
+import type { DataFieldDto } from "@open-dpp/api-client";
+import { DataFieldType, GranularityLevel } from "@open-dpp/api-client";
+import { Button, SplitButton } from "primevue";
 import { ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod/v4";
+import { APPEND_TO } from "../../const.ts";
 import { useDraftStore } from "../../stores/draft";
-import { useDraftSidebarStore } from "../../stores/draftSidebar";
+import { SidebarContentType, useDraftSidebarStore } from "../../stores/draftSidebar";
 import { useModelDialogStore } from "../../stores/modal.dialog";
 import { useNotificationStore } from "../../stores/notification";
-import BaseButton from "../basics/BaseButton.vue";
 
 const props = defineProps<{
   type: DataFieldType;
@@ -22,6 +18,7 @@ const props = defineProps<{
   id?: string;
 }>();
 const { t } = useI18n();
+const formRef = ref<HTMLFormElement | null>(null);
 const formData = ref<Record<string, unknown>>({});
 const formSchema = ref();
 const dataFieldToModify = ref<DataFieldDto | undefined>();
@@ -29,36 +26,40 @@ const draftStore = useDraftStore();
 const draftSidebarStore = useDraftSidebarStore();
 const modelDialogStore = useModelDialogStore();
 
-function formSchemaFromType(type: DataFieldType, existingGranularityLevel: GranularityLevel | undefined) {
+function formSchemaFromType(
+  type: DataFieldType,
+  existingGranularityLevel: GranularityLevel | undefined,
+) {
   const granularityOptions = {
     [GranularityLevel.MODEL]: t("builder.granularity.model"),
     [GranularityLevel.ITEM]: t("builder.granularity.item"),
   };
+
   const dataFieldFormkitSchema = [];
+  const nameField = {
+    "$formkit": "text",
+    "name": "name",
+    "validation": "required",
+    "data-cy": "name",
+  };
 
   switch (type) {
     case DataFieldType.TEXT_FIELD:
       dataFieldFormkitSchema.push({
-        "$formkit": "text",
-        "name": "name",
-        "label": t("builder.textField.name"),
-        "data-cy": "name",
+        ...nameField,
+        label: t("builder.textField.name"),
       });
       break;
     case DataFieldType.PRODUCT_PASSPORT_LINK:
       dataFieldFormkitSchema.push({
-        "$formkit": "text",
-        "name": "name",
-        "label": t("builder.passportLink.name"),
-        "data-cy": "name",
+        ...nameField,
+        label: t("builder.passportLink.name"),
       });
       break;
     case DataFieldType.NUMERIC_FIELD:
       dataFieldFormkitSchema.push({
-        "$formkit": "text",
-        "name": "name",
-        "label": t("builder.numeric.name"),
-        "data-cy": "name",
+        ...nameField,
+        label: t("builder.numeric.name"),
       });
       dataFieldFormkitSchema.push({
         "$formkit": "number",
@@ -75,10 +76,8 @@ function formSchemaFromType(type: DataFieldType, existingGranularityLevel: Granu
       break;
     case DataFieldType.FILE_FIELD:
       dataFieldFormkitSchema.push({
-        "$formkit": "text",
-        "name": "name",
-        "label": t("builder.file.name"),
-        "data-cy": "name",
+        ...nameField,
+        label: t("builder.file.name"),
       });
       break;
     default:
@@ -95,6 +94,7 @@ function formSchemaFromType(type: DataFieldType, existingGranularityLevel: Granu
       "data-cy": "select-granularity-level",
     });
   }
+
   return dataFieldFormkitSchema;
 }
 
@@ -142,6 +142,19 @@ async function onDelete() {
     },
   );
 }
+async function onChangeDataFieldType() {
+  if (dataFieldToModify.value) {
+    draftSidebarStore.setContentWithProps(
+      SidebarContentType.DATA_FIELD_SELECTION,
+      {
+        type: dataFieldToModify.value?.type,
+        parentId: props.parentId,
+        parentGranularityLevel: props.parentGranularityLevel,
+        dataFieldId: dataFieldToModify.value.id,
+      },
+    );
+  }
+}
 
 async function onSubmit() {
   let options: Record<string, unknown> | undefined;
@@ -154,6 +167,7 @@ async function onSubmit() {
   const data = z
     .object({
       name: z.string(),
+      type: z.enum(DataFieldType),
       granularityLevel: z.enum(GranularityLevel),
       options: z.any().optional(),
     })
@@ -163,17 +177,19 @@ async function onSubmit() {
         || dataFieldToModify.value?.granularityLevel
         || props.parentGranularityLevel,
       name: formData.value.name,
+      type: props.type,
       options,
     });
   if (dataFieldToModify.value) {
     await draftStore.modifyDataField(dataFieldToModify.value.id, {
       name: data.name,
+      type: data.type,
       options: data.options ?? undefined,
     });
   }
   else if (props.parentId) {
     await draftStore.addDataField(props.parentId, {
-      type: props.type,
+      type: data.type,
       name: data.name,
       granularityLevel: data.granularityLevel,
       options: data.options ?? undefined,
@@ -183,15 +199,29 @@ async function onSubmit() {
     const notificationStore = useNotificationStore();
     notificationStore.addErrorNotification(t("draft.errorAddingDataField"));
   }
-
   draftSidebarStore.close();
 }
+async function submitForm() {
+  formRef.value?.node.submit();
+}
+
+const buttonActions = [
+  {
+    label: t("draft.changeDataFieldType"),
+    command: onChangeDataFieldType,
+  },
+  {
+    label: t("draft.deleteDataField"),
+    command: onDelete,
+  },
+];
 </script>
 
 <template>
   <div class="p-4">
     <FormKit
       id="repeatable-form"
+      ref="formRef"
       v-model="formData"
       :actions="false"
       type="form"
@@ -199,18 +229,18 @@ async function onSubmit() {
     >
       <FormKitSchema v-if="formSchema" :schema="formSchema" />
       <div class="flex gap-1">
-        <BaseButton data-cy="submit" type="submit" variant="primary">
-          {{ dataFieldToModify ? t('common.change') : t('common.add') }}
-        </BaseButton>
-        <BaseButton
+        <SplitButton
           v-if="dataFieldToModify"
-          data-cy="delete"
-          type="button"
-          variant="error"
-          @click="onDelete"
+          data-cy="submit"
+          :model="buttonActions"
+          :append-to="APPEND_TO"
+          @click="submitForm"
         >
-          {{ t('draft.deleteDataField') }}
-        </BaseButton>
+          {{ t("common.change") }}
+        </SplitButton>
+        <Button v-else data-cy="submit" @click="submitForm">
+          {{ t("common.add") }}
+        </Button>
       </div>
     </FormKit>
   </div>

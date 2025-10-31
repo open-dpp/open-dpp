@@ -72,6 +72,7 @@
       "name": "File field name"
     },
     "name": "Section name",
+    "dataFieldType": "Datafield type",
     "granularityLevel": "Granularity level"
   },
   "draft": {
@@ -122,6 +123,7 @@
     "selection": "Selection",
     "section": "Section",
     "addSection": "Add Section",
+    "subsections": "Subsections",
     "configuration": "Configuration",
     "dataField": "Data field",
     "addDataField": "Add data field",
@@ -137,7 +139,8 @@
     "fileField": "File",
     "addFileField": "Add file upload",
     "passportDraft": "Passport draft | Passport drafts",
-    "passportDraftDescription": "All passport drafts"
+    "passportDraftDescription": "All passport drafts",
+    "changeDataFieldType": "Change datafield type"
   },
   "integrations": {
     "integrations": "Integrations",

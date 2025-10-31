@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import {
   AssetAdministrationShellType,
+  DataFieldType,
   GranularityLevel,
   MoveDirection,
   MoveType,
@@ -9,21 +10,12 @@ import {
   VisibilityLevel,
 } from '../../src'
 import { activeOrganization, organizations } from '../organization'
-import {
-  aasPropertiesWithParent,
-  connection,
-  connectionList,
-} from './handlers/aas-integration'
+import { aasPropertiesWithParent, connection, connectionList } from './handlers/aas-integration'
 import { item1, item2 } from './handlers/item'
 import { model, responseDataValues, updateDataValues } from './handlers/model'
 import { productPassport } from './handlers/product-passport'
 import { template } from './handlers/template'
-import {
-  dataFieldDraft,
-  draftsOfOrganization,
-  sectionDraft,
-  templateDraft,
-} from './handlers/template-draft'
+import { dataFieldDraft, draftsOfOrganization, sectionDraft, templateDraft } from './handlers/template-draft'
 import {
   uniqueProductIdentifierId,
   uniqueProductIdentifierMetadata,
@@ -252,6 +244,7 @@ describe('apiClient', () => {
         dataFieldDraft.id,
         {
           name: 'new name',
+          type: DataFieldType.NUMERIC_FIELD,
           options: { min: 2 },
         },
       )

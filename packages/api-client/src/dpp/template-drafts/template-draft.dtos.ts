@@ -61,6 +61,7 @@ export interface TemplateDraftCreateDto {
 
 export interface DataFieldDraftUpdateDto {
   name: string
+  type?: DataFieldType
   options?: Record<string, unknown>
 }
 

@@ -1127,6 +1127,7 @@ describe("templateDraftController", () => {
 
     const body = {
       name: "Memory",
+      type: DataFieldType.NUMERIC_FIELD,
       options: { max: 8 },
     };
     const response = await request(getApp(app))
@@ -1147,7 +1148,8 @@ describe("templateDraftController", () => {
       {
         ...dataField,
         _name: body.name,
-        options: body.options,
+        _type: body.type,
+        _options: body.options,
       },
     ]);
   });
