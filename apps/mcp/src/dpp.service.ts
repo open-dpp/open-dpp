@@ -7,11 +7,11 @@ export class DppService {
   private readonly dppClient: DppApiClient;
 
   constructor(configService: EnvService) {
-    const baseURL = configService.get("DPP_API_URL");
+    const baseURL = configService.get("OPEN_DPP_URL");
     if (!baseURL) {
-      throw new Error("DPP_API_URL is not set");
+      throw new Error("OPEN_DPP_URL is not set");
     }
-    this.dppClient = new DppApiClient({ baseURL });
+    this.dppClient = new DppApiClient({ baseURL: `${baseURL}/api` });
   }
 
   async getProductPassport(uuid: string): Promise<ProductPassportDto> {
