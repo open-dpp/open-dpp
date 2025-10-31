@@ -27,6 +27,7 @@
     "@tailwindcss/forms": "^0.5.10",
     "@types/qrcode": "^1.5.5",
     "axios": "^1.12.2",
+    "chartjs": "^0.3.24",
     "dompurify": "^3.3.0",
     "keycloak-js": "^26.2.1",
     "lodash": "^4.17.21",
@@ -37,6 +38,7 @@
     "qrcode": "^1.5.4",
     "socket.io-client": "^4.8.1",
     "vue": "^3.5.22",
+    "vue-chartjs": "^5.3.2",
     "vue-i18n": "^11.1.12",
     "vue-router": "^4.6.3",
     "zod": "^4.1.12"
