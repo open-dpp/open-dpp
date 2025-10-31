@@ -11,12 +11,12 @@ export class PassportService {
     const baseURL = configService.get("OPEN_DPP_URL");
     const serviceToken = configService.get("OPEN_DPP_SERVICE_TOKEN");
     if (!baseURL) {
-      throw new Error("DPP_API_URL is not set");
+      throw new Error("OPEN_DPP_URL is not set");
     }
     if (!serviceToken) {
       throw new Error("API_SERVICE_TOKEN is not set");
     }
-    this.dppApiClient = new DppApiClient({ baseURL, serviceToken });
+    this.dppApiClient = new DppApiClient({ baseURL: `${baseURL}/api`, serviceToken });
   }
 
   async findOneOrFail(uuid: string): Promise<Passport | undefined> {

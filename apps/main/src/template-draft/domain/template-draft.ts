@@ -159,6 +159,7 @@ export class TemplateDraft {
     data: {
       name?: string;
       options?: Record<string, unknown>;
+
     },
   ) {
     this.findSectionOrFail(sectionId).modifyDataField(dataFieldId, data);

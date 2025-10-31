@@ -114,6 +114,10 @@ describe("dataSectionDraft", () => {
       name: "newName",
       options: { min: 3 },
     });
+    section.modifyDataField(dataField2.id, {
+      type: DataFieldType.NUMERIC_FIELD,
+      options: { max: 2 },
+    });
     expect(section.dataFields).toEqual([
       DataFieldDraft.loadFromDb({
         id: dataField1.id,
@@ -122,7 +126,13 @@ describe("dataSectionDraft", () => {
         name: "newName",
         options: { min: 3, max: 2 },
       }),
-      dataField2,
+      DataFieldDraft.loadFromDb({
+        id: dataField2.id,
+        type: DataFieldType.NUMERIC_FIELD,
+        granularityLevel: dataField2.granularityLevel,
+        name: dataField2.name,
+        options: { max: 2 },
+      }),
     ]);
   });
 

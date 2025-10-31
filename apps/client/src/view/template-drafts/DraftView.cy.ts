@@ -115,7 +115,7 @@ describe("<DraftView />", () => {
     cy.contains(`Passvorlagen Entwurf ${draft.name}`).should("be.visible");
     cy.contains(`Version ${draft.version}`).should("be.visible");
     cy.contains("button", "Abschnitt hinzufügen").click();
-    cy.contains(`Abschnitt hinzufügen`).should("be.visible");
+
     cy.contains(`Auswahl`).should("be.visible");
     // Check that no data fields are selectable
     cy.contains("li", "Textfeld").should("not.exist");
@@ -220,9 +220,7 @@ describe("<DraftView />", () => {
     cy.mountWithPinia(DraftView, { router });
 
     cy.wait("@getDraft").its("response.statusCode").should("eq", 200);
-    cy.get(
-      `[data-cy="move-data-field-${dataField1.id}-up"]`,
-    ).click();
+    cy.get(`[data-cy="move-data-field-${dataField1.id}-up"]`).click();
     cy.wait("@moveDataField").then(({ request }) => {
       const expected = {
         type: MoveType.POSITION,
@@ -396,8 +394,10 @@ describe("<DraftView />", () => {
         });
 
         cy.get(`[data-cy="${dataFieldToCreate.id}"]`)
-          .find("input")
-          .should("have.attr", "placeholder", dataFieldToCreate.name);
+          .within(() => {
+            cy.contains(dataFieldToCreate.name)
+              .should("be.visible");
+          });
       });
     },
   );
@@ -478,7 +478,7 @@ describe("<DraftView />", () => {
     );
     cy.spy(router, "push").as("pushSpy");
 
-    actionsOfSection.within(() => cy.contains("Abschnitt hinzufügen").click());
+    actionsOfSection.within(() => cy.contains("Unterabschnitte").click());
     cy.get("@pushSpy").should(
       "have.been.calledWith",
       `?sectionId=${repeatableSection.id}`,
@@ -557,7 +557,7 @@ describe("<DraftView />", () => {
 
     cy.wait("@getDraft").its("response.statusCode").should("eq", 200);
 
-    cy.get(`[data-cy="${dataFieldToModify.id}"]`).click();
+    cy.get(`[data-cy="edit-${dataFieldToModify.id}"]`).click();
     cy.get("[data-cy=\"select-granularity-level\"]").should("not.exist");
     const newFieldName = "New Name";
     const nameField = cy.get("[data-cy=\"name\"]");
@@ -570,12 +570,13 @@ describe("<DraftView />", () => {
     cy.wait("@modifyDataField").then(({ request }) => {
       const expected = {
         name: newFieldName,
+        type: DataFieldType.TEXT_FIELD,
       };
       cy.expectDeepEqualWithDiff(request.body, expected);
     });
   });
 
-  it("renders draft and deletes data field", () => {
+  it("renders draft and deletes data field", async () => {
     const orgaId = "orgaId";
     const dataFieldToDelete = section.dataFields[0] as DataFieldDto;
 
@@ -613,6 +614,7 @@ describe("<DraftView />", () => {
     cy.wrap(
       router.push(`/organizations/${orgaId}/data-model-drafts/${draft.id}`),
     );
+
     cy.mountWithPinia(TestWrapper, {
       slots: {
         default: DraftView,
@@ -623,12 +625,84 @@ describe("<DraftView />", () => {
     cy.wait("@getDraft").its("response.statusCode").should("eq", 200);
 
     cy.get(`[data-cy="${dataFieldToDelete.id}"]`).click();
-    cy.get("[data-cy=\"delete\"]").click();
+    cy.get(".p-button-icon-only").click();
+
+    cy.contains("Datenfeld löschen").click();
 
     cy.contains("button", "Bestätigen").click();
 
     cy.wait("@deleteDataField").its("response.statusCode").should("eq", 200);
     cy.get(`[data-cy="${dataFieldToDelete.id}"]`).should("not.exist");
+
+    // Trigger command of a specific item
+  });
+
+  it("renders draft and change data field type", async () => {
+    const orgaId = "orgaId";
+    const dataFieldToModify = section.dataFields[0] as DataFieldDto;
+
+    cy.intercept(
+      "GET",
+      `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}`,
+      {
+        statusCode: 200,
+        body: draft,
+      },
+    ).as("getDraft");
+
+    cy.intercept(
+      "PATCH",
+      `${API_URL}/organizations/${orgaId}/template-drafts/${draft.id}/sections/${section.id}/data-fields/${dataFieldToModify.id}`,
+      {
+        statusCode: 200,
+        body: {
+          ...draft,
+          sections: [
+            {
+              ...section,
+              dataFields: section.dataFields.map(
+                df => df.id === dataFieldToModify.id ? { ...df, type: DataFieldType.NUMERIC_FIELD } : df,
+              ),
+            },
+          ],
+        },
+      },
+    ).as("modifyDataField");
+
+    const indexStore = useIndexStore();
+    indexStore.selectOrganization(orgaId);
+
+    cy.wrap(
+      router.push(`/organizations/${orgaId}/data-model-drafts/${draft.id}`),
+    );
+
+    cy.mountWithPinia(TestWrapper, {
+      slots: {
+        default: DraftView,
+      },
+      router,
+    });
+
+    cy.wait("@getDraft").its("response.statusCode").should("eq", 200);
+
+    cy.get(`[data-cy="${dataFieldToModify.id}"]`).click();
+    cy.get(".p-button-icon-only").click();
+
+    cy.contains("Datenfeldtyp ändern").click();
+
+    cy.contains("li", "Numerisches Feld").click();
+
+    cy.get("[data-cy=\"submit\"]").click();
+
+    cy.wait("@modifyDataField").then(({ request }) => {
+      const expected = {
+        name: dataFieldToModify.name,
+        type: DataFieldType.NUMERIC_FIELD,
+        options: { min: null, max: null },
+      };
+      cy.expectDeepEqualWithDiff(request.body, expected);
+    });
+    // Trigger command of a specific item
   });
 
   //

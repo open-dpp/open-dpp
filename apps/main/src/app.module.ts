@@ -11,6 +11,7 @@ import { PassportModule } from "./ai/passports/passport.module";
 import { ChatGateway } from "./ai/presentation/chat.gateway";
 import { AuthGuard } from "./auth/auth.guard";
 import { AuthModule } from "./auth/auth.module";
+import { AnalyticsModule } from "./analytics/analytics.module";
 import { generateMongoConfig } from "./database/config";
 import { EmailModule } from "./email/email.module";
 import { IntegrationModule } from "./integrations/integration.module";
@@ -58,6 +59,7 @@ import { UsersModule } from "./users/users.module";
     MarketplaceModule,
     AiConfigurationModule,
     AiModule,
+    AnalyticsModule,
     PassportModule,
     AuthModule,
     EmailModule,

@@ -1,17 +1,4 @@
 services:
-  mcp-server:
-    container_name: mcp-server
-    image: ghcr.io/open-dpp/mcp-server:main
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    ports:
-      - "3002:3000"
-    environment:
-      - DPP_API_URL=http://host.docker.internal:3000/api
-      - PORT=3000
-    networks:
-      - open-dpp-local
-
   api-mongo-db:
     ports:
       - ${OPEN_DPP_MONGODB_PORT}:27017
