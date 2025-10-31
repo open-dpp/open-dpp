@@ -10,7 +10,6 @@ import { useDraftStore } from "../../stores/draft";
 import { SidebarContentType, useDraftSidebarStore } from "../../stores/draftSidebar";
 import { useModelDialogStore } from "../../stores/modal.dialog";
 import { useNotificationStore } from "../../stores/notification";
-import BaseButton from "../basics/BaseButton.vue";
 
 const props = defineProps<{
   type: DataFieldType;
