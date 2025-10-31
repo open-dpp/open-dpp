@@ -28,6 +28,7 @@
     "@types/qrcode": "^1.5.5",
     "axios": "^1.12.2",
     "chartjs": "^0.3.24",
+    "dayjs": "^1.11.18",
     "dompurify": "^3.3.0",
     "keycloak-js": "^26.2.1",
     "lodash": "^4.17.21",
