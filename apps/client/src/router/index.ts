@@ -1,9 +1,8 @@
 import type { RouteRecordRaw } from "vue-router";
 import { createRouter, createWebHistory } from "vue-router";
-import { keycloakDisabled } from "../const";
-import keycloakIns from "../lib/keycloak";
-import { useIndexStore } from "../stores";
+import { authClient } from "../auth-client.ts";
 
+import { useIndexStore } from "../stores";
 import { useLayoutStore } from "../stores/layout";
 import { AUTH_ROUTES } from "./routes/auth";
 import { MARKETPLACE_ROUTES } from "./routes/marketplace";
@@ -28,6 +27,55 @@ export const routes: RouteRecordRaw[] = [
       }
     },
   },
+  {
+    path: "/signin",
+    name: "Signin",
+    component: () => import("../view/auth/Signin.vue"),
+    meta: {
+      layout: "none",
+      public: true,
+      onlyAnonymous: true,
+    },
+  },
+  {
+    path: "/signout",
+    name: "Signout",
+    component: () => import("../view/Logout.vue"),
+    meta: {
+      layout: "none",
+      public: true,
+    },
+  },
+  {
+    path: "/signup",
+    name: "Signup",
+    component: () => import("../view/auth/Signup.vue"),
+    meta: {
+      layout: "none",
+      public: true,
+      onlyAnonymous: true,
+    },
+  },
+  {
+    path: "/password-reset",
+    name: "PasswordReset",
+    component: () => import("../view/auth/PasswordReset.vue"),
+    meta: {
+      layout: "none",
+      public: true,
+      onlyAnonymous: true,
+    },
+  },
+  {
+    path: "/password-reset-request",
+    name: "PasswordResetRequest",
+    component: () => import("../view/auth/PasswordResetRequest.vue"),
+    meta: {
+      layout: "none",
+      public: true,
+      onlyAnonymous: true,
+    },
+  },
   ...AUTH_ROUTES,
   ...ORGANIZATION_ROUTES,
   ...MARKETPLACE_ROUTES,
@@ -43,18 +91,19 @@ export const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const layoutStore = useLayoutStore();
   layoutStore.isPageLoading = true;
-  if (keycloakDisabled) {
-    next();
+  const { data: session } = await authClient.getSession();
+  const isSignedIn = session !== null;
+
+  if (isSignedIn && to.meta?.onlyAnonymous) {
+    next("/");
+    return;
   }
-  if (!keycloakIns.authenticated) {
-    await keycloakIns.login({
-      redirectUri: `${window.location.origin}${to.fullPath}`,
-    });
-    next();
+  if (!isSignedIn && !to.meta?.public) {
+    next("/signin");
+    return;
   }
-  else {
-    next();
-  }
+
+  next();
 });
 
 router.afterEach(async () => {

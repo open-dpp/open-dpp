@@ -12,10 +12,8 @@ import PrimeVue from "primevue/config";
 import { createApp, watch } from "vue";
 import { rootClasses } from "../formkit.theme";
 import App from "./App.vue";
-import { keycloakDisabled } from "./const";
-import keycloakIns, { initializeKeycloak } from "./lib/keycloak";
+import { authClient } from "./auth-client.ts";
 import { router } from "./router";
-import { useIndexStore } from "./stores";
 import { useLanguageStore } from "./stores/language.ts";
 import { useOrganizationsStore } from "./stores/organizations";
 import { i18n } from "./translations/i18n.ts";
@@ -35,7 +33,6 @@ async function startApp() {
     },
   });
 
-  const indexStore = useIndexStore();
   const { shortLocale, onI18nLocaleChange } = useLanguageStore();
   watch(
     () => (i18n.global.locale as unknown as { value: Locale })
@@ -61,21 +58,12 @@ async function startApp() {
       plugins: [createMultiStepPlugin(), createAutoAnimatePlugin()],
     }),
   );
-  if (!keycloakDisabled) {
-    app.provide("$keycloak", keycloakIns);
-    await initializeKeycloak(keycloakIns);
-    if (keycloakIns.authenticated) {
-      const organizationsStore = useOrganizationsStore();
-      await organizationsStore.fetchOrganizations();
-      const lastSelectedOrganization = indexStore.selectedOrganization;
-      if (
-        !organizationsStore.organizations.find(
-          organization => organization.id === lastSelectedOrganization,
-        )
-      ) {
-        indexStore.selectOrganization(null);
-      }
-    }
+
+  const { data: session } = await authClient.getSession();
+  const isSignedIn = session !== null;
+  if (isSignedIn) {
+    const organizationStore = useOrganizationsStore();
+    await organizationStore.fetchOrganizations();
   }
 
   app.use(router);

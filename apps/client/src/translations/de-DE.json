@@ -359,8 +359,7 @@
     "profile": "Dein Profil",
     "personalInformation": "Persönliche Informationen",
     "logout": "Abmelden",
-    "firstName": "Vorname",
-    "lastName": "Nachname",
+    "name": "Name",
     "language": "Sprache",
     "displaySettings": "Anzeigeeinstellungen"
   },

@@ -1,7 +1,3 @@
-{$SERVICE_KEYCLOAK_URL} {
-	reverse_proxy keycloak:8080
-}
-
 {$SERVICE_APP_URL} {
 	reverse_proxy open-dpp:3000
 }

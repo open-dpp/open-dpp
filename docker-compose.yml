@@ -10,7 +10,6 @@ services:
     ports:
       - ${SERVICE_CADDY_PORT}:${SERVICE_CADDY_PORT}
     environment:
-      - SERVICE_KEYCLOAK_URL=${SERVICE_KEYCLOAK_URL}
       - SERVICE_APP_URL=${SERVICE_APP_URL}
       - SERVICE_MAILPIT_URL=${SERVICE_MAILPIT_URL}
       - SERVICE_MCP_SERVER_URL=${SERVICE_MCP_SERVER_URL}
@@ -20,55 +19,12 @@ services:
       - caddy_config:/config
     restart: unless-stopped
 
-  keycloak:
-    container_name: keycloak
-    build:
-      context: apps/keycloak
-    environment:
-      - KC_BOOTSTRAP_ADMIN_USERNAME=${OPEN_DPP_KEYCLOAK_USER}
-      - KC_BOOTSTRAP_ADMIN_PASSWORD=${OPEN_DPP_KEYCLOAK_PASSWORD}
-      - KC_HEALTH_ENABLED=true
-      - KC_HOSTNAME_STRICT=false
-      - KC_HOSTNAME=${OPEN_DPP_KEYCLOAK_URL}
-      - KC_HTTP_ENABLED=true
-      - PROXY_ADDRESS_FORWARDING=true
-      - KC_PROXY_HEADERS=xforwarded
-      - KC_DB=postgres
-      - KC_DB_URL=jdbc:postgresql://auth-db/auth
-      - KC_DB_USERNAME=admin
-      - KC_DB_PASSWORD=admin
-    healthcheck:
-      test: /opt/keycloak/bin/healthcheck.sh || exit 1
-      start_period: 20s
-      interval: 15s
-      retries: 10
-    command: start
-    ports:
-      - 20001:8080
-    depends_on:
-      - auth-db
-
-  auth-db:
-    container_name: auth-db
-    image: postgres:17-alpine
-    volumes:
-      - auth_db:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=auth
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=admin
-
   open-dpp:
     container_name: open-dpp
     restart: unless-stopped
     image: ghcr.io/open-dpp/open-dpp:local
-    extra_hosts:
-      - "${SERVICE_KEYCLOAK_HOST}:host-gateway"
     env_file:
       - .env
-    depends_on:
-      keycloak:
-        condition: service_healthy
 
   mcp-server:
     container_name: mcp-server
@@ -97,38 +53,12 @@ services:
   mailpit:
     container_name: mailpit
     image: axllent/mailpit:latest
-
-  keycloak-config-cli:
-    container_name: keycloak-configurator
-    image: adorsys/keycloak-config-cli:latest-26.1.0 # ensure this is equal to keycloak version
+    ports:
+      - "8025:8025"
+      - "8026:1025"
     environment:
-      - KEYCLOAK_URL=http://keycloak:8080/
-      - KEYCLOAK_USER=${OPEN_DPP_KEYCLOAK_USER}
-      - KEYCLOAK_PASSWORD=${OPEN_DPP_KEYCLOAK_PASSWORD}
-      - KEYCLOAK_AVAILABILITYCHECK_ENABLED=true
-      - KEYCLOAK_AVAILABILITYCHECK_TIMEOUT=120s
-      - IMPORT_FILES_LOCATIONS=/config/*.json
-      - IMPORT_VALIDATE=true
-      - IMPORT_CACHE_ENABLED=false
-      - IMPORT_VARSUBSTITUTION_ENABLED=true
-      - CUSTOM_VAR_ADMIN_INTERFACE_ROOT_URL=${SERVICE_APP_URL}
-      - CUSTOM_VAR_ADMIN_INTERFACE_WEBORIGIN=${SERVICE_APP_URL}
-      - CUSTOM_VAR_SMTP_AUTH_ENABLED=false
-      - CUSTOM_VAR_SMTP_USER=open-dpp
-      - CUSTOM_VAR_SMTP_PASSWORD=*******
-      - CUSTOM_VAR_SMTP_TLS_ENABLED=false
-      - CUSTOM_VAR_SMTP_PORT=1025
-      - CUSTOM_VAR_SMTP_HOST=mailpit
-      - CUSTOM_VAR_SMTP_FROM=keycloak@open-dpp.localhost
-      - CUSTOM_VAR_SMTP_FROM_NAME=open-dpp-[LOCAL]
-      - CUSTOM_VAR_SMTP_REPLYTO=keycloak@open-dpp.localhost
-      - CUSTOM_VAR_SMTP_REPLYTO_NAME=open-dpp-[LOCAL]
-      - CUSTOM_VAR_POSTMAN_CLIENT_SECRET=uYs1LvvYrXA1B4Gf0pEY3m4hV8mvav27
-    depends_on:
-      keycloak:
-        condition: service_healthy
-    volumes:
-      - ./keycloak-realm.json:/config/keycloak-realm.json
+      - MP_SMTP_AUTH=${OPEN_DPP_MAIL_MAILPIT_SMTP_AUTH}
+      - MP_SMTP_AUTH_ALLOW_INSECURE=${OPEN_DPP_MAIL_MAILPIT_SMTP_ALLOW_INSECURE}
 
   minio:
     container_name: minio
@@ -172,8 +102,6 @@ volumes:
   caddy_data:
   caddy_config:
   minio_data:
-  etcd_data:
   mongo_db:
   mongo_config:
   api_db:
-  auth_db:

@@ -69,7 +69,7 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "transformIgnorePatterns": [
-      "node_modules/(?!(@open-dpp|@keycloak)/)"
+      "node_modules/(?!(@open-dpp)/)"
     ],
     "moduleNameMapper": {
       "^@open-dpp/(.*)$": "<rootDir>/../../packages/$1/src"

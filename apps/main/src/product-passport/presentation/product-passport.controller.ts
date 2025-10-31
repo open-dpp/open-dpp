@@ -1,5 +1,5 @@
 import { Controller, Get, Param } from "@nestjs/common";
-import { Public } from "@open-dpp/auth";
+import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { TemplateService } from "../../templates/infrastructure/template.service";
@@ -26,7 +26,7 @@ export class ProductPassportController {
     this.itemService = itemService;
   }
 
-  @Public()
+  @AllowAnonymous()
   @Get("product-passports/:id")
   async getProductPassport(@Param("id") id: string) {
     const uniqueProductIdentifier

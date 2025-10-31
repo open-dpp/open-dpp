@@ -4,9 +4,10 @@ import { expect, jest } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule } from "@open-dpp/env";
-import { KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
+import { MongooseTestingModule } from "@open-dpp/testing";
 import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
-import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
+import { AuthService } from "../../auth/auth.service";
+import { EmailService } from "../../email/email.service";
 import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { Template } from "../../templates/domain/template";
@@ -18,19 +19,12 @@ import {
   TemplateSchema,
 } from "../../templates/infrastructure/template.schema";
 import { TemplateService } from "../../templates/infrastructure/template.service";
-import { UserDbSchema, UserDoc } from "../../users/infrastructure/user.schema";
-import { UsersService } from "../../users/infrastructure/users.service";
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,
 } from "../infrastructure/passport-template-publication.schema";
 import { PassportTemplatePublicationService } from "../infrastructure/passport-template-publication.service";
 import { MarketplaceApplicationService } from "./marketplace.application.service";
-
-// Mock the KeycloakResourcesService module before any imports that use it
-/* jest.mock("../../keycloak-resources/infrastructure/keycloak-resources.service", () => ({
-  KeycloakResourcesService: jest.fn(),
-})); */
 
 describe("marketplaceService", () => {
   let marketplaceService: MarketplaceApplicationService;
@@ -57,10 +51,6 @@ describe("marketplaceService", () => {
             name: OrganizationDoc.name,
             schema: OrganizationDbSchema,
           },
-          {
-            name: UserDoc.name,
-            schema: UserDbSchema,
-          },
         ]),
       ],
       providers: [
@@ -68,10 +58,23 @@ describe("marketplaceService", () => {
         MarketplaceApplicationService,
         TemplateService,
         OrganizationsService,
-        UsersService,
         {
-          provide: KeycloakResourcesService,
-          useClass: KeycloakResourcesServiceTesting,
+          provide: EmailService,
+          useValue: {
+            send: jest.fn(),
+          },
+        },
+        {
+          provide: AuthService,
+          useValue: {
+            getSession: jest.fn(),
+            getUserById: jest.fn((userId) => {
+              // Return the appropriate test user based on userId
+              return TestUsersAndOrganizations.users.user1.id === userId
+                ? TestUsersAndOrganizations.users.user1
+                : TestUsersAndOrganizations.users.user2;
+            }),
+          },
         },
       ],
     }).compile();
@@ -82,9 +85,7 @@ describe("marketplaceService", () => {
     passportTemplateService = module.get<PassportTemplatePublicationService>(
       PassportTemplatePublicationService,
     );
-    const usersService = module.get(UsersService);
     organizationService = module.get<OrganizationsService>(OrganizationsService);
-    await usersService.save(TestUsersAndOrganizations.users.user1);
     await organizationService.save(TestUsersAndOrganizations.organizations.org1);
     await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });

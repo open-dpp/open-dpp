@@ -1,19 +1,13 @@
-const keycloakDisabled = import.meta.env.VITE_KEYCLOAK_DISABLED === "true";
-
-export { keycloakDisabled };
-// eslint-disable-next-line import/no-mutable-exports
-export let KEYCLOAK_URL = import.meta.env.VITE_KEYCLOAK_ROOT as string;
 // eslint-disable-next-line import/no-mutable-exports
 export let API_URL = import.meta.env.VITE_API_ROOT as string;
 export const APPEND_TO = import.meta.env.VITE_APPEND_TO as string ?? "body"; // This is set to self for cypress component tests to fix rendering issues for primevue components using teleport like SplitButton
 async function fetchConfig() {
-  if (!API_URL && !KEYCLOAK_URL) {
+  if (!API_URL) {
     // Get runtime configuration
     try {
       const response = await fetch("/config.json");
       const config = await response.json();
       API_URL = config.API_URL || "";
-      KEYCLOAK_URL = config.KEYCLOAK_URL || "";
     }
     catch (error) {
       console.error("Failed to fetch runtime configuration:", error);

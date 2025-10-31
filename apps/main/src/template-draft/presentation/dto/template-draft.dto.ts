@@ -19,8 +19,8 @@ const TemplateDraftDtoSchema = z.object({
   version: z.string().min(1),
   publications: PublicationDtoSchema.array(),
   sections: SectionBaseDtoSchema.array(),
-  createdByUserId: z.uuid(),
-  ownedByOrganizationId: z.uuid(),
+  createdByUserId: z.string(),
+  ownedByOrganizationId: z.string(),
 });
 
 export type TemplateDraftDto = z.infer<typeof TemplateDraftDtoSchema>;

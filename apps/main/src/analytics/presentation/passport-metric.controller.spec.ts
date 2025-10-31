@@ -4,18 +4,18 @@ import { APP_GUARD, Reflector } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule } from "@open-dpp/env";
-import getKeycloakAuthToken, {
+import {
   getApp,
-  KeycloakAuthTestingGuard,
-  KeycloakResourcesServiceTesting,
   MongooseTestingModule,
 } from "@open-dpp/testing";
 import { Connection } from "mongoose";
 import request from "supertest";
+import { BetterAuthTestingGuard, getBetterAuthToken } from "../../../test/better-auth-testing.guard";
 import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
+import { AuthService } from "../../auth/auth.service";
+import { EmailService } from "../../email/email.service";
 import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
 import { ItemsService } from "../../items/infrastructure/items.service";
-import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
@@ -33,9 +33,6 @@ import {
 import {
   UniqueProductIdentifierApplicationService,
 } from "../../unique-product-identifier/presentation/unique.product.identifier.application.service";
-import { InjectUserToAuthContextGuard } from "../../users/infrastructure/inject-user-to-auth-context.guard";
-import { UserDbSchema, UserDoc } from "../../users/infrastructure/user.schema";
-import { UsersService } from "../../users/infrastructure/users.service";
 import { AnalyticsModule } from "../analytics.module";
 import { MeasurementType, PassportMetric } from "../domain/passport-metric";
 import { TimePeriod } from "../domain/time-period";
@@ -48,16 +45,9 @@ describe("passportMetricController", () => {
   let passportMetricService: PassportMetricService;
   let module: TestingModule;
   let mongoConnection: Connection;
-  const user = TestUsersAndOrganizations.users.user1;
-  const otherUser = TestUsersAndOrganizations.users.user2;
-  const organization = TestUsersAndOrganizations.organizations.org1;
-  const otherOrganization = TestUsersAndOrganizations.organizations.org2;
-  const reflector = new Reflector();
-
-  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(
-    new Map(),
-    reflector,
-  );
+  const reflector: Reflector = new Reflector();
+  const betterAuthTestingGuard = new BetterAuthTestingGuard(reflector);
+  betterAuthTestingGuard.loadUsers([TestUsersAndOrganizations.users.user1, TestUsersAndOrganizations.users.user2]);
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -78,10 +68,6 @@ describe("passportMetricController", () => {
             schema: ModelSchema,
           },
           {
-            name: UserDoc.name,
-            schema: UserDbSchema,
-          },
-          {
             name: OrganizationDoc.name,
             schema: OrganizationDbSchema,
           },
@@ -89,39 +75,36 @@ describe("passportMetricController", () => {
         AnalyticsModule,
       ],
       providers: [
-        KeycloakResourcesService,
-        UsersService,
         OrganizationsService,
         UniqueProductIdentifierService,
         UniqueProductIdentifierApplicationService,
         ModelsService,
         ItemsService,
         {
-          provide: APP_GUARD,
-          useValue: keycloakAuthTestingGuard,
+          provide: EmailService,
+          useValue: {
+            send: jest.fn(),
+          },
+        },
+        {
+          provide: AuthService,
+          useValue: {
+            getSession: jest.fn(),
+            getUserById: jest.fn(),
+          },
         },
         {
           provide: APP_GUARD,
-          useClass: InjectUserToAuthContextGuard,
+          useValue: betterAuthTestingGuard,
         },
       ],
       controllers: [PassportMetricController],
-    }).overrideProvider(KeycloakResourcesService).useValue(
-      KeycloakResourcesServiceTesting.fromPlain({
-        users: [
-          {
-            id: user.keycloakUserId,
-            email: user.email,
-          },
-        ],
-      }),
-    ).compile();
+    }).compile();
 
     mongoConnection = module.get<Connection>(getConnectionToken());
     passportMetricService = module.get<PassportMetricService>(
       PassportMetricService,
     );
-    const usersService = module.get<UsersService>(UsersService);
     const organizationService = module.get<OrganizationsService>(OrganizationsService);
     modelsService = module.get<ModelsService>(ModelsService);
     app = module.createNestApplication();
@@ -135,10 +118,8 @@ describe("passportMetricController", () => {
       },
       new Date(),
     );
-    await usersService.save(user);
-    await usersService.save(otherUser);
-    await organizationService.save(organization);
-    await organizationService.save(otherOrganization);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
+    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
 
   beforeEach(() => {
@@ -152,12 +133,12 @@ describe("passportMetricController", () => {
   it("/POST should create page view metric", async () => {
     jest.spyOn(reflector, "get").mockReturnValue(true);
     const template = Template.loadFromDb(
-      laptopFactory.build({ organizationId: organization.id, userId: user.id }),
+      laptopFactory.build({ organizationId: TestUsersAndOrganizations.organizations.org1.id, userId: TestUsersAndOrganizations.users.user1.id }),
     );
     const model = Model.create({
       name: "My product",
-      userId: user.id,
-      organizationId: organization.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
       template,
     });
     const uniqueProductIdentifier = model.createUniqueProductIdentifier();
@@ -195,7 +176,7 @@ describe("passportMetricController", () => {
     const date2 = new Date("2025-01-01T14:00:00Z");
     const source = {
       templateId,
-      organizationId: organization.id,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
       modelId: randomUUID(),
     };
     const page = "http://example.com/page1";
@@ -215,13 +196,12 @@ describe("passportMetricController", () => {
 
     const response = await request(getApp(app))
       .get(
-        `/organizations/${organization.id}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T00:00:00Z&endDate=2025-03-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T00:00:00Z&endDate=2025-03-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          user.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send();
@@ -249,7 +229,7 @@ describe("passportMetricController", () => {
     const date = new Date("2025-01-01T13:00:00Z");
     const source = {
       templateId,
-      organizationId: organization.id,
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
       modelId: randomUUID(),
     };
 
@@ -263,13 +243,12 @@ describe("passportMetricController", () => {
     await passportMetricService.create(pageView);
     const response = await request(getApp(app))
       .get(
-        `/organizations/${otherOrganization.id}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T00:00:00Z&endDate=2025-02-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T00:00:00Z&endDate=2025-02-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          otherUser.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user2.id,
         ),
       )
       .send();
@@ -286,13 +265,12 @@ describe("passportMetricController", () => {
   it(`/GET passport metrics fails if user is not member of organization`, async () => {
     const response = await request(getApp(app))
       .get(
-        `/organizations/${otherOrganization.id}/passport-metrics?templateId=${randomUUID()}&modelId=${randomUUID()}&startDate=2025-01-01T12:00:00Z&endDate=2025-01-01T13:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
+        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/passport-metrics?templateId=${randomUUID()}&modelId=${randomUUID()}&startDate=2025-01-01T12:00:00Z&endDate=2025-01-01T13:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
       )
       .set(
         "Authorization",
-        getKeycloakAuthToken(
-          user.keycloakUserId,
-          keycloakAuthTestingGuard,
+        getBetterAuthToken(
+          TestUsersAndOrganizations.users.user1.id,
         ),
       )
       .send();

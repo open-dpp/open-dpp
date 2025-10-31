@@ -28,9 +28,9 @@ import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import logo from "../../assets/logo-with-text.svg";
+import { authClient } from "../../auth-client.ts";
 import { useIndexStore } from "../../stores";
 import { useLayoutStore } from "../../stores/layout";
-import { useProfileStore } from "../../stores/profile";
 import Breadcrumbs from "../Breadcrumbs.vue";
 import NotificationHandler from "../notifications/NotificationHandler.vue";
 import SelectOrganization from "../organizations/SelectOrganization.vue";
@@ -41,7 +41,8 @@ const router = useRouter();
 
 const indexStore = useIndexStore();
 const layoutStore = useLayoutStore();
-const profileStore = useProfileStore();
+
+const session = authClient.useSession();
 
 const { t } = useI18n();
 
@@ -51,14 +52,6 @@ interface MenuItemInterface {
   icon: FunctionalComponent;
   show: () => boolean;
 }
-
-const initials = computed(() => {
-  if (!profileStore.profile)
-    return "AN";
-  const first = profileStore.profile.firstName?.substring(0, 1) || "A";
-  const last = profileStore.profile.lastName?.substring(0, 1) || "N";
-  return (first + last).toUpperCase();
-});
 
 const unfilteredNavigation = computed<Array<MenuItemInterface>>(() => [
   {
@@ -352,14 +345,14 @@ const sidebarOpen = ref(false);
             <span
               aria-hidden="true"
               class="hidden xl:inline-block ml-4 text-sm font-semibold leading-6 text-gray-900"
-            >{{ profileStore.profile?.name }}</span>
+            >{{ session.data?.user.name ?? "AN" }}</span>
             <!-- Profile dropdown -->
             <Menu as="div" class="relative">
               <MenuButton class="-m-1.5 flex items-center p-1.5">
                 <div
                   class="hover:bg-indigo-700 cursor-pointer inline-flex items-center justify-center w-10 h-10 rounded-full bg-indigo-600 text-white text-sm font-medium"
                 >
-                  {{ initials }}
+                  {{ (session.data?.user.name ?? "AN").substring(0, 2).toLocaleUpperCase() }}
                 </div>
               </MenuButton>
               <transition

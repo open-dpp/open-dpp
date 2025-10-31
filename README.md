@@ -18,7 +18,6 @@ Replace the secrets and api tokens marked with:
 * change-to-secure-mongo-password
 * change-to-a-secret-key
 * your-mistral-key
-* secure-keycloak-password
 
 ## Build
 ```shell
@@ -57,7 +56,6 @@ pnpm test
 * Download docker-compose.yml
 * Download .env-example and rename it to .env
 * Download Caddyfile
-* Download keycloak-realm.json
 * Create secrets with your favorite secret generator and replace all secrets in .env
 * Adapt all urls to your domain
 
