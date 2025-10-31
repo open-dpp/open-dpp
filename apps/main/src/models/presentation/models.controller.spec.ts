@@ -643,6 +643,34 @@ describe("modelsController", () => {
       isValid: false,
     });
   });
+
+  it("add media to model", async () => {
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
+    const model = Model.create({
+      name: "My name",
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      template,
+    });
+    model.createUniqueProductIdentifier();
+
+    await modelsService.save(model);
+    const mediaReference = { id: randomUUID() };
+    const response = await request(getApp(app))
+      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/media`)
+      .set(
+        "Authorization",
+        getKeycloakAuthToken(
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(mediaReference);
+    expect(response.status).toEqual(201);
+    expect(response.body.mediaReferences).toEqual([mediaReference.id]);
+  });
+
   //
   it("add data values to model", async () => {
     const template = Template.loadFromDb(laptopModel);

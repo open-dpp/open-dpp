@@ -23,6 +23,9 @@ export class ModelDoc extends PassportDoc {
   }) // Track schema version
   _schemaVersion: ModelDocSchemaVersion_TYPE;
 
+  @Prop({ required: true, default: [] })
+  mediaReferences: string[];
+
   @Prop({ required: false })
   description?: string;
 }

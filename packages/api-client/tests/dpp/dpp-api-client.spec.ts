@@ -12,7 +12,7 @@ import {
 import { activeOrganization, organizations } from '../organization'
 import { aasPropertiesWithParent, connection, connectionList } from './handlers/aas-integration'
 import { item1, item2 } from './handlers/item'
-import { model, responseDataValues, updateDataValues } from './handlers/model'
+import { mediaReferences, model, responseDataValues, updateDataValues } from './handlers/model'
 import { productPassport } from './handlers/product-passport'
 import { template } from './handlers/template'
 import { dataFieldDraft, draftsOfOrganization, sectionDraft, templateDraft } from './handlers/template-draft'
@@ -113,6 +113,18 @@ describe('apiClient', () => {
       const response = await sdk.dpp.models.addData(model.id, addDataValues)
       expect(response.data.dataValues).toEqual(
         addDataValues.map(v => ({ ...v })),
+      )
+    })
+
+    it('should add media reference', async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      })
+      sdk.setActiveOrganizationId(activeOrganization.id)
+
+      const response = await sdk.dpp.models.addMediaReference(model.id, mediaReferences[0])
+      expect(response.data.mediaReferences).toEqual(
+        [mediaReferences[0].id],
       )
     })
   })

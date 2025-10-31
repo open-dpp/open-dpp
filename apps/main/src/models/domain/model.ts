@@ -19,6 +19,7 @@ export type ModelDbProps = Omit<ModelCreateProps, "template"> & {
   templateId: string;
   dataValues: DataValue[];
   description: string | undefined;
+  mediaReferences: string[];
 };
 
 export class Model extends ProductPassportData {
@@ -29,6 +30,7 @@ export class Model extends ProductPassportData {
   private constructor(
     id: string,
     name: string,
+    public readonly mediaReferences: string[],
     ownedByOrganizationId: string,
     createdByUserId: string,
     uniqueProductIdentifiers: UniqueProductIdentifier[] = [],
@@ -52,6 +54,7 @@ export class Model extends ProductPassportData {
     const model = new Model(
       randomUUID(),
       data.name,
+      [],
       data.organizationId,
       data.userId,
       [],
@@ -67,6 +70,7 @@ export class Model extends ProductPassportData {
     return new Model(
       data.id,
       data.name,
+      data.mediaReferences,
       data.organizationId,
       data.userId,
       data.uniqueProductIdentifiers,
@@ -79,6 +83,12 @@ export class Model extends ProductPassportData {
   rename(name: string) {
     this.name = name;
   }
+
+  addMediaReference(mediaFileId: string) {
+    if (!this.mediaReferences.includes(mediaFileId)) {
+      this.mediaReferences.push(mediaFileId);
+    }
+  };
 
   modifyDescription(description: string | undefined) {
     this.description = description;

@@ -1,7 +1,4 @@
 import type * as authRequest from "@open-dpp/auth";
-import type {
-  DataValueDto,
-} from "../../product-passport-data/presentation/dto/data-value.dto";
 import {
   BadRequestException,
   Body,
@@ -14,20 +11,22 @@ import {
   Request,
 } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
-
 import { ZodValidationPipe } from "@open-dpp/exception";
+
 import { hasPermission, PermissionAction } from "@open-dpp/permission";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { modelParamDocumentation } from "../../open-api-docs/item.doc";
 import {
   createModelDocumentation,
+  mediaReferenceDocumentation,
   modelDocumentation,
   updateModelDocumentation,
 } from "../../open-api-docs/model.doc";
 import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import {
+  DataValueDto,
   DataValueDtoSchema,
 } from "../../product-passport-data/presentation/dto/data-value.dto";
 import {
@@ -39,7 +38,7 @@ import { User } from "../../users/domain/user";
 import { Model } from "../domain/model";
 import { ModelsService } from "../infrastructure/models.service";
 import * as createModelDto_1 from "./dto/create-model.dto";
-import { modelToDto } from "./dto/model.dto";
+import { MediaReferenceDto, MediaReferenceDtoSchema, modelToDto } from "./dto/model.dto";
 import * as updateModelDto_1 from "./dto/update-model.dto";
 
 @Controller("/organizations/:orgaId/models")
@@ -319,6 +318,43 @@ export class ModelsController {
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.toJson());
     }
+    return modelToDto(await this.modelsService.save(model));
+  }
+
+  @ApiOperation({
+    summary: "Add media file to model",
+    description:
+      "Add media file",
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiBody({
+    schema: mediaReferenceDocumentation,
+  })
+  @ApiResponse({
+    schema: modelDocumentation,
+  })
+  @Post(":modelId/media")
+  async addMediaFile(
+    @Param("orgaId") organizationId: string,
+    @Param("modelId") modelId: string,
+    @Body(new ZodValidationPipe(MediaReferenceDtoSchema))
+    mediaReferenceDto: MediaReferenceDto,
+    @Request() req: authRequest.AuthRequest,
+  ) {
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
+    const model = await this.modelsService.findOneOrFail(modelId);
+    if (model.ownedByOrganizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+    model.addMediaReference(mediaReferenceDto.id);
     return modelToDto(await this.modelsService.save(model));
   }
 }

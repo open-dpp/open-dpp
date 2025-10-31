@@ -41,6 +41,24 @@ describe("model", () => {
     expect(model.isOwnedBy(randomUUID())).toBeFalsy();
   });
 
+  it("should add product image to model", () => {
+    const model = Model.create({
+      name: "My model",
+      userId,
+      organizationId,
+      template,
+    });
+    const productMediaId = randomUUID();
+    model.addMediaReference(productMediaId);
+    expect(model.mediaReferences).toEqual([productMediaId]);
+    const productMediaId2 = randomUUID();
+
+    model.addMediaReference(productMediaId);
+    model.addMediaReference(productMediaId2);
+
+    expect(model.mediaReferences).toEqual([productMediaId, productMediaId2]);
+  });
+
   it("is created from plain with defaults", () => {
     const model = Model.create({
       name: "My name",
@@ -84,6 +102,7 @@ describe("model", () => {
     const model = Model.loadFromDb({
       id,
       name,
+      mediaReferences: [],
       organizationId: ownedByOrganizationId,
       userId: createdByUserId,
       uniqueProductIdentifiers: [],

@@ -12,6 +12,7 @@ import {
 export const ModelDtoSchema = z.object({
   id: z.uuid(),
   name: z.string(),
+  mediaReferences: z.string().array(),
   description: z.string().optional(),
   uniqueProductIdentifiers: UniqueProductIdentifierDtoSchema.array(),
   templateId: z.uuid(),
@@ -25,6 +26,7 @@ export function modelToDto(model: Model): ModelDto {
   return ModelDtoSchema.parse({
     id: model.id,
     name: model.name,
+    mediaReferences: model.mediaReferences,
     description: model.description,
     dataValues: model.dataValues.map(d => dataValueToDto(d)),
     owner: model.createdByUserId,
@@ -34,3 +36,9 @@ export function modelToDto(model: Model): ModelDto {
     templateId: model.templateId,
   });
 }
+
+export const MediaReferenceDtoSchema = z.object({
+  id: z.uuid(),
+});
+
+export type MediaReferenceDto = z.infer<typeof MediaReferenceDtoSchema>;

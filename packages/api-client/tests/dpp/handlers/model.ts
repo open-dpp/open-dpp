@@ -19,6 +19,12 @@ export const updateDataValues: DataValueDto[] = [
     row: 0,
   },
 ]
+
+export const mediaReferences = [
+  {
+    id: randomUUID(),
+  },
+]
 export const dataSectionId = randomUUID()
 export const dataFieldId = randomUUID()
 
@@ -33,6 +39,7 @@ export const model = {
   id: randomUUID(),
   dataValues: [],
   name: 'My name',
+  mediaReferences: [],
   description: 'My desc',
   owner: randomUUID(),
 }
@@ -80,6 +87,18 @@ export const modelHandlers = [
           dataValues: body.map((b: any) => ({
             ...b,
           })),
+        },
+        { status: 201 },
+      )
+    },
+  ),
+  http.post(
+    `${baseURL}/organizations/${activeOrganization.id}/models/${model.id}/media`,
+    async () => {
+      return HttpResponse.json(
+        {
+          ...model,
+          mediaReferences: mediaReferences.map(b => b.id),
         },
         { status: 201 },
       )

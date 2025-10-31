@@ -20,10 +20,18 @@ export const updateModelDocumentation = {
   required: [],
 };
 
+export const mediaReferenceDocumentation = {
+  type: "object",
+  properties: {
+    id: { type: "string", format: "uuid" },
+  },
+};
+
 export const modelDocumentation = {
   type: "object",
   properties: {
     id: { type: "string", format: "uuid" },
+    mediaFileIds: { type: "array", items: { type: "string", format: "uuid" } },
     name: { type: "string" },
     description: { type: "string" },
     uniqueProductIdentifiers: {
