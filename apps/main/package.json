@@ -62,6 +62,7 @@
     "minio": "^8.0.6",
     "mjml": "^4.16.1",
     "mjml-core": "^4.16.1",
+    "mongodb": "^6.20.0",
     "nodemailer": "^7.0.9",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
