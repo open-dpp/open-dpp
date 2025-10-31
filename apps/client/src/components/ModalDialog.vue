@@ -12,7 +12,7 @@ import {
 } from "@heroicons/vue/24/outline";
 import { useI18n } from "vue-i18n";
 import { useModelDialogStore } from "../stores/modal.dialog";
-import BaseButton from "./BaseButton.vue";
+import BaseButton from "./basics/BaseButton.vue";
 
 const { t } = useI18n();
 

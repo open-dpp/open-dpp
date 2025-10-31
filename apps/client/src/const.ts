@@ -27,6 +27,8 @@ export const MARKETPLACE_URL = API_URL; // import.meta.env.VITE_MARKETPLACE_ROOT
 export const VIEW_ROOT_URL = API_URL; // import.meta.env.VITE_VIEW_ROOT_URL;
 export const MEDIA_SERVICE_URL = API_URL; // import.meta.env.VITE_MEDIA_SERVICE_ROOT;
 export const AGENT_SERVER_URL = API_URL;
+export const ANALYTICS_URL = API_URL;
+
 export const AGENT_WEBSOCKET_URL = API_URL.substring(
   0,
   API_URL.lastIndexOf("/"),

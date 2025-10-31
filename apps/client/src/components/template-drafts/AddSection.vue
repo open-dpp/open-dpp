@@ -5,7 +5,7 @@ import {
   SidebarContentType,
   useDraftSidebarStore,
 } from "../../stores/draftSidebar";
-import BaseButton from "../BaseButton.vue";
+import BaseButton from "../basics/BaseButton.vue";
 
 const props = defineProps<{
   parentId?: string;

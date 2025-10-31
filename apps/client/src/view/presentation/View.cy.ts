@@ -87,7 +87,7 @@ describe("<View />", () => {
   const uuid = productPassport.id;
   const apiPath = `${API_URL}/product-passports/${uuid}`;
 
-  it("renders sections at root level and navigates to row 1 entry", () => {
+  it("renders sections at root level and navigates to row 1 entry", async () => {
     cy.intercept("GET", apiPath, {
       statusCode: 200,
       body: productPassport,
@@ -121,7 +121,7 @@ describe("<View />", () => {
     });
   });
 
-  it("renders sub sections and navigates to one of them", () => {
+  it("renders sub sections and navigates to one of them", async () => {
     cy.intercept("GET", apiPath, {
       statusCode: 200,
       body: productPassport,
@@ -141,7 +141,7 @@ describe("<View />", () => {
     });
   });
 
-  it("renders sub sections in table and navigates to one of them", () => {
+  it("renders sub sections in table and navigates to one of them", async () => {
     cy.intercept("GET", apiPath, {
       statusCode: 200,
       body: productPassport,
@@ -162,7 +162,7 @@ describe("<View />", () => {
     });
   });
 
-  it("renders specific row of repeatable section", () => {
+  it("renders specific row of repeatable section", async () => {
     cy.intercept("GET", apiPath, {
       statusCode: 200,
       body: productPassport,
@@ -181,7 +181,7 @@ describe("<View />", () => {
     });
   });
 
-  it("renders repeatable section for large displays and navigates to other passport", () => {
+  it("renders repeatable section for large displays and navigates to other passport", async () => {
     cy.intercept("GET", apiPath, {
       statusCode: 200,
       body: productPassport,
@@ -215,7 +215,7 @@ describe("<View />", () => {
     });
   });
 
-  it("renders sidebar for root level and navigate to section and back", () => {
+  it("renders sidebar for root level and navigate to section and back", async () => {
     cy.intercept("GET", apiPath, {
       statusCode: 200,
       body: productPassport,

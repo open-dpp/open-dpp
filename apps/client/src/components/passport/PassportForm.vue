@@ -4,7 +4,7 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { usePassportFormStore } from "../../stores/passport.form";
-import BaseButton from "../BaseButton.vue";
+import BaseButton from "../basics/BaseButton.vue";
 import SectionHeader from "../SectionHeader.vue";
 import RepeatableSection from "./form-components/RepeatableSection.vue";
 import SectionForm from "./form-components/SectionForm.vue";

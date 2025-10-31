@@ -12,7 +12,7 @@ import { z } from "zod/v4";
 import { useDraftStore } from "../../stores/draft";
 import { useDraftSidebarStore } from "../../stores/draftSidebar";
 import { useModelDialogStore } from "../../stores/modal.dialog";
-import BaseButton from "../BaseButton.vue";
+import BaseButton from "../basics/BaseButton.vue";
 
 const props = defineProps<{
   type: SectionType;

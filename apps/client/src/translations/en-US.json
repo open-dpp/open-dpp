@@ -203,8 +203,17 @@
     "edit": "Edit",
     "errorCreate": "Failed to create connection"
   },
-  "statistics": {
-    "statistics": "Statistics"
+  "analytics": {
+    "analytics": "Analytics",
+    "startAnalysis": "Start analysis",
+    "loadingMetricError": "Failed to load the analysis",
+    "passportSelection": "Passport selection",
+    "timeViewSelection": "View",
+    "pageViews": "Page views",
+    "daylyView": "Dayly view",
+    "weeklyView": "Weekly view",
+    "monthlyView": "Monthly view",
+    "yearlyView": "Yearly view"
   },
   "members": {
     "members": "Members"
