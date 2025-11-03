@@ -13,8 +13,6 @@ import { BetterAuthTestingGuard } from "../../../test/better-auth-testing.guard"
 import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
 import { AuthService } from "../../auth/auth.service";
 import { EmailService } from "../../email/email.service";
-import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { PassportTemplatePublication } from "../domain/passport-template-publication";
 import { passportTemplatePublicationPropsFactory } from "../fixtures/passport.template.factory";
@@ -47,14 +45,9 @@ describe("passportTemplateController", () => {
             name: PassportTemplatePublicationDoc.name,
             schema: PassportTemplatePublicationDbSchema,
           },
-          {
-            name: OrganizationDoc.name,
-            schema: OrganizationDbSchema,
-          },
         ]),
       ],
       providers: [
-        OrganizationsService,
         UsersService,
         PassportTemplatePublicationService,
         {
@@ -86,12 +79,8 @@ describe("passportTemplateController", () => {
     app = module.createNestApplication();
     mongoConnection = module.get(getConnectionToken());
     passportTemplateService = module.get(PassportTemplatePublicationService);
-    const organizationService = module.get(OrganizationsService);
 
     await app.init();
-
-    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
-    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
   beforeEach(() => {
     jest.spyOn(Date, "now").mockImplementation(() => mockNow.getTime());

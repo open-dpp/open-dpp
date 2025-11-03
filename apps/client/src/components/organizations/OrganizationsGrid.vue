@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { useIndexStore } from "../../stores";
 import { useOrganizationsStore } from "../../stores/organizations";
 import EmptyState from "./EmptyState.vue";
+import UserInvitationsList from "./UserInvitationsList.vue";
 
 const { t } = useI18n();
 const indexStore = useIndexStore();
@@ -19,6 +20,9 @@ function setOrganization(organizationId: string) {
 
 <template>
   <div class="">
+    <div>
+      <UserInvitationsList />
+    </div>
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
         <h1 class="text-base font-semibold text-gray-900">

@@ -26,12 +26,14 @@ async function create(fields: {
   const responseData = await organizationStore.createOrganization({
     name: fields.stepper.generalInfo.name,
   });
-  await new Promise(resolve => setTimeout(resolve, 250));
-  submitted.value = true;
-  reset("createOrganizationForm");
-  await organizationStore.fetchOrganizations();
-  indexStore.selectOrganization(responseData.id);
-  await router.push("/");
+  if (responseData) {
+    await new Promise(resolve => setTimeout(resolve, 250));
+    submitted.value = true;
+    reset("createOrganizationForm");
+    await organizationStore.fetchOrganizations();
+    indexStore.selectOrganization(responseData.id);
+    await router.push("/");
+  }
 }
 </script>
 

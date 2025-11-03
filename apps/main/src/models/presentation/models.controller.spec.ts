@@ -24,8 +24,6 @@ import {
   PassportTemplatePublicationService,
 } from "../../marketplace/infrastructure/passport-template-publication.service";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
-import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import { Template, TemplateDbProps } from "../../templates/domain/template";
 import {
@@ -94,16 +92,11 @@ describe("modelsController", () => {
             name: PassportTemplatePublicationDoc.name,
             schema: PassportTemplatePublicationDbSchema,
           },
-          {
-            name: OrganizationDoc.name,
-            schema: OrganizationDbSchema,
-          },
         ]),
         EmailModule,
       ],
       providers: [
         UsersService,
-        OrganizationsService,
         ModelsService,
         ItemsService,
         UniqueProductIdentifierService,
@@ -140,15 +133,11 @@ describe("modelsController", () => {
     marketplaceService = moduleRef.get<MarketplaceApplicationService>(
       MarketplaceApplicationService,
     );
-    const organizationService = moduleRef.get(OrganizationsService);
 
     app = moduleRef.createNestApplication();
     app.useGlobalFilters(new NotFoundInDatabaseExceptionFilter());
 
     await app.init();
-
-    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
-    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
 
   const sectionId3 = randomUUID();

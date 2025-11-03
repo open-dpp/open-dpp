@@ -23,8 +23,6 @@ import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { Organization } from "../../organizations/domain/organization";
-import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { Template, TemplateDbProps } from "../../templates/domain/template";
 import { dataFieldDbPropsFactory } from "../../templates/fixtures/data-field.factory";
 import { laptopFactory } from "../../templates/fixtures/laptop.factory";
@@ -57,7 +55,6 @@ describe("aasConnectionController", () => {
   let modelsService: ModelsService;
   let itemsService: ItemsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
-  let organizationService: OrganizationsService;
 
   const apiTokenUser1 = "api-token-user-1";
   const betterAuthTestingGuard = new BetterAuthTestingGuard(new Reflector());
@@ -93,14 +90,9 @@ describe("aasConnectionController", () => {
             name: TraceabilityEventDocument.name,
             schema: DppEventSchema,
           },
-          {
-            name: OrganizationDoc.name,
-            schema: OrganizationDbSchema,
-          },
         ]),
       ],
       providers: [
-        OrganizationsService,
         UsersService,
         TemplateService,
         AasConnectionService,
@@ -141,7 +133,6 @@ describe("aasConnectionController", () => {
     aasConnectionService = moduleRef.get(AasConnectionService);
     modelsService = moduleRef.get(ModelsService);
     itemsService = moduleRef.get(ItemsService);
-    organizationService = moduleRef.get(OrganizationsService);
     const configService = moduleRef.get(EnvService);
 
     uniqueProductIdentifierService = moduleRef.get(
@@ -150,8 +141,6 @@ describe("aasConnectionController", () => {
 
     await app.init();
 
-    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
-    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
     const originalGet = configService.get.bind(configService);
     jest.spyOn(configService, "get").mockImplementation((key: string) => key === "OPEN_DPP_AAS_TOKEN" ? apiTokenUser1 : originalGet(key as any));
     betterAuthTestingGuard.addApiToken(configService.get("OPEN_DPP_AAS_TOKEN"), TestUsersAndOrganizations.users.user1);
@@ -382,7 +371,7 @@ describe("aasConnectionController", () => {
       createdByUserId: userTemp.id,
       members: [userTemp],
     });
-    await organizationService.save(orgTemp);
+    // await organizationService.save(orgTemp);
     const aasConnection1 = AasConnection.create({
       name: "Connection Name 1",
       organizationId: orgTemp.id,

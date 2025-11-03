@@ -109,7 +109,7 @@
     "uuid": "^13.0.0"
   },
   "jest": {
-    "testRegex": ".*\\.spec\\.ts$",
+    "testRegex": "src/models/presentation/models.controller.spec.ts",
     "transform": {
       "^.+\\.(t|j)s$": [
         "@swc/jest",

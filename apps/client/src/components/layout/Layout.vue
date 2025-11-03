@@ -111,6 +111,26 @@ const userNavigation = [
   { name: t("user.logout"), to: "/logout" },
 ];
 
+const initials = computed(() => {
+  const session = authClient.useSession();
+  if (!session.value.data)
+    return "AN";
+  const userSession = session.value.data;
+  const first = userSession.user.firstName.substring(0, 1) || "A";
+  const last = userSession.user.lastName.substring(0, 1) || "N";
+  return (first + last).toUpperCase();
+});
+
+const fullName = computed(() => {
+  const session = authClient.useSession();
+  if (!session.value.data)
+    return "AN";
+  const userSession = session.value.data;
+  const first = userSession.user.firstName;
+  const last = userSession.user.lastName;
+  return `${first} ${last}`;
+});
+
 const sidebarOpen = ref(false);
 </script>
 
@@ -181,8 +201,8 @@ const sidebarOpen = ref(false);
                           <router-link
                             class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6" :class="[
                               item.to === route.path
-                                ? 'bg-gray-50 text-GJDarkGreen'
-                                : 'text-gray-700 hover:bg-gray-50 hover:text-GJDarkGreen',
+                                ? 'bg-gray-50 text-gray-700'
+                                : 'text-gray-700 hover:bg-gray-50 hover:text-black',
                             ]"
                             :to="item.to"
                           >
@@ -190,8 +210,8 @@ const sidebarOpen = ref(false);
                               :is="item.icon"
                               class="h-6 w-6 shrink-0" :class="[
                                 item.to === route.path
-                                  ? 'text-GJDarkGreen'
-                                  : 'text-gray-400 group-hover:text-GJDarkGreen',
+                                  ? 'text-black'
+                                  : 'text-gray-400 group-hover:text-black',
                               ]"
                               aria-hidden="true"
                             />
@@ -214,19 +234,19 @@ const sidebarOpen = ref(false);
                           <router-link
                             class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6" :class="[
                               item.path === route.path
-                                ? 'bg-gray-50 text-GJDarkGreen'
-                                : 'text-gray-700 hover:bg-gray-50 hover:text-GJDarkGreen',
+                                ? 'bg-gray-50 text-black'
+                                : 'text-gray-700 hover:bg-gray-50 hover:text-black',
                             ]"
                             :to="item.path"
                           >
                             <span
                               class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border bg-white text-[0.625rem] font-medium" :class="[
                                 item.path === route.path
-                                  ? 'border-GJDarkGreen text-GJDarkGreen'
-                                  : 'border-gray-200 text-gray-400 group-hover:border-GJDarkGreen group-hover:text-GJDarkGreen',
+                                  ? 'border-black text-black'
+                                  : 'border-gray-200 text-gray-400 group-hover:border-black group-hover:text-black',
                               ]"
                             >{{
-                              item.name.substring(0, 2).toLocaleUpperCase()
+                              item.name
                             }}</span>
                             <span class="truncate">{{ item.name }}</span>
                           </router-link>
@@ -266,8 +286,8 @@ const sidebarOpen = ref(false);
                   <router-link
                     class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6" :class="[
                       item.to === route.path
-                        ? 'bg-gray-50 text-GJDarkGreen'
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-GJDarkGreen',
+                        ? 'bg-gray-50 text-black'
+                        : 'text-gray-700 hover:bg-gray-50 hover:text-black',
                     ]"
                     :to="item.to"
                   >
@@ -275,8 +295,8 @@ const sidebarOpen = ref(false);
                       :is="item.icon"
                       class="h-6 w-6 shrink-0" :class="[
                         item.to === route.path
-                          ? 'text-GJDarkGreen'
-                          : 'text-gray-400 group-hover:text-GJDarkGreen',
+                          ? 'text-black'
+                          : 'text-gray-400 group-hover:text-black',
                       ]"
                       aria-hidden="true"
                     />
@@ -297,18 +317,18 @@ const sidebarOpen = ref(false);
                   <router-link
                     class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6" :class="[
                       item.path === route.path
-                        ? 'bg-gray-50 text-GJDarkGreen'
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-GJDarkGreen',
+                        ? 'bg-gray-50 text-black'
+                        : 'text-gray-700 hover:bg-gray-50 hover:text-black',
                     ]"
                     :to="item.path"
                   >
                     <span
                       class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border bg-white text-[0.625rem] font-medium" :class="[
                         item.path === route.path
-                          ? 'border-GJDarkGreen text-GJDarkGreen'
-                          : 'border-gray-200 text-gray-400 group-hover:border-GJDarkGreen group-hover:text-GJDarkGreen',
+                          ? 'border-black text-black'
+                          : 'border-gray-200 text-gray-400 group-hover:border-black group-hover:text-black',
                       ]"
-                    >{{ item.name.substring(0, 2).toLocaleUpperCase() }}</span>
+                    >{{ item.name }}</span>
                     <span class="truncate">{{ item.name }}</span>
                   </router-link>
                 </li>
@@ -345,14 +365,14 @@ const sidebarOpen = ref(false);
             <span
               aria-hidden="true"
               class="hidden xl:inline-block ml-4 text-sm font-semibold leading-6 text-gray-900"
-            >{{ session.data?.user.name ?? "AN" }}</span>
+            >{{ fullName ?? "AN" }}</span>
             <!-- Profile dropdown -->
             <Menu as="div" class="relative">
               <MenuButton class="-m-1.5 flex items-center p-1.5">
                 <div
                   class="hover:bg-indigo-700 cursor-pointer inline-flex items-center justify-center w-10 h-10 rounded-full bg-indigo-600 text-white text-sm font-medium"
                 >
-                  {{ (session.data?.user.name ?? "AN").substring(0, 2).toLocaleUpperCase() }}
+                  {{ initials }}
                 </div>
               </MenuButton>
               <transition

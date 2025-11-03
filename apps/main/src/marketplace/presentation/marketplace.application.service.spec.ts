@@ -8,8 +8,6 @@ import { MongooseTestingModule } from "@open-dpp/testing";
 import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
 import { AuthService } from "../../auth/auth.service";
 import { EmailService } from "../../email/email.service";
-import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { Template } from "../../templates/domain/template";
 import { laptopFactory } from "../../templates/fixtures/laptop.factory";
 import { templateCreatePropsFactory } from "../../templates/fixtures/template.factory";
@@ -28,7 +26,6 @@ import { MarketplaceApplicationService } from "./marketplace.application.service
 
 describe("marketplaceService", () => {
   let marketplaceService: MarketplaceApplicationService;
-  let organizationService: OrganizationsService;
   let module: TestingModule;
   let templateService: TemplateService;
   let passportTemplateService: PassportTemplatePublicationService;
@@ -47,17 +44,12 @@ describe("marketplaceService", () => {
             name: TemplateDoc.name,
             schema: TemplateSchema,
           },
-          {
-            name: OrganizationDoc.name,
-            schema: OrganizationDbSchema,
-          },
         ]),
       ],
       providers: [
         PassportTemplatePublicationService,
         MarketplaceApplicationService,
         TemplateService,
-        OrganizationsService,
         {
           provide: EmailService,
           useValue: {
@@ -85,9 +77,6 @@ describe("marketplaceService", () => {
     passportTemplateService = module.get<PassportTemplatePublicationService>(
       PassportTemplatePublicationService,
     );
-    organizationService = module.get<OrganizationsService>(OrganizationsService);
-    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
-    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
 
   const laptopModelPlain = laptopFactory.build({

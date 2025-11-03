@@ -18,8 +18,8 @@
       <mj-column>
         <mj-text align="center" padding="10px 25px" font-size="20px" color="#512d0b"><strong>Hey {{firstName}}!</strong></mj-text>
         <mj-text align="center" font-size="18px" font-family="Arial">You have been invited to the organization {{organizationName}}!<br /><p></p></mj-text>
-        <mj-text align="center" font-size="18px" font-family="Arial">You have automatically accepted the invitation and can view the organization via the link below.</mj-text>
-        <mj-button background-color="#6BAD87" color="#FFFFFF" href="{{link}}" font-family="Arial, sans-serif" padding="20px 0 0 0" font-weight="bold" font-size="16px">View organization</mj-button>
+        <mj-text align="center" font-size="18px" font-family="Arial">Click the link below to join the organization.</mj-text>
+        <mj-button background-color="#6BAD87" color="#FFFFFF" href="{{link}}" font-family="Arial, sans-serif" padding="20px 0 0 0" font-weight="bold" font-size="16px">Join organization</mj-button>
         <mj-text align="center" color="#000000" font-size="14px" font-family="Arial, sans-serif" padding-top="40px">open-dpp GmbH</mj-text>
       </mj-column>
     </mj-section>

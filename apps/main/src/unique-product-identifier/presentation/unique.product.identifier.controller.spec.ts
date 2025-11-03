@@ -22,8 +22,6 @@ import { ItemsService } from "../../items/infrastructure/items.service";
 import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
-import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { phoneFactory } from "../../product-passport/fixtures/product-passport.factory";
 import { Template } from "../../templates/domain/template";
 import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
@@ -45,7 +43,6 @@ describe("uniqueProductIdentifierController", () => {
 
   let templateService: TemplateService;
   const reflector: Reflector = new Reflector();
-  let organizationService: OrganizationsService;
 
   const betterAuthTestingGuard = new BetterAuthTestingGuard(reflector);
   betterAuthTestingGuard.loadUsers([TestUsersAndOrganizations.users.user1, TestUsersAndOrganizations.users.user2]);
@@ -73,15 +70,10 @@ describe("uniqueProductIdentifierController", () => {
             name: TemplateDoc.name,
             schema: TemplateSchema,
           },
-          {
-            name: OrganizationDoc.name,
-            schema: OrganizationDbSchema,
-          },
         ]),
       ],
       providers: [
         UsersService,
-        OrganizationsService,
         ModelsService,
         UniqueProductIdentifierService,
         UniqueProductIdentifierApplicationService,
@@ -112,14 +104,10 @@ describe("uniqueProductIdentifierController", () => {
     modelsService = moduleRef.get(ModelsService);
     itemsService = moduleRef.get(ItemsService);
     templateService = moduleRef.get<TemplateService>(TemplateService);
-    organizationService = moduleRef.get(OrganizationsService);
 
     app = moduleRef.createNestApplication();
 
     await app.init();
-
-    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
-    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
   beforeEach(() => {
     jest.spyOn(reflector, "get").mockReturnValue(false);

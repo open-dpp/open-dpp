@@ -4,7 +4,6 @@ import type { User } from "../../users/domain/user";
 import { randomUUID } from "node:crypto";
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import {
   deserializeTemplate,
   serializeTemplate,
@@ -19,7 +18,6 @@ export class MarketplaceApplicationService {
   private readonly logger = new Logger(MarketplaceApplicationService.name);
 
   constructor(
-    private organizationService: OrganizationsService,
     @InjectModel(TemplateDoc.name)
     private TemplateDoc: Model<TemplateDoc>,
     private templateService: TemplateService,
@@ -32,9 +30,6 @@ export class MarketplaceApplicationService {
   ): Promise<PassportTemplatePublication> {
     try {
       const templateData = serializeTemplate(template);
-      const organization = await this.organizationService.findOneOrFail(
-        template.ownedByOrganizationId,
-      );
       return await this.passportTemplateService.save(
         PassportTemplatePublication.create({
           website: null,
@@ -42,11 +37,11 @@ export class MarketplaceApplicationService {
           name: template.name,
           description: template.description,
           sectors: template.sectors,
-          organizationName: organization.name,
+          organizationName: "name", // TODO
           templateData,
           contactEmail: user.email,
           isOfficial: false,
-          ownedByOrganizationId: organization.id,
+          ownedByOrganizationId: "id", // TODO
           createdByUserId: user.id,
         }),
       );

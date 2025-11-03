@@ -10,15 +10,11 @@ import {
 } from "@nestjs/common";
 
 import { ZodValidationPipe } from "@open-dpp/exception";
-import {
-  hasPermission,
-  PermissionAction,
-} from "@open-dpp/permission";
+
 import { omit } from "lodash";
 import { UserSession } from "../../auth/auth.guard";
 import { Session } from "../../auth/session.decorator";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { TemplateService } from "../../templates/infrastructure/template.service";
 import { User } from "../../users/domain/user";
 import { DataFieldDraft } from "../domain/data-field-draft";
@@ -41,15 +37,12 @@ export class TemplateDraftController {
   private readonly templateService: TemplateService;
   private readonly templateDraftService: TemplateDraftService;
   private readonly marketplaceService: MarketplaceApplicationService;
-  private readonly organizationsService: OrganizationsService;
 
   constructor(
-    organizationsService: OrganizationsService,
     templateService: TemplateService,
     templateDraftService: TemplateDraftService,
     marketplaceService: MarketplaceApplicationService,
   ) {
-    this.organizationsService = organizationsService;
     this.templateService = templateService;
     this.templateDraftService = templateDraftService;
     this.marketplaceService = marketplaceService;
@@ -66,14 +59,6 @@ export class TemplateDraftController {
     )
     createTemplateDraftDto: createTemplateDraftDto_1.CreateTemplateDraftDto,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     return templateDraftToDto(
       await this.templateDraftService.save(
         TemplateDraft.create({
@@ -89,16 +74,7 @@ export class TemplateDraftController {
   async get(
     @Param("orgaId") organizationId: string,
     @Param("draftId") draftId: string,
-    @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -111,7 +87,6 @@ export class TemplateDraftController {
   async modify(
     @Param("orgaId") organizationId: string,
     @Param("draftId") draftId: string,
-    @Session() session: UserSession,
     @Body(
       new ZodValidationPipe(
         updateTemplateDraftDto_1.UpdateTemplateDraftDtoSchema,
@@ -119,14 +94,6 @@ export class TemplateDraftController {
     )
     updateTemplateDraftDto: updateTemplateDraftDto_1.UpdateTemplateDraftDto,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -142,19 +109,9 @@ export class TemplateDraftController {
   async addSection(
     @Param("orgaId") organizationId: string,
     @Param("draftId") draftId: string,
-    @Session() session: UserSession,
     @Body(new ZodValidationPipe(CreateSectionDraftDtoSchema))
     createSectionDraftDto: createSectionDraftDto_1.CreateSectionDraftDto,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
-
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -186,15 +143,6 @@ export class TemplateDraftController {
     @Body(new ZodValidationPipe(publishDto_1.PublishDtoSchema))
     publishDto: publishDto_1.PublishDto,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
-
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -232,7 +180,6 @@ export class TemplateDraftController {
     @Param("orgaId") organizationId: string,
     @Param("sectionId") sectionId: string,
     @Param("draftId") draftId: string,
-    @Session() session: UserSession,
     @Body(
       new ZodValidationPipe(
         createDataFieldDraftDto_1.CreateDataFieldDraftSchema,
@@ -240,15 +187,6 @@ export class TemplateDraftController {
     )
     createDataFieldDraftDto: createDataFieldDraftDto_1.CreateDataFieldDraftDto,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
-
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -268,16 +206,7 @@ export class TemplateDraftController {
     @Param("orgaId") organizationId: string,
     @Param("sectionId") sectionId: string,
     @Param("draftId") draftId: string,
-    @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -299,17 +228,7 @@ export class TemplateDraftController {
       new ZodValidationPipe(updateSectionDraftDto.UpdateSectionDraftDtoSchema),
     )
     modifySectionDraftDto: updateSectionDraftDto.UpdateSectionDraftDto,
-    @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
-
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -332,17 +251,7 @@ export class TemplateDraftController {
     @Param("draftId") draftId: string,
     @Body(new ZodValidationPipe(moveDto_1.MoveDtoSchema))
     moveDto: moveDto_1.MoveDto,
-    @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
-
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -367,17 +276,7 @@ export class TemplateDraftController {
       ),
     )
     modifyDataFieldDraftDto: updateDataFieldDraftDto.UpdateDataFieldDraftDto,
-    @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
-
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -402,17 +301,7 @@ export class TemplateDraftController {
     @Param("draftId") draftId: string,
     @Body(new ZodValidationPipe(moveDto_1.MoveDtoSchema))
     moveDto: moveDto_1.MoveDto,
-    @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
-
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -435,17 +324,7 @@ export class TemplateDraftController {
     @Param("sectionId") sectionId: string,
     @Param("draftId") draftId: string,
     @Param("fieldId") fieldId: string,
-    @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
-
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -461,17 +340,7 @@ export class TemplateDraftController {
   @Get()
   async findAllOfOrganization(
     @Param("orgaId") organizationId: string,
-    @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
-
     return await this.templateDraftService.findAllByOrganization(
       organizationId,
     );

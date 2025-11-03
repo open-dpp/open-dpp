@@ -19,8 +19,6 @@ import { ItemsService } from "../../items/infrastructure/items.service";
 import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
-import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { Template } from "../../templates/domain/template";
 import { laptopFactory } from "../../templates/fixtures/laptop.factory";
 import {
@@ -67,15 +65,10 @@ describe("passportMetricController", () => {
             name: ModelDoc.name,
             schema: ModelSchema,
           },
-          {
-            name: OrganizationDoc.name,
-            schema: OrganizationDbSchema,
-          },
         ]),
         AnalyticsModule,
       ],
       providers: [
-        OrganizationsService,
         UniqueProductIdentifierService,
         UniqueProductIdentifierApplicationService,
         ModelsService,
@@ -105,7 +98,6 @@ describe("passportMetricController", () => {
     passportMetricService = module.get<PassportMetricService>(
       PassportMetricService,
     );
-    const organizationService = module.get<OrganizationsService>(OrganizationsService);
     modelsService = module.get<ModelsService>(ModelsService);
     app = module.createNestApplication();
     await app.init();
@@ -118,8 +110,6 @@ describe("passportMetricController", () => {
       },
       new Date(),
     );
-    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
-    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
 
   beforeEach(() => {

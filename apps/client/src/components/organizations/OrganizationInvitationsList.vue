@@ -1,46 +1,57 @@
 <script lang="ts" setup>
-import type { OrganizationDto, UserDto } from "@open-dpp/api-client";
+import type { InvitationStatus } from "better-auth/plugins";
 import { UserCircleIcon } from "@heroicons/vue/24/solid";
+import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { ModalType, useLayoutStore } from "../../stores/layout";
-import InviteMemberDialog from "./InviteMemberDialog.vue";
+import { authClient } from "../../auth-client.ts";
+import BaseButton from "../basics/BaseButton.vue";
 
-defineProps<{
-  organization: OrganizationDto;
-  members: Array<UserDto>;
-}>();
-const emit = defineEmits<{
-  (e: "invitedUser"): void;
-}>();
 const { t } = useI18n();
-const layoutStore = useLayoutStore();
+
+const invitations = ref<Array<{
+  id: string;
+  organizationId: string;
+  email: string;
+  role: "member" | "admin" | "owner";
+  status: InvitationStatus;
+  inviterId: string;
+  expiresAt: Date;
+}>>([]);
+
+async function loadInvitations() {
+  invitations.value = [];
+  const { data } = await authClient.organization.listInvitations();
+  if (data) {
+    for (const invitation of data) {
+      if (invitation.status === "pending") {
+        invitations.value.push(invitation);
+      }
+    }
+  }
+}
+
+async function cancelInvite(invitationId: string) {
+  await authClient.organization.cancelInvitation({
+    invitationId,
+  });
+  await loadInvitations();
+}
+
+onMounted(async () => {
+  await loadInvitations();
+});
 </script>
 
 <template>
-  <div class="px-4 sm:px-6 lg:px-8">
+  <div v-if="invitations.length > 0" class="mt-8 pb-10">
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
         <h1 class="text-base font-semibold leading-6 text-gray-900">
-          {{ t('organizations.member') }}
+          {{ t('organizations.organizationInvitations.title') }}
         </h1>
         <p class="mt-2 text-sm text-gray-700">
-          {{ t('organizations.memberListDescription') }}
+          {{ t('organizations.organizationInvitations.description') }}
         </p>
-      </div>
-      <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-        <InviteMemberDialog
-          v-if="layoutStore.modalOpen === ModalType.INVITE_USER_MODAL"
-          :organization-id="organization.id"
-          @close="layoutStore.closeModal()"
-          @invited-user="emit('invitedUser')"
-        />
-        <button
-          class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-          type="button"
-          @click="layoutStore.openModal(ModalType.INVITE_USER_MODAL)"
-        >
-          {{ t('organizations.inviteUser') }}
-        </button>
       </div>
     </div>
     <div class="mt-8 flow-root">
@@ -67,35 +78,26 @@ const layoutStore = useLayoutStore();
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 bg-white">
-              <tr v-for="member in members" :key="member.id">
+              <tr v-for="invitation in invitations" :key="invitation.id">
                 <td class="whitespace-nowrap py-5 pl-4 pr-3 text-sm sm:pl-0">
                   <div class="flex items-center">
                     <div class="h-11 w-11 shrink-0">
-                      <UserCircleIcon class="h-11 w-11 rounded-full text-gray-700" />
+                      <UserCircleIcon class="h-11 w-11 rounded-full" />
                     </div>
                     <div class="ml-4">
                       <div class="font-medium text-gray-900">
-                        {{ member.email }}
+                        {{ invitation.email }}
                       </div>
                       <div class="mt-1 text-gray-500">
-                        {{ member.email }}
+                        {{ invitation.status }}
                       </div>
                     </div>
                   </div>
                 </td>
                 <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
-                  <div
-                    v-if="organization.ownedByUserId === member.id"
-                    class="text-gray-900"
-                  >
-                    {{ t('organizations.memberAdmin') }}
-                  </div>
-                  <div
-                    v-if="organization.createdByUserId === member.id"
-                    class="mt-1 text-gray-500"
-                  >
-                    {{ t('organizations.memberCreator') }}
-                  </div>
+                  <BaseButton @click="cancelInvite(invitation.id)">
+                    {{ t('organizations.invitation.cancel') }}
+                  </BaseButton>
                 </td>
               </tr>
             </tbody>

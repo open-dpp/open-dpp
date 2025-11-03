@@ -4,6 +4,7 @@ import { authClient } from "../auth-client.ts";
 
 import { useIndexStore } from "../stores";
 import { useLayoutStore } from "../stores/layout";
+import { useOrganizationsStore } from "../stores/organizations.ts";
 import { AUTH_ROUTES } from "./routes/auth";
 import { MARKETPLACE_ROUTES } from "./routes/marketplace";
 import { MEDIA_ROUTES } from "./routes/media";
@@ -76,6 +77,17 @@ export const routes: RouteRecordRaw[] = [
       onlyAnonymous: true,
     },
   },
+  {
+    path: "/accept-invitation/:id",
+    name: "AcceptInvitationToOrganization",
+    props: true,
+    component: () => import("../view/organizations/AcceptInviteToOrganizationView.vue"),
+    meta: {
+      layout: "default",
+      public: false,
+      onlyAnonymous: false,
+    },
+  },
   ...AUTH_ROUTES,
   ...ORGANIZATION_ROUTES,
   ...MARKETPLACE_ROUTES,
@@ -90,6 +102,9 @@ export const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   const layoutStore = useLayoutStore();
+  const organizationStore = useOrganizationsStore();
+  const indexStore = useIndexStore();
+
   layoutStore.isPageLoading = true;
   const { data: session } = await authClient.getSession();
   const isSignedIn = session !== null;
@@ -99,8 +114,25 @@ router.beforeEach(async (to, from, next) => {
     return;
   }
   if (!isSignedIn && !to.meta?.public) {
-    next("/signin");
+    const fullRedirectUrl = encodeURIComponent(window.location.origin + to.fullPath);
+    next({
+      name: "Signin",
+      query: {
+        redirect: fullRedirectUrl,
+      },
+    });
     return;
+  }
+
+  const paramOrganizationId = to.params.organizationId;
+  if (paramOrganizationId) {
+    const organization = organizationStore.organizations.find(o => o.id === paramOrganizationId);
+    if (!organization) {
+      next("/organizations");
+      indexStore.selectOrganization(null);
+      return;
+    }
+    indexStore.selectOrganization(organization.id);
   }
 
   next();

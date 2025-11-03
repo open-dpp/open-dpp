@@ -16,8 +16,6 @@ import TestUsersAndOrganizations from "../../../../test/test-users-and-orgs";
 import { AuthService } from "../../../auth/auth.service";
 import { EmailService } from "../../../email/email.service";
 import { Organization } from "../../../organizations/domain/organization";
-import { OrganizationDbSchema, OrganizationDoc } from "../../../organizations/infrastructure/organization.schema";
-import { OrganizationsService } from "../../../organizations/infrastructure/organizations.service";
 import { User } from "../../../users/domain/user";
 import { UsersService } from "../../../users/infrastructure/users.service";
 import { AiConfiguration, AiProvider } from "../domain/ai-configuration";
@@ -39,7 +37,6 @@ describe("aiConfigurationController", () => {
   let mongoConnection: Connection;
   let module: TestingModule;
   let aiConfigurationService: AiConfigurationService;
-  let organizationService: OrganizationsService;
 
   const mockNow = new Date("2025-01-01T12:00:00Z");
 
@@ -53,14 +50,9 @@ describe("aiConfigurationController", () => {
             name: AiConfigurationDoc.name,
             schema: AiConfigurationDbSchema,
           },
-          {
-            name: OrganizationDoc.name,
-            schema: OrganizationDbSchema,
-          },
         ]),
       ],
       providers: [
-        OrganizationsService,
         UsersService,
         AiConfigurationService,
         {
@@ -88,12 +80,8 @@ describe("aiConfigurationController", () => {
     app.useGlobalFilters(new NotFoundInDatabaseExceptionFilter());
     mongoConnection = module.get(getConnectionToken());
     aiConfigurationService = module.get(AiConfigurationService);
-    organizationService = module.get(OrganizationsService);
 
     await app.init();
-
-    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
-    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
   beforeEach(() => {
     jest.spyOn(Date, "now").mockImplementation(() => mockNow.getTime());
@@ -157,7 +145,7 @@ describe("aiConfigurationController", () => {
       members: [userTemp],
     });
     betterAuthTestingGuard.addUser(userTemp);
-    await organizationService.save(orgTemp);
+    // await organizationService.save(orgTemp);
     const configuration = AiConfiguration.loadFromDb(
       aiConfigurationFactory.build({
         ownedByOrganizationId: orgTemp.id,
@@ -198,7 +186,7 @@ describe("aiConfigurationController", () => {
       members: [userTemp],
     });
     betterAuthTestingGuard.addUser(userTemp);
-    await organizationService.save(orgTemp);
+    // await organizationService.save(orgTemp);
     const aiConfiguration = AiConfiguration.loadFromDb(
       aiConfigurationFactory.build({ ownedByOrganizationId: orgTemp.id }),
     );

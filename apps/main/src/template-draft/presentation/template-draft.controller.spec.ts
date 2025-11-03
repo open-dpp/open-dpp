@@ -29,8 +29,6 @@ import {
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { Organization } from "../../organizations/domain/organization";
 
-import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import {
   TemplateDoc,
   TemplateSchema,
@@ -62,7 +60,6 @@ describe("templateDraftController", () => {
   let templateDraftService: TemplateDraftService;
   let templateService: TemplateService;
   let module: TestingModule;
-  let organizationService: OrganizationsService;
   let marketplaceService: MarketplaceApplicationService;
 
   const betterAuthTestingGuard = new BetterAuthTestingGuard(new Reflector());
@@ -97,7 +94,6 @@ describe("templateDraftController", () => {
         TemplateDraftService,
         MarketplaceApplicationService,
         PassportTemplatePublicationService,
-        OrganizationsService,
         UsersService,
         {
           provide: EmailService,
@@ -133,9 +129,6 @@ describe("templateDraftController", () => {
       = module.get<OrganizationsService>(OrganizationsService);
 
     await app.init();
-
-    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
-    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
 
   const userNotMemberTxt = `fails if user is not member of organization`;
@@ -364,7 +357,7 @@ describe("templateDraftController", () => {
       members: [userTemp],
     });
     betterAuthTestingGuard.addUser(userTemp);
-    await organizationService.save(orgTemp);
+    // await organizationService.save(orgTemp);
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
         organizationId: orgTemp.id,

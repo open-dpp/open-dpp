@@ -1,11 +1,7 @@
-import { Controller, ForbiddenException, Get, Param } from "@nestjs/common";
-import { hasPermission, PermissionAction } from "@open-dpp/permission";
+import { Controller, Get, Param } from "@nestjs/common";
 import { AllowServiceAccess } from "../../auth/allow-service-access.decorator";
-import { UserSession } from "../../auth/auth.guard";
-import { Session } from "../../auth/session.decorator";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { ModelsService } from "../../models/infrastructure/models.service";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
 import {
   UniqueProductIdentifierReferenceDtoSchema,
@@ -18,36 +14,24 @@ export class UniqueProductIdentifierController {
   private readonly uniqueProductIdentifierService: UniqueProductIdentifierService;
   private readonly itemService: ItemsService;
   private readonly uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService;
-  private readonly organizationsService: OrganizationsService;
 
   constructor(
     modelsService: ModelsService,
     uniqueProductIdentifierService: UniqueProductIdentifierService,
     itemService: ItemsService,
     uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
-    organizationsService: OrganizationsService,
   ) {
     this.modelsService = modelsService;
     this.uniqueProductIdentifierService = uniqueProductIdentifierService;
     this.itemService = itemService;
     this.uniqueProductIdentifierApplicationService = uniqueProductIdentifierApplicationService;
-    this.organizationsService = organizationsService;
   }
 
   @Get("organizations/:orgaId/unique-product-identifiers/:id/reference")
   async getReferencedProductPassport(
     @Param("orgaId") organizationId: string,
     @Param("id") id: string,
-    @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     const uniqueProductIdentifier
       = await this.uniqueProductIdentifierService.findOneOrFail(id);
 

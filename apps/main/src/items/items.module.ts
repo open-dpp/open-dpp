@@ -2,7 +2,6 @@ import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ModelDoc, ModelSchema } from "../models/infrastructure/model.schema";
 import { ModelsModule } from "../models/models.module";
-import { OrganizationDbSchema, OrganizationDoc } from "../organizations/infrastructure/organization.schema";
 import { OrganizationsModule } from "../organizations/organizations.module";
 import { TemplateModule } from "../templates/template.module";
 import { TraceabilityEventsModule } from "../traceability-events/traceability-events.module";
@@ -23,10 +22,6 @@ import { ItemsController } from "./presentation/items.controller";
       {
         name: ModelDoc.name,
         schema: ModelSchema,
-      },
-      {
-        name: OrganizationDoc.name,
-        schema: OrganizationDbSchema,
       },
     ]),
     TemplateModule,

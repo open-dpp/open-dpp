@@ -14,6 +14,7 @@ import { rootClasses } from "../formkit.theme";
 import App from "./App.vue";
 import { authClient } from "./auth-client.ts";
 import { router } from "./router";
+import { useIndexStore } from "./stores";
 import { useLanguageStore } from "./stores/language.ts";
 import { useOrganizationsStore } from "./stores/organizations";
 import { i18n } from "./translations/i18n.ts";
@@ -64,6 +65,10 @@ async function startApp() {
   if (isSignedIn) {
     const organizationStore = useOrganizationsStore();
     await organizationStore.fetchOrganizations();
+    if (organizationStore.organizations.length === 0) {
+      const indexStore = useIndexStore();
+      indexStore.selectOrganization(null);
+    }
   }
 
   app.use(router);

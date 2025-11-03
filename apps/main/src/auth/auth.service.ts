@@ -3,8 +3,9 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/commo
 import { EnvService } from "@open-dpp/env";
 import { betterAuth, User } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { genericOAuth } from "better-auth/plugins";
+import { apiKey, genericOAuth, organization } from "better-auth/plugins";
 import { Db, MongoClient, ObjectId } from "mongodb";
+import { InviteUserToOrganizationMail } from "../email/domain/invite-user-to-organization-mail";
 import { PasswordResetMail } from "../email/domain/password-reset-mail";
 import { VerifyEmailMail } from "../email/domain/verify-email-mail";
 import { EmailService } from "../email/email.service";
@@ -51,6 +52,86 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
+  async isMemberOfOrganization(userId: string, organizationId: string): Promise<boolean> {
+    const member = await this.db!.collection("member").findOne({
+      userId: new ObjectId(userId),
+      organizationId: new ObjectId(organizationId),
+    });
+    return !!member;
+  }
+
+  async getActiveOrganization(userId: string) {
+    // Get the member record for the user
+    const member = await this.db!.collection("member").findOne({
+      userId: new ObjectId(userId),
+    });
+
+    if (!member) {
+      return null;
+    }
+
+    // Get the organization details
+    const organization = await this.db!.collection("organization").findOne({
+      _id: new ObjectId(member.organizationId),
+    });
+
+    return organization;
+  }
+
+  async getOrganizationNameIfUserInvited(organizationId: string, userEmail: string): Promise<string | null> {
+    if (!this.db)
+      return null;
+
+    // Validate organizationId and prepare ObjectId if possible
+    let orgObjectId: ObjectId | null = null;
+    try {
+      orgObjectId = new ObjectId(organizationId);
+    }
+    catch {
+      // ignore invalid ObjectId; we'll still try string match in invitation lookup
+    }
+
+    // Check for a pending (open) invitation for this user to this organization
+    const now = new Date();
+    const invitationFilter: any = {
+      email: userEmail,
+      status: "pending",
+    };
+
+    // Support both string and ObjectId storage for organizationId
+    invitationFilter.$and = [
+      {
+        $or: [
+          { organizationId },
+          ...(orgObjectId ? [{ organizationId: orgObjectId }] : []),
+        ],
+      },
+      {
+        $or: [
+          { expiresAt: { $gt: now } },
+          { expiresAt: null },
+          { expiresAt: { $exists: false } },
+        ],
+      },
+    ];
+
+    const invitation = await this.db.collection("invitation").findOne(invitationFilter);
+    if (!invitation) {
+      return null;
+    }
+
+    // Fetch organization to return its name
+    if (!orgObjectId) {
+      // If we couldn't parse a valid ObjectId for the organization, we cannot fetch the org document reliably
+      return null;
+    }
+
+    const organization = await this.db.collection("organization").findOne({ _id: orgObjectId });
+    if (!organization)
+      return null;
+    return (organization as any).name ?? null;
+  }
+
   async onModuleInit() {
     const mongoUser = this.configService.get("OPEN_DPP_MONGODB_USER");
     const mongoPassword = this.configService.get("OPEN_DPP_MONGODB_PASSWORD");
@@ -76,6 +157,26 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         ],
       });
     }
+    const emailSvc = this.emailService;
+    const configSvc = this.configService;
+    const organizationPlugin = organization({
+      async sendInvitationEmail(data) {
+        const inviteLink = `${configSvc.get("OPEN_DPP_URL")}/accept-invitation/${data.id}`;
+        await emailSvc.send(InviteUserToOrganizationMail.create({
+          to: data.email,
+          subject: "Invitation to join organization",
+          templateProperties: {
+            link: inviteLink,
+            firstName: "User",
+            organizationName: data.organization.name,
+          },
+        }));
+      },
+    });
+
+    const apiKeyPlugin = apiKey({
+      enableSessionForAPIKeys: true,
+    });
 
     const migrationEnabled = !!this.configService.get("OPEN_DPP_MIGRATE_KEYCLOAK_ENABLED");
 
@@ -84,15 +185,35 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       basePath: "/api/auth",
       secret: this.configService.get("OPEN_DPP_AUTH_SECRET"),
       trustedOrigins: [this.configService.get("OPEN_DPP_URL")],
+      user: {
+        additionalFields: {
+          firstName: {
+            type: "string",
+            required: true,
+            input: true,
+          },
+          lastName: {
+            type: "string",
+            required: true,
+            input: true,
+          },
+          name: {
+            type: "string",
+            required: false,
+            input: true,
+          },
+        },
+      },
       emailAndPassword: {
         enabled: true,
         sendResetPassword: async ({ user, token }) => {
+          const firstName = (user as any).firstName ?? "User";
           await this.emailService.send(PasswordResetMail.create({
             to: user.email,
             subject: "Password reset",
             templateProperties: {
               link: `${this.configService.get("OPEN_DPP_URL")}/password-reset?token=${token}`,
-              firstName: user.name ?? "User",
+              firstName,
             },
           }));
         },
@@ -100,18 +221,34 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       emailVerification: {
         sendOnSignUp: !migrationEnabled,
         sendVerificationEmail: async ({ user, url }: { user: User; url: string; token: string }) => {
+          const firstName = (user as any).firstName ?? "User";
           await this.emailService.send(VerifyEmailMail.create({
             to: user.email,
             subject: "Verify E-Mail address",
             templateProperties: {
               link: url,
-              firstName: user.name ?? "User",
+              firstName,
             },
           }));
         },
       },
+      databaseHooks: {
+        session: {
+          create: {
+            before: async (session) => {
+              const organization = await this.getActiveOrganization(session.userId);
+              return {
+                data: {
+                  ...session,
+                  activeOrganizationId: organization?._id,
+                },
+              };
+            },
+          },
+        },
+      },
       hooks: {},
-      plugins: genericOAuthPlugin ? [genericOAuthPlugin] : [],
+      plugins: genericOAuthPlugin ? [genericOAuthPlugin, organizationPlugin, apiKeyPlugin] : [organizationPlugin, apiKeyPlugin],
       database: mongodbAdapter(this.db, {
         client: this.client,
       }),

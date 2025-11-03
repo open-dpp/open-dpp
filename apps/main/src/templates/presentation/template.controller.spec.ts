@@ -16,8 +16,6 @@ import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
 import { AuthService } from "../../auth/auth.service";
 import { EmailService } from "../../email/email.service";
 import { Organization } from "../../organizations/domain/organization";
-import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { User } from "../../users/domain/user";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { Template } from "../domain/template";
@@ -32,7 +30,6 @@ describe("templateController", () => {
   let app: INestApplication;
   let service: TemplateService;
   let mongoConnection: Connection;
-  let organizationService: OrganizationsService;
 
   const betterAuthTestingGuard = new BetterAuthTestingGuard(new Reflector());
   betterAuthTestingGuard.loadUsers([TestUsersAndOrganizations.users.user1, TestUsersAndOrganizations.users.user2]);
@@ -47,14 +44,9 @@ describe("templateController", () => {
             name: TemplateDoc.name,
             schema: TemplateSchema,
           },
-          {
-            name: OrganizationDoc.name,
-            schema: OrganizationDbSchema,
-          },
         ]),
       ],
       providers: [
-        OrganizationsService,
         UsersService,
         TemplateService,
         {
@@ -79,16 +71,11 @@ describe("templateController", () => {
     })
       .compile();
 
-    organizationService = moduleRef.get(OrganizationsService);
-
     service = moduleRef.get<TemplateService>(TemplateService);
     mongoConnection = moduleRef.get<Connection>(getConnectionToken());
     app = moduleRef.createNestApplication();
 
     await app.init();
-
-    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
-    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
 
   const laptopPlain: TemplateDbProps = laptopFactory
@@ -144,7 +131,7 @@ describe("templateController", () => {
       members: [userTemp],
     });
     betterAuthTestingGuard.addUser(userTemp);
-    await organizationService.save(orgTemp);
+    // await organizationService.save(orgTemp);
     const laptopTemplate = Template.loadFromDb({
       ...laptopPlain,
       organizationId: orgTemp.id,

@@ -45,19 +45,31 @@ export class AuthGuard implements CanActivate {
   /**
    * Validates if the current request is authenticated
    * Attaches session and user information to the request object
-   * Supports both HTTP and GraphQL execution contexts
    * @param context - The execution context of the current request
    * @returns True if the request is authorized to proceed, throws an error otherwise
    */
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const session: UserSession | null = await this.authService.getSession(fromNodeHeaders(
-      request.headers || request?.handshake?.headers || [],
-    ),
-    );
+    const url = request.url as string;
+
+    const apiKeyHeader = request.headers["x-api-key"] || request.headers["X-API-KEY"];
+
+    let session: UserSession | null = null;
+
+    if (apiKeyHeader) {
+      session = await this.authService.getSession(new Headers({
+        "x-api-key": apiKeyHeader,
+      }));
+    }
+    else {
+      session = await this.authService.getSession(fromNodeHeaders(
+        request.headers || request?.handshake?.headers || [],
+      ),
+      );
+    }
 
     request.session = session;
-    request.user = session?.user ?? null; // useful for observability tools like Sentry
+    request.user = session?.user ?? null;
 
     const isPublic = this.reflector.getAllAndOverride<boolean>("PUBLIC", [
       context.getHandler(),
@@ -80,6 +92,17 @@ export class AuthGuard implements CanActivate {
         code: "UNAUTHORIZED",
         message: "Unauthorized",
       });
+    }
+
+    const isBetterAuthUrl = url.startsWith("/api/auth");
+    if (!isBetterAuthUrl) {
+      const organizationId = request.params.organizationId ?? request.params.orgaId ?? null;
+      if (organizationId) {
+        const isMember = await this.authService.isMemberOfOrganization(session.user.id, organizationId);
+        if (!isMember) {
+          return false;
+        }
+      }
     }
 
     const requiredRoles = this.reflector.getAllAndOverride<string[]>("ROLES", [

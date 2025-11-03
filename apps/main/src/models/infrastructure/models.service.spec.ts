@@ -10,8 +10,6 @@ import { ignoreIds, MongooseTestingModule } from "@open-dpp/testing";
 import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
 import { AuthService } from "../../auth/auth.service";
 import { EmailService } from "../../email/email.service";
-import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import { Template } from "../../templates/domain/template";
 import { laptopFactory } from "../../templates/fixtures/laptop.factory";
@@ -44,16 +42,11 @@ describe("modelsService", () => {
             name: ModelDoc.name,
             schema: ModelSchema,
           },
-          {
-            name: OrganizationDoc.name,
-            schema: OrganizationDbSchema,
-          },
         ]),
       ],
       providers: [
         ModelsService,
         UniqueProductIdentifierService,
-        OrganizationsService,
         UsersService,
         {
           provide: EmailService,
@@ -75,10 +68,6 @@ describe("modelsService", () => {
     modelsService = module.get<ModelsService>(ModelsService);
     mongoConnection = module.get<Connection>(getConnectionToken());
     modelDoc = mongoConnection.model(ModelDoc.name, ModelSchema);
-
-    const organizationService = module.get<OrganizationsService>(OrganizationsService);
-    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
-    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
 
   it("should create a model", async () => {

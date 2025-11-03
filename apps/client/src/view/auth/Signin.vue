@@ -1,11 +1,15 @@
 <script lang="ts" setup>
 import { ref } from "vue";
+import { useRoute } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import { useIndexStore } from "../../stores";
+import { useNotificationStore } from "../../stores/notification.ts";
 import { useOrganizationsStore } from "../../stores/organizations.ts";
 
 const indexStore = useIndexStore();
 const organizationsStore = useOrganizationsStore();
+const route = useRoute();
+const notificationStore = useNotificationStore();
 
 const email = ref<string>("");
 const password = ref<string>("");
@@ -14,22 +18,9 @@ const rememberMe = ref<boolean>(false);
 async function signin() {
   try {
     await authClient.signIn.email({
-      /**
-       * The user email
-       */
       email: email.value,
-      /**
-       * The user password
-       */
       password: password.value,
-      /**
-       * A URL to redirect to after the user verifies their email (optional)
-       */
-      callbackURL: "/",
-      /**
-       * remember the user session after the browser is closed.
-       * @default true
-       */
+      callbackURL: route.query.redirect ? decodeURIComponent(route.query.redirect as string) : "/",
       rememberMe: rememberMe.value,
     }, {
       // callbacks
@@ -44,8 +35,8 @@ async function signin() {
       indexStore.selectOrganization(null);
     }
   }
-  catch {
-    // console.log(error);
+  catch (error: any) {
+    notificationStore.addErrorNotification(error.message);
   }
   password.value = "";
 }
@@ -53,7 +44,7 @@ async function signin() {
 async function signInWithOpenDppCloud() {
   await authClient.signIn.oauth2({
     providerId: "auth.demo1.open-dpp.de", // required
-    callbackURL: "/",
+    callbackURL: decodeURIComponent(route.query.redirect as string),
     errorCallbackURL: "/signin",
     newUserCallbackURL: "/",
     disableRedirect: false,

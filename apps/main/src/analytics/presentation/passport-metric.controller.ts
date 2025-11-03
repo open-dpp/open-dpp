@@ -2,7 +2,6 @@ import type { PassportPageViewDto } from "./dto/passport-page-view.dto";
 import {
   Body,
   Controller,
-  ForbiddenException,
   Get,
   Logger,
   Param,
@@ -10,11 +9,7 @@ import {
   Query,
 } from "@nestjs/common";
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { hasPermission, PermissionAction } from "@open-dpp/permission";
 import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
-import { UserSession } from "../../auth/auth.guard";
-import { Session } from "../../auth/session.decorator";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { UniqueProductIdentifierApplicationService } from "../../unique-product-identifier/presentation/unique.product.identifier.application.service";
 import { PassportMetric } from "../domain/passport-metric";
 import { PassportMetricService } from "../infrastructure/passport-metric.service";
@@ -28,7 +23,6 @@ export class PassportMetricController {
   constructor(
     private passportMetricService: PassportMetricService,
     private uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
-    private readonly organizationsService: OrganizationsService,
   ) {}
 
   @AllowAnonymous()
@@ -69,7 +63,6 @@ export class PassportMetricController {
     @Query("valueKey") valueKey: string,
     @Query("period") period: string,
     @Query("timezone") timezone: string,
-    @Session() session: UserSession,
   ) {
     const query = PassportMetricQuerySchema.parse({
       startDate,
@@ -86,15 +79,14 @@ export class PassportMetricController {
         query,
       )}`,
     );
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-
+    /* const organization = await this.organizationsService.findOneOrFail(organizationId);
     if (!hasPermission({
       user: {
         id: session.user.id,
       },
     }, PermissionAction.READ, organization.toPermissionSubject())) {
       throw new ForbiddenException();
-    }
+    } */
 
     return this.passportMetricService.computeStatistic(
       organizationId,

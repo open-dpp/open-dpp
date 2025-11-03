@@ -16,6 +16,7 @@
     "abort": "Abort",
     "general": "General",
     "remove": "Remove",
+    "copy": "Copy",
     "errorOccured": "An error occurred",
     "unknownErrorOccured": "An unexpected error occurred. Please try again.",
     "toHome": "To home",
@@ -249,6 +250,21 @@
         "help": "Give your organization a name",
         "label": "Name"
       }
+    },
+    "invitation": {
+      "name": "Name",
+      "status": "Status",
+      "accept": "Accept",
+      "decline": "Decline",
+      "cancel": "Cancel"
+    },
+    "userInvitations": {
+      "title": "Invitations",
+      "description": "Invitations to organizations"
+    },
+    "organizationInvitations": {
+      "title": "Invitations",
+      "description": "Invitations to this organizations"
     }
   },
   "marketplace": {
@@ -326,7 +342,8 @@
     "profile": "Your profile",
     "personalInformation": "Personal information",
     "logout": "Logout",
-    "name": "Name",
+    "firstName": "First name",
+    "lastName": "Last name",
     "language": "Language",
     "displaySettings": "Display settings"
   },

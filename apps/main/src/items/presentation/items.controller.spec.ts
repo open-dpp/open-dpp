@@ -27,8 +27,6 @@ import { MarketplaceApplicationService } from "../../marketplace/presentation/ma
 import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
-import { OrganizationDbSchema, OrganizationDoc } from "../../organizations/infrastructure/organization.schema";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import { Template, TemplateDbProps } from "../../templates/domain/template";
 import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
@@ -178,14 +176,9 @@ describe("itemsController", () => {
             name: PassportTemplatePublicationDoc.name,
             schema: PassportTemplatePublicationDbSchema,
           },
-          {
-            name: OrganizationDoc.name,
-            schema: OrganizationDbSchema,
-          },
         ]),
       ],
       providers: [
-        OrganizationsService,
         UsersService,
         ModelsService,
         ItemsService,
@@ -223,14 +216,10 @@ describe("itemsController", () => {
     uniqueProductIdentifierService = moduleRef.get(
       UniqueProductIdentifierService,
     );
-    const organizationService = moduleRef.get(OrganizationsService);
 
     app = moduleRef.createNestApplication();
     await templateService.save(template);
     await app.init();
-
-    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
-    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
   });
 
   const expectedDataValues = [

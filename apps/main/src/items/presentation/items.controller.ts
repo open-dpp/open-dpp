@@ -13,7 +13,6 @@ import {
 } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { hasPermission, PermissionAction } from "@open-dpp/permission";
 import { UserSession } from "../../auth/auth.guard";
 import { Session } from "../../auth/session.decorator";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
@@ -23,7 +22,6 @@ import {
   itemParamDocumentation,
   modelParamDocumentation,
 } from "../../open-api-docs/item.doc";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import {
   DataValueDtoSchema,
@@ -43,20 +41,17 @@ export class ItemsController {
   private readonly itemsApplicationService: ItemsApplicationService;
   private readonly modelsService: ModelsService;
   private readonly templateService: TemplateService;
-  private readonly organizationsService: OrganizationsService;
 
   constructor(
     itemsService: ItemsService,
     itemsApplicationService: ItemsApplicationService,
     modelsService: ModelsService,
     templateService: TemplateService,
-    organizationsService: OrganizationsService,
   ) {
     this.itemsService = itemsService;
     this.itemsApplicationService = itemsApplicationService;
     this.modelsService = modelsService;
     this.templateService = templateService;
-    this.organizationsService = organizationsService;
   }
 
   @ApiOperation({
@@ -75,14 +70,6 @@ export class ItemsController {
     @Param("modelId") modelId: string,
     @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     const item = await this.itemsApplicationService.createItem(
       organizationId,
       modelId,
@@ -104,16 +91,7 @@ export class ItemsController {
   async getAll(
     @Param("orgaId") organizationId: string,
     @Param("modelId") modelId: string,
-    @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     const model = await this.modelsService.findOneOrFail(modelId);
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
@@ -138,16 +116,7 @@ export class ItemsController {
     @Param("orgaId") organizationId: string,
     @Param("modelId") modelId: string,
     @Param("itemId") itemId: string,
-    @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     const item = await this.itemsService.findOneOrFail(itemId);
     if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
       throw new ForbiddenException();
@@ -176,16 +145,7 @@ export class ItemsController {
     @Param("itemId") itemId: string,
     @Body(new ZodValidationPipe(DataValueDtoSchema.array()))
     addDataValues: DataValueDto[],
-    @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     const item = await this.itemsService.findOneOrFail(itemId);
     if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
       throw new ForbiddenException();
@@ -229,16 +189,7 @@ export class ItemsController {
     @Param("itemId") itemId: string,
     @Body(new ZodValidationPipe(DataValueDtoSchema.array()))
     updateDataValues: DataValueDto[],
-    @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     const item = await this.itemsService.findOneOrFail(itemId);
     if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
       throw new ForbiddenException();

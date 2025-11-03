@@ -30,11 +30,11 @@ watch(locale, (newLocale) => {
         <div
           class="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6 md:col-span-2"
         >
-          <div class="sm:col-span-6">
+          <div class="sm:col-span-3">
             <label
               class="block text-sm font-medium leading-6 text-gray-900"
               for="first-name"
-            >{{ t('user.name') }}</label>
+            >{{ t('user.firstName') }}</label>
             <div class="mt-2">
               <input
                 id="first-name"
@@ -43,7 +43,25 @@ watch(locale, (newLocale) => {
                 name="first-name"
                 type="text"
                 disabled
-                :value="session.data?.user.name"
+                :value="session.data?.user.firstName"
+              >
+            </div>
+          </div>
+
+          <div class="sm:col-span-3">
+            <label
+              class="block text-sm font-medium leading-6 text-gray-900"
+              for="family-name"
+            >{{ t('user.lastName') }}</label>
+            <div class="mt-2">
+              <input
+                id="family-name"
+                autocomplete="family-name"
+                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                name="family-name"
+                type="text"
+                disabled
+                :value="session.data?.user.lastName"
               >
             </div>
           </div>

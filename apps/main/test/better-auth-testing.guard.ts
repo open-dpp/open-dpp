@@ -29,6 +29,7 @@ export class BetterAuthTestingGuard implements CanActivate {
     const authHeader = request.headers.authorization;
     const serviceToken = request.headers.service_token;
     const apiToken = request.headers.api_token;
+    const url = request.url as string;
 
     const isPublic = this.reflector.getAllAndOverride<boolean>(ALLOW_ANONYMOUS, [
       context.getHandler(),
@@ -87,6 +88,7 @@ export class BetterAuthTestingGuard implements CanActivate {
     request.session = {
       user,
     };
+
     return true;
   }
 

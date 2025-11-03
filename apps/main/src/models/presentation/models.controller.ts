@@ -14,7 +14,6 @@ import {
 import { ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
 
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { hasPermission, PermissionAction } from "@open-dpp/permission";
 import { UserSession } from "../../auth/auth.guard";
 import { Session } from "../../auth/session.decorator";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
@@ -25,7 +24,6 @@ import {
   modelDocumentation,
   updateModelDocumentation,
 } from "../../open-api-docs/model.doc";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import {
   DataValueDtoSchema,
@@ -46,18 +44,15 @@ export class ModelsController {
   private readonly modelsService: ModelsService;
   private readonly templateService: TemplateService;
   private readonly marketplaceService: MarketplaceApplicationService;
-  private readonly organizationsService: OrganizationsService;
 
   constructor(
     modelsService: ModelsService,
     templateService: TemplateService,
     marketplaceService: MarketplaceApplicationService,
-    organizationsService: OrganizationsService,
   ) {
     this.modelsService = modelsService;
     this.templateService = templateService;
     this.marketplaceService = marketplaceService;
-    this.organizationsService = organizationsService;
   }
 
   @ApiOperation({
@@ -78,15 +73,6 @@ export class ModelsController {
     createModelDto: createModelDto_1.CreateModelDto,
     @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
-
     // Validate that only one of templateId or marketplaceResourceId is provided
     if (!createModelDto.templateId && !createModelDto.marketplaceResourceId) {
       throw new BadRequestException(
@@ -144,16 +130,7 @@ export class ModelsController {
   @Get()
   async findAll(
     @Param("orgaId") organizationId: string,
-    @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     return (await this.modelsService.findAllByOrganization(organizationId)).map(
       m => modelToDto(m),
     );
@@ -172,16 +149,7 @@ export class ModelsController {
   async findOne(
     @Param("orgaId") organizationId: string,
     @Param("modelId") id: string,
-    @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     const model = await this.modelsService.findOneOrFail(id);
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
@@ -207,16 +175,7 @@ export class ModelsController {
     @Param("modelId") modelId: string,
     @Body(new ZodValidationPipe(updateModelDto_1.UpdateModelDtoSchema))
     updateModelDto: updateModelDto_1.UpdateModelDto,
-    @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     const model = await this.modelsService.findOneOrFail(modelId);
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
@@ -249,16 +208,7 @@ export class ModelsController {
     @Param("modelId") modelId: string,
     @Body(new ZodValidationPipe(DataValueDtoSchema.array()))
     updateDataValues: DataValueDto[],
-    @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     const model = await this.modelsService.findOneOrFail(modelId);
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
@@ -295,16 +245,7 @@ export class ModelsController {
     @Param("modelId") modelId: string,
     @Body(new ZodValidationPipe(DataValueDtoSchema.array()))
     addDataValues: DataValueDto[],
-    @Session() session: UserSession,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     const model = await this.modelsService.findOneOrFail(modelId);
     if (model.ownedByOrganizationId !== organizationId) {
       throw new ForbiddenException();

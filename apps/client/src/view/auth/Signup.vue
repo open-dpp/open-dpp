@@ -1,31 +1,35 @@
 <script lang="ts" setup>
 import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { authClient } from "../../auth-client.ts";
+import { useNotificationStore } from "../../stores/notification.ts";
 
 const router = useRouter();
+const route = useRoute();
+const notificationStore = useNotificationStore();
 
-const name = ref<string>("");
+const firstName = ref<string>("");
+const lastName = ref<string>("");
 const email = ref<string>("");
 const password = ref<string>("");
 
 async function signup() {
   await authClient.signUp.email({
-    email: email.value, // user email address
-    password: password.value, // user password -> min 8 characters by default
-    name: name.value, // user display name
-    callbackURL: "/", // A URL to redirect to after the user verifies their email (optional)
+    email: email.value,
+    password: password.value,
+    firstName: firstName.value,
+    lastName: lastName.value,
+    name: `${firstName.value} ${lastName.value}`,
+    callbackURL: route.query.redirect ? decodeURIComponent(route.query.redirect as string) : "/",
   }, {
     onRequest: () => {
       // show loading
     },
     onSuccess: () => {
-      // redirect to the dashboard or sign in page
       router.push("/signin");
     },
-    onError: () => {
-      // display the error message
-      // alert(ctx.error.message);
+    onError: (ctx) => {
+      notificationStore.addErrorNotification(ctx.error.message);
     },
   });
 }
@@ -45,9 +49,16 @@ async function signup() {
       <div class="bg-white px-6 py-12 shadow-sm sm:rounded-lg sm:px-12 dark:bg-gray-800/50 dark:shadow-none dark:outline dark:-outline-offset-1 dark:outline-white/10">
         <div class="space-y-6">
           <div>
-            <label for="name" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Name</label>
+            <label for="firstName" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Vorname</label>
             <div class="mt-2">
-              <input id="name" v-model="name" type="text" name="name" autocomplete="name" required="true" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
+              <input id="firstName" v-model="firstName" type="text" name="given-name" autocomplete="firstname" required="true" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
+            </div>
+          </div>
+
+          <div>
+            <label for="lastName" class="block text-sm/6 font-medium text-gray-900 dark:text-white">Nachname</label>
+            <div class="mt-2">
+              <input id="lastName" v-model="lastName" type="text" name="lastName" autocomplete="family-name" required="true" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
             </div>
           </div>
 
