@@ -5,6 +5,7 @@ import type {
   SectionDto,
   UniqueProductIdentifierDto,
 } from "@open-dpp/api-client";
+import type { MediaInfo } from "../components/media/MediaInfo.interface.ts";
 import {
   GranularityLevel,
 } from "@open-dpp/api-client";
@@ -13,6 +14,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import apiClient from "../lib/api-client";
 import { i18n } from "../translations/i18n.ts";
+import { useMediaStore } from "./media.ts";
 
 type FormKitSchemaNode
   = | string // Text content
@@ -39,6 +41,8 @@ export const usePassportFormStore = defineStore("passport.form", () => {
   const modelId = ref<string>();
   const fetchInFlight = ref<boolean>(false);
   const { t } = i18n.global;
+  const mediaStore = useMediaStore();
+  const mediaFiles = ref<{ blob: Blob | null; mediaInfo: MediaInfo; url: string }[]>([]);
 
   const VALUE_FOR_OTHER_GRANULARITY_LEVEL = {
     [GranularityLevel.MODEL]: t("builder.granularity.setOnModel"),
@@ -225,14 +229,27 @@ export const usePassportFormStore = defineStore("passport.form", () => {
     }
   };
 
+  const loadMedia = async () => {
+    if (modelId.value && uniqueProductIdentifier.value) {
+      mediaFiles.value = [];
+      const mediaReferences = ["df92f661-53c1-452b-809e-62c48b49212a", "07cf160e-8400-479e-954b-31a05281c674"];
+      for (const mediaReference of mediaReferences) {
+        const mediaFile = await mediaStore.fetchMedia(mediaReference);
+        mediaFiles.value.push({ ...mediaFile, url: mediaFile.blob ? URL.createObjectURL(mediaFile.blob) : "" });
+      }
+    }
+  };
+
   return {
     getUUID,
     granularityLevel,
     productPassport,
     fetchInFlight,
+    mediaFiles,
     getValueForOtherGranularityLevel,
     fetchModel,
     fetchItem,
+    loadMedia,
     findSubSections,
     findSectionById,
     updateDataValues,
