@@ -1,7 +1,7 @@
 import { z } from "zod/v4";
 
 export const PassportPageViewSchema = z.object({
-  uuid: z.uuid(),
+  uuid: z.string(),
   page: z.string(),
 });
 

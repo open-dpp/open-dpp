@@ -76,7 +76,6 @@ services:
     ports:
       - "3002:3000"
     environment:
-      - DPP_API_URL=http://open-dpp:3000/api
       - PORT=3000
 
   api-mongo-db:
