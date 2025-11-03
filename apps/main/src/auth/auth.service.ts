@@ -138,7 +138,9 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     const mongoHost = this.configService.get("OPEN_DPP_MONGODB_HOST");
     const mongoPort = this.configService.get("OPEN_DPP_MONGODB_PORT");
     const mongoDb = this.configService.get("OPEN_DPP_MONGODB_DATABASE");
-    const mongoUri = `mongodb://${encodeURIComponent(mongoUser)}:${encodeURIComponent(mongoPassword)}@${mongoHost}:${mongoPort}/${mongoDb}?authSource=${mongoUser}`;
+    const mongoUriEnv = this.configService.get("OPEN_DPP_MONGODB_URI");
+    const mongoUri = mongoUriEnv ?? `mongodb://${encodeURIComponent(mongoUser)}:${encodeURIComponent(mongoPassword)}@${mongoHost}:${mongoPort}/${mongoDb}?authSource=${mongoUser}`;
+    console.log(mongoUri);
     this.client = new MongoClient(mongoUri);
     await this.client.connect();
     this.db = this.client.db();

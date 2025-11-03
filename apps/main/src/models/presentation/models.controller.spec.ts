@@ -1,16 +1,15 @@
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { INestApplication } from "@nestjs/common";
-import { APP_GUARD, Reflector } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { EnvModule } from "@open-dpp/env";
+import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
-import { getApp, ignoreIds, MongooseTestingModule } from "@open-dpp/testing";
+import { getApp, ignoreIds } from "@open-dpp/testing";
 import request from "supertest";
-import { BetterAuthTestingGuard, getBetterAuthToken } from "../../../test/better-auth-testing.guard";
-import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
-import { AuthService } from "../../auth/auth.service";
+import { getBetterAuthToken } from "../../../test/better-auth-testing.guard";
+import { AuthModule } from "../../auth/auth.module";
+import { generateMongoConfig } from "../../database/config";
 import { EmailModule } from "../../email/email.module";
 import { EmailService } from "../../email/email.service";
 import { AasConnectionDoc, AasConnectionSchema } from "../../integrations/infrastructure/aas-connection.schema";
@@ -41,7 +40,7 @@ import {
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
-import { UsersService } from "../../users/infrastructure/users.service";
+import { User } from "../../users/domain/user";
 import { Model } from "../domain/model";
 import { ModelDoc, ModelSchema } from "../infrastructure/model.schema";
 import { ModelsService } from "../infrastructure/models.service";
@@ -55,14 +54,17 @@ describe("modelsController", () => {
   let templateService: TemplateService;
   let marketplaceService: MarketplaceApplicationService;
 
-  const betterAuthTestingGuard = new BetterAuthTestingGuard(new Reflector());
-  betterAuthTestingGuard.loadUsers([TestUsersAndOrganizations.users.user1, TestUsersAndOrganizations.users.user2]);
-
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        MongooseTestingModule,
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
         MongooseModule.forFeature([
           {
             name: ModelDoc.name,
@@ -93,10 +95,10 @@ describe("modelsController", () => {
             schema: PassportTemplatePublicationDbSchema,
           },
         ]),
+        AuthModule,
         EmailModule,
       ],
       providers: [
-        UsersService,
         ModelsService,
         ItemsService,
         UniqueProductIdentifierService,
@@ -108,17 +110,6 @@ describe("modelsController", () => {
           useValue: {
             send: jest.fn(),
           },
-        },
-        {
-          provide: AuthService,
-          useValue: {
-            getSession: jest.fn(),
-            getUserById: jest.fn(),
-          },
-        },
-        {
-          provide: APP_GUARD,
-          useValue: betterAuthTestingGuard,
         },
       ],
       controllers: [ModelsController],
@@ -140,13 +131,19 @@ describe("modelsController", () => {
     await app.init();
   });
 
+  const org1id = randomUUID();
+  const org2id = randomUUID();
+  const user1 = User.create({
+    email: `${randomUUID()}@test.test`,
+  });
+
   const sectionId3 = randomUUID();
   const dataFieldId4 = randomUUID();
   const dataFieldId5 = randomUUID();
 
   const laptopModel: TemplateDbProps = laptopFactory
     .addSections()
-    .build({ organizationId: TestUsersAndOrganizations.organizations.org1.id, userId: TestUsersAndOrganizations.users.user1.id });
+    .build({ organizationId: org1id, userId: user1.id });
 
   it(`/CREATE model`, async () => {
     const template = Template.loadFromDb(laptopModel);
@@ -157,18 +154,18 @@ describe("modelsController", () => {
       templateId: template.id,
     };
     const response = await request(getApp(app))
-      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models`)
+      .post(`/organizations/${org1id}/models`)
       .set(
         "Authorization",
         getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
+          user1.id,
         ),
       )
       .send(body);
     expect(response.status).toEqual(201);
     const found = await modelsService.findOneOrFail(response.body.id);
     expect(response.body.id).toEqual(found.id);
-    expect(found.isOwnedBy(TestUsersAndOrganizations.organizations.org1.id)).toBeTruthy();
+    expect(found.isOwnedBy(org1id)).toBeTruthy();
     expect(found.templateId).toEqual(template.id);
     const foundUniqueProductIdentifiers
       = await uniqueProductIdentifierService.findAllByReferencedId(found.id);
@@ -183,11 +180,11 @@ describe("modelsController", () => {
   it(`/CREATE model using template from marketplace`, async () => {
     const template = Template.loadFromDb(laptopModel);
     const token = getBetterAuthToken(
-      TestUsersAndOrganizations.users.user1.id,
+      user1.id,
     );
     const { id: marketplaceResourceId } = await marketplaceService.upload(
       template,
-      TestUsersAndOrganizations.users.user1,
+      user1,
     );
 
     const body = {
@@ -196,13 +193,13 @@ describe("modelsController", () => {
       marketplaceResourceId,
     };
     const response = await request(getApp(app))
-      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models`)
+      .post(`/organizations/${org1id}/models`)
       .set("Authorization", token)
       .send(body);
     expect(response.status).toEqual(201);
     const found = await modelsService.findOneOrFail(response.body.id);
     expect(response.body.id).toEqual(found.id);
-    expect(found.isOwnedBy(TestUsersAndOrganizations.organizations.org1.id)).toBeTruthy();
+    expect(found.isOwnedBy(org1id)).toBeTruthy();
     const foundTemplate = await templateService.findOneOrFail(found.templateId);
     expect(foundTemplate.marketplaceResourceId).toEqual(marketplaceResourceId);
   });
@@ -214,11 +211,11 @@ describe("modelsController", () => {
       templateId: randomUUID(),
     };
     const response = await request(getApp(app))
-      .post(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/models`)
+      .post(`/organizations/${org2id}/models`)
       .set(
         "Authorization",
         getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
+          user1.id,
         ),
       )
       .send(body);
@@ -228,7 +225,7 @@ describe("modelsController", () => {
   it(`/CREATE model fails if template does not belong to organization`, async () => {
     const template = Template.loadFromDb({
       ...laptopModel,
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      organizationId: org2id,
     });
     await templateService.save(template);
     const body = {
@@ -237,11 +234,11 @@ describe("modelsController", () => {
       templateId: template.id,
     };
     const response = await request(getApp(app))
-      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models`)
+      .post(`/organizations/${org1id}/models`)
       .set(
         "Authorization",
         getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
+          user1.id,
         ),
       )
       .send(body);
@@ -256,11 +253,11 @@ describe("modelsController", () => {
       marketplaceResourceId: randomUUID(),
     };
     const response = await request(getApp(app))
-      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models`)
+      .post(`/organizations/${org1id}/models`)
       .set(
         "Authorization",
         getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
+          user1.id,
         ),
       )
       .send(body);
@@ -280,11 +277,11 @@ describe("modelsController", () => {
       description: "My desc",
     };
     const response = await request(getApp(app))
-      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models`)
+      .post(`/organizations/${org1id}/models`)
       .set(
         "Authorization",
         getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
+          user1.id,
         ),
       )
       .send(body);
@@ -306,8 +303,8 @@ describe("modelsController", () => {
       modelNames.map(async (pn) => {
         const model = Model.create({
           name: pn,
-          organizationId: TestUsersAndOrganizations.organizations.org1.id,
-          userId: TestUsersAndOrganizations.users.user1.id,
+          organizationId: org1id,
+          userId: user1.id,
           template,
         });
         return await modelsService.save(model);
@@ -316,18 +313,18 @@ describe("modelsController", () => {
     await modelsService.save(
       Model.create({
         name: "Other Orga",
-        organizationId: TestUsersAndOrganizations.organizations.org1.id,
-        userId: TestUsersAndOrganizations.users.user1.id,
+        organizationId: org1id,
+        userId: user1.id,
         template,
       }),
     );
 
     const response = await request(getApp(app))
-      .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models`)
+      .get(`/organizations/${org1id}/models`)
       .set(
         "Authorization",
         getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
+          user1.id,
         ),
       );
     expect(response.status).toEqual(200);
@@ -361,18 +358,18 @@ describe("modelsController", () => {
 
     const model = Model.create({
       name: "Model",
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org2id,
+      userId: user1.id,
       template,
     });
     await modelsService.save(model);
 
     const response = await request(getApp(app))
-      .get(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/models`)
+      .get(`/organizations/${org2id}/models`)
       .set(
         "Authorization",
         getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
+          user1.id,
         ),
       );
     expect(response.status).toEqual(403);
@@ -383,17 +380,17 @@ describe("modelsController", () => {
 
     const model = Model.create({
       name: "Model",
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org1id,
+      userId: user1.id,
       template,
     });
     await modelsService.save(model);
     const response = await request(getApp(app))
-      .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}`)
+      .get(`/organizations/${org1id}/models/${model.id}`)
       .set(
         "Authorization",
         getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
+          user1.id,
         ),
       );
     expect(response.status).toEqual(200);
@@ -405,17 +402,17 @@ describe("modelsController", () => {
 
     const model = Model.create({
       name: "Model",
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org2id,
+      userId: user1.id,
       template,
     });
     await modelsService.save(model);
     const response = await request(getApp(app))
-      .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}`)
+      .get(`/organizations/${org1id}/models/${model.id}`)
       .set(
         "Authorization",
         getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
+          user1.id,
         ),
       );
     expect(response.status).toEqual(403);
@@ -426,17 +423,17 @@ describe("modelsController", () => {
 
     const model = Model.create({
       name: "Model",
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org2id,
+      userId: user1.id,
       template,
     });
     await modelsService.save(model);
     const response = await request(getApp(app))
-      .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}`)
+      .get(`/organizations/${org1id}/models/${model.id}`)
       .set(
         "Authorization",
         getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
+          user1.id,
         ),
       );
     expect(response.status).toEqual(403);
@@ -448,8 +445,8 @@ describe("modelsController", () => {
     await templateService.save(template);
     const model = Model.create({
       name: "My name",
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org1id,
+      userId: user1.id,
       template,
     });
 
@@ -473,11 +470,11 @@ describe("modelsController", () => {
       },
     ];
     const response = await request(getApp(app))
-      .patch(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/data-values`)
+      .patch(`/organizations/${org1id}/models/${model.id}/data-values`)
       .set(
         "Authorization",
         getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
+          user1.id,
         ),
       )
       .send(updatedValues);
@@ -508,8 +505,8 @@ describe("modelsController", () => {
     await templateService.save(template);
     const model = Model.create({
       name: "My name",
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org2id,
+      userId: user1.id,
       template,
     });
 
@@ -525,12 +522,12 @@ describe("modelsController", () => {
     ];
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/data-values`,
+        `/organizations/${org1id}/models/${model.id}/data-values`,
       )
       .set(
         "Authorization",
         getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
+          user1.id,
         ),
       )
       .send(updatedValues);
@@ -544,7 +541,7 @@ describe("modelsController", () => {
     const model = Model.create({
       name: "My name",
       organizationId: otherOrganizationId,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      userId: user1.id,
       template,
     });
 
@@ -559,11 +556,11 @@ describe("modelsController", () => {
       },
     ];
     const response = await request(getApp(app))
-      .patch(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/data-values`)
+      .patch(`/organizations/${org1id}/models/${model.id}/data-values`)
       .set(
         "Authorization",
         getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
+          user1.id,
         ),
       )
       .send(updatedValues);
@@ -576,8 +573,8 @@ describe("modelsController", () => {
     await templateService.save(template);
     const model = Model.create({
       name: "My name",
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org1id,
+      userId: user1.id,
       template,
     });
 
@@ -597,11 +594,11 @@ describe("modelsController", () => {
       },
     ];
     const response = await request(getApp(app))
-      .patch(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/data-values`)
+      .patch(`/organizations/${org1id}/models/${model.id}/data-values`)
       .set(
         "Authorization",
         getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
+          user1.id,
         ),
       )
       .send(updatedValues);
@@ -623,8 +620,8 @@ describe("modelsController", () => {
     await templateService.save(template);
     const model = Model.create({
       name: "My name",
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org1id,
+      userId: user1.id,
       template,
     });
     model.createUniqueProductIdentifier();
@@ -646,11 +643,11 @@ describe("modelsController", () => {
       },
     ];
     const response = await request(getApp(app))
-      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/data-values`)
+      .post(`/organizations/${org1id}/models/${model.id}/data-values`)
       .set(
         "Authorization",
         getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
+          user1.id,
         ),
       )
       .send(addedValues);
@@ -671,8 +668,8 @@ describe("modelsController", () => {
     await templateService.save(template);
     const model = Model.create({
       name: "My name",
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org2id,
+      userId: user1.id,
       template,
     });
 
@@ -680,12 +677,12 @@ describe("modelsController", () => {
     const addedValues: Array<any> = [];
     const response = await request(getApp(app))
       .post(
-        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/models/${model.id}/data-values`,
+        `/organizations/${org2id}/models/${model.id}/data-values`,
       )
       .set(
         "Authorization",
         getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
+          user1.id,
         ),
       )
       .send(addedValues);

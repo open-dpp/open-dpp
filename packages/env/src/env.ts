@@ -77,13 +77,6 @@ const envSchema = z.object({
       path: ["OPEN_DPP_MONGODB_URI"],
     });
   }
-  if (hasUri && hasHostPort) {
-    ctx.addIssue({
-      code: "custom",
-      message: "Specify only one: OPEN_DPP_MONGODB_URI or host/port pair, not both.",
-      path: ["OPEN_DPP_MONGODB_URI"],
-    });
-  }
   // if open-dpp cloud as auth provider is enabled, env must be prepared for it
   const isAuthCloudEnabled = !!val.OPEN_DPP_AUTH_CLOUD_ENABLED;
   if (isAuthCloudEnabled) {

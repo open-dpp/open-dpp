@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import KcAdminClient from "@keycloak/keycloak-admin-client";
 import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
 import { AuthService } from "./auth.service";
@@ -19,6 +18,8 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
   }
 
   async onApplicationBootstrap() {
+    const { default: KcAdminClient } = await import("@keycloak/keycloak-admin-client");
+
     const isTestNodeEnv = this.configService.get("NODE_ENV") === "test";
     if (isTestNodeEnv) {
       return;

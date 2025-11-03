@@ -13,7 +13,7 @@
     "start:debug": "nest start --debug --watch",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:clear-cache": "jest --clearCache",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -99,6 +99,7 @@
     "fishery": "^2.3.1",
     "globals": "^16.4.0",
     "jest": "^30.2.0",
+    "mongodb-memory-server": "^10.3.0",
     "source-map-support": "^0.5.21",
     "supertest": "^7.1.4",
     "ts-loader": "^9.5.4",
@@ -107,38 +108,5 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.1",
     "uuid": "^13.0.0"
-  },
-  "jest": {
-    "testRegex": "src/models/presentation/models.controller.spec.ts",
-    "transform": {
-      "^.+\\.(t|j)s$": [
-        "@swc/jest",
-        {
-          "jsc": {
-            "target": "es2022",
-            "parser": {
-              "syntax": "typescript",
-              "decorators": true
-            },
-            "transform": {
-              "decoratorMetadata": true
-            }
-          },
-          "module": {
-            "type": "commonjs"
-          }
-        }
-      ]
-    },
-    "transformIgnorePatterns": [
-      "node_modules/(?!((?:\\.pnpm/.*?/)?(?:@(?:open-dpp)|jose|@noble|uuid|@keycloak|url-join|url-template|camelize-ts))(?:/|$))"
-    ],
-    "moduleNameMapper": {
-      "^@open-dpp/(.*)$": "<rootDir>/../../packages/$1/src"
-    },
-    "testEnvironment": "node",
-    "setupFiles": [
-      "<rootDir>/test/setup-jest.ts"
-    ]
   }
 }
