@@ -54,6 +54,7 @@ describe("passportFormStore", () => {
       id: "pid",
       name: "Handy",
       description: "Handy Desc",
+      mediaReferences: [],
       dataSections: [
         {
           id: "s1",
@@ -204,6 +205,7 @@ describe("passportFormStore", () => {
     id: "pid",
     name: "Handy",
     description: "Handy desc",
+    mediaReferences: [],
     dataSections: [section1, section11, section111],
   };
 
@@ -240,6 +242,7 @@ describe("passportFormStore", () => {
       id: "pid",
       name: "Handy",
       description: "1.0.0",
+      mediaReferences: [],
       dataSections: [section1Group],
     };
 
@@ -317,6 +320,7 @@ describe("passportFormStore", () => {
       id: "pid",
       name: "Handy",
       description: "Handy Desc",
+      mediaReferences: [],
       dataSections: [section1Group],
     };
 

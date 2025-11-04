@@ -8,5 +8,6 @@ export interface ProductPassportDto {
   id: string
   name: string
   description: string
+  mediaReferences: string[]
   dataSections: DataSectionDto[]
 }

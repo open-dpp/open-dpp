@@ -271,6 +271,7 @@
     "errorRevokingUrlError": "Fehler beim Freigeben der Objekt-URL nach Fehler:"
   },
   "media": {
+    "title": "Titel",
     "media": "Medien",
     "preview": "Vorschau"
   },
@@ -297,6 +298,7 @@
     "general": "Allgemein",
     "myDrafts": "Meine Vorlagen",
     "form": {
+      "mediaEditDialog": "Produktbilder bearbeiten",
       "id": "ID",
       "name": {
         "help": "Geben Sie Ihrem Modellpass einen Namen",

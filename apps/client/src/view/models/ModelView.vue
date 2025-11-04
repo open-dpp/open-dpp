@@ -1,8 +1,10 @@
 <script lang="ts" setup>
+import type { MediaInfo } from "../../components/media/MediaInfo.interface.ts";
 import { Button, Galleria, Image } from "primevue";
 import { ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
+import emptyState from "../../assets/empty-state.png";
 import GalleriaEditDialog from "../../components/models/GalleriaEditDialog.vue";
 import PassportForm from "../../components/passport/PassportForm.vue";
 import { usePassportFormStore } from "../../stores/passport.form";
@@ -10,7 +12,7 @@ import { usePassportFormStore } from "../../stores/passport.form";
 const { t } = useI18n();
 const route = useRoute();
 const modelFormStore = usePassportFormStore();
-const visible = ref(false);
+const galleriaEditDialogIsVisible = ref(false);
 
 watch(
   () => route.params.modelId, // The store property to watch
@@ -20,6 +22,12 @@ watch(
   },
   { immediate: true, deep: true }, // Optional: to run the watcher immediately when the component mounts
 );
+
+async function addMedia(images: MediaInfo[]) {
+  if (images.length > 0 && images[0]) {
+    await modelFormStore.addMediaReference(images[0]);
+  }
+}
 </script>
 
 <template>
@@ -56,10 +64,10 @@ watch(
             </dl>
           </div>
         </div>
-        <Galleria :value="modelFormStore.mediaFiles" thumbnails-position="bottom" :num-visible="5" container-style="max-width: 340px">
+        <Galleria :value="modelFormStore.mediaFiles.length > 0 ? modelFormStore.mediaFiles : [{ url: emptyState }]" :show-thumbnails="modelFormStore.mediaFiles.length > 0" thumbnails-position="bottom" :num-visible="5" container-style="max-width: 340px">
           <template #header>
             <div class="p-2">
-              <Button label="Bearbeiten" @click="visible = true" />
+              <Button :label="modelFormStore.mediaFiles.length > 0 ? t('common.edit') : t('common.add')" @click="galleriaEditDialogIsVisible = true" />
             </div>
           </template>
           <template #item="slotProps">
@@ -77,7 +85,10 @@ watch(
       />
     </div>
     <GalleriaEditDialog
-      v-model:visible="visible"
+      v-model:visible="galleriaEditDialogIsVisible"
+      :title="t('models.form.mediaEditDialog')"
+      :images="modelFormStore.mediaFiles"
+      @add-images="addMedia"
     />
   </div>
 </template>

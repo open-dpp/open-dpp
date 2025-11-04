@@ -264,6 +264,7 @@
     "general": "General",
     "myDrafts": "My templates",
     "form": {
+      "mediaEditDialog": "Edit product images",
       "id": "ID",
       "name": {
         "help": "Give your model passport a name",
@@ -347,6 +348,7 @@
     "elements": "elements"
   },
   "media": {
+    "title": "Title",
     "media": "Media",
     "preview": "Preview"
   },

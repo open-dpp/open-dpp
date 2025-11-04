@@ -69,11 +69,12 @@ describe("productPassportController", () => {
   it(`/GET public view for unique product identifier`, async () => {
     const template = Template.loadFromDb({ ...phoneTemplate });
     await templateService.save(template);
+    const mediaReferences = [randomUUID(), randomUUID(), randomUUID()];
 
     const model = Model.loadFromDb(
       phoneModelFactory
         .addDataValues()
-        .build({ ...authProps, templateId: template.id }),
+        .build({ ...authProps, templateId: template.id, mediaReferences }),
     );
 
     const item = Item.loadFromDb(

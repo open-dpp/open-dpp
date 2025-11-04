@@ -3,6 +3,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   Param,
@@ -16,7 +17,7 @@ import { ZodValidationPipe } from "@open-dpp/exception";
 import { hasPermission, PermissionAction } from "@open-dpp/permission";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
-import { modelParamDocumentation } from "../../open-api-docs/item.doc";
+import { mediaParamDocumentation, modelParamDocumentation } from "../../open-api-docs/item.doc";
 import {
   createModelDocumentation,
   mediaReferenceDocumentation,
@@ -355,6 +356,43 @@ export class ModelsController {
       throw new ForbiddenException();
     }
     model.addMediaReference(mediaReferenceDto.id);
+    return modelToDto(await this.modelsService.save(model));
+  }
+
+  @ApiOperation({
+    summary: "Remove media file from model",
+    description:
+      "Remove media file",
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiParam(mediaParamDocumentation)
+  @ApiBody({
+    schema: mediaReferenceDocumentation,
+  })
+  @ApiResponse({
+    schema: modelDocumentation,
+  })
+  @Delete(":modelId/media/:mediaId")
+  async removeMediaFile(
+    @Param("orgaId") organizationId: string,
+    @Param("modelId") modelId: string,
+    @Param("mediaId") mediaId: string,
+    @Request() req: authRequest.AuthRequest,
+  ) {
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
+    const model = await this.modelsService.findOneOrFail(modelId);
+    if (model.ownedByOrganizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+    model.deleteMediaReference(mediaId);
     return modelToDto(await this.modelsService.save(model));
   }
 }

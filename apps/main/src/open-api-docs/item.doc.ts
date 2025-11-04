@@ -17,6 +17,14 @@ export const itemDocumentation = {
   required: ["id", "uniqueProductIdentifiers", "templateId", "dataValues"],
 };
 
+export const mediaParamDocumentation = {
+  name: "mediaId",
+  description: "The id of the media.",
+  required: true,
+  type: "string",
+  format: "uuid",
+};
+
 export const modelParamDocumentation = {
   name: "modelId",
   description: "The id of the model. A item always belongs to a model.",

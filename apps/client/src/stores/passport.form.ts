@@ -230,13 +230,20 @@ export const usePassportFormStore = defineStore("passport.form", () => {
   };
 
   const loadMedia = async () => {
-    if (modelId.value && uniqueProductIdentifier.value) {
+    if (productPassport.value) {
       mediaFiles.value = [];
-      const mediaReferences = ["df92f661-53c1-452b-809e-62c48b49212a", "07cf160e-8400-479e-954b-31a05281c674"];
-      for (const mediaReference of mediaReferences) {
+      for (const mediaReference of productPassport.value.mediaReferences) {
         const mediaFile = await mediaStore.fetchMedia(mediaReference);
         mediaFiles.value.push({ ...mediaFile, url: mediaFile.blob ? URL.createObjectURL(mediaFile.blob) : "" });
       }
+    }
+  };
+
+  const addMediaReference = async (mediaInfo: MediaInfo) => {
+    if (modelId.value) {
+      await apiClient.dpp.models.addMediaReference(modelId.value, { id: mediaInfo.id });
+      await fetchProductPassport();
+      await loadMedia();
     }
   };
 
@@ -249,6 +256,7 @@ export const usePassportFormStore = defineStore("passport.form", () => {
     getValueForOtherGranularityLevel,
     fetchModel,
     fetchItem,
+    addMediaReference,
     loadMedia,
     findSubSections,
     findSectionById,

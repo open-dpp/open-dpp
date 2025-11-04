@@ -2,6 +2,7 @@ import type { DataValue } from "../../product-passport-data/domain/data-value";
 import type { Template } from "../../templates/domain/template";
 import type { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
 import { randomUUID } from "node:crypto";
+import { ValueError } from "@open-dpp/exception";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { ProductPassportData } from "../../product-passport-data/domain/product-passport-data";
 
@@ -88,6 +89,30 @@ export class Model extends ProductPassportData {
     if (!this.mediaReferences.includes(mediaFileId)) {
       this.mediaReferences.push(mediaFileId);
     }
+  };
+
+  private findMediaReferenceIndexOrFail(mediaFileId: string) {
+    const index = this.mediaReferences.indexOf(mediaFileId);
+    if (index > -1) {
+      return index;
+    }
+    else {
+      throw new ValueError(`Cannot find media reference with id ${mediaFileId}.`);
+    };
+  }
+
+  deleteMediaReference(mediaFileId: string) {
+    const index = this.findMediaReferenceIndexOrFail(mediaFileId);
+    this.mediaReferences.splice(index, 1);
+  };
+
+  moveMediaReference(mediaFileId: string, newPosition: number) {
+    if (newPosition < 0 || newPosition >= this.mediaReferences.length) {
+      throw new ValueError(`Cannot move media reference to position ${newPosition}, since position is out of bounds [0, ${this.mediaReferences.length - 1}].`);
+    }
+    const index = this.findMediaReferenceIndexOrFail(mediaFileId);
+    this.mediaReferences.splice(index, 1);
+    this.mediaReferences.splice(newPosition, 0, mediaFileId);
   };
 
   modifyDescription(description: string | undefined) {

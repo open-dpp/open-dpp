@@ -671,6 +671,62 @@ describe("modelsController", () => {
     expect(response.body.mediaReferences).toEqual([mediaReference.id]);
   });
 
+  it("delete media from model", async () => {
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
+    const model = Model.create({
+      name: "My name",
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      template,
+    });
+    const mediaReferenceToDelete = randomUUID();
+    model.addMediaReference(mediaReferenceToDelete);
+    const mediaReferenceToKeep = randomUUID();
+    model.addMediaReference(mediaReferenceToKeep);
+    model.createUniqueProductIdentifier();
+
+    await modelsService.save(model);
+    const response = await request(getApp(app))
+      .delete(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/media/${mediaReferenceToDelete}`)
+      .set(
+        "Authorization",
+        getKeycloakAuthToken(
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
+          keycloakAuthTestingGuard,
+        ),
+      );
+    expect(response.status).toEqual(200);
+    expect(response.body.mediaReferences).toEqual([mediaReferenceToKeep]);
+  });
+
+  // it("add media to model", async () => {
+  //   const template = Template.loadFromDb(laptopModel);
+  //   await templateService.save(template);
+  //   const model = Model.create({
+  //     name: "My name",
+  //     organizationId: TestUsersAndOrganizations.organizations.org1.id,
+  //     userId: TestUsersAndOrganizations.users.user1.id,
+  //     template,
+  //   });
+  //   model.createUniqueProductIdentifier();
+  //
+  //   await modelsService.save(model);
+  //   const mediaReference = { id: randomUUID() };
+  //   const response = await request(getApp(app))
+  //     .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/media`)
+  //     .set(
+  //       "Authorization",
+  //       getKeycloakAuthToken(
+  //         TestUsersAndOrganizations.users.user1.keycloakUserId,
+  //         keycloakAuthTestingGuard,
+  //       ),
+  //     )
+  //     .send(mediaReference);
+  //   expect(response.status).toEqual(201);
+  //   expect(response.body.mediaReferences).toEqual([mediaReference.id]);
+  // });
+
   //
   it("add data values to model", async () => {
     const template = Template.loadFromDb(laptopModel);
