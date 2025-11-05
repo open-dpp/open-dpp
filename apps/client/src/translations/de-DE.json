@@ -381,7 +381,10 @@
     "firstName": "Vorname",
     "lastName": "Nachname",
     "language": "Sprache",
-    "displaySettings": "Anzeigeeinstellungen"
+    "displaySettings": "Anzeigeeinstellungen",
+    "email": "E-Mail-Adresse",
+    "password": "Passwort",
+    "passwordRepeat": "Passwort wiederholen"
   },
   "notifications": {
     "success": "Erfolg",
@@ -397,5 +400,34 @@
     "to": " bis ",
     "of": " von ",
     "elements": " Elementen"
+  },
+  "auth": {
+    "signin": {
+      "title": "Melde dich in deinem Account an",
+      "button": "Anmelden",
+      "rememberMe": "Angemeldet bleiben",
+      "forgotPassword": "Passwort vergessen?",
+      "textForProviders": "Oder anmelden mit",
+      "notAMember": "Noch nicht registriert?",
+      "ctaSignUp": "Jetzt registrieren"
+    },
+    "signup": {
+      "title": "Neuen Account erstellen",
+      "button": "Anmelden",
+      "alreadyAMember": "Noch nicht registriert?",
+      "ctaSignIn": "Jetzt anmelden"
+    },
+    "passwordResetRequest": {
+      "title": "Passwort zurücksetzen",
+      "button": "Passwort zurücksetzen",
+      "rememberLogin": "Logindaten wieder eingefallen?",
+      "ctaSignIn": "Jetzt anmelden"
+    },
+    "passwordReset": {
+      "title": "Passwort zurücksetzen",
+      "button": "Neues Passwort setzen",
+      "rememberLogin": "Logindaten wieder eingefallen?",
+      "ctaSignIn": "Jetzt anmelden"
+    }
   }
 }

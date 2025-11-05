@@ -348,7 +348,10 @@
     "firstName": "First name",
     "lastName": "Last name",
     "language": "Language",
-    "displaySettings": "Display settings"
+    "displaySettings": "Display settings",
+    "email": "Email address",
+    "password": "Password",
+    "passwordRepeat": "Repeat password"
   },
   "notifications": {
     "success": "Success",
@@ -397,5 +400,34 @@
     "productpass": "Product passport",
     "askQuestion": "Ask your question...",
     "answerPending": "Processing answer..."
+  },
+  "auth": {
+    "signin": {
+      "title": "Sign in to your account",
+      "button": "Signin",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "textForProviders": "Or continue with",
+      "notAMember": "Not a member?",
+      "ctaSignUp": "Sign up now"
+    },
+    "signup": {
+      "title": "Signup a new account",
+      "button": "Signup",
+      "alreadyAMember": "Already a member?",
+      "ctaSignIn": "Signin now"
+    },
+    "passwordResetRequest": {
+      "title": "Request password reset",
+      "button": "Request password reset",
+      "rememberLogin": "Remember your login?",
+      "ctaSignIn": "Sign in now"
+    },
+    "passwordReset": {
+      "title": "Reset password",
+      "button": "Set new password",
+      "rememberLogin": "Remember your login?",
+      "ctaSignIn": "Sign in now"
+    }
   }
 }
