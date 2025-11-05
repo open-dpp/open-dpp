@@ -42,11 +42,6 @@ async function loadUserInvitations() {
 }
 
 async function acceptInvite(invitationId: string) {
-  await authClient.organization.acceptInvitation({
-    invitationId,
-  });
-  await loadUserInvitations();
-  await organizationStore.fetchOrganizations();
   try {
     await authClient.organization.acceptInvitation({
       invitationId,
