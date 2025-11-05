@@ -413,8 +413,8 @@
     },
     "signup": {
       "title": "Neuen Account erstellen",
-      "button": "Anmelden",
-      "alreadyAMember": "Noch nicht registriert?",
+      "button": "Registrieren",
+      "alreadyAMember": "Bereits registriert?",
       "ctaSignIn": "Jetzt anmelden"
     },
     "passwordResetRequest": {
