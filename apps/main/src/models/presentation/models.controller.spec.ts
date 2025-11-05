@@ -700,32 +700,71 @@ describe("modelsController", () => {
     expect(response.body.mediaReferences).toEqual([mediaReferenceToKeep]);
   });
 
-  // it("add media to model", async () => {
-  //   const template = Template.loadFromDb(laptopModel);
-  //   await templateService.save(template);
-  //   const model = Model.create({
-  //     name: "My name",
-  //     organizationId: TestUsersAndOrganizations.organizations.org1.id,
-  //     userId: TestUsersAndOrganizations.users.user1.id,
-  //     template,
-  //   });
-  //   model.createUniqueProductIdentifier();
-  //
-  //   await modelsService.save(model);
-  //   const mediaReference = { id: randomUUID() };
-  //   const response = await request(getApp(app))
-  //     .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/media`)
-  //     .set(
-  //       "Authorization",
-  //       getKeycloakAuthToken(
-  //         TestUsersAndOrganizations.users.user1.keycloakUserId,
-  //         keycloakAuthTestingGuard,
-  //       ),
-  //     )
-  //     .send(mediaReference);
-  //   expect(response.status).toEqual(201);
-  //   expect(response.body.mediaReferences).toEqual([mediaReference.id]);
-  // });
+  it("modify media of model", async () => {
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
+    const model = Model.create({
+      name: "My name",
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      template,
+    });
+    const mediaReference1 = randomUUID();
+    model.addMediaReference(mediaReference1);
+    const mediaReference2 = randomUUID();
+    model.addMediaReference(mediaReference2);
+    model.createUniqueProductIdentifier();
+
+    await modelsService.save(model);
+    const mediaReferencePayload = {
+      id: randomUUID(),
+    };
+    const response = await request(getApp(app))
+      .patch(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/media/${mediaReference1}`)
+      .set(
+        "Authorization",
+        getKeycloakAuthToken(
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(mediaReferencePayload);
+    expect(response.status).toEqual(200);
+    expect(response.body.mediaReferences).toEqual([mediaReferencePayload.id, mediaReference2]);
+  });
+
+  it("move media to another position", async () => {
+    const template = Template.loadFromDb(laptopModel);
+    await templateService.save(template);
+    const model = Model.create({
+      name: "My name",
+      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: TestUsersAndOrganizations.users.user1.id,
+      template,
+    });
+    model.createUniqueProductIdentifier();
+    const mediaReference1 = randomUUID();
+    const mediaReference2 = randomUUID();
+    const mediaReference3 = randomUUID();
+    model.addMediaReference(mediaReference1);
+    model.addMediaReference(mediaReference2);
+    model.addMediaReference(mediaReference3);
+
+    await modelsService.save(model);
+    const positionPayload = { position: 2 };
+    const response = await request(getApp(app))
+      .patch(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/media/${mediaReference1}/move`)
+      .set(
+        "Authorization",
+        getKeycloakAuthToken(
+          TestUsersAndOrganizations.users.user1.keycloakUserId,
+          keycloakAuthTestingGuard,
+        ),
+      )
+      .send(positionPayload);
+    expect(response.status).toEqual(200);
+    expect(response.body.mediaReferences).toEqual([mediaReference2, mediaReference3, mediaReference1]);
+  });
 
   //
   it("add data values to model", async () => {

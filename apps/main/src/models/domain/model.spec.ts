@@ -74,6 +74,22 @@ describe("model", () => {
     expect(model.mediaReferences).toEqual([productMediaId2]);
   });
 
+  it("should modify product image", () => {
+    const model = Model.create({
+      name: "My model",
+      userId,
+      organizationId,
+      template,
+    });
+    const productMediaId = randomUUID();
+    const productMediaId2 = randomUUID();
+    model.addMediaReference(productMediaId);
+    model.addMediaReference(productMediaId2);
+    const productMediaId3 = randomUUID();
+    model.modifyMediaReference(productMediaId, productMediaId3);
+    expect(model.mediaReferences).toEqual([productMediaId3, productMediaId2]);
+  });
+
   it("should move product image", () => {
     const model = Model.create({
       name: "My model",

@@ -2,6 +2,7 @@ import type { MediaInfo } from "../components/media/MediaInfo.interface";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { MEDIA_SERVICE_URL } from "../const";
+import apiClient from "../lib/api-client.ts";
 import axiosIns from "../lib/axios";
 
 export const useMediaStore = defineStore("media", () => {
@@ -93,20 +94,16 @@ export const useMediaStore = defineStore("media", () => {
     if (!uuid) {
       throw new Error("No UUID provided");
     }
-    const response = await axiosIns.get(
-      `${MEDIA_SERVICE_URL}/media/dpp/${uuid}/${dataFieldId}/info`,
-    );
-    return response.data as MediaInfo;
+    const response = await apiClient.media.media.getMediaInfoOfDataField(uuid, dataFieldId);
+    return response.data;
   };
 
   const getMediaInfo = async (id: string | undefined): Promise<MediaInfo> => {
     if (!id) {
       throw new Error("No ID provided");
     }
-    const response = await axiosIns.get(
-      `${MEDIA_SERVICE_URL}/media/${id}/info`,
-    );
-    return response.data as MediaInfo;
+    const response = await apiClient.media.media.getMediaInfo(id);
+    return response.data;
   };
 
   const downloadDppMedia = async (
@@ -116,11 +113,8 @@ export const useMediaStore = defineStore("media", () => {
     if (!uuid) {
       throw new Error("No UUID provided");
     }
-    const response = await axiosIns.get(
-      `${MEDIA_SERVICE_URL}/media/dpp/${uuid}/${dataFieldId}/download`,
-      { responseType: "blob" },
-    );
-    return response.data as Blob;
+    const response = await apiClient.media.media.downloadMediaOfDataField(uuid, dataFieldId);
+    return response.data;
   };
 
   const fetchDppMedia = async (
@@ -136,14 +130,13 @@ export const useMediaStore = defineStore("media", () => {
 
   const downloadMedia = async (id: string): Promise<Blob | null> => {
     try {
-      const response = await axiosIns.get(
-        `${MEDIA_SERVICE_URL}/media/${id}/download`,
-        { responseType: "blob" },
+      const response = await apiClient.media.media.download(
+        id,
       );
       if (response.status !== 200) {
         return null;
       }
-      return response.data as Blob;
+      return response.data;
     }
     catch {
       return null;
@@ -160,12 +153,8 @@ export const useMediaStore = defineStore("media", () => {
     return { blob, mediaInfo: info };
   };
 
-  const fetchMediaByOrganizationId = async (
-    organizationId: string,
-  ): Promise<Array<MediaInfo>> => {
-    const response = await axiosIns.get(
-      `${MEDIA_SERVICE_URL}/media/by-organization/${organizationId}`,
-    );
+  const fetchMediaByOrganizationId = async (): Promise<Array<MediaInfo>> => {
+    const response = await apiClient.media.media.getMediaInfoByOrganization();
     const media = response.data as Array<MediaInfo>;
     organizationMedia.value = media;
     return media;

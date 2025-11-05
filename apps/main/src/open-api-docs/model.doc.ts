@@ -27,6 +27,13 @@ export const mediaReferenceDocumentation = {
   },
 };
 
+export const mediaReferencePositionDocumentation = {
+  type: "object",
+  properties: {
+    position: { type: "number" },
+  },
+};
+
 export const modelDocumentation = {
   type: "object",
   properties: {

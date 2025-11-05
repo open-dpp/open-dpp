@@ -21,6 +21,7 @@ import { mediaParamDocumentation, modelParamDocumentation } from "../../open-api
 import {
   createModelDocumentation,
   mediaReferenceDocumentation,
+  mediaReferencePositionDocumentation,
   modelDocumentation,
   updateModelDocumentation,
 } from "../../open-api-docs/model.doc";
@@ -39,7 +40,13 @@ import { User } from "../../users/domain/user";
 import { Model } from "../domain/model";
 import { ModelsService } from "../infrastructure/models.service";
 import * as createModelDto_1 from "./dto/create-model.dto";
-import { MediaReferenceDto, MediaReferenceDtoSchema, modelToDto } from "./dto/model.dto";
+import {
+  MediaReferenceDto,
+  MediaReferenceDtoSchema,
+  MediaReferencePositionDto,
+  MediaReferencePositionDtoSchema,
+  modelToDto,
+} from "./dto/model.dto";
 import * as updateModelDto_1 from "./dto/update-model.dto";
 
 @Controller("/organizations/:orgaId/models")
@@ -367,9 +374,6 @@ export class ModelsController {
   @ApiParam(orgaParamDocumentation)
   @ApiParam(modelParamDocumentation)
   @ApiParam(mediaParamDocumentation)
-  @ApiBody({
-    schema: mediaReferenceDocumentation,
-  })
   @ApiResponse({
     schema: modelDocumentation,
   })
@@ -393,6 +397,82 @@ export class ModelsController {
       throw new ForbiddenException();
     }
     model.deleteMediaReference(mediaId);
+    return modelToDto(await this.modelsService.save(model));
+  }
+
+  @ApiOperation({
+    summary: "Remove media file from model",
+    description:
+      "Remove media file",
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiParam(mediaParamDocumentation)
+  @ApiBody(mediaReferenceDocumentation)
+  @ApiResponse({
+    schema: modelDocumentation,
+  })
+  @Patch(":modelId/media/:mediaId")
+  async modifyMediaFile(
+    @Param("orgaId") organizationId: string,
+    @Param("modelId") modelId: string,
+    @Param("mediaId") mediaId: string,
+    @Body(new ZodValidationPipe(MediaReferenceDtoSchema))
+    mediaReferenceDto: MediaReferenceDto,
+    @Request() req: authRequest.AuthRequest,
+  ) {
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
+    const model = await this.modelsService.findOneOrFail(modelId);
+    if (model.ownedByOrganizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+    model.modifyMediaReference(mediaId, mediaReferenceDto.id);
+    return modelToDto(await this.modelsService.save(model));
+  }
+
+  @ApiOperation({
+    summary: "Move media file to other position",
+    description:
+      "Move media file to another position",
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiParam(mediaParamDocumentation)
+  @ApiBody({
+    schema: mediaReferencePositionDocumentation,
+  })
+  @ApiResponse({
+    schema: modelDocumentation,
+  })
+  @Patch(":modelId/media/:mediaId/move")
+  async moveMediaFile(
+    @Param("orgaId") organizationId: string,
+    @Param("modelId") modelId: string,
+    @Param("mediaId") mediaId: string,
+    @Body(new ZodValidationPipe(MediaReferencePositionDtoSchema))
+    mediaReferencePositionDto: MediaReferencePositionDto,
+    @Request() req: authRequest.AuthRequest,
+  ) {
+    const organization = await this.organizationsService.findOneOrFail(organizationId);
+    if (!hasPermission({
+      user: {
+        id: (req.authContext.user as User).id,
+      },
+    }, PermissionAction.READ, organization.toPermissionSubject())) {
+      throw new ForbiddenException();
+    }
+    const model = await this.modelsService.findOneOrFail(modelId);
+    if (model.ownedByOrganizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+    model.moveMediaReference(mediaId, mediaReferencePositionDto.position);
     return modelToDto(await this.modelsService.save(model));
   }
 }

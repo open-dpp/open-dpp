@@ -6,9 +6,7 @@ import type {
   UniqueProductIdentifierDto,
 } from "@open-dpp/api-client";
 import type { MediaInfo } from "../components/media/MediaInfo.interface.ts";
-import {
-  GranularityLevel,
-} from "@open-dpp/api-client";
+import { GranularityLevel } from "@open-dpp/api-client";
 import { assign, keys, pick } from "lodash";
 import { defineStore } from "pinia";
 import { ref } from "vue";
@@ -42,7 +40,9 @@ export const usePassportFormStore = defineStore("passport.form", () => {
   const fetchInFlight = ref<boolean>(false);
   const { t } = i18n.global;
   const mediaStore = useMediaStore();
-  const mediaFiles = ref<{ blob: Blob | null; mediaInfo: MediaInfo; url: string }[]>([]);
+  const mediaFiles = ref<
+    { blob: Blob | null; mediaInfo: MediaInfo; url: string }[]
+  >([]);
 
   const VALUE_FOR_OTHER_GRANULARITY_LEVEL = {
     [GranularityLevel.MODEL]: t("builder.granularity.setOnModel"),
@@ -234,16 +234,11 @@ export const usePassportFormStore = defineStore("passport.form", () => {
       mediaFiles.value = [];
       for (const mediaReference of productPassport.value.mediaReferences) {
         const mediaFile = await mediaStore.fetchMedia(mediaReference);
-        mediaFiles.value.push({ ...mediaFile, url: mediaFile.blob ? URL.createObjectURL(mediaFile.blob) : "" });
+        mediaFiles.value.push({
+          ...mediaFile,
+          url: mediaFile.blob ? URL.createObjectURL(mediaFile.blob) : "",
+        });
       }
-    }
-  };
-
-  const addMediaReference = async (mediaInfo: MediaInfo) => {
-    if (modelId.value) {
-      await apiClient.dpp.models.addMediaReference(modelId.value, { id: mediaInfo.id });
-      await fetchProductPassport();
-      await loadMedia();
     }
   };
 
@@ -256,7 +251,6 @@ export const usePassportFormStore = defineStore("passport.form", () => {
     getValueForOtherGranularityLevel,
     fetchModel,
     fetchItem,
-    addMediaReference,
     loadMedia,
     findSubSections,
     findSectionById,

@@ -6,22 +6,45 @@ import { useMediaStore } from "./media";
 
 // Mocks
 const postMock = vi.fn();
-const getMock = vi.fn();
 vi.mock("../lib/axios", () => ({
   default: {
     post: (...args: never[]) => postMock(...args),
-    get: (...args: never[]) => getMock(...args),
   },
 }));
 vi.mock("../const", () => ({
   MEDIA_SERVICE_URL: "http://media-service",
 }));
 
+const mocks = vi.hoisted(() => {
+  return {
+
+    getMediaInfoByOrganization: vi.fn(),
+    getMediaInfo: vi.fn(),
+    getMediaInfoOfDataField: vi.fn(),
+    download: vi.fn(),
+    downloadMediaOfDataField: vi.fn(),
+  };
+});
+
+vi.mock("../lib/api-client", () => ({
+  default: {
+    setActiveOrganizationId: vi.fn(),
+    media: {
+      media: {
+        getMediaInfoByOrganization: mocks.getMediaInfoByOrganization,
+        getMediaInfo: mocks.getMediaInfo,
+        getMediaInfoOfDataField: mocks.getMediaInfoOfDataField,
+        download: mocks.download,
+        downloadMediaOfDataField: mocks.downloadMediaOfDataField,
+      },
+    },
+  },
+}));
+
 describe("media store", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     postMock.mockReset();
-    getMock.mockReset();
   });
 
   describe("uploadDppMedia", () => {
@@ -126,11 +149,12 @@ describe("media store", () => {
         size: 5,
         mimeType: "image/png",
       };
-      getMock.mockResolvedValueOnce({ data: info });
+      mocks.getMediaInfoOfDataField.mockResolvedValueOnce({ data: info });
       const result = await store.getDppMediaInfo("uuid", "field");
       expect(result).toEqual(info);
-      expect(getMock).toHaveBeenCalledWith(
-        "http://media-service/media/dpp/uuid/field/info",
+      expect(mocks.getMediaInfoOfDataField).toHaveBeenCalledWith(
+        "uuid",
+        "field",
       );
     });
   });
@@ -146,12 +170,12 @@ describe("media store", () => {
     it("returns blob from endpoint", async () => {
       const store = useMediaStore();
       const blob = new Blob(["hello"], { type: "text/plain" });
-      getMock.mockResolvedValueOnce({ data: blob });
+      mocks.downloadMediaOfDataField.mockResolvedValueOnce({ data: blob });
       const result = await store.downloadDppMedia("uuid", "field");
       expect(result).toEqual(blob);
-      expect(getMock).toHaveBeenCalledWith(
-        "http://media-service/media/dpp/uuid/field/download",
-        { responseType: "blob" },
+      expect(mocks.downloadMediaOfDataField).toHaveBeenCalledWith(
+        "uuid",
+        "field",
       );
     });
   });
@@ -162,31 +186,24 @@ describe("media store", () => {
       const blob = new Blob(["data"], { type: "application/octet-stream" });
 
       // Mock axios GET to return appropriate responses irrespective of call order
-      getMock.mockImplementation((url: string) => {
-        if (url.endsWith("/info")) {
-          const info: MediaInfo = {
-            id: "",
-            title: "",
-            size: 5,
-            mimeType: "image/jpeg",
-          };
-          return Promise.resolve({ data: info });
-        }
-        if (url.endsWith("/download")) {
-          return Promise.resolve({ data: blob });
-        }
-        return Promise.reject(new Error(`unexpected url: ${url}`));
-      });
+      mocks.getMediaInfoOfDataField.mockResolvedValue({ data: {
+        id: "",
+        title: "",
+        size: 5,
+        mimeType: "image/jpeg",
+      } });
+      mocks.downloadMediaOfDataField.mockResolvedValue({ data: blob });
 
       const result = await store.fetchDppMedia("uuid", "field");
       expect(result.blob).toEqual(blob);
       expect(result.mediaInfo.mimeType).toEqual("image/jpeg");
-      expect(getMock).toHaveBeenCalledWith(
-        "http://media-service/media/dpp/uuid/field/info",
+      expect(mocks.getMediaInfoOfDataField).toHaveBeenCalledWith(
+        "uuid",
+        "field",
       );
-      expect(getMock).toHaveBeenCalledWith(
-        "http://media-service/media/dpp/uuid/field/download",
-        { responseType: "blob" },
+      expect(mocks.downloadMediaOfDataField).toHaveBeenCalledWith(
+        "uuid",
+        "field",
       );
     });
   });

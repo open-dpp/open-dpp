@@ -290,6 +290,7 @@
   },
   "models": {
     "models": "Produktpässe",
+    "mediaEditDialog": "Produktbilder bearbeiten",
     "pass": "Modellpass",
     "info": "Modellpass Informationen",
     "errorLoad": "Laden der Modellpässe fehlgeschlagen",
@@ -298,7 +299,6 @@
     "general": "Allgemein",
     "myDrafts": "Meine Vorlagen",
     "form": {
-      "mediaEditDialog": "Produktbilder bearbeiten",
       "id": "ID",
       "name": {
         "help": "Geben Sie Ihrem Modellpass einen Namen",

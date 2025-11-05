@@ -17,3 +17,7 @@ export interface ModelCreateDto {
 export interface MediaReferenceDto {
   id: string
 }
+
+export interface MediaReferencePositionDto {
+  position: number
+}

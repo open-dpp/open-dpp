@@ -91,6 +91,11 @@ export class Model extends ProductPassportData {
     }
   };
 
+  modifyMediaReference(mediaFileId: string, newMediaFileId: string) {
+    const index = this.findMediaReferenceIndexOrFail(mediaFileId);
+    this.mediaReferences[index] = newMediaFileId;
+  }
+
   private findMediaReferenceIndexOrFail(mediaFileId: string) {
     const index = this.mediaReferences.indexOf(mediaFileId);
     if (index > -1) {

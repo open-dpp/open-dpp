@@ -20,6 +20,10 @@ export const updateDataValues: DataValueDto[] = [
   },
 ]
 
+export const mediaReferenceUpdate = {
+  id: randomUUID(),
+}
+
 export const mediaReferences = [
   {
     id: randomUUID(),
@@ -101,6 +105,42 @@ export const modelHandlers = [
           mediaReferences: mediaReferences.map(b => b.id),
         },
         { status: 201 },
+      )
+    },
+  ),
+  http.delete(
+    `${baseURL}/organizations/${activeOrganization.id}/models/${model.id}/media/${mediaReferences[0].id}`,
+    async () => {
+      return HttpResponse.json(
+        {
+          ...model,
+          mediaReferences: [],
+        },
+        { status: 200 },
+      )
+    },
+  ),
+  http.patch(
+    `${baseURL}/organizations/${activeOrganization.id}/models/${model.id}/media/${mediaReferences[0].id}/move`,
+    async () => {
+      return HttpResponse.json(
+        {
+          ...model,
+          mediaReferences: mediaReferences.map(b => b.id),
+        },
+        { status: 200 },
+      )
+    },
+  ),
+  http.patch(
+    `${baseURL}/organizations/${activeOrganization.id}/models/${model.id}/media/${mediaReferences[0].id}`,
+    async () => {
+      return HttpResponse.json(
+        {
+          ...model,
+          mediaReferences: [mediaReferenceUpdate.id],
+        },
+        { status: 200 },
       )
     },
   ),

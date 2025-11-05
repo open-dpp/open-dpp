@@ -42,3 +42,11 @@ export const MediaReferenceDtoSchema = z.object({
 });
 
 export type MediaReferenceDto = z.infer<typeof MediaReferenceDtoSchema>;
+
+export const MediaReferencePositionDtoSchema = z.object({
+  position: z.number(),
+});
+
+export type MediaReferencePositionDto = z.infer<
+  typeof MediaReferencePositionDtoSchema
+>;

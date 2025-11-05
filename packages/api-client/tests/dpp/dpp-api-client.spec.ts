@@ -12,7 +12,7 @@ import {
 import { activeOrganization, organizations } from '../organization'
 import { aasPropertiesWithParent, connection, connectionList } from './handlers/aas-integration'
 import { item1, item2 } from './handlers/item'
-import { mediaReferences, model, responseDataValues, updateDataValues } from './handlers/model'
+import { mediaReferences, mediaReferenceUpdate, model, responseDataValues, updateDataValues } from './handlers/model'
 import { productPassport } from './handlers/product-passport'
 import { template } from './handlers/template'
 import { dataFieldDraft, draftsOfOrganization, sectionDraft, templateDraft } from './handlers/template-draft'
@@ -123,6 +123,42 @@ describe('apiClient', () => {
       sdk.setActiveOrganizationId(activeOrganization.id)
 
       const response = await sdk.dpp.models.addMediaReference(model.id, mediaReferences[0])
+      expect(response.data.mediaReferences).toEqual(
+        [mediaReferences[0].id],
+      )
+    })
+
+    it('should delete media reference', async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      })
+      sdk.setActiveOrganizationId(activeOrganization.id)
+
+      const response = await sdk.dpp.models.deleteMediaReference(model.id, mediaReferences[0].id)
+      expect(response.data.mediaReferences).toEqual(
+        [],
+      )
+    })
+
+    it('should modify media reference', async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      })
+      sdk.setActiveOrganizationId(activeOrganization.id)
+
+      const response = await sdk.dpp.models.modifyMediaReference(model.id, mediaReferences[0].id, mediaReferenceUpdate)
+      expect(response.data.mediaReferences).toEqual(
+        [mediaReferenceUpdate.id],
+      )
+    })
+
+    it('should move media reference to another position', async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      })
+      sdk.setActiveOrganizationId(activeOrganization.id)
+
+      const response = await sdk.dpp.models.moveMediaReference(model.id, mediaReferences[0].id, { position: 0 })
       expect(response.data.mediaReferences).toEqual(
         [mediaReferences[0].id],
       )
