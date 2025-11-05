@@ -1,19 +1,4 @@
 services:
-  api-mongo-db-test:
-    image: mongo:6.0
-    logging:
-      options:
-        max-size: 1g
-    ports:
-      - ${OPEN_DPP_MONGODB_PORT}:27017
-    volumes:
-      - mongo_db_test:/data/db
-      - mongo_config_test:/data/configdb
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${OPEN_DPP_MONGODB_USER}
-      - MONGO_INITDB_ROOT_PASSWORD=${OPEN_DPP_MONGODB_PASSWORD}
-      - MONGO_INITDB_DATABASE=${OPEN_DPP_MONGODB_DATABASE}
-
   mcp-server-test:
     image: ghcr.io/open-dpp/mcp-server:main
     extra_hosts:
