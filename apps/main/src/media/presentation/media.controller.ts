@@ -1,5 +1,5 @@
-import type * as authRequest from "@open-dpp/auth";
 import type express from "express";
+import type { UserSession } from "../../auth/auth.guard";
 import type { Media } from "../domain/media";
 import {
   Controller,
@@ -9,14 +9,14 @@ import {
   Param,
   ParseFilePipe,
   Post,
-  Req,
   Res,
   UploadedFile,
   UseInterceptors,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { Public } from "@open-dpp/auth";
 import { memoryStorage } from "multer";
+import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
+import { Session } from "../../auth/session.decorator";
 import { MediaService } from "../infrastructure/media.service";
 import { VirusScanFileValidator } from "./virus-scan.file-validator";
 
@@ -49,11 +49,11 @@ export class MediaController {
       }),
     )
     file: Express.Multer.File,
-    @Req() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
   ): Promise<void> {
     await this.filesService.uploadProfilePicture(
       file.buffer,
-      req.authContext.keycloakUser.sub,
+      session.user.id,
     );
   }
 
@@ -81,7 +81,7 @@ export class MediaController {
     @Param("orgId") orgId: string,
     @Param("upi") upi: string,
     @Param("dataFieldId") dataFieldId: string,
-    @Req() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
   ): Promise<{
     mediaId: string;
   }> {
@@ -90,7 +90,7 @@ export class MediaController {
       file.buffer,
       dataFieldId,
       upi,
-      req.authContext.keycloakUser.sub,
+      session.user.id,
       orgId,
     );
     return {
@@ -99,7 +99,7 @@ export class MediaController {
   }
 
   @Get("dpp/:upi/:dataFieldId/info")
-  @Public()
+  @AllowAnonymous()
   async getDppFileInfo(
     @Param("upi") upi: string,
     @Param("dataFieldId") dataFieldId: string,
@@ -108,11 +108,10 @@ export class MediaController {
   }
 
   @Get("dpp/:upi/:dataFieldId/download")
-  @Public()
+  @AllowAnonymous()
   async streamDppFile(
     @Param("upi") upi: string,
     @Param("dataFieldId") dataFieldId: string,
-    @Req() req: authRequest.AuthRequest,
     @Res() res: express.Response,
   ): Promise<void> {
     try {
@@ -146,10 +145,9 @@ export class MediaController {
   }
 
   @Get(":id/download")
-  @Public()
+  @AllowAnonymous()
   async streamFile(
     @Param("id") id: string,
-    @Req() req: authRequest.AuthRequest,
     @Res() res: express.Response,
   ): Promise<void> {
     try {
@@ -173,7 +171,7 @@ export class MediaController {
   }
 
   @Get(":id/info")
-  @Public()
+  @AllowAnonymous()
   async getMediaInfo(@Param("id") id: string): Promise<Media> {
     return await this.filesService.findOneOrFail(id);
   }
@@ -200,14 +198,14 @@ export class MediaController {
     )
     file: Express.Multer.File,
     @Param("orgId") orgId: string,
-    @Req() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
   ): Promise<{
     mediaId: string;
   }> {
     const media = await this.filesService.uploadMedia(
       file.originalname,
       file.buffer,
-      req.authContext.keycloakUser.sub,
+      session.user.id,
       orgId,
     );
     return {

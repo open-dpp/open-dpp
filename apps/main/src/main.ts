@@ -12,11 +12,14 @@ import {
 import * as bodyParser from "body-parser";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import { AppModule } from "./app.module";
-import { applyBodySizeHandler } from "./BodySizeHandler";
+import { applyBodySizeHandler } from "./body-handler";
 import { buildOpenApiDocumentation } from "./open-api-docs";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bodyParser: false,
+  });
+  app.useLogger(["log", "error", "warn", "debug", "verbose"]);
   const configService = app.get(ConfigService);
   const logger = new Logger("Bootstrap");
 
@@ -36,7 +39,11 @@ async function bootstrap() {
   }
 
   app.setGlobalPrefix("api");
-  app.enableCors();
+  app.enableCors({
+    credentials: true,
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  });
   app.useGlobalFilters(
     new NotFoundInDatabaseExceptionFilter(),
     new NotFoundExceptionFilter(),

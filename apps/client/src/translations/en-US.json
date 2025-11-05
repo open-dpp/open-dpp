@@ -16,6 +16,7 @@
     "abort": "Abort",
     "general": "General",
     "remove": "Remove",
+    "copy": "Copy",
     "errorOccured": "An error occurred",
     "unknownErrorOccured": "An unexpected error occurred. Please try again.",
     "toHome": "To home",
@@ -249,6 +250,24 @@
         "help": "Give your organization a name",
         "label": "Name"
       }
+    },
+    "invitation": {
+      "name": "Name",
+      "status": "Status",
+      "accept": "Accept",
+      "decline": "Decline",
+      "cancel": "Cancel",
+      "acceptSuccess": "Successfully accepted invitation.",
+      "acceptError": "Error on accepting invitation.",
+      "acceptTitle": "You have been invited to join an organization"
+    },
+    "userInvitations": {
+      "title": "Invitations",
+      "description": "Invitations to organizations"
+    },
+    "organizationInvitations": {
+      "title": "Invitations",
+      "description": "Invitations to this organizations"
     }
   },
   "marketplace": {
@@ -329,7 +348,10 @@
     "firstName": "First name",
     "lastName": "Last name",
     "language": "Language",
-    "displaySettings": "Display settings"
+    "displaySettings": "Display settings",
+    "email": "Email address",
+    "password": "Password",
+    "passwordRepeat": "Repeat password"
   },
   "notifications": {
     "success": "Success",
@@ -378,5 +400,34 @@
     "productpass": "Product passport",
     "askQuestion": "Ask your question...",
     "answerPending": "Processing answer..."
+  },
+  "auth": {
+    "signin": {
+      "title": "Sign in to your account",
+      "button": "Signin",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "textForProviders": "Or continue with",
+      "notAMember": "Not a member?",
+      "ctaSignUp": "Sign up now"
+    },
+    "signup": {
+      "title": "Signup a new account",
+      "button": "Signup",
+      "alreadyAMember": "Already a member?",
+      "ctaSignIn": "Signin now"
+    },
+    "passwordResetRequest": {
+      "title": "Request password reset",
+      "button": "Request password reset",
+      "rememberLogin": "Remember your login?",
+      "ctaSignIn": "Sign in now"
+    },
+    "passwordReset": {
+      "title": "Reset password",
+      "button": "Set new password",
+      "rememberLogin": "Remember your login?",
+      "ctaSignIn": "Sign in now"
+    }
   }
 }

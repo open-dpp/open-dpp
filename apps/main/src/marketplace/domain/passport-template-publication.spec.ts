@@ -5,7 +5,7 @@ import { PassportTemplatePublication } from "./passport-template-publication";
 
 describe("passportTemplate", () => {
   it("is created", () => {
-    const props = passportTemplatePublicationPropsFactory.build();
+    const props = passportTemplatePublicationPropsFactory.build({ ownedByOrganizationId: "690b3954794fd991d52305ca", createdByUserId: "690b3954794fd991d52305cb" });
 
     const passportTemplate = PassportTemplatePublication.create(props);
     expect(passportTemplate).toBeInstanceOf(PassportTemplatePublication);
@@ -26,7 +26,7 @@ describe("passportTemplate", () => {
     expect(passportTemplate.createdAt).toBeInstanceOf(Date);
   });
   it("is loaded from database", () => {
-    const props = passportTemplatePublicationPropsFactory.build();
+    const props = passportTemplatePublicationPropsFactory.build({ ownedByOrganizationId: "690b3954794fd991d52305ca", createdByUserId: "690b3954794fd991d52305cb" });
 
     const passportTemplate = PassportTemplatePublication.loadFromDb(props);
     expect(passportTemplate).toBeInstanceOf(PassportTemplatePublication);

@@ -20,6 +20,7 @@
     "abort": "Abbrechen",
     "general": "Allgemein",
     "remove": "Entfernen",
+    "copy": "Kopieren",
     "back": "Zurück",
     "call": "Aufrufen",
     "website": "Website",
@@ -200,7 +201,7 @@
     },
     "apiKey": {
       "create": "API Key erstellen",
-      "createSuccess": "API Key wurde erfolgreich erstellt. Bitte kopieren Sie den Schlüssel: { key }",
+      "createSuccess": "API Key wurde erfolgreich erstellt. Bitte kopieren Sie den API Key und speichern Sie diesen sicher ab, da der API Key nur einmalig generiert wird und nicht mehr angezeigt werden kann.",
       "createError": "Fehler beim Erstellen des API Keys. Bitte versuchen Sie es erneut."
     },
     "edit": "Editieren",
@@ -234,7 +235,7 @@
     "inviteUser": "Benutzer einladen",
     "inviteUserSuccess": "Der Benutzer wurde erfolgreich eingeladen.",
     "member": "Mitglieder",
-    "memberListDescription": "Eine Lisxte von allen Mitgliedern in dieser Organisation.",
+    "memberListDescription": "Eine Liste von allen Mitgliedern in dieser Organisation.",
     "memberName": "Name",
     "memberRole": "Rolle",
     "memberAdmin": "Admin",
@@ -249,6 +250,24 @@
         "help": "Geben Sie Ihrer Organisation einen Namen",
         "label": "Name"
       }
+    },
+    "invitation": {
+      "name": "Name",
+      "status": "Status",
+      "accept": "Akzeptieren",
+      "decline": "Ablehnen",
+      "cancel": "Zurücknehmen",
+      "acceptSuccess": "Die Einladung wurde erfolgreich angenommen.",
+      "acceptError": "Fehler bei der Akzeptanz der Einladung.",
+      "acceptTitle": "Du wurdest zu einer Organisation eingeladen."
+    },
+    "userInvitations": {
+      "title": "Einladungen",
+      "description": "Einladungen zu Organisationen"
+    },
+    "organizationInvitations": {
+      "title": "Einladungen",
+      "description": "Einladungen zu dieser Organisation"
     }
   },
   "marketplace": {
@@ -362,7 +381,10 @@
     "firstName": "Vorname",
     "lastName": "Nachname",
     "language": "Sprache",
-    "displaySettings": "Anzeigeeinstellungen"
+    "displaySettings": "Anzeigeeinstellungen",
+    "email": "E-Mail-Adresse",
+    "password": "Passwort",
+    "passwordRepeat": "Passwort wiederholen"
   },
   "notifications": {
     "success": "Erfolg",
@@ -378,5 +400,34 @@
     "to": " bis ",
     "of": " von ",
     "elements": " Elementen"
+  },
+  "auth": {
+    "signin": {
+      "title": "Melde dich in deinem Account an",
+      "button": "Anmelden",
+      "rememberMe": "Angemeldet bleiben",
+      "forgotPassword": "Passwort vergessen?",
+      "textForProviders": "Oder anmelden mit",
+      "notAMember": "Noch nicht registriert?",
+      "ctaSignUp": "Jetzt registrieren"
+    },
+    "signup": {
+      "title": "Neuen Account erstellen",
+      "button": "Registrieren",
+      "alreadyAMember": "Bereits registriert?",
+      "ctaSignIn": "Jetzt anmelden"
+    },
+    "passwordResetRequest": {
+      "title": "Passwort zurücksetzen",
+      "button": "Passwort zurücksetzen",
+      "rememberLogin": "Logindaten wieder eingefallen?",
+      "ctaSignIn": "Jetzt anmelden"
+    },
+    "passwordReset": {
+      "title": "Passwort zurücksetzen",
+      "button": "Neues Passwort setzen",
+      "rememberLogin": "Logindaten wieder eingefallen?",
+      "ctaSignIn": "Jetzt anmelden"
+    }
   }
 }

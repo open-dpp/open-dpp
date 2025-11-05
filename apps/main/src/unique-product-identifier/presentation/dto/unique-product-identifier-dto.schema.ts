@@ -9,14 +9,14 @@ export const UniqueProductIdentifierDtoSchema = z.object({
 
 export const UniqueProductIdentifierReferenceDtoSchema = z.object({
   id: z.uuid(),
-  organizationId: z.uuid(),
+  organizationId: z.string(),
   modelId: z.uuid().optional(),
   granularityLevel: z.enum(GranularityLevel),
 });
 
 export const UniqueProductIdentifierMetadataDtoSchema = z.object({
   passportId: z.uuid(),
-  organizationId: z.uuid(),
+  organizationId: z.string(),
   templateId: z.uuid(),
   modelId: z.uuid(),
 });

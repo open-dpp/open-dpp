@@ -5,7 +5,7 @@
   "author": "open-dpp GmbH",
   "private": true,
   "license": "LGPL-3.0-only",
-  "packageManager": "pnpm@10.18.3",
+  "packageManager": "pnpm@10.19.0",
   "devDependencies": {
     "@dotenvx/dotenvx": "^1.51.0",
     "turbo": "^2.5.8"

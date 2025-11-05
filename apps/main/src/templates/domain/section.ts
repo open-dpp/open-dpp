@@ -7,7 +7,7 @@ import type {
 } from "./data-field";
 import { randomUUID } from "node:crypto";
 import { NotSupportedError } from "@open-dpp/exception";
-import { groupBy } from "lodash";
+import _ from "lodash";
 import {
   SectionBase,
   SectionType,
@@ -88,7 +88,7 @@ export abstract class Section extends SectionBase {
     granularity: GranularityLevel_TYPE,
   ): DataFieldValidationResult[] {
     const validations: Array<DataFieldValidationResult> = [];
-    const sectionValues = groupBy(
+    const sectionValues = _.groupBy(
       values.filter(v => v.dataSectionId === this.id),
       "row",
     );

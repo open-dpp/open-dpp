@@ -55,7 +55,7 @@ function isCurrent(record: RouteRecordRaw) {
         <div class="flex items-center">
           <svg
             aria-hidden="true"
-            class="h-full w-6 shrink-0 text-gray-200"
+            class="w-2 h-3 shrink-0 text-gray-200"
             preserveAspectRatio="none"
             viewBox="0 0 24 44"
           >

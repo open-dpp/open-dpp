@@ -1,5 +1,5 @@
 import { Controller, Get } from "@nestjs/common";
-import { Public } from "@open-dpp/auth";
+import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
 import { PassportTemplatePublicationService } from "../infrastructure/passport-template-publication.service";
 import * as passportTemplateDto_1 from "./dto/passport-template-publication.dto";
 
@@ -11,7 +11,7 @@ export class PassportTemplatePublicationController {
     private passportTemplateService: PassportTemplatePublicationService,
   ) {}
 
-  @Public()
+  @AllowAnonymous()
   @Get(templatesEndpoint)
   async getTemplates() {
     const passportTemplates = await this.passportTemplateService.findAll();

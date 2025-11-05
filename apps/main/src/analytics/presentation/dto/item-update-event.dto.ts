@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 export const ItemUpdateEventSchema = z.object({
   modelId: z.uuid(),
   templateId: z.uuid(),
-  organizationId: z.uuid(),
+  organizationId: z.string(),
   fieldValues: z.array(
     z.object({
       dataFieldId: z.uuid(),
