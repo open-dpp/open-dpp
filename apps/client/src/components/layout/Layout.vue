@@ -114,8 +114,8 @@ const initials = computed(() => {
   if (!session.value.data)
     return "AN";
   const userSession = session.value.data;
-  const first = userSession.user.firstName.substring(0, 1) || "A";
-  const last = userSession.user.lastName.substring(0, 1) || "N";
+  const first = userSession.user.firstName?.substring(0, 1) || "A";
+  const last = userSession.user.lastName?.substring(0, 1) || "N";
   return (first + last).toUpperCase();
 });
 
