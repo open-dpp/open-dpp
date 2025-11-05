@@ -2,6 +2,7 @@ import type { ProductPassportDto } from "@open-dpp/api-client";
 import type { MediaFile } from "../lib/media.ts";
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { revokeObjectUrl } from "../lib/media.ts";
 import { useMediaStore } from "./media.ts";
 
 export const useProductPassportStore = defineStore("productPassport", () => {
@@ -27,7 +28,7 @@ export const useProductPassportStore = defineStore("productPassport", () => {
   const cleanupMediaUrls = () => {
     for (const mediaFile of mediaFiles.value) {
       if (mediaFile.url) {
-        URL.revokeObjectURL(mediaFile.url);
+        revokeObjectUrl(mediaFile.url);
       }
     }
     mediaFiles.value = [];

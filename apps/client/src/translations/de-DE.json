@@ -302,6 +302,7 @@
       "addImageError": "Hinzufügen des Produktbilds fehlgeschlagen"
     },
     "form": {
+      "mediaDownloadError": "Laden der Prduktbilder fehlgeschlagen",
       "id": "ID",
       "name": {
         "help": "Geben Sie Ihrem Modellpass einen Namen",
