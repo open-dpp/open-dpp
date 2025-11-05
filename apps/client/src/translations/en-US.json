@@ -256,7 +256,9 @@
       "status": "Status",
       "accept": "Accept",
       "decline": "Decline",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "acceptSuccess": "Successfully accepted invitation.",
+      "acceptError": "Error on accepting invitation."
     },
     "userInvitations": {
       "title": "Invitations",

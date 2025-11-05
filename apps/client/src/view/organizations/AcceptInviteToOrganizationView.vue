@@ -1,30 +1,29 @@
 <script lang="ts" setup>
-import { onMounted } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { authClient } from "../../auth-client.ts";
+import { useNotificationStore } from "../../stores/notification.ts";
 
 const props = defineProps<{
   id: string;
 }>();
 
 const router = useRouter();
+const notificationStore = useNotificationStore();
+const { t } = useI18n();
 
 async function acceptInvite() {
-  await authClient.organization.acceptInvitation({
-    invitationId: props.id,
-  });
-  await router.push("/organizations");
-}
-
-onMounted(() => {
-  /* const urlToken = new URLSearchParams(window.location.search).get("token");
-  if (urlToken) {
-    token.value = urlToken;
+  try {
+    await authClient.organization.acceptInvitation({
+      invitationId: props.id,
+    });
+    notificationStore.addSuccessNotification(t("organizations.invitation.acceptSuccess"));
+    await router.push("/organizations");
   }
-  else {
-    router.push("/signin");
-  } */
-});
+  catch {
+    notificationStore.addErrorNotification(t("organizations.invitation.acceptError"));
+  }
+}
 </script>
 
 <template>

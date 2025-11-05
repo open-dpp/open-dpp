@@ -256,7 +256,9 @@
       "status": "Status",
       "accept": "Akzeptieren",
       "decline": "Ablehnen",
-      "cancel": "Zurücknehmen"
+      "cancel": "Zurücknehmen",
+      "acceptSuccess": "Die Einladung wurde erfolgreich angenommen.",
+      "acceptError": "Fehler bei der Akzeptanz der Einladung."
     },
     "userInvitations": {
       "title": "Einladungen",
