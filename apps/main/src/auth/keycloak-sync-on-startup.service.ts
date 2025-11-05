@@ -5,7 +5,7 @@ import { AuthService } from "./auth.service";
 
 @Injectable()
 export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
-  private readonly logger = new Logger(AuthService.name);
+  private readonly logger = new Logger(KeycloakSyncOnStartupService.name);
   private readonly configService: EnvService;
   private readonly authService: AuthService;
 
