@@ -1,10 +1,9 @@
 import type { INestApplication } from "@nestjs/common";
 import type { TestingModule } from "@nestjs/testing";
-import type { Connection } from "mongoose";
 import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
 import { APP_GUARD } from "@nestjs/core";
-import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { getApp } from "@open-dpp/testing";
@@ -27,7 +26,6 @@ import { PassportTemplatePublicationController } from "./passport-template-publi
 
 describe("passportTemplateController", () => {
   let app: INestApplication;
-  let mongoConnection: Connection;
   let module: TestingModule;
   let passportTemplateService: PassportTemplatePublicationService;
   let authService: AuthService;
@@ -68,7 +66,6 @@ describe("passportTemplateController", () => {
     }).compile();
 
     app = module.createNestApplication();
-    mongoConnection = module.get(getConnectionToken());
     passportTemplateService = module.get(PassportTemplatePublicationService);
     authService = module.get<AuthService>(
       AuthService,
@@ -76,11 +73,6 @@ describe("passportTemplateController", () => {
     betterAuthHelper.setAuthService(authService);
 
     await app.init();
-
-    const user1data = await betterAuthHelper.createUser();
-    await betterAuthHelper.createOrganization(user1data?.user.id as string);
-    const user2data = await betterAuthHelper.createUser();
-    await betterAuthHelper.createOrganization(user2data?.user.id as string);
   });
 
   afterEach(() => {
@@ -88,7 +80,7 @@ describe("passportTemplateController", () => {
   });
 
   it(`/GET find all passport templates`, async () => {
-    const { org, user } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org, user } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     jest.spyOn(Date, "now").mockImplementation(() => mockNow.getTime());
     const passportTemplate = PassportTemplatePublication.loadFromDb(
       passportTemplatePublicationPropsFactory.build({ ownedByOrganizationId: org.id, createdByUserId: user.id }),
@@ -111,7 +103,6 @@ describe("passportTemplateController", () => {
 
   afterAll(async () => {
     await module.close();
-    await mongoConnection.destroy();
     await app.close();
   });
 });
