@@ -82,9 +82,6 @@ describe("passportTemplateController", () => {
     const user2data = await betterAuthHelper.createUser();
     await betterAuthHelper.createOrganization(user2data?.user.id as string);
   });
-  beforeEach(() => {
-    jest.spyOn(Date, "now").mockImplementation(() => mockNow.getTime());
-  });
 
   afterEach(() => {
     jest.restoreAllMocks();
@@ -92,6 +89,7 @@ describe("passportTemplateController", () => {
 
   it(`/GET find all passport templates`, async () => {
     const { org, user } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    jest.spyOn(Date, "now").mockImplementation(() => mockNow.getTime());
     const passportTemplate = PassportTemplatePublication.loadFromDb(
       passportTemplatePublicationPropsFactory.build({ ownedByOrganizationId: org.id, createdByUserId: user.id }),
     );
