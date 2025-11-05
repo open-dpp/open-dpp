@@ -123,7 +123,7 @@ export class BetterAuthHelper {
   }
 
   async getRandomOrganizationAndUserWithCookie() {
-    const keys = this.organizationMap.keys().toArray();
+    const keys = Array.from(this.organizationMap.keys());
     if (keys.length === 0) {
       throw new Error("No organizations found");
     }
