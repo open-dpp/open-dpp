@@ -1,6 +1,6 @@
+import type { UserSession } from "../../../auth/auth.guard";
 import { Body, Controller, Get, Param, Put } from "@nestjs/common";
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { UserSession } from "../../../auth/auth.guard";
 import { Session } from "../../../auth/session.decorator";
 import { AiConfiguration } from "../domain/ai-configuration";
 import { AiConfigurationService } from "../infrastructure/ai-configuration.service";
@@ -49,14 +49,6 @@ export class AiConfigurationController {
   async findConfigurationByOrganization(
     @Param("organizationId") organizationId: string,
   ) {
-    /* const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    } */
     return aiConfigurationDto.aiConfigurationToDto(
       await this.aiConfigurationService.findOneByOrganizationIdOrFail(
         organizationId,

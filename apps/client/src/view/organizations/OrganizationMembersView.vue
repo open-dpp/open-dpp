@@ -4,9 +4,6 @@ import { onMounted, ref } from "vue";
 import { authClient } from "../../auth-client.ts";
 import OrganizationInvitationsList from "../../components/organizations/OrganizationInvitationsList.vue";
 import OrganizationMembersList from "../../components/organizations/OrganizationMembersList.vue";
-import { useIndexStore } from "../../stores";
-
-const indexStore = useIndexStore();
 
 const members = ref<Array<UserDto>>([]);
 const organization = ref<OrganizationDto | null>(null);

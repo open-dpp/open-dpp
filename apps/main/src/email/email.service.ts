@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
-import { compile } from "handlebars";
+import Handlebars from "handlebars";
 import mjml2html from "mjml";
 import { createTransport, Transporter } from "nodemailer";
 import SMTPTransport from "nodemailer/lib/smtp-transport";
@@ -41,7 +41,7 @@ export class EmailService implements OnApplicationBootstrap {
   async send(mail: BaseEmail) {
     const templatePath = resolve(__dirname, "templates", mail.template);
     const templateContent = readFileSync(templatePath, "utf-8");
-    const compiler = compile(templateContent);
+    const compiler = Handlebars.compile(templateContent);
     const compilerData = mail.templateProperties ?? {};
     const compiled = compiler(compilerData);
     const mjml = await this.compileMjml(compiled);

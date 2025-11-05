@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { expect, jest } from "@jest/globals";
 import { ignoreIds } from "@open-dpp/testing";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import { Template } from "../../templates/domain/template";

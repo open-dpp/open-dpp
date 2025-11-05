@@ -1,13 +1,12 @@
 import type { CanActivate, ExecutionContext } from "@nestjs/common";
 import type { getSession } from "better-auth/api";
 import {
-  ForbiddenException,
   Inject,
   Injectable,
-  UnauthorizedException,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { fromNodeHeaders } from "better-auth/node";
+import { EnvService } from "@open-dpp/env";
+import { ALLOW_SERVICE_ACCESS } from "./allow-service-access.decorator";
 import { AuthService } from "./auth.service";
 
 /**
@@ -32,14 +31,17 @@ export type UserSession = BaseUserSession & {
 export class AuthGuard implements CanActivate {
   private readonly reflector: Reflector;
   private readonly authService: AuthService;
+  private readonly configService: EnvService;
 
   constructor(
     @Inject(Reflector)
     reflector: Reflector,
     authService: AuthService,
+    configService: EnvService,
   ) {
     this.reflector = reflector;
     this.authService = authService;
+    this.configService = configService;
   }
 
   /**
@@ -53,19 +55,33 @@ export class AuthGuard implements CanActivate {
     const url = request.url as string;
 
     const apiKeyHeader = request.headers["x-api-key"] || request.headers["X-API-KEY"];
+    const serviceTokenHeader = request.headers.service_token;
 
     let session: UserSession | null = null;
 
+    const isAllowServiceAccess = this.reflector.getAllAndOverride<boolean>(ALLOW_SERVICE_ACCESS, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isAllowServiceAccess && serviceTokenHeader) {
+      return serviceTokenHeader === this.configService.get("OPEN_DPP_SERVICE_TOKEN");
+    }
+
     if (apiKeyHeader) {
-      session = await this.authService.getSession(new Headers({
-        "x-api-key": apiKeyHeader,
-      }));
+      const headers = new Headers();
+      headers.set("x-api-key", apiKeyHeader);
+      session = await this.authService.getSession(headers);
     }
     else {
-      session = await this.authService.getSession(fromNodeHeaders(
-        request.headers || request?.handshake?.headers || [],
-      ),
-      );
+      const headers = new Headers();
+      if (request.headers.cookie) {
+        headers.set("cookie", request.headers.cookie);
+      }
+      if (request.headers.authorization) {
+        headers.set("authorization", request.headers.authorization);
+      }
+      session = await this.authService.getSession(headers);
     }
 
     request.session = session;
@@ -76,22 +92,21 @@ export class AuthGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    if (isPublic)
+    if (isPublic) {
       return true;
+    }
 
     const isOptional = this.reflector.getAllAndOverride<boolean>("OPTIONAL", [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    if (isOptional && !session)
+    if (isOptional && !session) {
       return true;
+    }
 
     if (!session) {
-      throw new UnauthorizedException({
-        code: "UNAUTHORIZED",
-        message: "Unauthorized",
-      });
+      return false;
     }
 
     const isBetterAuthUrl = url.startsWith("/api/auth");
@@ -105,11 +120,10 @@ export class AuthGuard implements CanActivate {
       }
     }
 
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>("ROLES", [
+    /* const requiredRoles = this.reflector.getAllAndOverride<string[]>("ROLES", [
       context.getHandler(),
       context.getClass(),
     ]);
-
     if (requiredRoles && requiredRoles.length > 0) {
       const userRole = session.user.role;
       let hasRole = false;
@@ -126,7 +140,7 @@ export class AuthGuard implements CanActivate {
           message: "Insufficient permissions",
         });
       }
-    }
+    } */
 
     return true;
   }

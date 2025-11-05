@@ -102,8 +102,6 @@ export const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   const layoutStore = useLayoutStore();
-  const organizationStore = useOrganizationsStore();
-  const indexStore = useIndexStore();
 
   layoutStore.isPageLoading = true;
   const { data: session } = await authClient.getSession();
@@ -124,6 +122,8 @@ router.beforeEach(async (to, from, next) => {
     return;
   }
 
+  const organizationStore = useOrganizationsStore();
+  const indexStore = useIndexStore();
   const paramOrganizationId = to.params.organizationId;
   if (paramOrganizationId) {
     const organization = organizationStore.organizations.find(o => o.id === paramOrganizationId);

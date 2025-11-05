@@ -2,13 +2,18 @@ import type { TestingModule } from "@nestjs/testing";
 import type { Connection, Model as MongooseModel } from "mongoose";
 import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
+import { INestApplication } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { EnvModule } from "@open-dpp/env";
+import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { ignoreIds, MongooseTestingModule } from "@open-dpp/testing";
-import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
+import { ignoreIds } from "@open-dpp/testing";
+import { BetterAuthHelper } from "../../../test/better-auth-helper";
+import { AuthGuard } from "../../auth/auth.guard";
+import { AuthModule } from "../../auth/auth.module";
 import { AuthService } from "../../auth/auth.service";
+import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import { Template } from "../../templates/domain/template";
@@ -24,15 +29,25 @@ import { ModelDoc, ModelDocSchemaVersion, ModelSchema } from "./model.schema";
 import { ModelsService } from "./models.service";
 
 describe("modelsService", () => {
+  let app: INestApplication;
   let modelsService: ModelsService;
   let mongoConnection: Connection;
   let modelDoc: MongooseModel<ModelDoc>;
+  let authService: AuthService;
+
+  const betterAuthHelper = new BetterAuthHelper();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        MongooseTestingModule,
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
         MongooseModule.forFeature([
           {
             name: UniqueProductIdentifierDoc.name,
@@ -43,43 +58,49 @@ describe("modelsService", () => {
             schema: ModelSchema,
           },
         ]),
+        AuthModule,
       ],
       providers: [
         ModelsService,
         UniqueProductIdentifierService,
         UsersService,
         {
-          provide: EmailService,
-          useValue: {
-            send: jest.fn(),
-          },
-        },
-        {
-          provide: AuthService,
-          useValue: {
-            getSession: jest.fn(),
-            getUserById: jest.fn(),
-          },
+          provide: APP_GUARD,
+          useClass: AuthGuard,
         },
       ],
-    })
-      .compile();
+    }).overrideProvider(EmailService).useValue({
+      send: jest.fn(),
+    }).compile();
 
     modelsService = module.get<ModelsService>(ModelsService);
     mongoConnection = module.get<Connection>(getConnectionToken());
     modelDoc = mongoConnection.model(ModelDoc.name, ModelSchema);
+    authService = module.get<AuthService>(
+      AuthService,
+    );
+    betterAuthHelper.setAuthService(authService);
+
+    app = module.createNestApplication();
+    await app.init();
+
+    const user1data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user1data?.user.id as string);
+    const user2data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user2data?.user.id as string);
   });
 
   it("should create a model", async () => {
+    const { org, user } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const template = Template.loadFromDb(
       laptopFactory
         .addSections()
-        .build({ organizationId: TestUsersAndOrganizations.organizations.org1.id, userId: TestUsersAndOrganizations.users.user1.id }),
+        .build({ organizationId: org.id, userId: user.id }),
     );
     const model = Model.create({
       name: "My product",
-      userId: TestUsersAndOrganizations.users.user1.id,
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: user.id,
+      organizationId: org.id,
       template,
     });
 
@@ -124,8 +145,8 @@ describe("modelsService", () => {
         }),
       ]),
     );
-    expect(foundModel.createdByUserId).toEqual(TestUsersAndOrganizations.users.user1.id);
-    expect(foundModel.isOwnedBy(TestUsersAndOrganizations.organizations.org1.id)).toBeTruthy();
+    expect(foundModel.createdByUserId).toEqual(user.id);
+    expect(foundModel.isOwnedBy(org.id)).toBeTruthy();
   });
 
   it("fails if requested model could not be found", async () => {
@@ -135,28 +156,29 @@ describe("modelsService", () => {
   });
 
   it("should find all models of organization", async () => {
+    const { org, user } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const otherOrganizationId = randomUUID();
     const template = Template.loadFromDb(
       laptopFactory
         .addSections()
-        .build({ organizationId: TestUsersAndOrganizations.organizations.org1.id, userId: TestUsersAndOrganizations.users.user1.id }),
+        .build({ organizationId: org.id, userId: user.id }),
     );
 
     const model1 = Model.create({
       name: "Product A",
-      userId: TestUsersAndOrganizations.users.user1.id,
+      userId: user.id,
       organizationId: otherOrganizationId,
       template,
     });
     const model2 = Model.create({
       name: "Product B",
-      userId: TestUsersAndOrganizations.users.user1.id,
+      userId: user.id,
       organizationId: otherOrganizationId,
       template,
     });
     const model3 = Model.create({
       name: "Product C",
-      userId: TestUsersAndOrganizations.users.user1.id,
+      userId: user.id,
       organizationId: otherOrganizationId,
       template,
     });

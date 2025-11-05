@@ -5,8 +5,6 @@ import {
   Param,
 } from "@nestjs/common";
 import { ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
-import { UserSession } from "../../auth/auth.guard";
-import { Session } from "../../auth/session.decorator";
 import {
   templateDocumentation,
   templateGetAllDocumentation,
@@ -36,7 +34,6 @@ export class TemplateController {
   async get(
     @Param("organizationId") organizationId: string,
     @Param("templateId") id: string,
-    @Session() session: UserSession,
   ) {
     const found = await this.templateService.findOneOrFail(id);
 
@@ -57,7 +54,6 @@ export class TemplateController {
   @Get()
   async getAll(
     @Param("organizationId") organizationId: string,
-    @Session() session: UserSession,
   ) {
     return await this.templateService.findAllByOrganization(organizationId);
   }

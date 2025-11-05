@@ -42,8 +42,6 @@ const router = useRouter();
 const indexStore = useIndexStore();
 const layoutStore = useLayoutStore();
 
-const session = authClient.useSession();
-
 const { t } = useI18n();
 
 interface MenuItemInterface {
@@ -417,7 +415,9 @@ const sidebarOpen = ref(false);
               >
                 <RingLoader class="mx-auto" />
               </div>
-              <component :is="Component" v-else />
+              <div v-else>
+                <component :is="Component" />
+              </div>
             </transition>
           </router-view>
         </div>

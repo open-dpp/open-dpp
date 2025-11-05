@@ -1,4 +1,7 @@
+import type { UserSession } from "../../auth/auth.guard";
+
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -10,9 +13,7 @@ import {
 } from "@nestjs/common";
 
 import { ZodValidationPipe } from "@open-dpp/exception";
-
-import { omit } from "lodash";
-import { UserSession } from "../../auth/auth.guard";
+import { AuthService } from "../../auth/auth.service";
 import { Session } from "../../auth/session.decorator";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { TemplateService } from "../../templates/infrastructure/template.service";
@@ -37,15 +38,18 @@ export class TemplateDraftController {
   private readonly templateService: TemplateService;
   private readonly templateDraftService: TemplateDraftService;
   private readonly marketplaceService: MarketplaceApplicationService;
+  private readonly authService: AuthService;
 
   constructor(
     templateService: TemplateService,
     templateDraftService: TemplateDraftService,
     marketplaceService: MarketplaceApplicationService,
+    authService: AuthService,
   ) {
     this.templateService = templateService;
     this.templateDraftService = templateDraftService;
     this.marketplaceService = marketplaceService;
+    this.authService = authService;
   }
 
   @Post()
@@ -117,9 +121,8 @@ export class TemplateDraftController {
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
-    const section = SectionDraft.create({
-      ...omit(createSectionDraftDto, ["parentSectionId"]),
-    });
+    const { parentSectionId, ...sectionData } = createSectionDraftDto;
+    const section = SectionDraft.create(sectionData);
 
     if (createSectionDraftDto.parentSectionId) {
       foundProductDataModelDraft.addSubSection(
@@ -157,9 +160,15 @@ export class TemplateDraftController {
         id: session.user.id,
         email: session.user.email,
       });
+      const organization = await this.authService.getActiveOrganization(session.user.id);
+      if (!organization) {
+        throw new BadRequestException();
+      }
       const marketplaceResponse = await this.marketplaceService.upload(
         publishedProductDataModel,
         user,
+        organization.id,
+        organization.name,
       );
       publishedProductDataModel.assignMarketplaceResource(
         marketplaceResponse.id,
@@ -236,7 +245,7 @@ export class TemplateDraftController {
 
     foundProductDataModelDraft.modifySection(
       sectionId,
-      omit(modifySectionDraftDto),
+      { ...modifySectionDraftDto },
     );
 
     return templateDraftToDto(
@@ -282,10 +291,11 @@ export class TemplateDraftController {
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
+    const { ...dataFieldData } = modifyDataFieldDraftDto;
     foundProductDataModelDraft.modifyDataField(
       sectionId,
       fieldId,
-      omit(modifyDataFieldDraftDto, "view"),
+      dataFieldData,
     );
 
     return templateDraftToDto(

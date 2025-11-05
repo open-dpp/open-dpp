@@ -1,3 +1,4 @@
+import type { UserSession } from "../../auth/auth.guard";
 import type {
   DataValueDto,
 } from "../../product-passport-data/presentation/dto/data-value.dto";
@@ -13,7 +14,6 @@ import {
 } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { UserSession } from "../../auth/auth.guard";
 import { Session } from "../../auth/session.decorator";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { ModelsService } from "../../models/infrastructure/models.service";

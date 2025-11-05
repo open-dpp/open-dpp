@@ -7,7 +7,6 @@ import { ServeStaticModule } from "@nestjs/serve-static";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { AiConfigurationModule } from "./ai/ai-configuration/ai-configuration.module";
 import { AiModule } from "./ai/ai.module";
-import { PassportModule } from "./ai/passports/passport.module";
 import { ChatGateway } from "./ai/presentation/chat.gateway";
 import { AnalyticsModule } from "./analytics/analytics.module";
 import { AuthGuard } from "./auth/auth.guard";
@@ -60,7 +59,6 @@ import { UsersModule } from "./users/users.module";
     AiConfigurationModule,
     AiModule,
     AnalyticsModule,
-    PassportModule,
     AuthModule,
     EmailModule,
   ],

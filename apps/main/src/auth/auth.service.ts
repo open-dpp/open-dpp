@@ -47,7 +47,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   }
 
   async getSession(headers: Headers) {
-    return this.auth!.api.getSession({
+    return await this.auth!.api.getSession({
       headers,
     });
   }
@@ -71,11 +71,9 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     }
 
     // Get the organization details
-    const organization = await this.db!.collection("organization").findOne({
+    return await this.db!.collection("organization").findOne({
       _id: new ObjectId(member.organizationId),
     });
-
-    return organization;
   }
 
   async getOrganizationNameIfUserInvited(organizationId: string, userEmail: string): Promise<string | null> {
@@ -140,7 +138,6 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     const mongoDb = this.configService.get("OPEN_DPP_MONGODB_DATABASE");
     const mongoUriEnv = this.configService.get("OPEN_DPP_MONGODB_URI");
     const mongoUri = mongoUriEnv ?? `mongodb://${encodeURIComponent(mongoUser)}:${encodeURIComponent(mongoPassword)}@${mongoHost}:${mongoPort}/${mongoDb}?authSource=${mongoUser}`;
-    console.log(mongoUri);
     this.client = new MongoClient(mongoUri);
     await this.client.connect();
     this.db = this.client.db();
@@ -179,6 +176,10 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     const apiKeyPlugin = apiKey({
       enableSessionForAPIKeys: true,
     });
+    const plugins = [apiKeyPlugin, organizationPlugin];
+    if (genericOAuthPlugin) {
+      plugins.push(genericOAuthPlugin as any);
+    }
 
     const migrationEnabled = !!this.configService.get("OPEN_DPP_MIGRATE_KEYCLOAK_ENABLED");
 
@@ -250,7 +251,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         },
       },
       hooks: {},
-      plugins: genericOAuthPlugin ? [genericOAuthPlugin, organizationPlugin, apiKeyPlugin] : [organizationPlugin, apiKeyPlugin],
+      plugins,
       database: mongodbAdapter(this.db, {
         client: this.client,
       }),

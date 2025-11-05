@@ -1,18 +1,19 @@
 import { randomUUID } from "node:crypto";
+import { jest } from "@jest/globals";
 import { INestApplication } from "@nestjs/common";
-import { APP_GUARD, Reflector } from "@nestjs/core";
-import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { APP_GUARD } from "@nestjs/core";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { EnvModule } from "@open-dpp/env";
+import { EnvModule, EnvService } from "@open-dpp/env";
 import {
   getApp,
-  MongooseTestingModule,
 } from "@open-dpp/testing";
-import { Connection } from "mongoose";
 import request from "supertest";
-import { BetterAuthTestingGuard, getBetterAuthToken } from "../../../test/better-auth-testing.guard";
-import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
+import { BetterAuthHelper } from "../../../test/better-auth-helper";
+import { AuthGuard } from "../../auth/auth.guard";
+import { AuthModule } from "../../auth/auth.module";
 import { AuthService } from "../../auth/auth.service";
+import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
 import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
 import { ItemsService } from "../../items/infrastructure/items.service";
@@ -42,16 +43,21 @@ describe("passportMetricController", () => {
   let modelsService: ModelsService;
   let passportMetricService: PassportMetricService;
   let module: TestingModule;
-  let mongoConnection: Connection;
-  const reflector: Reflector = new Reflector();
-  const betterAuthTestingGuard = new BetterAuthTestingGuard(reflector);
-  betterAuthTestingGuard.loadUsers([TestUsersAndOrganizations.users.user1, TestUsersAndOrganizations.users.user2]);
+  let authService: AuthService;
+
+  const betterAuthHelper = new BetterAuthHelper();
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        MongooseTestingModule,
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
         MongooseModule.forFeature([
           {
             name: UniqueProductIdentifierDoc.name,
@@ -67,6 +73,7 @@ describe("passportMetricController", () => {
           },
         ]),
         AnalyticsModule,
+        AuthModule,
       ],
       providers: [
         UniqueProductIdentifierService,
@@ -74,33 +81,35 @@ describe("passportMetricController", () => {
         ModelsService,
         ItemsService,
         {
-          provide: EmailService,
-          useValue: {
-            send: jest.fn(),
-          },
-        },
-        {
-          provide: AuthService,
-          useValue: {
-            getSession: jest.fn(),
-            getUserById: jest.fn(),
-          },
-        },
-        {
           provide: APP_GUARD,
-          useValue: betterAuthTestingGuard,
+          useClass: AuthGuard,
         },
       ],
       controllers: [PassportMetricController],
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
 
-    mongoConnection = module.get<Connection>(getConnectionToken());
     passportMetricService = module.get<PassportMetricService>(
       PassportMetricService,
     );
     modelsService = module.get<ModelsService>(ModelsService);
+    authService = module.get<AuthService>(
+      AuthService,
+    );
+    betterAuthHelper.setAuthService(authService);
+
     app = module.createNestApplication();
     await app.init();
+
+    const user1data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user1data?.user.id as string);
+    const user2data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user2data?.user.id as string);
+
     await passportMetricService.findOne(
       {
         modelId: randomUUID(),
@@ -112,23 +121,15 @@ describe("passportMetricController", () => {
     );
   });
 
-  beforeEach(() => {
-    jest.spyOn(reflector, "get").mockReturnValue(false);
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
-
   it("/POST should create page view metric", async () => {
-    jest.spyOn(reflector, "get").mockReturnValue(true);
+    const { org, user } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const template = Template.loadFromDb(
-      laptopFactory.build({ organizationId: TestUsersAndOrganizations.organizations.org1.id, userId: TestUsersAndOrganizations.users.user1.id }),
+      laptopFactory.build({ organizationId: org.id, userId: user.id }),
     );
     const model = Model.create({
       name: "My product",
-      userId: TestUsersAndOrganizations.users.user1.id,
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: user.id,
+      organizationId: org.id,
       template,
     });
     const uniqueProductIdentifier = model.createUniqueProductIdentifier();
@@ -161,12 +162,13 @@ describe("passportMetricController", () => {
   });
 
   it(`/GET passport metrics`, async () => {
+    const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const templateId = randomUUID();
     const date1 = new Date("2025-01-01T13:00:00Z");
     const date2 = new Date("2025-01-01T14:00:00Z");
     const source = {
       templateId,
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      organizationId: org.id,
       modelId: randomUUID(),
     };
     const page = "http://example.com/page1";
@@ -186,14 +188,9 @@ describe("passportMetricController", () => {
 
     const response = await request(getApp(app))
       .get(
-        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T00:00:00Z&endDate=2025-03-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
+        `/organizations/${org.id}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T00:00:00Z&endDate=2025-03-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
       )
-      .set(
-        "Authorization",
-        getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send();
 
     expect(response.status).toEqual(200);
@@ -215,11 +212,13 @@ describe("passportMetricController", () => {
   });
   //
   it(`/GET passport returns metric results with sum value equal to zero if template is not part of organization`, async () => {
+    const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { org: org2, userCookie: user2Cookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const templateId = randomUUID();
     const date = new Date("2025-01-01T13:00:00Z");
     const source = {
       templateId,
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      organizationId: org.id,
       modelId: randomUUID(),
     };
 
@@ -233,14 +232,9 @@ describe("passportMetricController", () => {
     await passportMetricService.create(pageView);
     const response = await request(getApp(app))
       .get(
-        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T00:00:00Z&endDate=2025-02-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
+        `/organizations/${org2.id}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T00:00:00Z&endDate=2025-02-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
       )
-      .set(
-        "Authorization",
-        getBetterAuthToken(
-          TestUsersAndOrganizations.users.user2.id,
-        ),
-      )
+      .set("Cookie", user2Cookie)
       .send();
     expect(response.status).toEqual(200);
     expect(response.body).toEqual([{
@@ -253,22 +247,18 @@ describe("passportMetricController", () => {
   });
 
   it(`/GET passport metrics fails if user is not member of organization`, async () => {
+    const { userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const response = await request(getApp(app))
       .get(
-        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/passport-metrics?templateId=${randomUUID()}&modelId=${randomUUID()}&startDate=2025-01-01T12:00:00Z&endDate=2025-01-01T13:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
+        `/organizations/${org2.id}/passport-metrics?templateId=${randomUUID()}&modelId=${randomUUID()}&startDate=2025-01-01T12:00:00Z&endDate=2025-01-01T13:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
       )
-      .set(
-        "Authorization",
-        getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send();
     expect(response.status).toEqual(403);
   });
 
   afterAll(async () => {
-    await mongoConnection.close();
     await module.close();
     await app.close();
   });

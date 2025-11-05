@@ -1,12 +1,16 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
+import { INestApplication } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { EnvModule } from "@open-dpp/env";
-import { MongooseTestingModule } from "@open-dpp/testing";
-import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
+import { EnvModule, EnvService } from "@open-dpp/env";
+import { BetterAuthHelper } from "../../../test/better-auth-helper";
+import { AuthGuard } from "../../auth/auth.guard";
+import { AuthModule } from "../../auth/auth.module";
 import { AuthService } from "../../auth/auth.service";
+import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
 import { Template } from "../../templates/domain/template";
 import { laptopFactory } from "../../templates/fixtures/laptop.factory";
@@ -25,16 +29,26 @@ import { PassportTemplatePublicationService } from "../infrastructure/passport-t
 import { MarketplaceApplicationService } from "./marketplace.application.service";
 
 describe("marketplaceService", () => {
+  let app: INestApplication;
   let marketplaceService: MarketplaceApplicationService;
   let module: TestingModule;
   let templateService: TemplateService;
   let passportTemplateService: PassportTemplatePublicationService;
+  let authService: AuthService;
+
+  const betterAuthHelper = new BetterAuthHelper();
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        MongooseTestingModule,
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
         MongooseModule.forFeature([
           {
             name: PassportTemplatePublicationDoc.name,
@@ -45,30 +59,19 @@ describe("marketplaceService", () => {
             schema: TemplateSchema,
           },
         ]),
+        AuthModule,
       ],
       providers: [
         PassportTemplatePublicationService,
         MarketplaceApplicationService,
         TemplateService,
         {
-          provide: EmailService,
-          useValue: {
-            send: jest.fn(),
-          },
-        },
-        {
-          provide: AuthService,
-          useValue: {
-            getSession: jest.fn(),
-            getUserById: jest.fn((userId) => {
-              // Return the appropriate test user based on userId
-              return TestUsersAndOrganizations.users.user1.id === userId
-                ? TestUsersAndOrganizations.users.user1
-                : TestUsersAndOrganizations.users.user2;
-            }),
-          },
+          provide: APP_GUARD,
+          useClass: AuthGuard,
         },
       ],
+    }).overrideProvider(EmailService).useValue({
+      send: jest.fn(),
     }).compile();
     marketplaceService = module.get<MarketplaceApplicationService>(
       MarketplaceApplicationService,
@@ -77,28 +80,42 @@ describe("marketplaceService", () => {
     passportTemplateService = module.get<PassportTemplatePublicationService>(
       PassportTemplatePublicationService,
     );
-  });
+    authService = module.get<AuthService>(
+      AuthService,
+    );
+    betterAuthHelper.setAuthService(authService);
 
-  const laptopModelPlain = laptopFactory.build({
-    organizationId: TestUsersAndOrganizations.organizations.org1.id,
-    userId: TestUsersAndOrganizations.users.user1.id,
+    app = module.createNestApplication();
+    await app.init();
+
+    const user1data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user1data?.user.id as string);
+    const user2data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user2data?.user.id as string);
   });
 
   it("should upload template to marketplace", async () => {
+    const { org, user } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const laptopModelPlain = laptopFactory.build({
+      organizationId: org.id,
+      userId: user.id,
+    });
     const template = Template.loadFromDb({
       ...laptopModelPlain,
       name: `${randomUUID()}-data-model`,
     });
     const { id } = await marketplaceService.upload(
       template,
-      TestUsersAndOrganizations.users.user1,
+      user,
+      org.id,
+      org.name,
     );
     const expected = {
       version: template.version,
       name: template.name,
       description: template.description,
       sectors: template.sectors,
-      organizationName: TestUsersAndOrganizations.organizations.org1.name,
+      organizationName: org.name,
     };
     const foundUpload = await passportTemplateService.findOneOrFail(id);
     expect(foundUpload.templateData).toEqual({
@@ -135,12 +152,15 @@ describe("marketplaceService", () => {
   });
 
   it("should return already downloaded template instead of fetching it from the marketplace", async () => {
+    const { org, user } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const template = Template.create(
-      templateCreatePropsFactory.build({ organizationId: TestUsersAndOrganizations.organizations.org1.id }),
+      templateCreatePropsFactory.build({ organizationId: org.id }),
     );
     const { id } = await marketplaceService.upload(
       template,
-      TestUsersAndOrganizations.users.user1,
+      user,
+      org.id,
+      org.name,
     );
     template.marketplaceResourceId = id;
     await templateService.save(template);
@@ -150,7 +170,7 @@ describe("marketplaceService", () => {
     );
 
     const downloadedTemplate = await marketplaceService.download(
-      TestUsersAndOrganizations.organizations.org1.id,
+      org.id,
       randomUUID(),
       template.marketplaceResourceId,
     );
@@ -160,12 +180,15 @@ describe("marketplaceService", () => {
   });
 
   it("should download template from marketplace", async () => {
+    const { org, user } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const template = Template.create(
-      templateCreatePropsFactory.build({ organizationId: TestUsersAndOrganizations.organizations.org1.id }),
+      templateCreatePropsFactory.build({ organizationId: org.id }),
     );
     const { id, name, version } = await marketplaceService.upload(
       template,
-      TestUsersAndOrganizations.users.user1,
+      user,
+      org.id,
+      org.name,
     );
 
     const findTemplateAtMarketplace = jest.spyOn(
@@ -174,8 +197,8 @@ describe("marketplaceService", () => {
     );
 
     const productDataModel = await marketplaceService.download(
-      TestUsersAndOrganizations.organizations.org1.id,
-      TestUsersAndOrganizations.users.user1.id,
+      org.id,
+      user.id,
       id,
     );
     expect(findTemplateAtMarketplace).toHaveBeenCalledWith(id);
@@ -183,8 +206,8 @@ describe("marketplaceService", () => {
     expect(productDataModel.marketplaceResourceId).toEqual(id);
     expect(productDataModel.name).toEqual(name);
     expect(productDataModel.version).toEqual(version);
-    expect(productDataModel.ownedByOrganizationId).toEqual(TestUsersAndOrganizations.organizations.org1.id);
-    expect(productDataModel.createdByUserId).toEqual(TestUsersAndOrganizations.users.user1.id);
+    expect(productDataModel.ownedByOrganizationId).toEqual(org.id);
+    expect(productDataModel.createdByUserId).toEqual(user.id);
   });
 
   afterEach(() => {

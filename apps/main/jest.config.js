@@ -1,6 +1,5 @@
 module.exports = {
-  // Run only this spec for now (matches your current intent)
-  testRegex: "src/models/presentation/models.controller.spec.ts",
+  testRegex: ".*\\.spec\\.ts$",
 
   testEnvironment: "node",
 

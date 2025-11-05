@@ -1,4 +1,4 @@
-import { loadEsm } from "load-esm";
+import * as loadEsm from "load-esm";
 
 async function fileTypeFromBuffer(buffer: Uint8Array | ArrayBuffer) {
   /**
@@ -8,7 +8,7 @@ async function fileTypeFromBuffer(buffer: Uint8Array | ArrayBuffer) {
     try {
       // Dynamically import the ESM module, including types
       const { fileTypeFromBuffer }
-        = await loadEsm<typeof import("file-type")>("file-type");
+        = await loadEsm.loadEsm<typeof import("file-type")>("file-type");
       return fileTypeFromBuffer(buffer);
     }
     catch (error) {

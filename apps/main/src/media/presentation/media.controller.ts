@@ -1,4 +1,5 @@
 import type express from "express";
+import type { UserSession } from "../../auth/auth.guard";
 import type { Media } from "../domain/media";
 import {
   Controller,
@@ -15,7 +16,6 @@ import {
 import { FileInterceptor } from "@nestjs/platform-express";
 import { memoryStorage } from "multer";
 import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
-import { UserSession } from "../../auth/auth.guard";
 import { Session } from "../../auth/session.decorator";
 import { MediaService } from "../infrastructure/media.service";
 import { VirusScanFileValidator } from "./virus-scan.file-validator";

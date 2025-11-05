@@ -1,7 +1,6 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { EnvModule } from "@open-dpp/env";
-import { OrganizationsModule } from "../organizations/organizations.module";
 import { UniqueProductIdentifierModule } from "../unique-product-identifier/unique.product.identifier.module";
 import { AiConfigurationDbSchema, AiConfigurationDoc } from "./ai-configuration/infrastructure/ai-configuration.schema";
 import { AiConfigurationService } from "./ai-configuration/infrastructure/ai-configuration.service";
@@ -9,7 +8,6 @@ import { AiConfigurationController } from "./ai-configuration/presentation/ai-co
 import { ChatService } from "./chat.service";
 import { AiService } from "./infrastructure/ai.service";
 import { McpClientModule } from "./mcp-client/mcp-client.module";
-import { PassportService } from "./passports/passport.service";
 
 @Module({
   imports: [
@@ -21,7 +19,6 @@ import { PassportService } from "./passports/passport.service";
     ]),
     UniqueProductIdentifierModule,
     EnvModule,
-    OrganizationsModule,
     McpClientModule,
   ],
   controllers: [AiConfigurationController],
@@ -29,7 +26,6 @@ import { PassportService } from "./passports/passport.service";
     ChatService,
     AiConfigurationService,
     AiService,
-    PassportService,
   ],
   exports: [AiService, ChatService],
 })

@@ -30,17 +30,12 @@ async function inviteUser(fields: { email: string }) {
   try {
     if (fields.email) {
       loading.value = true;
-      const { data, error } = await authClient.organization.inviteMember({
+      const { error } = await authClient.organization.inviteMember({
         email: fields.email,
         role: "member",
         organizationId: props.organizationId,
         resend: true,
       });
-      console.log(data);
-      /* const response = await apiClient.dpp.organizations.inviteUser(
-        fields.email,
-        props.organizationId,
-      ); */
       loading.value = false;
       if (!error) {
         success.value = true;

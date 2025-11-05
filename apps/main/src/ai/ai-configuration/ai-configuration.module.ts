@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { OrganizationsModule } from "../../organizations/organizations.module";
 import {
   AiConfigurationDbSchema,
   AiConfigurationDoc,
@@ -16,7 +15,6 @@ import { AiConfigurationController } from "./presentation/ai-configuration.contr
         schema: AiConfigurationDbSchema,
       },
     ]),
-    OrganizationsModule,
   ],
   controllers: [AiConfigurationController],
   providers: [AiConfigurationService],

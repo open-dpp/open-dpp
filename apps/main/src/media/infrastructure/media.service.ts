@@ -5,7 +5,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { join } from "lodash";
+import _ from "lodash";
 import * as Minio from "minio";
 import sharp from "sharp";
 import { Media } from "../domain/media";
@@ -49,7 +49,7 @@ export class MediaService {
   }
 
   buildBucketPath(objectName: string, remoteFolders: string[] = []) {
-    return join([...remoteFolders, objectName], this.pathDelimiter);
+    return _.join([...remoteFolders, objectName], this.pathDelimiter);
   }
 
   async uploadFile(

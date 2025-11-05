@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Req, Res, Param, ForbiddenException } from "@nestjs/common";
-import { toNodeHandler, fromNodeHeaders } from "better-auth/node";
-import { Request, Response } from "express";
+import type express from "express";
+import { Controller, ForbiddenException, Get, Param, Post, Req, Res } from "@nestjs/common";
+import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
 import { AuthService } from "./auth.service";
 import { OptionalAuth } from "./optional-auth.decorator";
 
@@ -20,7 +20,7 @@ export class AuthController {
   @OptionalAuth()
   async getOrganizationNameIfInvited(
     @Param("organizationId") organizationId: string,
-    @Req() request: Request,
+    @Req() request: express.Request,
   ) {
     const session = await this.authService.getSession(fromNodeHeaders(request.headers || []));
     const userEmail = session?.user?.email;
@@ -40,8 +40,8 @@ export class AuthController {
   @Post("*path")
   @OptionalAuth()
   async handleBetterAuthPostRequest(
-    @Req() request: Request,
-    @Res() response: Response,
+    @Req() request: express.Request,
+    @Res() response: express.Response,
   ) {
     const handler = toNodeHandler(this.authService.auth!);
     await handler(request, response);
@@ -50,8 +50,8 @@ export class AuthController {
   @Get("*path")
   @OptionalAuth()
   async handleBetterAuthGetRequest(
-    @Req() request: Request,
-    @Res() response: Response,
+    @Req() request: express.Request,
+    @Res() response: express.Response,
   ) {
     const handler = toNodeHandler(this.authService.auth!);
     await handler(request, response);

@@ -1,19 +1,21 @@
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { expect, jest } from "@jest/globals";
 import { INestApplication } from "@nestjs/common";
-import { APP_GUARD, Reflector } from "@nestjs/core";
+import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { EnvModule } from "@open-dpp/env";
-import { getApp, ignoreIds, MongooseTestingModule } from "@open-dpp/testing";
+import { EnvModule, EnvService } from "@open-dpp/env";
+import { getApp, ignoreIds } from "@open-dpp/testing";
 import request from "supertest";
-import { BetterAuthTestingGuard, getBetterAuthToken } from "../../../test/better-auth-testing.guard";
-import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
+import { BetterAuthHelper } from "../../../test/better-auth-helper";
+import { AuthGuard } from "../../auth/auth.guard";
+import { AuthModule } from "../../auth/auth.module";
 import { AuthService } from "../../auth/auth.service";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
 import { Sector } from "../../data-modelling/domain/sectors";
+import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
 import { AasConnectionDoc, AasConnectionSchema } from "../../integrations/infrastructure/aas-connection.schema";
 import {
@@ -41,22 +43,13 @@ import {
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
-import { UsersService } from "../../users/infrastructure/users.service";
 import { Item } from "../domain/item";
 import { ItemDoc, ItemSchema } from "../infrastructure/item.schema";
 import { ItemsService } from "../infrastructure/items.service";
 import { ItemsApplicationService } from "./items-application.service";
 import { ItemsController } from "./items.controller";
 
-describe("itemsController", () => {
-  let app: INestApplication;
-  let itemsService: ItemsService;
-  let modelsService: ModelsService;
-  let templateService: TemplateService;
-  let uniqueProductIdentifierService: UniqueProductIdentifierService;
-  const betterAuthTestingGuard = new BetterAuthTestingGuard(new Reflector());
-  betterAuthTestingGuard.loadUsers([TestUsersAndOrganizations.users.user1, TestUsersAndOrganizations.users.user2]);
-
+async function createTemplate(userId: string, organizationId: string, templateService: TemplateService) {
   const sectionId1 = randomUUID();
   const sectionId2 = randomUUID();
   const sectionId3 = randomUUID();
@@ -72,8 +65,8 @@ describe("itemsController", () => {
     description: "My laptop",
     sectors: [Sector.ELECTRONICS],
     version: "1.0",
-    organizationId: TestUsersAndOrganizations.organizations.org1.id,
-    userId: TestUsersAndOrganizations.users.user1.id,
+    organizationId,
+    userId,
     sections: [
       {
         type: SectionType.GROUP,
@@ -141,12 +134,54 @@ describe("itemsController", () => {
     ],
   };
   const template = Template.loadFromDb(laptopModel);
+  await templateService.save(template);
+  const expectedDataValues = [
+    {
+      dataSectionId: sectionId1,
+      dataFieldId: dataFieldId1,
+      value: undefined,
+      row: 0,
+    },
+    {
+      dataSectionId: sectionId1,
+      dataFieldId: dataFieldId2,
+      value: undefined,
+      row: 0,
+    },
+    {
+      dataSectionId: sectionId2,
+      dataFieldId: dataFieldId3,
+      value: undefined,
+      row: 0,
+    },
+  ];
+  return {
+    template,
+    expectedDataValues,
+  };
+}
+
+describe("itemsController", () => {
+  let app: INestApplication;
+  let itemsService: ItemsService;
+  let modelsService: ModelsService;
+  let templateService: TemplateService;
+  let uniqueProductIdentifierService: UniqueProductIdentifierService;
+  let authService: AuthService;
+
+  const betterAuthHelper = new BetterAuthHelper();
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        MongooseTestingModule,
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
         MongooseModule.forFeature([
           {
             name: ModelDoc.name,
@@ -177,9 +212,9 @@ describe("itemsController", () => {
             schema: PassportTemplatePublicationDbSchema,
           },
         ]),
+        AuthModule,
       ],
       providers: [
-        UsersService,
         ModelsService,
         ItemsService,
         UniqueProductIdentifierService,
@@ -189,26 +224,14 @@ describe("itemsController", () => {
         ItemsApplicationService,
         TraceabilityEventsService,
         {
-          provide: EmailService,
-          useValue: {
-            send: jest.fn(),
-          },
-        },
-        {
-          provide: AuthService,
-          useValue: {
-            getSession: jest.fn(),
-            getUserById: jest.fn(),
-          },
-        },
-        {
           provide: APP_GUARD,
-          useValue: betterAuthTestingGuard,
+          useClass: AuthGuard,
         },
       ],
       controllers: [ItemsController],
-    })
-      .compile();
+    }).overrideProvider(EmailService).useValue({
+      send: jest.fn(),
+    }).compile();
 
     modelsService = moduleRef.get(ModelsService);
     itemsService = moduleRef.get(ItemsService);
@@ -216,49 +239,33 @@ describe("itemsController", () => {
     uniqueProductIdentifierService = moduleRef.get(
       UniqueProductIdentifierService,
     );
+    authService = moduleRef.get<AuthService>(
+      AuthService,
+    );
+    betterAuthHelper.setAuthService(authService);
 
     app = moduleRef.createNestApplication();
-    await templateService.save(template);
     await app.init();
+
+    const user1data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user1data?.user.id as string);
+    const user2data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user2data?.user.id as string);
   });
 
-  const expectedDataValues = [
-    {
-      dataSectionId: sectionId1,
-      dataFieldId: dataFieldId1,
-      value: undefined,
-      row: 0,
-    },
-    {
-      dataSectionId: sectionId1,
-      dataFieldId: dataFieldId2,
-      value: undefined,
-      row: 0,
-    },
-    {
-      dataSectionId: sectionId2,
-      dataFieldId: dataFieldId3,
-      value: undefined,
-      row: 0,
-    },
-  ];
-
   it(`/CREATE item`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { template, expectedDataValues } = await createTemplate(user.id, org.id, templateService);
     const model = Model.create({
       name: "name",
-      userId: TestUsersAndOrganizations.users.user1.id,
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: user.id,
+      organizationId: org.id,
       template,
     });
     await modelsService.save(model);
     const response = await request(getApp(app))
-      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items`)
-      .set(
-        "Authorization",
-        getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
-        ),
-      );
+      .post(`/organizations/${org.id}/models/${model.id}/items`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(201);
     const found = await itemsService.findOneOrFail(response.body.id);
     const foundUniqueProductIdentifiers
@@ -278,78 +285,71 @@ describe("itemsController", () => {
   });
 
   it(`/CREATE item fails if user is not member of organization`, async () => {
+    const { user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { template } = await createTemplate(user.id, org2.id, templateService);
     const model = Model.create({
       name: "name",
-      userId: TestUsersAndOrganizations.users.user1.id,
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      userId: user.id,
+      organizationId: org2.id,
       template,
     });
     await modelsService.save(model);
     const response = await request(getApp(app))
-      .post(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/models/${model.id}/items`)
-      .set(
-        "Authorization",
-        getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
-        ),
-      );
+      .post(`/organizations/${org2.id}/models/${model.id}/items`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
 
   it(`/CREATE item fails if model does not belong to organization`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { template } = await createTemplate(user.id, org.id, templateService);
     const model = Model.create({
       name: "name",
-      userId: TestUsersAndOrganizations.users.user1.id,
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      userId: user.id,
+      organizationId: org2.id,
       template,
     });
     await modelsService.save(model);
     const response = await request(getApp(app))
-      .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items`)
-      .set(
-        "Authorization",
-        getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
-        ),
-      );
+      .post(`/organizations/${org.id}/models/${model.id}/items`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
 
   it("add data values to item", async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { template } = await createTemplate(user.id, org.id, templateService);
     const model = Model.create({
       name: "name",
-      userId: TestUsersAndOrganizations.users.user1.id,
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: user.id,
+      organizationId: org.id,
       template,
     });
-    const item = Item.create({ organizationId: TestUsersAndOrganizations.organizations.org1.id, userId: TestUsersAndOrganizations.users.user1.id, model, template });
+    const item = Item.create({ organizationId: org.id, userId: user.id, model, template });
     item.createUniqueProductIdentifier();
     await itemsService.save(item);
     const existingDataValues = item.dataValues;
     const addedValues = [
       {
-        dataSectionId: sectionId3,
-        dataFieldId: dataFieldId4,
+        dataSectionId: randomUUID(),
+        dataFieldId: randomUUID(),
         value: "value 4",
         row: 0,
       },
       {
-        dataSectionId: sectionId3,
-        dataFieldId: dataFieldId5,
+        dataSectionId: randomUUID(),
+        dataFieldId: randomUUID(),
         value: "value 5",
         row: 0,
       },
     ];
     const response = await request(getApp(app))
       .post(
-        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items/${item.id}/data-values`,
+        `/organizations/${org.id}/models/${model.id}/items/${item.id}/data-values`,
       )
-      .set(
-        "Authorization",
-        getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(addedValues);
     expect(response.status).toEqual(201);
     const expected = [
@@ -364,15 +364,18 @@ describe("itemsController", () => {
   });
 
   it("add data values to item fails if user is not member of organization", async () => {
+    const { user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { template } = await createTemplate(user.id, org2.id, templateService);
     const model = Model.create({
       name: "name",
-      userId: TestUsersAndOrganizations.users.user1.id,
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      userId: user.id,
+      organizationId: org2.id,
       template,
     });
     const item = Item.create({
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org2.id,
+      userId: user.id,
       template,
       model,
     });
@@ -380,28 +383,25 @@ describe("itemsController", () => {
     const addedValues: Array<any> = [];
     const response = await request(getApp(app))
       .post(
-        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/models/${model.id}/items/${item.id}/data-values`,
+        `/organizations/${org2.id}/models/${model.id}/items/${item.id}/data-values`,
       )
-      .set(
-        "Authorization",
-        getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(addedValues);
     expect(response.status).toEqual(403);
   });
 
   it("update data values of item", async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { template } = await createTemplate(user.id, org.id, templateService);
     const model = Model.create({
       name: "name",
-      userId: TestUsersAndOrganizations.users.user1.id,
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: user.id,
+      organizationId: org.id,
       template,
     });
     const item = Item.create({
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org.id,
+      userId: user.id,
       template,
       model,
     });
@@ -428,14 +428,9 @@ describe("itemsController", () => {
     await itemsService.save(item);
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items/${item.id}/data-values`,
+        `/organizations/${org.id}/models/${model.id}/items/${item.id}/data-values`,
       )
-      .set(
-        "Authorization",
-        getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(updatedValues);
     expect(response.status).toEqual(200);
     const expectedDataValues = [
@@ -457,15 +452,18 @@ describe("itemsController", () => {
   });
 
   it("update data values fails if user is not member of organization", async () => {
+    const { user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { template } = await createTemplate(user.id, org2.id, templateService);
     const model = Model.create({
       name: "name",
-      userId: TestUsersAndOrganizations.users.user1.id,
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      userId: user.id,
+      organizationId: org2.id,
       template,
     });
     const item = Item.create({
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org2.id,
+      userId: user.id,
       template,
       model,
     });
@@ -480,28 +478,26 @@ describe("itemsController", () => {
     ];
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${TestUsersAndOrganizations.organizations.org2.id}/models/${model.id}/items/${item.id}/data-values`,
+        `/organizations/${org2.id}/models/${model.id}/items/${item.id}/data-values`,
       )
-      .set(
-        "Authorization",
-        getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(updatedValues);
     expect(response.status).toEqual(403);
   });
 
   it("update data values fails if item does not belong to organization", async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { template } = await createTemplate(user.id, org.id, templateService);
     const model = Model.create({
       name: "name",
-      userId: TestUsersAndOrganizations.users.user1.id,
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: user.id,
+      organizationId: org.id,
       template,
     });
     const item = Item.create({
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org2.id,
+      userId: user.id,
       template,
       model,
     });
@@ -517,29 +513,26 @@ describe("itemsController", () => {
 
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items/${item.id}/data-values`,
+        `/organizations/${org.id}/models/${model.id}/items/${item.id}/data-values`,
       )
-      .set(
-        "Authorization",
-        getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(updatedValues);
     expect(response.status).toEqual(403);
   });
 
   it(`/GET item`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { template, expectedDataValues } = await createTemplate(user.id, org.id, templateService);
     const model = Model.create({
       name: "name",
-      userId: TestUsersAndOrganizations.users.user1.id,
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: user.id,
+      organizationId: org.id,
       template,
     });
     await modelsService.save(model);
     const item = Item.create({
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org.id,
+      userId: user.id,
       model,
       template,
     });
@@ -547,14 +540,9 @@ describe("itemsController", () => {
     await itemsService.save(item);
     const response = await request(getApp(app))
       .get(
-        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items/${item.id}`,
+        `/organizations/${org.id}/models/${model.id}/items/${item.id}`,
       )
-      .set(
-        "Authorization",
-        getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
-        ),
-      );
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
       id: item.id,
@@ -570,15 +558,18 @@ describe("itemsController", () => {
   });
   //
   it(`/GET item fails if user is not member of organization`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { template } = await createTemplate(user.id, org.id, templateService);
     const model = Model.create({
       name: "name",
-      userId: TestUsersAndOrganizations.users.user1.id,
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      userId: user.id,
+      organizationId: org2.id,
       template,
     });
     const item = Item.create({
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org2.id,
+      userId: user.id,
       template,
       model,
     });
@@ -586,27 +577,25 @@ describe("itemsController", () => {
     await itemsService.save(item);
     const response = await request(getApp(app))
       .get(
-        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items/${item.id}`,
+        `/organizations/${org.id}/models/${model.id}/items/${item.id}`,
       )
-      .set(
-        "Authorization",
-        getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
-        ),
-      );
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
 
   it(`/GET item fails if item does not belong to organization`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { template } = await createTemplate(user.id, org.id, templateService);
     const model = Model.create({
       name: "name",
-      userId: TestUsersAndOrganizations.users.user1.id,
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: user.id,
+      organizationId: org.id,
       template,
     });
     const item = Item.create({
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org2.id,
+      userId: user.id,
       template,
       model,
     });
@@ -614,49 +603,41 @@ describe("itemsController", () => {
     await itemsService.save(item);
     const response = await request(getApp(app))
       .get(
-        `/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items/${item.id}`,
+        `/organizations/${org.id}/models/${model.id}/items/${item.id}`,
       )
-      .set(
-        "Authorization",
-        getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
-        ),
-      );
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
 
   it(`/GET all item`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { template, expectedDataValues } = await createTemplate(user.id, org.id, templateService);
     const model = Model.create({
       name: "name",
-      userId: TestUsersAndOrganizations.users.user1.id,
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
+      userId: user.id,
+      organizationId: org.id,
       template,
     });
     await modelsService.save(model);
     const item = Item.create({
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org.id,
+      userId: user.id,
       template,
       model,
     });
     const uniqueProductId1 = item.createUniqueProductIdentifier();
     await itemsService.save(item);
     const item2 = Item.create({
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org.id,
+      userId: user.id,
       template,
       model,
     });
     const uniqueProductId2 = item2.createUniqueProductIdentifier();
     await itemsService.save(item2);
     const response = await request(getApp(app))
-      .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items`)
-      .set(
-        "Authorization",
-        getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
-        ),
-      );
+      .get(`/organizations/${org.id}/models/${model.id}/items`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(200);
     expect(response.body).toEqual([
       {
@@ -685,54 +666,50 @@ describe("itemsController", () => {
   });
   //
   it(`/GET all item fails if user is not member of organization`, async () => {
+    const { user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { template } = await createTemplate(user.id, org2.id, templateService);
     const model = Model.create({
       name: "name",
-      userId: TestUsersAndOrganizations.users.user1.id,
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      userId: user.id,
+      organizationId: org2.id,
       template,
     });
     await modelsService.save(model);
     const item = Item.create({
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org2.id,
+      userId: user.id,
       template,
       model,
     });
     await itemsService.save(item);
     const response = await request(getApp(app))
-      .get(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/models/${model.id}/items`)
-      .set(
-        "Authorization",
-        getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
-        ),
-      );
+      .get(`/organizations/${org2.id}/models/${model.id}/items`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
 
   it(`/GET all item fails if model do not belong to organization`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { template } = await createTemplate(user.id, org.id, templateService);
     const model = Model.create({
       name: "name",
-      userId: TestUsersAndOrganizations.users.user1.id,
-      organizationId: TestUsersAndOrganizations.organizations.org2.id,
+      userId: user.id,
+      organizationId: org2.id,
       template,
     });
     await modelsService.save(model);
     const item = Item.create({
-      organizationId: TestUsersAndOrganizations.organizations.org1.id,
-      userId: TestUsersAndOrganizations.users.user1.id,
+      organizationId: org.id,
+      userId: user.id,
       template,
       model,
     });
     await itemsService.save(item);
     const response = await request(getApp(app))
-      .get(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/items`)
-      .set(
-        "Authorization",
-        getBetterAuthToken(
-          TestUsersAndOrganizations.users.user1.id,
-        ),
-      );
+      .get(`/organizations/${org.id}/models/${model.id}/items`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
 

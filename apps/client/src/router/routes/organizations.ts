@@ -51,7 +51,6 @@ export const ORGANIZATION: RouteRecordRaw = {
 export const ORGANIZATION_MEMBERS: RouteRecordRaw = {
   path: "members",
   name: "OrganizationMembers",
-  props: true,
   component: () =>
     import("../../view/organizations/OrganizationMembersView.vue"),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {

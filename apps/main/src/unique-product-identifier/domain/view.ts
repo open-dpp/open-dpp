@@ -7,7 +7,7 @@ import type {
   Section,
 } from "../../templates/domain/section";
 import type { Template } from "../../templates/domain/template";
-import { maxBy, minBy } from "lodash";
+import _ from "lodash";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
 import {
@@ -66,8 +66,8 @@ export class View {
       = section.granularityLevel === GranularityLevel.MODEL
         ? this.model.getDataValuesBySectionId(section.id)
         : (this.item?.getDataValuesBySectionId(section.id) ?? []);
-    const minRow = minBy(dataValuesOfSectionAllRows, "row")?.row ?? 0;
-    const maxRow = maxBy(dataValuesOfSectionAllRows, "row")?.row ?? 0;
+    const minRow = _.minBy(dataValuesOfSectionAllRows, "row")?.row ?? 0;
+    const maxRow = _.maxBy(dataValuesOfSectionAllRows, "row")?.row ?? 0;
 
     const rows = [];
     for (let rowIndex = minRow; rowIndex <= maxRow; rowIndex++) {

@@ -27,6 +27,8 @@ export class MarketplaceApplicationService {
   async upload(
     template: Template,
     user: User,
+    organizationId: string,
+    organizationName: string,
   ): Promise<PassportTemplatePublication> {
     try {
       const templateData = serializeTemplate(template);
@@ -37,11 +39,11 @@ export class MarketplaceApplicationService {
           name: template.name,
           description: template.description,
           sectors: template.sectors,
-          organizationName: "name", // TODO
+          organizationName,
           templateData,
           contactEmail: user.email,
           isOfficial: false,
-          ownedByOrganizationId: "id", // TODO
+          ownedByOrganizationId: organizationId,
           createdByUserId: user.id,
         }),
       );

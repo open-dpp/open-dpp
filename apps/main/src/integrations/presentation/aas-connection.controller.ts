@@ -1,3 +1,4 @@
+import type { UserSession } from "../../auth/auth.guard";
 import type {
   AssetAdministrationShellType_TYPE,
 } from "../domain/asset-administration-shell";
@@ -12,8 +13,6 @@ import {
   Post,
 } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
-import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
-import { UserSession } from "../../auth/auth.guard";
 import { Session } from "../../auth/session.decorator";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { itemToDto } from "../../items/presentation/dto/item.dto";
@@ -60,7 +59,6 @@ export class AasConnectionController {
     this.uniqueProductIdentifierService = uniqueProductIdentifierService;
   }
 
-  @AllowAnonymous()
   @Post("/connections/:connectionId/items")
   async upsertItem(
     @Headers("API_TOKEN") apiToken: string,
@@ -69,9 +67,6 @@ export class AasConnectionController {
     @Body() aasJson: any,
     @Session() session: UserSession,
   ) {
-    if (apiToken !== this.configService.get("OPEN_DPP_AAS_TOKEN")) {
-      throw new ForbiddenException("Wrong api token");
-    }
     const aasConnection
       = await this.aasConnectionService.findById(connectionId);
 

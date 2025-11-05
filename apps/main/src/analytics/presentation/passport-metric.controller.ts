@@ -79,15 +79,6 @@ export class PassportMetricController {
         query,
       )}`,
     );
-    /* const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: session.user.id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    } */
-
     return this.passportMetricService.computeStatistic(
       organizationId,
       query,

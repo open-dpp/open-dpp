@@ -3,17 +3,16 @@ import type { TestingModule } from "@nestjs/testing";
 import type { Connection } from "mongoose";
 import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
-import { APP_GUARD, Reflector } from "@nestjs/core";
+import { APP_GUARD } from "@nestjs/core";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { EnvModule } from "@open-dpp/env";
-import { getApp, MongooseTestingModule } from "@open-dpp/testing";
+import { EnvModule, EnvService } from "@open-dpp/env";
+import { getApp } from "@open-dpp/testing";
 import request from "supertest";
-import { BetterAuthTestingGuard } from "../../../test/better-auth-testing.guard";
-import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
-import { AuthService } from "../../auth/auth.service";
+import { AuthGuard } from "../../auth/auth.guard";
+import { AuthModule } from "../../auth/auth.module";
+import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
-import { UsersService } from "../../users/infrastructure/users.service";
 import { PassportTemplatePublication } from "../domain/passport-template-publication";
 import { passportTemplatePublicationPropsFactory } from "../fixtures/passport.template.factory";
 import {
@@ -26,9 +25,6 @@ import { PassportTemplatePublicationController } from "./passport-template-publi
 
 describe("passportTemplateController", () => {
   let app: INestApplication;
-  const betterAuthTestingGuard = new BetterAuthTestingGuard(new Reflector());
-  betterAuthTestingGuard.loadUsers([TestUsersAndOrganizations.users.user1, TestUsersAndOrganizations.users.user2]);
-
   let mongoConnection: Connection;
   let module: TestingModule;
   let passportTemplateService: PassportTemplatePublicationService;
@@ -39,41 +35,31 @@ describe("passportTemplateController", () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        MongooseTestingModule,
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
         MongooseModule.forFeature([
           {
             name: PassportTemplatePublicationDoc.name,
             schema: PassportTemplatePublicationDbSchema,
           },
         ]),
+        AuthModule,
       ],
       providers: [
-        UsersService,
         PassportTemplatePublicationService,
         {
-          provide: EmailService,
-          useValue: {
-            send: jest.fn(),
-          },
-        },
-        {
-          provide: AuthService,
-          useValue: {
-            getSession: jest.fn(),
-            getUserById: jest.fn((userId) => {
-              // Return the appropriate test user based on userId
-              return TestUsersAndOrganizations.users.user1.id === userId
-                ? TestUsersAndOrganizations.users.user1
-                : TestUsersAndOrganizations.users.user2;
-            }),
-          },
-        },
-        {
           provide: APP_GUARD,
-          useValue: betterAuthTestingGuard,
+          useClass: AuthGuard,
         },
       ],
       controllers: [PassportTemplatePublicationController],
+    }).overrideProvider(EmailService).useValue({
+      send: jest.fn(),
     }).compile();
 
     app = module.createNestApplication();

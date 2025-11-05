@@ -1,16 +1,17 @@
 import type { INestApplication } from "@nestjs/common";
 import type { TestingModule } from "@nestjs/testing";
 import type { TemplateDbProps } from "../../templates/domain/template";
-import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
-import { APP_GUARD, Reflector } from "@nestjs/core";
+import { expect, jest } from "@jest/globals";
+import { APP_GUARD } from "@nestjs/core";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { EnvModule } from "@open-dpp/env";
-import { MongooseTestingModule } from "@open-dpp/testing";
+import { EnvModule, EnvService } from "@open-dpp/env";
 import request from "supertest";
-import { BetterAuthTestingGuard, getBetterAuthToken } from "../../../test/better-auth-testing.guard";
-import TestUsersAndOrganizations from "../../../test/test-users-and-orgs";
+import { BetterAuthHelper } from "../../../test/better-auth-helper";
+import { AuthGuard } from "../../auth/auth.guard";
+import { AuthModule } from "../../auth/auth.module";
 import { AuthService } from "../../auth/auth.service";
+import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
 import { Item } from "../../items/domain/item";
 import { ItemsService } from "../../items/infrastructure/items.service";
@@ -31,53 +32,56 @@ describe("productPassportController", () => {
   let app: INestApplication;
   let modelsService: ModelsService;
   let itemsService: ItemsService;
-
   let templateService: TemplateService;
-  const betterAuthTestingGuard = new BetterAuthTestingGuard(new Reflector());
-  betterAuthTestingGuard.loadUsers([TestUsersAndOrganizations.users.user1, TestUsersAndOrganizations.users.user2]);
+  let authService: AuthService;
 
-  const userId = randomUUID();
-  const organizationId = randomUUID();
+  const betterAuthHelper = new BetterAuthHelper();
+
   let module: TestingModule;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [EnvModule.forRoot(), MongooseTestingModule, ProductPassportModule],
+      imports: [
+        EnvModule.forRoot(),
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
+        AuthModule,
+        ProductPassportModule,
+      ],
       providers: [
         {
-          provide: EmailService,
-          useValue: {
-            send: jest.fn(),
-          },
-        },
-        {
-          provide: AuthService,
-          useValue: {
-            getSession: jest.fn(),
-            getUserById: jest.fn(),
-          },
-        },
-        {
           provide: APP_GUARD,
-          useValue: betterAuthTestingGuard,
+          useClass: AuthGuard,
         },
       ],
+    }).overrideProvider(EmailService).useValue({
+      send: jest.fn(),
     }).compile();
 
     modelsService = module.get(ModelsService);
     itemsService = module.get(ItemsService);
     templateService = module.get<TemplateService>(TemplateService);
+    authService = module.get<AuthService>(
+      AuthService,
+    );
+    betterAuthHelper.setAuthService(authService);
 
     app = module.createNestApplication();
 
     await app.init();
   });
-  const authProps = { userId, organizationId };
-  const phoneTemplate: TemplateDbProps = phoneFactory
-    .addSections()
-    .build(authProps);
 
   it(`/GET public view for unique product identifier`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const authProps = { userId: user.id, organizationId: org.id };
+    const phoneTemplate: TemplateDbProps = phoneFactory
+      .addSections()
+      .build(authProps);
     const template = Template.loadFromDb({ ...phoneTemplate });
     await templateService.save(template);
 
@@ -99,12 +103,7 @@ describe("productPassportController", () => {
 
     const response = await request(app.getHttpServer()).get(
       `/product-passports/${uuid}`,
-    ).set(
-      "Authorization",
-      getBetterAuthToken(
-        TestUsersAndOrganizations.users.user1.id,
-      ),
-    );
+    ).set("Cookie", userCookie);
     expect(response.status).toEqual(200);
 
     const productPassport = ProductPassport.create({

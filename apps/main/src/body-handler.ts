@@ -1,7 +1,6 @@
 import type { INestApplication } from "@nestjs/common";
-import type { NextFunction, Request, Response } from "express";
 import { EnvService } from "@open-dpp/env";
-import { json } from "express";
+import express from "express";
 
 /**
  * Applies body size handling and JSON parsing middleware to the provided Nest application.
@@ -18,10 +17,10 @@ export function applyBodySizeHandler(app: INestApplication) {
   const integrationJsonLimit = configService.get(
     "OPEN_DPP_JSON_LIMIT_INTEGRATION",
   );
-  const defaultJsonParser = json({ limit: defaultJsonLimit });
-  const integrationJsonParser = json({ limit: integrationJsonLimit });
+  const defaultJsonParser = express.json({ limit: defaultJsonLimit });
+  const integrationJsonParser = express.json({ limit: integrationJsonLimit });
 
-  app.use((req: Request, res: Response, next: NextFunction) => {
+  app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
     if (betterAuthRouteRegex.test(req.path)) {
       return next();
     }
@@ -31,7 +30,7 @@ export function applyBodySizeHandler(app: INestApplication) {
     return parser(req, res, next);
   });
 
-  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     if (err?.type === "entity.too.large") {
       return res.status(413).json({
         statusCode: 413,
