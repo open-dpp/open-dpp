@@ -1,10 +1,9 @@
 import type { INestApplication } from "@nestjs/common";
 import type { TestingModule } from "@nestjs/testing";
-import type { Connection } from "mongoose";
 import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
 import { APP_GUARD } from "@nestjs/core";
-import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
@@ -62,7 +61,6 @@ describe("passportTemplateService", () => {
     service = module.get<PassportTemplatePublicationService>(
       PassportTemplatePublicationService,
     );
-    mongoConnection = module.get<Connection>(getConnectionToken());
     authService = module.get<AuthService>(
       AuthService,
     );
