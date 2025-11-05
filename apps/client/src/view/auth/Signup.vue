@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import { useNotificationStore } from "../../stores/notification.ts";
@@ -13,6 +13,10 @@ const lastName = ref<string>("");
 const email = ref<string>("");
 const password = ref<string>("");
 
+const redirectUri = computed(() => {
+  return route.query.redirect ? decodeURIComponent(route.query.redirect as string) : "/";
+});
+
 async function signup() {
   await authClient.signUp.email({
     email: email.value,
@@ -20,7 +24,7 @@ async function signup() {
     firstName: firstName.value,
     lastName: lastName.value,
     name: `${firstName.value} ${lastName.value}`,
-    callbackURL: route.query.redirect ? decodeURIComponent(route.query.redirect as string) : "/",
+    callbackURL: redirectUri.value,
   }, {
     onRequest: () => {
       // show loading
@@ -87,7 +91,14 @@ async function signup() {
       <p class="mt-10 text-center text-sm/6 text-gray-500 dark:text-gray-400">
         Already a member?
         {{ ' ' }}
-        <router-link to="/signin" class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
+        <router-link
+          :to="{
+            name: 'Signin',
+            query: {
+              redirect: redirectUri,
+            },
+          }" class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+        >
           Sign in to your account
         </router-link>
       </p>

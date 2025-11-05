@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
+import { AuthModule } from "../auth/auth.module";
 import { MarketplaceModule } from "../marketplace/marketplace.module";
 import { OrganizationsModule } from "../organizations/organizations.module";
 import {
@@ -26,6 +27,7 @@ import { TemplateDraftController } from "./presentation/template-draft.controlle
         schema: TemplateSchema,
       },
     ]),
+    AuthModule,
     MarketplaceModule,
     OrganizationsModule,
   ],

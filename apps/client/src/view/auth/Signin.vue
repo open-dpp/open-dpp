@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import { useIndexStore } from "../../stores";
@@ -15,12 +15,16 @@ const email = ref<string>("");
 const password = ref<string>("");
 const rememberMe = ref<boolean>(false);
 
+const redirectUri = computed(() => {
+  return route.query.redirect ? decodeURIComponent(route.query.redirect as string) : "/";
+});
+
 async function signin() {
   try {
     await authClient.signIn.email({
       email: email.value,
       password: password.value,
-      callbackURL: route.query.redirect ? decodeURIComponent(route.query.redirect as string) : "/",
+      callbackURL: redirectUri.value,
       rememberMe: rememberMe.value,
     }, {
       // callbacks
@@ -135,7 +139,14 @@ async function signInWithOpenDppCloud() {
       <p class="mt-10 text-center text-sm/6 text-gray-500 dark:text-gray-400">
         Not a member?
         {{ ' ' }}
-        <router-link to="/signup" class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300">
+        <router-link
+          :to="{
+            name: 'Signup',
+            query: {
+              redirect: redirectUri,
+            },
+          }" class="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+        >
           Sign up now
         </router-link>
       </p>

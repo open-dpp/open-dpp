@@ -4,6 +4,7 @@ import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { authClient } from "../../auth-client.ts";
 import axiosIns from "../../lib/axios.ts";
+import { useNotificationStore } from "../../stores/notification.ts";
 import { useOrganizationsStore } from "../../stores/organizations.ts";
 import BaseButton from "../basics/BaseButton.vue";
 

@@ -258,7 +258,8 @@
       "decline": "Decline",
       "cancel": "Cancel",
       "acceptSuccess": "Successfully accepted invitation.",
-      "acceptError": "Error on accepting invitation."
+      "acceptError": "Error on accepting invitation.",
+      "acceptTitle": "You have been invited to join an organization"
     },
     "userInvitations": {
       "title": "Invitations",
