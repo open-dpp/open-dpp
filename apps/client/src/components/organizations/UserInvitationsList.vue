@@ -9,6 +9,7 @@ import BaseButton from "../basics/BaseButton.vue";
 
 const { t } = useI18n();
 const organizationStore = useOrganizationsStore();
+const notificationStore = useNotificationStore();
 
 const invitations = ref<Array<{
   id: string;
@@ -25,15 +26,17 @@ async function loadUserInvitations() {
   invitations.value = [];
   const { data } = await authClient.organization.listUserInvitations();
   if (data) {
-    for (const invitation of data) {
-      if (invitation.status === "pending") {
-        const orgResponse = await axiosIns.get(`auth/organization/${invitation.organizationId}/name`);
-        invitations.value.push({
-          ...invitation,
-          organizationName: orgResponse.data?.name ?? invitation.organizationId,
-        });
-      }
-    }
+    const pendingInvitations = data.filter(inv => inv.status === "pending");
+    const orgNamePromises = pendingInvitations.map(invitation =>
+      axiosIns.get(`auth/organization/${invitation.organizationId}/name`)
+        .then(response => ({ invitation, name: response.data?.name ?? invitation.organizationId }))
+        .catch(() => ({ invitation, name: invitation.organizationId })),
+    );
+    const results = await Promise.all(orgNamePromises);
+    invitations.value = results.map(({ invitation, name }) => ({
+      ...invitation,
+      organizationName: name,
+    }));
   }
 }
 
@@ -43,6 +46,18 @@ async function acceptInvite(invitationId: string) {
   });
   await loadUserInvitations();
   await organizationStore.fetchOrganizations();
+  try {
+    await authClient.organization.acceptInvitation({
+      invitationId,
+    });
+    await loadUserInvitations();
+    await organizationStore.fetchOrganizations();
+    notificationStore.addSuccessNotification(t("organizations.invitation.acceptSuccess"));
+  }
+  catch (error) {
+    notificationStore.addErrorNotification(t("organizations.invitation.acceptError"));
+    console.error("Failed to accept invitation:", error);
+  }
 }
 
 onMounted(async () => {
