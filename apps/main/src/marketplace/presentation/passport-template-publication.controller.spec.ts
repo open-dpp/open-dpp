@@ -9,8 +9,10 @@ import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { getApp } from "@open-dpp/testing";
 import request from "supertest";
+import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import { AuthGuard } from "../../auth/auth.guard";
 import { AuthModule } from "../../auth/auth.module";
+import { AuthService } from "../../auth/auth.service";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
 import { PassportTemplatePublication } from "../domain/passport-template-publication";
@@ -28,6 +30,9 @@ describe("passportTemplateController", () => {
   let mongoConnection: Connection;
   let module: TestingModule;
   let passportTemplateService: PassportTemplatePublicationService;
+  let authService: AuthService;
+
+  const betterAuthHelper = new BetterAuthHelper();
 
   const mockNow = new Date("2025-01-01T12:00:00Z");
 
@@ -65,8 +70,17 @@ describe("passportTemplateController", () => {
     app = module.createNestApplication();
     mongoConnection = module.get(getConnectionToken());
     passportTemplateService = module.get(PassportTemplatePublicationService);
+    authService = module.get<AuthService>(
+      AuthService,
+    );
+    betterAuthHelper.setAuthService(authService);
 
     await app.init();
+
+    const user1data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user1data?.user.id as string);
+    const user2data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user2data?.user.id as string);
   });
   beforeEach(() => {
     jest.spyOn(Date, "now").mockImplementation(() => mockNow.getTime());
@@ -77,11 +91,12 @@ describe("passportTemplateController", () => {
   });
 
   it(`/GET find all passport templates`, async () => {
+    const { org, user } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const passportTemplate = PassportTemplatePublication.loadFromDb(
-      passportTemplatePublicationPropsFactory.build(),
+      passportTemplatePublicationPropsFactory.build({ ownedByOrganizationId: org.id, createdByUserId: user.id }),
     );
     const passportTemplate2 = PassportTemplatePublication.loadFromDb(
-      passportTemplatePublicationPropsFactory.build({ id: randomUUID() }),
+      passportTemplatePublicationPropsFactory.build({ id: randomUUID(), ownedByOrganizationId: org.id, createdByUserId: user.id }),
     );
 
     await passportTemplateService.save(passportTemplate);
