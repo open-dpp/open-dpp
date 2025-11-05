@@ -47,6 +47,7 @@ onMounted(async () => {
       <ul class="flex flex-wrap gap-x-4 gap-y-8" role="list">
         <li v-for="media in page" :key="media.id" class="relative">
           <MediaListItem
+            :data-cy="`select-media-${media.id}`"
             :is-selected="selected.some((f) => f.id === media.id)"
             :media="media"
             :selectable="selectable"

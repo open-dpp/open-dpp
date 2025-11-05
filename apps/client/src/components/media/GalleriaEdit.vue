@@ -70,6 +70,7 @@ function onMoveImageDown(image: MediaInfo) {
         <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="text-xl font-bold">{{ t("media.media") }}</span>
           <Button
+            data-cy="add-image"
             icon="pi pi-plus"
             rounded
             raised
@@ -88,14 +89,14 @@ function onMoveImageDown(image: MediaInfo) {
           <div class="flex items-center rounded-md gap-2">
             <Button
               icon="pi pi-pencil"
-              :data-cy="`edit-${data.mediaInfo.id}`"
+              :data-cy="`modify-media-${data.mediaInfo.id}`"
               severity="primary"
               rounded
               @click="onModifyImage(data.mediaInfo)"
             />
             <Button
               icon="pi pi-chevron-up"
-              :data-cy="`move-data-field-${data.mediaInfo.id}-up`"
+              :data-cy="`move-media-${data.mediaInfo.id}-up`"
               severity="secondary"
               :disabled="isFirst(index)"
               rounded
@@ -103,7 +104,7 @@ function onMoveImageDown(image: MediaInfo) {
             />
             <Button
               icon="pi pi-chevron-down"
-              :data-cy="`move-data-field-${data.mediaInfo.id}-down`"
+              :data-cy="`move-media-${data.mediaInfo.id}-down`"
               severity="secondary"
               :disabled="isLast(index)"
               rounded
@@ -111,7 +112,7 @@ function onMoveImageDown(image: MediaInfo) {
             />
             <Button
               icon="pi pi-trash"
-              :data-cy="`delete-${data.mediaInfo.id}`"
+              :data-cy="`delete-media-${data.mediaInfo.id}`"
               severity="danger"
               rounded
               @click="emits('removeImage', data.mediaInfo)"
