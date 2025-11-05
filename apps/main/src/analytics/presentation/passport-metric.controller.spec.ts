@@ -122,7 +122,7 @@ describe("passportMetricController", () => {
   });
 
   it("/POST should create page view metric", async () => {
-    const { org, user } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { org, user, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const template = Template.loadFromDb(
       laptopFactory.build({ organizationId: org.id, userId: user.id }),
     );
@@ -141,6 +141,7 @@ describe("passportMetricController", () => {
       getApp(app),
     )
       .post(`/passport-metrics/page-views`)
+      .set("Cookie", userCookie)
       .send({
         page,
         uuid: uniqueProductIdentifier.uuid,

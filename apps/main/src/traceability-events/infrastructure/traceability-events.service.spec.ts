@@ -1,15 +1,14 @@
 import type { TestingModule } from "@nestjs/testing";
-import type { Connection, Model } from "mongoose";
+import type { Model } from "mongoose";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import {
-  getConnectionToken,
   getModelToken,
   MongooseModule,
 } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { EnvModule } from "@open-dpp/env";
-import { MongooseTestingModule } from "@open-dpp/testing";
+import { EnvModule, EnvService } from "@open-dpp/env";
+import { generateMongoConfig } from "../../database/config";
 import { TraceabilityEventType } from "../domain/traceability-event-type.enum";
 import { TraceabilityEventWrapper } from "../domain/traceability-event-wrapper";
 import { OpenEpcisEvent } from "../modules/openepcis-events/domain/openepcis-event";
@@ -22,14 +21,19 @@ import { TraceabilityEventsService } from "./traceability-events.service";
 
 describe("traceabilityEventsService", () => {
   let service: TraceabilityEventsService;
-  let mongoConnection: Connection;
   let dppEventModel: Model<TraceabilityEventDocument>;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        MongooseTestingModule,
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
         MongooseModule.forFeature([
           {
             name: TraceabilityEventDocument.name,
@@ -41,7 +45,6 @@ describe("traceabilityEventsService", () => {
     }).compile();
 
     service = module.get<TraceabilityEventsService>(TraceabilityEventsService);
-    mongoConnection = module.get<Connection>(getConnectionToken());
     dppEventModel = module.get<Model<TraceabilityEventDocument>>(
       getModelToken(TraceabilityEventDocument.name),
     );
@@ -50,10 +53,6 @@ describe("traceabilityEventsService", () => {
   afterEach(async () => {
     // Clean up the database after each test
     await dppEventModel.deleteMany({});
-  });
-
-  afterAll(async () => {
-    await mongoConnection.close(); // Close connection after tests
   });
 
   it("should be defined", () => {

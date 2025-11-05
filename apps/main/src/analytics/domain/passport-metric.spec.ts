@@ -23,7 +23,7 @@ describe("passportMetric", () => {
       { key: "v2", row: 2, value: 2 },
       { key: "v3", row: 3, value: 3 },
     ];
-    const props = passportMetricFactory.build({ values });
+    const props = passportMetricFactory.build({ values, source: { organizationId: "690b3954794fd991d52305ca" } });
     const passportMetric = PassportMetric.loadFromDb(props);
     expect(passportMetric).toBeInstanceOf(PassportMetric);
     expect(passportMetric.source).toEqual(props.source);

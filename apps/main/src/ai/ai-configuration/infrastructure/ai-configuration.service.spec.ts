@@ -1,11 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
-import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { EnvModule } from "@open-dpp/env";
+import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { MongooseTestingModule } from "@open-dpp/testing";
-import { Connection } from "mongoose";
+import { generateMongoConfig } from "../../../database/config";
 import { AiConfiguration } from "../domain/ai-configuration";
 import { aiConfigurationFactory } from "../fixtures/ai-configuration-props.factory";
 import {
@@ -16,7 +15,6 @@ import { AiConfigurationService } from "./ai-configuration.service";
 
 describe("aiConfigurationService", () => {
   let service: AiConfigurationService;
-  let mongoConnection: Connection;
   let module: TestingModule;
 
   const mockNow = new Date("2025-01-01T12:00:00Z").getTime();
@@ -25,7 +23,13 @@ describe("aiConfigurationService", () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        MongooseTestingModule,
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
         MongooseModule.forFeature([
           {
             name: AiConfigurationDoc.name,
@@ -36,7 +40,6 @@ describe("aiConfigurationService", () => {
       providers: [AiConfigurationService],
     }).compile();
     service = module.get<AiConfigurationService>(AiConfigurationService);
-    mongoConnection = module.get<Connection>(getConnectionToken());
   });
   beforeEach(() => {
     jest.spyOn(Date, "now").mockImplementation(() => mockNow);
@@ -73,7 +76,6 @@ describe("aiConfigurationService", () => {
   });
 
   afterAll(async () => {
-    await mongoConnection.close();
     await module.close();
   });
 });

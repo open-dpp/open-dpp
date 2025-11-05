@@ -1,54 +1,85 @@
 import { randomUUID } from "node:crypto";
-import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { jest } from "@jest/globals";
+import { INestApplication } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { EnvModule } from "@open-dpp/env";
+import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { MongooseTestingModule } from "@open-dpp/testing";
-import { Connection } from "mongoose";
+import { BetterAuthHelper } from "../../../test/better-auth-helper";
+import { AuthGuard } from "../../auth/auth.guard";
+import { AuthModule } from "../../auth/auth.module";
+import { AuthService } from "../../auth/auth.service";
+import { generateMongoConfig } from "../../database/config";
+import { EmailService } from "../../email/email.service";
 import { MeasurementType, PassportMetric } from "../domain/passport-metric";
 import { TimePeriod } from "../domain/time-period";
-
 import { dataFieldFactory, passportMetricFactory } from "../fixtures/passport-metric.factory";
 import { PassportMetricDoc, PassportMetricSchema } from "./passport-metric.schema";
 import { PassportMetricService } from "./passport-metric.service";
 
 describe("passportMetricService", () => {
+  let app: INestApplication;
   let passportMetricService: PassportMetricService;
-  let mongoConnection: Connection;
   let module: TestingModule;
+  let authService: AuthService;
+
+  const betterAuthHelper = new BetterAuthHelper();
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        MongooseTestingModule,
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
         MongooseModule.forFeature([
           {
             name: PassportMetricDoc.name,
             schema: PassportMetricSchema,
           },
         ]),
+        AuthModule,
       ],
-      providers: [PassportMetricService],
+      providers: [PassportMetricService, {
+        provide: APP_GUARD,
+        useClass: AuthGuard,
+      }],
+    }).overrideProvider(EmailService).useValue({
+      send: jest.fn(),
     }).compile();
 
     passportMetricService = module.get<PassportMetricService>(
       PassportMetricService,
     );
-    mongoConnection = module.get<Connection>(getConnectionToken());
+    authService = module.get<AuthService>(
+      AuthService,
+    );
+    betterAuthHelper.setAuthService(authService);
+
+    app = module.createNestApplication();
+    await app.init();
+
     // This findOne is important to ensure that the collection with its timeseries buckets is created. Otherwise, the test will fail.
+    const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     await passportMetricService.findOne(
       {
         modelId: randomUUID(),
         type: MeasurementType.PAGE_VIEWS,
         templateId: randomUUID(),
-        organizationId: randomUUID(),
+        organizationId: org.id,
       },
       new Date(),
     );
   });
 
   it("should create and modify passport metric", async () => {
+    const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+
     const passportMetric = PassportMetric.loadFromDb(
       passportMetricFactory.build({
         date: new Date(Date.now()),
@@ -56,6 +87,9 @@ describe("passportMetricService", () => {
           { key: "v1", row: 1, value: 7 },
           { key: "v2", row: 2, value: 90 },
         ],
+        source: {
+          organizationId: org.id,
+        },
       }),
     );
 
@@ -63,7 +97,7 @@ describe("passportMetricService", () => {
 
     const source = {
       modelId: passportMetric.source.modelId,
-      organizationId: passportMetric.source.organizationId,
+      organizationId: org.id,
       templateId: passportMetric.source.templateId,
       type: passportMetric.source.type,
     };
@@ -83,12 +117,13 @@ describe("passportMetricService", () => {
   });
 
   it("fails if requested passport metric could not be found", async () => {
+    const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     await expect(
       passportMetricService.findOneOrFail(
         {
           modelId: randomUUID(),
           type: MeasurementType.PAGE_VIEWS,
-          organizationId: randomUUID(),
+          organizationId: org.id,
           templateId: randomUUID(),
         },
         new Date(),
@@ -97,9 +132,10 @@ describe("passportMetricService", () => {
   });
 
   it("get passport page view statistic", async () => {
+    const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const source = {
       modelId: randomUUID(),
-      organizationId: randomUUID(),
+      organizationId: org.id,
       templateId: randomUUID(),
     };
     const page = "http://example.com/page1";
@@ -184,9 +220,10 @@ describe("passportMetricService", () => {
   });
 
   it("get passport field value statistic", async () => {
+    const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const source = {
       modelId: randomUUID(),
-      organizationId: randomUUID(),
+      organizationId: org.id,
       templateId: randomUUID(),
     };
     const dataSectionId = randomUUID();
@@ -313,7 +350,6 @@ describe("passportMetricService", () => {
   });
 
   afterAll(async () => {
-    await mongoConnection.close();
     await module.close();
   });
 });

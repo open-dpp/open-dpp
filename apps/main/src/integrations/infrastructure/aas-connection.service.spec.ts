@@ -1,12 +1,11 @@
 import type { TestingModule } from "@nestjs/testing";
-import type { Connection } from "mongoose";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
-import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { EnvModule } from "@open-dpp/env";
+import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { MongooseTestingModule } from "@open-dpp/testing";
+import { generateMongoConfig } from "../../database/config";
 import { AasConnection } from "../domain/aas-connection";
 import { AssetAdministrationShellType } from "../domain/asset-administration-shell";
 import { AasConnectionDoc, AasConnectionSchema } from "./aas-connection.schema";
@@ -16,13 +15,18 @@ describe("aasMappingService", () => {
   let aasConnectionService: AasConnectionService;
   const userId = randomUUID();
   const organizationId = randomUUID();
-  let mongoConnection: Connection;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        MongooseTestingModule,
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
         MongooseModule.forFeature([
           {
             name: AasConnectionDoc.name,
@@ -34,7 +38,6 @@ describe("aasMappingService", () => {
     }).compile();
     aasConnectionService
       = module.get<AasConnectionService>(AasConnectionService);
-    mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
   it("fails if requested item could not be found", async () => {
@@ -123,9 +126,5 @@ describe("aasMappingService", () => {
     const aasConnections
       = await aasConnectionService.findAllByOrganization(otherOrganizationId);
     expect(aasConnections).toEqual([aasConnection1, aasConnection2]);
-  });
-
-  afterAll(async () => {
-    await mongoConnection.close();
   });
 });

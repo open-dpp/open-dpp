@@ -215,8 +215,4 @@ describe("modelsService", () => {
     const saved = await modelsService.save(found);
     expect(saved.templateId).toEqual("templateId");
   });
-
-  afterAll(async () => {
-    await mongoConnection.close();
-  });
 });

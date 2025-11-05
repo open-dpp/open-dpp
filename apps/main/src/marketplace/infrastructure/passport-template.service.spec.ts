@@ -25,7 +25,6 @@ import { PassportTemplatePublicationService } from "./passport-template-publicat
 describe("passportTemplateService", () => {
   let app: INestApplication;
   let service: PassportTemplatePublicationService;
-  let mongoConnection: Connection;
   let module: TestingModule;
   let authService: AuthService;
 
@@ -118,7 +117,6 @@ describe("passportTemplateService", () => {
   });
 
   afterAll(async () => {
-    await mongoConnection.close();
     await module.close();
   });
 });
