@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { watch } from "vue";
+import { onBeforeUnmount, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import ViewInformation from "../../components/presentation-components/ViewInformation.vue";
 import apiClient from "../../lib/api-client";
@@ -11,6 +11,11 @@ const router = useRouter();
 
 const productPassportStore = useProductPassportStore();
 const analyticsStore = useAnalyticsStore();
+
+// Cleanup object URLs when component unmounts to prevent memory leaks
+onBeforeUnmount(() => {
+  productPassportStore.cleanupMediaUrls();
+});
 
 watch(
   () => route.params.permalink,

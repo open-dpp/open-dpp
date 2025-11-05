@@ -256,7 +256,6 @@
   },
   "models": {
     "models": "Passports",
-    "mediaEditDialog": "Edit product images",
     "pass": "Model passport",
     "info": "Model passport information",
     "errorLoad": "Failed to load model passports",
@@ -264,6 +263,10 @@
     "submitCreatePass": "Create model passport",
     "general": "General",
     "myDrafts": "My templates",
+    "mediaEditDialog": {
+      "title": "Edit product images",
+      "addImageError": "Failed to add product image"
+    },
     "form": {
       "id": "ID",
       "name": {

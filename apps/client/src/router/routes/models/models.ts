@@ -95,7 +95,7 @@ export const MODEL_MEDIA: RouteRecordRaw = {
     layoutStore.breadcrumbs = [
       ...(await modelBreadcrumbs(to)),
       {
-        name: localizedBreadcrumb("models.mediaEditDialog"),
+        name: localizedBreadcrumb("models.mediaEditDialog.title"),
         route: MODEL_MEDIA,
         params: to.params,
       },

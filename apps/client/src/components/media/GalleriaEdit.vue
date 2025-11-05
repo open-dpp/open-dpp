@@ -14,7 +14,7 @@ const emits = defineEmits<{
 const { t } = useI18n();
 const images = defineModel<{ blob: Blob | null; mediaInfo: MediaInfo; url: string }[]>();
 const openMediaModal = ref(false);
-const imageToModiy = ref<MediaInfo | null>(null);
+const imageToModify = ref<MediaInfo | null>(null);
 
 function isFirst(index: number) {
   return index === 0;
@@ -29,9 +29,9 @@ function isLast(index: number) {
 
 function onMediaModalConfirm(images: Array<MediaInfo>) {
   if (images.length > 0 && images[0]) {
-    if (imageToModiy.value) {
-      emits("modifyImage", imageToModiy.value, images[0]);
-      imageToModiy.value = null;
+    if (imageToModify.value) {
+      emits("modifyImage", imageToModify.value, images[0]);
+      imageToModify.value = null;
     }
     else {
       emits("addImage", images[0]);
@@ -41,7 +41,7 @@ function onMediaModalConfirm(images: Array<MediaInfo>) {
 }
 
 function onModifyImage(image: MediaInfo) {
-  imageToModiy.value = image;
+  imageToModify.value = image;
   openMediaModal.value = true;
 }
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Galleria, Image } from "primevue";
+import Galleria from "primevue/galleria";
+import Image from "primevue/image";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import emptyState from "../../assets/empty-state.png";

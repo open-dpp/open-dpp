@@ -47,6 +47,14 @@ describe("modelsMediaStore", () => {
   beforeEach(() => {
     // Create a fresh pinia instance and make it active
     setActivePinia(createPinia());
+    // mock first media file
+    mocks.getMediaInfo.mockResolvedValueOnce({ data: mediaInfo1 });
+    mocks.download.mockResolvedValueOnce({ status: 200, data: blob1 });
+    mocks.mockObjectURL.mockReturnValueOnce("mockObjectURL1");
+    // mock second media file
+    mocks.getMediaInfo.mockResolvedValueOnce({ data: mediaInfo2 });
+    mocks.download.mockResolvedValueOnce({ status: 200, data: blob2 });
+    mocks.mockObjectURL.mockReturnValueOnce("mockObjectURL2");
   });
   afterEach(() => {
     vi.restoreAllMocks(); // This will restore URL.createObjectURL to its original implementation
@@ -68,17 +76,6 @@ describe("modelsMediaStore", () => {
     size: 5,
     mimeType: "image/jpeg",
   };
-
-  beforeEach(() => {
-    // mock first media file
-    mocks.getMediaInfo.mockResolvedValueOnce({ data: mediaInfo1 });
-    mocks.download.mockResolvedValueOnce({ status: 200, data: blob1 });
-    mocks.mockObjectURL.mockReturnValueOnce("mockObjectURL1");
-    // mock second media file
-    mocks.getMediaInfo.mockResolvedValueOnce({ data: mediaInfo2 });
-    mocks.download.mockResolvedValueOnce({ status: 200, data: blob2 });
-    mocks.mockObjectURL.mockReturnValueOnce("mockObjectURL2");
-  });
 
   it("should add media reference", async () => {
     const modelsMediaStore = useModelsMediaStore();

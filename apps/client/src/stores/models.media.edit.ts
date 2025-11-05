@@ -4,8 +4,10 @@ import type { MediaFile } from "../lib/media.ts";
 import { GranularityLevel } from "@open-dpp/api-client";
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
 import apiClient from "../lib/api-client";
 import { createObjectUrl } from "../lib/media.ts";
+import { useErrorHandlingStore } from "./error.handling.ts";
 import { useMediaStore } from "./media.ts";
 
 export const useModelsMediaStore = defineStore("models.media", () => {
@@ -15,6 +17,8 @@ export const useModelsMediaStore = defineStore("models.media", () => {
   const mediaStore = useMediaStore();
   const mediaFileCache = ref<Map<string, MediaFile>>(new Map());
   const mediaFiles = ref<MediaFile[]>([]);
+  const errorHandlingStore = useErrorHandlingStore();
+  const { t } = useI18n();
 
   const fetchModel = async (id: string) => {
     fetchInFlight.value = true;
@@ -52,15 +56,23 @@ export const useModelsMediaStore = defineStore("models.media", () => {
 
   const addMediaReference = async (mediaInfo: MediaInfo) => {
     if (model.value) {
-      const response = await apiClient.dpp.models.addMediaReference(
-        model.value.id,
-        {
-          id: mediaInfo.id,
-        },
-      );
-      model.value = response.data;
-      await fetchAndAddMediaIfNotExists(mediaInfo.id);
-      updateMediaFiles();
+      try {
+        const response = await apiClient.dpp.models.addMediaReference(
+          model.value.id,
+          {
+            id: mediaInfo.id,
+          },
+        );
+        model.value = response.data;
+        await fetchAndAddMediaIfNotExists(mediaInfo.id);
+        updateMediaFiles();
+      }
+      catch (e) {
+        errorHandlingStore.logErrorWithNotification(
+          t("models.mediaEditDialog.addImageError"),
+          e,
+        );
+      }
     }
   };
 
@@ -90,6 +102,7 @@ export const useModelsMediaStore = defineStore("models.media", () => {
       );
       model.value = response.data;
       await fetchAndAddMediaIfNotExists(newMediaInfo.id);
+      mediaFileCache.value.delete(mediaInfo.id);
       updateMediaFiles();
     }
   };

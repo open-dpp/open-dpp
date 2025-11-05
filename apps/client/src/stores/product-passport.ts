@@ -19,9 +19,29 @@ export const useProductPassportStore = defineStore("productPassport", () => {
     return productPassport.value?.dataSections.find(s => s.id === sectionId);
   };
 
+  /**
+   * Revokes all current object URLs and clears mediaFiles.
+   * Components using this store should call this function from onBeforeUnmount
+   * to prevent memory leaks.
+   */
+  const cleanupMediaUrls = () => {
+    for (const mediaFile of mediaFiles.value) {
+      if (mediaFile.url) {
+        URL.revokeObjectURL(mediaFile.url);
+      }
+    }
+    mediaFiles.value = [];
+  };
+
+  /**
+   * Loads media files for the current product passport.
+   * Revokes previous object URLs before creating new ones to prevent memory leaks.
+   */
   const loadMedia = async () => {
     if (productPassport.value) {
-      mediaFiles.value = [];
+      // Cleanup previous object URLs before creating new ones
+      cleanupMediaUrls();
+
       for (const mediaReference of productPassport.value.mediaReferences) {
         const mediaFile = await mediaStore.fetchMedia(mediaReference);
         mediaFiles.value.push({
@@ -32,5 +52,5 @@ export const useProductPassportStore = defineStore("productPassport", () => {
     }
   };
 
-  return { productPassport, mediaFiles, loadMedia, findSubSections, findSection };
+  return { productPassport, mediaFiles, loadMedia, findSubSections, findSection, cleanupMediaUrls };
 });

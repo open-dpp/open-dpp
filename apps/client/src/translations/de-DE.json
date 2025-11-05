@@ -290,7 +290,6 @@
   },
   "models": {
     "models": "Produktpässe",
-    "mediaEditDialog": "Produktbilder bearbeiten",
     "pass": "Modellpass",
     "info": "Modellpass Informationen",
     "errorLoad": "Laden der Modellpässe fehlgeschlagen",
@@ -298,6 +297,10 @@
     "submitCreatePass": "Modelpass erstellen",
     "general": "Allgemein",
     "myDrafts": "Meine Vorlagen",
+    "mediaEditDialog": {
+      "title": "Produktbilder bearbeiten",
+      "addImageError": "Hinzufügen des Produktbilds fehlgeschlagen"
+    },
     "form": {
       "id": "ID",
       "name": {
