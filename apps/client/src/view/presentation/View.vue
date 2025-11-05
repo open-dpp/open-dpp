@@ -9,7 +9,7 @@ import { useProductPassportStore } from "../../stores/product-passport";
 const route = useRoute();
 const router = useRouter();
 
-const viewStore = useProductPassportStore();
+const productPassportStore = useProductPassportStore();
 const analyticsStore = useAnalyticsStore();
 
 watch(
@@ -28,7 +28,8 @@ watch(
         });
         return;
       }
-      viewStore.productPassport = response.data;
+      productPassportStore.productPassport = response.data;
+      await productPassportStore.loadMedia();
     }
     catch (e) {
       console.error(e);

@@ -5,7 +5,7 @@ import type {
   SectionDto,
   UniqueProductIdentifierDto,
 } from "@open-dpp/api-client";
-import type { MediaInfo } from "../components/media/MediaInfo.interface.ts";
+import type { MediaFile } from "../lib/media.ts";
 import { GranularityLevel } from "@open-dpp/api-client";
 import { assign, keys, pick } from "lodash";
 import { defineStore } from "pinia";
@@ -41,7 +41,7 @@ export const usePassportFormStore = defineStore("passport.form", () => {
   const { t } = i18n.global;
   const mediaStore = useMediaStore();
   const mediaFiles = ref<
-    { blob: Blob | null; mediaInfo: MediaInfo; url: string }[]
+    MediaFile[]
   >([]);
 
   const VALUE_FOR_OTHER_GRANULARITY_LEVEL = {

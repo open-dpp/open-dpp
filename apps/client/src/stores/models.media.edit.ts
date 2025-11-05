@@ -1,5 +1,6 @@
 import type { ModelDto } from "@open-dpp/api-client";
 import type { MediaInfo } from "../components/media/MediaInfo.interface.ts";
+import type { MediaFile } from "../lib/media.ts";
 import { GranularityLevel } from "@open-dpp/api-client";
 import { defineStore } from "pinia";
 import { ref } from "vue";
@@ -7,11 +8,6 @@ import apiClient from "../lib/api-client";
 import { createObjectUrl } from "../lib/media.ts";
 import { useMediaStore } from "./media.ts";
 
-interface MediaFile {
-  blob: Blob | null;
-  mediaInfo: MediaInfo;
-  url: string;
-}
 export const useModelsMediaStore = defineStore("models.media", () => {
   const granularityLevel = ref<GranularityLevel>(GranularityLevel.MODEL);
   const model = ref<ModelDto>();
