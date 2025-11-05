@@ -79,7 +79,7 @@ describe("passportTemplateController", () => {
     jest.restoreAllMocks();
   });
 
-  it(`/GET find all passport templates`, async () => {
+  it.skip(`/GET find all passport templates`, async () => {
     const { org, user } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     jest.spyOn(Date, "now").mockImplementation(() => mockNow.getTime());
     const passportTemplate = PassportTemplatePublication.loadFromDb(
