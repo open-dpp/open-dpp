@@ -66,12 +66,6 @@ onMounted(async () => {
                 >
                   {{ t('organizations.memberName') }}
                 </th>
-                <th
-                  class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                  scope="col"
-                >
-                  {{ t('organizations.memberRole') }}
-                </th>
                 <th class="relative py-3.5 pl-3 pr-4 sm:pr-0" scope="col">
                   <span class="sr-only">{{ t('common.edit') }}</span>
                 </th>
