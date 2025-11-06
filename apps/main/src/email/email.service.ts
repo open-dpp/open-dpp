@@ -46,7 +46,7 @@ export class EmailService implements OnApplicationBootstrap {
     const compiled = compiler(compilerData);
     const mjml = await this.compileMjml(compiled);
     await this.transporter.sendMail({
-      from: "open-dpp",
+      from: this.configService.get("OPEN_DPP_MAIL_SENDER_ADDRESS"),
       to: mail.to,
       subject: mail.subject,
       html: mjml,
