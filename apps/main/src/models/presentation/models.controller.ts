@@ -1,11 +1,10 @@
 import type { UserSession } from "../../auth/auth.guard";
-import type {
-  DataValueDto,
-} from "../../product-passport-data/presentation/dto/data-value.dto";
+import type { DataValueDto } from "../../product-passport-data/presentation/dto/data-value.dto";
 import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   Param,
@@ -17,16 +16,16 @@ import { ZodValidationPipe } from "@open-dpp/exception";
 import { Session } from "../../auth/session.decorator";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
-import { modelParamDocumentation } from "../../open-api-docs/item.doc";
+import { mediaParamDocumentation, modelParamDocumentation } from "../../open-api-docs/item.doc";
 import {
   createModelDocumentation,
+  mediaReferenceDocumentation,
+  mediaReferencePositionDocumentation,
   modelDocumentation,
   updateModelDocumentation,
 } from "../../open-api-docs/model.doc";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import {
-  DataValueDtoSchema,
-} from "../../product-passport-data/presentation/dto/data-value.dto";
+import { DataValueDtoSchema } from "../../product-passport-data/presentation/dto/data-value.dto";
 import {
   dataValueDocumentation,
   orgaParamDocumentation,
@@ -286,18 +285,9 @@ export class ModelsController {
     @Param("modelId") modelId: string,
     @Body(new ZodValidationPipe(MediaReferenceDtoSchema))
     mediaReferenceDto: MediaReferenceDto,
-    @Request() req: authRequest.AuthRequest,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: (req.authContext.user as User).id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     const model = await this.modelsService.findOneOrFail(modelId);
-    if (model.ownedByOrganizationId !== organizationId) {
+    if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
     }
     model.addMediaReference(mediaReferenceDto.id);
@@ -320,16 +310,7 @@ export class ModelsController {
     @Param("orgaId") organizationId: string,
     @Param("modelId") modelId: string,
     @Param("mediaId") mediaId: string,
-    @Request() req: authRequest.AuthRequest,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: (req.authContext.user as User).id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     const model = await this.modelsService.findOneOrFail(modelId);
     if (model.ownedByOrganizationId !== organizationId) {
       throw new ForbiddenException();
@@ -357,16 +338,7 @@ export class ModelsController {
     @Param("mediaId") mediaId: string,
     @Body(new ZodValidationPipe(MediaReferenceDtoSchema))
     mediaReferenceDto: MediaReferenceDto,
-    @Request() req: authRequest.AuthRequest,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: (req.authContext.user as User).id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     const model = await this.modelsService.findOneOrFail(modelId);
     if (model.ownedByOrganizationId !== organizationId) {
       throw new ForbiddenException();
@@ -396,16 +368,7 @@ export class ModelsController {
     @Param("mediaId") mediaId: string,
     @Body(new ZodValidationPipe(MediaReferencePositionDtoSchema))
     mediaReferencePositionDto: MediaReferencePositionDto,
-    @Request() req: authRequest.AuthRequest,
   ) {
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-    if (!hasPermission({
-      user: {
-        id: (req.authContext.user as User).id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
     const model = await this.modelsService.findOneOrFail(modelId);
     if (model.ownedByOrganizationId !== organizationId) {
       throw new ForbiddenException();
