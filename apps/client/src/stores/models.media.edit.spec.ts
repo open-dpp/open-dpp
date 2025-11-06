@@ -16,6 +16,12 @@ const mocks = vi.hoisted(() => {
   };
 });
 
+vi.mock("vue-i18n", () => ({
+  useI18n: () => ({
+    t: (key: string) => key, // This will return the key itself as the translation
+  }),
+}));
+
 vi.mock("../lib/media", () => {
   return {
     createObjectUrl: mocks.mockObjectURL,
@@ -44,22 +50,6 @@ vi.mock("../lib/api-client", () => ({
 }));
 
 describe("modelsMediaStore", () => {
-  beforeEach(() => {
-    // Create a fresh pinia instance and make it active
-    setActivePinia(createPinia());
-    // mock first media file
-    mocks.getMediaInfo.mockResolvedValueOnce({ data: mediaInfo1 });
-    mocks.download.mockResolvedValueOnce({ status: 200, data: blob1 });
-    mocks.mockObjectURL.mockReturnValueOnce("mockObjectURL1");
-    // mock second media file
-    mocks.getMediaInfo.mockResolvedValueOnce({ data: mediaInfo2 });
-    mocks.download.mockResolvedValueOnce({ status: 200, data: blob2 });
-    mocks.mockObjectURL.mockReturnValueOnce("mockObjectURL2");
-  });
-  afterEach(() => {
-    vi.restoreAllMocks(); // This will restore URL.createObjectURL to its original implementation
-  });
-
   const mediaReference1 = "m1";
   const mediaReference2 = "m2";
   const blob1 = new Blob(["data1"], { type: "application/octet-stream" });
@@ -76,6 +66,21 @@ describe("modelsMediaStore", () => {
     size: 5,
     mimeType: "image/jpeg",
   };
+  beforeEach(() => {
+    // Create a fresh pinia instance and make it active
+    setActivePinia(createPinia());
+    // mock first media file
+    mocks.getMediaInfo.mockResolvedValueOnce({ data: mediaInfo1 });
+    mocks.download.mockResolvedValueOnce({ status: 200, data: blob1 });
+    mocks.mockObjectURL.mockReturnValueOnce("mockObjectURL1");
+    // mock second media file
+    mocks.getMediaInfo.mockResolvedValueOnce({ data: mediaInfo2 });
+    mocks.download.mockResolvedValueOnce({ status: 200, data: blob2 });
+    mocks.mockObjectURL.mockReturnValueOnce("mockObjectURL2");
+  });
+  afterEach(() => {
+    vi.restoreAllMocks(); // This will restore URL.createObjectURL to its original implementation
+  });
 
   it("should add media reference", async () => {
     const modelsMediaStore = useModelsMediaStore();
