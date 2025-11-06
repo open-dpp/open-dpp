@@ -1,5 +1,7 @@
 import type { Auth } from "better-auth";
+import type { Connection } from "mongoose";
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
+import { InjectConnection } from "@nestjs/mongoose";
 import { EnvService } from "@open-dpp/env";
 import { betterAuth, User } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
@@ -15,6 +17,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(AuthService.name);
   private readonly configService: EnvService;
   private readonly emailService: EmailService;
+  private readonly mongooseConnection: Connection;
 
   public auth: Auth | undefined;
   private db: Db | undefined;
@@ -23,9 +26,12 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   constructor(
     configService: EnvService,
     emailService: EmailService,
+    @InjectConnection()
+    mongooseConnection: Connection,
   ) {
     this.configService = configService;
     this.emailService = emailService;
+    this.mongooseConnection = mongooseConnection;
   }
 
   async getUserById(userId: string): Promise<User | null> {
@@ -131,16 +137,8 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
-    const mongoUser = this.configService.get("OPEN_DPP_MONGODB_USER");
-    const mongoPassword = this.configService.get("OPEN_DPP_MONGODB_PASSWORD");
-    const mongoHost = this.configService.get("OPEN_DPP_MONGODB_HOST");
-    const mongoPort = this.configService.get("OPEN_DPP_MONGODB_PORT");
-    const mongoDb = this.configService.get("OPEN_DPP_MONGODB_DATABASE");
-    const mongoUriEnv = this.configService.get("OPEN_DPP_MONGODB_URI");
-    const mongoUri = mongoUriEnv ?? `mongodb://${encodeURIComponent(mongoUser)}:${encodeURIComponent(mongoPassword)}@${mongoHost}:${mongoPort}/${mongoDb}?authSource=${mongoUser}`;
-    this.client = new MongoClient(mongoUri);
-    await this.client.connect();
-    this.db = this.client.db();
+    this.db = this.mongooseConnection.db;
+    const mongoClient = this.mongooseConnection.getClient();
 
     const isCloudAuthEnabled = !!this.configService.get("OPEN_DPP_AUTH_CLOUD_ENABLED");
     let genericOAuthPlugin;
@@ -252,8 +250,8 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       },
       hooks: {},
       plugins,
-      database: mongodbAdapter(this.db, {
-        client: this.client,
+      database: mongodbAdapter(this.db!, {
+        client: mongoClient,
       }),
     });
     this.logger.log("Auth initialized");
