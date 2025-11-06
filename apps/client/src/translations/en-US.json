@@ -357,7 +357,10 @@
     "firstName": "First name",
     "lastName": "Last name",
     "language": "Language",
-    "displaySettings": "Display settings"
+    "displaySettings": "Display settings",
+    "email": "Email address",
+    "password": "Password",
+    "passwordRepeat": "Repeat password"
   },
   "notifications": {
     "success": "Success",
@@ -395,20 +398,6 @@
     "errorRevokingUrl": "Error revoking previous object URL:",
     "errorRevokingUrlError": "Error revoking object URL after error:"
   },
-  "presentation": {
-    "productDetails": "Product details",
-    "productDetailsDesc": "General information about the product.",
-    "additionalSections": "Additional sections",
-    "moreInfo": "More information",
-    "navigation": "Navigation",
-    "backToApp": "Back to app",
-    "toPass": "To pass view",
-    "chatWithAI": "Chat with AI",
-    "productpass": "Product passport",
-    "askQuestion": "Ask your question...",
-    "answerPending": "Processing answer...",
-    "loadPassportMediaError": "Failed to load product images."
-  },
   "auth": {
     "signin": {
       "title": "Sign in to your account",
@@ -437,5 +426,19 @@
       "rememberLogin": "Remember your login?",
       "ctaSignIn": "Sign in now"
     }
+  },
+  "presentation": {
+    "productDetails": "Product details",
+    "productDetailsDesc": "General information about the product.",
+    "additionalSections": "Additional sections",
+    "moreInfo": "More information",
+    "navigation": "Navigation",
+    "backToApp": "Back to app",
+    "toPass": "To pass view",
+    "chatWithAI": "Chat with AI",
+    "productpass": "Product passport",
+    "askQuestion": "Ask your question...",
+    "answerPending": "Processing answer...",
+    "loadPassportMediaError": "Failed to load product images."
   }
 }
