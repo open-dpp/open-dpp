@@ -51,9 +51,11 @@ export class KeycloakSyncOnStartupService implements OnApplicationBootstrap {
           const dbUser = await this.authService.getUserByEmail(user.email as string);
           if (!dbUser) {
             this.logger.log(`User ${user.username} not found in database`);
-            const data = await this.authService.auth?.api.signUpEmail({
+            const data = await (this.authService.auth?.api as any).signUpEmail({
               body: {
                 name: `${user.firstName} ${user.lastName}`,
+                firstName: user.firstName,
+                lastName: user.lastName,
                 email: user.email as string,
                 password: randomUUID(),
               },
