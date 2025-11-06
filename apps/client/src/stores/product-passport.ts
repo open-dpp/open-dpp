@@ -2,14 +2,17 @@ import type { ProductPassportDto } from "@open-dpp/api-client";
 import type { MediaFile } from "../lib/media.ts";
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { revokeObjectUrl } from "../lib/media.ts";
+import { useErrorHandlingStore } from "./error.handling.ts";
 import { useMediaStore } from "./media.ts";
 
 export const useProductPassportStore = defineStore("productPassport", () => {
   const productPassport = ref<ProductPassportDto>();
   const mediaFiles = ref<MediaFile[]>([]);
   const mediaStore = useMediaStore();
-
+  const { t } = useI18n();
+  const errorHandlingStore = useErrorHandlingStore();
   const findSubSections = (sectionId: string) => {
     return productPassport.value?.dataSections.filter(
       s => s.parentId === sectionId,
@@ -44,11 +47,16 @@ export const useProductPassportStore = defineStore("productPassport", () => {
       cleanupMediaUrls();
 
       for (const mediaReference of productPassport.value.mediaReferences) {
-        const mediaFile = await mediaStore.fetchMedia(mediaReference);
-        mediaFiles.value.push({
-          ...mediaFile,
-          url: mediaFile.blob ? URL.createObjectURL(mediaFile.blob) : "",
-        });
+        try {
+          const mediaFile = await mediaStore.fetchMedia(mediaReference);
+          mediaFiles.value.push({
+            ...mediaFile,
+            url: mediaFile.blob ? URL.createObjectURL(mediaFile.blob) : "",
+          });
+        }
+        catch (error) {
+          errorHandlingStore.logErrorWithNotification(t("presentation.loadPassportMediaError"), error);
+        }
       }
     }
   };

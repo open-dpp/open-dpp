@@ -98,12 +98,10 @@ export class Model extends ProductPassportData {
 
   private findMediaReferenceIndexOrFail(mediaFileId: string) {
     const index = this.mediaReferences.indexOf(mediaFileId);
-    if (index > -1) {
-      return index;
-    }
-    else {
+    if (index === -1) {
       throw new ValueError(`Cannot find media reference with id ${mediaFileId}.`);
-    };
+    }
+    return index;
   }
 
   deleteMediaReference(mediaFileId: string) {

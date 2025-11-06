@@ -401,9 +401,9 @@ export class ModelsController {
   }
 
   @ApiOperation({
-    summary: "Remove media file from model",
+    summary: "Modify media file from model",
     description:
-      "Remove media file",
+      "Modify media file",
   })
   @ApiParam(orgaParamDocumentation)
   @ApiParam(modelParamDocumentation)

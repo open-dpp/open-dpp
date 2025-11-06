@@ -22,9 +22,14 @@ export const useModelsMediaStore = defineStore("models.media", () => {
 
   const fetchModel = async (id: string) => {
     fetchInFlight.value = true;
-    const response = await apiClient.dpp.models.getById(id);
-    granularityLevel.value = GranularityLevel.MODEL;
-    model.value = response.data;
+    try {
+      const response = await apiClient.dpp.models.getById(id);
+      granularityLevel.value = GranularityLevel.MODEL;
+      model.value = response.data;
+    }
+    catch (e) {
+      errorHandlingStore.logErrorWithNotification(t("models.mediaEditDialog.loadModelError"), e);
+    }
     fetchInFlight.value = false;
   };
 
@@ -78,13 +83,21 @@ export const useModelsMediaStore = defineStore("models.media", () => {
 
   const removeMediaReference = async (mediaInfo: MediaInfo) => {
     if (model.value) {
-      const response = await apiClient.dpp.models.deleteMediaReference(
-        model.value.id,
-        mediaInfo.id,
-      );
-      model.value = response.data;
-      mediaFileCache.value.delete(mediaInfo.id);
-      updateMediaFiles();
+      try {
+        const response = await apiClient.dpp.models.deleteMediaReference(
+          model.value.id,
+          mediaInfo.id,
+        );
+        model.value = response.data;
+        mediaFileCache.value.delete(mediaInfo.id);
+        updateMediaFiles();
+      }
+      catch (e) {
+        errorHandlingStore.logErrorWithNotification(
+          t("models.mediaEditDialog.deleteImageError"),
+          e,
+        );
+      }
     }
   };
 
@@ -93,17 +106,25 @@ export const useModelsMediaStore = defineStore("models.media", () => {
     newMediaInfo: MediaInfo,
   ) => {
     if (model.value) {
-      const response = await apiClient.dpp.models.modifyMediaReference(
-        model.value.id,
-        mediaInfo.id,
-        {
-          id: newMediaInfo.id,
-        },
-      );
-      model.value = response.data;
-      await fetchAndAddMediaIfNotExists(newMediaInfo.id);
-      mediaFileCache.value.delete(mediaInfo.id);
-      updateMediaFiles();
+      try {
+        const response = await apiClient.dpp.models.modifyMediaReference(
+          model.value.id,
+          mediaInfo.id,
+          {
+            id: newMediaInfo.id,
+          },
+        );
+        model.value = response.data;
+        await fetchAndAddMediaIfNotExists(newMediaInfo.id);
+        mediaFileCache.value.delete(mediaInfo.id);
+        updateMediaFiles();
+      }
+      catch (e) {
+        errorHandlingStore.logErrorWithNotification(
+          t("models.mediaEditDialog.modifyImageError"),
+          e,
+        );
+      }
     }
   };
 
@@ -112,14 +133,22 @@ export const useModelsMediaStore = defineStore("models.media", () => {
     newPosition: number,
   ) => {
     if (model.value) {
-      const response = await apiClient.dpp.models.moveMediaReference(
-        model.value.id,
+      try {
+        const response = await apiClient.dpp.models.moveMediaReference(
+          model.value.id,
 
-        mediaInfo.id,
-        { position: newPosition },
-      );
-      model.value = response.data;
-      updateMediaFiles();
+          mediaInfo.id,
+          { position: newPosition },
+        );
+        model.value = response.data;
+        updateMediaFiles();
+      }
+      catch (e) {
+        errorHandlingStore.logErrorWithNotification(
+          t("models.mediaEditDialog.moveImageError"),
+          e,
+        );
+      }
     }
   };
 

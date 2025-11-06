@@ -38,7 +38,7 @@ export const modelDocumentation = {
   type: "object",
   properties: {
     id: { type: "string", format: "uuid" },
-    mediaFileIds: { type: "array", items: { type: "string", format: "uuid" } },
+    mediaReferences: { type: "array", items: { type: "string", format: "uuid" } },
     name: { type: "string" },
     description: { type: "string" },
     uniqueProductIdentifiers: {

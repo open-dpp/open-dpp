@@ -242,9 +242,8 @@ export const usePassportFormStore = defineStore("passport.form", () => {
   };
 
   const loadMedia = async () => {
+    cleanupMediaUrls();
     if (productPassport.value) {
-      cleanupMediaUrls();
-
       for (const mediaReference of productPassport.value.mediaReferences) {
         try {
           const mediaFile = await mediaStore.fetchMedia(mediaReference);

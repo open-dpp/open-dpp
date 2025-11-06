@@ -275,19 +275,6 @@
     "media": "Medien",
     "preview": "Vorschau"
   },
-  "presentation": {
-    "productDetails": "Produktdetails",
-    "productDetailsDesc": "Allgemeine Informationen zum Produkt.",
-    "additionalSections": "Weiterführende Abschnitte",
-    "moreInfo": "Mehr Informationen",
-    "navigation": "Navigation",
-    "backToApp": "Zurück zur App",
-    "toPass": "Zur Passansicht",
-    "chatWithAI": "Mit KI chatten",
-    "productpass": "Produktpass",
-    "askQuestion": "Stellen Sie Ihre Frage...",
-    "answerPending": "Wird verarbeitet..."
-  },
   "models": {
     "models": "Produktpässe",
     "pass": "Modellpass",
@@ -299,7 +286,11 @@
     "myDrafts": "Meine Vorlagen",
     "mediaEditDialog": {
       "title": "Produktbilder bearbeiten",
-      "addImageError": "Hinzufügen des Produktbilds fehlgeschlagen"
+      "addImageError": "Hinzufügen des Produktbilds fehlgeschlagen.",
+      "deleteImageError": "Löschen des Produktbilds fehlgeschlagen.",
+      "modifyImageError": "Anpassen des Produktbilds fehlgeschlagen.",
+      "moveImageError": "Ändern der Reihenfolge der Produktbilder fehlgeschlagen.",
+      "loadModelError": "Laden des Modellpasses fehlgeschlagen."
     },
     "form": {
       "mediaDownloadError": "Laden der Prduktbilder fehlgeschlagen",
@@ -384,5 +375,19 @@
     "to": " bis ",
     "of": " von ",
     "elements": " Elementen"
+  },
+  "presentation": {
+    "productDetails": "Produktdetails",
+    "productDetailsDesc": "Allgemeine Informationen zum Produkt.",
+    "additionalSections": "Weiterführende Abschnitte",
+    "moreInfo": "Mehr Informationen",
+    "navigation": "Navigation",
+    "backToApp": "Zurück zur App",
+    "toPass": "Zur Passansicht",
+    "chatWithAI": "Mit KI chatten",
+    "productpass": "Produktpass",
+    "askQuestion": "Stellen Sie Ihre Frage...",
+    "answerPending": "Wird verarbeitet...",
+    "loadPassportMediaError": "Laden der Produktbilder fehlgeschlagen."
   }
 }

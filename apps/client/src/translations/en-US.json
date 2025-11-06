@@ -265,7 +265,11 @@
     "myDrafts": "My templates",
     "mediaEditDialog": {
       "title": "Edit product images",
-      "addImageError": "Failed to add product image"
+      "addImageError": "Failed to add product image.",
+      "deleteImageError": "Failed to delete product image.",
+      "modifyImageError": "Failed to modify product image.",
+      "moveImageError": "Failed to change order of product images.",
+      "loadModelError": "Failed to load model passport."
     },
     "form": {
       "mediaDownloadError": "Failed to load product images",
@@ -383,6 +387,7 @@
     "chatWithAI": "Chat with AI",
     "productpass": "Product passport",
     "askQuestion": "Ask your question...",
-    "answerPending": "Processing answer..."
+    "answerPending": "Processing answer...",
+    "loadPassportMediaError": "Failed to load product images."
   }
 }
