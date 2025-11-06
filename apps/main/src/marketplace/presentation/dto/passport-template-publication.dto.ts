@@ -2,17 +2,19 @@ import type { PassportTemplatePublication } from "../../domain/passport-template
 import { z } from "zod";
 import { Sector } from "../../../data-modelling/domain/sectors";
 
+const SectorEnum = z.enum(Object.values(Sector) as [string, ...string[]]);
+
 export const PassportTemplatePublicationSchema = z.object({
   id: z.uuid(),
   version: z.string(),
   name: z.string(),
   description: z.string(),
-  sectors: z.enum(Sector).array(),
+  sectors: SectorEnum.array(),
   website: z.string().nullable().default(null),
   organizationName: z.string(),
   templateData: z.record(z.string(), z.unknown()),
-  ownedByOrganizationId: z.uuid(),
-  createdByUserId: z.uuid(),
+  ownedByOrganizationId: z.string(),
+  createdByUserId: z.string(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });

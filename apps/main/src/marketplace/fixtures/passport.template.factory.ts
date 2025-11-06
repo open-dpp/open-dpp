@@ -6,10 +6,10 @@ import { PassportTemplatePublicationProps } from "../domain/passport-template-pu
 export const nowDate = new Date("2025-01-01T12:00:00Z");
 
 export const passportTemplatePublicationPropsFactory
-  = Factory.define<PassportTemplatePublicationProps>(() => ({
+  = Factory.define<PassportTemplatePublicationProps>(({ params }) => ({
     id: randomUUID(),
-    ownedByOrganizationId: randomUUID(),
-    createdByUserId: randomUUID(),
+    ownedByOrganizationId: params.ownedByOrganizationId as string,
+    createdByUserId: params.createdByUserId as string,
     name: "test",
     description: "test description",
     version: "1.0.0",
@@ -22,8 +22,8 @@ export const passportTemplatePublicationPropsFactory
       id: randomUUID(),
       name: "my name",
       version: "1.0.0",
-      createdByUserId: randomUUID(),
-      ownedByOrganizationId: "organizationId",
+      createdByUserId: params.createdByUserId as string,
+      ownedByOrganizationId: params.ownedByOrganizationId as string,
       sections: [],
     },
     vcDid: "did:key:z6Mkrh8ezBnQcZWXnDskt8oPHb4kGvSENgHwy8k7Vr857FqU",

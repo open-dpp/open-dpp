@@ -3,7 +3,7 @@ import type { Model } from "../../models/domain/model";
 import type { DataValue } from "../../product-passport-data/domain/data-value";
 import type { Template } from "../../templates/domain/template";
 import type { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
-import { maxBy, minBy } from "lodash";
+import _ from "lodash";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
 import { Section } from "../../templates/domain/section";
@@ -55,9 +55,9 @@ export class DataSection extends Section {
         .concat(item?.getDataValuesBySectionId(section.id) ?? []);
     }
 
-    const maxFound = maxBy(dataValuesOfSection, "row")?.row;
+    const maxFound = _.maxBy(dataValuesOfSection, "row")?.row;
 
-    const minRow = minBy(dataValuesOfSection, "row")?.row ?? 0;
+    const minRow = _.minBy(dataValuesOfSection, "row")?.row ?? 0;
     const maxRow = maxFound !== undefined && Number.isFinite(maxFound) ? maxFound + 1 : 0;
     const dataValues: Array<any> = [];
     for (let rowIndex = minRow; rowIndex < maxRow; rowIndex++) {

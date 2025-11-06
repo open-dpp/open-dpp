@@ -64,6 +64,3 @@ api-mongo-config
 api-mongo-db
 auth-db
 .turbo
-
-apps/keycloak/customization/target
-apps/keycloak/.idea

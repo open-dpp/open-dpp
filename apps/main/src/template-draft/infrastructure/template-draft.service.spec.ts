@@ -5,12 +5,12 @@ import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { EnvModule } from "@open-dpp/env";
+import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { MongooseTestingModule } from "@open-dpp/testing";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
+import { generateMongoConfig } from "../../database/config";
 import { TemplateDocSchemaVersion } from "../../templates/infrastructure/template.schema";
 import { DataFieldDraft } from "../domain/data-field-draft";
 import { SectionDraft } from "../domain/section-draft";
@@ -33,7 +33,13 @@ describe("templateDraftService", () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        MongooseTestingModule,
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
         MongooseModule.forFeature([
           {
             name: TemplateDraftDoc.name,
@@ -288,7 +294,6 @@ describe("templateDraftService", () => {
   });
 
   afterAll(async () => {
-    await mongoConnection.close(); // Close connection after tests
     await module.close();
   });
 });

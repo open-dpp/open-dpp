@@ -17,7 +17,7 @@ export const ModelDtoSchema = z.object({
   uniqueProductIdentifiers: UniqueProductIdentifierDtoSchema.array(),
   templateId: z.uuid(),
   dataValues: DataValueDtoSchema.array(),
-  owner: z.uuid(),
+  owner: z.string(),
 });
 
 export type ModelDto = z.infer<typeof ModelDtoSchema>;

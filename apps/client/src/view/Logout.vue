@@ -1,13 +1,18 @@
 <script lang="ts" setup>
 import { onMounted } from "vue";
-import keycloakIns from "../lib/keycloak";
-import { useIndexStore } from "../stores";
+import { useRouter } from "vue-router";
+import { authClient } from "../auth-client.ts";
 
-const indexStore = useIndexStore();
+const router = useRouter();
 
 onMounted(async () => {
-  await keycloakIns.logout({ redirectUri: window.location.origin });
-  indexStore.selectOrganization(null);
+  await authClient.signOut({
+    fetchOptions: {
+      onSuccess: async () => {
+        await router.push("/signin");
+      },
+    },
+  });
 });
 </script>
 

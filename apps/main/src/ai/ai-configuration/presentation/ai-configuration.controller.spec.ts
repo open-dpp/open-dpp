@@ -1,26 +1,20 @@
-import { randomUUID } from "node:crypto";
+import { jest } from "@jest/globals";
 import { INestApplication } from "@nestjs/common";
-import { APP_GUARD, Reflector } from "@nestjs/core";
-import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { APP_GUARD } from "@nestjs/core";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { EnvModule } from "@open-dpp/env";
+import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
-import getKeycloakAuthToken, {
-  createKeycloakUserInToken,
+import {
   getApp,
-  KeycloakAuthTestingGuard,
-  MongooseTestingModule,
 } from "@open-dpp/testing";
-import { Connection } from "mongoose";
 import request from "supertest";
-import TestUsersAndOrganizations from "../../../../test/test-users-and-orgs";
-import { Organization } from "../../../organizations/domain/organization";
-import { OrganizationDbSchema, OrganizationDoc } from "../../../organizations/infrastructure/organization.schema";
-import { OrganizationsService } from "../../../organizations/infrastructure/organizations.service";
-import { User } from "../../../users/domain/user";
-import { InjectUserToAuthContextGuard } from "../../../users/infrastructure/inject-user-to-auth-context.guard";
-import { UserDbSchema, UserDoc } from "../../../users/infrastructure/user.schema";
-import { UsersService } from "../../../users/infrastructure/users.service";
+import { BetterAuthHelper } from "../../../../test/better-auth-helper";
+import { AuthGuard } from "../../../auth/auth.guard";
+import { AuthModule } from "../../../auth/auth.module";
+import { AuthService } from "../../../auth/auth.service";
+import { generateMongoConfig } from "../../../database/config";
+import { EmailService } from "../../../email/email.service";
 import { AiConfiguration, AiProvider } from "../domain/ai-configuration";
 import { aiConfigurationFactory } from "../fixtures/ai-configuration-props.factory";
 import {
@@ -33,17 +27,11 @@ import { aiConfigurationToDto } from "./dto/ai-configuration.dto";
 
 describe("aiConfigurationController", () => {
   let app: INestApplication;
-  const reflector: Reflector = new Reflector();
-  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(
-    new Map(),
-    reflector,
-  );
-
-  let mongoConnection: Connection;
   let module: TestingModule;
   let aiConfigurationService: AiConfigurationService;
-  let usersService: UsersService;
-  let organizationService: OrganizationsService;
+  let authService: AuthService;
+
+  const betterAuthHelper = new BetterAuthHelper();
 
   const mockNow = new Date("2025-01-01T12:00:00Z");
 
@@ -51,54 +39,50 @@ describe("aiConfigurationController", () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        MongooseTestingModule,
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
         MongooseModule.forFeature([
           {
             name: AiConfigurationDoc.name,
             schema: AiConfigurationDbSchema,
           },
-          {
-            name: OrganizationDoc.name,
-            schema: OrganizationDbSchema,
-          },
-          {
-            name: UserDoc.name,
-            schema: UserDbSchema,
-          },
         ]),
+        AuthModule,
       ],
       providers: [
-        OrganizationsService,
-        UsersService,
         AiConfigurationService,
         {
           provide: APP_GUARD,
-          useValue: keycloakAuthTestingGuard,
-        },
-        {
-          provide: APP_GUARD,
-          useClass: InjectUserToAuthContextGuard,
+          useClass: AuthGuard,
         },
       ],
       controllers: [AiConfigurationController],
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
+
+    aiConfigurationService = module.get(AiConfigurationService);
+    authService = module.get<AuthService>(
+      AuthService,
+    );
+    betterAuthHelper.setAuthService(authService);
 
     app = module.createNestApplication();
     app.useGlobalFilters(new NotFoundInDatabaseExceptionFilter());
-    mongoConnection = module.get(getConnectionToken());
-    aiConfigurationService = module.get(AiConfigurationService);
-    usersService = module.get(UsersService);
-    organizationService = module.get(OrganizationsService);
 
     await app.init();
-
-    await usersService.save(TestUsersAndOrganizations.users.user1);
-    await organizationService.save(TestUsersAndOrganizations.organizations.org1);
-    await organizationService.save(TestUsersAndOrganizations.organizations.org2);
-  });
-  beforeEach(() => {
-    jest.spyOn(Date, "now").mockImplementation(() => mockNow.getTime());
-    jest.spyOn(reflector, "get").mockReturnValue(false);
+    const user1data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user1data?.user.id as string);
+    const user2data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user2data?.user.id as string);
   });
 
   afterEach(() => {
@@ -106,21 +90,19 @@ describe("aiConfigurationController", () => {
   });
 
   it(`/PUT create configuration`, async () => {
+    const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const body = {
       isEnabled: true,
       provider: AiProvider.Mistral,
       model: "codestral-latest",
     };
     const response = await request(getApp(app))
-      .put(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/configurations`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(TestUsersAndOrganizations.users.user1.keycloakUserId, keycloakAuthTestingGuard),
-      )
+      .put(`/organizations/${org.id}/configurations`)
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(200);
     const found
-      = await aiConfigurationService.findOneByOrganizationIdOrFail(TestUsersAndOrganizations.organizations.org1.id);
+      = await aiConfigurationService.findOneByOrganizationIdOrFail(org.id);
     expect(found).toBeDefined();
     expect(found.isEnabled).toEqual(body.isEnabled);
     expect(found.provider).toEqual(body.provider);
@@ -128,38 +110,25 @@ describe("aiConfigurationController", () => {
   });
 
   it(`/PUT create configuration fails if user is no member of organization`, async () => {
+    const { userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const body = {
       isEnabled: true,
       provider: AiProvider.Mistral,
       model: "codestral-latest",
     };
-    const response = await request(app.getHttpServer())
-      .put(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/configurations`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(TestUsersAndOrganizations.users.user1.keycloakUserId, keycloakAuthTestingGuard),
-      )
+    const response = await request(getApp(app))
+      .put(`/organizations/${org2.id}/configurations`)
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/PUT update configuration`, async () => {
-    const keycloakUserTemp = createKeycloakUserInToken();
-    const userTemp = User.create({
-      email: keycloakUserTemp.email,
-      keycloakUserId: keycloakUserTemp.sub,
-    });
-    const orgTemp = Organization.create({
-      name: `organization-temp-${randomUUID()}`,
-      ownedByUserId: userTemp.id,
-      createdByUserId: userTemp.id,
-      members: [userTemp],
-    });
-    await usersService.save(userTemp);
-    await organizationService.save(orgTemp);
+    const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const configuration = AiConfiguration.loadFromDb(
       aiConfigurationFactory.build({
-        ownedByOrganizationId: orgTemp.id,
+        ownedByOrganizationId: org.id,
       }),
     );
     const { id } = await aiConfigurationService.save(configuration);
@@ -169,15 +138,12 @@ describe("aiConfigurationController", () => {
       model: "qwen3:0.6b",
     };
     const response = await request(getApp(app))
-      .put(`/organizations/${orgTemp.id}/configurations`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(userTemp.keycloakUserId, keycloakAuthTestingGuard),
-      )
+      .put(`/organizations/${org.id}/configurations`)
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(200);
     const found
-      = await aiConfigurationService.findOneByOrganizationIdOrFail(orgTemp.id);
+      = await aiConfigurationService.findOneByOrganizationIdOrFail(org.id);
     expect(found.id).toEqual(id);
     expect(found.isEnabled).toEqual(body.isEnabled);
     expect(found.provider).toEqual(body.provider);
@@ -185,62 +151,41 @@ describe("aiConfigurationController", () => {
   });
 
   it(`/GET find configuration`, async () => {
-    const keycloakUserTemp = createKeycloakUserInToken();
-    const userTemp = User.create({
-      email: keycloakUserTemp.email,
-      keycloakUserId: keycloakUserTemp.sub,
-    });
-    const orgTemp = Organization.create({
-      name: `organization-temp-${randomUUID()}`,
-      ownedByUserId: userTemp.id,
-      createdByUserId: userTemp.id,
-      members: [userTemp],
-    });
-    await usersService.save(userTemp);
-    await organizationService.save(orgTemp);
+    const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    jest.spyOn(Date, "now").mockImplementation(() => mockNow.getTime());
     const aiConfiguration = AiConfiguration.loadFromDb(
-      aiConfigurationFactory.build({ ownedByOrganizationId: orgTemp.id }),
+      aiConfigurationFactory.build({ ownedByOrganizationId: org.id }),
     );
     await aiConfigurationService.save(aiConfiguration);
     const response = await request(getApp(app))
-      .get(`/organizations/${orgTemp.id}/configurations`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userTemp.keycloakUserId,
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .get(`/organizations/${org.id}/configurations`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(200);
     expect(response.body).toEqual(aiConfigurationToDto(aiConfiguration));
   });
 
   it(`/GET find configuration fails if user is no member of organization`, async () => {
+    const { userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const aiConfiguration = AiConfiguration.loadFromDb(
-      aiConfigurationFactory.build({ ownedByOrganizationId: TestUsersAndOrganizations.organizations.org2.id }),
+      aiConfigurationFactory.build({ ownedByOrganizationId: org2.id }),
     );
     await aiConfigurationService.save(aiConfiguration);
     const response = await request(getApp(app))
-      .get(`/organizations/${TestUsersAndOrganizations.organizations.org2.id}/configurations`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(TestUsersAndOrganizations.users.user1.keycloakUserId, keycloakAuthTestingGuard),
-      );
+      .get(`/organizations/${org2.id}/configurations`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
 
   it(`/GET cannot find configuration`, async () => {
+    const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const response = await request(getApp(app))
-      .get(`/organizations/${randomUUID()}/configurations`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(TestUsersAndOrganizations.users.user1.keycloakUserId, keycloakAuthTestingGuard),
-      );
+      .get(`/organizations/${org.id}/configurations`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(404);
   });
 
   afterAll(async () => {
-    await mongoConnection.close();
     await module.close();
     await app.close();
   });

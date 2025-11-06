@@ -9,7 +9,7 @@ import {
 import { EnvelopeIcon, XMarkIcon } from "@heroicons/vue/24/outline";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import apiClient from "../../lib/api-client";
+import { authClient } from "../../auth-client.ts";
 import RingLoader from "../RingLoader.vue";
 
 const props = defineProps<{
@@ -30,12 +30,14 @@ async function inviteUser(fields: { email: string }) {
   try {
     if (fields.email) {
       loading.value = true;
-      const response = await apiClient.dpp.organizations.inviteUser(
-        fields.email,
-        props.organizationId,
-      );
+      const { error } = await authClient.organization.inviteMember({
+        email: fields.email,
+        role: "member",
+        organizationId: props.organizationId,
+        resend: true,
+      });
       loading.value = false;
-      if (response.status === 201) {
+      if (!error) {
         success.value = true;
         emit("invitedUser");
       }

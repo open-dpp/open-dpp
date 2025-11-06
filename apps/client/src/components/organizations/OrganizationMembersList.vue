@@ -71,7 +71,7 @@ const layoutStore = useLayoutStore();
                 <td class="whitespace-nowrap py-5 pl-4 pr-3 text-sm sm:pl-0">
                   <div class="flex items-center">
                     <div class="h-11 w-11 shrink-0">
-                      <UserCircleIcon class="h-11 w-11 rounded-full" />
+                      <UserCircleIcon class="h-11 w-11 rounded-full text-gray-700" />
                     </div>
                     <div class="ml-4">
                       <div class="font-medium text-gray-900">

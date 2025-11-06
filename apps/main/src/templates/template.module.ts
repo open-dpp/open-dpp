@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { KeycloakResourcesModule } from "../keycloak-resources/keycloak-resources.module";
 import { OrganizationsModule } from "../organizations/organizations.module";
 import { TemplateDoc, TemplateSchema } from "./infrastructure/template.schema";
 import { TemplateService } from "./infrastructure/template.service";
@@ -14,7 +13,6 @@ import { TemplateController } from "./presentation/template.controller";
         schema: TemplateSchema,
       },
     ]),
-    KeycloakResourcesModule,
     OrganizationsModule,
   ],
   controllers: [TemplateController],

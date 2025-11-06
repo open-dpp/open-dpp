@@ -1,23 +1,16 @@
-import type * as authRequest from "@open-dpp/auth";
-
 import type { PassportPageViewDto } from "./dto/passport-page-view.dto";
 import {
   Body,
   Controller,
-  ForbiddenException,
   Get,
   Logger,
   Param,
   Post,
   Query,
-  Request,
 } from "@nestjs/common";
-import { Public } from "@open-dpp/auth";
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { hasPermission, PermissionAction } from "@open-dpp/permission";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
+import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
 import { UniqueProductIdentifierApplicationService } from "../../unique-product-identifier/presentation/unique.product.identifier.application.service";
-import { User } from "../../users/domain/user";
 import { PassportMetric } from "../domain/passport-metric";
 import { PassportMetricService } from "../infrastructure/passport-metric.service";
 import { PassportMetricQuerySchema } from "./dto/passport-metric-query.dto";
@@ -30,10 +23,9 @@ export class PassportMetricController {
   constructor(
     private passportMetricService: PassportMetricService,
     private uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
-    private readonly organizationsService: OrganizationsService,
   ) {}
 
-  @Public()
+  @AllowAnonymous()
   @Post("/passport-metrics/page-views")
   async handlePassportPageViewed(
     @Body(new ZodValidationPipe(PassportPageViewSchema))
@@ -71,7 +63,6 @@ export class PassportMetricController {
     @Query("valueKey") valueKey: string,
     @Query("period") period: string,
     @Query("timezone") timezone: string,
-    @Request() req: authRequest.AuthRequest,
   ) {
     const query = PassportMetricQuerySchema.parse({
       startDate,
@@ -88,16 +79,6 @@ export class PassportMetricController {
         query,
       )}`,
     );
-    const organization = await this.organizationsService.findOneOrFail(organizationId);
-
-    if (!hasPermission({
-      user: {
-        id: (req.authContext.user as User).id,
-      },
-    }, PermissionAction.READ, organization.toPermissionSubject())) {
-      throw new ForbiddenException();
-    }
-
     return this.passportMetricService.computeStatistic(
       organizationId,
       query,
