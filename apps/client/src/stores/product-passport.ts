@@ -3,7 +3,7 @@ import type { MediaFile } from "../lib/media.ts";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { revokeObjectUrl } from "../lib/media.ts";
+import { createObjectUrl, revokeObjectUrl } from "../lib/media.ts";
 import { useErrorHandlingStore } from "./error.handling.ts";
 import { useMediaStore } from "./media.ts";
 
@@ -42,17 +42,18 @@ export const useProductPassportStore = defineStore("productPassport", () => {
    * Revokes previous object URLs before creating new ones to prevent memory leaks.
    */
   const loadMedia = async () => {
+    // Cleanup previous object URLs before creating new ones
+    cleanupMediaUrls();
     if (productPassport.value) {
-      // Cleanup previous object URLs before creating new ones
-      cleanupMediaUrls();
-
       for (const mediaReference of productPassport.value.mediaReferences) {
         try {
           const mediaFile = await mediaStore.fetchMedia(mediaReference);
-          mediaFiles.value.push({
-            ...mediaFile,
-            url: mediaFile.blob ? URL.createObjectURL(mediaFile.blob) : "",
-          });
+          if (mediaFile && mediaFile.blob) {
+            mediaFiles.value.push({
+              ...mediaFile,
+              url: createObjectUrl(mediaFile.blob),
+            });
+          }
         }
         catch (error) {
           errorHandlingStore.logErrorWithNotification(t("presentation.loadPassportMediaError"), error);

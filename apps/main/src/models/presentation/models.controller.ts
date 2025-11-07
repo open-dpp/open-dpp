@@ -329,7 +329,7 @@ export class ModelsController {
   @ApiParam(orgaParamDocumentation)
   @ApiParam(modelParamDocumentation)
   @ApiParam(mediaParamDocumentation)
-  @ApiBody(mediaReferenceDocumentation)
+  @ApiBody({ schema: mediaReferenceDocumentation })
   @ApiResponse({
     schema: modelDocumentation,
   })

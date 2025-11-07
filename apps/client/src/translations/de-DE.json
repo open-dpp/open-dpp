@@ -312,7 +312,7 @@
       "loadModelError": "Laden des Modellpasses fehlgeschlagen."
     },
     "form": {
-      "mediaDownloadError": "Laden der Prduktbilder fehlgeschlagen",
+      "mediaDownloadError": "Laden der Produktbilder fehlgeschlagen",
       "id": "ID",
       "name": {
         "help": "Geben Sie Ihrem Modellpass einen Namen",

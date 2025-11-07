@@ -92,6 +92,9 @@ export class Model extends ProductPassportData {
   };
 
   modifyMediaReference(mediaFileId: string, newMediaFileId: string) {
+    if (this.mediaReferences.includes(newMediaFileId) && mediaFileId !== newMediaFileId) {
+      throw new ValueError(`Media reference with id ${newMediaFileId} already exists.`);
+    }
     const index = this.findMediaReferenceIndexOrFail(mediaFileId);
     this.mediaReferences[index] = newMediaFileId;
   }
