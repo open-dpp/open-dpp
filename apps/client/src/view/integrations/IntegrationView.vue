@@ -40,12 +40,9 @@ const actions = computed(() => [
 ]);
 
 async function createApiKey() {
-  notificationStore.addErrorNotification(
-    t("integrations.apiKey.createError"),
-  );
   const { data, error } = await authClient.apiKey.create({
     name: "project-api-key",
-    expiresIn: 60 * 60 * 24 * 7,
+    expiresIn: 60 * 60 * 24 * 28,
     prefix: "project-api-key",
   });
   if (error) {
