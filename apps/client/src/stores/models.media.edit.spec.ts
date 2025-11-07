@@ -25,6 +25,7 @@ vi.mock("vue-i18n", () => ({
 vi.mock("../lib/media", () => {
   return {
     createObjectUrl: mocks.mockObjectURL,
+    revokeObjectUrl: vi.fn(),
   };
 });
 
