@@ -605,127 +605,120 @@ describe("modelsController", () => {
     });
   });
 
-  // it("add media to model", async () => {
-  //   const template = Template.loadFromDb(laptopModel);
-  //   await templateService.save(template);
-  //   const model = Model.create({
-  //     name: "My name",
-  //     organizationId: TestUsersAndOrganizations.organizations.org1.id,
-  //     userId: TestUsersAndOrganizations.users.user1.id,
-  //     template,
-  //   });
-  //   model.createUniqueProductIdentifier();
-  //
-  //   await modelsService.save(model);
-  //   const mediaReference = { id: randomUUID() };
-  //   const response = await request(getApp(app))
-  //     .post(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/media`)
-  //     .set(
-  //       "Authorization",
-  //       getKeycloakAuthToken(
-  //         TestUsersAndOrganizations.users.user1.keycloakUserId,
-  //         keycloakAuthTestingGuard,
-  //       ),
-  //     )
-  //     .send(mediaReference);
-  //   expect(response.status).toEqual(201);
-  //   expect(response.body.mediaReferences).toEqual([mediaReference.id]);
-  // });
-  //
-  // it("delete media from model", async () => {
-  //   const template = Template.loadFromDb(laptopModel);
-  //   await templateService.save(template);
-  //   const model = Model.create({
-  //     name: "My name",
-  //     organizationId: TestUsersAndOrganizations.organizations.org1.id,
-  //     userId: TestUsersAndOrganizations.users.user1.id,
-  //     template,
-  //   });
-  //   const mediaReferenceToDelete = randomUUID();
-  //   model.addMediaReference(mediaReferenceToDelete);
-  //   const mediaReferenceToKeep = randomUUID();
-  //   model.addMediaReference(mediaReferenceToKeep);
-  //   model.createUniqueProductIdentifier();
-  //
-  //   await modelsService.save(model);
-  //   const response = await request(getApp(app))
-  //     .delete(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/media/${mediaReferenceToDelete}`)
-  //     .set(
-  //       "Authorization",
-  //       getKeycloakAuthToken(
-  //         TestUsersAndOrganizations.users.user1.keycloakUserId,
-  //         keycloakAuthTestingGuard,
-  //       ),
-  //     );
-  //   expect(response.status).toEqual(200);
-  //   expect(response.body.mediaReferences).toEqual([mediaReferenceToKeep]);
-  // });
-  //
-  // it("modify media of model", async () => {
-  //   const template = Template.loadFromDb(laptopModel);
-  //   await templateService.save(template);
-  //   const model = Model.create({
-  //     name: "My name",
-  //     organizationId: TestUsersAndOrganizations.organizations.org1.id,
-  //     userId: TestUsersAndOrganizations.users.user1.id,
-  //     template,
-  //   });
-  //   const mediaReference1 = randomUUID();
-  //   model.addMediaReference(mediaReference1);
-  //   const mediaReference2 = randomUUID();
-  //   model.addMediaReference(mediaReference2);
-  //   model.createUniqueProductIdentifier();
-  //
-  //   await modelsService.save(model);
-  //   const mediaReferencePayload = {
-  //     id: randomUUID(),
-  //   };
-  //   const response = await request(getApp(app))
-  //     .patch(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/media/${mediaReference1}`)
-  //     .set(
-  //       "Authorization",
-  //       getKeycloakAuthToken(
-  //         TestUsersAndOrganizations.users.user1.keycloakUserId,
-  //         keycloakAuthTestingGuard,
-  //       ),
-  //     )
-  //     .send(mediaReferencePayload);
-  //   expect(response.status).toEqual(200);
-  //   expect(response.body.mediaReferences).toEqual([mediaReferencePayload.id, mediaReference2]);
-  // });
-  //
-  // it("move media to another position", async () => {
-  //   const template = Template.loadFromDb(laptopModel);
-  //   await templateService.save(template);
-  //   const model = Model.create({
-  //     name: "My name",
-  //     organizationId: TestUsersAndOrganizations.organizations.org1.id,
-  //     userId: TestUsersAndOrganizations.users.user1.id,
-  //     template,
-  //   });
-  //   model.createUniqueProductIdentifier();
-  //   const mediaReference1 = randomUUID();
-  //   const mediaReference2 = randomUUID();
-  //   const mediaReference3 = randomUUID();
-  //   model.addMediaReference(mediaReference1);
-  //   model.addMediaReference(mediaReference2);
-  //   model.addMediaReference(mediaReference3);
-  //
-  //   await modelsService.save(model);
-  //   const positionPayload = { position: 2 };
-  //   const response = await request(getApp(app))
-  //     .patch(`/organizations/${TestUsersAndOrganizations.organizations.org1.id}/models/${model.id}/media/${mediaReference1}/move`)
-  //     .set(
-  //       "Authorization",
-  //       getKeycloakAuthToken(
-  //         TestUsersAndOrganizations.users.user1.keycloakUserId,
-  //         keycloakAuthTestingGuard,
-  //       ),
-  //     )
-  //     .send(positionPayload);
-  //   expect(response.status).toEqual(200);
-  //   expect(response.body.mediaReferences).toEqual([mediaReference2, mediaReference3, mediaReference1]);
-  // });
+  it("add media to model", async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const laptopTemplate = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
+    const template = Template.loadFromDb(laptopTemplate);
+    await templateService.save(template);
+    const model = Model.create({
+      name: "My name",
+      organizationId: org.id,
+      userId: user.id,
+      template,
+    });
+    model.createUniqueProductIdentifier();
+
+    await modelsService.save(model);
+    const mediaReference = { id: randomUUID() };
+    const response = await request(getApp(app))
+      .post(`/organizations/${org.id}/models/${model.id}/media`)
+      .set("Cookie", userCookie)
+      .send(mediaReference);
+    expect(response.status).toEqual(201);
+    expect(response.body.mediaReferences).toEqual([mediaReference.id]);
+  });
+
+  it("remove media from model", async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const laptopTemplate = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
+    const template = Template.loadFromDb(laptopTemplate);
+    await templateService.save(template);
+    const model = Model.create({
+      name: "My name",
+      organizationId: org.id,
+      userId: user.id,
+      template,
+    });
+    const mediaReferenceToDelete = randomUUID();
+    model.addMediaReference(mediaReferenceToDelete);
+    const mediaReferenceToKeep = randomUUID();
+    model.addMediaReference(mediaReferenceToKeep);
+    model.createUniqueProductIdentifier();
+
+    await modelsService.save(model);
+    const response = await request(getApp(app))
+      .delete(`/organizations/${org.id}/models/${model.id}/media/${mediaReferenceToDelete}`)
+      .set("Cookie", userCookie);
+
+    expect(response.status).toEqual(200);
+    expect(response.body.mediaReferences).toEqual([mediaReferenceToKeep]);
+  });
+
+  it("modify media of model", async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const laptopTemplate = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
+    const template = Template.loadFromDb(laptopTemplate);
+    await templateService.save(template);
+    const model = Model.create({
+      name: "My name",
+      organizationId: org.id,
+      userId: user.id,
+      template,
+    });
+    const mediaReference1 = randomUUID();
+    model.addMediaReference(mediaReference1);
+    const mediaReference2 = randomUUID();
+    model.addMediaReference(mediaReference2);
+    model.createUniqueProductIdentifier();
+
+    await modelsService.save(model);
+    const mediaReferencePayload = {
+      id: randomUUID(),
+    };
+    const response = await request(getApp(app))
+      .patch(`/organizations/${org.id}/models/${model.id}/media/${mediaReference1}`)
+      .set("Cookie", userCookie)
+      .send(mediaReferencePayload);
+    expect(response.status).toEqual(200);
+    expect(response.body.mediaReferences).toEqual([mediaReferencePayload.id, mediaReference2]);
+  });
+
+  it("move media to another position", async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const laptopTemplate = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
+    const template = Template.loadFromDb(laptopTemplate);
+    await templateService.save(template);
+    const model = Model.create({
+      name: "My name",
+      organizationId: org.id,
+      userId: user.id,
+      template,
+    });
+    model.createUniqueProductIdentifier();
+    const mediaReference1 = randomUUID();
+    const mediaReference2 = randomUUID();
+    const mediaReference3 = randomUUID();
+    model.addMediaReference(mediaReference1);
+    model.addMediaReference(mediaReference2);
+    model.addMediaReference(mediaReference3);
+
+    await modelsService.save(model);
+    const positionPayload = { position: 2 };
+    const response = await request(getApp(app))
+      .patch(`/organizations/${org.id}/models/${model.id}/media/${mediaReference1}/move`)
+      .set("Cookie", userCookie)
+      .send(positionPayload);
+    expect(response.status).toEqual(200);
+    expect(response.body.mediaReferences).toEqual([mediaReference2, mediaReference3, mediaReference1]);
+  });
 
   //
   it("add data values to model", async () => {
