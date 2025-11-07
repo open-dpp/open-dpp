@@ -6,7 +6,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import apiClient from "../lib/api-client";
-import { createObjectUrl } from "../lib/media.ts";
+import { createObjectUrl, revokeObjectUrl } from "../lib/media.ts";
 import { useErrorHandlingStore } from "./error.handling.ts";
 import { useMediaStore } from "./media.ts";
 
@@ -81,6 +81,14 @@ export const useModelsMediaStore = defineStore("models.media", () => {
     }
   };
 
+  const deleteFromCache = (mediaInfo: MediaInfo) => {
+    const mediaFile = mediaFileCache.value.get(mediaInfo.id);
+    if (mediaFile) {
+      revokeObjectUrl(mediaFile.url);
+      mediaFileCache.value.delete(mediaInfo.id);
+    }
+  };
+
   const removeMediaReference = async (mediaInfo: MediaInfo) => {
     if (model.value) {
       try {
@@ -89,7 +97,7 @@ export const useModelsMediaStore = defineStore("models.media", () => {
           mediaInfo.id,
         );
         model.value = response.data;
-        mediaFileCache.value.delete(mediaInfo.id);
+        deleteFromCache(mediaInfo);
         updateMediaFiles();
       }
       catch (e) {
@@ -116,7 +124,7 @@ export const useModelsMediaStore = defineStore("models.media", () => {
         );
         model.value = response.data;
         await fetchAndAddMediaIfNotExists(newMediaInfo.id);
-        mediaFileCache.value.delete(mediaInfo.id);
+        deleteFromCache(mediaInfo);
         updateMediaFiles();
       }
       catch (e) {
