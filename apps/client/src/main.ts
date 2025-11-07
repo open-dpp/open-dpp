@@ -31,6 +31,9 @@ async function startApp() {
   app.use(PrimeVue, {
     theme: {
       preset: Aura,
+      options: {
+        darkModeSelector: false,
+      },
     },
   });
 
