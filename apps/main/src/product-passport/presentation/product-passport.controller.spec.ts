@@ -1,6 +1,7 @@
 import type { INestApplication } from "@nestjs/common";
 import type { TestingModule } from "@nestjs/testing";
 import type { TemplateDbProps } from "../../templates/domain/template";
+import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";

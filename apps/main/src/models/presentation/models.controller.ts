@@ -1,5 +1,9 @@
 import type { UserSession } from "../../auth/auth.guard";
 import type { DataValueDto } from "../../product-passport-data/presentation/dto/data-value.dto";
+import type {
+  MediaReferenceDto,
+  MediaReferencePositionDto,
+} from "./dto/model.dto";
 import {
   BadRequestException,
   Body,
@@ -35,9 +39,7 @@ import { Model } from "../domain/model";
 import { ModelsService } from "../infrastructure/models.service";
 import * as createModelDto_1 from "./dto/create-model.dto";
 import {
-  MediaReferenceDto,
   MediaReferenceDtoSchema,
-  MediaReferencePositionDto,
   MediaReferencePositionDtoSchema,
   modelToDto,
 } from "./dto/model.dto";
