@@ -406,7 +406,8 @@
       "forgotPassword": "Forgot password?",
       "textForProviders": "Or continue with",
       "notAMember": "Not a member?",
-      "ctaSignUp": "Sign up now"
+      "ctaSignUp": "Sign up now",
+      "error": "Login failed."
     },
     "signup": {
       "title": "Signup a new account",

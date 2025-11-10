@@ -406,7 +406,8 @@
       "forgotPassword": "Passwort vergessen?",
       "textForProviders": "Oder anmelden mit",
       "notAMember": "Noch nicht registriert?",
-      "ctaSignUp": "Jetzt registrieren"
+      "ctaSignUp": "Jetzt registrieren",
+      "error": "Anmeldung fehlgeschlagen."
     },
     "signup": {
       "title": "Neuen Account erstellen",

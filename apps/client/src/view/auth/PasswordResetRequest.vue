@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { Button, InputText } from "primevue";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { authClient } from "../../auth-client.ts";
@@ -35,14 +36,12 @@ async function requestPasswordReset() {
           <div>
             <label for="email" class="block text-sm/6 font-medium text-gray-900 dark:text-white">{{ t('user.email') }}</label>
             <div class="mt-2">
-              <input id="email" v-model="email" type="email" name="email" autocomplete="email" required="true" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
+              <InputText id="email" v-model="email" type="email" name="email" autocomplete="email" required class="w-full" />
             </div>
           </div>
 
           <div>
-            <button type="submit" class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:bg-indigo-500 dark:shadow-none dark:hover:bg-indigo-400 dark:focus-visible:outline-indigo-500" @click="requestPasswordReset">
-              {{ t('auth.passwordResetRequest.button') }}
-            </button>
+            <Button class="w-full" :label="t('auth.passwordResetRequest.button')" @click="requestPasswordReset" />
           </div>
         </div>
       </div>

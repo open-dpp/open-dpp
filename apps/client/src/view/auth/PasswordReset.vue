@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { Button, Password } from "primevue";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
@@ -55,21 +56,19 @@ onMounted(() => {
           <div>
             <label for="newPassword" class="block text-sm/6 font-medium text-gray-900 dark:text-white">{{ t('user.password') }}</label>
             <div class="mt-2">
-              <input id="newPassword" v-model="newPassword" type="password" name="newPassword" autocomplete="new-password" required="true" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
+              <Password v-model="newPassword" inputId="newPassword" :feedback="false" toggleMask class="w-full" :inputProps="{ name: 'newPassword', autocomplete: 'new-password', required: true }" />
             </div>
           </div>
 
           <div>
             <label for="newPasswordCheck" class="block text-sm/6 font-medium text-gray-900 dark:text-white">{{ t('user.passwordRepeat') }}</label>
             <div class="mt-2">
-              <input id="newPasswordCheck" v-model="newPasswordCheck" type="password" name="newPasswordCheck" autocomplete="none" required="true" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
+              <Password v-model="newPasswordCheck" inputId="newPasswordCheck" :feedback="false" toggleMask class="w-full" :inputProps="{ name: 'newPasswordCheck', autocomplete: 'off', required: true }" />
             </div>
           </div>
 
           <div>
-            <button type="submit" class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:bg-indigo-500 dark:shadow-none dark:hover:bg-indigo-400 dark:focus-visible:outline-indigo-500" @click="requestPasswordReset">
-              {{ t('auth.passwordReset.button') }}
-            </button>
+            <Button class="w-full" :label="t('auth.passwordReset.button')" @click="requestPasswordReset" />
           </div>
         </div>
       </div>

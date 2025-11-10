@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { Button, InputText, Password } from "primevue";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
@@ -56,35 +57,33 @@ async function signup() {
           <div>
             <label for="firstName" class="block text-sm/6 font-medium text-gray-900 dark:text-white">{{ t('user.firstName') }}</label>
             <div class="mt-2">
-              <input id="firstName" v-model="firstName" type="text" name="given-name" autocomplete="given-name" required="true" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
+              <InputText id="firstName" v-model="firstName" type="text" name="given-name" autocomplete="given-name" required class="w-full" />
             </div>
           </div>
 
           <div>
             <label for="lastName" class="block text-sm/6 font-medium text-gray-900 dark:text-white">{{ t('user.lastName') }}</label>
             <div class="mt-2">
-              <input id="lastName" v-model="lastName" type="text" name="lastName" autocomplete="family-name" required="true" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
+              <InputText id="lastName" v-model="lastName" type="text" name="lastName" autocomplete="family-name" required class="w-full" />
             </div>
           </div>
 
           <div>
             <label for="email" class="block text-sm/6 font-medium text-gray-900 dark:text-white">{{ t('user.email') }}</label>
             <div class="mt-2">
-              <input id="email" v-model="email" type="email" name="email" autocomplete="email" required="true" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
+              <InputText id="email" v-model="email" type="email" name="email" autocomplete="email" required class="w-full" />
             </div>
           </div>
 
           <div>
             <label for="password" class="block text-sm/6 font-medium text-gray-900 dark:text-white">{{ t('user.password') }}</label>
             <div class="mt-2">
-              <input id="password" v-model="password" type="password" name="password" autocomplete="new-password" required="true" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500">
+              <Password v-model="password" inputId="password" :feedback="false" toggleMask class="w-full" :inputProps="{ name: 'password', autocomplete: 'new-password', required: true }" />
             </div>
           </div>
 
           <div>
-            <button type="submit" class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:bg-indigo-500 dark:shadow-none dark:hover:bg-indigo-400 dark:focus-visible:outline-indigo-500" @click="signup">
-              {{ t('auth.signup.button') }}
-            </button>
+            <Button class="w-full" :label="t('auth.signup.button')" @click="signup" />
           </div>
         </div>
       </div>
