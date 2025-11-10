@@ -37,7 +37,7 @@ async function uploadFile() {
       progress => (uploadProgress.value = progress),
     );
     notificationStore.addSuccessNotification(t("file.uploadSuccess"));
-    await mediaStore.fetchMediaByOrganizationId(indexStore.selectedOrganization);
+    await mediaStore.fetchMediaByOrganizationId();
   }
   catch (error: unknown) {
     console.error("Fehler beim Hochladen der Datei:", error);
