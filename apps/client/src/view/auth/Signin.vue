@@ -89,14 +89,14 @@ async function signInWithOpenDppCloud() {
             <div>
               <label for="email" class="block text-sm/6 font-medium text-gray-900 dark:text-white">{{ t('user.email') }}</label>
               <div class="mt-2">
-                <InputText id="email" v-model="email" type="email" name="email" autocomplete="email" required="true" class="w-full" />
+                <InputText id="email" v-model="email" type="email" name="email" autocomplete="email" required="true" class="w-full" :disabled="loading" />
               </div>
             </div>
 
             <div>
               <label for="password" class="block text-sm/6 font-medium text-gray-900 dark:text-white">{{ t('user.password') }}</label>
               <div class="mt-2">
-                <Password v-model="password" fluid input-id="password" :feedback="false" toggle-mask :input-props="{ name: 'password', autocomplete: 'current-password', required: true }" />
+                <Password v-model="password" fluid input-id="password" :feedback="false" toggle-mask :input-props="{ name: 'password', autocomplete: 'current-password', required: true }" :disabled="loading" />
               </div>
             </div>
 
