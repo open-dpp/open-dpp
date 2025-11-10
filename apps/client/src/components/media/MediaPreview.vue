@@ -11,11 +11,11 @@ import { useI18n } from "vue-i18n";
 import { useMediaStore } from "../../stores/media";
 import RingLoader from "../RingLoader.vue";
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   media: MediaInfo;
   showType?: boolean;
   preview?: boolean;
-}>();
+}>(), { preview: true });
 const { t } = useI18n();
 const mediaStore = useMediaStore();
 

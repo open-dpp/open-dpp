@@ -78,13 +78,10 @@ onMounted(async () => {
         v-if="uploadedFileUrl"
         :download="uploadedMedia.title"
         :href="uploadedFileUrl"
-        class="shrink bg-[#6BAD87]/50 rounded-sm p-2 hover:cursor-pointer my-auto"
+        class="h-8 w-8 shrink bg-[#6BAD87]/50 rounded-sm p-2 hover:cursor-pointer my-auto"
       >
         <ArrowDownTrayIcon class="h-4 w-4" />
       </a>
-    </div>
-    <div class="text-gray-600 text-sm my-auto max-w-full truncate">
-      {{ uploadedMedia.title }}
     </div>
   </div>
   <div v-else class="flex flex-row gap-4">
