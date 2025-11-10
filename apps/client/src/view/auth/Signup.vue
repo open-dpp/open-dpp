@@ -65,33 +65,33 @@ async function signup() {
             <div>
               <label for="firstName" class="block text-sm/6 font-medium text-gray-900 dark:text-white">{{ t('user.firstName') }}</label>
               <div class="mt-2">
-                <InputText id="firstName" v-model="firstName" type="text" name="given-name" autocomplete="given-name" required class="w-full" />
+                <InputText id="firstName" v-model="firstName" type="text" name="given-name" autocomplete="given-name" required class="w-full" :disabled="loading" />
               </div>
             </div>
 
             <div>
               <label for="lastName" class="block text-sm/6 font-medium text-gray-900 dark:text-white">{{ t('user.lastName') }}</label>
               <div class="mt-2">
-                <InputText id="lastName" v-model="lastName" type="text" name="lastName" autocomplete="family-name" required class="w-full" />
+                <InputText id="lastName" v-model="lastName" type="text" name="lastName" autocomplete="family-name" required class="w-full" :disabled="loading" />
               </div>
             </div>
 
             <div>
               <label for="email" class="block text-sm/6 font-medium text-gray-900 dark:text-white">{{ t('user.email') }}</label>
               <div class="mt-2">
-                <InputText id="email" v-model="email" type="email" name="email" autocomplete="email" required class="w-full" />
+                <InputText id="email" v-model="email" type="email" name="email" autocomplete="email" required class="w-full" :disabled="loading" />
               </div>
             </div>
 
             <div>
               <label for="password" class="block text-sm/6 font-medium text-gray-900 dark:text-white">{{ t('user.password') }}</label>
               <div class="mt-2">
-                <Password v-model="password" input-id="password" :feedback="false" toggle-mask fluid :input-props="{ name: 'password', autocomplete: 'new-password', required: true }" />
+                <Password v-model="password" input-id="password" :feedback="false" toggle-mask fluid :disabled="loading" :input-props="{ name: 'password', autocomplete: 'new-password', required: true }" />
               </div>
             </div>
 
             <div>
-              <Button :loading="loading" class="w-full" :label="t('auth.signup.button')" @click="signup" />
+              <Button :loading="loading" :disabled="loading" class="w-full" :label="t('auth.signup.button')" @click="signup" />
             </div>
           </div>
         </div>
