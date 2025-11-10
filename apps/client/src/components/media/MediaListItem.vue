@@ -23,7 +23,7 @@ const emits = defineEmits<{
     class="p-2 rounded"
     @click="selectable && emits('onSelect', media)"
   >
-    <MediaPreview :media="media" :show-type="true" />
+    <MediaPreview :media="media" :show-type="true" :preview="false" />
     <p class="mt-2 block truncate text-sm font-medium text-gray-900">
       {{ media.title }}
     </p>

@@ -72,8 +72,8 @@ onMounted(async () => {
 
 <template>
   <div v-if="uploadedMedia" class="max-w-full flex flex-col gap-4">
-    <div class="flex flex-row gap-4 w-full justify-between">
-      <MediaPreview :media="uploadedMedia" class="grow" />
+    <div class="flex flex-row gap-4 w-full">
+      <MediaPreview :media="uploadedMedia" />
       <a
         v-if="uploadedFileUrl"
         :download="uploadedMedia.title"

@@ -6,6 +6,7 @@ import {
 import { de, en } from "@formkit/i18n";
 import { genesisIcons } from "@formkit/icons";
 import { defaultConfig, plugin } from "@formkit/vue";
+import { definePreset } from "@primeuix/themes";
 import Aura from "@primeuix/themes/aura";
 import { createPinia } from "pinia";
 import PrimeVue from "primevue/config";
@@ -25,12 +26,21 @@ import "dayjs/locale/de";
 
 const pinia = createPinia();
 
+const OpenDppPreset = definePreset(Aura, {
+  semantic: {
+    primary: {
+      500: "#6BAD87",
+      600: "#00965E",
+    },
+  },
+});
+
 async function startApp() {
   const app = createApp(App).use(pinia);
   app.use(i18n);
   app.use(PrimeVue, {
     theme: {
-      preset: Aura,
+      preset: OpenDppPreset,
       options: {
         darkModeSelector: false,
       },
