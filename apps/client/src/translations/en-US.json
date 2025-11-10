@@ -439,6 +439,9 @@
     "productpass": "Product passport",
     "askQuestion": "Ask your question...",
     "answerPending": "Processing answer...",
-    "loadPassportMediaError": "Failed to load product images."
+    "loadPassportMediaError": "Failed to load product images.",
+    "emailGreeting": "Thanks",
+    "repairRequestSubject": "Repair request",
+    "repairRequestIntro": "Hello,\n\nI have the following repair request:"
   }
 }

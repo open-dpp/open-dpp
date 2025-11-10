@@ -1,10 +1,9 @@
 <script lang="ts" setup>
 import { Disclosure } from "@headlessui/vue";
-import { ChatBubbleOvalLeftEllipsisIcon } from "@heroicons/vue/16/solid";
+import { Button } from "primevue";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
-import BaseButton from "../presentation-components/BaseButton.vue";
 
 const { t } = useI18n();
 const route = useRoute();
@@ -41,24 +40,19 @@ function backToApp() {
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <BaseButton
+          <Button
             v-if="!isChatRoute"
-            variant="primary"
+            icon="pi pi-android"
+            :label="t('presentation.chatWithAI')"
             @click="navigateToAiChat"
-          >
-            <ChatBubbleOvalLeftEllipsisIcon class="size-5 mr-2 inline-block" />
-            {{ t('presentation.chatWithAI') }}
-          </BaseButton>
-          <BaseButton
+          />
+          <Button
             v-else
-            variant="primary"
+            icon="pi pi-home"
+            :label="t('presentation.toPass')"
             @click="navigateToPassportView"
-          >
-            {{ t('presentation.toPass') }}
-          </BaseButton>
-          <BaseButton class="hidden md:flex" @click="backToApp">
-            <span>{{ t('presentation.backToApp') }}</span>
-          </BaseButton>
+          />
+          <Button class="p-button-secondary hidden md:flex" :label="t('presentation.backToApp')" @click="backToApp" />
         </div>
       </div>
     </div>

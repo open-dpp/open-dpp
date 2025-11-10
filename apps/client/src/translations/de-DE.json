@@ -439,6 +439,9 @@
     "productpass": "Produktpass",
     "askQuestion": "Stellen Sie Ihre Frage...",
     "answerPending": "Wird verarbeitet...",
-    "loadPassportMediaError": "Laden der Produktbilder fehlgeschlagen."
+    "loadPassportMediaError": "Laden der Produktbilder fehlgeschlagen.",
+    "emailGreeting": "Vielen Dank",
+    "repairRequestSubject": "Reparaturanfrage",
+    "repairRequestIntro": "Guten Tag,\n\nich habe folgendes Reparaturanliegen:"
   }
 }

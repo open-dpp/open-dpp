@@ -57,7 +57,7 @@ async function onSubSectionClick(subSectionId: string, rowIndex: number) {
         :header="t('presentation.additionalSections')"
       >
         <template #body="{ index }">
-          <div class="grid grid-cols-2 gap-1">
+          <div class="grid grid-cols-3 gap-1">
             <Chip
               v-for="subSection in subSections"
               :key="subSection.id"

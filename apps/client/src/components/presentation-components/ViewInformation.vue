@@ -22,7 +22,7 @@ const productPassport = computed(() => productPassportStore.productPassport);
       <div
         v-if="productPassport"
         data-cy="content"
-        class="flex flex-col gap-5 w-full"
+        class="flex flex-col gap-5 w-full relative"
       >
         <ProductPassportHeader />
         <ProductPassportBody />
