@@ -41,6 +41,85 @@ describe("model", () => {
     expect(model.isOwnedBy(randomUUID())).toBeFalsy();
   });
 
+  it("should add product image to model", () => {
+    const model = Model.create({
+      name: "My model",
+      userId,
+      organizationId,
+      template,
+    });
+    const productMediaId = randomUUID();
+    model.addMediaReference(productMediaId);
+    expect(model.mediaReferences).toEqual([productMediaId]);
+    const productMediaId2 = randomUUID();
+
+    model.addMediaReference(productMediaId);
+    model.addMediaReference(productMediaId2);
+
+    expect(model.mediaReferences).toEqual([productMediaId, productMediaId2]);
+  });
+
+  it("should delete product image", () => {
+    const model = Model.create({
+      name: "My model",
+      userId,
+      organizationId,
+      template,
+    });
+    const productMediaId = randomUUID();
+    const productMediaId2 = randomUUID();
+    model.addMediaReference(productMediaId);
+    model.addMediaReference(productMediaId2);
+    model.deleteMediaReference(productMediaId);
+    expect(model.mediaReferences).toEqual([productMediaId2]);
+  });
+
+  it("should modify product image", () => {
+    const model = Model.create({
+      name: "My model",
+      userId,
+      organizationId,
+      template,
+    });
+    const productMediaId = randomUUID();
+    const productMediaId2 = randomUUID();
+    model.addMediaReference(productMediaId);
+    model.addMediaReference(productMediaId2);
+    const productMediaId3 = randomUUID();
+    model.modifyMediaReference(productMediaId, productMediaId3);
+    expect(model.mediaReferences).toEqual([productMediaId3, productMediaId2]);
+  });
+
+  it("should move product image", () => {
+    const model = Model.create({
+      name: "My model",
+      userId,
+      organizationId,
+      template,
+    });
+
+    const productMediaId1 = "m1";
+    const productMediaId2 = "m2";
+    const productMediaId3 = "m3";
+    const productMediaId4 = "m4";
+    model.addMediaReference(productMediaId1);
+    model.addMediaReference(productMediaId2);
+    model.addMediaReference(productMediaId3);
+    model.addMediaReference(productMediaId4);
+    model.moveMediaReference(productMediaId1, 3);
+    expect(model.mediaReferences).toEqual([productMediaId2, productMediaId3, productMediaId4, productMediaId1]);
+    model.moveMediaReference(productMediaId1, 1);
+    expect(model.mediaReferences).toEqual([productMediaId2, productMediaId1, productMediaId3, productMediaId4]);
+    model.moveMediaReference(productMediaId4, 0);
+    expect(model.mediaReferences).toEqual([productMediaId4, productMediaId2, productMediaId1, productMediaId3]);
+    expect(() => model.moveMediaReference(productMediaId4, 4)).toThrow(
+      "Cannot move media reference to position 4, since position is out of bounds [0, 3].",
+    );
+    expect(() => model.moveMediaReference("m5", 3)).toThrow(
+      "Cannot find media reference with id m5.",
+    );
+  });
+
   it("is created from plain with defaults", () => {
     const model = Model.create({
       name: "My name",
@@ -84,6 +163,7 @@ describe("model", () => {
     const model = Model.loadFromDb({
       id,
       name,
+      mediaReferences: [],
       organizationId: ownedByOrganizationId,
       userId: createdByUserId,
       uniqueProductIdentifiers: [],

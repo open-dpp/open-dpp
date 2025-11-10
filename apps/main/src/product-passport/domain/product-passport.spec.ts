@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { Item } from "../../items/domain/item";
 import { Model } from "../../models/domain/model";
@@ -13,8 +14,9 @@ import { DataSection, ProductPassport } from "./product-passport";
 
 describe("productPassport", () => {
   const template = Template.loadFromDb(phoneFactory.addSections().build());
+  const mediaReferences = [randomUUID(), randomUUID()];
   const model = Model.loadFromDb(
-    phoneModelFactory.addDataValues().build({ templateId: template.id }),
+    phoneModelFactory.addDataValues().build({ templateId: template.id, mediaReferences }),
   );
   const item = Item.loadFromDb(
     phoneItemFactory.addDataValues().build({
@@ -23,7 +25,7 @@ describe("productPassport", () => {
     }),
   );
 
-  it("is create at item level", () => {
+  it("is created at item level", () => {
     const sharedProps = { template, model, item };
     const dataSection1 = DataSection.create({
       ...sharedProps,
@@ -135,6 +137,7 @@ describe("productPassport", () => {
 
     expect(productPassport.id).toEqual(item.uniqueProductIdentifiers[0].uuid);
     expect(productPassport.name).toEqual(model.name);
+    expect(productPassport.mediaReferences).toEqual(mediaReferences);
     expect(productPassport.description).toEqual(model.description);
     expect(productPassport.dataSections).toEqual([
       dataSection1,
@@ -145,7 +148,7 @@ describe("productPassport", () => {
     ]);
   });
 
-  it("is create at model level", () => {
+  it("creates data section at model level", () => {
     const sharedProps = { template, model };
     const dataSection1 = DataSection.create({
       ...sharedProps,

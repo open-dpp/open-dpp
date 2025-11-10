@@ -294,6 +294,7 @@ export class PhoneModelFactory extends Factory<ModelDbProps> {
 export const phoneModelFactory = PhoneModelFactory.define(() => ({
   id: randomUUID(),
   name: "Model Y",
+  mediaReferences: [],
   description: "My desc",
   templateId: randomUUID(),
   organizationId: randomUUID(),

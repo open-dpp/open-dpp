@@ -601,6 +601,7 @@ describe("integrationFormStore", () => {
     await integrationFormStore.fetchConnection(connectionId);
     const model: ModelDto = {
       name: "modelName",
+      mediaReferences: [],
       id: otherModelId,
       templateId: otherTemplateDto.id,
       owner: "o1",

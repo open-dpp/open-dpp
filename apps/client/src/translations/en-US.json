@@ -282,7 +282,16 @@
     "submitCreatePass": "Create model passport",
     "general": "General",
     "myDrafts": "My templates",
+    "mediaEditDialog": {
+      "title": "Edit product images",
+      "addImageError": "Failed to add product image.",
+      "deleteImageError": "Failed to delete product image.",
+      "modifyImageError": "Failed to modify product image.",
+      "moveImageError": "Failed to change order of product images.",
+      "loadModelError": "Failed to load model passport."
+    },
     "form": {
+      "mediaDownloadError": "Failed to load product images",
       "id": "ID",
       "name": {
         "help": "Give your model passport a name",
@@ -369,6 +378,7 @@
     "elements": "elements"
   },
   "media": {
+    "title": "Title",
     "media": "Media",
     "preview": "Preview"
   },
@@ -387,19 +397,6 @@
     "couldNotBeLoaded": "File could not be loaded.",
     "errorRevokingUrl": "Error revoking previous object URL:",
     "errorRevokingUrlError": "Error revoking object URL after error:"
-  },
-  "presentation": {
-    "productDetails": "Product details",
-    "productDetailsDesc": "General information about the product.",
-    "additionalSections": "Additional sections",
-    "moreInfo": "More information",
-    "navigation": "Navigation",
-    "backToApp": "Back to app",
-    "toPass": "To pass view",
-    "chatWithAI": "Chat with AI",
-    "productpass": "Product passport",
-    "askQuestion": "Ask your question...",
-    "answerPending": "Processing answer..."
   },
   "auth": {
     "signin": {
@@ -429,5 +426,19 @@
       "rememberLogin": "Remember your login?",
       "ctaSignIn": "Sign in now"
     }
+  },
+  "presentation": {
+    "productDetails": "Product details",
+    "productDetailsDesc": "General information about the product.",
+    "additionalSections": "Additional sections",
+    "moreInfo": "More information",
+    "navigation": "Navigation",
+    "backToApp": "Back to app",
+    "toPass": "To pass view",
+    "chatWithAI": "Chat with AI",
+    "productpass": "Product passport",
+    "askQuestion": "Ask your question...",
+    "answerPending": "Processing answer...",
+    "loadPassportMediaError": "Failed to load product images."
   }
 }

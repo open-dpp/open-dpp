@@ -1,5 +1,5 @@
 import { OpenDppClient } from "@open-dpp/api-client";
-import { AGENT_SERVER_URL, ANALYTICS_URL, API_URL, MARKETPLACE_URL } from "../const";
+import { AGENT_SERVER_URL, ANALYTICS_URL, API_URL, MARKETPLACE_URL, MEDIA_SERVICE_URL } from "../const";
 
 const apiClient = new OpenDppClient({
   dpp: {
@@ -13,6 +13,9 @@ const apiClient = new OpenDppClient({
   },
   analytics: {
     baseURL: ANALYTICS_URL,
+  },
+  media: {
+    baseURL: MEDIA_SERVICE_URL,
   },
 });
 export default apiClient;

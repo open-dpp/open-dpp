@@ -16,6 +16,7 @@ onlyBuiltDependencies:
   - esbuild
   - fsevents
   - highlight.js
+  - mongodb-memory-server
   - msw
   - sharp
   - unrs-resolver

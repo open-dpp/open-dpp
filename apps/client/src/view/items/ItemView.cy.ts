@@ -109,6 +109,7 @@ describe("<ItemView />", () => {
       id: "pdm1",
       name: "Laptop neu",
       description: "Laptop neu desc",
+      mediaReferences: [],
       dataSections: [section1, section2, section3],
     };
 
@@ -116,6 +117,7 @@ describe("<ItemView />", () => {
       id: "pdm1other",
       name: "Laptop neu other",
       description: "Laptop neu desc",
+      mediaReferences: [],
       dataSections: [section1OtherPassport, section2, section3],
     };
     const item: ItemDto = {
