@@ -93,4 +93,7 @@ export type {
   PassportTemplateGetAllDto,
 } from './marketplace/passport-templates/passport-templates.dtos'
 export { PassportTemplatesNamespace } from './marketplace/passport-templates/passport-templates.namespace'
+export type { MediaInfoDto } from './media/media.dtos'
+export { MediaNamespace } from './media/media.namespace'
+
 export { OpenDppClient } from './open-dpp-client'

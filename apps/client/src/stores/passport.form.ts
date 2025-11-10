@@ -5,14 +5,16 @@ import type {
   SectionDto,
   UniqueProductIdentifierDto,
 } from "@open-dpp/api-client";
-import {
-  GranularityLevel,
-} from "@open-dpp/api-client";
+import type { MediaFile } from "../lib/media.ts";
+import { GranularityLevel } from "@open-dpp/api-client";
 import { assign, keys, pick } from "lodash";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import apiClient from "../lib/api-client";
+import { createObjectUrl, revokeObjectUrl } from "../lib/media.ts";
 import { i18n } from "../translations/i18n.ts";
+import { useErrorHandlingStore } from "./error.handling.ts";
+import { useMediaStore } from "./media.ts";
 
 type FormKitSchemaNode
   = | string // Text content
@@ -39,6 +41,11 @@ export const usePassportFormStore = defineStore("passport.form", () => {
   const modelId = ref<string>();
   const fetchInFlight = ref<boolean>(false);
   const { t } = i18n.global;
+  const errorHandlingStore = useErrorHandlingStore();
+  const mediaStore = useMediaStore();
+  const mediaFiles = ref<
+    MediaFile[]
+  >([]);
 
   const VALUE_FOR_OTHER_GRANULARITY_LEVEL = {
     [GranularityLevel.MODEL]: t("builder.granularity.setOnModel"),
@@ -225,14 +232,49 @@ export const usePassportFormStore = defineStore("passport.form", () => {
     }
   };
 
+  const cleanupMediaUrls = () => {
+    for (const mediaFile of mediaFiles.value) {
+      if (mediaFile.url) {
+        revokeObjectUrl(mediaFile.url);
+      }
+    }
+    mediaFiles.value = [];
+  };
+
+  const loadMedia = async () => {
+    cleanupMediaUrls();
+    if (productPassport.value) {
+      for (const mediaReference of productPassport.value.mediaReferences) {
+        try {
+          const mediaFile = await mediaStore.fetchMedia(mediaReference);
+          // Only push entries with valid blobs
+          if (mediaFile && mediaFile.blob) {
+            mediaFiles.value.push({
+              ...mediaFile,
+              url: createObjectUrl(mediaFile.blob),
+            });
+          }
+        }
+        catch (error) {
+          errorHandlingStore.logErrorWithNotification(
+            t("passport.form.mediaDownloadError"),
+            error,
+          );
+        }
+      }
+    }
+  };
+
   return {
     getUUID,
     granularityLevel,
     productPassport,
     fetchInFlight,
+    mediaFiles,
     getValueForOtherGranularityLevel,
     fetchModel,
     fetchItem,
+    loadMedia,
     findSubSections,
     findSectionById,
     updateDataValues,

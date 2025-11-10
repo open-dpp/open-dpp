@@ -30,6 +30,7 @@ export class ModelsService {
     return Model.loadFromDb({
       id: modelDoc._id,
       name: modelDoc.name,
+      mediaReferences: modelDoc.mediaReferences,
       organizationId: modelDoc.ownedByOrganizationId,
       userId: modelDoc.createdByUserId,
       uniqueProductIdentifiers,
@@ -53,6 +54,7 @@ export class ModelsService {
         $set: {
           _schemaVersion: ModelDocSchemaVersion.v1_0_1,
           name: model.name,
+          mediaReferences: model.mediaReferences,
           description: model.description,
           templateId: model.templateId,
           dataValues: model.dataValues.map(d => ({

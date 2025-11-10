@@ -1,6 +1,7 @@
 import type { INestApplication } from "@nestjs/common";
 import type { TestingModule } from "@nestjs/testing";
 import type { TemplateDbProps } from "../../templates/domain/template";
+import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
@@ -84,11 +85,12 @@ describe("productPassportController", () => {
       .build(authProps);
     const template = Template.loadFromDb({ ...phoneTemplate });
     await templateService.save(template);
+    const mediaReferences = [randomUUID(), randomUUID(), randomUUID()];
 
     const model = Model.loadFromDb(
       phoneModelFactory
         .addDataValues()
-        .build({ ...authProps, templateId: template.id }),
+        .build({ ...authProps, templateId: template.id, mediaReferences }),
     );
 
     const item = Item.loadFromDb(

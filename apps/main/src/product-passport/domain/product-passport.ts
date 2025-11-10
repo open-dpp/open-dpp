@@ -92,16 +92,12 @@ export class DataSection extends Section {
 }
 
 export class ProductPassport {
-  public readonly id: string;
-  public readonly name: string;
-  public description: string;
-  public readonly dataSections: DataSection[];
-
   private constructor(
-    id: string,
-    name: string,
-    description: string,
-    dataSections: DataSection[],
+    public readonly id: string,
+    public readonly name: string,
+    public description: string,
+    public readonly mediaReferences: string[],
+    public readonly dataSections: DataSection[],
   ) {
     this.id = id;
     this.name = name;
@@ -125,6 +121,7 @@ export class ProductPassport {
       data.uniqueProductIdentifier.uuid,
       data.model.name,
       data.model.description || "",
+      data.model.mediaReferences,
       dataSections,
     );
   }

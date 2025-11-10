@@ -1,11 +1,17 @@
 import { SectionType } from "@open-dpp/api-client";
 import { createPinia, setActivePinia } from "pinia";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   dataSectionFactory,
   productPassportFactory,
 } from "../testing-utils/fixtures/product-passport.factory";
 import { useProductPassportStore } from "./product-passport";
+
+vi.mock("vue-i18n", () => ({
+  useI18n: () => ({
+    t: (key: string) => key, // This will return the key itself as the translation
+  }),
+}));
 
 describe("productPassportStore", () => {
   beforeEach(() => {

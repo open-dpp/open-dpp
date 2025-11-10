@@ -86,6 +86,7 @@ describe("<ModelView />", () => {
     const model: ModelDto = {
       dataValues: [],
       name: "",
+      mediaReferences: [],
       owner: "",
       templateId: "",
       id: "someId",

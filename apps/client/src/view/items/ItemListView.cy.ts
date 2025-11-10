@@ -33,6 +33,7 @@ describe("<ItemListView />", () => {
       id: modelId,
       templateId: "",
       name: "Test Model",
+      mediaReferences: [],
       dataValues: [],
       uniqueProductIdentifiers: [
         {

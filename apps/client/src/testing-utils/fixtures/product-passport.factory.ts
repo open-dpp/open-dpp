@@ -50,6 +50,7 @@ export const productPassportFactory = ProductPassportFactory.define(() => {
     id,
     name: `Product Name ${id}`,
     description: "Product Description",
+    mediaReferences: [],
     dataSections: [],
   };
 });

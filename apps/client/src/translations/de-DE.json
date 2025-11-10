@@ -290,21 +290,9 @@
     "errorRevokingUrlError": "Fehler beim Freigeben der Objekt-URL nach Fehler:"
   },
   "media": {
+    "title": "Titel",
     "media": "Medien",
     "preview": "Vorschau"
-  },
-  "presentation": {
-    "productDetails": "Produktdetails",
-    "productDetailsDesc": "Allgemeine Informationen zum Produkt.",
-    "additionalSections": "Weiterführende Abschnitte",
-    "moreInfo": "Mehr Informationen",
-    "navigation": "Navigation",
-    "backToApp": "Zurück zur App",
-    "toPass": "Zur Passansicht",
-    "chatWithAI": "Mit KI chatten",
-    "productpass": "Produktpass",
-    "askQuestion": "Stellen Sie Ihre Frage...",
-    "answerPending": "Wird verarbeitet..."
   },
   "models": {
     "models": "Produktpässe",
@@ -315,7 +303,16 @@
     "submitCreatePass": "Modelpass erstellen",
     "general": "Allgemein",
     "myDrafts": "Meine Vorlagen",
+    "mediaEditDialog": {
+      "title": "Produktbilder bearbeiten",
+      "addImageError": "Hinzufügen des Produktbilds fehlgeschlagen.",
+      "deleteImageError": "Löschen des Produktbilds fehlgeschlagen.",
+      "modifyImageError": "Anpassen des Produktbilds fehlgeschlagen.",
+      "moveImageError": "Ändern der Reihenfolge der Produktbilder fehlgeschlagen.",
+      "loadModelError": "Laden des Modellpasses fehlgeschlagen."
+    },
     "form": {
+      "mediaDownloadError": "Laden der Produktbilder fehlgeschlagen",
       "id": "ID",
       "name": {
         "help": "Geben Sie Ihrem Modellpass einen Namen",
@@ -429,5 +426,19 @@
       "rememberLogin": "Logindaten wieder eingefallen?",
       "ctaSignIn": "Jetzt anmelden"
     }
+  },
+  "presentation": {
+    "productDetails": "Produktdetails",
+    "productDetailsDesc": "Allgemeine Informationen zum Produkt.",
+    "additionalSections": "Weiterführende Abschnitte",
+    "moreInfo": "Mehr Informationen",
+    "navigation": "Navigation",
+    "backToApp": "Zurück zur App",
+    "toPass": "Zur Passansicht",
+    "chatWithAI": "Mit KI chatten",
+    "productpass": "Produktpass",
+    "askQuestion": "Stellen Sie Ihre Frage...",
+    "answerPending": "Wird verarbeitet...",
+    "loadPassportMediaError": "Laden der Produktbilder fehlgeschlagen."
   }
 }

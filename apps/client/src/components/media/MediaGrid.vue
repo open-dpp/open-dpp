@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import type { MediaInfo } from "./MediaInfo.interface";
 import { computed, onMounted } from "vue";
-import { useIndexStore } from "../../stores";
 import { useMediaStore } from "../../stores/media";
 import Pagination from "../lists/Pagination.vue";
 import MediaListItem from "./MediaListItem.vue";
@@ -15,7 +14,6 @@ const emits = defineEmits<{
   (e: "updateSelectedItems", items: Array<MediaInfo>): void;
 }>();
 const mediaStore = useMediaStore();
-const indexStore = useIndexStore();
 
 const page = computed(() => {
   return mediaStore.organizationMedia;
@@ -39,11 +37,7 @@ function onSelect(media: MediaInfo) {
 }
 
 onMounted(async () => {
-  if (indexStore.selectedOrganization) {
-    await mediaStore.fetchMediaByOrganizationId(
-      indexStore.selectedOrganization,
-    );
-  }
+  await mediaStore.fetchMediaByOrganizationId();
 });
 </script>
 
@@ -53,6 +47,7 @@ onMounted(async () => {
       <ul class="flex flex-wrap gap-x-4 gap-y-8" role="list">
         <li v-for="media in page" :key="media.id" class="relative">
           <MediaListItem
+            :data-cy="`select-media-${media.id}`"
             :is-selected="selected.some((f) => f.id === media.id)"
             :media="media"
             :selectable="selectable"

@@ -13,6 +13,7 @@ const ProductPassportDtoSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().optional(),
+  mediaReferences: z.string().array(),
   dataSections: DataSectionDtoSchema.array(),
 });
 
@@ -25,6 +26,7 @@ export function productPassportToDto(
     id: productPassport.id,
     name: productPassport.name,
     description: productPassport.description,
+    mediaReferences: productPassport.mediaReferences,
     dataSections: productPassport.dataSections.map(dataSection => ({
       ...sectionToDto(dataSection),
       dataValues: dataSection.dataValues,

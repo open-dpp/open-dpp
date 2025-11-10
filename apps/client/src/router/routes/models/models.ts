@@ -86,9 +86,26 @@ export const MODEL_QRCODE: RouteRecordRaw = {
   },
 };
 
+export const MODEL_MEDIA: RouteRecordRaw = {
+  path: "media",
+  name: "ModelMedia",
+  component: () => import("../../../view/models/ModelMediaEditView.vue"),
+  beforeEnter: async (to: RouteLocationNormalizedGeneric) => {
+    const layoutStore = useLayoutStore();
+    layoutStore.breadcrumbs = [
+      ...(await modelBreadcrumbs(to)),
+      {
+        name: localizedBreadcrumb("models.mediaEditDialog.title"),
+        route: MODEL_MEDIA,
+        params: to.params,
+      },
+    ];
+  },
+};
+
 const MODEL_PARENT: RouteRecordRaw = {
   path: ":modelId",
-  children: [MODEL, MODEL_QRCODE, ITEMS_PARENT],
+  children: [MODEL, MODEL_QRCODE, MODEL_MEDIA, ITEMS_PARENT],
 };
 
 export const MODEL_CREATE: RouteRecordRaw = {
