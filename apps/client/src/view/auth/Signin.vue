@@ -52,7 +52,10 @@ async function signin() {
   catch {
     showError.value = true;
   }
-  password.value = "";
+  finally {
+    loading.value = false;
+    password.value = "";
+  }
 }
 
 async function signInWithOpenDppCloud() {
