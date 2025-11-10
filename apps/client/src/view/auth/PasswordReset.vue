@@ -75,14 +75,14 @@ onMounted(() => {
             <div>
               <label for="newPassword" class="block text-sm/6 font-medium text-gray-900 dark:text-white">{{ t('user.password') }}</label>
               <div class="mt-2">
-                <Password v-model="newPassword" input-id="newPassword" :feedback="false" toggle-mask class="w-full" :input-props="{ name: 'newPassword', autocomplete: 'new-password', required: true }" />
+                <Password v-model="newPassword" input-id="newPassword" :feedback="false" toggle-mask :disabled="loading" class="w-full" :input-props="{ name: 'newPassword', autocomplete: 'new-password', required: true }" />
               </div>
             </div>
 
             <div>
               <label for="newPasswordCheck" class="block text-sm/6 font-medium text-gray-900 dark:text-white">{{ t('user.passwordRepeat') }}</label>
               <div class="mt-2">
-                <Password v-model="newPasswordCheck" input-id="newPasswordCheck" :feedback="false" toggle-mask class="w-full" :input-props="{ name: 'newPasswordCheck', autocomplete: 'off', required: true }" />
+                <Password v-model="newPasswordCheck" input-id="newPasswordCheck" :feedback="false" toggle-mask :disabled="loading" class="w-full" :input-props="{ name: 'newPasswordCheck', autocomplete: 'off', required: true }" />
               </div>
             </div>
 
