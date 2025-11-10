@@ -87,7 +87,7 @@ onMounted(() => {
             </div>
 
             <div>
-              <Button class="w-full" :label="t('auth.passwordReset.button')" @click="requestPasswordReset" />
+              <Button :loading="loading" class="w-full" :label="t('auth.passwordReset.button')" @click="requestPasswordReset" />
             </div>
           </div>
         </div>
