@@ -413,13 +413,15 @@
       "title": "Neuen Account erstellen",
       "button": "Registrieren",
       "alreadyAMember": "Bereits registriert?",
-      "ctaSignIn": "Jetzt anmelden"
+      "ctaSignIn": "Jetzt anmelden",
+      "error": "Registrierung fehlgeschlagen."
     },
     "passwordResetRequest": {
       "title": "Passwort zurücksetzen",
       "button": "Passwort zurücksetzen",
       "rememberLogin": "Logindaten wieder eingefallen?",
-      "ctaSignIn": "Jetzt anmelden"
+      "ctaSignIn": "Jetzt anmelden",
+      "success": "Bitte überprüfe deine Mails."
     },
     "passwordReset": {
       "title": "Passwort zurücksetzen",
