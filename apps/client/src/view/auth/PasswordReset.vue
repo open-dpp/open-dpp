@@ -39,7 +39,8 @@ async function requestPasswordReset() {
     });
   }
   catch {
-    // console.log(error);
+    loading.value = false;
+    showError.value = true;
   }
 }
 
