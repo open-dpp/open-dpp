@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Disclosure } from "@headlessui/vue";
 import { ChatBubbleOvalLeftEllipsisIcon } from "@heroicons/vue/16/solid";
-import { computed, onMounted, ref } from "vue";
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { authClient } from "../../auth-client.ts";
@@ -10,13 +10,11 @@ import BaseButton from "../presentation-components/BaseButton.vue";
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
+const session = authClient.useSession();
 const permalink = computed(() => String(route.params.permalink ?? ""));
 const isChatRoute = computed(() => route.path.endsWith("/chat"));
-const isSignedIn = ref<boolean>(false);
-
-onMounted(async () => {
-  const { data: session } = await authClient.getSession();
-  isSignedIn.value = session !== null;
+const isSignedIn = computed<boolean>(() => {
+  return session.value !== null && session.value.data !== null;
 });
 
 function navigateToPassportView() {
