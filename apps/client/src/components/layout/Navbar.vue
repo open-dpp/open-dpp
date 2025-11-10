@@ -14,7 +14,7 @@ const session = authClient.useSession();
 const permalink = computed(() => String(route.params.permalink ?? ""));
 const isChatRoute = computed(() => route.path.endsWith("/chat"));
 const isSignedIn = computed<boolean>(() => {
-  return session.value !== null && session.value.data !== null;
+  return session.value?.data != null;
 });
 
 function navigateToPassportView() {
