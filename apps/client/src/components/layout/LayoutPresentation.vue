@@ -46,7 +46,7 @@ const repairAction = {
 
 const items = computed(() => route.path.endsWith("/chat")
   ? [{
-      label: t("presentation.chatWithAI"),
+      label: t("presentation.toPass"),
       icon: "pi pi-home",
       command: () => {
         router.push(`/presentation/${permalink.value}`);
@@ -94,22 +94,11 @@ const items = computed(() => route.path.endsWith("/chat")
               class="border-none!"
               @click="toggleCallback"
             >
-              <img :src="logo" alt="Logo" class="cursor-pointer h-16 w-auto">
+              <img :src="logo" alt="Action menu" class="cursor-pointer h-16 w-auto">
             </Button>
           </template>
           <template #item="{ item, toggleCallback }">
             <Button
-              v-if="item.link"
-              size="large"
-              :icon="item.icon"
-              rounded
-              as="a"
-              :href="item.link"
-              target="_blank"
-              rel="noopener"
-            />
-            <Button
-              v-else
               size="large"
               :icon="item.icon"
               rounded

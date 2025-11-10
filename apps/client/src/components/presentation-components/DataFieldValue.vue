@@ -6,11 +6,13 @@ import { z } from "zod/v4";
 const props = defineProps<{ fieldView: FieldView }>();
 
 const link = computed(() => {
-  if (z.url().safeParse(props.fieldView.value).success) {
-    return z.url().parse(props.fieldView.value);
+  const urlResult = z.url().safeParse(props.fieldView.value);
+  if (urlResult.success) {
+    return urlResult.data;
   }
-  else if (z.email().safeParse(props.fieldView.value).success) {
-    return `mailto:${z.email().parse(props.fieldView.value)}`;
+  const emailResult = z.email().safeParse(props.fieldView.value);
+  if (emailResult.success) {
+    return `mailto:${emailResult.data}`;
   }
   return null;
 });
