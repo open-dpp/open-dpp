@@ -1,20 +1,21 @@
 <script lang="ts" setup>
 import type { MediaInfo } from "./MediaInfo.interface";
 import {
-  DocumentIcon,
   ExclamationTriangleIcon,
   PhotoIcon,
   VideoCameraIcon,
 } from "@heroicons/vue/24/solid";
+import { Image } from "primevue";
 import { onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useMediaStore } from "../../stores/media";
 import RingLoader from "../RingLoader.vue";
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   media: MediaInfo;
   showType?: boolean;
-}>();
+  preview?: boolean;
+}>(), { preview: true });
 const { t } = useI18n();
 const mediaStore = useMediaStore();
 
@@ -38,25 +39,19 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="h-[150px] w-full rounded-lg bg-[#6BAD87]/10 relative">
+  <div>
     <div v-if="loading" class="mx-auto my-auto">
       <RingLoader />
     </div>
-    <img
-      v-else-if="url && media.mimeType.startsWith('image/')"
-      :alt="url"
-      :src="url"
-      class="max-h-[150px] mx-auto"
-    >
+    <Image v-else-if="url && media.mimeType.startsWith('image/')" :src="url" :alt="url" :preview="props.preview" width="150px" />
     <div v-else class="w-full h-full flex items-center justify-center">
       <PhotoIcon v-if="media.mimeType.startsWith('image/')" class="w-12 h-12" />
       <VideoCameraIcon
         v-else-if="media.mimeType.startsWith('video/')"
         class="w-12 h-12"
       />
-      <DocumentIcon v-else class="w-12 h-12" />
+      <i v-else class="pi pi-file" style="font-size: 150px" />
     </div>
-
     <div
       v-if="url === null"
       class="absolute top-1 right-1 h-fit w-36 z-10 bg-red-500 text-white text-[0.6rem] p-1 rounded"

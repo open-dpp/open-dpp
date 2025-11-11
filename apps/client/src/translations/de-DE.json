@@ -442,6 +442,18 @@
     "productpass": "Produktpass",
     "askQuestion": "Stellen Sie Ihre Frage...",
     "answerPending": "Wird verarbeitet...",
-    "loadPassportMediaError": "Laden der Produktbilder fehlgeschlagen."
+    "loadPassportMediaError": "Laden der Produktbilder fehlgeschlagen.",
+    "emailGreeting": "Vielen Dank",
+    "repairRequest": {
+      "addAiChatDialog": {
+        "title": "Chatverlauf hinzufügen",
+        "question": "Soll der bisherige Chatverlauf der Reparaturanfrage hinzugefügt werden?",
+        "add": "Hinzufügen",
+        "doNotAdd": "Nicht hinzufügen"
+      },
+      "subject": "Reparaturanfrage",
+      "intro": "Guten Tag,\n\nich habe folgendes Reparaturanliegen:",
+      "sendError": "Die Reperaturanfrage konnte nicht abgeschickt werden. Haben Sie bereits einen Emailclient konfiguriert?"
+    }
   }
 }

@@ -442,6 +442,18 @@
     "productpass": "Product passport",
     "askQuestion": "Ask your question...",
     "answerPending": "Processing answer...",
-    "loadPassportMediaError": "Failed to load product images."
+    "loadPassportMediaError": "Failed to load product images.",
+    "emailGreeting": "Thanks",
+    "repairRequest": {
+      "addAiChatDialog": {
+        "title": "Add chat history",
+        "question": "Should the previous chat history be added to the repair request?",
+        "add": "Add",
+        "doNotAdd": "Do not add"
+      },
+      "subject": "Repair request",
+      "intro": "Hello,\n\nI have the following repair request:",
+      "sendError": "The repair request could not be sent. Have you already configured an email client?"
+    }
   }
 }

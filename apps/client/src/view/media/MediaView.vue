@@ -31,13 +31,13 @@ async function uploadFile() {
     return;
   }
   try {
-    const mediaId = await mediaStore.uploadMedia(
+    await mediaStore.uploadMedia(
       indexStore.selectedOrganization,
       selectedLocalFile.value,
       progress => (uploadProgress.value = progress),
     );
     notificationStore.addSuccessNotification(t("file.uploadSuccess"));
-    await mediaStore.fetchMedia(mediaId);
+    await mediaStore.fetchMediaByOrganizationId();
   }
   catch (error: unknown) {
     console.error("Fehler beim Hochladen der Datei:", error);

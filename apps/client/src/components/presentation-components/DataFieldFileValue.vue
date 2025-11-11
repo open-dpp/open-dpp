@@ -72,19 +72,16 @@ onMounted(async () => {
 
 <template>
   <div v-if="uploadedMedia" class="max-w-full flex flex-col gap-4">
-    <div class="flex flex-row gap-4 w-full justify-between">
-      <MediaPreview :media="uploadedMedia" class="grow" />
+    <div class="flex flex-row gap-4 w-full">
+      <MediaPreview :media="uploadedMedia" />
       <a
         v-if="uploadedFileUrl"
         :download="uploadedMedia.title"
         :href="uploadedFileUrl"
-        class="shrink bg-[#6BAD87]/50 rounded-sm p-2 hover:cursor-pointer my-auto"
+        class="h-8 w-8 shrink bg-[#6BAD87]/50 rounded-sm p-2 hover:cursor-pointer my-auto"
       >
         <ArrowDownTrayIcon class="h-4 w-4" />
       </a>
-    </div>
-    <div class="text-gray-600 text-sm my-auto max-w-full truncate">
-      {{ uploadedMedia.title }}
     </div>
   </div>
   <div v-else class="flex flex-row gap-4">

@@ -5,9 +5,9 @@ import Navbar from "./Navbar.vue";
 
 <template>
   <div>
-    <div class="xl:max-w-7xl pt-10 mx-auto">
+    <div class="xl:max-w-7xl mx-auto relative">
       <div class="flex flex-col gap-5">
-        <div class="bg-white shadow-sm">
+        <div class="sticky top-0 z-10">
           <Navbar />
         </div>
         <div class="bg-white shadow-sm">
