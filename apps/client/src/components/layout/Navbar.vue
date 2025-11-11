@@ -45,9 +45,14 @@ function sendEmail(service: string, intro: string, addAIChat: boolean) {
           return `${role}: ${message.text}`;
         })
         .join("\n\n")
-    : undefined;
+    : "";
 
-  const body = `${intro}\n\n...\n\nLink: ${link}${addAIChat ? `\n\nChat:\n${chatMessages}` : ""}\n\n${t("presentation.emailGreeting")}`;
+  const maxChatLength = 1000;
+  const truncatedChat = chatMessages.length > maxChatLength
+    ? `${chatMessages.substring(0, maxChatLength)}\n\n[... truncated]`
+    : chatMessages;
+
+  const body = `${intro}\n\n...\n\nLink: ${link}${addAIChat ? `\n\nChat:\n${truncatedChat}` : ""}\n\n${t("presentation.emailGreeting")}`;
 
   // Encode it properly
   const mailtoLink = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
