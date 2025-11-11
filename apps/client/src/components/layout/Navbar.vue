@@ -8,6 +8,7 @@ import { useRoute, useRouter } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import { VIEW_ROOT_URL } from "../../const.ts";
 import { useAiAgentStore } from "../../stores/ai-agent.ts";
+import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 
 const { t } = useI18n();
 const route = useRoute();
@@ -18,6 +19,7 @@ const aiAgentStore = useAiAgentStore();
 const isSignedIn = computed<boolean>(() => {
   return session.value?.data != null;
 });
+const errorHandlerStore = useErrorHandlingStore();
 
 const confirm = useConfirm();
 
@@ -37,28 +39,33 @@ function sendEmail(service: string, intro: string, addAIChat: boolean) {
   const recipient = "info@open-dpp.de";
   const subject = `${service}, ID: ${permalink.value}`;
   const link = `${VIEW_ROOT_URL}/${permalink.value}`;
-  const chatMessages = addAIChat
-    ? aiAgentStore.messages
-        .map((message) => {
-          const role
-            = message.sender.charAt(0).toUpperCase() + message.sender.slice(1);
-          return `${role}: ${message.text}`;
-        })
-        .join("\n\n")
-    : "";
+  try {
+    const chatMessages = addAIChat
+      ? aiAgentStore.messages
+          .map((message) => {
+            const role
+              = message.sender.charAt(0).toUpperCase() + message.sender.slice(1);
+            return `${role}: ${message.text}`;
+          })
+          .join("\n\n")
+      : "";
 
-  const maxChatLength = 1000;
-  const truncatedChat = chatMessages.length > maxChatLength
-    ? `${chatMessages.substring(0, maxChatLength)}\n\n[... truncated]`
-    : chatMessages;
+    const maxChatLength = 1000;
+    const truncatedChat = chatMessages.length > maxChatLength
+      ? `${chatMessages.substring(0, maxChatLength)}\n\n[... truncated]`
+      : chatMessages;
 
-  const body = `${intro}\n\n...\n\nLink: ${link}${addAIChat ? `\n\nChat:\n${truncatedChat}` : ""}\n\n${t("presentation.emailGreeting")}`;
+    const body = `${intro}\n\n...\n\nLink: ${link}${addAIChat ? `\n\nChat:\n${truncatedChat}` : ""}\n\n${t("presentation.emailGreeting")}`;
 
-  // Encode it properly
-  const mailtoLink = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    // Encode it properly
+    const mailtoLink = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-  // Open email client
-  window.location.href = mailtoLink;
+    // Open email client
+    window.location.href = mailtoLink;
+  }
+  catch (e) {
+    errorHandlerStore.logErrorWithNotification(t("presentation.repairRequest.sendError"), e);
+  }
 }
 
 const menuItems = computed(() => {

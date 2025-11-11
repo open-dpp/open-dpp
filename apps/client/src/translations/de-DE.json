@@ -452,7 +452,8 @@
         "doNotAdd": "Nicht hinzufügen"
       },
       "subject": "Reparaturanfrage",
-      "intro": "Guten Tag,\n\nich habe folgendes Reparaturanliegen:"
+      "intro": "Guten Tag,\n\nich habe folgendes Reparaturanliegen:",
+      "sendError": "Die Reperaturanfrage konnte nicht abgeschickt werden. Haben Sie bereits einen Emailclient konfiguriert?"
     }
   }
 }

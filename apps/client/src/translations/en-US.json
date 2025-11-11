@@ -452,7 +452,8 @@
         "doNotAdd": "Do not add"
       },
       "subject": "Repair request",
-      "intro": "Hello,\n\nI have the following repair request:"
+      "intro": "Hello,\n\nI have the following repair request:",
+      "sendError": "The repair request could not be sent. Have you already configured an email client?"
     }
   }
 }
