@@ -444,7 +444,15 @@
     "answerPending": "Processing answer...",
     "loadPassportMediaError": "Failed to load product images.",
     "emailGreeting": "Thanks",
-    "repairRequestSubject": "Repair request",
-    "repairRequestIntro": "Hello,\n\nI have the following repair request:"
+    "repairRequest": {
+      "addAiChatDialog": {
+        "title": "Add chat history",
+        "question": "Should the previous chat history be added to the repair request?",
+        "add": "Add",
+        "doNotAdd": "Do not add"
+      },
+      "subject": "Repair request",
+      "intro": "Hello,\n\nI have the following repair request:"
+    }
   }
 }

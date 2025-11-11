@@ -1,5 +1,7 @@
 <script lang="ts" setup>
 import { Button, Menubar } from "primevue";
+import ConfirmDialog from "primevue/confirmdialog";
+import { useConfirm } from "primevue/useconfirm";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
@@ -17,6 +19,8 @@ const isSignedIn = computed<boolean>(() => {
   return session.value?.data != null;
 });
 
+const confirm = useConfirm();
+
 function navigateToPassportView() {
   router.push(`/presentation/${permalink.value}`);
 }
@@ -29,19 +33,21 @@ function backToApp() {
   router.push("/");
 }
 
-function sendEmail(service: string, intro: string) {
+function sendEmail(service: string, intro: string, addAIChat: boolean) {
   const recipient = "info@open-dpp.de";
   const subject = `${service}, ID: ${permalink.value}`;
   const link = `${VIEW_ROOT_URL}/${permalink.value}`;
-  const chatMessages = aiAgentStore.messages
-    .map((message) => {
-      const role
-        = message.sender.charAt(0).toUpperCase() + message.sender.slice(1);
-      return `${role}: ${message.text}`;
-    })
-    .join("\n\n");
+  const chatMessages = addAIChat
+    ? aiAgentStore.messages
+        .map((message) => {
+          const role
+            = message.sender.charAt(0).toUpperCase() + message.sender.slice(1);
+          return `${role}: ${message.text}`;
+        })
+        .join("\n\n")
+    : undefined;
 
-  const body = `${intro}\n\n...\n\nLink: ${link}\n\nChat\n\n${chatMessages}\n\n${t("presentation.emailGreeting")}`;
+  const body = `${intro}\n\n...\n\nLink: ${link}${addAIChat ? `\n\nChat:\n${chatMessages}` : ""}\n\n${t("presentation.emailGreeting")}`;
 
   // Encode it properly
   const mailtoLink = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -67,13 +73,10 @@ const menuItems = computed(() => {
       },
     },
     {
-      label: t("presentation.repairRequestSubject"),
+      label: t("presentation.repairRequest.subject"),
       icon: "pi pi-wrench",
       command: () => {
-        sendEmail(
-          t("presentation.repairRequestSubject"),
-          t("presentation.repairRequestIntro"),
-        );
+        confirmToAddAIChatToEmail();
       },
     },
   ];
@@ -90,6 +93,36 @@ const menuItems = computed(() => {
 
   return items;
 });
+
+function confirmToAddAIChatToEmail() {
+  confirm.require({
+    message: t("presentation.repairRequest.addAiChatDialog.question"),
+    header: t("presentation.repairRequest.addAiChatDialog.title"),
+    icon: "pi pi-question-circle",
+    rejectProps: {
+      label: t("presentation.repairRequest.addAiChatDialog.doNotAdd"),
+      severity: "secondary",
+      outlined: true,
+    },
+    acceptProps: {
+      label: t("presentation.repairRequest.addAiChatDialog.add"),
+    },
+    accept: () => {
+      sendEmail(
+        t("presentation.repairRequest.subject"),
+        t("presentation.repairRequest.intro"),
+        true,
+      );
+    },
+    reject: () => {
+      sendEmail(
+        t("presentation.repairRequest.subject"),
+        t("presentation.repairRequest.intro"),
+        false,
+      );
+    },
+  });
+}
 </script>
 
 <template>
@@ -116,4 +149,5 @@ const menuItems = computed(() => {
       </div>
     </template>
   </Menubar>
+  <ConfirmDialog />
 </template>

@@ -444,7 +444,15 @@
     "answerPending": "Wird verarbeitet...",
     "loadPassportMediaError": "Laden der Produktbilder fehlgeschlagen.",
     "emailGreeting": "Vielen Dank",
-    "repairRequestSubject": "Reparaturanfrage",
-    "repairRequestIntro": "Guten Tag,\n\nich habe folgendes Reparaturanliegen:"
+    "repairRequest": {
+      "addAiChatDialog": {
+        "title": "Chatverlauf hinzufügen",
+        "question": "Soll der bisherige Chatverlauf der Reparaturanfrage hinzugefügt werden?",
+        "add": "Hinzufügen",
+        "doNotAdd": "Nicht hinzufügen"
+      },
+      "subject": "Reparaturanfrage",
+      "intro": "Guten Tag,\n\nich habe folgendes Reparaturanliegen:"
+    }
   }
 }

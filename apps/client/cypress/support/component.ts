@@ -37,6 +37,7 @@ import { diff } from "jest-diff";
 import _ from "lodash";
 import { createPinia, setActivePinia } from "pinia";
 import PrimeVue from "primevue/config";
+import ConfirmationService from "primevue/confirmationservice";
 import { rootClasses } from "../../formkit.theme.js";
 import { i18n } from "../../src/translations/i18n.ts";
 // Import commands.js using ES2015 syntax:
@@ -93,6 +94,7 @@ Cypress.Commands.add(
           preset: Aura,
         },
       }],
+      ConfirmationService,
       i18n,
       [
         FormKit,

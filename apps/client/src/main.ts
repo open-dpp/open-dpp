@@ -10,6 +10,7 @@ import { definePreset } from "@primeuix/themes";
 import Aura from "@primeuix/themes/aura";
 import { createPinia } from "pinia";
 import PrimeVue from "primevue/config";
+import ConfirmationService from "primevue/confirmationservice";
 import { createApp, watch } from "vue";
 import { rootClasses } from "../formkit.theme";
 import App from "./App.vue";
@@ -47,10 +48,11 @@ async function startApp() {
     },
   });
 
+  app.use(ConfirmationService);
+
   const { shortLocale, onI18nLocaleChange } = useLanguageStore();
   watch(
-    () => (i18n.global.locale as unknown as { value: Locale })
-      .value,
+    () => (i18n.global.locale as unknown as { value: Locale }).value,
     (newLocale) => {
       // const localValue = (newLocale as unknown as { value: Locale }).value;
       onI18nLocaleChange(newLocale);
