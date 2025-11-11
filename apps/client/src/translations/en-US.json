@@ -406,19 +406,22 @@
       "forgotPassword": "Forgot password?",
       "textForProviders": "Or continue with",
       "notAMember": "Not a member?",
-      "ctaSignUp": "Sign up now"
+      "ctaSignUp": "Sign up now",
+      "error": "Login failed."
     },
     "signup": {
       "title": "Signup a new account",
       "button": "Signup",
       "alreadyAMember": "Already a member?",
-      "ctaSignIn": "Signin now"
+      "ctaSignIn": "Signin now",
+      "error": "Signup failed."
     },
     "passwordResetRequest": {
       "title": "Request password reset",
       "button": "Request password reset",
       "rememberLogin": "Remember your login?",
-      "ctaSignIn": "Sign in now"
+      "ctaSignIn": "Sign in now",
+      "success": "Please check your mails."
     },
     "passwordReset": {
       "title": "Reset password",

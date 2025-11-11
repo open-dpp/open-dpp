@@ -12,6 +12,7 @@ export const PRESENTATION_VIEW: RouteRecordRaw = {
   },
   meta: {
     layout: "presentation",
+    public: true,
   },
 };
 
@@ -35,6 +36,7 @@ export const PRESENTATION_404: RouteRecordRaw = {
   },
   meta: {
     layout: "presentation",
+    public: true,
   },
 };
 
@@ -48,6 +50,7 @@ export const PRESENTATION_VIEW_CHAT: RouteRecordRaw = {
   },
   meta: {
     layout: "presentation",
+    public: true,
   },
 };
 

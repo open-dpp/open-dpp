@@ -4,12 +4,17 @@ import { Button } from "primevue";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
+import { authClient } from "../../auth-client.ts";
 
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
+const session = authClient.useSession();
 const permalink = computed(() => String(route.params.permalink ?? ""));
 const isChatRoute = computed(() => route.path.endsWith("/chat"));
+const isSignedIn = computed<boolean>(() => {
+  return session.value?.data != null;
+});
 
 function navigateToPassportView() {
   router.push(`/presentation/${permalink.value}`);
@@ -52,7 +57,7 @@ function backToApp() {
             :label="t('presentation.toPass')"
             @click="navigateToPassportView"
           />
-          <Button class="p-button-secondary hidden md:flex" :label="t('presentation.backToApp')" @click="backToApp" />
+          <Button v-if="isSignedIn" class="p-button-secondary hidden md:flex" :label="t('presentation.backToApp')" @click="backToApp" />
         </div>
       </div>
     </div>
