@@ -104,7 +104,7 @@ async function selectFile(event: Event) {
       v-if="sidebarOpen"
       class="flex flex-col gap-4 w-sm shadow-sm p-4 h-full shrink"
     >
-      <MediaDetailsSidebar v-if="selected.length > 0" :media="selected[0] as MediaInfo" @close="sidebarOpen = false" />
+      <MediaDetailsSidebar v-if="selected.length > 0 && selected[0]" :media="selected[0]" @close="sidebarOpen = false; selected = [];" />
     </div>
   </div>
 </template>
