@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, watch } from "vue";
+import { authClient } from "../auth-client.ts";
 import { LAST_SELECTED_ORGANIZATION_ID_KEY } from "../const";
 import apiClient from "../lib/api-client";
 
@@ -23,9 +24,12 @@ export const useIndexStore = defineStore("index", () => {
 
   watch(
     () => selectedOrganization.value,
-    (newVal) => {
+    async (newVal) => {
       if (newVal) {
         apiClient.setActiveOrganizationId(newVal);
+        await authClient.organization.setActive({
+          organizationId: newVal,
+        });
       }
     },
     {
