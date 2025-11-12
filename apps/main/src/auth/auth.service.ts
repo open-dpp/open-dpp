@@ -173,6 +173,9 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
 
     const apiKeyPlugin = apiKey({
       enableSessionForAPIKeys: true,
+      rateLimit: {
+        enabled: false,
+      },
     });
     const plugins = [apiKeyPlugin, organizationPlugin];
     if (genericOAuthPlugin) {
