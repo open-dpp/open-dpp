@@ -40,7 +40,7 @@ declare global {
         options?: MountingOptions<Component>
       ): Chainable<any>;
 
-      mockAuthClient(): void;
+      mockAuthClient: () => void;
     }
   }
 }
