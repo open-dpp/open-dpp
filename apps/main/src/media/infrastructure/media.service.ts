@@ -95,6 +95,12 @@ export class MediaService {
     );
   }
 
+  async processImageBuffer(buffer: Buffer) {
+    return await sharp(buffer)
+      .webp({ quality: 85 })
+      .toBuffer();
+  }
+
   async uploadFileOfProductPassport(
     originalFilename: string,
     buffer: Buffer,
@@ -120,9 +126,7 @@ export class MediaService {
     let fileTypeMime = fileType.mime;
     let uploadBuffer: Buffer = buffer;
     if (fileType.mime.startsWith("image/")) {
-      uploadBuffer = await sharp(buffer)
-        .webp({ quality: 85 })
-        .toBuffer();
+      uploadBuffer = await this.processImageBuffer(uploadBuffer);
       fileTypeMime = "image/webp";
     }
     const uploadInfo = await this.uploadFile(
@@ -166,10 +170,7 @@ export class MediaService {
     let fileTypeMime = fileType.mime;
     let uploadBuffer: Buffer = buffer;
     if (fileType.mime.startsWith("image/")) {
-      uploadBuffer = await sharp(buffer)
-        .resize({ width: 480, height: 480, fit: "cover" })
-        .webp({ quality: 85 })
-        .toBuffer();
+      uploadBuffer = await this.processImageBuffer(uploadBuffer);
       fileTypeMime = "image/webp";
     }
     const uuid = randomUUID();
