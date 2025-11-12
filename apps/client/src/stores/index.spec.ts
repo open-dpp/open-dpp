@@ -20,6 +20,14 @@ vi.mock("primevue", () => ({
   }),
 }));
 
+vi.mock("../auth-client", () => ({
+  authClient: {
+    organization: {
+      setActive: vi.fn().mockResolvedValue({}),
+    },
+  },
+}));
+
 describe("indexStore", () => {
   beforeEach(() => {
     // Create a fresh pinia instance and make it active

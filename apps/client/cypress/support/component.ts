@@ -54,6 +54,8 @@ beforeEach(() => {
 
   // Set current Pinia instance
   setActivePinia(pinia);
+
+  cy.mockAuthClient();
 });
 
 type VueMountable = Component;
@@ -138,4 +140,17 @@ Cypress.Commands.add("expectDeepEqualWithDiff", (actual, expected) => {
     console.warn("🔍 Deep diff:\n", diff(expected, actual));
   }
   expect(actual).to.deep.equal(expected);
+});
+
+Cypress.Commands.add("mockAuthClient", () => {
+  cy.intercept("POST", "**/organization/set-active", {
+    statusCode: 200,
+    body: { success: true },
+  }).as("setActiveOrg");
+
+  // Add other auth-related intercepts as needed
+  cy.intercept("GET", "**/session", {
+    statusCode: 200,
+    body: { user: null },
+  }).as("getSession");
 });
