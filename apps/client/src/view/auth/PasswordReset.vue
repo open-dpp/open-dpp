@@ -72,7 +72,7 @@ onMounted(() => {
             {{ t('common.unknownErrorOccured') }}
           </Message>
 
-          <div class="space-y-6">
+          <form class="space-y-6" @submit.prevent="requestPasswordReset">
             <div>
               <label for="newPassword" class="block text-sm/6 font-medium text-gray-900 dark:text-white">{{ t('user.password') }}</label>
               <div class="mt-2">
@@ -88,9 +88,9 @@ onMounted(() => {
             </div>
 
             <div>
-              <Button :loading="loading" class="w-full" :label="t('auth.passwordReset.button')" @click="requestPasswordReset" />
+              <Button type="submit" :loading="loading" class="w-full" :label="t('auth.passwordReset.button')" />
             </div>
-          </div>
+          </form>
         </div>
       </template>
       <template #footer>

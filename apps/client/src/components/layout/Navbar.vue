@@ -51,9 +51,10 @@ function sendEmail(service: string, intro: string, addAIChat: boolean) {
       : "";
 
     const maxChatLength = 1000;
-    const truncatedChat = chatMessages.length > maxChatLength
-      ? `${chatMessages.substring(0, maxChatLength)}\n\n[... truncated]`
-      : chatMessages;
+    const truncatedChat
+      = chatMessages.length > maxChatLength
+        ? `${chatMessages.substring(0, maxChatLength)}\n\n[... truncated]`
+        : chatMessages;
 
     const body = `${intro}\n\n...\n\nLink: ${link}${addAIChat ? `\n\nChat:\n${truncatedChat}` : ""}\n\n${t("presentation.emailGreeting")}`;
 
@@ -64,7 +65,10 @@ function sendEmail(service: string, intro: string, addAIChat: boolean) {
     window.location.href = mailtoLink;
   }
   catch (e) {
-    errorHandlerStore.logErrorWithNotification(t("presentation.repairRequest.sendError"), e);
+    errorHandlerStore.logErrorWithNotification(
+      t("presentation.repairRequest.sendError"),
+      e,
+    );
   }
 }
 
@@ -79,7 +83,7 @@ const menuItems = computed(() => {
     },
     {
       label: t("presentation.chatWithAI"),
-      icon: "pi pi-android",
+      icon: "pi pi-comments",
       command: () => {
         navigateToAiChat();
       },
@@ -138,10 +142,7 @@ function confirmToAddAIChatToEmail() {
 </script>
 
 <template>
-  <Menubar
-    class="p-10!"
-    :model="menuItems"
-  >
+  <Menubar class="p-10!" :model="menuItems">
     <template #start>
       <img
         class="h-12 w-auto"
@@ -152,7 +153,7 @@ function confirmToAddAIChatToEmail() {
     <template #end>
       <div class="flex items-center gap-2">
         <Button
-          icon="pi pi-android"
+          icon="pi pi-comments"
           size="large"
           rounded
           :aria-label="t('presentation.chatWithAI')"

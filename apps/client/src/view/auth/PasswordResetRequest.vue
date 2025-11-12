@@ -60,7 +60,7 @@ async function requestPasswordReset() {
             {{ t('auth.passwordResetRequest.success') }}
           </Message>
 
-          <div class="space-y-6">
+          <form class="space-y-6" @submit.prevent="requestPasswordReset">
             <div>
               <label for="email" class="block text-sm/6 font-medium text-gray-900 dark:text-white">{{ t('user.email') }}</label>
               <div class="mt-2">
@@ -69,9 +69,9 @@ async function requestPasswordReset() {
             </div>
 
             <div>
-              <Button :loading="loading" class="w-full" :label="t('auth.passwordResetRequest.button')" @click="requestPasswordReset" />
+              <Button type="submit" :loading="loading" class="w-full" :label="t('auth.passwordResetRequest.button')" />
             </div>
-          </div>
+          </form>
         </div>
       </template>
       <template #footer>
