@@ -121,7 +121,6 @@ export class MediaService {
     let uploadBuffer: Buffer = buffer;
     if (fileType.mime.startsWith("image/")) {
       uploadBuffer = await sharp(buffer)
-        .resize({ width: 480, height: 480, fit: "cover" })
         .webp({ quality: 85 })
         .toBuffer();
       fileTypeMime = "image/webp";
