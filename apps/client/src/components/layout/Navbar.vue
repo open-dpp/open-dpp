@@ -43,17 +43,18 @@ function sendEmail(service: string, intro: string, addAIChat: boolean) {
     const chatMessages = addAIChat
       ? aiAgentStore.messages
           .map((message) => {
-            const role
-              = message.sender.charAt(0).toUpperCase() + message.sender.slice(1);
+            const role =
+              message.sender.charAt(0).toUpperCase() + message.sender.slice(1);
             return `${role}: ${message.text}`;
           })
           .join("\n\n")
       : "";
 
     const maxChatLength = 1000;
-    const truncatedChat = chatMessages.length > maxChatLength
-      ? `${chatMessages.substring(0, maxChatLength)}\n\n[... truncated]`
-      : chatMessages;
+    const truncatedChat =
+      chatMessages.length > maxChatLength
+        ? `${chatMessages.substring(0, maxChatLength)}\n\n[... truncated]`
+        : chatMessages;
 
     const body = `${intro}\n\n...\n\nLink: ${link}${addAIChat ? `\n\nChat:\n${truncatedChat}` : ""}\n\n${t("presentation.emailGreeting")}`;
 
@@ -62,9 +63,11 @@ function sendEmail(service: string, intro: string, addAIChat: boolean) {
 
     // Open email client
     window.location.href = mailtoLink;
-  }
-  catch (e) {
-    errorHandlerStore.logErrorWithNotification(t("presentation.repairRequest.sendError"), e);
+  } catch (e) {
+    errorHandlerStore.logErrorWithNotification(
+      t("presentation.repairRequest.sendError"),
+      e
+    );
   }
 }
 
@@ -79,7 +82,7 @@ const menuItems = computed(() => {
     },
     {
       label: t("presentation.chatWithAI"),
-      icon: "pi pi-android",
+      icon: "pi pi-comments",
       command: () => {
         navigateToAiChat();
       },
@@ -123,14 +126,14 @@ function confirmToAddAIChatToEmail() {
       sendEmail(
         t("presentation.repairRequest.subject"),
         t("presentation.repairRequest.intro"),
-        true,
+        true
       );
     },
     reject: () => {
       sendEmail(
         t("presentation.repairRequest.subject"),
         t("presentation.repairRequest.intro"),
-        false,
+        false
       );
     },
   });
@@ -138,21 +141,18 @@ function confirmToAddAIChatToEmail() {
 </script>
 
 <template>
-  <Menubar
-    class="p-10!"
-    :model="menuItems"
-  >
+  <Menubar class="p-10!" :model="menuItems">
     <template #start>
       <img
         class="h-12 w-auto"
         src="../../assets/logo-with-text.svg"
         alt="open-dpp GmbH logo"
-      >
+      />
     </template>
     <template #end>
       <div class="flex items-center gap-2">
         <Button
-          icon="pi pi-android"
+          icon="pi pi-comments"
           size="large"
           rounded
           :aria-label="t('presentation.chatWithAI')"

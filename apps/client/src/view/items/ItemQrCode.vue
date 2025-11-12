@@ -3,6 +3,7 @@ import type { UniqueProductIdentifierDto } from "@open-dpp/api-client";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import QrCode from "../../components/QrCode.vue";
+import { VIEW_ROOT_URL } from "../../const";
 import apiClient from "../../lib/api-client";
 
 const route = useRoute();
@@ -17,7 +18,7 @@ onMounted(async () => {
   const item = response.data;
   const uqi = item.uniqueProductIdentifiers[0] as UniqueProductIdentifierDto;
   link.value = `/presentation/${uqi.uuid}`;
-  content.value = `/presentation/${uqi.uuid}`;
+  content.value = `${VIEW_ROOT_URL}/presentation/${uqi.uuid}`;
 });
 </script>
 
