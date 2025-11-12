@@ -43,16 +43,16 @@ function sendEmail(service: string, intro: string, addAIChat: boolean) {
     const chatMessages = addAIChat
       ? aiAgentStore.messages
           .map((message) => {
-            const role =
-              message.sender.charAt(0).toUpperCase() + message.sender.slice(1);
+            const role
+              = message.sender.charAt(0).toUpperCase() + message.sender.slice(1);
             return `${role}: ${message.text}`;
           })
           .join("\n\n")
       : "";
 
     const maxChatLength = 1000;
-    const truncatedChat =
-      chatMessages.length > maxChatLength
+    const truncatedChat
+      = chatMessages.length > maxChatLength
         ? `${chatMessages.substring(0, maxChatLength)}\n\n[... truncated]`
         : chatMessages;
 
@@ -63,10 +63,11 @@ function sendEmail(service: string, intro: string, addAIChat: boolean) {
 
     // Open email client
     window.location.href = mailtoLink;
-  } catch (e) {
+  }
+  catch (e) {
     errorHandlerStore.logErrorWithNotification(
       t("presentation.repairRequest.sendError"),
-      e
+      e,
     );
   }
 }
@@ -126,14 +127,14 @@ function confirmToAddAIChatToEmail() {
       sendEmail(
         t("presentation.repairRequest.subject"),
         t("presentation.repairRequest.intro"),
-        true
+        true,
       );
     },
     reject: () => {
       sendEmail(
         t("presentation.repairRequest.subject"),
         t("presentation.repairRequest.intro"),
-        false
+        false,
       );
     },
   });
@@ -147,7 +148,7 @@ function confirmToAddAIChatToEmail() {
         class="h-12 w-auto"
         src="../../assets/logo-with-text.svg"
         alt="open-dpp GmbH logo"
-      />
+      >
     </template>
     <template #end>
       <div class="flex items-center gap-2">
