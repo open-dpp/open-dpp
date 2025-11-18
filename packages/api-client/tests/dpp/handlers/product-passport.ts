@@ -7,6 +7,7 @@ export const productPassport: ProductPassportDto = {
   id: randomUUID(),
   name: 'name',
   description: 'description',
+  mediaReferences: [randomUUID(), randomUUID()],
   dataSections: [],
 }
 

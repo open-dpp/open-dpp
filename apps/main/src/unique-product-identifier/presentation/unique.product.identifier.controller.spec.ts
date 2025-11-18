@@ -1,37 +1,30 @@
 import type { INestApplication } from "@nestjs/common";
 import type { TemplateDbProps } from "../../templates/domain/template";
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
-import { APP_GUARD, Reflector } from "@nestjs/core";
+import { expect, jest } from "@jest/globals";
+import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { ALLOW_SERVICE_ACCESS, AuthContext, PermissionModule } from "@open-dpp/auth";
-import { EnvModule } from "@open-dpp/env";
-import getKeycloakAuthToken, {
-  createKeycloakUserInToken,
-  KeycloakAuthTestingGuard,
-  KeycloakResourcesServiceTesting,
-  MongooseTestingModule,
-  TypeOrmTestingModule,
-} from "@open-dpp/testing";
+import { EnvModule, EnvService } from "@open-dpp/env";
+
 import request from "supertest";
+import { BetterAuthHelper } from "../../../test/better-auth-helper";
+import { AuthGuard } from "../../auth/auth.guard";
+import { AuthModule } from "../../auth/auth.module";
+import { AuthService } from "../../auth/auth.service";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { generateMongoConfig } from "../../database/config";
+import { EmailService } from "../../email/email.service";
 import { Item } from "../../items/domain/item";
 import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
-
 import { ItemsService } from "../../items/infrastructure/items.service";
-import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
-import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { phoneFactory } from "../../product-passport/fixtures/product-passport.factory";
 import { Template } from "../../templates/domain/template";
 import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
 import { TemplateService } from "../../templates/infrastructure/template.service";
-import { UserEntity } from "../../users/infrastructure/user.entity";
-import { UsersService } from "../../users/infrastructure/users.service";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
@@ -44,27 +37,23 @@ describe("uniqueProductIdentifierController", () => {
   let app: INestApplication;
   let modelsService: ModelsService;
   let itemsService: ItemsService;
-  const serviceToken = "serviceToken";
-
   let templateService: TemplateService;
-  const reflector: Reflector = new Reflector();
-  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(
-    new Map(),
-    reflector,
-    new Map([["SERVICE_TOKEN", serviceToken]]),
-  );
-  const authContext = new AuthContext();
-  authContext.keycloakUser = createKeycloakUserInToken();
-  const organizationId = randomUUID();
+  let configService: EnvService;
+  let authService: AuthService;
+
+  const betterAuthHelper = new BetterAuthHelper();
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        TypeOrmTestingModule,
-        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
-        PermissionModule,
-        MongooseTestingModule,
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
         MongooseModule.forFeature([
           {
             name: ModelDoc.name,
@@ -83,11 +72,9 @@ describe("uniqueProductIdentifierController", () => {
             schema: TemplateSchema,
           },
         ]),
+        AuthModule,
       ],
       providers: [
-        UsersService,
-        OrganizationsService,
-        KeycloakResourcesService,
         ModelsService,
         UniqueProductIdentifierService,
         UniqueProductIdentifierApplicationService,
@@ -95,42 +82,41 @@ describe("uniqueProductIdentifierController", () => {
         TemplateService,
         {
           provide: APP_GUARD,
-          useValue: keycloakAuthTestingGuard,
+          useClass: AuthGuard,
         },
       ],
       controllers: [UniqueProductIdentifierController],
-    })
-      .overrideProvider(KeycloakResourcesService)
-      .useValue(
-        KeycloakResourcesServiceTesting.fromPlain({
-          users: [
-            {
-              id: authContext.keycloakUser.sub,
-              email: authContext.keycloakUser.email,
-            },
-          ],
-        }),
-      )
-      .compile();
+    }).overrideProvider(EmailService).useValue({
+      send: jest.fn(),
+    }).compile();
 
     modelsService = moduleRef.get(ModelsService);
     itemsService = moduleRef.get(ItemsService);
     templateService = moduleRef.get<TemplateService>(TemplateService);
+    configService = moduleRef.get<EnvService>(EnvService);
+    authService = moduleRef.get<AuthService>(
+      AuthService,
+    );
+    betterAuthHelper.setAuthService(authService);
 
     app = moduleRef.createNestApplication();
 
     await app.init();
-  });
-  beforeEach(() => {
-    jest.spyOn(reflector, "get").mockReturnValue(false);
-  });
 
-  const authProps = { userId: authContext.keycloakUser.sub, organizationId };
-  const phoneTemplate: TemplateDbProps = phoneFactory
-    .addSections()
-    .build(authProps);
+    const user1data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user1data?.user.id as string);
+    const user2data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user2data?.user.id as string);
+  });
 
   it(`/GET reference of unique product identifier`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const phoneTemplate: TemplateDbProps = phoneFactory
+      .addSections()
+      .build({
+        userId: user.id,
+        organizationId: org.id,
+      });
     const template = Template.loadFromDb({ ...phoneTemplate });
     await templateService.save(template);
     const model = Model.create({
@@ -140,8 +126,8 @@ describe("uniqueProductIdentifierController", () => {
       template,
     });
     const item = Item.create({
-      organizationId,
-      userId: authContext.keycloakUser.sub,
+      organizationId: org.id,
+      userId: user.id,
       template,
       model,
     });
@@ -150,42 +136,40 @@ describe("uniqueProductIdentifierController", () => {
 
     const response = await request(app.getHttpServer())
       .get(
-        `/organizations/${organizationId}/unique-product-identifiers/${uuid}/reference`,
+        `/organizations/${org.id}/unique-product-identifiers/${uuid}/reference`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .set("Cookie", userCookie);
 
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
       id: item.id,
-      organizationId,
+      organizationId: org.id,
       modelId: model.id,
       granularityLevel: GranularityLevel.ITEM,
     });
   });
 
   it(`/GET organizationId of unique product identifier`, async () => {
-    jest
-      .spyOn(reflector, "get")
-      .mockImplementation(key => key === ALLOW_SERVICE_ACCESS);
+    const { org, user } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const phoneTemplate: TemplateDbProps = phoneFactory
+      .addSections()
+      .build({
+        userId: user.id,
+        organizationId: org.id,
+      });
 
     const template = Template.loadFromDb({ ...phoneTemplate });
     await templateService.save(template);
     const model = Model.create({
       name: "model",
-      userId: randomUUID(),
-      organizationId: randomUUID(),
+      userId: user.id,
+      organizationId: org.id,
       template,
     });
+    await modelsService.save(model);
     const item = Item.create({
-      organizationId,
-      userId: authContext.keycloakUser.sub,
+      organizationId: org.id,
+      userId: user.id,
       template,
       model,
     });
@@ -194,52 +178,51 @@ describe("uniqueProductIdentifierController", () => {
 
     const response = await request(app.getHttpServer())
       .get(`/unique-product-identifiers/${uuid}/metadata`)
-      .set("service_token", serviceToken);
+      .set("service_token", configService.get("OPEN_DPP_SERVICE_TOKEN"));
 
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
-      organizationId,
+      modelId: model.id,
+      organizationId: org.id,
+      passportId: item.id,
+      templateId: template.id,
     });
   });
 
   it(`/GET fails to return organizationId of unique product identifier if service token invalid`, async () => {
-    jest
-      .spyOn(reflector, "get")
-      .mockImplementation(key => key === ALLOW_SERVICE_ACCESS);
-
     const response = await request(app.getHttpServer())
       .get(`/unique-product-identifiers/${randomUUID()}/metadata`)
       .set("service_token", "invalid_token");
-    expect(response.status).toEqual(401);
+    expect(response.status).toEqual(403);
   });
 
   it(`/GET model reference of unique product identifier`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const phoneTemplate: TemplateDbProps = phoneFactory
+      .addSections()
+      .build({
+        userId: user.id,
+        organizationId: org.id,
+      });
     const template = Template.loadFromDb({ ...phoneTemplate });
     await templateService.save(template);
     const model = Model.create({
       name: "model",
       userId: randomUUID(),
-      organizationId,
+      organizationId: org.id,
       template,
     });
     const { uuid } = model.createUniqueProductIdentifier();
     await modelsService.save(model);
     const response = await request(app.getHttpServer())
       .get(
-        `/organizations/${organizationId}/unique-product-identifiers/${uuid}/reference`,
+        `/organizations/${org.id}/unique-product-identifiers/${uuid}/reference`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
       id: model.id,
-      organizationId,
+      organizationId: org.id,
       granularityLevel: GranularityLevel.MODEL,
     });
   });

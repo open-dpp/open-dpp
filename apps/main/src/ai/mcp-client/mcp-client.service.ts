@@ -1,10 +1,10 @@
-import type { OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { MultiServerMCPClient } from "@langchain/mcp-adapters";
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
 
 @Injectable()
 export class McpClientService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(McpClientService.name);
   private client: MultiServerMCPClient;
   private readonly configService: EnvService;
 
@@ -31,7 +31,7 @@ export class McpClientService implements OnModuleInit, OnModuleDestroy {
       mcpServers: {
         productPassport: {
           transport: "http",
-          url: this.configService.get("OPEN_DPP_MCP_URL") || "",
+          url: this.configService.get("OPEN_DPP_MCP_URL"),
           reconnect: {
             enabled: true,
             maxAttempts: 5,
@@ -41,6 +41,7 @@ export class McpClientService implements OnModuleInit, OnModuleDestroy {
       },
     });
     await this.client.initializeConnections();
+    this.logger.log(`Connected to MCP server: ${this.configService.get("OPEN_DPP_MCP_URL")}`);
 
     return this.client;
   }

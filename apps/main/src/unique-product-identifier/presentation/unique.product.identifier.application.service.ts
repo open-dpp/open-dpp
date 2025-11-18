@@ -23,18 +23,14 @@ export class UniqueProductIdentifierApplicationService {
     const item = await this.itemService.findOne(
       uniqueProductIdentifier.referenceId,
     );
-    let organizationId;
-    if (item) {
-      organizationId = item.ownedByOrganizationId;
-    }
-    else {
-      const model = await this.modelsService.findOneOrFail(
-        uniqueProductIdentifier.referenceId,
-      );
-      organizationId = model.ownedByOrganizationId;
-    }
+    const modelId = item?.modelId ?? uniqueProductIdentifier.referenceId;
+    const model = await this.modelsService.findOneOrFail(modelId);
+
     return UniqueProductIdentifierMetadataDtoSchema.parse({
-      organizationId,
+      organizationId: model.ownedByOrganizationId,
+      passportId: item?.id ?? model.id,
+      modelId: model.id,
+      templateId: model.templateId,
     });
   }
 }

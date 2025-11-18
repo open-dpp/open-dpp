@@ -5,7 +5,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { join } from "lodash";
+import _ from "lodash";
 import * as Minio from "minio";
 import sharp from "sharp";
 import { Media } from "../domain/media";
@@ -22,6 +22,7 @@ export class MediaService {
   private readonly bucketNameDefault: string;
   private readonly bucketNameProfilePictures: string;
   private readonly pathDelimiter = "/";
+  private readonly fallbackMediaVersionId = "unversioned";
 
   private readonly configService: EnvService;
   private mediaDoc: Model<MediaDoc>;
@@ -48,7 +49,7 @@ export class MediaService {
   }
 
   buildBucketPath(objectName: string, remoteFolders: string[] = []) {
-    return join([...remoteFolders, objectName], this.pathDelimiter);
+    return _.join([...remoteFolders, objectName], this.pathDelimiter);
   }
 
   async uploadFile(
@@ -94,6 +95,12 @@ export class MediaService {
     );
   }
 
+  async processImageBuffer(buffer: Buffer) {
+    return await sharp(buffer)
+      .webp({ quality: 85 })
+      .toBuffer();
+  }
+
   async uploadFileOfProductPassport(
     originalFilename: string,
     buffer: Buffer,
@@ -119,10 +126,7 @@ export class MediaService {
     let fileTypeMime = fileType.mime;
     let uploadBuffer: Buffer = buffer;
     if (fileType.mime.startsWith("image/")) {
-      uploadBuffer = await sharp(buffer)
-        .resize({ width: 480, height: 480, fit: "cover" })
-        .webp({ quality: 85 })
-        .toBuffer();
+      uploadBuffer = await this.processImageBuffer(uploadBuffer);
       fileTypeMime = "image/webp";
     }
     const uploadInfo = await this.uploadFile(
@@ -147,7 +151,7 @@ export class MediaService {
       bucket: uploadInfo.location.bucket,
       objectName: uploadInfo.location.objectName,
       eTag: uploadInfo.info.etag,
-      versionId: uploadInfo.info.versionId || "",
+      versionId: uploadInfo.info.versionId || this.fallbackMediaVersionId,
     });
     await this.save(media);
     return media;
@@ -166,10 +170,7 @@ export class MediaService {
     let fileTypeMime = fileType.mime;
     let uploadBuffer: Buffer = buffer;
     if (fileType.mime.startsWith("image/")) {
-      uploadBuffer = await sharp(buffer)
-        .resize({ width: 480, height: 480, fit: "cover" })
-        .webp({ quality: 85 })
-        .toBuffer();
+      uploadBuffer = await this.processImageBuffer(uploadBuffer);
       fileTypeMime = "image/webp";
     }
     const uuid = randomUUID();
@@ -195,7 +196,7 @@ export class MediaService {
       bucket: uploadInfo.location.bucket,
       objectName: uploadInfo.location.objectName,
       eTag: uploadInfo.info.etag,
-      versionId: uploadInfo.info.versionId || "",
+      versionId: uploadInfo.info.versionId || this.fallbackMediaVersionId,
     });
     await this.save(media);
     return media;

@@ -1,15 +1,14 @@
 <script lang="ts" setup>
 import { ArrowRightStartOnRectangleIcon } from "@heroicons/vue/16/solid";
 import { computed, ref, useAttrs } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { useErrorHandlingStore } from "../../../stores/error.handling";
 import { useUniqueProductIdentifierStore } from "../../../stores/unique.product.identifier";
-import { useI18n } from 'vue-i18n';
 
+const props = defineProps<{ id: string; className?: string }>();
 const router = useRouter();
 const { t } = useI18n();
-const props = defineProps<{ id: string; className?: string }>();
-
 const inputValue = ref<string>("");
 
 const uniqueProductIdentifierStore = useUniqueProductIdentifierStore();
@@ -27,8 +26,8 @@ async function onLinkClick() {
     }
     catch (e) {
       errorHandlingStore.logErrorWithNotification(
-          t('models.form.link.navigationError'),
-          e,
+        t("models.form.link.navigationError"),
+        e,
       );
     }
   }

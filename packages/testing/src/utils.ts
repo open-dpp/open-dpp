@@ -1,19 +1,19 @@
 import type { INestApplication } from '@nestjs/common'
 import type { App } from 'supertest/types'
 import { expect } from '@jest/globals'
-import { isArray, isObject, transform } from 'lodash'
+import _ from 'lodash'
 
 export function ignoreIds(plain: any) {
-  return transform(
+  return _.transform(
     plain,
     (result: Record<string, unknown>, value: unknown, key: string) => {
       if (key === 'id') {
         result[key] = expect.any(String)
       }
-      else if (isObject(value)) {
+      else if (_.isObject(value)) {
         result[key] = ignoreIds(value)
       }
-      else if (isArray(value)) {
+      else if (_.isArray(value)) {
         result[key] = value.map(item => ignoreIds(item))
       }
       else {

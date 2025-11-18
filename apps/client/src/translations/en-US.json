@@ -16,6 +16,7 @@
     "abort": "Abort",
     "general": "General",
     "remove": "Remove",
+    "copy": "Copy",
     "errorOccured": "An error occurred",
     "unknownErrorOccured": "An unexpected error occurred. Please try again.",
     "toHome": "To home",
@@ -72,6 +73,7 @@
       "name": "File field name"
     },
     "name": "Section name",
+    "dataFieldType": "Datafield type",
     "granularityLevel": "Granularity level"
   },
   "draft": {
@@ -122,6 +124,7 @@
     "selection": "Selection",
     "section": "Section",
     "addSection": "Add Section",
+    "subsections": "Subsections",
     "configuration": "Configuration",
     "dataField": "Data field",
     "addDataField": "Add data field",
@@ -137,7 +140,8 @@
     "fileField": "File",
     "addFileField": "Add file upload",
     "passportDraft": "Passport draft | Passport drafts",
-    "passportDraftDescription": "All passport drafts"
+    "passportDraftDescription": "All passport drafts",
+    "changeDataFieldType": "Change datafield type"
   },
   "integrations": {
     "integrations": "Integrations",
@@ -203,8 +207,17 @@
     "edit": "Edit",
     "errorCreate": "Failed to create connection"
   },
-  "statistics": {
-    "statistics": "Statistics"
+  "analytics": {
+    "analytics": "Analytics",
+    "startAnalysis": "Start analysis",
+    "loadingMetricError": "Failed to load the analysis",
+    "passportSelection": "Passport selection",
+    "timeViewSelection": "View",
+    "pageViews": "Page views",
+    "daylyView": "Dayly view",
+    "weeklyView": "Weekly view",
+    "monthlyView": "Monthly view",
+    "yearlyView": "Yearly view"
   },
   "members": {
     "members": "Members"
@@ -237,6 +250,24 @@
         "help": "Give your organization a name",
         "label": "Name"
       }
+    },
+    "invitation": {
+      "name": "Name",
+      "status": "Status",
+      "accept": "Accept",
+      "decline": "Decline",
+      "cancel": "Cancel",
+      "acceptSuccess": "Successfully accepted invitation.",
+      "acceptError": "Error on accepting invitation.",
+      "acceptTitle": "You have been invited to join an organization"
+    },
+    "userInvitations": {
+      "title": "Invitations",
+      "description": "Invitations to organizations"
+    },
+    "organizationInvitations": {
+      "title": "Invitations",
+      "description": "Invitations to this organizations"
     }
   },
   "marketplace": {
@@ -251,7 +282,16 @@
     "submitCreatePass": "Create model passport",
     "general": "General",
     "myDrafts": "My templates",
+    "mediaEditDialog": {
+      "title": "Edit product images",
+      "addImageError": "Failed to add product image.",
+      "deleteImageError": "Failed to delete product image.",
+      "modifyImageError": "Failed to modify product image.",
+      "moveImageError": "Failed to change order of product images.",
+      "loadModelError": "Failed to load model passport."
+    },
     "form": {
+      "mediaDownloadError": "Failed to load product images",
       "id": "ID",
       "name": {
         "help": "Give your model passport a name",
@@ -317,7 +357,10 @@
     "firstName": "First name",
     "lastName": "Last name",
     "language": "Language",
-    "displaySettings": "Display settings"
+    "displaySettings": "Display settings",
+    "email": "Email address",
+    "password": "Password",
+    "passwordRepeat": "Repeat password"
   },
   "notifications": {
     "success": "Success",
@@ -335,6 +378,7 @@
     "elements": "elements"
   },
   "media": {
+    "title": "Title",
     "media": "Media",
     "preview": "Preview"
   },
@@ -354,6 +398,38 @@
     "errorRevokingUrl": "Error revoking previous object URL:",
     "errorRevokingUrlError": "Error revoking object URL after error:"
   },
+  "auth": {
+    "signin": {
+      "title": "Sign in to your account",
+      "button": "Signin",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "textForProviders": "Or continue with",
+      "notAMember": "Not a member?",
+      "ctaSignUp": "Sign up now",
+      "error": "Login failed."
+    },
+    "signup": {
+      "title": "Signup a new account",
+      "button": "Signup",
+      "alreadyAMember": "Already a member?",
+      "ctaSignIn": "Signin now",
+      "error": "Signup failed."
+    },
+    "passwordResetRequest": {
+      "title": "Request password reset",
+      "button": "Request password reset",
+      "rememberLogin": "Remember your login?",
+      "ctaSignIn": "Sign in now",
+      "success": "Please check your mails."
+    },
+    "passwordReset": {
+      "title": "Reset password",
+      "button": "Set new password",
+      "rememberLogin": "Remember your login?",
+      "ctaSignIn": "Sign in now"
+    }
+  },
   "presentation": {
     "productDetails": "Product details",
     "productDetailsDesc": "General information about the product.",
@@ -364,6 +440,20 @@
     "toPass": "To pass view",
     "chatWithAI": "Chat with AI",
     "productpass": "Product passport",
-    "askQuestion": "Ask your question..."
+    "askQuestion": "Ask your question...",
+    "answerPending": "Processing answer...",
+    "loadPassportMediaError": "Failed to load product images.",
+    "emailGreeting": "Thanks",
+    "repairRequest": {
+      "addAiChatDialog": {
+        "title": "Add chat history",
+        "question": "Should the previous chat history be added to the repair request?",
+        "add": "Add",
+        "doNotAdd": "Do not add"
+      },
+      "subject": "Repair request",
+      "intro": "Hello,\n\nI have the following repair request:",
+      "sendError": "The repair request could not be sent. Have you already configured an email client?"
+    }
   }
 }

@@ -1,34 +1,35 @@
-import type * as authRequest from "@open-dpp/auth";
+import type { UserSession } from "../../auth/auth.guard";
+import type { DataValueDto } from "../../product-passport-data/presentation/dto/data-value.dto";
 import type {
-  DataValueDto,
-} from "../../product-passport-data/presentation/dto/data-value.dto";
+  MediaReferenceDto,
+  MediaReferencePositionDto,
+} from "./dto/model.dto";
 import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   Param,
   Patch,
   Post,
-  Request,
 } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
-import { PermissionService } from "@open-dpp/auth";
-
 import { ZodValidationPipe } from "@open-dpp/exception";
+import { Session } from "../../auth/session.decorator";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
-import { modelParamDocumentation } from "../../open-api-docs/item.doc";
+import { mediaParamDocumentation, modelParamDocumentation } from "../../open-api-docs/item.doc";
 import {
   createModelDocumentation,
+  mediaReferenceDocumentation,
+  mediaReferencePositionDocumentation,
   modelDocumentation,
   updateModelDocumentation,
 } from "../../open-api-docs/model.doc";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import {
-  DataValueDtoSchema,
-} from "../../product-passport-data/presentation/dto/data-value.dto";
+import { DataValueDtoSchema } from "../../product-passport-data/presentation/dto/data-value.dto";
 import {
   dataValueDocumentation,
   orgaParamDocumentation,
@@ -37,25 +38,26 @@ import { TemplateService } from "../../templates/infrastructure/template.service
 import { Model } from "../domain/model";
 import { ModelsService } from "../infrastructure/models.service";
 import * as createModelDto_1 from "./dto/create-model.dto";
-import { modelToDto } from "./dto/model.dto";
+import {
+  MediaReferenceDtoSchema,
+  MediaReferencePositionDtoSchema,
+  modelToDto,
+} from "./dto/model.dto";
 import * as updateModelDto_1 from "./dto/update-model.dto";
 
 @Controller("/organizations/:orgaId/models")
 export class ModelsController {
   private readonly modelsService: ModelsService;
   private readonly templateService: TemplateService;
-  private readonly permissionsService: PermissionService;
   private readonly marketplaceService: MarketplaceApplicationService;
 
   constructor(
     modelsService: ModelsService,
     templateService: TemplateService,
-    permissionsService: PermissionService,
     marketplaceService: MarketplaceApplicationService,
   ) {
     this.modelsService = modelsService;
     this.templateService = templateService;
-    this.permissionsService = permissionsService;
     this.marketplaceService = marketplaceService;
   }
 
@@ -75,13 +77,8 @@ export class ModelsController {
     @Param("orgaId") organizationId: string,
     @Body(new ZodValidationPipe(createModelDto_1.CreateModelDtoSchema))
     createModelDto: createModelDto_1.CreateModelDto,
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
-
     // Validate that only one of templateId or marketplaceResourceId is provided
     if (!createModelDto.templateId && !createModelDto.marketplaceResourceId) {
       throw new BadRequestException(
@@ -110,7 +107,7 @@ export class ModelsController {
     else {
       template = await this.marketplaceService.download(
         organizationId,
-        req.authContext.keycloakUser.sub,
+        session.user.id,
         createModelDto.marketplaceResourceId,
       );
     }
@@ -120,7 +117,7 @@ export class ModelsController {
     const model = Model.create({
       name: createModelDto.name,
       description: createModelDto.description,
-      userId: req.authContext.keycloakUser.sub,
+      userId: session.user.id,
       organizationId,
       template,
     });
@@ -139,12 +136,7 @@ export class ModelsController {
   @Get()
   async findAll(
     @Param("orgaId") organizationId: string,
-    @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
     return (await this.modelsService.findAllByOrganization(organizationId)).map(
       m => modelToDto(m),
     );
@@ -163,12 +155,7 @@ export class ModelsController {
   async findOne(
     @Param("orgaId") organizationId: string,
     @Param("modelId") id: string,
-    @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
     const model = await this.modelsService.findOneOrFail(id);
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
@@ -194,12 +181,7 @@ export class ModelsController {
     @Param("modelId") modelId: string,
     @Body(new ZodValidationPipe(updateModelDto_1.UpdateModelDtoSchema))
     updateModelDto: updateModelDto_1.UpdateModelDto,
-    @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
     const model = await this.modelsService.findOneOrFail(modelId);
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
@@ -232,12 +214,7 @@ export class ModelsController {
     @Param("modelId") modelId: string,
     @Body(new ZodValidationPipe(DataValueDtoSchema.array()))
     updateDataValues: DataValueDto[],
-    @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
     const model = await this.modelsService.findOneOrFail(modelId);
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
@@ -274,12 +251,7 @@ export class ModelsController {
     @Param("modelId") modelId: string,
     @Body(new ZodValidationPipe(DataValueDtoSchema.array()))
     addDataValues: DataValueDto[],
-    @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
     const model = await this.modelsService.findOneOrFail(modelId);
     if (model.ownedByOrganizationId !== organizationId) {
       throw new ForbiddenException();
@@ -293,6 +265,117 @@ export class ModelsController {
     if (!validationResult.isValid) {
       throw new BadRequestException(validationResult.toJson());
     }
+    return modelToDto(await this.modelsService.save(model));
+  }
+
+  @ApiOperation({
+    summary: "Add media file to model",
+    description:
+      "Add media file",
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiBody({
+    schema: mediaReferenceDocumentation,
+  })
+  @ApiResponse({
+    schema: modelDocumentation,
+  })
+  @Post(":modelId/media")
+  async addMediaFile(
+    @Param("orgaId") organizationId: string,
+    @Param("modelId") modelId: string,
+    @Body(new ZodValidationPipe(MediaReferenceDtoSchema))
+    mediaReferenceDto: MediaReferenceDto,
+  ) {
+    const model = await this.modelsService.findOneOrFail(modelId);
+    if (!model.isOwnedBy(organizationId)) {
+      throw new ForbiddenException();
+    }
+    model.addMediaReference(mediaReferenceDto.id);
+    return modelToDto(await this.modelsService.save(model));
+  }
+
+  @ApiOperation({
+    summary: "Remove media file from model",
+    description:
+      "Remove media file",
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiParam(mediaParamDocumentation)
+  @ApiResponse({
+    schema: modelDocumentation,
+  })
+  @Delete(":modelId/media/:mediaId")
+  async removeMediaFile(
+    @Param("orgaId") organizationId: string,
+    @Param("modelId") modelId: string,
+    @Param("mediaId") mediaId: string,
+  ) {
+    const model = await this.modelsService.findOneOrFail(modelId);
+    if (model.ownedByOrganizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+    model.deleteMediaReference(mediaId);
+    return modelToDto(await this.modelsService.save(model));
+  }
+
+  @ApiOperation({
+    summary: "Modify media file from model",
+    description:
+      "Modify media file",
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiParam(mediaParamDocumentation)
+  @ApiBody({ schema: mediaReferenceDocumentation })
+  @ApiResponse({
+    schema: modelDocumentation,
+  })
+  @Patch(":modelId/media/:mediaId")
+  async modifyMediaFile(
+    @Param("orgaId") organizationId: string,
+    @Param("modelId") modelId: string,
+    @Param("mediaId") mediaId: string,
+    @Body(new ZodValidationPipe(MediaReferenceDtoSchema))
+    mediaReferenceDto: MediaReferenceDto,
+  ) {
+    const model = await this.modelsService.findOneOrFail(modelId);
+    if (model.ownedByOrganizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+    model.modifyMediaReference(mediaId, mediaReferenceDto.id);
+    return modelToDto(await this.modelsService.save(model));
+  }
+
+  @ApiOperation({
+    summary: "Move media file to other position",
+    description:
+      "Move media file to another position",
+  })
+  @ApiParam(orgaParamDocumentation)
+  @ApiParam(modelParamDocumentation)
+  @ApiParam(mediaParamDocumentation)
+  @ApiBody({
+    schema: mediaReferencePositionDocumentation,
+  })
+  @ApiResponse({
+    schema: modelDocumentation,
+  })
+  @Patch(":modelId/media/:mediaId/move")
+  async moveMediaFile(
+    @Param("orgaId") organizationId: string,
+    @Param("modelId") modelId: string,
+    @Param("mediaId") mediaId: string,
+    @Body(new ZodValidationPipe(MediaReferencePositionDtoSchema))
+    mediaReferencePositionDto: MediaReferencePositionDto,
+  ) {
+    const model = await this.modelsService.findOneOrFail(modelId);
+    if (model.ownedByOrganizationId !== organizationId) {
+      throw new ForbiddenException();
+    }
+    model.moveMediaReference(mediaId, mediaReferencePositionDto.position);
     return modelToDto(await this.modelsService.save(model));
   }
 }

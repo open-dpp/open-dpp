@@ -1,13 +1,14 @@
 import { Logger, UseFilters } from "@nestjs/common";
 import {
+  ConnectedSocket,
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from "@nestjs/websockets";
-import { Public } from "@open-dpp/auth";
 import { SocketIoExceptionFilter } from "@open-dpp/exception";
-import { Server } from "socket.io";
+import { Server, Socket } from "socket.io";
+import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
 import { ChatService } from "../chat.service";
 
 @WebSocketGateway({ cors: true, path: "/api/ai-socket" })
@@ -24,10 +25,11 @@ export class ChatGateway {
     this.chatService = chatService;
   }
 
-  @Public()
+  @AllowAnonymous()
   @SubscribeMessage("userMessage")
   async handleMessage(
     @MessageBody() message: { msg: string; passportUUID: string },
+    @ConnectedSocket() client: Socket,
   ) {
     const startTime = Date.now();
     this.logger.log("Start to process message:", message);
@@ -35,9 +37,9 @@ export class ChatGateway {
       message.msg,
       message.passportUUID,
     );
-    this.server.emit("botMessage", reply);
+    client.emit("botMessage", reply);
     const endTime = Date.now();
     const executionTime = endTime - startTime;
-    this.logger.log("Processing time:", executionTime, "ms");
+    this.logger.log(`Processing time: ${executionTime}ms`);
   }
 }

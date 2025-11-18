@@ -3,15 +3,20 @@ packages:
   - apps/*
   - packages/*
 
+injectWorkspacePackages: true
+
 onlyBuiltDependencies:
   - '@nestjs/core'
   - '@scarf/scarf'
   - '@swc/core'
   - '@tailwindcss/oxide'
+  - better-sqlite3
   - core-js
   - cypress
   - esbuild
   - fsevents
+  - highlight.js
+  - mongodb-memory-server
   - msw
   - sharp
   - unrs-resolver

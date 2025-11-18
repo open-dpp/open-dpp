@@ -1,14 +1,21 @@
 <script lang="ts" setup>
-import { watch } from "vue";
+import { onBeforeUnmount, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import ViewInformation from "../../components/presentation-components/ViewInformation.vue";
 import apiClient from "../../lib/api-client";
+import { useAnalyticsStore } from "../../stores/analytics.ts";
 import { useProductPassportStore } from "../../stores/product-passport";
 
 const route = useRoute();
 const router = useRouter();
 
-const viewStore = useProductPassportStore();
+const productPassportStore = useProductPassportStore();
+const analyticsStore = useAnalyticsStore();
+
+// Cleanup object URLs when component unmounts to prevent memory leaks
+onBeforeUnmount(() => {
+  productPassportStore.cleanupMediaUrls();
+});
 
 watch(
   () => route.params.permalink,
@@ -16,7 +23,7 @@ watch(
     const permalink = String(route.params.permalink);
     try {
       const response = await apiClient.dpp.productPassports.getById(permalink);
-
+      await analyticsStore.addPageView();
       if (response.status === 404) {
         await router.push({
           path: "404",
@@ -26,7 +33,8 @@ watch(
         });
         return;
       }
-      viewStore.productPassport = response.data;
+      productPassportStore.productPassport = response.data;
+      await productPassportStore.loadMedia();
     }
     catch (e) {
       console.error(e);

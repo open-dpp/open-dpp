@@ -2,12 +2,12 @@
 import type { MediaInfo } from "../../components/media/MediaInfo.interface";
 import { CloudArrowUpIcon } from "@heroicons/vue/24/outline";
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
 import MediaDetailsSidebar from "../../components/media/MediaDetailsSidebar.vue";
 import MediaGrid from "../../components/media/MediaGrid.vue";
 import { useIndexStore } from "../../stores";
 import { useMediaStore } from "../../stores/media";
 import { useNotificationStore } from "../../stores/notification";
-import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const mediaStore = useMediaStore();
@@ -31,18 +31,18 @@ async function uploadFile() {
     return;
   }
   try {
-    const mediaId = await mediaStore.uploadMedia(
+    await mediaStore.uploadMedia(
       indexStore.selectedOrganization,
       selectedLocalFile.value,
       progress => (uploadProgress.value = progress),
     );
-    notificationStore.addSuccessNotification(t('file.uploadSuccess'));
-    await mediaStore.fetchMedia(mediaId);
+    notificationStore.addSuccessNotification(t("file.uploadSuccess"));
+    await mediaStore.fetchMediaByOrganizationId();
   }
   catch (error: unknown) {
     console.error("Fehler beim Hochladen der Datei:", error);
     notificationStore.addErrorNotification(
-        t('file.uploadError'),
+      t("file.uploadError"),
     );
     selectedFile.value = null;
   }
@@ -104,7 +104,7 @@ async function selectFile(event: Event) {
       v-if="sidebarOpen"
       class="flex flex-col gap-4 w-sm shadow-sm p-4 h-full shrink"
     >
-      <MediaDetailsSidebar v-if="selected.length > 0" :media="selected[0] as MediaInfo" @close="sidebarOpen = false" />
+      <MediaDetailsSidebar v-if="selected.length > 0 && selected[0]" :media="selected[0]" @close="updateSelected([])" />
     </div>
   </div>
 </template>

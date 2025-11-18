@@ -1,4 +1,4 @@
-import type * as authRequest from "@open-dpp/auth";
+import type { UserSession } from "../../auth/auth.guard";
 import type {
   DataValueDto,
 } from "../../product-passport-data/presentation/dto/data-value.dto";
@@ -11,11 +11,10 @@ import {
   Param,
   Patch,
   Post,
-  Request,
 } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
-import { PermissionService } from "@open-dpp/auth";
 import { ZodValidationPipe } from "@open-dpp/exception";
+import { Session } from "../../auth/session.decorator";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import {
@@ -39,20 +38,17 @@ import { ItemsApplicationService } from "./items-application.service";
 @Controller("organizations/:orgaId/models/:modelId/items")
 export class ItemsController {
   private readonly itemsService: ItemsService;
-  private readonly permissionsService: PermissionService;
   private readonly itemsApplicationService: ItemsApplicationService;
   private readonly modelsService: ModelsService;
   private readonly templateService: TemplateService;
 
   constructor(
     itemsService: ItemsService,
-    permissionsService: PermissionService,
     itemsApplicationService: ItemsApplicationService,
     modelsService: ModelsService,
     templateService: TemplateService,
   ) {
     this.itemsService = itemsService;
-    this.permissionsService = permissionsService;
     this.itemsApplicationService = itemsApplicationService;
     this.modelsService = modelsService;
     this.templateService = templateService;
@@ -72,16 +68,12 @@ export class ItemsController {
   async create(
     @Param("orgaId") organizationId: string,
     @Param("modelId") modelId: string,
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
     const item = await this.itemsApplicationService.createItem(
       organizationId,
       modelId,
-      req.authContext.keycloakUser.sub,
+      session.user.id,
     );
     return itemToDto(await this.itemsService.save(item));
   }
@@ -99,12 +91,7 @@ export class ItemsController {
   async getAll(
     @Param("orgaId") organizationId: string,
     @Param("modelId") modelId: string,
-    @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
     const model = await this.modelsService.findOneOrFail(modelId);
     if (!model.isOwnedBy(organizationId)) {
       throw new ForbiddenException();
@@ -129,12 +116,7 @@ export class ItemsController {
     @Param("orgaId") organizationId: string,
     @Param("modelId") modelId: string,
     @Param("itemId") itemId: string,
-    @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
     const item = await this.itemsService.findOneOrFail(itemId);
     if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
       throw new ForbiddenException();
@@ -163,12 +145,7 @@ export class ItemsController {
     @Param("itemId") itemId: string,
     @Body(new ZodValidationPipe(DataValueDtoSchema.array()))
     addDataValues: DataValueDto[],
-    @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
     const item = await this.itemsService.findOneOrFail(itemId);
     if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
       throw new ForbiddenException();
@@ -212,12 +189,7 @@ export class ItemsController {
     @Param("itemId") itemId: string,
     @Body(new ZodValidationPipe(DataValueDtoSchema.array()))
     updateDataValues: DataValueDto[],
-    @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
     const item = await this.itemsService.findOneOrFail(itemId);
     if (!item.isOwnedBy(organizationId) || item.modelId !== modelId) {
       throw new ForbiddenException();

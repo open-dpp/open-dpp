@@ -1,20 +1,18 @@
 <script lang="ts" setup>
 import type { OrganizationDto, UserDto } from "@open-dpp/api-client";
 import { UserCircleIcon } from "@heroicons/vue/24/solid";
+import { useI18n } from "vue-i18n";
 import { ModalType, useLayoutStore } from "../../stores/layout";
 import InviteMemberDialog from "./InviteMemberDialog.vue";
-import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
 defineProps<{
   organization: OrganizationDto;
   members: Array<UserDto>;
 }>();
-
 const emit = defineEmits<{
   (e: "invitedUser"): void;
 }>();
-
+const { t } = useI18n();
 const layoutStore = useLayoutStore();
 </script>
 
@@ -73,7 +71,7 @@ const layoutStore = useLayoutStore();
                 <td class="whitespace-nowrap py-5 pl-4 pr-3 text-sm sm:pl-0">
                   <div class="flex items-center">
                     <div class="h-11 w-11 shrink-0">
-                      <UserCircleIcon class="h-11 w-11 rounded-full" />
+                      <UserCircleIcon class="h-11 w-11 rounded-full text-gray-700" />
                     </div>
                     <div class="ml-4">
                       <div class="font-medium text-gray-900">

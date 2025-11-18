@@ -2,6 +2,7 @@
 import type { FieldView } from "../../lib/field-view";
 import { DataFieldType } from "@open-dpp/api-client";
 import DataFieldFileValue from "./DataFieldFileValue.vue";
+import DataFieldValue from "./DataFieldValue.vue";
 import LinkValue from "./LinkValue.vue";
 
 const props = defineProps<{ fieldView: FieldView }>();
@@ -18,5 +19,5 @@ const props = defineProps<{ fieldView: FieldView }>();
     v-else-if="props.fieldView.dataField.type === DataFieldType.FILE_FIELD"
     :field-view="props.fieldView"
   />
-  <span v-else>{{ props.fieldView.value }}</span>
+  <DataFieldValue v-else :field-view="props.fieldView" />
 </template>

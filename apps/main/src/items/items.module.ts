@@ -1,12 +1,8 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { PermissionModule } from "@open-dpp/auth";
-import { KeycloakResourcesModule } from "../keycloak-resources/keycloak-resources.module";
 import { ModelDoc, ModelSchema } from "../models/infrastructure/model.schema";
 import { ModelsModule } from "../models/models.module";
-import { OrganizationEntity } from "../organizations/infrastructure/organization.entity";
-import { OrganizationsService } from "../organizations/infrastructure/organizations.service";
+import { OrganizationsModule } from "../organizations/organizations.module";
 import { TemplateModule } from "../templates/template.module";
 import { TraceabilityEventsModule } from "../traceability-events/traceability-events.module";
 import { UniqueProductIdentifierModule } from "../unique-product-identifier/unique.product.identifier.module";
@@ -18,7 +14,6 @@ import { ItemsController } from "./presentation/items.controller";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([OrganizationEntity]),
     MongooseModule.forFeature([
       {
         name: ItemDoc.name,
@@ -33,12 +28,11 @@ import { ItemsController } from "./presentation/items.controller";
     ModelsModule,
     UniqueProductIdentifierModule,
     UsersModule,
-    KeycloakResourcesModule,
-    PermissionModule,
     TraceabilityEventsModule,
+    OrganizationsModule,
   ],
   controllers: [ItemsController],
-  providers: [ItemsService, ItemsApplicationService, OrganizationsService],
+  providers: [ItemsService, ItemsApplicationService],
   exports: [ItemsService],
 })
 export class ItemsModule {}

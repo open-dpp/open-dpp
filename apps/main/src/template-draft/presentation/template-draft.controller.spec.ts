@@ -1,19 +1,26 @@
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { beforeAll, expect, jest } from "@jest/globals";
 import { INestApplication } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { AuthContext, PermissionModule } from "@open-dpp/auth";
-import { EnvModule } from "@open-dpp/env";
-import getKeycloakAuthToken, { createKeycloakUserInToken, getApp, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import { EnvModule, EnvService } from "@open-dpp/env";
+import {
+  getApp,
+} from "@open-dpp/testing";
 import request from "supertest";
+import { BetterAuthHelper } from "../../../test/better-auth-helper";
+import { AuthGuard } from "../../auth/auth.guard";
+import { AuthModule } from "../../auth/auth.module";
+import { AuthService } from "../../auth/auth.service";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
 import { Sector } from "../../data-modelling/domain/sectors";
 import { sectionToDto } from "../../data-modelling/presentation/dto/section-base.dto";
-import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
+import { generateMongoConfig } from "../../database/config";
+import { EmailService } from "../../email/email.service";
+
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,
@@ -22,20 +29,13 @@ import {
   PassportTemplatePublicationService,
 } from "../../marketplace/infrastructure/passport-template-publication.service";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
-import { Organization } from "../../organizations/domain/organization";
-import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import {
   TemplateDoc,
   TemplateSchema,
 } from "../../templates/infrastructure/template.schema";
 import { TemplateService } from "../../templates/infrastructure/template.service";
-import { User } from "../../users/domain/user";
-import { UserEntity } from "../../users/infrastructure/user.entity";
-import { UsersService } from "../../users/infrastructure/users.service";
 import { DataFieldDraft } from "../domain/data-field-draft";
 import { SectionDraft } from "../domain/section-draft";
-
 import { MoveDirection, TemplateDraft } from "../domain/template-draft";
 import { dataFieldDraftDbPropsFactory } from "../fixtures/data-field-draft.factory";
 import { sectionDraftDbPropsFactory } from "../fixtures/section-draft.factory";
@@ -55,25 +55,24 @@ import { TemplateDraftController } from "./template-draft.controller";
 
 describe("templateDraftController", () => {
   let app: INestApplication;
-  const authContext = new AuthContext();
   let templateDraftService: TemplateDraftService;
   let templateService: TemplateService;
-  authContext.keycloakUser = createKeycloakUserInToken();
-  const userId = authContext.keycloakUser.sub;
-  const organizationId = randomUUID();
-  const otherOrganizationId = randomUUID();
-  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
   let module: TestingModule;
-  let organizationService: OrganizationsService;
-  let marketplaceService: MarketplaceApplicationService;
+  let authService: AuthService;
+
+  const betterAuthHelper = new BetterAuthHelper();
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        TypeOrmTestingModule,
-        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
-        MongooseTestingModule,
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
         MongooseModule.forFeature([
           {
             name: TemplateDraftDoc.name,
@@ -88,66 +87,50 @@ describe("templateDraftController", () => {
             schema: PassportTemplatePublicationDbSchema,
           },
         ]),
-        PermissionModule,
+        AuthModule,
       ],
       providers: [
         TemplateService,
         TemplateDraftService,
         MarketplaceApplicationService,
         PassportTemplatePublicationService,
-        OrganizationsService,
-        UsersService,
-        KeycloakResourcesService,
         {
           provide: APP_GUARD,
-          useValue: keycloakAuthTestingGuard,
+          useClass: AuthGuard,
         },
       ],
       controllers: [TemplateDraftController],
-    })
-      .overrideProvider(KeycloakResourcesService)
-      .useValue(
-        KeycloakResourcesServiceTesting.fromPlain({
-          users: [
-            {
-              id: authContext.keycloakUser.sub,
-              email: authContext.keycloakUser.email,
-            },
-          ],
-        }),
-      )
-      .compile();
+    }).overrideProvider(EmailService).useValue({
+      send: jest.fn(),
+    }).compile();
 
     app = module.createNestApplication();
 
     templateService = module.get<TemplateService>(TemplateService);
     templateDraftService
       = module.get<TemplateDraftService>(TemplateDraftService);
-    marketplaceService = module.get<MarketplaceApplicationService>(
-      MarketplaceApplicationService,
+    authService = module.get<AuthService>(
+      AuthService,
     );
-
-    organizationService
-      = module.get<OrganizationsService>(OrganizationsService);
+    betterAuthHelper.setAuthService(authService);
 
     await app.init();
+
+    const user1data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user1data?.user.id as string);
+    const user2data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user2data?.user.id as string);
   });
 
   const userNotMemberTxt = `fails if user is not member of organization`;
   const draftDoesNotBelongToOrga = `fails if draft does not belong to organization`;
 
   it(`/CREATE template draft`, async () => {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const body = templateDraftCreateDtoFactory.build();
     const response = await request(getApp(app))
-      .post(`/organizations/${organizationId}/template-drafts`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .post(`/organizations/${org.id}/template-drafts`)
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(201);
     expect(response.body.id).toBeDefined();
@@ -156,27 +139,23 @@ describe("templateDraftController", () => {
   });
 
   it(`/CREATE template draft ${userNotMemberTxt}`, async () => {
+    const { userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const body = templateDraftCreateDtoFactory.build();
 
     const response = await request(getApp(app))
-      .post(`/organizations/${otherOrganizationId}/template-drafts`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .post(`/organizations/${org2.id}/template-drafts`)
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/PATCH template draft`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: org.id,
+        userId: user.id,
       }),
     );
 
@@ -184,16 +163,9 @@ describe("templateDraftController", () => {
     const body = templateDraftCreateDtoFactory.build();
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
@@ -203,10 +175,12 @@ describe("templateDraftController", () => {
   });
 
   it(`/PATCH template draft ${userNotMemberTxt}`, async () => {
+    const { user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: org2.id,
+        userId: user.id,
       }),
     );
 
@@ -214,50 +188,39 @@ describe("templateDraftController", () => {
     const body = templateDraftCreateDtoFactory.build();
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${otherOrganizationId}/template-drafts/${laptopDraft.id}`,
+        `/organizations/${org2.id}/template-drafts/${laptopDraft.id}`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/PATCH template draft ${draftDoesNotBelongToOrga}`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: org2.id,
+        userId: user.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
     const body = templateDraftCreateDtoFactory.build();
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/PUBLISH template draft`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: org.id,
+        userId: user.id,
       }),
     );
 
@@ -276,32 +239,15 @@ describe("templateDraftController", () => {
     laptopDraft.addDataFieldToSection(section.id, dataField);
     await templateDraftService.save(laptopDraft);
 
-    await organizationService.save(
-      Organization.fromPlain({
-        id: organizationId,
-        name: "orga name",
-        members: [new User(userId, `${userId}@example.com`)],
-        createdByUserId: userId,
-        ownedByUserId: userId,
-      }),
-    );
-
     const body = {
       visibility: VisibilityLevel.PUBLIC,
     };
-    const spyUpload = jest.spyOn(marketplaceService, "upload");
-
-    const token = getKeycloakAuthToken(
-      userId,
-      [organizationId],
-      keycloakAuthTestingGuard,
-    );
 
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/publish`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/publish`,
       )
-      .set("Authorization", token)
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(201);
     const foundDraft = await templateDraftService.findOneOrFail(
@@ -316,15 +262,15 @@ describe("templateDraftController", () => {
     expect(foundTemplate.id).toEqual(foundDraft.publications[0].id);
 
     expect(foundTemplate.marketplaceResourceId).toBeDefined();
-    const user = User.create({ id: userId, email: `${userId}@test.test` });
-    expect(spyUpload).toHaveBeenCalledWith(foundTemplate, user);
   });
 
   it(`/PUBLISH template draft ${userNotMemberTxt}`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: org.id,
+        userId: user.id,
       }),
     );
     const body = {
@@ -333,25 +279,20 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${otherOrganizationId}/template-drafts/${laptopDraft.id}/publish`,
+        `/organizations/${org2.id}/template-drafts/${laptopDraft.id}/publish`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/PUBLISH template draft ${draftDoesNotBelongToOrga}`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: org2.id,
+        userId: user.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -361,42 +302,32 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/publish`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/publish`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/GET template drafts of organization`, async () => {
-    const myOrgaId = randomUUID();
+    const { org, user, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: myOrgaId,
-        userId,
+        organizationId: org.id,
+        userId: user.id,
       }),
     );
     const phoneDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: myOrgaId,
-        userId,
+        organizationId: org.id,
+        userId: user.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
     await templateDraftService.save(phoneDraft);
     const response = await request(getApp(app))
-      .get(`/organizations/${myOrgaId}/template-drafts`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(userId, [myOrgaId], keycloakAuthTestingGuard),
-      );
+      .get(`/organizations/${org.id}/template-drafts`)
+      .set("Cookie", userCookie);
 
     expect(response.status).toEqual(200);
     expect(response.body).toEqual([
@@ -406,24 +337,20 @@ describe("templateDraftController", () => {
   });
 
   it(`/GET template drafts of organization ${userNotMemberTxt}`, async () => {
+    const { userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const response = await request(getApp(app))
-      .get(`/organizations/${otherOrganizationId}/template-drafts`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .get(`/organizations/${org2.id}/template-drafts`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
 
   it(`/CREATE section draft`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: org.id,
+        userId: user.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -434,16 +361,9 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/sections`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(201);
     expect(response.body.id).toBeDefined();
@@ -464,10 +384,11 @@ describe("templateDraftController", () => {
   });
 
   it(`/CREATE sub section draft`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: org.id,
+        userId: user.id,
       }),
     );
 
@@ -489,16 +410,9 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/sections`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(201);
     // expect draft data
@@ -521,6 +435,8 @@ describe("templateDraftController", () => {
   });
 
   it(`/CREATE section draft ${userNotMemberTxt}`, async () => {
+    const { userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const body = {
       name: "Dimensions",
       type: SectionType.GROUP,
@@ -529,25 +445,20 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections`,
+        `/organizations/${org2.id}/template-drafts/${randomUUID()}/sections`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/CREATE section draft ${draftDoesNotBelongToOrga}`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: org2.id,
+        userId: user.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -560,25 +471,19 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/sections`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/GET draft`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: org.id,
+        userId: user.id,
       }),
     );
 
@@ -591,63 +496,47 @@ describe("templateDraftController", () => {
 
     await templateDraftService.save(laptopDraft);
     const response = await request(getApp(app))
-      .get(`/organizations/${organizationId}/template-drafts/${laptopDraft.id}`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .get(`/organizations/${org.id}/template-drafts/${laptopDraft.id}`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(200);
     const found = await templateDraftService.findOneOrFail(response.body.id);
     expect(response.body).toEqual(templateDraftToDto(found));
   });
 
   it(`/GET draft ${userNotMemberTxt}`, async () => {
+    const { userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const response = await request(getApp(app))
       .get(
-        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}`,
+        `/organizations/${org2.id}/template-drafts/${randomUUID()}`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
 
   it(`/GET draft ${draftDoesNotBelongToOrga}`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: org2.id,
+        userId: user.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
 
     const response = await request(getApp(app))
-      .get(`/organizations/${organizationId}/template-drafts/${laptopDraft.id}`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .get(`/organizations/${org.id}/template-drafts/${laptopDraft.id}`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
 
   it(`/PATCH section draft`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: org.id,
+        userId: user.id,
       }),
     );
 
@@ -665,16 +554,9 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/sections/${section.id}`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(200);
     const found = await templateDraftService.findOneOrFail(response.body.id);
@@ -685,30 +567,27 @@ describe("templateDraftController", () => {
   });
 
   it(`/PATCH section draft ${userNotMemberTxt}`, async () => {
+    const { userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const body = {
       name: "Technical Specs",
     };
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}`,
+        `/organizations/${org2.id}/template-drafts/${randomUUID()}/sections/${randomUUID()}`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/PATCH section draft ${draftDoesNotBelongToOrga}`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: org2.id,
+        userId: user.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -717,25 +596,19 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/POST move section`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: org.id,
+        userId: user.id,
       }),
     );
     const section1 = SectionDraft.create(sectionDraftDbPropsFactory.build());
@@ -755,16 +628,9 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section2.id}/move`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/sections/${section2.id}/move`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(201);
     const found = await templateDraftService.findOneOrFail(response.body.id);
@@ -772,10 +638,12 @@ describe("templateDraftController", () => {
   });
 
   it(`/POST move section ${userNotMemberTxt}`, async () => {
+    const { user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: org2.id,
+        userId: user.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -785,25 +653,20 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
+        `/organizations/${org2.id}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [otherOrganizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/POST move section ${draftDoesNotBelongToOrga}`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: org2.id,
+        userId: user.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -813,25 +676,19 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/move`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/POST move data field`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: org.id,
+        userId: user.id,
       }),
     );
     const dataField1 = DataFieldDraft.loadFromDb(
@@ -860,16 +717,9 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section1.id}/data-fields/${dataField3.id}/move`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/sections/${section1.id}/data-fields/${dataField3.id}/move`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(201);
     const found = await templateDraftService.findOneOrFail(response.body.id);
@@ -881,10 +731,12 @@ describe("templateDraftController", () => {
   });
 
   it(`/POST move data field ${userNotMemberTxt}`, async () => {
+    const { user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: org2.id,
+        userId: user.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -894,25 +746,20 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}/move`,
+        `/organizations/${org2.id}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}/move`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [otherOrganizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/POST move data field ${draftDoesNotBelongToOrga}`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: org2.id,
+        userId: user.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -922,25 +769,19 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}/move`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}/move`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/DELETE section draft`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: org.id,
+        userId: user.id,
       }),
     );
 
@@ -953,66 +794,50 @@ describe("templateDraftController", () => {
     await templateDraftService.save(laptopDraft);
     const response = await request(getApp(app))
       .delete(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/sections/${section.id}`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(200);
     const found = await templateDraftService.findOneOrFail(response.body.id);
     expect(found.sections).toEqual([]);
   });
 
   it(`/DELETE section draft ${userNotMemberTxt}`, async () => {
+    const { userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const response = await request(getApp(app))
       .delete(
-        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}`,
+        `/organizations/${org2.id}/template-drafts/${randomUUID()}/sections/${randomUUID()}`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
 
   it(`/DELETE section draft ${draftDoesNotBelongToOrga}`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: org2.id,
+        userId: user.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
 
     const response = await request(getApp(app))
       .delete(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
 
   it(`/CREATE data field draft`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: org.id,
+        userId: user.id,
       }),
     );
     const section = SectionDraft.create({
@@ -1032,16 +857,9 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(201);
     expect(response.body.id).toBeDefined();
@@ -1061,6 +879,8 @@ describe("templateDraftController", () => {
   });
 
   it(`/CREATE data field draft ${userNotMemberTxt}`, async () => {
+    const { userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const body = {
       name: "Processor",
       type: DataFieldType.TEXT_FIELD,
@@ -1070,25 +890,20 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}/data-fields`,
+        `/organizations/${org2.id}/template-drafts/${randomUUID()}/sections/${randomUUID()}/data-fields`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/CREATE data field draft ${draftDoesNotBelongToOrga}`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: org2.id,
+        userId: user.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -1101,25 +916,19 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .post(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/PATCH data field draft`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: org.id,
+        userId: user.id,
       }),
     );
     const section = SectionDraft.create({
@@ -1139,20 +948,14 @@ describe("templateDraftController", () => {
 
     const body = {
       name: "Memory",
+      type: DataFieldType.NUMERIC_FIELD,
       options: { max: 8 },
     };
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields/${dataField.id}`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields/${dataField.id}`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(200);
     const found = await templateDraftService.findOneOrFail(response.body.id);
@@ -1160,37 +963,35 @@ describe("templateDraftController", () => {
       {
         ...dataField,
         _name: body.name,
-        options: body.options,
+        _type: body.type,
+        _options: body.options,
       },
     ]);
   });
 
   it(`/PATCH data field draft ${userNotMemberTxt}`, async () => {
+    const { userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const body = {
       name: "Memory",
       options: { max: 8 },
     };
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/someId/data-fields/someId`,
+        `/organizations/${org2.id}/template-drafts/${randomUUID()}/sections/someId/data-fields/someId`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/PATCH data field draft ${draftDoesNotBelongToOrga}`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: org2.id,
+        userId: user.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
@@ -1200,25 +1001,19 @@ describe("templateDraftController", () => {
     };
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/someId/data-fields/someId`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/sections/someId/data-fields/someId`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/DELETE data field draft`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId,
-        userId,
+        organizationId: org.id,
+        userId: user.id,
       }),
     );
 
@@ -1239,16 +1034,9 @@ describe("templateDraftController", () => {
     await templateDraftService.save(laptopDraft);
     const response = await request(getApp(app))
       .delete(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields/${dataField.id}`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/sections/${section.id}/data-fields/${dataField.id}`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(200);
     expect(response.body.id).toBeDefined();
     expect(response.body.sections[0].dataFields).toEqual([]);
@@ -1257,42 +1045,32 @@ describe("templateDraftController", () => {
   });
 
   it(`/DELETE data field ${userNotMemberTxt}`, async () => {
+    const { userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const response = await request(getApp(app))
       .delete(
-        `/organizations/${otherOrganizationId}/template-drafts/${randomUUID()}/sections/${randomUUID()}/data-fields/${randomUUID()}`,
+        `/organizations/${org2.id}/template-drafts/${randomUUID()}/sections/${randomUUID()}/data-fields/${randomUUID()}`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
 
   it(`/DELETE data field ${draftDoesNotBelongToOrga}`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const laptopDraft = TemplateDraft.create(
       templateDraftCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
-        userId,
+        organizationId: org2.id,
+        userId: user.id,
       }),
     );
     await templateDraftService.save(laptopDraft);
 
     const response = await request(getApp(app))
       .delete(
-        `/organizations/${organizationId}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}`,
+        `/organizations/${org.id}/template-drafts/${laptopDraft.id}/sections/${randomUUID()}/data-fields/${randomUUID()}`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          userId,
-          [organizationId, otherOrganizationId],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
 

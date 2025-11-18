@@ -9,13 +9,12 @@ import {
 } from "@headlessui/vue";
 import { CloudArrowUpIcon, XMarkIcon } from "@heroicons/vue/24/outline";
 import { ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { useIndexStore } from "../../stores";
 import { useMediaStore } from "../../stores/media";
 import { useNotificationStore } from "../../stores/notification";
 import MediaGrid from "./MediaGrid.vue";
-import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
 const props = defineProps<{
   open: boolean;
 }>();
@@ -23,6 +22,7 @@ const emits = defineEmits<{
   (e: "confirm", files: Array<MediaInfo>): void;
   (e: "cancel"): void;
 }>();
+const { t } = useI18n();
 const mediaStore = useMediaStore();
 const notificationStore = useNotificationStore();
 const indexStore = useIndexStore();
@@ -45,7 +45,7 @@ async function uploadFile() {
       progress => (uploadProgress.value = progress),
     );
     notificationStore.addSuccessNotification("Datei erfolgreich hochgeladen.");
-    await mediaStore.fetchMediaByOrganizationId(organizationId);
+    await mediaStore.fetchMediaByOrganizationId();
   }
   catch (error: unknown) {
     console.error("Fehler beim Hochladen der Datei:", error);
@@ -124,8 +124,9 @@ watch(
                   <DialogTitle
                     as="h3"
                     class="text-base font-semibold text-gray-900"
-                    >{{ t('file.select') }}</DialogTitle
                   >
+                    {{ t('file.select') }}
+                  </DialogTitle>
                 </div>
                 <div>
                   <button

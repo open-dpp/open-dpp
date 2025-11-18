@@ -1,13 +1,12 @@
 <script lang="ts" setup>
 import type { TemplateGetAllDto } from "@open-dpp/api-client";
-import { useI18n } from 'vue-i18n';
+import { useI18n } from "vue-i18n";
 
-const { t } = useI18n();
 const props = defineProps<{ templates: TemplateGetAllDto[] }>();
 const emits = defineEmits<{
   (e: "submit", selectedProductDataModelId: string, modelName: string): void;
 }>();
-
+const { t } = useI18n();
 const selectableDataModels = props.templates.map(p => ({
   label: `${p.name} ${p.version}`,
   value: p.id,

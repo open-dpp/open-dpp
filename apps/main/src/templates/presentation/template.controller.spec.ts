@@ -1,16 +1,19 @@
 import type { INestApplication } from "@nestjs/common";
-import type { Connection } from "mongoose";
 import type { TemplateDbProps } from "../domain/template";
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { expect, jest } from "@jest/globals";
 import { APP_GUARD } from "@nestjs/core";
-import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { AuthContext, PermissionModule } from "@open-dpp/auth";
-import { EnvModule } from "@open-dpp/env";
-import getKeycloakAuthToken, { createKeycloakUserInToken, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule } from "@open-dpp/testing";
+import { EnvModule, EnvService } from "@open-dpp/env";
+
 import request from "supertest";
-import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
+import { BetterAuthHelper } from "../../../test/better-auth-helper";
+import { AuthGuard } from "../../auth/auth.guard";
+import { AuthModule } from "../../auth/auth.module";
+import { AuthService } from "../../auth/auth.service";
+import { generateMongoConfig } from "../../database/config";
+import { EmailService } from "../../email/email.service";
 import { Template } from "../domain/template";
 import { laptopFactory } from "../fixtures/laptop.factory";
 import { templateCreatePropsFactory } from "../fixtures/template.factory";
@@ -22,115 +25,110 @@ import { TemplateController } from "./template.controller";
 describe("templateController", () => {
   let app: INestApplication;
   let service: TemplateService;
-  let mongoConnection: Connection;
+  let authService: AuthService;
 
-  const authContext = new AuthContext();
-  authContext.keycloakUser = createKeycloakUserInToken();
-  const organizationId = randomUUID();
-  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
+  const betterAuthHelper = new BetterAuthHelper();
+
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        MongooseTestingModule,
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
         MongooseModule.forFeature([
           {
             name: TemplateDoc.name,
             schema: TemplateSchema,
           },
         ]),
-        PermissionModule,
+        AuthModule,
       ],
       providers: [
         TemplateService,
         {
           provide: APP_GUARD,
-          useValue: keycloakAuthTestingGuard,
+          useClass: AuthGuard,
         },
       ],
       controllers: [TemplateController],
-    })
-      .overrideProvider(KeycloakResourcesService)
-      .useValue(
-        KeycloakResourcesServiceTesting.fromPlain({
-          users: [
-            {
-              id: authContext.keycloakUser.sub,
-              email: authContext.keycloakUser.email,
-            },
-          ],
-        }),
-      )
-      .compile();
+    }).overrideProvider(EmailService).useValue({
+      send: jest.fn(),
+    }).compile();
 
     service = moduleRef.get<TemplateService>(TemplateService);
-    mongoConnection = moduleRef.get<Connection>(getConnectionToken());
+    authService = moduleRef.get<AuthService>(
+      AuthService,
+    );
+    betterAuthHelper.setAuthService(authService);
+
     app = moduleRef.createNestApplication();
-
     await app.init();
-  });
 
-  const laptopPlain: TemplateDbProps = laptopFactory
-    .addSections()
-    .build({ organizationId });
+    const user1data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user1data?.user.id as string);
+    const user2data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user2data?.user.id as string);
+  });
 
   const userHasNotThePermissionsTxt = `fails if user has not the permissions`;
 
   it(`/GET template`, async () => {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const laptopPlain: TemplateDbProps = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id });
     const template = Template.loadFromDb({ ...laptopPlain });
 
     await service.save(template);
     const response = await request(app.getHttpServer())
-      .get(`/organizations/${organizationId}/templates/${template.id}`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .get(`/organizations/${org.id}/templates/${template.id}`)
+      .set("Cookie", userCookie)
       .send();
     expect(response.status).toEqual(200);
     expect(response.body).toEqual(templateToDto(template));
   });
 
   it(`/GET template ${userHasNotThePermissionsTxt}`, async () => {
-    const otherOrganizationId = randomUUID();
+    const { userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const template = Template.create(
       templateCreatePropsFactory.build({
-        organizationId: otherOrganizationId,
+        organizationId: org2.id,
       }),
     );
     await service.save(template);
     const response = await request(app.getHttpServer())
-      .get(`/organizations/${otherOrganizationId}/templates/${template.id}`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .get(`/organizations/${org2.id}/templates/${template.id}`)
+      .set("Cookie", userCookie)
       .send();
     expect(response.status).toEqual(403);
   });
 
   it(`/GET all templates which belong to the organization`, async () => {
-    const otherOrganizationId = randomUUID();
+    const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const laptopPlain: TemplateDbProps = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id });
     const laptopTemplate = Template.loadFromDb({
       ...laptopPlain,
+      organizationId: org.id,
     });
     const phoneTemplate = Template.loadFromDb({
       ...laptopPlain,
       id: randomUUID(),
       name: "phone",
+      organizationId: org.id,
     });
     const notAccessibleTemplate = Template.create(
       templateCreatePropsFactory.build({
         name: "privateModel",
-        organizationId: otherOrganizationId,
+        organizationId: org2.id,
       }),
     );
 
@@ -138,15 +136,8 @@ describe("templateController", () => {
     await service.save(phoneTemplate);
     await service.save(notAccessibleTemplate);
     const response = await request(app.getHttpServer())
-      .get(`/organizations/${organizationId}/templates`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .get(`/organizations/${org.id}/templates`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(200);
 
     expect(response.body).toContainEqual({
@@ -173,22 +164,15 @@ describe("templateController", () => {
   });
 
   it(`/GET all templates which belong to the organization ${userHasNotThePermissionsTxt}`, async () => {
-    const otherOrganizationId = randomUUID();
+    const { userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const response = await request(app.getHttpServer())
-      .get(`/organizations/${otherOrganizationId}/templates`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          authContext.keycloakUser.sub,
-          [organizationId],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .get(`/organizations/${org2.id}/templates`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
 
   afterAll(async () => {
     await app.close();
-    await mongoConnection.close();
   });
 });

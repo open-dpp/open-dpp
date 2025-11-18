@@ -18,23 +18,10 @@ const envSchema = z.object({
   OPEN_DPP_MONGODB_USER: z.coerce.string(),
   OPEN_DPP_MONGODB_PASSWORD: z.coerce.string(),
   OPEN_DPP_MONGODB_DATABASE: z.coerce.string(),
-  // Postgres
-  OPEN_DPP_DB_PORT: z.coerce.number().max(65535).min(0),
-  OPEN_DPP_DB_SSL: asBoolean.optional(),
-  OPEN_DPP_DB_HOST: z.coerce.string(),
-  OPEN_DPP_DB_USER: z.coerce.string(),
-  OPEN_DPP_DB_PASSWORD: z.coerce.string(),
-  OPEN_DPP_DB_DATABASE: z.coerce.string(),
   // AI
   OPEN_DPP_MISTRAL_API_KEY: z.coerce.string(),
   OPEN_DPP_OLLAMA_URL: z.url(),
   OPEN_DPP_MCP_URL: z.url(),
-  // Keycloak
-  OPEN_DPP_KEYCLOAK_URL: z.url(),
-  OPEN_DPP_KEYCLOAK_REALM: z.coerce.string(),
-  OPEN_DPP_KEYCLOAK_USER: z.coerce.string(),
-  OPEN_DPP_KEYCLOAK_PASSWORD: z.coerce.string(),
-  OPEN_DPP_KEYCLOAK_JWT_AUDIENCE: z.coerce.string(),
   // S3
   OPEN_DPP_S3_ENDPOINT: z.coerce.string(),
   OPEN_DPP_S3_PORT: z.coerce.number().max(65535).min(0),
@@ -60,6 +47,27 @@ const envSchema = z.object({
     .or(z.number())
     .optional()
     .default("50mb"),
+  // Mail
+  OPEN_DPP_MAIL_HOST: z.coerce.string(),
+  OPEN_DPP_MAIL_PORT: z.coerce.number().max(65535).min(0),
+  OPEN_DPP_MAIL_USER: z.coerce.string(),
+  OPEN_DPP_MAIL_PASSWORD: z.coerce.string(),
+  OPEN_DPP_MAIL_SENDER_ADDRESS: z.coerce.string(),
+  OPEN_DPP_MAIL_MAILPIT_SMTP_AUTH: z.coerce.string().optional(),
+  OPEN_DPP_MAIL_MAILPIT_SMTP_ALLOW_INSECURE: z.coerce.string().optional(),
+  // Auth
+  OPEN_DPP_AUTH_SECRET: z.coerce.string(),
+  OPEN_DPP_AUTH_CLOUD_ENABLED: asBoolean.optional(),
+  OPEN_DPP_AUTH_CLOUD_PROVIDER: z.string().optional(),
+  OPEN_DPP_AUTH_CLOUD_CLIENT_ID: z.string().optional(),
+  OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET: z.string().optional(),
+  OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL: z.string().optional(),
+  // Migrate
+  OPEN_DPP_MIGRATE_KEYCLOAK_ENABLED: asBoolean.optional(),
+  OPEN_DPP_MIGRATE_KEYCLOAK_BASEURL: z.string().optional(),
+  OPEN_DPP_MIGRATE_KEYCLOAK_REALM: z.string().optional(),
+  OPEN_DPP_MIGRATE_KEYCLOAK_CLIENTID: z.string().optional(),
+  OPEN_DPP_MIGRATE_KEYCLOAK_CLIENTSECRET: z.string().optional(),
 }).superRefine((val, ctx) => {
   const hasUri = !!val.OPEN_DPP_MONGODB_URI;
   const hasHostPort = !!val.OPEN_DPP_MONGODB_HOST && !!val.OPEN_DPP_MONGODB_PORT;
@@ -70,12 +78,20 @@ const envSchema = z.object({
       path: ["OPEN_DPP_MONGODB_URI"],
     });
   }
-  if (hasUri && hasHostPort) {
-    ctx.addIssue({
-      code: "custom",
-      message: "Specify only one: OPEN_DPP_MONGODB_URI or host/port pair, not both.",
-      path: ["OPEN_DPP_MONGODB_URI"],
-    });
+  // if open-dpp cloud as auth provider is enabled, env must be prepared for it
+  const isAuthCloudEnabled = !!val.OPEN_DPP_AUTH_CLOUD_ENABLED;
+  if (isAuthCloudEnabled) {
+    const hasAuthCloudProvider = !!val.OPEN_DPP_AUTH_CLOUD_PROVIDER;
+    const hasAuthCloudClientId = !!val.OPEN_DPP_AUTH_CLOUD_CLIENT_ID;
+    const hasAuthCloudClientSecret = !!val.OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET;
+    const hasAuthCloudDiscoveryUrl = !!val.OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL;
+    if (!hasAuthCloudProvider || !hasAuthCloudClientId || !hasAuthCloudClientSecret || !hasAuthCloudDiscoveryUrl) {
+      ctx.addIssue({
+        code: "custom",
+        message: "OPEN_DPP_AUTH_CLOUD_ENABLED is set to true but not correctly configured. Please check the following env variables:",
+        path: ["OPEN_DPP_AUTH_CLOUD_PROVIDER", "OPEN_DPP_AUTH_CLOUD_CLIENT_ID", "OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET", "OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL"],
+      });
+    }
   }
 });
 

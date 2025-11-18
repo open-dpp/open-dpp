@@ -2,9 +2,9 @@
 import type { RouteRecordRaw } from "vue-router";
 import { HomeIcon } from "@heroicons/vue/20/solid";
 import { computed, onMounted, onUnmounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { useLayoutStore } from "../stores/layout";
-import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const layoutStore = useLayoutStore();
@@ -55,8 +55,7 @@ function isCurrent(record: RouteRecordRaw) {
         <div class="flex items-center">
           <svg
             aria-hidden="true"
-            class="h-full w-6 shrink-0 text-gray-200"
-            fill="currentColor"
+            class="w-2 h-3 shrink-0 text-gray-200"
             preserveAspectRatio="none"
             viewBox="0 0 24 44"
           >
@@ -66,7 +65,8 @@ function isCurrent(record: RouteRecordRaw) {
             :aria-current="isCurrent(page.route) ? 'page' : undefined"
             :to="{ name: page.route.name, params: page.params }"
             class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700"
-            >{{ page.name.localized ? t(page.name.text) : page.name.text }}
+          >
+            {{ page.name.localized ? t(page.name.text) : page.name.text }}
           </router-link>
         </div>
       </li>

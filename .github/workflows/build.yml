@@ -2,10 +2,10 @@ name: Build and push Docker image
 
 on:
   push:
-    branches: [ main ]
-    tags: [ 'v*' ]
+    branches: [main]
+    tags: ["v*"]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -17,26 +17,38 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  # lint:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v3
-  #     - name: Set up Node.js
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: ${{ env.NODE_VERSION }}
-  #     - name: Install dependencies
-  #       run: npm install
-  #     - name: Run linter
-  #       run: npm run lint
+      # Step 2: Install pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
 
-  test-backend:
+      # Step 3: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      # Step 4: Install dependencies
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Step 5: Run linting
+      - name: Run linter
+        run: pnpm run lint
+
+  test:
     runs-on: ubuntu-latest
     permissions:
       contents: read
     env:
+      NODE_VERSION: 24
       # Common
       OPEN_DPP_PORT: "3000"
       OPEN_DPP_URL: "http://dpp.example.de"
@@ -48,22 +60,10 @@ jobs:
       OPEN_DPP_MONGODB_USER: "admin"
       OPEN_DPP_MONGODB_PASSWORD: "test-mongo-password"
       OPEN_DPP_MONGODB_DATABASE: "management"
-      # Postgres
-      OPEN_DPP_DB_PORT: "5432"
-      OPEN_DPP_DB_HOST: "localhost"
-      OPEN_DPP_DB_USER: "admin"
-      OPEN_DPP_DB_PASSWORD: "test-postgres-password"
-      OPEN_DPP_DB_DATABASE: "management"
       # AI
       OPEN_DPP_MISTRAL_API_KEY: "your-mistral-key"
       OPEN_DPP_OLLAMA_URL: "https://ollama-url"
       OPEN_DPP_MCP_URL: "http://localhost:3002/sse"
-      # Keycloak
-      OPEN_DPP_KEYCLOAK_URL: "https://auth.example.de"
-      OPEN_DPP_KEYCLOAK_REALM: "open-dpp"
-      OPEN_DPP_KEYCLOAK_USER: "admin"
-      OPEN_DPP_KEYCLOAK_PASSWORD: "test-keycloak-password"
-      OPEN_DPP_KEYCLOAK_JWT_AUDIENCE: "account"
       # S3
       OPEN_DPP_S3_ENDPOINT: "minio"
       OPEN_DPP_S3_PORT: "9000"
@@ -73,68 +73,119 @@ jobs:
       OPEN_DPP_S3_DEFAULT_BUCKET: "dpp"
       OPEN_DPP_S3_PROFILE_PICTURE_BUCKET: "profile-pictures"
       # ClamAV
-      OPEN_DPP_CLAMAV_URL: "http://clamav"
-      OPEN_DPP_CLAMAV_PORT: "3310"
+      OPEN_DPP_CLAMAV_URL: "http://clamav-rest"
+      OPEN_DPP_CLAMAV_PORT: "9000"
+      # MCP
+      OPEN_DPP_MCP_PORT: "3001"
+      # Mail
+      OPEN_DPP_MAIL_HOST=: "localhost"
+      OPEN_DPP_MAIL_PORT: "8026"
+      OPEN_DPP_MAIL_USER: "admin"
+      OPEN_DPP_MAIL_PASSWORD: "admin"
+      OPEN_DPP_MAIL_SENDER_ADDRESS: "open-dpp"
+      OPEN_DPP_MAIL_MAILPIT_SMTP_AUTH: "admin:admin"
+      OPEN_DPP_MAIL_MAILPIT_SMTP_ALLOW_INSECURE: "true"
+      # Auth
+      OPEN_DPP_AUTH_SECRET: "change-this-to-a-good-secret"
+      OPEN_DPP_AUTH_CLOUD_ENABLED: "false"
+      OPEN_DPP_AUTH_CLOUD_PROVIDER: ""
+      OPEN_DPP_AUTH_CLOUD_CLIENT_ID: ""
+      OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET: ""
+      OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL: ""
+      # Migrate from keycloak
+      OPEN_DPP_MIGRATE_KEYCLOAK_ENABLED: "false"
+      OPEN_DPP_MIGRATE_KEYCLOAK_BASEURL: ""
+      OPEN_DPP_MIGRATE_KEYCLOAK_REALM: ""
+      OPEN_DPP_MIGRATE_KEYCLOAK_CLIENTID: ""
+      OPEN_DPP_MIGRATE_KEYCLOAK_CLIENTSECRET: ""
+      # Frontend
+      VITE_API_ROOT: "http://localhost"
 
     steps:
       # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Start database
+      - name: Start test stack
         run: |
           docker compose -f docker-compose-test.yml up -d
 
-      # Step 2: Set up Node.js
+      # Step 2: Install pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      # Step 3: Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
 
-      # Step 3: Install dependencies
+      # Step 4: See https://docs.cypress.io/app/get-started/install-cypress#pnpm-configuration
+      - name: Disable pnpm side-effects cache
+        run: pnpm config set side-effects-cache false --location project
+
+      # Step 5: Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: pnpm install --frozen-lockfile
 
-      # Step 4: Wait for Databases to be ready
-      - name: Wait for Databases to be ready
-        run: |
-          echo "Waiting for PostgreSQL to start..."
-          until pg_isready -h ${{ env.OPEN_DPP_DB_HOST }} -p ${{ env.OPEN_DPP_DB_PORT}} -U ${{ env.OPEN_DPP_DB_DATABASE}}; do
-            sleep 1
-          done
-          echo "Waiting for MongoDB to start..."
-          until nc -z ${{ env.OPEN_DPP_MONGODB_HOST }} ${{ env.OPEN_DPP_MONGODB_PORT }}; do
-            sleep 1
-          done
-
-      # Step 5: Run tests
-      - name: Run tests
-        run: npm run test
-
-  test-frontend:
-    runs-on: ubuntu-latest
-    env:
-      KEYCLOAK_DISABLED: "true"
-      VITE_API_ROOT: "http://localhost"
-      VITE_KEYCLOAK_ROOT: "http://localhost"
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      # Step 6: Cache cypress binaries (optional but helps CI performance)
+      - name: Cache Cypress binary
+        uses: actions/cache@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-      - name: Install dependencies
-        run: npm run ui:install
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      # Step 7: Build project
+      - name: Build project
+        run: pnpm build
+
+      # Step 8: Build testing support package
+      - name: Build project
+        run: cd packages/testing && pnpm build
+
+      # Step 10: Run tests
       - name: Run tests
-        run: npm run ui:test
+        run: pnpm test:ci
+
+      # Step 11: Verify Cypress binary
+      - name: Verify Cypress install
+        run: npx cypress verify
+
+      # Step 12: Run cypress tests
+      - name: Run cypress tests
+        run: pnpm test:ci:cypress
+
+      # Step 13: Upload Cypress artifacts (optional)
+      - name: Upload Cypress Artifacts
+        if: always() # This ensures artifacts are uploaded even if the tests fail
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-artifacts
+          path: |
+            apps/client/cypress/videos/
+            apps/client/cypress/screenshots/
 
   build-and-push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Check which folders changed
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            keycloak:
+              - 'apps/keycloak/**'
+            mcp:
+              - 'apps/mcp/**'
+              - 'packages/**'
+            main:
+              - 'apps/main/**'
+              - 'apps/client/**'
+              - 'packages/**'
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
@@ -149,8 +200,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Extract Docker metadata
-        id: meta
+      - name: Extract Docker production metadata
+        if: steps.changes.outputs.main == 'true'
+        id: meta-production
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
@@ -160,16 +212,42 @@ jobs:
             type=ref,event=tag
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
-      - name: Build and push
+      - name: Extract Docker mcp metadata
+        if: steps.changes.outputs.mcp == 'true'
+        id: meta-mcp
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/mcp
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=ref,event=tag
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and push Production
         uses: docker/build-push-action@v6
+        if: steps.changes.outputs.main == 'true'
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
-          build-args: |
-            APP_NAME=main
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
+          target: production
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta-production.outputs.tags }}
+          labels: ${{ steps.meta-production.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push MCP Server
+        uses: docker/build-push-action@v6
+        if: steps.changes.outputs.mcp == 'true'
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
+          target: mcpserver
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-mcp.outputs.tags }}
+          labels: ${{ steps.meta-mcp.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

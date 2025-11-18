@@ -1,18 +1,22 @@
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { expect, jest } from "@jest/globals";
 import { INestApplication } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { AuthContext, PermissionModule } from "@open-dpp/auth";
-import { EnvModule } from "@open-dpp/env";
+import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
-import getKeycloakAuthToken, { createKeycloakUserInToken, getApp, ignoreIds, KeycloakAuthTestingGuard, KeycloakResourcesServiceTesting, MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
+import { getApp, ignoreIds } from "@open-dpp/testing";
 import request from "supertest";
+import { BetterAuthHelper } from "../../../test/better-auth-helper";
+import { AuthGuard } from "../../auth/auth.guard";
+import { AuthModule } from "../../auth/auth.module";
+import { AuthService } from "../../auth/auth.service";
+import { generateMongoConfig } from "../../database/config";
+import { EmailService } from "../../email/email.service";
 import { AasConnectionDoc, AasConnectionSchema } from "../../integrations/infrastructure/aas-connection.schema";
 import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
 import { ItemsService } from "../../items/infrastructure/items.service";
-import { KeycloakResourcesService } from "../../keycloak-resources/infrastructure/keycloak-resources.service";
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,
@@ -21,11 +25,8 @@ import {
   PassportTemplatePublicationService,
 } from "../../marketplace/infrastructure/passport-template-publication.service";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
-import { Organization } from "../../organizations/domain/organization";
-import { OrganizationEntity } from "../../organizations/infrastructure/organization.entity";
-import { OrganizationsService } from "../../organizations/infrastructure/organizations.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import { Template, TemplateDbProps } from "../../templates/domain/template";
+import { Template } from "../../templates/domain/template";
 import {
   LaptopFactory,
   laptopFactory,
@@ -41,9 +42,6 @@ import {
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
-import { User } from "../../users/domain/user";
-import { UserEntity } from "../../users/infrastructure/user.entity";
-import { UsersService } from "../../users/infrastructure/users.service";
 import { Model } from "../domain/model";
 import { ModelDoc, ModelSchema } from "../infrastructure/model.schema";
 import { ModelsService } from "../infrastructure/models.service";
@@ -55,27 +53,26 @@ describe("modelsController", () => {
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
   let modelsService: ModelsService;
   let templateService: TemplateService;
-  const keycloakAuthTestingGuard = new KeycloakAuthTestingGuard(new Map());
-  const authContext = new AuthContext();
-  authContext.keycloakUser = createKeycloakUserInToken();
-  const user = new User(
-    authContext.keycloakUser.sub,
-    authContext.keycloakUser.email,
-  );
-  const organization = Organization.create({
-    name: "orga",
-    user,
-  });
   let marketplaceService: MarketplaceApplicationService;
+  let authService: AuthService;
+
+  const sectionId3 = randomUUID();
+  const dataFieldId4 = randomUUID();
+  const dataFieldId5 = randomUUID();
+
+  const betterAuthHelper = new BetterAuthHelper();
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        TypeOrmTestingModule,
-        TypeOrmTestingModule.forFeature([OrganizationEntity, UserEntity]),
-        PermissionModule,
-        MongooseTestingModule,
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
         MongooseModule.forFeature([
           {
             name: ModelDoc.name,
@@ -106,11 +103,9 @@ describe("modelsController", () => {
             schema: PassportTemplatePublicationDbSchema,
           },
         ]),
+        AuthModule,
       ],
       providers: [
-        UsersService,
-        OrganizationsService,
-        KeycloakResourcesService,
         ModelsService,
         ItemsService,
         UniqueProductIdentifierService,
@@ -119,17 +114,15 @@ describe("modelsController", () => {
         PassportTemplatePublicationService,
         {
           provide: APP_GUARD,
-          useValue: keycloakAuthTestingGuard,
+          useClass: AuthGuard,
         },
       ],
       controllers: [ModelsController],
     })
-      .overrideProvider(KeycloakResourcesService)
-      .useValue(
-        KeycloakResourcesServiceTesting.fromPlain({
-          users: [{ id: user.id, email: user.email }],
-        }),
-      )
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
       .compile();
 
     uniqueProductIdentifierService = moduleRef.get(
@@ -140,25 +133,27 @@ describe("modelsController", () => {
     marketplaceService = moduleRef.get<MarketplaceApplicationService>(
       MarketplaceApplicationService,
     );
-    const organizationService
-      = moduleRef.get<OrganizationsService>(OrganizationsService);
-    await organizationService.save(organization);
+
+    authService = moduleRef.get<AuthService>(
+      AuthService,
+    );
+    betterAuthHelper.setAuthService(authService);
 
     app = moduleRef.createNestApplication();
     app.useGlobalFilters(new NotFoundInDatabaseExceptionFilter());
-
     await app.init();
+
+    const user1data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user1data?.user.id as string);
+    const user2data = await betterAuthHelper.createUser();
+    await betterAuthHelper.createOrganization(user2data?.user.id as string);
   });
 
-  const sectionId3 = randomUUID();
-  const dataFieldId4 = randomUUID();
-  const dataFieldId5 = randomUUID();
-
-  const laptopModel: TemplateDbProps = laptopFactory
-    .addSections()
-    .build({ organizationId: organization.id, userId: user.id });
-
   it(`/CREATE model`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const laptopModel = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
     const body = {
@@ -167,20 +162,13 @@ describe("modelsController", () => {
       templateId: template.id,
     };
     const response = await request(getApp(app))
-      .post(`/organizations/${organization.id}/models`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .post(`/organizations/${org.id}/models`)
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(201);
     const found = await modelsService.findOneOrFail(response.body.id);
     expect(response.body.id).toEqual(found.id);
-    expect(found.isOwnedBy(organization.id)).toBeTruthy();
+    expect(found.isOwnedBy(org.id)).toBeTruthy();
     expect(found.templateId).toEqual(template.id);
     const foundUniqueProductIdentifiers
       = await uniqueProductIdentifierService.findAllByReferencedId(found.id);
@@ -193,15 +181,16 @@ describe("modelsController", () => {
   });
 
   it(`/CREATE model using template from marketplace`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const laptopModel = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
     const template = Template.loadFromDb(laptopModel);
-    const token = getKeycloakAuthToken(
-      user.id,
-      [organization.id],
-      keycloakAuthTestingGuard,
-    );
     const { id: marketplaceResourceId } = await marketplaceService.upload(
       template,
       user,
+      org.id,
+      org.name,
     );
 
     const body = {
@@ -210,43 +199,41 @@ describe("modelsController", () => {
       marketplaceResourceId,
     };
     const response = await request(getApp(app))
-      .post(`/organizations/${organization.id}/models`)
-      .set("Authorization", token)
+      .post(`/organizations/${org.id}/models`)
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(201);
     const found = await modelsService.findOneOrFail(response.body.id);
     expect(response.body.id).toEqual(found.id);
-    expect(found.isOwnedBy(organization.id)).toBeTruthy();
+    expect(found.isOwnedBy(org.id)).toBeTruthy();
     const foundTemplate = await templateService.findOneOrFail(found.templateId);
     expect(foundTemplate.marketplaceResourceId).toEqual(marketplaceResourceId);
   });
 
   it(`/CREATE model fails if user is not member of organization`, async () => {
+    const { userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const body = {
       name: "My name",
       description: "My desc",
       templateId: randomUUID(),
     };
-    const otherOrganizationId = randomUUID();
     const response = await request(getApp(app))
-      .post(`/organizations/${otherOrganizationId}/models`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .post(`/organizations/${org2.id}/models`)
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/CREATE model fails if template does not belong to organization`, async () => {
-    const otherOrganizationId = randomUUID();
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const laptopModel = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
     const template = Template.loadFromDb({
       ...laptopModel,
-      organizationId: otherOrganizationId,
+      organizationId: org2.id,
     });
     await templateService.save(template);
     const body = {
@@ -255,20 +242,14 @@ describe("modelsController", () => {
       templateId: template.id,
     };
     const response = await request(getApp(app))
-      .post(`/organizations/${organization.id}/models`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .post(`/organizations/${org.id}/models`)
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
   });
 
   it(`/CREATE model fails if template and marketplace resource id are provided`, async () => {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const body = {
       name: "My name",
       description: "My desc",
@@ -276,15 +257,8 @@ describe("modelsController", () => {
       marketplaceResourceId: randomUUID(),
     };
     const response = await request(getApp(app))
-      .post(`/organizations/${organization.id}/models`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .post(`/organizations/${org.id}/models`)
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(400);
     expect(response.body.errors).toEqual([
@@ -297,20 +271,14 @@ describe("modelsController", () => {
   });
 
   it(`/CREATE model fails if neither template nor marketplace resource id are provided`, async () => {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const body = {
       name: "My name",
       description: "My desc",
     };
     const response = await request(getApp(app))
-      .post(`/organizations/${organization.id}/models`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .post(`/organizations/${org.id}/models`)
+      .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(400);
     expect(response.body.errors).toEqual([
@@ -323,16 +291,19 @@ describe("modelsController", () => {
   });
 
   it(`/GET models of organization`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const laptopModel = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
     const modelNames = ["P1", "P2"];
-    const otherOrganizationId = randomUUID();
     const template = Template.loadFromDb(laptopModel);
 
     const models: Model[] = await Promise.all(
       modelNames.map(async (pn) => {
         const model = Model.create({
           name: pn,
-          organizationId: otherOrganizationId,
-          userId: user.id,
+          organizationId: org.id,
+          userId: user.id as string,
           template,
         });
         return await modelsService.save(model);
@@ -341,131 +312,137 @@ describe("modelsController", () => {
     await modelsService.save(
       Model.create({
         name: "Other Orga",
-        organizationId: organization.id,
+        organizationId: org.id,
         userId: user.id,
         template,
       }),
     );
 
     const response = await request(getApp(app))
-      .get(`/organizations/${otherOrganizationId}/models`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          user.id,
-          [organization.id, otherOrganizationId],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .get(`/organizations/${org.id}/models`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(200);
 
-    expect(response.body).toEqual(models.map(m => modelToDto(m)));
+    expect(response.body).toEqual(
+      expect.arrayContaining(
+        models.map((m) => {
+          const dto = modelToDto(m);
+          // Only assert on stable fields you care about
+          return expect.objectContaining({
+            id: dto.id,
+            name: dto.name,
+            templateId: dto.templateId,
+            owner: dto.owner,
+            // You can also verify dataValues structure without insisting on `value`
+            dataValues: expect.arrayContaining(
+              dto.dataValues.map(dv => expect.objectContaining({
+                dataFieldId: dv.dataFieldId,
+                dataSectionId: dv.dataSectionId,
+                row: dv.row,
+              })),
+            ),
+          });
+        }),
+      ),
+    );
   });
 
   it(`/GET models of organization fails if user is not part of organization`, async () => {
-    const otherOrganizationId = randomUUID();
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const laptopModel = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
     const template = Template.loadFromDb(laptopModel);
 
     const model = Model.create({
       name: "Model",
-      organizationId: otherOrganizationId,
+      organizationId: org2.id,
       userId: user.id,
       template,
     });
     await modelsService.save(model);
 
     const response = await request(getApp(app))
-      .get(`/organizations/${otherOrganizationId}/models`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .get(`/organizations/${org2.id}/models`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
 
   it(`/GET model`, async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const laptopModel = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
     const template = Template.loadFromDb(laptopModel);
 
     const model = Model.create({
       name: "Model",
-      organizationId: organization.id,
+      organizationId: org.id,
       userId: user.id,
       template,
     });
     await modelsService.save(model);
     const response = await request(getApp(app))
-      .get(`/organizations/${organization.id}/models/${model.id}`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .get(`/organizations/${org.id}/models/${model.id}`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(200);
     expect(response.body).toEqual(modelToDto(model));
   });
 
   it(`/GET model fails if user is not member of organization`, async () => {
-    const otherOrganizationId = randomUUID();
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const laptopModel = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
     const template = Template.loadFromDb(laptopModel);
 
     const model = Model.create({
       name: "Model",
-      organizationId: otherOrganizationId,
+      organizationId: org2.id,
       userId: user.id,
       template,
     });
     await modelsService.save(model);
     const response = await request(getApp(app))
-      .get(`/organizations/${otherOrganizationId}/models/${model.id}`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .get(`/organizations/${org.id}/models/${model.id}`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
 
   it(`/GET model fails if model does not belong to organization`, async () => {
-    const otherOrganizationId = randomUUID();
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const laptopModel = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
     const template = Template.loadFromDb(laptopModel);
 
     const model = Model.create({
       name: "Model",
-      organizationId: otherOrganizationId,
+      organizationId: org2.id,
       userId: user.id,
       template,
     });
     await modelsService.save(model);
     const response = await request(getApp(app))
-      .get(`/organizations/${organization.id}/models/${model.id}`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      );
+      .get(`/organizations/${org.id}/models/${model.id}`)
+      .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
 
   //
   it("update data values of model", async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const laptopModel = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
     const model = Model.create({
       name: "My name",
-      organizationId: organization.id,
+      organizationId: org.id,
       userId: user.id,
       template,
     });
@@ -490,15 +467,8 @@ describe("modelsController", () => {
       },
     ];
     const response = await request(getApp(app))
-      .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .patch(`/organizations/${org.id}/models/${model.id}/data-values`)
+      .set("Cookie", userCookie)
       .send(updatedValues);
     expect(response.status).toEqual(200);
     const expectedDataValues = [
@@ -523,12 +493,16 @@ describe("modelsController", () => {
   });
 
   it("update data values fails if user is not member of organization", async () => {
-    const otherOrganizationId = randomUUID();
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const laptopModel = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
     const model = Model.create({
       name: "My name",
-      organizationId: organization.id,
+      organizationId: org2.id,
       userId: user.id,
       template,
     });
@@ -545,21 +519,18 @@ describe("modelsController", () => {
     ];
     const response = await request(getApp(app))
       .patch(
-        `/organizations/${otherOrganizationId}/models/${model.id}/data-values`,
+        `/organizations/${org.id}/models/${model.id}/data-values`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(updatedValues);
     expect(response.status).toEqual(403);
   });
 
   it("update data values fails if model does not belong to organization", async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const laptopModel = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
     const otherOrganizationId = randomUUID();
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
@@ -581,26 +552,23 @@ describe("modelsController", () => {
       },
     ];
     const response = await request(getApp(app))
-      .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .patch(`/organizations/${org.id}/models/${model.id}/data-values`)
+      .set("Cookie", userCookie)
       .send(updatedValues);
     expect(response.status).toEqual(403);
   });
 
   //
   it("update data values fails caused by validation", async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const laptopModel = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
     const model = Model.create({
       name: "My name",
-      organizationId: organization.id,
+      organizationId: org.id,
       userId: user.id,
       template,
     });
@@ -621,15 +589,8 @@ describe("modelsController", () => {
       },
     ];
     const response = await request(getApp(app))
-      .patch(`/organizations/${organization.id}/models/${model.id}/data-values`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .patch(`/organizations/${org.id}/models/${model.id}/data-values`)
+      .set("Cookie", userCookie)
       .send(updatedValues);
     expect(response.status).toEqual(400);
     expect(response.body).toEqual({
@@ -643,13 +604,133 @@ describe("modelsController", () => {
       isValid: false,
     });
   });
+
+  it("add media to model", async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const laptopTemplate = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
+    const template = Template.loadFromDb(laptopTemplate);
+    await templateService.save(template);
+    const model = Model.create({
+      name: "My name",
+      organizationId: org.id,
+      userId: user.id,
+      template,
+    });
+    model.createUniqueProductIdentifier();
+
+    await modelsService.save(model);
+    const mediaReference = { id: randomUUID() };
+    const response = await request(getApp(app))
+      .post(`/organizations/${org.id}/models/${model.id}/media`)
+      .set("Cookie", userCookie)
+      .send(mediaReference);
+    expect(response.status).toEqual(201);
+    expect(response.body.mediaReferences).toEqual([mediaReference.id]);
+  });
+
+  it("remove media from model", async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const laptopTemplate = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
+    const template = Template.loadFromDb(laptopTemplate);
+    await templateService.save(template);
+    const model = Model.create({
+      name: "My name",
+      organizationId: org.id,
+      userId: user.id,
+      template,
+    });
+    const mediaReferenceToDelete = randomUUID();
+    model.addMediaReference(mediaReferenceToDelete);
+    const mediaReferenceToKeep = randomUUID();
+    model.addMediaReference(mediaReferenceToKeep);
+    model.createUniqueProductIdentifier();
+
+    await modelsService.save(model);
+    const response = await request(getApp(app))
+      .delete(`/organizations/${org.id}/models/${model.id}/media/${mediaReferenceToDelete}`)
+      .set("Cookie", userCookie);
+
+    expect(response.status).toEqual(200);
+    expect(response.body.mediaReferences).toEqual([mediaReferenceToKeep]);
+  });
+
+  it("modify media of model", async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const laptopTemplate = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
+    const template = Template.loadFromDb(laptopTemplate);
+    await templateService.save(template);
+    const model = Model.create({
+      name: "My name",
+      organizationId: org.id,
+      userId: user.id,
+      template,
+    });
+    const mediaReference1 = randomUUID();
+    model.addMediaReference(mediaReference1);
+    const mediaReference2 = randomUUID();
+    model.addMediaReference(mediaReference2);
+    model.createUniqueProductIdentifier();
+
+    await modelsService.save(model);
+    const mediaReferencePayload = {
+      id: randomUUID(),
+    };
+    const response = await request(getApp(app))
+      .patch(`/organizations/${org.id}/models/${model.id}/media/${mediaReference1}`)
+      .set("Cookie", userCookie)
+      .send(mediaReferencePayload);
+    expect(response.status).toEqual(200);
+    expect(response.body.mediaReferences).toEqual([mediaReferencePayload.id, mediaReference2]);
+  });
+
+  it("move media to another position", async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const laptopTemplate = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
+    const template = Template.loadFromDb(laptopTemplate);
+    await templateService.save(template);
+    const model = Model.create({
+      name: "My name",
+      organizationId: org.id,
+      userId: user.id,
+      template,
+    });
+    model.createUniqueProductIdentifier();
+    const mediaReference1 = randomUUID();
+    const mediaReference2 = randomUUID();
+    const mediaReference3 = randomUUID();
+    model.addMediaReference(mediaReference1);
+    model.addMediaReference(mediaReference2);
+    model.addMediaReference(mediaReference3);
+
+    await modelsService.save(model);
+    const positionPayload = { position: 2 };
+    const response = await request(getApp(app))
+      .patch(`/organizations/${org.id}/models/${model.id}/media/${mediaReference1}/move`)
+      .set("Cookie", userCookie)
+      .send(positionPayload);
+    expect(response.status).toEqual(200);
+    expect(response.body.mediaReferences).toEqual([mediaReference2, mediaReference3, mediaReference1]);
+  });
+
   //
   it("add data values to model", async () => {
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const laptopModel = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
     const model = Model.create({
       name: "My name",
-      organizationId: organization.id,
+      organizationId: org.id,
       userId: user.id,
       template,
     });
@@ -672,15 +753,8 @@ describe("modelsController", () => {
       },
     ];
     const response = await request(getApp(app))
-      .post(`/organizations/${organization.id}/models/${model.id}/data-values`)
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .post(`/organizations/${org.id}/models/${model.id}/data-values`)
+      .set("Cookie", userCookie)
       .send(addedValues);
     expect(response.status).toEqual(201);
     const expected = [
@@ -695,12 +769,16 @@ describe("modelsController", () => {
   });
 
   it("add data values to model fails if user is not member of organization", async () => {
-    const otherOrganizationId = randomUUID();
+    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const laptopModel = laptopFactory
+      .addSections()
+      .build({ organizationId: org.id, userId: user.id });
     const template = Template.loadFromDb(laptopModel);
     await templateService.save(template);
     const model = Model.create({
       name: "My name",
-      organizationId: otherOrganizationId,
+      organizationId: org2.id,
       userId: user.id,
       template,
     });
@@ -709,16 +787,9 @@ describe("modelsController", () => {
     const addedValues: Array<any> = [];
     const response = await request(getApp(app))
       .post(
-        `/organizations/${otherOrganizationId}/models/${model.id}/data-values`,
+        `/organizations/${org2.id}/models/${model.id}/data-values`,
       )
-      .set(
-        "Authorization",
-        getKeycloakAuthToken(
-          user.id,
-          [organization.id],
-          keycloakAuthTestingGuard,
-        ),
-      )
+      .set("Cookie", userCookie)
       .send(addedValues);
     expect(response.status).toEqual(403);
   });

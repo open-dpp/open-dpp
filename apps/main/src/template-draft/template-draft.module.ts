@@ -1,7 +1,8 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { PermissionModule } from "@open-dpp/auth";
+import { AuthModule } from "../auth/auth.module";
 import { MarketplaceModule } from "../marketplace/marketplace.module";
+import { OrganizationsModule } from "../organizations/organizations.module";
 import {
   TemplateDoc,
   TemplateSchema,
@@ -26,8 +27,9 @@ import { TemplateDraftController } from "./presentation/template-draft.controlle
         schema: TemplateSchema,
       },
     ]),
+    AuthModule,
     MarketplaceModule,
-    PermissionModule,
+    OrganizationsModule,
   ],
   controllers: [TemplateDraftController],
   providers: [TemplateService, TemplateDraftService],

@@ -1,13 +1,12 @@
 import type { TestingModule } from "@nestjs/testing";
-import type { Connection } from "mongoose";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
-import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { EnvModule } from "@open-dpp/env";
+import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { MongooseTestingModule, TypeOrmTestingModule } from "@open-dpp/testing";
 import { v4 as uuid4 } from "uuid";
+import { generateMongoConfig } from "../../database/config";
 import { TraceabilityEventsModule } from "../../traceability-events/traceability-events.module";
 import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
 import {
@@ -18,16 +17,19 @@ import { UniqueProductIdentifierService } from "./unique-product-identifier.serv
 
 describe("uniqueProductIdentifierService", () => {
   let service: UniqueProductIdentifierService;
-  let mongoConnection: Connection;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
-        TypeOrmTestingModule,
-        MongooseTestingModule,
         TraceabilityEventsModule,
-        MongooseTestingModule,
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
         MongooseModule.forFeature([
           {
             name: UniqueProductIdentifierDoc.name,
@@ -40,7 +42,6 @@ describe("uniqueProductIdentifierService", () => {
     service = module.get<UniqueProductIdentifierService>(
       UniqueProductIdentifierService,
     );
-    mongoConnection = module.get<Connection>(getConnectionToken());
   });
 
   it("should create unique product identifier with external id", async () => {
@@ -74,9 +75,5 @@ describe("uniqueProductIdentifierService", () => {
     const found = await service.findAllByReferencedId(referenceId);
     expect(found).toContainEqual(uniqueProductIdentifier1);
     expect(found).toContainEqual(uniqueProductIdentifier2);
-  });
-
-  afterAll(async () => {
-    await mongoConnection.close();
   });
 });

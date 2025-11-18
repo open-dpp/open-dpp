@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import type { DataSectionDto } from "@open-dpp/api-client";
 import { computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { usePassportFormStore } from "../../../stores/passport.form";
-import BaseButton from "../../BaseButton.vue";
+import BaseButton from "../../basics/BaseButton.vue";
 import SectionForm from "./SectionForm.vue";
-import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
 const props = defineProps<{
   section: DataSectionDto;
 }>();
-
+const { t } = useI18n();
 const productPassportStore = usePassportFormStore();
 
 const rows = computed(() => {
@@ -41,11 +40,13 @@ const rowInEditMode = ref<number>(0);
         class="flex justify-between items-center"
       >
         <div>
-          {{ t('models.form.repeater.series') + ' ' + index }}
+          {{ `${t('models.form.repeater.series')} ${index}` }}
         </div>
-        <BaseButton variant="primary" @click="rowInEditMode = index">{{
-          t('common.edit')
-        }}</BaseButton>
+        <BaseButton variant="primary" @click="rowInEditMode = index">
+          {{
+            t('common.edit')
+          }}
+        </BaseButton>
       </div>
       <SectionForm v-else :section="props.section" :row="index" />
     </li>

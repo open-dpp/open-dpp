@@ -1,10 +1,8 @@
 <script lang="ts" setup>
 import type { MediaInfo } from "./MediaInfo.interface";
 import { XMarkIcon } from "@heroicons/vue/24/outline";
+import { useI18n } from "vue-i18n";
 import MediaPreview from "./MediaPreview.vue";
-import { useI18n } from 'vue-i18n';
-
-const { t } = useI18n();
 
 defineProps<{
   media: MediaInfo;
@@ -13,6 +11,8 @@ defineProps<{
 const emits = defineEmits<{
   (e: "close"): void;
 }>();
+
+const { t } = useI18n();
 </script>
 
 <template>
@@ -43,7 +43,7 @@ const emits = defineEmits<{
           {{ t('media.preview') }}
         </dt>
         <dd class="text-sm/6 mt-1 text-gray-900 dark:text-white">
-          <MediaPreview :media="media" />
+          <MediaPreview :key="media.id" :media="media" :preview="true" />
         </dd>
       </div>
       <div class="flex-auto">

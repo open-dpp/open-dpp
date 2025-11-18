@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { AssetAdministrationShellType } from "@open-dpp/api-client";
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { z } from "zod/v4";
 import { AAS_NAME_MAPPING } from "../../lib/aas-name-mapping";
@@ -8,7 +9,6 @@ import { useIndexStore } from "../../stores";
 import { useAasConnectionStore } from "../../stores/aas.connection";
 import { useModelsStore } from "../../stores/models";
 import { useNotificationStore } from "../../stores/notification";
-import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const modelsStore = useModelsStore();
@@ -58,7 +58,7 @@ async function create(formFields: unknown) {
   }
   else {
     notificationsStore.addErrorNotification(
-      t('integrations.connections.errorCreate'),
+      t("integrations.connections.errorCreate"),
     );
   }
 }

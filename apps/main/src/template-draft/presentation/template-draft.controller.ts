@@ -1,5 +1,7 @@
-import type * as authRequest from "@open-dpp/auth";
+import type { UserSession } from "../../auth/auth.guard";
+
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -8,20 +10,18 @@ import {
   Param,
   Patch,
   Post,
-  Request,
 } from "@nestjs/common";
-import { PermissionService } from "@open-dpp/auth";
+
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { omit } from "lodash";
+import { AuthService } from "../../auth/auth.service";
+import { Session } from "../../auth/session.decorator";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { TemplateService } from "../../templates/infrastructure/template.service";
 import { User } from "../../users/domain/user";
 import { DataFieldDraft } from "../domain/data-field-draft";
 import { SectionDraft } from "../domain/section-draft";
-
 import { TemplateDraft } from "../domain/template-draft";
 import { TemplateDraftService } from "../infrastructure/template-draft.service";
-
 import * as createDataFieldDraftDto_1 from "./dto/create-data-field-draft.dto";
 import * as createSectionDraftDto_1 from "./dto/create-section-draft.dto";
 import { CreateSectionDraftDtoSchema } from "./dto/create-section-draft.dto";
@@ -35,27 +35,27 @@ import * as updateTemplateDraftDto_1 from "./dto/update-template-draft.dto";
 
 @Controller("/organizations/:orgaId/template-drafts")
 export class TemplateDraftController {
-  private readonly permissionsService: PermissionService;
   private readonly templateService: TemplateService;
   private readonly templateDraftService: TemplateDraftService;
   private readonly marketplaceService: MarketplaceApplicationService;
+  private readonly authService: AuthService;
 
   constructor(
-    permissionsService: PermissionService,
     templateService: TemplateService,
     templateDraftService: TemplateDraftService,
     marketplaceService: MarketplaceApplicationService,
+    authService: AuthService,
   ) {
-    this.permissionsService = permissionsService;
     this.templateService = templateService;
     this.templateDraftService = templateDraftService;
     this.marketplaceService = marketplaceService;
+    this.authService = authService;
   }
 
   @Post()
   async create(
     @Param("orgaId") organizationId: string,
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
     @Body(
       new ZodValidationPipe(
         createTemplateDraftDto_1.CreateTemplateDraftDtoSchema,
@@ -63,16 +63,12 @@ export class TemplateDraftController {
     )
     createTemplateDraftDto: createTemplateDraftDto_1.CreateTemplateDraftDto,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
     return templateDraftToDto(
       await this.templateDraftService.save(
         TemplateDraft.create({
           ...createTemplateDraftDto,
           organizationId,
-          userId: req.authContext.keycloakUser.sub,
+          userId: session.user.id,
         }),
       ),
     );
@@ -82,12 +78,7 @@ export class TemplateDraftController {
   async get(
     @Param("orgaId") organizationId: string,
     @Param("draftId") draftId: string,
-    @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -100,7 +91,6 @@ export class TemplateDraftController {
   async modify(
     @Param("orgaId") organizationId: string,
     @Param("draftId") draftId: string,
-    @Request() req: authRequest.AuthRequest,
     @Body(
       new ZodValidationPipe(
         updateTemplateDraftDto_1.UpdateTemplateDraftDtoSchema,
@@ -108,10 +98,6 @@ export class TemplateDraftController {
     )
     updateTemplateDraftDto: updateTemplateDraftDto_1.UpdateTemplateDraftDto,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -127,23 +113,16 @@ export class TemplateDraftController {
   async addSection(
     @Param("orgaId") organizationId: string,
     @Param("draftId") draftId: string,
-    @Request() req: authRequest.AuthRequest,
     @Body(new ZodValidationPipe(CreateSectionDraftDtoSchema))
     createSectionDraftDto: createSectionDraftDto_1.CreateSectionDraftDto,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
-
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
-    const section = SectionDraft.create({
-      ...omit(createSectionDraftDto, ["parentSectionId"]),
-    });
+    const { parentSectionId, ...sectionData } = createSectionDraftDto;
+    const section = SectionDraft.create(sectionData);
 
     if (createSectionDraftDto.parentSectionId) {
       foundProductDataModelDraft.addSubSection(
@@ -163,31 +142,33 @@ export class TemplateDraftController {
   async publish(
     @Param("orgaId") organizationId: string,
     @Param("draftId") draftId: string,
-    @Request() req: authRequest.AuthRequest,
+    @Session() session: UserSession,
     @Body(new ZodValidationPipe(publishDto_1.PublishDtoSchema))
     publishDto: publishDto_1.PublishDto,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
-
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     const publishedProductDataModel = foundProductDataModelDraft.publish(
-      req.authContext.keycloakUser.sub,
+      session.user.id,
     );
 
     if (publishDto.visibility === publishDto_1.VisibilityLevel.PUBLIC) {
+      const user = User.loadFromDb({
+        id: session.user.id,
+        email: session.user.email,
+      });
+      const organization = await this.authService.getActiveOrganization(session.user.id);
+      if (!organization) {
+        throw new BadRequestException();
+      }
       const marketplaceResponse = await this.marketplaceService.upload(
         publishedProductDataModel,
-        User.create({
-          email: req.authContext.keycloakUser.email,
-          id: req.authContext.keycloakUser.sub,
-        }),
+        user,
+        organization.id,
+        organization.name,
       );
       publishedProductDataModel.assignMarketplaceResource(
         marketplaceResponse.id,
@@ -208,7 +189,6 @@ export class TemplateDraftController {
     @Param("orgaId") organizationId: string,
     @Param("sectionId") sectionId: string,
     @Param("draftId") draftId: string,
-    @Request() req: authRequest.AuthRequest,
     @Body(
       new ZodValidationPipe(
         createDataFieldDraftDto_1.CreateDataFieldDraftSchema,
@@ -216,11 +196,6 @@ export class TemplateDraftController {
     )
     createDataFieldDraftDto: createDataFieldDraftDto_1.CreateDataFieldDraftDto,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
-
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -240,12 +215,7 @@ export class TemplateDraftController {
     @Param("orgaId") organizationId: string,
     @Param("sectionId") sectionId: string,
     @Param("draftId") draftId: string,
-    @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -267,13 +237,7 @@ export class TemplateDraftController {
       new ZodValidationPipe(updateSectionDraftDto.UpdateSectionDraftDtoSchema),
     )
     modifySectionDraftDto: updateSectionDraftDto.UpdateSectionDraftDto,
-    @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
-
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -281,7 +245,7 @@ export class TemplateDraftController {
 
     foundProductDataModelDraft.modifySection(
       sectionId,
-      omit(modifySectionDraftDto),
+      { ...modifySectionDraftDto },
     );
 
     return templateDraftToDto(
@@ -296,13 +260,7 @@ export class TemplateDraftController {
     @Param("draftId") draftId: string,
     @Body(new ZodValidationPipe(moveDto_1.MoveDtoSchema))
     moveDto: moveDto_1.MoveDto,
-    @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
-
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -327,22 +285,17 @@ export class TemplateDraftController {
       ),
     )
     modifyDataFieldDraftDto: updateDataFieldDraftDto.UpdateDataFieldDraftDto,
-    @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
-
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
+    const { ...dataFieldData } = modifyDataFieldDraftDto;
     foundProductDataModelDraft.modifyDataField(
       sectionId,
       fieldId,
-      omit(modifyDataFieldDraftDto, "view"),
+      dataFieldData,
     );
 
     return templateDraftToDto(
@@ -358,13 +311,7 @@ export class TemplateDraftController {
     @Param("draftId") draftId: string,
     @Body(new ZodValidationPipe(moveDto_1.MoveDtoSchema))
     moveDto: moveDto_1.MoveDto,
-    @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
-
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -387,13 +334,7 @@ export class TemplateDraftController {
     @Param("sectionId") sectionId: string,
     @Param("draftId") draftId: string,
     @Param("fieldId") fieldId: string,
-    @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
-
     const foundProductDataModelDraft
       = await this.templateDraftService.findOneOrFail(draftId);
 
@@ -409,13 +350,7 @@ export class TemplateDraftController {
   @Get()
   async findAllOfOrganization(
     @Param("orgaId") organizationId: string,
-    @Request() req: authRequest.AuthRequest,
   ) {
-    this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
-
     return await this.templateDraftService.findAllByOrganization(
       organizationId,
     );

@@ -4,7 +4,7 @@ import type {
 import type { GranularityLevel_TYPE } from "../../data-modelling/domain/granularity-level";
 import type { DataFieldDbProps } from "../../templates/domain/data-field";
 import { randomUUID } from "node:crypto";
-import { merge } from "lodash";
+import _ from "lodash";
 import {
   DataFieldBase,
 } from "../../data-modelling/domain/data-field-base";
@@ -52,11 +52,16 @@ export class DataFieldDraft extends DataFieldBase {
   }
 
   mergeOptions(newOptions: Record<string, unknown>) {
-    merge(this.options, newOptions);
+    _.merge(this.options, newOptions);
   }
 
   rename(newName: string) {
     this._name = newName;
+  }
+
+  changeType(dataFieldType: DataFieldType_TYPE) {
+    this._type = dataFieldType;
+    this._options = {};
   }
 
   publish(): DataFieldDbProps {

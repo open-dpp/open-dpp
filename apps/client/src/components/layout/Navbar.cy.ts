@@ -13,8 +13,10 @@ describe("<Chat />", () => {
     cy.wrap(router.push(`/presentation/${permalinkId}`));
     cy.mountWithPinia(Navbar, { router });
     cy.spy(router, "push").as("pushSpy");
+    cy.get(".p-menubar-button").click();
     cy.contains("Mit KI chatten").click();
     cy.get("@pushSpy").should("have.been.calledWith", `/presentation/${permalinkId}/chat`);
+    cy.get(".p-menubar-button").click();
     cy.contains("Zur Passansicht").click();
     cy.get("@pushSpy").should("have.been.calledWith", `/presentation/${permalinkId}`);
   });

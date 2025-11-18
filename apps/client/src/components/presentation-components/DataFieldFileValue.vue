@@ -3,13 +3,12 @@ import type { FieldView } from "../../lib/field-view";
 import type { MediaInfo } from "../media/MediaInfo.interface";
 import { ArrowDownTrayIcon } from "@heroicons/vue/24/outline";
 import { onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { useMediaStore } from "../../stores/media";
 import MediaPreview from "../media/MediaPreview.vue";
-import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
 const props = defineProps<{ fieldView: FieldView }>();
-
+const { t } = useI18n();
 const mediaStore = useMediaStore();
 
 const uploadedFileUrl = ref<string | undefined>(undefined);
@@ -25,8 +24,9 @@ async function loadFile() {
     if (uploadedFileUrl.value) {
       try {
         URL.revokeObjectURL(uploadedFileUrl.value);
-      } catch (revokeErr) {
-        console.error(t('file.errorRevokingUrl'), revokeErr);
+      }
+      catch (revokeErr) {
+        console.error(t("file.errorRevokingUrl"), revokeErr);
       }
     }
 
@@ -41,8 +41,9 @@ async function loadFile() {
     if (uploadedFileUrl.value) {
       try {
         URL.revokeObjectURL(uploadedFileUrl.value);
-      } catch (revokeErr) {
-        console.error(t('file.errorRevokingUrlError'), revokeErr);
+      }
+      catch (revokeErr) {
+        console.error(t("file.errorRevokingUrlError"), revokeErr);
       }
     }
     uploadedFileUrl.value = undefined;
@@ -71,19 +72,16 @@ onMounted(async () => {
 
 <template>
   <div v-if="uploadedMedia" class="max-w-full flex flex-col gap-4">
-    <div class="flex flex-row gap-4 w-full justify-between">
-      <MediaPreview :media="uploadedMedia" class="grow" />
+    <div class="flex flex-row gap-4 w-full">
+      <MediaPreview :media="uploadedMedia" />
       <a
         v-if="uploadedFileUrl"
         :download="uploadedMedia.title"
         :href="uploadedFileUrl"
-        class="shrink bg-[#6BAD87]/50 rounded-sm p-2 hover:cursor-pointer my-auto"
+        class="h-8 w-8 shrink bg-[#6BAD87]/50 rounded-sm p-2 hover:cursor-pointer my-auto"
       >
         <ArrowDownTrayIcon class="h-4 w-4" />
       </a>
-    </div>
-    <div class="text-gray-600 text-sm my-auto max-w-full truncate">
-      {{ uploadedMedia.title }}
     </div>
   </div>
   <div v-else class="flex flex-row gap-4">

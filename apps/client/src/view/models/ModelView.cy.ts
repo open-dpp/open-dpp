@@ -86,6 +86,7 @@ describe("<ModelView />", () => {
     const model: ModelDto = {
       dataValues: [],
       name: "",
+      mediaReferences: [],
       owner: "",
       templateId: "",
       id: "someId",
@@ -223,7 +224,7 @@ describe("<ModelView />", () => {
     });
   });
 
-  it("renders model form and navigates between different rows", () => {
+  it("renders model form and navigates between different rows", async () => {
     const dataField1 = dataFieldFactory.build();
     const dataField2 = dataFieldFactory.build({
       type: DataFieldType.PRODUCT_PASSPORT_LINK,
@@ -312,66 +313,72 @@ describe("<ModelView />", () => {
 
     const indexStore = useIndexStore();
     indexStore.selectOrganization(orgaId);
+    cy.spy(router, "push").as("pushSpy");
 
     cy.mountWithPinia(ModelView, { router });
 
     cy.wrap(router.push(`/organizations/${orgaId}/models/${model.id}`));
+    cy.wait("@getModel").its("response.statusCode").should("eq", 200).then(() => {
+      cy.wait("@getProductPassport").its("response.statusCode").should("eq", 200).then(() => {
+        cy.contains("Modellpass Informationen").should("be.visible");
 
-    cy.wait("@getModel").its("response.statusCode").should("eq", 200);
-    cy.wait("@getProductPassport").its("response.statusCode").should("eq", 200);
-    cy.contains("Modellpass Informationen").should("be.visible");
-    cy.spy(router, "push").as("pushSpy");
-    const section1Card = cy.get(`[data-cy="section-card-${dataSection1.id}"]`);
-    section1Card.within(() => {
-      cy.get(`[data-cy="edit-subsection-${dataSection4.id}"]`).click();
-    });
-    cy.get("@pushSpy").should(
-      "have.been.calledWith",
-      `?sectionId=${dataSection4.id}&row=0`,
-    );
-    cy.contains(dataSection4.name).should("be.visible");
-    cy.get(`[data-cy="${dataField7.id}"]`).should("have.value", "f7 value");
-    cy.get(`[data-cy="${dataField8.id}"]`).should("have.value", "f8 value");
-    cy.contains(`Zurück zu ${dataSection1.name}`).click();
-    cy.get("@pushSpy").should(
-      "have.been.calledWith",
-      `?sectionId=${dataSection1.id}&row=0`,
-    );
-    cy.contains(`Zur Startseite`).click();
-    cy.get("@pushSpy").should("have.been.calledWith", `?sectionId=undefined`);
-    const section2Card = cy.get(`[data-cy="section-card-${dataSection2.id}"]`);
-    section2Card.within(() => {
-      cy.get(`[data-cy="row-1"]`).within(() => {
-        cy.contains("Editieren").click();
+        const section1Card = cy.get(`[data-cy="section-card-${dataSection1.id}"]`);
+        section1Card.within(() => {
+          cy.get(`[data-cy="edit-subsection-${dataSection4.id}"]`).click();
+        });
+
+        cy.wait("@pushSpy").should(
+          "have.been.calledWith",
+          `?sectionId=${dataSection4.id}&row=0`,
+        ).then(() => {
+          cy.contains(dataSection4.name).should("be.visible");
+          cy.get(`[data-cy="${dataField7.id}"]`).should("have.value", "f7 value");
+          cy.get(`[data-cy="${dataField8.id}"]`).should("have.value", "f8 value");
+          cy.contains(`Zurück zu ${dataSection1.name}`).click();
+          cy.get("@pushSpy").should(
+            "have.been.calledWith",
+            `?sectionId=${dataSection1.id}&row=0`,
+          );
+          cy.contains(`Zur Startseite`).click();
+          cy.get("@pushSpy").should("have.been.calledWith", `?sectionId=undefined`);
+          const section2Card = cy.get(`[data-cy="section-card-${dataSection2.id}"]`);
+          section2Card.within(() => {
+            cy.get(`[data-cy="row-1"]`).within(() => {
+              cy.contains("Editieren").click();
+            });
+          });
+          cy.get(`[data-cy="${dataField3.id}"]`).should(
+            "have.value",
+            "f3 value, row 1",
+          );
+          cy.get(`[data-cy="${dataField4.id}"]`).should(
+            "have.value",
+            "f4 value, row 1",
+          );
+          cy.get(`[data-cy="edit-subsection-${dataSection3.id}"]`).click();
+          cy.get("@pushSpy").should(
+            "have.been.calledWith",
+            `?sectionId=${dataSection3.id}&row=1`,
+          );
+          cy.get(`[data-cy="${dataField5.id}"]`).should(
+            "have.value",
+            "f5 value, row 1",
+          );
+          cy.get(`[data-cy="${dataField5.id}"]`).should(
+            "have.value",
+            "f5 value, row 1",
+          );
+          cy.contains(`Zurück zu ${dataSection2.name}`).click();
+
+          cy.wait("@pushSpy").should(
+            "have.been.calledWith",
+            `?sectionId=${dataSection2.id}&row=1`,
+          ).then(() => {
+            cy.contains(`Zur Startseite`).click();
+            cy.get("@pushSpy").should("have.been.calledWith", `?sectionId=undefined`);
+          });
+        });
       });
     });
-    cy.get(`[data-cy="${dataField3.id}"]`).should(
-      "have.value",
-      "f3 value, row 1",
-    );
-    cy.get(`[data-cy="${dataField4.id}"]`).should(
-      "have.value",
-      "f4 value, row 1",
-    );
-    cy.get(`[data-cy="edit-subsection-${dataSection3.id}"]`).click();
-    cy.get("@pushSpy").should(
-      "have.been.calledWith",
-      `?sectionId=${dataSection3.id}&row=1`,
-    );
-    cy.get(`[data-cy="${dataField5.id}"]`).should(
-      "have.value",
-      "f5 value, row 1",
-    );
-    cy.get(`[data-cy="${dataField5.id}"]`).should(
-      "have.value",
-      "f5 value, row 1",
-    );
-    cy.contains(`Zurück zu ${dataSection2.name}`).click();
-    cy.get("@pushSpy").should(
-      "have.been.calledWith",
-      `?sectionId=${dataSection2.id}&row=1`,
-    );
-    cy.contains(`Zur Startseite`).click();
-    cy.get("@pushSpy").should("have.been.calledWith", `?sectionId=undefined`);
   });
 });

@@ -13,8 +13,8 @@ const TemplateDtoSchema = z.object({
   sectors: z.enum(Sector).array(),
   version: z.string().min(1),
   sections: SectionBaseDtoSchema.array(),
-  createdByUserId: z.uuid(),
-  ownedByOrganizationId: z.uuid(),
+  createdByUserId: z.string(),
+  ownedByOrganizationId: z.string(),
   marketplaceResourceId: z.string().nullable(),
 });
 

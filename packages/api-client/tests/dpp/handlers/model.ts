@@ -19,6 +19,16 @@ export const updateDataValues: DataValueDto[] = [
     row: 0,
   },
 ]
+
+export const mediaReferenceUpdate = {
+  id: randomUUID(),
+}
+
+export const mediaReferences = [
+  {
+    id: randomUUID(),
+  },
+]
 export const dataSectionId = randomUUID()
 export const dataFieldId = randomUUID()
 
@@ -33,6 +43,7 @@ export const model = {
   id: randomUUID(),
   dataValues: [],
   name: 'My name',
+  mediaReferences: [],
   description: 'My desc',
   owner: randomUUID(),
 }
@@ -82,6 +93,54 @@ export const modelHandlers = [
           })),
         },
         { status: 201 },
+      )
+    },
+  ),
+  http.post(
+    `${baseURL}/organizations/${activeOrganization.id}/models/${model.id}/media`,
+    async () => {
+      return HttpResponse.json(
+        {
+          ...model,
+          mediaReferences: mediaReferences.map(b => b.id),
+        },
+        { status: 201 },
+      )
+    },
+  ),
+  http.delete(
+    `${baseURL}/organizations/${activeOrganization.id}/models/${model.id}/media/${mediaReferences[0].id}`,
+    async () => {
+      return HttpResponse.json(
+        {
+          ...model,
+          mediaReferences: [],
+        },
+        { status: 200 },
+      )
+    },
+  ),
+  http.patch(
+    `${baseURL}/organizations/${activeOrganization.id}/models/${model.id}/media/${mediaReferences[0].id}/move`,
+    async () => {
+      return HttpResponse.json(
+        {
+          ...model,
+          mediaReferences: mediaReferences.map(b => b.id),
+        },
+        { status: 200 },
+      )
+    },
+  ),
+  http.patch(
+    `${baseURL}/organizations/${activeOrganization.id}/models/${model.id}/media/${mediaReferences[0].id}`,
+    async () => {
+      return HttpResponse.json(
+        {
+          ...model,
+          mediaReferences: [mediaReferenceUpdate.id],
+        },
+        { status: 200 },
       )
     },
   ),

@@ -1,16 +1,11 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { PermissionModule } from "@open-dpp/auth";
-import { KeycloakResourcesModule } from "../keycloak-resources/keycloak-resources.module";
-import { OrganizationEntity } from "../organizations/infrastructure/organization.entity";
 import { OrganizationsModule } from "../organizations/organizations.module";
 import {
   TemplateDoc,
   TemplateSchema,
 } from "../templates/infrastructure/template.schema";
 import { TemplateService } from "../templates/infrastructure/template.service";
-import { UserEntity } from "../users/infrastructure/user.entity";
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,
@@ -21,7 +16,6 @@ import { PassportTemplatePublicationController } from "./presentation/passport-t
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([OrganizationEntity, UserEntity]),
     MongooseModule.forFeature([
       {
         name: PassportTemplatePublicationDoc.name,
@@ -32,8 +26,6 @@ import { PassportTemplatePublicationController } from "./presentation/passport-t
         schema: TemplateSchema,
       },
     ]),
-    KeycloakResourcesModule,
-    PermissionModule,
     OrganizationsModule,
   ],
   controllers: [PassportTemplatePublicationController],

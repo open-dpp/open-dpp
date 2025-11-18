@@ -1,4 +1,3 @@
-import { flatMap, get } from "lodash";
 import { z } from "zod";
 import { semitrailerAas } from "./semitrailer";
 import { semitrailerTruckAas } from "./semitrailer-truck-aas";
@@ -55,7 +54,7 @@ export class AssetAdministrationShell {
   }
 
   static create(data: { content: any }) {
-    const collectedProperties = flatMap(data.content.submodels, submodel =>
+    const collectedProperties = data.content.submodels.flatMap((submodel: any) =>
       AssetAdministrationShell.collectElementsWithParent(
         submodel.submodelElements || [],
         submodel.idShort,
@@ -70,7 +69,7 @@ export class AssetAdministrationShell {
   }
 
   private static parseElement(el: any) {
-    const modelType = get(el, "modelType");
+    const modelType = el?.modelType;
     if (modelType === "Property") {
       const property = AASPropertySchema.parse(el);
       return AASPropertySchema.parse({
@@ -97,7 +96,10 @@ export class AssetAdministrationShell {
     elements: any[],
     parentIdShort: string | null = null,
   ): { parentIdShort: string | null; property: AasProperty }[] {
-    return flatMap(elements, (el) => {
+    if (!Array.isArray(elements)) {
+      return [];
+    }
+    return elements.flatMap((el) => {
       const property = AssetAdministrationShell.parseElement(el);
       const subElements = AssetAdministrationShell.getSubElements(el);
       const nested

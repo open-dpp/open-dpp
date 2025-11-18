@@ -1,14 +1,14 @@
-import { isArray, isObject, mapKeys, mapValues } from "lodash";
+import _ from "lodash";
 
 function mapKeysDeep(
   obj: any,
   cb: (value: unknown, key: string) => string,
 ): any {
-  if (isArray(obj)) {
+  if (_.isArray(obj)) {
     return obj.map(innerObj => mapKeysDeep(innerObj, cb));
   }
-  else if (isObject(obj)) {
-    return mapValues(mapKeys(obj, cb), val => mapKeysDeep(val, cb));
+  else if (_.isObject(obj)) {
+    return _.mapValues(_.mapKeys(obj, cb), val => mapKeysDeep(val, cb));
   }
   else {
     return obj;

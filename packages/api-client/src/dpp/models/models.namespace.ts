@@ -1,6 +1,6 @@
 import type { AxiosInstance } from 'axios'
 import type { DataValueDto } from '../passport-data/data-value.dto'
-import type { ModelCreateDto, ModelDto } from './model.dtos'
+import type { MediaReferenceDto, MediaReferencePositionDto, ModelCreateDto, ModelDto } from './model.dtos'
 
 export class ModelsNamespace {
   private readonly modelsEndpoint: string
@@ -18,6 +18,33 @@ export class ModelsNamespace {
   public async addData(modelId: string, data: DataValueDto[]) {
     return this.axiosInstance.post<ModelDto>(
       `${this.modelsEndpoint}/${modelId}/data-values`,
+      data,
+    )
+  }
+
+  public async addMediaReference(modelId: string, data: MediaReferenceDto) {
+    return this.axiosInstance.post<ModelDto>(
+      `${this.modelsEndpoint}/${modelId}/media`,
+      data,
+    )
+  }
+
+  public async deleteMediaReference(modelId: string, mediaId: string) {
+    return this.axiosInstance.delete<ModelDto>(
+      `${this.modelsEndpoint}/${modelId}/media/${mediaId}`,
+    )
+  }
+
+  public async modifyMediaReference(modelId: string, mediaId: string, data: MediaReferenceDto) {
+    return this.axiosInstance.patch<ModelDto>(
+      `${this.modelsEndpoint}/${modelId}/media/${mediaId}`,
+      data,
+    )
+  }
+
+  public async moveMediaReference(modelId: string, mediaId: string, data: MediaReferencePositionDto) {
+    return this.axiosInstance.patch<ModelDto>(
+      `${this.modelsEndpoint}/${modelId}/media/${mediaId}/move`,
       data,
     )
   }

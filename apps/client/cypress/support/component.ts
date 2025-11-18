@@ -31,15 +31,19 @@ import {
 import { de } from "@formkit/i18n";
 import { genesisIcons } from "@formkit/icons";
 import { defaultConfig, plugin as FormKit } from "@formkit/vue";
+import Aura from "@primeuix/themes/aura";
 import { mount } from "cypress/vue";
 import { diff } from "jest-diff";
 import _ from "lodash";
 import { createPinia, setActivePinia } from "pinia";
+import PrimeVue from "primevue/config";
+import ConfirmationService from "primevue/confirmationservice";
 import { rootClasses } from "../../formkit.theme.js";
 import { i18n } from "../../src/translations/i18n.ts";
 // Import commands.js using ES2015 syntax:
 import "./commands.js";
 import "../plugins/tailwind.js";
+import "primeicons/primeicons.css";
 
 let pinia: Pinia;
 
@@ -50,6 +54,8 @@ beforeEach(() => {
 
   // Set current Pinia instance
   setActivePinia(pinia);
+
+  cy.mockAuthClient();
 });
 
 type VueMountable = Component;
@@ -84,6 +90,13 @@ Cypress.Commands.add(
       ...basePlugins,
       ...(routerPlugin ? [routerPlugin] : []),
       pinia,
+      [PrimeVue, {
+        ripple: false,
+        theme: {
+          preset: Aura,
+        },
+      }],
+      ConfirmationService,
       i18n,
       [
         FormKit,
@@ -127,4 +140,17 @@ Cypress.Commands.add("expectDeepEqualWithDiff", (actual, expected) => {
     console.warn("🔍 Deep diff:\n", diff(expected, actual));
   }
   expect(actual).to.deep.equal(expected);
+});
+
+Cypress.Commands.add("mockAuthClient", () => {
+  cy.intercept("POST", "**/organization/set-active", {
+    statusCode: 200,
+    body: { success: true },
+  }).as("setActiveOrg");
+
+  // Add other auth-related intercepts as needed
+  cy.intercept("GET", "**/session", {
+    statusCode: 200,
+    body: { user: null },
+  }).as("getSession");
 });

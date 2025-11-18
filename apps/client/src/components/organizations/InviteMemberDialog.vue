@@ -8,20 +8,18 @@ import {
 } from "@headlessui/vue";
 import { EnvelopeIcon, XMarkIcon } from "@heroicons/vue/24/outline";
 import { ref } from "vue";
-import apiClient from "../../lib/api-client";
+import { useI18n } from "vue-i18n";
+import { authClient } from "../../auth-client.ts";
 import RingLoader from "../RingLoader.vue";
-import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
 const props = defineProps<{
   organizationId: string;
 }>();
-
 const emit = defineEmits<{
   (e: "close"): void;
   (e: "invitedUser"): void;
 }>();
-
+const { t } = useI18n();
 const loading = ref<boolean>(false);
 const errors = ref<Array<string>>([]);
 const success = ref<boolean>(false);
@@ -32,12 +30,14 @@ async function inviteUser(fields: { email: string }) {
   try {
     if (fields.email) {
       loading.value = true;
-      const response = await apiClient.dpp.organizations.inviteUser(
-        fields.email,
-        props.organizationId,
-      );
+      const { error } = await authClient.organization.inviteMember({
+        email: fields.email,
+        role: "member",
+        organizationId: props.organizationId,
+        resend: true,
+      });
       loading.value = false;
-      if (response.status === 201) {
+      if (!error) {
         success.value = true;
         emit("invitedUser");
       }
@@ -111,8 +111,9 @@ async function inviteUser(fields: { email: string }) {
                   <DialogTitle
                     as="h3"
                     class="text-base font-semibold text-gray-900"
-                    >{{ t('organizations.inviteUser') }}</DialogTitle
                   >
+                    {{ t('organizations.inviteUser') }}
+                  </DialogTitle>
                   <div v-if="success" class="mt-3">
                     <div class="text-sm text-green-600">
                       {{ t('organizations.inviteUserSuccess') }}

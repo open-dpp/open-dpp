@@ -20,6 +20,7 @@
     "abort": "Abbrechen",
     "general": "Allgemein",
     "remove": "Entfernen",
+    "copy": "Kopieren",
     "back": "Zurück",
     "call": "Aufrufen",
     "website": "Website",
@@ -72,6 +73,7 @@
       "name": "Name des Dateifeldes"
     },
     "name": "Name des Abschnitts",
+    "dataFieldType": "Datenfeldtyp",
     "granularityLevel": "Granularitätsebene"
   },
   "draft": {
@@ -121,6 +123,7 @@
     "version": "Version",
     "selection": "Auswahl",
     "section": "Abschnitt",
+    "subsections": "Unterabschnitte",
     "addSection": "Abschnitt hinzufügen",
     "configuration": "Konfiguration",
     "dataField": "Datenfeld",
@@ -137,7 +140,8 @@
     "fileField": "Datei",
     "addFileField": "Fügen Sie einen Dateiupload hinzu",
     "passportDraft": "Passvorlagen Entwurf | Passvorlagen Entwürfe",
-    "passportDraftDescription": "Alle Passvorlagen Entwürfe"
+    "passportDraftDescription": "Alle Passvorlagen Entwürfe",
+    "changeDataFieldType": "Datenfeldtyp ändern"
   },
   "integrations": {
     "integrations": "Integrationen",
@@ -197,14 +201,23 @@
     },
     "apiKey": {
       "create": "API Key erstellen",
-      "createSuccess": "API Key wurde erfolgreich erstellt. Bitte kopieren Sie den Schlüssel: { key }",
+      "createSuccess": "API Key wurde erfolgreich erstellt. Bitte kopieren Sie den API Key und speichern Sie diesen sicher ab, da der API Key nur einmalig generiert wird und nicht mehr angezeigt werden kann.",
       "createError": "Fehler beim Erstellen des API Keys. Bitte versuchen Sie es erneut."
     },
     "edit": "Editieren",
     "errorCreate": "Erstellen der Verbindung fehlgeschlagen"
   },
-  "statistics": {
-    "statistics": "Auswertungen"
+  "analytics": {
+    "analytics": "Auswertungen",
+    "startAnalysis": "Analyse starten",
+    "loadingMetricError": "Laden der Analyse fehlgeschlagen",
+    "passportSelection": "Passauswahl",
+    "timeViewSelection": "Ansicht",
+    "pageViews": "Seitenaufrufe",
+    "daylyView": "Tagesansicht",
+    "weeklyView": "Wochenansicht",
+    "monthlyView": "Monatsansicht",
+    "yearlyView": "Jahresansicht"
   },
   "members": {
     "members": "Mitglieder"
@@ -222,7 +235,7 @@
     "inviteUser": "Benutzer einladen",
     "inviteUserSuccess": "Der Benutzer wurde erfolgreich eingeladen.",
     "member": "Mitglieder",
-    "memberListDescription": "Eine Lisxte von allen Mitgliedern in dieser Organisation.",
+    "memberListDescription": "Eine Liste von allen Mitgliedern in dieser Organisation.",
     "memberName": "Name",
     "memberRole": "Rolle",
     "memberAdmin": "Admin",
@@ -237,6 +250,24 @@
         "help": "Geben Sie Ihrer Organisation einen Namen",
         "label": "Name"
       }
+    },
+    "invitation": {
+      "name": "Name",
+      "status": "Status",
+      "accept": "Akzeptieren",
+      "decline": "Ablehnen",
+      "cancel": "Zurücknehmen",
+      "acceptSuccess": "Die Einladung wurde erfolgreich angenommen.",
+      "acceptError": "Fehler bei der Akzeptanz der Einladung.",
+      "acceptTitle": "Du wurdest zu einer Organisation eingeladen."
+    },
+    "userInvitations": {
+      "title": "Einladungen",
+      "description": "Einladungen zu Organisationen"
+    },
+    "organizationInvitations": {
+      "title": "Einladungen",
+      "description": "Einladungen zu dieser Organisation"
     }
   },
   "marketplace": {
@@ -259,20 +290,9 @@
     "errorRevokingUrlError": "Fehler beim Freigeben der Objekt-URL nach Fehler:"
   },
   "media": {
+    "title": "Titel",
     "media": "Medien",
     "preview": "Vorschau"
-  },
-  "presentation": {
-    "productDetails": "Produktdetails",
-    "productDetailsDesc": "Allgemeine Informationen zum Produkt.",
-    "additionalSections": "Weiterführende Abschnitte",
-    "moreInfo": "Mehr Informationen",
-    "navigation": "Navigation",
-    "backToApp": "Zurück zur App",
-    "toPass": "Zur Passansicht",
-    "chatWithAI": "Mit KI chatten",
-    "productpass": "Produktpass",
-    "askQuestion": "Stellen Sie Ihre Frage..."
   },
   "models": {
     "models": "Produktpässe",
@@ -283,7 +303,16 @@
     "submitCreatePass": "Modelpass erstellen",
     "general": "Allgemein",
     "myDrafts": "Meine Vorlagen",
+    "mediaEditDialog": {
+      "title": "Produktbilder bearbeiten",
+      "addImageError": "Hinzufügen des Produktbilds fehlgeschlagen.",
+      "deleteImageError": "Löschen des Produktbilds fehlgeschlagen.",
+      "modifyImageError": "Anpassen des Produktbilds fehlgeschlagen.",
+      "moveImageError": "Ändern der Reihenfolge der Produktbilder fehlgeschlagen.",
+      "loadModelError": "Laden des Modellpasses fehlgeschlagen."
+    },
     "form": {
+      "mediaDownloadError": "Laden der Produktbilder fehlgeschlagen",
       "id": "ID",
       "name": {
         "help": "Geben Sie Ihrem Modellpass einen Namen",
@@ -349,7 +378,10 @@
     "firstName": "Vorname",
     "lastName": "Nachname",
     "language": "Sprache",
-    "displaySettings": "Anzeigeeinstellungen"
+    "displaySettings": "Anzeigeeinstellungen",
+    "email": "E-Mail-Adresse",
+    "password": "Passwort",
+    "passwordRepeat": "Passwort wiederholen"
   },
   "notifications": {
     "success": "Erfolg",
@@ -365,5 +397,63 @@
     "to": " bis ",
     "of": " von ",
     "elements": " Elementen"
+  },
+  "auth": {
+    "signin": {
+      "title": "Melde dich in deinem Account an",
+      "button": "Anmelden",
+      "rememberMe": "Angemeldet bleiben",
+      "forgotPassword": "Passwort vergessen?",
+      "textForProviders": "Oder anmelden mit",
+      "notAMember": "Noch nicht registriert?",
+      "ctaSignUp": "Jetzt registrieren",
+      "error": "Anmeldung fehlgeschlagen."
+    },
+    "signup": {
+      "title": "Neuen Account erstellen",
+      "button": "Registrieren",
+      "alreadyAMember": "Bereits registriert?",
+      "ctaSignIn": "Jetzt anmelden",
+      "error": "Registrierung fehlgeschlagen."
+    },
+    "passwordResetRequest": {
+      "title": "Passwort zurücksetzen",
+      "button": "Passwort zurücksetzen",
+      "rememberLogin": "Logindaten wieder eingefallen?",
+      "ctaSignIn": "Jetzt anmelden",
+      "success": "Bitte überprüfe deine Mails."
+    },
+    "passwordReset": {
+      "title": "Passwort zurücksetzen",
+      "button": "Neues Passwort setzen",
+      "rememberLogin": "Logindaten wieder eingefallen?",
+      "ctaSignIn": "Jetzt anmelden"
+    }
+  },
+  "presentation": {
+    "productDetails": "Produktdetails",
+    "productDetailsDesc": "Allgemeine Informationen zum Produkt.",
+    "additionalSections": "Weiterführende Abschnitte",
+    "moreInfo": "Mehr Informationen",
+    "navigation": "Navigation",
+    "backToApp": "Zurück zur App",
+    "toPass": "Zur Passansicht",
+    "chatWithAI": "Mit KI chatten",
+    "productpass": "Produktpass",
+    "askQuestion": "Stellen Sie Ihre Frage...",
+    "answerPending": "Wird verarbeitet...",
+    "loadPassportMediaError": "Laden der Produktbilder fehlgeschlagen.",
+    "emailGreeting": "Vielen Dank",
+    "repairRequest": {
+      "addAiChatDialog": {
+        "title": "Chatverlauf hinzufügen",
+        "question": "Soll der bisherige Chatverlauf der Reparaturanfrage hinzugefügt werden?",
+        "add": "Hinzufügen",
+        "doNotAdd": "Nicht hinzufügen"
+      },
+      "subject": "Reparaturanfrage",
+      "intro": "Guten Tag,\n\nich habe folgendes Reparaturanliegen:",
+      "sendError": "Die Reperaturanfrage konnte nicht abgeschickt werden. Haben Sie bereits einen Emailclient konfiguriert?"
+    }
   }
 }

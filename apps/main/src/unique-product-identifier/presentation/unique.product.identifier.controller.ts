@@ -1,6 +1,5 @@
-import type * as authRequest from "@open-dpp/auth";
-import { Controller, Get, Param, Request } from "@nestjs/common";
-import { AllowServiceAccess, PermissionService } from "@open-dpp/auth";
+import { Controller, Get, Param } from "@nestjs/common";
+import { AllowServiceAccess } from "../../auth/allow-service-access.decorator";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
@@ -14,20 +13,17 @@ export class UniqueProductIdentifierController {
   private readonly modelsService: ModelsService;
   private readonly uniqueProductIdentifierService: UniqueProductIdentifierService;
   private readonly itemService: ItemsService;
-  private readonly permissionsService: PermissionService;
   private readonly uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService;
 
   constructor(
     modelsService: ModelsService,
     uniqueProductIdentifierService: UniqueProductIdentifierService,
     itemService: ItemsService,
-    permissionsService: PermissionService,
     uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
   ) {
     this.modelsService = modelsService;
     this.uniqueProductIdentifierService = uniqueProductIdentifierService;
     this.itemService = itemService;
-    this.permissionsService = permissionsService;
     this.uniqueProductIdentifierApplicationService = uniqueProductIdentifierApplicationService;
   }
 
@@ -35,12 +31,7 @@ export class UniqueProductIdentifierController {
   async getReferencedProductPassport(
     @Param("orgaId") organizationId: string,
     @Param("id") id: string,
-    @Request() req: authRequest.AuthRequest,
   ) {
-    await this.permissionsService.canAccessOrganizationOrFail(
-      organizationId,
-      req.authContext,
-    );
     const uniqueProductIdentifier
       = await this.uniqueProductIdentifierService.findOneOrFail(id);
 

@@ -10,15 +10,15 @@ import {
   InformationCircleIcon,
 } from "@heroicons/vue/24/outline";
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import {
   NotificationType,
   useNotificationStore,
 } from "../../stores/notification";
-import { useI18n } from 'vue-i18n';
-
-const { t } = useI18n();
 
 const props = defineProps<{ notification: Notification }>();
+
+const { t } = useI18n();
 
 const notificationStore = useNotificationStore();
 
@@ -28,12 +28,12 @@ function onDelete() {
 
 const title = computed<string>(() => {
   const titleMap = {
-    [NotificationType.SUCCESS]: t('notifications.success'),
-    [NotificationType.ERROR]: t('notifications.error'),
-    [NotificationType.WARNING]: t('notifications.warning'),
-    [NotificationType.INFO]: t('notifications.info'),
+    [NotificationType.SUCCESS]: t("notifications.success"),
+    [NotificationType.ERROR]: t("notifications.error"),
+    [NotificationType.WARNING]: t("notifications.warning"),
+    [NotificationType.INFO]: t("notifications.info"),
   };
-  return titleMap[props.notification.type] || t('notifications.info');
+  return titleMap[props.notification.type] || t("notifications.info");
 });
 </script>
 
