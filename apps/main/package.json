@@ -22,7 +22,6 @@
     "check-ts": "tsc --noEmit"
   },
   "dependencies": {
-    "@aas-core-works/aas-core3.0-typescript": "^1.0.4",
     "@keycloak/keycloak-admin-client": "^26.4.2",
     "@langchain/core": "^0.3.78",
     "@langchain/langgraph": "^0.4.9",

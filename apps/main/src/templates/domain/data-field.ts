@@ -9,6 +9,7 @@ import { Language, LanguageText } from "../../aas/domain/common/language-text";
 import { Qualifier, QualifierKind } from "../../aas/domain/common/qualififiable";
 import { Reference, ReferenceTypes } from "../../aas/domain/common/reference";
 import { File } from "../../aas/domain/submodelBase/file";
+import { MultiLanguageProperty } from "../../aas/domain/submodelBase/multi-language-property";
 import { Property } from "../../aas/domain/submodelBase/property";
 import { ReferenceElement } from "../../aas/domain/submodelBase/reference-element";
 import { ISubmodelBase } from "../../aas/domain/submodelBase/submodel";
@@ -112,31 +113,6 @@ export abstract class DataField extends DataFieldBase {
     };
   }
 
-  protected toAasProperty(valueType: DataTypeDef): Property {
-    const qualifiers = this.type === DataFieldType.NUMERIC_FIELD && this.options.min !== undefined && this.options.max !== undefined
-      ? [Qualifier.create({
-          semanticId: Reference.create({
-            keys: [Key.create(
-              {
-                type: KeyTypes.GlobalReference,
-                value: "https://admin-shell.io/SubmodelTemplates/AllowedRange/1/0",
-              },
-            )],
-            type: ReferenceTypes.ExternalReference,
-          }),
-          valueType,
-          type: "SMT/AllowedRange",
-          value: `[${this.options.min},${this.options.max}]`,
-          kind: QualifierKind.TemplateQualifier,
-          supplementalSemanticIds: [],
-        })]
-      : undefined;
-
-    return Property.create({ valueType, idShort: this.id, displayName: [
-      LanguageText.create(Language.de, this.name),
-    ], qualifiers });
-  }
-
   abstract toAas(): ISubmodelBase;
 }
 
@@ -171,7 +147,9 @@ export class TextField extends DataField {
   }
 
   toAas() {
-    return this.toAasProperty(DataTypeDef.String);
+    return MultiLanguageProperty.create({ idShort: this.id, displayName: [
+      LanguageText.create(Language.de, this.name),
+    ] });
   }
 }
 
@@ -232,7 +210,28 @@ export class NumericField extends DataField {
   }
 
   toAas() {
-    return this.toAasProperty(DataTypeDef.Double);
+    const qualifiers = this.options.min !== undefined && this.options.max !== undefined
+      ? [Qualifier.create({
+          semanticId: Reference.create({
+            keys: [Key.create(
+              {
+                type: KeyTypes.GlobalReference,
+                value: "https://admin-shell.io/SubmodelTemplates/AllowedRange/1/0",
+              },
+            )],
+            type: ReferenceTypes.ExternalReference,
+          }),
+          valueType: DataTypeDef.Double,
+          type: "SMT/AllowedRange",
+          value: `[${this.options.min},${this.options.max}]`,
+          kind: QualifierKind.TemplateQualifier,
+          supplementalSemanticIds: [],
+        })]
+      : undefined;
+
+    return Property.create({ valueType: DataTypeDef.Double, idShort: this.id, displayName: [
+      LanguageText.create(Language.de, this.name),
+    ], qualifiers });
   }
 }
 

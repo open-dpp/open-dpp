@@ -5,6 +5,7 @@ import { Language, LanguageText } from "../../aas/domain/common/language-text";
 import { Qualifier, QualifierKind } from "../../aas/domain/common/qualififiable";
 import { Reference, ReferenceTypes } from "../../aas/domain/common/reference";
 import { File } from "../../aas/domain/submodelBase/file";
+import { MultiLanguageProperty } from "../../aas/domain/submodelBase/multi-language-property";
 import { Property } from "../../aas/domain/submodelBase/property";
 import { ReferenceElement } from "../../aas/domain/submodelBase/reference-element";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
@@ -52,8 +53,7 @@ describe("dataField", () => {
       granularityLevel: GranularityLevel.MODEL,
     });
     const property = dataField.toAas();
-    expect(property).toEqual(Property.create({
-      valueType: DataTypeDef.String,
+    expect(property).toEqual(MultiLanguageProperty.create({
       idShort: dataField.id,
       displayName: [LanguageText.create(
         Language.de,

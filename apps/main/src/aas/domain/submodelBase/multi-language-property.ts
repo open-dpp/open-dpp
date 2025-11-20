@@ -1,4 +1,3 @@
-import { LangStringTextType } from "@aas-core-works/aas-core3.0-typescript/types";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -17,7 +16,7 @@ export class MultiLanguageProperty extends SubmodelBase {
     public readonly supplementalSemanticIds: Reference[] | null = null,
     public readonly qualifiers: Qualifier[] | null = null,
     public readonly embeddedDataSpecifications: EmbeddedDataSpecification[] | null = null,
-    public readonly value: LangStringTextType[] | null = null,
+    public readonly value: LanguageText[] | null = null,
     public readonly valueId: Reference | null = null,
   ) {
     super(
@@ -42,7 +41,7 @@ export class MultiLanguageProperty extends SubmodelBase {
     supplementalSemanticIds?: Reference[];
     qualifiers?: Qualifier[];
     embeddedDataSpecifications?: EmbeddedDataSpecification[];
-    value?: LangStringTextType[];
+    value?: LanguageText[];
     valueId?: Reference;
   }) {
     return new MultiLanguageProperty(
