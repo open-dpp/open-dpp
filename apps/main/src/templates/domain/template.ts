@@ -8,8 +8,9 @@ import { Key, KeyTypes } from "../../aas/domain/common/key";
 import { Language, LanguageText } from "../../aas/domain/common/language-text";
 import { Reference, ReferenceTypes } from "../../aas/domain/common/reference";
 import { Environment } from "../../aas/domain/environment";
-import { Submodel } from "../../aas/domain/submodelBase/submodel";
+import { AasSubmodelElements, Submodel } from "../../aas/domain/submodelBase/submodel";
 import { SubmodelElementCollection } from "../../aas/domain/submodelBase/submodel-element-collection";
+import { SubmodelElementList } from "../../aas/domain/submodelBase/submodel-element-list";
 import { SectionType } from "../../data-modelling/domain/section-base";
 import { Sector_TYPE } from "../../data-modelling/domain/sectors";
 import { DataValue } from "../../product-passport-data/domain/data-value";
@@ -236,22 +237,44 @@ export class Template {
     });
     const submodels: Submodel[] = [];
     for (const section of this.sections.filter(s => s.parentId === undefined)) {
-      // TODO: Handle RepeaterSections separately, because they are not represented as submodels in AAS
+      const submodelId = section.type === SectionType.GROUP ? section.id : `submodel-for-${section.id}`;
       aas.addSubmodelReference(Reference.create({
         type: ReferenceTypes.ModelReference,
         keys: [Key.create({
           type: KeyTypes.Submodel,
-          value: section.id,
+          value: submodelId,
         })],
       }));
-      const submodel = Submodel.create({ id: section.id, idShort: section.id, displayName: [
-        LanguageText.create(Language.de, section.name),
-      ] });
-      for (const dataField of section.dataFields) {
-        submodel.addSubmodelElement(dataField.toAas());
+      const submodel = Submodel.create({
+        id: submodelId,
+        idShort: submodelId,
+        displayName: [
+          LanguageText.create(Language.de, section.name),
+        ],
+      });
+      if (section.type === SectionType.GROUP) {
+        for (const dataField of section.dataFields) {
+          submodel.addSubmodelElement(dataField.toAas());
+        }
+        for (const subSection of section.subSections) {
+          submodel.addSubmodelElement(this.convertToSubmodelElement(this.findSectionByIdOrFail(subSection)));
+        }
       }
-      for (const subSection of section.subSections) {
-        submodel.addSubmodelElement(this.convertToSubmodelElement(this.findSectionByIdOrFail(subSection)));
+      else {
+        submodel.addSubmodelElement(SubmodelElementList.create({
+          idShort: section.id,
+          displayName: [
+            LanguageText.create(Language.de, section.name),
+          ],
+          typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+          value: [SubmodelElementCollection.create({
+            idShort: `${section.id}_0`,
+            value: [
+              ...section.dataFields.map(d => d.toAas()),
+              ...section.subSections.map(subS => this.convertToSubmodelElement(this.findSectionByIdOrFail(subS))),
+            ],
+          })],
+        }));
       }
       submodels.push(submodel);
     }
