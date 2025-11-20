@@ -40,14 +40,14 @@ export enum AasSubmodelElements {
 
 export abstract class SubmodelBase implements ISubmodelBase {
   protected constructor(
-    public readonly category: string | null = null,
-    public readonly idShort: string | null = null,
-    public readonly displayName: Array<LanguageText> | null = null,
-    public readonly description: Array<LanguageText> | null = null,
-    public readonly semanticId: Reference | null = null,
-    public readonly supplementalSemanticIds: Array<Reference> | null = null,
-    public readonly qualifiers: Qualifier[] | null = null,
-    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification> | null = null,
+    public readonly category: string | null,
+    public readonly idShort: string | null,
+    public readonly displayName: Array<LanguageText> | null,
+    public readonly description: Array<LanguageText> | null,
+    public readonly semanticId: Reference | null,
+    public readonly supplementalSemanticIds: Array<Reference> | null,
+    public readonly qualifiers: Qualifier[] | null,
+    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification> | null,
   ) {
   }
 }
@@ -55,18 +55,18 @@ export abstract class SubmodelBase implements ISubmodelBase {
 export class Submodel extends SubmodelBase {
   private constructor(
     public readonly id: string,
-    public readonly extensions: Array<Extension> | null = null,
-    public readonly category: string | null = null,
-    public readonly idShort: string | null = null,
-    public readonly displayName: Array<LanguageText> | null = null,
-    public readonly description: Array<LanguageText> | null = null,
-    public readonly administration: AdministrativeInformation | null = null,
-    public readonly kind: ModellingKind | null = null,
-    public readonly semanticId: Reference | null = null,
-    public readonly supplementalSemanticIds: Array<Reference> | null = null,
-    public readonly qualifiers: Qualifier[] | null = null,
-    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification> | null = null,
-    public readonly submodelElements: Array<ISubmodelBase> | null = null,
+    public readonly extensions: Array<Extension> | null,
+    public readonly category: string | null,
+    public readonly idShort: string | null,
+    public readonly displayName: Array<LanguageText> | null,
+    public readonly description: Array<LanguageText> | null,
+    public readonly administration: AdministrativeInformation | null,
+    public readonly kind: ModellingKind | null,
+    public readonly semanticId: Reference | null,
+    public readonly supplementalSemanticIds: Array<Reference> | null,
+    public readonly qualifiers: Qualifier[] | null,
+    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification> | null,
+    public readonly submodelElements: Array<ISubmodelBase>,
   ) {
     super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
   }
@@ -101,7 +101,11 @@ export class Submodel extends SubmodelBase {
       data.supplementalSemanticIds ?? null,
       data.qualifiers ?? null,
       data.embeddedDataSpecifications ?? null,
-      data.submodelElements ?? null,
+      data.submodelElements ?? [],
     );
   };
+
+  public addSubmodelElement(submodelElement: ISubmodelBase) {
+    this.submodelElements.push(submodelElement);
+  }
 }

@@ -16,7 +16,7 @@ export class SubmodelElementCollection extends SubmodelBase {
     public readonly supplementalSemanticIds: Array<Reference> | null = null,
     public readonly qualifiers: Qualifier[] | null = null,
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification> | null = null,
-    public readonly value: Array<ISubmodelBase> | null = null,
+    public readonly value: Array<ISubmodelBase>,
   ) {
     super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
   }
@@ -43,7 +43,11 @@ export class SubmodelElementCollection extends SubmodelBase {
       data.supplementalSemanticIds ?? null,
       data.qualifiers ?? null,
       data.embeddedDataSpecifications ?? null,
-      data.value ?? null,
+      data.value ?? [],
     );
   };
+
+  addSubmodelBase(submodelBase: ISubmodelBase) {
+    this.value.push(submodelBase);
+  }
 }

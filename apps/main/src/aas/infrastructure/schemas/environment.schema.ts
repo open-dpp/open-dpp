@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { AssetAdministrationShellSchema } from "./asset-administration-shell.schema";
-import { ConceptDescriptionDoc } from "./concept-description.schema";
-import { SubmodelBaseDoc } from "./submodelBase/submodel.schema";
+import { AssetAdministrationShellDoc, AssetAdministrationShellSchema } from "./asset-administration-shell.schema";
+import { ConceptDescriptionDoc, ConceptDescriptionSchema } from "./concept-description.schema";
+import { SubmodelBaseDoc, SubmodelBaseSchema } from "./submodelBase/submodel.schema";
 
 @Schema({ _id: false })
 export class EnvironmentDoc {

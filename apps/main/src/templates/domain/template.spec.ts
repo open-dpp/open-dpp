@@ -319,4 +319,10 @@ describe("template", () => {
     productDataModel.assignMarketplaceResource("m1");
     expect(productDataModel.marketplaceResourceId).toEqual("m1");
   });
+
+  it("should convert to AAS", () => {
+    const laptopModel: TemplateDbProps = laptopFactory.addSections().build();
+    const template = Template.loadFromDb(laptopModel);
+    const aas = template.convertToAas();
+  });
 });

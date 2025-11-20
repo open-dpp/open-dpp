@@ -205,6 +205,9 @@ importers:
 
   apps/main:
     dependencies:
+      '@aas-core-works/aas-core3.0-typescript':
+        specifier: ^1.0.4
+        version: 1.0.4
       '@keycloak/keycloak-admin-client':
         specifier: ^26.4.2
         version: 26.4.2
@@ -835,6 +838,9 @@ importers:
         version: 5.9.3
 
 packages:
+
+  '@aas-core-works/aas-core3.0-typescript@1.0.4':
+    resolution: {integrity: sha512-tHCCi5HMDw1UBmYmgd7kRMLFPjUNsULsoex3Gg0bikC0CxJnT5X2N6z1j81sJOVmsTbdwCmlfMZXF2b+PCfdYA==}
 
   '@acemir/cssom@0.9.20':
     resolution: {integrity: sha512-YUSA5jW8qn/c6nZUlFsn2Nt5qFFRBcGTgL9CzbiZbJCtEFY0Nv/ycO3BHT9tLjus9++zOYWe5mLCRIesuay25g==}
@@ -9190,6 +9196,8 @@ packages:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
 snapshots:
+
+  '@aas-core-works/aas-core3.0-typescript@1.0.4': {}
 
   '@acemir/cssom@0.9.20': {}
 

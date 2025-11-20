@@ -19,7 +19,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     public readonly administration: AdministrativeInformation | null = null,
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification> | null = null,
     public readonly derivedFrom: Reference | null = null,
-    public readonly submodels: Array<Reference> | null = null,
+    public readonly submodels: Array<Reference>,
   ) {
   }
 
@@ -49,7 +49,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
       data.administration ?? null,
       data.embeddedDataSpecifications ?? null,
       data.derivedFrom ?? null,
-      data.submodels ?? null,
+      data.submodels ?? [],
     );
   };
 
@@ -67,5 +67,9 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     submodels?: Array<Reference>;
   }) {
 
+  }
+
+  addSubmodelReference(submodel: Reference) {
+    this.submodels.push(submodel);
   }
 }

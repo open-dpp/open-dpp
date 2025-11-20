@@ -1,8 +1,8 @@
 import { Prop, SchemaFactory } from "@nestjs/mongoose";
 import { EntityType } from "../../../domain/submodelBase/entity";
 import { ExtensionDoc, ExtensionSchema } from "../extension.schema";
-import { SpecificAssetIdDoc } from "../specific-asset-id.schema";
-import { SubmodelBaseDoc } from "./submodel.schema";
+import { SpecificAssetIdDoc, SpecificAssetIdSchema } from "../specific-asset-id.schema";
+import { SubmodelBaseDoc, SubmodelBaseSchema } from "./submodel.schema";
 
 export class EntityDoc extends SubmodelBaseDoc {
   @Prop({ required: true, enum: EntityType })

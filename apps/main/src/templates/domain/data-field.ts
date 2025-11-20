@@ -3,10 +3,16 @@ import type { GranularityLevel_TYPE } from "../../data-modelling/domain/granular
 import { randomUUID } from "node:crypto";
 import { NotSupportedError } from "@open-dpp/exception";
 import { z } from "zod";
-import {
-  DataFieldBase,
-  DataFieldType,
-} from "../../data-modelling/domain/data-field-base";
+import { DataTypeDef } from "../../aas/domain/common/data-type-def";
+import { Key, KeyTypes } from "../../aas/domain/common/key";
+import { Language, LanguageText } from "../../aas/domain/common/language-text";
+import { Qualifier, QualifierKind } from "../../aas/domain/common/qualififiable";
+import { Reference, ReferenceTypes } from "../../aas/domain/common/reference";
+import { File } from "../../aas/domain/submodelBase/file";
+import { Property } from "../../aas/domain/submodelBase/property";
+import { ReferenceElement } from "../../aas/domain/submodelBase/reference-element";
+import { ISubmodelBase } from "../../aas/domain/submodelBase/submodel";
+import { DataFieldBase, DataFieldType } from "../../data-modelling/domain/data-field-base";
 
 export class DataFieldValidationResult {
   public readonly dataFieldId: string;
@@ -105,6 +111,33 @@ export abstract class DataField extends DataFieldBase {
       granularityLevel: this.granularityLevel,
     };
   }
+
+  protected toAasProperty(valueType: DataTypeDef): Property {
+    const qualifiers = this.type === DataFieldType.NUMERIC_FIELD && this.options.min !== undefined && this.options.max !== undefined
+      ? [Qualifier.create({
+          semanticId: Reference.create({
+            keys: [Key.create(
+              {
+                type: KeyTypes.GlobalReference,
+                value: "https://admin-shell.io/SubmodelTemplates/AllowedRange/1/0",
+              },
+            )],
+            type: ReferenceTypes.ExternalReference,
+          }),
+          valueType,
+          type: "SMT/AllowedRange",
+          value: `[${this.options.min},${this.options.max}]`,
+          kind: QualifierKind.TemplateQualifier,
+          supplementalSemanticIds: [],
+        })]
+      : undefined;
+
+    return Property.create({ valueType, idShort: this.id, displayName: [
+      LanguageText.create(Language.de, this.name),
+    ], qualifiers });
+  }
+
+  abstract toAas(): ISubmodelBase;
 }
 
 function validateString(
@@ -136,6 +169,10 @@ export class TextField extends DataField {
   validate(version: string, value: unknown): DataFieldValidationResult {
     return validateString(this.id, this.name, value);
   }
+
+  toAas() {
+    return this.toAasProperty(DataTypeDef.String);
+  }
 }
 
 export class ProductPassportLink extends DataField {
@@ -156,6 +193,13 @@ export class ProductPassportLink extends DataField {
 
   validate(version: string, value: unknown): DataFieldValidationResult {
     return validateString(this.id, this.name, value);
+  }
+
+  toAas() {
+    return ReferenceElement.create({
+      idShort: this.id,
+      displayName: [LanguageText.create(Language.de, this.name)],
+    });
   }
 }
 
@@ -186,6 +230,10 @@ export class NumericField extends DataField {
         : undefined,
     });
   }
+
+  toAas() {
+    return this.toAasProperty(DataTypeDef.Double);
+  }
 }
 
 export class FileField extends DataField {
@@ -202,6 +250,10 @@ export class FileField extends DataField {
 
   validate(version: string, value: unknown): DataFieldValidationResult {
     return validateString(this.id, this.name, value);
+  }
+
+  toAas() {
+    return File.create({ idShort: this.id, contentType: "application/octet-stream", displayName: [LanguageText.create(Language.de, this.name)] });
   }
 }
 

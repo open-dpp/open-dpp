@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { KeyTypes } from "../../../domain/aas/common/key";
+import { KeyTypes } from "../../../domain/common/key";
 
 @Schema({ _id: false })
 export class KeyDoc {

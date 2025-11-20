@@ -3,6 +3,7 @@ import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
+import { SpecificAssetId } from "../specific-asset-id";
 import { SubmodelBase } from "./submodel";
 
 export enum EntityType {

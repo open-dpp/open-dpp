@@ -1,3 +1,8 @@
+export enum Language {
+  en = "en",
+  de = "de",
+}
+
 export class LanguageText {
   private constructor(public readonly language: string, public readonly text: string) {
   }

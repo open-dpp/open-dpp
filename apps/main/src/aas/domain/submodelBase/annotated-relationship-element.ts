@@ -1,3 +1,9 @@
+import { LanguageText } from "../common/language-text";
+import { Qualifier } from "../common/qualififiable";
+import { Reference } from "../common/reference";
+import { EmbeddedDataSpecification } from "../embedded-data-specification";
+import { Extension } from "../extension";
+import { IRelationshipElement } from "./relationship-element";
 import { SubmodelBase } from "./submodel";
 
 export class AnnotatedRelationshipElement extends SubmodelBase implements IRelationshipElement {

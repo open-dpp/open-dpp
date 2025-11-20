@@ -4,9 +4,9 @@ import { Submodel } from "./submodelBase/submodel";
 
 export class Environment {
   private constructor(
-    public readonly assetAdministrationShells: Array<AssetAdministrationShell> | null = null,
-    public readonly submodels: Array<Submodel> | null = null,
-    public readonly conceptDescriptions: Array<ConceptDescription> | null = null,
+    public readonly assetAdministrationShells: Array<AssetAdministrationShell>,
+    public readonly submodels: Array<Submodel>,
+    public readonly conceptDescriptions: Array<ConceptDescription>,
   ) {
 
   }
@@ -17,9 +17,17 @@ export class Environment {
     conceptDescriptions?: Array<ConceptDescription>;
   }): Environment {
     return new Environment(
-      data.assetAdministrationShells ?? null,
-      data.submodels ?? null,
-      data.conceptDescriptions ?? null,
+      data.assetAdministrationShells ?? [],
+      data.submodels ?? [],
+      data.conceptDescriptions ?? [],
     );
+  }
+
+  addAssetAdministrationShell(assetAdministrationShell: AssetAdministrationShell) {
+    this.assetAdministrationShells.push(assetAdministrationShell);
+  }
+
+  addSubmodel(submodel: Submodel) {
+    this.submodels.push(submodel);
   }
 }

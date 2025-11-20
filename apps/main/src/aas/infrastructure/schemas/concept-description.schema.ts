@@ -1,6 +1,12 @@
 import { Prop, SchemaFactory } from "@nestjs/mongoose";
-import { ExtensionDoc, ExtensionSchema } from "../extension.schema";
+import {
+  AdministrativeInformationDoc,
+  AdministrativeInformationSchema,
+} from "./common/administration.information.schema";
 import { LanguageTextDoc, LanguageTextSchema } from "./common/language.text.schema";
+import { ReferenceDoc, ReferenceSchema } from "./common/reference.schema";
+import { EmbeddedDataSpecificationDoc, EmbeddedDataSpecificationSchema } from "./embedded-data-specification.schema";
+import { ExtensionDoc, ExtensionSchema } from "./extension.schema";
 
 export class ConceptDescriptionDoc {
   @Prop({ required: true })

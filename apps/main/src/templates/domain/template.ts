@@ -1,16 +1,19 @@
 import type { GranularityLevel_TYPE } from "../../data-modelling/domain/granularity-level";
 import type { DataFieldValidationResult } from "./data-field";
-import type {
-  Section,
-  SectionDbProps,
-} from "./section";
+import type { Section, SectionDbProps } from "./section";
 import { randomUUID } from "node:crypto";
+import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
+import { AssetInformation, AssetKind } from "../../aas/domain/asset-information";
+import { Key, KeyTypes } from "../../aas/domain/common/key";
+import { Language, LanguageText } from "../../aas/domain/common/language-text";
+import { Reference, ReferenceTypes } from "../../aas/domain/common/reference";
+import { Environment } from "../../aas/domain/environment";
+import { Submodel } from "../../aas/domain/submodelBase/submodel";
+import { SubmodelElementCollection } from "../../aas/domain/submodelBase/submodel-element-collection";
 import { SectionType } from "../../data-modelling/domain/section-base";
 import { Sector_TYPE } from "../../data-modelling/domain/sectors";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import {
-  findSectionClassByTypeOrFail,
-} from "./section";
+import { findSectionClassByTypeOrFail } from "./section";
 
 export class ValidationResult {
   private readonly _validationResults: DataFieldValidationResult[] = [];
@@ -210,5 +213,48 @@ export class Template {
           ),
       )
       .flat();
+  }
+
+  private convertToSubmodelElement(section: Section): SubmodelElementCollection {
+    const subSectionSubmodel = SubmodelElementCollection.create({
+      idShort: section.id,
+      displayName: [LanguageText.create(Language.de, section.name)],
+    });
+    for (const dataField of section.dataFields) {
+      subSectionSubmodel.addSubmodelBase(dataField.toAas());
+    }
+    for (const subSection of section.subSections) {
+      subSectionSubmodel.addSubmodelBase(this.convertToSubmodelElement(this.findSectionByIdOrFail(subSection)));
+    }
+    return subSectionSubmodel;
+  }
+
+  convertToAas() {
+    const aas = AssetAdministrationShell.create({
+      id: this.id,
+      assetInformation: AssetInformation.create({ assetKind: AssetKind.Type }),
+    });
+    const submodels: Submodel[] = [];
+    for (const section of this.sections.filter(s => s.parentId === undefined)) {
+      // TODO: Handle RepeaterSections separately, because they are not represented as submodels in AAS
+      aas.addSubmodelReference(Reference.create({
+        type: ReferenceTypes.ModelReference,
+        keys: [Key.create({
+          type: KeyTypes.Submodel,
+          value: section.id,
+        })],
+      }));
+      const submodel = Submodel.create({ id: section.id, idShort: section.id, displayName: [
+        LanguageText.create(Language.de, section.name),
+      ] });
+      for (const dataField of section.dataFields) {
+        submodel.addSubmodelElement(dataField.toAas());
+      }
+      for (const subSection of section.subSections) {
+        submodel.addSubmodelElement(this.convertToSubmodelElement(this.findSectionByIdOrFail(subSection)));
+      }
+      submodels.push(submodel);
+    }
+    return Environment.create({ assetAdministrationShells: [aas], submodels });
   }
 }

@@ -1,8 +1,14 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { ModellingKind } from "../../../domain/common/has-kind";
 import { ReferenceTypes } from "../../../domain/common/reference";
+import {
+  AdministrativeInformationDoc,
+  AdministrativeInformationSchema,
+} from "../common/administration.information.schema";
 import { LanguageTextDoc, LanguageTextSchema } from "../common/language.text.schema";
-import { QualifierSchema } from "../common/qualifier.schema";
+import { QualifierDoc, QualifierSchema } from "../common/qualifier.schema";
+import { ReferenceDoc, ReferenceSchema } from "../common/reference.schema";
+import { EmbeddedDataSpecificationDoc, EmbeddedDataSpecificationSchema } from "../embedded-data-specification.schema";
 import { ExtensionDoc, ExtensionSchema } from "../extension.schema";
 
 @Schema({ _id: false })

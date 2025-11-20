@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { LanguageTextDoc, LanguageTextSchema } from "../common/language.text.schema";
-import { ReferenceDoc } from "../common/reference.schema";
+import { ReferenceDoc, ReferenceSchema } from "../common/reference.schema";
 import { ExtensionDoc, ExtensionSchema } from "../extension.schema";
 import { SubmodelBaseDoc } from "./submodel.schema";
 
