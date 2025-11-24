@@ -148,7 +148,7 @@ export class TextField extends DataField {
 
   toAas() {
     return MultiLanguageProperty.create({ idShort: this.id, displayName: [
-      LanguageText.create(Language.de, this.name),
+      LanguageText.create({ language: Language.de, text: this.name }),
     ] });
   }
 }
@@ -176,7 +176,7 @@ export class ProductPassportLink extends DataField {
   toAas() {
     return ReferenceElement.create({
       idShort: this.id,
-      displayName: [LanguageText.create(Language.de, this.name)],
+      displayName: [LanguageText.create({ language: Language.de, text: this.name })],
     });
   }
 }
@@ -230,7 +230,7 @@ export class NumericField extends DataField {
       : undefined;
 
     return Property.create({ valueType: DataTypeDef.Double, idShort: this.id, displayName: [
-      LanguageText.create(Language.de, this.name),
+      LanguageText.create({ language: Language.de, text: this.name }),
     ], qualifiers });
   }
 }
@@ -252,7 +252,7 @@ export class FileField extends DataField {
   }
 
   toAas() {
-    return File.create({ idShort: this.id, contentType: "application/octet-stream", displayName: [LanguageText.create(Language.de, this.name)] });
+    return File.create({ idShort: this.id, contentType: "application/octet-stream", displayName: [LanguageText.create({ language: Language.de, text: this.name })] });
   }
 }
 

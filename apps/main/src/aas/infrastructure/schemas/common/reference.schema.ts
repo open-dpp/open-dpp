@@ -5,7 +5,7 @@ import { KeyDoc, KeySchema } from "./key.schema";
 
 @Schema({ _id: false })
 export class ReferenceDoc {
-  @Prop({ required: true, enum: ReferenceTypes })
+  @Prop({ required: true, enum: Object.values(ReferenceTypes), type: String })
   type: ReferenceTypes;
 
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: "ReferenceDoc" })

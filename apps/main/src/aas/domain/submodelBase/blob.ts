@@ -8,15 +8,15 @@ import { SubmodelBase } from "./submodel";
 export class Blob extends SubmodelBase {
   private constructor(
     public readonly contentType: string,
-    public readonly extensions: Array<Extension> | null = null,
+    public readonly extensions: Array<Extension>,
     public readonly category: string | null = null,
     public readonly idShort: string | null = null,
-    public readonly displayName: Array<LanguageText> | null = null,
-    public readonly description: Array<LanguageText> | null = null,
+    public readonly displayName: Array<LanguageText>,
+    public readonly description: Array<LanguageText>,
     public readonly semanticId: Reference | null = null,
-    public readonly supplementalSemanticIds: Array<Reference> | null = null,
-    public readonly qualifiers: Array<Qualifier> | null = null,
-    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification> | null = null,
+    public readonly supplementalSemanticIds: Array<Reference>,
+    public readonly qualifiers: Array<Qualifier>,
+    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
     public readonly value: Uint8Array | null = null,
   ) {
     super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
@@ -37,15 +37,15 @@ export class Blob extends SubmodelBase {
   }) {
     return new Blob(
       data.contentType,
-      data.extensions ?? null,
+      data.extensions ?? [],
       data.category ?? null,
       data.idShort ?? null,
-      data.displayName ?? null,
-      data.description ?? null,
+      data.displayName ?? [],
+      data.description ?? [],
       data.semanticId ?? null,
-      data.supplementalSemanticIds ?? null,
-      data.qualifiers ?? null,
-      data.embeddedDataSpecifications ?? null,
+      data.supplementalSemanticIds ?? [],
+      data.qualifiers ?? [],
+      data.embeddedDataSpecifications ?? [],
       data.value ?? null,
     );
   }

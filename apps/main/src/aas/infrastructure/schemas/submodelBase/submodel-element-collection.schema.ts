@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { ExtensionDoc, ExtensionSchema } from "../extension.schema";
-import { SubmodelBaseDoc, SubmodelBaseSchema } from "./submodel.schema";
+import { SubmodelBaseDoc, SubmodelBaseSchema } from "./submodel-base.schema";
 
 @Schema({ _id: false })
 export class SubmodelElementCollectionDoc extends SubmodelBaseDoc {
@@ -9,6 +9,9 @@ export class SubmodelElementCollectionDoc extends SubmodelBaseDoc {
 
   @Prop({ type: [SubmodelBaseSchema], default: [] })
   value?: SubmodelBaseDoc[];
+
+  // @Prop({ required: true })
+  // testDemo: string;
 }
 
 export const SubmodelElementCollectionSchema = SchemaFactory.createForClass(SubmodelElementCollectionDoc);

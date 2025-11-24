@@ -1,6 +1,7 @@
 import { Prop, SchemaFactory } from "@nestjs/mongoose";
 import { ExtensionDoc, ExtensionSchema } from "../extension.schema";
-import { SubmodelBaseDoc } from "./submodel.schema";
+
+import { SubmodelBaseDoc } from "./submodel-base.schema";
 
 export class FileDoc extends SubmodelBaseDoc {
   @Prop({ required: true })

@@ -1,14 +1,5 @@
-export class Key {
-  private constructor(public type: KeyTypes, public value: string) {
-  }
-
-  static create(data: {
-    type: KeyTypes;
-    value: string;
-  }) {
-    return new Key(data.type, data.value);
-  }
-}
+import { z } from "zod/v4";
+import { IVisitable, IVisitor } from "../visitor";
 
 export enum KeyTypes {
   AnnotatedRelationshipElement = "AnnotatedRelationshipElement",
@@ -35,4 +26,29 @@ export enum KeyTypes {
   SubmodelElement = "SubmodelElement",
   SubmodelElementCollection = "SubmodelElementCollection",
   SubmodelElementList = "SubmodelElementList",
+}
+
+export const KeyJsonSchema = z.object({
+  type: z.enum(KeyTypes),
+  value: z.string(),
+});
+
+export class Key implements IVisitable<any> {
+  private constructor(public type: KeyTypes, public value: string) {
+  }
+
+  static create(data: {
+    type: KeyTypes;
+    value: string;
+  }) {
+    return new Key(data.type, data.value);
+  }
+
+  static fromPlain(json: Record<string, unknown>) {
+    return Key.create(KeyJsonSchema.parse(json));
+  }
+
+  accept(visitor: IVisitor<any>): any {
+    return visitor.visitKey(this);
+  }
 }

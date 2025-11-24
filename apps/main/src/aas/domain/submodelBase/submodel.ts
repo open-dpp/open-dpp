@@ -8,11 +8,13 @@ import { IReferable } from "../common/referable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
+import { IVisitable, IVisitor } from "../visitor";
 
 export interface ISubmodelBase
   extends IReferable,
   IHasSemantics,
   IQualifiable,
+  IVisitable<any>,
   IHasDataSpecification {
   // Intentionally empty.
 }
@@ -42,30 +44,34 @@ export abstract class SubmodelBase implements ISubmodelBase {
   protected constructor(
     public readonly category: string | null,
     public readonly idShort: string | null,
-    public readonly displayName: Array<LanguageText> | null,
-    public readonly description: Array<LanguageText> | null,
+    public readonly displayName: Array<LanguageText>,
+    public readonly description: Array<LanguageText>,
     public readonly semanticId: Reference | null,
-    public readonly supplementalSemanticIds: Array<Reference> | null,
-    public readonly qualifiers: Qualifier[] | null,
-    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification> | null,
+    public readonly supplementalSemanticIds: Array<Reference>,
+    public readonly qualifiers: Qualifier[],
+    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
   ) {
+  }
+
+  accept(visitor: IVisitor<any>): any {
+    throw new Error("Method not implemented.");
   }
 }
 
 export class Submodel extends SubmodelBase {
   private constructor(
     public readonly id: string,
-    public readonly extensions: Array<Extension> | null,
+    public readonly extensions: Array<Extension>,
     public readonly category: string | null,
     public readonly idShort: string | null,
-    public readonly displayName: Array<LanguageText> | null,
-    public readonly description: Array<LanguageText> | null,
-    public readonly administration: AdministrativeInformation | null,
+    public readonly displayName: Array<LanguageText>,
+    public readonly description: Array<LanguageText>,
+    public readonly administration: AdministrativeInformation,
     public readonly kind: ModellingKind | null,
     public readonly semanticId: Reference | null,
-    public readonly supplementalSemanticIds: Array<Reference> | null,
-    public readonly qualifiers: Qualifier[] | null,
-    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification> | null,
+    public readonly supplementalSemanticIds: Array<Reference>,
+    public readonly qualifiers: Qualifier[],
+    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
     public readonly submodelElements: Array<ISubmodelBase>,
   ) {
     super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
@@ -79,7 +85,7 @@ export class Submodel extends SubmodelBase {
       idShort?: string;
       displayName?: Array<LanguageText>;
       description?: Array<LanguageText>;
-      administration?: AdministrativeInformation;
+      administration: AdministrativeInformation;
       kind?: ModellingKind;
       semanticId?: Reference;
       supplementalSemanticIds?: Array<Reference>;
@@ -90,17 +96,17 @@ export class Submodel extends SubmodelBase {
   ) {
     return new Submodel(
       data.id,
-      data.extensions ?? null,
+      data.extensions ?? [],
       data.category ?? null,
       data.idShort ?? null,
-      data.displayName ?? null,
-      data.description ?? null,
-      data.administration ?? null,
+      data.displayName ?? [],
+      data.description ?? [],
+      data.administration,
       data.kind ?? null,
       data.semanticId ?? null,
-      data.supplementalSemanticIds ?? null,
-      data.qualifiers ?? null,
-      data.embeddedDataSpecifications ?? null,
+      data.supplementalSemanticIds ?? [],
+      data.qualifiers ?? [],
+      data.embeddedDataSpecifications ?? [],
       data.submodelElements ?? [],
     );
   };

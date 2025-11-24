@@ -1,3 +1,4 @@
+import { IVisitable, IVisitor } from "../visitor";
 import { DataTypeDef } from "./data-type-def";
 import { IHasSemantics } from "./has-semantics";
 import { Reference } from "./reference";
@@ -8,12 +9,16 @@ export enum QualifierKind {
   TemplateQualifier = "TemplateQualifier",
 }
 
-export class Qualifier implements IHasSemantics {
+export class Qualifier implements IHasSemantics, IVisitable<any> {
   private constructor(public readonly type: string, public valueType: DataTypeDef, public semanticId: Reference | null, public readonly supplementalSemanticIds: Reference[], public readonly kind: QualifierKind, public value: string | null, public valueId: Reference | null) {
   }
 
   static create(data: { type: string; valueType: DataTypeDef; semanticId?: Reference; supplementalSemanticIds: Reference[]; kind: QualifierKind; value?: string; valueId?: Reference }): Qualifier {
     return new Qualifier(data.type, data.valueType, data.semanticId ?? null, data.supplementalSemanticIds, data.kind, data.value ?? null, data.valueId ?? null);
+  }
+
+  accept(visitor: IVisitor<any>): any {
+    return visitor.visitQualifier(this);
   }
 }
 

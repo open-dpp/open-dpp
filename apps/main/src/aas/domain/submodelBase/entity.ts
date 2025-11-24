@@ -14,18 +14,18 @@ export enum EntityType {
 export class Entity extends SubmodelBase {
   private constructor(
     public readonly entityType: EntityType,
-    public readonly extensions: Array<Extension> | null = null,
+    public readonly extensions: Array<Extension>,
     public readonly category: string | null = null,
     public readonly idShort: string | null = null,
-    public readonly displayName: Array<LanguageText> | null = null,
-    public readonly description: Array<LanguageText> | null = null,
+    public readonly displayName: Array<LanguageText>,
+    public readonly description: Array<LanguageText>,
     public readonly semanticId: Reference | null = null,
-    public readonly supplementalSemanticIds: Array<Reference> | null = null,
-    public readonly qualifiers: Array<Qualifier> | null = null,
-    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification> | null = null,
-    public readonly statements: Array<SubmodelBase> | null = null,
+    public readonly supplementalSemanticIds: Array<Reference>,
+    public readonly qualifiers: Array<Qualifier>,
+    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
+    public readonly statements: Array<SubmodelBase>,
     public readonly globalAssetId: string | null = null,
-    public readonly specificAssetIds: Array<SpecificAssetId> | null = null,
+    public readonly specificAssetIds: Array<SpecificAssetId>,
   ) {
     super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
   }
@@ -47,18 +47,18 @@ export class Entity extends SubmodelBase {
   }) {
     return new Entity(
       data.entityType,
-      data.extensions ?? null,
+      data.extensions ?? [],
       data.category ?? null,
       data.idShort ?? null,
-      data.displayName ?? null,
-      data.description ?? null,
+      data.displayName ?? [],
+      data.description ?? [],
       data.semanticId ?? null,
-      data.supplementalSemanticIds ?? null,
-      data.qualifiers ?? null,
-      data.embeddedDataSpecifications ?? null,
-      data.statements ?? null,
+      data.supplementalSemanticIds ?? [],
+      data.qualifiers ?? [],
+      data.embeddedDataSpecifications ?? [],
+      data.statements ?? [],
       data.globalAssetId ?? null,
-      data.specificAssetIds ?? null,
+      data.specificAssetIds ?? [],
     );
   };
 }

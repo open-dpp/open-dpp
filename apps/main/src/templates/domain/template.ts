@@ -4,6 +4,7 @@ import type { Section, SectionDbProps } from "./section";
 import { randomUUID } from "node:crypto";
 import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
 import { AssetInformation, AssetKind } from "../../aas/domain/asset-information";
+import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
 import { Key, KeyTypes } from "../../aas/domain/common/key";
 import { Language, LanguageText } from "../../aas/domain/common/language-text";
 import { Reference, ReferenceTypes } from "../../aas/domain/common/reference";
@@ -219,7 +220,7 @@ export class Template {
   private convertToSubmodelElement(section: Section): SubmodelElementCollection {
     const subSectionSubmodel = SubmodelElementCollection.create({
       idShort: section.id,
-      displayName: [LanguageText.create(Language.de, section.name)],
+      displayName: [LanguageText.create({ language: Language.de, text: section.name })],
     });
     for (const dataField of section.dataFields) {
       subSectionSubmodel.addSubmodelBase(dataField.toAas());
@@ -248,8 +249,12 @@ export class Template {
       const submodel = Submodel.create({
         id: submodelId,
         idShort: submodelId,
+        administration: AdministrativeInformation.create({
+          version: "1.0.0",
+          revision: "1",
+        }),
         displayName: [
-          LanguageText.create(Language.de, section.name),
+          LanguageText.create({ language: Language.de, text: section.name }),
         ],
       });
       if (section.type === SectionType.GROUP) {
@@ -264,7 +269,7 @@ export class Template {
         submodel.addSubmodelElement(SubmodelElementList.create({
           idShort: section.id,
           displayName: [
-            LanguageText.create(Language.de, section.name),
+            LanguageText.create({ language: Language.de, text: section.name }),
           ],
           typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
           value: [SubmodelElementCollection.create({

@@ -4,6 +4,7 @@ import { expect } from "@jest/globals";
 import { ignoreIds } from "@open-dpp/testing";
 import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
 import { AssetInformation, AssetKind } from "../../aas/domain/asset-information";
+import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
 import { DataTypeDef } from "../../aas/domain/common/data-type-def";
 import { Key, KeyTypes } from "../../aas/domain/common/key";
 import { Language, LanguageText } from "../../aas/domain/common/language-text";
@@ -364,42 +365,46 @@ describe("template", () => {
         ],
       }),
     ]);
+    const administration = AdministrativeInformation.create({ version: "1.0.0", revision: "1" });
     expect(aasEnvironment.submodels).toEqual([
       Submodel.create({
         id: LaptopFactory.ids.techSpecs.id,
         idShort: LaptopFactory.ids.techSpecs.id,
-        displayName: [LanguageText.create(Language.de, "Technical specifications")],
+        administration,
+        displayName: [LanguageText.create({ language: Language.de, text: "Technical specifications" })],
         submodelElements: [
-          MultiLanguageProperty.create({ idShort: LaptopFactory.ids.techSpecs.fields.processor, displayName: [LanguageText.create(Language.de, "Processor")] }),
-          MultiLanguageProperty.create({ idShort: LaptopFactory.ids.techSpecs.fields.memory, displayName: [LanguageText.create(Language.de, "Memory")] }),
-          MultiLanguageProperty.create({ idShort: LaptopFactory.ids.techSpecs.fields.serialNumber, displayName: [LanguageText.create(Language.de, "Serial number")] }),
-          MultiLanguageProperty.create({ idShort: LaptopFactory.ids.techSpecs.fields.batteryStatus, displayName: [LanguageText.create(Language.de, "Battery Status")] }),
+          MultiLanguageProperty.create({ idShort: LaptopFactory.ids.techSpecs.fields.processor, displayName: [LanguageText.create({ language: Language.de, text: "Processor" })] }),
+          MultiLanguageProperty.create({ idShort: LaptopFactory.ids.techSpecs.fields.memory, displayName: [LanguageText.create({ language: Language.de, text: "Memory" })] }),
+          MultiLanguageProperty.create({ idShort: LaptopFactory.ids.techSpecs.fields.serialNumber, displayName: [LanguageText.create({ language: Language.de, text: "Serial number" })] }),
+          MultiLanguageProperty.create({ idShort: LaptopFactory.ids.techSpecs.fields.batteryStatus, displayName: [LanguageText.create({ language: Language.de, text: "Battery Status" })] }),
         ],
       }),
       Submodel.create({
         id: LaptopFactory.ids.environment.id,
         idShort: LaptopFactory.ids.environment.id,
-        displayName: [LanguageText.create(Language.de, "Environment")],
+        administration,
+        displayName: [LanguageText.create({ language: Language.de, text: "Environment" })],
         submodelElements: [
-          Property.create({ valueType: DataTypeDef.Double, idShort: LaptopFactory.ids.environment.fields.waterConsumption, displayName: [LanguageText.create(Language.de, "Water consumption")] }),
-          Property.create({ valueType: DataTypeDef.Double, idShort: LaptopFactory.ids.environment.fields.energyConsumption, displayName: [LanguageText.create(Language.de, "Energy consumption")] }),
+          Property.create({ valueType: DataTypeDef.Double, idShort: LaptopFactory.ids.environment.fields.waterConsumption, displayName: [LanguageText.create({ language: Language.de, text: "Water consumption" })] }),
+          Property.create({ valueType: DataTypeDef.Double, idShort: LaptopFactory.ids.environment.fields.energyConsumption, displayName: [LanguageText.create({ language: Language.de, text: "Energy consumption" })] }),
         ],
       }),
       Submodel.create({
         id: `submodel-for-${LaptopFactory.ids.material.id}`,
         idShort: `submodel-for-${LaptopFactory.ids.material.id}`,
-        displayName: [LanguageText.create(Language.de, "Material")],
+        administration,
+        displayName: [LanguageText.create({ language: Language.de, text: "Material" })],
         submodelElements: [
-          SubmodelElementList.create({ typeValueListElement: AasSubmodelElements.SubmodelElementCollection, idShort: LaptopFactory.ids.material.id, displayName: [LanguageText.create(Language.de, "Material")], value: [
+          SubmodelElementList.create({ typeValueListElement: AasSubmodelElements.SubmodelElementCollection, idShort: LaptopFactory.ids.material.id, displayName: [LanguageText.create({ language: Language.de, text: "Material" })], value: [
             SubmodelElementCollection.create({ idShort: `${LaptopFactory.ids.material.id}_0`, value: [
-              MultiLanguageProperty.create({ idShort: LaptopFactory.ids.material.fields.materialType, displayName: [LanguageText.create(Language.de, "Material type")] }),
-              Property.create({ valueType: DataTypeDef.Double, idShort: LaptopFactory.ids.material.fields.mass, displayName: [LanguageText.create(Language.de, "Mass")] }),
+              MultiLanguageProperty.create({ idShort: LaptopFactory.ids.material.fields.materialType, displayName: [LanguageText.create({ language: Language.de, text: "Material type" })] }),
+              Property.create({ valueType: DataTypeDef.Double, idShort: LaptopFactory.ids.material.fields.mass, displayName: [LanguageText.create({ language: Language.de, text: "Mass" })] }),
               SubmodelElementCollection.create({
                 idShort: LaptopFactory.ids.materialCo2.id,
-                displayName: [LanguageText.create(Language.de, "Material Co2")],
+                displayName: [LanguageText.create({ language: Language.de, text: "Material Co2" })],
                 value: [
-                  MultiLanguageProperty.create({ idShort: LaptopFactory.ids.materialCo2.fields.co2CalculationMethod, displayName: [LanguageText.create(Language.de, "Co2 calculation method")] }),
-                  Property.create({ valueType: DataTypeDef.Double, idShort: LaptopFactory.ids.materialCo2.fields.co2Emissions, displayName: [LanguageText.create(Language.de, "Co2 emissions")] }),
+                  MultiLanguageProperty.create({ idShort: LaptopFactory.ids.materialCo2.fields.co2CalculationMethod, displayName: [LanguageText.create({ language: Language.de, text: "Co2 calculation method" })] }),
+                  Property.create({ valueType: DataTypeDef.Double, idShort: LaptopFactory.ids.materialCo2.fields.co2Emissions, displayName: [LanguageText.create({ language: Language.de, text: "Co2 emissions" })] }),
                 ],
               }),
             ] }),

@@ -1,60 +1,37 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Schema as MongooseSchema } from "mongoose";
 import { ModellingKind } from "../../../domain/common/has-kind";
-import { ReferenceTypes } from "../../../domain/common/reference";
 import {
   AdministrativeInformationDoc,
   AdministrativeInformationSchema,
 } from "../common/administration.information.schema";
-import { LanguageTextDoc, LanguageTextSchema } from "../common/language.text.schema";
-import { QualifierDoc, QualifierSchema } from "../common/qualifier.schema";
-import { ReferenceDoc, ReferenceSchema } from "../common/reference.schema";
-import { EmbeddedDataSpecificationDoc, EmbeddedDataSpecificationSchema } from "../embedded-data-specification.schema";
 import { ExtensionDoc, ExtensionSchema } from "../extension.schema";
+import { SubmodelBaseDoc, SubmodelBaseSchema } from "./submodel-base.schema";
+import { registerSubmodelBaseSchemas } from "./submodel-discriminators";
 
-@Schema({ _id: false })
-export class SubmodelBaseDoc {
-  @Prop()
-  category?: string;
-
-  @Prop()
-  idShort?: string;
-
-  @Prop({ type: [LanguageTextSchema], default: [] })
-  displayName?: LanguageTextDoc[];
-
-  @Prop({ type: [LanguageTextSchema], default: [] })
-  description?: LanguageTextDoc[];
-
-  @Prop({ type: ReferenceSchema })
-  semanticId?: ReferenceDoc;
-
-  @Prop({ type: [ReferenceSchema], default: [] })
-  supplementalSemanticIds?: ReferenceDoc[];
-
-  @Prop({ qualifiers: [QualifierSchema], default: [] })
-  qualifiers?: QualifierDoc[];
-
-  @Prop({ type: [EmbeddedDataSpecificationSchema], default: [] })
-  embeddedDataSpecifications?: EmbeddedDataSpecificationDoc[];
+export enum SubmodelDocSchemaVersion {
+  v1_0_0 = "1.0.0",
 }
-
-export const SubmodelBaseSchema = SchemaFactory.createForClass(SubmodelBaseDoc);
 
 @Schema({ _id: false })
 export class SubmodelDoc extends SubmodelBaseDoc {
+  @Prop({
+    default: SubmodelDocSchemaVersion.v1_0_0,
+    enum: Object.values(SubmodelDocSchemaVersion),
+    type: String,
+  }) // Track schema version
+  _schemaVersion: SubmodelDocSchemaVersion;
+
   @Prop({ required: true })
-  id: string;
+  _id: string;
 
   @Prop({ type: [ExtensionSchema], default: [] })
   extensions?: ExtensionDoc[];
 
-  @Prop({ required: true, enum: ReferenceTypes })
-  type: ReferenceTypes;
-
   @Prop({ type: AdministrativeInformationSchema })
-  administration?: AdministrativeInformationDoc;
+  administration: AdministrativeInformationDoc;
 
-  @Prop({ enum: ModellingKind })
+  @Prop({ enum: Object.values(ModellingKind), type: String })
   kind?: ModellingKind;
 
   @Prop({ type: [SubmodelBaseSchema], default: [] })
@@ -62,3 +39,6 @@ export class SubmodelDoc extends SubmodelBaseDoc {
 }
 
 export const SubmodelSchema = SchemaFactory.createForClass(SubmodelDoc);
+const submodelElementsPath
+  = SubmodelSchema.path("submodelElements") as MongooseSchema.Types.DocumentArray;
+registerSubmodelBaseSchemas(submodelElementsPath);

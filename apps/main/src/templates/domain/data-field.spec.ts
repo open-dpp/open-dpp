@@ -22,10 +22,7 @@ describe("dataField", () => {
     expect(property).toEqual(Property.create({
       valueType: DataTypeDef.Double,
       idShort: dataField.id,
-      displayName: [LanguageText.create(
-        Language.de,
-        "field1",
-      )],
+      displayName: [LanguageText.create({ language: Language.de, text: "field1" })],
       qualifiers: [
         Qualifier.create({
           semanticId: Reference.create({
@@ -55,10 +52,7 @@ describe("dataField", () => {
     const property = dataField.toAas();
     expect(property).toEqual(MultiLanguageProperty.create({
       idShort: dataField.id,
-      displayName: [LanguageText.create(
-        Language.de,
-        "field1",
-      )],
+      displayName: [LanguageText.create({ language: Language.de, text: "field1" })],
     }));
   });
 
@@ -70,10 +64,7 @@ describe("dataField", () => {
     const property = dataField.toAas();
     expect(property).toEqual(File.create({
       idShort: dataField.id,
-      displayName: [LanguageText.create(
-        Language.de,
-        "field1",
-      )],
+      displayName: [LanguageText.create({ language: Language.de, text: "field1" })],
       contentType: "application/octet-stream",
     }));
   });
@@ -87,7 +78,7 @@ describe("dataField", () => {
     expect(property).toEqual(
       ReferenceElement.create({
         idShort: dataField.id,
-        displayName: [LanguageText.create(Language.de, "field1")],
+        displayName: [LanguageText.create({ language: Language.de, text: "field1" })],
       }),
     );
   });

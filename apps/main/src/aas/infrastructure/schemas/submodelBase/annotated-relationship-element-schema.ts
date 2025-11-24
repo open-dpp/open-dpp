@@ -1,15 +1,15 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { ReferenceSchema } from "../common/reference.schema";
+import { ReferenceDoc, ReferenceSchema } from "../common/reference.schema";
 import { ExtensionDoc, ExtensionSchema } from "../extension.schema";
-import { SubmodelBaseDoc, SubmodelBaseSchema } from "./submodel.schema";
+import { SubmodelBaseDoc, SubmodelBaseSchema } from "./submodel-base.schema";
 
 @Schema({ _id: false })
 export class AnnotatedRelationshipElementDoc extends SubmodelBaseDoc {
   @Prop({ required: true, type: ReferenceSchema })
-  first: string;
+  first: ReferenceDoc;
 
   @Prop({ required: true, type: ReferenceSchema })
-  second: string;
+  second: ReferenceDoc;
 
   @Prop({ type: [ExtensionSchema], default: [] })
   extensions?: ExtensionDoc[];
