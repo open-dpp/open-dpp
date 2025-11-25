@@ -181,6 +181,7 @@ jobs:
           hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
           server_type: cax21
           location: nbg1 # Nuremberg, Germany
+          image: docker-ce
 
   build-and-push:
     needs: create-runner
