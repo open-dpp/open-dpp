@@ -17,24 +17,6 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  create-runner:
-    name: Create Hetzner ARM Runner
-    runs-on: ubuntu-latest
-    outputs:
-      label: ${{ steps.create-hcloud-runner.outputs.label }}
-      server_id: ${{ steps.create-hcloud-runner.outputs.server_id }}
-    steps:
-      - name: Create runner
-        id: create-hcloud-runner
-        uses: Cyclenerd/hcloud-github-runner@v1
-        with:
-          mode: create
-          github_token: ${{ secrets.HETZNER_PAT }}
-          hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
-          server_type: cx22
-          location: nbg1 # Nuremberg, Germany
-          image: rocky-9 # Rocky Linux 9
-
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -183,6 +165,22 @@ jobs:
           path: |
             apps/client/cypress/videos/
             apps/client/cypress/screenshots/
+  create-runner:
+    name: Create Hetzner ARM Runner
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.create-hcloud-runner.outputs.label }}
+      server_id: ${{ steps.create-hcloud-runner.outputs.server_id }}
+    steps:
+      - name: Create runner
+        id: create-hcloud-runner
+        uses: Cyclenerd/hcloud-github-runner@v1
+        with:
+          mode: create
+          github_token: ${{ secrets.HETZNER_PAT }}
+          hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+          server_type: cax21
+          location: nbg1 # Nuremberg, Germany
 
   build-and-push:
     needs: create-runner
