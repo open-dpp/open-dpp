@@ -213,21 +213,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check which folders changed
-        id: changes
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            mcp:
-              - 'apps/mcp/**'
-              - 'packages/**'
-            main:
-              - 'apps/main/**'
-              - 'apps/client/**'
-              - 'packages/**'
-
       - name: Skip if no changes
-        if: steps.changes.outputs[matrix.filter_path] != 'true'
         run: echo "No changes detected for ${{ matrix.target }}, skipping build" && exit 0
 
       - name: Prepare
@@ -236,7 +222,6 @@ jobs:
           echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
 
       - name: Log in to the Container registry
-        if: steps.changes.outputs[matrix.filter_path] == 'true'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -244,15 +229,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up QEMU
-        if: steps.changes.outputs[matrix.filter_path] == 'true'
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        if: steps.changes.outputs[matrix.filter_path] == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Extract Docker metadata
-        if: steps.changes.outputs[matrix.filter_path] == 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -264,7 +246,6 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build and push by digest
-        if: steps.changes.outputs[matrix.filter_path] == 'true'
         id: build
         uses: docker/build-push-action@v6
         with:
@@ -278,14 +259,12 @@ jobs:
           outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }},push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
-        if: steps.changes.outputs[matrix.filter_path] == 'true'
         run: |
           mkdir -p /tmp/digests/${{ matrix.target }}
           digest="${{ steps.build.outputs.digest }}"
           touch "/tmp/digests/${{ matrix.target }}/${digest#sha256:}"
 
       - name: Upload digest
-        if: steps.changes.outputs[matrix.filter_path] == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: digests-${{ matrix.target }}-${{ env.PLATFORM_PAIR }}
