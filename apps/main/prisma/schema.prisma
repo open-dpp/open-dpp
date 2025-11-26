@@ -1,0 +1,263 @@
+// Prisma schema for @open-dpp/main
+// Minimal setup pointing to MongoDB used by the project
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// Embedded types
+
+// Generic data value used in passport documents
+type DataValue {
+  value         Json?
+  row           Int
+  dataSectionId String
+  dataFieldId   String
+}
+
+// Data modelling (templates)
+type DataField {
+  id               String @map("_id")
+  name             String
+  type             String
+  options          Json
+  granularityLevel String
+  layout           Json?
+}
+
+type Section {
+  id               String   @map("_id")
+  name             String
+  type             String
+  dataFields       DataField[]
+  layout           Json?
+  parentId         String?
+  subSections      String[]
+  granularityLevel String?
+}
+
+type Publication {
+  id      String
+  version String
+}
+
+// AAS integration mapping
+type AasFieldAssignment {
+  sectionId    String
+  dataFieldId  String
+  idShortParent String
+  idShort       String
+}
+
+// Analytics types
+type MetricValue {
+  key   String
+  value Float
+  row   Int?
+}
+
+type MetricSource {
+  modelId        String
+  templateId     String
+  organizationId String
+  type           String
+}
+
+type Geolocation {
+  latitude  String
+  longitude String
+}
+
+// Models
+
+model AiConfiguration {
+  id                   String   @id @map("_id") @db.ObjectId
+  _schemaVersion       String   @default("1.0.0")
+  ownedByOrganizationId String
+  createdByUserId       String
+  isEnabled             Boolean
+  provider              String
+  aiModel               String
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("configuration")
+  @@unique([ownedByOrganizationId])
+}
+
+model AasConnection {
+  id                   String   @id @map("_id") @db.ObjectId
+  _schemaVersion       String   @default("1.0.0")
+  name                 String
+  createdByUserId      String
+  ownedByOrganizationId String
+  dataModelId          String
+  aasType              String
+  modelId              String?
+  fieldAssignments     AasFieldAssignment[]
+  createdAt            DateTime?
+  updatedAt            DateTime?
+
+  @@map("aas_mapping")
+  @@index([ownedByOrganizationId])
+}
+
+model Media {
+  id                 String   @id @map("_id") @db.ObjectId
+  _schemaVersion     String   @default("1.0.0")
+  title              String
+  description        String
+  mimeType           String
+  fileExtension      String
+  size               Int
+  originalFilename   String
+  ownedByOrganizationId String
+  createdByUserId    String
+  uniqueProductIdentifier String?
+  dataFieldId        String?
+  bucket             String
+  objectName         String
+  eTag               String
+  versionId          String
+  createdAt          DateTime
+  updatedAt          DateTime
+
+  @@map("media")
+}
+
+model Model {
+  id                   String   @id @map("_id") @db.ObjectId
+  // Common passport fields
+  createdByUserId      String
+  ownedByOrganizationId String
+  dataValues           DataValue[]
+  productDataModelId   String?
+  templateId           String
+  createdAt            DateTime?
+  updatedAt            DateTime?
+  // Model-specific
+  name                 String
+  _schemaVersion       String   @default("1.0.1")
+  mediaReferences      String[]
+  description          String?
+
+  @@map("models")
+  @@index([ownedByOrganizationId])
+}
+
+model Item {
+  id                   String   @id @map("_id") @db.ObjectId
+  // Common passport fields
+  createdByUserId      String
+  ownedByOrganizationId String
+  dataValues           DataValue[]
+  productDataModelId   String?
+  templateId           String
+  createdAt            DateTime?
+  updatedAt            DateTime?
+  // Item-specific
+  _schemaVersion       String   @default("1.0.2")
+  modelId              String
+
+  @@map("items")
+  @@index([ownedByOrganizationId])
+  @@index([modelId])
+}
+
+model Template {
+  id                   String   @id @map("_id") @db.ObjectId
+  name                 String
+  description          String
+  sectors              String[]
+  version              String
+  sections             Section[]
+  createdByUserId      String
+  ownedByOrganizationId String
+  _schemaVersion       String   @default("1.0.3")
+  marketplaceResourceId String?
+
+  @@map("product_data_models")
+  @@index([ownedByOrganizationId])
+  @@index([marketplaceResourceId])
+}
+
+model TemplateDraft {
+  id                   String   @id @map("_id") @db.ObjectId
+  name                 String
+  description          String
+  sectors              String[]
+  version              String
+  sections             Section[]
+  createdByUserId      String
+  ownedByOrganizationId String
+  _schemaVersion       String   @default("1.0.3")
+  publications         Publication[]
+
+  @@map("product_data_model_drafts")
+  @@index([ownedByOrganizationId])
+}
+
+model PassportTemplatePublication {
+  id                   String   @id @map("_id") @db.ObjectId
+  _schemaVersion       String   @default("1.0.0")
+  version              String
+  name                 String
+  description          String
+  isOfficial           Boolean
+  sectors              String[]
+  website              String?
+  contactEmail         String
+  organizationName     String
+  ownedByOrganizationId String
+  createdByUserId      String
+  templateData         Json
+  createdAt            DateTime
+  updatedAt            DateTime
+
+  @@map("passport_template_publications")
+  // NOTE: Original Mongoose index: { organizationName: 1, sectors: 1 }
+}
+
+model PassportMetric {
+  // Note: This collection uses string IDs (uuid7) for time-ordered semantics.
+  id             String   @id @map("_id")
+  _schemaVersion String   @default("1.0.0")
+  source         MetricSource
+  date           DateTime
+  values         MetricValue[]
+
+  @@map("passport_metric")
+}
+
+model UniqueProductIdentifier {
+  id             String   @id @map("_id") @db.ObjectId
+  referenceId    String
+  _schemaVersion String   @default("1.0.0")
+  createdAt      DateTime?
+  updatedAt      DateTime?
+
+  @@map("unique_product_identifiers")
+  @@index([referenceId])
+}
+
+model TraceabilityEvent {
+  id             String   @id @map("_id") @db.ObjectId
+  _schemaVersion String   @default("1.0.0")
+  createdAt      DateTime
+  updatedAt      DateTime
+  ip             String?
+  userId         String?
+  itemId         String?
+  chargeId       String?
+  organizationId String?
+  geolocation    Geolocation?
+  type           String?
+  data           Json
+
+  @@map("traceability_events")
+}
