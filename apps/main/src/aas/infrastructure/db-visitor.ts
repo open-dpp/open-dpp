@@ -1,11 +1,15 @@
 import { btoa } from "node:buffer";
+import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
+import { AssetInformation } from "../domain/asset-information";
 import { AdministrativeInformation } from "../domain/common/administrative-information";
-import { Key, KeyTypes } from "../domain/common/key";
+import { Key } from "../domain/common/key";
+import { KeyTypes } from "../domain/common/key-types-enum";
 import { LanguageText } from "../domain/common/language-text";
 import { Qualifier } from "../domain/common/qualififiable";
 import { Reference } from "../domain/common/reference";
 import { EmbeddedDataSpecification } from "../domain/embedded-data-specification";
 import { Extension } from "../domain/extension";
+import { Resource } from "../domain/resource";
 import { SpecificAssetId } from "../domain/specific-asset-id";
 import { AnnotatedRelationshipElement } from "../domain/submodelBase/annotated-relationship-element";
 import { Blob } from "../domain/submodelBase/blob";
@@ -233,6 +237,39 @@ export class DbVisitor implements IVisitor<any> {
       semanticId: element.semanticId?.accept(this),
       supplementalSemanticIds: element.supplementalSemanticIds.map(s => s.accept(this)),
       externalSubjectId: element.externalSubjectId?.accept(this),
+    };
+  }
+
+  visitAssetAdministrationShell(element: AssetAdministrationShell): any {
+    return {
+      id: element.id,
+      assetInformation: element.assetInformation.accept(this),
+      extensions: element.extensions.map(e => e.accept(this)),
+      category: element.category,
+      idShort: element.idShort,
+      displayName: element.displayName.map(lt => lt.accept(this)),
+      description: element.description.map(lt => lt.accept(this)),
+      administration: element.administration?.accept(this),
+      embeddedDataSpecifications: element.embeddedDataSpecifications.map(e => e.accept(this)),
+      derivedFrom: element.derivedFrom?.accept(this),
+      submodels: element.submodels.map(s => s.accept(this)),
+    };
+  }
+
+  visitAssetInformation(element: AssetInformation): any {
+    return {
+      assetKind: element.assetKind,
+      globalAssetId: element.globalAssetId,
+      specificAssetIds: element.specificAssetIds.map(s => s.accept(this)),
+      assetType: element.assetType,
+      defaultThumbnail: element.defaultThumbnail?.accept(this),
+    };
+  }
+
+  visitResource(element: Resource): any {
+    return {
+      path: element.path,
+      contentType: element.contentType,
     };
   }
 }

@@ -1,6 +1,6 @@
 import { Reference } from "./common/reference";
+import { EmbeddedDataSpecificationJsonSchema } from "./parsing/aas-json-schemas";
 import { IVisitable, IVisitor } from "./visitor";
-import { EmbeddedDataSpecificationJsonSchema } from "./zod-schemas";
 
 export class EmbeddedDataSpecification implements IVisitable<any> {
   private constructor(

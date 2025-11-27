@@ -1,5 +1,5 @@
+import { AdministrativeInformationJsonSchema } from "../parsing/aas-json-schemas";
 import { IVisitable, IVisitor } from "../visitor";
-import { AdministrativeInformationJsonSchema } from "../zod-schemas";
 
 export class AdministrativeInformation implements IVisitable<any> {
   private constructor(public readonly version: string, public readonly revision: string) {

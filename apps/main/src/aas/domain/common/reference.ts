@@ -1,17 +1,21 @@
+import { z } from "zod";
+import { ReferenceJsonSchema } from "../parsing/reference-json-schema";
 import { IVisitable, IVisitor } from "../visitor";
-import { ReferenceJsonSchema } from "../zod-schemas";
 import { Key } from "./key";
 
-export enum ReferenceTypes {
-  ExternalReference = "ExternalReference",
-  ModelReference = "ModelReference",
-}
+export const ReferenceTypes = {
+  ExternalReference: "ExternalReference",
+  ModelReference: "ModelReference",
+} as const;
+
+export const ReferenceTypesEnum = z.enum(ReferenceTypes);
+export type ReferenceTypesType = z.infer<typeof ReferenceTypesEnum>;
 
 export class Reference implements IVisitable<any> {
-  private constructor(public type: ReferenceTypes, public referredSemanticId: Reference | null, public keys: Key[]) {
+  private constructor(public type: ReferenceTypesType, public referredSemanticId: Reference | null, public keys: Key[]) {
   }
 
-  static create(data: { type: ReferenceTypes; referredSemanticId?: Reference; keys: Key[] }): Reference {
+  static create(data: { type: ReferenceTypesType; referredSemanticId?: Reference; keys: Key[] }): Reference {
     return new Reference(data.type, data.referredSemanticId ?? null, data.keys);
   }
 
@@ -20,7 +24,7 @@ export class Reference implements IVisitable<any> {
     return Reference.create({
       type: parsed.type,
       referredSemanticId: parsed.referredSemanticId ? Reference.fromPlain(parsed.referredSemanticId) : undefined,
-      keys: parsed.keys.map(k => Key.fromPlain(k)),
+      keys: parsed.keys.map(Key.fromPlain),
     });
   }
 

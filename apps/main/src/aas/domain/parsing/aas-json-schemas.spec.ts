@@ -1,7 +1,7 @@
 import { expect } from "@jest/globals";
 import { z } from "zod";
-import { DataTypeDef } from "./common/data-type-def";
-import { SubmodelBaseUnionSchema } from "./zod-schemas";
+import { DataTypeDef } from "../common/data-type-def";
+import { SubmodelBaseUnionSchema } from "./aas-json-schemas";
 
 describe("zod-schemas", () => {
   it("should parse discriminated union correctly", () => {

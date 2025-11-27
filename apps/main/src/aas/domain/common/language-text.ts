@@ -1,5 +1,5 @@
+import { LanguageTextJsonSchema } from "../parsing/aas-json-schemas";
 import { IVisitable, IVisitor } from "../visitor";
-import { LanguageTextJsonSchema } from "../zod-schemas";
 
 export enum Language {
   en = "en",

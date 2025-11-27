@@ -1,12 +1,12 @@
-import { DataTypeDef } from "../common/data-type-def";
-import { KeyTypes } from "../common/key";
+import { DataTypeDefType } from "../common/data-type-def";
+import { KeyTypes } from "../common/key-types-enum";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
+import { SubmodelElementListJsonSchema } from "../parsing/aas-json-schemas";
 import { IVisitor } from "../visitor";
-import { SubmodelElementListJsonSchema } from "../zod-schemas";
 import { AasSubmodelElements } from "./aas-submodel-elements";
 import { ISubmodelBase } from "./submodel";
 import { parseSubmodelBaseUnion, SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
@@ -26,7 +26,7 @@ export class SubmodelElementList extends SubmodelBase {
     embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
     public readonly orderRelevant: boolean | null = null,
     public readonly semanticIdListElement: Reference | null = null,
-    public readonly valueTypeListElement: DataTypeDef | null = null,
+    public readonly valueTypeListElement: DataTypeDefType | null = null,
     public readonly value: Array<ISubmodelBase>,
   ) {
     super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
@@ -37,7 +37,7 @@ export class SubmodelElementList extends SubmodelBase {
     extensions?: Array<Extension>;
     orderRelevant?: boolean;
     semanticIdListElement?: Reference;
-    valueTypeListElement?: DataTypeDef;
+    valueTypeListElement?: DataTypeDefType;
     value?: Array<ISubmodelBase>;
   }) {
     return new SubmodelElementList(

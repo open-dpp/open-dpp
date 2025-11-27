@@ -1,20 +1,15 @@
+import { QualifierJsonSchema } from "../parsing/qualifier-json-schema";
 import { IVisitable, IVisitor } from "../visitor";
-import { QualifierJsonSchema } from "../zod-schemas";
-import { DataTypeDef } from "./data-type-def";
+import { DataTypeDefType } from "./data-type-def";
 import { IHasSemantics } from "./has-semantics";
+import { QualifierKindType } from "./qualifier-kind-enum";
 import { Reference } from "./reference";
 
-export enum QualifierKind {
-  ValueQualifier = "ValueQualifier",
-  ConceptQualifier = "ConceptQualifier",
-  TemplateQualifier = "TemplateQualifier",
-}
-
 export class Qualifier implements IHasSemantics, IVisitable<any> {
-  private constructor(public readonly type: string, public valueType: DataTypeDef, public semanticId: Reference | null, public readonly supplementalSemanticIds: Reference[], public readonly kind: QualifierKind, public value: string | null, public valueId: Reference | null) {
+  private constructor(public readonly type: string, public valueType: DataTypeDefType, public semanticId: Reference | null, public readonly supplementalSemanticIds: Reference[], public readonly kind: QualifierKindType, public value: string | null, public valueId: Reference | null) {
   }
 
-  static create(data: { type: string; valueType: DataTypeDef; semanticId?: Reference; supplementalSemanticIds: Reference[]; kind: QualifierKind; value?: string; valueId?: Reference }): Qualifier {
+  static create(data: { type: string; valueType: DataTypeDefType; semanticId?: Reference; supplementalSemanticIds: Reference[]; kind: QualifierKindType; value?: string; valueId?: Reference }): Qualifier {
     return new Qualifier(data.type, data.valueType, data.semanticId ?? null, data.supplementalSemanticIds, data.kind, data.value ?? null, data.valueId ?? null);
   }
 

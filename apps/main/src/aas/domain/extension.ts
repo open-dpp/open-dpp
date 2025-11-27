@@ -1,14 +1,14 @@
-import { DataTypeDef } from "./common/data-type-def";
+import { DataTypeDefType } from "./common/data-type-def";
 import { Reference } from "./common/reference";
+import { ExtensionJsonSchema } from "./parsing/aas-json-schemas";
 import { IVisitable, IVisitor } from "./visitor";
-import { ExtensionJsonSchema } from "./zod-schemas";
 
 export class Extension implements IVisitable<any> {
   private constructor(
     public readonly name: string,
     public readonly semanticId: Reference | null = null,
     public readonly supplementalSemanticIds: Array<Reference>,
-    public readonly valueType: DataTypeDef | null = null,
+    public readonly valueType: DataTypeDefType | null = null,
     public readonly value: string | null = null,
     public readonly refersTo: Array<Reference>,
   ) {
@@ -20,7 +20,7 @@ export class Extension implements IVisitable<any> {
       name: string;
       semanticId?: Reference;
       supplementalSemanticIds?: Array<Reference>;
-      valueType?: DataTypeDef;
+      valueType?: DataTypeDefType;
       value?: string;
       refersTo?: Array<Reference>;
     },

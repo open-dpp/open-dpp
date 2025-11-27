@@ -1,63 +1,20 @@
 import { z } from "zod";
-import { DataTypeDef } from "./common/data-type-def";
-import { ModellingKind } from "./common/has-kind";
-import { KeyTypes } from "./common/key";
-import { Language } from "./common/language-text";
-import { QualifierKind } from "./common/qualififiable";
-import { ReferenceTypes } from "./common/reference";
-import { AasSubmodelElements } from "./submodelBase/aas-submodel-elements";
-import { EntityType } from "./submodelBase/entity";
+import { DataTypeDef } from "../common/data-type-def";
+import { ModellingKind } from "../common/has-kind";
+import { KeyTypes } from "../common/key-types-enum";
+import { Language } from "../common/language-text";
+import { AasSubmodelElements } from "../submodelBase/aas-submodel-elements";
+import { EntityType } from "../submodelBase/entity";
+import { nullishToOptional, ValueTypeSchema } from "./basic-json-schema";
+import { QualifierJsonSchema } from "./qualifier-json-schema";
+import { ReferenceJsonSchema } from "./reference-json-schema";
 
-export function nullishToOptional<T extends z.ZodType>(schema: T) {
-  return schema.nullish().transform(value => value === null ? undefined : value);
-}
-
-const ValueTypeSchema = z.string().transform(
-  (value) => {
-    // turn "positiveInteger" → "PositiveInteger"
-    let key = value;
-    if (value.startsWith("xs:")) {
-      const raw = value.replace(/^xs:/, "");
-      key = raw.charAt(0).toUpperCase() + raw.slice(1);
-    }
-
-    // validate against enum
-    if (!(key in DataTypeDef)) {
-      throw new Error(`Unknown number type: ${value}`);
-    }
-
-    // return the enum value
-    return z.enum(DataTypeDef).parse(key);
-  },
-);
-
-export const KeyJsonSchema = z.object({
-  type: z.enum(KeyTypes),
-  value: z.string(),
+export const EmbeddedDataSpecificationJsonSchema = z.object({
+  dataSpecification: ReferenceJsonSchema,
 });
-export const ReferenceJsonSchema = z.object({
-  type: z.enum(ReferenceTypes),
-  get referredSemanticId() {
-    return ReferenceJsonSchema.optional();
-  },
-  keys: z.array(KeyJsonSchema),
-});
-
 export const LanguageTextJsonSchema = z.object({
   language: z.enum(Language),
   text: z.string(),
-});
-export const QualifierJsonSchema = z.object({
-  type: z.string(),
-  valueType: z.enum(DataTypeDef),
-  semanticId: ReferenceJsonSchema.optional(),
-  supplementalSemanticIds: z.array(ReferenceJsonSchema),
-  kind: z.enum(QualifierKind),
-  value: z.string().optional(),
-  valueId: ReferenceJsonSchema.optional(),
-});
-export const EmbeddedDataSpecificationJsonSchema = z.object({
-  dataSpecification: ReferenceJsonSchema,
 });
 export const SubmodelBaseJsonSchema = z.object({
   category: nullishToOptional(z.string()),
@@ -196,4 +153,9 @@ export const SubmodelElementListJsonSchema = z.object({
   semanticIdListElement: nullishToOptional(ReferenceJsonSchema),
   valueTypeListElement: nullishToOptional(ValueTypeSchema),
   value: SubmodelBaseUnionSchema.array().default([]),
+});
+
+export const ResourceJsonSchema = z.object({
+  path: z.string(),
+  contentType: nullishToOptional(z.string()),
 });

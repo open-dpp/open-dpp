@@ -1,7 +1,7 @@
 import { IHasSemantics } from "./common/has-semantics";
 import { Reference } from "./common/reference";
+import { SpecificAssetIdJsonSchema } from "./parsing/aas-json-schemas";
 import { IVisitable, IVisitor } from "./visitor";
-import { SpecificAssetIdJsonSchema } from "./zod-schemas";
 
 export class SpecificAssetId implements IHasSemantics, IVisitable<any> {
   private constructor(

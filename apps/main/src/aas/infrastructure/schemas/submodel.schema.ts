@@ -1,25 +1,26 @@
+import type { EmbeddedDataSpecificationDb, ExtensionDb, QualifierDb, ReferenceDb, SubmodelBaseUnionDb } from "./db-types";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Schema as MongooseSchema } from "mongoose";
 import { z } from "zod";
-import { ModellingKind } from "../../../domain/common/has-kind";
+import { ModellingKind } from "../../domain/common/has-kind";
 import {
   EmbeddedDataSpecificationJsonSchema,
   ExtensionJsonSchema,
-  QualifierJsonSchema,
-  ReferenceJsonSchema,
   SubmodelBaseUnionSchema,
-} from "../../../domain/zod-schemas";
+} from "../../domain/parsing/aas-json-schemas";
+import { QualifierJsonSchema } from "../../domain/parsing/qualifier-json-schema";
+import { ReferenceJsonSchema } from "../../domain/parsing/reference-json-schema";
 import {
   AdministrativeInformationDoc,
   AdministrativeInformationSchema,
-} from "../common/administration.information.schema";
-import { LanguageTextDoc, LanguageTextSchema } from "../common/language.text.schema";
+} from "./administration.information.schema";
+import { LanguageTextDoc, LanguageTextSchema } from "./language.text.schema";
 
 export enum SubmodelDocSchemaVersion {
   v1_0_0 = "1.0.0",
 }
 
-@Schema({ _id: false })
+@Schema({ _id: false, collection: "submodels" })
 export class SubmodelDoc extends Document {
   @Prop({
     default: SubmodelDocSchemaVersion.v1_0_0,
@@ -45,19 +46,19 @@ export class SubmodelDoc extends Document {
   description?: LanguageTextDoc[];
 
   @Prop({ type: MongooseSchema.Types.Mixed, validate: (value: any) => ReferenceJsonSchema.nullish().parse(value) })
-  semanticId?: z.infer<typeof ReferenceJsonSchema>;
+  semanticId?: ReferenceDb;
 
   @Prop({ type: [MongooseSchema.Types.Mixed], validate: (value: any) => z.array(ReferenceJsonSchema).parse(value) })
-  supplementalSemanticIds: z.infer<typeof ReferenceJsonSchema>[];
+  supplementalSemanticIds: ReferenceDb[];
 
   @Prop({ qualifiers: [MongooseSchema.Types.Mixed], validate: (value: any) => z.array(QualifierJsonSchema).parse(value) })
-  qualifiers: z.infer<typeof QualifierJsonSchema>[];
+  qualifiers: QualifierDb[];
 
   @Prop({ type: [MongooseSchema.Types.Mixed], validate: (value: any) => z.array(EmbeddedDataSpecificationJsonSchema).parse(value) })
-  embeddedDataSpecifications: z.infer<typeof EmbeddedDataSpecificationJsonSchema>[];
+  embeddedDataSpecifications: EmbeddedDataSpecificationDb[];
 
   @Prop({ type: [MongooseSchema.Types.Mixed], validate: (value: any) => z.array(ExtensionJsonSchema).parse(value) })
-  extensions: z.infer<typeof ExtensionJsonSchema>[];
+  extensions: ExtensionDb[];
 
   @Prop({ type: AdministrativeInformationSchema })
   administration: AdministrativeInformationDoc;
@@ -66,9 +67,7 @@ export class SubmodelDoc extends Document {
   kind?: ModellingKind;
 
   @Prop({ type: [MongooseSchema.Types.Mixed], validate: (value: any) => SubmodelBaseUnionSchema.array().parse(value) })
-  submodelElements: z.infer<typeof SubmodelBaseUnionSchema>[];
+  submodelElements: SubmodelBaseUnionDb[];
 }
 
 export const SubmodelSchema = SchemaFactory.createForClass(SubmodelDoc);
-// const path = SubmodelSchema.path("submodelElements") as MongooseSchema.Types.DocumentArray;
-// registerSubmodelSchema(path);

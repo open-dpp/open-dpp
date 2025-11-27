@@ -1,11 +1,11 @@
-import { KeyTypes } from "../common/key";
+import { KeyTypes } from "../common/key-types-enum";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
+import { SubmodelElementCollectionJsonSchema } from "../parsing/aas-json-schemas";
 import { IVisitor } from "../visitor";
-import { SubmodelElementCollectionJsonSchema } from "../zod-schemas";
 import { ISubmodelBase } from "./submodel";
 import { parseSubmodelBaseUnion, SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 import { registerSubmodel } from "./submodel-registry";

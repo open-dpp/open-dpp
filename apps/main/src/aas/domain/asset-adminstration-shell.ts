@@ -6,18 +6,20 @@ import { LanguageText } from "./common/language-text";
 import { Reference } from "./common/reference";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
+import { AssetAdministrationShellJsonSchema } from "./parsing/asset-administration-shell-json-schema";
+import { IVisitable, IVisitor } from "./visitor";
 
-export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecification {
+export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecification, IVisitable<any> {
   private constructor(
     public readonly id: string,
     public readonly assetInformation: AssetInformation,
-    public readonly extensions: Extension[] | null = null,
+    public readonly extensions: Extension[],
     public readonly category: string | null = null,
     public readonly idShort: string | null = null,
-    public readonly displayName: LanguageText[] | null = null,
-    public readonly description: LanguageText[] | null = null,
+    public readonly displayName: LanguageText[],
+    public readonly description: LanguageText[],
     public readonly administration: AdministrativeInformation | null = null,
-    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification> | null = null,
+    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
     public readonly derivedFrom: Reference | null = null,
     public readonly submodels: Array<Reference>,
   ) {
@@ -41,13 +43,13 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     return new AssetAdministrationShell(
       data.id,
       data.assetInformation,
-      data.extensions ?? null,
+      data.extensions ?? [],
       data.category ?? null,
       data.idShort ?? null,
-      data.displayName ?? null,
-      data.description ?? null,
+      data.displayName ?? [],
+      data.description ?? [],
       data.administration ?? null,
-      data.embeddedDataSpecifications ?? null,
+      data.embeddedDataSpecifications ?? [],
       data.derivedFrom ?? null,
       data.submodels ?? [],
     );
@@ -55,5 +57,25 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
 
   addSubmodelReference(submodel: Reference) {
     this.submodels.push(submodel);
+  }
+
+  accept(visitor: IVisitor<any>): any {
+    return visitor.visitAssetAdministrationShell(this);
+  }
+
+  static fromPlain(data: Record<string, unknown>): AssetAdministrationShell {
+    const parsed = AssetAdministrationShellJsonSchema.parse(data);
+    return AssetAdministrationShell.create({
+      id: parsed.id,
+      assetInformation: AssetInformation.fromPlain(parsed.assetInformation),
+      extensions: parsed.extensions.map(Extension.fromPlain),
+      category: parsed.category,
+      idShort: parsed.idShort,
+      displayName: parsed.displayName.map(LanguageText.fromPlain),
+      description: parsed.description.map(LanguageText.fromPlain),
+      administration: parsed.administration ? AdministrativeInformation.fromPlain(parsed.administration) : undefined,
+      embeddedDataSpecifications: parsed.embeddedDataSpecifications.map(EmbeddedDataSpecification.fromPlain),
+      derivedFrom: parsed.derivedFrom ? Reference.fromPlain(parsed.derivedFrom) : undefined,
+    });
   }
 }

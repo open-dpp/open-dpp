@@ -1,12 +1,12 @@
 import { NotSupportedError } from "@open-dpp/exception";
 import { z } from "zod";
-import { KeyTypes } from "../common/key";
+import { KeyTypes } from "../common/key-types-enum";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
+import { SubmodelBaseJsonSchema } from "../parsing/aas-json-schemas";
 import { IVisitor } from "../visitor";
-import { SubmodelBaseJsonSchema } from "../zod-schemas";
 import { ISubmodelBase } from "./submodel";
 import { getSubmodelClass } from "./submodel-registry";
 

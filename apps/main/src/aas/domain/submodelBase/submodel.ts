@@ -2,15 +2,15 @@ import { AdministrativeInformation } from "../common/administrative-information"
 import { IHasDataSpecification } from "../common/has-data-specification";
 import { ModellingKind } from "../common/has-kind";
 import { IHasSemantics } from "../common/has-semantics";
-import { KeyTypes } from "../common/key";
+import { KeyTypes } from "../common/key-types-enum";
 import { LanguageText } from "../common/language-text";
 import { IQualifiable, Qualifier } from "../common/qualififiable";
 import { IReferable } from "../common/referable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
+import { SubmodelJsonSchema } from "../parsing/aas-json-schemas";
 import { IVisitable, IVisitor } from "../visitor";
-import { SubmodelJsonSchema } from "../zod-schemas";
 import { parseSubmodelBaseUnion, SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 import { registerSubmodel } from "./submodel-registry";
 

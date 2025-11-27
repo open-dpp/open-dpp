@@ -1,8 +1,10 @@
 import { expect } from "@jest/globals";
 import { DataTypeDef } from "../../aas/domain/common/data-type-def";
-import { Key, KeyTypes } from "../../aas/domain/common/key";
+import { Key } from "../../aas/domain/common/key";
+import { KeyTypes } from "../../aas/domain/common/key-types-enum";
 import { Language, LanguageText } from "../../aas/domain/common/language-text";
-import { Qualifier, QualifierKind } from "../../aas/domain/common/qualififiable";
+import { QualifierKind } from "../../aas/domain/common/qualifier-kind-enum";
+import { Qualifier } from "../../aas/domain/common/qualififiable";
 import { Reference, ReferenceTypes } from "../../aas/domain/common/reference";
 import { File } from "../../aas/domain/submodelBase/file";
 import { MultiLanguageProperty } from "../../aas/domain/submodelBase/multi-language-property";
