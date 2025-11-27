@@ -1,6 +1,6 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
-import { expect, jest } from "@jest/globals";
+import { jest } from "@jest/globals";
 import { INestApplication } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
@@ -16,6 +16,8 @@ import { EmailService } from "../../email/email.service";
 import { UsersService } from "../../users/infrastructure/users.service";
 import { AdministrativeInformation } from "../domain/common/administrative-information";
 import { DataTypeDef } from "../domain/common/data-type-def";
+import { LanguageText } from "../domain/common/language-text";
+import { Entity, EntityType } from "../domain/submodelBase/entity";
 import { Property } from "../domain/submodelBase/property";
 import { Submodel } from "../domain/submodelBase/submodel";
 import { AasService } from "./aas.service";
@@ -77,6 +79,37 @@ describe("aasService", () => {
   it("should save a submodel", async () => {
     const { org, user } = await betterAuthHelper.createOrganizationAndUserWithCookie();
 
+    const entity = Entity.create({
+      entityType: EntityType.CoManagedEntity,
+      statements: [
+        Entity.create({
+          entityType: EntityType.CoManagedEntity,
+          statements: [
+            Property.create(
+              {
+                value: "http://shells.smartfactory.de/aHR0cHM6Ly9zbWFydGZhY3RvcnkuZGUvc2hlbGxzLy1TUjdCYm5jSkc",
+                valueType: DataTypeDef.String,
+                category: "CONSTANT",
+                description: [
+                  LanguageText.create(
+                    {
+                      language: "en",
+                      text: "URL of the application",
+                    },
+                  ),
+                  LanguageText.create({
+                    language: "de",
+                    text: "URL der Anwendung",
+                  }),
+                ],
+                idShort: "ApplicationURL",
+              },
+            ),
+          ],
+        }),
+      ],
+    });
+
     const submodel = Submodel.create({
       id: randomUUID(),
       idShort: "carbon footprint",
@@ -87,6 +120,7 @@ describe("aasService", () => {
           valueType: DataTypeDef.Double,
           value: "1000",
         }),
+        entity,
       ],
     });
     await aasService.saveSubmodel(submodel);

@@ -59,6 +59,7 @@
     "http-proxy-middleware": "^3.0.5",
     "langchain": "^0.3.36",
     "load-esm": "^1.0.3",
+    "lodash": "^4.17.21",
     "minio": "^8.0.6",
     "mjml": "^4.16.1",
     "mjml-core": "^4.16.1",

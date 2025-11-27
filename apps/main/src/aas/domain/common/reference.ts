@@ -1,17 +1,11 @@
-import { z } from "zod/v4";
 import { IVisitable, IVisitor } from "../visitor";
-import { Key, KeyJsonSchema } from "./key";
+import { ReferenceJsonSchema } from "../zod-schemas";
+import { Key } from "./key";
 
 export enum ReferenceTypes {
   ExternalReference = "ExternalReference",
   ModelReference = "ModelReference",
 }
-
-export const ReferenceJsonSchema = z.object({
-  type: z.enum(ReferenceTypes),
-  get referredSemanticId() { return ReferenceJsonSchema.optional(); },
-  keys: z.array(KeyJsonSchema),
-});
 
 export class Reference implements IVisitable<any> {
   private constructor(public type: ReferenceTypes, public referredSemanticId: Reference | null, public keys: Key[]) {

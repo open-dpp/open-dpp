@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { DataTypeDef } from "../../../domain/common/data-type-def";
-import { AasSubmodelElements } from "../../../domain/submodelBase/submodel";
+import { AasSubmodelElements } from "../../../domain/submodelBase/aas-submodel-elements";
 import { ReferenceDoc, ReferenceSchema } from "../common/reference.schema";
 import { ExtensionDoc, ExtensionSchema } from "../extension.schema";
 import { SubmodelBaseDoc, SubmodelBaseSchema } from "./submodel-base.schema";

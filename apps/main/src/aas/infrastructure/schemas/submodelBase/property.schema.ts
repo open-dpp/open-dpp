@@ -1,8 +1,8 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { DataTypeDef } from "../../../domain/common/data-type-def";
 import { ReferenceDoc, ReferenceSchema } from "../common/reference.schema";
-import { ExtensionDoc, ExtensionSchema } from "../extension.schema";
 
+import { ExtensionDoc, ExtensionSchema } from "../extension.schema";
 import { SubmodelBaseDoc } from "./submodel-base.schema";
 
 @Schema({ _id: false })
@@ -13,7 +13,7 @@ export class PropertyDoc extends SubmodelBaseDoc {
   @Prop({ type: [ExtensionSchema], default: [] })
   extensions?: ExtensionDoc[];
 
-  @Prop()
+  @Prop({ type: String, required: false, cast: false })
   value?: string;
 
   @Prop({ type: ReferenceSchema })

@@ -1,16 +1,7 @@
-import { z } from "zod/v4";
 import { DataTypeDef } from "./common/data-type-def";
-import { Reference, ReferenceJsonSchema } from "./common/reference";
+import { Reference } from "./common/reference";
 import { IVisitable, IVisitor } from "./visitor";
-
-export const ExtensionJsonSchema = z.object({
-  name: z.string(),
-  semanticId: ReferenceJsonSchema.optional(),
-  supplementalSemanticIds: z.array(ReferenceJsonSchema),
-  valueType: z.enum(DataTypeDef).optional(),
-  value: z.string().optional(),
-  refersTo: z.array(ReferenceJsonSchema),
-});
+import { ExtensionJsonSchema } from "./zod-schemas";
 
 export class Extension implements IVisitable<any> {
   private constructor(
@@ -44,8 +35,8 @@ export class Extension implements IVisitable<any> {
     );
   }
 
-  static fromJson(json: Record<string, unknown>): Extension {
-    const parsed = ExtensionJsonSchema.parse(json);
+  static fromPlain(data: Record<string, unknown>): Extension {
+    const parsed = ExtensionJsonSchema.parse(data);
     return Extension.create({
       name: parsed.name,
       semanticId: parsed.semanticId ? Reference.fromPlain(parsed.semanticId) : undefined,

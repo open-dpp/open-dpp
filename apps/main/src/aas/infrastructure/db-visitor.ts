@@ -1,11 +1,25 @@
+import { btoa } from "node:buffer";
+import { AdministrativeInformation } from "../domain/common/administrative-information";
 import { Key, KeyTypes } from "../domain/common/key";
 import { LanguageText } from "../domain/common/language-text";
 import { Qualifier } from "../domain/common/qualififiable";
 import { Reference } from "../domain/common/reference";
 import { EmbeddedDataSpecification } from "../domain/embedded-data-specification";
 import { Extension } from "../domain/extension";
+import { SpecificAssetId } from "../domain/specific-asset-id";
+import { AnnotatedRelationshipElement } from "../domain/submodelBase/annotated-relationship-element";
+import { Blob } from "../domain/submodelBase/blob";
+import { Entity } from "../domain/submodelBase/entity";
+import { File } from "../domain/submodelBase/file";
+import { MultiLanguageProperty } from "../domain/submodelBase/multi-language-property";
 import { Property } from "../domain/submodelBase/property";
-import { SubmodelBase } from "../domain/submodelBase/submodel";
+import { Range } from "../domain/submodelBase/range";
+import { ReferenceElement } from "../domain/submodelBase/reference-element";
+import { RelationshipElement } from "../domain/submodelBase/relationship-element";
+import { Submodel } from "../domain/submodelBase/submodel";
+import { SubmodelBase } from "../domain/submodelBase/submodel-base";
+import { SubmodelElementCollection } from "../domain/submodelBase/submodel-element-collection";
+import { SubmodelElementList } from "../domain/submodelBase/submodel-element-list";
 import { IVisitor } from "../domain/visitor";
 
 export class DbVisitor implements IVisitor<any> {
@@ -24,7 +38,7 @@ export class DbVisitor implements IVisitor<any> {
 
   visitProperty(element: Property): any {
     return {
-      kindDiscriminator: KeyTypes.Property,
+      modelType: KeyTypes.Property,
       ...this.buildBase(element),
       extensions: element.extensions.map(e => e.accept(this)),
       valueType: element.valueType,
@@ -70,7 +84,6 @@ export class DbVisitor implements IVisitor<any> {
   visitEmbeddedDataSpecification(element: EmbeddedDataSpecification): any {
     return {
       dataSpecification: element.dataSpecification.accept(this),
-      dataSpecificationContent: element.dataSpecificationContent,
     };
   }
 
@@ -82,6 +95,144 @@ export class DbVisitor implements IVisitor<any> {
       valueType: element.valueType,
       value: element.value,
       refersTo: element.refersTo.map(r => r.accept(this)),
+    };
+  }
+
+  visitSubmodel(element: Submodel): any {
+    return {
+      ...this.buildBase(element),
+      modelType: KeyTypes.Submodel,
+      id: element.id,
+      extensions: element.extensions.map(e => e.accept(this)),
+      administration: element.administration.accept(this),
+      kind: element.kind,
+      submodelElements: element.submodelElements.map(e => e.accept(this)),
+    };
+  }
+
+  visitAdministrativeInformation(element: AdministrativeInformation): any {
+    return {
+      version: element.version,
+      revision: element.revision,
+    };
+  }
+
+  visitAnnotatedRelationshipElement(element: AnnotatedRelationshipElement): any {
+    return {
+      ...this.buildBase(element),
+      modelType: KeyTypes.AnnotatedRelationshipElement,
+      first: element.first.accept(this),
+      second: element.second.accept(this),
+      extensions: element.extensions.map(e => e.accept(this)),
+      annotations: element.annotations.map(a => a.accept(this)),
+    };
+  }
+
+  visitBlob(element: Blob): any {
+    return {
+      ...this.buildBase(element),
+      modelType: KeyTypes.Blob,
+      contentType: element.contentType,
+      extensions: element.extensions.map(e => e.accept(this)),
+      value: element.value
+        ? btoa(Array.from(element.value)
+            .map(byte => String.fromCharCode(byte))
+            .join(""),
+          )
+        : null,
+    };
+  }
+
+  visitEntity(element: Entity): any {
+    return {
+      ...this.buildBase(element),
+      modelType: KeyTypes.Entity,
+      entityType: element.entityType,
+      extensions: element.extensions.map(e => e.accept(this)),
+      statements: element.statements.map(s => s.accept(this)),
+      globalAssetId: element.globalAssetId,
+      specificAssetIds: element.specificAssetIds.map(s => s.accept(this)),
+    };
+  }
+
+  visitFile(element: File): any {
+    return {
+      ...this.buildBase(element),
+      modelType: KeyTypes.File,
+      contentType: element.contentType,
+      extensions: element.extensions.map(e => e.accept(this)),
+      value: element.value,
+    };
+  }
+
+  visitMultiLanguageProperty(element: MultiLanguageProperty): any {
+    return {
+      ...this.buildBase(element),
+      modelType: KeyTypes.MultiLanguageProperty,
+      extensions: element.extensions.map(e => e.accept(this)),
+      value: element.value.map(lt => lt.accept(this)),
+      valueId: element.valueId?.accept(this),
+    };
+  }
+
+  visitRange(element: Range): any {
+    return {
+      ...this.buildBase(element),
+      modelType: KeyTypes.Range,
+      valueType: element.valueType,
+      extensions: element.extensions.map(e => e.accept(this)),
+      min: element.min,
+      max: element.max,
+    };
+  }
+
+  visitReferenceElement(element: ReferenceElement): any {
+    return {
+      ...this.buildBase(element),
+      modelType: KeyTypes.ReferenceElement,
+      extensions: element.extensions.map(e => e.accept(this)),
+      value: element.value?.accept(this),
+    };
+  }
+
+  visitRelationshipElement(element: RelationshipElement): any {
+    return {
+      ...this.buildBase(element),
+      modelType: KeyTypes.RelationshipElement,
+      first: element.first.accept(this),
+      second: element.second.accept(this),
+      extensions: element.extensions.map(e => e.accept(this)),
+    };
+  }
+
+  visitSubmodelElementCollection(element: SubmodelElementCollection): any {
+    return {
+      ...this.buildBase(element),
+      modelType: KeyTypes.SubmodelElementCollection,
+      extensions: element.extensions.map(e => e.accept(this)),
+      value: element.value.map(e => e.accept(this)),
+    };
+  }
+
+  visitSubmodelElementList(element: SubmodelElementList): any {
+    return {
+      ...this.buildBase(element),
+      modelType: KeyTypes.SubmodelElementList,
+      extensions: element.extensions.map(e => e.accept(this)),
+      orderRelevant: element.orderRelevant,
+      semanticIdListElement: element.semanticIdListElement?.accept(this),
+      valueTypeListElement: element.valueTypeListElement,
+      value: element.value.map(e => e.accept(this)),
+    };
+  }
+
+  visitSpecificAssetId(element: SpecificAssetId): any {
+    return {
+      name: element.name,
+      value: element.value,
+      semanticId: element.semanticId?.accept(this),
+      supplementalSemanticIds: element.supplementalSemanticIds.map(s => s.accept(this)),
+      externalSubjectId: element.externalSubjectId?.accept(this),
     };
   }
 }

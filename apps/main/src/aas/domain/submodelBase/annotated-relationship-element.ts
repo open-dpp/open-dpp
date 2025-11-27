@@ -1,25 +1,30 @@
+import { KeyTypes } from "../common/key";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
+import { IVisitor } from "../visitor";
+import { AnnotatedRelationshipElementJsonSchema } from "../zod-schemas";
 import { IRelationshipElement } from "./relationship-element";
-import { SubmodelBase } from "./submodel";
+import { ISubmodelBase } from "./submodel";
+import { parseSubmodelBaseUnion, SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { registerSubmodel } from "./submodel-registry";
 
 export class AnnotatedRelationshipElement extends SubmodelBase implements IRelationshipElement {
-  private constructor(
+  protected constructor(
     public readonly first: Reference,
     public readonly second: Reference,
     public readonly extensions: Array<Extension>,
-    public readonly category: string | null = null,
-    public readonly idShort: string | null = null,
-    public readonly displayName: Array<LanguageText>,
-    public readonly description: Array<LanguageText>,
-    public readonly semanticId: Reference | null = null,
-    public readonly supplementalSemanticIds: Array<Reference>,
-    public readonly qualifiers: Qualifier[],
-    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly annotations: Array<SubmodelBase>,
+    category: string | null = null,
+    idShort: string | null = null,
+    displayName: Array<LanguageText>,
+    description: Array<LanguageText>,
+    semanticId: Reference | null = null,
+    supplementalSemanticIds: Array<Reference>,
+    qualifiers: Qualifier[],
+    embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
+    public readonly annotations: Array<ISubmodelBase>,
   ) {
     super(
       category,
@@ -33,19 +38,11 @@ export class AnnotatedRelationshipElement extends SubmodelBase implements IRelat
     );
   }
 
-  static create(data: {
+  static create(data: SubmodelBaseProps & {
     first: Reference;
     second: Reference;
     extensions?: Array<Extension>;
-    category?: string;
-    idShort?: string;
-    displayName?: Array<LanguageText>;
-    description?: Array<LanguageText>;
-    semanticId?: Reference;
-    supplementalSemanticIds?: Array<Reference>;
-    qualifiers?: Qualifier[];
-    embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
-    annotations?: Array<SubmodelBase>;
+    annotations?: Array<ISubmodelBase>;
   }) {
     return new AnnotatedRelationshipElement(
       data.first,
@@ -62,4 +59,21 @@ export class AnnotatedRelationshipElement extends SubmodelBase implements IRelat
       data.annotations ?? [],
     );
   }
+
+  static fromPlain(data: Record<string, unknown>): SubmodelBase {
+    const parsed = AnnotatedRelationshipElementJsonSchema.parse(data);
+    return AnnotatedRelationshipElement.create({
+      ...submodelBasePropsFromPlain(parsed),
+      first: Reference.fromPlain(parsed.first),
+      second: Reference.fromPlain(parsed.second),
+      extensions: parsed.extensions.map(e => Extension.fromPlain(e)),
+      annotations: parsed.annotations.map(parseSubmodelBaseUnion),
+    });
+  }
+
+  accept(visitor: IVisitor<any>): any {
+    return visitor.visitAnnotatedRelationshipElement(this);
+  }
 }
+
+registerSubmodel(KeyTypes.AnnotatedRelationshipElement, AnnotatedRelationshipElement);

@@ -1,9 +1,13 @@
+import { KeyTypes } from "../common/key";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { SubmodelBase } from "./submodel";
+import { IVisitor } from "../visitor";
+import { RelationshipElementJsonSchema } from "../zod-schemas";
+import { SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { registerSubmodel } from "./submodel-registry";
 
 export class IRelationshipElement {
   first: Reference;
@@ -15,14 +19,14 @@ export class RelationshipElement extends SubmodelBase implements IRelationshipEl
     public readonly first: Reference,
     public readonly second: Reference,
     public readonly extensions: Array<Extension>,
-    public readonly category: string | null = null,
-    public readonly idShort: string | null = null,
-    public readonly displayName: Array<LanguageText>,
-    public readonly description: Array<LanguageText>,
-    public readonly semanticId: Reference | null = null,
-    public readonly supplementalSemanticIds: Array<Reference>,
-    public readonly qualifiers: Qualifier[],
-    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
+    category: string | null = null,
+    idShort: string | null = null,
+    displayName: Array<LanguageText>,
+    description: Array<LanguageText>,
+    semanticId: Reference | null = null,
+    supplementalSemanticIds: Array<Reference>,
+    qualifiers: Qualifier[],
+    embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
   ) {
     super(
       category,
@@ -37,18 +41,10 @@ export class RelationshipElement extends SubmodelBase implements IRelationshipEl
   }
 
   static create(
-    data: {
+    data: SubmodelBaseProps & {
       first: Reference;
       second: Reference;
       extensions?: Array<Extension>;
-      category?: string;
-      idShort?: string;
-      displayName?: Array<LanguageText>;
-      description?: Array<LanguageText>;
-      semanticId?: Reference;
-      supplementalSemanticIds?: Array<Reference>;
-      qualifiers?: Qualifier[];
-      embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
     },
   ) {
     return new RelationshipElement(
@@ -65,4 +61,20 @@ export class RelationshipElement extends SubmodelBase implements IRelationshipEl
       data.embeddedDataSpecifications ?? [],
     );
   }
+
+  static fromPlain(data: Record<string, unknown>): SubmodelBase {
+    const parsed = RelationshipElementJsonSchema.parse(data);
+    return RelationshipElement.create({
+      ...submodelBasePropsFromPlain(parsed),
+      first: Reference.fromPlain(parsed.first),
+      second: Reference.fromPlain(parsed.second),
+      extensions: parsed.extensions.map(e => Extension.fromPlain(e)),
+    });
+  }
+
+  accept(visitor: IVisitor<any>): any {
+    return visitor.visitRelationshipElement(this);
+  }
 }
+
+registerSubmodel(KeyTypes.RelationshipElement, RelationshipElement);

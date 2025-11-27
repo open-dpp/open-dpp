@@ -1,10 +1,15 @@
+import { KeyTypes } from "../common/key";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import { SpecificAssetId } from "../specific-asset-id";
-import { SubmodelBase } from "./submodel";
+import { IVisitor } from "../visitor";
+import { EntityTypeJsonSchema } from "../zod-schemas";
+import { ISubmodelBase } from "./submodel";
+import { parseSubmodelBaseUnion, SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { registerSubmodel } from "./submodel-registry";
 
 export enum EntityType {
   CoManagedEntity = "CoManagedEntity",
@@ -15,33 +20,25 @@ export class Entity extends SubmodelBase {
   private constructor(
     public readonly entityType: EntityType,
     public readonly extensions: Array<Extension>,
-    public readonly category: string | null = null,
-    public readonly idShort: string | null = null,
-    public readonly displayName: Array<LanguageText>,
-    public readonly description: Array<LanguageText>,
-    public readonly semanticId: Reference | null = null,
-    public readonly supplementalSemanticIds: Array<Reference>,
-    public readonly qualifiers: Array<Qualifier>,
-    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly statements: Array<SubmodelBase>,
+    category: string | null = null,
+    idShort: string | null = null,
+    displayName: Array<LanguageText>,
+    description: Array<LanguageText>,
+    semanticId: Reference | null = null,
+    supplementalSemanticIds: Array<Reference>,
+    qualifiers: Array<Qualifier>,
+    embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
+    public readonly statements: Array<ISubmodelBase>,
     public readonly globalAssetId: string | null = null,
     public readonly specificAssetIds: Array<SpecificAssetId>,
   ) {
     super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
   }
 
-  static create(data: {
+  static create(data: SubmodelBaseProps & {
     entityType: EntityType;
     extensions?: Array<Extension>;
-    category?: string;
-    idShort?: string;
-    displayName?: Array<LanguageText>;
-    description?: Array<LanguageText>;
-    semanticId?: Reference;
-    supplementalSemanticIds?: Array<Reference>;
-    qualifiers?: Array<Qualifier>;
-    embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
-    statements?: Array<SubmodelBase>;
+    statements?: Array<ISubmodelBase>;
     globalAssetId?: string;
     specificAssetIds?: Array<SpecificAssetId>;
   }) {
@@ -61,4 +58,21 @@ export class Entity extends SubmodelBase {
       data.specificAssetIds ?? [],
     );
   };
+
+  static fromPlain(data: Record<string, unknown>): SubmodelBase {
+    const parsed = EntityTypeJsonSchema.parse(data);
+    return Entity.create({
+      ...submodelBasePropsFromPlain(parsed),
+      entityType: parsed.entityType,
+      statements: parsed.statements.map(parseSubmodelBaseUnion),
+      globalAssetId: parsed.globalAssetId,
+      specificAssetIds: parsed.specificAssetIds.map(s => SpecificAssetId.fromPlain(s)),
+    });
+  }
+
+  accept(visitor: IVisitor<any>): any {
+    return visitor.visitEntity(this);
+  }
 }
+
+registerSubmodel(KeyTypes.Entity, Entity);

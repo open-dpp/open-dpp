@@ -53,22 +53,6 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     );
   };
 
-  fromJson(data: {
-    id: string;
-    assetInformation: AssetInformation;
-    extensions?: Extension[];
-    category?: string;
-    idShort?: string;
-    displayName?: LanguageText[];
-    description?: LanguageText[];
-    administration?: AdministrativeInformation;
-    embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
-    derivedFrom?: Reference;
-    submodels?: Array<Reference>;
-  }) {
-
-  }
-
   addSubmodelReference(submodel: Reference) {
     this.submodels.push(submodel);
   }

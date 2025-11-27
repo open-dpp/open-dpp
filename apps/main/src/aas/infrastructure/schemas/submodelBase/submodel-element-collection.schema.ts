@@ -9,9 +9,6 @@ export class SubmodelElementCollectionDoc extends SubmodelBaseDoc {
 
   @Prop({ type: [SubmodelBaseSchema], default: [] })
   value?: SubmodelBaseDoc[];
-
-  // @Prop({ required: true })
-  // testDemo: string;
 }
 
 export const SubmodelElementCollectionSchema = SchemaFactory.createForClass(SubmodelElementCollectionDoc);

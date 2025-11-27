@@ -20,11 +20,8 @@ export class AasService {
   convertToDomain(
     submodelDoc: SubmodelDoc,
   ) {
-    return Submodel.create({
-      id: submodelDoc._id,
-      idShort: submodelDoc.idShort,
-      administration: submodelDoc.administration,
-    });
+    const plain = submodelDoc.toObject();
+    return Submodel.fromPlain({ ...plain, id: plain._id });
   }
 
   async saveSubmodel(submodel: Submodel) {
@@ -39,13 +36,11 @@ export class AasService {
       });
     }
     const dbVisitor = new DbVisitor();
+    const plainSubmodel = submodel.accept(dbVisitor);
     // 3. Modify fields — casting and validation occur on save()
     doc.set({
       _schemaVersion: SubmodelDocSchemaVersion.v1_0_0,
-      idShort: submodel.idShort,
-      submodelElements: submodel.submodelElements.map(
-        se => se.accept(dbVisitor),
-      ),
+      ...plainSubmodel,
     });
     return this.convertToDomain(await doc.save({ validateBeforeSave: true }));
   }

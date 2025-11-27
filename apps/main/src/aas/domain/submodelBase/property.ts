@@ -1,41 +1,36 @@
 import { DataTypeDef } from "../common/data-type-def";
+import { KeyTypes } from "../common/key";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import { IVisitor } from "../visitor";
-import { SubmodelBase } from "./submodel";
+import { PropertyJsonSchema } from "../zod-schemas";
+import { SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { registerSubmodel } from "./submodel-registry";
 
 export class Property extends SubmodelBase {
   private constructor(
     public readonly valueType: DataTypeDef,
     public readonly extensions: Extension[],
-    public readonly category: string | null = null,
-    public readonly idShort: string | null = null,
-    public readonly displayName: LanguageText[],
-    public readonly description: LanguageText[],
-    public readonly semanticId: Reference | null = null,
-    public readonly supplementalSemanticIds: Reference[],
-    public readonly qualifiers: Qualifier[],
-    public readonly embeddedDataSpecifications: EmbeddedDataSpecification[],
+    category: string | null = null,
+    idShort: string | null = null,
+    displayName: LanguageText[],
+    description: LanguageText[],
+    semanticId: Reference | null = null,
+    supplementalSemanticIds: Reference[],
+    qualifiers: Qualifier[],
+    embeddedDataSpecifications: EmbeddedDataSpecification[],
     public readonly value: string | null = null,
     public readonly valueId: Reference | null = null,
   ) {
     super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
   }
 
-  static create(data: {
+  static create(data: SubmodelBaseProps & {
     valueType: DataTypeDef;
     extensions?: Extension[];
-    category?: string;
-    idShort?: string;
-    displayName?: LanguageText[];
-    description?: LanguageText[];
-    semanticId?: Reference;
-    supplementalSemanticIds?: Reference[];
-    qualifiers?: Qualifier[];
-    embeddedDataSpecifications?: EmbeddedDataSpecification[];
     value?: string;
     valueId?: Reference;
   }) {
@@ -55,7 +50,20 @@ export class Property extends SubmodelBase {
     );
   }
 
+  static fromPlain(data: Record<string, unknown>) {
+    const parsed = PropertyJsonSchema.parse(data);
+    return Property.create({
+      ...submodelBasePropsFromPlain(parsed),
+      valueType: parsed.valueType,
+      extensions: parsed.extensions.map(Extension.fromPlain),
+      value: parsed.value,
+      valueId: parsed.valueId ? Reference.fromPlain(parsed.valueId) : undefined,
+    });
+  }
+
   accept(visitor: IVisitor<any>): any {
     return visitor.visitProperty(this);
   }
 }
+
+registerSubmodel(KeyTypes.Property, Property);

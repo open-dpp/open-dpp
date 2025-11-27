@@ -1,5 +1,5 @@
-import { z } from "zod/v4";
 import { IVisitable, IVisitor } from "../visitor";
+import { KeyJsonSchema } from "../zod-schemas";
 
 export enum KeyTypes {
   AnnotatedRelationshipElement = "AnnotatedRelationshipElement",
@@ -27,11 +27,6 @@ export enum KeyTypes {
   SubmodelElementCollection = "SubmodelElementCollection",
   SubmodelElementList = "SubmodelElementList",
 }
-
-export const KeyJsonSchema = z.object({
-  type: z.enum(KeyTypes),
-  value: z.string(),
-});
 
 export class Key implements IVisitable<any> {
   private constructor(public type: KeyTypes, public value: string) {

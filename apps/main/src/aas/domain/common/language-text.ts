@@ -1,15 +1,10 @@
-import { z } from "zod/v4";
 import { IVisitable, IVisitor } from "../visitor";
+import { LanguageTextJsonSchema } from "../zod-schemas";
 
 export enum Language {
   en = "en",
   de = "de",
 }
-
-export const LanguageTextJsonSchema = z.object({
-  language: z.enum(Language),
-  text: z.string(),
-});
 
 export class LanguageText implements IVisitable<any> {
   private constructor(public readonly language: string, public readonly text: string) {
