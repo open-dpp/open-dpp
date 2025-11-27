@@ -223,6 +223,7 @@
     "members": "Members"
   },
   "organizations": {
+    "settings": "Settings",
     "organizations": "Organization | Organizations",
     "select": "Select organization",
     "info": "Organization information",
@@ -246,6 +247,10 @@
       "createdBy": "Created by",
       "administeredBy": "Administered by",
       "description": "Description",
+      "image": {
+        "label": "Image",
+        "help": "Upload an image for the organization"
+      },
       "name": {
         "help": "Give your organization a name",
         "label": "Name"

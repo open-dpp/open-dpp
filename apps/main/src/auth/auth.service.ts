@@ -157,6 +157,17 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     const emailSvc = this.emailService;
     const configSvc = this.configService;
     const organizationPlugin = organization({
+      schema: {
+        organization: {
+          additionalFields: {
+            image: {
+              type: "string",
+              input: true,
+              required: false,
+            },
+          },
+        },
+      },
       async sendInvitationEmail(data) {
         const inviteLink = `${configSvc.get("OPEN_DPP_URL")}/accept-invitation/${data.id}`;
         await emailSvc.send(InviteUserToOrganizationMail.create({

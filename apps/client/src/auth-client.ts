@@ -24,6 +24,13 @@ export const authClient = createAuthClient({
           input: true,
         },
       },
+      organization: {
+        image: {
+          type: "string",
+          required: false,
+          input: true,
+        },
+      },
     }),
     genericOAuthClient(),
     organizationClient(),
