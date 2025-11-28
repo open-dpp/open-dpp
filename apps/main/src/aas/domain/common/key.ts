@@ -1,4 +1,4 @@
-import { KeyJsonSchema } from "../parsing/key-json-schema";
+import { KeyJsonSchema } from "../parsing/common/key-json-schema";
 import { IVisitable, IVisitor } from "../visitor";
 import { KeyTypesType } from "./key-types-enum";
 

@@ -5,7 +5,7 @@ import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
-import { SubmodelBaseJsonSchema } from "../parsing/aas-json-schemas";
+import { SubmodelBaseJsonSchema } from "../parsing/submodel-base/submodel-base-json-schema";
 import { IVisitor } from "../visitor";
 import { ISubmodelBase } from "./submodel";
 import { getSubmodelClass } from "./submodel-registry";

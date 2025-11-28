@@ -4,14 +4,21 @@ import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { FileJsonSchema } from "../parsing/aas-json-schemas";
+import { EntityTypeJsonSchema } from "../parsing/submodel-base/entity-type-json-schema";
+import { SpecificAssetId } from "../specific-asset-id";
 import { IVisitor } from "../visitor";
-import { SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { ISubmodelBase } from "./submodel";
+import { parseSubmodelBaseUnion, SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 import { registerSubmodel } from "./submodel-registry";
 
-export class File extends SubmodelBase {
+export enum EntityType {
+  CoManagedEntity = "CoManagedEntity",
+  SelfManagedEntity = "SelfManagedEntity",
+}
+
+export class Entity extends SubmodelBase {
   private constructor(
-    public readonly contentType: string,
+    public readonly entityType: EntityType,
     public readonly extensions: Array<Extension>,
     category: string | null = null,
     idShort: string | null = null,
@@ -21,18 +28,22 @@ export class File extends SubmodelBase {
     supplementalSemanticIds: Array<Reference>,
     qualifiers: Array<Qualifier>,
     embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly value: string | null = null,
+    public readonly statements: Array<ISubmodelBase>,
+    public readonly globalAssetId: string | null = null,
+    public readonly specificAssetIds: Array<SpecificAssetId>,
   ) {
     super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
   }
 
   static create(data: SubmodelBaseProps & {
-    contentType: string;
+    entityType: EntityType;
     extensions?: Array<Extension>;
-    value?: string;
+    statements?: Array<ISubmodelBase>;
+    globalAssetId?: string;
+    specificAssetIds?: Array<SpecificAssetId>;
   }) {
-    return new File(
-      data.contentType,
+    return new Entity(
+      data.entityType,
       data.extensions ?? [],
       data.category ?? null,
       data.idShort ?? null,
@@ -42,22 +53,26 @@ export class File extends SubmodelBase {
       data.supplementalSemanticIds ?? [],
       data.qualifiers ?? [],
       data.embeddedDataSpecifications ?? [],
-      data.value ?? null,
+      data.statements ?? [],
+      data.globalAssetId ?? null,
+      data.specificAssetIds ?? [],
     );
-  }
+  };
 
   static fromPlain(data: Record<string, unknown>): SubmodelBase {
-    const parsed = FileJsonSchema.parse(data);
-    return File.create({
+    const parsed = EntityTypeJsonSchema.parse(data);
+    return Entity.create({
       ...submodelBasePropsFromPlain(parsed),
-      contentType: parsed.contentType,
-      value: parsed.value,
+      entityType: parsed.entityType,
+      statements: parsed.statements.map(parseSubmodelBaseUnion),
+      globalAssetId: parsed.globalAssetId,
+      specificAssetIds: parsed.specificAssetIds.map(s => SpecificAssetId.fromPlain(s)),
     });
   }
 
   accept(visitor: IVisitor<any>): any {
-    return visitor.visitFile(this);
+    return visitor.visitEntity(this);
   }
 }
 
-registerSubmodel(KeyTypes.File, File);
+registerSubmodel(KeyTypes.Entity, Entity);

@@ -4,21 +4,17 @@ import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { EntityTypeJsonSchema } from "../parsing/aas-json-schemas";
-import { SpecificAssetId } from "../specific-asset-id";
+import { AnnotatedRelationshipElementJsonSchema } from "../parsing/submodel-base/annotated-relationship-element-json-schema";
 import { IVisitor } from "../visitor";
+import { IRelationshipElement } from "./relationship-element";
 import { ISubmodelBase } from "./submodel";
 import { parseSubmodelBaseUnion, SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 import { registerSubmodel } from "./submodel-registry";
 
-export enum EntityType {
-  CoManagedEntity = "CoManagedEntity",
-  SelfManagedEntity = "SelfManagedEntity",
-}
-
-export class Entity extends SubmodelBase {
-  private constructor(
-    public readonly entityType: EntityType,
+export class AnnotatedRelationshipElement extends SubmodelBase implements IRelationshipElement {
+  protected constructor(
+    public readonly first: Reference,
+    public readonly second: Reference,
     public readonly extensions: Array<Extension>,
     category: string | null = null,
     idShort: string | null = null,
@@ -26,24 +22,31 @@ export class Entity extends SubmodelBase {
     description: Array<LanguageText>,
     semanticId: Reference | null = null,
     supplementalSemanticIds: Array<Reference>,
-    qualifiers: Array<Qualifier>,
+    qualifiers: Qualifier[],
     embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly statements: Array<ISubmodelBase>,
-    public readonly globalAssetId: string | null = null,
-    public readonly specificAssetIds: Array<SpecificAssetId>,
+    public readonly annotations: Array<ISubmodelBase>,
   ) {
-    super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
+    super(
+      category,
+      idShort,
+      displayName,
+      description,
+      semanticId,
+      supplementalSemanticIds,
+      qualifiers,
+      embeddedDataSpecifications,
+    );
   }
 
   static create(data: SubmodelBaseProps & {
-    entityType: EntityType;
+    first: Reference;
+    second: Reference;
     extensions?: Array<Extension>;
-    statements?: Array<ISubmodelBase>;
-    globalAssetId?: string;
-    specificAssetIds?: Array<SpecificAssetId>;
+    annotations?: Array<ISubmodelBase>;
   }) {
-    return new Entity(
-      data.entityType,
+    return new AnnotatedRelationshipElement(
+      data.first,
+      data.second,
       data.extensions ?? [],
       data.category ?? null,
       data.idShort ?? null,
@@ -53,26 +56,24 @@ export class Entity extends SubmodelBase {
       data.supplementalSemanticIds ?? [],
       data.qualifiers ?? [],
       data.embeddedDataSpecifications ?? [],
-      data.statements ?? [],
-      data.globalAssetId ?? null,
-      data.specificAssetIds ?? [],
+      data.annotations ?? [],
     );
-  };
+  }
 
   static fromPlain(data: Record<string, unknown>): SubmodelBase {
-    const parsed = EntityTypeJsonSchema.parse(data);
-    return Entity.create({
+    const parsed = AnnotatedRelationshipElementJsonSchema.parse(data);
+    return AnnotatedRelationshipElement.create({
       ...submodelBasePropsFromPlain(parsed),
-      entityType: parsed.entityType,
-      statements: parsed.statements.map(parseSubmodelBaseUnion),
-      globalAssetId: parsed.globalAssetId,
-      specificAssetIds: parsed.specificAssetIds.map(s => SpecificAssetId.fromPlain(s)),
+      first: Reference.fromPlain(parsed.first),
+      second: Reference.fromPlain(parsed.second),
+      extensions: parsed.extensions.map(e => Extension.fromPlain(e)),
+      annotations: parsed.annotations.map(parseSubmodelBaseUnion),
     });
   }
 
   accept(visitor: IVisitor<any>): any {
-    return visitor.visitEntity(this);
+    return visitor.visitAnnotatedRelationshipElement(this);
   }
 }
 
-registerSubmodel(KeyTypes.Entity, Entity);
+registerSubmodel(KeyTypes.AnnotatedRelationshipElement, AnnotatedRelationshipElement);

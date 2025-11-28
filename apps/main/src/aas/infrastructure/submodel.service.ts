@@ -2,7 +2,7 @@ import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { Submodel } from "../domain/submodelBase/submodel";
+import { Submodel } from "../domain/submodel-base/submodel";
 import { DbVisitor } from "./db-visitor";
 import { SubmodelDoc, SubmodelDocSchemaVersion } from "./schemas/submodel.schema";
 

@@ -1,6 +1,6 @@
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { ConceptDescription } from "./concept-description";
-import { Submodel } from "./submodelBase/submodel";
+import { Submodel } from "./submodel-base/submodel";
 
 export class Environment {
   private constructor(

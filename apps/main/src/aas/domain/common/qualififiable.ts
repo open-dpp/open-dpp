@@ -1,4 +1,4 @@
-import { QualifierJsonSchema } from "../parsing/qualifier-json-schema";
+import { QualifierJsonSchema } from "../parsing/common/qualifier-json-schema";
 import { IVisitable, IVisitor } from "../visitor";
 import { DataTypeDefType } from "./data-type-def";
 import { IHasSemantics } from "./has-semantics";

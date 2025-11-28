@@ -6,15 +6,16 @@ import { z } from "zod";
 import { DataTypeDef } from "../../aas/domain/common/data-type-def";
 import { Key } from "../../aas/domain/common/key";
 import { KeyTypes } from "../../aas/domain/common/key-types-enum";
-import { Language, LanguageText } from "../../aas/domain/common/language-text";
+import { Language } from "../../aas/domain/common/language-enum";
+import { LanguageText } from "../../aas/domain/common/language-text";
 import { QualifierKind } from "../../aas/domain/common/qualifier-kind-enum";
 import { Qualifier } from "../../aas/domain/common/qualififiable";
 import { Reference, ReferenceTypes } from "../../aas/domain/common/reference";
-import { File } from "../../aas/domain/submodelBase/file";
-import { MultiLanguageProperty } from "../../aas/domain/submodelBase/multi-language-property";
-import { Property } from "../../aas/domain/submodelBase/property";
-import { ReferenceElement } from "../../aas/domain/submodelBase/reference-element";
-import { ISubmodelBase } from "../../aas/domain/submodelBase/submodel";
+import { File } from "../../aas/domain/submodel-base/file";
+import { MultiLanguageProperty } from "../../aas/domain/submodel-base/multi-language-property";
+import { Property } from "../../aas/domain/submodel-base/property";
+import { ReferenceElement } from "../../aas/domain/submodel-base/reference-element";
+import { ISubmodelBase } from "../../aas/domain/submodel-base/submodel";
 import { DataFieldBase, DataFieldType } from "../../data-modelling/domain/data-field-base";
 
 export class DataFieldValidationResult {

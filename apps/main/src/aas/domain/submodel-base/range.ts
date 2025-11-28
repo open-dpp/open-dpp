@@ -1,17 +1,18 @@
+import { DataTypeDefType } from "../common/data-type-def";
 import { KeyTypes } from "../common/key-types-enum";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { BlobJsonSchema } from "../parsing/aas-json-schemas";
+import { RangeJsonSchema } from "../parsing/submodel-base/range-json-schema";
 import { IVisitor } from "../visitor";
 import { SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 import { registerSubmodel } from "./submodel-registry";
 
-export class Blob extends SubmodelBase {
+export class Range extends SubmodelBase {
   private constructor(
-    public readonly contentType: string,
+    public readonly valueType: DataTypeDefType,
     public readonly extensions: Array<Extension>,
     category: string | null = null,
     idShort: string | null = null,
@@ -21,18 +22,20 @@ export class Blob extends SubmodelBase {
     supplementalSemanticIds: Array<Reference>,
     qualifiers: Array<Qualifier>,
     embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly value: Uint8Array | null = null,
+    public readonly min: string | null = null,
+    public readonly max: string | null = null,
   ) {
     super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
   }
 
   static create(data: SubmodelBaseProps & {
-    contentType: string;
+    valueType: DataTypeDefType;
     extensions?: Array<Extension>;
-    value?: Uint8Array;
+    min?: string;
+    max?: string;
   }) {
-    return new Blob(
-      data.contentType,
+    return new Range(
+      data.valueType,
       data.extensions ?? [],
       data.category ?? null,
       data.idShort ?? null,
@@ -42,22 +45,25 @@ export class Blob extends SubmodelBase {
       data.supplementalSemanticIds ?? [],
       data.qualifiers ?? [],
       data.embeddedDataSpecifications ?? [],
-      data.value ?? null,
+      data.min ?? null,
+      data.max ?? null,
     );
   }
 
   static fromPlain(data: Record<string, unknown>): SubmodelBase {
-    const parsed = BlobJsonSchema.parse(data);
-    return Blob.create({
+    const parsed = RangeJsonSchema.parse(data);
+    return Range.create({
       ...submodelBasePropsFromPlain(parsed),
-      contentType: parsed.contentType,
-      value: parsed.value ? new Uint8Array(atob(parsed.value).split("").map(c => c.charCodeAt(0))) : undefined,
+      valueType: parsed.valueType,
+      extensions: parsed.extensions.map(Extension.fromPlain),
+      min: parsed.min,
+      max: parsed.max,
     });
   }
 
   accept(visitor: IVisitor<any>): any {
-    return visitor.visitBlob(this);
+    return visitor.visitRange(this);
   }
 }
 
-registerSubmodel(KeyTypes.Blob, Blob);
+registerSubmodel(KeyTypes.Range, Range);

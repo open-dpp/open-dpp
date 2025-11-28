@@ -1,16 +1,18 @@
+import { DataTypeDefType } from "../common/data-type-def";
 import { KeyTypes } from "../common/key-types-enum";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { MultiLanguagePropertyJsonSchema } from "../parsing/aas-json-schemas";
+import { PropertyJsonSchema } from "../parsing/submodel-base/property-json-schema";
 import { IVisitor } from "../visitor";
 import { SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 import { registerSubmodel } from "./submodel-registry";
 
-export class MultiLanguageProperty extends SubmodelBase {
+export class Property extends SubmodelBase {
   private constructor(
+    public readonly valueType: DataTypeDefType,
     public readonly extensions: Extension[],
     category: string | null = null,
     idShort: string | null = null,
@@ -20,27 +22,20 @@ export class MultiLanguageProperty extends SubmodelBase {
     supplementalSemanticIds: Reference[],
     qualifiers: Qualifier[],
     embeddedDataSpecifications: EmbeddedDataSpecification[],
-    public readonly value: LanguageText[],
+    public readonly value: string | null = null,
     public readonly valueId: Reference | null = null,
   ) {
-    super(
-      category,
-      idShort,
-      displayName,
-      description,
-      semanticId,
-      supplementalSemanticIds,
-      qualifiers,
-      embeddedDataSpecifications,
-    );
+    super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
   }
 
   static create(data: SubmodelBaseProps & {
+    valueType: DataTypeDefType;
     extensions?: Extension[];
-    value?: LanguageText[];
+    value?: string;
     valueId?: Reference;
   }) {
-    return new MultiLanguageProperty(
+    return new Property(
+      data.valueType,
       data.extensions ?? [],
       data.category ?? null,
       data.idShort ?? null,
@@ -50,24 +45,25 @@ export class MultiLanguageProperty extends SubmodelBase {
       data.supplementalSemanticIds ?? [],
       data.qualifiers ?? [],
       data.embeddedDataSpecifications ?? [],
-      data.value ?? [],
+      data.value ?? null,
       data.valueId ?? null,
     );
   }
 
-  static fromPlain(data: Record<string, unknown>): SubmodelBase {
-    const parsed = MultiLanguagePropertyJsonSchema.parse(data);
-    return MultiLanguageProperty.create({
+  static fromPlain(data: Record<string, unknown>) {
+    const parsed = PropertyJsonSchema.parse(data);
+    return Property.create({
       ...submodelBasePropsFromPlain(parsed),
-      extensions: parsed.extensions.map(e => Extension.fromPlain(e)),
-      value: parsed.value.map(l => LanguageText.fromPlain(l)),
+      valueType: parsed.valueType,
+      extensions: parsed.extensions.map(Extension.fromPlain),
+      value: parsed.value,
       valueId: parsed.valueId ? Reference.fromPlain(parsed.valueId) : undefined,
     });
   }
 
   accept(visitor: IVisitor<any>): any {
-    return visitor.visitMultiLanguageProperty(this);
+    return visitor.visitProperty(this);
   }
 }
 
-registerSubmodel(KeyTypes.MultiLanguageProperty, MultiLanguageProperty);
+registerSubmodel(KeyTypes.Property, Property);

@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { AssetKindEnum } from "../asset-kind-enum";
-import { ResourceJsonSchema, SpecificAssetIdJsonSchema } from "./aas-json-schemas";
-import { nullishToOptional } from "./basic-json-schema";
+import { nullishToOptional } from "./common/basic-json-schema";
+import { ResourceJsonSchema } from "./resource-json-schema";
+import { SpecificAssetIdJsonSchema } from "./specific-asset-id-json-schema";
 
 export const AssetInformationJsonSchema = z.object({
   assetKind: AssetKindEnum,

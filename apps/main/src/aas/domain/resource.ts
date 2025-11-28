@@ -1,4 +1,4 @@
-import { ResourceJsonSchema } from "./parsing/aas-json-schemas";
+import { ResourceJsonSchema } from "./parsing/resource-json-schema";
 import { IVisitable, IVisitor } from "./visitor";
 
 export class Resource implements IVisitable<any> {

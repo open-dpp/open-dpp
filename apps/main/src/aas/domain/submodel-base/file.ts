@@ -4,14 +4,14 @@ import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { SubmodelElementCollectionJsonSchema } from "../parsing/aas-json-schemas";
+import { FileJsonSchema } from "../parsing/submodel-base/file-json-schema";
 import { IVisitor } from "../visitor";
-import { ISubmodelBase } from "./submodel";
-import { parseSubmodelBaseUnion, SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 import { registerSubmodel } from "./submodel-registry";
 
-export class SubmodelElementCollection extends SubmodelBase {
+export class File extends SubmodelBase {
   private constructor(
+    public readonly contentType: string,
     public readonly extensions: Array<Extension>,
     category: string | null = null,
     idShort: string | null = null,
@@ -19,18 +19,20 @@ export class SubmodelElementCollection extends SubmodelBase {
     description: Array<LanguageText>,
     semanticId: Reference | null = null,
     supplementalSemanticIds: Array<Reference>,
-    qualifiers: Qualifier[],
+    qualifiers: Array<Qualifier>,
     embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly value: Array<ISubmodelBase>,
+    public readonly value: string | null = null,
   ) {
     super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
   }
 
   static create(data: SubmodelBaseProps & {
+    contentType: string;
     extensions?: Array<Extension>;
-    value?: Array<ISubmodelBase>;
+    value?: string;
   }) {
-    return new SubmodelElementCollection(
+    return new File(
+      data.contentType,
       data.extensions ?? [],
       data.category ?? null,
       data.idShort ?? null,
@@ -40,26 +42,22 @@ export class SubmodelElementCollection extends SubmodelBase {
       data.supplementalSemanticIds ?? [],
       data.qualifiers ?? [],
       data.embeddedDataSpecifications ?? [],
-      data.value ?? [],
+      data.value ?? null,
     );
-  };
-
-  addSubmodelBase(submodelBase: ISubmodelBase) {
-    this.value.push(submodelBase);
   }
 
   static fromPlain(data: Record<string, unknown>): SubmodelBase {
-    const parsed = SubmodelElementCollectionJsonSchema.parse(data);
-    return SubmodelElementCollection.create({
+    const parsed = FileJsonSchema.parse(data);
+    return File.create({
       ...submodelBasePropsFromPlain(parsed),
-      extensions: parsed.extensions.map(Extension.fromPlain),
-      value: parsed.value.map(parseSubmodelBaseUnion),
+      contentType: parsed.contentType,
+      value: parsed.value,
     });
   }
 
   accept(visitor: IVisitor<any>): any {
-    return visitor.visitSubmodelElementCollection(this);
+    return visitor.visitFile(this);
   }
 }
 
-registerSubmodel(KeyTypes.SubmodelElementCollection, SubmodelElementCollection);
+registerSubmodel(KeyTypes.File, File);

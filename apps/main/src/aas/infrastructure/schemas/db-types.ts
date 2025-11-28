@@ -1,12 +1,11 @@
 import { z } from "zod";
-import {
-  EmbeddedDataSpecificationJsonSchema,
-  ExtensionJsonSchema,
-  SubmodelBaseUnionSchema,
-} from "../../domain/parsing/aas-json-schemas";
 import { AssetInformationJsonSchema } from "../../domain/parsing/asset-information-json-schema";
-import { QualifierJsonSchema } from "../../domain/parsing/qualifier-json-schema";
-import { ReferenceJsonSchema } from "../../domain/parsing/reference-json-schema";
+import { QualifierJsonSchema } from "../../domain/parsing/common/qualifier-json-schema";
+import { ReferenceJsonSchema } from "../../domain/parsing/common/reference-json-schema";
+import { EmbeddedDataSpecificationJsonSchema } from "../../domain/parsing/embedded-data-specification-json-schema";
+import { ExtensionJsonSchema } from "../../domain/parsing/extension-json-schema";
+
+import { SubmodelBaseUnionSchema } from "../../domain/parsing/submodel-base/submodel-base-union-schema";
 
 export type EmbeddedDataSpecificationDb = z.infer<typeof EmbeddedDataSpecificationJsonSchema>;
 export type QualifierDb = z.infer<typeof QualifierJsonSchema>;

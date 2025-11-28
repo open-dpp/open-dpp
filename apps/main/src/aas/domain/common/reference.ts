@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ReferenceJsonSchema } from "../parsing/reference-json-schema";
+import { ReferenceJsonSchema } from "../parsing/common/reference-json-schema";
 import { IVisitable, IVisitor } from "../visitor";
 import { Key } from "./key";
 

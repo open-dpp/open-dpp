@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DataTypeDef } from "../common/data-type-def";
+import { DataTypeDef } from "../../common/data-type-def";
 
 export function nullishToOptional<T extends z.ZodType>(schema: T) {
   return schema.nullish().transform(value => value === null ? undefined : value);

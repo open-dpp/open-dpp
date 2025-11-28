@@ -1,14 +1,12 @@
 import { z } from "zod";
-import {
-  AdministrativeInformationJsonSchema,
-  EmbeddedDataSpecificationJsonSchema,
-  ExtensionJsonSchema,
-  LanguageTextJsonSchema,
-  ResourceJsonSchema,
-} from "./aas-json-schemas";
+import { AdministrativeInformationJsonSchema } from "./administrative-information-json-schema";
 import { AssetInformationJsonSchema } from "./asset-information-json-schema";
-import { nullishToOptional } from "./basic-json-schema";
-import { ReferenceJsonSchema } from "./reference-json-schema";
+import { nullishToOptional } from "./common/basic-json-schema";
+import { LanguageTextJsonSchema } from "./common/language-text-json-schema";
+import { ReferenceJsonSchema } from "./common/reference-json-schema";
+import { EmbeddedDataSpecificationJsonSchema } from "./embedded-data-specification-json-schema";
+import { ExtensionJsonSchema } from "./extension-json-schema";
+import { ResourceJsonSchema } from "./resource-json-schema";
 
 export const AssetAdministrationShellJsonSchema = z.object({
   id: z.string(),

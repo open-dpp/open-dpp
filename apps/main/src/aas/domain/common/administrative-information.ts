@@ -1,4 +1,4 @@
-import { AdministrativeInformationJsonSchema } from "../parsing/aas-json-schemas";
+import { AdministrativeInformationJsonSchema } from "../parsing/administrative-information-json-schema";
 import { IVisitable, IVisitor } from "../visitor";
 
 export class AdministrativeInformation implements IVisitable<any> {

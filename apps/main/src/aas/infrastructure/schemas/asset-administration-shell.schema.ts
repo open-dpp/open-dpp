@@ -1,13 +1,10 @@
 import type { AssetInformationDb, EmbeddedDataSpecificationDb, ExtensionDb, ReferenceDb } from "./db-types";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Schema as MongooseSchema } from "mongoose";
-import {
-  EmbeddedDataSpecificationJsonSchema,
-  ExtensionJsonSchema,
-
-} from "../../domain/parsing/aas-json-schemas";
 import { AssetInformationJsonSchema } from "../../domain/parsing/asset-information-json-schema";
-import { ReferenceJsonSchema } from "../../domain/parsing/reference-json-schema";
+import { ReferenceJsonSchema } from "../../domain/parsing/common/reference-json-schema";
+import { EmbeddedDataSpecificationJsonSchema } from "../../domain/parsing/embedded-data-specification-json-schema";
+import { ExtensionJsonSchema } from "../../domain/parsing/extension-json-schema";
 import { AdministrativeInformationDoc, AdministrativeInformationSchema } from "./administration.information.schema";
 import { LanguageTextDoc, LanguageTextSchema } from "./language.text.schema";
 

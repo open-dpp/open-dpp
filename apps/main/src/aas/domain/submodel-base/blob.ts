@@ -4,20 +4,14 @@ import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { RelationshipElementJsonSchema } from "../parsing/aas-json-schemas";
+import { BlobJsonSchema } from "../parsing/submodel-base/blob-json-schema";
 import { IVisitor } from "../visitor";
 import { SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 import { registerSubmodel } from "./submodel-registry";
 
-export class IRelationshipElement {
-  first: Reference;
-  second: Reference;
-}
-
-export class RelationshipElement extends SubmodelBase implements IRelationshipElement {
-  constructor(
-    public readonly first: Reference,
-    public readonly second: Reference,
+export class Blob extends SubmodelBase {
+  private constructor(
+    public readonly contentType: string,
     public readonly extensions: Array<Extension>,
     category: string | null = null,
     idShort: string | null = null,
@@ -25,31 +19,20 @@ export class RelationshipElement extends SubmodelBase implements IRelationshipEl
     description: Array<LanguageText>,
     semanticId: Reference | null = null,
     supplementalSemanticIds: Array<Reference>,
-    qualifiers: Qualifier[],
+    qualifiers: Array<Qualifier>,
     embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
+    public readonly value: Uint8Array | null = null,
   ) {
-    super(
-      category,
-      idShort,
-      displayName,
-      description,
-      semanticId,
-      supplementalSemanticIds,
-      qualifiers,
-      embeddedDataSpecifications,
-    );
+    super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
   }
 
-  static create(
-    data: SubmodelBaseProps & {
-      first: Reference;
-      second: Reference;
-      extensions?: Array<Extension>;
-    },
-  ) {
-    return new RelationshipElement(
-      data.first,
-      data.second,
+  static create(data: SubmodelBaseProps & {
+    contentType: string;
+    extensions?: Array<Extension>;
+    value?: Uint8Array;
+  }) {
+    return new Blob(
+      data.contentType,
       data.extensions ?? [],
       data.category ?? null,
       data.idShort ?? null,
@@ -59,22 +42,22 @@ export class RelationshipElement extends SubmodelBase implements IRelationshipEl
       data.supplementalSemanticIds ?? [],
       data.qualifiers ?? [],
       data.embeddedDataSpecifications ?? [],
+      data.value ?? null,
     );
   }
 
   static fromPlain(data: Record<string, unknown>): SubmodelBase {
-    const parsed = RelationshipElementJsonSchema.parse(data);
-    return RelationshipElement.create({
+    const parsed = BlobJsonSchema.parse(data);
+    return Blob.create({
       ...submodelBasePropsFromPlain(parsed),
-      first: Reference.fromPlain(parsed.first),
-      second: Reference.fromPlain(parsed.second),
-      extensions: parsed.extensions.map(e => Extension.fromPlain(e)),
+      contentType: parsed.contentType,
+      value: parsed.value ? new Uint8Array(atob(parsed.value).split("").map(c => c.charCodeAt(0))) : undefined,
     });
   }
 
   accept(visitor: IVisitor<any>): any {
-    return visitor.visitRelationshipElement(this);
+    return visitor.visitBlob(this);
   }
 }
 
-registerSubmodel(KeyTypes.RelationshipElement, RelationshipElement);
+registerSubmodel(KeyTypes.Blob, Blob);

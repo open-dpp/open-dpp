@@ -10,9 +10,9 @@ import { EmailService } from "../../email/email.service";
 import { AdministrativeInformation } from "../domain/common/administrative-information";
 import { DataTypeDef } from "../domain/common/data-type-def";
 import { LanguageText } from "../domain/common/language-text";
-import { Entity, EntityType } from "../domain/submodelBase/entity";
-import { Property } from "../domain/submodelBase/property";
-import { Submodel } from "../domain/submodelBase/submodel";
+import { Entity, EntityType } from "../domain/submodel-base/entity";
+import { Property } from "../domain/submodel-base/property";
+import { Submodel } from "../domain/submodel-base/submodel";
 import { SubmodelDoc, SubmodelSchema } from "./schemas/submodel.schema";
 import { SubmodelService } from "./submodel.service";
 

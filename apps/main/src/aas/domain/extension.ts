@@ -1,6 +1,6 @@
 import { DataTypeDefType } from "./common/data-type-def";
 import { Reference } from "./common/reference";
-import { ExtensionJsonSchema } from "./parsing/aas-json-schemas";
+import { ExtensionJsonSchema } from "./parsing/extension-json-schema";
 import { IVisitable, IVisitor } from "./visitor";
 
 export class Extension implements IVisitable<any> {

@@ -4,13 +4,14 @@ import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { ReferenceElementJsonSchema } from "../parsing/aas-json-schemas";
+import { SubmodelElementCollectionJsonSchema } from "../parsing/submodel-base/submodel-element-collection-json-schema";
 import { IVisitor } from "../visitor";
-import { SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { ISubmodelBase } from "./submodel";
+import { parseSubmodelBaseUnion, SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 import { registerSubmodel } from "./submodel-registry";
 
-export class ReferenceElement extends SubmodelBase {
-  constructor(
+export class SubmodelElementCollection extends SubmodelBase {
+  private constructor(
     public readonly extensions: Array<Extension>,
     category: string | null = null,
     idShort: string | null = null,
@@ -18,20 +19,18 @@ export class ReferenceElement extends SubmodelBase {
     description: Array<LanguageText>,
     semanticId: Reference | null = null,
     supplementalSemanticIds: Array<Reference>,
-    qualifiers: Array<Qualifier>,
+    qualifiers: Qualifier[],
     embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly value: Reference | null = null,
+    public readonly value: Array<ISubmodelBase>,
   ) {
     super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
   }
 
-  static create(
-    data: SubmodelBaseProps & {
-      extensions?: Array<Extension>;
-      value?: Reference;
-    },
-  ) {
-    return new ReferenceElement(
+  static create(data: SubmodelBaseProps & {
+    extensions?: Array<Extension>;
+    value?: Array<ISubmodelBase>;
+  }) {
+    return new SubmodelElementCollection(
       data.extensions ?? [],
       data.category ?? null,
       data.idShort ?? null,
@@ -41,22 +40,26 @@ export class ReferenceElement extends SubmodelBase {
       data.supplementalSemanticIds ?? [],
       data.qualifiers ?? [],
       data.embeddedDataSpecifications ?? [],
-      data.value ?? null,
+      data.value ?? [],
     );
+  };
+
+  addSubmodelBase(submodelBase: ISubmodelBase) {
+    this.value.push(submodelBase);
   }
 
   static fromPlain(data: Record<string, unknown>): SubmodelBase {
-    const parsed = ReferenceElementJsonSchema.parse(data);
-    return ReferenceElement.create({
+    const parsed = SubmodelElementCollectionJsonSchema.parse(data);
+    return SubmodelElementCollection.create({
       ...submodelBasePropsFromPlain(parsed),
       extensions: parsed.extensions.map(Extension.fromPlain),
-      value: parsed.value ? Reference.fromPlain(parsed.value) : undefined,
+      value: parsed.value.map(parseSubmodelBaseUnion),
     });
   }
 
   accept(visitor: IVisitor<any>): any {
-    return visitor.visitReferenceElement(this);
+    return visitor.visitSubmodelElementCollection(this);
   }
 }
 
-registerSubmodel(KeyTypes.ReferenceElement, ReferenceElement);
+registerSubmodel(KeyTypes.SubmodelElementCollection, SubmodelElementCollection);

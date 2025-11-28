@@ -5,7 +5,7 @@ import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { SubmodelElementListJsonSchema } from "../parsing/aas-json-schemas";
+import { SubmodelElementListJsonSchema } from "../parsing/submodel-base/submodel-element-list-json-schema";
 import { IVisitor } from "../visitor";
 import { AasSubmodelElements } from "./aas-submodel-elements";
 import { ISubmodelBase } from "./submodel";

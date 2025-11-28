@@ -9,7 +9,7 @@ import { IReferable } from "../common/referable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { SubmodelJsonSchema } from "../parsing/aas-json-schemas";
+import { SubmodelJsonSchema } from "../parsing/submodel-base/submodel-json-schema";
 import { IVisitable, IVisitor } from "../visitor";
 import { parseSubmodelBaseUnion, SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 import { registerSubmodel } from "./submodel-registry";
