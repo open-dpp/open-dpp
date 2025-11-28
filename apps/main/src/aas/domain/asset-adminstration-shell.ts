@@ -6,10 +6,12 @@ import { LanguageText } from "./common/language-text";
 import { Reference } from "./common/reference";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
+import { IPersistable } from "./IPersistable";
 import { AssetAdministrationShellJsonSchema } from "./parsing/asset-administration-shell-json-schema";
+import { JsonVisitor } from "./parsing/json-visitor";
 import { IVisitable, IVisitor } from "./visitor";
 
-export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecification, IVisitable<any> {
+export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecification, IVisitable<any>, IPersistable {
   private constructor(
     public readonly id: string,
     public readonly assetInformation: AssetInformation,
@@ -77,5 +79,10 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
       embeddedDataSpecifications: parsed.embeddedDataSpecifications.map(EmbeddedDataSpecification.fromPlain),
       derivedFrom: parsed.derivedFrom ? Reference.fromPlain(parsed.derivedFrom) : undefined,
     });
+  }
+
+  toPlain(): Record<string, any> {
+    const jsonVisitor = new JsonVisitor();
+    return this.accept(jsonVisitor);
   }
 }

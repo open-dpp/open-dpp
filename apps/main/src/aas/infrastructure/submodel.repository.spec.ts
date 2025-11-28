@@ -14,10 +14,10 @@ import { Entity, EntityType } from "../domain/submodel-base/entity";
 import { Property } from "../domain/submodel-base/property";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { SubmodelDoc, SubmodelSchema } from "./schemas/submodel.schema";
-import { SubmodelService } from "./submodel.service";
+import { SubmodelRepository } from "./submodel.repository";
 
-describe("submodelService", () => {
-  let submodelService: SubmodelService;
+describe("submodelRepository", () => {
+  let submodelRepository: SubmodelRepository;
   let module: TestingModule;
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -38,13 +38,13 @@ describe("submodelService", () => {
         ]),
       ],
       providers: [
-        SubmodelService,
+        SubmodelRepository,
       ],
     }).overrideProvider(EmailService).useValue({
       send: jest.fn(),
     }).compile();
 
-    submodelService = module.get<SubmodelService>(SubmodelService);
+    submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);
   });
 
   it("should save a submodel", async () => {
@@ -92,8 +92,8 @@ describe("submodelService", () => {
         entity,
       ],
     });
-    await submodelService.save(submodel);
-    const foundSubmodel = await submodelService.findOneOrFail(submodel.id);
+    await submodelRepository.save(submodel);
+    const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
     expect(foundSubmodel).toEqual(submodel);
   });
 

@@ -5,10 +5,12 @@ import { LanguageText } from "./common/language-text";
 import { Reference } from "./common/reference";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
+import { IPersistable } from "./IPersistable";
 import { ConceptDescriptionJsonSchema } from "./parsing/concept-description-json-schema";
+import { JsonVisitor } from "./parsing/json-visitor";
 import { IVisitable, IVisitor } from "./visitor";
 
-export class ConceptDescription implements IIdentifiable, IHasDataSpecification, IVisitable<any> {
+export class ConceptDescription implements IIdentifiable, IHasDataSpecification, IVisitable<any>, IPersistable {
   private constructor(
     public readonly id: string,
     public readonly extensions: Array<Extension>,
@@ -68,5 +70,10 @@ export class ConceptDescription implements IIdentifiable, IHasDataSpecification,
       administration: parsed.administration ? AdministrativeInformation.fromPlain(parsed.administration) : undefined,
       embeddedDataSpecifications: parsed.embeddedDataSpecifications.map(EmbeddedDataSpecification.fromPlain),
     });
+  }
+
+  toPlain(): Record<string, any> {
+    const jsonVisitor = new JsonVisitor();
+    return this.accept(jsonVisitor);
   }
 }

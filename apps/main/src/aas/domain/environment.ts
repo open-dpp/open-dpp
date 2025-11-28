@@ -1,20 +1,20 @@
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
-import { ConceptDescription } from "./concept-description";
+import { EnvironmentJsonSchema } from "./parsing/environment-json-schema";
 import { Submodel } from "./submodel-base/submodel";
 
 export class Environment {
   private constructor(
-    public readonly assetAdministrationShells: Array<AssetAdministrationShell>,
-    public readonly submodels: Array<Submodel>,
-    public readonly conceptDescriptions: Array<ConceptDescription>,
+    public readonly assetAdministrationShells: Array<string>,
+    public readonly submodels: Array<string>,
+    public readonly conceptDescriptions: Array<string>,
   ) {
 
   }
 
   static create(data: {
-    assetAdministrationShells?: Array<AssetAdministrationShell>;
-    submodels?: Array<Submodel>;
-    conceptDescriptions?: Array<ConceptDescription>;
+    assetAdministrationShells?: Array<string>;
+    submodels?: Array<string>;
+    conceptDescriptions?: Array<string>;
   }): Environment {
     return new Environment(
       data.assetAdministrationShells ?? [],
@@ -23,11 +23,28 @@ export class Environment {
     );
   }
 
+  static fromPlain(data: Record<string, unknown>): Environment {
+    const parsed = EnvironmentJsonSchema.parse(data);
+    return Environment.create({
+      assetAdministrationShells: parsed.assetAdministrationShells,
+      submodels: parsed.submodels,
+      conceptDescriptions: parsed.conceptDescriptions,
+    });
+  }
+
   addAssetAdministrationShell(assetAdministrationShell: AssetAdministrationShell) {
-    this.assetAdministrationShells.push(assetAdministrationShell);
+    this.assetAdministrationShells.push(assetAdministrationShell.id);
   }
 
   addSubmodel(submodel: Submodel) {
-    this.submodels.push(submodel);
+    this.submodels.push(submodel.id);
+  }
+
+  toPlain() {
+    return {
+      assetAdministrationShells: this.assetAdministrationShells,
+      submodels: this.submodels,
+      conceptDescriptions: this.conceptDescriptions,
+    };
   }
 }

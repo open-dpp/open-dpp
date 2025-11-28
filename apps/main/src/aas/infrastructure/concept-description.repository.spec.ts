@@ -7,17 +7,13 @@ import { EnvModule, EnvService } from "@open-dpp/env";
 
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
-import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
-import { AssetInformation } from "../domain/asset-information";
-import { AssetKind } from "../domain/asset-kind-enum";
-import { AasService } from "./aas.service";
-import {
-  AssetAdministrationShellDoc,
-  AssetAdministrationShellSchema,
-} from "./schemas/asset-administration-shell.schema";
 
-describe("aasService", () => {
-  let aasService: AasService;
+import { ConceptDescription } from "../domain/concept-description";
+import { ConceptDescriptionRepository } from "./concept-description.repository";
+import { ConceptDescriptionDoc, ConceptDescriptionSchema } from "./schemas/concept-description.schema";
+
+describe("conceptDescriptionRepository", () => {
+  let conceptDescriptionRepository: ConceptDescriptionRepository;
   let module: TestingModule;
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -32,31 +28,28 @@ describe("aasService", () => {
         }),
         MongooseModule.forFeature([
           {
-            name: AssetAdministrationShellDoc.name,
-            schema: AssetAdministrationShellSchema,
+            name: ConceptDescriptionDoc.name,
+            schema: ConceptDescriptionSchema,
           },
         ]),
       ],
       providers: [
-        AasService,
+        ConceptDescriptionRepository,
       ],
     }).overrideProvider(EmailService).useValue({
       send: jest.fn(),
     }).compile();
 
-    aasService = module.get<AasService>(AasService);
+    conceptDescriptionRepository = module.get<ConceptDescriptionRepository>(ConceptDescriptionRepository);
   });
 
-  it("should save a aas", async () => {
-    const aas = AssetAdministrationShell.create({
+  it("should save a concept description", async () => {
+    const conceptDescription = ConceptDescription.create({
       id: randomUUID(),
-      assetInformation: AssetInformation.create({
-        assetKind: AssetKind.Instance,
-      }),
     });
-    await aasService.save(aas);
-    const foundAas = await aasService.findOneOrFail(aas.id);
-    expect(foundAas).toEqual(aas);
+    await conceptDescriptionRepository.save(conceptDescription);
+    const foundAas = await conceptDescriptionRepository.findOneOrFail(conceptDescription.id);
+    expect(foundAas).toEqual(conceptDescription);
   });
 
   afterAll(async () => {

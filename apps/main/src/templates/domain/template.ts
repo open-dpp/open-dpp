@@ -287,6 +287,6 @@ export class Template {
       }
       submodels.push(submodel);
     }
-    return Environment.create({ assetAdministrationShells: [aas], submodels });
+    return Environment.create({ assetAdministrationShells: [aas.id], submodels: submodels.map(s => s.id) });
   }
 }

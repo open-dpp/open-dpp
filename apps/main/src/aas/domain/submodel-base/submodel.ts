@@ -9,6 +9,8 @@ import { IReferable } from "../common/referable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
+import { IPersistable } from "../IPersistable";
+import { JsonVisitor } from "../parsing/json-visitor";
 import { SubmodelJsonSchema } from "../parsing/submodel-base/submodel-json-schema";
 import { IVisitable, IVisitor } from "../visitor";
 import { parseSubmodelBaseUnion, SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
@@ -23,7 +25,7 @@ export interface ISubmodelBase
   // Intentionally empty.
 }
 
-export class Submodel extends SubmodelBase {
+export class Submodel extends SubmodelBase implements IPersistable {
   private constructor(
     public readonly id: string,
     public readonly extensions: Array<Extension>,
@@ -86,6 +88,11 @@ export class Submodel extends SubmodelBase {
 
   accept(visitor: IVisitor<any>): any {
     return visitor.visitSubmodel(this);
+  }
+
+  toPlain(): Record<string, any> {
+    const jsonVisitor = new JsonVisitor();
+    return this.accept(jsonVisitor);
   }
 }
 

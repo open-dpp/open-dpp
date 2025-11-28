@@ -7,13 +7,17 @@ import { EnvModule, EnvService } from "@open-dpp/env";
 
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
+import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
+import { AssetInformation } from "../domain/asset-information";
+import { AssetKind } from "../domain/asset-kind-enum";
+import { AasRepository } from "./aas.repository";
+import {
+  AssetAdministrationShellDoc,
+  AssetAdministrationShellSchema,
+} from "./schemas/asset-administration-shell.schema";
 
-import { ConceptDescription } from "../domain/concept-description";
-import { ConceptDescriptionService } from "./concept-description.service";
-import { ConceptDescriptionDoc, ConceptDescriptionSchema } from "./schemas/concept-description.schema";
-
-describe("conceptDescriptionService", () => {
-  let conceptDescriptionService: ConceptDescriptionService;
+describe("aasRepository", () => {
+  let aasRepository: AasRepository;
   let module: TestingModule;
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -28,28 +32,31 @@ describe("conceptDescriptionService", () => {
         }),
         MongooseModule.forFeature([
           {
-            name: ConceptDescriptionDoc.name,
-            schema: ConceptDescriptionSchema,
+            name: AssetAdministrationShellDoc.name,
+            schema: AssetAdministrationShellSchema,
           },
         ]),
       ],
       providers: [
-        ConceptDescriptionService,
+        AasRepository,
       ],
     }).overrideProvider(EmailService).useValue({
       send: jest.fn(),
     }).compile();
 
-    conceptDescriptionService = module.get<ConceptDescriptionService>(ConceptDescriptionService);
+    aasRepository = module.get<AasRepository>(AasRepository);
   });
 
-  it("should save a concept description", async () => {
-    const conceptDescription = ConceptDescription.create({
+  it("should save a aas", async () => {
+    const aas = AssetAdministrationShell.create({
       id: randomUUID(),
+      assetInformation: AssetInformation.create({
+        assetKind: AssetKind.Instance,
+      }),
     });
-    await conceptDescriptionService.save(conceptDescription);
-    const foundAas = await conceptDescriptionService.findOneOrFail(conceptDescription.id);
-    expect(foundAas).toEqual(conceptDescription);
+    await aasRepository.save(aas);
+    const foundAas = await aasRepository.findOneOrFail(aas.id);
+    expect(foundAas).toEqual(aas);
   });
 
   afterAll(async () => {
