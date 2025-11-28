@@ -14,23 +14,23 @@ import {
 } from "./administration.information.schema";
 import { LanguageTextDoc, LanguageTextSchema } from "./language.text.schema";
 
-export enum SubmodelDocSchemaVersion {
-  v1_0_0 = "1.0.0",
-}
+export const SubmodelDocSchemaVersion = {
+  v1_0_0: "1.0.0",
+} as const;
+type SubmodelDocSchemaVersionType = (typeof SubmodelDocSchemaVersion)[keyof typeof SubmodelDocSchemaVersion];
 
-@Schema({ _id: false, collection: "submodels" })
+@Schema({ collection: "submodels" })
 export class SubmodelDoc extends Document {
+  @Prop({ type: String })
+  declare _id: string;
+
   @Prop({
     default: SubmodelDocSchemaVersion.v1_0_0,
     enum: Object.values(SubmodelDocSchemaVersion),
     type: String,
   }) // Track schema version
-  _schemaVersion: SubmodelDocSchemaVersion;
+  _schemaVersion: SubmodelDocSchemaVersionType;
 
-  @Prop({ required: true })
-  _id: string;
-
-  // -----
   @Prop({ type: String, cast: false })
   category?: string;
 

@@ -7,14 +7,14 @@ import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import { SubmodelElementListJsonSchema } from "../parsing/submodel-base/submodel-element-list-json-schema";
 import { IVisitor } from "../visitor";
-import { AasSubmodelElements } from "./aas-submodel-elements";
+import { AasSubmodelElementsType } from "./aas-submodel-elements";
 import { ISubmodelBase } from "./submodel";
 import { parseSubmodelBaseUnion, SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 import { registerSubmodel } from "./submodel-registry";
 
 export class SubmodelElementList extends SubmodelBase {
   private constructor(
-    public readonly typeValueListElement: AasSubmodelElements,
+    public readonly typeValueListElement: AasSubmodelElementsType,
     public readonly extensions: Array<Extension>,
     category: string | null = null,
     idShort: string | null = null,
@@ -33,7 +33,7 @@ export class SubmodelElementList extends SubmodelBase {
   }
 
   static create(data: SubmodelBaseProps & {
-    typeValueListElement: AasSubmodelElements;
+    typeValueListElement: AasSubmodelElementsType;
     extensions?: Array<Extension>;
     orderRelevant?: boolean;
     semanticIdListElement?: Reference;

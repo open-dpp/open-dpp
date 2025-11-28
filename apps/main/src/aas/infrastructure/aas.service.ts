@@ -37,11 +37,11 @@ export class AasService {
       });
     }
     const dbVisitor = new DbVisitor();
-    const plainSubmodel = assetAdminstrationShell.accept(dbVisitor);
+    const plainAas = assetAdminstrationShell.accept(dbVisitor);
     // 3. Modify fields — casting and validation occur on save()
     doc.set({
       _schemaVersion: SubmodelDocSchemaVersion.v1_0_0,
-      ...plainSubmodel,
+      ...plainAas,
     });
     return this.convertToDomain(await doc.save({ validateBeforeSave: true }));
   }

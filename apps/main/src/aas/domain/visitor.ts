@@ -5,6 +5,7 @@ import { Key } from "./common/key";
 import { LanguageText } from "./common/language-text";
 import { Qualifier } from "./common/qualififiable";
 import { Reference } from "./common/reference";
+import { ConceptDescription } from "./concept-description";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
 import { Resource } from "./resource";
@@ -46,6 +47,7 @@ export interface IVisitor<R> {
   visitAssetAdministrationShell: (element: AssetAdministrationShell) => R;
   visitAssetInformation: (element: AssetInformation) => R;
   visitResource: (element: Resource) => R;
+  visitConceptDescription: (element: ConceptDescription) => R;
 }
 
 export interface IVisitable<R> {

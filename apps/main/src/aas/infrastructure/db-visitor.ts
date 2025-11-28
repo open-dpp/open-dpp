@@ -7,6 +7,7 @@ import { KeyTypes } from "../domain/common/key-types-enum";
 import { LanguageText } from "../domain/common/language-text";
 import { Qualifier } from "../domain/common/qualififiable";
 import { Reference } from "../domain/common/reference";
+import { ConceptDescription } from "../domain/concept-description";
 import { EmbeddedDataSpecification } from "../domain/embedded-data-specification";
 import { Extension } from "../domain/extension";
 import { Resource } from "../domain/resource";
@@ -270,6 +271,21 @@ export class DbVisitor implements IVisitor<any> {
     return {
       path: element.path,
       contentType: element.contentType,
+    };
+  }
+
+  visitConceptDescription(element: ConceptDescription): any {
+    return {
+      id: element.id,
+      extensions: element.extensions.map(e => e.accept(this)),
+      category: element.category,
+      idShort: element.idShort,
+      displayName: element.displayName.map(lt => lt.accept(this)),
+      description: element.description.map(lt => lt.accept(this)),
+      semanticId: element.semanticId?.accept(this),
+      administration: element.administration?.accept(this),
+      embeddedDataSpecifications: element.embeddedDataSpecifications.map(e => e.accept(this)),
+      isCaseOf: element.isCaseOf.map(s => s.accept(this)),
     };
   }
 }

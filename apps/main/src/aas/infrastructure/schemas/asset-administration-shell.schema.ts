@@ -8,21 +8,21 @@ import { ExtensionJsonSchema } from "../../domain/parsing/extension-json-schema"
 import { AdministrativeInformationDoc, AdministrativeInformationSchema } from "./administration.information.schema";
 import { LanguageTextDoc, LanguageTextSchema } from "./language.text.schema";
 
-export enum AssetAdministrationShellDocSchemaVersion {
-  v1_0_0 = "1.0.0",
-}
-
-@Schema({ _id: false })
+export const AssetAdministrationShellDocSchemaVersion = {
+  v1_0_0: "1.0.0",
+} as const;
+type AssetAdministrationShellDocSchemaVersionType = (typeof AssetAdministrationShellDocSchemaVersion)[keyof typeof AssetAdministrationShellDocSchemaVersion];
+@Schema()
 export class AssetAdministrationShellDoc extends Document {
-  @Prop()
-  _id: string;
+  @Prop({ type: String })
+  declare _id: string;
 
   @Prop({
     default: AssetAdministrationShellDocSchemaVersion.v1_0_0,
     enum: Object.values(AssetAdministrationShellDocSchemaVersion),
     type: String,
   }) // Track schema version
-  _schemaVersion: AssetAdministrationShellDocSchemaVersion;
+  _schemaVersion: AssetAdministrationShellDocSchemaVersionType;
 
   @Prop({ type: MongooseSchema.Types.Mixed, validate: (value: any) => AssetInformationJsonSchema.parse(value), required: true })
   assetInformation: AssetInformationDb;
