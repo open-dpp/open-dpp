@@ -99,7 +99,7 @@ export class ProductPassport {
     public readonly mediaReferences: string[],
     public readonly dataSections: DataSection[],
     public readonly organizationName: string,
-    public readonly organizationImage: string,
+    public readonly organizationImage?: string,
   ) {
     this.id = id;
     this.name = name;
@@ -115,7 +115,7 @@ export class ProductPassport {
     item?: Item;
     uniqueProductIdentifier: UniqueProductIdentifier;
     organizationName: string;
-    organizationImage: string;
+    organizationImage?: string;
   }) {
     if (!data.model.description) {
       // throw new ValueError("Model does not have a description. Please add one.");
