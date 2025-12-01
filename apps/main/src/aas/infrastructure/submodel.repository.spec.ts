@@ -1,12 +1,11 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
-import { expect, jest } from "@jest/globals";
+import { expect } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 
 import { generateMongoConfig } from "../../database/config";
-import { EmailService } from "../../email/email.service";
 import { AdministrativeInformation } from "../domain/common/administrative-information";
 import { DataTypeDef } from "../domain/common/data-type-def";
 import { LanguageText } from "../domain/common/language-text";
@@ -40,8 +39,6 @@ describe("submodelRepository", () => {
       providers: [
         SubmodelRepository,
       ],
-    }).overrideProvider(EmailService).useValue({
-      send: jest.fn(),
     }).compile();
 
     submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);

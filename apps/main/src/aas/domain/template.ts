@@ -1,9 +1,9 @@
 import { IDigitalProductPassportIdentifiable } from "./digital-product-passport-identifiable";
 import { Environment } from "./environment";
 import { IPersistable } from "./IPersistable";
-import { PassportJsonSchema } from "./parsing/passport-json-schema";
+import { TemplateJsonSchema } from "./parsing/passport-json-schema";
 
-export class Passport implements IPersistable, IDigitalProductPassportIdentifiable {
+export class Template implements IPersistable, IDigitalProductPassportIdentifiable {
   private constructor(
     public readonly id: string,
     public readonly organizationId: string,
@@ -16,7 +16,7 @@ export class Passport implements IPersistable, IDigitalProductPassportIdentifiab
     organizationId: string;
     environment: Environment;
   }) {
-    return new Passport(
+    return new Template(
       data.id,
       data.organizationId,
       data.environment,
@@ -24,8 +24,8 @@ export class Passport implements IPersistable, IDigitalProductPassportIdentifiab
   }
 
   static fromPlain(data: Record<string, unknown>) {
-    const parsed = PassportJsonSchema.parse(data);
-    return Passport.create({
+    const parsed = TemplateJsonSchema.parse(data);
+    return Template.create({
       id: parsed.id,
       organizationId: parsed.organizationId,
       environment: Environment.fromPlain(parsed.environment),

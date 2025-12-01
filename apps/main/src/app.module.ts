@@ -5,6 +5,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { AasModule } from "./aas/aas.module";
 import { AiConfigurationModule } from "./ai/ai-configuration/ai-configuration.module";
 import { AiModule } from "./ai/ai.module";
 import { ChatGateway } from "./ai/presentation/chat.gateway";
@@ -38,6 +39,7 @@ import { UsersModule } from "./users/users.module";
     }),
     TemplateDraftModule,
     TemplateModule,
+    AasModule,
     ItemsModule,
     ModelsModule,
     OrganizationsModule,

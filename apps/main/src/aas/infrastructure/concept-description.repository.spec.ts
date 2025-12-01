@@ -1,12 +1,10 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
-import { jest } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 
 import { generateMongoConfig } from "../../database/config";
-import { EmailService } from "../../email/email.service";
 
 import { ConceptDescription } from "../domain/concept-description";
 import { ConceptDescriptionRepository } from "./concept-description.repository";
@@ -36,8 +34,6 @@ describe("conceptDescriptionRepository", () => {
       providers: [
         ConceptDescriptionRepository,
       ],
-    }).overrideProvider(EmailService).useValue({
-      send: jest.fn(),
     }).compile();
 
     conceptDescriptionRepository = module.get<ConceptDescriptionRepository>(ConceptDescriptionRepository);
