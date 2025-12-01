@@ -59,7 +59,7 @@ async function save() {
 
   if (selectedFile.value) {
     try {
-      imageUrl = await mediaStore.uploadMedia(indexStore.selectedOrganization, selectedFile.value);
+      imageUrl = await mediaStore.uploadOrganizationProfileMedia(indexStore.selectedOrganization, selectedFile.value);
     }
     catch (e) {
       console.error("Failed to upload image", e);
