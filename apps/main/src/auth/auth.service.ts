@@ -146,7 +146,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       orgObjectId = new ObjectId(organizationId);
     }
     catch {
-      // ignore invalid ObjectId; we'll still try string match in invitation lookup
+      // ignore invalid ObjectId; return null if organizationId is not a valid ObjectId
     }
     // Fetch organization to return its name
     if (!orgObjectId) {

@@ -39,6 +39,7 @@ export const useProductPassportStore = defineStore("productPassport", () => {
     }
     if (organizationImage.value) {
       revokeObjectUrl(organizationImage.value.url);
+      organizationImage.value = undefined;
     }
     mediaFiles.value = [];
   };
@@ -65,18 +66,20 @@ export const useProductPassportStore = defineStore("productPassport", () => {
           errorHandlingStore.logErrorWithNotification(t("presentation.loadPassportMediaError"), error);
         }
       }
-      try {
-        const mediaResult = await mediaStore.fetchMedia(productPassport.value?.organizationImage);
-        if (mediaResult && mediaResult.blob) {
-          organizationImage.value = {
-            blob: mediaResult.blob,
-            mediaInfo: mediaResult.mediaInfo,
-            url: createObjectUrl(mediaResult.blob),
-          };
+      if (productPassport.value?.organizationImage) {
+        try {
+          const mediaResult = await mediaStore.fetchMedia(productPassport.value.organizationImage);
+          if (mediaResult && mediaResult.blob) {
+            organizationImage.value = {
+              blob: mediaResult.blob,
+              mediaInfo: mediaResult.mediaInfo,
+              url: createObjectUrl(mediaResult.blob),
+            };
+          }
         }
-      }
-      catch (error) {
-        errorHandlingStore.logErrorWithNotification(t("presentation.loadPassportMediaError"), error);
+        catch (error) {
+          errorHandlingStore.logErrorWithNotification(t("presentation.loadPassportMediaError"), error);
+        }
       }
     }
   };

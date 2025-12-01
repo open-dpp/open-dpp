@@ -252,7 +252,8 @@
       },
       "name": {
         "help": "Geben Sie Ihrer Organisation einen Namen",
-        "label": "Name der Organisation"
+        "label": "Name der Organisation",
+        "error": "Bitte geben Sie einen Namen ein."
       }
     },
     "invitation": {

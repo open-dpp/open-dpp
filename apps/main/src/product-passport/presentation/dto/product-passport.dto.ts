@@ -15,8 +15,8 @@ const ProductPassportDtoSchema = z.object({
   description: z.string().optional(),
   mediaReferences: z.string().array(),
   dataSections: DataSectionDtoSchema.array(),
-  organizationName: z.string(),
-  organizationImage: z.string(),
+  organizationName: z.string().optional(),
+  organizationImage: z.string().optional(),
 });
 
 export type ProductPassportDto = z.infer<typeof ProductPassportDtoSchema>;
