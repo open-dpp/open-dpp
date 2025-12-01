@@ -113,6 +113,8 @@ describe("passportFormStore", () => {
           subSections: [],
         },
       ],
+      organizationName: "Org A",
+      organizationImage: "orga-a-image",
     };
 
     let result = passportFormStore.getFormData("s1", { field1: 8 });
@@ -207,6 +209,8 @@ describe("passportFormStore", () => {
     description: "Handy desc",
     mediaReferences: [],
     dataSections: [section1, section11, section111],
+    organizationName: "Org A",
+    organizationImage: "orga-a-image",
   };
 
   const model = {
@@ -244,6 +248,8 @@ describe("passportFormStore", () => {
       description: "1.0.0",
       mediaReferences: [],
       dataSections: [section1Group],
+      organizationName: "Org A",
+      organizationImage: "orga-a-image",
     };
 
     const model = {
@@ -322,6 +328,8 @@ describe("passportFormStore", () => {
       description: "Handy Desc",
       mediaReferences: [],
       dataSections: [section1Group],
+      organizationName: "Org A",
+      organizationImage: "orga-a-image",
     };
 
     const modelId = "mid";

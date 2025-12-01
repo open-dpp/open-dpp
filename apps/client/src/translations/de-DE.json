@@ -246,9 +246,13 @@
       "createdBy": "Erstellt von",
       "administeredBy": "Administriert von",
       "description": "Beschreibung",
+      "image": {
+        "label": "Bild für das Profil der Organisation",
+        "help": "Lade ein Bild für die Organisation hoch"
+      },
       "name": {
         "help": "Geben Sie Ihrer Organisation einen Namen",
-        "label": "Name"
+        "label": "Name der Organisation"
       }
     },
     "invitation": {
@@ -268,6 +272,9 @@
     "organizationInvitations": {
       "title": "Einladungen",
       "description": "Einladungen zu dieser Organisation"
+    },
+    "settings": {
+      "title": "Organisation anpassen"
     }
   },
   "marketplace": {

@@ -74,7 +74,7 @@ export const ORGANIZATION_SETTINGS: RouteRecordRaw = {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = [
       {
-        name: localizedBreadcrumb("organizations.settings"),
+        name: localizedBreadcrumb("organizations.settings.title"),
         route: ORGANIZATION_SETTINGS,
         params: to.params,
       },

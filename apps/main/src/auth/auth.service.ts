@@ -136,6 +136,33 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     return (organization as any).name ?? null;
   }
 
+  async getOrganizationDataForPermalink(organizationId: string): Promise<{ name: string; image: string } | null> {
+    if (!this.db)
+      return null;
+
+    // Validate organizationId and prepare ObjectId if possible
+    let orgObjectId: ObjectId | null = null;
+    try {
+      orgObjectId = new ObjectId(organizationId);
+    }
+    catch {
+      // ignore invalid ObjectId; we'll still try string match in invitation lookup
+    }
+    // Fetch organization to return its name
+    if (!orgObjectId) {
+      // If we couldn't parse a valid ObjectId for the organization, we cannot fetch the org document reliably
+      return null;
+    }
+
+    const organization = await this.db.collection("organization").findOne({ _id: orgObjectId });
+    if (!organization)
+      return null;
+    return {
+      name: organization.name ?? "",
+      image: organization.image ?? "",
+    };
+  }
+
   async onModuleInit() {
     this.db = this.mongooseConnection.db;
     const mongoClient = this.mongooseConnection.getClient();

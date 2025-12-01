@@ -15,6 +15,8 @@ const ProductPassportDtoSchema = z.object({
   description: z.string().optional(),
   mediaReferences: z.string().array(),
   dataSections: DataSectionDtoSchema.array(),
+  organizationName: z.string(),
+  organizationImage: z.string(),
 });
 
 export type ProductPassportDto = z.infer<typeof ProductPassportDtoSchema>;
@@ -31,5 +33,7 @@ export function productPassportToDto(
       ...sectionToDto(dataSection),
       dataValues: dataSection.dataValues,
     })),
+    organizationName: productPassport.organizationName,
+    organizationImage: productPassport.organizationImage,
   });
 }

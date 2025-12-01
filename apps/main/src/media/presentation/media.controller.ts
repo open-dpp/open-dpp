@@ -17,7 +17,7 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import { memoryStorage } from "multer";
 import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
 import { Session } from "../../auth/session.decorator";
-import { MediaService } from "../infrastructure/media.service";
+import { BucketDefaultPaths, MediaService } from "../infrastructure/media.service";
 import { VirusScanFileValidator } from "./virus-scan.file-validator";
 
 @Controller("media")
@@ -207,6 +207,44 @@ export class MediaController {
       file.buffer,
       session.user.id,
       orgId,
+    );
+    return {
+      mediaId: media.id,
+    };
+  }
+
+  @Post("organization-profile/:orgId")
+  @UseInterceptors(
+    FileInterceptor("file", {
+      storage: memoryStorage(),
+    }),
+  )
+  async uploadOrganizationProfile(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: 15 * 1024 * 1024 /* max 15MB */,
+          }),
+          new FileTypeValidator({
+            fileType: /(image\/(jpeg|jpg|png|heic|webp))$/,
+          }),
+          new VirusScanFileValidator({ storageType: "memory" }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+    @Param("orgId") orgId: string,
+    @Session() session: UserSession,
+  ): Promise<{
+    mediaId: string;
+  }> {
+    const media = await this.filesService.uploadMedia(
+      file.originalname,
+      file.buffer,
+      session.user.id,
+      orgId,
+      [BucketDefaultPaths.ORGANIZATION_PROFILE_PICTURES],
     );
     return {
       mediaId: media.id,

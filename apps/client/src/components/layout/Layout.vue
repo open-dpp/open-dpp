@@ -84,7 +84,7 @@ const unfilteredNavigation = computed<Array<MenuItemInterface>>(() => [
     show: () => indexStore.selectedOrganization !== null,
   },
   {
-    name: t("organizations.settings"),
+    name: t("organizations.settings.title"),
     to: `/organizations/${indexStore.selectedOrganization}/settings`,
     icon: Cog6ToothIcon,
     show: () => indexStore.selectedOrganization !== null,

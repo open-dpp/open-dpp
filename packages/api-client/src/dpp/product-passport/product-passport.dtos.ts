@@ -10,4 +10,6 @@ export interface ProductPassportDto {
   description: string
   mediaReferences: string[]
   dataSections: DataSectionDto[]
+  organizationName: string
+  organizationImage: string
 }
