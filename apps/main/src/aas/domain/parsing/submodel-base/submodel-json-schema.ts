@@ -10,7 +10,7 @@ export const SubmodelJsonSchema = z.object({
   ...SubmodelBaseJsonSchema.shape,
   id: z.string(),
   extensions: ExtensionJsonSchema.array().default([]),
-  administration: AdministrativeInformationJsonSchema,
+  administration: nullishToOptional(AdministrativeInformationJsonSchema),
   kind: nullishToOptional(z.enum(ModellingKind)),
   submodelElements: SubmodelBaseUnionSchema.array().default([]),
 });

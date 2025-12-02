@@ -1,6 +1,6 @@
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { Document, Model as MongooseModel } from "mongoose";
-import { IPersistable } from "../domain/IPersistable";
+import { IPersistable } from "../domain/persistable";
 
 export async function convertToDomain<T>(
   mongoDoc: Document,

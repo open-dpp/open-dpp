@@ -1,4 +1,3 @@
-import { KeyTypes } from "../common/key-types-enum";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -7,7 +6,6 @@ import { Extension } from "../extension";
 import { ReferenceElementJsonSchema } from "../parsing/submodel-base/reference-element-json-schema";
 import { IVisitor } from "../visitor";
 import { SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
-import { registerSubmodel } from "./submodel-registry";
 
 export class ReferenceElement extends SubmodelBase {
   constructor(
@@ -58,5 +56,3 @@ export class ReferenceElement extends SubmodelBase {
     return visitor.visitReferenceElement(this);
   }
 }
-
-registerSubmodel(KeyTypes.ReferenceElement, ReferenceElement);

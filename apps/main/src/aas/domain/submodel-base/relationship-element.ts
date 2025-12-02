@@ -1,4 +1,3 @@
-import { KeyTypes } from "../common/key-types-enum";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -7,7 +6,6 @@ import { Extension } from "../extension";
 import { RelationshipElementJsonSchema } from "../parsing/submodel-base/relationship-element-json-schema";
 import { IVisitor } from "../visitor";
 import { SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
-import { registerSubmodel } from "./submodel-registry";
 
 export class IRelationshipElement {
   first: Reference;
@@ -76,5 +74,3 @@ export class RelationshipElement extends SubmodelBase implements IRelationshipEl
     return visitor.visitRelationshipElement(this);
   }
 }
-
-registerSubmodel(KeyTypes.RelationshipElement, RelationshipElement);

@@ -1,4 +1,3 @@
-import { KeyTypes } from "../common/key-types-enum";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -9,7 +8,6 @@ import { IVisitor } from "../visitor";
 import { IRelationshipElement } from "./relationship-element";
 import { ISubmodelBase } from "./submodel";
 import { parseSubmodelBaseUnion, SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
-import { registerSubmodel } from "./submodel-registry";
 
 export class AnnotatedRelationshipElement extends SubmodelBase implements IRelationshipElement {
   protected constructor(
@@ -75,5 +73,3 @@ export class AnnotatedRelationshipElement extends SubmodelBase implements IRelat
     return visitor.visitAnnotatedRelationshipElement(this);
   }
 }
-
-registerSubmodel(KeyTypes.AnnotatedRelationshipElement, AnnotatedRelationshipElement);

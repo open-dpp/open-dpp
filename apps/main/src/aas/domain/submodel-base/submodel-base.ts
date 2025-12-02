@@ -23,7 +23,7 @@ export abstract class SubmodelBase implements ISubmodelBase {
   ) {
   }
 
-  static fromPlain(data: Record<string, unknown>): SubmodelBase {
+  static fromPlain(_: Record<string, unknown>): SubmodelBase {
     throw new NotSupportedError("Method not implemented.");
   }
 

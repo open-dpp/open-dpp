@@ -1,4 +1,3 @@
-import { KeyTypes } from "../common/key-types-enum";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -7,7 +6,6 @@ import { Extension } from "../extension";
 import { FileJsonSchema } from "../parsing/submodel-base/file-json-schema";
 import { IVisitor } from "../visitor";
 import { SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
-import { registerSubmodel } from "./submodel-registry";
 
 export class File extends SubmodelBase {
   private constructor(
@@ -59,5 +57,3 @@ export class File extends SubmodelBase {
     return visitor.visitFile(this);
   }
 }
-
-registerSubmodel(KeyTypes.File, File);

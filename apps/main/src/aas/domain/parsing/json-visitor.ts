@@ -109,7 +109,7 @@ export class JsonVisitor implements IVisitor<any> {
       modelType: KeyTypes.Submodel,
       id: element.id,
       extensions: element.extensions.map(e => e.accept(this)),
-      administration: element.administration.accept(this),
+      administration: element.administration?.accept(this),
       kind: element.kind,
       submodelElements: element.submodelElements.map(e => e.accept(this)),
     };

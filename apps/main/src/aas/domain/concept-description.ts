@@ -5,9 +5,9 @@ import { LanguageText } from "./common/language-text";
 import { Reference } from "./common/reference";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
-import { IPersistable } from "./IPersistable";
 import { ConceptDescriptionJsonSchema } from "./parsing/concept-description-json-schema";
 import { JsonVisitor } from "./parsing/json-visitor";
+import { IPersistable } from "./persistable";
 import { IVisitable, IVisitor } from "./visitor";
 
 export class ConceptDescription implements IIdentifiable, IHasDataSpecification, IVisitable<any>, IPersistable {

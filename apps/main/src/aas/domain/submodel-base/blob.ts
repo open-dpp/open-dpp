@@ -1,4 +1,3 @@
-import { KeyTypes } from "../common/key-types-enum";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -7,7 +6,6 @@ import { Extension } from "../extension";
 import { BlobJsonSchema } from "../parsing/submodel-base/blob-json-schema";
 import { IVisitor } from "../visitor";
 import { SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
-import { registerSubmodel } from "./submodel-registry";
 
 export class Blob extends SubmodelBase {
   private constructor(
@@ -59,5 +57,3 @@ export class Blob extends SubmodelBase {
     return visitor.visitBlob(this);
   }
 }
-
-registerSubmodel(KeyTypes.Blob, Blob);

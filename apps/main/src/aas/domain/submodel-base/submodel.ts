@@ -2,19 +2,17 @@ import { AdministrativeInformation } from "../common/administrative-information"
 import { IHasDataSpecification } from "../common/has-data-specification";
 import { ModellingKind } from "../common/has-kind";
 import { IHasSemantics } from "../common/has-semantics";
-import { KeyTypes } from "../common/key-types-enum";
 import { LanguageText } from "../common/language-text";
 import { IQualifiable, Qualifier } from "../common/qualififiable";
 import { IReferable } from "../common/referable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { IPersistable } from "../IPersistable";
 import { JsonVisitor } from "../parsing/json-visitor";
 import { SubmodelJsonSchema } from "../parsing/submodel-base/submodel-json-schema";
+import { IPersistable } from "../persistable";
 import { IVisitable, IVisitor } from "../visitor";
 import { parseSubmodelBaseUnion, SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
-import { registerSubmodel } from "./submodel-registry";
 
 export interface ISubmodelBase
   extends IReferable,
@@ -33,7 +31,7 @@ export class Submodel extends SubmodelBase implements IPersistable {
     idShort: string | null,
     displayName: Array<LanguageText>,
     description: Array<LanguageText>,
-    public readonly administration: AdministrativeInformation,
+    public readonly administration: AdministrativeInformation | null,
     public readonly kind: ModellingKind | null,
     semanticId: Reference | null,
     supplementalSemanticIds: Array<Reference>,
@@ -48,7 +46,7 @@ export class Submodel extends SubmodelBase implements IPersistable {
     data: SubmodelBaseProps & {
       id: string;
       extensions?: Array<Extension>;
-      administration: AdministrativeInformation;
+      administration?: AdministrativeInformation;
       kind?: ModellingKind;
       submodelElements?: Array<ISubmodelBase>;
     },
@@ -60,7 +58,7 @@ export class Submodel extends SubmodelBase implements IPersistable {
       data.idShort ?? null,
       data.displayName ?? [],
       data.description ?? [],
-      data.administration,
+      data.administration ?? null,
       data.kind ?? null,
       data.semanticId ?? null,
       data.supplementalSemanticIds ?? [],
@@ -75,7 +73,7 @@ export class Submodel extends SubmodelBase implements IPersistable {
     return Submodel.create({
       ...submodelBasePropsFromPlain(parsed),
       id: parsed.id,
-      administration: AdministrativeInformation.fromPlain(parsed.administration),
+      administration: parsed.administration ? AdministrativeInformation.fromPlain(parsed.administration) : undefined,
       kind: parsed.kind,
       extensions: parsed.extensions.map(x => Extension.fromPlain(x)),
       submodelElements: parsed.submodelElements.map(parseSubmodelBaseUnion),
@@ -95,5 +93,3 @@ export class Submodel extends SubmodelBase implements IPersistable {
     return this.accept(jsonVisitor);
   }
 }
-
-registerSubmodel(KeyTypes.Submodel, Submodel);

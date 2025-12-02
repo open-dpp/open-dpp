@@ -12,6 +12,7 @@ import { LanguageText } from "../domain/common/language-text";
 import { Entity, EntityType } from "../domain/submodel-base/entity";
 import { Property } from "../domain/submodel-base/property";
 import { Submodel } from "../domain/submodel-base/submodel";
+import { SubmodelRegistryInitializer } from "../presentation/submodel-registry-initializer";
 import { SubmodelDoc, SubmodelSchema } from "./schemas/submodel.schema";
 import { SubmodelRepository } from "./submodel.repository";
 
@@ -37,10 +38,11 @@ describe("submodelRepository", () => {
         ]),
       ],
       providers: [
+        SubmodelRegistryInitializer,
         SubmodelRepository,
       ],
     }).compile();
-
+    await module.init();
     submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);
   });
 

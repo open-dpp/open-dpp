@@ -1,5 +1,4 @@
 import { DataTypeDefType } from "../common/data-type-def";
-import { KeyTypes } from "../common/key-types-enum";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -8,7 +7,6 @@ import { Extension } from "../extension";
 import { PropertyJsonSchema } from "../parsing/submodel-base/property-json-schema";
 import { IVisitor } from "../visitor";
 import { SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
-import { registerSubmodel } from "./submodel-registry";
 
 export class Property extends SubmodelBase {
   private constructor(
@@ -65,5 +63,3 @@ export class Property extends SubmodelBase {
     return visitor.visitProperty(this);
   }
 }
-
-registerSubmodel(KeyTypes.Property, Property);

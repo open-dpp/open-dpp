@@ -1,4 +1,3 @@
-import { KeyTypes } from "../common/key-types-enum";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -9,7 +8,6 @@ import { SpecificAssetId } from "../specific-asset-id";
 import { IVisitor } from "../visitor";
 import { ISubmodelBase } from "./submodel";
 import { parseSubmodelBaseUnion, SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
-import { registerSubmodel } from "./submodel-registry";
 
 export enum EntityType {
   CoManagedEntity = "CoManagedEntity",
@@ -74,5 +72,3 @@ export class Entity extends SubmodelBase {
     return visitor.visitEntity(this);
   }
 }
-
-registerSubmodel(KeyTypes.Entity, Entity);

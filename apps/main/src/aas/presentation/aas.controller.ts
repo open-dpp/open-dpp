@@ -1,14 +1,16 @@
 import { Get, Param } from "@nestjs/common";
-import {
-  IDigitalProductPassportIdentifiableRepository,
-} from "../infrastructure/digital-product-passport-identifiable.repository";
+
+import { Pagination } from "../domain/pagination";
+import { PagingResult } from "../domain/paging-result";
+import { EnvironmentService } from "./environment.service";
 
 export class AasController {
-  constructor(public dppIdentifiableRepository: IDigitalProductPassportIdentifiableRepository) {}
+  constructor(private readonly environmentService: EnvironmentService) {}
 
-  @Get("/:id/submodels")
-  async getSubmodels(@Param("orgaId") organizationId: string, @Param("id") id: string): Promise<any> {
-    console.log(organizationId, id);
-    const dppIdentifiable = await this.dppIdentifiableRepository.findOneOrFail(id);
+  @Get("/:id/shells")
+  async getShells(@Param("orgaId") organizationId: string, @Param("id") id: string): Promise<any> {
+    const pagination = Pagination.create({ limit: 1 });
+    const shells = await this.environmentService.getAasShells(organizationId, id, pagination);
+    return PagingResult.create({ pagination, items: shells }).toPlain();
   }
 }

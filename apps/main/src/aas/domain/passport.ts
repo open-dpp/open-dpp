@@ -1,7 +1,7 @@
 import { IDigitalProductPassportIdentifiable } from "./digital-product-passport-identifiable";
 import { Environment } from "./environment";
-import { IPersistable } from "./IPersistable";
 import { PassportJsonSchema } from "./parsing/passport-json-schema";
+import { IPersistable } from "./persistable";
 
 export class Passport implements IPersistable, IDigitalProductPassportIdentifiable {
   private constructor(

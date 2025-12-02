@@ -1,4 +1,3 @@
-import { KeyTypes } from "../common/key-types-enum";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -7,7 +6,6 @@ import { Extension } from "../extension";
 import { MultiLanguagePropertyJsonSchema } from "../parsing/submodel-base/multi-language-property-json-schema";
 import { IVisitor } from "../visitor";
 import { SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
-import { registerSubmodel } from "./submodel-registry";
 
 export class MultiLanguageProperty extends SubmodelBase {
   private constructor(
@@ -69,5 +67,3 @@ export class MultiLanguageProperty extends SubmodelBase {
     return visitor.visitMultiLanguageProperty(this);
   }
 }
-
-registerSubmodel(KeyTypes.MultiLanguageProperty, MultiLanguageProperty);
