@@ -28,9 +28,9 @@
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
-    "@nestjs/common": "^11.1.6",
+    "@nestjs/common": "^11.1.9",
     "@nestjs/config": "^4.0.2",
-    "@nestjs/core": "^11.1.6",
+    "@nestjs/core": "^11.1.9",
     "zod": "^4.1.12"
   },
   "devDependencies": {

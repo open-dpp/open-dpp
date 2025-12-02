@@ -8,7 +8,7 @@
   "packageManager": "pnpm@10.19.0",
   "devDependencies": {
     "@dotenvx/dotenvx": "^1.51.0",
-    "turbo": "^2.5.8"
+    "turbo": "^2.6.1"
   },
   "scripts": {
     "lint": "turbo lint",
