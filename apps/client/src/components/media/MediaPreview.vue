@@ -39,11 +39,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div>
+  <div class="relative w-full h-full">
     <div v-if="loading" class="mx-auto my-auto">
       <RingLoader />
     </div>
-    <Image v-else-if="url && media.mimeType.startsWith('image/')" :src="url" :alt="url" :preview="props.preview" width="150px" />
+    <Image v-else-if="url && media.mimeType.startsWith('image/')" class="max-h-48 max-w-48 object-contain" image-class="max-h-48 max-w-48 object-contain" :src="url" :alt="url" :preview="props.preview" />
     <div v-else class="w-full h-full flex items-center justify-center">
       <PhotoIcon v-if="media.mimeType.startsWith('image/')" class="w-12 h-12" />
       <VideoCameraIcon

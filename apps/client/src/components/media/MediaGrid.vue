@@ -44,13 +44,14 @@ onMounted(async () => {
 <template>
   <div>
     <div class="overflow-y-auto p-3">
-      <ul class="flex flex-wrap gap-x-4 gap-y-8" role="list">
+      <ul class="flex flex-wrap gap-x-4 gap-y-8 h-[50vh]" role="list">
         <li v-for="media in page" :key="media.id" class="relative">
           <MediaListItem
             :data-cy="`select-media-${media.id}`"
             :is-selected="selected.some((f) => f.id === media.id)"
             :media="media"
             :selectable="selectable"
+            class="p-8"
             @on-select="onSelect"
           />
         </li>

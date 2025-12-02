@@ -9,6 +9,7 @@ import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 import { authClient } from "../../auth-client.ts";
+import MediaInput from "../../components/media/MediaInput.vue";
 import MediaPreview from "../../components/media/MediaPreview.vue";
 import { useIndexStore } from "../../stores";
 import { useMediaStore } from "../../stores/media";
@@ -24,6 +25,7 @@ const currentMedia = ref<MediaInfo | null>(null);
 const submitted = ref(false);
 const selectedFile = ref<File | null>(null);
 const fileUploadKey = ref(0);
+const openFileModal = ref<boolean>(false);
 
 async function fetchOrganization() {
   const { data } = await authClient.organization.getFullOrganization();
@@ -116,6 +118,7 @@ onMounted(() => {
 
             <div class="flex flex-col gap-2">
               <div class="flex items-center gap-2">
+                <MediaInput id="abc" :label="t('organizations.form.image.label')" :value="currentMedia" />
                 <FileUpload
                   :key="fileUploadKey"
                   mode="basic"
