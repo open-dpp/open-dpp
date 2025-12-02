@@ -9,7 +9,7 @@ import { ExtensionJsonSchema } from "./extension-json-schema";
 import { ResourceJsonSchema } from "./resource-json-schema";
 
 export const AssetAdministrationShellJsonSchema = z.object({
-  id: z.string(),
+  id: z.string().meta({ description: "Id of the AAS" }),
   assetInformation: AssetInformationJsonSchema,
   extensions: ExtensionJsonSchema.array().default([]),
   category: nullishToOptional(z.string()),

@@ -7,10 +7,15 @@ import { AasRepository } from "../infrastructure/aas.repository";
 import {
   IDigitalProductPassportIdentifiableRepository,
 } from "../infrastructure/digital-product-passport-identifiable.repository";
+import { PassportRepository } from "../infrastructure/passport.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 
 export class EnvironmentService {
   constructor(private readonly dppIdentifiableRepository: IDigitalProductPassportIdentifiableRepository, private readonly aasRepository: AasRepository, private readonly submodelRepository: SubmodelRepository) {
+  }
+
+  public environmentWrapperClass() {
+    return this.dppIdentifiableRepository instanceof PassportRepository ? "passport" : "template";
   }
 
   private async loadEnvironmentOrFail(organizationId: string, environmentId: string): Promise<Environment> {

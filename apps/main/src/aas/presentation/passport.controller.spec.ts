@@ -26,6 +26,7 @@ import {
 import { PassportDoc, PassportSchema } from "../infrastructure/schemas/passport.schema";
 import { SubmodelDoc, SubmodelSchema } from "../infrastructure/schemas/submodel.schema";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
+import { AssetAdministrationShellResponseDtoSchema } from "./dto/asset-administration-shell.dto";
 import { PassportController } from "./passport.controller";
 
 describe("passportController", () => {
@@ -630,7 +631,7 @@ describe("passportController", () => {
       .send();
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toEqual(aas.id);
-    expect(response.body.result).toEqual([aas.toPlain()]);
+    expect(response.body.result).toEqual(AssetAdministrationShellResponseDtoSchema.shape.result.parse([aas.toPlain()]));
   });
 
   afterAll(async () => {

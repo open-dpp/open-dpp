@@ -1,5 +1,6 @@
 import type { INestApplication } from "@nestjs/common";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { cleanupOpenApiDoc } from "nestjs-zod";
 import { AasModule } from "../aas/aas.module";
 import { ItemsModule } from "../items/items.module";
 import { ModelsModule } from "../models/models.module";
@@ -22,8 +23,8 @@ export function buildOpenApiDocumentation(app: INestApplication) {
     .addSecurityRequirements("api_token")
     .build();
   const documentFactory = () =>
-    SwaggerModule.createDocument(app, config, {
+    cleanupOpenApiDoc(SwaggerModule.createDocument(app, config, {
       include: [ItemsModule, ModelsModule, TemplateModule, AasModule],
-    });
+    }));
   SwaggerModule.setup("api", app, documentFactory);
 }
