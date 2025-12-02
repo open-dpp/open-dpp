@@ -261,7 +261,7 @@ onUnmounted(() => {
         </div>
         <div v-else-if="uploadedMedia" class="max-w-full flex flex-col gap-4">
           <div class="flex flex-row gap-4 w-full justify-between">
-            <MediaPreview :media="uploadedMedia" class="grow" />
+            <MediaPreview :media="uploadedMedia" class="grow h-48" />
             <button
               class="shrink bg-[#6BAD87]/50 rounded-sm p-2 hover:cursor-pointer my-auto"
               @click.prevent="openFileModal = true"

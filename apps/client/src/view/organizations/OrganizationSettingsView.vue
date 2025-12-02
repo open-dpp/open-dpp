@@ -1,8 +1,6 @@
 <script lang="ts" setup>
-import type { FileUploadSelectEvent } from "primevue/fileupload";
-import type { MediaInfo } from "../../components/media/MediaInfo.interface";
+import type { MediaResult } from "../../components/media/MediaInfo.interface";
 import Button from "primevue/button";
-import FileUpload from "primevue/fileupload";
 import InputText from "primevue/inputtext";
 import { onMounted, ref } from "vue";
 
@@ -10,7 +8,6 @@ import { useI18n } from "vue-i18n";
 
 import { authClient } from "../../auth-client.ts";
 import MediaInput from "../../components/media/MediaInput.vue";
-import MediaPreview from "../../components/media/MediaPreview.vue";
 import { useIndexStore } from "../../stores";
 import { useMediaStore } from "../../stores/media";
 import { useOrganizationsStore } from "../../stores/organizations";
@@ -21,11 +18,10 @@ const mediaStore = useMediaStore();
 const indexStore = useIndexStore();
 
 const name = ref("");
-const currentMedia = ref<MediaInfo | null>(null);
+const currentMedia = ref<MediaResult | null>(null);
 const submitted = ref(false);
 const selectedFile = ref<File | null>(null);
 const fileUploadKey = ref(0);
-const openFileModal = ref<boolean>(false);
 
 async function fetchOrganization() {
   const { data } = await authClient.organization.getFullOrganization();
@@ -33,19 +29,19 @@ async function fetchOrganization() {
     name.value = data.name;
     const imageId = (data as any).image;
     if (imageId) {
-      try {
-        currentMedia.value = await mediaStore.getMediaInfo(imageId);
-      }
-      catch (e) {
-        console.error("Failed to fetch media info", e);
-      }
+      await fetchMedia(imageId);
     }
   }
 }
 
-function onFileSelect(event: FileUploadSelectEvent) {
-  if (event.files && event.files.length > 0) {
-    selectedFile.value = event.files[0];
+async function fetchMedia(mediaId: string | null) {
+  if (mediaId) {
+    try {
+      currentMedia.value = await mediaStore.fetchMedia(mediaId);
+    }
+    catch (e) {
+      console.error("Failed to fetch media info", e);
+    }
   }
 }
 
@@ -57,23 +53,26 @@ async function save() {
   if (!indexStore.selectedOrganization)
     return;
 
-  let imageUrl;
+  let image;
 
   if (selectedFile.value) {
     try {
-      imageUrl = await mediaStore.uploadOrganizationProfileMedia(indexStore.selectedOrganization, selectedFile.value);
+      image = await mediaStore.uploadOrganizationProfileMedia(indexStore.selectedOrganization, selectedFile.value);
     }
     catch (e) {
       console.error("Failed to upload image", e);
       // Handle error
     }
   }
+  if (currentMedia.value && currentMedia.value.mediaInfo.id) {
+    image = currentMedia.value.mediaInfo.id;
+  }
 
   await authClient.organization.update({
     organizationId: indexStore.selectedOrganization,
     data: {
       name: name.value,
-      ...(imageUrl ? { image: imageUrl } : {}),
+      ...(image ? { image } : {}),
     },
   });
 
@@ -105,30 +104,13 @@ onMounted(() => {
               <small v-if="submitted && !name" class="text-red-500">{{ t('organizations.form.name.error') }}</small>
             </div>
 
-            <div v-if="currentMedia" class="mb-4">
-              <div class="block text-sm font-medium leading-6 text-gray-900 mb-2">
-                {{ t('organizations.form.image.label') }}
-              </div>
-              <MediaPreview
-                :key="currentMedia.id"
-                :media="currentMedia"
-                :preview="false"
-              />
-            </div>
-
             <div class="flex flex-col gap-2">
               <div class="flex items-center gap-2">
-                <MediaInput id="abc" :label="t('organizations.form.image.label')" :value="currentMedia" />
-                <FileUpload
-                  :key="fileUploadKey"
-                  mode="basic"
-                  name="image"
-                  accept="image/*"
-                  :max-file-size="1000000"
-                  :choose-label="t('common.select')"
-                  auto
-                  custom-upload
-                  @select="onFileSelect"
+                <MediaInput
+                  id="abc"
+                  :label="t('organizations.form.image.label')"
+                  :value="currentMedia"
+                  @update-by-id="(id) => fetchMedia(id)"
                 />
                 <span v-if="selectedFile" class="text-sm text-gray-600">{{ selectedFile.name }}</span>
               </div>

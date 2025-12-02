@@ -44,6 +44,9 @@ const { t } = useI18n();
             <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
               {{ productPassport.organizationName }}
             </dd>
+            <dt class="text-sm font-medium text-gray-900">
+              {{ t("organizations.form.image.shortLabel") }}
+            </dt>
             <dd v-if="productPassportStore.organizationImage" class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
               <Image :src="productPassportStore.organizationImage.url" alt="Organization Image" width="100%" image-class="max-h-[250px]" preview />
             </dd>

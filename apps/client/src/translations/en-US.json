@@ -248,7 +248,8 @@
       "description": "Description",
       "image": {
         "label": "Image for organization profile",
-        "help": "Upload an image for the organization"
+        "help": "Upload an image for the organization",
+        "shortLabel": "Logo"
       },
       "name": {
         "help": "Give your organization a name",

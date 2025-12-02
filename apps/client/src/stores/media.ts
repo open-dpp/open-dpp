@@ -1,4 +1,4 @@
-import type { MediaInfo } from "../components/media/MediaInfo.interface";
+import type { MediaInfo, MediaResult } from "../components/media/MediaInfo.interface";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { MEDIA_SERVICE_URL } from "../const";
@@ -182,7 +182,7 @@ export const useMediaStore = defineStore("media", () => {
 
   const fetchMedia = async (
     id: string,
-  ): Promise<{ blob: Blob | null; mediaInfo: MediaInfo }> => {
+  ): Promise<MediaResult> => {
     const [info, blob] = await Promise.all([
       getMediaInfo(id),
       downloadMedia(id),

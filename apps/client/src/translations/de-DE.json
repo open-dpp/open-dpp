@@ -248,7 +248,8 @@
       "description": "Beschreibung",
       "image": {
         "label": "Bild für das Profil der Organisation",
-        "help": "Lade ein Bild für die Organisation hoch"
+        "help": "Lade ein Bild für die Organisation hoch",
+        "shortLabel": "Logo"
       },
       "name": {
         "help": "Geben Sie Ihrer Organisation einen Namen",
