@@ -9,9 +9,12 @@ import {
 } from "./infrastructure/schemas/asset-administration-shell.schema";
 import { PassportDoc, PassportSchema } from "./infrastructure/schemas/passport.schema";
 import { SubmodelDoc, SubmodelSchema } from "./infrastructure/schemas/submodel.schema";
+import { TemplateDoc, TemplateSchema } from "./infrastructure/schemas/template.schema";
 import { SubmodelRepository } from "./infrastructure/submodel.repository";
+import { TemplateRepository } from "./infrastructure/template.repository";
 import { PassportController } from "./presentation/passport.controller";
 import { SubmodelRegistryInitializer } from "./presentation/submodel-registry-initializer";
+import { TemplateController } from "./presentation/template.controller";
 
 @Module({
   imports: [
@@ -22,11 +25,12 @@ import { SubmodelRegistryInitializer } from "./presentation/submodel-registry-in
         name: PassportDoc.name,
         schema: PassportSchema,
       },
+      { name: TemplateDoc.name, schema: TemplateSchema },
     ]),
     OrganizationsModule,
   ],
-  controllers: [PassportController],
-  providers: [SubmodelRegistryInitializer, PassportRepository, AasRepository, SubmodelRepository],
-  exports: [PassportRepository, AasRepository, SubmodelRepository],
+  controllers: [PassportController, TemplateController],
+  providers: [SubmodelRegistryInitializer, PassportRepository, TemplateRepository, AasRepository, SubmodelRepository],
+  exports: [PassportRepository, TemplateRepository, AasRepository, SubmodelRepository],
 })
 export class AasModule {}
