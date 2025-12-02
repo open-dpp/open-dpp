@@ -207,7 +207,7 @@ importers:
     dependencies:
       '@keycloak/keycloak-admin-client':
         specifier: ^26.4.2
-        version: 26.4.2
+        version: 26.4.7
       '@langchain/core':
         specifier: ^0.3.78
         version: 0.3.79(openai@5.12.2(ws@8.18.3)(zod@4.1.12))
@@ -2066,8 +2066,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
 
-  '@keycloak/keycloak-admin-client@26.4.2':
-    resolution: {integrity: sha512-BDZuV+s9XoYSElHmG/Ul6r/uHzbExRSC3jybBR9CHZ9JDad1PcVwpSVSBTqiJhF7P1OtMm1gnLLS1TMO/QY+8Q==}
+  '@keycloak/keycloak-admin-client@26.4.7':
+    resolution: {integrity: sha512-6AqwZjWuWBzM0nPVggWDV4Oep+CO8ATfNEvVhXgC1dH7PkBCl/4hCRj9ZFHnX1OtQJ+zozD6LQ1giwArcAU6qQ==}
     engines: {node: '>=18'}
 
   '@kurkle/color@0.3.4':
@@ -8776,10 +8776,6 @@ packages:
     resolution: {integrity: sha512-Am1ousAhSLBeB9cG/7k7r2R0zj50uDRlZHPGbazid5s9rlF1F/QKYObEKSIunSjIOkJZqwRRLpvewjEkM7pSqg==}
     deprecated: Please see https://github.com/lydell/urix#deprecated
 
-  url-join@5.0.0:
-    resolution: {integrity: sha512-n2huDr9h9yzd6exQVnH/jU5mr+Pfx08LRXXZhkLLetAMESRj+anQsTAh940iMrIetKAmry9coFuZQ2jY8/p3WA==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
-
   url-template@3.1.1:
     resolution: {integrity: sha512-4oszoaEKE/mQOtAmdMWqIRHmkxWkUZMnXFnjQ5i01CuRSK3uluxcH1MRVVVWmhlnzT1SCDfKxxficm2G37qzCA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
@@ -10813,10 +10809,9 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@keycloak/keycloak-admin-client@26.4.2':
+  '@keycloak/keycloak-admin-client@26.4.7':
     dependencies:
       camelize-ts: 3.0.0
-      url-join: 5.0.0
       url-template: 3.1.1
 
   '@kurkle/color@0.3.4': {}
@@ -18669,8 +18664,6 @@ snapshots:
       punycode: 2.3.1
 
   urix@0.1.0: {}
-
-  url-join@5.0.0: {}
 
   url-template@3.1.1: {}
 
