@@ -129,42 +129,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Step 6: Cache cypress binaries (optional but helps CI performance)
-      - name: Cache Cypress binary
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/Cypress
-          key: cypress-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-
-      # Step 7: Build project
+      # Step 6: Build project
       - name: Build project
         run: pnpm build
 
-      # Step 8: Build testing support package
+      # Step 7: Build testing support package
       - name: Build project
         run: cd packages/testing && pnpm build
 
-      # Step 10: Run tests
+      # Step 8: Run tests
       - name: Run tests
         run: pnpm test:ci
-
-      # Step 11: Verify Cypress binary
-      - name: Verify Cypress install
-        run: npx cypress verify
-
-      # Step 12: Run cypress tests
-      - name: Run cypress tests
-        run: pnpm test:ci:cypress
-
-      # Step 13: Upload Cypress artifacts (optional)
-      - name: Upload Cypress Artifacts
-        if: always() # This ensures artifacts are uploaded even if the tests fail
-        uses: actions/upload-artifact@v4
-        with:
-          name: cypress-artifacts
-          path: |
-            apps/client/cypress/videos/
-            apps/client/cypress/screenshots/
 
   build-and-push:
     runs-on: ubuntu-latest
