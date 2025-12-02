@@ -92,12 +92,6 @@ jobs:
       OPEN_DPP_AUTH_CLOUD_CLIENT_ID: ""
       OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET: ""
       OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL: ""
-      # Migrate from keycloak
-      OPEN_DPP_MIGRATE_KEYCLOAK_ENABLED: "false"
-      OPEN_DPP_MIGRATE_KEYCLOAK_BASEURL: ""
-      OPEN_DPP_MIGRATE_KEYCLOAK_REALM: ""
-      OPEN_DPP_MIGRATE_KEYCLOAK_CLIENTID: ""
-      OPEN_DPP_MIGRATE_KEYCLOAK_CLIENTSECRET: ""
       # Frontend
       VITE_API_ROOT: "http://localhost"
 
@@ -152,8 +146,6 @@ jobs:
         uses: dorny/paths-filter@v3
         with:
           filters: |
-            keycloak:
-              - 'apps/keycloak/**'
             mcp:
               - 'apps/mcp/**'
               - 'packages/**'
