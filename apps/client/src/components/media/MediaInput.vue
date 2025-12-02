@@ -129,7 +129,6 @@ async function loadFile(mediaResult: MediaResult | null) {
 
     if (mediaResult && mediaResult.blob) {
       uploadedFileUrl.value = URL.createObjectURL(mediaResult.blob);
-      console.log("Set new");
     }
   }
   catch (error) {
