@@ -22,7 +22,6 @@
     "check-ts": "tsc --noEmit"
   },
   "dependencies": {
-    "@keycloak/keycloak-admin-client": "^26.4.2",
     "@langchain/core": "^0.3.78",
     "@langchain/langgraph": "^0.4.9",
     "@langchain/mcp-adapters": "^0.6.0",

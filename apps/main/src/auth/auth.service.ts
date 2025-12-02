@@ -182,8 +182,6 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       plugins.push(genericOAuthPlugin as any);
     }
 
-    const migrationEnabled = !!this.configService.get("OPEN_DPP_MIGRATE_KEYCLOAK_ENABLED");
-
     this.auth = betterAuth({
       baseURL: this.configService.get("OPEN_DPP_URL"),
       basePath: "/api/auth",
@@ -223,7 +221,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         },
       },
       emailVerification: {
-        sendOnSignUp: !migrationEnabled,
+        sendOnSignUp: true,
         sendVerificationEmail: async ({ user, url }: { user: User; url: string; token: string }) => {
           const firstName = (user as any).firstName ?? "User";
           await this.emailService.send(VerifyEmailMail.create({
