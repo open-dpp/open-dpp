@@ -53,12 +53,7 @@ const isImage = computed(() => {
   return selectedLocalFile.value.type.startsWith("image/");
 });
 
-const fileUrl = computed(() => {
-  if (!selectedLocalFile.value) {
-    return null;
-  }
-  return URL.createObjectURL(selectedLocalFile.value);
-});
+const fileUrl = ref<string | null>(null);
 
 const selectedFileSizeKB = computed(() => {
   const size = selectedLocalFile.value?.size;
@@ -226,6 +221,15 @@ watch(() => props.value, async (newValue) => {
 }, { deep: true });
 
 watch(selectedLocalFile, (newFile) => {
+  if (fileUrl.value) {
+    URL.revokeObjectURL(fileUrl.value);
+  }
+  if (newFile) {
+    fileUrl.value = URL.createObjectURL(newFile);
+  }
+  else {
+    fileUrl.value = null;
+  }
   emits("selectFile", newFile);
 });
 </script>
