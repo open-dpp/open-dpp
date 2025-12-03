@@ -2,7 +2,7 @@
 import type { MediaResult } from "../../components/media/MediaInfo.interface";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 import { useI18n } from "vue-i18n";
 
@@ -24,6 +24,8 @@ const currentMedia = ref<MediaResult | null>(null);
 const submitted = ref(false);
 const selectedFile = ref<File | null>(null);
 const fileUploadKey = ref(0);
+
+const mediaInputId = computed(() => `organization-image-${indexStore.selectedOrganization}`);
 
 async function fetchOrganization() {
   const { data } = await authClient.organization.getFullOrganization();
@@ -116,7 +118,7 @@ onMounted(() => {
             <div class="flex flex-col gap-2">
               <div class="flex items-center gap-2">
                 <MediaInput
-                  id="abc"
+                  :id="mediaInputId"
                   context="organization"
                   :label="t('organizations.form.image.label')"
                   :value="currentMedia"
