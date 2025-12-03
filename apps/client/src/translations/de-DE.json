@@ -255,7 +255,8 @@
         "help": "Geben Sie Ihrer Organisation einen Namen",
         "label": "Name der Organisation",
         "error": "Bitte geben Sie einen Namen ein."
-      }
+      },
+      "updateError": "Fehler beim Aktualisieren der Organisation."
     },
     "invitation": {
       "name": "Name",

@@ -9,6 +9,7 @@ import { useI18n } from "vue-i18n";
 import { authClient } from "../../auth-client.ts";
 import MediaInput from "../../components/media/MediaInput.vue";
 import { useIndexStore } from "../../stores";
+import { useErrorHandlingStore } from "../../stores/error.handling";
 import { useMediaStore } from "../../stores/media";
 import { useOrganizationsStore } from "../../stores/organizations";
 
@@ -16,6 +17,7 @@ const { t } = useI18n();
 const organizationStore = useOrganizationsStore();
 const mediaStore = useMediaStore();
 const indexStore = useIndexStore();
+const errorHandlingStore = useErrorHandlingStore();
 
 const name = ref("");
 const currentMedia = ref<MediaResult | null>(null);
@@ -69,20 +71,26 @@ async function save() {
     }
   }
 
-  await authClient.organization.update({
-    organizationId: indexStore.selectedOrganization,
-    data: {
-      name: name.value,
-      ...(image ? { image } : {}),
-    },
-  });
+  try {
+    await authClient.organization.update({
+      organizationId: indexStore.selectedOrganization,
+      data: {
+        name: name.value,
+        ...(image ? { image } : {}),
+      },
+    });
 
-  await fetchOrganization();
-  await organizationStore.fetchOrganizations();
-
-  selectedFile.value = null;
-  fileUploadKey.value++;
-  submitted.value = false;
+    await fetchOrganization();
+    await organizationStore.fetchOrganizations();
+  }
+  catch (e) {
+    errorHandlingStore.logErrorWithNotification(t("organizations.form.updateError"), e);
+  }
+  finally {
+    selectedFile.value = null;
+    fileUploadKey.value++;
+    submitted.value = false;
+  }
 }
 
 onMounted(() => {

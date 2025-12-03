@@ -255,7 +255,8 @@
         "help": "Give your organization a name",
         "label": "Name of organization",
         "error": "Please enter a name."
-      }
+      },
+      "updateError": "Failed to update organization."
     },
     "invitation": {
       "name": "Name",
