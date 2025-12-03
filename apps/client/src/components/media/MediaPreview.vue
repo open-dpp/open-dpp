@@ -21,7 +21,7 @@ const { t } = useI18n();
 const mediaStore = useMediaStore();
 
 const url = ref<string | null>(null);
-const loading = ref<boolean>(false);
+const loading = ref<boolean>(true);
 
 async function loadMedia(media: MediaInfo) {
   loading.value = true;
@@ -57,7 +57,7 @@ watch(() => props.media, async (newValue) => {
       class="w-full h-full flex items-center justify-center"
       image-class="max-w-full max-h-full object-contain"
       :src="url"
-      :alt="url"
+      :alt="media.title || ''"
       :preview="props.preview"
     />
     <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
