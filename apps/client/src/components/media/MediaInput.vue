@@ -2,7 +2,7 @@
 import type { MediaInfo, MediaResult } from "./MediaInfo.interface";
 import { DocumentIcon, PencilIcon } from "@heroicons/vue/16/solid";
 import InputText from "primevue/inputtext";
-import { computed, onMounted, onUnmounted, ref, useAttrs, watch } from "vue";
+import { computed, onUnmounted, ref, useAttrs, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useIndexStore } from "../../stores";
 import { useMediaStore } from "../../stores/media";
@@ -39,7 +39,6 @@ const fileInput = ref<HTMLInputElement>();
 const selectedLocalFile = ref<File | null>(null);
 const selectedFile = ref<MediaInfo | null>(null);
 const uploadProgress = ref<number>(0);
-const uploadedFileUrl = ref<string | undefined>(undefined);
 const openFileModal = ref<boolean>(false);
 
 const computedAttrs = computed(() => ({
@@ -125,61 +124,6 @@ async function uploadFile() {
   }
 }
 
-async function loadFile(mediaResult: MediaResult | null) {
-  if (!mediaResult) {
-    return;
-  }
-
-  try {
-    // Revoke an old object URL to avoid memory leaks before assigning a new one
-    if (uploadedFileUrl.value) {
-      try {
-        URL.revokeObjectURL(uploadedFileUrl.value);
-      }
-      catch (revokeErr) {
-        console.error(
-          "Fehler beim Freigeben der vorherigen Objekt-URL:",
-          revokeErr,
-        );
-      }
-    }
-
-    if (mediaResult && mediaResult.blob) {
-      uploadedFileUrl.value = URL.createObjectURL(mediaResult.blob);
-    }
-  }
-  catch (error) {
-    console.error("Fehler beim Laden der Datei:", error);
-    // Reset state on failure
-    if (uploadedFileUrl.value) {
-      try {
-        URL.revokeObjectURL(uploadedFileUrl.value);
-      }
-      catch (revokeErr) {
-        console.error(
-          "Fehler beim Freigeben der Objekt-URL nach Fehler:",
-          revokeErr,
-        );
-      }
-    }
-    uploadedFileUrl.value = undefined;
-
-    // Notify user via the existing notification store if available
-    try {
-      notificationStore.addErrorNotification(
-        t("models.form.file.downloadError"),
-      );
-    }
-    catch {
-      // Fallback to console if the notification store is not available for any reason
-      console.error(
-        "Benachrichtigung über Ladefehler konnte nicht angezeigt werden.",
-      );
-    }
-    // We intentionally do not rethrow to keep caller logic simple unless needed.
-  }
-}
-
 async function updateFileFromModal(items: Array<MediaInfo>) {
   if (items.length === 0) {
     openFileModal.value = false;
@@ -203,18 +147,13 @@ async function updateFileFromModal(items: Array<MediaInfo>) {
   }
 }
 
-onMounted(async () => {
-  await loadFile(props.value);
-});
-
 onUnmounted(() => {
   if (fileUrl.value) {
     URL.revokeObjectURL(fileUrl.value);
   }
 });
 
-watch(() => props.value, async (newValue) => {
-  await loadFile(newValue);
+watch(() => props.value, (newValue) => {
   if (newValue) {
     selectedLocalFile.value = null;
   }
