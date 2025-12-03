@@ -11,11 +11,14 @@ import { usePassportFormStore } from "../../stores/passport.form";
 import MediaModal from "./MediaModal.vue";
 import MediaPreview from "./MediaPreview.vue";
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   id: string;
   label: string;
   value: MediaResult | null;
-}>();
+  context?: "dpp" | "organization";
+}>(), {
+  context: "dpp",
+});
 
 const emits = defineEmits<{
   (e: "clicked"): void;
@@ -85,23 +88,41 @@ async function uploadFile() {
     return;
   }
   try {
-    await mediaStore.uploadDppMedia(
-      indexStore.selectedOrganization,
-      passportFormStore.getUUID(),
-      props.id,
-      selectedLocalFile.value,
-      progress => (uploadProgress.value = progress),
-    );
+    let mediaId: string;
+
+    if (props.context === "organization") {
+      mediaId = await mediaStore.uploadOrganizationProfileMedia(
+        indexStore.selectedOrganization,
+        selectedLocalFile.value,
+        progress => (uploadProgress.value = progress),
+      );
+    }
+    else {
+      mediaId = await mediaStore.uploadDppMedia(
+        indexStore.selectedOrganization,
+        passportFormStore.getUUID(),
+        props.id,
+        selectedLocalFile.value,
+        progress => (uploadProgress.value = progress),
+      );
+    }
+
+    const mediaResult = await mediaStore.fetchMedia(mediaId);
+    selectedFile.value = mediaResult.mediaInfo;
+
+    emits("updateById", mediaId);
+    emits("update:value", mediaResult);
+
     notificationStore.addSuccessNotification(
       t("models.form.file.uploadSuccess"),
     );
-    selectedLocalFile.value = null;
+    // selectedLocalFile.value = null;
     // await loadFile();
   }
   catch (error: unknown) {
     console.error("Fehler beim Hochladen der Datei:", error);
     notificationStore.addErrorNotification(t("models.form.file.uploadError"));
-    selectedFile.value = null;
+    selectedLocalFile.value = null;
   }
   finally {
     uploadProgress.value = 0;
@@ -169,8 +190,20 @@ async function updateFileFromModal(items: Array<MediaInfo>) {
     return;
   }
   if (items.length > 0) {
-    emits("updateById", (items[0] as MediaInfo).id);
+    const item = items[0] as MediaInfo;
+    emits("updateById", item.id);
+
+    try {
+      const result = await mediaStore.fetchMedia(item.id);
+      emits("update:value", result);
+      selectedFile.value = result.mediaInfo;
+    }
+    catch (e) {
+      console.error("Failed to fetch selected media", e);
+    }
+
     openFileModal.value = false;
+    selectedLocalFile.value = null;
   }
 }
 
@@ -186,6 +219,9 @@ onUnmounted(() => {
 
 watch(() => props.value, async (newValue) => {
   await loadFile(newValue);
+  if (newValue) {
+    selectedLocalFile.value = null;
+  }
 }, { deep: true });
 </script>
 

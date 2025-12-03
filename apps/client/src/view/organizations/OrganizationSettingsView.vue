@@ -108,6 +108,7 @@ onMounted(() => {
               <div class="flex items-center gap-2">
                 <MediaInput
                   id="abc"
+                  context="organization"
                   :label="t('organizations.form.image.label')"
                   :value="currentMedia"
                   @update-by-id="(id) => fetchMedia(id)"
