@@ -379,7 +379,7 @@ importers:
         version: 22.0.4
       '@tsconfig/node-ts':
         specifier: ^23.6.1
-        version: 23.6.1
+        version: 23.6.2
       '@types/body-parser':
         specifier: ^1.19.6
         version: 1.19.6
@@ -670,7 +670,7 @@ importers:
         version: 22.0.4
       '@tsconfig/node-ts':
         specifier: ^23.6.1
-        version: 23.6.1
+        version: 23.6.2
       eslint:
         specifier: ^9.38.0
         version: 9.39.1(jiti@2.6.1)
@@ -713,7 +713,7 @@ importers:
         version: 22.0.4
       '@tsconfig/node-ts':
         specifier: ^23.6.1
-        version: 23.6.1
+        version: 23.6.2
       '@types/jest':
         specifier: ^30.0.0
         version: 30.0.0
@@ -753,7 +753,7 @@ importers:
         version: 22.0.4
       '@tsconfig/node-ts':
         specifier: ^23.6.1
-        version: 23.6.1
+        version: 23.6.2
       eslint:
         specifier: ^9.38.0
         version: 9.39.1(jiti@2.6.1)
@@ -808,7 +808,7 @@ importers:
         version: 22.0.4
       '@tsconfig/node-ts':
         specifier: ^23.6.1
-        version: 23.6.1
+        version: 23.6.2
       '@types/lodash':
         specifier: ^4.17.20
         version: 4.17.20
@@ -3110,8 +3110,8 @@ packages:
   '@tsconfig/node-lts@22.0.4':
     resolution: {integrity: sha512-5eAeCX6l/EYe6H2UAw5nBgjfAgdlsR+lSp8YNNGwz+ixoi7JfJ5bOQvsiEhxGm5bOZFVF+cJSIj4tanpCCRMIw==}
 
-  '@tsconfig/node-ts@23.6.1':
-    resolution: {integrity: sha512-1E5cUp+S65pLKKI9VrGMQPWDHxOEq3dAGM2onG3fLeSRwWbylYFwhIjnzJikjSN7w2nCgwxmv8ifvUKDFkK38Q==}
+  '@tsconfig/node-ts@23.6.2':
+    resolution: {integrity: sha512-WcU3KR3tHB8XMotRBpUEGfPLT3W0gAhrHcTxU7mNQ4N1+fwF3LbjpWP07TuhZtN5ehK3bcK/R4Zzqp7Pqd7Nqg==}
 
   '@tsconfig/node10@1.0.11':
     resolution: {integrity: sha512-DcRjDCujK/kCk/cUe8Xz8ZSpm8mS3mNNpta+jGCA6USEDfktlNvm1+IuZ9eTcDbNk41BHwpHHeW+N1lKCz4zOw==}
@@ -11998,7 +11998,7 @@ snapshots:
 
   '@tsconfig/node-lts@22.0.4': {}
 
-  '@tsconfig/node-ts@23.6.1': {}
+  '@tsconfig/node-ts@23.6.2': {}
 
   '@tsconfig/node10@1.0.11': {}
 
