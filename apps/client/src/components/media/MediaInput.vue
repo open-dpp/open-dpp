@@ -222,7 +222,7 @@ watch(selectedLocalFile, (newFile) => {
           <DocumentIcon v-else class="w-24 h-24 text-gray-600" />
           <div class="text-gray-600 my-auto">
             {{ selectedLocalFile.name
-            }}<span v-if="selectedFile && selectedFile.size">
+            }}<span v-if="selectedFileSizeKB">
               ({{ selectedFileSizeKB }} KB)</span>
           </div>
           <button
