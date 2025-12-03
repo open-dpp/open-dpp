@@ -55,6 +55,10 @@ async function save() {
 
   let image;
 
+  if (currentMedia.value && currentMedia.value.mediaInfo.id) {
+    image = currentMedia.value.mediaInfo.id;
+  }
+
   if (selectedFile.value) {
     try {
       image = await mediaStore.uploadOrganizationProfileMedia(indexStore.selectedOrganization, selectedFile.value);
@@ -63,9 +67,6 @@ async function save() {
       console.error("Failed to upload image", e);
       // Handle error
     }
-  }
-  if (currentMedia.value && currentMedia.value.mediaInfo.id) {
-    image = currentMedia.value.mediaInfo.id;
   }
 
   await authClient.organization.update({
@@ -112,6 +113,7 @@ onMounted(() => {
                   :label="t('organizations.form.image.label')"
                   :value="currentMedia"
                   @update-by-id="(id) => fetchMedia(id)"
+                  @select-file="(file) => selectedFile = file"
                 />
                 <span v-if="selectedFile" class="text-sm text-gray-600">{{ selectedFile.name }}</span>
               </div>

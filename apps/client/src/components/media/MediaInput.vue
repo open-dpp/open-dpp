@@ -24,6 +24,7 @@ const emits = defineEmits<{
   (e: "clicked"): void;
   (e: "update:value", value: MediaResult | null): void;
   (e: "updateById", value: string | null): void;
+  (e: "selectFile", value: File | null): void;
 }>();
 
 const { t } = useI18n();
@@ -223,6 +224,10 @@ watch(() => props.value, async (newValue) => {
     selectedLocalFile.value = null;
   }
 }, { deep: true });
+
+watch(selectedLocalFile, (newFile) => {
+  emits("selectFile", newFile);
+});
 </script>
 
 <template>
