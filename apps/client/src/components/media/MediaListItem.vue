@@ -20,7 +20,7 @@ const emits = defineEmits<{
       'hover:cursor-default': !selectable,
       'ring-2 ring-[#6BAD87] ring-offset-2 ring-offset-gray-100': isSelected,
     }"
-    class="p-2 rounded flex flex-col gap-2 w-64 h-64"
+    class="rounded flex flex-col gap-2 w-64 h-64"
     @click="selectable && emits('onSelect', media)"
   >
     <MediaPreview :media="media" :show-type="true" :preview="false" />
