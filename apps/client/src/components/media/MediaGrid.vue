@@ -51,7 +51,6 @@ onMounted(async () => {
             :is-selected="selected.some((f) => f.id === media.id)"
             :media="media"
             :selectable="selectable"
-            class="p-8"
             @on-select="onSelect"
           />
         </li>
