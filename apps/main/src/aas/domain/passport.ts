@@ -44,7 +44,7 @@ export class Passport implements IPersistable, IDigitalProductPassportIdentifiab
     return this.environment;
   }
 
-  ownedByOrganization(organizationId: string): boolean {
-    return this.organizationId === organizationId;
+  getOrganizationId(): string {
+    return this.organizationId;
   }
 }

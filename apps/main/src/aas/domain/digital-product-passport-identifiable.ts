@@ -1,6 +1,6 @@
 import { Environment } from "./environment";
 
 export interface IDigitalProductPassportIdentifiable {
-  ownedByOrganization: (organizationId: string) => boolean;
+  getOrganizationId: () => string;
   getEnvironment: () => Environment;
 }
