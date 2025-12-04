@@ -626,7 +626,7 @@ describe("passportController", () => {
     await passportRepository.save(passport);
 
     const response = await request(app.getHttpServer())
-      .get(`/passports/${passport.id}/shells`)
+      .get(`/passports/${passport.id}/shells?limit=1`)
       .set("Cookie", userCookie)
       .send();
     expect(response.status).toEqual(200);
