@@ -1,4 +1,3 @@
-import { NotSupportedError } from "@open-dpp/exception";
 import { z } from "zod";
 import { KeyTypes } from "../common/key-types-enum";
 import { LanguageText } from "../common/language-text";
@@ -6,29 +5,8 @@ import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { SubmodelBaseJsonSchema } from "../parsing/submodel-base/submodel-base-json-schema";
-import { IVisitor } from "../visitor";
 import { ISubmodelBase } from "./submodel";
 import { getSubmodelClass } from "./submodel-registry";
-
-export abstract class SubmodelBase implements ISubmodelBase {
-  protected constructor(
-    public readonly category: string | null,
-    public readonly idShort: string | null,
-    public readonly displayName: Array<LanguageText>,
-    public readonly description: Array<LanguageText>,
-    public readonly semanticId: Reference | null,
-    public readonly supplementalSemanticIds: Array<Reference>,
-    public readonly qualifiers: Qualifier[],
-    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-  ) {
-  }
-
-  static fromPlain(_: unknown): SubmodelBase {
-    throw new NotSupportedError("Method not implemented.");
-  }
-
-  abstract accept(visitor: IVisitor<any>): any;
-}
 
 export interface SubmodelBaseProps {
   category?: string;

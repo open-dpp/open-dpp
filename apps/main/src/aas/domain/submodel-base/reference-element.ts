@@ -5,22 +5,22 @@ import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import { ReferenceElementJsonSchema } from "../parsing/submodel-base/reference-element-json-schema";
 import { IVisitor } from "../visitor";
-import { SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { ISubmodelBase } from "./submodel";
+import { SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
-export class ReferenceElement extends SubmodelBase {
+export class ReferenceElement implements ISubmodelBase {
   constructor(
     public readonly extensions: Array<Extension>,
-    category: string | null = null,
-    idShort: string | null = null,
-    displayName: Array<LanguageText>,
-    description: Array<LanguageText>,
-    semanticId: Reference | null = null,
-    supplementalSemanticIds: Array<Reference>,
-    qualifiers: Array<Qualifier>,
-    embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
+    public readonly category: string | null,
+    public readonly idShort: string | null,
+    public readonly displayName: Array<LanguageText>,
+    public readonly description: Array<LanguageText>,
+    public readonly semanticId: Reference | null,
+    public readonly supplementalSemanticIds: Array<Reference>,
+    public readonly qualifiers: Qualifier[],
+    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
     public readonly value: Reference | null = null,
   ) {
-    super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
   }
 
   static create(
@@ -43,7 +43,7 @@ export class ReferenceElement extends SubmodelBase {
     );
   }
 
-  static fromPlain(data: unknown): SubmodelBase {
+  static fromPlain(data: unknown): ISubmodelBase {
     const parsed = ReferenceElementJsonSchema.parse(data);
     return ReferenceElement.create({
       ...submodelBasePropsFromPlain(parsed),

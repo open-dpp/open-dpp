@@ -21,14 +21,13 @@ import { Property } from "../submodel-base/property";
 import { Range } from "../submodel-base/range";
 import { ReferenceElement } from "../submodel-base/reference-element";
 import { RelationshipElement } from "../submodel-base/relationship-element";
-import { Submodel } from "../submodel-base/submodel";
-import { SubmodelBase } from "../submodel-base/submodel-base";
+import { ISubmodelBase, Submodel } from "../submodel-base/submodel";
 import { SubmodelElementCollection } from "../submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "../submodel-base/submodel-element-list";
 import { IVisitor } from "../visitor";
 
 export class JsonVisitor implements IVisitor<any> {
-  private buildBase(submodelBase: SubmodelBase) {
+  private buildBase(submodelBase: ISubmodelBase) {
     return {
       category: submodelBase.category,
       idShort: submodelBase.idShort,

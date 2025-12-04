@@ -5,32 +5,23 @@ import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import { MultiLanguagePropertyJsonSchema } from "../parsing/submodel-base/multi-language-property-json-schema";
 import { IVisitor } from "../visitor";
-import { SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { ISubmodelBase } from "./submodel";
+import { SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
-export class MultiLanguageProperty extends SubmodelBase {
+export class MultiLanguageProperty implements ISubmodelBase {
   private constructor(
     public readonly extensions: Extension[],
-    category: string | null = null,
-    idShort: string | null = null,
-    displayName: LanguageText[],
-    description: LanguageText[],
-    semanticId: Reference | null = null,
-    supplementalSemanticIds: Reference[],
-    qualifiers: Qualifier[],
-    embeddedDataSpecifications: EmbeddedDataSpecification[],
+    public readonly category: string | null,
+    public readonly idShort: string | null,
+    public readonly displayName: Array<LanguageText>,
+    public readonly description: Array<LanguageText>,
+    public readonly semanticId: Reference | null,
+    public readonly supplementalSemanticIds: Array<Reference>,
+    public readonly qualifiers: Qualifier[],
+    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
     public readonly value: LanguageText[],
     public readonly valueId: Reference | null = null,
   ) {
-    super(
-      category,
-      idShort,
-      displayName,
-      description,
-      semanticId,
-      supplementalSemanticIds,
-      qualifiers,
-      embeddedDataSpecifications,
-    );
   }
 
   static create(data: SubmodelBaseProps & {
@@ -53,7 +44,7 @@ export class MultiLanguageProperty extends SubmodelBase {
     );
   }
 
-  static fromPlain(data: unknown): SubmodelBase {
+  static fromPlain(data: unknown): ISubmodelBase {
     const parsed = MultiLanguagePropertyJsonSchema.parse(data);
     return MultiLanguageProperty.create({
       ...submodelBasePropsFromPlain(parsed),

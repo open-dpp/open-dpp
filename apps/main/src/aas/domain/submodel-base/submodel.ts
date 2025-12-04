@@ -12,7 +12,7 @@ import { JsonVisitor } from "../parsing/json-visitor";
 import { SubmodelJsonSchema } from "../parsing/submodel-base/submodel-json-schema";
 import { IPersistable } from "../persistable";
 import { IVisitable, IVisitor } from "../visitor";
-import { parseSubmodelBaseUnion, SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { parseSubmodelBaseUnion, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
 export interface ISubmodelBase
   extends IReferable,
@@ -20,26 +20,32 @@ export interface ISubmodelBase
   IQualifiable,
   IVisitable<any>,
   IHasDataSpecification {
-  // Intentionally empty.
+  category: string | null;
+  idShort: string | null;
+  displayName: Array<LanguageText>;
+  description: Array<LanguageText>;
+  semanticId: Reference | null;
+  supplementalSemanticIds: Array<Reference>;
+  qualifiers: Qualifier[];
+  embeddedDataSpecifications: Array<EmbeddedDataSpecification>;
 }
 
-export class Submodel extends SubmodelBase implements IPersistable {
+export class Submodel implements ISubmodelBase, IPersistable {
   private constructor(
     public readonly id: string,
     public readonly extensions: Array<Extension>,
-    category: string | null,
-    idShort: string | null,
-    displayName: Array<LanguageText>,
-    description: Array<LanguageText>,
+    public readonly category: string | null,
+    public readonly idShort: string | null,
+    public readonly displayName: Array<LanguageText>,
+    public readonly description: Array<LanguageText>,
     public readonly administration: AdministrativeInformation | null,
     public readonly kind: ModellingKindType | null,
-    semanticId: Reference | null,
-    supplementalSemanticIds: Array<Reference>,
-    qualifiers: Qualifier[],
-    embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
+    public readonly semanticId: Reference | null,
+    public readonly supplementalSemanticIds: Array<Reference>,
+    public readonly qualifiers: Qualifier[],
+    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
     public readonly submodelElements: Array<ISubmodelBase>,
   ) {
-    super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
   }
 
   static create(

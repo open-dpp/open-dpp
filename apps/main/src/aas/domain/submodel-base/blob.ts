@@ -5,23 +5,23 @@ import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import { BlobJsonSchema } from "../parsing/submodel-base/blob-json-schema";
 import { IVisitor } from "../visitor";
-import { SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { ISubmodelBase } from "./submodel";
+import { SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
-export class Blob extends SubmodelBase {
+export class Blob implements ISubmodelBase {
   private constructor(
     public readonly contentType: string,
     public readonly extensions: Array<Extension>,
-    category: string | null = null,
-    idShort: string | null = null,
-    displayName: Array<LanguageText>,
-    description: Array<LanguageText>,
-    semanticId: Reference | null = null,
-    supplementalSemanticIds: Array<Reference>,
-    qualifiers: Array<Qualifier>,
-    embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
+    public readonly category: string | null,
+    public readonly idShort: string | null,
+    public readonly displayName: Array<LanguageText>,
+    public readonly description: Array<LanguageText>,
+    public readonly semanticId: Reference | null,
+    public readonly supplementalSemanticIds: Array<Reference>,
+    public readonly qualifiers: Qualifier[],
+    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
     public readonly value: Uint8Array | null = null,
   ) {
-    super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
   }
 
   static create(data: SubmodelBaseProps & {
@@ -44,7 +44,7 @@ export class Blob extends SubmodelBase {
     );
   }
 
-  static fromPlain(data: unknown): SubmodelBase {
+  static fromPlain(data: unknown): ISubmodelBase {
     const parsed = BlobJsonSchema.parse(data);
     return Blob.create({
       ...submodelBasePropsFromPlain(parsed),

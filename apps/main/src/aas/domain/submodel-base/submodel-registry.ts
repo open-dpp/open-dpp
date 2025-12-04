@@ -1,9 +1,9 @@
 import { KeyTypesType } from "../common/key-types-enum";
-import { SubmodelBase } from "./submodel-base";
+import { ISubmodelBase } from "./submodel";
 
 // Define the static side of the classes
 export interface SubmodelStatic {
-  fromPlain: (data: Record<string, unknown>) => SubmodelBase;
+  fromPlain: (data: unknown) => ISubmodelBase;
 }
 
 // Create the registry

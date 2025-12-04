@@ -3,37 +3,29 @@ import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { AnnotatedRelationshipElementJsonSchema } from "../parsing/submodel-base/annotated-relationship-element-json-schema";
+import {
+  AnnotatedRelationshipElementJsonSchema,
+} from "../parsing/submodel-base/annotated-relationship-element-json-schema";
 import { IVisitor } from "../visitor";
 import { IRelationshipElement } from "./relationship-element";
 import { ISubmodelBase } from "./submodel";
-import { parseSubmodelBaseUnion, SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { parseSubmodelBaseUnion, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
-export class AnnotatedRelationshipElement extends SubmodelBase implements IRelationshipElement {
+export class AnnotatedRelationshipElement implements ISubmodelBase, IRelationshipElement {
   protected constructor(
     public readonly first: Reference,
     public readonly second: Reference,
     public readonly extensions: Array<Extension>,
-    category: string | null = null,
-    idShort: string | null = null,
-    displayName: Array<LanguageText>,
-    description: Array<LanguageText>,
-    semanticId: Reference | null = null,
-    supplementalSemanticIds: Array<Reference>,
-    qualifiers: Qualifier[],
-    embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
+    public readonly category: string | null,
+    public readonly idShort: string | null,
+    public readonly displayName: Array<LanguageText>,
+    public readonly description: Array<LanguageText>,
+    public readonly semanticId: Reference | null,
+    public readonly supplementalSemanticIds: Array<Reference>,
+    public readonly qualifiers: Qualifier[],
+    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
     public readonly annotations: Array<ISubmodelBase>,
   ) {
-    super(
-      category,
-      idShort,
-      displayName,
-      description,
-      semanticId,
-      supplementalSemanticIds,
-      qualifiers,
-      embeddedDataSpecifications,
-    );
   }
 
   static create(data: SubmodelBaseProps & {
@@ -58,7 +50,7 @@ export class AnnotatedRelationshipElement extends SubmodelBase implements IRelat
     );
   }
 
-  static fromPlain(data: unknown): SubmodelBase {
+  static fromPlain(data: unknown): ISubmodelBase {
     const parsed = AnnotatedRelationshipElementJsonSchema.parse(data);
     return AnnotatedRelationshipElement.create({
       ...submodelBasePropsFromPlain(parsed),

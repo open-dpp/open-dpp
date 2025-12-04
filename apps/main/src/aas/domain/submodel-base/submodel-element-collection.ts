@@ -6,22 +6,21 @@ import { Extension } from "../extension";
 import { SubmodelElementCollectionJsonSchema } from "../parsing/submodel-base/submodel-element-collection-json-schema";
 import { IVisitor } from "../visitor";
 import { ISubmodelBase } from "./submodel";
-import { parseSubmodelBaseUnion, SubmodelBase, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { parseSubmodelBaseUnion, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
-export class SubmodelElementCollection extends SubmodelBase {
+export class SubmodelElementCollection implements ISubmodelBase {
   private constructor(
     public readonly extensions: Array<Extension>,
-    category: string | null = null,
-    idShort: string | null = null,
-    displayName: Array<LanguageText>,
-    description: Array<LanguageText>,
-    semanticId: Reference | null = null,
-    supplementalSemanticIds: Array<Reference>,
-    qualifiers: Qualifier[],
-    embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
+    public readonly category: string | null,
+    public readonly idShort: string | null,
+    public readonly displayName: Array<LanguageText>,
+    public readonly description: Array<LanguageText>,
+    public readonly semanticId: Reference | null,
+    public readonly supplementalSemanticIds: Array<Reference>,
+    public readonly qualifiers: Qualifier[],
+    public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
     public readonly value: Array<ISubmodelBase>,
   ) {
-    super(category, idShort, displayName, description, semanticId, supplementalSemanticIds, qualifiers, embeddedDataSpecifications);
   }
 
   static create(data: SubmodelBaseProps & {
@@ -46,7 +45,7 @@ export class SubmodelElementCollection extends SubmodelBase {
     this.value.push(submodelBase);
   }
 
-  static fromPlain(data: unknown): SubmodelBase {
+  static fromPlain(data: unknown): ISubmodelBase {
     const parsed = SubmodelElementCollectionJsonSchema.parse(data);
     return SubmodelElementCollection.create({
       ...submodelBasePropsFromPlain(parsed),

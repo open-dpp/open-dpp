@@ -9,9 +9,8 @@ import {
   loadEnvironmentAndCheckOwnership,
 } from "../../aas/presentation/aas.decorators";
 import { IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
-import {
-  AssetAdministrationShellResponseDto,
-} from "../../aas/presentation/dto/asset-administration-shell.dto";
+import { AssetAdministrationShellResponseDto } from "../../aas/presentation/dto/asset-administration-shell.dto";
+import { SubmodelResponseDto } from "../../aas/presentation/dto/submodel.dto";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { AuthService } from "../../auth/auth.service";
 import { TemplateRepository } from "../infrastructure/template.repository";
@@ -26,5 +25,12 @@ export class TemplateController implements IAasReadEndpoints {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getAasShells(environment, pagination);
+  }
+
+  @ApiGetShells(AasWrapper.Template)
+  async getSubmodels(@Param("id") id: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @Req() req: express.Request): Promise<SubmodelResponseDto> {
+    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
+    const pagination = Pagination.create({ limit, cursor });
+    return await this.environmentService.getSubmodels(environment, pagination);
   }
 }
