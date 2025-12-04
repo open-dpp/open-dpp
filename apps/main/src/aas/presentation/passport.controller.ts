@@ -1,16 +1,33 @@
+import type express from "express";
 import { Controller } from "@nestjs/common";
-import { AasRepository } from "../infrastructure/aas.repository";
+import { AuthService } from "../../auth/auth.service";
+import { Pagination } from "../domain/pagination";
+
 import { PassportRepository } from "../infrastructure/passport.repository";
-import { SubmodelRepository } from "../infrastructure/submodel.repository";
-import { AasController } from "./aas.controller";
+import {
+  AasWrapper,
+  ApiGetShells,
+  CursorQueryParam,
+  IdParam,
+  LimitQueryParam,
+  loadEnvironmentAndCheckOwnership,
+  RequestParam,
+} from "./aas.decorators";
+import { IAasReadEndpoints } from "./aas.endpoints";
+import {
+  AssetAdministrationShellResponseDto,
+} from "./dto/asset-administration-shell.dto";
 import { EnvironmentService } from "./environment.service";
 
-@Controller("/organizations/:orgaId/passports")
-export class PassportController extends AasController {
-  constructor(private readonly passportRepository: PassportRepository, private readonly aasRepository: AasRepository, private readonly submodelRepository: SubmodelRepository) {
-    super(new EnvironmentService(passportRepository, aasRepository, submodelRepository));
+@Controller("/passports")
+export class PassportController implements IAasReadEndpoints {
+  constructor(private readonly environmentService: EnvironmentService, private readonly authService: AuthService, private readonly passportRepository: PassportRepository) {
   }
-  // async getSubmodels(): Promise<any> {
-  //
-  // }
+
+  @ApiGetShells(AasWrapper.Passport)
+  async getShells(@IdParam() id: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @RequestParam() req: express.Request): Promise<AssetAdministrationShellResponseDto> {
+    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.passportRepository, id, req);
+    const pagination = Pagination.create({ limit, cursor });
+    return await this.environmentService.getAasShells(environment, pagination);
+  }
 }

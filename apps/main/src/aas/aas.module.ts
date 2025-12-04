@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
+import { AuthModule } from "../auth/auth.module";
 import { OrganizationsModule } from "../organizations/organizations.module";
 import { AasRepository } from "./infrastructure/aas.repository";
 import { PassportRepository } from "./infrastructure/passport.repository";
@@ -12,6 +13,7 @@ import { SubmodelDoc, SubmodelSchema } from "./infrastructure/schemas/submodel.s
 import { TemplateDoc, TemplateSchema } from "./infrastructure/schemas/template.schema";
 import { SubmodelRepository } from "./infrastructure/submodel.repository";
 import { TemplateRepository } from "./infrastructure/template.repository";
+import { EnvironmentService } from "./presentation/environment.service";
 import { PassportController } from "./presentation/passport.controller";
 import { SubmodelRegistryInitializer } from "./presentation/submodel-registry-initializer";
 import { TemplateController } from "./presentation/template.controller";
@@ -27,10 +29,11 @@ import { TemplateController } from "./presentation/template.controller";
       },
       { name: TemplateDoc.name, schema: TemplateSchema },
     ]),
+    AuthModule,
     OrganizationsModule,
   ],
   controllers: [PassportController, TemplateController],
-  providers: [SubmodelRegistryInitializer, PassportRepository, TemplateRepository, AasRepository, SubmodelRepository],
-  exports: [PassportRepository, TemplateRepository, AasRepository, SubmodelRepository],
+  providers: [SubmodelRegistryInitializer, PassportRepository, TemplateRepository, AasRepository, SubmodelRepository, EnvironmentService],
+  exports: [PassportRepository, TemplateRepository, AasRepository, SubmodelRepository, EnvironmentService],
 })
 export class AasModule {}
