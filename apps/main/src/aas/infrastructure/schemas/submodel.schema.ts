@@ -1,4 +1,11 @@
-import type { EmbeddedDataSpecificationDb, ExtensionDb, QualifierDb, ReferenceDb, SubmodelBaseUnionDb } from "./db-types";
+import type { ModellingKindType } from "../../domain/common/has-kind";
+import type {
+  EmbeddedDataSpecificationDb,
+  ExtensionDb,
+  QualifierDb,
+  ReferenceDb,
+  SubmodelBaseUnionDb,
+} from "./db-types";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Schema as MongooseSchema } from "mongoose";
 import { z } from "zod";
@@ -8,10 +15,7 @@ import { ReferenceJsonSchema } from "../../domain/parsing/common/reference-json-
 import { EmbeddedDataSpecificationJsonSchema } from "../../domain/parsing/embedded-data-specification-json-schema";
 import { ExtensionJsonSchema } from "../../domain/parsing/extension-json-schema";
 import { SubmodelBaseUnionSchema } from "../../domain/parsing/submodel-base/submodel-base-union-schema";
-import {
-  AdministrativeInformationDoc,
-  AdministrativeInformationSchema,
-} from "./administration.information.schema";
+import { AdministrativeInformationDoc, AdministrativeInformationSchema } from "./administration.information.schema";
 import { LanguageTextDoc, LanguageTextSchema } from "./language.text.schema";
 
 export const SubmodelDocSchemaVersion = {
@@ -62,7 +66,7 @@ export class SubmodelDoc extends Document {
   administration: AdministrativeInformationDoc;
 
   @Prop({ enum: Object.values(ModellingKind), type: String })
-  kind?: ModellingKind;
+  kind?: ModellingKindType;
 
   @Prop({ type: [MongooseSchema.Types.Mixed], validate: (value: any) => SubmodelBaseUnionSchema.array().parse(value) })
   submodelElements: SubmodelBaseUnionDb[];

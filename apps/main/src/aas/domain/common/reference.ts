@@ -19,7 +19,7 @@ export class Reference implements IVisitable<any> {
     return new Reference(data.type, data.referredSemanticId ?? null, data.keys);
   }
 
-  static fromPlain(json: Record<string, unknown>): Reference {
+  static fromPlain(json: unknown): Reference {
     const parsed = ReferenceJsonSchema.parse(json);
     return Reference.create({
       type: parsed.type,

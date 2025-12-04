@@ -29,7 +29,7 @@ export class SpecificAssetId implements IHasSemantics, IVisitable<any> {
     );
   }
 
-  static fromPlain(data: Record<string, unknown>): SpecificAssetId {
+  static fromPlain(data: unknown): SpecificAssetId {
     const parsed = SpecificAssetIdJsonSchema.parse(data);
     return SpecificAssetId.create({
       name: parsed.name,

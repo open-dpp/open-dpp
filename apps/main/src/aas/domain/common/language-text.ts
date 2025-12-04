@@ -10,7 +10,7 @@ export class LanguageText implements IVisitable<any> {
     return new LanguageText(data.language, data.text);
   }
 
-  static fromPlain(json: Record<string, unknown>): LanguageText {
+  static fromPlain(json: unknown): LanguageText {
     return LanguageText.create(LanguageTextJsonSchema.parse(json));
   }
 

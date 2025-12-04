@@ -43,7 +43,7 @@ export class ReferenceElement extends SubmodelBase {
     );
   }
 
-  static fromPlain(data: Record<string, unknown>): SubmodelBase {
+  static fromPlain(data: unknown): SubmodelBase {
     const parsed = ReferenceElementJsonSchema.parse(data);
     return ReferenceElement.create({
       ...submodelBasePropsFromPlain(parsed),

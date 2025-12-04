@@ -19,10 +19,12 @@ import { ItemsModule } from "./items/items.module";
 import { MarketplaceModule } from "./marketplace/marketplace.module";
 import { MediaModule } from "./media/media.module";
 import { ModelsModule } from "./models/models.module";
+import { TemplateModule as OldTemplateModule } from "./old-templates/template.module";
 import { OrganizationsModule } from "./organizations/organizations.module";
+import { PassportsModule } from "./passports/passports.module";
 import { ProductPassportModule } from "./product-passport/product-passport.module";
 import { TemplateDraftModule } from "./template-draft/template-draft.module";
-import { TemplateModule } from "./templates/template.module";
+import { TemplatesModule } from "./templates/templates.module";
 import { TraceabilityEventsModule } from "./traceability-events/traceability-events.module";
 import { UniqueProductIdentifierModule } from "./unique-product-identifier/unique.product.identifier.module";
 import { UsersModule } from "./users/users.module";
@@ -37,9 +39,11 @@ import { UsersModule } from "./users/users.module";
       }),
       inject: [EnvService],
     }),
-    TemplateDraftModule,
-    TemplateModule,
     AasModule,
+    TemplateDraftModule,
+    OldTemplateModule,
+    TemplatesModule,
+    PassportsModule,
     ItemsModule,
     ModelsModule,
     OrganizationsModule,

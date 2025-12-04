@@ -13,7 +13,7 @@ export class Key implements IVisitable<any> {
     return new Key(data.type, data.value);
   }
 
-  static fromPlain(json: Record<string, unknown>) {
+  static fromPlain(json: unknown) {
     return Key.create(KeyJsonSchema.parse(json));
   }
 

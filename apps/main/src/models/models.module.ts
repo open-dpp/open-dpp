@@ -1,12 +1,12 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { MarketplaceModule } from "../marketplace/marketplace.module";
-import { OrganizationsModule } from "../organizations/organizations.module";
 import {
   TemplateDoc,
   TemplateSchema,
-} from "../templates/infrastructure/template.schema";
-import { TemplateModule } from "../templates/template.module";
+} from "../old-templates/infrastructure/template.schema";
+import { TemplateModule } from "../old-templates/template.module";
+import { OrganizationsModule } from "../organizations/organizations.module";
 import { TraceabilityEventsModule } from "../traceability-events/traceability-events.module";
 import { UniqueProductIdentifierModule } from "../unique-product-identifier/unique.product.identifier.module";
 import { UsersModule } from "../users/users.module";

@@ -44,7 +44,7 @@ export class Blob extends SubmodelBase {
     );
   }
 
-  static fromPlain(data: Record<string, unknown>): SubmodelBase {
+  static fromPlain(data: unknown): SubmodelBase {
     const parsed = BlobJsonSchema.parse(data);
     return Blob.create({
       ...submodelBasePropsFromPlain(parsed),

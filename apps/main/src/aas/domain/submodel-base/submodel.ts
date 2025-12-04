@@ -1,6 +1,6 @@
 import { AdministrativeInformation } from "../common/administrative-information";
 import { IHasDataSpecification } from "../common/has-data-specification";
-import { ModellingKind } from "../common/has-kind";
+import { ModellingKindType } from "../common/has-kind";
 import { IHasSemantics } from "../common/has-semantics";
 import { LanguageText } from "../common/language-text";
 import { IQualifiable, Qualifier } from "../common/qualififiable";
@@ -32,7 +32,7 @@ export class Submodel extends SubmodelBase implements IPersistable {
     displayName: Array<LanguageText>,
     description: Array<LanguageText>,
     public readonly administration: AdministrativeInformation | null,
-    public readonly kind: ModellingKind | null,
+    public readonly kind: ModellingKindType | null,
     semanticId: Reference | null,
     supplementalSemanticIds: Array<Reference>,
     qualifiers: Qualifier[],
@@ -47,7 +47,7 @@ export class Submodel extends SubmodelBase implements IPersistable {
       id: string;
       extensions?: Array<Extension>;
       administration?: AdministrativeInformation;
-      kind?: ModellingKind;
+      kind?: ModellingKindType;
       submodelElements?: Array<ISubmodelBase>;
     },
   ) {
@@ -68,7 +68,7 @@ export class Submodel extends SubmodelBase implements IPersistable {
     );
   };
 
-  static fromPlain(data: Record<string, unknown>) {
+  static fromPlain(data: unknown) {
     const parsed = SubmodelJsonSchema.parse(data);
     return Submodel.create({
       ...submodelBasePropsFromPlain(parsed),

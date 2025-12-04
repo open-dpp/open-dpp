@@ -18,7 +18,7 @@ export class Resource implements IVisitable<any> {
     );
   }
 
-  static fromPlain(data: Record<string, unknown>): Resource {
+  static fromPlain(data: unknown): Resource {
     const parsed = ResourceJsonSchema.parse(data);
     return Resource.create({
       path: parsed.path,

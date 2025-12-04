@@ -4,13 +4,13 @@ import { IPersistable } from "../domain/persistable";
 
 export async function convertToDomain<T>(
   mongoDoc: Document,
-  fromPlain: (plain: Record<string, unknown>) => T,
+  fromPlain: (plain: unknown) => T,
 ): Promise<T> {
   const plain = mongoDoc.toObject();
   return fromPlain({ ...plain, id: plain._id });
 }
 
-export async function save<T, V>(domainObject: IPersistable, docModel: MongooseModel<T>, schemaVersion: string, fromPlain: (plain: Record<string, unknown>) => V): Promise<V> {
+export async function save<T, V>(domainObject: IPersistable, docModel: MongooseModel<T>, schemaVersion: string, fromPlain: (plain: unknown) => V): Promise<V> {
   // 1. Try to find an existing document
   let doc = await docModel.findById(domainObject.id);
 
@@ -30,7 +30,7 @@ export async function save<T, V>(domainObject: IPersistable, docModel: MongooseM
   return convertToDomain(await doc.save({ validateBeforeSave: true }), fromPlain);
 }
 
-export async function findOneOrFail<T, V>(id: string, docModel: MongooseModel<T>, fromPlain: (plain: Record<string, unknown>) => V): Promise<V> {
+export async function findOneOrFail<T, V>(id: string, docModel: MongooseModel<T>, fromPlain: (plain: unknown) => V): Promise<V> {
   const domainObject = await findOne(id, docModel, fromPlain);
   if (!domainObject) {
     throw new NotFoundInDatabaseException(docModel.modelName);
@@ -38,7 +38,7 @@ export async function findOneOrFail<T, V>(id: string, docModel: MongooseModel<T>
   return domainObject;
 }
 
-export async function findOne<T, V>(id: string, docModel: MongooseModel<T>, fromPlain: (plain: Record<string, unknown>) => V): Promise<V | undefined> {
+export async function findOne<T, V>(id: string, docModel: MongooseModel<T>, fromPlain: (plain: unknown) => V): Promise<V | undefined> {
   const mongoDoc = await docModel.findById(id);
   if (!mongoDoc) {
     return undefined;

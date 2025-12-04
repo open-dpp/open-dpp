@@ -60,7 +60,7 @@ export class RelationshipElement extends SubmodelBase implements IRelationshipEl
     );
   }
 
-  static fromPlain(data: Record<string, unknown>): SubmodelBase {
+  static fromPlain(data: unknown): SubmodelBase {
     const parsed = RelationshipElementJsonSchema.parse(data);
     return RelationshipElement.create({
       ...submodelBasePropsFromPlain(parsed),

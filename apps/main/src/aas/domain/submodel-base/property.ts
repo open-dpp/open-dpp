@@ -48,7 +48,7 @@ export class Property extends SubmodelBase {
     );
   }
 
-  static fromPlain(data: Record<string, unknown>) {
+  static fromPlain(data: unknown) {
     const parsed = PropertyJsonSchema.parse(data);
     return Property.create({
       ...submodelBasePropsFromPlain(parsed),

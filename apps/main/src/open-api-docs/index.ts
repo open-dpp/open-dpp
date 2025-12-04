@@ -1,10 +1,10 @@
 import type { INestApplication } from "@nestjs/common";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { cleanupOpenApiDoc } from "nestjs-zod";
-import { AasModule } from "../aas/aas.module";
 import { ItemsModule } from "../items/items.module";
 import { ModelsModule } from "../models/models.module";
-import { TemplateModule } from "../templates/template.module";
+import { PassportsModule } from "../passports/passports.module";
+import { TemplatesModule } from "../templates/templates.module";
 
 export function buildOpenApiDocumentation(app: INestApplication) {
   const config = new DocumentBuilder()
@@ -24,7 +24,7 @@ export function buildOpenApiDocumentation(app: INestApplication) {
     .build();
   const documentFactory = () =>
     cleanupOpenApiDoc(SwaggerModule.createDocument(app, config, {
-      include: [ItemsModule, ModelsModule, TemplateModule, AasModule],
+      include: [ItemsModule, ModelsModule, TemplatesModule, PassportsModule],
     }));
   SwaggerModule.setup("api", app, documentFactory);
 }

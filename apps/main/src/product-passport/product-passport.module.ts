@@ -7,8 +7,8 @@ import { ModelsService } from "../models/infrastructure/models.service";
 import {
   TemplateDoc,
   TemplateSchema,
-} from "../templates/infrastructure/template.schema";
-import { TemplateService } from "../templates/infrastructure/template.service";
+} from "../old-templates/infrastructure/template.schema";
+import { TemplateService } from "../old-templates/infrastructure/template.service";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,

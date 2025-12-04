@@ -17,6 +17,7 @@ import { ZodValidationPipe } from "@open-dpp/exception";
 import { Session } from "../../auth/session.decorator";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { ModelsService } from "../../models/infrastructure/models.service";
+import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import {
   itemDocumentation,
   itemParamDocumentation,
@@ -30,7 +31,6 @@ import {
   dataValueDocumentation,
   orgaParamDocumentation,
 } from "../../product-passport-data/presentation/dto/docs/product-passport-data.doc";
-import { TemplateService } from "../../templates/infrastructure/template.service";
 import { ItemsService } from "../infrastructure/items.service";
 import { itemToDto } from "./dto/item.dto";
 import { ItemsApplicationService } from "./items-application.service";

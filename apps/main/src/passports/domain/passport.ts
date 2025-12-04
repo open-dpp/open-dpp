@@ -1,7 +1,7 @@
-import { IDigitalProductPassportIdentifiable } from "./digital-product-passport-identifiable";
-import { Environment } from "./environment";
-import { PassportJsonSchema } from "./parsing/passport-json-schema";
-import { IPersistable } from "./persistable";
+import { IDigitalProductPassportIdentifiable } from "../../aas/domain/digital-product-passport-identifiable";
+import { Environment } from "../../aas/domain/environment";
+import { PassportJsonSchema } from "../../aas/domain/parsing/passport-json-schema";
+import { IPersistable } from "../../aas/domain/persistable";
 
 export class Passport implements IPersistable, IDigitalProductPassportIdentifiable {
   private constructor(
@@ -23,7 +23,7 @@ export class Passport implements IPersistable, IDigitalProductPassportIdentifiab
     );
   }
 
-  static fromPlain(data: Record<string, unknown>) {
+  static fromPlain(data: unknown) {
     const parsed = PassportJsonSchema.parse(data);
     return Passport.create({
       id: parsed.id,

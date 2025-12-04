@@ -4,12 +4,12 @@ import { ItemDoc, ItemSchema } from "../items/infrastructure/item.schema";
 import { ItemsService } from "../items/infrastructure/items.service";
 import { ModelDoc, ModelSchema } from "../models/infrastructure/model.schema";
 import { ModelsService } from "../models/infrastructure/models.service";
-import { OrganizationsModule } from "../organizations/organizations.module";
 import {
   TemplateDoc,
   TemplateSchema,
-} from "../templates/infrastructure/template.schema";
-import { TemplateService } from "../templates/infrastructure/template.service";
+} from "../old-templates/infrastructure/template.schema";
+import { TemplateService } from "../old-templates/infrastructure/template.service";
+import { OrganizationsModule } from "../organizations/organizations.module";
 import { TraceabilityEventsModule } from "../traceability-events/traceability-events.module";
 import { UsersModule } from "../users/users.module";
 import {

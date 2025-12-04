@@ -48,7 +48,7 @@ export class Range extends SubmodelBase {
     );
   }
 
-  static fromPlain(data: Record<string, unknown>): SubmodelBase {
+  static fromPlain(data: unknown): SubmodelBase {
     const parsed = RangeJsonSchema.parse(data);
     return Range.create({
       ...submodelBasePropsFromPlain(parsed),

@@ -1,9 +1,9 @@
 import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { findOne, findOneOrFail, save } from "../../aas/infrastructure/repository-helpers";
 import { Passport } from "../domain/passport";
-import { findOne, findOneOrFail, save } from "./repository-helpers";
-import { PassportDoc, PassportDocVersion } from "./schemas/passport.schema";
+import { PassportDoc, PassportDocVersion } from "./passport.schema";
 
 @Injectable()
 export class PassportRepository {

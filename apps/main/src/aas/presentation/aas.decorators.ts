@@ -9,6 +9,7 @@ import {
   IDigitalProductPassportIdentifiableRepository,
 } from "../infrastructure/digital-product-passport-identifiable.repository";
 import { AssetAdministrationShellResponseDto } from "./dto/asset-administration-shell.dto";
+import { SubmodelResponseDto } from "./dto/submodel.dto";
 
 const limitParamOpts = {
   name: "limit",
@@ -52,6 +53,21 @@ export function ApiGetShells(aasWrapper: AasWrapperType) {
     ApiQuery(limitParamOpts),
     ApiQuery(cursorParamOpts),
     Get("/:id/shells"),
+  );
+}
+
+export function ApiGetSubmodels(aasWrapper: AasWrapperType) {
+  return applyDecorators(
+    ApiOperation({
+      summary: `Returns all Submodels of the ${aasWrapper}`,
+    }),
+    ApiOkResponse({
+      type: SubmodelResponseDto,
+    }),
+    ApiParam(idParamOpts(aasWrapper)),
+    ApiQuery(limitParamOpts),
+    ApiQuery(cursorParamOpts),
+    Get("/:id/submodels"),
   );
 }
 

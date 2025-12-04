@@ -13,7 +13,7 @@ export class Qualifier implements IHasSemantics, IVisitable<any> {
     return new Qualifier(data.type, data.valueType, data.semanticId ?? null, data.supplementalSemanticIds, data.kind, data.value ?? null, data.valueId ?? null);
   }
 
-  static fromPlain(json: Record<string, unknown>): Qualifier {
+  static fromPlain(json: unknown): Qualifier {
     const parsed = QualifierJsonSchema.parse(json);
     return Qualifier.create({
       type: parsed.type,

@@ -53,7 +53,7 @@ export class MultiLanguageProperty extends SubmodelBase {
     );
   }
 
-  static fromPlain(data: Record<string, unknown>): SubmodelBase {
+  static fromPlain(data: unknown): SubmodelBase {
     const parsed = MultiLanguagePropertyJsonSchema.parse(data);
     return MultiLanguageProperty.create({
       ...submodelBasePropsFromPlain(parsed),

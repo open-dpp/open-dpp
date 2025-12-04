@@ -44,7 +44,7 @@ export class File extends SubmodelBase {
     );
   }
 
-  static fromPlain(data: Record<string, unknown>): SubmodelBase {
+  static fromPlain(data: unknown): SubmodelBase {
     const parsed = FileJsonSchema.parse(data);
     return File.create({
       ...submodelBasePropsFromPlain(parsed),

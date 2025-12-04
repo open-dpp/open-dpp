@@ -35,7 +35,7 @@ export class Extension implements IVisitable<any> {
     );
   }
 
-  static fromPlain(data: Record<string, unknown>): Extension {
+  static fromPlain(data: unknown): Extension {
     const parsed = ExtensionJsonSchema.parse(data);
     return Extension.create({
       name: parsed.name,

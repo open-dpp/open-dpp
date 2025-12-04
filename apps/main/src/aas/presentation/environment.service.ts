@@ -9,6 +9,7 @@ import {
   AssetAdministrationShellResponseDto,
   AssetAdministrationShellResponseDtoSchema,
 } from "./dto/asset-administration-shell.dto";
+import { SubmodelResponseDto, SubmodelResponseDtoSchema } from "./dto/submodel.dto";
 
 @Injectable()
 export class EnvironmentService {
@@ -19,5 +20,11 @@ export class EnvironmentService {
     const pages = pagination.nextPages(environment.assetAdministrationShells);
     const shells = await Promise.all(pages.map(p => this.aasRepository.findOneOrFail(p)));
     return AssetAdministrationShellResponseDtoSchema.parse(PagingResult.create({ pagination, items: shells }).toPlain());
+  }
+
+  async getSubmodels(environment: Environment, pagination: Pagination): Promise<SubmodelResponseDto> {
+    const pages = pagination.nextPages(environment.submodels);
+    const submodels = await Promise.all(pages.map(p => this.submodelRepository.findOneOrFail(p)));
+    return SubmodelResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodels }).toPlain());
   }
 }

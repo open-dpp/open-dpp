@@ -56,7 +56,7 @@ export class SubmodelElementList extends SubmodelBase {
     );
   }
 
-  static fromPlain(data: Record<string, unknown>): SubmodelBase {
+  static fromPlain(data: unknown): SubmodelBase {
     const parsed = SubmodelElementListJsonSchema.parse(data);
     return SubmodelElementList.create({
       ...submodelBasePropsFromPlain(parsed),

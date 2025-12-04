@@ -46,7 +46,7 @@ export class SubmodelElementCollection extends SubmodelBase {
     this.value.push(submodelBase);
   }
 
-  static fromPlain(data: Record<string, unknown>): SubmodelBase {
+  static fromPlain(data: unknown): SubmodelBase {
     const parsed = SubmodelElementCollectionJsonSchema.parse(data);
     return SubmodelElementCollection.create({
       ...submodelBasePropsFromPlain(parsed),

@@ -29,10 +29,10 @@ import { MarketplaceApplicationService } from "../../marketplace/presentation/ma
 import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
+import { Template, TemplateDbProps } from "../../old-templates/domain/template";
+import { TemplateDoc, TemplateSchema } from "../../old-templates/infrastructure/template.schema";
+import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import { Template, TemplateDbProps } from "../../templates/domain/template";
-import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
-import { TemplateService } from "../../templates/infrastructure/template.service";
 import {
   DppEventSchema,
   TraceabilityEventDocument,

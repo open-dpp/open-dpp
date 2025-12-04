@@ -57,7 +57,7 @@ export class ConceptDescription implements IIdentifiable, IHasDataSpecification,
     return visitor.visitConceptDescription(this);
   }
 
-  static fromPlain(data: Record<string, unknown>): ConceptDescription {
+  static fromPlain(data: unknown): ConceptDescription {
     const parsed = ConceptDescriptionJsonSchema.parse(data);
     return ConceptDescription.create({
       id: parsed.id,

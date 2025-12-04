@@ -30,7 +30,7 @@ export class AssetInformation implements IVisitable<any> {
     );
   }
 
-  static fromPlain(data: Record<string, unknown>): AssetInformation {
+  static fromPlain(data: unknown): AssetInformation {
     const parsed = AssetInformationJsonSchema.parse(data);
     return AssetInformation.create({
       assetKind: parsed.assetKind,

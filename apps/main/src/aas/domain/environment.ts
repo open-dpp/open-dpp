@@ -23,7 +23,7 @@ export class Environment {
     );
   }
 
-  static fromPlain(data: Record<string, unknown>): Environment {
+  static fromPlain(data: unknown): Environment {
     const parsed = EnvironmentJsonSchema.parse(data);
     return Environment.create({
       assetAdministrationShells: parsed.assetAdministrationShells,

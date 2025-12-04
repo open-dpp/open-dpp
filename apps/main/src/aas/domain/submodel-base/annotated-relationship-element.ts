@@ -58,7 +58,7 @@ export class AnnotatedRelationshipElement extends SubmodelBase implements IRelat
     );
   }
 
-  static fromPlain(data: Record<string, unknown>): SubmodelBase {
+  static fromPlain(data: unknown): SubmodelBase {
     const parsed = AnnotatedRelationshipElementJsonSchema.parse(data);
     return AnnotatedRelationshipElement.create({
       ...submodelBasePropsFromPlain(parsed),

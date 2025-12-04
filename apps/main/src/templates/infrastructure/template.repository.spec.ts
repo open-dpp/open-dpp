@@ -4,12 +4,12 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 
-import { generateMongoConfig } from "../../database/config";
+import { Environment } from "../../aas/domain/environment";
 
-import { Environment } from "../domain/environment";
+import { generateMongoConfig } from "../../database/config";
 import { Template } from "../domain/template";
-import { TemplateDoc, TemplateSchema } from "./schemas/template.schema";
 import { TemplateRepository } from "./template.repository";
+import { TemplateDoc, TemplateSchema } from "./template.schema";
 
 describe("templateRepository", () => {
   let templateRepository: TemplateRepository;

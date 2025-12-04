@@ -65,7 +65,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     return visitor.visitAssetAdministrationShell(this);
   }
 
-  static fromPlain(data: Record<string, unknown>): AssetAdministrationShell {
+  static fromPlain(data: unknown): AssetAdministrationShell {
     const parsed = AssetAdministrationShellJsonSchema.parse(data);
     return AssetAdministrationShell.create({
       id: parsed.id,

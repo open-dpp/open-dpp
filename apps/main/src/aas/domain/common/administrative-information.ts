@@ -9,7 +9,7 @@ export class AdministrativeInformation implements IVisitable<any> {
     return new AdministrativeInformation(data.version, data.revision);
   }
 
-  static fromPlain(json: Record<string, unknown>): AdministrativeInformation {
+  static fromPlain(json: unknown): AdministrativeInformation {
     return AdministrativeInformation.create(AdministrativeInformationJsonSchema.parse(json));
   }
 

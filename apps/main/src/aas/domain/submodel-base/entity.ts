@@ -57,7 +57,7 @@ export class Entity extends SubmodelBase {
     );
   };
 
-  static fromPlain(data: Record<string, unknown>): SubmodelBase {
+  static fromPlain(data: unknown): SubmodelBase {
     const parsed = EntityTypeJsonSchema.parse(data);
     return Entity.create({
       ...submodelBasePropsFromPlain(parsed),
