@@ -9,10 +9,10 @@ assignees: ''
 
 **Acceptance Criteria**
 
-[] Given a [registered user], when [they enter a valid username and password], then [they should be redirected to the dashboard].
+- [ ] Given a [registered user], when [they enter a valid username and password], then [they should be redirected to the dashboard].
 
 **Technical Criteria**
-[] Should be performant.
+- [ ] Should be performant.
 
 **Examples**
 * My first example
