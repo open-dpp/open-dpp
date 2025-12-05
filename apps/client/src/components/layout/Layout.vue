@@ -19,6 +19,7 @@ import {
 import {
   Bars3Icon,
   BuildingOfficeIcon,
+  Cog6ToothIcon,
   CubeIcon,
   Square3Stack3DIcon,
   UsersIcon,
@@ -80,6 +81,12 @@ const unfilteredNavigation = computed<Array<MenuItemInterface>>(() => [
     name: t("members.members"),
     to: `/organizations/${indexStore.selectedOrganization}/members`,
     icon: UsersIcon,
+    show: () => indexStore.selectedOrganization !== null,
+  },
+  {
+    name: t("organizations.settings.title"),
+    to: `/organizations/${indexStore.selectedOrganization}/settings`,
+    icon: Cog6ToothIcon,
     show: () => indexStore.selectedOrganization !== null,
   },
   {
