@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable } from "@nestjs/common";
 import { ModelsService } from "../../models/infrastructure/models.service";
-import { TemplateService } from "../../templates/infrastructure/template.service";
+import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import { TraceabilityEventsService } from "../../traceability-events/infrastructure/traceability-events.service";
 import { ItemCreatedEventData } from "../../traceability-events/modules/open-dpp/domain/open-dpp-events/item-created-event.data";
 import { UniqueProductIdentifierCreatedEventData } from "../../traceability-events/modules/open-dpp/domain/open-dpp-events/unique-product-identifier-created-event.data";

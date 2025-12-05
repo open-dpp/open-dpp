@@ -20,8 +20,8 @@ import { ItemsService } from "../../items/infrastructure/items.service";
 import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
-import { Template } from "../../templates/domain/template";
-import { laptopFactory } from "../../templates/fixtures/laptop.factory";
+import { Template } from "../../old-templates/domain/template";
+import { laptopFactory } from "../../old-templates/fixtures/laptop.factory";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,

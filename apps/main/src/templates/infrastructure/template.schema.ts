@@ -1,35 +1,29 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import {
-  createCommonIndexesForTemplate,
-  TemplateBaseDoc,
-} from "../../data-modelling/infrastructure/template-base.schema";
+import { Document } from "mongoose";
+import { EnvironmentDoc, EnvironmentSchema } from "../../aas/infrastructure/schemas/environment.schema";
 
-export const TemplateDocSchemaVersion = {
+export const TemplateDocVersion = {
   v1_0_0: "1.0.0",
-  v1_0_1: "1.0.1",
-  v1_0_2: "1.0.2",
-  v1_0_3: "1.0.3",
 } as const;
+type TemplateDocVersionType = (typeof TemplateDocVersion)[keyof typeof TemplateDocVersion];
 
-export type TemplateDocSchemaVersion_TYPE = (typeof TemplateDocSchemaVersion)[keyof typeof TemplateDocSchemaVersion];
-
-@Schema({ collection: "product_data_models" })
-export class TemplateDoc extends TemplateBaseDoc {
+@Schema({ collection: "templates" })
+export class TemplateDoc extends Document {
   @Prop({
-    default: TemplateDocSchemaVersion.v1_0_3,
-    enum: Object.values(TemplateDocSchemaVersion),
+    default: TemplateDocVersion.v1_0_0,
+    enum: Object.values(TemplateDocVersion),
     type: String,
-  }) // Track schema version
-  _schemaVersion: TemplateDocSchemaVersion_TYPE;
-
-  @Prop({
-    required: false,
-    default: null,
   })
-  marketplaceResourceId: string;
+  _schemaVersion: TemplateDocVersionType;
+
+  @Prop({ type: String, required: true })
+  declare _id: string;
+
+  @Prop({ type: String, required: true })
+  organizationId: string;
+
+  @Prop({ type: EnvironmentSchema, required: true })
+  environment: EnvironmentDoc;
 }
 
 export const TemplateSchema = SchemaFactory.createForClass(TemplateDoc);
-
-createCommonIndexesForTemplate(TemplateSchema);
-TemplateSchema.index({ marketplaceResourceId: 1 });

@@ -1,14 +1,14 @@
 import type { ItemDbProps } from "../../items/domain/item";
 import type { ModelDbProps } from "../../models/domain/model";
-import type { TemplateDbProps } from "../../templates/domain/template";
+import type { TemplateDbProps } from "../../old-templates/domain/template";
 import { randomUUID } from "node:crypto";
 import { Sector } from "@open-dpp/api-client";
 import { Factory } from "fishery";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
+import { sectionDbPropsFactory } from "../../old-templates/fixtures/section.factory";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import { sectionDbPropsFactory } from "../../templates/fixtures/section.factory";
 
 export class PhoneFactory extends Factory<TemplateDbProps> {
   static ids = {

@@ -25,14 +25,14 @@ import {
   PassportTemplatePublicationService,
 } from "../../marketplace/infrastructure/passport-template-publication.service";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
-import { DataValue } from "../../product-passport-data/domain/data-value";
-import { Template } from "../../templates/domain/template";
+import { Template } from "../../old-templates/domain/template";
 import {
   LaptopFactory,
   laptopFactory,
-} from "../../templates/fixtures/laptop.factory";
-import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
-import { TemplateService } from "../../templates/infrastructure/template.service";
+} from "../../old-templates/fixtures/laptop.factory";
+import { TemplateDoc, TemplateSchema } from "../../old-templates/infrastructure/template.schema";
+import { TemplateService } from "../../old-templates/infrastructure/template.service";
+import { DataValue } from "../../product-passport-data/domain/data-value";
 import {
   DppEventSchema,
   TraceabilityEventDocument,

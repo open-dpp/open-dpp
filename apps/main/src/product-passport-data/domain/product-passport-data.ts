@@ -1,5 +1,5 @@
 import type { GranularityLevel_TYPE } from "../../data-modelling/domain/granularity-level";
-import type { Template } from "../../templates/domain/template";
+import type { Template } from "../../old-templates/domain/template";
 import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
 import { DataValue } from "./data-value";
 

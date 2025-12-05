@@ -32,8 +32,8 @@ import { MarketplaceApplicationService } from "../../marketplace/presentation/ma
 import {
   TemplateDoc,
   TemplateSchema,
-} from "../../templates/infrastructure/template.schema";
-import { TemplateService } from "../../templates/infrastructure/template.service";
+} from "../../old-templates/infrastructure/template.schema";
+import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import { DataFieldDraft } from "../domain/data-field-draft";
 import { SectionDraft } from "../domain/section-draft";
 import { MoveDirection, TemplateDraft } from "../domain/template-draft";
