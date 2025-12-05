@@ -1,15 +1,20 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { Environment } from "../domain/environment";
 
 import { Pagination } from "../domain/pagination";
 import { PagingResult } from "../domain/paging-result";
+import { SubmodelJsonSchema } from "../domain/parsing/submodel-base/submodel-json-schema";
 import { AasRepository } from "../infrastructure/aas.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import {
   AssetAdministrationShellResponseDto,
   AssetAdministrationShellResponseDtoSchema,
 } from "./dto/asset-administration-shell.dto";
-import { SubmodelResponseDto, SubmodelResponseDtoSchema } from "./dto/submodel.dto";
+import {
+  SubmodelPaginationResponseDto,
+  SubmodelPaginationResponseDtoSchema,
+  SubmodelResponseDto,
+} from "./dto/submodel.dto";
 
 @Injectable()
 export class EnvironmentService {
@@ -22,9 +27,18 @@ export class EnvironmentService {
     return AssetAdministrationShellResponseDtoSchema.parse(PagingResult.create({ pagination, items: shells }).toPlain());
   }
 
-  async getSubmodels(environment: Environment, pagination: Pagination): Promise<SubmodelResponseDto> {
+  async getSubmodels(environment: Environment, pagination: Pagination): Promise<SubmodelPaginationResponseDto> {
     const pages = pagination.nextPages(environment.submodels);
     const submodels = await Promise.all(pages.map(p => this.submodelRepository.findOneOrFail(p)));
-    return SubmodelResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodels }).toPlain());
+    return SubmodelPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodels }).toPlain());
+  }
+
+  async getSubmodelById(environment: Environment, submodelId: string): Promise<SubmodelResponseDto> {
+    if (environment.submodels.includes(submodelId)) {
+      return SubmodelJsonSchema.parse((await this.submodelRepository.findOneOrFail(submodelId)).toPlain());
+    }
+    else {
+      throw new BadRequestException(`Environment has no submodel with id ${submodelId}`);
+    }
   }
 }

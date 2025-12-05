@@ -1,16 +1,21 @@
 import type express from "express";
-import { Controller, Param, Req } from "@nestjs/common";
+import { Controller, Req } from "@nestjs/common";
 import { Pagination } from "../../aas/domain/pagination";
 import {
   AasWrapper,
   ApiGetShells,
+  ApiGetSubmodelById,
+  ApiGetSubmodels,
   CursorQueryParam,
+  IdParam,
   LimitQueryParam,
   loadEnvironmentAndCheckOwnership,
+  RequestParam,
+  SubmodelIdParam,
 } from "../../aas/presentation/aas.decorators";
 import { IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
 import { AssetAdministrationShellResponseDto } from "../../aas/presentation/dto/asset-administration-shell.dto";
-import { SubmodelResponseDto } from "../../aas/presentation/dto/submodel.dto";
+import { SubmodelPaginationResponseDto, SubmodelResponseDto } from "../../aas/presentation/dto/submodel.dto";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { AuthService } from "../../auth/auth.service";
 import { TemplateRepository } from "../infrastructure/template.repository";
@@ -21,16 +26,22 @@ export class TemplateController implements IAasReadEndpoints {
   }
 
   @ApiGetShells(AasWrapper.Template)
-  async getShells(@Param("id") id: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @Req() req: express.Request): Promise<AssetAdministrationShellResponseDto> {
+  async getShells(@IdParam() id: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @Req() req: express.Request): Promise<AssetAdministrationShellResponseDto> {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getAasShells(environment, pagination);
   }
 
-  @ApiGetShells(AasWrapper.Template)
-  async getSubmodels(@Param("id") id: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @Req() req: express.Request): Promise<SubmodelResponseDto> {
+  @ApiGetSubmodels(AasWrapper.Template)
+  async getSubmodels(@IdParam() id: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @Req() req: express.Request): Promise<SubmodelPaginationResponseDto> {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getSubmodels(environment, pagination);
+  }
+
+  @ApiGetSubmodelById(AasWrapper.Template)
+  async getSubmodelById(@IdParam() id: string, @SubmodelIdParam() submodelId: string, @RequestParam() req: express.Request): Promise<SubmodelResponseDto> {
+    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
+    return await this.environmentService.getSubmodelById(environment, submodelId);
   }
 }

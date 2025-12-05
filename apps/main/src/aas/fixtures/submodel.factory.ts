@@ -2,20 +2,24 @@ import { Factory } from "fishery";
 import { z } from "zod/index";
 import { SubmodelJsonSchema } from "../domain/parsing/submodel-base/submodel-json-schema";
 
+interface SubmodelTransientParams {
+  iriDomain: string;
+}
+
 export const submodelDesignOfProductPlainFactory
-  = Factory.define<z.input<typeof SubmodelJsonSchema>> (() => ({
+  = Factory.define<z.input<typeof SubmodelJsonSchema>, SubmodelTransientParams> (({ transientParams }) => ({
     modelType: "Submodel",
     kind: "Instance",
     semanticId: {
       keys: [
         {
           type: "GlobalReference",
-          value: "https://smartfactory.de/semantics/submodel/DesignOfProduct#1/0",
+          value: `${transientParams.iriDomain}/semantics/submodel/DesignOfProduct#1/0`,
         },
       ],
       type: "ExternalReference",
     },
-    id: "https://smartfactory.de/submodels/2CZc64Umg5",
+    id: `${transientParams.iriDomain}/submodels/2CZc64Umg5`,
     idShort: "DesignOfProduct",
     submodelElements: [
       {
@@ -213,7 +217,7 @@ export const submodelDesignOfProductPlainFactory
     ],
   }));
 
-export const submodelCarbonFootprintPlainFactory = Factory.define<z.input<typeof SubmodelJsonSchema>>(() => ({
+export const submodelCarbonFootprintPlainFactory = Factory.define<z.input<typeof SubmodelJsonSchema>, SubmodelTransientParams>(({ transientParams }) => ({
   modelType: "Submodel",
   kind: "Instance",
   semanticId: {
@@ -230,7 +234,7 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<z.input<typeof
     templateId: "https://admin-shell.io/idta/CarbonFootprint/CarbonFootprint/0/9",
     version: "0",
   },
-  id: "https://smartfactory.de/submodels/ObSfHebEIR",
+  id: `${transientParams.iriDomain}/submodels/ObSfHebEIR`,
   description: [
     {
       language: "en",

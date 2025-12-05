@@ -2,14 +2,16 @@ import type express from "express";
 import { applyDecorators, ForbiddenException, Get, Param, Query, Req } from "@nestjs/common";
 
 import { ApiOkResponse, ApiOperation, ApiParam, ApiQuery } from "@nestjs/swagger";
+import { ZodValidationPipe } from "@open-dpp/exception";
 import { fromNodeHeaders } from "better-auth/node";
 import { AuthService } from "../../auth/auth.service";
+import { IdDtoSchema } from "../../identification/id.dto";
 import { Environment } from "../domain/environment";
 import {
   IDigitalProductPassportIdentifiableRepository,
 } from "../infrastructure/digital-product-passport-identifiable.repository";
 import { AssetAdministrationShellResponseDto } from "./dto/asset-administration-shell.dto";
-import { SubmodelResponseDto } from "./dto/submodel.dto";
+import { SubmodelPaginationResponseDto, SubmodelResponseDto } from "./dto/submodel.dto";
 
 const limitParamOpts = {
   name: "limit",
@@ -41,6 +43,13 @@ function idParamOpts(aasWrapper: AasWrapperType) {
   };
 }
 
+const submodelIdParamOpts = {
+  name: "submodelId",
+  type: String,
+  required: true,
+  description: `The id of the submodel`,
+};
+
 export function ApiGetShells(aasWrapper: AasWrapperType) {
   return applyDecorators(
     ApiOperation({
@@ -62,7 +71,7 @@ export function ApiGetSubmodels(aasWrapper: AasWrapperType) {
       summary: `Returns all Submodels of the ${aasWrapper}`,
     }),
     ApiOkResponse({
-      type: SubmodelResponseDto,
+      type: SubmodelPaginationResponseDto,
     }),
     ApiParam(idParamOpts(aasWrapper)),
     ApiQuery(limitParamOpts),
@@ -71,7 +80,23 @@ export function ApiGetSubmodels(aasWrapper: AasWrapperType) {
   );
 }
 
-export const IdParam = () => Param("id");
+export function ApiGetSubmodelById(aasWrapper: AasWrapperType) {
+  return applyDecorators(
+    ApiOperation({
+      summary: `Returns Submodel by id`,
+    }),
+    ApiOkResponse({
+      type: SubmodelResponseDto,
+    }),
+    ApiParam(idParamOpts(aasWrapper)),
+    ApiParam(submodelIdParamOpts),
+    Get("/:id/submodels/:submodelId"),
+  );
+}
+
+export const IdParam = () => Param("id", new ZodValidationPipe(IdDtoSchema));
+export const SubmodelIdParam = () => Param("submodelId", new ZodValidationPipe(IdDtoSchema));
+
 export const RequestParam = () => Req();
 
 export const LimitQueryParam = () => Query("limit");

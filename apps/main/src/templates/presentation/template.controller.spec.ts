@@ -32,21 +32,21 @@ import { AuthModule } from "../../auth/auth.module";
 import { AuthService } from "../../auth/auth.service";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
-import { Passport } from "../domain/passport";
-import { PassportRepository } from "../infrastructure/passport.repository";
-import { PassportDoc, PassportSchema } from "../infrastructure/passport.schema";
-import { PassportsModule } from "../passports.module";
-import { PassportController } from "./passport.controller";
+import { Template } from "../domain/template";
+import { TemplateRepository } from "../infrastructure/template.repository";
+import { TemplateDoc, TemplateSchema } from "../infrastructure/template.schema";
+import { TemplatesModule } from "../templates.module";
+import { TemplateController } from "./template.controller";
 
-describe("passportController", () => {
+describe("templateController", () => {
   let app: INestApplication;
   let authService: AuthService;
-  let passportRepository: PassportRepository;
+  let templateRepository: TemplateRepository;
   let submodelRepository: SubmodelRepository;
   let aasRepository: AasRepository;
 
   const betterAuthHelper = new BetterAuthHelper();
-  const basePath = "/passports";
+  const basePath = "/templates";
   let aas: AssetAdministrationShell;
   let submodels: Submodel[];
 
@@ -65,16 +65,16 @@ describe("passportController", () => {
           { name: AssetAdministrationShellDoc.name, schema: AssetAdministrationShellSchema },
           { name: SubmodelDoc.name, schema: SubmodelSchema },
           {
-            name: PassportDoc.name,
-            schema: PassportSchema,
+            name: TemplateDoc.name,
+            schema: TemplateSchema,
           },
         ]),
         AasModule,
         AuthModule,
-        PassportsModule,
+        TemplatesModule,
       ],
       providers: [
-        PassportRepository,
+        TemplateRepository,
         AasRepository,
         SubmodelRepository,
         {
@@ -82,7 +82,7 @@ describe("passportController", () => {
           useClass: AuthGuard,
         },
       ],
-      controllers: [PassportController],
+      controllers: [TemplateController],
     }).overrideProvider(EmailService).useValue({
       send: jest.fn(),
     }).compile();
@@ -94,9 +94,10 @@ describe("passportController", () => {
 
     app = moduleRef.createNestApplication();
     await app.init();
-    passportRepository = moduleRef.get<PassportRepository>(PassportRepository);
+    templateRepository = moduleRef.get<TemplateRepository>(TemplateRepository);
     aasRepository = moduleRef.get<AasRepository>(AasRepository);
     submodelRepository = moduleRef.get<SubmodelRepository>(SubmodelRepository);
+
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
     aas = AssetAdministrationShell.fromPlain(aasPlainFactory.build(undefined, { transient: { iriDomain } }));
     submodels = [Submodel.fromPlain(submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } })), Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }))];
@@ -111,8 +112,8 @@ describe("passportController", () => {
     await betterAuthHelper.createOrganization(user2data?.user.id as string);
   });
 
-  async function createPassport(orgId: string): Promise<Passport> {
-    return passportRepository.save(Passport.create({
+  async function createTemplate(orgId: string): Promise<Template> {
+    return templateRepository.save(Template.create({
       id: randomUUID(),
       organizationId: orgId,
       environment: Environment.create({
@@ -125,9 +126,9 @@ describe("passportController", () => {
 
   it(`/GET shells`, async () => {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
-    const passport = await createPassport(org.id);
+    const template = await createTemplate(org.id);
     const response = await request(app.getHttpServer())
-      .get(`${basePath}/${passport.id}/shells?limit=1`)
+      .get(`${basePath}/${template.id}/shells?limit=1`)
       .set("Cookie", userCookie)
       .send();
     expect(response.status).toEqual(200);
@@ -137,9 +138,9 @@ describe("passportController", () => {
 
   it(`/GET submodels`, async () => {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
-    const passport = await createPassport(org.id);
+    const template = await createTemplate(org.id);
     const response = await request(app.getHttpServer())
-      .get(`${basePath}/${passport.id}/submodels?limit=2`)
+      .get(`${basePath}/${template.id}/submodels?limit=2`)
       .set("Cookie", userCookie)
       .send();
     expect(response.status).toEqual(200);
@@ -149,9 +150,9 @@ describe("passportController", () => {
 
   it(`/GET submodel by id`, async () => {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
-    const passport = await createPassport(org.id);
+    const template = await createTemplate(org.id);
     const response = await request(app.getHttpServer())
-      .get(`${basePath}/${passport.id}/submodels/${btoa(submodels[1].id)}`)
+      .get(`${basePath}/${template.id}/submodels/${btoa(submodels[1].id)}`)
       .set("Cookie", userCookie)
       .send();
     expect(response.status).toEqual(200);

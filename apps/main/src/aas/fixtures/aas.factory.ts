@@ -2,8 +2,12 @@ import { Factory } from "fishery";
 import { z } from "zod";
 import { AssetAdministrationShellJsonSchema } from "../domain/parsing/asset-administration-shell-json-schema";
 
+interface AasTransientParams {
+  iriDomain: string;
+}
+
 export const aasPlainFactory
-  = Factory.define<z.input<typeof AssetAdministrationShellJsonSchema>> (() => ({
+  = Factory.define<z.input<typeof AssetAdministrationShellJsonSchema>, AasTransientParams> (({ transientParams }) => ({
     modelType: "AssetAdministrationShell",
     assetInformation: {
       assetKind: "Instance",
@@ -12,14 +16,14 @@ export const aasPlainFactory
         contentType: "image/png",
         path: "https://raw.githubusercontent.com/SmartFactory-KL/thumbnails/refs/heads/main/truck/Truck.png",
       },
-      globalAssetId: "https://smartfactory.de/assets/zm6As5rG-h",
+      globalAssetId: `${transientParams.iriDomain}/assets/zm6As5rG-h`,
     },
     submodels: [
       {
         keys: [
           {
             type: "Submodel",
-            value: "https://smartfactory.de/submodels/k9u4UhbfeY",
+            value: `${transientParams.iriDomain}/submodels/k9u4UhbfeY`,
           },
         ],
         referredSemanticId: {
@@ -37,7 +41,7 @@ export const aasPlainFactory
         keys: [
           {
             type: "Submodel",
-            value: "https://smartfactory.de/submodels/IexIFXJ0YL",
+            value: `${transientParams.iriDomain}/submodels/IexIFXJ0YL`,
           },
         ],
         referredSemanticId: {
@@ -48,7 +52,7 @@ export const aasPlainFactory
             },
             {
               type: "GlobalReference",
-              value: "https://smartfactory.de/semantics/submodel/Truck/BillOfMaterial#1/0",
+              value: `${transientParams.iriDomain}/semantics/submodel/Truck/BillOfMaterial#1/0`,
             },
           ],
           type: "ExternalReference",
@@ -59,7 +63,7 @@ export const aasPlainFactory
         keys: [
           {
             type: "Submodel",
-            value: "https://smartfactory.de/submodels/ObSfHebEIR",
+            value: `${transientParams.iriDomain}/submodels/ObSfHebEIR`,
           },
         ],
         referredSemanticId: {
@@ -77,14 +81,14 @@ export const aasPlainFactory
         keys: [
           {
             type: "Submodel",
-            value: "https://smartfactory.de/submodels/ap3eDlX07V",
+            value: `${transientParams.iriDomain}/submodels/ap3eDlX07V`,
           },
         ],
         referredSemanticId: {
           keys: [
             {
               type: "GlobalReference",
-              value: "https://smartfactory.de/semantics/submodel/CommercialProperties#1/0",
+              value: `${transientParams.iriDomain}/semantics/submodel/CommercialProperties#1/0`,
             },
           ],
           type: "ExternalReference",
@@ -95,14 +99,14 @@ export const aasPlainFactory
         keys: [
           {
             type: "Submodel",
-            value: "https://smartfactory.de/submodels/2CZc64Umg5",
+            value: `${transientParams.iriDomain}/submodels/2CZc64Umg5`,
           },
         ],
         referredSemanticId: {
           keys: [
             {
               type: "GlobalReference",
-              value: "https://smartfactory.de/semantics/submodel/DesignOfProduct#1/0",
+              value: `${transientParams.iriDomain}/semantics/submodel/DesignOfProduct#1/0`,
             },
           ],
           type: "ExternalReference",
@@ -113,14 +117,14 @@ export const aasPlainFactory
         keys: [
           {
             type: "Submodel",
-            value: "https://smartfactory.de/submodels/u-OoAXBcS9",
+            value: `${transientParams.iriDomain}/submodels/u-OoAXBcS9`,
           },
         ],
         referredSemanticId: {
           keys: [
             {
               type: "GlobalReference",
-              value: "https://smartfactory.de/semantics/submodel/MaterialData#1/0",
+              value: `${transientParams.iriDomain}/semantics/submodel/MaterialData#1/0`,
             },
           ],
           type: "ExternalReference",
@@ -131,7 +135,7 @@ export const aasPlainFactory
         keys: [
           {
             type: "Submodel",
-            value: "https://smartfactory.de/submodels/FHQAji8hF7",
+            value: `${transientParams.iriDomain}/submodels/FHQAji8hF7`,
           },
         ],
         referredSemanticId: {
@@ -149,14 +153,14 @@ export const aasPlainFactory
         keys: [
           {
             type: "Submodel",
-            value: "https://smartfactory.de/submodels/JYxmp8RpoK",
+            value: `${transientParams.iriDomain}/submodels/JYxmp8RpoK`,
           },
         ],
         referredSemanticId: {
           keys: [
             {
               type: "GlobalReference",
-              value: "https://smartfactory.de/semantics/submodel/Offers#1/0",
+              value: `${transientParams.iriDomain}/semantics/submodel/Offers#1/0`,
             },
           ],
           type: "ExternalReference",
@@ -167,14 +171,14 @@ export const aasPlainFactory
         keys: [
           {
             type: "Submodel",
-            value: "https://smartfactory.de/submodels/SuccLBA6uS",
+            value: `${transientParams.iriDomain}/submodels/SuccLBA6uS`,
           },
         ],
         referredSemanticId: {
           keys: [
             {
               type: "GlobalReference",
-              value: "https://smartfactory.de/semantics/submodel/ProductIdentification#1/0",
+              value: `${transientParams.iriDomain}/semantics/submodel/ProductIdentification#1/0`,
             },
           ],
           type: "ExternalReference",
@@ -185,14 +189,14 @@ export const aasPlainFactory
         keys: [
           {
             type: "Submodel",
-            value: "https://smartfactory.de/submodels/vyLbhavxNR",
+            value: `${transientParams.iriDomain}/submodels/vyLbhavxNR`,
           },
         ],
         referredSemanticId: {
           keys: [
             {
               type: "GlobalReference",
-              value: "https://smartfactory.de/semantics/submodel/QualityInformation#1/0",
+              value: `${transientParams.iriDomain}/semantics/submodel/QualityInformation#1/0`,
             },
           ],
           type: "ExternalReference",
@@ -203,14 +207,14 @@ export const aasPlainFactory
         keys: [
           {
             type: "Submodel",
-            value: "https://smartfactory.de/submodels/PJB9h1jH2s",
+            value: `${transientParams.iriDomain}/submodels/PJB9h1jH2s`,
           },
         ],
         referredSemanticId: {
           keys: [
             {
               type: "GlobalReference",
-              value: "https://smartfactory.de/semantics/submodel/RequestForServices#1/0",
+              value: `${transientParams.iriDomain}/semantics/submodel/RequestForServices#1/0`,
             },
           ],
           type: "ExternalReference",
@@ -221,14 +225,14 @@ export const aasPlainFactory
         keys: [
           {
             type: "Submodel",
-            value: "https://smartfactory.de/submodels/chpKK0Q-N7",
+            value: `${transientParams.iriDomain}/submodels/chpKK0Q-N7`,
           },
         ],
         referredSemanticId: {
           keys: [
             {
               type: "GlobalReference",
-              value: "https://smartfactory.de/semantics/submodel/CapabilityDescription#1/0",
+              value: `${transientParams.iriDomain}/semantics/submodel/CapabilityDescription#1/0`,
             },
           ],
           type: "ExternalReference",
@@ -239,7 +243,7 @@ export const aasPlainFactory
         keys: [
           {
             type: "Submodel",
-            value: "https://smartfactory.de/submodels/B5t9hU0siU",
+            value: `${transientParams.iriDomain}/submodels/B5t9hU0siU`,
           },
         ],
         referredSemanticId: {
@@ -257,14 +261,14 @@ export const aasPlainFactory
         keys: [
           {
             type: "Submodel",
-            value: "https://smartfactory.de/submodels/7e00b513-44d1-4fb5-9779-efcdf5ed6cda",
+            value: `${transientParams.iriDomain}/submodels/7e00b513-44d1-4fb5-9779-efcdf5ed6cda`,
           },
         ],
         referredSemanticId: {
           keys: [
             {
               type: "Submodel",
-              value: "https://smartfactory.de/semantics/submodel/ProductionPlan#1/0",
+              value: `${transientParams.iriDomain}/semantics/submodel/ProductionPlan#1/0`,
             },
           ],
           type: "ExternalReference",
@@ -298,7 +302,7 @@ export const aasPlainFactory
         value: "true",
       },
     ],
-    id: "https://smartfactory.de/shells/-SR7BbncJG",
+    id: `${transientParams.iriDomain}/shells/-SR7BbncJG`,
     displayName: [
       {
         language: "de",
