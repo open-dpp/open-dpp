@@ -7,7 +7,7 @@ import { EmbeddedDataSpecificationJsonSchema } from "../embedded-data-specificat
 
 export const SubmodelBaseJsonSchema = z.object({
   category: nullishToOptional(z.string()),
-  idShort: nullishToOptional(z.string()),
+  idShort: z.string(),
   displayName: z.array(LanguageTextJsonSchema).default([]),
   description: z.array(LanguageTextJsonSchema).default([]),
   semanticId: nullishToOptional(ReferenceJsonSchema),

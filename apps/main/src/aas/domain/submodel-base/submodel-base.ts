@@ -10,7 +10,7 @@ import { getSubmodelClass } from "./submodel-registry";
 
 export interface SubmodelBaseProps {
   category?: string;
-  idShort?: string;
+  idShort: string;
   displayName?: Array<LanguageText>;
   description?: Array<LanguageText>;
   semanticId?: Reference;

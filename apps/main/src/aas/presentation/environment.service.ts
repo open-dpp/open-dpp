@@ -11,6 +11,10 @@ import {
   AssetAdministrationShellResponseDtoSchema,
 } from "./dto/asset-administration-shell.dto";
 import {
+  SubmodelElementPaginationResponseDto,
+  SubmodelElementPaginationResponseDtoSchema,
+} from "./dto/submodel-element.dto";
+import {
   SubmodelPaginationResponseDto,
   SubmodelPaginationResponseDtoSchema,
   SubmodelResponseDto,
@@ -36,6 +40,18 @@ export class EnvironmentService {
   async getSubmodelById(environment: Environment, submodelId: string): Promise<SubmodelResponseDto> {
     if (environment.submodels.includes(submodelId)) {
       return SubmodelJsonSchema.parse((await this.submodelRepository.findOneOrFail(submodelId)).toPlain());
+    }
+    else {
+      throw new BadRequestException(`Environment has no submodel with id ${submodelId}`);
+    }
+  }
+
+  async getSubmodelElements(environment: Environment, submodelId: string, pagination: Pagination): Promise<SubmodelElementPaginationResponseDto> {
+    if (environment.submodels.includes(submodelId)) {
+      const submodel = await this.submodelRepository.findOneOrFail(submodelId);
+      const pages = pagination.nextPages(submodel.submodelElements.map(e => e.idShort));
+      const submodelElements = submodel.submodelElements.filter(e => pages.includes(e.idShort));
+      return SubmodelElementPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodelElements }).toPlain());
     }
     else {
       throw new BadRequestException(`Environment has no submodel with id ${submodelId}`);

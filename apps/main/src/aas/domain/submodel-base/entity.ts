@@ -3,6 +3,7 @@ import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
+import { JsonVisitor } from "../parsing/json-visitor";
 import { EntityTypeJsonSchema } from "../parsing/submodel-base/entity-type-json-schema";
 import { SpecificAssetId } from "../specific-asset-id";
 import { IVisitor } from "../visitor";
@@ -19,7 +20,7 @@ export class Entity implements ISubmodelBase {
     public readonly entityType: EntityType,
     public readonly extensions: Array<Extension>,
     public readonly category: string | null,
-    public readonly idShort: string | null,
+    public readonly idShort: string,
     public readonly displayName: Array<LanguageText>,
     public readonly description: Array<LanguageText>,
     public readonly semanticId: Reference | null,
@@ -43,7 +44,7 @@ export class Entity implements ISubmodelBase {
       data.entityType,
       data.extensions ?? [],
       data.category ?? null,
-      data.idShort ?? null,
+      data.idShort,
       data.displayName ?? [],
       data.description ?? [],
       data.semanticId ?? null,
@@ -69,5 +70,10 @@ export class Entity implements ISubmodelBase {
 
   accept(visitor: IVisitor<any>): any {
     return visitor.visitEntity(this);
+  }
+
+  toPlain(): Record<string, any> {
+    const jsonVisitor = new JsonVisitor();
+    return this.accept(jsonVisitor);
   }
 }

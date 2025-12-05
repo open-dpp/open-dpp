@@ -21,13 +21,14 @@ export interface ISubmodelBase
   IVisitable<any>,
   IHasDataSpecification {
   category: string | null;
-  idShort: string | null;
+  idShort: string;
   displayName: Array<LanguageText>;
   description: Array<LanguageText>;
   semanticId: Reference | null;
   supplementalSemanticIds: Array<Reference>;
   qualifiers: Qualifier[];
   embeddedDataSpecifications: Array<EmbeddedDataSpecification>;
+  toPlain: () => Record<string, any>;
 }
 
 export class Submodel implements ISubmodelBase, IPersistable {
@@ -35,7 +36,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     public readonly id: string,
     public readonly extensions: Array<Extension>,
     public readonly category: string | null,
-    public readonly idShort: string | null,
+    public readonly idShort: string,
     public readonly displayName: Array<LanguageText>,
     public readonly description: Array<LanguageText>,
     public readonly administration: AdministrativeInformation | null,
@@ -61,7 +62,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
       data.id,
       data.extensions ?? [],
       data.category ?? null,
-      data.idShort ?? null,
+      data.idShort,
       data.displayName ?? [],
       data.description ?? [],
       data.administration ?? null,

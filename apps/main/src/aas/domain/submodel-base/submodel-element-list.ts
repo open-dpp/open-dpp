@@ -4,6 +4,7 @@ import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
+import { JsonVisitor } from "../parsing/json-visitor";
 import { SubmodelElementListJsonSchema } from "../parsing/submodel-base/submodel-element-list-json-schema";
 import { IVisitor } from "../visitor";
 import { AasSubmodelElementsType } from "./aas-submodel-elements";
@@ -15,7 +16,7 @@ export class SubmodelElementList implements ISubmodelBase {
     public readonly typeValueListElement: AasSubmodelElementsType,
     public readonly extensions: Array<Extension>,
     public readonly category: string | null,
-    public readonly idShort: string | null,
+    public readonly idShort: string,
     public readonly displayName: Array<LanguageText>,
     public readonly description: Array<LanguageText>,
     public readonly semanticId: Reference | null,
@@ -41,7 +42,7 @@ export class SubmodelElementList implements ISubmodelBase {
       data.typeValueListElement,
       data.extensions ?? [],
       data.category ?? null,
-      data.idShort ?? null,
+      data.idShort,
       data.displayName ?? [],
       data.description ?? [],
       data.semanticId ?? null,
@@ -70,5 +71,10 @@ export class SubmodelElementList implements ISubmodelBase {
 
   accept(visitor: IVisitor<any>): any {
     return visitor.visitSubmodelElementList(this);
+  }
+
+  toPlain(): Record<string, any> {
+    const jsonVisitor = new JsonVisitor();
+    return this.accept(jsonVisitor);
   }
 }

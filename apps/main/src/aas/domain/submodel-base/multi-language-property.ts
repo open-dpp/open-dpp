@@ -3,6 +3,7 @@ import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
+import { JsonVisitor } from "../parsing/json-visitor";
 import { MultiLanguagePropertyJsonSchema } from "../parsing/submodel-base/multi-language-property-json-schema";
 import { IVisitor } from "../visitor";
 import { ISubmodelBase } from "./submodel";
@@ -12,7 +13,7 @@ export class MultiLanguageProperty implements ISubmodelBase {
   private constructor(
     public readonly extensions: Extension[],
     public readonly category: string | null,
-    public readonly idShort: string | null,
+    public readonly idShort: string,
     public readonly displayName: Array<LanguageText>,
     public readonly description: Array<LanguageText>,
     public readonly semanticId: Reference | null,
@@ -32,7 +33,7 @@ export class MultiLanguageProperty implements ISubmodelBase {
     return new MultiLanguageProperty(
       data.extensions ?? [],
       data.category ?? null,
-      data.idShort ?? null,
+      data.idShort,
       data.displayName ?? [],
       data.description ?? [],
       data.semanticId ?? null,
@@ -56,5 +57,10 @@ export class MultiLanguageProperty implements ISubmodelBase {
 
   accept(visitor: IVisitor<any>): any {
     return visitor.visitMultiLanguageProperty(this);
+  }
+
+  toPlain(): Record<string, any> {
+    const jsonVisitor = new JsonVisitor();
+    return this.accept(jsonVisitor);
   }
 }

@@ -17,12 +17,13 @@ import { EmailService } from "../../email/email.service";
 import { AasModule } from "../aas.module";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 
+import { SubmodelBaseUnionSchema } from "../domain/parsing/submodel-base/submodel-base-union-schema";
 import { SubmodelJsonSchema } from "../domain/parsing/submodel-base/submodel-json-schema";
 import { IPersistable } from "../domain/persistable";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { aasPlainFactory } from "../fixtures/aas.factory";
-import { submodelCarbonFootprintPlainFactory, submodelDesignOfProductPlainFactory } from "../fixtures/submodel.factory";
 
+import { submodelCarbonFootprintPlainFactory, submodelDesignOfProductPlainFactory } from "../fixtures/submodel.factory";
 import { AasRepository } from "../infrastructure/aas.repository";
 import {
   AssetAdministrationShellDoc,
@@ -139,6 +140,18 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     expect(response.body).toEqual(SubmodelJsonSchema.parse(submodels[1].toPlain()));
   }
 
+  async function assertGetSubmodelElements(createEntity: CreateEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const entity = await createEntity(org.id);
+    const response = await request(app.getHttpServer())
+      .get(`${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements`)
+      .set("Cookie", userCookie)
+      .send();
+    expect(response.status).toEqual(200);
+    expect(response.body.paging_metadata.cursor).toEqual(submodels[1].submodelElements[submodels[1].submodelElements.length - 1].idShort);
+    expect(response.body.result).toEqual(SubmodelBaseUnionSchema.array().parse(submodels[1].submodelElements.map(s => s.toPlain())));
+  }
+
   afterAll(async () => {
     await app.close();
   });
@@ -150,6 +163,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       getShells: assertGetShells,
       getSubmodels: assertGetSubmodels,
       getSubmodelById: assertGetSubmodelById,
+      getSubmodelElements: assertGetSubmodelElements,
     },
   };
 }

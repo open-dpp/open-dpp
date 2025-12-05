@@ -49,9 +49,11 @@ describe("submodelRepository", () => {
   it("should save a submodel", async () => {
     const entity = Entity.create({
       entityType: EntityType.CoManagedEntity,
+      idShort: "EntityId",
       statements: [
         Entity.create({
           entityType: EntityType.CoManagedEntity,
+          idShort: "EntitySubId",
           statements: [
             Property.create(
               {

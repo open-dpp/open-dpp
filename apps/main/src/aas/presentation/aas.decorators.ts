@@ -11,6 +11,7 @@ import {
   IDigitalProductPassportIdentifiableRepository,
 } from "../infrastructure/digital-product-passport-identifiable.repository";
 import { AssetAdministrationShellResponseDto } from "./dto/asset-administration-shell.dto";
+import { SubmodelElementPaginationResponseDto } from "./dto/submodel-element.dto";
 import { SubmodelPaginationResponseDto, SubmodelResponseDto } from "./dto/submodel.dto";
 
 const limitParamOpts = {
@@ -91,6 +92,20 @@ export function ApiGetSubmodelById(aasWrapper: AasWrapperType) {
     ApiParam(idParamOpts(aasWrapper)),
     ApiParam(submodelIdParamOpts),
     Get("/:id/submodels/:submodelId"),
+  );
+}
+
+export function ApiGetSubmodelElements(aasWrapper: AasWrapperType) {
+  return applyDecorators(
+    ApiOperation({
+      summary: `Returns all submodel elements of the given submodel`,
+    }),
+    ApiOkResponse({
+      type: SubmodelElementPaginationResponseDto,
+    }),
+    ApiParam(idParamOpts(aasWrapper)),
+    ApiParam(submodelIdParamOpts),
+    Get("/:id/submodels/:submodelId/submodel-elements"),
   );
 }
 
