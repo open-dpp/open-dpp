@@ -1,7 +1,7 @@
 ---
-name: As a [persona], I [want to], [so that].
+name: Create user story
 about: Suggest an user story for this project
-title: ''
+title: As a [persona], I [want to], [so that].
 labels: enhancement
 assignees: ''
 
