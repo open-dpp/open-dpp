@@ -8,9 +8,9 @@ import { Extension } from "./extension";
 import { ConceptDescriptionJsonSchema } from "./parsing/concept-description-json-schema";
 import { JsonVisitor } from "./parsing/json-visitor";
 import { IPersistable } from "./persistable";
-import { IVisitable, IVisitor } from "./visitor";
+import { IAasComponent, IVisitor } from "./visitor";
 
-export class ConceptDescription implements IIdentifiable, IHasDataSpecification, IVisitable<any>, IPersistable {
+export class ConceptDescription implements IIdentifiable, IHasDataSpecification, IAasComponent, IPersistable {
   private constructor(
     public readonly id: string,
     public readonly extensions: Array<Extension>,
@@ -53,8 +53,8 @@ export class ConceptDescription implements IIdentifiable, IHasDataSpecification,
     );
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitConceptDescription(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitConceptDescription(this, context);
   }
 
   static fromPlain(data: unknown): ConceptDescription {

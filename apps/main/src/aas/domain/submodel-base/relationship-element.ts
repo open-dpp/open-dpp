@@ -63,8 +63,8 @@ export class RelationshipElement implements ISubmodelBase, IRelationshipElement 
     });
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitRelationshipElement(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitRelationshipElement(this, context);
   }
 
   toPlain(): Record<string, any> {

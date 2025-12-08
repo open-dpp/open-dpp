@@ -69,8 +69,8 @@ export class SubmodelElementList implements ISubmodelBase {
     });
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitSubmodelElementList(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitSubmodelElementList(this, context);
   }
 
   toPlain(): Record<string, any> {

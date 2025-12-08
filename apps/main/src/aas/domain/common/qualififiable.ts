@@ -1,11 +1,11 @@
 import { QualifierJsonSchema } from "../parsing/common/qualifier-json-schema";
-import { IVisitable, IVisitor } from "../visitor";
+import { IAasComponent, IVisitor } from "../visitor";
 import { DataTypeDefType } from "./data-type-def";
 import { IHasSemantics } from "./has-semantics";
 import { QualifierKindType } from "./qualifier-kind-enum";
 import { Reference } from "./reference";
 
-export class Qualifier implements IHasSemantics, IVisitable<any> {
+export class Qualifier implements IHasSemantics, IAasComponent {
   private constructor(public readonly type: string, public valueType: DataTypeDefType, public semanticId: Reference | null, public readonly supplementalSemanticIds: Reference[], public readonly kind: QualifierKindType, public value: string | null, public valueId: Reference | null) {
   }
 
@@ -26,8 +26,8 @@ export class Qualifier implements IHasSemantics, IVisitable<any> {
     });
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitQualifier(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitQualifier(this, context);
   }
 }
 

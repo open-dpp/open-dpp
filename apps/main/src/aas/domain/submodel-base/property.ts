@@ -60,8 +60,8 @@ export class Property implements ISubmodelBase {
     });
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitProperty(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitProperty(this, context);
   }
 
   toPlain(): Record<string, any> {

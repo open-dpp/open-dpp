@@ -1,8 +1,8 @@
 import { KeyJsonSchema } from "../parsing/common/key-json-schema";
-import { IVisitable, IVisitor } from "../visitor";
+import { IAasComponent, IVisitor } from "../visitor";
 import { KeyTypesType } from "./key-types-enum";
 
-export class Key implements IVisitable<any> {
+export class Key implements IAasComponent {
   private constructor(public type: KeyTypesType, public value: string) {
   }
 
@@ -17,7 +17,7 @@ export class Key implements IVisitable<any> {
     return Key.create(KeyJsonSchema.parse(json));
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitKey(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitKey(this, context);
   }
 }

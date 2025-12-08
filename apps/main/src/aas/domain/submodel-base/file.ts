@@ -54,8 +54,8 @@ export class File implements ISubmodelBase {
     });
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitFile(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitFile(this, context);
   }
 
   toPlain(): Record<string, any> {

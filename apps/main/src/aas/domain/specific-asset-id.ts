@@ -1,9 +1,9 @@
 import { IHasSemantics } from "./common/has-semantics";
 import { Reference } from "./common/reference";
 import { SpecificAssetIdJsonSchema } from "./parsing/specific-asset-id-json-schema";
-import { IVisitable, IVisitor } from "./visitor";
+import { IAasComponent, IVisitor } from "./visitor";
 
-export class SpecificAssetId implements IHasSemantics, IVisitable<any> {
+export class SpecificAssetId implements IHasSemantics, IAasComponent {
   private constructor(
     public readonly name: string,
     public readonly value: string,
@@ -40,7 +40,7 @@ export class SpecificAssetId implements IHasSemantics, IVisitable<any> {
     });
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitSpecificAssetId(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitSpecificAssetId(this, context);
   }
 }

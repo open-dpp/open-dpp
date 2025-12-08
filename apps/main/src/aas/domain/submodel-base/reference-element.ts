@@ -53,8 +53,8 @@ export class ReferenceElement implements ISubmodelBase {
     });
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitReferenceElement(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitReferenceElement(this, context);
   }
 
   toPlain(): Record<string, any> {

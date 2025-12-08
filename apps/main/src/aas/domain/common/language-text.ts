@@ -1,8 +1,8 @@
 import { LanguageTextJsonSchema } from "../parsing/common/language-text-json-schema";
-import { IVisitable, IVisitor } from "../visitor";
+import { IAasComponent, IVisitor } from "../visitor";
 import { LanguageType } from "./language-enum";
 
-export class LanguageText implements IVisitable<any> {
+export class LanguageText implements IAasComponent {
   private constructor(public readonly language: LanguageType, public readonly text: string) {
   }
 
@@ -14,7 +14,7 @@ export class LanguageText implements IVisitable<any> {
     return LanguageText.create(LanguageTextJsonSchema.parse(json));
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitLanguageText(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitLanguageText(this, context);
   }
 }

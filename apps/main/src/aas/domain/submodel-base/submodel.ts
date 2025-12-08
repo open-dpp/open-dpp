@@ -11,14 +11,31 @@ import { Extension } from "../extension";
 import { JsonVisitor } from "../parsing/json-visitor";
 import { SubmodelJsonSchema } from "../parsing/submodel-base/submodel-json-schema";
 import { IPersistable } from "../persistable";
-import { IVisitable, IVisitor } from "../visitor";
+import { IAasComponent, IVisitor } from "../visitor";
 import { parseSubmodelBaseUnion, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+
+export class IdShortPath {
+  constructor(public readonly path: Array<string>) {
+  }
+
+  static create(data: { path: string }): IdShortPath {
+    return new IdShortPath(data.path.split("."));
+  }
+
+  addPathSegment(segment: string) {
+    this.path.push(segment);
+  }
+
+  toString(): string {
+    return this.path.join(".");
+  }
+}
 
 export interface ISubmodelBase
   extends IReferable,
   IHasSemantics,
   IQualifiable,
-  IVisitable<any>,
+  IAasComponent,
   IHasDataSpecification {
   category: string | null;
   idShort: string;
@@ -87,12 +104,16 @@ export class Submodel implements ISubmodelBase, IPersistable {
     });
   };
 
+  findSubmodelElement(idShortPath: IdShortPath): ISubmodelBase | undefined {
+    return this.submodelElements.find(e => e.idShort === idShortPath.toString());
+  }
+
   public addSubmodelElement(submodelElement: ISubmodelBase) {
     this.submodelElements.push(submodelElement);
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitSubmodel(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitSubmodel(this, context);
   }
 
   toPlain(): Record<string, any> {

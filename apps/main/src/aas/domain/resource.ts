@@ -1,7 +1,7 @@
 import { ResourceJsonSchema } from "./parsing/resource-json-schema";
-import { IVisitable, IVisitor } from "./visitor";
+import { IAasComponent, IVisitor } from "./visitor";
 
-export class Resource implements IVisitable<any> {
+export class Resource implements IAasComponent {
   private constructor(
     public readonly path: string,
     public readonly contentType: string | null,
@@ -26,7 +26,7 @@ export class Resource implements IVisitable<any> {
     });
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitResource(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitResource(this, context);
   }
 }

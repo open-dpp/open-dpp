@@ -9,9 +9,9 @@ import { Extension } from "./extension";
 import { AssetAdministrationShellJsonSchema } from "./parsing/asset-administration-shell-json-schema";
 import { JsonVisitor } from "./parsing/json-visitor";
 import { IPersistable } from "./persistable";
-import { IVisitable, IVisitor } from "./visitor";
+import { IAasComponent, IVisitor } from "./visitor";
 
-export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecification, IVisitable<any>, IPersistable {
+export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecification, IAasComponent, IPersistable {
   private constructor(
     public readonly id: string,
     public readonly assetInformation: AssetInformation,
@@ -61,8 +61,8 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     this.submodels.push(submodel);
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitAssetAdministrationShell(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitAssetAdministrationShell(this, context);
   }
 
   static fromPlain(data: unknown): AssetAdministrationShell {

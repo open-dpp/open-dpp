@@ -68,8 +68,8 @@ export class Entity implements ISubmodelBase {
     });
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitEntity(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitEntity(this, context);
   }
 
   toPlain(): Record<string, any> {

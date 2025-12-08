@@ -62,8 +62,8 @@ export class AnnotatedRelationshipElement implements ISubmodelBase, IRelationshi
     });
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitAnnotatedRelationshipElement(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitAnnotatedRelationshipElement(this, context);
   }
 
   toPlain(): Record<string, any> {

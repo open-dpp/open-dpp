@@ -60,8 +60,8 @@ export class Range implements ISubmodelBase {
     });
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitRange(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitRange(this, context);
   }
 
   toPlain(): Record<string, any> {

@@ -1,9 +1,9 @@
 import { DataTypeDefType } from "./common/data-type-def";
 import { Reference } from "./common/reference";
 import { ExtensionJsonSchema } from "./parsing/extension-json-schema";
-import { IVisitable, IVisitor } from "./visitor";
+import { IAasComponent, IVisitor } from "./visitor";
 
-export class Extension implements IVisitable<any> {
+export class Extension implements IAasComponent {
   private constructor(
     public readonly name: string,
     public readonly semanticId: Reference | null = null,
@@ -47,7 +47,7 @@ export class Extension implements IVisitable<any> {
     });
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitExtension(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitExtension(this, context);
   }
 }

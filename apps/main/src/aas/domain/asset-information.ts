@@ -2,9 +2,9 @@ import { AssetKindType } from "./asset-kind-enum";
 import { AssetInformationJsonSchema } from "./parsing/asset-information-json-schema";
 import { Resource } from "./resource";
 import { SpecificAssetId } from "./specific-asset-id";
-import { IVisitable, IVisitor } from "./visitor";
+import { IAasComponent, IVisitor } from "./visitor";
 
-export class AssetInformation implements IVisitable<any> {
+export class AssetInformation implements IAasComponent {
   private constructor(
     public readonly assetKind: AssetKindType,
     public readonly globalAssetId: string | null = null,
@@ -41,7 +41,7 @@ export class AssetInformation implements IVisitable<any> {
     });
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitAssetInformation(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitAssetInformation(this, context);
   }
 }

@@ -26,7 +26,7 @@ import { SubmodelElementCollection } from "../submodel-base/submodel-element-col
 import { SubmodelElementList } from "../submodel-base/submodel-element-list";
 import { IVisitor } from "../visitor";
 
-export class JsonVisitor implements IVisitor<any> {
+export class JsonVisitor implements IVisitor<undefined, any> {
   private buildBase(submodelBase: ISubmodelBase) {
     return {
       category: submodelBase.category,

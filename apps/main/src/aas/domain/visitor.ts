@@ -23,33 +23,33 @@ import { Submodel } from "./submodel-base/submodel";
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 
-export interface IVisitor<R> {
-  visitAdministrativeInformation: (element: AdministrativeInformation) => R;
-  visitKey: (element: Key) => R;
-  visitLanguageText: (element: LanguageText) => R;
-  visitQualifier: (element: Qualifier) => R;
-  visitReference: (element: Reference) => R;
-  visitAnnotatedRelationshipElement: (element: AnnotatedRelationshipElement) => R;
-  visitBlob: (element: Blob) => R;
-  visitEntity: (element: Entity) => R;
-  visitFile: (element: File) => R;
-  visitMultiLanguageProperty: (element: MultiLanguageProperty) => R;
-  visitProperty: (element: Property) => R;
-  visitRange: (element: Range) => R;
-  visitReferenceElement: (element: ReferenceElement) => R;
-  visitRelationshipElement: (element: RelationshipElement) => R;
-  visitSubmodel: (element: Submodel) => R;
-  visitSubmodelElementCollection: (element: SubmodelElementCollection) => R;
-  visitSubmodelElementList: (element: SubmodelElementList) => R;
-  visitEmbeddedDataSpecification: (element: EmbeddedDataSpecification) => R;
-  visitExtension: (element: Extension) => R;
-  visitSpecificAssetId: (element: SpecificAssetId) => R;
-  visitAssetAdministrationShell: (element: AssetAdministrationShell) => R;
-  visitAssetInformation: (element: AssetInformation) => R;
-  visitResource: (element: Resource) => R;
-  visitConceptDescription: (element: ConceptDescription) => R;
+export interface IVisitor<ContextT, R> {
+  visitAdministrativeInformation: (element: AdministrativeInformation, context?: ContextT) => R;
+  visitKey: (element: Key, context?: ContextT) => R;
+  visitLanguageText: (element: LanguageText, context?: ContextT) => R;
+  visitQualifier: (element: Qualifier, context?: ContextT) => R;
+  visitReference: (element: Reference, context?: ContextT) => R;
+  visitAnnotatedRelationshipElement: (element: AnnotatedRelationshipElement, context?: ContextT) => R;
+  visitBlob: (element: Blob, context?: ContextT) => R;
+  visitEntity: (element: Entity, context?: ContextT) => R;
+  visitFile: (element: File, context?: ContextT) => R;
+  visitMultiLanguageProperty: (element: MultiLanguageProperty, context?: ContextT) => R;
+  visitProperty: (element: Property, context?: ContextT) => R;
+  visitRange: (element: Range, context?: ContextT) => R;
+  visitReferenceElement: (element: ReferenceElement, context?: ContextT) => R;
+  visitRelationshipElement: (element: RelationshipElement, context?: ContextT) => R;
+  visitSubmodel: (element: Submodel, context?: ContextT) => R;
+  visitSubmodelElementCollection: (element: SubmodelElementCollection, context?: ContextT) => R;
+  visitSubmodelElementList: (element: SubmodelElementList, context?: ContextT) => R;
+  visitEmbeddedDataSpecification: (element: EmbeddedDataSpecification, context?: ContextT) => R;
+  visitExtension: (element: Extension, context?: ContextT) => R;
+  visitSpecificAssetId: (element: SpecificAssetId, context?: ContextT) => R;
+  visitAssetAdministrationShell: (element: AssetAdministrationShell, context?: ContextT) => R;
+  visitAssetInformation: (element: AssetInformation, context?: ContextT) => R;
+  visitResource: (element: Resource, context?: ContextT) => R;
+  visitConceptDescription: (element: ConceptDescription, context?: ContextT) => R;
 }
 
-export interface IVisitable<R> {
-  accept: (visitor: IVisitor<R>) => R;
+export interface IAasComponent {
+  accept: <ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT) => R;
 }

@@ -1,8 +1,8 @@
 import { Reference } from "./common/reference";
 import { EmbeddedDataSpecificationJsonSchema } from "./parsing/embedded-data-specification-json-schema";
-import { IVisitable, IVisitor } from "./visitor";
+import { IAasComponent, IVisitor } from "./visitor";
 
-export class EmbeddedDataSpecification implements IVisitable<any> {
+export class EmbeddedDataSpecification implements IAasComponent {
   private constructor(
     public readonly dataSpecification: Reference,
   ) {
@@ -23,7 +23,7 @@ export class EmbeddedDataSpecification implements IVisitable<any> {
     });
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitEmbeddedDataSpecification(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitEmbeddedDataSpecification(this, context);
   }
 }

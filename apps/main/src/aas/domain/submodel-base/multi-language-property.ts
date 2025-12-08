@@ -55,8 +55,8 @@ export class MultiLanguageProperty implements ISubmodelBase {
     });
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitMultiLanguageProperty(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitMultiLanguageProperty(this, context);
   }
 
   toPlain(): Record<string, any> {

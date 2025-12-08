@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ReferenceJsonSchema } from "../parsing/common/reference-json-schema";
-import { IVisitable, IVisitor } from "../visitor";
+import { IAasComponent, IVisitor } from "../visitor";
 import { Key } from "./key";
 
 export const ReferenceTypes = {
@@ -11,7 +11,7 @@ export const ReferenceTypes = {
 export const ReferenceTypesEnum = z.enum(ReferenceTypes);
 export type ReferenceTypesType = z.infer<typeof ReferenceTypesEnum>;
 
-export class Reference implements IVisitable<any> {
+export class Reference implements IAasComponent {
   private constructor(public type: ReferenceTypesType, public referredSemanticId: Reference | null, public keys: Key[]) {
   }
 
@@ -28,7 +28,7 @@ export class Reference implements IVisitable<any> {
     });
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitReference(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitReference(this, context);
   }
 }

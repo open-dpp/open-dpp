@@ -1,7 +1,7 @@
 import { AdministrativeInformationJsonSchema } from "../parsing/administrative-information-json-schema";
-import { IVisitable, IVisitor } from "../visitor";
+import { IAasComponent, IVisitor } from "../visitor";
 
-export class AdministrativeInformation implements IVisitable<any> {
+export class AdministrativeInformation implements IAasComponent {
   private constructor(public readonly version: string, public readonly revision: string) {
   }
 
@@ -13,7 +13,7 @@ export class AdministrativeInformation implements IVisitable<any> {
     return AdministrativeInformation.create(AdministrativeInformationJsonSchema.parse(json));
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitAdministrativeInformation(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitAdministrativeInformation(this, context);
   }
 }

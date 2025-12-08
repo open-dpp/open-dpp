@@ -54,8 +54,8 @@ export class Blob implements ISubmodelBase {
     });
   }
 
-  accept(visitor: IVisitor<any>): any {
-    return visitor.visitBlob(this);
+  accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
+    return visitor.visitBlob(this, context);
   }
 
   toPlain(): Record<string, any> {
