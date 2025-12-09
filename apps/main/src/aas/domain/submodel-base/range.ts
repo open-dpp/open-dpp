@@ -30,8 +30,8 @@ export class Range implements ISubmodelBase {
   static create(data: SubmodelBaseProps & {
     valueType: DataTypeDefType;
     extensions?: Array<Extension>;
-    min?: string;
-    max?: string;
+    min?: string | null;
+    max?: string | null;
   }) {
     return new Range(
       data.valueType,
@@ -67,5 +67,9 @@ export class Range implements ISubmodelBase {
   toPlain(): Record<string, any> {
     const jsonVisitor = new JsonVisitor();
     return this.accept(jsonVisitor);
+  }
+
+  * getChildren(): IterableIterator<ISubmodelBase> {
+    yield* [];
   }
 }

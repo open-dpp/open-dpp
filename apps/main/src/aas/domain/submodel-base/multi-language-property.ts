@@ -28,7 +28,7 @@ export class MultiLanguageProperty implements ISubmodelBase {
   static create(data: SubmodelBaseProps & {
     extensions?: Extension[];
     value?: LanguageText[];
-    valueId?: Reference;
+    valueId?: Reference | null;
   }) {
     return new MultiLanguageProperty(
       data.extensions ?? [],
@@ -62,5 +62,9 @@ export class MultiLanguageProperty implements ISubmodelBase {
   toPlain(): Record<string, any> {
     const jsonVisitor = new JsonVisitor();
     return this.accept(jsonVisitor);
+  }
+
+  * getChildren(): IterableIterator<ISubmodelBase> {
+    yield* [];
   }
 }

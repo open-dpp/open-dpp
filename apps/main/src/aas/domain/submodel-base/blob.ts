@@ -28,7 +28,7 @@ export class Blob implements ISubmodelBase {
   static create(data: SubmodelBaseProps & {
     contentType: string;
     extensions?: Array<Extension>;
-    value?: Uint8Array;
+    value?: Uint8Array | null;
   }) {
     return new Blob(
       data.contentType,
@@ -61,5 +61,9 @@ export class Blob implements ISubmodelBase {
   toPlain(): Record<string, any> {
     const jsonVisitor = new JsonVisitor();
     return this.accept(jsonVisitor);
+  }
+
+  * getChildren(): IterableIterator<ISubmodelBase> {
+    yield* [];
   }
 }

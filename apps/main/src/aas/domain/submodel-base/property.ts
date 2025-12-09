@@ -30,8 +30,8 @@ export class Property implements ISubmodelBase {
   static create(data: SubmodelBaseProps & {
     valueType: DataTypeDefType;
     extensions?: Extension[];
-    value?: string;
-    valueId?: Reference;
+    value?: string | null;
+    valueId?: Reference | null;
   }) {
     return new Property(
       data.valueType,
@@ -67,5 +67,9 @@ export class Property implements ISubmodelBase {
   toPlain(): Record<string, any> {
     const jsonVisitor = new JsonVisitor();
     return this.accept(jsonVisitor);
+  }
+
+  * getChildren(): IterableIterator<ISubmodelBase> {
+    yield* [];
   }
 }

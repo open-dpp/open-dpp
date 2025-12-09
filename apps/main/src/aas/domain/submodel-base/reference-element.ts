@@ -27,7 +27,7 @@ export class ReferenceElement implements ISubmodelBase {
   static create(
     data: SubmodelBaseProps & {
       extensions?: Array<Extension>;
-      value?: Reference;
+      value?: Reference | null;
     },
   ) {
     return new ReferenceElement(
@@ -60,5 +60,9 @@ export class ReferenceElement implements ISubmodelBase {
   toPlain(): Record<string, any> {
     const jsonVisitor = new JsonVisitor();
     return this.accept(jsonVisitor);
+  }
+
+  * getChildren(): IterableIterator<ISubmodelBase> {
+    yield* [];
   }
 }

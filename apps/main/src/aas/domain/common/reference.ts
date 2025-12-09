@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ReferenceJsonSchema } from "../parsing/common/reference-json-schema";
-import { IAasComponent, IVisitor } from "../visitor";
+import { IVisitable, IVisitor } from "../visitor";
 import { Key } from "./key";
 
 export const ReferenceTypes = {
@@ -11,11 +11,19 @@ export const ReferenceTypes = {
 export const ReferenceTypesEnum = z.enum(ReferenceTypes);
 export type ReferenceTypesType = z.infer<typeof ReferenceTypesEnum>;
 
-export class Reference implements IAasComponent {
-  private constructor(public type: ReferenceTypesType, public referredSemanticId: Reference | null, public keys: Key[]) {
+export class Reference implements IVisitable {
+  private constructor(
+    public type: ReferenceTypesType,
+    public referredSemanticId: Reference | null,
+    public keys: Key[],
+  ) {
   }
 
-  static create(data: { type: ReferenceTypesType; referredSemanticId?: Reference; keys: Key[] }): Reference {
+  static create(data: {
+    type: ReferenceTypesType;
+    referredSemanticId?: Reference | null;
+    keys: Key[];
+  }): Reference {
     return new Reference(data.type, data.referredSemanticId ?? null, data.keys);
   }
 

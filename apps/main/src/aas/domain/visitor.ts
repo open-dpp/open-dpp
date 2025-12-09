@@ -50,6 +50,6 @@ export interface IVisitor<ContextT, R> {
   visitConceptDescription: (element: ConceptDescription, context?: ContextT) => R;
 }
 
-export interface IAasComponent {
+export interface IVisitable {
   accept: <ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT) => R;
 }

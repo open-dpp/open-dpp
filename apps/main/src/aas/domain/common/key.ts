@@ -1,8 +1,8 @@
 import { KeyJsonSchema } from "../parsing/common/key-json-schema";
-import { IAasComponent, IVisitor } from "../visitor";
+import { IVisitable, IVisitor } from "../visitor";
 import { KeyTypesType } from "./key-types-enum";
 
-export class Key implements IAasComponent {
+export class Key implements IVisitable {
   private constructor(public type: KeyTypesType, public value: string) {
   }
 

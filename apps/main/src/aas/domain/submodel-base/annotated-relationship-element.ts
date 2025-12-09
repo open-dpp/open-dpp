@@ -70,4 +70,8 @@ export class AnnotatedRelationshipElement implements ISubmodelBase, IRelationshi
     const jsonVisitor = new JsonVisitor();
     return this.accept(jsonVisitor);
   }
+
+  * getChildren(): IterableIterator<ISubmodelBase> {
+    yield* this.annotations;
+  }
 }

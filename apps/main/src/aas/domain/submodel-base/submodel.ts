@@ -11,11 +11,11 @@ import { Extension } from "../extension";
 import { JsonVisitor } from "../parsing/json-visitor";
 import { SubmodelJsonSchema } from "../parsing/submodel-base/submodel-json-schema";
 import { IPersistable } from "../persistable";
-import { IAasComponent, IVisitor } from "../visitor";
+import { IVisitable, IVisitor } from "../visitor";
 import { parseSubmodelBaseUnion, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
 export class IdShortPath {
-  constructor(public readonly path: Array<string>) {
+  constructor(private readonly _segments: Array<string>) {
   }
 
   static create(data: { path: string }): IdShortPath {
@@ -23,11 +23,15 @@ export class IdShortPath {
   }
 
   addPathSegment(segment: string) {
-    this.path.push(segment);
+    this._segments.push(segment);
+  }
+
+  get segments(): IterableIterator<string> {
+    return this._segments[Symbol.iterator]();
   }
 
   toString(): string {
-    return this.path.join(".");
+    return this._segments.join(".");
   }
 }
 
@@ -35,7 +39,7 @@ export interface ISubmodelBase
   extends IReferable,
   IHasSemantics,
   IQualifiable,
-  IAasComponent,
+  IVisitable,
   IHasDataSpecification {
   category: string | null;
   idShort: string;
@@ -46,6 +50,7 @@ export interface ISubmodelBase
   qualifiers: Qualifier[];
   embeddedDataSpecifications: Array<EmbeddedDataSpecification>;
   toPlain: () => Record<string, any>;
+  getChildren: () => IterableIterator<ISubmodelBase>;
 }
 
 export class Submodel implements ISubmodelBase, IPersistable {
@@ -70,8 +75,8 @@ export class Submodel implements ISubmodelBase, IPersistable {
     data: SubmodelBaseProps & {
       id: string;
       extensions?: Array<Extension>;
-      administration?: AdministrativeInformation;
-      kind?: ModellingKindType;
+      administration?: AdministrativeInformation | null;
+      kind?: ModellingKindType | null;
       submodelElements?: Array<ISubmodelBase>;
     },
   ) {
@@ -105,7 +110,19 @@ export class Submodel implements ISubmodelBase, IPersistable {
   };
 
   findSubmodelElement(idShortPath: IdShortPath): ISubmodelBase | undefined {
-    return this.submodelElements.find(e => e.idShort === idShortPath.toString());
+    let current: ISubmodelBase | undefined;
+
+    let children = [...this.getChildren()];
+
+    for (const segment of idShortPath.segments) {
+      current = children.find(el => el.idShort === segment);
+      if (!current) {
+        return undefined; // path broken
+      }
+      children = [...current.getChildren()]; // descend
+    }
+
+    return current;
   }
 
   public addSubmodelElement(submodelElement: ISubmodelBase) {
@@ -119,5 +136,9 @@ export class Submodel implements ISubmodelBase, IPersistable {
   toPlain(): Record<string, any> {
     const jsonVisitor = new JsonVisitor();
     return this.accept(jsonVisitor);
+  }
+
+  * getChildren(): IterableIterator<ISubmodelBase> {
+    yield* this.submodelElements;
   }
 }

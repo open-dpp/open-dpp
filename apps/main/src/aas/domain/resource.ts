@@ -1,7 +1,7 @@
 import { ResourceJsonSchema } from "./parsing/resource-json-schema";
-import { IAasComponent, IVisitor } from "./visitor";
+import { IVisitable, IVisitor } from "./visitor";
 
-export class Resource implements IAasComponent {
+export class Resource implements IVisitable {
   private constructor(
     public readonly path: string,
     public readonly contentType: string | null,
@@ -10,7 +10,7 @@ export class Resource implements IAasComponent {
 
   static create(data: {
     path: string;
-    contentType?: string;
+    contentType?: string | null;
   }) {
     return new Resource(
       data.path,

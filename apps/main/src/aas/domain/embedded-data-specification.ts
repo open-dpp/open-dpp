@@ -1,8 +1,8 @@
 import { Reference } from "./common/reference";
 import { EmbeddedDataSpecificationJsonSchema } from "./parsing/embedded-data-specification-json-schema";
-import { IAasComponent, IVisitor } from "./visitor";
+import { IVisitable, IVisitor } from "./visitor";
 
-export class EmbeddedDataSpecification implements IAasComponent {
+export class EmbeddedDataSpecification implements IVisitable {
   private constructor(
     public readonly dataSpecification: Reference,
   ) {

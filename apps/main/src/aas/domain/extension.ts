@@ -1,9 +1,9 @@
 import { DataTypeDefType } from "./common/data-type-def";
 import { Reference } from "./common/reference";
 import { ExtensionJsonSchema } from "./parsing/extension-json-schema";
-import { IAasComponent, IVisitor } from "./visitor";
+import { IVisitable, IVisitor } from "./visitor";
 
-export class Extension implements IAasComponent {
+export class Extension implements IVisitable {
   private constructor(
     public readonly name: string,
     public readonly semanticId: Reference | null = null,
@@ -18,10 +18,10 @@ export class Extension implements IAasComponent {
   static create(
     data: {
       name: string;
-      semanticId?: Reference;
+      semanticId?: Reference | null;
       supplementalSemanticIds?: Array<Reference>;
-      valueType?: DataTypeDefType;
-      value?: string;
+      valueType?: DataTypeDefType | null;
+      value?: string | null;
       refersTo?: Array<Reference>;
     },
   ) {

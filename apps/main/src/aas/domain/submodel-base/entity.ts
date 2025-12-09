@@ -37,7 +37,7 @@ export class Entity implements ISubmodelBase {
     entityType: EntityType;
     extensions?: Array<Extension>;
     statements?: Array<ISubmodelBase>;
-    globalAssetId?: string;
+    globalAssetId?: string | null;
     specificAssetIds?: Array<SpecificAssetId>;
   }) {
     return new Entity(
@@ -75,5 +75,9 @@ export class Entity implements ISubmodelBase {
   toPlain(): Record<string, any> {
     const jsonVisitor = new JsonVisitor();
     return this.accept(jsonVisitor);
+  }
+
+  * getChildren(): IterableIterator<ISubmodelBase> {
+    yield* this.statements;
   }
 }

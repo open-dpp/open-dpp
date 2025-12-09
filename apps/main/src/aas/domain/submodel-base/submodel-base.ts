@@ -9,11 +9,11 @@ import { ISubmodelBase } from "./submodel";
 import { getSubmodelClass } from "./submodel-registry";
 
 export interface SubmodelBaseProps {
-  category?: string;
+  category?: string | null;
   idShort: string;
   displayName?: Array<LanguageText>;
   description?: Array<LanguageText>;
-  semanticId?: Reference;
+  semanticId?: Reference | null;
   supplementalSemanticIds?: Array<Reference>;
   qualifiers?: Array<Qualifier>;
   embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;

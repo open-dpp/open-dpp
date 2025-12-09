@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { AasSubmodelElementsEnum } from "../../submodel-base/aas-submodel-elements";
-import { nullishToOptional, ValueTypeSchema } from "../common/basic-json-schema";
+import { ValueTypeSchema } from "../common/basic-json-schema";
 import { ReferenceJsonSchema } from "../common/reference-json-schema";
 import { ExtensionJsonSchema } from "../extension-json-schema";
 import { SubmodelBaseJsonSchema } from "./submodel-base-json-schema";
@@ -15,9 +15,9 @@ export function SubmodelElementListJsonSchemaImpl() {
     ...SubmodelBaseJsonSchema.shape,
     typeValueListElement: AasSubmodelElementsEnum,
     extensions: ExtensionJsonSchema.array().default([]),
-    orderRelevant: nullishToOptional(z.boolean()),
-    semanticIdListElement: nullishToOptional(ReferenceJsonSchema),
-    valueTypeListElement: nullishToOptional(ValueTypeSchema),
+    orderRelevant: z.nullish(z.boolean()),
+    semanticIdListElement: z.nullish(ReferenceJsonSchema),
+    valueTypeListElement: z.nullish(ValueTypeSchema),
     value: SubmodelBaseUnionSchema.array().default([]),
   });
 };

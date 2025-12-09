@@ -1,13 +1,11 @@
 import { Factory } from "fishery";
-import { z } from "zod/index";
-import { SubmodelJsonSchema } from "../domain/parsing/submodel-base/submodel-json-schema";
 
 interface SubmodelTransientParams {
   iriDomain: string;
 }
 
 export const submodelDesignOfProductPlainFactory
-  = Factory.define<z.input<typeof SubmodelJsonSchema>, SubmodelTransientParams> (({ transientParams }) => ({
+  = Factory.define<any, SubmodelTransientParams> (({ transientParams }) => ({
     modelType: "Submodel",
     kind: "Instance",
     semanticId: {
@@ -217,7 +215,7 @@ export const submodelDesignOfProductPlainFactory
     ],
   }));
 
-export const submodelCarbonFootprintPlainFactory = Factory.define<z.input<typeof SubmodelJsonSchema>, SubmodelTransientParams>(({ transientParams }) => ({
+export const submodelCarbonFootprintPlainFactory = Factory.define<any, SubmodelTransientParams>(({ transientParams }) => ({
   modelType: "Submodel",
   kind: "Instance",
   semanticId: {

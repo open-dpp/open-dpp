@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { nullishToOptional } from "../common/basic-json-schema";
 import { LanguageTextJsonSchema } from "../common/language-text-json-schema";
 import { ReferenceJsonSchema } from "../common/reference-json-schema";
 import { ExtensionJsonSchema } from "../extension-json-schema";
@@ -9,5 +8,5 @@ export const MultiLanguagePropertyJsonSchema = z.object({
   ...SubmodelBaseJsonSchema.shape,
   extensions: ExtensionJsonSchema.array().default([]),
   value: LanguageTextJsonSchema.array().default([]),
-  valueId: nullishToOptional(ReferenceJsonSchema),
+  valueId: z.nullish(ReferenceJsonSchema),
 });

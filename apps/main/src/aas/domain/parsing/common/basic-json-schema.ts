@@ -1,11 +1,7 @@
 import { z } from "zod";
 import { DataTypeDef } from "../../common/data-type-def";
 
-export function nullishToOptional<T extends z.ZodType>(schema: T) {
-  return schema.nullish().transform(value => value === null ? undefined : value);
-}
-
-export const ValueTypeSchema = z.string().transform(
+export const ValueTypeSchema = z.string().overwrite(
   (value) => {
     // turn "positiveInteger" → "PositiveInteger"
     let key = value;
@@ -18,8 +14,6 @@ export const ValueTypeSchema = z.string().transform(
     if (!(key in DataTypeDef)) {
       throw new Error(`Unknown number type: ${value}`);
     }
-
-    // return the enum value
-    return z.enum(DataTypeDef).parse(key);
+    return key;
   },
-);
+).pipe(z.enum(DataTypeDef));

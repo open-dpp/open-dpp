@@ -152,6 +152,31 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     expect(response.body.result).toEqual(SubmodelBaseUnionSchema.array().parse(submodels[1].submodelElements.map(s => s.toPlain())));
   }
 
+  async function assertGetSubmodelElementById(createEntity: CreateEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const entity = await createEntity(org.id);
+    const response = await request(app.getHttpServer())
+      .get(`${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements/DesignOfProduct.Author.AuthorName`)
+      .set("Cookie", userCookie)
+      .send();
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      modelType: "Property",
+      semanticId: {
+        keys: [
+          {
+            type: "GlobalReference",
+            value: "AuthorName",
+          },
+        ],
+        type: "ExternalReference",
+      },
+      value: "Fabrikvordenker:in ER28-0652",
+      valueType: "xs:string",
+      idShort: "AuthorName",
+    });
+  }
+
   afterAll(async () => {
     await app.close();
   });
@@ -164,6 +189,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       getSubmodels: assertGetSubmodels,
       getSubmodelById: assertGetSubmodelById,
       getSubmodelElements: assertGetSubmodelElements,
+      getSubmodelElementById: assertGetSubmodelElementById,
     },
   };
 }

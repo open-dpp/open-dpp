@@ -1,9 +1,9 @@
 import { IHasSemantics } from "./common/has-semantics";
 import { Reference } from "./common/reference";
 import { SpecificAssetIdJsonSchema } from "./parsing/specific-asset-id-json-schema";
-import { IAasComponent, IVisitor } from "./visitor";
+import { IVisitable, IVisitor } from "./visitor";
 
-export class SpecificAssetId implements IHasSemantics, IAasComponent {
+export class SpecificAssetId implements IHasSemantics, IVisitable {
   private constructor(
     public readonly name: string,
     public readonly value: string,
@@ -16,9 +16,9 @@ export class SpecificAssetId implements IHasSemantics, IAasComponent {
   static create(data: {
     name: string;
     value: string;
-    semanticId?: Reference;
+    semanticId?: Reference | null;
     supplementalSemanticIds?: Array<Reference>;
-    externalSubjectId?: Reference;
+    externalSubjectId?: Reference | null;
   }) {
     return new SpecificAssetId(
       data.name,

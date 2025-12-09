@@ -8,9 +8,9 @@ import { Extension } from "./extension";
 import { ConceptDescriptionJsonSchema } from "./parsing/concept-description-json-schema";
 import { JsonVisitor } from "./parsing/json-visitor";
 import { IPersistable } from "./persistable";
-import { IAasComponent, IVisitor } from "./visitor";
+import { IVisitable, IVisitor } from "./visitor";
 
-export class ConceptDescription implements IIdentifiable, IHasDataSpecification, IAasComponent, IPersistable {
+export class ConceptDescription implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable {
   private constructor(
     public readonly id: string,
     public readonly extensions: Array<Extension>,
@@ -29,11 +29,11 @@ export class ConceptDescription implements IIdentifiable, IHasDataSpecification,
     data: {
       id: string;
       extensions?: Array<Extension>;
-      category?: string;
-      idShort?: string;
+      category?: string | null;
+      idShort?: string | null;
       displayName?: Array<LanguageText>;
       description?: Array<LanguageText>;
-      semanticId?: Reference;
+      semanticId?: Reference | null;
       administration?: AdministrativeInformation;
       embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
       isCaseOf?: Reference[];

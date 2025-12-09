@@ -9,9 +9,9 @@ import { Extension } from "./extension";
 import { AssetAdministrationShellJsonSchema } from "./parsing/asset-administration-shell-json-schema";
 import { JsonVisitor } from "./parsing/json-visitor";
 import { IPersistable } from "./persistable";
-import { IAasComponent, IVisitor } from "./visitor";
+import { IVisitable, IVisitor } from "./visitor";
 
-export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecification, IAasComponent, IPersistable {
+export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable {
   private constructor(
     public readonly id: string,
     public readonly assetInformation: AssetInformation,
@@ -32,13 +32,13 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
       id: string;
       assetInformation: AssetInformation;
       extensions?: Extension[];
-      category?: string;
-      idShort?: string;
+      category?: string | null;
+      idShort?: string | null;
       displayName?: LanguageText[];
       description?: LanguageText[];
       administration?: AdministrativeInformation;
       embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
-      derivedFrom?: Reference;
+      derivedFrom?: Reference | null;
       submodels?: Array<Reference>;
     },
   ) {

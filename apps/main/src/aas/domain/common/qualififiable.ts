@@ -1,16 +1,40 @@
 import { QualifierJsonSchema } from "../parsing/common/qualifier-json-schema";
-import { IAasComponent, IVisitor } from "../visitor";
+import { IVisitable, IVisitor } from "../visitor";
 import { DataTypeDefType } from "./data-type-def";
 import { IHasSemantics } from "./has-semantics";
 import { QualifierKindType } from "./qualifier-kind-enum";
 import { Reference } from "./reference";
 
-export class Qualifier implements IHasSemantics, IAasComponent {
-  private constructor(public readonly type: string, public valueType: DataTypeDefType, public semanticId: Reference | null, public readonly supplementalSemanticIds: Reference[], public readonly kind: QualifierKindType, public value: string | null, public valueId: Reference | null) {
+export class Qualifier implements IHasSemantics, IVisitable {
+  private constructor(
+    public readonly type: string,
+    public valueType: DataTypeDefType,
+    public semanticId: Reference | null,
+    public readonly supplementalSemanticIds: Reference[],
+    public readonly kind: QualifierKindType,
+    public value: string | null,
+    public valueId: Reference | null,
+  ) {
   }
 
-  static create(data: { type: string; valueType: DataTypeDefType; semanticId?: Reference; supplementalSemanticIds: Reference[]; kind: QualifierKindType; value?: string; valueId?: Reference }): Qualifier {
-    return new Qualifier(data.type, data.valueType, data.semanticId ?? null, data.supplementalSemanticIds, data.kind, data.value ?? null, data.valueId ?? null);
+  static create(data: {
+    type: string;
+    valueType: DataTypeDefType;
+    semanticId?: Reference | null;
+    supplementalSemanticIds: Reference[];
+    kind: QualifierKindType;
+    value?: string | null;
+    valueId?: Reference | null;
+  }): Qualifier {
+    return new Qualifier(
+      data.type,
+      data.valueType,
+      data.semanticId ?? null,
+      data.supplementalSemanticIds,
+      data.kind,
+      data.value ?? null,
+      data.valueId ?? null,
+    );
   }
 
   static fromPlain(json: unknown): Qualifier {

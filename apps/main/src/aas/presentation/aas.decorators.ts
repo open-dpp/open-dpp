@@ -5,7 +5,7 @@ import { ApiOkResponse, ApiOperation, ApiParam, ApiQuery } from "@nestjs/swagger
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { fromNodeHeaders } from "better-auth/node";
 import { AuthService } from "../../auth/auth.service";
-import { IdDtoSchema } from "../../identification/id.dto";
+import { IdDtoSchema, IdShortPathDtoSchema } from "../../identification/id.dto";
 import { Environment } from "../domain/environment";
 import {
   IDigitalProductPassportIdentifiableRepository,
@@ -49,6 +49,13 @@ const submodelIdParamOpts = {
   type: String,
   required: true,
   description: `The id of the submodel`,
+};
+
+const idShortPathParamOpts = {
+  name: "idShortPath",
+  type: String,
+  required: true,
+  description: "IdShort path to the submodel element (dot-separated)",
 };
 
 export function ApiGetShells(aasWrapper: AasWrapperType) {
@@ -109,8 +116,24 @@ export function ApiGetSubmodelElements(aasWrapper: AasWrapperType) {
   );
 }
 
+// export function ApiGetSubmodelElementById(aasWrapper: AasWrapperType) {
+//   return applyDecorators(
+//     ApiOperation({
+//       summary: `Returns submodel element by id`,
+//     }),
+//     ApiOkResponse({
+//       type: SubmodelElementResponseDto,
+//     }),
+//     ApiParam(idParamOpts(aasWrapper)),
+//     ApiParam(submodelIdParamOpts),
+//     ApiParam(idShortPathParamOpts),
+//     Get("/:id/submodels/:submodelId/submodel-elements/:idShortPath"),
+//   );
+// }
+
 export const IdParam = () => Param("id", new ZodValidationPipe(IdDtoSchema));
 export const SubmodelIdParam = () => Param("submodelId", new ZodValidationPipe(IdDtoSchema));
+export const IdShortPathParam = () => Param("idShortPath", new ZodValidationPipe(IdShortPathDtoSchema));
 
 export const RequestParam = () => Req();
 

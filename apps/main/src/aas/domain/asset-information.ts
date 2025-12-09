@@ -2,9 +2,9 @@ import { AssetKindType } from "./asset-kind-enum";
 import { AssetInformationJsonSchema } from "./parsing/asset-information-json-schema";
 import { Resource } from "./resource";
 import { SpecificAssetId } from "./specific-asset-id";
-import { IAasComponent, IVisitor } from "./visitor";
+import { IVisitable, IVisitor } from "./visitor";
 
-export class AssetInformation implements IAasComponent {
+export class AssetInformation implements IVisitable {
   private constructor(
     public readonly assetKind: AssetKindType,
     public readonly globalAssetId: string | null = null,
@@ -16,10 +16,10 @@ export class AssetInformation implements IAasComponent {
 
   static create(data: {
     assetKind: AssetKindType;
-    globalAssetId?: string;
+    globalAssetId?: string | null;
     specificAssetIds?: Array<SpecificAssetId>;
-    assetType?: string;
-    defaultThumbnail?: Resource;
+    assetType?: string | null;
+    defaultThumbnail?: Resource | null;
   }) {
     return new AssetInformation(
       data.assetKind,

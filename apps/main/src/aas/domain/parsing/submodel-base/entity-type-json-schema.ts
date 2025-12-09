@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { EntityType } from "../../submodel-base/entity";
-import { nullishToOptional } from "../common/basic-json-schema";
 import { ExtensionJsonSchema } from "../extension-json-schema";
 import { SpecificAssetIdJsonSchema } from "../specific-asset-id-json-schema";
 import { SubmodelBaseJsonSchema } from "./submodel-base-json-schema";
@@ -16,7 +15,7 @@ export function EntityTypeJsonSchemaImpl() {
     entityType: z.enum(EntityType),
     extensions: ExtensionJsonSchema.array().default([]),
     statements: SubmodelBaseUnionSchema.array().default([]),
-    globalAssetId: nullishToOptional(z.string()),
+    globalAssetId: z.nullish(z.string()),
     specificAssetIds: SpecificAssetIdJsonSchema.array().default([]),
   },
   );

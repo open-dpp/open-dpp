@@ -28,7 +28,7 @@ export class File implements ISubmodelBase {
   static create(data: SubmodelBaseProps & {
     contentType: string;
     extensions?: Array<Extension>;
-    value?: string;
+    value?: string | null;
   }) {
     return new File(
       data.contentType,
@@ -61,5 +61,9 @@ export class File implements ISubmodelBase {
   toPlain(): Record<string, any> {
     const jsonVisitor = new JsonVisitor();
     return this.accept(jsonVisitor);
+  }
+
+  * getChildren(): IterableIterator<ISubmodelBase> {
+    yield* [];
   }
 }

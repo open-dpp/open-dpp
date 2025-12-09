@@ -1,8 +1,11 @@
 import { AdministrativeInformationJsonSchema } from "../parsing/administrative-information-json-schema";
-import { IAasComponent, IVisitor } from "../visitor";
+import { IVisitable, IVisitor } from "../visitor";
 
-export class AdministrativeInformation implements IAasComponent {
-  private constructor(public readonly version: string, public readonly revision: string) {
+export class AdministrativeInformation implements IVisitable {
+  private constructor(
+    public readonly version: string,
+    public readonly revision: string,
+  ) {
   }
 
   static create(data: { version: string; revision: string }): AdministrativeInformation {

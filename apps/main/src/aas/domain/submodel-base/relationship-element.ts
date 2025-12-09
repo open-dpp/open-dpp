@@ -71,4 +71,8 @@ export class RelationshipElement implements ISubmodelBase, IRelationshipElement 
     const jsonVisitor = new JsonVisitor();
     return this.accept(jsonVisitor);
   }
+
+  * getChildren(): IterableIterator<ISubmodelBase> {
+    yield* [];
+  }
 }

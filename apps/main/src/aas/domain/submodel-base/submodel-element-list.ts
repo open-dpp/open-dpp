@@ -33,9 +33,9 @@ export class SubmodelElementList implements ISubmodelBase {
   static create(data: SubmodelBaseProps & {
     typeValueListElement: AasSubmodelElementsType;
     extensions?: Array<Extension>;
-    orderRelevant?: boolean;
-    semanticIdListElement?: Reference;
-    valueTypeListElement?: DataTypeDefType;
+    orderRelevant?: boolean | null;
+    semanticIdListElement?: Reference | null;
+    valueTypeListElement?: DataTypeDefType | null;
     value?: Array<ISubmodelBase>;
   }) {
     return new SubmodelElementList(
@@ -76,5 +76,9 @@ export class SubmodelElementList implements ISubmodelBase {
   toPlain(): Record<string, any> {
     const jsonVisitor = new JsonVisitor();
     return this.accept(jsonVisitor);
+  }
+
+  * getChildren(): IterableIterator<ISubmodelBase> {
+    yield* this.value;
   }
 }
