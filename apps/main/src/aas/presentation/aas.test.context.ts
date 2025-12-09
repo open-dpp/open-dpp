@@ -156,12 +156,19 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const entity = await createEntity(org.id);
     const response = await request(app.getHttpServer())
-      .get(`${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements/DesignOfProduct.Author.AuthorName`)
+      .get(`${basePath}/${entity.id}/submodels/${btoa(submodels[0].id)}/submodel-elements/Design_V01.Author.AuthorName`)
       .set("Cookie", userCookie)
       .send();
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
       modelType: "Property",
+      category: null,
+      description: [],
+      displayName: [],
+      embeddedDataSpecifications: [],
+      extensions: [],
+      supplementalSemanticIds: [],
+      qualifiers: [],
       semanticId: {
         keys: [
           {
@@ -172,7 +179,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
         type: "ExternalReference",
       },
       value: "Fabrikvordenker:in ER28-0652",
-      valueType: "xs:string",
+      valueType: "String",
       idShort: "AuthorName",
     });
   }

@@ -1,12 +1,15 @@
+import { SubmodelBaseUnionSchema } from "../aas/domain/parsing/submodel-base/submodel-base-union-schema";
 import { SubmodelJsonSchema } from "../aas/domain/parsing/submodel-base/submodel-json-schema";
 import {
   ApiGetShellsPath,
   ApiGetSubmodelByIdPath,
+  ApiGetSubmodelElementByIdPath,
   ApiGetSubmodelElementsPath,
   ApiGetSubmodelsPath,
-  cursorQueryParamSchema,
+  CursorQueryParamSchema,
   IdParamSchema,
-  limitQueryParamSchema,
+  IdShortPathParamSchema,
+  LimitQueryParamSchema,
   SubmodelIdParamSchema,
 } from "../aas/presentation/aas.decorators";
 import {
@@ -29,7 +32,7 @@ export function createAasPaths(tag: string) {
       get: {
         tags: [tag],
         summary: "Returns all Asset Administration Shells",
-        parameters: [IdParamSchema, limitQueryParamSchema, cursorQueryParamSchema],
+        parameters: [IdParamSchema, LimitQueryParamSchema, CursorQueryParamSchema],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -43,7 +46,7 @@ export function createAasPaths(tag: string) {
       get: {
         tags: [tag],
         summary: `Returns all Submodels of the ${tag}`,
-        parameters: [IdParamSchema, limitQueryParamSchema, cursorQueryParamSchema],
+        parameters: [IdParamSchema, LimitQueryParamSchema, CursorQueryParamSchema],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -57,7 +60,7 @@ export function createAasPaths(tag: string) {
       get: {
         tags: [tag],
         summary: `Returns all Submodels of the ${tag}`,
-        parameters: [IdParamSchema, limitQueryParamSchema, cursorQueryParamSchema],
+        parameters: [IdParamSchema, LimitQueryParamSchema, CursorQueryParamSchema],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -85,11 +88,25 @@ export function createAasPaths(tag: string) {
       get: {
         tags: [tag],
         summary: `Returns all Submodel Elements of the given Submodel`,
-        parameters: [IdParamSchema, SubmodelIdParamSchema, limitQueryParamSchema, cursorQueryParamSchema],
+        parameters: [IdParamSchema, SubmodelIdParamSchema, LimitQueryParamSchema, CursorQueryParamSchema],
         responses: {
           [HTTPCode.OK]: {
             content: {
               [ContentType.JSON]: { schema: SubmodelElementPaginationResponseDtoSchema },
+            },
+          },
+        },
+      },
+    },
+    [`${tag}${ApiGetSubmodelElementByIdPath}`]: {
+      get: {
+        tags: [tag],
+        summary: `Returns Submodel Elements of by idShortPath`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelBaseUnionSchema },
             },
           },
         },

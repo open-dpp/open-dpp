@@ -1,23 +1,28 @@
 import type express from "express";
 import { Controller, Req } from "@nestjs/common";
 import { Pagination } from "../../aas/domain/pagination";
+import { IdShortPath } from "../../aas/domain/submodel-base/submodel";
 import {
   ApiGetShells,
   ApiGetSubmodelById,
+  ApiGetSubmodelElementById,
   ApiGetSubmodelElements,
   ApiGetSubmodels,
   CursorQueryParam,
   IdParam,
+  IdShortPathParam,
   LimitQueryParam,
-  loadEnvironmentAndCheckOwnership,
   RequestParam,
   SubmodelIdParam,
 } from "../../aas/presentation/aas.decorators";
 import { IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
 import { AssetAdministrationShellResponseDto } from "../../aas/presentation/dto/asset-administration-shell.dto";
-import { SubmodelElementPaginationResponseDto } from "../../aas/presentation/dto/submodel-element.dto";
+import {
+  SubmodelElementPaginationResponseDto,
+  SubmodelElementResponseDto,
+} from "../../aas/presentation/dto/submodel-element.dto";
 import { SubmodelPaginationResponseDto, SubmodelResponseDto } from "../../aas/presentation/dto/submodel.dto";
-import { EnvironmentService } from "../../aas/presentation/environment.service";
+import { EnvironmentService, loadEnvironmentAndCheckOwnership } from "../../aas/presentation/environment.service";
 import { AuthService } from "../../auth/auth.service";
 import { TemplateRepository } from "../infrastructure/template.repository";
 
@@ -51,5 +56,16 @@ export class TemplateController implements IAasReadEndpoints {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getSubmodelElements(environment, submodelId, pagination);
+  }
+
+  @ApiGetSubmodelElementById()
+  async getSubmodelElementById(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementResponseDto> {
+    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
+    return await this.environmentService.getSubmodelElementById(environment, submodelId, idShortPath);
   }
 }

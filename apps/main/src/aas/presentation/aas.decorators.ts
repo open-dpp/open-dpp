@@ -1,15 +1,8 @@
-import type express from "express";
-import { applyDecorators, ForbiddenException, Get, Param, Query, Req } from "@nestjs/common";
+import { applyDecorators, Get, Param, Query, Req } from "@nestjs/common";
 
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { fromNodeHeaders } from "better-auth/node";
 import { z } from "zod";
-import { AuthService } from "../../auth/auth.service";
-import { Environment } from "../domain/environment";
 import { IdShortPath } from "../domain/submodel-base/submodel";
-import {
-  IDigitalProductPassportIdentifiableRepository,
-} from "../infrastructure/digital-product-passport-identifiable.repository";
 
 export const AasWrapper = {
   Passport: "passport",
@@ -43,7 +36,12 @@ export function ApiGetSubmodelElements() {
     Get(ApiGetSubmodelElementsPath),
   );
 }
-
+export const ApiGetSubmodelElementByIdPath = "/:id/submodels/:submodelId/submodel-elements/:idShortPath";
+export function ApiGetSubmodelElementById() {
+  return applyDecorators(
+    Get(ApiGetSubmodelElementByIdPath),
+  );
+}
 const IdBaseSchema = z.string().transform((v) => {
   let parsed = z.uuid().safeParse(v);
   if (parsed.success) {
@@ -65,7 +63,7 @@ export const IdParamSchema = IdBaseSchema.meta({
 export const IdParam = () => Param("id", new ZodValidationPipe(IdParamSchema));
 
 export const SubmodelIdParamSchema = IdBaseSchema.meta({
-  description: "The id",
+  description: "The submodel id",
   example: "032a7e62-29e2-4530-8f4b-765e32514a56",
   param: { in: "path", name: "submodelId" },
 });
@@ -73,8 +71,8 @@ export const SubmodelIdParamSchema = IdBaseSchema.meta({
 export const SubmodelIdParam = () => Param("submodelId", new ZodValidationPipe(SubmodelIdParamSchema));
 
 export const IdShortPathParamSchema = z.string().regex(
-  /^[a-z0-9]+(?:\.[a-z0-9]+)*$/i,
-  "Path must be alphanumeric segments optionally separated by dots",
+  /^[^./]+(?:\.[^./]+)*$/,
+  "Path must be segments optionally separated by dots",
 ).transform(v => IdShortPath.create({ path: v })).meta({
   description: "IdShort path to the submodel element (dot-separated)",
   example: "path1.path2.path3",
@@ -84,29 +82,18 @@ export const IdShortPathParam = () => Param("idShortPath", new ZodValidationPipe
 
 export const RequestParam = () => Req();
 
-export const limitQueryParamSchema = z.coerce.number().optional().meta({
+export const LimitQueryParamSchema = z.coerce.number().optional().meta({
   description: "The maximum number of elements in the response array",
   example: 10,
   param: { in: "query", name: "limit" },
 });
 
-export const LimitQueryParam = () => Query("limit", new ZodValidationPipe(limitQueryParamSchema));
+export const LimitQueryParam = () => Query("limit", new ZodValidationPipe(LimitQueryParamSchema));
 
-export const cursorQueryParamSchema = z.string().optional().meta({
+export const CursorQueryParamSchema = z.string().optional().meta({
   description: "A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue",
   example: "958b741c-c2ef-4366-a134-fafd30210ed4 ",
   param: { in: "query", name: "cursor" },
 });
 
-export const CursorQueryParam = () => Query("cursor", new ZodValidationPipe(cursorQueryParamSchema));
-
-export async function loadEnvironmentAndCheckOwnership(authService: AuthService, envRepository: IDigitalProductPassportIdentifiableRepository, environmentId: string, req: express.Request): Promise<Environment> {
-  const dppIdentifiable = await envRepository.findOneOrFail(environmentId);
-  const session = await authService.getSession(fromNodeHeaders(req.headers || []));
-  if (session?.user.id && await authService.isMemberOfOrganization(session.user.id, dppIdentifiable.getOrganizationId())) {
-    return dppIdentifiable.getEnvironment();
-  }
-  else {
-    throw new ForbiddenException();
-  }
-}
+export const CursorQueryParam = () => Query("cursor", new ZodValidationPipe(CursorQueryParamSchema));

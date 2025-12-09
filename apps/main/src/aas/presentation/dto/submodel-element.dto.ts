@@ -10,3 +10,4 @@ export const SubmodelElementPaginationResponseDtoSchema = z.object({
 }).meta({ id: "SubmodelElements" });
 
 export type SubmodelElementPaginationResponseDto = z.infer<typeof SubmodelElementPaginationResponseDtoSchema>;
+export type SubmodelElementResponseDto = z.infer<typeof SubmodelBaseUnionSchema>;
