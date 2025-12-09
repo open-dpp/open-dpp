@@ -7,8 +7,8 @@ import { SubmodelJsonSchema } from "../domain/parsing/submodel-base/submodel-jso
 import { AasRepository } from "../infrastructure/aas.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import {
+  AssetAdministrationShellPaginationResponseDtoSchema,
   AssetAdministrationShellResponseDto,
-  AssetAdministrationShellResponseDtoSchema,
 } from "./dto/asset-administration-shell.dto";
 import {
   SubmodelElementPaginationResponseDto,
@@ -28,7 +28,7 @@ export class EnvironmentService {
   async getAasShells(environment: Environment, pagination: Pagination): Promise<AssetAdministrationShellResponseDto> {
     const pages = pagination.nextPages(environment.assetAdministrationShells);
     const shells = await Promise.all(pages.map(p => this.aasRepository.findOneOrFail(p)));
-    return AssetAdministrationShellResponseDtoSchema.parse(PagingResult.create({ pagination, items: shells }).toPlain());
+    return AssetAdministrationShellPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: shells }).toPlain());
   }
 
   async getSubmodels(environment: Environment, pagination: Pagination): Promise<SubmodelPaginationResponseDto> {

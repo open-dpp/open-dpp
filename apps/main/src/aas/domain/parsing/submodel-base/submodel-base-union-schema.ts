@@ -18,7 +18,7 @@ import { SubmodelElementListJsonSchemaImpl } from "./submodel-element-list-json-
 
 export const SubmodelBaseUnionSchema: z.ZodTypeAny = z.lazy(() =>
   SubmodelBaseUnionSchemaImpl(),
-);
+).meta({ id: "SubmodelElement" });
 
 export function SubmodelBaseUnionSchemaImpl() {
   return z.discriminatedUnion("modelType", [

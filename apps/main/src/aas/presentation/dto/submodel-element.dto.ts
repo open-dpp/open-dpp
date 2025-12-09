@@ -1,4 +1,3 @@
-import { createZodDto } from "nestjs-zod";
 import { z } from "zod";
 import {
   SubmodelBaseUnionSchema,
@@ -8,6 +7,6 @@ import { PagingMetadataDtoSchema } from "./paging-metadata.dto";
 export const SubmodelElementPaginationResponseDtoSchema = z.object({
   ...PagingMetadataDtoSchema.shape,
   result: SubmodelBaseUnionSchema.array(),
-}).meta({ id: "SubmodelElementPaginationResponseDto" });
+}).meta({ id: "SubmodelElements" });
 
-export class SubmodelElementPaginationResponseDto extends createZodDto(SubmodelElementPaginationResponseDtoSchema) {}
+export type SubmodelElementPaginationResponseDto = z.infer<typeof SubmodelElementPaginationResponseDtoSchema>;

@@ -1,32 +1,15 @@
 import type express from "express";
 import { applyDecorators, ForbiddenException, Get, Param, Query, Req } from "@nestjs/common";
 
-import { ApiOkResponse, ApiOperation, ApiParam, ApiQuery } from "@nestjs/swagger";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { fromNodeHeaders } from "better-auth/node";
+import { z } from "zod";
 import { AuthService } from "../../auth/auth.service";
-import { IdDtoSchema, IdShortPathDtoSchema } from "../../identification/id.dto";
 import { Environment } from "../domain/environment";
+import { IdShortPath } from "../domain/submodel-base/submodel";
 import {
   IDigitalProductPassportIdentifiableRepository,
 } from "../infrastructure/digital-product-passport-identifiable.repository";
-import { AssetAdministrationShellResponseDto } from "./dto/asset-administration-shell.dto";
-import { SubmodelElementPaginationResponseDto } from "./dto/submodel-element.dto";
-import { SubmodelPaginationResponseDto, SubmodelResponseDto } from "./dto/submodel.dto";
-
-const limitParamOpts = {
-  name: "limit",
-  type: Number,
-  required: false,
-  description: "The maximum number of elements in the response array",
-};
-
-const cursorParamOpts = {
-  name: "cursor",
-  type: String,
-  required: false,
-  description: "A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue",
-};
 
 export const AasWrapper = {
   Passport: "passport",
@@ -35,110 +18,87 @@ export const AasWrapper = {
 
 export type AasWrapperType = typeof AasWrapper[keyof typeof AasWrapper];
 
-function idParamOpts(aasWrapper: AasWrapperType) {
-  return {
-    name: "id",
-    type: String,
-    required: true,
-    description: `The id of the ${aasWrapper}`,
-  };
+export const ApiGetShellsPath = "/:id/shells";
+export function ApiGetShells() {
+  return applyDecorators(
+    Get(ApiGetShellsPath),
+  );
+}
+export const ApiGetSubmodelsPath = "/:id/submodels";
+export function ApiGetSubmodels() {
+  return applyDecorators(
+    Get(ApiGetSubmodelsPath),
+  );
+}
+export const ApiGetSubmodelByIdPath = "/:id/submodels/:submodelId";
+export function ApiGetSubmodelById() {
+  return applyDecorators(
+    Get(ApiGetSubmodelByIdPath),
+  );
 }
 
-const submodelIdParamOpts = {
-  name: "submodelId",
-  type: String,
-  required: true,
-  description: `The id of the submodel`,
-};
+export const ApiGetSubmodelElementsPath = "/:id/submodels/:submodelId/submodel-elements";
+export function ApiGetSubmodelElements() {
+  return applyDecorators(
+    Get(ApiGetSubmodelElementsPath),
+  );
+}
 
-const idShortPathParamOpts = {
-  name: "idShortPath",
-  type: String,
-  required: true,
+const IdBaseSchema = z.string().transform((v) => {
+  let parsed = z.uuid().safeParse(v);
+  if (parsed.success) {
+    return parsed.data;
+  }
+  parsed = z.base64().safeParse(v);
+  if (parsed.success) { // In case of base64 encoded IRI, URL
+    return atob(parsed.data);
+  }
+  return v;
+});
+
+export const IdParamSchema = IdBaseSchema.meta({
+  description: "The id",
+  example: "958b741c-c2ef-4366-a134-fafd30210ed4",
+  param: { in: "path", name: "id" },
+});
+
+export const IdParam = () => Param("id", new ZodValidationPipe(IdParamSchema));
+
+export const SubmodelIdParamSchema = IdBaseSchema.meta({
+  description: "The id",
+  example: "032a7e62-29e2-4530-8f4b-765e32514a56",
+  param: { in: "path", name: "submodelId" },
+});
+
+export const SubmodelIdParam = () => Param("submodelId", new ZodValidationPipe(SubmodelIdParamSchema));
+
+export const IdShortPathParamSchema = z.string().regex(
+  /^[a-z0-9]+(?:\.[a-z0-9]+)*$/i,
+  "Path must be alphanumeric segments optionally separated by dots",
+).transform(v => IdShortPath.create({ path: v })).meta({
   description: "IdShort path to the submodel element (dot-separated)",
-};
-
-export function ApiGetShells(aasWrapper: AasWrapperType) {
-  return applyDecorators(
-    ApiOperation({
-      summary: `Returns all Asset Administration Shells of the ${aasWrapper}`,
-    }),
-    ApiOkResponse({
-      type: AssetAdministrationShellResponseDto,
-    }),
-    ApiParam(idParamOpts(aasWrapper)),
-    ApiQuery(limitParamOpts),
-    ApiQuery(cursorParamOpts),
-    Get("/:id/shells"),
-  );
-}
-
-export function ApiGetSubmodels(aasWrapper: AasWrapperType) {
-  return applyDecorators(
-    ApiOperation({
-      summary: `Returns all Submodels of the ${aasWrapper}`,
-    }),
-    ApiOkResponse({
-      type: SubmodelPaginationResponseDto,
-    }),
-    ApiParam(idParamOpts(aasWrapper)),
-    ApiQuery(limitParamOpts),
-    ApiQuery(cursorParamOpts),
-    Get("/:id/submodels"),
-  );
-}
-
-export function ApiGetSubmodelById(aasWrapper: AasWrapperType) {
-  return applyDecorators(
-    ApiOperation({
-      summary: `Returns Submodel by id`,
-    }),
-    ApiOkResponse({
-      type: SubmodelResponseDto,
-    }),
-    ApiParam(idParamOpts(aasWrapper)),
-    ApiParam(submodelIdParamOpts),
-    Get("/:id/submodels/:submodelId"),
-  );
-}
-
-export function ApiGetSubmodelElements(aasWrapper: AasWrapperType) {
-  return applyDecorators(
-    ApiOperation({
-      summary: `Returns all submodel elements of the given submodel`,
-    }),
-    ApiOkResponse({
-      type: SubmodelElementPaginationResponseDto,
-    }),
-    ApiParam(idParamOpts(aasWrapper)),
-    ApiParam(submodelIdParamOpts),
-    Get("/:id/submodels/:submodelId/submodel-elements"),
-  );
-}
-
-// export function ApiGetSubmodelElementById(aasWrapper: AasWrapperType) {
-//   return applyDecorators(
-//     ApiOperation({
-//       summary: `Returns submodel element by id`,
-//     }),
-//     ApiOkResponse({
-//       type: SubmodelElementResponseDto,
-//     }),
-//     ApiParam(idParamOpts(aasWrapper)),
-//     ApiParam(submodelIdParamOpts),
-//     ApiParam(idShortPathParamOpts),
-//     Get("/:id/submodels/:submodelId/submodel-elements/:idShortPath"),
-//   );
-// }
-
-export const IdParam = () => Param("id", new ZodValidationPipe(IdDtoSchema));
-export const SubmodelIdParam = () => Param("submodelId", new ZodValidationPipe(IdDtoSchema));
-export const IdShortPathParam = () => Param("idShortPath", new ZodValidationPipe(IdShortPathDtoSchema));
+  example: "path1.path2.path3",
+  param: { in: "path", name: "idShortPath" },
+});
+export const IdShortPathParam = () => Param("idShortPath", new ZodValidationPipe(IdShortPathParamSchema));
 
 export const RequestParam = () => Req();
 
-export const LimitQueryParam = () => Query("limit");
-export const CursorQueryParam = () => Query("cursor");
+export const limitQueryParamSchema = z.coerce.number().optional().meta({
+  description: "The maximum number of elements in the response array",
+  example: 10,
+  param: { in: "query", name: "limit" },
+});
+
+export const LimitQueryParam = () => Query("limit", new ZodValidationPipe(limitQueryParamSchema));
+
+export const cursorQueryParamSchema = z.string().optional().meta({
+  description: "A server-generated identifier retrieved from pagingMetadata that specifies from which position the result listing should continue",
+  example: "958b741c-c2ef-4366-a134-fafd30210ed4 ",
+  param: { in: "query", name: "cursor" },
+});
+
+export const CursorQueryParam = () => Query("cursor", new ZodValidationPipe(cursorQueryParamSchema));
 
 export async function loadEnvironmentAndCheckOwnership(authService: AuthService, envRepository: IDigitalProductPassportIdentifiableRepository, environmentId: string, req: express.Request): Promise<Environment> {
   const dppIdentifiable = await envRepository.findOneOrFail(environmentId);

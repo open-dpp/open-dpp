@@ -6,7 +6,7 @@ import { SubmodelBaseUnionSchema } from "./submodel-base-union-schema";
 
 export const AnnotatedRelationshipElementJsonSchema = z.lazy(() =>
   AnnotatedRelationshipElementJsonSchemaImpl(),
-);
+).meta({ id: "AnnotatedRelationshipElement" });
 
 export function AnnotatedRelationshipElementJsonSchemaImpl() {
   return z.object({

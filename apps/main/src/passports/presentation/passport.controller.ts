@@ -3,7 +3,6 @@ import { Controller } from "@nestjs/common";
 import { Pagination } from "../../aas/domain/pagination";
 
 import {
-  AasWrapper,
   ApiGetShells,
   ApiGetSubmodelById,
   ApiGetSubmodelElements,
@@ -30,27 +29,27 @@ export class PassportController implements IAasReadEndpoints {
   constructor(private readonly environmentService: EnvironmentService, private readonly authService: AuthService, private readonly passportRepository: PassportRepository) {
   }
 
-  @ApiGetShells(AasWrapper.Passport)
+  @ApiGetShells()
   async getShells(@IdParam() id: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @RequestParam() req: express.Request): Promise<AssetAdministrationShellResponseDto> {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.passportRepository, id, req);
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getAasShells(environment, pagination);
   }
 
-  @ApiGetSubmodels(AasWrapper.Passport)
+  @ApiGetSubmodels()
   async getSubmodels(@IdParam() id: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @RequestParam() req: express.Request): Promise<SubmodelPaginationResponseDto> {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.passportRepository, id, req);
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getSubmodels(environment, pagination);
   }
 
-  @ApiGetSubmodelById(AasWrapper.Passport)
+  @ApiGetSubmodelById()
   async getSubmodelById(@IdParam() id: string, @SubmodelIdParam() submodelId: string, @RequestParam() req: express.Request): Promise<SubmodelResponseDto> {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.passportRepository, id, req);
     return await this.environmentService.getSubmodelById(environment, submodelId);
   }
 
-  @ApiGetSubmodelElements(AasWrapper.Passport)
+  @ApiGetSubmodelElements()
   async getSubmodelElements(@IdParam() id: string, @SubmodelIdParam() submodelId: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @RequestParam() req: express.Request): Promise<SubmodelElementPaginationResponseDto> {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.passportRepository, id, req);
     const pagination = Pagination.create({ limit, cursor });

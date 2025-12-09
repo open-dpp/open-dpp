@@ -12,4 +12,4 @@ export const SubmodelJsonSchema = z.object({
   administration: z.nullish(AdministrativeInformationJsonSchema),
   kind: z.nullish(ModellingKindEnum),
   submodelElements: SubmodelBaseUnionSchema.array().default([]),
-});
+}).meta({ id: "Submodel" });

@@ -31,7 +31,7 @@ import {
 } from "../infrastructure/schemas/asset-administration-shell.schema";
 import { SubmodelDoc, SubmodelSchema } from "../infrastructure/schemas/submodel.schema";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
-import { AssetAdministrationShellResponseDtoSchema } from "./dto/asset-administration-shell.dto";
+import { AssetAdministrationShellPaginationResponseDtoSchema } from "./dto/asset-administration-shell.dto";
 import { SubmodelPaginationResponseDtoSchema } from "./dto/submodel.dto";
 
 export function createAasTestContext<T>(basePath: string, metadataTestingModule: ModuleMetadata, mongooseModels: ModelDefinition[], EntityRepositoryClass: new (...args: any[]) => T) {
@@ -114,7 +114,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       .send();
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toEqual(aas.id);
-    expect(response.body.result).toEqual(AssetAdministrationShellResponseDtoSchema.shape.result.parse([aas.toPlain()]));
+    expect(response.body.result).toEqual(AssetAdministrationShellPaginationResponseDtoSchema.shape.result.parse([aas.toPlain()]));
   }
 
   async function assertGetSubmodels(createEntity: CreateEntity) {
