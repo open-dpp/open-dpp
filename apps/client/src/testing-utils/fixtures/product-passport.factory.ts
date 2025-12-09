@@ -52,6 +52,8 @@ export const productPassportFactory = ProductPassportFactory.define(() => {
     description: "Product Description",
     mediaReferences: [],
     dataSections: [],
+    organizationName: "Org A",
+    organizationImage: "orga-a-image",
   };
 });
 

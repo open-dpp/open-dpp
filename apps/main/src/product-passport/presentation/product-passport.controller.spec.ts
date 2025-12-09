@@ -113,6 +113,8 @@ describe("productPassportController", () => {
       template,
       model,
       item,
+      organizationName: org.name,
+      organizationImage: "org-image-media-id",
     });
     expect(response.body).toEqual(productPassportToDto(productPassport));
   });

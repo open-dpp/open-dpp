@@ -156,7 +156,7 @@ watch(
                 </button>
               </div>
               <div
-                class="px-4 py-2 sm:px-6 sm:py-4 max-h-[50vh] overflow-y-auto"
+                class="px-4 py-2 sm:px-6 sm:py-4 max-h-[60vh] overflow-y-auto"
               >
                 <MediaGrid
                   :multiple="false"

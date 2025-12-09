@@ -1,24 +1,32 @@
 <script lang="ts" setup>
-import type { MediaInfo } from "../../media/MediaInfo.interface";
+import type { MediaInfo, MediaResult } from "./MediaInfo.interface";
 import { DocumentIcon, PencilIcon } from "@heroicons/vue/16/solid";
-import { computed, onMounted, onUnmounted, ref, useAttrs } from "vue";
+import InputText from "primevue/inputtext";
+import { computed, onUnmounted, ref, useAttrs, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { useIndexStore } from "../../../stores";
-import { useMediaStore } from "../../../stores/media";
-import { useNotificationStore } from "../../../stores/notification";
-import { usePassportFormStore } from "../../../stores/passport.form";
-import MediaModal from "../../media/MediaModal.vue";
-import MediaPreview from "../../media/MediaPreview.vue";
+import { useIndexStore } from "../../stores";
+import { useMediaStore } from "../../stores/media";
+import { useNotificationStore } from "../../stores/notification";
+import { usePassportFormStore } from "../../stores/passport.form";
+import MediaModal from "./MediaModal.vue";
+import MediaPreview from "./MediaPreview.vue";
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   id: string;
   label: string;
-  dataCy: string;
-  className?: string;
-}>();
+  value: MediaResult | null;
+  context?: "dpp" | "organization";
+}>(), {
+  context: "dpp",
+});
+
 const emits = defineEmits<{
   (e: "clicked"): void;
+  (e: "update:value", value: MediaResult | null): void;
+  (e: "updateById", value: string | null): void;
+  (e: "selectFile", value: File | null): void;
 }>();
+
 const { t } = useI18n();
 const passportFormStore = usePassportFormStore();
 const indexStore = useIndexStore();
@@ -30,10 +38,7 @@ const attrs = useAttrs() as Record<string, unknown>;
 const fileInput = ref<HTMLInputElement>();
 const selectedLocalFile = ref<File | null>(null);
 const selectedFile = ref<MediaInfo | null>(null);
-const uploadedMedia = ref<MediaInfo | null>(null);
 const uploadProgress = ref<number>(0);
-const uploadedMediaId = ref<string | undefined>(undefined);
-const uploadedFileUrl = ref<string | undefined>(undefined);
 const openFileModal = ref<boolean>(false);
 
 const computedAttrs = computed(() => ({
@@ -47,12 +52,7 @@ const isImage = computed(() => {
   return selectedLocalFile.value.type.startsWith("image/");
 });
 
-const fileUrl = computed(() => {
-  if (!selectedLocalFile.value) {
-    return null;
-  }
-  return URL.createObjectURL(selectedLocalFile.value);
-});
+const fileUrl = ref<string | null>(null);
 
 const selectedFileSizeKB = computed(() => {
   const size = selectedLocalFile.value?.size;
@@ -83,88 +83,44 @@ async function uploadFile() {
     return;
   }
   try {
-    uploadedMediaId.value = await mediaStore.uploadDppMedia(
-      indexStore.selectedOrganization,
-      passportFormStore.getUUID(),
-      props.id,
-      selectedLocalFile.value,
-      progress => (uploadProgress.value = progress),
-    );
+    let mediaId: string;
+
+    if (props.context === "organization") {
+      mediaId = await mediaStore.uploadOrganizationProfileMedia(
+        indexStore.selectedOrganization,
+        selectedLocalFile.value,
+        progress => (uploadProgress.value = progress),
+      );
+    }
+    else {
+      mediaId = await mediaStore.uploadDppMedia(
+        indexStore.selectedOrganization,
+        passportFormStore.getUUID(),
+        props.id,
+        selectedLocalFile.value,
+        progress => (uploadProgress.value = progress),
+      );
+    }
+
+    const mediaResult = await mediaStore.fetchMedia(mediaId);
+    selectedFile.value = mediaResult.mediaInfo;
+
+    emits("updateById", mediaId);
+    emits("update:value", mediaResult);
+
     notificationStore.addSuccessNotification(
       t("models.form.file.uploadSuccess"),
     );
-    selectedLocalFile.value = null;
-    await loadFile();
+    // selectedLocalFile.value = null;
+    // await loadFile();
   }
   catch (error: unknown) {
     console.error("Fehler beim Hochladen der Datei:", error);
-    uploadedMediaId.value = undefined;
     notificationStore.addErrorNotification(t("models.form.file.uploadError"));
-    selectedFile.value = null;
+    selectedLocalFile.value = null;
   }
   finally {
     uploadProgress.value = 0;
-  }
-}
-
-async function loadFile() {
-  if (!uploadedMediaId.value) {
-    return;
-  }
-
-  try {
-    const { blob, mediaInfo } = await mediaStore.fetchMedia(
-      uploadedMediaId.value,
-    );
-
-    // Revoke an old object URL to avoid memory leaks before assigning a new one
-    if (uploadedFileUrl.value) {
-      try {
-        URL.revokeObjectURL(uploadedFileUrl.value);
-      }
-      catch (revokeErr) {
-        console.error(
-          "Fehler beim Freigeben der vorherigen Objekt-URL:",
-          revokeErr,
-        );
-      }
-    }
-
-    if (blob) {
-      uploadedFileUrl.value = URL.createObjectURL(blob);
-    }
-    uploadedMedia.value = mediaInfo;
-  }
-  catch (error) {
-    console.error("Fehler beim Laden der Datei:", error);
-    // Reset state on failure
-    if (uploadedFileUrl.value) {
-      try {
-        URL.revokeObjectURL(uploadedFileUrl.value);
-      }
-      catch (revokeErr) {
-        console.error(
-          "Fehler beim Freigeben der Objekt-URL nach Fehler:",
-          revokeErr,
-        );
-      }
-    }
-    uploadedFileUrl.value = undefined;
-    uploadedMedia.value = null;
-
-    // Notify user via the existing notification store if available
-    try {
-      notificationStore.addErrorNotification(
-        t("models.form.file.downloadError"),
-      );
-    }
-    catch {
-      // Fallback to console if the notification store is not available for any reason
-      console.error(
-        "Benachrichtigung über Ladefehler konnte nicht angezeigt werden.",
-      );
-    }
-    // We intentionally do not rethrow to keep caller logic simple unless needed.
   }
 }
 
@@ -174,29 +130,52 @@ async function updateFileFromModal(items: Array<MediaInfo>) {
     return;
   }
   if (items.length > 0) {
-    uploadedMediaId.value = (items[0] as MediaInfo).id;
+    const item = items[0] as MediaInfo;
+    emits("updateById", item.id);
+
+    try {
+      const result = await mediaStore.fetchMedia(item.id);
+      emits("update:value", result);
+      selectedFile.value = result.mediaInfo;
+    }
+    catch (e) {
+      console.error("Failed to fetch selected media", e);
+    }
+
     openFileModal.value = false;
-    await loadFile();
+    selectedLocalFile.value = null;
   }
 }
-
-onMounted(async () => {
-  await loadFile();
-});
 
 onUnmounted(() => {
   if (fileUrl.value) {
     URL.revokeObjectURL(fileUrl.value);
   }
 });
+
+watch(() => props.value, (newValue) => {
+  if (newValue) {
+    selectedLocalFile.value = null;
+  }
+}, { deep: true });
+
+watch(selectedLocalFile, (newFile) => {
+  if (fileUrl.value) {
+    URL.revokeObjectURL(fileUrl.value);
+  }
+  if (newFile) {
+    fileUrl.value = URL.createObjectURL(newFile);
+  }
+  else {
+    fileUrl.value = null;
+  }
+  emits("selectFile", newFile);
+});
 </script>
 
 <template>
   <div
-    class="group grow min-w-0 text-base mb-4 data-disabled:select-none data-disabled:opacity-50 data-disabled:pointer-events-none formkit-outer" :class="[
-      props.className,
-    ]"
-    :data-cy="props.dataCy"
+    class="group grow min-w-0 text-base mb-4 data-disabled:select-none data-disabled:opacity-50 data-disabled:pointer-events-none formkit-outer"
     data-auto-animate="true"
     data-complete="true"
     data-family="text"
@@ -213,11 +192,11 @@ onUnmounted(() => {
       <div
         class="flex flex-row gap-4 p-2 w-full shadow-xs ring-1 ring-inset ring-gray-300 rounded-md border-0"
       >
-        <FormKit
-          v-model="uploadedMediaId"
+        <InputText
+          v-if="value"
+          :value="value.mediaInfo.title"
           :data-cy="id"
           :name="id"
-          inner-class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300"
           type="hidden"
           v-bind="computedAttrs"
         />
@@ -243,7 +222,7 @@ onUnmounted(() => {
           <DocumentIcon v-else class="w-24 h-24 text-gray-600" />
           <div class="text-gray-600 my-auto">
             {{ selectedLocalFile.name
-            }}<span v-if="selectedFile && selectedFile.size">
+            }}<span v-if="selectedFileSizeKB">
               ({{ selectedFileSizeKB }} KB)</span>
           </div>
           <button
@@ -259,9 +238,9 @@ onUnmounted(() => {
             {{ t('models.form.file.upload') }}
           </button>
         </div>
-        <div v-else-if="uploadedMedia" class="max-w-full flex flex-col gap-4">
+        <div v-else-if="value" class="max-w-full flex flex-col gap-4">
           <div class="flex flex-row gap-4 w-full justify-between">
-            <MediaPreview :media="uploadedMedia" class="grow h-48" />
+            <MediaPreview :media="value.mediaInfo" class="grow h-48" />
             <button
               class="shrink bg-[#6BAD87]/50 rounded-sm p-2 hover:cursor-pointer my-auto"
               @click.prevent="openFileModal = true"
@@ -270,7 +249,7 @@ onUnmounted(() => {
             </button>
           </div>
           <div class="text-gray-600 text-sm my-auto max-w-full truncate">
-            {{ uploadedMedia.title }}
+            {{ value.mediaInfo.title }}
           </div>
         </div>
         <div v-else class="flex flex-row gap-4 w-full justify-between">
@@ -289,7 +268,7 @@ onUnmounted(() => {
         <MediaModal
           :open="openFileModal"
           @cancel="openFileModal = false"
-          @confirm="(items) => updateFileFromModal(items)"
+          @confirm="items => updateFileFromModal(items)"
         />
       </div>
     </div>

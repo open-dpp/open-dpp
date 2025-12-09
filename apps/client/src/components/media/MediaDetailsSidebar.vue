@@ -43,7 +43,7 @@ const { t } = useI18n();
           {{ t('media.preview') }}
         </dt>
         <dd class="text-sm/6 mt-1 text-gray-900 dark:text-white">
-          <MediaPreview :key="media.id" :media="media" :preview="true" />
+          <MediaPreview :key="media.id" :media="media" :preview="true" class="h-64 w-full" />
         </dd>
       </div>
       <div class="flex-auto">
