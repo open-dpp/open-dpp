@@ -13,7 +13,7 @@ export const AssetAdministrationShellDocSchemaVersion = {
 } as const;
 type AssetAdministrationShellDocSchemaVersionType = (typeof AssetAdministrationShellDocSchemaVersion)[keyof typeof AssetAdministrationShellDocSchemaVersion];
 @Schema()
-export class AssetAdministrationShellDoc extends Document {
+export class AssetAdministrationShellDoc extends Document<string> {
   @Prop({ type: String })
   declare _id: string;
 

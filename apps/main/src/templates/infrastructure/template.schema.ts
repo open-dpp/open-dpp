@@ -8,7 +8,7 @@ export const TemplateDocVersion = {
 type TemplateDocVersionType = (typeof TemplateDocVersion)[keyof typeof TemplateDocVersion];
 
 @Schema({ collection: "templates" })
-export class TemplateDoc extends Document {
+export class TemplateDoc extends Document<string> {
   @Prop({
     default: TemplateDocVersion.v1_0_0,
     enum: Object.values(TemplateDocVersion),

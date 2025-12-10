@@ -16,7 +16,7 @@ export const ConceptDescriptionDocSchemaVersion = {
 type ConceptDescriptionDocSchemaVersionType = (typeof ConceptDescriptionDocSchemaVersion)[keyof typeof ConceptDescriptionDocSchemaVersion];
 
 @Schema()
-export class ConceptDescriptionDoc extends Document {
+export class ConceptDescriptionDoc extends Document<string> {
   @Prop({ type: String })
   declare _id: string;
 

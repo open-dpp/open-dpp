@@ -8,7 +8,7 @@ export const PassportDocVersion = {
 type PassportDocVersionType = (typeof PassportDocVersion)[keyof typeof PassportDocVersion];
 
 @Schema({ collection: "passports" })
-export class PassportDoc extends Document {
+export class PassportDoc extends Document<string> {
   @Prop({
     default: PassportDocVersion.v1_0_0,
     enum: Object.values(PassportDocVersion),

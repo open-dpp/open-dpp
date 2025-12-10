@@ -24,7 +24,7 @@ export const SubmodelDocSchemaVersion = {
 type SubmodelDocSchemaVersionType = (typeof SubmodelDocSchemaVersion)[keyof typeof SubmodelDocSchemaVersion];
 
 @Schema({ collection: "submodels" })
-export class SubmodelDoc extends Document {
+export class SubmodelDoc extends Document<string> {
   @Prop({ type: String })
   declare _id: string;
 
