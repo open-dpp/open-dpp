@@ -247,7 +247,7 @@
       "administeredBy": "Administriert von",
       "description": "Beschreibung",
       "image": {
-        "label": "Bild für das Profil der Organisation",
+        "label": "Logo Ihrer Organisation",
         "help": "Lade ein Bild für die Organisation hoch",
         "shortLabel": "Logo"
       },
