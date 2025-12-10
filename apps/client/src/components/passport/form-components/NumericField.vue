@@ -1,29 +1,40 @@
 <script lang="ts" setup>
-import { computed, useAttrs } from "vue";
+import InputNumber from "primevue/inputnumber";
+import { computed } from "vue";
 
-const props = defineProps<{ id: string; className?: string }>();
+const props = defineProps<{
+  id: string;
+  className?: string;
+  label?: string;
+  modelValue?: number | null;
+  options?: Record<string, unknown>;
+  required?: boolean;
+}>();
 
-const attrs = useAttrs() as Record<string, unknown>;
+const emit = defineEmits<{
+  (e: "update:modelValue", value: number | null): void;
+}>();
 
-const computedAttrs = computed(() => ({
-  ...attrs,
-}));
-
-const computedOptions = computed(
-  () => computedAttrs.value.options as Record<string, unknown>,
-);
+const min = computed(() => props.options?.min as number | undefined);
+const max = computed(() => props.options?.max as number | undefined);
 </script>
 
 <template>
-  <div :class="props.className">
-    <FormKit
+  <div class="flex flex-col gap-2" :class="props.className">
+    <label
+      v-if="label"
+      :for="id"
+      class="block text-sm font-medium text-gray-900 dark:text-white"
+    >{{ label }}</label>
+    <InputNumber
+      :id="id"
+      :model-value="modelValue"
+      :min="min"
+      :max="max"
       :data-cy="props.id"
-      :max="(computedOptions?.max as number) ?? undefined"
-      :min="(computedOptions?.min as number) ?? undefined"
-      inner-class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300"
-      number
-      type="number"
-      v-bind="computedAttrs"
+      class="w-full"
+      :required="required"
+      @update:model-value="emit('update:modelValue', $event)"
     />
   </div>
 </template>

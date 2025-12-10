@@ -9,7 +9,7 @@ const props = defineProps<{
 
 <template>
   <div
-    class="group grow max-w-[20em] min-w-0 text-base mb-4 data-disabled:select-none data-disabled:opacity-50 data-disabled:pointer-events-none formkit-outer" :class="[
+    class="group grow max-w-[20em] min-w-0 text-base mb-4 data-disabled:select-none data-disabled:opacity-50 data-disabled:pointer-events-none" :class="[
       props.className,
     ]"
     data-family="text"
@@ -21,7 +21,7 @@ const props = defineProps<{
     :data-cy="props.dataCy"
   >
     <div
-      class="mb-1.5 flex flex-col items-start justify-start last:mb-0 formkit-wrapper"
+      class="mb-1.5 flex flex-col items-start justify-start last:mb-0"
     >
       <label
         class="block text-neutral-900 text-sm mb-1 dark:text-neutral-100 formkit-label"

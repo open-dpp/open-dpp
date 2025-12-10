@@ -1,21 +1,33 @@
 <script lang="ts" setup>
-import { computed, useAttrs } from "vue";
+import InputText from "primevue/inputtext";
 
-const props = defineProps<{ id: string; className?: string }>();
+const props = defineProps<{
+  id: string;
+  className?: string;
+  label?: string;
+  modelValue?: string | null;
+  required?: boolean;
+}>();
 
-const attrs = useAttrs() as Record<string, unknown>;
-
-const computedAttrs = computed(() => ({
-  ...attrs,
-}));
+const emit = defineEmits<{
+  (e: "update:modelValue", value: string): void;
+}>();
 </script>
 
 <template>
-  <div :class="props.className">
-    <FormKit
+  <div class="flex flex-col gap-2" :class="props.className">
+    <label
+      v-if="label"
+      :for="id"
+      class="block text-sm font-medium text-gray-900 dark:text-white"
+    >{{ label }}</label>
+    <InputText
+      :id="id"
+      :model-value="modelValue || ''"
       :data-cy="props.id"
-      inner-class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300"
-      v-bind="computedAttrs"
+      class="w-full"
+      :required="required"
+      @update:model-value="emit('update:modelValue', $event as string)"
     />
   </div>
 </template>
