@@ -23,7 +23,7 @@ const emits = defineEmits<{
     class="rounded flex flex-col gap-2 w-64 h-64"
     @click="selectable && emits('onSelect', media)"
   >
-    <MediaPreview :media="media" :show-type="true" :preview="false" />
+    <MediaPreview :media="media" :show-type="true" :preview="false" class="grow" />
     <p class="mt-2 truncate text-sm font-medium text-gray-900 min-h-4">
       {{ media.title }}
     </p>

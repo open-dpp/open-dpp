@@ -48,7 +48,7 @@ watch(() => props.media, async (newValue) => {
 </script>
 
 <template>
-  <div class="relative w-full h-full flex items-center justify-center bg-gray-50 rounded overflow-hidden border border-gray-200">
+  <div class="relative w-full flex items-center justify-center bg-gray-50 rounded overflow-hidden border border-gray-200">
     <div v-if="loading" class="mx-auto my-auto">
       <RingLoader />
     </div>
