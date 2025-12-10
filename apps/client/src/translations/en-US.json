@@ -256,7 +256,8 @@
         "label": "Name of organization",
         "error": "Please enter a name."
       },
-      "updateError": "Failed to update organization."
+      "updateError": "Failed to update organization.",
+      "updateSuccess": "Organization settings saved successfully."
     },
     "invitation": {
       "name": "Name",

@@ -256,7 +256,8 @@
         "label": "Name der Organisation",
         "error": "Bitte geben Sie einen Namen ein."
       },
-      "updateError": "Fehler beim Aktualisieren der Organisation."
+      "updateError": "Fehler beim Aktualisieren der Organisation.",
+      "updateSuccess": "Organisationseinstellungen erfolgreich gespeichert."
     },
     "invitation": {
       "name": "Name",

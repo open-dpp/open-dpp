@@ -11,6 +11,7 @@ import MediaInput from "../../components/media/MediaInput.vue";
 import { useIndexStore } from "../../stores";
 import { useErrorHandlingStore } from "../../stores/error.handling";
 import { useMediaStore } from "../../stores/media";
+import { useNotificationStore } from "../../stores/notification";
 import { useOrganizationsStore } from "../../stores/organizations";
 
 const { t } = useI18n();
@@ -18,6 +19,7 @@ const organizationStore = useOrganizationsStore();
 const mediaStore = useMediaStore();
 const indexStore = useIndexStore();
 const errorHandlingStore = useErrorHandlingStore();
+const notificationStore = useNotificationStore();
 
 const name = ref("");
 const currentMedia = ref<MediaResult | null>(null);
@@ -84,6 +86,7 @@ async function save() {
 
     await fetchOrganization();
     await organizationStore.fetchOrganizations();
+    notificationStore.addSuccessNotification(t("organizations.form.updateSuccess"));
   }
   catch (e) {
     errorHandlingStore.logErrorWithNotification(t("organizations.form.updateError"), e);
