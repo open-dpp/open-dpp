@@ -53,13 +53,21 @@ export class AnnotatedRelationshipElement implements ISubmodelBase, IRelationshi
 
   static fromPlain(data: unknown): ISubmodelBase {
     const parsed = AnnotatedRelationshipElementJsonSchema.parse(data);
-    return AnnotatedRelationshipElement.create({
-      ...submodelBasePropsFromPlain(parsed),
-      first: Reference.fromPlain(parsed.first),
-      second: Reference.fromPlain(parsed.second),
-      extensions: parsed.extensions.map(e => Extension.fromPlain(e)),
-      annotations: parsed.annotations.map(parseSubmodelBaseUnion),
-    });
+    const baseObjects = submodelBasePropsFromPlain(parsed);
+    return new AnnotatedRelationshipElement(
+      Reference.fromPlain(parsed.first),
+      Reference.fromPlain(parsed.second),
+      parsed.extensions.map(e => Extension.fromPlain(e)),
+      baseObjects.category,
+      baseObjects.idShort,
+      baseObjects.displayName,
+      baseObjects.description,
+      baseObjects.semanticId,
+      baseObjects.supplementalSemanticIds,
+      baseObjects.qualifiers,
+      baseObjects.embeddedDataSpecifications,
+      parsed.annotations.map(parseSubmodelBaseUnion),
+    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

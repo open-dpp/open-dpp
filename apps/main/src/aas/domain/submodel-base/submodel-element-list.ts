@@ -58,15 +58,23 @@ export class SubmodelElementList implements ISubmodelBase {
 
   static fromPlain(data: unknown): ISubmodelBase {
     const parsed = SubmodelElementListJsonSchema.parse(data);
-    return SubmodelElementList.create({
-      ...submodelBasePropsFromPlain(parsed),
-      typeValueListElement: parsed.typeValueListElement,
-      extensions: parsed.extensions.map(Extension.fromPlain),
-      orderRelevant: parsed.orderRelevant,
-      semanticIdListElement: parsed.semanticIdListElement ? Reference.fromPlain(parsed.semanticIdListElement) : undefined,
-      valueTypeListElement: parsed.valueTypeListElement,
-      value: parsed.value.map(parseSubmodelBaseUnion),
-    });
+    const baseObjects = submodelBasePropsFromPlain(parsed);
+    return new SubmodelElementList(
+      parsed.typeValueListElement,
+      parsed.extensions.map(Extension.fromPlain),
+      baseObjects.category,
+      baseObjects.idShort,
+      baseObjects.displayName,
+      baseObjects.description,
+      baseObjects.semanticId,
+      baseObjects.supplementalSemanticIds,
+      baseObjects.qualifiers,
+      baseObjects.embeddedDataSpecifications,
+      parsed.orderRelevant,
+      parsed.semanticIdListElement ? Reference.fromPlain(parsed.semanticIdListElement) : null,
+      parsed.valueTypeListElement,
+      parsed.value.map(parseSubmodelBaseUnion),
+    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

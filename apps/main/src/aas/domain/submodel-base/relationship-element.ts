@@ -55,12 +55,20 @@ export class RelationshipElement implements ISubmodelBase, IRelationshipElement 
 
   static fromPlain(data: unknown): ISubmodelBase {
     const parsed = RelationshipElementJsonSchema.parse(data);
-    return RelationshipElement.create({
-      ...submodelBasePropsFromPlain(parsed),
-      first: Reference.fromPlain(parsed.first),
-      second: Reference.fromPlain(parsed.second),
-      extensions: parsed.extensions.map(e => Extension.fromPlain(e)),
-    });
+    const baseObjects = submodelBasePropsFromPlain(parsed);
+    return new RelationshipElement(
+      Reference.fromPlain(parsed.first),
+      Reference.fromPlain(parsed.second),
+      parsed.extensions.map(e => Extension.fromPlain(e)),
+      baseObjects.category,
+      baseObjects.idShort,
+      baseObjects.displayName,
+      baseObjects.description,
+      baseObjects.semanticId,
+      baseObjects.supplementalSemanticIds,
+      baseObjects.qualifiers,
+      baseObjects.embeddedDataSpecifications,
+    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

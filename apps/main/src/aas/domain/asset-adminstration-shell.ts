@@ -67,18 +67,19 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
 
   static fromPlain(data: unknown): AssetAdministrationShell {
     const parsed = AssetAdministrationShellJsonSchema.parse(data);
-    return AssetAdministrationShell.create({
-      id: parsed.id,
-      assetInformation: AssetInformation.fromPlain(parsed.assetInformation),
-      extensions: parsed.extensions.map(Extension.fromPlain),
-      category: parsed.category,
-      idShort: parsed.idShort,
-      displayName: parsed.displayName.map(LanguageText.fromPlain),
-      description: parsed.description.map(LanguageText.fromPlain),
-      administration: parsed.administration ? AdministrativeInformation.fromPlain(parsed.administration) : undefined,
-      embeddedDataSpecifications: parsed.embeddedDataSpecifications.map(EmbeddedDataSpecification.fromPlain),
-      derivedFrom: parsed.derivedFrom ? Reference.fromPlain(parsed.derivedFrom) : undefined,
-    });
+    return new AssetAdministrationShell(
+      parsed.id,
+      AssetInformation.fromPlain(parsed.assetInformation),
+      parsed.extensions.map(Extension.fromPlain),
+      parsed.category,
+      parsed.idShort,
+      parsed.displayName.map(LanguageText.fromPlain),
+      parsed.description.map(LanguageText.fromPlain),
+      parsed.administration ? AdministrativeInformation.fromPlain(parsed.administration) : null,
+      parsed.embeddedDataSpecifications.map(EmbeddedDataSpecification.fromPlain),
+      parsed.derivedFrom ? Reference.fromPlain(parsed.derivedFrom) : null,
+      parsed.submodels.map(Reference.fromPlain),
+    );
   }
 
   toPlain(): Record<string, any> {

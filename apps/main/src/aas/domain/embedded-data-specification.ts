@@ -18,9 +18,9 @@ export class EmbeddedDataSpecification implements IVisitable {
 
   static fromPlain(json: unknown): EmbeddedDataSpecification {
     const parsed = EmbeddedDataSpecificationJsonSchema.parse(json);
-    return EmbeddedDataSpecification.create({
-      dataSpecification: Reference.fromPlain(parsed.dataSpecification),
-    });
+    return new EmbeddedDataSpecification(
+      Reference.fromPlain(parsed.dataSpecification),
+    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

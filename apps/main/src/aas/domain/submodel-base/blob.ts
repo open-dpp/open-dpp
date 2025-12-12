@@ -48,11 +48,20 @@ export class Blob implements ISubmodelBase {
 
   static fromPlain(data: unknown): ISubmodelBase {
     const parsed = BlobJsonSchema.parse(data);
-    return Blob.create({
-      ...submodelBasePropsFromPlain(parsed),
-      contentType: parsed.contentType,
-      value: parsed.value ? Buffer.from(parsed.value) : undefined,
-    });
+    const baseObjects = submodelBasePropsFromPlain(parsed);
+    return new Blob(
+      parsed.contentType,
+      parsed.extensions.map(e => Extension.fromPlain(e)),
+      baseObjects.category,
+      baseObjects.idShort,
+      baseObjects.displayName,
+      baseObjects.description,
+      baseObjects.semanticId,
+      baseObjects.supplementalSemanticIds,
+      baseObjects.qualifiers,
+      baseObjects.embeddedDataSpecifications,
+      parsed.value ? Buffer.from(parsed.value) : undefined,
+    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

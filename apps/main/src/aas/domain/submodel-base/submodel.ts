@@ -100,14 +100,22 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   static fromPlain(data: unknown): Submodel {
     const parsed = SubmodelJsonSchema.parse(data);
-    return Submodel.create({
-      ...submodelBasePropsFromPlain(parsed),
-      id: parsed.id,
-      administration: parsed.administration ? AdministrativeInformation.fromPlain(parsed.administration) : undefined,
-      kind: parsed.kind,
-      extensions: parsed.extensions.map(x => Extension.fromPlain(x)),
-      submodelElements: parsed.submodelElements.map(parseSubmodelBaseUnion),
-    });
+    const baseObjects = submodelBasePropsFromPlain(parsed);
+    return new Submodel(
+      parsed.id,
+      parsed.extensions.map(x => Extension.fromPlain(x)),
+      baseObjects.category,
+      baseObjects.idShort,
+      baseObjects.displayName,
+      baseObjects.description,
+      parsed.administration ? AdministrativeInformation.fromPlain(parsed.administration) : null,
+      parsed.kind ?? null,
+      baseObjects.semanticId,
+      baseObjects.supplementalSemanticIds,
+      baseObjects.qualifiers,
+      baseObjects.embeddedDataSpecifications,
+      parsed.submodelElements.map(parseSubmodelBaseUnion),
+    );
   };
 
   getValueRepresentation() {

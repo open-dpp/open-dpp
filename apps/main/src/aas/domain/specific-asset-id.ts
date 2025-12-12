@@ -31,13 +31,13 @@ export class SpecificAssetId implements IHasSemantics, IVisitable {
 
   static fromPlain(data: unknown): SpecificAssetId {
     const parsed = SpecificAssetIdJsonSchema.parse(data);
-    return SpecificAssetId.create({
-      name: parsed.name,
-      value: parsed.value,
-      semanticId: parsed.semanticId ? Reference.fromPlain(parsed.semanticId) : undefined,
-      supplementalSemanticIds: parsed.supplementalSemanticIds.map(s => Reference.fromPlain(s)),
-      externalSubjectId: parsed.externalSubjectId ? Reference.fromPlain(parsed.externalSubjectId) : undefined,
-    });
+    return new SpecificAssetId(
+      parsed.name,
+      parsed.value,
+      parsed.semanticId ? Reference.fromPlain(parsed.semanticId) : null,
+      parsed.supplementalSemanticIds.map(s => Reference.fromPlain(s)),
+      parsed.externalSubjectId ? Reference.fromPlain(parsed.externalSubjectId) : null,
+    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

@@ -25,11 +25,11 @@ export class Environment {
 
   static fromPlain(data: unknown): Environment {
     const parsed = EnvironmentJsonSchema.parse(data);
-    return Environment.create({
-      assetAdministrationShells: parsed.assetAdministrationShells,
-      submodels: parsed.submodels,
-      conceptDescriptions: parsed.conceptDescriptions,
-    });
+    return new Environment(
+      parsed.assetAdministrationShells,
+      parsed.submodels,
+      parsed.conceptDescriptions,
+    );
   }
 
   addAssetAdministrationShell(assetAdministrationShell: AssetAdministrationShell) {

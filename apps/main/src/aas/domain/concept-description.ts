@@ -59,17 +59,18 @@ export class ConceptDescription implements IIdentifiable, IHasDataSpecification,
 
   static fromPlain(data: unknown): ConceptDescription {
     const parsed = ConceptDescriptionJsonSchema.parse(data);
-    return ConceptDescription.create({
-      id: parsed.id,
-      extensions: parsed.extensions.map(Extension.fromPlain),
-      category: parsed.category,
-      idShort: parsed.idShort,
-      displayName: parsed.displayName.map(LanguageText.fromPlain),
-      description: parsed.description.map(LanguageText.fromPlain),
-      semanticId: parsed.semanticId ? Reference.fromPlain(parsed.semanticId) : undefined,
-      administration: parsed.administration ? AdministrativeInformation.fromPlain(parsed.administration) : undefined,
-      embeddedDataSpecifications: parsed.embeddedDataSpecifications.map(EmbeddedDataSpecification.fromPlain),
-    });
+    return new ConceptDescription(
+      parsed.id,
+      parsed.extensions.map(Extension.fromPlain),
+      parsed.category,
+      parsed.idShort,
+      parsed.displayName.map(LanguageText.fromPlain),
+      parsed.description.map(LanguageText.fromPlain),
+      parsed.semanticId ? Reference.fromPlain(parsed.semanticId) : null,
+      parsed.administration ? AdministrativeInformation.fromPlain(parsed.administration) : null,
+      parsed.embeddedDataSpecifications.map(EmbeddedDataSpecification.fromPlain),
+      parsed.isCaseOf.map(Reference.fromPlain),
+    );
   }
 
   toPlain(): Record<string, any> {

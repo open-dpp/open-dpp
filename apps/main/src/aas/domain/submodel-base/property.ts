@@ -51,13 +51,21 @@ export class Property implements ISubmodelBase {
 
   static fromPlain(data: unknown) {
     const parsed = PropertyJsonSchema.parse(data);
-    return Property.create({
-      ...submodelBasePropsFromPlain(parsed),
-      valueType: parsed.valueType,
-      extensions: parsed.extensions.map(Extension.fromPlain),
-      value: parsed.value,
-      valueId: parsed.valueId ? Reference.fromPlain(parsed.valueId) : undefined,
-    });
+    const baseObjects = submodelBasePropsFromPlain(parsed);
+    return new Property(
+      parsed.valueType,
+      parsed.extensions.map(Extension.fromPlain),
+      baseObjects.category,
+      baseObjects.idShort,
+      baseObjects.displayName,
+      baseObjects.description,
+      baseObjects.semanticId,
+      baseObjects.supplementalSemanticIds,
+      baseObjects.qualifiers,
+      baseObjects.embeddedDataSpecifications,
+      parsed.value,
+      parsed.valueId ? Reference.fromPlain(parsed.valueId) : undefined,
+    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

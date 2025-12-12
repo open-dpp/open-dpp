@@ -51,13 +51,21 @@ export class Range implements ISubmodelBase {
 
   static fromPlain(data: unknown): ISubmodelBase {
     const parsed = RangeJsonSchema.parse(data);
-    return Range.create({
-      ...submodelBasePropsFromPlain(parsed),
-      valueType: parsed.valueType,
-      extensions: parsed.extensions.map(Extension.fromPlain),
-      min: parsed.min,
-      max: parsed.max,
-    });
+    const baseObjects = submodelBasePropsFromPlain(parsed);
+    return new Range(
+      parsed.valueType,
+      parsed.extensions.map(Extension.fromPlain),
+      baseObjects.category,
+      baseObjects.idShort,
+      baseObjects.displayName,
+      baseObjects.description,
+      baseObjects.semanticId,
+      baseObjects.supplementalSemanticIds,
+      baseObjects.qualifiers,
+      baseObjects.embeddedDataSpecifications,
+      parsed.min,
+      parsed.max,
+    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

@@ -37,14 +37,14 @@ export class Extension implements IVisitable {
 
   static fromPlain(data: unknown): Extension {
     const parsed = ExtensionJsonSchema.parse(data);
-    return Extension.create({
-      name: parsed.name,
-      semanticId: parsed.semanticId ? Reference.fromPlain(parsed.semanticId) : undefined,
-      supplementalSemanticIds: parsed.supplementalSemanticIds.map(s => Reference.fromPlain(s)),
-      valueType: parsed.valueType,
-      value: parsed.value,
-      refersTo: parsed.refersTo.map(s => Reference.fromPlain(s)),
-    });
+    return new Extension(
+      parsed.name,
+      parsed.semanticId ? Reference.fromPlain(parsed.semanticId) : undefined,
+      parsed.supplementalSemanticIds.map(s => Reference.fromPlain(s)),
+      parsed.valueType,
+      parsed.value,
+      parsed.refersTo.map(s => Reference.fromPlain(s)),
+    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

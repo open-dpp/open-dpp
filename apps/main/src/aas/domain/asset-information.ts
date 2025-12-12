@@ -32,13 +32,13 @@ export class AssetInformation implements IVisitable {
 
   static fromPlain(data: unknown): AssetInformation {
     const parsed = AssetInformationJsonSchema.parse(data);
-    return AssetInformation.create({
-      assetKind: parsed.assetKind,
-      globalAssetId: parsed.globalAssetId,
-      specificAssetIds: parsed.specificAssetIds.map(SpecificAssetId.fromPlain),
-      assetType: parsed.assetType,
-      defaultThumbnail: parsed.defaultThumbnail ? Resource.fromPlain(parsed.defaultThumbnail) : undefined,
-    });
+    return new AssetInformation(
+      parsed.assetKind,
+      parsed.globalAssetId,
+      parsed.specificAssetIds.map(SpecificAssetId.fromPlain),
+      parsed.assetType,
+      parsed.defaultThumbnail ? Resource.fromPlain(parsed.defaultThumbnail) : null,
+    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

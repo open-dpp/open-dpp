@@ -47,12 +47,20 @@ export class MultiLanguageProperty implements ISubmodelBase {
 
   static fromPlain(data: unknown): ISubmodelBase {
     const parsed = MultiLanguagePropertyJsonSchema.parse(data);
-    return MultiLanguageProperty.create({
-      ...submodelBasePropsFromPlain(parsed),
-      extensions: parsed.extensions.map(e => Extension.fromPlain(e)),
-      value: parsed.value.map(l => LanguageText.fromPlain(l)),
-      valueId: parsed.valueId ? Reference.fromPlain(parsed.valueId) : undefined,
-    });
+    const baseObjects = submodelBasePropsFromPlain(parsed);
+    return new MultiLanguageProperty(
+      parsed.extensions.map(e => Extension.fromPlain(e)),
+      baseObjects.category,
+      baseObjects.idShort,
+      baseObjects.displayName,
+      baseObjects.description,
+      baseObjects.semanticId,
+      baseObjects.supplementalSemanticIds,
+      baseObjects.qualifiers,
+      baseObjects.embeddedDataSpecifications,
+      parsed.value.map(l => LanguageText.fromPlain(l)),
+      parsed.valueId ? Reference.fromPlain(parsed.valueId) : undefined,
+    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

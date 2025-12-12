@@ -47,11 +47,20 @@ export class File implements ISubmodelBase {
 
   static fromPlain(data: unknown): ISubmodelBase {
     const parsed = FileJsonSchema.parse(data);
-    return File.create({
-      ...submodelBasePropsFromPlain(parsed),
-      contentType: parsed.contentType,
-      value: parsed.value,
-    });
+    const baseObjects = submodelBasePropsFromPlain(parsed);
+    return new File(
+      parsed.contentType,
+      parsed.extensions.map(e => Extension.fromPlain(e)),
+      baseObjects.category,
+      baseObjects.idShort,
+      baseObjects.displayName,
+      baseObjects.description,
+      baseObjects.semanticId,
+      baseObjects.supplementalSemanticIds,
+      baseObjects.qualifiers,
+      baseObjects.embeddedDataSpecifications,
+      parsed.value,
+    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

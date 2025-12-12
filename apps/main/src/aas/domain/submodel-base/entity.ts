@@ -59,13 +59,22 @@ export class Entity implements ISubmodelBase {
 
   static fromPlain(data: unknown): ISubmodelBase {
     const parsed = EntityTypeJsonSchema.parse(data);
-    return Entity.create({
-      ...submodelBasePropsFromPlain(parsed),
-      entityType: parsed.entityType,
-      statements: parsed.statements.map(parseSubmodelBaseUnion),
-      globalAssetId: parsed.globalAssetId,
-      specificAssetIds: parsed.specificAssetIds.map(s => SpecificAssetId.fromPlain(s)),
-    });
+    const baseObjects = submodelBasePropsFromPlain(parsed);
+    return new Entity(
+      parsed.entityType,
+      parsed.extensions.map(e => Extension.fromPlain(e)),
+      baseObjects.category,
+      baseObjects.idShort,
+      baseObjects.displayName,
+      baseObjects.description,
+      baseObjects.semanticId,
+      baseObjects.supplementalSemanticIds,
+      baseObjects.qualifiers,
+      baseObjects.embeddedDataSpecifications,
+      parsed.statements.map(parseSubmodelBaseUnion),
+      parsed.globalAssetId,
+      parsed.specificAssetIds.map(s => SpecificAssetId.fromPlain(s)),
+    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

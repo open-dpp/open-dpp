@@ -20,10 +20,10 @@ export class Resource implements IVisitable {
 
   static fromPlain(data: unknown): Resource {
     const parsed = ResourceJsonSchema.parse(data);
-    return Resource.create({
-      path: parsed.path,
-      contentType: parsed.contentType,
-    });
+    return new Resource(
+      parsed.path,
+      parsed.contentType ?? null,
+    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

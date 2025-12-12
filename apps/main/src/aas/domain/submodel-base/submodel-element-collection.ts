@@ -48,11 +48,19 @@ export class SubmodelElementCollection implements ISubmodelBase {
 
   static fromPlain(data: unknown): ISubmodelBase {
     const parsed = SubmodelElementCollectionJsonSchema.parse(data);
-    return SubmodelElementCollection.create({
-      ...submodelBasePropsFromPlain(parsed),
-      extensions: parsed.extensions.map(Extension.fromPlain),
-      value: parsed.value.map(parseSubmodelBaseUnion),
-    });
+    const baseObjects = submodelBasePropsFromPlain(parsed);
+    return new SubmodelElementCollection(
+      parsed.extensions.map(Extension.fromPlain),
+      baseObjects.category,
+      baseObjects.idShort,
+      baseObjects.displayName,
+      baseObjects.description,
+      baseObjects.semanticId,
+      baseObjects.supplementalSemanticIds,
+      baseObjects.qualifiers,
+      baseObjects.embeddedDataSpecifications,
+      parsed.value.map(parseSubmodelBaseUnion),
+    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

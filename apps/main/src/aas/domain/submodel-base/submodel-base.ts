@@ -19,14 +19,25 @@ export interface SubmodelBaseProps {
   embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
 }
 
-export function submodelBasePropsFromPlain(data: Record<string, unknown>): SubmodelBaseProps {
+export interface SubmodelBaseObjects {
+  category: string | null;
+  idShort: string;
+  displayName: Array<LanguageText>;
+  description: Array<LanguageText>;
+  semanticId: Reference | null;
+  supplementalSemanticIds: Array<Reference>;
+  qualifiers: Array<Qualifier>;
+  embeddedDataSpecifications: Array<EmbeddedDataSpecification>;
+}
+
+export function submodelBasePropsFromPlain(data: Record<string, unknown>): SubmodelBaseObjects {
   const parsed = SubmodelBaseJsonSchema.parse(data);
   return {
-    category: parsed.category,
+    category: parsed.category ?? null,
     idShort: parsed.idShort,
     displayName: parsed.displayName.map(x => LanguageText.fromPlain(x)),
     description: parsed.description.map(x => LanguageText.fromPlain(x)),
-    semanticId: parsed.semanticId ? Reference.fromPlain(parsed.semanticId) : undefined,
+    semanticId: parsed.semanticId ? Reference.fromPlain(parsed.semanticId) : null,
     supplementalSemanticIds: parsed.supplementalSemanticIds.map(x => Reference.fromPlain(x)),
     qualifiers: parsed.qualifiers.map(q => Qualifier.fromPlain(q)),
     embeddedDataSpecifications: parsed.embeddedDataSpecifications.map(e => EmbeddedDataSpecification.fromPlain(e)),

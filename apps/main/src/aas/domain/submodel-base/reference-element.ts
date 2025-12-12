@@ -46,11 +46,19 @@ export class ReferenceElement implements ISubmodelBase {
 
   static fromPlain(data: unknown): ISubmodelBase {
     const parsed = ReferenceElementJsonSchema.parse(data);
-    return ReferenceElement.create({
-      ...submodelBasePropsFromPlain(parsed),
-      extensions: parsed.extensions.map(Extension.fromPlain),
-      value: parsed.value ? Reference.fromPlain(parsed.value) : undefined,
-    });
+    const baseObjects = submodelBasePropsFromPlain(parsed);
+    return new ReferenceElement(
+      parsed.extensions.map(Extension.fromPlain),
+      baseObjects.category,
+      baseObjects.idShort,
+      baseObjects.displayName,
+      baseObjects.description,
+      baseObjects.semanticId,
+      baseObjects.supplementalSemanticIds,
+      baseObjects.qualifiers,
+      baseObjects.embeddedDataSpecifications,
+      parsed.value ? Reference.fromPlain(parsed.value) : undefined,
+    );
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
