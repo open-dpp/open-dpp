@@ -1,7 +1,7 @@
 import type { Model } from "../../models/domain/model";
-import type { DataValue } from "../../product-passport-data/domain/data-value";
+import type { Template } from "../../old-templates/domain/template";
 
-import type { Template } from "../../templates/domain/template";
+import type { DataValue } from "../../product-passport-data/domain/data-value";
 import type { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
 import { randomUUID } from "node:crypto";
 import { ValueError } from "@open-dpp/exception";

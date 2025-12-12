@@ -1,60 +1,71 @@
+import type express from "express";
+import { Controller, Req } from "@nestjs/common";
+import { Pagination } from "../../aas/domain/pagination";
+import { IdShortPath } from "../../aas/domain/submodel-base/submodel";
 import {
-  Controller,
-  ForbiddenException,
-  Get,
-  Param,
-} from "@nestjs/common";
-import { ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
+  ApiGetShells,
+  ApiGetSubmodelById,
+  ApiGetSubmodelElementById,
+  ApiGetSubmodelElements,
+  ApiGetSubmodels,
+  CursorQueryParam,
+  IdParam,
+  IdShortPathParam,
+  LimitQueryParam,
+  RequestParam,
+  SubmodelIdParam,
+} from "../../aas/presentation/aas.decorators";
+import { IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
+import { AssetAdministrationShellResponseDto } from "../../aas/presentation/dto/asset-administration-shell.dto";
 import {
-  templateDocumentation,
-  templateGetAllDocumentation,
-} from "../../open-api-docs/template.doc";
-import { TemplateService } from "../infrastructure/template.service";
-import { templateParamDocumentation, templateToDto } from "./dto/template.dto";
+  SubmodelElementPaginationResponseDto,
+  SubmodelElementResponseDto,
+} from "../../aas/presentation/dto/submodel-element.dto";
+import { SubmodelPaginationResponseDto, SubmodelResponseDto } from "../../aas/presentation/dto/submodel.dto";
+import { EnvironmentService, loadEnvironmentAndCheckOwnership } from "../../aas/presentation/environment.service";
+import { AuthService } from "../../auth/auth.service";
+import { TemplateRepository } from "../infrastructure/template.repository";
 
-@Controller("/organizations/:organizationId/templates")
-export class TemplateController {
-  private readonly templateService: TemplateService;
-
-  constructor(
-    templateService: TemplateService,
-  ) {
-    this.templateService = templateService;
+@Controller("/templates")
+export class TemplateController implements IAasReadEndpoints {
+  constructor(private readonly environmentService: EnvironmentService, private readonly authService: AuthService, private readonly templateRepository: TemplateRepository) {
   }
 
-  @ApiOperation({
-    summary: "Find template by id",
-    description: "Find template by id.",
-  })
-  @ApiParam(templateParamDocumentation)
-  @ApiResponse({
-    schema: templateDocumentation,
-  })
-  @Get(":templateId")
-  async get(
-    @Param("organizationId") organizationId: string,
-    @Param("templateId") id: string,
-  ) {
-    const found = await this.templateService.findOneOrFail(id);
-
-    if (!found.isOwnedBy(organizationId)) {
-      throw new ForbiddenException();
-    }
-
-    return templateToDto(found);
+  @ApiGetShells()
+  async getShells(@IdParam() id: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @Req() req: express.Request): Promise<AssetAdministrationShellResponseDto> {
+    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
+    const pagination = Pagination.create({ limit, cursor });
+    return await this.environmentService.getAasShells(environment, pagination);
   }
 
-  @ApiOperation({
-    summary: "Find all templates",
-    description: "Find all templates which belong to the user's organization.",
-  })
-  @ApiResponse({
-    schema: templateGetAllDocumentation,
-  })
-  @Get()
-  async getAll(
-    @Param("organizationId") organizationId: string,
-  ) {
-    return await this.templateService.findAllByOrganization(organizationId);
+  @ApiGetSubmodels()
+  async getSubmodels(@IdParam() id: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @Req() req: express.Request): Promise<SubmodelPaginationResponseDto> {
+    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
+    const pagination = Pagination.create({ limit, cursor });
+    return await this.environmentService.getSubmodels(environment, pagination);
+  }
+
+  @ApiGetSubmodelById()
+  async getSubmodelById(@IdParam() id: string, @SubmodelIdParam() submodelId: string, @RequestParam() req: express.Request): Promise<SubmodelResponseDto> {
+    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
+    return await this.environmentService.getSubmodelById(environment, submodelId);
+  }
+
+  @ApiGetSubmodelElements()
+  async getSubmodelElements(@IdParam() id: string, @SubmodelIdParam() submodelId: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @RequestParam() req: express.Request): Promise<SubmodelElementPaginationResponseDto> {
+    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
+    const pagination = Pagination.create({ limit, cursor });
+    return await this.environmentService.getSubmodelElements(environment, submodelId, pagination);
+  }
+
+  @ApiGetSubmodelElementById()
+  async getSubmodelElementById(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementResponseDto> {
+    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
+    return await this.environmentService.getSubmodelElementById(environment, submodelId, idShortPath);
   }
 }

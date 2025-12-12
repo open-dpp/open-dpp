@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
 import { ignoreIds } from "@open-dpp/testing";
+import { Template } from "../../old-templates/domain/template";
+import { templateCreatePropsFactory } from "../../old-templates/fixtures/template.factory";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import { Template } from "../../templates/domain/template";
-import { templateCreatePropsFactory } from "../../templates/fixtures/template.factory";
 import { Model } from "./model";
 
 describe("model", () => {

@@ -14,9 +14,9 @@ import { GranularityLevel } from "../../data-modelling/domain/granularity-level"
 import { SectionType } from "../../data-modelling/domain/section-base";
 import { generateMongoConfig } from "../../database/config";
 import { Model } from "../../models/domain/model";
+import { Template } from "../../old-templates/domain/template";
+import { templateCreatePropsFactory } from "../../old-templates/fixtures/template.factory";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import { Template } from "../../templates/domain/template";
-import { templateCreatePropsFactory } from "../../templates/fixtures/template.factory";
 import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
 import {
   UniqueProductIdentifierDoc,

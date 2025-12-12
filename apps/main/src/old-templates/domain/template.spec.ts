@@ -2,6 +2,22 @@ import type { TemplateDbProps } from "./template";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { ignoreIds } from "@open-dpp/testing";
+import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
+import { AssetInformation } from "../../aas/domain/asset-information";
+import { AssetKind } from "../../aas/domain/asset-kind-enum";
+import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
+import { DataTypeDef } from "../../aas/domain/common/data-type-def";
+import { Key } from "../../aas/domain/common/key";
+import { KeyTypes } from "../../aas/domain/common/key-types-enum";
+import { Language } from "../../aas/domain/common/language-enum";
+import { LanguageText } from "../../aas/domain/common/language-text";
+import { Reference, ReferenceTypes } from "../../aas/domain/common/reference";
+import { AasSubmodelElements } from "../../aas/domain/submodel-base/aas-submodel-elements";
+import { MultiLanguageProperty } from "../../aas/domain/submodel-base/multi-language-property";
+import { Property } from "../../aas/domain/submodel-base/property";
+import { Submodel } from "../../aas/domain/submodel-base/submodel";
+import { SubmodelElementCollection } from "../../aas/domain/submodel-base/submodel-element-collection";
+import { SubmodelElementList } from "../../aas/domain/submodel-base/submodel-element-list";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import { laptopFactory, LaptopFactory } from "../fixtures/laptop.factory";
@@ -318,5 +334,88 @@ describe("template", () => {
     const productDataModel = Template.loadFromDb(laptopModel);
     productDataModel.assignMarketplaceResource("m1");
     expect(productDataModel.marketplaceResourceId).toEqual("m1");
+  });
+
+  it.skip("should convert to AAS", () => {
+    const laptopModel: TemplateDbProps = laptopFactory.addSections().build();
+    const template = Template.loadFromDb(laptopModel);
+    const aasEnvironment = template.convertToAas();
+    expect(aasEnvironment.assetAdministrationShells).toEqual([
+      AssetAdministrationShell.create({
+        id: template.id,
+        assetInformation: AssetInformation.create({ assetKind: AssetKind.Type }),
+        submodels: [
+          Reference.create({
+            type: ReferenceTypes.ModelReference,
+            keys: [Key.create({
+              type: KeyTypes.Submodel,
+              value: LaptopFactory.ids.techSpecs.id,
+            })],
+          }),
+          Reference.create({
+            type: ReferenceTypes.ModelReference,
+            keys: [Key.create({
+              type: KeyTypes.Submodel,
+              value: LaptopFactory.ids.environment.id,
+            })],
+          }),
+          Reference.create({
+            type: ReferenceTypes.ModelReference,
+            keys: [Key.create({
+              type: KeyTypes.Submodel,
+              value: `submodel-for-${LaptopFactory.ids.material.id}`,
+            })],
+          }),
+        ],
+      }),
+    ]);
+    const administration = AdministrativeInformation.create({ version: "1.0.0", revision: "1" });
+    expect(aasEnvironment.submodels).toEqual([
+      Submodel.create({
+        id: LaptopFactory.ids.techSpecs.id,
+        idShort: LaptopFactory.ids.techSpecs.id,
+        administration,
+        displayName: [LanguageText.create({ language: Language.de, text: "Technical specifications" })],
+        submodelElements: [
+          MultiLanguageProperty.create({ idShort: LaptopFactory.ids.techSpecs.fields.processor, displayName: [LanguageText.create({ language: Language.de, text: "Processor" })] }),
+          MultiLanguageProperty.create({ idShort: LaptopFactory.ids.techSpecs.fields.memory, displayName: [LanguageText.create({ language: Language.de, text: "Memory" })] }),
+          MultiLanguageProperty.create({ idShort: LaptopFactory.ids.techSpecs.fields.serialNumber, displayName: [LanguageText.create({ language: Language.de, text: "Serial number" })] }),
+          MultiLanguageProperty.create({ idShort: LaptopFactory.ids.techSpecs.fields.batteryStatus, displayName: [LanguageText.create({ language: Language.de, text: "Battery Status" })] }),
+        ],
+      }),
+      Submodel.create({
+        id: LaptopFactory.ids.environment.id,
+        idShort: LaptopFactory.ids.environment.id,
+        administration,
+        displayName: [LanguageText.create({ language: Language.de, text: "Environment" })],
+        submodelElements: [
+          Property.create({ valueType: DataTypeDef.Double, idShort: LaptopFactory.ids.environment.fields.waterConsumption, displayName: [LanguageText.create({ language: Language.de, text: "Water consumption" })] }),
+          Property.create({ valueType: DataTypeDef.Double, idShort: LaptopFactory.ids.environment.fields.energyConsumption, displayName: [LanguageText.create({ language: Language.de, text: "Energy consumption" })] }),
+        ],
+      }),
+      Submodel.create({
+        id: `submodel-for-${LaptopFactory.ids.material.id}`,
+        idShort: `submodel-for-${LaptopFactory.ids.material.id}`,
+        administration,
+        displayName: [LanguageText.create({ language: Language.de, text: "Material" })],
+        submodelElements: [
+          SubmodelElementList.create({ typeValueListElement: AasSubmodelElements.SubmodelElementCollection, idShort: LaptopFactory.ids.material.id, displayName: [LanguageText.create({ language: Language.de, text: "Material" })], value: [
+            SubmodelElementCollection.create({ idShort: `${LaptopFactory.ids.material.id}_0`, value: [
+              MultiLanguageProperty.create({ idShort: LaptopFactory.ids.material.fields.materialType, displayName: [LanguageText.create({ language: Language.de, text: "Material type" })] }),
+              Property.create({ valueType: DataTypeDef.Double, idShort: LaptopFactory.ids.material.fields.mass, displayName: [LanguageText.create({ language: Language.de, text: "Mass" })] }),
+              SubmodelElementCollection.create({
+                idShort: LaptopFactory.ids.materialCo2.id,
+                displayName: [LanguageText.create({ language: Language.de, text: "Material Co2" })],
+                value: [
+                  MultiLanguageProperty.create({ idShort: LaptopFactory.ids.materialCo2.fields.co2CalculationMethod, displayName: [LanguageText.create({ language: Language.de, text: "Co2 calculation method" })] }),
+                  Property.create({ valueType: DataTypeDef.Double, idShort: LaptopFactory.ids.materialCo2.fields.co2Emissions, displayName: [LanguageText.create({ language: Language.de, text: "Co2 emissions" })] }),
+                ],
+              }),
+            ] }),
+          ] }),
+
+        ],
+      }),
+    ]);
   });
 });

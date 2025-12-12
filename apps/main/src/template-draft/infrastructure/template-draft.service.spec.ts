@@ -11,7 +11,7 @@ import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
 import { generateMongoConfig } from "../../database/config";
-import { TemplateDocSchemaVersion } from "../../templates/infrastructure/template.schema";
+import { TemplateDocSchemaVersion } from "../../old-templates/infrastructure/template.schema";
 import { DataFieldDraft } from "../domain/data-field-draft";
 import { SectionDraft } from "../domain/section-draft";
 import { TemplateDraft } from "../domain/template-draft";

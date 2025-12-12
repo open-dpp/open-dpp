@@ -2,7 +2,7 @@ import type {
   DataFieldType_TYPE,
 } from "../../data-modelling/domain/data-field-base";
 import type { GranularityLevel_TYPE } from "../../data-modelling/domain/granularity-level";
-import type { DataFieldDbProps } from "../../templates/domain/data-field";
+import type { DataFieldDbProps } from "../../old-templates/domain/data-field";
 import { randomUUID } from "node:crypto";
 import _ from "lodash";
 import {

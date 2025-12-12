@@ -12,15 +12,15 @@ import { AuthModule } from "../../auth/auth.module";
 import { AuthService } from "../../auth/auth.service";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
-import { Template } from "../../templates/domain/template";
-import { laptopFactory } from "../../templates/fixtures/laptop.factory";
-import { templateCreatePropsFactory } from "../../templates/fixtures/template.factory";
+import { Template } from "../../old-templates/domain/template";
+import { laptopFactory } from "../../old-templates/fixtures/laptop.factory";
+import { templateCreatePropsFactory } from "../../old-templates/fixtures/template.factory";
 import {
   TemplateDoc,
   TemplateDocSchemaVersion,
   TemplateSchema,
-} from "../../templates/infrastructure/template.schema";
-import { TemplateService } from "../../templates/infrastructure/template.service";
+} from "../../old-templates/infrastructure/template.schema";
+import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,
