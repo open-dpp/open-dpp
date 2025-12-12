@@ -1,10 +1,6 @@
 import type { AssetInformationDb, EmbeddedDataSpecificationDb, ExtensionDb, ReferenceDb } from "./db-types";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Schema as MongooseSchema } from "mongoose";
-import { AssetInformationJsonSchema } from "../../domain/parsing/asset-information-json-schema";
-import { ReferenceJsonSchema } from "../../domain/parsing/common/reference-json-schema";
-import { EmbeddedDataSpecificationJsonSchema } from "../../domain/parsing/embedded-data-specification-json-schema";
-import { ExtensionJsonSchema } from "../../domain/parsing/extension-json-schema";
 import { AdministrativeInformationDoc, AdministrativeInformationSchema } from "./administration.information.schema";
 import { LanguageTextDoc, LanguageTextSchema } from "./language.text.schema";
 
@@ -24,10 +20,10 @@ export class AssetAdministrationShellDoc extends Document<string> {
   }) // Track schema version
   _schemaVersion: AssetAdministrationShellDocSchemaVersionType;
 
-  @Prop({ type: MongooseSchema.Types.Mixed, validate: (value: any) => AssetInformationJsonSchema.parse(value), required: true })
+  @Prop({ type: MongooseSchema.Types.Mixed, required: true })
   assetInformation: AssetInformationDb;
 
-  @Prop({ type: [MongooseSchema.Types.Mixed], validate: (value: any) => ExtensionJsonSchema.array().parse(value), required: true })
+  @Prop({ type: [MongooseSchema.Types.Mixed], required: true })
   extensions: ExtensionDb[];
 
   @Prop({ type: String, cast: false })
@@ -45,13 +41,13 @@ export class AssetAdministrationShellDoc extends Document<string> {
   @Prop({ type: AdministrativeInformationSchema })
   administration?: AdministrativeInformationDoc;
 
-  @Prop({ type: [MongooseSchema.Types.Mixed], validate: (value: any) => EmbeddedDataSpecificationJsonSchema.array().parse(value) })
+  @Prop({ type: [MongooseSchema.Types.Mixed] })
   embeddedDataSpecifications: EmbeddedDataSpecificationDb[];
 
-  @Prop({ type: MongooseSchema.Types.Mixed, validate: (value: any) => ReferenceJsonSchema.nullish().parse(value) })
+  @Prop({ type: MongooseSchema.Types.Mixed })
   derivedFrom?: ReferenceDb;
 
-  @Prop({ type: [MongooseSchema.Types.Mixed], validate: (value: any) => ReferenceJsonSchema.array().parse(value) })
+  @Prop({ type: [MongooseSchema.Types.Mixed] })
   submodels: ReferenceDb[];
 }
 

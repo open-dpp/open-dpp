@@ -1,9 +1,6 @@
 import type { EmbeddedDataSpecificationDb, ExtensionDb, ReferenceDb } from "./db-types";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Schema as MongooseSchema } from "mongoose";
-import { ReferenceJsonSchema } from "../../domain/parsing/common/reference-json-schema";
-import { EmbeddedDataSpecificationJsonSchema } from "../../domain/parsing/embedded-data-specification-json-schema";
-import { ExtensionJsonSchema } from "../../domain/parsing/extension-json-schema";
 import {
   AdministrativeInformationDoc,
   AdministrativeInformationSchema,
@@ -27,7 +24,7 @@ export class ConceptDescriptionDoc extends Document<string> {
   }) // Track schema version
   _schemaVersion: ConceptDescriptionDocSchemaVersionType;
 
-  @Prop({ type: [MongooseSchema.Types.Mixed], validate: (value: any) => ExtensionJsonSchema.array().parse(value), required: true })
+  @Prop({ type: [MongooseSchema.Types.Mixed], required: true })
   extensions: ExtensionDb[];
 
   @Prop({ type: String, cast: false })
@@ -45,10 +42,10 @@ export class ConceptDescriptionDoc extends Document<string> {
   @Prop({ type: AdministrativeInformationSchema })
   administration?: AdministrativeInformationDoc;
 
-  @Prop({ type: [MongooseSchema.Types.Mixed], validate: (value: any) => EmbeddedDataSpecificationJsonSchema.array().parse(value), required: true })
+  @Prop({ type: [MongooseSchema.Types.Mixed], required: true })
   embeddedDataSpecifications: EmbeddedDataSpecificationDb[];
 
-  @Prop({ type: [MongooseSchema.Types.Mixed], validate: (value: any) => ReferenceJsonSchema.array().parse(value), required: true })
+  @Prop({ type: [MongooseSchema.Types.Mixed], required: true })
   isCaseOf: ReferenceDb[];
 }
 

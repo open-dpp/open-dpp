@@ -59,7 +59,8 @@ export class PassportController implements IAasReadEndpoints {
   ): Promise<SubmodelPaginationResponseDto> {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.passportRepository, id, req);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodels(environment, pagination);
+    const res = await this.environmentService.getSubmodels(environment, pagination);
+    return res;
   }
 
   @ApiGetSubmodelById()

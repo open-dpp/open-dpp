@@ -6,11 +6,13 @@ import { LanguageText } from "../common/language-text";
 import { IQualifiable, Qualifier } from "../common/qualififiable";
 import { IReferable } from "../common/referable";
 import { Reference } from "../common/reference";
+import { IConvertableToPlain } from "../convertable-to-plain";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import { JsonVisitor } from "../parsing/json-visitor";
 import { SubmodelJsonSchema } from "../parsing/submodel-base/submodel-json-schema";
 import { IPersistable } from "../persistable";
+import { ValueVisitor } from "../value-visitor";
 import { IVisitable, IVisitor } from "../visitor";
 import { parseSubmodelBaseUnion, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
@@ -40,7 +42,7 @@ export interface ISubmodelBase
   IHasSemantics,
   IQualifiable,
   IVisitable,
-  IHasDataSpecification {
+  IHasDataSpecification, IConvertableToPlain {
   category: string | null;
   idShort: string;
   displayName: Array<LanguageText>;
@@ -49,7 +51,6 @@ export interface ISubmodelBase
   supplementalSemanticIds: Array<Reference>;
   qualifiers: Qualifier[];
   embeddedDataSpecifications: Array<EmbeddedDataSpecification>;
-  toPlain: () => Record<string, any>;
   getChildren: () => IterableIterator<ISubmodelBase>;
 }
 
@@ -97,7 +98,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     );
   };
 
-  static fromPlain(data: unknown) {
+  static fromPlain(data: unknown): Submodel {
     const parsed = SubmodelJsonSchema.parse(data);
     return Submodel.create({
       ...submodelBasePropsFromPlain(parsed),
@@ -108,6 +109,11 @@ export class Submodel implements ISubmodelBase, IPersistable {
       submodelElements: parsed.submodelElements.map(parseSubmodelBaseUnion),
     });
   };
+
+  getValueRepresentation() {
+    const valueVisitor = new ValueVisitor();
+    return this.accept(valueVisitor);
+  }
 
   findSubmodelElement(idShortPath: IdShortPath): ISubmodelBase | undefined {
     let current: ISubmodelBase | undefined;

@@ -3,6 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { findOne, findOneOrFail, save } from "./repository-helpers";
+import { AssetAdministrationShellDbSchema } from "./schemas/asset-administration-shell-db-schema";
 import {
   AssetAdministrationShellDoc,
   AssetAdministrationShellDocSchemaVersion,
@@ -19,15 +20,19 @@ export class AasRepository {
     this.aasDoc = aasDoc;
   }
 
-  async save(assetAdminstrationShell: AssetAdministrationShell) {
-    return await save(assetAdminstrationShell, this.aasDoc, AssetAdministrationShellDocSchemaVersion.v1_0_0, AssetAdministrationShell.fromPlain);
+  fromPlain(plain: any): AssetAdministrationShell {
+    return AssetAdministrationShell.fromPlain(AssetAdministrationShellDbSchema.encode(plain));
+  }
+
+  async save(assetAdministrationShell: AssetAdministrationShell) {
+    return await save(assetAdministrationShell, this.aasDoc, AssetAdministrationShellDocSchemaVersion.v1_0_0, this.fromPlain, AssetAdministrationShellDbSchema);
   }
 
   async findOneOrFail(id: string): Promise<AssetAdministrationShell> {
-    return await findOneOrFail(id, this.aasDoc, AssetAdministrationShell.fromPlain);
+    return await findOneOrFail(id, this.aasDoc, this.fromPlain);
   }
 
   async findOne(id: string): Promise<AssetAdministrationShell | undefined> {
-    return await findOne(id, this.aasDoc, AssetAdministrationShell.fromPlain);
+    return await findOne(id, this.aasDoc, this.fromPlain);
   }
 }

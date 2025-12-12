@@ -8,13 +8,7 @@ import type {
 } from "./db-types";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Schema as MongooseSchema } from "mongoose";
-import { z } from "zod";
 import { ModellingKind } from "../../domain/common/has-kind";
-import { QualifierJsonSchema } from "../../domain/parsing/common/qualifier-json-schema";
-import { ReferenceJsonSchema } from "../../domain/parsing/common/reference-json-schema";
-import { EmbeddedDataSpecificationJsonSchema } from "../../domain/parsing/embedded-data-specification-json-schema";
-import { ExtensionJsonSchema } from "../../domain/parsing/extension-json-schema";
-import { SubmodelBaseUnionSchema } from "../../domain/parsing/submodel-base/submodel-base-union-schema";
 import { AdministrativeInformationDoc, AdministrativeInformationSchema } from "./administration.information.schema";
 import { LanguageTextDoc, LanguageTextSchema } from "./language.text.schema";
 
@@ -47,19 +41,19 @@ export class SubmodelDoc extends Document<string> {
   @Prop({ type: [LanguageTextSchema], default: [] })
   description?: LanguageTextDoc[];
 
-  @Prop({ type: MongooseSchema.Types.Mixed, validate: (value: any) => ReferenceJsonSchema.nullish().parse(value) })
+  @Prop({ type: MongooseSchema.Types.Mixed })
   semanticId?: ReferenceDb;
 
-  @Prop({ type: [MongooseSchema.Types.Mixed], validate: (value: any) => z.array(ReferenceJsonSchema).parse(value) })
+  @Prop({ type: [MongooseSchema.Types.Mixed] })
   supplementalSemanticIds: ReferenceDb[];
 
-  @Prop({ qualifiers: [MongooseSchema.Types.Mixed], validate: (value: any) => z.array(QualifierJsonSchema).parse(value) })
+  @Prop({ qualifiers: [MongooseSchema.Types.Mixed] })
   qualifiers: QualifierDb[];
 
-  @Prop({ type: [MongooseSchema.Types.Mixed], validate: (value: any) => z.array(EmbeddedDataSpecificationJsonSchema).parse(value) })
+  @Prop({ type: [MongooseSchema.Types.Mixed] })
   embeddedDataSpecifications: EmbeddedDataSpecificationDb[];
 
-  @Prop({ type: [MongooseSchema.Types.Mixed], validate: (value: any) => z.array(ExtensionJsonSchema).parse(value) })
+  @Prop({ type: [MongooseSchema.Types.Mixed] })
   extensions: ExtensionDb[];
 
   @Prop({ type: AdministrativeInformationSchema })
@@ -68,7 +62,7 @@ export class SubmodelDoc extends Document<string> {
   @Prop({ enum: Object.values(ModellingKind), type: String })
   kind?: ModellingKindType;
 
-  @Prop({ type: [MongooseSchema.Types.Mixed], validate: (value: any) => SubmodelBaseUnionSchema.array().parse(value) })
+  @Prop({ type: [MongooseSchema.Types.Mixed] })
   submodelElements: SubmodelBaseUnionDb[];
 }
 

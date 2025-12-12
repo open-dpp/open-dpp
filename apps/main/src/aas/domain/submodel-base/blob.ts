@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -21,14 +22,14 @@ export class Blob implements ISubmodelBase {
     public readonly supplementalSemanticIds: Array<Reference>,
     public readonly qualifiers: Qualifier[],
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly value: Uint8Array | null = null,
+    public readonly value: Buffer | null = null,
   ) {
   }
 
   static create(data: SubmodelBaseProps & {
     contentType: string;
     extensions?: Array<Extension>;
-    value?: Uint8Array | null;
+    value?: Buffer | null;
   }) {
     return new Blob(
       data.contentType,
@@ -50,7 +51,7 @@ export class Blob implements ISubmodelBase {
     return Blob.create({
       ...submodelBasePropsFromPlain(parsed),
       contentType: parsed.contentType,
-      value: parsed.value ? new Uint8Array(atob(parsed.value).split("").map(c => c.charCodeAt(0))) : undefined,
+      value: parsed.value ? Buffer.from(parsed.value) : undefined,
     });
   }
 

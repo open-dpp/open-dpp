@@ -3,6 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { ConceptDescription } from "../domain/concept-description";
 import { findOne, findOneOrFail, save } from "./repository-helpers";
+import { ConceptDescriptionDbSchema } from "./schemas/concept-description-db-schema";
 import { ConceptDescriptionDoc, ConceptDescriptionDocSchemaVersion } from "./schemas/concept-description.schema";
 
 @Injectable()
@@ -16,15 +17,19 @@ export class ConceptDescriptionRepository {
     this.conceptDescriptionDoc = conceptDescriptionDoc;
   }
 
+  fromPlain(plain: any): ConceptDescription {
+    return ConceptDescription.fromPlain(ConceptDescriptionDbSchema.encode(plain));
+  }
+
   async save(conceptDescription: ConceptDescription) {
-    return await save(conceptDescription, this.conceptDescriptionDoc, ConceptDescriptionDocSchemaVersion.v1_0_0, ConceptDescription.fromPlain);
+    return await save(conceptDescription, this.conceptDescriptionDoc, ConceptDescriptionDocSchemaVersion.v1_0_0, this.fromPlain, ConceptDescriptionDbSchema);
   }
 
   async findOneOrFail(id: string): Promise<ConceptDescription> {
-    return await findOneOrFail(id, this.conceptDescriptionDoc, ConceptDescription.fromPlain);
+    return await findOneOrFail(id, this.conceptDescriptionDoc, this.fromPlain);
   }
 
   async findOne(id: string): Promise<ConceptDescription | undefined> {
-    return await findOne(id, this.conceptDescriptionDoc, ConceptDescription.fromPlain);
+    return await findOne(id, this.conceptDescriptionDoc, this.fromPlain);
   }
 }

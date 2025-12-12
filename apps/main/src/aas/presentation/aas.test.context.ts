@@ -91,7 +91,10 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     submodelRepository = moduleRef.get<SubmodelRepository>(SubmodelRepository);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
     aas = AssetAdministrationShell.fromPlain(aasPlainFactory.build(undefined, { transient: { iriDomain } }));
-    submodels = [Submodel.fromPlain(submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } })), Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }))];
+    submodels = [
+      Submodel.fromPlain(submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } })),
+      Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } })),
+    ];
     await aasRepository.save(aas);
     for (const s of submodels) {
       await submodelRepository.save(s);

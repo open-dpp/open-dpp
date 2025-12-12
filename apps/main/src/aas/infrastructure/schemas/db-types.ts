@@ -1,16 +1,16 @@
 import { z } from "zod";
-import { AssetInformationJsonSchema } from "../../domain/parsing/asset-information-json-schema";
-import { QualifierJsonSchema } from "../../domain/parsing/common/qualifier-json-schema";
-import { ReferenceJsonSchema } from "../../domain/parsing/common/reference-json-schema";
-import { EmbeddedDataSpecificationJsonSchema } from "../../domain/parsing/embedded-data-specification-json-schema";
-import { ExtensionJsonSchema } from "../../domain/parsing/extension-json-schema";
 
-import { SubmodelBaseUnionSchema } from "../../domain/parsing/submodel-base/submodel-base-union-schema";
+import { AssetInformationDbSchema } from "./asset-information-db-schema";
+import { QualifierDbSchema } from "./common/qualifier-db-schema";
+import { ReferenceDbSchema } from "./common/reference-db-schema";
+import { EmbeddedDataSpecificationDbSchema } from "./embedded-data-specification-db-schema";
+import { ExtensionDbSchema } from "./extension-db-schema";
+import { SubmodelBaseUnionDbSchema } from "./submodel-base/submodel-base-union-db-schema";
 
-export type EmbeddedDataSpecificationDb = z.infer<typeof EmbeddedDataSpecificationJsonSchema>;
-export type QualifierDb = z.infer<typeof QualifierJsonSchema>;
+export type EmbeddedDataSpecificationDb = z.infer<typeof EmbeddedDataSpecificationDbSchema>;
+export type QualifierDb = z.infer<typeof QualifierDbSchema>;
 
-export type ExtensionDb = z.infer<typeof ExtensionJsonSchema>;
-export type SubmodelBaseUnionDb = z.infer<typeof SubmodelBaseUnionSchema>;
-export type AssetInformationDb = z.infer<typeof AssetInformationJsonSchema>;
-export type ReferenceDb = z.infer<typeof ReferenceJsonSchema>;
+export type ExtensionDb = z.infer<typeof ExtensionDbSchema>;
+export type SubmodelBaseUnionDb = z.infer<typeof SubmodelBaseUnionDbSchema>;
+export type AssetInformationDb = z.infer<typeof AssetInformationDbSchema>;
+export type ReferenceDb = z.infer<typeof ReferenceDbSchema>;

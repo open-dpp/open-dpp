@@ -1,4 +1,3 @@
-import { btoa } from "node:buffer";
 import { AssetAdministrationShell } from "../asset-adminstration-shell";
 import { AssetInformation } from "../asset-information";
 import { AdministrativeInformation } from "../common/administrative-information";
@@ -138,12 +137,7 @@ export class JsonVisitor implements IVisitor<undefined, any> {
       modelType: KeyTypes.Blob,
       contentType: element.contentType,
       extensions: element.extensions.map(e => e.accept(this)),
-      value: element.value
-        ? btoa(Array.from(element.value)
-            .map(byte => String.fromCharCode(byte))
-            .join(""),
-          )
-        : null,
+      value: element.value ? element.value.toString() : element.value,
     };
   }
 

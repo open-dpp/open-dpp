@@ -1,5 +1,6 @@
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { Document, Model as MongooseModel } from "mongoose";
+import { ZodObject } from "zod";
 import { IPersistable } from "../domain/persistable";
 
 export async function convertToDomain<T>(
@@ -10,7 +11,7 @@ export async function convertToDomain<T>(
   return fromPlain({ ...plain, id: plain._id });
 }
 
-export async function save<T extends Document<string>, V>(domainObject: IPersistable, docModel: MongooseModel<T>, schemaVersion: string, fromPlain: (plain: unknown) => V): Promise<V> {
+export async function save<T extends Document<string>, V>(domainObject: IPersistable, docModel: MongooseModel<T>, schemaVersion: string, fromPlain: (plain: unknown) => V, ValidationSchema?: ZodObject<any>): Promise<V> {
   // 1. Try to find an existing document
   let doc = await docModel.findById(domainObject.id);
 
@@ -21,7 +22,7 @@ export async function save<T extends Document<string>, V>(domainObject: IPersist
       _id: domainObject.id, // top-level discriminator
     });
   }
-  const plain = domainObject.toPlain();
+  const plain = ValidationSchema ? ValidationSchema.parse(domainObject.toPlain()) : domainObject.toPlain();
   // 3. Modify fields — casting and validation occur on save()
   doc.set({
     _schemaVersion: schemaVersion,

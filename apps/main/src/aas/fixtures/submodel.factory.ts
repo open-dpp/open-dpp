@@ -5,215 +5,250 @@ interface SubmodelTransientParams {
 }
 
 export const submodelDesignOfProductPlainFactory
-  = Factory.define<any, SubmodelTransientParams> (({ transientParams }) => ({
-    modelType: "Submodel",
-    kind: "Instance",
-    semanticId: {
-      keys: [
-        {
-          type: "GlobalReference",
-          value: `${transientParams.iriDomain}/semantics/submodel/DesignOfProduct#1/0`,
-        },
-      ],
-      type: "ExternalReference",
-    },
-    id: `${transientParams.iriDomain}/submodels/2CZc64Umg5`,
-    idShort: "DesignOfProduct",
-    submodelElements: [
-      {
-        modelType: "SubmodelElementCollection",
-        idShort: "Design_V01",
-        value: [
+  = Factory.define<any, SubmodelTransientParams> (({ transientParams }) => (
+    {
+      modelType: "Submodel",
+      kind: "Instance",
+      semanticId: {
+        keys: [
           {
-            modelType: "SubmodelElementCollection",
-            semanticId: {
-              keys: [
-                {
-                  type: "GlobalReference",
-                  value: "Author",
-                },
-              ],
-              type: "ExternalReference",
-            },
-            idShort: "Author",
-            value: [
-              {
-                modelType: "Property",
-                semanticId: {
-                  keys: [
-                    {
-                      type: "GlobalReference",
-                      value: "AuthorName",
-                    },
-                  ],
-                  type: "ExternalReference",
-                },
-                value: "Fabrikvordenker:in ER28-0652",
-                valueType: "xs:string",
-                idShort: "AuthorName",
-              },
-              {
-                modelType: "Property",
-                semanticId: {
-                  keys: [
-                    {
-                      type: "GlobalReference",
-                      value: "AuthorOrganization",
-                    },
-                  ],
-                  type: "ExternalReference",
-                },
-                value: "Technologie-Initiative SmartFactory KL e. V.",
-                valueType: "xs:string",
-                idShort: "AuthorOrganization",
-              },
-            ],
-          },
-          {
-            modelType: "SubmodelElementCollection",
-            semanticId: {
-              keys: [
-                {
-                  type: "GlobalReference",
-                  value: "AdditionalInformation",
-                },
-              ],
-              type: "ExternalReference",
-            },
-            idShort: "AdditionalInformation",
-            value: [
-              {
-                modelType: "Property",
-                semanticId: {
-                  keys: [
-                    {
-                      type: "GlobalReference",
-                      value: "AuthorName",
-                    },
-                  ],
-                  type: "ExternalReference",
-                },
-                value: "Probably _PHUCKET",
-                valueType: "xs:string",
-                idShort: "CreatorIsland",
-              },
-              {
-                modelType: "Property",
-                semanticId: {
-                  keys: [
-                    {
-                      type: "GlobalReference",
-                      value: "AuthorOrganization",
-                    },
-                  ],
-                  type: "ExternalReference",
-                },
-                value: "1. Fußball-Club Kaiserslautern e. V.",
-                valueType: "xs:string",
-                idShort: "Aufsteiger",
-              },
-              {
-                modelType: "Property",
-                semanticId: {
-                  keys: [
-                    {
-                      type: "GlobalReference",
-                      value: "ApplicationName",
-                    },
-                  ],
-                  type: "ExternalReference",
-                },
-                value: "https://www.youtube.com/watch?v=G1IbRujko-A",
-                valueType: "xs:string",
-                idShort: "MotivationalVideo",
-              },
-            ],
-          },
-          {
-            modelType: "Property",
-            value: "Technologie-Initiative SmartFactory KL e. V.",
-            valueType: "xs:string",
-            idShort: "ApplicationSource",
-          },
-          {
-            modelType: "Property",
-            semanticId: {
-              keys: [
-                {
-                  type: "GlobalReference",
-                  value: "ApplicationName",
-                },
-              ],
-              type: "ExternalReference",
-            },
-            value: "Siemens NX",
-            valueType: "xs:string",
-            idShort: "ApplicationName",
-          },
-          {
-            modelType: "Property",
-            semanticId: {
-              keys: [
-                {
-                  type: "GlobalReference",
-                  value: "ModelDescription",
-                },
-              ],
-              type: "ExternalReference",
-            },
-            value: "prt",
-            valueType: "xs:string",
-            idShort: "ModelDescription",
-          },
-          {
-            modelType: "Property",
-            semanticId: {
-              keys: [
-                {
-                  type: "GlobalReference",
-                  value: "ModelType",
-                },
-              ],
-              type: "ExternalReference",
-            },
-            value: "CAD",
-            valueType: "xs:string",
-            idShort: "ModelType",
-          },
-          {
-            modelType: "Property",
-            semanticId: {
-              keys: [
-                {
-                  type: "GlobalReference",
-                  value: "ModelFileVersion",
-                },
-              ],
-              type: "ExternalReference",
-            },
-            value: "V1.0",
-            valueType: "xs:string",
-            idShort: "ModelFileVersion",
-          },
-          {
-            modelType: "Property",
-            semanticId: {
-              keys: [
-                {
-                  type: "GlobalReference",
-                  value: "ModelName",
-                },
-              ],
-              type: "ExternalReference",
-            },
-            value: "Truck",
-            valueType: "xs:string",
-            idShort: "ModelName",
+            type: "GlobalReference",
+            value: `${transientParams.iriDomain}/semantics/submodel/DesignOfProduct#1/0`,
           },
         ],
+        type: "ExternalReference",
       },
-    ],
-  }));
+      id: `${transientParams.iriDomain}/submodels/2CZc64Umg5`,
+      idShort: "DesignOfProduct",
+      submodelElements: [
+        {
+          modelType: "SubmodelElementCollection",
+          idShort: "Design_V01",
+          value: [
+            {
+              modelType: "SubmodelElementCollection",
+              semanticId: {
+                keys: [
+                  {
+                    type: "GlobalReference",
+                    value: "Author",
+                  },
+                ],
+                type: "ExternalReference",
+              },
+              idShort: "Author",
+              value: [
+                {
+                  modelType: "Property",
+                  semanticId: {
+                    keys: [
+                      {
+                        type: "GlobalReference",
+                        value: "AuthorName",
+                      },
+                    ],
+                    type: "ExternalReference",
+                  },
+                  value: "Fabrikvordenker:in ER28-0652",
+                  valueType: "xs:string",
+                  idShort: "AuthorName",
+                },
+                {
+                  modelType: "Property",
+                  semanticId: {
+                    keys: [
+                      {
+                        type: "GlobalReference",
+                        value: "AuthorOrganization",
+                      },
+                    ],
+                    type: "ExternalReference",
+                  },
+                  value: "Technologie-Initiative SmartFactory KL e. V.",
+                  valueType: "xs:string",
+                  idShort: "AuthorOrganization",
+                },
+              ],
+            },
+            {
+              modelType: "SubmodelElementCollection",
+              semanticId: {
+                keys: [
+                  {
+                    type: "GlobalReference",
+                    value: "AdditionalInformation",
+                  },
+                ],
+                type: "ExternalReference",
+              },
+              idShort: "AdditionalInformation",
+              value: [
+                {
+                  modelType: "Property",
+                  semanticId: {
+                    keys: [
+                      {
+                        type: "GlobalReference",
+                        value: "AuthorName",
+                      },
+                    ],
+                    type: "ExternalReference",
+                  },
+                  value: "Probably _PHUCKET",
+                  valueType: "xs:string",
+                  idShort: "CreatorIsland",
+                },
+                {
+                  modelType: "Property",
+                  semanticId: {
+                    keys: [
+                      {
+                        type: "GlobalReference",
+                        value: "AuthorOrganization",
+                      },
+                    ],
+                    type: "ExternalReference",
+                  },
+                  value: "1. Fußball-Club Kaiserslautern e. V.",
+                  valueType: "xs:string",
+                  idShort: "Aufsteiger",
+                },
+                {
+                  modelType: "Blob",
+                  contentType: "text/rtf",
+                  // value: "{\\rtf1\\ansi\\ansicpg1252\\cocoartf2822\n\\cocoatextscaling0\\cocoaplatform0{\\fonttbl\\f0\\fswiss\\fcharset0 Helvetica;}\n{\\colortbl;\\red255\\green255\\blue255;}\n{\\*\\expandedcolortbl;;}\n\\paperw11900\\paperh16840\\margl1440\\margr1440\\vieww11520\\viewh8400\\viewkind0\n\\pard\\tx720\\tx1440\\tx2160\\tx2880\\tx3600\\tx4320\\tx5040\\tx5760\\tx6480\\tx7200\\tx7920\\tx8640\\pardirnatural\\partightenfactor0\n\n\\f0\\fs24 \\cf0 test}",
+                  value: "e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcY29jb2FydGYyODIyClxjb2NvYXRleHRzY2FsaW5nMFxjb2NvYXBsYXRmb3JtMHtcZm9udHRibFxmMFxmc3dpc3NcZmNoYXJzZXQwIEhlbHZldGljYTt9CntcY29sb3J0Ymw7XHJlZDI1NVxncmVlbjI1NVxibHVlMjU1O30Ke1wqXGV4cGFuZGVkY29sb3J0Ymw7O30KXHBhcGVydzExOTAwXHBhcGVyaDE2ODQwXG1hcmdsMTQ0MFxtYXJncjE0NDBcdmlld3cxMTUyMFx2aWV3aDg0MDBcdmlld2tpbmQwClxwYXJkXHR4NzIwXHR4MTQ0MFx0eDIxNjBcdHgyODgwXHR4MzYwMFx0eDQzMjBcdHg1MDQwXHR4NTc2MFx0eDY0ODBcdHg3MjAwXHR4NzkyMFx0eDg2NDBccGFyZGlybmF0dXJhbFxwYXJ0aWdodGVuZmFjdG9yMAoKXGYwXGZzMjQgXGNmMCB0ZXN0fQ==",
+                  idShort: "BlobProp",
+                },
+                {
+                  modelType: "File",
+                  contentType: "image/jpeg",
+                  value: "aHR-Design_V01.Author.FileProp.jpg",
+                  idShort: "FileProp",
+                },
+                {
+                  modelType: "Range",
+                  max: "20",
+                  min: "4",
+                  valueType: "xs:string",
+                  idShort: "RangeProp",
+                },
+                {
+                  modelType: "MultiLanguageProperty",
+                  value: [
+                    {
+                      language: "de",
+                      text: "Schnelle Übersicht",
+                    },
+                    {
+                      language: "en",
+                      text: "Quick Overview",
+                    },
+                  ],
+                  idShort: "MultilanguageProp",
+                },
+                {
+                  modelType: "Property",
+                  semanticId: {
+                    keys: [
+                      {
+                        type: "GlobalReference",
+                        value: "ApplicationName",
+                      },
+                    ],
+                    type: "ExternalReference",
+                  },
+                  value: "https://www.youtube.com/watch?v=G1IbRujko-A",
+                  valueType: "xs:string",
+                  idShort: "MotivationalVideo",
+                },
+              ],
+            },
+            {
+              modelType: "Property",
+              value: "Technologie-Initiative SmartFactory KL e. V.",
+              valueType: "xs:string",
+              idShort: "ApplicationSource",
+            },
+            {
+              modelType: "Property",
+              semanticId: {
+                keys: [
+                  {
+                    type: "GlobalReference",
+                    value: "ApplicationName",
+                  },
+                ],
+                type: "ExternalReference",
+              },
+              value: "Siemens NX",
+              valueType: "xs:string",
+              idShort: "ApplicationName",
+            },
+            {
+              modelType: "Property",
+              semanticId: {
+                keys: [
+                  {
+                    type: "GlobalReference",
+                    value: "ModelDescription",
+                  },
+                ],
+                type: "ExternalReference",
+              },
+              value: "prt",
+              valueType: "xs:string",
+              idShort: "ModelDescription",
+            },
+            {
+              modelType: "Property",
+              semanticId: {
+                keys: [
+                  {
+                    type: "GlobalReference",
+                    value: "ModelType",
+                  },
+                ],
+                type: "ExternalReference",
+              },
+              value: "CAD",
+              valueType: "xs:string",
+              idShort: "ModelType",
+            },
+            {
+              modelType: "Property",
+              semanticId: {
+                keys: [
+                  {
+                    type: "GlobalReference",
+                    value: "ModelFileVersion",
+                  },
+                ],
+                type: "ExternalReference",
+              },
+              value: "V1.0",
+              valueType: "xs:string",
+              idShort: "ModelFileVersion",
+            },
+            {
+              modelType: "Property",
+              semanticId: {
+                keys: [
+                  {
+                    type: "GlobalReference",
+                    value: "ModelName",
+                  },
+                ],
+                type: "ExternalReference",
+              },
+              value: "Truck",
+              valueType: "xs:string",
+              idShort: "ModelName",
+            },
+          ],
+        },
+      ],
+    }));
 
 export const submodelCarbonFootprintPlainFactory = Factory.define<any, SubmodelTransientParams>(({ transientParams }) => ({
   modelType: "Submodel",

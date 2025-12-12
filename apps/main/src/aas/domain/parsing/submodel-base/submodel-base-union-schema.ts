@@ -18,6 +18,10 @@ import { SubmodelElementListJsonSchemaImpl } from "./submodel-element-list-json-
 
 export const SubmodelBaseUnionSchema: z.ZodTypeAny = z.lazy(() =>
   SubmodelBaseUnionSchemaImpl(),
+);
+
+export const SubmodelBaseResponseUnionSchema: z.ZodTypeAny = z.lazy(() =>
+  SubmodelBaseUnionSchemaImpl(),
 ).meta({ id: "SubmodelElement" });
 
 export function SubmodelBaseUnionSchemaImpl() {
