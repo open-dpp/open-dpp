@@ -68,8 +68,8 @@ watch(
         formData.value = {
           name: dataField.name,
           granularityLevel: dataField.granularityLevel,
-          min: dataField.options?.min,
-          max: dataField.options?.max,
+          min: dataField.options?.min as number | undefined,
+          max: dataField.options?.max as number | undefined,
         };
       }
       else {
