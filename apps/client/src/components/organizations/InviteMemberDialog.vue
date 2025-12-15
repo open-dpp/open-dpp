@@ -157,9 +157,9 @@ async function inviteUser() {
                           type="text"
                           :invalid="!!emailError"
                           class="w-full"
-                          aria-describedby="email-help"
+                          :aria-describedby="emailError ? 'email-error' : 'email-help'"
                         />
-                        <small v-if="emailError" class="text-red-600">{{ emailError }}</small>
+                        <small v-if="emailError" id="email-error" class="text-red-600">{{ emailError }}</small>
                         <small v-else id="email-help" class="text-gray-500">
                           {{ t('common.form.email.help') }}
                         </small>
