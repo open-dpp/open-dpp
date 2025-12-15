@@ -250,7 +250,7 @@ describe("integrationFormStore", () => {
 
   it("should update connection", async () => {
     const integrationFormStore = useAasConnectionFormStore();
-    
+
     // Setup mocks
     const newFieldAssignments: AasFieldAssignmentDto[] = [
       {
@@ -292,7 +292,7 @@ describe("integrationFormStore", () => {
     currentAssignments[0]!.dpp = "s0/f0";
     currentAssignments[1]!.aas = "p2-update/i2-update";
     currentAssignments[1]!.dpp = "s2/f3";
-    
+
     // Update the store ref
     integrationFormStore.fieldAssignments = [...currentAssignments];
 
@@ -310,21 +310,21 @@ describe("integrationFormStore", () => {
 
     // Verify the store state reflects the update (which it should if modifyConnection returns the updated dto)
     expect(integrationFormStore.fieldAssignments).toHaveLength(2);
-    // Note: IDs might be regenerated or preserved depending on implementation. 
-    // In current implementation, if aasConnection.value is updated from response, 
-    // IDs are NOT regenerated because initializeFormData is NOT called in submitModifications 
+    // Note: IDs might be regenerated or preserved depending on implementation.
+    // In current implementation, if aasConnection.value is updated from response,
+    // IDs are NOT regenerated because initializeFormData is NOT called in submitModifications
     // EXCEPT if we manually trigger it or if the store watcher handles it.
-    // Looking at the store code: 
+    // Looking at the store code:
     // aasConnection.value = response.data;
     // But initializeFormData is NOT called after this line in submitModifications.
     // Wait, the store implementation of submitModifications:
     // aasConnection.value = response.data;
-    // It does NOT update fieldAssignments from the response. 
+    // It does NOT update fieldAssignments from the response.
     // It relies on the local state being the source of truth for the UI?
     // Actually, if the backend returns normalized data, we might want to reload it.
     // But let's check what we expect. We updated the local state manually before submit.
     // So the local state should still have our values.
-    
+
     expect(integrationFormStore.fieldAssignments[0]).toMatchObject({
       aas: "p1-update/i1-update",
       dpp: "s0/f0",
@@ -392,13 +392,13 @@ describe("integrationFormStore", () => {
     // Expect fieldAssignments to be updated
     // Original[0]: aas="p1/i1", dpp="s1/f1"
     // Original[1]: aas="p2/i2", dpp="s2/f2"
-    
+
     // In otherTemplateDto:
     // "s1/f1" does NOT exist (it has "s1/f1-other") -> should be cleared
     // "s2/f2" DOES exist -> should be preserved
 
     expect(integrationFormStore.fieldAssignments).toHaveLength(2);
-    
+
     expect(integrationFormStore.fieldAssignments[0]).toMatchObject({
       aas: "p1/i1",
       dpp: "", // Cleared because s1/f1 is not in otherTemplateDto
