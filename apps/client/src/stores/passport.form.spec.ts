@@ -2,7 +2,6 @@ import type {
   DataFieldDto,
   DataSectionDto,
   DataValueDto,
-  ItemDto,
   ProductPassportDto,
 } from "@open-dpp/api-client";
 import {
@@ -213,7 +212,6 @@ describe("passportFormStore", () => {
     id: "id1",
     uniqueProductIdentifiers: [{ uuid: "uuid1", referenceId: "id1" }],
   };
-
 
   it("should add row to section", async () => {
     const passportFormStore = usePassportFormStore();

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { TemplateGetAllDto } from "@open-dpp/api-client";
+import InputText from "primevue/inputtext";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
@@ -17,9 +18,12 @@ const { t } = useI18n();
 const name = ref<string>("");
 const selectedTemplate = ref<TemplateGetAllDto | null>(null);
 const isMarketplaceSelected = ref<boolean>(false);
+const errors = ref<{ name?: string }>({});
 
 async function onSubmit() {
+  errors.value = {};
   if (!name.value) {
+    errors.value.name = t("validation.required");
     notificationStore.addErrorNotification(t("models.form.name.error"));
     return;
   }
@@ -59,17 +63,23 @@ async function onSubmit() {
       </div>
     </div>
     <div class="mt-8 flex flex-col gap-10">
-      <div class="flex items-center">
+      <div class="flex items-start">
         <div class="flex-auto">
-          <form-kit
-            v-model="name"
-            data-cy="name"
-            :help="t('models.form.name.help')"
-            :label="t('models.form.name.label')"
-            name="name"
-            type="text"
-            validation="required"
-          />
+          <div class="flex flex-col gap-2">
+            <label for="name" class="block text-sm font-medium text-gray-700">
+              {{ t('models.form.name.label') }}
+            </label>
+            <InputText
+              id="name"
+              v-model="name"
+              type="text"
+              :invalid="!!errors.name"
+              class="w-full"
+              data-cy="name"
+            />
+            <small v-if="errors.name" class="text-red-600">{{ errors.name }}</small>
+            <small v-else class="text-gray-500">{{ t('models.form.name.help') }}</small>
+          </div>
         </div>
         <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
           <button
