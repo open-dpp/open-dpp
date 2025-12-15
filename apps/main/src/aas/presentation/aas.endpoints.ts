@@ -23,4 +23,10 @@ export interface IAasReadEndpoints {
     idShortPath: IdShortPath,
     req: express.Request,
   ) => Promise<SubmodelElementResponseDto>;
+  getSubmodelElementValue: (
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    req: express.Request,
+  ) => Promise<ValueResponseDto>;
 }

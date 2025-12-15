@@ -50,6 +50,14 @@ export function ApiGetSubmodelElementById() {
     Get(ApiGetSubmodelElementByIdPath),
   );
 }
+
+export const ApiGetSubmodelElementValuePath = "/:id/submodels/:submodelId/submodel-elements/:idShortPath/$value";
+export function ApiGetSubmodelElementValue() {
+  return applyDecorators(
+    Get(ApiGetSubmodelElementValuePath),
+  );
+}
+
 const IdBaseSchema = z.string().transform((v) => {
   let parsed = z.uuid().safeParse(v);
   if (parsed.success) {

@@ -8,6 +8,7 @@ import {
   ApiGetSubmodelById,
   ApiGetSubmodelElementById,
   ApiGetSubmodelElements,
+  ApiGetSubmodelElementValue,
   ApiGetSubmodels,
   ApiGetSubmodelValue,
   CursorQueryParam,
@@ -106,5 +107,16 @@ export class PassportController implements IAasReadEndpoints {
   ): Promise<SubmodelElementResponseDto> {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.passportRepository, id, req);
     return await this.environmentService.getSubmodelElementById(environment, submodelId, idShortPath);
+  }
+
+  @ApiGetSubmodelElementValue()
+  async getSubmodelElementValue(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @RequestParam() req: express.Request,
+  ): Promise<ValueResponseDto> {
+    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.passportRepository, id, req);
+    return await this.environmentService.getSubmodelElementValue(environment, submodelId, idShortPath);
   }
 }

@@ -59,7 +59,7 @@ export class EnvironmentService {
     return SubmodelPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodels }).toPlain());
   }
 
-  private async findSubmodelById(environment: Environment, submodelId: string): Promise<Submodel> {
+  private async findSubmodelByIdOrFail(environment: Environment, submodelId: string): Promise<Submodel> {
     if (environment.submodels.includes(submodelId)) {
       return await this.submodelRepository.findOneOrFail(submodelId);
     }
@@ -69,39 +69,31 @@ export class EnvironmentService {
   }
 
   async getSubmodelById(environment: Environment, submodelId: string): Promise<SubmodelResponseDto> {
-    return SubmodelJsonSchema.parse((await this.findSubmodelById(environment, submodelId)).toPlain());
+    return SubmodelJsonSchema.parse((await this.findSubmodelByIdOrFail(environment, submodelId)).toPlain());
   }
 
   async getSubmodelValue(environment: Environment, submodelId: string): Promise<ValueResponseDto> {
-    const submodel = await this.findSubmodelById(environment, submodelId);
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const value = submodel.getValueRepresentation();
     return ValueResponseDtoSchema.parse(value);
   }
 
   async getSubmodelElements(environment: Environment, submodelId: string, pagination: Pagination): Promise<SubmodelElementPaginationResponseDto> {
-    if (environment.submodels.includes(submodelId)) {
-      const submodel = await this.submodelRepository.findOneOrFail(submodelId);
-      const pages = pagination.nextPages(submodel.submodelElements.map(e => e.idShort));
-      const submodelElements = submodel.submodelElements.filter(e => pages.includes(e.idShort));
-      return SubmodelElementPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodelElements }).toPlain());
-    }
-    else {
-      throw new SubmodelNotPartOfEnvironmentException(submodelId);
-    }
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const pages = pagination.nextPages(submodel.submodelElements.map(e => e.idShort));
+    const submodelElements = submodel.submodelElements.filter(e => pages.includes(e.idShort));
+    return SubmodelElementPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodelElements }).toPlain());
   }
 
   async getSubmodelElementById(environment: Environment, submodelId: string, idShortPath: IdShortPath): Promise<SubmodelElementResponseDto> {
-    if (environment.submodels.includes(submodelId)) {
-      const submodel = await this.submodelRepository.findOneOrFail(submodelId);
-      const submodelElement = submodel.findSubmodelElement(idShortPath);
-      if (!submodelElement) {
-        throw new SubmodelElementNotFoundException(idShortPath);
-      }
-      return SubmodelBaseUnionSchema.parse(submodelElement.toPlain());
-    }
-    else {
-      throw new SubmodelNotPartOfEnvironmentException(submodelId);
-    }
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const submodelElement = submodel.findSubmodelElementOrFail(idShortPath);
+    return SubmodelBaseUnionSchema.parse(submodelElement.toPlain());
+  }
+
+  async getSubmodelElementValue(environment: Environment, submodelId: string, idShortPath: IdShortPath): Promise<ValueResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    return ValueResponseDtoSchema.parse(submodel.getValueRepresentation(idShortPath));
   }
 }
 

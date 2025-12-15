@@ -5,6 +5,7 @@ import {
   ApiGetSubmodelByIdPath,
   ApiGetSubmodelElementByIdPath,
   ApiGetSubmodelElementsPath,
+  ApiGetSubmodelElementValuePath,
   ApiGetSubmodelsPath,
   ApiGetSubmodelValuePath,
   CursorQueryParamSchema,
@@ -117,12 +118,26 @@ export function createAasPaths(tag: string) {
     [`${tag}${ApiGetSubmodelElementByIdPath}`]: {
       get: {
         tags: [tag],
-        summary: `Returns Submodel Elements of by idShortPath`,
+        summary: `Returns Submodel Element by idShortPath`,
         parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema],
         responses: {
           [HTTPCode.OK]: {
             content: {
               [ContentType.JSON]: { schema: SubmodelBaseUnionSchema },
+            },
+          },
+        },
+      },
+    },
+    [`${tag}${ApiGetSubmodelElementValuePath}`]: {
+      get: {
+        tags: [tag],
+        summary: `Returns value representation of Submodel Element`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: ValueResponseDtoSchema },
             },
           },
         },
