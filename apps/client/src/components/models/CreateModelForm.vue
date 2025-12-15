@@ -24,11 +24,11 @@ function validate() {
   errors.value = {};
   let isValid = true;
   if (!name.value) {
-    errors.value.name = "Required"; // Or t('validation.required') if available
+    errors.value.name = t("validation.required");
     isValid = false;
   }
   if (!productDataModelId.value) {
-    errors.value.productDataModelId = "Required";
+    errors.value.productDataModelId = t("validation.required");
     isValid = false;
   }
   return isValid;

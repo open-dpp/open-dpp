@@ -1,4 +1,7 @@
 {
+  "validation": {
+    "required": "Erforderlich"
+  },
   "common": {
     "id": "ID",
     "identification": "Identifikation",

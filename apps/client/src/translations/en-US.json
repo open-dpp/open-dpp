@@ -1,4 +1,7 @@
 {
+  "validation": {
+    "required": "Required"
+  },
   "common": {
     "actions": "Actions",
     "clipboardSuccess": "Copied to clipboard.",
