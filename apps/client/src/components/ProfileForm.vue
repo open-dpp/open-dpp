@@ -1,19 +1,15 @@
 <script lang="ts" setup>
-import { inject, watch } from "vue";
+import { watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { authClient } from "../auth-client.ts";
 import { LAST_SELECTED_LANGUAGE } from "../const";
 
 const { t, locale } = useI18n();
-const config = inject<{ locale: string }>(Symbol.for("FormKitConfig"));
 
 const session = authClient.useSession();
 
 watch(locale, (newLocale) => {
   localStorage.setItem(LAST_SELECTED_LANGUAGE, newLocale as string);
-  if (config) {
-    config.locale = newLocale.split("-")[0] as string;
-  }
 });
 </script>
 
