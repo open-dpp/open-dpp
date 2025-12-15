@@ -16,11 +16,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@formkit/addons": "^1.6.9",
-    "@formkit/core": "^1.6.9",
-    "@formkit/i18n": "^1.6.9",
-    "@formkit/icons": "^1.6.9",
-    "@formkit/vue": "^1.6.9",
     "@headlessui/vue": "^1.7.23",
     "@heroicons/vue": "^2.2.0",
     "@open-dpp/api-client": "workspace:*",

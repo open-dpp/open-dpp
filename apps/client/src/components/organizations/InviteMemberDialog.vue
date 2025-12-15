@@ -39,7 +39,6 @@ async function inviteUser() {
   const result = emailSchema.safeParse(email.value);
 
   if (!result.success) {
-    // Basic error message since I don't have full FormKit i18n map
     emailError.value = t("common.form.email.invalid");
     return;
   }
