@@ -8,48 +8,6 @@ import axiosIns from "../lib/axios";
 export const useMediaStore = defineStore("media", () => {
   const organizationMedia = ref<Array<MediaInfo>>([]);
 
-  const uploadDppMedia = async (
-    organizationId: string | null,
-    uuid: string | undefined,
-    dataFieldId: string,
-    file: File,
-    onUploadProgress?: (progress: number) => void,
-  ): Promise<string> => {
-    if (!organizationId) {
-      throw new Error("No organization selected");
-    }
-    if (!uuid) {
-      throw new Error("No UUID provided");
-    }
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const response = await axiosIns.post(
-      `${MEDIA_SERVICE_URL}/media/dpp/${organizationId}/${uuid}/${dataFieldId}`,
-      formData,
-      {
-        onUploadProgress: (progressEvent) => {
-          if (onUploadProgress) {
-            const total = progressEvent.total ?? 1;
-            const progress = Math.round((progressEvent.loaded / total) * 100);
-            onUploadProgress(progress);
-          }
-        },
-      },
-    );
-
-    if (
-      response.status === 201
-      || response.status === 304
-      || response.status === 200
-    ) {
-      return (response.data as { mediaId: string }).mediaId;
-    }
-
-    throw new Error(`Unexpected upload status ${response.status}`);
-  };
-
   const uploadMedia = async (
     organizationId: string | null,
     file: File,
@@ -161,7 +119,6 @@ export const useMediaStore = defineStore("media", () => {
   };
 
   return {
-    uploadDppMedia,
     getDppMediaInfo,
     downloadDppMedia,
     fetchDppMedia,

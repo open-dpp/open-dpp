@@ -31,7 +31,7 @@ const fileUploadKey = ref(0);
 const mediaInputId = computed(() => `organization-image-${indexStore.selectedOrganization}`);
 
 async function fetchOrganization() {
-  const { data } = await authClient.organization.getFullOrganization();
+  const data = await organizationStore.fetchCurrentOrganization();
   if (data) {
     name.value = data.name;
     const imageId = (data as any).image;
