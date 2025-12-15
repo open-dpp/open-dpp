@@ -90,7 +90,7 @@ async function uploadFile() {
       mediaId = await apiClient.media.media.uploadOrganizationProfileMedia(
         indexStore.selectedOrganization,
         selectedLocalFile.value,
-        progress => (uploadProgress.value = progress),
+        (progress: number) => (uploadProgress.value = progress),
       );
     }
     else {
@@ -99,7 +99,7 @@ async function uploadFile() {
         passportFormStore.getUUID(),
         props.id,
         selectedLocalFile.value,
-        progress => (uploadProgress.value = progress),
+        (progress: number) => (uploadProgress.value = progress),
       );
     }
 

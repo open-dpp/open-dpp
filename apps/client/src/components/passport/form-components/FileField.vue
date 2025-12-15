@@ -88,7 +88,7 @@ async function uploadFile() {
       passportFormStore.getUUID(),
       props.id,
       selectedLocalFile.value,
-      progress => (uploadProgress.value = progress),
+      (progress: number) => (uploadProgress.value = progress),
     );
     notificationStore.addSuccessNotification(
       t("models.form.file.uploadSuccess"),
