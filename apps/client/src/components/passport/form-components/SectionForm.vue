@@ -125,7 +125,7 @@ async function onSubmit() {
     </div>
     <div class="flex justify-start">
       <BaseButton type="submit" variant="primary">
-        Speichern
+        {{ t('common.save') }}
       </BaseButton>
     </div>
   </form>
