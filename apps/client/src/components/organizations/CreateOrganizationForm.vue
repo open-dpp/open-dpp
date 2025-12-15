@@ -14,7 +14,6 @@ const { t } = useI18n();
 const indexStore = useIndexStore();
 const organizationStore = useOrganizationsStore();
 
-const submitted = ref(false);
 const organizationName = ref("");
 
 async function create() {
@@ -23,7 +22,6 @@ async function create() {
   });
   if (responseData) {
     await new Promise(resolve => setTimeout(resolve, 250));
-    submitted.value = true;
     organizationName.value = ""; // Reset form
     await organizationStore.fetchOrganizations();
     indexStore.selectOrganization(responseData.id);
