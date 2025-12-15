@@ -16,7 +16,7 @@ async function onSubmit() {
   <form class="flex flex-col gap-4" @submit.prevent="onSubmit">
     <div
       v-for="(assignment, index) in aasConnectionFormStore.fieldAssignments"
-      :key="index"
+      :key="assignment.id"
       class="flex flex-col items-center justify-around gap-2 md:flex-row"
     >
       <div class="w-full flex-1">

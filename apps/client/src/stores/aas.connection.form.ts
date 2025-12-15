@@ -44,7 +44,7 @@ export const useAasConnectionFormStore = defineStore(
   "aas-connection-form",
   () => {
     const { t } = i18n.global;
-    const fieldAssignments = ref<{ aas: string; dpp: string }[]>([]);
+    const fieldAssignments = ref<{ id: string; aas: string; dpp: string }[]>([]);
     const errorHandlingStore = useErrorHandlingStore();
     const granularityLevel = GranularityLevel.ITEM;
     const fetchInFlight = ref<boolean>(false);
@@ -77,13 +77,14 @@ export const useAasConnectionFormStore = defineStore(
         return;
       }
       fieldAssignments.value = aasConnection.value.fieldAssignments.map(fm => ({
+        id: crypto.randomUUID(),
         aas: aasDropdownValue(fm.idShortParent, fm.idShort),
         dpp: dataFieldDropdownValue(fm.sectionId, fm.dataFieldId),
       }));
     };
 
     const addFieldAssignmentRow = () => {
-      fieldAssignments.value.push({ aas: "", dpp: "" });
+      fieldAssignments.value.push({ id: crypto.randomUUID(), aas: "", dpp: "" });
     };
 
     const removeFieldAssignmentRow = (index: number) => {
