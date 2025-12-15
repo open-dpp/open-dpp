@@ -197,7 +197,8 @@
         "inactive": "Inaktiv"
       },
       "fieldAssignments": "Feldverknüpfungen",
-      "addFieldAssignments": "Neue Feldverknüpfung hinzufügen"
+      "addFieldAssignments": "Neue Feldverknüpfung hinzufügen",
+      "addRow": "Zeile hinzufügen"
     },
     "apiKey": {
       "create": "API Key erstellen",

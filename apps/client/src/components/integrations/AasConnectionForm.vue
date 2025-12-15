@@ -65,7 +65,7 @@ async function onSubmit() {
 
     <div class="flex justify-end">
       <Button
-        label="Add Row"
+        :label="t('integrations.connections.addRow')"
         icon="pi pi-plus"
         severity="secondary"
         @click="aasConnectionFormStore.addFieldAssignmentRow"

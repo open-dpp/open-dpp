@@ -197,7 +197,8 @@
         "inactive": "Inactive"
       },
       "fieldAssignments": "Field assignments",
-      "addFieldAssignments": "Add new field assignment"
+      "addFieldAssignments": "Add new field assignment",
+      "addRow": "Add Row"
     },
     "apiKey": {
       "create": "Create API Key",
