@@ -220,6 +220,7 @@ export class JsonVisitor implements IVisitor<undefined, any> {
       orderRelevant: element.orderRelevant,
       semanticIdListElement: element.semanticIdListElement?.accept(this),
       valueTypeListElement: element.valueTypeListElement,
+      typeValueListElement: element.typeValueListElement,
       value: element.value.map(e => e.accept(this)),
     };
   }

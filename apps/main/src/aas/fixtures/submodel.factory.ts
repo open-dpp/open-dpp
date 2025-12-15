@@ -1,11 +1,13 @@
 import { Factory } from "fishery";
+import { z } from "zod";
+import { SubmodelJsonSchema } from "../domain/parsing/submodel-base/submodel-json-schema";
 
 interface SubmodelTransientParams {
   iriDomain: string;
 }
-
+type Input = z.infer<typeof SubmodelJsonSchema>;
 export const submodelDesignOfProductPlainFactory
-  = Factory.define<any, SubmodelTransientParams> (({ transientParams }) => (
+  = Factory.define<Partial<Input>, SubmodelTransientParams> (({ transientParams }) => (
     {
       modelType: "Submodel",
       kind: "Instance",
@@ -67,6 +69,38 @@ export const submodelDesignOfProductPlainFactory
                   value: "Technologie-Initiative SmartFactory KL e. V.",
                   valueType: "xs:string",
                   idShort: "AuthorOrganization",
+                },
+                {
+                  modelType: "SubmodelElementList",
+                  idShort: "ListProp",
+                  orderRelevant: false,
+                  typeValueListElement: "SubmodelElementCollection",
+                  value: [
+                    {
+                      modelType: "SubmodelElementCollection",
+                      idShort: "el1",
+                      value: [
+                        {
+                          modelType: "Property",
+                          value: "val1",
+                          valueType: "xs:string",
+                          idShort: "prop1",
+                        },
+                      ],
+                    },
+                    {
+                      modelType: "SubmodelElementCollection",
+                      idShort: "el2",
+                      value: [
+                        {
+                          modelType: "Property",
+                          value: "val2",
+                          valueType: "xs:string",
+                          idShort: "prop2",
+                        },
+                      ],
+                    },
+                  ],
                 },
               ],
             },
@@ -215,6 +249,7 @@ export const submodelDesignOfProductPlainFactory
               valueType: "xs:string",
               idShort: "ModelType",
             },
+
             {
               modelType: "Property",
               semanticId: {
@@ -1522,3 +1557,186 @@ export const submodelCarbonFootprintPlainFactory = Factory.define<any, SubmodelT
     },
   ],
 }));
+
+export const submodelBillOfMaterialPlainFactory
+  = Factory.define<Partial<Input>, SubmodelTransientParams> (({ transientParams }) => (
+    {
+      modelType: "Submodel",
+      kind: "Instance",
+      semanticId: {
+        keys: [
+          {
+            type: "GlobalReference",
+            value: "http://example.com/id/type/submodel/BOM/1/1",
+          },
+          {
+            type: "GlobalReference",
+            value: `${transientParams.iriDomain}/semantics/submodel/Truck/BillOfMaterial#1/0`,
+          },
+        ],
+        type: "ExternalReference",
+      },
+      id: `${transientParams.iriDomain}/submodels/IexIFXJ0YL`,
+      idShort: "BillOfMaterial",
+      submodelElements: [
+        {
+          modelType: "Entity",
+          entityType: "SelfManagedEntity",
+          globalAssetId: `${transientParams.iriDomain}/assets/zm6As5rG-h`,
+          statements: [
+            {
+              modelType: "Property",
+              value: `${transientParams.iriDomain}/shells/-SR7BbncJG`,
+              valueType: "xs:string",
+              idShort: "Id",
+            },
+            {
+              modelType: "ReferenceElement",
+              idShort: "URL",
+              value: {
+                keys: [
+                  {
+                    type: "GlobalReference",
+                    value: `${transientParams.iriDomain}/shells/-SR7BbncJG`,
+                  },
+                ],
+                type: "ExternalReference",
+              },
+            },
+            {
+              modelType: "Entity",
+              entityType: "SelfManagedEntity",
+              globalAssetId: `${transientParams.iriDomain}/assets/aYJwzLG1RF`,
+              statements: [
+                {
+                  modelType: "Property",
+                  value: `${transientParams.iriDomain}/shells/wpIL8kYawf`,
+                  valueType: "xs:string",
+                  idShort: "Id",
+                },
+                {
+                  modelType: "Entity",
+                  entityType: "SelfManagedEntity",
+                  globalAssetId: `${transientParams.iriDomain}/assets/XjUPRWkSw5`,
+                  idShort: "Lid",
+                  statements: [
+                    {
+                      modelType: "Property",
+                      value: "Lid_A_Blue",
+                      valueType: "xs:string",
+                      idShort: "Name",
+                    },
+                  ],
+                  semanticId: {
+                    keys: [
+                      {
+                        type: "GlobalReference",
+                        value: "https://admin-shell.io/idta/HierarchicalStructures/Node/1/0",
+                      },
+                    ],
+                    type: "ExternalReference",
+                  },
+                  qualifiers: [
+                    {
+                      semanticId: {
+                        keys: [
+                          {
+                            type: "GlobalReference",
+                            value: "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0",
+                          },
+                        ],
+                        type: "ExternalReference",
+                      },
+                      kind: "ConceptQualifier",
+                      type: "SMT/Cardinality",
+                      value: "One",
+                      valueType: "xs:string",
+                    },
+                  ],
+                },
+              ],
+              idShort: "Semitrailer",
+            },
+            {
+              modelType: "RelationshipElement",
+              semanticId: {
+                keys: [
+                  {
+                    type: "GlobalReference",
+                    value: "https://admin-shell.io/idta/HierarchicalStructures/HasPart/1/0",
+                  },
+                ],
+                type: "ExternalReference",
+              },
+              qualifiers: [
+                {
+                  semanticId: {
+                    keys: [
+                      {
+                        type: "GlobalReference",
+                        value: "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0",
+                      },
+                    ],
+                    type: "ExternalReference",
+                  },
+                  kind: "ConceptQualifier",
+                  type: "SMT/Cardinality",
+                  value: "ZeroToMany",
+                  valueType: "xs:string",
+                },
+                {
+                  kind: "ValueQualifier",
+                  type: "EditIdShort",
+                  value: "True",
+                  valueType: "xs:string",
+                },
+              ],
+              description: [
+                {
+                  language: "en",
+                  text: "Modeling of logical connections between components and sub-components. Either this or \"IsPartOf\" must be used, not both.",
+                },
+              ],
+              idShort: "HasPart0001",
+              first: {
+                keys: [
+                  {
+                    type: "Submodel",
+                    value: `${transientParams.iriDomain}/submodels/IexIFXJ0YL`,
+                  },
+                  {
+                    type: "Entity",
+                    value: "Truck",
+                  },
+                ],
+                type: "ModelReference",
+              },
+              second: {
+                keys: [
+                  {
+                    type: "Submodel",
+                    value: `${transientParams.iriDomain}/submodels/IexIFXJ0YL`,
+                  },
+                  {
+                    type: "Entity",
+                    value: "Truck",
+                  },
+                  {
+                    type: "Entity",
+                    value: "Semitrailer",
+                  },
+                ],
+                type: "ModelReference",
+              },
+            },
+          ],
+          specificAssetIds: [
+            {
+              name: "testi",
+              value: "val1",
+            },
+          ],
+          idShort: "Truck",
+        },
+      ],
+    }));

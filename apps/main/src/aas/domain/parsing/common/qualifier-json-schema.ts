@@ -1,13 +1,13 @@
 import { z } from "zod";
-import { DataTypeDefEnum } from "../../common/data-type-def";
 import { QualifierKindEnum } from "../../common/qualifier-kind-enum";
+import { ValueTypeSchema } from "./basic-json-schema";
 import { ReferenceJsonSchema } from "./reference-json-schema";
 
 export const QualifierJsonSchema = z.object({
   type: z.string(),
-  valueType: DataTypeDefEnum,
+  valueType: ValueTypeSchema,
   semanticId: ReferenceJsonSchema.optional(),
-  supplementalSemanticIds: z.array(ReferenceJsonSchema),
+  supplementalSemanticIds: z.array(ReferenceJsonSchema).default([]),
   kind: QualifierKindEnum,
   value: z.string().optional(),
   valueId: ReferenceJsonSchema.optional(),

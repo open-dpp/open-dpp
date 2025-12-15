@@ -1,3 +1,4 @@
+import { NotFoundException } from "@nestjs/common";
 import { AdministrativeInformation } from "../common/administrative-information";
 import { IHasDataSpecification } from "../common/has-data-specification";
 import { ModellingKindType } from "../common/has-kind";
@@ -12,7 +13,7 @@ import { Extension } from "../extension";
 import { JsonVisitor } from "../parsing/json-visitor";
 import { SubmodelJsonSchema } from "../parsing/submodel-base/submodel-json-schema";
 import { IPersistable } from "../persistable";
-import { ValueVisitor } from "../value-visitor";
+import { JsonType, ValueVisitor } from "../value-visitor";
 import { IVisitable, IVisitor } from "../visitor";
 import { parseSubmodelBaseUnion, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
@@ -118,9 +119,18 @@ export class Submodel implements ISubmodelBase, IPersistable {
     );
   };
 
-  getValueRepresentation() {
+  getValueRepresentation(idShortPath?: IdShortPath): JsonType {
+    const element = idShortPath ? this.findSubmodelElementOrFail(idShortPath) : this;
     const valueVisitor = new ValueVisitor();
-    return this.accept(valueVisitor);
+    return element.accept(valueVisitor);
+  }
+
+  findSubmodelElementOrFail(idShortPath: IdShortPath): ISubmodelBase {
+    const element = this.findSubmodelElement(idShortPath);
+    if (!element) {
+      throw new NotFoundException(`Submodel element with idShortPath ${idShortPath.toString()} not found`);
+    }
+    return element;
   }
 
   findSubmodelElement(idShortPath: IdShortPath): ISubmodelBase | undefined {

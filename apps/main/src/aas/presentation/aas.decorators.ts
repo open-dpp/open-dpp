@@ -23,10 +23,18 @@ export function ApiGetSubmodels() {
     Get(ApiGetSubmodelsPath),
   );
 }
+
 export const ApiGetSubmodelByIdPath = "/:id/submodels/:submodelId";
 export function ApiGetSubmodelById() {
   return applyDecorators(
     Get(ApiGetSubmodelByIdPath),
+  );
+}
+
+export const ApiGetSubmodelValuePath = "/:id/submodels/:submodelId/$value";
+export function ApiGetSubmodelValue() {
+  return applyDecorators(
+    Get(ApiGetSubmodelValuePath),
   );
 }
 

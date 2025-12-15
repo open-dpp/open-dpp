@@ -8,6 +8,7 @@ import {
   ApiGetSubmodelElementById,
   ApiGetSubmodelElements,
   ApiGetSubmodels,
+  ApiGetSubmodelValue,
   CursorQueryParam,
   IdParam,
   IdShortPathParam,
@@ -22,6 +23,7 @@ import {
   SubmodelElementResponseDto,
 } from "../../aas/presentation/dto/submodel-element.dto";
 import { SubmodelPaginationResponseDto, SubmodelResponseDto } from "../../aas/presentation/dto/submodel.dto";
+import { ValueResponseDto } from "../../aas/presentation/dto/value-response.dto";
 import { EnvironmentService, loadEnvironmentAndCheckOwnership } from "../../aas/presentation/environment.service";
 import { AuthService } from "../../auth/auth.service";
 import { TemplateRepository } from "../infrastructure/template.repository";
@@ -49,6 +51,16 @@ export class TemplateController implements IAasReadEndpoints {
   async getSubmodelById(@IdParam() id: string, @SubmodelIdParam() submodelId: string, @RequestParam() req: express.Request): Promise<SubmodelResponseDto> {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
     return await this.environmentService.getSubmodelById(environment, submodelId);
+  }
+
+  @ApiGetSubmodelValue()
+  async getSubmodelValue(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @RequestParam() req: express.Request,
+  ): Promise<ValueResponseDto> {
+    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
+    return await this.environmentService.getSubmodelValue(environment, submodelId);
   }
 
   @ApiGetSubmodelElements()

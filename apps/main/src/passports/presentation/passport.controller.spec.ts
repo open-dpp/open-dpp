@@ -37,6 +37,10 @@ describe("passportController", () => {
     await ctx.asserts.getSubmodelById(createPassport);
   });
 
+  it("/GET submodel value", async () => {
+    await ctx.asserts.getSubmodelValue(createPassport);
+  });
+
   it(`/GET submodel elements`, async () => {
     await ctx.asserts.getSubmodelElements(createPassport);
   });

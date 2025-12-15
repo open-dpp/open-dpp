@@ -1,4 +1,6 @@
 import { Buffer } from "node:buffer";
+import { NotSupportedError } from "@open-dpp/exception";
+import { z } from "zod";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";
 import { AdministrativeInformation } from "./common/administrative-information";
@@ -25,78 +27,120 @@ import { SubmodelElementCollection } from "./submodel-base/submodel-element-coll
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
 
-export class ValueVisitor implements IVisitor<any, any> {
-  visitAdministrativeInformation(element: AdministrativeInformation, context: any): any {
+export type JsonType = z.infer<typeof z.json>;
+export class ValueVisitor implements IVisitor<any, JsonType> {
+  visitAdministrativeInformation(_element: AdministrativeInformation, _context: any): JsonType {
+    throw new NotSupportedError(
+      "AdministrativeInformation is not supported for value serialization.",
+    );
   }
 
-  visitAnnotatedRelationshipElement(element: AnnotatedRelationshipElement, context: any): any {
+  visitAnnotatedRelationshipElement(element: AnnotatedRelationshipElement, context: any): JsonType {
+    return { first: element.first.accept(this, context), second: element.second.accept(this, context) };
   }
 
-  visitAssetAdministrationShell(element: AssetAdministrationShell, context: any): any {
+  visitAssetAdministrationShell(_element: AssetAdministrationShell, _context: any): JsonType {
+    throw new NotSupportedError(
+      "AssetAdministrationShell is not supported for value serialization.",
+    );
   }
 
-  visitAssetInformation(element: AssetInformation, context: any): any {
+  visitAssetInformation(_element: AssetInformation, _context: any): JsonType {
+    throw new NotSupportedError(
+      "AssetInformation is not supported for value serialization.",
+    );
   }
 
-  visitBlob(element: Blob, context: any): any {
+  visitBlob(element: Blob, _context: any): JsonType {
     return element.value ? { contentType: element.contentType, value: Buffer.from(element.value).toString("utf-8") } : { contentType: element.contentType, value: undefined };
   }
 
-  visitConceptDescription(element: ConceptDescription, context: any): any {
+  visitConceptDescription(_element: ConceptDescription, _context: any): JsonType {
+    throw new NotSupportedError(
+      "ConceptDescription is not supported for value serialization.",
+    );
   }
 
-  visitEmbeddedDataSpecification(element: EmbeddedDataSpecification, context: any): any {
+  visitEmbeddedDataSpecification(_element: EmbeddedDataSpecification, _context: any): JsonType {
+    throw new NotSupportedError(
+      "EmbeddedDataSpecification is not supported for value serialization.",
+    );
   }
 
-  visitEntity(element: Entity, context: any): any {
+  visitEntity(element: Entity, context: any): JsonType {
+    return {
+      entityType: element.entityType,
+      globalAssetId: element.globalAssetId,
+      statements: element.statements.map(st => ({ [st.idShort]: st.accept(this, context) })),
+      specificAssetIds: element.specificAssetIds.map(specificAssetId => specificAssetId.accept(this, context)),
+    };
   }
 
-  visitExtension(element: Extension, context: any): any {
+  visitExtension(_element: Extension, _context: any): JsonType {
+    throw new NotSupportedError(
+      "Extension is not supported for value serialization.",
+    );
   }
 
-  visitFile(element: File, context: any): any {
+  visitFile(element: File, _context: any): JsonType {
     return { contentType: element.contentType, value: element.value };
   }
 
-  visitKey(element: Key, context: any): any {
+  visitKey(element: Key, _context: any): JsonType {
+    return { type: element.type, value: element.value };
   }
 
-  visitLanguageText(element: LanguageText, context: any): any {
+  visitLanguageText(element: LanguageText, _context: any): JsonType {
+    return { [element.language]: element.text };
   }
 
-  visitMultiLanguageProperty(element: MultiLanguageProperty, context: any): any {
-    return element.value.map(v => ({
-      [v.language]: v.text,
-    }));
+  visitMultiLanguageProperty(element: MultiLanguageProperty, context: any): JsonType {
+    return element.value.map(v => v.accept(this, context));
   }
 
-  visitProperty(element: Property, context: any): any {
+  visitProperty(element: Property, _context: any): JsonType {
     return element.value;
   }
 
-  visitQualifier(element: Qualifier, context: any): any {
+  visitQualifier(_element: Qualifier, _context: any): JsonType {
+    throw new NotSupportedError(
+      "Qualifier is not supported for value serialization.",
+    );
   }
 
-  visitRange(element: Range, context: any): any {
+  visitRange(element: Range, _context: any): JsonType {
     return { min: element.min, max: element.max };
   }
 
-  visitReference(element: Reference, context: any): any {
+  visitReference(element: Reference, context: any): JsonType {
+    return {
+      type: element.type,
+      ...(element.referredSemanticId && { referredSemanticId: element.referredSemanticId.accept(this, context) }),
+      keys: element.keys.map(key => key.accept(this, context)),
+    };
   }
 
-  visitReferenceElement(element: ReferenceElement, context: any): any {
+  visitReferenceElement(element: ReferenceElement, _context: any): JsonType {
+    return element.value?.accept(this) ?? null;
   }
 
-  visitRelationshipElement(element: RelationshipElement, context: any): any {
+  visitRelationshipElement(element: RelationshipElement, context: any): JsonType {
+    return { first: element.first.accept(this, context), second: element.second.accept(this, context) };
   }
 
-  visitResource(element: Resource, context: any): any {
+  visitResource(_element: Resource, _context: any): JsonType {
+    throw new NotSupportedError(
+      "Resource is not supported for value serialization.",
+    );
   }
 
-  visitSpecificAssetId(element: SpecificAssetId, context: any): any {
+  visitSpecificAssetId(element: SpecificAssetId, _context: any): JsonType {
+    return {
+      [element.name]: element.value,
+    };
   }
 
-  visitSubmodel(element: Submodel, context: any): any {
+  visitSubmodel(element: Submodel, context: any): JsonType {
     const value: { [key: string]: any } = {};
     for (const submodelElement of element.submodelElements) {
       value[submodelElement.idShort] = submodelElement.accept(this, context);
@@ -104,7 +148,7 @@ export class ValueVisitor implements IVisitor<any, any> {
     return value;
   }
 
-  visitSubmodelElementCollection(element: SubmodelElementCollection, context: any): any {
+  visitSubmodelElementCollection(element: SubmodelElementCollection, context: any): JsonType {
     const value: { [key: string]: any } = {};
     for (const submodelElement of element.value) {
       value[submodelElement.idShort] = submodelElement.accept(this, context);
@@ -112,6 +156,7 @@ export class ValueVisitor implements IVisitor<any, any> {
     return value;
   }
 
-  visitSubmodelElementList(element: SubmodelElementList, context: any): any {
+  visitSubmodelElementList(element: SubmodelElementList, context: any): JsonType {
+    return element.value.map(v => v.accept(this, context));
   }
 }

@@ -187,6 +187,80 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     });
   }
 
+  async function assertGetSubmodelValue(createEntity: CreateEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const entity = await createEntity(org.id);
+    const response = await request(app.getHttpServer())
+      .get(`${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/$value`)
+      .set("Cookie", userCookie)
+      .send();
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual(
+      {
+        ProductCarbonFootprint_A1A3: {
+          PCFCO2eq: "2.6300",
+          PCFCalculationMethod: "GHG Protocol",
+          PCFFactSheet: {
+            type: "ExternalReference",
+            keys: [
+              {
+                type: "GlobalReference",
+                value: "http://pdf.shells.smartfactory.de/PCF_FactSheet/Truck_printed.pdf",
+              },
+            ],
+          },
+          PCFGoodsAddressHandover: {
+            CityTown: "Kaiserslautern",
+            Country: "Germany",
+            HouseNumber: "122",
+            Latitude: "49.428006",
+            Longitude: "7.751222",
+            Street: "Trippstadter Strasse",
+            ZipCode: "67663",
+          },
+          PCFLifeCyclePhase: "A1-A3",
+          PCFQuantityOfMeasureForCalculation: "1",
+          PCFReferenceValueForCalculation: "piece",
+          PublicationDate: "2025-03-31",
+        },
+        ProductCarbonFootprint_A4: {
+          PCFCO2eq: "2.0000",
+          PCFCalculationMethod: "GHG Protocol",
+          PCFGoodsAddressHandover: {
+            CityTown: "Hannover",
+            Country: "Germany",
+            HouseNumber: "11",
+            Latitude: "52.31947731917296",
+            Longitude: "9.81000507976999",
+            Street: "Alte Kronsbergstraße",
+            ZipCode: "30521",
+          },
+          PCFLifeCyclePhase: "A4",
+          PCFQuantityOfMeasureForCalculation: "1",
+          PCFReferenceValueForCalculation: "piece",
+          PublicationDate: "2025-03-31",
+        },
+        ProductCarbonFootprint_B5: {
+          PCFCO2eq: "4.0000",
+          PCFCalculationMethod: "GHG Protocol",
+          PCFGoodsAddressHandover: {
+            CityTown: "Hannover",
+            Country: "Germany",
+            HouseNumber: "11",
+            Latitude: "52.31947731917296",
+            Longitude: "9.81000507976999",
+            Street: "Alte Kronsbergstraße",
+            ZipCode: "30521",
+          },
+          PCFLifeCyclePhase: "B5",
+          PCFQuantityOfMeasureForCalculation: "1",
+          PCFReferenceValueForCalculation: "piece",
+          PublicationDate: "2025-03-31",
+        },
+      },
+    );
+  }
+
   afterAll(async () => {
     await app.close();
   });
@@ -198,6 +272,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       getShells: assertGetShells,
       getSubmodels: assertGetSubmodels,
       getSubmodelById: assertGetSubmodelById,
+      getSubmodelValue: assertGetSubmodelValue,
       getSubmodelElements: assertGetSubmodelElements,
       getSubmodelElementById: assertGetSubmodelElementById,
     },

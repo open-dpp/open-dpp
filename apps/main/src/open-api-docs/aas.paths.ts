@@ -6,6 +6,7 @@ import {
   ApiGetSubmodelElementByIdPath,
   ApiGetSubmodelElementsPath,
   ApiGetSubmodelsPath,
+  ApiGetSubmodelValuePath,
   CursorQueryParamSchema,
   IdParamSchema,
   IdShortPathParamSchema,
@@ -17,6 +18,7 @@ import {
 } from "../aas/presentation/dto/asset-administration-shell.dto";
 import { SubmodelElementPaginationResponseDtoSchema } from "../aas/presentation/dto/submodel-element.dto";
 import { SubmodelPaginationResponseDtoSchema } from "../aas/presentation/dto/submodel.dto";
+import { ValueResponseDtoSchema } from "../aas/presentation/dto/value-response.dto";
 
 const HTTPCode = {
   OK: 200,
@@ -79,6 +81,20 @@ export function createAasPaths(tag: string) {
           [HTTPCode.OK]: {
             content: {
               [ContentType.JSON]: { schema: SubmodelJsonSchema },
+            },
+          },
+        },
+      },
+    },
+    [`${tag}${ApiGetSubmodelValuePath}`]: {
+      get: {
+        tags: [tag],
+        summary: `Returns Submodel value representation`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: ValueResponseDtoSchema },
             },
           },
         },

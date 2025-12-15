@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DataTypeDef } from "../../common/data-type-def";
+import { DataTypeDef, DataTypeDefEnum } from "../../common/data-type-def";
 
 export const ValueTypeSchema = z.string().overwrite(
   (value) => {
@@ -16,4 +16,4 @@ export const ValueTypeSchema = z.string().overwrite(
     }
     return key;
   },
-).pipe(z.enum(DataTypeDef));
+).pipe(DataTypeDefEnum);

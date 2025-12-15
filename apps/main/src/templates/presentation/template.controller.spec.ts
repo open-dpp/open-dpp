@@ -32,9 +32,13 @@ describe("templateController", () => {
   it(`/GET submodels`, async () => {
     await ctx.asserts.getSubmodels(createTemplate);
   });
-  //
+
   it(`/GET submodel by id`, async () => {
     await ctx.asserts.getSubmodelById(createTemplate);
+  });
+
+  it("/GET submodel value", async () => {
+    await ctx.asserts.getSubmodelValue(createTemplate);
   });
 
   it(`/GET submodel elements`, async () => {

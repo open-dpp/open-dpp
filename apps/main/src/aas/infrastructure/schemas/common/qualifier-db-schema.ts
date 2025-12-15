@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { DataTypeDefEnum } from "../../../domain/common/data-type-def";
 import { QualifierKindEnum } from "../../../domain/common/qualifier-kind-enum";
+import { ValueTypeDbSchema } from "./basic-db-schema";
 import { ReferenceDbSchema } from "./reference-db-schema";
 
 export const QualifierDbSchema = z.object({
   type: z.string(),
-  valueType: DataTypeDefEnum,
+  valueType: ValueTypeDbSchema,
   semanticId: ReferenceDbSchema.optional(),
   supplementalSemanticIds: z.array(ReferenceDbSchema),
   kind: QualifierKindEnum,

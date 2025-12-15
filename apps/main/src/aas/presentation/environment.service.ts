@@ -8,7 +8,7 @@ import { Pagination } from "../domain/pagination";
 import { PagingResult } from "../domain/paging-result";
 import { SubmodelBaseUnionSchema } from "../domain/parsing/submodel-base/submodel-base-union-schema";
 import { SubmodelJsonSchema } from "../domain/parsing/submodel-base/submodel-json-schema";
-import { IdShortPath } from "../domain/submodel-base/submodel";
+import { IdShortPath, Submodel } from "../domain/submodel-base/submodel";
 import { AasRepository } from "../infrastructure/aas.repository";
 import {
   IDigitalProductPassportIdentifiableRepository,
@@ -28,6 +28,7 @@ import {
   SubmodelPaginationResponseDtoSchema,
   SubmodelResponseDto,
 } from "./dto/submodel.dto";
+import { ValueResponseDto, ValueResponseDtoSchema } from "./dto/value-response.dto";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
@@ -58,13 +59,23 @@ export class EnvironmentService {
     return SubmodelPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodels }).toPlain());
   }
 
-  async getSubmodelById(environment: Environment, submodelId: string): Promise<SubmodelResponseDto> {
+  private async findSubmodelById(environment: Environment, submodelId: string): Promise<Submodel> {
     if (environment.submodels.includes(submodelId)) {
-      return SubmodelJsonSchema.parse((await this.submodelRepository.findOneOrFail(submodelId)).toPlain());
+      return await this.submodelRepository.findOneOrFail(submodelId);
     }
     else {
       throw new SubmodelNotPartOfEnvironmentException(submodelId);
     }
+  }
+
+  async getSubmodelById(environment: Environment, submodelId: string): Promise<SubmodelResponseDto> {
+    return SubmodelJsonSchema.parse((await this.findSubmodelById(environment, submodelId)).toPlain());
+  }
+
+  async getSubmodelValue(environment: Environment, submodelId: string): Promise<ValueResponseDto> {
+    const submodel = await this.findSubmodelById(environment, submodelId);
+    const value = submodel.getValueRepresentation();
+    return ValueResponseDtoSchema.parse(value);
   }
 
   async getSubmodelElements(environment: Environment, submodelId: string, pagination: Pagination): Promise<SubmodelElementPaginationResponseDto> {

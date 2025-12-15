@@ -9,6 +9,7 @@ import {
   ApiGetSubmodelElementById,
   ApiGetSubmodelElements,
   ApiGetSubmodels,
+  ApiGetSubmodelValue,
   CursorQueryParam,
   IdParam,
   IdShortPathParam,
@@ -25,6 +26,7 @@ import {
   SubmodelElementResponseDto,
 } from "../../aas/presentation/dto/submodel-element.dto";
 import { SubmodelPaginationResponseDto, SubmodelResponseDto } from "../../aas/presentation/dto/submodel.dto";
+import { ValueResponseDto } from "../../aas/presentation/dto/value-response.dto";
 import { EnvironmentService, loadEnvironmentAndCheckOwnership } from "../../aas/presentation/environment.service";
 import { AuthService } from "../../auth/auth.service";
 import { PassportRepository } from "../infrastructure/passport.repository";
@@ -59,8 +61,7 @@ export class PassportController implements IAasReadEndpoints {
   ): Promise<SubmodelPaginationResponseDto> {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.passportRepository, id, req);
     const pagination = Pagination.create({ limit, cursor });
-    const res = await this.environmentService.getSubmodels(environment, pagination);
-    return res;
+    return await this.environmentService.getSubmodels(environment, pagination);
   }
 
   @ApiGetSubmodelById()
@@ -71,6 +72,16 @@ export class PassportController implements IAasReadEndpoints {
   ): Promise<SubmodelResponseDto> {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.passportRepository, id, req);
     return await this.environmentService.getSubmodelById(environment, submodelId);
+  }
+
+  @ApiGetSubmodelValue()
+  async getSubmodelValue(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @RequestParam() req: express.Request,
+  ): Promise<ValueResponseDto> {
+    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.passportRepository, id, req);
+    return await this.environmentService.getSubmodelValue(environment, submodelId);
   }
 
   @ApiGetSubmodelElements()

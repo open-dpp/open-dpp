@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { beforeAll } from "@jest/globals";
+import { beforeAll, expect } from "@jest/globals";
 import {
+  submodelBillOfMaterialPlainFactory,
   submodelCarbonFootprintPlainFactory,
   submodelDesignOfProductPlainFactory,
 } from "../../fixtures/submodel.factory";
@@ -39,11 +40,11 @@ describe("submodel", () => {
     expect(element).toBeUndefined();
   });
 
-  it("should get value representation", () => {
+  it("should get value representation for design submodel", () => {
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } }));
-    const element = submodel.getValueRepresentation();
+    let element = submodel.getValueRepresentation();
     expect(element).toEqual(
       { Design_V01: {
         AdditionalInformation: {
@@ -78,10 +79,152 @@ describe("submodel", () => {
         Author: {
           AuthorOrganization: "Technologie-Initiative SmartFactory KL e. V.",
           AuthorName: "Fabrikvordenker:in ER28-0652",
+          ListProp: [
+            {
+              prop1: "val1",
+            },
+            {
+              prop2: "val2",
+            },
+          ],
         },
         ModelType: "CAD",
         ModelDescription: "prt",
+
       } },
     );
+
+    element = submodel.getValueRepresentation(IdShortPath.create({ path: "Design_V01.Author" }));
+    expect(element).toEqual({
+      AuthorOrganization: "Technologie-Initiative SmartFactory KL e. V.",
+      AuthorName: "Fabrikvordenker:in ER28-0652",
+      ListProp: [
+        {
+          prop1: "val1",
+        },
+        {
+          prop2: "val2",
+        },
+      ],
+    });
+
+    element = submodel.getValueRepresentation(IdShortPath.create({ path: "Design_V01.Author.ListProp" }));
+    expect(element).toEqual([
+      {
+        prop1: "val1",
+      },
+      {
+        prop2: "val2",
+      },
+    ],
+    );
+    element = submodel.getValueRepresentation(IdShortPath.create({ path: "Design_V01.Author.AuthorName" }));
+    expect(element).toEqual("Fabrikvordenker:in ER28-0652");
+  });
+
+  it("should get value representation for carbon footprint", () => {
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const element = submodel.getValueRepresentation(IdShortPath.create({ path: "ProductCarbonFootprint_A1A3.PCFFactSheet" }));
+    expect(element).toEqual({
+      type: "ExternalReference",
+      keys: [
+        {
+          type: "GlobalReference",
+          value: "http://pdf.shells.smartfactory.de/PCF_FactSheet/Truck_printed.pdf",
+        },
+      ],
+    });
+  });
+
+  it("should get value representation for bill of material", () => {
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const element = submodel.getValueRepresentation();
+    expect(element).toEqual({
+      Truck: {
+        statements: [
+          {
+            Id: `${iriDomain}/shells/-SR7BbncJG`,
+          },
+          {
+            URL: {
+              type: "ExternalReference",
+              keys: [
+                {
+                  type: "GlobalReference",
+                  value: `${iriDomain}/shells/-SR7BbncJG`,
+                },
+              ],
+            },
+          },
+          {
+            Semitrailer: {
+              statements: [
+                {
+                  Id: `${iriDomain}/shells/wpIL8kYawf`,
+                },
+                {
+                  Lid: {
+                    entityType: "SelfManagedEntity",
+                    globalAssetId: `${iriDomain}/assets/XjUPRWkSw5`,
+                    specificAssetIds: [],
+                    statements: [
+                      { Name: "Lid_A_Blue" },
+                    ],
+                  },
+                },
+              ],
+              entityType: "SelfManagedEntity",
+              globalAssetId: `${iriDomain}/assets/aYJwzLG1RF`,
+              specificAssetIds: [],
+            },
+          },
+          {
+            HasPart0001: {
+              first: {
+                type: "ModelReference",
+                keys: [
+                  {
+                    type: "Submodel",
+                    value: `${iriDomain}/submodels/IexIFXJ0YL`,
+                  },
+                  {
+                    type: "Entity",
+                    value: "Truck",
+                  },
+                ],
+              },
+              second: {
+                type: "ModelReference",
+                keys: [
+                  {
+                    type: "Submodel",
+                    value: `${iriDomain}/submodels/IexIFXJ0YL`,
+                  },
+                  {
+                    type: "Entity",
+                    value: "Truck",
+                  },
+                  {
+                    type: "Entity",
+                    value: "Semitrailer",
+                  },
+                ],
+              },
+            },
+          },
+        ],
+        entityType: "SelfManagedEntity",
+        globalAssetId: `${iriDomain}/assets/zm6As5rG-h`,
+        specificAssetIds: [
+          {
+            testi: "val1",
+          },
+        ],
+      },
+    });
   });
 });
