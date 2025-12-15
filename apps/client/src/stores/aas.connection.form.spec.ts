@@ -95,37 +95,6 @@ describe("integrationFormStore", () => {
     },
   ];
 
-  const selectOptionsAas = [
-    {
-      group: "p1",
-      options: [
-        {
-          label: "i1",
-          property: {
-            idShort: "i1",
-            modelType: "Property",
-            valueType: "xs:string",
-          },
-          value: "p1/i1",
-        },
-      ],
-    },
-    {
-      group: "p2",
-      options: [
-        {
-          label: "i2",
-          property: {
-            idShort: "i2",
-            modelType: "Property",
-            valueType: "xs:string",
-          },
-          value: "p2/i2",
-        },
-      ],
-    },
-  ];
-
   const templateDto: TemplateDto = {
     id: "dataModelId",
     name: "Test Product Data Model",
@@ -256,184 +225,7 @@ describe("integrationFormStore", () => {
     ],
   };
 
-  const selectOptionsOfOtherTemplate = [
-    {
-      group: "Section 0",
-      options: [
-        {
-          label: "Field 0",
-          value: "s0/f0",
-        },
-      ],
-    },
-    {
-      group: "Section 1",
-      options: [
-        {
-          label: "Field 1 other",
-          value: "s1/f1-other",
-        },
-      ],
-    },
-    {
-      group: "Section 2",
-      options: [
-        {
-          label: "Field 2",
-          value: "s2/f2",
-        },
-        {
-          label: "Field 3 other",
-          value: "s2/f3-other",
-        },
-      ],
-    },
-  ];
-
-  const selectOptionsOfTemplate = [
-    {
-      group: "Section 0",
-      options: [
-        {
-          label: "Field 0",
-          value: "s0/f0",
-        },
-      ],
-    },
-    {
-      group: "Section 1",
-      options: [
-        {
-          label: "Field 1",
-          value: "s1/f1",
-        },
-      ],
-    },
-    {
-      group: "Section 2",
-      options: [
-        {
-          label: "Field 2",
-          value: "s2/f2",
-        },
-        {
-          label: "Field 3",
-          value: "s2/f3",
-        },
-      ],
-    },
-  ];
-
-  const rowDiv = {
-    $el: "div",
-    attrs: {
-      class: "flex flex-col md:flex-row justify-around gap-2 items-center",
-    },
-    children: [],
-  };
-
-  const horizontalLine = {
-    $el: "div",
-    attrs: {
-      class: "w-full border-t border-gray-300 m-2",
-    },
-  };
-
-  const connectedMsgDiv = {
-    $el: "div",
-    attrs: {
-      class: "flex",
-    },
-    children: "ist verknüpft mit",
-  };
-
-  const flexDivStart = {
-    $el: "div",
-    attrs: {
-      class: "flex",
-    },
-  };
-
-  const placeHolderAas
-    = "Wählen Sie ein Feld aus der Asset Administration Shell";
-  const placeHolderDpp = "Wählen Sie ein Feld aus dem Produktdatenmodell";
-  const labelAas = "Feld aus der Asset Administration Shell";
-  const labelDpp = "Feld aus dem Produktdatenmodell";
-
-  const expectedFormSchema = [
-    {
-      ...rowDiv,
-      children: [
-        {
-          ...flexDivStart,
-          children: [
-            {
-              "$formkit": "select",
-              "label": labelAas,
-              "placeholder": placeHolderAas,
-              "name": `aas-${0}`,
-              "options": selectOptionsAas,
-              "data-cy": "aas-select-0",
-              "required": true,
-            },
-          ],
-        },
-        connectedMsgDiv,
-        {
-          ...flexDivStart,
-          children: [
-            {
-              "$formkit": "select",
-              "label": labelDpp,
-              "placeholder": placeHolderDpp,
-              "name": `dpp-${0}`,
-              "options": selectOptionsOfTemplate,
-              "data-cy": "dpp-select-0",
-              "required": true,
-            },
-          ],
-        },
-      ],
-      rowIndex: 0,
-    },
-    horizontalLine,
-    {
-      ...rowDiv,
-      children: [
-        {
-          ...flexDivStart,
-          children: [
-            {
-              "$formkit": "select",
-              "label": labelAas,
-              "placeholder": placeHolderAas,
-              "name": `aas-${1}`,
-              "options": selectOptionsAas,
-              "data-cy": "aas-select-1",
-              "required": true,
-            },
-          ],
-        },
-        connectedMsgDiv,
-        {
-          ...flexDivStart,
-          children: [
-            {
-              "$formkit": "select",
-              "label": labelDpp,
-              "placeholder": placeHolderDpp,
-              "name": `dpp-${1}`,
-              "options": selectOptionsOfTemplate,
-              "data-cy": "dpp-select-1",
-              "required": true,
-            },
-          ],
-        },
-      ],
-      rowIndex: 1,
-    },
-  ];
-  it("should initialize formSchema and formData correctly", async () => {
+  it("should initialize fieldAssignments correctly", async () => {
     const integrationFormStore = useAasConnectionFormStore();
 
     mocks.getTemplateById.mockResolvedValue({
@@ -443,28 +235,23 @@ describe("integrationFormStore", () => {
     mocks.getPropertiesOfAas.mockResolvedValue({ data: mockedProperties });
     await integrationFormStore.fetchConnection(connectionId);
 
-    expect(integrationFormStore.formSchema).toEqual(expectedFormSchema);
-
-    expect(integrationFormStore.formData).toEqual({
-      "aas-0": "p1/i1",
-      "aas-1": "p2/i2",
-      "dpp-0": "s1/f1",
-      "dpp-1": "s2/f2",
+    expect(integrationFormStore.fieldAssignments).toHaveLength(2);
+    expect(integrationFormStore.fieldAssignments[0]).toEqual({
+      id: expect.any(String),
+      aas: "p1/i1",
+      dpp: "s1/f1",
+    });
+    expect(integrationFormStore.fieldAssignments[1]).toEqual({
+      id: expect.any(String),
+      aas: "p2/i2",
+      dpp: "s2/f2",
     });
   });
 
   it("should update connection", async () => {
     const integrationFormStore = useAasConnectionFormStore();
-    const formUpdate = {
-      name: "Connection 1",
-      modelId: "modelId",
-      fieldAssignments: {
-        "aas-0": "p1-update/i1-update",
-        "aas-1": "p2-update/i2-update",
-        "dpp-0": "s0/f0",
-        "dpp-1": "s2/f3",
-      },
-    };
+    
+    // Setup mocks
     const newFieldAssignments: AasFieldAssignmentDto[] = [
       {
         idShortParent: "p1-update",
@@ -495,7 +282,20 @@ describe("integrationFormStore", () => {
     });
 
     await integrationFormStore.fetchConnection(connectionId);
-    integrationFormStore.formData = formUpdate.fieldAssignments;
+
+    // Manually update fieldAssignments to simulate user input
+    // We preserve the IDs from the fetch but change the values
+    const currentAssignments = integrationFormStore.fieldAssignments;
+    expect(currentAssignments).toHaveLength(2);
+
+    currentAssignments[0]!.aas = "p1-update/i1-update";
+    currentAssignments[0]!.dpp = "s0/f0";
+    currentAssignments[1]!.aas = "p2-update/i2-update";
+    currentAssignments[1]!.dpp = "s2/f3";
+    
+    // Update the store ref
+    integrationFormStore.fieldAssignments = [...currentAssignments];
+
     await integrationFormStore.submitModifications();
 
     await waitFor(() =>
@@ -508,12 +308,30 @@ describe("integrationFormStore", () => {
       }),
     );
 
-    expect(integrationFormStore.formSchema).toEqual(expectedFormSchema);
-    expect(integrationFormStore.formData).toEqual({
-      "aas-0": "p1-update/i1-update",
-      "aas-1": "p2-update/i2-update",
-      "dpp-0": "s0/f0",
-      "dpp-1": "s2/f3",
+    // Verify the store state reflects the update (which it should if modifyConnection returns the updated dto)
+    expect(integrationFormStore.fieldAssignments).toHaveLength(2);
+    // Note: IDs might be regenerated or preserved depending on implementation. 
+    // In current implementation, if aasConnection.value is updated from response, 
+    // IDs are NOT regenerated because initializeFormData is NOT called in submitModifications 
+    // EXCEPT if we manually trigger it or if the store watcher handles it.
+    // Looking at the store code: 
+    // aasConnection.value = response.data;
+    // But initializeFormData is NOT called after this line in submitModifications.
+    // Wait, the store implementation of submitModifications:
+    // aasConnection.value = response.data;
+    // It does NOT update fieldAssignments from the response. 
+    // It relies on the local state being the source of truth for the UI?
+    // Actually, if the backend returns normalized data, we might want to reload it.
+    // But let's check what we expect. We updated the local state manually before submit.
+    // So the local state should still have our values.
+    
+    expect(integrationFormStore.fieldAssignments[0]).toMatchObject({
+      aas: "p1-update/i1-update",
+      dpp: "s0/f0",
+    });
+    expect(integrationFormStore.fieldAssignments[1]).toMatchObject({
+      aas: "p2-update/i2-update",
+      dpp: "s2/f3",
     });
   });
 
@@ -529,51 +347,11 @@ describe("integrationFormStore", () => {
 
     integrationFormStore.addFieldAssignmentRow();
 
-    expect(integrationFormStore.formSchema).toEqual([
-      ...expectedFormSchema,
-      horizontalLine,
-      {
-        ...rowDiv,
-        children: [
-          {
-            ...flexDivStart,
-            children: [
-              {
-                "$formkit": "select",
-                "label": labelAas,
-                "name": `aas-${2}`,
-                "placeholder": placeHolderAas,
-                "options": selectOptionsAas,
-                "data-cy": "aas-select-2",
-                "required": true,
-              },
-            ],
-          },
-          connectedMsgDiv,
-          {
-            ...flexDivStart,
-            children: [
-              {
-                "$formkit": "select",
-                "label": labelDpp,
-                "name": `dpp-${2}`,
-                "placeholder": placeHolderDpp,
-                "options": selectOptionsOfTemplate,
-                "data-cy": "dpp-select-2",
-                "required": true,
-              },
-            ],
-          },
-        ],
-        rowIndex: 2,
-      },
-    ]);
-
-    expect(integrationFormStore.formData).toEqual({
-      "aas-0": "p1/i1",
-      "aas-1": "p2/i2",
-      "dpp-0": "s1/f1",
-      "dpp-1": "s2/f2",
+    expect(integrationFormStore.fieldAssignments).toHaveLength(3);
+    expect(integrationFormStore.fieldAssignments[2]).toEqual({
+      id: expect.any(String),
+      aas: "",
+      dpp: "",
     });
   });
 
@@ -611,85 +389,24 @@ describe("integrationFormStore", () => {
 
     await integrationFormStore.switchModel(model);
 
-    expect(integrationFormStore.formSchema).toEqual([
-      {
-        ...rowDiv,
-        children: [
-          {
-            ...flexDivStart,
-            children: [
-              {
-                "$formkit": "select",
-                "label": labelAas,
-                "placeholder": placeHolderAas,
-                "name": `aas-${0}`,
-                "options": selectOptionsAas,
-                "data-cy": "aas-select-0",
-                "required": true,
-              },
-            ],
-          },
-          connectedMsgDiv,
-          {
-            ...flexDivStart,
-            children: [
-              {
-                "$formkit": "select",
-                "label": labelDpp,
-                "placeholder": placeHolderDpp,
-                "name": `dpp-${0}`,
-                "options": selectOptionsOfOtherTemplate,
-                "data-cy": "dpp-select-0",
-                "required": true,
-              },
-            ],
-          },
-        ],
-        rowIndex: 0,
-      },
-      horizontalLine,
-      {
-        ...rowDiv,
-        children: [
-          {
-            ...flexDivStart,
-            children: [
-              {
-                "$formkit": "select",
-                "label": labelAas,
-                "placeholder": placeHolderAas,
-                "name": `aas-${1}`,
-                "options": selectOptionsAas,
-                "data-cy": "aas-select-1",
-                "required": true,
-              },
-            ],
-          },
-          connectedMsgDiv,
-          {
-            ...flexDivStart,
-            children: [
-              {
-                "$formkit": "select",
-                "label": labelDpp,
-                "placeholder": placeHolderDpp,
-                "name": `dpp-${1}`,
-                "options": selectOptionsOfOtherTemplate,
-                "data-cy": "dpp-select-1",
-                "required": true,
-              },
-            ],
-          },
-        ],
-        rowIndex: 1,
-      },
-    ]);
+    // Expect fieldAssignments to be updated
+    // Original[0]: aas="p1/i1", dpp="s1/f1"
+    // Original[1]: aas="p2/i2", dpp="s2/f2"
+    
+    // In otherTemplateDto:
+    // "s1/f1" does NOT exist (it has "s1/f1-other") -> should be cleared
+    // "s2/f2" DOES exist -> should be preserved
 
-    expect(integrationFormStore.formData).toEqual({
-      "aas-0": "p1/i1",
-      "aas-1": "p2/i2",
-      "dpp-0": "",
-      "dpp-1": "s2/f2",
+    expect(integrationFormStore.fieldAssignments).toHaveLength(2);
+    
+    expect(integrationFormStore.fieldAssignments[0]).toMatchObject({
+      aas: "p1/i1",
+      dpp: "", // Cleared because s1/f1 is not in otherTemplateDto
+    });
+
+    expect(integrationFormStore.fieldAssignments[1]).toMatchObject({
+      aas: "p2/i2",
+      dpp: "s2/f2", // Preserved
     });
   });
 });
