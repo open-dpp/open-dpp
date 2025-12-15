@@ -101,7 +101,7 @@ function submit() {
       <label class="block text-sm font-medium text-gray-700">
         {{ t('draft.form.sectors.label') }}
       </label>
-      <div class="flex flex-col gap-2">
+      <div class="flex flex-col gap-2" data-cy="sectors">
         <div v-for="option in sectorOptions" :key="option.value" class="flex items-center gap-2">
           <Checkbox
             v-model="sectors"
@@ -109,7 +109,6 @@ function submit() {
             :value="option.value"
             name="sectors"
             :invalid="!!errors.sectors"
-            data-cy="sectors"
           />
           <label :for="option.value" class="text-sm text-gray-700">{{ option.label }}</label>
         </div>
