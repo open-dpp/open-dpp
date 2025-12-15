@@ -4,6 +4,7 @@ import { DocumentIcon, PencilIcon } from "@heroicons/vue/16/solid";
 import InputText from "primevue/inputtext";
 import { computed, onUnmounted, ref, useAttrs, watch } from "vue";
 import { useI18n } from "vue-i18n";
+import apiClient from "../../lib/api-client";
 import { useIndexStore } from "../../stores";
 import { useMediaStore } from "../../stores/media";
 import { useNotificationStore } from "../../stores/notification";
@@ -86,7 +87,7 @@ async function uploadFile() {
     let mediaId: string;
 
     if (props.context === "organization") {
-      mediaId = await mediaStore.uploadOrganizationProfileMedia(
+      mediaId = await apiClient.media.media.uploadOrganizationProfileMedia(
         indexStore.selectedOrganization,
         selectedLocalFile.value,
         progress => (uploadProgress.value = progress),

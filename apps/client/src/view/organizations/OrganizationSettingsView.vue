@@ -8,6 +8,7 @@ import { useI18n } from "vue-i18n";
 
 import { authClient } from "../../auth-client.ts";
 import MediaInput from "../../components/media/MediaInput.vue";
+import apiClient from "../../lib/api-client";
 import { useIndexStore } from "../../stores";
 import { useErrorHandlingStore } from "../../stores/error.handling";
 import { useMediaStore } from "../../stores/media";
@@ -67,7 +68,7 @@ async function save() {
 
   if (selectedFile.value) {
     try {
-      image = await mediaStore.uploadOrganizationProfileMedia(indexStore.selectedOrganization, selectedFile.value);
+      image = await apiClient.media.media.uploadOrganizationProfileMedia(indexStore.selectedOrganization, selectedFile.value);
     }
     catch (e) {
       console.error("Failed to upload image", e);

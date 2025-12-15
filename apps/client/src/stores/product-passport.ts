@@ -66,7 +66,7 @@ export const useProductPassportStore = defineStore("productPassport", () => {
           errorHandlingStore.logErrorWithNotification(t("presentation.loadPassportMediaError"), error);
         }
       }
-      if (productPassport.value?.organizationImage) {
+      if (productPassport.value.organizationImage) {
         try {
           const mediaResult = await mediaStore.fetchMedia(productPassport.value.organizationImage);
           if (mediaResult && mediaResult.blob) {
