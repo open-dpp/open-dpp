@@ -35,12 +35,12 @@ async function inviteUser() {
   errors.value = [];
   emailError.value = "";
 
-  const emailSchema = z.string().email();
+  const emailSchema = z.email();
   const result = emailSchema.safeParse(email.value);
 
   if (!result.success) {
     // Basic error message since I don't have full FormKit i18n map
-    emailError.value = "Please enter a valid email address.";
+    emailError.value = t("common.form.email.invalid");
     return;
   }
 

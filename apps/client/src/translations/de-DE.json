@@ -38,7 +38,8 @@
       "email": {
         "help": "Geben Sie eine E-Mail Adresse ein.",
         "label": "E-Mail Adresse",
-        "error": "Bitte geben Sie eine E-Mail Adresse ein."
+        "error": "Bitte geben Sie eine E-Mail Adresse ein.",
+        "invalid": "Bitte geben Sie eine gültige E-Mail Adresse ein."
       }
     }
   },

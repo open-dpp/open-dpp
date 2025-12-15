@@ -30,7 +30,8 @@
       "email": {
         "help": "Enter an email address.",
         "label": "Email address",
-        "error": "Please enter an email address."
+        "error": "Please enter an email address.",
+        "invalid": "Please enter a valid email address."
       }
     },
     "id": "ID",
