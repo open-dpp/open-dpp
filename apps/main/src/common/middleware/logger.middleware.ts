@@ -8,9 +8,7 @@ export class LoggerMiddleware implements NestMiddleware {
   private readonly logFormat: "json" | "plain";
 
   constructor(private readonly envService: EnvService) {
-    this.logFormat = this.envService.get("OPEN_DPP_LOG_FORMAT") as
-    | "json"
-    | "plain";
+    this.logFormat = this.envService.get("OPEN_DPP_LOG_FORMAT");
   }
 
   use(req: Request, res: Response, next: NextFunction): void {
