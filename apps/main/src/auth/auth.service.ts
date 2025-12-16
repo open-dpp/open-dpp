@@ -191,8 +191,8 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       logger: {
         disabled: false,
         log: (level, message, ...args) => {
-          const formattedMessage =
-            args.length > 0 ? `${message} ${JSON.stringify(args)}` : message;
+          const formattedMessage
+            = args.length > 0 ? `${message} ${JSON.stringify(args)}` : message;
           switch (level) {
             case "error":
               logger.error(formattedMessage);
