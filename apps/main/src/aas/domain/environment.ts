@@ -1,4 +1,8 @@
+import { randomUUID } from "node:crypto";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
+import { AssetInformation } from "./asset-information";
+import { AssetKindType } from "./asset-kind-enum";
+import { AdministrativeInformation } from "./common/administrative-information";
 import { EnvironmentJsonSchema } from "./parsing/environment-json-schema";
 import { Submodel } from "./submodel-base/submodel";
 
@@ -30,6 +34,17 @@ export class Environment {
       parsed.submodels,
       parsed.conceptDescriptions,
     );
+  }
+
+  createAssetAdministrationShell(assetKind: AssetKindType): AssetAdministrationShell {
+    const id = randomUUID();
+    const aas = AssetAdministrationShell.create({
+      id,
+      assetInformation: AssetInformation.create({ assetKind, globalAssetId: id }),
+      administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
+    });
+    this.assetAdministrationShells.push(aas.id);
+    return aas;
   }
 
   addAssetAdministrationShell(assetAdministrationShell: AssetAdministrationShell) {

@@ -305,7 +305,11 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
   });
 
   return {
-    getDppIdentifiableRepository: () => dppIdentifiableRepository,
+    globals: () => ({
+      app,
+      betterAuthHelper,
+    }),
+    getRepositories: () => ({ dppIdentifiableRepository, aasRepository }),
     getAasObjects: () => ({ aas, submodels }),
     asserts: {
       getShells: assertGetShells,

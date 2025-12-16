@@ -1,5 +1,7 @@
 import type express from "express";
-import { Controller, Req } from "@nestjs/common";
+import { Controller, Post, Req, UnauthorizedException } from "@nestjs/common";
+import { fromNodeHeaders } from "better-auth/node";
+import { AssetKind } from "../../aas/domain/asset-kind-enum";
 import { Pagination } from "../../aas/domain/pagination";
 import { IdShortPath } from "../../aas/domain/submodel-base/submodel";
 import {
@@ -27,7 +29,9 @@ import { SubmodelPaginationResponseDto, SubmodelResponseDto } from "../../aas/pr
 import { ValueResponseDto } from "../../aas/presentation/dto/value-response.dto";
 import { EnvironmentService, loadEnvironmentAndCheckOwnership } from "../../aas/presentation/environment.service";
 import { AuthService } from "../../auth/auth.service";
+import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
+import { TemplateDto, TemplateDtoSchema } from "./dto/template.dto";
 
 @Controller("/templates")
 export class TemplateController implements IAasReadEndpoints {
@@ -91,5 +95,26 @@ export class TemplateController implements IAasReadEndpoints {
   ): Promise<ValueResponseDto> {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
     return await this.environmentService.getSubmodelElementValue(environment, submodelId, idShortPath);
+  }
+
+  @Post()
+  async createTemplate(
+    @RequestParam() req: express.Request,
+  ): Promise<TemplateDto> {
+    const environment = await this.environmentService.createEnvironmentWithEmptyAas(AssetKind.Type);
+    const template = Template.create({ organizationId: await this.getActiveOrganizationId(req), environment });
+    return TemplateDtoSchema.parse((await this.templateRepository.save(template)).toPlain());
+  }
+
+  private async getActiveOrganizationId(req: express.Request) {
+    const session = await this.authService.getSession(fromNodeHeaders(req.headers || []));
+    if (!session?.user) {
+      throw new UnauthorizedException("User is not logged in");
+    }
+    const activeOrganization = await this.authService.getActiveOrganization(session.user.id);
+    if (!activeOrganization) {
+      throw new UnauthorizedException("User is not part of any organization");
+    }
+    return activeOrganization._id.toString();
   }
 }

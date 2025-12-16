@@ -1,7 +1,10 @@
 import { randomUUID } from "node:crypto";
 
-import { Environment } from "../../aas/domain/environment";
+import { expect } from "@jest/globals";
 
+import request from "supertest";
+import { AssetKind } from "../../aas/domain/asset-kind-enum";
+import { Environment } from "../../aas/domain/environment";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
@@ -10,11 +13,12 @@ import { TemplatesModule } from "../templates.module";
 import { TemplateController } from "./template.controller";
 
 describe("templateController", () => {
-  const ctx = createAasTestContext("/templates", { imports: [TemplatesModule], providers: [TemplateRepository], controllers: [TemplateController] }, [{ name: TemplateDoc.name, schema: TemplateSchema }], TemplateRepository);
+  const basePath = "/templates";
+  const ctx = createAasTestContext(basePath, { imports: [TemplatesModule], providers: [TemplateRepository], controllers: [TemplateController] }, [{ name: TemplateDoc.name, schema: TemplateSchema }], TemplateRepository);
 
   async function createTemplate(orgId: string): Promise<Template> {
     const { aas, submodels } = ctx.getAasObjects();
-    return ctx.getDppIdentifiableRepository().save(Template.create({
+    return ctx.getRepositories().dppIdentifiableRepository.save(Template.create({
       id: randomUUID(),
       organizationId: orgId,
       environment: Environment.create({
@@ -51,5 +55,28 @@ describe("templateController", () => {
 
   it(`/GET submodel element value`, async () => {
     await ctx.asserts.getSubmodelElementValue(createTemplate);
+  });
+
+  it(`/POST a template`, async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const response = await request(app.getHttpServer())
+      .post(basePath)
+      .set("Cookie", userCookie)
+      .send();
+    expect(response.status).toEqual(201);
+    expect(response.body).toEqual({
+      id: expect.any(String),
+      organizationId: org.id,
+      environment: {
+        assetAdministrationShells: [
+          expect.any(String),
+        ],
+        submodels: [],
+        conceptDescriptions: [],
+      },
+    });
+    const foundAas = await ctx.getRepositories().aasRepository.findOneOrFail(response.body.environment.assetAdministrationShells[0]);
+    expect(foundAas.assetInformation.assetKind).toEqual(AssetKind.Type);
   });
 });

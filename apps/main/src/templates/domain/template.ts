@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { IDigitalProductPassportIdentifiable } from "../../aas/domain/digital-product-passport-identifiable";
 import { Environment } from "../../aas/domain/environment";
 import { TemplateJsonSchema } from "../../aas/domain/parsing/passport-json-schema";
@@ -12,24 +13,24 @@ export class Template implements IPersistable, IDigitalProductPassportIdentifiab
   }
 
   static create(data: {
-    id: string;
+    id?: string;
     organizationId: string;
-    environment: Environment;
+    environment?: Environment;
   }) {
     return new Template(
-      data.id,
+      data.id ?? randomUUID(),
       data.organizationId,
-      data.environment,
+      data.environment ?? Environment.create({}),
     );
   }
 
   static fromPlain(data: unknown) {
     const parsed = TemplateJsonSchema.parse(data);
-    return Template.create({
-      id: parsed.id,
-      organizationId: parsed.organizationId,
-      environment: Environment.fromPlain(parsed.environment),
-    });
+    return new Template(
+      parsed.id,
+      parsed.organizationId,
+      Environment.fromPlain(parsed.environment),
+    );
   }
 
   toPlain() {

@@ -8,7 +8,7 @@ export const AssetAdministrationShellDocSchemaVersion = {
   v1_0_0: "1.0.0",
 } as const;
 type AssetAdministrationShellDocSchemaVersionType = (typeof AssetAdministrationShellDocSchemaVersion)[keyof typeof AssetAdministrationShellDocSchemaVersion];
-@Schema()
+@Schema({ collection: "asset_administration_shells" })
 export class AssetAdministrationShellDoc extends Document<string> {
   @Prop({ type: String })
   declare _id: string;

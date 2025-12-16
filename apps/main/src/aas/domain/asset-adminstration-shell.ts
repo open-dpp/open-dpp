@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { AssetInformation } from "./asset-information";
 import { AdministrativeInformation } from "./common/administrative-information";
 import { IHasDataSpecification } from "./common/has-data-specification";
@@ -29,7 +30,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
 
   static create(
     data: {
-      id: string;
+      id?: string;
       assetInformation: AssetInformation;
       extensions?: Extension[];
       category?: string | null;
@@ -43,7 +44,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     },
   ) {
     return new AssetAdministrationShell(
-      data.id,
+      data.id ?? randomUUID(),
       data.assetInformation,
       data.extensions ?? [],
       data.category ?? null,

@@ -1,8 +1,9 @@
 import type express from "express";
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
 
 import { fromNodeHeaders } from "better-auth/node";
 import { AuthService } from "../../auth/auth.service";
+import { AssetKindType } from "../domain/asset-kind-enum";
 import { Environment } from "../domain/environment";
 import { Pagination } from "../domain/pagination";
 import { PagingResult } from "../domain/paging-result";
@@ -36,15 +37,16 @@ class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   }
 }
 
-class SubmodelElementNotFoundException extends NotFoundException {
-  constructor(idShortPath: IdShortPath) {
-    super(`Submodel element with id ${idShortPath.toString()} not found`);
-  }
-}
-
 @Injectable()
 export class EnvironmentService {
   constructor(private readonly aasRepository: AasRepository, private readonly submodelRepository: SubmodelRepository) {
+  }
+
+  async createEnvironmentWithEmptyAas(assetKind: AssetKindType): Promise<Environment> {
+    const environment = Environment.create({});
+    const aas = environment.createAssetAdministrationShell(assetKind);
+    await this.aasRepository.save(aas);
+    return environment;
   }
 
   async getAasShells(environment: Environment, pagination: Pagination): Promise<AssetAdministrationShellResponseDto> {

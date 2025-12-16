@@ -25,11 +25,11 @@ export class Passport implements IPersistable, IDigitalProductPassportIdentifiab
 
   static fromPlain(data: unknown) {
     const parsed = PassportJsonSchema.parse(data);
-    return Passport.create({
-      id: parsed.id,
-      organizationId: parsed.organizationId,
-      environment: Environment.fromPlain(parsed.environment),
-    });
+    return new Passport(
+      parsed.id,
+      parsed.organizationId,
+      Environment.fromPlain(parsed.environment),
+    );
   }
 
   toPlain() {

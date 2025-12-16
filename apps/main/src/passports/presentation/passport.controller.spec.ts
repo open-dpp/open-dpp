@@ -14,7 +14,7 @@ describe("passportController", () => {
 
   async function createPassport(orgId: string): Promise<Passport> {
     const { aas, submodels } = ctx.getAasObjects();
-    return ctx.getDppIdentifiableRepository().save(Passport.create({
+    return ctx.getRepositories().save(Passport.create({
       id: randomUUID(),
       organizationId: orgId,
       environment: Environment.create({

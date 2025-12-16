@@ -12,7 +12,7 @@ export const ConceptDescriptionDocSchemaVersion = {
 } as const;
 type ConceptDescriptionDocSchemaVersionType = (typeof ConceptDescriptionDocSchemaVersion)[keyof typeof ConceptDescriptionDocSchemaVersion];
 
-@Schema()
+@Schema({ collection: "concept_descriptions" })
 export class ConceptDescriptionDoc extends Document<string> {
   @Prop({ type: String })
   declare _id: string;
