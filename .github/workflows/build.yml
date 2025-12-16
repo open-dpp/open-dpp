@@ -127,6 +127,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build API Client
+        run: pnpm --filter @open-dpp/api-client build
+
       # Step 6: Build project
       - name: Build project
         run: pnpm build
