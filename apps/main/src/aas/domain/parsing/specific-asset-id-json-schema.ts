@@ -4,7 +4,7 @@ import { ReferenceJsonSchema } from "./common/reference-json-schema";
 export const SpecificAssetIdJsonSchema = z.object({
   name: z.string(),
   value: z.string(),
-  semanticId: ReferenceJsonSchema.optional(),
+  semanticId: ReferenceJsonSchema.nullish(),
   supplementalSemanticIds: z.array(ReferenceJsonSchema).default([]),
-  externalSubjectId: ReferenceJsonSchema.optional(),
+  externalSubjectId: ReferenceJsonSchema.nullish(),
 });

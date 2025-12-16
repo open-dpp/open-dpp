@@ -1,15 +1,10 @@
-import { applyDecorators, Get, Param, Query, Req } from "@nestjs/common";
+import { applyDecorators, Body, Get, Param, Post, Query, Req } from "@nestjs/common";
 
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { z } from "zod";
+import { SubmodelElementSchema } from "../domain/parsing/submodel-base/submodel-element-schema";
 import { IdShortPath } from "../domain/submodel-base/submodel";
-
-export const AasWrapper = {
-  Passport: "passport",
-  Template: "template",
-} as const;
-
-export type AasWrapperType = typeof AasWrapper[keyof typeof AasWrapper];
+import { SubmodelRequestDtoSchema } from "./dto/submodel.dto";
 
 export const ApiGetShellsPath = "/:id/shells";
 export function ApiGetShells() {
@@ -17,10 +12,16 @@ export function ApiGetShells() {
     Get(ApiGetShellsPath),
   );
 }
-export const ApiGetSubmodelsPath = "/:id/submodels";
+export const ApiSubmodelsPath = "/:id/submodels";
 export function ApiGetSubmodels() {
   return applyDecorators(
-    Get(ApiGetSubmodelsPath),
+    Get(ApiSubmodelsPath),
+  );
+}
+
+export function ApiPostSubmodel() {
+  return applyDecorators(
+    Post(ApiSubmodelsPath),
   );
 }
 
@@ -38,12 +39,19 @@ export function ApiGetSubmodelValue() {
   );
 }
 
-export const ApiGetSubmodelElementsPath = "/:id/submodels/:submodelId/submodel-elements";
+export const ApiSubmodelElementsPath = "/:id/submodels/:submodelId/submodel-elements";
 export function ApiGetSubmodelElements() {
   return applyDecorators(
-    Get(ApiGetSubmodelElementsPath),
+    Get(ApiSubmodelElementsPath),
   );
 }
+
+export function ApiPostSubmodelElement() {
+  return applyDecorators(
+    Post(ApiSubmodelElementsPath),
+  );
+}
+
 export const ApiGetSubmodelElementByIdPath = "/:id/submodels/:submodelId/submodel-elements/:idShortPath";
 export function ApiGetSubmodelElementById() {
   return applyDecorators(
@@ -113,3 +121,6 @@ export const CursorQueryParamSchema = z.string().optional().meta({
 });
 
 export const CursorQueryParam = () => Query("cursor", new ZodValidationPipe(CursorQueryParamSchema));
+
+export const SubmodelRequestBody = () => Body(new ZodValidationPipe(SubmodelRequestDtoSchema));
+export const SubmodelElementRequestBody = () => Body(new ZodValidationPipe(SubmodelElementSchema));

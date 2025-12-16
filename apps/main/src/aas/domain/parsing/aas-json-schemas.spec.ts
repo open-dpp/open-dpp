@@ -2,12 +2,12 @@ import { expect } from "@jest/globals";
 import { z } from "zod";
 import { DataTypeDef } from "../common/data-type-def";
 
-import { SubmodelBaseUnionSchema } from "./submodel-base/submodel-base-union-schema";
+import { SubmodelElementSchema } from "./submodel-base/submodel-element-schema";
 
 describe("zod-schemas", () => {
   it("should parse discriminated union correctly", () => {
     const schema = z.object({
-      submodels: SubmodelBaseUnionSchema.array(),
+      submodels: SubmodelElementSchema.array(),
     });
 
     const submodels = [

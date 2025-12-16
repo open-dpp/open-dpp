@@ -12,11 +12,11 @@ import { RelationshipElementDbSchema } from "./relationship-element-db-schema";
 import { SubmodelElementCollectionDbSchemaImpl } from "./submodel-element-collection-db-schema";
 import { SubmodelElementListDbSchemaImpl } from "./submodel-element-list-db-schema";
 
-export const SubmodelBaseUnionDbSchema: z.ZodTypeAny = z.lazy(() =>
-  SubmodelBaseUnionSchemaDbImpl(),
+export const SubmodelElementDbSchema: z.ZodTypeAny = z.lazy(() =>
+  SubmodelElementSchemaDbImpl(),
 );
 
-export function SubmodelBaseUnionSchemaDbImpl() {
+export function SubmodelElementSchemaDbImpl() {
   return z.discriminatedUnion("modelType", [
     AnnotatedRelationshipElementDbSchemaImpl().extend({
       modelType: z.literal(KeyTypes.AnnotatedRelationshipElement),

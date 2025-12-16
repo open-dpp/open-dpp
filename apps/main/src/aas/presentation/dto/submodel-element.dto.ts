@@ -1,13 +1,16 @@
 import { z } from "zod";
 import {
-  SubmodelBaseResponseUnionSchema,
-} from "../../domain/parsing/submodel-base/submodel-base-union-schema";
+  SubmodelElementSchema,
+} from "../../domain/parsing/submodel-base/submodel-element-schema";
 import { PagingMetadataDtoSchema } from "./paging-metadata.dto";
+
+export const SubmodelBaseUnionDtoSchema = SubmodelElementSchema.meta({ id: "SubmodelElement" });
 
 export const SubmodelElementPaginationResponseDtoSchema = z.object({
   ...PagingMetadataDtoSchema.shape,
-  result: SubmodelBaseResponseUnionSchema.array(),
+  result: SubmodelBaseUnionDtoSchema.array(),
 }).meta({ id: "SubmodelElements" });
 
 export type SubmodelElementPaginationResponseDto = z.infer<typeof SubmodelElementPaginationResponseDtoSchema>;
-export type SubmodelElementResponseDto = z.infer<typeof SubmodelBaseResponseUnionSchema>;
+export type SubmodelElementRequestDto = z.infer<typeof SubmodelBaseUnionDtoSchema>;
+export type SubmodelElementResponseDto = z.infer<typeof SubmodelBaseUnionDtoSchema>;

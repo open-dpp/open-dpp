@@ -16,15 +16,11 @@ import {
 } from "./submodel-element-collection-json-schema";
 import { SubmodelElementListJsonSchemaImpl } from "./submodel-element-list-json-schema";
 
-export const SubmodelBaseUnionSchema: z.ZodTypeAny = z.lazy(() =>
-  SubmodelBaseUnionSchemaImpl(),
+export const SubmodelElementSchema: z.ZodTypeAny = z.lazy(() =>
+  SubmodelElementSchemaImpl(),
 );
 
-export const SubmodelBaseResponseUnionSchema: z.ZodTypeAny = z.lazy(() =>
-  SubmodelBaseUnionSchemaImpl(),
-).meta({ id: "SubmodelElement" });
-
-export function SubmodelBaseUnionSchemaImpl() {
+export function SubmodelElementSchemaImpl() {
   return z.discriminatedUnion("modelType", [
     AnnotatedRelationshipElementJsonSchemaImpl().extend({
       modelType: z.literal(KeyTypes.AnnotatedRelationshipElement),

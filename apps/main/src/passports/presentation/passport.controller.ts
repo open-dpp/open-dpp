@@ -1,4 +1,6 @@
 import type express from "express";
+import type { SubmodelElementRequestDto } from "../../aas/presentation/dto/submodel-element.dto";
+import type { SubmodelRequestDto } from "../../aas/presentation/dto/submodel.dto";
 import { Controller } from "@nestjs/common";
 import { Pagination } from "../../aas/domain/pagination";
 
@@ -11,17 +13,19 @@ import {
   ApiGetSubmodelElementValue,
   ApiGetSubmodels,
   ApiGetSubmodelValue,
+  ApiPostSubmodel,
+  ApiPostSubmodelElement,
   CursorQueryParam,
   IdParam,
   IdShortPathParam,
   LimitQueryParam,
   RequestParam,
+  SubmodelElementRequestBody,
   SubmodelIdParam,
+  SubmodelRequestBody,
 } from "../../aas/presentation/aas.decorators";
-import { IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
-import {
-  AssetAdministrationShellResponseDto,
-} from "../../aas/presentation/dto/asset-administration-shell.dto";
+import { IAasCreateEndpoints, IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
+import { AssetAdministrationShellResponseDto } from "../../aas/presentation/dto/asset-administration-shell.dto";
 import {
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
@@ -33,7 +37,7 @@ import { AuthService } from "../../auth/auth.service";
 import { PassportRepository } from "../infrastructure/passport.repository";
 
 @Controller("/passports")
-export class PassportController implements IAasReadEndpoints {
+export class PassportController implements IAasReadEndpoints, IAasCreateEndpoints {
   constructor(
     private readonly environmentService: EnvironmentService,
     private readonly authService: AuthService,
@@ -65,6 +69,16 @@ export class PassportController implements IAasReadEndpoints {
     return await this.environmentService.getSubmodels(environment, pagination);
   }
 
+  @ApiPostSubmodel()
+  async createSubmodel(
+    @IdParam() id: string,
+    @SubmodelRequestBody() body: SubmodelRequestDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelResponseDto> {
+    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.passportRepository, id, req);
+    return await this.environmentService.addSubmodelToEnvironment(environment, body);
+  }
+
   @ApiGetSubmodelById()
   async getSubmodelById(
     @IdParam() id: string,
@@ -85,13 +99,24 @@ export class PassportController implements IAasReadEndpoints {
     return await this.environmentService.getSubmodelValue(environment, submodelId);
   }
 
+  @ApiPostSubmodelElement()
+  async createSubmodelElement(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementResponseDto> {
+    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.passportRepository, id, req);
+    return await this.environmentService.addSubmodelElement(environment, submodelId, body);
+  }
+
   @ApiGetSubmodelElements()
   async getSubmodelElements(
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @LimitQueryParam() limit: number | undefined,
-    @CursorQueryParam() cursor: string | undefined,
-    @RequestParam() req: express.Request,
+    @CursorQueryParam() cursor: string | undefined, @RequestParam()
+    req: express.Request,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.passportRepository, id, req);
     const pagination = Pagination.create({ limit, cursor });

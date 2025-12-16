@@ -5,12 +5,12 @@ import { QualifierDbSchema } from "./common/qualifier-db-schema";
 import { ReferenceDbSchema } from "./common/reference-db-schema";
 import { EmbeddedDataSpecificationDbSchema } from "./embedded-data-specification-db-schema";
 import { ExtensionDbSchema } from "./extension-db-schema";
-import { SubmodelBaseUnionDbSchema } from "./submodel-base/submodel-base-union-db-schema";
+import { SubmodelElementDbSchema } from "./submodel-base/submodel-element-db-schema";
 
 export type EmbeddedDataSpecificationDb = z.infer<typeof EmbeddedDataSpecificationDbSchema>;
 export type QualifierDb = z.infer<typeof QualifierDbSchema>;
 
 export type ExtensionDb = z.infer<typeof ExtensionDbSchema>;
-export type SubmodelBaseUnionDb = z.infer<typeof SubmodelBaseUnionDbSchema>;
+export type SubmodelBaseUnionDb = z.infer<typeof SubmodelElementDbSchema>;
 export type AssetInformationDb = z.infer<typeof AssetInformationDbSchema>;
 export type ReferenceDb = z.infer<typeof ReferenceDbSchema>;

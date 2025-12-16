@@ -1,4 +1,5 @@
 import { NotFoundException } from "@nestjs/common";
+import { ValueError } from "@open-dpp/exception";
 import { AdministrativeInformation } from "../common/administrative-information";
 import { IHasDataSpecification } from "../common/has-data-specification";
 import { ModellingKindType } from "../common/has-kind";
@@ -149,8 +150,12 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return current;
   }
 
-  public addSubmodelElement(submodelElement: ISubmodelBase) {
+  public addSubmodelElement(submodelElement: ISubmodelBase): ISubmodelBase {
+    if (this.submodelElements.find(el => el.idShort === submodelElement.idShort)) {
+      throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
+    }
     this.submodelElements.push(submodelElement);
+    return submodelElement;
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {

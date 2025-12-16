@@ -17,13 +17,18 @@ import { EmailService } from "../../email/email.service";
 import { AasModule } from "../aas.module";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 
-import { SubmodelBaseUnionSchema } from "../domain/parsing/submodel-base/submodel-base-union-schema";
+import { SubmodelElementSchema } from "../domain/parsing/submodel-base/submodel-element-schema";
 import { SubmodelJsonSchema } from "../domain/parsing/submodel-base/submodel-json-schema";
 import { IPersistable } from "../domain/persistable";
-import { Submodel } from "../domain/submodel-base/submodel";
+import { IdShortPath, Submodel } from "../domain/submodel-base/submodel";
 import { aasPlainFactory } from "../fixtures/aas.factory";
 
-import { submodelCarbonFootprintPlainFactory, submodelDesignOfProductPlainFactory } from "../fixtures/submodel.factory";
+import { propertyPlainFactory } from "../fixtures/submodel-element.factory";
+import {
+  submodelBillOfMaterialPlainFactory,
+  submodelCarbonFootprintPlainFactory,
+  submodelDesignOfProductPlainFactory,
+} from "../fixtures/submodel.factory";
 import { AasRepository } from "../infrastructure/aas.repository";
 import {
   AssetAdministrationShellDoc,
@@ -143,6 +148,21 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     expect(response.body).toEqual(SubmodelJsonSchema.parse(submodels[1].toPlain()));
   }
 
+  async function assertPostSubmodel(createEntity: CreateEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const passport = await createEntity(org.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+    const submodelJson = submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } });
+
+    const response = await request(app.getHttpServer())
+      .post(`${basePath}/${passport.id}/submodels`)
+      .set("Cookie", userCookie)
+      .send(submodelJson);
+    expect(response.status).toEqual(201);
+    const foundSubmodel = await submodelRepository.findOneOrFail(response.body.id);
+    expect(response.body).toEqual(SubmodelJsonSchema.parse(foundSubmodel.toPlain()));
+  }
+
   async function assertGetSubmodelElements(createEntity: CreateEntity) {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const entity = await createEntity(org.id);
@@ -152,7 +172,23 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       .send();
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toEqual(submodels[1].submodelElements[submodels[1].submodelElements.length - 1].idShort);
-    expect(response.body.result).toEqual(SubmodelBaseUnionSchema.array().parse(submodels[1].submodelElements.map(s => s.toPlain())));
+    expect(response.body.result).toEqual(SubmodelElementSchema.array().parse(submodels[1].submodelElements.map(s => s.toPlain())));
+  }
+
+  async function assertPostSubmodelElement(createEntity: CreateEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const entity = await createEntity(org.id);
+    const submodelElementJson = propertyPlainFactory.build();
+
+    const response = await request(app.getHttpServer())
+      .post(`${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements`)
+      .set("Cookie", userCookie)
+      .send(submodelElementJson);
+    expect(response.status).toEqual(201);
+    const foundSubmodelElement = await submodelRepository.findOneOrFail(submodels[1].id);
+    expect(response.body).toEqual(SubmodelElementSchema.parse(foundSubmodelElement.findSubmodelElementOrFail(
+      IdShortPath.create({ path: submodelElementJson.idShort }),
+    ).toPlain()));
   }
 
   async function assertGetSubmodelElementById(createEntity: CreateEntity) {
@@ -315,8 +351,10 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       getShells: assertGetShells,
       getSubmodels: assertGetSubmodels,
       getSubmodelById: assertGetSubmodelById,
+      postSubmodel: assertPostSubmodel,
       getSubmodelValue: assertGetSubmodelValue,
       getSubmodelElements: assertGetSubmodelElements,
+      postSubmodelElement: assertPostSubmodelElement,
       getSubmodelElementById: assertGetSubmodelElementById,
       getSubmodelElementValue: assertGetSubmodelElementValue,
     },

@@ -3,7 +3,7 @@ import { ModellingKindEnum } from "../../common/has-kind";
 import { AdministrativeInformationJsonSchema } from "../administrative-information-json-schema";
 import { ExtensionJsonSchema } from "../extension-json-schema";
 import { SubmodelBaseJsonSchema } from "./submodel-base-json-schema";
-import { SubmodelBaseUnionSchema } from "./submodel-base-union-schema";
+import { SubmodelElementSchema } from "./submodel-element-schema";
 
 export const SubmodelJsonSchema = z.object({
   ...SubmodelBaseJsonSchema.shape,
@@ -11,5 +11,5 @@ export const SubmodelJsonSchema = z.object({
   extensions: ExtensionJsonSchema.array().default([]),
   administration: z.nullish(AdministrativeInformationJsonSchema),
   kind: z.nullish(ModellingKindEnum),
-  submodelElements: SubmodelBaseUnionSchema.array().default([]),
+  submodelElements: SubmodelElementSchema.array().default([]),
 }).meta({ id: "Submodel" });

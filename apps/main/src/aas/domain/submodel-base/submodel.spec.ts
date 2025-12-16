@@ -1,10 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { beforeAll, expect } from "@jest/globals";
+import { ValueError } from "@open-dpp/exception";
 import {
   submodelBillOfMaterialPlainFactory,
   submodelCarbonFootprintPlainFactory,
   submodelDesignOfProductPlainFactory,
 } from "../../fixtures/submodel.factory";
+import { DataTypeDef } from "../common/data-type-def";
+import { Property } from "./property";
 import { registerSubmodelClasses } from "./register-submodel-classes";
 import { IdShortPath, Submodel } from "./submodel";
 
@@ -25,7 +28,6 @@ describe("submodel", () => {
     element = submodel.findSubmodelElement(IdShortPath.create({ path: "ProductCarbonFootprint_A1A3.PCFGoodsAddressHandover.Street" }));
     expect(element?.idShort).toBe("Street");
   });
-
   it("should fail to find submodel element by idShortPath", () => {
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
@@ -38,6 +40,15 @@ describe("submodel", () => {
 
     element = submodel.findSubmodelElement(IdShortPath.create({ path: "ProductCarbonFootprint_A1A3.PCFGoodsAddressHandoverUnknown.Street" }));
     expect(element).toBeUndefined();
+  });
+  it("should add submodel element", () => {
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodelElement = Property.create({ idShort: "prop1", value: "10", valueType: DataTypeDef.Double });
+    submodel.addSubmodelElement(submodelElement);
+    expect(submodel.findSubmodelElementOrFail(IdShortPath.create({ path: submodelElement.idShort }))).toEqual(submodelElement);
+    expect(() => submodel.addSubmodelElement(submodelElement)).toThrow(new ValueError(`Submodel element with idShort prop1 already exists`));
   });
 
   it("should get value representation for design submodel", () => {

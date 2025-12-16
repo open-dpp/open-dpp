@@ -1,6 +1,7 @@
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { Document, Model as MongooseModel } from "mongoose";
 import { ZodObject } from "zod";
+import { ReferenceJsonSchema } from "../domain/parsing/common/reference-json-schema";
 import { IPersistable } from "../domain/persistable";
 
 export async function convertToDomain<T>(
@@ -8,6 +9,9 @@ export async function convertToDomain<T>(
   fromPlain: (plain: unknown) => T,
 ): Promise<T> {
   const plain = mongoDoc.toObject();
+  if (plain.submodelElements?.[0].semanticId) {
+    ReferenceJsonSchema.parse(plain.submodelElements[0].semanticId);
+  }
   return fromPlain({ ...plain, id: plain._id });
 }
 

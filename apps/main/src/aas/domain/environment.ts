@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { ValueError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";
 import { AssetKindType } from "./asset-kind-enum";
@@ -36,23 +37,27 @@ export class Environment {
     );
   }
 
-  createAssetAdministrationShell(assetKind: AssetKindType): AssetAdministrationShell {
+  addAssetAdministrationShell(assetAdministrationShell: AssetAdministrationShell | { assetKind: AssetKindType }): AssetAdministrationShell {
+    if (assetAdministrationShell instanceof AssetAdministrationShell) {
+      this.assetAdministrationShells.push(assetAdministrationShell.id);
+      return assetAdministrationShell;
+    }
     const id = randomUUID();
-    const aas = AssetAdministrationShell.create({
+    const newAas = AssetAdministrationShell.create({
       id,
-      assetInformation: AssetInformation.create({ assetKind, globalAssetId: id }),
+      assetInformation: AssetInformation.create({ assetKind: assetAdministrationShell.assetKind, globalAssetId: id }),
       administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
     });
-    this.assetAdministrationShells.push(aas.id);
-    return aas;
-  }
-
-  addAssetAdministrationShell(assetAdministrationShell: AssetAdministrationShell) {
-    this.assetAdministrationShells.push(assetAdministrationShell.id);
+    this.assetAdministrationShells.push(newAas.id);
+    return newAas;
   }
 
   addSubmodel(submodel: Submodel) {
+    if (this.submodels.includes(submodel.id)) {
+      throw new ValueError(`Submodel with id ${submodel.id} already exists`);
+    }
     this.submodels.push(submodel.id);
+    return submodel;
   }
 
   toPlain() {

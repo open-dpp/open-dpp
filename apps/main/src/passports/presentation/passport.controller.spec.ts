@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 
 import { Environment } from "../../aas/domain/environment";
-
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
@@ -14,7 +13,7 @@ describe("passportController", () => {
 
   async function createPassport(orgId: string): Promise<Passport> {
     const { aas, submodels } = ctx.getAasObjects();
-    return ctx.getRepositories().save(Passport.create({
+    return ctx.getRepositories().dppIdentifiableRepository.save(Passport.create({
       id: randomUUID(),
       organizationId: orgId,
       environment: Environment.create({
@@ -32,6 +31,10 @@ describe("passportController", () => {
   it(`/GET submodels`, async () => {
     await ctx.asserts.getSubmodels(createPassport);
   });
+
+  it(`/POST submodel`, async () => {
+    await ctx.asserts.postSubmodel(createPassport);
+  });
   //
   it(`/GET submodel by id`, async () => {
     await ctx.asserts.getSubmodelById(createPassport);
@@ -43,6 +46,10 @@ describe("passportController", () => {
 
   it(`/GET submodel elements`, async () => {
     await ctx.asserts.getSubmodelElements(createPassport);
+  });
+
+  it(`/POST submodel element`, async () => {
+    await ctx.asserts.postSubmodelElement(createPassport);
   });
 
   it(`/GET submodel element by id`, async () => {

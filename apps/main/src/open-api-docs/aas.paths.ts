@@ -1,13 +1,13 @@
-import { SubmodelBaseUnionSchema } from "../aas/domain/parsing/submodel-base/submodel-base-union-schema";
+import { SubmodelElementSchema } from "../aas/domain/parsing/submodel-base/submodel-element-schema";
 import { SubmodelJsonSchema } from "../aas/domain/parsing/submodel-base/submodel-json-schema";
 import {
   ApiGetShellsPath,
   ApiGetSubmodelByIdPath,
   ApiGetSubmodelElementByIdPath,
-  ApiGetSubmodelElementsPath,
   ApiGetSubmodelElementValuePath,
-  ApiGetSubmodelsPath,
   ApiGetSubmodelValuePath,
+  ApiSubmodelElementsPath,
+  ApiSubmodelsPath,
   CursorQueryParamSchema,
   IdParamSchema,
   IdShortPathParamSchema,
@@ -18,11 +18,13 @@ import {
   AssetAdministrationShellPaginationResponseDtoSchema,
 } from "../aas/presentation/dto/asset-administration-shell.dto";
 import { SubmodelElementPaginationResponseDtoSchema } from "../aas/presentation/dto/submodel-element.dto";
-import { SubmodelPaginationResponseDtoSchema } from "../aas/presentation/dto/submodel.dto";
+import { SubmodelPaginationResponseDtoSchema, SubmodelRequestDtoSchema } from "../aas/presentation/dto/submodel.dto";
 import { ValueResponseDtoSchema } from "../aas/presentation/dto/value-response.dto";
+import { TemplateDtoSchema } from "../templates/presentation/dto/template.dto";
 
 const HTTPCode = {
   OK: 200,
+  CREATED: 201,
 } as const;
 
 const ContentType = {
@@ -45,7 +47,7 @@ export function createAasPaths(tag: string) {
         },
       },
     },
-    [`${tag}${ApiGetSubmodelsPath}`]: {
+    [`${tag}${ApiSubmodelsPath}`]: {
       get: {
         tags: [tag],
         summary: `Returns all Submodels of the ${tag}`,
@@ -58,16 +60,20 @@ export function createAasPaths(tag: string) {
           },
         },
       },
-    },
-    [`${tag}${ApiGetSubmodelsPath}`]: {
-      get: {
+      post: {
+        operationId: "createSubmodel",
         tags: [tag],
-        summary: `Returns all Submodels of the ${tag}`,
-        parameters: [IdParamSchema, LimitQueryParamSchema, CursorQueryParamSchema],
+        summary: `Creates submodel for ${tag.slice(0, -1)}`,
+        parameters: [IdParamSchema],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: SubmodelRequestDtoSchema },
+          },
+        },
         responses: {
-          [HTTPCode.OK]: {
+          [HTTPCode.CREATED]: {
             content: {
-              [ContentType.JSON]: { schema: SubmodelPaginationResponseDtoSchema },
+              [ContentType.JSON]: { schema: SubmodelJsonSchema },
             },
           },
         },
@@ -101,7 +107,7 @@ export function createAasPaths(tag: string) {
         },
       },
     },
-    [`${tag}${ApiGetSubmodelElementsPath}`]: {
+    [`${tag}${ApiSubmodelElementsPath}`]: {
       get: {
         tags: [tag],
         summary: `Returns all Submodel Elements of the given Submodel`,
@@ -110,6 +116,23 @@ export function createAasPaths(tag: string) {
           [HTTPCode.OK]: {
             content: {
               [ContentType.JSON]: { schema: SubmodelElementPaginationResponseDtoSchema },
+            },
+          },
+        },
+      },
+      post: {
+        tags: [tag],
+        summary: `Add Submodel Element to the given Submodel`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: SubmodelElementSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelElementSchema },
             },
           },
         },
@@ -123,7 +146,7 @@ export function createAasPaths(tag: string) {
         responses: {
           [HTTPCode.OK]: {
             content: {
-              [ContentType.JSON]: { schema: SubmodelBaseUnionSchema },
+              [ContentType.JSON]: { schema: SubmodelElementSchema },
             },
           },
         },
@@ -146,7 +169,27 @@ export function createAasPaths(tag: string) {
   };
 }
 
+function createTemplatePaths() {
+  const tag = "templates";
+  return {
+    ...createAasPaths(tag),
+    [`${tag}`]: {
+      post: {
+        tags: [tag],
+        summary: `Creates template`,
+        responses: {
+          [HTTPCode.CREATED]: {
+            content: {
+              [ContentType.JSON]: { schema: TemplateDtoSchema },
+            },
+          },
+        },
+      },
+    },
+  };
+}
+
 export const aasPaths = {
   ...createAasPaths("passports"),
-  ...createAasPaths("templates"),
+  ...createTemplatePaths(),
 };

@@ -5,7 +5,7 @@ import { KeyJsonSchema } from "./key-json-schema";
 export const ReferenceJsonSchema: z.ZodType<any> = z.lazy(() =>
   z.object({
     type: ReferenceTypesEnum,
-    referredSemanticId: ReferenceJsonSchema.optional(),
+    referredSemanticId: ReferenceJsonSchema.nullish(),
     keys: z.array(KeyJsonSchema),
   }),
 );

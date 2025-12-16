@@ -1,4 +1,6 @@
 import type express from "express";
+import type { SubmodelElementRequestDto } from "../../aas/presentation/dto/submodel-element.dto";
+import type { SubmodelRequestDto } from "../../aas/presentation/dto/submodel.dto";
 import { Controller, Post, Req, UnauthorizedException } from "@nestjs/common";
 import { fromNodeHeaders } from "better-auth/node";
 import { AssetKind } from "../../aas/domain/asset-kind-enum";
@@ -12,20 +14,28 @@ import {
   ApiGetSubmodelElementValue,
   ApiGetSubmodels,
   ApiGetSubmodelValue,
+  ApiPostSubmodel,
+  ApiPostSubmodelElement,
   CursorQueryParam,
   IdParam,
   IdShortPathParam,
   LimitQueryParam,
   RequestParam,
+  SubmodelElementRequestBody,
   SubmodelIdParam,
+  SubmodelRequestBody,
 } from "../../aas/presentation/aas.decorators";
-import { IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
+import { IAasCreateEndpoints, IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
 import { AssetAdministrationShellResponseDto } from "../../aas/presentation/dto/asset-administration-shell.dto";
 import {
   SubmodelElementPaginationResponseDto,
+
   SubmodelElementResponseDto,
 } from "../../aas/presentation/dto/submodel-element.dto";
-import { SubmodelPaginationResponseDto, SubmodelResponseDto } from "../../aas/presentation/dto/submodel.dto";
+import {
+  SubmodelPaginationResponseDto,
+  SubmodelResponseDto,
+} from "../../aas/presentation/dto/submodel.dto";
 import { ValueResponseDto } from "../../aas/presentation/dto/value-response.dto";
 import { EnvironmentService, loadEnvironmentAndCheckOwnership } from "../../aas/presentation/environment.service";
 import { AuthService } from "../../auth/auth.service";
@@ -34,7 +44,7 @@ import { TemplateRepository } from "../infrastructure/template.repository";
 import { TemplateDto, TemplateDtoSchema } from "./dto/template.dto";
 
 @Controller("/templates")
-export class TemplateController implements IAasReadEndpoints {
+export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoints {
   constructor(private readonly environmentService: EnvironmentService, private readonly authService: AuthService, private readonly templateRepository: TemplateRepository) {
   }
 
@@ -50,6 +60,16 @@ export class TemplateController implements IAasReadEndpoints {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getSubmodels(environment, pagination);
+  }
+
+  @ApiPostSubmodel()
+  async createSubmodel(
+    @IdParam() id: string,
+    @SubmodelRequestBody() body: SubmodelRequestDto,
+    @Req() req: express.Request,
+  ): Promise<SubmodelResponseDto> {
+    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
+    return await this.environmentService.addSubmodelToEnvironment(environment, body);
   }
 
   @ApiGetSubmodelById()
@@ -73,6 +93,17 @@ export class TemplateController implements IAasReadEndpoints {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getSubmodelElements(environment, submodelId, pagination);
+  }
+
+  @ApiPostSubmodelElement()
+  async createSubmodelElement(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementResponseDto> {
+    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
+    return await this.environmentService.addSubmodelElement(environment, submodelId, body);
   }
 
   @ApiGetSubmodelElementById()

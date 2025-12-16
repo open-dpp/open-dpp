@@ -6,9 +6,9 @@ import { ReferenceDbSchema } from "./reference-db-schema";
 export const QualifierDbSchema = z.object({
   type: z.string(),
   valueType: ValueTypeDbSchema,
-  semanticId: ReferenceDbSchema.optional(),
+  semanticId: ReferenceDbSchema.nullish(),
   supplementalSemanticIds: z.array(ReferenceDbSchema),
   kind: QualifierKindEnum,
-  value: z.string().optional(),
-  valueId: ReferenceDbSchema.optional(),
+  value: z.string().nullish(),
+  valueId: ReferenceDbSchema.nullish(),
 });

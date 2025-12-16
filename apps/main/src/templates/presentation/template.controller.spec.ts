@@ -37,6 +37,10 @@ describe("templateController", () => {
     await ctx.asserts.getSubmodels(createTemplate);
   });
 
+  it(`/POST submodel`, async () => {
+    await ctx.asserts.postSubmodel(createTemplate);
+  });
+
   it(`/GET submodel by id`, async () => {
     await ctx.asserts.getSubmodelById(createTemplate);
   });
@@ -47,6 +51,10 @@ describe("templateController", () => {
 
   it(`/GET submodel elements`, async () => {
     await ctx.asserts.getSubmodelElements(createTemplate);
+  });
+
+  it(`/POST submodel element`, async () => {
+    await ctx.asserts.postSubmodelElement(createTemplate);
   });
 
   it(`/GET submodel element by id`, async () => {

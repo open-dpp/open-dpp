@@ -4,7 +4,7 @@ import { ValueTypeDbSchema } from "../common/basic-db-schema";
 import { ReferenceDbSchema } from "../common/reference-db-schema";
 import { ExtensionDbSchema } from "../extension-db-schema";
 import { SubmodelBaseDbSchema } from "./submodel-base-db-schema";
-import { SubmodelBaseUnionDbSchema } from "./submodel-base-union-db-schema";
+import { SubmodelElementDbSchema } from "./submodel-element-db-schema";
 
 export const SubmodelElementListDbSchema = z.lazy(() =>
   SubmodelElementListDbSchemaImpl(),
@@ -18,6 +18,6 @@ export function SubmodelElementListDbSchemaImpl() {
     orderRelevant: z.nullish(z.boolean()),
     semanticIdListElement: z.nullish(ReferenceDbSchema),
     valueTypeListElement: z.nullish(ValueTypeDbSchema),
-    value: SubmodelBaseUnionDbSchema.array().default([]),
+    value: SubmodelElementDbSchema.array().default([]),
   });
 };

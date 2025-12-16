@@ -6,9 +6,9 @@ import { ReferenceJsonSchema } from "./reference-json-schema";
 export const QualifierJsonSchema = z.object({
   type: z.string(),
   valueType: ValueTypeSchema,
-  semanticId: ReferenceJsonSchema.optional(),
+  semanticId: ReferenceJsonSchema.nullish(),
   supplementalSemanticIds: z.array(ReferenceJsonSchema).default([]),
   kind: QualifierKindEnum,
-  value: z.string().optional(),
-  valueId: ReferenceJsonSchema.optional(),
+  value: z.string().nullish(),
+  valueId: ReferenceJsonSchema.nullish(),
 });
