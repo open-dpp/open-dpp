@@ -224,6 +224,22 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     });
   }
 
+  async function assertPostSubmodelElementAtIdShortPath(createEntity: CreateEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const entity = await createEntity(org.id);
+    const submodelElementJson = propertyPlainFactory.build();
+
+    const response = await request(app.getHttpServer())
+      .post(`${basePath}/${entity.id}/submodels/${btoa(submodels[0].id)}/submodel-elements/Design_V01.Author`)
+      .set("Cookie", userCookie)
+      .send(submodelElementJson);
+    expect(response.status).toEqual(201);
+    const foundSubmodelElement = await submodelRepository.findOneOrFail(submodels[0].id);
+    expect(response.body).toEqual(SubmodelElementSchema.parse(foundSubmodelElement.findSubmodelElementOrFail(
+      IdShortPath.create({ path: `Design_V01.Author.${submodelElementJson.idShort}` }),
+    ).toPlain()));
+  }
+
   async function assertGetSubmodelValue(createEntity: CreateEntity) {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const entity = await createEntity(org.id);
@@ -356,6 +372,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       getSubmodelValue: assertGetSubmodelValue,
       getSubmodelElements: assertGetSubmodelElements,
       postSubmodelElement: assertPostSubmodelElement,
+      postSubmodelElementAtIdShortPath: assertPostSubmodelElementAtIdShortPath,
       getSubmodelElementById: assertGetSubmodelElementById,
       getSubmodelElementValue: assertGetSubmodelElementValue,
     },

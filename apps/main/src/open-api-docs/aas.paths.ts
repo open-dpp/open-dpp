@@ -151,6 +151,23 @@ export function createAasPaths(tag: string) {
           },
         },
       },
+      post: {
+        tags: [tag],
+        summary: `Creates a new Submodel Element at a specified path within submodel elements hierarchy`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: SubmodelElementSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelElementSchema },
+            },
+          },
+        },
+      },
     },
     [`${tag}${ApiGetSubmodelElementValuePath}`]: {
       get: {

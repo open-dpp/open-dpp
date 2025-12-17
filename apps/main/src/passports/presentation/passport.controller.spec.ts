@@ -52,6 +52,10 @@ describe("passportController", () => {
     await ctx.asserts.postSubmodelElement(createPassport);
   });
 
+  it(`/POST submodel element at a specified path within submodel elements hierarchy`, async () => {
+    await ctx.asserts.postSubmodelElementAtIdShortPath(createPassport);
+  });
+
   it(`/GET submodel element by id`, async () => {
     await ctx.asserts.getSubmodelElementById(createPassport);
   });

@@ -37,5 +37,17 @@ export interface IAasReadEndpoints {
 
 export interface IAasCreateEndpoints {
   createSubmodel: (id: string, body: SubmodelRequestDto, req: express.Request) => Promise<SubmodelResponseDto>;
-  createSubmodelElement: (id: string, submodelId: string, body: SubmodelElementRequestDto, req: express.Request) => Promise<SubmodelElementResponseDto>;
+  createSubmodelElement: (
+    id: string,
+    submodelId: string,
+    body: SubmodelElementRequestDto,
+    req: express.Request,
+  ) => Promise<SubmodelElementResponseDto>;
+  createSubmodelElementAtIdShortPath: (
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    body: SubmodelElementRequestDto,
+    req: express.Request,
+  ) => Promise<SubmodelElementResponseDto>;
 }

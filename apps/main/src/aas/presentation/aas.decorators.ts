@@ -59,6 +59,12 @@ export function ApiGetSubmodelElementById() {
   );
 }
 
+export function ApiPostSubmodelElementAtIdShortPath() {
+  return applyDecorators(
+    Post(ApiGetSubmodelElementByIdPath),
+  );
+}
+
 export const ApiGetSubmodelElementValuePath = "/:id/submodels/:submodelId/submodel-elements/:idShortPath/$value";
 export function ApiGetSubmodelElementValue() {
   return applyDecorators(

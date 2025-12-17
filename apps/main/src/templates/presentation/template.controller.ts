@@ -16,6 +16,7 @@ import {
   ApiGetSubmodelValue,
   ApiPostSubmodel,
   ApiPostSubmodelElement,
+  ApiPostSubmodelElementAtIdShortPath,
   CursorQueryParam,
   IdParam,
   IdShortPathParam,
@@ -115,6 +116,18 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
   ): Promise<SubmodelElementResponseDto> {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
     return await this.environmentService.getSubmodelElementById(environment, submodelId, idShortPath);
+  }
+
+  @ApiPostSubmodelElementAtIdShortPath()
+  async createSubmodelElementAtIdShortPath(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementResponseDto> {
+    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
+    return await this.environmentService.addSubmodelElement(environment, submodelId, body, idShortPath);
   }
 
   @ApiGetSubmodelElementValue()
