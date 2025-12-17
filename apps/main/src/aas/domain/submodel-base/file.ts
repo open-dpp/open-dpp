@@ -1,3 +1,4 @@
+import { ValueError } from "@open-dpp/exception";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -6,10 +7,10 @@ import { Extension } from "../extension";
 import { JsonVisitor } from "../parsing/json-visitor";
 import { FileJsonSchema } from "../parsing/submodel-base/file-json-schema";
 import { IVisitor } from "../visitor";
-import { ISubmodelBase } from "./submodel";
-import { SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { AasSubmodelElements, AasSubmodelElementsType } from "./aas-submodel-elements";
+import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
-export class File implements ISubmodelBase {
+export class File implements ISubmodelElement {
   private constructor(
     public readonly contentType: string,
     public readonly extensions: Array<Extension>,
@@ -45,7 +46,7 @@ export class File implements ISubmodelBase {
     );
   }
 
-  static fromPlain(data: unknown): ISubmodelBase {
+  static fromPlain(data: unknown): ISubmodelElement {
     const parsed = FileJsonSchema.parse(data);
     const baseObjects = submodelBasePropsFromPlain(parsed);
     return new File(
@@ -72,7 +73,15 @@ export class File implements ISubmodelBase {
     return this.accept(jsonVisitor);
   }
 
-  * getChildren(): IterableIterator<ISubmodelBase> {
+  * getSubmodelElements(): IterableIterator<ISubmodelElement> {
     yield* [];
+  }
+
+  addSubmodelElement(_submodelElement: ISubmodelElement): ISubmodelElement {
+    throw new ValueError("File cannot contain submodel elements");
+  }
+
+  getSubmodelElementType(): AasSubmodelElementsType {
+    return AasSubmodelElements.File;
   }
 }

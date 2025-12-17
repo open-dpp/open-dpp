@@ -1,10 +1,10 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
 
-import { registerSubmodelClasses } from "../domain/submodel-base/register-submodel-classes";
+import { registerSubmodelElementClasses } from "../domain/submodel-base/register-submodel-element-classes";
 
 @Injectable()
 export class SubmodelRegistryInitializer implements OnModuleInit {
   onModuleInit() {
-    registerSubmodelClasses();
+    registerSubmodelElementClasses();
   }
 }

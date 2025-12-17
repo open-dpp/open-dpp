@@ -1,3 +1,4 @@
+import { ValueError } from "@open-dpp/exception";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -6,10 +7,15 @@ import { Extension } from "../extension";
 import { JsonVisitor } from "../parsing/json-visitor";
 import { SubmodelElementCollectionJsonSchema } from "../parsing/submodel-base/submodel-element-collection-json-schema";
 import { IVisitor } from "../visitor";
-import { ISubmodelBase } from "./submodel";
-import { parseSubmodelBaseUnion, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { AasSubmodelElements, AasSubmodelElementsType } from "./aas-submodel-elements";
+import {
+  ISubmodelElement,
+  parseSubmodelBaseUnion,
+  SubmodelBaseProps,
+  submodelBasePropsFromPlain,
+} from "./submodel-base";
 
-export class SubmodelElementCollection implements ISubmodelBase {
+export class SubmodelElementCollection implements ISubmodelElement {
   private constructor(
     public readonly extensions: Array<Extension>,
     public readonly category: string | null,
@@ -20,13 +26,13 @@ export class SubmodelElementCollection implements ISubmodelBase {
     public readonly supplementalSemanticIds: Array<Reference>,
     public readonly qualifiers: Qualifier[],
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly value: Array<ISubmodelBase>,
+    public readonly value: Array<ISubmodelElement>,
   ) {
   }
 
   static create(data: SubmodelBaseProps & {
     extensions?: Array<Extension>;
-    value?: Array<ISubmodelBase>;
+    value?: Array<ISubmodelElement>;
   }) {
     return new SubmodelElementCollection(
       data.extensions ?? [],
@@ -42,11 +48,15 @@ export class SubmodelElementCollection implements ISubmodelBase {
     );
   };
 
-  addSubmodelBase(submodelBase: ISubmodelBase) {
-    this.value.push(submodelBase);
+  addSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
+    if (this.value.some(s => s.idShort === submodelElement.idShort)) {
+      throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
+    }
+    this.value.push(submodelElement);
+    return submodelElement;
   }
 
-  static fromPlain(data: unknown): ISubmodelBase {
+  static fromPlain(data: unknown): ISubmodelElement {
     const parsed = SubmodelElementCollectionJsonSchema.parse(data);
     const baseObjects = submodelBasePropsFromPlain(parsed);
     return new SubmodelElementCollection(
@@ -72,7 +82,11 @@ export class SubmodelElementCollection implements ISubmodelBase {
     return this.accept(jsonVisitor);
   }
 
-  * getChildren(): IterableIterator<ISubmodelBase> {
+  * getSubmodelElements(): IterableIterator<ISubmodelElement> {
     yield* this.value;
+  }
+
+  getSubmodelElementType(): AasSubmodelElementsType {
+    return AasSubmodelElements.SubmodelElementCollection;
   }
 }

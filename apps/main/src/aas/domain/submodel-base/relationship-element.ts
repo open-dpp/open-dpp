@@ -1,3 +1,4 @@
+import { ValueError } from "@open-dpp/exception";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -6,15 +7,15 @@ import { Extension } from "../extension";
 import { JsonVisitor } from "../parsing/json-visitor";
 import { RelationshipElementJsonSchema } from "../parsing/submodel-base/relationship-element-json-schema";
 import { IVisitor } from "../visitor";
-import { ISubmodelBase } from "./submodel";
-import { SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { AasSubmodelElements, AasSubmodelElementsType } from "./aas-submodel-elements";
+import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
 export class IRelationshipElement {
   first: Reference;
   second: Reference;
 }
 
-export class RelationshipElement implements ISubmodelBase, IRelationshipElement {
+export class RelationshipElement implements ISubmodelElement, IRelationshipElement {
   constructor(
     public readonly first: Reference,
     public readonly second: Reference,
@@ -53,7 +54,7 @@ export class RelationshipElement implements ISubmodelBase, IRelationshipElement 
     );
   }
 
-  static fromPlain(data: unknown): ISubmodelBase {
+  static fromPlain(data: unknown): ISubmodelElement {
     const parsed = RelationshipElementJsonSchema.parse(data);
     const baseObjects = submodelBasePropsFromPlain(parsed);
     return new RelationshipElement(
@@ -80,7 +81,15 @@ export class RelationshipElement implements ISubmodelBase, IRelationshipElement 
     return this.accept(jsonVisitor);
   }
 
-  * getChildren(): IterableIterator<ISubmodelBase> {
+  * getSubmodelElements(): IterableIterator<ISubmodelElement> {
     yield* [];
+  }
+
+  addSubmodelElement(_submodelElement: ISubmodelElement): ISubmodelElement {
+    throw new ValueError("RelationshipElement cannot contain submodel elements");
+  }
+
+  getSubmodelElementType(): AasSubmodelElementsType {
+    return AasSubmodelElements.RelationshipElement;
   }
 }

@@ -9,8 +9,8 @@ import { Pagination } from "../domain/pagination";
 import { PagingResult } from "../domain/paging-result";
 import { SubmodelElementSchema } from "../domain/parsing/submodel-base/submodel-element-schema";
 import { SubmodelJsonSchema } from "../domain/parsing/submodel-base/submodel-json-schema";
-import { IdShortPath, Submodel } from "../domain/submodel-base/submodel";
-import { parseSubmodelBaseUnion } from "../domain/submodel-base/submodel-base";
+import { Submodel } from "../domain/submodel-base/submodel";
+import { IdShortPath, parseSubmodelBaseUnion } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
 import {
   IDigitalProductPassportIdentifiableRepository,

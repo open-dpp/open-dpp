@@ -3,7 +3,7 @@ import { applyDecorators, Body, Get, Param, Post, Query, Req } from "@nestjs/com
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { z } from "zod";
 import { SubmodelElementSchema } from "../domain/parsing/submodel-base/submodel-element-schema";
-import { IdShortPath } from "../domain/submodel-base/submodel";
+import { IdShortPath } from "../domain/submodel-base/submodel-base";
 import { SubmodelRequestDtoSchema } from "./dto/submodel.dto";
 
 export const ApiGetShellsPath = "/:id/shells";

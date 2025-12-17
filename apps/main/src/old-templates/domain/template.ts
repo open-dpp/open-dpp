@@ -227,10 +227,10 @@ export class Template {
       displayName: [LanguageText.create({ language: Language.de, text: section.name })],
     });
     for (const dataField of section.dataFields) {
-      subSectionSubmodel.addSubmodelBase(dataField.toAas());
+      subSectionSubmodel.addSubmodelElement(dataField.toAas());
     }
     for (const subSection of section.subSections) {
-      subSectionSubmodel.addSubmodelBase(this.convertToSubmodelElement(this.findSectionByIdOrFail(subSection)));
+      subSectionSubmodel.addSubmodelElement(this.convertToSubmodelElement(this.findSectionByIdOrFail(subSection)));
     }
     return subSectionSubmodel;
   }

@@ -1,60 +1,25 @@
 import { NotFoundException } from "@nestjs/common";
 import { ValueError } from "@open-dpp/exception";
 import { AdministrativeInformation } from "../common/administrative-information";
-import { IHasDataSpecification } from "../common/has-data-specification";
 import { ModellingKindType } from "../common/has-kind";
-import { IHasSemantics } from "../common/has-semantics";
 import { LanguageText } from "../common/language-text";
-import { IQualifiable, Qualifier } from "../common/qualififiable";
-import { IReferable } from "../common/referable";
+import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
-import { IConvertableToPlain } from "../convertable-to-plain";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import { JsonVisitor } from "../parsing/json-visitor";
 import { SubmodelJsonSchema } from "../parsing/submodel-base/submodel-json-schema";
 import { IPersistable } from "../persistable";
 import { JsonType, ValueVisitor } from "../value-visitor";
-import { IVisitable, IVisitor } from "../visitor";
-import { parseSubmodelBaseUnion, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
-
-export class IdShortPath {
-  constructor(private readonly _segments: Array<string>) {
-  }
-
-  static create(data: { path: string }): IdShortPath {
-    return new IdShortPath(data.path.split("."));
-  }
-
-  addPathSegment(segment: string) {
-    this._segments.push(segment);
-  }
-
-  get segments(): IterableIterator<string> {
-    return this._segments[Symbol.iterator]();
-  }
-
-  toString(): string {
-    return this._segments.join(".");
-  }
-}
-
-export interface ISubmodelBase
-  extends IReferable,
-  IHasSemantics,
-  IQualifiable,
-  IVisitable,
-  IHasDataSpecification, IConvertableToPlain {
-  category: string | null;
-  idShort: string;
-  displayName: Array<LanguageText>;
-  description: Array<LanguageText>;
-  semanticId: Reference | null;
-  supplementalSemanticIds: Array<Reference>;
-  qualifiers: Qualifier[];
-  embeddedDataSpecifications: Array<EmbeddedDataSpecification>;
-  getChildren: () => IterableIterator<ISubmodelBase>;
-}
+import { IVisitor } from "../visitor";
+import {
+  IdShortPath,
+  ISubmodelBase,
+  ISubmodelElement,
+  parseSubmodelBaseUnion,
+  SubmodelBaseProps,
+  submodelBasePropsFromPlain,
+} from "./submodel-base";
 
 export class Submodel implements ISubmodelBase, IPersistable {
   private constructor(
@@ -70,7 +35,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     public readonly supplementalSemanticIds: Array<Reference>,
     public readonly qualifiers: Qualifier[],
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly submodelElements: Array<ISubmodelBase>,
+    public readonly submodelElements: Array<ISubmodelElement>,
   ) {
   }
 
@@ -80,7 +45,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
       extensions?: Array<Extension>;
       administration?: AdministrativeInformation | null;
       kind?: ModellingKindType | null;
-      submodelElements?: Array<ISubmodelBase>;
+      submodelElements?: Array<ISubmodelElement>;
     },
   ) {
     return new Submodel(
@@ -137,24 +102,30 @@ export class Submodel implements ISubmodelBase, IPersistable {
   findSubmodelElement(idShortPath: IdShortPath): ISubmodelBase | undefined {
     let current: ISubmodelBase | undefined;
 
-    let children = [...this.getChildren()];
+    let children = [...this.getSubmodelElements()];
 
     for (const segment of idShortPath.segments) {
       current = children.find(el => el.idShort === segment);
       if (!current) {
         return undefined; // path broken
       }
-      children = [...current.getChildren()]; // descend
+      children = [...current.getSubmodelElements()]; // descend
     }
 
     return current;
   }
 
-  public addSubmodelElement(submodelElement: ISubmodelBase): ISubmodelBase {
-    if (this.submodelElements.find(el => el.idShort === submodelElement.idShort)) {
-      throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
+  public addSubmodelElement(submodelElement: ISubmodelElement, idShortPath?: IdShortPath): ISubmodelElement {
+    if (idShortPath) {
+      const parent = this.findSubmodelElementOrFail(idShortPath);
+      parent.addSubmodelElement(submodelElement);
     }
-    this.submodelElements.push(submodelElement);
+    else {
+      if (this.submodelElements.find(el => el.idShort === submodelElement.idShort)) {
+        throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
+      }
+      this.submodelElements.push(submodelElement);
+    }
     return submodelElement;
   }
 
@@ -167,7 +138,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return this.accept(jsonVisitor);
   }
 
-  * getChildren(): IterableIterator<ISubmodelBase> {
+  * getSubmodelElements(): IterableIterator<ISubmodelElement> {
     yield* this.submodelElements;
   }
 }

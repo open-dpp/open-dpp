@@ -1,3 +1,4 @@
+import { ValueError } from "@open-dpp/exception";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -7,15 +8,20 @@ import { JsonVisitor } from "../parsing/json-visitor";
 import { EntityTypeJsonSchema } from "../parsing/submodel-base/entity-type-json-schema";
 import { SpecificAssetId } from "../specific-asset-id";
 import { IVisitor } from "../visitor";
-import { ISubmodelBase } from "./submodel";
-import { parseSubmodelBaseUnion, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { AasSubmodelElements, AasSubmodelElementsType } from "./aas-submodel-elements";
+import {
+  ISubmodelElement,
+  parseSubmodelBaseUnion,
+  SubmodelBaseProps,
+  submodelBasePropsFromPlain,
+} from "./submodel-base";
 
 export enum EntityType {
   CoManagedEntity = "CoManagedEntity",
   SelfManagedEntity = "SelfManagedEntity",
 }
 
-export class Entity implements ISubmodelBase {
+export class Entity implements ISubmodelElement {
   private constructor(
     public readonly entityType: EntityType,
     public readonly extensions: Array<Extension>,
@@ -27,7 +33,7 @@ export class Entity implements ISubmodelBase {
     public readonly supplementalSemanticIds: Array<Reference>,
     public readonly qualifiers: Qualifier[],
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly statements: Array<ISubmodelBase>,
+    public readonly statements: Array<ISubmodelElement>,
     public readonly globalAssetId: string | null = null,
     public readonly specificAssetIds: Array<SpecificAssetId>,
   ) {
@@ -36,7 +42,7 @@ export class Entity implements ISubmodelBase {
   static create(data: SubmodelBaseProps & {
     entityType: EntityType;
     extensions?: Array<Extension>;
-    statements?: Array<ISubmodelBase>;
+    statements?: Array<ISubmodelElement>;
     globalAssetId?: string | null;
     specificAssetIds?: Array<SpecificAssetId>;
   }) {
@@ -57,7 +63,7 @@ export class Entity implements ISubmodelBase {
     );
   };
 
-  static fromPlain(data: unknown): ISubmodelBase {
+  static fromPlain(data: unknown): ISubmodelElement {
     const parsed = EntityTypeJsonSchema.parse(data);
     const baseObjects = submodelBasePropsFromPlain(parsed);
     return new Entity(
@@ -86,7 +92,19 @@ export class Entity implements ISubmodelBase {
     return this.accept(jsonVisitor);
   }
 
-  * getChildren(): IterableIterator<ISubmodelBase> {
+  * getSubmodelElements(): IterableIterator<ISubmodelElement> {
     yield* this.statements;
+  }
+
+  addSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
+    if (this.statements.some(s => s.idShort === submodelElement.idShort)) {
+      throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
+    }
+    this.statements.push(submodelElement);
+    return submodelElement;
+  }
+
+  getSubmodelElementType(): AasSubmodelElementsType {
+    return AasSubmodelElements.Entity;
   }
 }

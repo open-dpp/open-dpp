@@ -7,11 +7,15 @@ import { Extension } from "../extension";
 import { JsonVisitor } from "../parsing/json-visitor";
 import { SubmodelElementListJsonSchema } from "../parsing/submodel-base/submodel-element-list-json-schema";
 import { IVisitor } from "../visitor";
-import { AasSubmodelElementsType } from "./aas-submodel-elements";
-import { ISubmodelBase } from "./submodel";
-import { parseSubmodelBaseUnion, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { AasSubmodelElements, AasSubmodelElementsType } from "./aas-submodel-elements";
+import {
+  ISubmodelElement,
+  parseSubmodelBaseUnion,
+  SubmodelBaseProps,
+  submodelBasePropsFromPlain,
+} from "./submodel-base";
 
-export class SubmodelElementList implements ISubmodelBase {
+export class SubmodelElementList implements ISubmodelElement {
   private constructor(
     public readonly typeValueListElement: AasSubmodelElementsType,
     public readonly extensions: Array<Extension>,
@@ -26,7 +30,7 @@ export class SubmodelElementList implements ISubmodelBase {
     public readonly orderRelevant: boolean | null = null,
     public readonly semanticIdListElement: Reference | null = null,
     public readonly valueTypeListElement: DataTypeDefType | null = null,
-    public readonly value: Array<ISubmodelBase>,
+    public readonly value: Array<ISubmodelElement>,
   ) {
   }
 
@@ -36,7 +40,7 @@ export class SubmodelElementList implements ISubmodelBase {
     orderRelevant?: boolean | null;
     semanticIdListElement?: Reference | null;
     valueTypeListElement?: DataTypeDefType | null;
-    value?: Array<ISubmodelBase>;
+    value?: Array<ISubmodelElement>;
   }) {
     return new SubmodelElementList(
       data.typeValueListElement,
@@ -56,7 +60,7 @@ export class SubmodelElementList implements ISubmodelBase {
     );
   }
 
-  static fromPlain(data: unknown): ISubmodelBase {
+  static fromPlain(data: unknown): ISubmodelElement {
     const parsed = SubmodelElementListJsonSchema.parse(data);
     const baseObjects = submodelBasePropsFromPlain(parsed);
     return new SubmodelElementList(
@@ -86,7 +90,23 @@ export class SubmodelElementList implements ISubmodelBase {
     return this.accept(jsonVisitor);
   }
 
-  * getChildren(): IterableIterator<ISubmodelBase> {
+  * getSubmodelElements(): IterableIterator<ISubmodelElement> {
     yield* this.value;
+  }
+
+  addSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
+    if (this.value.some(s => s.idShort === submodelElement.idShort)) {
+      throw new Error(`Submodel element with idShort ${submodelElement.idShort} already exists`);
+    }
+    if (submodelElement.getSubmodelElementType() !== this.typeValueListElement) {
+      throw new Error(`Submodel element type ${submodelElement.getSubmodelElementType()} does not match list type ${this.typeValueListElement}`);
+    }
+
+    this.value.push(submodelElement);
+    return submodelElement;
+  }
+
+  getSubmodelElementType(): AasSubmodelElementsType {
+    return AasSubmodelElements.SubmodelElementList;
   }
 }

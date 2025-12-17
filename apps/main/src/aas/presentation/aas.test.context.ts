@@ -20,9 +20,10 @@ import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { SubmodelElementSchema } from "../domain/parsing/submodel-base/submodel-element-schema";
 import { SubmodelJsonSchema } from "../domain/parsing/submodel-base/submodel-json-schema";
 import { IPersistable } from "../domain/persistable";
-import { IdShortPath, Submodel } from "../domain/submodel-base/submodel";
-import { aasPlainFactory } from "../fixtures/aas.factory";
+import { Submodel } from "../domain/submodel-base/submodel";
+import { IdShortPath } from "../domain/submodel-base/submodel-base";
 
+import { aasPlainFactory } from "../fixtures/aas.factory";
 import { propertyPlainFactory } from "../fixtures/submodel-element.factory";
 import {
   submodelBillOfMaterialPlainFactory,

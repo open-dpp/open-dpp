@@ -1,4 +1,5 @@
 import { Buffer } from "node:buffer";
+import { ValueError } from "@open-dpp/exception";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -7,10 +8,10 @@ import { Extension } from "../extension";
 import { JsonVisitor } from "../parsing/json-visitor";
 import { BlobJsonSchema } from "../parsing/submodel-base/blob-json-schema";
 import { IVisitor } from "../visitor";
-import { ISubmodelBase } from "./submodel";
-import { SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { AasSubmodelElements, AasSubmodelElementsType } from "./aas-submodel-elements";
+import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
-export class Blob implements ISubmodelBase {
+export class Blob implements ISubmodelElement {
   private constructor(
     public readonly contentType: string,
     public readonly extensions: Array<Extension>,
@@ -46,7 +47,7 @@ export class Blob implements ISubmodelBase {
     );
   }
 
-  static fromPlain(data: unknown): ISubmodelBase {
+  static fromPlain(data: unknown): ISubmodelElement {
     const parsed = BlobJsonSchema.parse(data);
     const baseObjects = submodelBasePropsFromPlain(parsed);
     return new Blob(
@@ -73,7 +74,15 @@ export class Blob implements ISubmodelBase {
     return this.accept(jsonVisitor);
   }
 
-  * getChildren(): IterableIterator<ISubmodelBase> {
+  * getSubmodelElements(): IterableIterator<ISubmodelElement> {
     yield* [];
+  }
+
+  addSubmodelElement(_submodelElement: ISubmodelElement): ISubmodelElement {
+    throw new ValueError("Blob cannot contain submodel elements");
+  }
+
+  getSubmodelElementType(): AasSubmodelElementsType {
+    return AasSubmodelElements.Blob;
   }
 }

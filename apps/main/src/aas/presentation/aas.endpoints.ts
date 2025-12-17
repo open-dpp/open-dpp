@@ -1,5 +1,5 @@
 import type express from "express";
-import { IdShortPath } from "../domain/submodel-base/submodel";
+import { IdShortPath } from "../domain/submodel-base/submodel-base";
 import { AssetAdministrationShellResponseDto } from "./dto/asset-administration-shell.dto";
 import {
   SubmodelElementPaginationResponseDto,

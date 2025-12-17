@@ -1,3 +1,4 @@
+import { ValueError } from "@open-dpp/exception";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -6,10 +7,10 @@ import { Extension } from "../extension";
 import { JsonVisitor } from "../parsing/json-visitor";
 import { ReferenceElementJsonSchema } from "../parsing/submodel-base/reference-element-json-schema";
 import { IVisitor } from "../visitor";
-import { ISubmodelBase } from "./submodel";
-import { SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { AasSubmodelElements, AasSubmodelElementsType } from "./aas-submodel-elements";
+import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
-export class ReferenceElement implements ISubmodelBase {
+export class ReferenceElement implements ISubmodelElement {
   constructor(
     public readonly extensions: Array<Extension>,
     public readonly category: string | null,
@@ -44,7 +45,7 @@ export class ReferenceElement implements ISubmodelBase {
     );
   }
 
-  static fromPlain(data: unknown): ISubmodelBase {
+  static fromPlain(data: unknown): ISubmodelElement {
     const parsed = ReferenceElementJsonSchema.parse(data);
     const baseObjects = submodelBasePropsFromPlain(parsed);
     return new ReferenceElement(
@@ -70,7 +71,15 @@ export class ReferenceElement implements ISubmodelBase {
     return this.accept(jsonVisitor);
   }
 
-  * getChildren(): IterableIterator<ISubmodelBase> {
+  * getSubmodelElements(): IterableIterator<ISubmodelElement> {
     yield* [];
+  }
+
+  addSubmodelElement(_submodelElement: ISubmodelElement): ISubmodelElement {
+    throw new ValueError("ReferenceElement cannot contain submodel elements");
+  }
+
+  getSubmodelElementType(): AasSubmodelElementsType {
+    return AasSubmodelElements.ReferenceElement;
   }
 }

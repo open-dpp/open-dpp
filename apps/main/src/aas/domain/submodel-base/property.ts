@@ -1,3 +1,4 @@
+import { ValueError } from "@open-dpp/exception";
 import { DataTypeDefType } from "../common/data-type-def";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
@@ -7,10 +8,10 @@ import { Extension } from "../extension";
 import { JsonVisitor } from "../parsing/json-visitor";
 import { PropertyJsonSchema } from "../parsing/submodel-base/property-json-schema";
 import { IVisitor } from "../visitor";
-import { ISubmodelBase } from "./submodel";
-import { SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { AasSubmodelElements, AasSubmodelElementsType } from "./aas-submodel-elements";
+import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
-export class Property implements ISubmodelBase {
+export class Property implements ISubmodelElement {
   private constructor(
     public readonly valueType: DataTypeDefType,
     public readonly extensions: Extension[],
@@ -49,7 +50,7 @@ export class Property implements ISubmodelBase {
     );
   }
 
-  static fromPlain(data: unknown) {
+  static fromPlain(data: unknown): ISubmodelElement {
     const parsed = PropertyJsonSchema.parse(data);
     const baseObjects = submodelBasePropsFromPlain(parsed);
     return new Property(
@@ -77,7 +78,15 @@ export class Property implements ISubmodelBase {
     return this.accept(jsonVisitor);
   }
 
-  * getChildren(): IterableIterator<ISubmodelBase> {
+  * getSubmodelElements(): IterableIterator<ISubmodelElement> {
     yield* [];
+  }
+
+  addSubmodelElement(_submodelElement: ISubmodelElement): ISubmodelElement {
+    throw new ValueError("Property cannot contain submodel elements");
+  }
+
+  getSubmodelElementType(): AasSubmodelElementsType {
+    return AasSubmodelElements.Property;
   }
 }

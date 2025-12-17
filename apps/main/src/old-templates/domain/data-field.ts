@@ -15,7 +15,7 @@ import { File } from "../../aas/domain/submodel-base/file";
 import { MultiLanguageProperty } from "../../aas/domain/submodel-base/multi-language-property";
 import { Property } from "../../aas/domain/submodel-base/property";
 import { ReferenceElement } from "../../aas/domain/submodel-base/reference-element";
-import { ISubmodelBase } from "../../aas/domain/submodel-base/submodel";
+import { ISubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import { DataFieldBase, DataFieldType } from "../../data-modelling/domain/data-field-base";
 
 export class DataFieldValidationResult {
@@ -116,7 +116,7 @@ export abstract class DataField extends DataFieldBase {
     };
   }
 
-  abstract toAas(): ISubmodelBase;
+  abstract toAas(): ISubmodelElement;
 }
 
 function validateString(

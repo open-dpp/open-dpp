@@ -1,11 +1,16 @@
 import { z } from "zod";
+import { IHasDataSpecification } from "../common/has-data-specification";
+import { IHasSemantics } from "../common/has-semantics";
 import { KeyTypes } from "../common/key-types-enum";
 import { LanguageText } from "../common/language-text";
-import { Qualifier } from "../common/qualififiable";
+import { IQualifiable, Qualifier } from "../common/qualififiable";
+import { IReferable } from "../common/referable";
 import { Reference } from "../common/reference";
+import { IConvertableToPlain } from "../convertable-to-plain";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { SubmodelBaseJsonSchema } from "../parsing/submodel-base/submodel-base-json-schema";
-import { ISubmodelBase } from "./submodel";
+import { IVisitable } from "../visitor";
+import { AasSubmodelElementsType } from "./aas-submodel-elements";
 import { getSubmodelClass } from "./submodel-registry";
 
 export interface SubmodelBaseProps {
@@ -44,7 +49,50 @@ export function submodelBasePropsFromPlain(data: Record<string, unknown>): Submo
   };
 }
 
-export function parseSubmodelBaseUnion(submodelBase: any): ISubmodelBase {
+export class IdShortPath {
+  constructor(private readonly _segments: Array<string>) {
+  }
+
+  static create(data: { path: string }): IdShortPath {
+    return new IdShortPath(data.path.split("."));
+  }
+
+  addPathSegment(segment: string) {
+    this._segments.push(segment);
+  }
+
+  get segments(): IterableIterator<string> {
+    return this._segments[Symbol.iterator]();
+  }
+
+  toString(): string {
+    return this._segments.join(".");
+  }
+}
+
+export interface ISubmodelBase
+  extends IReferable,
+  IHasSemantics,
+  IQualifiable,
+  IVisitable,
+  IHasDataSpecification, IConvertableToPlain {
+  category: string | null;
+  idShort: string;
+  displayName: Array<LanguageText>;
+  description: Array<LanguageText>;
+  semanticId: Reference | null;
+  supplementalSemanticIds: Array<Reference>;
+  qualifiers: Qualifier[];
+  embeddedDataSpecifications: Array<EmbeddedDataSpecification>;
+  addSubmodelElement: (submodelElement: ISubmodelElement) => ISubmodelElement;
+  getSubmodelElements: () => IterableIterator<ISubmodelElement>;
+}
+
+export interface ISubmodelElement extends ISubmodelBase {
+  getSubmodelElementType: () => AasSubmodelElementsType;
+}
+
+export function parseSubmodelBaseUnion(submodelBase: any): ISubmodelElement {
   const schema = z.object({ modelType: z.enum(KeyTypes) });
   const AasClass = getSubmodelClass(schema.parse(submodelBase).modelType);
   return AasClass.fromPlain(submodelBase);

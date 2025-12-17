@@ -4,7 +4,7 @@ import type { SubmodelRequestDto } from "../../aas/presentation/dto/submodel.dto
 import { Controller } from "@nestjs/common";
 import { Pagination } from "../../aas/domain/pagination";
 
-import { IdShortPath } from "../../aas/domain/submodel-base/submodel";
+import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
 import {
   ApiGetShells,
   ApiGetSubmodelById,

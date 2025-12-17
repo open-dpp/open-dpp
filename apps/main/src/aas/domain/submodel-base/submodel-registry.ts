@@ -1,16 +1,17 @@
 import { KeyTypesType } from "../common/key-types-enum";
-import { ISubmodelBase } from "./submodel";
+
+import { ISubmodelElement } from "./submodel-base";
 
 // Define the static side of the classes
 export interface SubmodelStatic {
-  fromPlain: (data: unknown) => ISubmodelBase;
+  fromPlain: (data: unknown) => ISubmodelElement;
 }
 
 // Create the registry
 export const registry = new Map<KeyTypesType, SubmodelStatic>();
 
 // Type-safe registration function
-export function registerSubmodel(
+export function registerSubmodelElement(
   type: KeyTypesType,
   constructor: SubmodelStatic,
 ): void {

@@ -5,7 +5,7 @@ import { Controller, Post, Req, UnauthorizedException } from "@nestjs/common";
 import { fromNodeHeaders } from "better-auth/node";
 import { AssetKind } from "../../aas/domain/asset-kind-enum";
 import { Pagination } from "../../aas/domain/pagination";
-import { IdShortPath } from "../../aas/domain/submodel-base/submodel";
+import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
 import {
   ApiGetShells,
   ApiGetSubmodelById,

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { IdShortPath } from "../domain/submodel-base/submodel";
+import { IdShortPath } from "../domain/submodel-base/submodel-base";
 import { IdParamSchema, IdShortPathParamSchema } from "./aas.decorators";
 
 describe("idParamSchema", () => {

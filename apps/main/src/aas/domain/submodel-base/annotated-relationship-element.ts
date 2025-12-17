@@ -1,3 +1,4 @@
+import { ValueError } from "@open-dpp/exception";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -8,11 +9,16 @@ import {
   AnnotatedRelationshipElementJsonSchema,
 } from "../parsing/submodel-base/annotated-relationship-element-json-schema";
 import { IVisitor } from "../visitor";
+import { AasSubmodelElements, AasSubmodelElementsType } from "./aas-submodel-elements";
 import { IRelationshipElement } from "./relationship-element";
-import { ISubmodelBase } from "./submodel";
-import { parseSubmodelBaseUnion, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import {
+  ISubmodelElement,
+  parseSubmodelBaseUnion,
+  SubmodelBaseProps,
+  submodelBasePropsFromPlain,
+} from "./submodel-base";
 
-export class AnnotatedRelationshipElement implements ISubmodelBase, IRelationshipElement {
+export class AnnotatedRelationshipElement implements ISubmodelElement, IRelationshipElement {
   protected constructor(
     public readonly first: Reference,
     public readonly second: Reference,
@@ -25,7 +31,7 @@ export class AnnotatedRelationshipElement implements ISubmodelBase, IRelationshi
     public readonly supplementalSemanticIds: Array<Reference>,
     public readonly qualifiers: Qualifier[],
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly annotations: Array<ISubmodelBase>,
+    public readonly annotations: Array<ISubmodelElement>,
   ) {
   }
 
@@ -33,7 +39,7 @@ export class AnnotatedRelationshipElement implements ISubmodelBase, IRelationshi
     first: Reference;
     second: Reference;
     extensions?: Array<Extension>;
-    annotations?: Array<ISubmodelBase>;
+    annotations?: Array<ISubmodelElement>;
   }) {
     return new AnnotatedRelationshipElement(
       data.first,
@@ -51,7 +57,7 @@ export class AnnotatedRelationshipElement implements ISubmodelBase, IRelationshi
     );
   }
 
-  static fromPlain(data: unknown): ISubmodelBase {
+  static fromPlain(data: unknown): ISubmodelElement {
     const parsed = AnnotatedRelationshipElementJsonSchema.parse(data);
     const baseObjects = submodelBasePropsFromPlain(parsed);
     return new AnnotatedRelationshipElement(
@@ -79,7 +85,19 @@ export class AnnotatedRelationshipElement implements ISubmodelBase, IRelationshi
     return this.accept(jsonVisitor);
   }
 
-  * getChildren(): IterableIterator<ISubmodelBase> {
+  * getSubmodelElements(): IterableIterator<ISubmodelElement> {
     yield* this.annotations;
+  }
+
+  addSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
+    if (this.annotations.some(e => e.idShort === submodelElement.idShort)) {
+      throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
+    }
+    this.annotations.push(submodelElement);
+    return submodelElement;
+  }
+
+  getSubmodelElementType(): AasSubmodelElementsType {
+    return AasSubmodelElements.AnnotatedRelationshipElement;
   }
 }
