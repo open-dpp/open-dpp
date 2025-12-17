@@ -1,44 +1,41 @@
+import { PolicyKey } from "./policy";
+
 export interface CapCreateProps {
-  key: string;
+  organizationId: string;
+  key: PolicyKey;
   limit: number;
 }
 
-export type CapCreateDbProps = CapCreateProps & {
-  count: number;
-};
+export type CapCreateDbProps = CapCreateProps;
 
 export class Cap {
-  key: string;
-  limit: number;
-  count: number;
+  private key: PolicyKey;
+  private organizationId: string;
+  private limit: number;
 
-  protected constructor(key: string, limit: number, count: number) {
+  protected constructor(key: PolicyKey, limit: number, organizationId: string) {
     this.key = key;
     this.limit = limit;
-    this.count = count;
+    this.organizationId = organizationId;
   }
 
   static create(props: CapCreateProps) {
-    return new Cap(props.key, props.limit, 0);
+    return new Cap(props.key, props.limit, props.organizationId);
   }
 
   static loadFromDb(props: CapCreateDbProps) {
-    return new Cap(props.key, props.limit, props.count);
+    return new Cap(props.key, props.limit, props.organizationId);
   }
 
-  isReached() {
-    return this.count >= this.limit;
+  getKey() {
+    return this.key;
+  }
+
+  getOrganizationId() {
+    return this.organizationId;
   }
 
   getLimit(): number {
     return this.limit;
-  }
-
-  getCount(): number {
-    return this.count;
-  }
-
-  increase(amount: number) {
-    this.count += amount;
   }
 }

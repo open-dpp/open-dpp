@@ -1,65 +1,35 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable, InternalServerErrorException } from "@nestjs/common";
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { Cap } from "./domain/cap";
-import { Quota } from "./domain/quota";
+import { PolicyKey } from "./domain/policy";
 import { PolicyService } from "./infrastructure/policy.service";
-import { POLICY_KEY, PolicyRule } from "./policy.decorator";
+import { POLICY_META } from "./policy.decorator";
 
-// policy.guard.ts
 @Injectable()
 export class PolicyGuard implements CanActivate {
-  constructor(
-    private reflector: Reflector,
-    private policies: PolicyService,
-  ) {}
+  constructor(private reflector: Reflector, private policy: PolicyService) {}
 
-  async canActivate(ctx: ExecutionContext): Promise<boolean> {
+  async canActivate(ctx: ExecutionContext) {
     const req = ctx.switchToHttp().getRequest();
-    const rule = this.reflector.getAllAndOverride<PolicyRule>(
-      POLICY_KEY,
-      [ctx.getHandler(), ctx.getClass()],
-    );
-    if (!rule)
+    const keys = this.reflector.getAllAndOverride<PolicyKey[]>(POLICY_META, [
+      ctx.getHandler(),
+      ctx.getClass(),
+    ]) ?? [];
+
+    if (!keys.length)
       return true;
 
     const orgId = req.params.organizationId;
-    if (!orgId) {
-      throw new InternalServerErrorException("Organization ID not set");
+
+    try {
+      await this.policy.enforce(orgId, keys);
+    }
+    catch (error) {
+      throw new ForbiddenException(error.message);
     }
 
-    if (rule.cap) {
-      let cap = await this.policies.getCap(orgId, rule.cap.key);
-      if (!cap) {
-        cap = Cap.create({
-          key: rule.cap.key,
-          limit: rule.cap.defaultlimit,
-        });
-
-        cap = await this.policies.saveCap(orgId, cap);
-      }
-
-      if (cap.isReached()) {
-        throw new ForbiddenException("Resource cap reached");
-      }
-    }
-
-    if (rule.quota) {
-      let quota = await this.policies.getQuota(orgId, rule.quota.key);
-      if (!quota) {
-        quota = Quota.create({
-          key: rule.quota.key,
-          limit: rule.quota.defaultlimit,
-          period: rule.quota.period,
-        });
-
-        quota = await this.policies.saveQuota(orgId, quota);
-      }
-
-      if (quota.isExceeded()) {
-        throw new ForbiddenException("Quota exceeded");
-      }
-    }
-
+    // stash for interceptor consumption
+    req._policyKeys = keys;
+    req._orgId = orgId;
     return true;
   }
 }

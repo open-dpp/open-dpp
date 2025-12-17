@@ -1,9 +1,11 @@
 import { Cap } from "./cap";
+import { PolicyKey } from "./policy";
 
 export type QuotaPeriod = "year" | "month" | "day";
 
 export interface QuotaCreateProps {
-  key: string;
+  key: PolicyKey;
+  organizationId: string;
   limit: number;
   period: QuotaPeriod;
 }
@@ -15,20 +17,22 @@ export type QuotaCreateDbProps = QuotaCreateProps & {
 
 export class Quota extends Cap {
   private period: QuotaPeriod;
+  private count: number;
   private lastSetBack: Date;
 
-  protected constructor(key: string, limit: number, count: number, period: QuotaPeriod, lastSetBack: Date) {
-    super(key, limit, count);
+  protected constructor(key: PolicyKey, limit: number, organizationId: string, count: number, period: QuotaPeriod, lastSetBack: Date) {
+    super(key, limit, organizationId);
+    this.count = count;
     this.period = period;
     this.lastSetBack = lastSetBack;
   }
 
   static create(props: QuotaCreateProps) {
-    return new Quota(props.key, props.limit, 0, props.period, new Date());
+    return new Quota(props.key, props.limit, props.organizationId, 0, props.period, new Date());
   }
 
   static loadFromDb(props: QuotaCreateDbProps) {
-    return new Quota(props.key, props.limit, props.count, props.period, props.lastSetBack);
+    return new Quota(props.key, props.limit, props.organizationId, props.count, props.period, props.lastSetBack);
   }
 
   needsReset(): boolean {
@@ -56,7 +60,7 @@ export class Quota extends Cap {
   }
 
   isExceeded() {
-    return this.count >= this.limit;
+    return this.count >= this.getLimit();
   }
 
   reset() {
@@ -66,6 +70,14 @@ export class Quota extends Cap {
 
   getPeriod() {
     return this.period;
+  }
+
+  increase(amount: number) {
+    this.count += amount;
+  }
+
+  getCount() {
+    return this.count;
   }
 
   getLastReset() {

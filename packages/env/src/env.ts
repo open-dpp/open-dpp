@@ -62,6 +62,10 @@ const envSchema = z.object({
   OPEN_DPP_AUTH_CLOUD_CLIENT_ID: z.string().optional(),
   OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET: z.string().optional(),
   OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL: z.string().optional(),
+  // Default Caps
+  OPEN_DPP_DEFAULT_MODEL_CREATE_CAP: z.coerce.number().min(0).optional().default(10),
+  OPEN_DPP_DEFAULT_AI_TOKEN_QUOTA: z.coerce.number().min(0).optional().default(10_000),
+  OPEN_DPP_DEFAULT_MEDIA_STORAGE_CAP: z.coerce.number().min(0).optional().default(1000),
 }).superRefine((val, ctx) => {
   const hasUri = !!val.OPEN_DPP_MONGODB_URI;
   const hasHostPort = !!val.OPEN_DPP_MONGODB_HOST && !!val.OPEN_DPP_MONGODB_PORT;
@@ -103,3 +107,7 @@ export function validateEnv(env: Record<string, any>): Record<string, any> {
 }
 
 export type Env = z.infer<typeof envSchema>;
+
+export type NumericEnvKeys = Exclude<{
+  [K in keyof Env]: Env[K] extends number ? K : never;
+}[keyof Env], undefined>;

@@ -1,32 +1,45 @@
 import type { Model as MongooseModel } from "mongoose";
-import { Injectable } from "@nestjs/common";
+import { forwardRef, Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { Cap } from "../domain/cap";
+import { PolicyDefinitions, PolicyKey, PolicyQuotaRule } from "../domain/policy";
 import { Quota } from "../domain/quota";
+import { CapEvaluatorService } from "./cap-evaluator.service";
 import { CapDoc } from "./cap.schema";
 import { QuotaDoc } from "./quota.schema";
 
 @Injectable()
 export class PolicyService {
+  private readonly envService: EnvService;
+  private readonly capEvaluatorService: CapEvaluatorService;
+
   constructor(
     @InjectModel(CapDoc.name)
     private readonly capModel: MongooseModel<CapDoc>,
     @InjectModel(QuotaDoc.name)
     private readonly quotaModel: MongooseModel<QuotaDoc>,
-  ) {}
+    envService: EnvService,
+    @Inject(forwardRef(() => CapEvaluatorService))
+    capEvaluatorService: CapEvaluatorService,
+  ) {
+    this.envService = envService;
+    this.capEvaluatorService = capEvaluatorService;
+  }
 
   private convertCapToDomain(capDoc: CapDoc): Cap {
     return Cap.loadFromDb({
       key: capDoc.key,
+      organizationId: capDoc.organizationId,
       limit: capDoc.limit,
-      count: capDoc.count,
     });
   }
 
   private convertQuotaToDomain(quotaDoc: QuotaDoc): Quota {
     return Quota.loadFromDb({
       key: quotaDoc.key,
+      organizationId: quotaDoc.organizationId,
       limit: quotaDoc.limit,
       count: quotaDoc.count,
       period: quotaDoc.period,
@@ -34,34 +47,30 @@ export class PolicyService {
     });
   }
 
-  async getCap(organizationId: string, key: string): Promise<Cap | undefined> {
-    const capKey = this.capKey(organizationId, key);
-    const capDoc = await this.capModel.findOne({ key: capKey }).exec();
+  async getCap(organizationId: string, key: PolicyKey): Promise<Cap> {
+    const capDoc = await this.capModel.findOne({ key, organizationId }).exec();
 
     if (!capDoc) {
-      return undefined;
+      const defaultLimit = this.getDefaultLimit(key);
+
+      return Cap.create({
+        key,
+        organizationId,
+        limit: defaultLimit,
+      });
     }
 
     return this.convertCapToDomain(capDoc);
   }
 
-  async getCapOrFail(organizationId: string, key: string): Promise<Cap> {
-    const cap = await this.getCap(organizationId, key);
-    if (!cap) {
-      throw new NotFoundInDatabaseException(Cap.name);
-    }
-    return cap;
-  }
-
-  async saveCap(organizationId: string, cap: Cap): Promise<Cap> {
-    const capKey = this.capKey(organizationId, cap.key);
+  async saveCap(cap: Cap): Promise<Cap> {
     const capDoc = await this.capModel.findOneAndUpdate(
-      { key: capKey },
+      { key: cap.getKey(), organizationId: cap.getOrganizationId() },
       {
         $set: {
-          key: capKey,
+          key: cap.getKey(),
+          organizationId: cap.getOrganizationId(),
           limit: cap.getLimit(),
-          count: cap.getCount(),
         },
       },
       {
@@ -74,30 +83,15 @@ export class PolicyService {
     return this.convertCapToDomain(capDoc);
   }
 
-  async incrementCap(organizationId: string, key: string, delta: number): Promise<Cap> {
-    const capKey = this.capKey(organizationId, key);
+  async isCapReached(orgaId: string, key: PolicyKey) {
+    const cap = await this.getCap(orgaId, key);
+    const currentCapCount = await this.capEvaluatorService.getCurrent(orgaId, key);
 
-    const capDoc = await this.capModel.findOneAndUpdate(
-      { key: capKey },
-      {
-        $inc: { count: delta },
-      },
-      {
-        new: true,
-        upsert: false,
-      },
-    ).exec();
-
-    if (!capDoc) {
-      throw new NotFoundInDatabaseException(Cap.name);
-    }
-
-    return this.convertCapToDomain(capDoc);
+    return currentCapCount >= cap.getLimit();
   }
 
-  async getQuota(organizationId: string, key: string): Promise<Quota | undefined> {
-    const quotaKey = this.quotaKey(organizationId, key);
-    const quotaDoc = await this.quotaModel.findOne({ key: quotaKey }).exec();
+  async getQuota(organizationId: string, key: PolicyKey): Promise<Quota | undefined> {
+    const quotaDoc = await this.quotaModel.findOne({ key, organizationId }).exec();
 
     if (!quotaDoc) {
       return undefined;
@@ -105,16 +99,33 @@ export class PolicyService {
 
     const quota = this.convertQuotaToDomain(quotaDoc);
 
-    // Check if quota needs reset
     if (quota.needsReset()) {
       quota.reset();
-      return await this.saveQuota(organizationId, quota);
+      return await this.saveQuota(quota);
     }
 
     return quota;
   }
 
-  async getQuotaOrFail(organizationId: string, key: string): Promise<Quota> {
+  async isQuotaExceeded(orgaId: string, key: PolicyKey) {
+    let quota = await this.getQuota(orgaId, key);
+    if (!quota) {
+      const defaultLimit = this.getDefaultLimit(key);
+      const quotaRule = this.getQuotaRule(key);
+      quota = Quota.create({
+        key,
+        organizationId: orgaId,
+        limit: defaultLimit,
+        period: quotaRule.period,
+      });
+
+      quota = await this.saveQuota(quota);
+    }
+
+    return quota.isExceeded();
+  }
+
+  async getQuotaOrFail(organizationId: string, key: PolicyKey): Promise<Quota> {
     const quota = await this.getQuota(organizationId, key);
     if (!quota) {
       throw new NotFoundInDatabaseException(Quota.name);
@@ -122,13 +133,12 @@ export class PolicyService {
     return quota;
   }
 
-  async saveQuota(organizationId: string, quota: Quota): Promise<Quota> {
-    const quotaKey = this.quotaKey(organizationId, quota.key);
+  async saveQuota(quota: Quota): Promise<Quota> {
     const quotaDoc = await this.quotaModel.findOneAndUpdate(
-      { key: quotaKey },
+      { key: quota.getKey(), organizationId: quota.getOrganizationId() },
       {
         $set: {
-          key: quotaKey,
+          key: quota.getKey(),
           limit: quota.getLimit(),
           count: quota.getCount(),
           period: quota.getPeriod(),
@@ -145,22 +155,32 @@ export class PolicyService {
     return this.convertQuotaToDomain(quotaDoc);
   }
 
-  async incrementQuota(organizationId: string, key: string): Promise<Quota> {
-    const quota = await this.getQuota(organizationId, key);
+  private getDefaultLimit(key: PolicyKey): number {
+    const rule = PolicyDefinitions[key];
 
-    if (!quota) {
-      throw new NotFoundInDatabaseException(Quota.name);
+    return this.envService.get(rule.defaultlimit);
+  }
+
+  private getQuotaRule(key: PolicyKey) {
+    return PolicyDefinitions[key] as PolicyQuotaRule;
+  }
+
+  async enforce(organizationId: string, keys: PolicyKey[]): Promise<void> {
+    for (const key of keys) {
+      const rule = PolicyDefinitions[key];
+
+      if (rule.type === "cap") {
+        const capReached = await this.isCapReached(organizationId, key);
+        if (capReached) {
+          throw new Error(`Cap reached for policy: ${rule.description}`);
+        }
+      }
+      else if (rule.type === "quota") {
+        const quotaExceeded = await this.isQuotaExceeded(organizationId, key);
+        if (quotaExceeded) {
+          throw new Error(`Quota exceeded for policy: ${rule.description}`);
+        }
+      }
     }
-
-    quota.increase(1);
-    return await this.saveQuota(organizationId, quota);
-  }
-
-  private capKey(organizationId: string, key: string): string {
-    return `cap:${organizationId}:${key}`;
-  }
-
-  private quotaKey(organizationId: string, key: string): string {
-    return `quota:${organizationId}:${key}`;
   }
 }
