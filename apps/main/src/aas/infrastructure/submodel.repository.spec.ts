@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { DataTypeDef, EntityType, ModellingKindType } from "@open-dpp/aas";
+import { DataTypeDef, EntityType } from "@open-dpp/aas";
 
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";
@@ -17,7 +17,6 @@ import { SubmodelDoc, SubmodelSchema } from "./schemas/submodel.schema";
 import { SubmodelRepository } from "./submodel.repository";
 
 describe("submodelRepository", () => {
-  let t: ModellingKindType;
   let submodelRepository: SubmodelRepository;
   let module: TestingModule;
   beforeAll(async () => {
