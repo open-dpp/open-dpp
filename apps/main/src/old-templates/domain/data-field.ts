@@ -1,16 +1,13 @@
 import type { DataFieldType_TYPE } from "../../data-modelling/domain/data-field-base";
 import type { GranularityLevel_TYPE } from "../../data-modelling/domain/granularity-level";
 import { randomUUID } from "node:crypto";
+import { DataTypeDef, KeyTypes, Language, QualifierKind, ReferenceTypes } from "@open-dpp/aas";
 import { NotSupportedError } from "@open-dpp/exception";
 import { z } from "zod";
-import { DataTypeDef } from "../../aas/domain/common/data-type-def";
 import { Key } from "../../aas/domain/common/key";
-import { KeyTypes } from "../../aas/domain/common/key-types-enum";
-import { Language } from "../../aas/domain/common/language-enum";
 import { LanguageText } from "../../aas/domain/common/language-text";
-import { QualifierKind } from "../../aas/domain/common/qualifier-kind-enum";
 import { Qualifier } from "../../aas/domain/common/qualififiable";
-import { Reference, ReferenceTypes } from "../../aas/domain/common/reference";
+import { Reference } from "../../aas/domain/common/reference";
 import { File } from "../../aas/domain/submodel-base/file";
 import { MultiLanguageProperty } from "../../aas/domain/submodel-base/multi-language-property";
 import { Property } from "../../aas/domain/submodel-base/property";

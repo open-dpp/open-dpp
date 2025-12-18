@@ -1,5 +1,5 @@
+import { AssetKindEnum } from "@open-dpp/aas";
 import { z } from "zod";
-import { AssetKindEnum } from "../../domain/asset-kind-enum";
 import { ResourceDbSchema } from "./resource-db-schema";
 import { SpecificAssetIdDbSchema } from "./specific-asset-id-db-schema";
 

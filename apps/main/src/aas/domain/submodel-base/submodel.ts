@@ -1,14 +1,13 @@
 import { NotFoundException } from "@nestjs/common";
+import { ModellingKindType, SubmodelJsonSchema } from "@open-dpp/aas";
 import { ValueError } from "@open-dpp/exception";
 import { AdministrativeInformation } from "../common/administrative-information";
-import { ModellingKindType } from "../common/has-kind";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { JsonVisitor } from "../parsing/json-visitor";
-import { SubmodelJsonSchema } from "../parsing/submodel-base/submodel-json-schema";
+import { JsonVisitor } from "../json-visitor";
 import { IPersistable } from "../persistable";
 import { JsonType, ValueVisitor } from "../value-visitor";
 import { IVisitor } from "../visitor";

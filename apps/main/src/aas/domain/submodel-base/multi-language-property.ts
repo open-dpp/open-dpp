@@ -1,13 +1,12 @@
+import { AasSubmodelElements, AasSubmodelElementsType, MultiLanguagePropertyJsonSchema } from "@open-dpp/aas";
 import { ValueError } from "@open-dpp/exception";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { JsonVisitor } from "../parsing/json-visitor";
-import { MultiLanguagePropertyJsonSchema } from "../parsing/submodel-base/multi-language-property-json-schema";
+import { JsonVisitor } from "../json-visitor";
 import { IVisitor } from "../visitor";
-import { AasSubmodelElements, AasSubmodelElementsType } from "./aas-submodel-elements";
 import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
 export class MultiLanguageProperty implements ISubmodelElement {

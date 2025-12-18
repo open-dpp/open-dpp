@@ -1,3 +1,4 @@
+import { ConceptDescriptionJsonSchema } from "@open-dpp/aas";
 import { AdministrativeInformation } from "./common/administrative-information";
 import { IHasDataSpecification } from "./common/has-data-specification";
 import { IIdentifiable } from "./common/identifiable";
@@ -5,8 +6,7 @@ import { LanguageText } from "./common/language-text";
 import { Reference } from "./common/reference";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
-import { ConceptDescriptionJsonSchema } from "./parsing/concept-description-json-schema";
-import { JsonVisitor } from "./parsing/json-visitor";
+import { JsonVisitor } from "./json-visitor";
 import { IPersistable } from "./persistable";
 import { IVisitable, IVisitor } from "./visitor";
 

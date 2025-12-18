@@ -1,6 +1,6 @@
+import { SpecificAssetIdJsonSchema } from "@open-dpp/aas";
 import { IHasSemantics } from "./common/has-semantics";
 import { Reference } from "./common/reference";
-import { SpecificAssetIdJsonSchema } from "./parsing/specific-asset-id-json-schema";
 import { IVisitable, IVisitor } from "./visitor";
 
 export class SpecificAssetId implements IHasSemantics, IVisitable {

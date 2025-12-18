@@ -6,7 +6,7 @@ export const ExtensionDbSchema = z.object({
   name: z.string(),
   semanticId: z.nullish(ReferenceDbSchema),
   supplementalSemanticIds: z.array(ReferenceDbSchema).default([]),
-  valueType: z.nullish(ValueTypeDbSchema),
+  valueType: ValueTypeDbSchema.nullish(),
   value: z.nullish(z.string()),
   refersTo: z.array(ReferenceDbSchema).default([]),
 });

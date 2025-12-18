@@ -1,13 +1,11 @@
-import { DataTypeDefType } from "../common/data-type-def";
+import { AasSubmodelElements, AasSubmodelElementsType, DataTypeDefType, SubmodelElementListJsonSchema } from "@open-dpp/aas";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { JsonVisitor } from "../parsing/json-visitor";
-import { SubmodelElementListJsonSchema } from "../parsing/submodel-base/submodel-element-list-json-schema";
+import { JsonVisitor } from "../json-visitor";
 import { IVisitor } from "../visitor";
-import { AasSubmodelElements, AasSubmodelElementsType } from "./aas-submodel-elements";
 import {
   ISubmodelElement,
   parseSubmodelBaseUnion,

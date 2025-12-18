@@ -6,6 +6,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ModelDefinition } from "@nestjs/mongoose/dist/interfaces";
 import { Test } from "@nestjs/testing";
+import { SubmodelElementSchema, SubmodelJsonSchema } from "@open-dpp/aas";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
@@ -14,11 +15,9 @@ import { AuthModule } from "../../auth/auth.module";
 import { AuthService } from "../../auth/auth.service";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
+
 import { AasModule } from "../aas.module";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
-
-import { SubmodelElementSchema } from "../domain/parsing/submodel-base/submodel-element-schema";
-import { SubmodelJsonSchema } from "../domain/parsing/submodel-base/submodel-json-schema";
 import { IPersistable } from "../domain/persistable";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";

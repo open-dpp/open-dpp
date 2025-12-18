@@ -1,15 +1,6 @@
-import { z } from "zod";
-import { ReferenceJsonSchema } from "../parsing/common/reference-json-schema";
+import { ReferenceJsonSchema, ReferenceTypesType } from "@open-dpp/aas";
 import { IVisitable, IVisitor } from "../visitor";
 import { Key } from "./key";
-
-export const ReferenceTypes = {
-  ExternalReference: "ExternalReference",
-  ModelReference: "ModelReference",
-} as const;
-
-export const ReferenceTypesEnum = z.enum(ReferenceTypes);
-export type ReferenceTypesType = z.infer<typeof ReferenceTypesEnum>;
 
 export class Reference implements IVisitable {
   private constructor(

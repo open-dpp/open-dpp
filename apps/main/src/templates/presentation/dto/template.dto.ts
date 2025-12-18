@@ -1,5 +1,5 @@
+import { EnvironmentJsonSchema } from "@open-dpp/aas";
 import { z } from "zod";
-import { EnvironmentJsonSchema } from "../../../aas/domain/parsing/environment-json-schema";
 
 export const TemplateDtoSchema = z.object({
   id: z.string(),

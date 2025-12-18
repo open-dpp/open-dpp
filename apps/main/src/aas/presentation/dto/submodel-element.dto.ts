@@ -1,7 +1,7 @@
-import { z } from "zod";
 import {
   SubmodelElementSchema,
-} from "../../domain/parsing/submodel-base/submodel-element-schema";
+} from "@open-dpp/aas";
+import { z } from "zod";
 import { PagingMetadataDtoSchema } from "./paging-metadata.dto";
 
 export const SubmodelBaseUnionDtoSchema = SubmodelElementSchema.meta({ id: "SubmodelElement" });

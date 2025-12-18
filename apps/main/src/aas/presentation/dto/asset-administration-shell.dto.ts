@@ -1,5 +1,5 @@
+import { AssetAdministrationShellJsonSchema } from "@open-dpp/aas";
 import { z } from "zod";
-import { AssetAdministrationShellJsonSchema } from "../../domain/parsing/asset-administration-shell-json-schema";
 import { PagingMetadataDtoSchema } from "./paging-metadata.dto";
 
 export const AssetAdministrationShellPaginationResponseDtoSchema = z.object({

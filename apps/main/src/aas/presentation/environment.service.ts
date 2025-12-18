@@ -1,14 +1,12 @@
 import type express from "express";
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
 
+import { AssetKindType, SubmodelElementSchema, SubmodelJsonSchema } from "@open-dpp/aas";
 import { fromNodeHeaders } from "better-auth/node";
 import { AuthService } from "../../auth/auth.service";
-import { AssetKindType } from "../domain/asset-kind-enum";
 import { Environment } from "../domain/environment";
 import { Pagination } from "../domain/pagination";
 import { PagingResult } from "../domain/paging-result";
-import { SubmodelElementSchema } from "../domain/parsing/submodel-base/submodel-element-schema";
-import { SubmodelJsonSchema } from "../domain/parsing/submodel-base/submodel-json-schema";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath, parseSubmodelBaseUnion } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";

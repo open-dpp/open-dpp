@@ -1,5 +1,5 @@
+import { AasSubmodelElementsEnum } from "@open-dpp/aas";
 import { z } from "zod";
-import { AasSubmodelElementsEnum } from "../../../domain/submodel-base/aas-submodel-elements";
 import { ValueTypeDbSchema } from "../common/basic-db-schema";
 import { ReferenceDbSchema } from "../common/reference-db-schema";
 import { ExtensionDbSchema } from "../extension-db-schema";
@@ -17,7 +17,7 @@ export function SubmodelElementListDbSchemaImpl() {
     extensions: ExtensionDbSchema.array().default([]),
     orderRelevant: z.nullish(z.boolean()),
     semanticIdListElement: z.nullish(ReferenceDbSchema),
-    valueTypeListElement: z.nullish(ValueTypeDbSchema),
+    valueTypeListElement: ValueTypeDbSchema.nullish(),
     value: SubmodelElementDbSchema.array().default([]),
   });
 };

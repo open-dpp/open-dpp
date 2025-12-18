@@ -1,5 +1,5 @@
+import { QualifierKindEnum } from "@open-dpp/aas";
 import { z } from "zod";
-import { QualifierKindEnum } from "../../../domain/common/qualifier-kind-enum";
 import { ValueTypeDbSchema } from "./basic-db-schema";
 import { ReferenceDbSchema } from "./reference-db-schema";
 

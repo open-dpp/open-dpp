@@ -1,5 +1,5 @@
+import { KeyTypes } from "@open-dpp/aas";
 import { z } from "zod";
-import { KeyTypes } from "../../../domain/common/key-types-enum";
 import { AnnotatedRelationshipElementDbSchemaImpl } from "./annotated-relationship-element-db-schema";
 import { BlobDbSchema } from "./blob-db-schema";
 import { EntityTypeDbSchemaImpl } from "./entity-type-db-schema";

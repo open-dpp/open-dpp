@@ -1,7 +1,7 @@
 import { expect } from "@jest/globals";
+import { DataTypeDef } from "@open-dpp/aas";
 import { ValueError } from "@open-dpp/exception";
 import { propertyPlainFactory } from "../../fixtures/submodel-element.factory";
-import { DataTypeDef } from "../common/data-type-def";
 import { Property } from "./property";
 import { Range } from "./range";
 

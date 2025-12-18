@@ -1,6 +1,6 @@
+import { SubmodelJsonSchema } from "@open-dpp/aas";
 import { Factory } from "fishery";
 import { z } from "zod";
-import { SubmodelJsonSchema } from "../domain/parsing/submodel-base/submodel-json-schema";
 
 interface SubmodelTransientParams {
   iriDomain: string;

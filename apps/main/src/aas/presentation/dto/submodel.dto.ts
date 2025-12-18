@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { SubmodelJsonSchema } from "@open-dpp/aas";
 import { z } from "zod";
-import { SubmodelJsonSchema } from "../../domain/parsing/submodel-base/submodel-json-schema";
 import { PagingMetadataDtoSchema } from "./paging-metadata.dto";
 
 export const SubmodelPaginationResponseDtoSchema = z.object({

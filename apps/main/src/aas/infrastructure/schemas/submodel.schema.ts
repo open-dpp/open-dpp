@@ -1,4 +1,4 @@
-import type { ModellingKindType } from "../../domain/common/has-kind";
+import type { ModellingKindType } from "@open-dpp/aas";
 import type {
   EmbeddedDataSpecificationDb,
   ExtensionDb,
@@ -7,8 +7,8 @@ import type {
   SubmodelBaseUnionDb,
 } from "./db-types";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { ModellingKind } from "@open-dpp/aas";
 import { Document, Schema as MongooseSchema } from "mongoose";
-import { ModellingKind } from "../../domain/common/has-kind";
 import { AdministrativeInformationDoc, AdministrativeInformationSchema } from "./administration.information.schema";
 import { LanguageTextDoc, LanguageTextSchema } from "./language.text.schema";
 

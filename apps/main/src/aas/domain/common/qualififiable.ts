@@ -1,8 +1,6 @@
-import { QualifierJsonSchema } from "../parsing/common/qualifier-json-schema";
+import { DataTypeDefType, QualifierJsonSchema, QualifierKindType } from "@open-dpp/aas";
 import { IVisitable, IVisitor } from "../visitor";
-import { DataTypeDefType } from "./data-type-def";
 import { IHasSemantics } from "./has-semantics";
-import { QualifierKindType } from "./qualifier-kind-enum";
 import { Reference } from "./reference";
 
 export class Qualifier implements IHasSemantics, IVisitable {

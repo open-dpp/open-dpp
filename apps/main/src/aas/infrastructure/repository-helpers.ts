@@ -1,7 +1,7 @@
+import { ReferenceJsonSchema } from "@open-dpp/aas";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { Document, Model as MongooseModel } from "mongoose";
 import { ZodObject } from "zod";
-import { ReferenceJsonSchema } from "../domain/parsing/common/reference-json-schema";
 import { IPersistable } from "../domain/persistable";
 
 export async function convertToDomain<T>(

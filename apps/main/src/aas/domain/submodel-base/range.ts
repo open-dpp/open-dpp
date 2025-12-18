@@ -1,14 +1,12 @@
+import { AasSubmodelElements, AasSubmodelElementsType, DataTypeDefType, RangeJsonSchema } from "@open-dpp/aas";
 import { ValueError } from "@open-dpp/exception";
-import { DataTypeDefType } from "../common/data-type-def";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { JsonVisitor } from "../parsing/json-visitor";
-import { RangeJsonSchema } from "../parsing/submodel-base/range-json-schema";
+import { JsonVisitor } from "../json-visitor";
 import { IVisitor } from "../visitor";
-import { AasSubmodelElements, AasSubmodelElementsType } from "./aas-submodel-elements";
 import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
 export class Range implements ISubmodelElement {

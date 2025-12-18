@@ -2,8 +2,8 @@ import type express from "express";
 import type { SubmodelElementRequestDto } from "../../aas/presentation/dto/submodel-element.dto";
 import type { SubmodelRequestDto } from "../../aas/presentation/dto/submodel.dto";
 import { Controller, Post, Req, UnauthorizedException } from "@nestjs/common";
+import { AssetKind } from "@open-dpp/aas";
 import { fromNodeHeaders } from "better-auth/node";
-import { AssetKind } from "../../aas/domain/asset-kind-enum";
 import { Pagination } from "../../aas/domain/pagination";
 import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
 import {

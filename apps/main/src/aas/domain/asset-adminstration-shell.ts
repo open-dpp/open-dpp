@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { AssetAdministrationShellJsonSchema } from "@open-dpp/aas";
 import { AssetInformation } from "./asset-information";
 import { AdministrativeInformation } from "./common/administrative-information";
 import { IHasDataSpecification } from "./common/has-data-specification";
@@ -7,8 +8,7 @@ import { LanguageText } from "./common/language-text";
 import { Reference } from "./common/reference";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
-import { AssetAdministrationShellJsonSchema } from "./parsing/asset-administration-shell-json-schema";
-import { JsonVisitor } from "./parsing/json-visitor";
+import { JsonVisitor } from "./json-visitor";
 import { IPersistable } from "./persistable";
 import { IVisitable, IVisitor } from "./visitor";
 

@@ -1,6 +1,5 @@
-import { LanguageTextJsonSchema } from "../parsing/common/language-text-json-schema";
+import { LanguageTextJsonSchema, LanguageType } from "@open-dpp/aas";
 import { IVisitable, IVisitor } from "../visitor";
-import { LanguageType } from "./language-enum";
 
 export class LanguageText implements IVisitable {
   private constructor(public readonly language: LanguageType, public readonly text: string) {

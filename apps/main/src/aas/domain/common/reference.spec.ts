@@ -1,5 +1,6 @@
 import { expect } from "@jest/globals";
-import { Reference, ReferenceTypes } from "./reference";
+import { ReferenceTypes } from "@open-dpp/aas";
+import { Reference } from "./reference";
 
 describe("reference", () => {
   it("should be created from plain", () => {

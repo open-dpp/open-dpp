@@ -1,5 +1,5 @@
+import { ModellingKindEnum } from "@open-dpp/aas";
 import { z } from "zod";
-import { ModellingKindEnum } from "../../../domain/common/has-kind";
 import { AdministrativeInformationDbSchema } from "../administrative-information-db-schema";
 import { ExtensionDbSchema } from "../extension-db-schema";
 import { SubmodelBaseDbSchema } from "./submodel-base-db-schema";
@@ -10,6 +10,6 @@ export const SubmodelDbSchema = z.object({
   id: z.string(),
   extensions: ExtensionDbSchema.array().default([]),
   administration: z.nullish(AdministrativeInformationDbSchema),
-  kind: z.nullish(ModellingKindEnum),
+  kind: ModellingKindEnum.nullish(),
   submodelElements: SubmodelElementDbSchema.array().default([]),
 });

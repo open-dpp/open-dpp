@@ -1,5 +1,5 @@
+import { EmbeddedDataSpecificationJsonSchema } from "@open-dpp/aas";
 import { Reference } from "./common/reference";
-import { EmbeddedDataSpecificationJsonSchema } from "./parsing/embedded-data-specification-json-schema";
 import { IVisitable, IVisitor } from "./visitor";
 
 export class EmbeddedDataSpecification implements IVisitable {

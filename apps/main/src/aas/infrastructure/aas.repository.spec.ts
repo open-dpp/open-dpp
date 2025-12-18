@@ -3,13 +3,13 @@ import { randomUUID } from "node:crypto";
 import { jest } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { EnvModule, EnvService } from "@open-dpp/env";
+import { AssetKind } from "@open-dpp/aas";
 
+import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
-import { AssetKind } from "../domain/asset-kind-enum";
 import { AasRepository } from "./aas.repository";
 import {
   AssetAdministrationShellDoc,

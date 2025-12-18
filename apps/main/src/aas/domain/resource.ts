@@ -1,4 +1,4 @@
-import { ResourceJsonSchema } from "./parsing/resource-json-schema";
+import { ResourceJsonSchema } from "@open-dpp/aas";
 import { IVisitable, IVisitor } from "./visitor";
 
 export class Resource implements IVisitable {

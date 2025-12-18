@@ -1,5 +1,4 @@
-import { AssetKindType } from "./asset-kind-enum";
-import { AssetInformationJsonSchema } from "./parsing/asset-information-json-schema";
+import { AssetInformationJsonSchema, AssetKindType } from "@open-dpp/aas";
 import { Resource } from "./resource";
 import { SpecificAssetId } from "./specific-asset-id";
 import { IVisitable, IVisitor } from "./visitor";

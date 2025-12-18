@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { beforeAll, expect } from "@jest/globals";
+import { DataTypeDef } from "@open-dpp/aas";
 import { ValueError } from "@open-dpp/exception";
 import {
   submodelBillOfMaterialPlainFactory,
   submodelCarbonFootprintPlainFactory,
   submodelDesignOfProductPlainFactory,
 } from "../../fixtures/submodel.factory";
-import { DataTypeDef } from "../common/data-type-def";
 import { Property } from "./property";
 import { registerSubmodelElementClasses } from "./register-submodel-element-classes";
 import { Submodel } from "./submodel";

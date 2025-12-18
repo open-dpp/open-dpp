@@ -1,6 +1,5 @@
-import { KeyJsonSchema } from "../parsing/common/key-json-schema";
+import { KeyJsonSchema, KeyTypesType } from "@open-dpp/aas";
 import { IVisitable, IVisitor } from "../visitor";
-import { KeyTypesType } from "./key-types-enum";
 
 export class Key implements IVisitable {
   private constructor(public type: KeyTypesType, public value: string) {

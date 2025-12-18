@@ -1,3 +1,3 @@
-import { DataTypeDefEnum } from "../../../domain/common/data-type-def";
+import { DataTypeDefEnum } from "@open-dpp/aas";
 
 export const ValueTypeDbSchema = DataTypeDefEnum;

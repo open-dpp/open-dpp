@@ -2,8 +2,8 @@ import { randomUUID } from "node:crypto";
 
 import { expect } from "@jest/globals";
 
+import { AssetKind } from "@open-dpp/aas";
 import request from "supertest";
-import { AssetKind } from "../../aas/domain/asset-kind-enum";
 import { Environment } from "../../aas/domain/environment";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { Template } from "../domain/template";

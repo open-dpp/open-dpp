@@ -1,14 +1,18 @@
+import {
+  AasSubmodelElements,
+  AasSubmodelElementsType,
+  EntityTypeJsonSchema,
+  EntityTypeType,
+} from "@open-dpp/aas";
 import { ValueError } from "@open-dpp/exception";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { JsonVisitor } from "../parsing/json-visitor";
-import { EntityTypeJsonSchema } from "../parsing/submodel-base/entity-type-json-schema";
+import { JsonVisitor } from "../json-visitor";
 import { SpecificAssetId } from "../specific-asset-id";
 import { IVisitor } from "../visitor";
-import { AasSubmodelElements, AasSubmodelElementsType } from "./aas-submodel-elements";
 import {
   ISubmodelElement,
   parseSubmodelBaseUnion,
@@ -16,14 +20,9 @@ import {
   submodelBasePropsFromPlain,
 } from "./submodel-base";
 
-export enum EntityType {
-  CoManagedEntity = "CoManagedEntity",
-  SelfManagedEntity = "SelfManagedEntity",
-}
-
 export class Entity implements ISubmodelElement {
   private constructor(
-    public readonly entityType: EntityType,
+    public readonly entityType: EntityTypeType,
     public readonly extensions: Array<Extension>,
     public readonly category: string | null,
     public readonly idShort: string,
@@ -40,7 +39,7 @@ export class Entity implements ISubmodelElement {
   }
 
   static create(data: SubmodelBaseProps & {
-    entityType: EntityType;
+    entityType: EntityTypeType;
     extensions?: Array<Extension>;
     statements?: Array<ISubmodelElement>;
     globalAssetId?: string | null;

@@ -1,15 +1,12 @@
+import { AasSubmodelElements, AasSubmodelElementsType, AnnotatedRelationshipElementJsonSchema } from "@open-dpp/aas";
 import { ValueError } from "@open-dpp/exception";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { JsonVisitor } from "../parsing/json-visitor";
-import {
-  AnnotatedRelationshipElementJsonSchema,
-} from "../parsing/submodel-base/annotated-relationship-element-json-schema";
+import { JsonVisitor } from "../json-visitor";
 import { IVisitor } from "../visitor";
-import { AasSubmodelElements, AasSubmodelElementsType } from "./aas-submodel-elements";
 import { IRelationshipElement } from "./relationship-element";
 import {
   ISubmodelElement,

@@ -1,6 +1,6 @@
+import { PassportJsonSchema } from "@open-dpp/aas";
 import { IDigitalProductPassportIdentifiable } from "../../aas/domain/digital-product-passport-identifiable";
 import { Environment } from "../../aas/domain/environment";
-import { PassportJsonSchema } from "../../aas/domain/parsing/passport-json-schema";
 import { IPersistable } from "../../aas/domain/persistable";
 
 export class Passport implements IPersistable, IDigitalProductPassportIdentifiable {

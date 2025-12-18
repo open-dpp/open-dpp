@@ -1,10 +1,9 @@
 import { randomUUID } from "node:crypto";
+import { AssetKindType, EnvironmentJsonSchema } from "@open-dpp/aas";
 import { ValueError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";
-import { AssetKindType } from "./asset-kind-enum";
 import { AdministrativeInformation } from "./common/administrative-information";
-import { EnvironmentJsonSchema } from "./parsing/environment-json-schema";
 import { Submodel } from "./submodel-base/submodel";
 
 export class Environment {

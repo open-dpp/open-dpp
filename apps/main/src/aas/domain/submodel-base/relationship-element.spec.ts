@@ -1,7 +1,7 @@
 import { expect } from "@jest/globals";
+import { DataTypeDef, ReferenceTypes } from "@open-dpp/aas";
 import { ValueError } from "@open-dpp/exception";
-import { DataTypeDef } from "../common/data-type-def";
-import { Reference, ReferenceTypes } from "../common/reference";
+import { Reference } from "../common/reference";
 import { Property } from "./property";
 import { RelationshipElement } from "./relationship-element";
 

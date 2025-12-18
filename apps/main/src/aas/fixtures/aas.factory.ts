@@ -1,6 +1,6 @@
+import { AssetAdministrationShellJsonSchema } from "@open-dpp/aas";
 import { Factory } from "fishery";
 import { z } from "zod";
-import { AssetAdministrationShellJsonSchema } from "../domain/parsing/asset-administration-shell-json-schema";
 
 interface AasTransientParams {
   iriDomain: string;

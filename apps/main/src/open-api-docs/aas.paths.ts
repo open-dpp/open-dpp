@@ -1,5 +1,4 @@
-import { SubmodelElementSchema } from "../aas/domain/parsing/submodel-base/submodel-element-schema";
-import { SubmodelJsonSchema } from "../aas/domain/parsing/submodel-base/submodel-json-schema";
+import { SubmodelElementSchema, SubmodelJsonSchema } from "@open-dpp/aas";
 import {
   ApiGetShellsPath,
   ApiGetSubmodelByIdPath,

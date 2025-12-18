@@ -1,4 +1,4 @@
-import { KeyTypesType } from "../common/key-types-enum";
+import { KeyTypesType } from "@open-dpp/aas";
 
 import { ISubmodelElement } from "./submodel-base";
 

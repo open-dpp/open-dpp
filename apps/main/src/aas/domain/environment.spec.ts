@@ -1,8 +1,8 @@
 import { expect } from "@jest/globals";
+import { AssetKind } from "@open-dpp/aas";
 import { ValueError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";
-import { AssetKind } from "./asset-kind-enum";
 import { AdministrativeInformation } from "./common/administrative-information";
 import { Environment } from "./environment";
 import { Submodel } from "./submodel-base/submodel";

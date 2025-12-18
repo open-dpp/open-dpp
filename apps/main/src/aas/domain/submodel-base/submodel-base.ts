@@ -1,16 +1,14 @@
+import { AasSubmodelElementsType, KeyTypes, SubmodelBaseJsonSchema } from "@open-dpp/aas";
 import { z } from "zod";
 import { IHasDataSpecification } from "../common/has-data-specification";
 import { IHasSemantics } from "../common/has-semantics";
-import { KeyTypes } from "../common/key-types-enum";
 import { LanguageText } from "../common/language-text";
 import { IQualifiable, Qualifier } from "../common/qualififiable";
 import { IReferable } from "../common/referable";
 import { Reference } from "../common/reference";
 import { IConvertableToPlain } from "../convertable-to-plain";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
-import { SubmodelBaseJsonSchema } from "../parsing/submodel-base/submodel-base-json-schema";
 import { IVisitable } from "../visitor";
-import { AasSubmodelElementsType } from "./aas-submodel-elements";
 import { getSubmodelClass } from "./submodel-registry";
 
 export interface SubmodelBaseProps {
