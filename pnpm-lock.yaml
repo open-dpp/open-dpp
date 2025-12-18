@@ -267,7 +267,7 @@ importers:
         version: link:../../packages/api-client
       '@open-dpp/env':
         specifier: workspace:*
-        version: file:packages/env(@nestjs/microservices@11.1.9)(@nestjs/platform-express@11.1.9)(@nestjs/websockets@11.1.9)(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+        version: link:../../packages/env
       '@open-dpp/exception':
         specifier: workspace:*
         version: link:../../packages/exception
@@ -832,7 +832,7 @@ importers:
         version: 11.0.3(@nestjs/common@11.1.9(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.9)(mongoose@8.19.3)(rxjs@7.8.2)
       '@open-dpp/env':
         specifier: workspace:*
-        version: file:packages/env(@nestjs/microservices@11.1.9)(@nestjs/platform-express@11.1.9)(@nestjs/websockets@11.1.9)(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+        version: link:../../packages/env
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
