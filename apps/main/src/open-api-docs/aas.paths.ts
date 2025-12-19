@@ -5,6 +5,7 @@ import {
   SubmodelJsonSchema,
   SubmodelPaginationResponseDtoSchema,
   SubmodelRequestDtoSchema,
+  TemplateDtoSchema,
   ValueResponseDtoSchema,
 } from "@open-dpp/dto";
 import {
@@ -21,7 +22,6 @@ import {
   LimitQueryParamSchema,
   SubmodelIdParamSchema,
 } from "../aas/presentation/aas.decorators";
-import { TemplateDtoSchema } from "../templates/presentation/dto/template.dto";
 
 const HTTPCode = {
   OK: 200,

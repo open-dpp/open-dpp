@@ -8,6 +8,8 @@ import {
   SubmodelElementResponseDto,
   SubmodelPaginationResponseDto,
   SubmodelResponseDto,
+  TemplateDto,
+  TemplateDtoSchema,
   ValueResponseDto,
 } from "@open-dpp/dto";
 import { fromNodeHeaders } from "better-auth/node";
@@ -38,7 +40,6 @@ import { EnvironmentService, loadEnvironmentAndCheckOwnership } from "../../aas/
 import { AuthService } from "../../auth/auth.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
-import { TemplateDto, TemplateDtoSchema } from "./dto/template.dto";
 
 @Controller("/templates")
 export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoints {
