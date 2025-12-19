@@ -604,6 +604,9 @@ importers:
 
   packages/api-client:
     dependencies:
+      '@open-dpp/aas':
+        specifier: workspace:*
+        version: link:../aas
       axios:
         specifier: ^1.12.2
         version: 1.13.2

@@ -45,12 +45,12 @@ describe('apiClient', () => {
     })
     sdk.setActiveOrganizationId(activeOrganization.id)
     it('should get all templates', async () => {
-      const response = await sdk.dpp.templates.getAll()
+      const response = await sdk.dpp.oldTemplates.getAll()
       expect(response.data).toEqual([{ id: template.id, name: template.name }])
     })
 
     it('should get template by id', async () => {
-      const response = await sdk.dpp.templates.getById(template.id)
+      const response = await sdk.dpp.oldTemplates.getById(template.id)
       expect(response.data).toEqual(template)
     })
   })

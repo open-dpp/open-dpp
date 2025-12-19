@@ -1,7 +1,7 @@
 import type { AxiosInstance } from 'axios'
 import type { TemplateDto, TemplateGetAllDto } from './template.dtos'
 
-export class TemplatesNamespace {
+export class OldTemplatesNamespace {
   private readonly templatesEndpoint
 
   constructor(

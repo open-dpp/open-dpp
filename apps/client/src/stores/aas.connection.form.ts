@@ -268,7 +268,7 @@ export const useAasConnectionFormStore = defineStore(
         if (aasConnection.value && model.templateId) {
           aasConnection.value.modelId = model.id;
           aasConnection.value.dataModelId = model.templateId;
-          const response = await apiClient.dpp.templates.getById(
+          const response = await apiClient.dpp.oldTemplates.getById(
             aasConnection.value.dataModelId,
           );
           const template = response.data;
@@ -325,7 +325,7 @@ export const useAasConnectionFormStore = defineStore(
             property: prop.property,
           })),
         }));
-        const templateResponse = await apiClient.dpp.templates.getById(
+        const templateResponse = await apiClient.dpp.oldTemplates.getById(
           aasConnection.value.dataModelId,
         );
         await updateTemplateOptions(templateResponse.data);

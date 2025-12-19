@@ -33,7 +33,8 @@
     "major": "git fetch --tags && npm version major && git push --follow-tags"
   },
   "dependencies": {
-    "axios": "^1.12.2"
+    "axios": "^1.12.2",
+    "@open-dpp/aas": "workspace:*"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
@@ -59,35 +60,5 @@
     "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
     "typescript": "^5.9.3"
-  },
-  "jest": {
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": [
-        "@swc/jest",
-        {
-          "jsc": {
-            "target": "es2022",
-            "parser": {
-              "syntax": "typescript",
-              "decorators": true
-            },
-            "transform": {
-              "decoratorMetadata": true
-            }
-          },
-          "module": {
-            "type": "commonjs"
-          }
-        }
-      ]
-    },
-    "transformIgnorePatterns": [
-      "node_modules/(?!((?:\\.pnpm/.*?/)?(?:@(?:open-dpp)|until-async))(?:/|$))"
-    ],
-    "moduleNameMapper": {
-      "^@open-dpp/(.*)$": "<rootDir>/../../packages/$1/src"
-    },
-    "testEnvironment": "node"
   }
 }

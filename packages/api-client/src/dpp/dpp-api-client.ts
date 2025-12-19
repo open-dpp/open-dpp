@@ -4,10 +4,10 @@ import { createAxiosClient } from '../api-client'
 import { AasIntegrationNamespace } from './integrations/aas-integration.namespace'
 import { ItemsNamespace } from './items/items.namespace'
 import { ModelsNamespace } from './models/models.namespace'
+import { OldTemplatesNamespace } from './old-templates/oldTemplatesNamespace'
 import { OrganizationsNamespace } from './organizations/organizations.namespace'
 import { ProductPassportsNamespace } from './product-passport/product-passports.namespace'
 import { TemplateDraftsNamespace } from './template-drafts/template-drafts.namespace'
-import { TemplatesNamespace } from './templates/templates.namespace'
 import { UniqueProductIdentifiersNamespace } from './unique-product-identifiers/unique-product-identifiers.namespace'
 
 export class DppApiClient implements IApiClient {
@@ -15,7 +15,7 @@ export class DppApiClient implements IApiClient {
   public models!: ModelsNamespace
   public items!: ItemsNamespace
   public templateDrafts!: TemplateDraftsNamespace
-  public templates!: TemplatesNamespace
+  public oldTemplates!: OldTemplatesNamespace
   public uniqueProductIdentifiers!: UniqueProductIdentifiersNamespace
   public productPassports!: ProductPassportsNamespace
   public aasIntegration!: AasIntegrationNamespace
@@ -51,7 +51,7 @@ export class DppApiClient implements IApiClient {
       this.axiosInstance,
       this.options.activeOrganizationId,
     )
-    this.templates = new TemplatesNamespace(
+    this.oldTemplates = new OldTemplatesNamespace(
       this.axiosInstance,
       this.options.activeOrganizationId,
     )

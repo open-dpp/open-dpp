@@ -38,6 +38,11 @@ export type { ItemDto } from './dpp/items/item.dtos'
 export { ItemsNamespace } from './dpp/items/items.namespace'
 export type { ModelCreateDto, ModelDto } from './dpp/models/model.dtos'
 export { ModelsNamespace } from './dpp/models/models.namespace'
+export { OldTemplatesNamespace } from './dpp/old-templates/oldTemplatesNamespace'
+export type {
+  TemplateDto,
+  TemplateGetAllDto,
+} from './dpp/old-templates/template.dtos'
 export type {
   OrganizationCreateDto,
   OrganizationDto,
@@ -51,13 +56,13 @@ export type {
   DataSectionDto,
   ProductPassportDto,
 } from './dpp/product-passport/product-passport.dtos'
+
 export { ProductPassportsNamespace } from './dpp/product-passport/product-passports.namespace'
 export {
   MoveDirection,
   MoveType,
   VisibilityLevel,
 } from './dpp/template-drafts/template-draft.dtos'
-
 export type {
   DataFieldDraftCreateDto,
   DataFieldDraftUpdateDto,
@@ -72,11 +77,6 @@ export type {
   TemplateDraftUpdateDto,
 } from './dpp/template-drafts/template-draft.dtos'
 export { TemplateDraftsNamespace } from './dpp/template-drafts/template-drafts.namespace'
-export type {
-  TemplateDto,
-  TemplateGetAllDto,
-} from './dpp/templates/template.dtos'
-export { TemplatesNamespace } from './dpp/templates/templates.namespace'
 
 export type {
   UniqueProductIdentifierDto,
