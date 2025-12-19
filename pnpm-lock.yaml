@@ -259,12 +259,12 @@ importers:
       '@nestjs/websockets':
         specifier: ^11.1.6
         version: 11.1.9(@nestjs/common@11.1.9(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.9)(@nestjs/platform-socket.io@11.1.9)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@open-dpp/aas':
-        specifier: workspace:*
-        version: link:../../packages/aas
       '@open-dpp/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@open-dpp/dto':
+        specifier: workspace:*
+        version: link:../../packages/dto
       '@open-dpp/env':
         specifier: workspace:*
         version: file:packages/env(@nestjs/microservices@11.1.9)(@nestjs/platform-express@11.1.9)(@nestjs/websockets@11.1.9)(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -562,51 +562,11 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
-  packages/aas:
-    dependencies:
-      zod:
-        specifier: ^4.2.1
-        version: 4.2.1
-    devDependencies:
-      '@open-dpp/config-eslint':
-        specifier: workspace:*
-        version: link:../config-eslint
-      '@swc/core':
-        specifier: ^1.13.5
-        version: 1.15.3
-      '@swc/jest':
-        specifier: ^0.2.39
-        version: 0.2.39(@swc/core@1.15.3)
-      '@tsconfig/node-lts':
-        specifier: ^22.0.2
-        version: 22.0.4
-      '@tsconfig/node-ts':
-        specifier: ^23.6.1
-        version: 23.6.2
-      '@types/jest':
-        specifier: ^30.0.0
-        version: 30.0.0
-      eslint:
-        specifier: ^9.38.0
-        version: 9.39.1(jiti@2.6.1)
-      globals:
-        specifier: ^16.4.0
-        version: 16.5.0
-      jest:
-        specifier: ^30.2.0
-        version: 30.2.0(@types/node@24.10.1)(ts-node@10.9.2(@swc/core@1.15.3)(@types/node@24.10.1)(typescript@5.9.3))
-      rimraf:
-        specifier: 6.0.1
-        version: 6.0.1
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
-
   packages/api-client:
     dependencies:
-      '@open-dpp/aas':
+      '@open-dpp/dto':
         specifier: workspace:*
-        version: link:../aas
+        version: link:../dto
       axios:
         specifier: ^1.12.2
         version: 1.13.2
@@ -689,6 +649,46 @@ importers:
       eslint-plugin-format:
         specifier: ^1.0.2
         version: 1.0.2(eslint@9.39.1(jiti@2.6.1))
+
+  packages/dto:
+    dependencies:
+      zod:
+        specifier: ^4.2.1
+        version: 4.2.1
+    devDependencies:
+      '@open-dpp/config-eslint':
+        specifier: workspace:*
+        version: link:../config-eslint
+      '@swc/core':
+        specifier: ^1.13.5
+        version: 1.15.3
+      '@swc/jest':
+        specifier: ^0.2.39
+        version: 0.2.39(@swc/core@1.15.3)
+      '@tsconfig/node-lts':
+        specifier: ^22.0.2
+        version: 22.0.4
+      '@tsconfig/node-ts':
+        specifier: ^23.6.1
+        version: 23.6.2
+      '@types/jest':
+        specifier: ^30.0.0
+        version: 30.0.0
+      eslint:
+        specifier: ^9.38.0
+        version: 9.39.1(jiti@2.6.1)
+      globals:
+        specifier: ^16.4.0
+        version: 16.5.0
+      jest:
+        specifier: ^30.2.0
+        version: 30.2.0(@types/node@24.10.1)(ts-node@10.9.2(@swc/core@1.15.3)(@types/node@24.10.1)(typescript@5.9.3))
+      rimraf:
+        specifier: 6.0.1
+        version: 6.0.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   packages/env:
     dependencies:

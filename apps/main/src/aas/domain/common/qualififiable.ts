@@ -1,4 +1,4 @@
-import { DataTypeDefType, QualifierJsonSchema, QualifierKindType } from "@open-dpp/aas";
+import { DataTypeDefType, QualifierJsonSchema, QualifierKindType } from "@open-dpp/dto";
 import { IVisitable, IVisitor } from "../visitor";
 import { IHasSemantics } from "./has-semantics";
 import { Reference } from "./reference";

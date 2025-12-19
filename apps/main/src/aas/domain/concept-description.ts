@@ -1,4 +1,4 @@
-import { ConceptDescriptionJsonSchema } from "@open-dpp/aas";
+import { ConceptDescriptionJsonSchema } from "@open-dpp/dto";
 import { AdministrativeInformation } from "./common/administrative-information";
 import { IHasDataSpecification } from "./common/has-data-specification";
 import { IIdentifiable } from "./common/identifiable";

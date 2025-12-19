@@ -1,5 +1,5 @@
 import type express from "express";
-import { AssetAdministrationShellResponseDto, SubmodelElementPaginationResponseDto, SubmodelElementRequestDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelRequestDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/aas";
+import { AssetAdministrationShellResponseDto, SubmodelElementPaginationResponseDto, SubmodelElementRequestDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelRequestDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/dto";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
 
 export interface IAasReadEndpoints {

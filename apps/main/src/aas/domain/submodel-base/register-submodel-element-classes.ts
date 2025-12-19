@@ -1,4 +1,4 @@
-import { KeyTypes } from "@open-dpp/aas";
+import { KeyTypes } from "@open-dpp/dto";
 import { AnnotatedRelationshipElement } from "./annotated-relationship-element";
 import { Blob } from "./blob";
 import { Entity } from "./entity";

@@ -1,4 +1,4 @@
-import { KeyJsonSchema, KeyTypesType } from "@open-dpp/aas";
+import { KeyJsonSchema, KeyTypesType } from "@open-dpp/dto";
 import { IVisitable, IVisitor } from "../visitor";
 
 export class Key implements IVisitable {

@@ -1,4 +1,4 @@
-import { AdministrativeInformationJsonSchema } from "@open-dpp/aas";
+import { AdministrativeInformationJsonSchema } from "@open-dpp/dto";
 import { IVisitable, IVisitor } from "../visitor";
 
 export class AdministrativeInformation implements IVisitable {

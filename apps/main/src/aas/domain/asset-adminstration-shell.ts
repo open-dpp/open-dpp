@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { AssetAdministrationShellJsonSchema } from "@open-dpp/aas";
+import { AssetAdministrationShellJsonSchema } from "@open-dpp/dto";
 import { AssetInformation } from "./asset-information";
 import { AdministrativeInformation } from "./common/administrative-information";
 import { IHasDataSpecification } from "./common/has-data-specification";

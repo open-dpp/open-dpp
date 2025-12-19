@@ -1,7 +1,7 @@
 import type { TemplateDbProps } from "./template";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
-import { AasSubmodelElements, AssetKind, DataTypeDef, KeyTypes, Language, ReferenceTypes } from "@open-dpp/aas";
+import { AasSubmodelElements, AssetKind, DataTypeDef, KeyTypes, Language, ReferenceTypes } from "@open-dpp/dto";
 import { ignoreIds } from "@open-dpp/testing";
 import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
 import { AssetInformation } from "../../aas/domain/asset-information";

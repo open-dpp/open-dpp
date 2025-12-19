@@ -1,4 +1,4 @@
-import { ReferenceJsonSchema, ReferenceTypesType } from "@open-dpp/aas";
+import { ReferenceJsonSchema, ReferenceTypesType } from "@open-dpp/dto";
 import { IVisitable, IVisitor } from "../visitor";
 import { Key } from "./key";
 

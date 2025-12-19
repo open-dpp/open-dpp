@@ -6,7 +6,7 @@ import {
   SubmodelPaginationResponseDtoSchema,
   SubmodelRequestDtoSchema,
   ValueResponseDtoSchema,
-} from "@open-dpp/aas";
+} from "@open-dpp/dto";
 import {
   ApiGetShellsPath,
   ApiGetSubmodelByIdPath,

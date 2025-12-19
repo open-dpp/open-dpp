@@ -1,4 +1,4 @@
-import { QualifierKindEnum } from "@open-dpp/aas";
+import { QualifierKindEnum } from "@open-dpp/dto";
 import { z } from "zod";
 import { ValueTypeDbSchema } from "./basic-db-schema";
 import { ReferenceDbSchema } from "./reference-db-schema";

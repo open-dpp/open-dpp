@@ -1,7 +1,7 @@
 import type { DataFieldType_TYPE } from "../../data-modelling/domain/data-field-base";
 import type { GranularityLevel_TYPE } from "../../data-modelling/domain/granularity-level";
 import { randomUUID } from "node:crypto";
-import { DataTypeDef, KeyTypes, Language, QualifierKind, ReferenceTypes } from "@open-dpp/aas";
+import { DataTypeDef, KeyTypes, Language, QualifierKind, ReferenceTypes } from "@open-dpp/dto";
 import { NotSupportedError } from "@open-dpp/exception";
 import { z } from "zod";
 import { Key } from "../../aas/domain/common/key";

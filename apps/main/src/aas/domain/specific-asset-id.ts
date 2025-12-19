@@ -1,4 +1,4 @@
-import { SpecificAssetIdJsonSchema } from "@open-dpp/aas";
+import { SpecificAssetIdJsonSchema } from "@open-dpp/dto";
 import { IHasSemantics } from "./common/has-semantics";
 import { Reference } from "./common/reference";
 import { IVisitable, IVisitor } from "./visitor";

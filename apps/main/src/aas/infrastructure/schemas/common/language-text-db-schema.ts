@@ -1,4 +1,4 @@
-import { LanguageEnum } from "@open-dpp/aas";
+import { LanguageEnum } from "@open-dpp/dto";
 import { z } from "zod";
 
 export const LanguageTextDbSchema = z.object({

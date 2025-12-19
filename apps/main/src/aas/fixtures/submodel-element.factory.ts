@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { PropertyJsonSchema } from "@open-dpp/aas";
+import { PropertyJsonSchema } from "@open-dpp/dto";
 import { Factory } from "fishery";
 import { z } from "zod";
 

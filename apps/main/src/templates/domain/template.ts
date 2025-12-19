@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { TemplateJsonSchema } from "@open-dpp/aas";
+import { TemplateJsonSchema } from "@open-dpp/dto";
 import { IDigitalProductPassportIdentifiable } from "../../aas/domain/digital-product-passport-identifiable";
 import { Environment } from "../../aas/domain/environment";
 import { IPersistable } from "../../aas/domain/persistable";

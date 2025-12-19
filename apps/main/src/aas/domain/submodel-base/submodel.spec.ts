@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { beforeAll, expect } from "@jest/globals";
-import { DataTypeDef } from "@open-dpp/aas";
+import { DataTypeDef } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import {
   submodelBillOfMaterialPlainFactory,

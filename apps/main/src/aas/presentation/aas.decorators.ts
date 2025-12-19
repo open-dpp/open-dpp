@@ -1,6 +1,6 @@
 import { applyDecorators, Body, Get, Param, Post, Query, Req } from "@nestjs/common";
 
-import { SubmodelElementSchema, SubmodelRequestDtoSchema } from "@open-dpp/aas";
+import { SubmodelElementSchema, SubmodelRequestDtoSchema } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { z } from "zod";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";

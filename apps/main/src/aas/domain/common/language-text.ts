@@ -1,4 +1,4 @@
-import { LanguageTextJsonSchema, LanguageType } from "@open-dpp/aas";
+import { LanguageTextJsonSchema, LanguageType } from "@open-dpp/dto";
 import { IVisitable, IVisitor } from "../visitor";
 
 export class LanguageText implements IVisitable {

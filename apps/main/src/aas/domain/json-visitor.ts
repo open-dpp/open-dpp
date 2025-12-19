@@ -24,7 +24,7 @@ import type { ISubmodelBase } from "./submodel-base/submodel-base";
 import type { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import type { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import type { IVisitor } from "./visitor";
-import { KeyTypes } from "@open-dpp/aas";
+import { KeyTypes } from "@open-dpp/dto";
 
 export class JsonVisitor implements IVisitor<undefined, any> {
   private buildBase(submodelBase: ISubmodelBase) {

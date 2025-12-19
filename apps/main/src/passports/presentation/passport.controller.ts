@@ -1,7 +1,7 @@
-import type { SubmodelElementRequestDto, SubmodelRequestDto } from "@open-dpp/aas";
+import type { SubmodelElementRequestDto, SubmodelRequestDto } from "@open-dpp/dto";
 import type express from "express";
 import { Controller } from "@nestjs/common";
-import { AssetAdministrationShellResponseDto, SubmodelElementPaginationResponseDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/aas";
+import { AssetAdministrationShellResponseDto, SubmodelElementPaginationResponseDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/dto";
 
 import { Pagination } from "../../aas/domain/pagination";
 import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";

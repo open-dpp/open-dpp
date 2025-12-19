@@ -1,5 +1,5 @@
 import { expect } from "@jest/globals";
-import { DataTypeDef, KeyTypes, Language, QualifierKind, ReferenceTypes } from "@open-dpp/aas";
+import { DataTypeDef, KeyTypes, Language, QualifierKind, ReferenceTypes } from "@open-dpp/dto";
 import { Key } from "../../aas/domain/common/key";
 import { LanguageText } from "../../aas/domain/common/language-text";
 import { Qualifier } from "../../aas/domain/common/qualififiable";

@@ -1,5 +1,5 @@
 import { expect } from "@jest/globals";
-import { ReferenceTypes } from "@open-dpp/aas";
+import { ReferenceTypes } from "@open-dpp/dto";
 import { Reference } from "./reference";
 
 describe("reference", () => {

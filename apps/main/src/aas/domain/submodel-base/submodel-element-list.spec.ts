@@ -1,5 +1,5 @@
 import { expect } from "@jest/globals";
-import { AasSubmodelElements } from "@open-dpp/aas";
+import { AasSubmodelElements } from "@open-dpp/dto";
 import { propertyPlainFactory } from "../../fixtures/submodel-element.factory";
 import { Property } from "./property";
 import { SubmodelElementCollection } from "./submodel-element-collection";

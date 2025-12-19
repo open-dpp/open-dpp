@@ -1,5 +1,5 @@
 import { expect } from "@jest/globals";
-import { EntityType } from "@open-dpp/aas";
+import { EntityType } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { propertyPlainFactory } from "../../fixtures/submodel-element.factory";
 import { Entity } from "./entity";

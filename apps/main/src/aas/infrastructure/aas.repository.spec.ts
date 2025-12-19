@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { jest } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
-import { AssetKind } from "@open-dpp/aas";
+import { AssetKind } from "@open-dpp/dto";
 
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";

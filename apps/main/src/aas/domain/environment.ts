@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { AssetKindType, EnvironmentJsonSchema } from "@open-dpp/aas";
+import { AssetKindType, EnvironmentJsonSchema } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";

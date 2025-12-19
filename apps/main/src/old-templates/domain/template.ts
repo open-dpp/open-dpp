@@ -2,7 +2,7 @@ import type { GranularityLevel_TYPE } from "../../data-modelling/domain/granular
 import type { DataFieldValidationResult } from "./data-field";
 import type { Section, SectionDbProps } from "./section";
 import { randomUUID } from "node:crypto";
-import { AasSubmodelElements, AssetKind, KeyTypes, Language, ReferenceTypes } from "@open-dpp/aas";
+import { AasSubmodelElements, AssetKind, KeyTypes, Language, ReferenceTypes } from "@open-dpp/dto";
 import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
 import { AssetInformation } from "../../aas/domain/asset-information";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";

@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import { AasSubmodelElements, AasSubmodelElementsType, BlobJsonSchema } from "@open-dpp/aas";
+import { AasSubmodelElements, AasSubmodelElementsType, BlobJsonSchema } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";

@@ -1,4 +1,4 @@
-import { ReferenceTypesEnum } from "@open-dpp/aas";
+import { ReferenceTypesEnum } from "@open-dpp/dto";
 import { z } from "zod";
 import { KeyDbSchema } from "./key-db-schema";
 

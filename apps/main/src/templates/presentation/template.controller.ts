@@ -1,4 +1,4 @@
-import type { SubmodelElementRequestDto, SubmodelRequestDto } from "@open-dpp/aas";
+import type { SubmodelElementRequestDto, SubmodelRequestDto } from "@open-dpp/dto";
 import type express from "express";
 import { Controller, Post, Req, UnauthorizedException } from "@nestjs/common";
 import {
@@ -9,7 +9,7 @@ import {
   SubmodelPaginationResponseDto,
   SubmodelResponseDto,
   ValueResponseDto,
-} from "@open-dpp/aas";
+} from "@open-dpp/dto";
 import { fromNodeHeaders } from "better-auth/node";
 import { Pagination } from "../../aas/domain/pagination";
 import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";

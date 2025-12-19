@@ -1,4 +1,4 @@
-import { EnvironmentJsonSchema } from "@open-dpp/aas";
+import { EnvironmentJsonSchema } from "@open-dpp/dto";
 import { z } from "zod";
 
 export const TemplateDtoSchema = z.object({

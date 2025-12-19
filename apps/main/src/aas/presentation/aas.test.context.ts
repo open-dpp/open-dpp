@@ -6,7 +6,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ModelDefinition } from "@nestjs/mongoose/dist/interfaces";
 import { Test } from "@nestjs/testing";
-import { AssetAdministrationShellPaginationResponseDtoSchema, SubmodelElementSchema, SubmodelJsonSchema, SubmodelPaginationResponseDtoSchema } from "@open-dpp/aas";
+import { AssetAdministrationShellPaginationResponseDtoSchema, SubmodelElementSchema, SubmodelJsonSchema, SubmodelPaginationResponseDtoSchema } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";

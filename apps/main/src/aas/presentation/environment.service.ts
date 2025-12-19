@@ -1,7 +1,7 @@
 import type express from "express";
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
 
-import { AssetAdministrationShellPaginationResponseDtoSchema, AssetAdministrationShellResponseDto, AssetKindType, SubmodelElementPaginationResponseDto, SubmodelElementPaginationResponseDtoSchema, SubmodelElementRequestDto, SubmodelElementResponseDto, SubmodelElementSchema, SubmodelJsonSchema, SubmodelPaginationResponseDto, SubmodelPaginationResponseDtoSchema, SubmodelRequestDto, SubmodelResponseDto, ValueResponseDto, ValueResponseDtoSchema } from "@open-dpp/aas";
+import { AssetAdministrationShellPaginationResponseDtoSchema, AssetAdministrationShellResponseDto, AssetKindType, SubmodelElementPaginationResponseDto, SubmodelElementPaginationResponseDtoSchema, SubmodelElementRequestDto, SubmodelElementResponseDto, SubmodelElementSchema, SubmodelJsonSchema, SubmodelPaginationResponseDto, SubmodelPaginationResponseDtoSchema, SubmodelRequestDto, SubmodelResponseDto, ValueResponseDto, ValueResponseDtoSchema } from "@open-dpp/dto";
 import { fromNodeHeaders } from "better-auth/node";
 import { AuthService } from "../../auth/auth.service";
 import { Environment } from "../domain/environment";

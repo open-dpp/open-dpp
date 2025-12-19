@@ -1,4 +1,4 @@
-import { DataTypeDefType, ExtensionJsonSchema } from "@open-dpp/aas";
+import { DataTypeDefType, ExtensionJsonSchema } from "@open-dpp/dto";
 import { Reference } from "./common/reference";
 import { IVisitable, IVisitor } from "./visitor";
 

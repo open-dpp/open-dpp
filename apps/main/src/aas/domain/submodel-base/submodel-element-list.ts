@@ -1,4 +1,4 @@
-import { AasSubmodelElements, AasSubmodelElementsType, DataTypeDefType, SubmodelElementListJsonSchema } from "@open-dpp/aas";
+import { AasSubmodelElements, AasSubmodelElementsType, DataTypeDefType, SubmodelElementListJsonSchema } from "@open-dpp/dto";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";

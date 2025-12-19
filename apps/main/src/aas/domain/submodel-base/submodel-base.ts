@@ -1,4 +1,4 @@
-import { AasSubmodelElementsType, KeyTypes, SubmodelBaseJsonSchema } from "@open-dpp/aas";
+import { AasSubmodelElementsType, KeyTypes, SubmodelBaseJsonSchema } from "@open-dpp/dto";
 import { z } from "zod";
 import { IHasDataSpecification } from "../common/has-data-specification";
 import { IHasSemantics } from "../common/has-semantics";

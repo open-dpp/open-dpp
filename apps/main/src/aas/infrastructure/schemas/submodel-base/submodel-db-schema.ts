@@ -1,4 +1,4 @@
-import { ModellingKindEnum } from "@open-dpp/aas";
+import { ModellingKindEnum } from "@open-dpp/dto";
 import { z } from "zod";
 import { AdministrativeInformationDbSchema } from "../administrative-information-db-schema";
 import { ExtensionDbSchema } from "../extension-db-schema";

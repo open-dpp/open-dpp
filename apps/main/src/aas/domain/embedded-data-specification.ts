@@ -1,4 +1,4 @@
-import { EmbeddedDataSpecificationJsonSchema } from "@open-dpp/aas";
+import { EmbeddedDataSpecificationJsonSchema } from "@open-dpp/dto";
 import { Reference } from "./common/reference";
 import { IVisitable, IVisitor } from "./visitor";
 

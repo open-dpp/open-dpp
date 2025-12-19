@@ -1,4 +1,4 @@
-import type { AssetAdministrationShellResponseDto } from '@open-dpp/aas'
+import type { AssetAdministrationShellResponseDto } from '@open-dpp/dto'
 import type { AxiosInstance } from 'axios'
 
 export class AasNamespace {

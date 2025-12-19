@@ -1,4 +1,4 @@
-import { EntityType } from "@open-dpp/aas";
+import { EntityType } from "@open-dpp/dto";
 import { z } from "zod";
 import { ExtensionDbSchema } from "../extension-db-schema";
 import { SpecificAssetIdDbSchema } from "../specific-asset-id-db-schema";

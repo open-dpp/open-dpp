@@ -1,5 +1,5 @@
 import { NotFoundException } from "@nestjs/common";
-import { ModellingKindType, SubmodelJsonSchema } from "@open-dpp/aas";
+import { ModellingKindType, SubmodelJsonSchema } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { AdministrativeInformation } from "../common/administrative-information";
 import { LanguageText } from "../common/language-text";

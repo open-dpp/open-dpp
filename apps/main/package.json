@@ -40,7 +40,7 @@
     "@nestjs/serve-static": "^5.0.4",
     "@nestjs/swagger": "^11.2.1",
     "@nestjs/websockets": "^11.1.6",
-    "@open-dpp/aas": "workspace:*",
+    "@open-dpp/dto": "workspace:*",
     "@open-dpp/api-client": "workspace:*",
     "@open-dpp/env": "workspace:*",
     "@open-dpp/exception": "workspace:*",

@@ -1,5 +1,5 @@
 import { expect } from "@jest/globals";
-import { AssetKind } from "@open-dpp/aas";
+import { AssetKind } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";

@@ -1,4 +1,4 @@
-import { AasSubmodelElementsEnum } from "@open-dpp/aas";
+import { AasSubmodelElementsEnum } from "@open-dpp/dto";
 import { z } from "zod";
 import { ValueTypeDbSchema } from "../common/basic-db-schema";
 import { ReferenceDbSchema } from "../common/reference-db-schema";

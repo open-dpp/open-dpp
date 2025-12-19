@@ -1,4 +1,4 @@
-import { SubmodelJsonSchema } from "@open-dpp/aas";
+import { SubmodelJsonSchema } from "@open-dpp/dto";
 import { Factory } from "fishery";
 import { z } from "zod";
 

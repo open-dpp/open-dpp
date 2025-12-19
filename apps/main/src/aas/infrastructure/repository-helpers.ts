@@ -1,4 +1,4 @@
-import { ReferenceJsonSchema } from "@open-dpp/aas";
+import { ReferenceJsonSchema } from "@open-dpp/dto";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { Document, Model as MongooseModel } from "mongoose";
 import { ZodObject } from "zod";
