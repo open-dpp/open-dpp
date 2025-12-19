@@ -112,6 +112,16 @@ describe('apiClient', () => {
       const response = await sdk.dpp.templates.aas.createSubmodelElement(aasWrapperId, btoa(submodelCarbonFootprintResponse.id), propertyToAdd)
       expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd))
     })
+
+    it('should create submodel element at idShortPath', async () => {
+      const response = await sdk.dpp.templates.aas.createSubmodelElementAtIdShortPath(
+        aasWrapperId,
+        btoa(submodelCarbonFootprintResponse.id),
+        submodelCarbonFootprintElement0.idShort,
+        propertyToAdd,
+      )
+      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd))
+    })
   })
 
   describe('model', () => {

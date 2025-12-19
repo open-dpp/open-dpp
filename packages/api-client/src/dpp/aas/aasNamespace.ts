@@ -57,4 +57,8 @@ export class AasNamespace {
   public async createSubmodelElement(id: string, submodelId: string, data: SubmodelElementRequestDto) {
     return this.axiosInstance.post<SubmodelElementResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements`, data)
   }
+
+  public async createSubmodelElementAtIdShortPath(id: string, submodelId: string, idShortPath: string, data: SubmodelElementRequestDto) {
+    return this.axiosInstance.post<SubmodelElementResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}`, data)
+  }
 }

@@ -80,5 +80,10 @@ export function aasHandlers(basePath: string) {
         status: 200,
       })
     }),
+    http.post(`${templatesEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements/${submodelCarbonFootprintElement0.idShort}`, async () => {
+      return HttpResponse.json(SubmodelElementSchema.parse(propertyToAdd), {
+        status: 200,
+      })
+    }),
   ]
 }
