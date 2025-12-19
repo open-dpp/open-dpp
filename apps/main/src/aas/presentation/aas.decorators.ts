@@ -1,10 +1,9 @@
 import { applyDecorators, Body, Get, Param, Post, Query, Req } from "@nestjs/common";
 
-import { SubmodelElementSchema } from "@open-dpp/aas";
+import { SubmodelElementSchema, SubmodelRequestDtoSchema } from "@open-dpp/aas";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { z } from "zod";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
-import { SubmodelRequestDtoSchema } from "./dto/submodel.dto";
 
 export const ApiGetShellsPath = "/:id/shells";
 export function ApiGetShells() {

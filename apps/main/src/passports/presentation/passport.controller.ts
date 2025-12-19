@@ -1,9 +1,9 @@
+import type { SubmodelElementRequestDto, SubmodelRequestDto } from "@open-dpp/aas";
 import type express from "express";
-import type { SubmodelElementRequestDto } from "../../aas/presentation/dto/submodel-element.dto";
-import type { SubmodelRequestDto } from "../../aas/presentation/dto/submodel.dto";
 import { Controller } from "@nestjs/common";
-import { Pagination } from "../../aas/domain/pagination";
+import { AssetAdministrationShellResponseDto, SubmodelElementPaginationResponseDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/aas";
 
+import { Pagination } from "../../aas/domain/pagination";
 import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
 import {
   ApiGetShells,
@@ -26,13 +26,6 @@ import {
   SubmodelRequestBody,
 } from "../../aas/presentation/aas.decorators";
 import { IAasCreateEndpoints, IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
-import { AssetAdministrationShellResponseDto } from "../../aas/presentation/dto/asset-administration-shell.dto";
-import {
-  SubmodelElementPaginationResponseDto,
-  SubmodelElementResponseDto,
-} from "../../aas/presentation/dto/submodel-element.dto";
-import { SubmodelPaginationResponseDto, SubmodelResponseDto } from "../../aas/presentation/dto/submodel.dto";
-import { ValueResponseDto } from "../../aas/presentation/dto/value-response.dto";
 import { EnvironmentService, loadEnvironmentAndCheckOwnership } from "../../aas/presentation/environment.service";
 import { AuthService } from "../../auth/auth.service";
 import { PassportRepository } from "../infrastructure/passport.repository";

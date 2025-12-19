@@ -1,4 +1,12 @@
-import { SubmodelElementSchema, SubmodelJsonSchema } from "@open-dpp/aas";
+import {
+  AssetAdministrationShellPaginationResponseDtoSchema,
+  SubmodelElementPaginationResponseDtoSchema,
+  SubmodelElementSchema,
+  SubmodelJsonSchema,
+  SubmodelPaginationResponseDtoSchema,
+  SubmodelRequestDtoSchema,
+  ValueResponseDtoSchema,
+} from "@open-dpp/aas";
 import {
   ApiGetShellsPath,
   ApiGetSubmodelByIdPath,
@@ -13,12 +21,6 @@ import {
   LimitQueryParamSchema,
   SubmodelIdParamSchema,
 } from "../aas/presentation/aas.decorators";
-import {
-  AssetAdministrationShellPaginationResponseDtoSchema,
-} from "../aas/presentation/dto/asset-administration-shell.dto";
-import { SubmodelElementPaginationResponseDtoSchema } from "../aas/presentation/dto/submodel-element.dto";
-import { SubmodelPaginationResponseDtoSchema, SubmodelRequestDtoSchema } from "../aas/presentation/dto/submodel.dto";
-import { ValueResponseDtoSchema } from "../aas/presentation/dto/value-response.dto";
 import { TemplateDtoSchema } from "../templates/presentation/dto/template.dto";
 
 const HTTPCode = {

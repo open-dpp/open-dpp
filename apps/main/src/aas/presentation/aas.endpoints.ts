@@ -1,13 +1,6 @@
 import type express from "express";
+import { AssetAdministrationShellResponseDto, SubmodelElementPaginationResponseDto, SubmodelElementRequestDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelRequestDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/aas";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
-import { AssetAdministrationShellResponseDto } from "./dto/asset-administration-shell.dto";
-import {
-  SubmodelElementPaginationResponseDto,
-  SubmodelElementRequestDto,
-  SubmodelElementResponseDto,
-} from "./dto/submodel-element.dto";
-import { SubmodelPaginationResponseDto, SubmodelRequestDto, SubmodelResponseDto } from "./dto/submodel.dto";
-import { ValueResponseDto } from "./dto/value-response.dto";
 
 export interface IAasReadEndpoints {
   getShells: (id: string, limit: number | undefined, cursor: string | undefined, req: express.Request) => Promise<AssetAdministrationShellResponseDto>;

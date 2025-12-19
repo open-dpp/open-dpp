@@ -10,6 +10,7 @@ import {
   VisibilityLevel,
 } from '../../src'
 import { activeOrganization, organizations } from '../organization'
+import { templateId } from './handlers/aas'
 import { aasPropertiesWithParent, connection, connectionList } from './handlers/aas-integration'
 import { item1, item2 } from './handlers/item'
 import { mediaReferences, mediaReferenceUpdate, model, responseDataValues, updateDataValues } from './handlers/model'
@@ -52,6 +53,16 @@ describe('apiClient', () => {
     it('should get template by id', async () => {
       const response = await sdk.dpp.oldTemplates.getById(template.id)
       expect(response.data).toEqual(template)
+    })
+  })
+
+  describe.each(['templates'])('aas', () => {
+    it('should return shells', async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      })
+      const response = await sdk.dpp.templates.aas.getShells(templateId)
+      expect(response.data).toEqual(organizations)
     })
   })
 

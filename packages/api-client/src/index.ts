@@ -17,6 +17,7 @@ export type {
   PassportMetricQueryDto,
 } from './analytics/passport-metric/passport-metric.dtos'
 export { PassportMetricNamespace } from './analytics/passport-metric/passport-metric.namespace'
+export { AasNamespace } from './dpp/aas/aasNamespace'
 export { DataFieldType } from './dpp/data-modelling/data-field.dto'
 export type { DataFieldDto } from './dpp/data-modelling/data-field.dto'
 export { GranularityLevel } from './dpp/data-modelling/granularity-level'
@@ -77,6 +78,7 @@ export type {
   TemplateDraftUpdateDto,
 } from './dpp/template-drafts/template-draft.dtos'
 export { TemplateDraftsNamespace } from './dpp/template-drafts/template-drafts.namespace'
+export { TemplatesNamespace } from './dpp/templates/templates.namespace'
 
 export type {
   UniqueProductIdentifierDto,

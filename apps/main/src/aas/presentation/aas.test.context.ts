@@ -6,7 +6,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ModelDefinition } from "@nestjs/mongoose/dist/interfaces";
 import { Test } from "@nestjs/testing";
-import { SubmodelElementSchema, SubmodelJsonSchema } from "@open-dpp/aas";
+import { AssetAdministrationShellPaginationResponseDtoSchema, SubmodelElementSchema, SubmodelJsonSchema, SubmodelPaginationResponseDtoSchema } from "@open-dpp/aas";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
@@ -36,8 +36,6 @@ import {
 } from "../infrastructure/schemas/asset-administration-shell.schema";
 import { SubmodelDoc, SubmodelSchema } from "../infrastructure/schemas/submodel.schema";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
-import { AssetAdministrationShellPaginationResponseDtoSchema } from "./dto/asset-administration-shell.dto";
-import { SubmodelPaginationResponseDtoSchema } from "./dto/submodel.dto";
 
 export function createAasTestContext<T>(basePath: string, metadataTestingModule: ModuleMetadata, mongooseModels: ModelDefinition[], EntityRepositoryClass: new (...args: any[]) => T) {
   let app: INestApplication;

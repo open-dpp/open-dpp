@@ -1,7 +1,7 @@
 import type express from "express";
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
 
-import { AssetKindType, SubmodelElementSchema, SubmodelJsonSchema } from "@open-dpp/aas";
+import { AssetAdministrationShellPaginationResponseDtoSchema, AssetAdministrationShellResponseDto, AssetKindType, SubmodelElementPaginationResponseDto, SubmodelElementPaginationResponseDtoSchema, SubmodelElementRequestDto, SubmodelElementResponseDto, SubmodelElementSchema, SubmodelJsonSchema, SubmodelPaginationResponseDto, SubmodelPaginationResponseDtoSchema, SubmodelRequestDto, SubmodelResponseDto, ValueResponseDto, ValueResponseDtoSchema } from "@open-dpp/aas";
 import { fromNodeHeaders } from "better-auth/node";
 import { AuthService } from "../../auth/auth.service";
 import { Environment } from "../domain/environment";
@@ -14,23 +14,6 @@ import {
   IDigitalProductPassportIdentifiableRepository,
 } from "../infrastructure/digital-product-passport-identifiable.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
-import {
-  AssetAdministrationShellPaginationResponseDtoSchema,
-  AssetAdministrationShellResponseDto,
-} from "./dto/asset-administration-shell.dto";
-import {
-  SubmodelElementPaginationResponseDto,
-  SubmodelElementPaginationResponseDtoSchema,
-  SubmodelElementRequestDto,
-  SubmodelElementResponseDto,
-} from "./dto/submodel-element.dto";
-import {
-  SubmodelPaginationResponseDto,
-  SubmodelPaginationResponseDtoSchema,
-  SubmodelRequestDto,
-  SubmodelResponseDto,
-} from "./dto/submodel.dto";
-import { ValueResponseDto, ValueResponseDtoSchema } from "./dto/value-response.dto";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
