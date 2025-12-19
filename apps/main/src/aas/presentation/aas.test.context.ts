@@ -8,27 +8,21 @@ import { ModelDefinition } from "@nestjs/mongoose/dist/interfaces";
 import { Test } from "@nestjs/testing";
 import { AssetAdministrationShellPaginationResponseDtoSchema, SubmodelElementSchema, SubmodelJsonSchema, SubmodelPaginationResponseDtoSchema } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { aasPlainFactory, propertyPlainFactory, submodelBillOfMaterialPlainFactory, submodelCarbonFootprintPlainFactory, submodelDesignOfProductPlainFactory } from "@open-dpp/testing";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import { AuthGuard } from "../../auth/auth.guard";
 import { AuthModule } from "../../auth/auth.module";
 import { AuthService } from "../../auth/auth.service";
 import { generateMongoConfig } from "../../database/config";
-import { EmailService } from "../../email/email.service";
 
+import { EmailService } from "../../email/email.service";
 import { AasModule } from "../aas.module";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { IPersistable } from "../domain/persistable";
 import { Submodel } from "../domain/submodel-base/submodel";
-import { IdShortPath } from "../domain/submodel-base/submodel-base";
 
-import { aasPlainFactory } from "../fixtures/aas.factory";
-import { propertyPlainFactory } from "../fixtures/submodel-element.factory";
-import {
-  submodelBillOfMaterialPlainFactory,
-  submodelCarbonFootprintPlainFactory,
-  submodelDesignOfProductPlainFactory,
-} from "../fixtures/submodel.factory";
+import { IdShortPath } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
 import {
   AssetAdministrationShellDoc,

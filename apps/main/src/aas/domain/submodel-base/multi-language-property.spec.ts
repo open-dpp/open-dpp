@@ -1,6 +1,6 @@
 import { expect } from "@jest/globals";
 import { ValueError } from "@open-dpp/exception";
-import { propertyPlainFactory } from "../../fixtures/submodel-element.factory";
+import { propertyPlainFactory } from "@open-dpp/testing";
 import { MultiLanguageProperty } from "./multi-language-property";
 import { Property } from "./property";
 
