@@ -267,7 +267,7 @@ importers:
         version: link:../../packages/api-client
       '@open-dpp/env':
         specifier: workspace:*
-        version: link:../../packages/env
+        version: file:packages/env(@nestjs/microservices@11.1.9)(@nestjs/platform-express@11.1.9)(@nestjs/websockets@11.1.9)(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@open-dpp/exception':
         specifier: workspace:*
         version: link:../../packages/exception
@@ -480,8 +480,8 @@ importers:
         specifier: ^11.1.6
         version: 11.1.9(@nestjs/common@11.1.9(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.9)
       '@open-dpp/api-client':
-        specifier: ^2.2.2
-        version: 2.2.2
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@open-dpp/env':
         specifier: workspace:*
         version: file:packages/env(@nestjs/microservices@11.1.9)(@nestjs/platform-express@11.1.9)(@nestjs/websockets@11.1.9)(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -832,7 +832,7 @@ importers:
         version: 11.0.3(@nestjs/common@11.1.9(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.9)(mongoose@8.19.3)(rxjs@7.8.2)
       '@open-dpp/env':
         specifier: workspace:*
-        version: link:../../packages/env
+        version: file:packages/env(@nestjs/microservices@11.1.9)(@nestjs/platform-express@11.1.9)(@nestjs/websockets@11.1.9)(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
@@ -2494,9 +2494,6 @@ packages:
 
   '@one-ini/wasm@0.1.1':
     resolution: {integrity: sha512-XuySG1E38YScSJoMlqovLru4KTUNSjgVTIjyh7qMX6aNN5HY5Ct5LhRJdxO79JtTzKfzV/bnWpz+zquYrISsvw==}
-
-  '@open-dpp/api-client@2.2.2':
-    resolution: {integrity: sha512-OENvKj3Zl4LnWWJaEcs2VjlWvKoZD49B+VxLkcQziCc+ltCfkyQASYhJmitmKAo96YQ2zSlD+gM62Tg3ZrP5mg==}
 
   '@open-dpp/env@file:packages/env':
     resolution: {directory: packages/env, type: directory}
@@ -11376,12 +11373,6 @@ snapshots:
       consola: 3.4.2
 
   '@one-ini/wasm@0.1.1': {}
-
-  '@open-dpp/api-client@2.2.2':
-    dependencies:
-      axios: 1.13.2
-    transitivePeerDependencies:
-      - debug
 
   '@open-dpp/env@file:packages/env(@nestjs/microservices@11.1.9)(@nestjs/platform-express@11.1.9)(@nestjs/websockets@11.1.9)(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
     dependencies:
