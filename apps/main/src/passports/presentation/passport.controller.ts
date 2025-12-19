@@ -1,7 +1,7 @@
 import type { SubmodelElementRequestDto, SubmodelRequestDto } from "@open-dpp/dto";
 import type express from "express";
 import { Controller } from "@nestjs/common";
-import { AssetAdministrationShellResponseDto, SubmodelElementPaginationResponseDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/dto";
+import { AssetAdministrationShellPaginationResponseDto, SubmodelElementPaginationResponseDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/dto";
 
 import { Pagination } from "../../aas/domain/pagination";
 import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
@@ -45,7 +45,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
     @RequestParam() req: express.Request,
-  ): Promise<AssetAdministrationShellResponseDto> {
+  ): Promise<AssetAdministrationShellPaginationResponseDto> {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.passportRepository, id, req);
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getAasShells(environment, pagination);

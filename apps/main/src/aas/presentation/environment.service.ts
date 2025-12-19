@@ -1,7 +1,7 @@
 import type express from "express";
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
 
-import { AssetAdministrationShellPaginationResponseDtoSchema, AssetAdministrationShellResponseDto, AssetKindType, SubmodelElementPaginationResponseDto, SubmodelElementPaginationResponseDtoSchema, SubmodelElementRequestDto, SubmodelElementResponseDto, SubmodelElementSchema, SubmodelJsonSchema, SubmodelPaginationResponseDto, SubmodelPaginationResponseDtoSchema, SubmodelRequestDto, SubmodelResponseDto, ValueResponseDto, ValueResponseDtoSchema } from "@open-dpp/dto";
+import { AssetAdministrationShellPaginationResponseDto, AssetAdministrationShellPaginationResponseDtoSchema, AssetKindType, SubmodelElementPaginationResponseDto, SubmodelElementPaginationResponseDtoSchema, SubmodelElementRequestDto, SubmodelElementResponseDto, SubmodelElementSchema, SubmodelJsonSchema, SubmodelPaginationResponseDto, SubmodelPaginationResponseDtoSchema, SubmodelRequestDto, SubmodelResponseDto, ValueResponseDto, ValueResponseDtoSchema } from "@open-dpp/dto";
 import { fromNodeHeaders } from "better-auth/node";
 import { AuthService } from "../../auth/auth.service";
 import { Environment } from "../domain/environment";
@@ -33,7 +33,7 @@ export class EnvironmentService {
     return environment;
   }
 
-  async getAasShells(environment: Environment, pagination: Pagination): Promise<AssetAdministrationShellResponseDto> {
+  async getAasShells(environment: Environment, pagination: Pagination): Promise<AssetAdministrationShellPaginationResponseDto> {
     const pages = pagination.nextPages(environment.assetAdministrationShells);
     const shells = await Promise.all(pages.map(p => this.aasRepository.findOneOrFail(p)));
     return AssetAdministrationShellPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: shells }).toPlain());

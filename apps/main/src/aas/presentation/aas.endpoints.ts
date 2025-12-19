@@ -1,9 +1,9 @@
 import type express from "express";
-import { AssetAdministrationShellResponseDto, SubmodelElementPaginationResponseDto, SubmodelElementRequestDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelRequestDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/dto";
+import { AssetAdministrationShellPaginationResponseDto, SubmodelElementPaginationResponseDto, SubmodelElementRequestDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelRequestDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/dto";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
 
 export interface IAasReadEndpoints {
-  getShells: (id: string, limit: number | undefined, cursor: string | undefined, req: express.Request) => Promise<AssetAdministrationShellResponseDto>;
+  getShells: (id: string, limit: number | undefined, cursor: string | undefined, req: express.Request) => Promise<AssetAdministrationShellPaginationResponseDto>;
   getSubmodels: (id: string, limit: number | undefined, cursor: string | undefined, req: express.Request) => Promise<SubmodelPaginationResponseDto>;
   getSubmodelById: (id: string, submodelId: string, req: express.Request) => Promise<SubmodelResponseDto>;
   getSubmodelValue: (id: string, submodelId: string, req: express.Request) => Promise<ValueResponseDto>;

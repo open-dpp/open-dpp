@@ -54,5 +54,5 @@ export class Qualifier implements IHasSemantics, IVisitable {
 }
 
 export interface IQualifiable {
-  qualifiers: Qualifier[] | null;
+  qualifiers: Qualifier[];
 }

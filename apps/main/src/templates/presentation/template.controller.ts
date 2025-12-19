@@ -2,7 +2,7 @@ import type { SubmodelElementRequestDto, SubmodelRequestDto } from "@open-dpp/dt
 import type express from "express";
 import { Controller, Post, Req, UnauthorizedException } from "@nestjs/common";
 import {
-  AssetAdministrationShellResponseDto,
+  AssetAdministrationShellPaginationResponseDto,
   AssetKind,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
@@ -47,7 +47,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
   }
 
   @ApiGetShells()
-  async getShells(@IdParam() id: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @Req() req: express.Request): Promise<AssetAdministrationShellResponseDto> {
+  async getShells(@IdParam() id: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @Req() req: express.Request): Promise<AssetAdministrationShellPaginationResponseDto> {
     const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getAasShells(environment, pagination);

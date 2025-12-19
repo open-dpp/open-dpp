@@ -22,15 +22,7 @@ export interface SubmodelBaseProps {
   embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
 }
 
-export interface SubmodelBaseObjects {
-  category: string | null;
-  idShort: string;
-  displayName: Array<LanguageText>;
-  description: Array<LanguageText>;
-  semanticId: Reference | null;
-  supplementalSemanticIds: Array<Reference>;
-  qualifiers: Array<Qualifier>;
-  embeddedDataSpecifications: Array<EmbeddedDataSpecification>;
+export interface SubmodelBaseObjects extends IReferable, IHasSemantics, IQualifiable, IHasDataSpecification {
 }
 
 export function submodelBasePropsFromPlain(data: Record<string, unknown>): SubmodelBaseObjects {
@@ -69,19 +61,9 @@ export class IdShortPath {
 }
 
 export interface ISubmodelBase
-  extends IReferable,
-  IHasSemantics,
-  IQualifiable,
+  extends SubmodelBaseObjects,
   IVisitable,
-  IHasDataSpecification, IConvertableToPlain {
-  category: string | null;
-  idShort: string;
-  displayName: Array<LanguageText>;
-  description: Array<LanguageText>;
-  semanticId: Reference | null;
-  supplementalSemanticIds: Array<Reference>;
-  qualifiers: Qualifier[];
-  embeddedDataSpecifications: Array<EmbeddedDataSpecification>;
+  IConvertableToPlain {
   addSubmodelElement: (submodelElement: ISubmodelElement) => ISubmodelElement;
   getSubmodelElements: () => IterableIterator<ISubmodelElement>;
 }

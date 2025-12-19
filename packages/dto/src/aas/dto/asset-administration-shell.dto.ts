@@ -9,6 +9,6 @@ export const AssetAdministrationShellPaginationResponseDtoSchema = z
   })
   .meta({ id: 'AssetAdministrationShells' })
 
-export type AssetAdministrationShellResponseDto = z.infer<
+export type AssetAdministrationShellPaginationResponseDto = z.infer<
   typeof AssetAdministrationShellPaginationResponseDtoSchema
 >

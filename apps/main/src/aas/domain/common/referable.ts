@@ -1,8 +1,8 @@
 import { LanguageText } from "./language-text";
 
 export interface IReferable {
-  idShort: string | null;
+  idShort: string;
   category: string | null;
-  description: LanguageText[] | null;
-  displayName: LanguageText[] | null;
+  description: LanguageText[];
+  displayName: LanguageText[];
 }
