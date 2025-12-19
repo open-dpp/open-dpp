@@ -3,8 +3,9 @@ import type {
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
   SubmodelPaginationResponseDto,
+  ValueResponseDto,
 } from '@open-dpp/dto'
-import type { AxiosInstance } from 'axios'
+import type { AxiosInstance, AxiosResponse } from 'axios'
 
 interface PaginationParams { limit?: number, cursor?: string }
 
@@ -28,6 +29,10 @@ export class AasNamespace {
 
   public async getSubmodelById(id: string, submodelId: string) {
     return this.axiosInstance.get<AssetAdministrationShellPaginationResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}`)
+  }
+
+  public async getSubmodelValue(id: string, submodelId: string): Promise<AxiosResponse<ValueResponseDto>> {
+    return this.axiosInstance.get<ValueResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}/$value`)
   }
 
   public async getSubmodelElements(id: string, submodelId: string) {

@@ -10,7 +10,15 @@ import {
   VisibilityLevel,
 } from '../../src'
 import { activeOrganization, organizations } from '../organization'
-import { aasResponse, aasWrapperId, paginationParams, submodelElement0, submodelResponse } from './handlers/aas'
+import {
+  aasResponse,
+  aasWrapperId,
+  paginationParams,
+  submodelCarbonFootprintResponse,
+  submodelDesignOfProduct,
+  submodelElement0,
+  submodelValueResponse,
+} from './handlers/aas'
 import { aasPropertiesWithParent, connection, connectionList } from './handlers/aas-integration'
 import { item1, item2 } from './handlers/item'
 import { mediaReferences, mediaReferenceUpdate, model, responseDataValues, updateDataValues } from './handlers/model'
@@ -69,29 +77,36 @@ describe('apiClient', () => {
         dpp: { baseURL },
       })
       const response = await sdk.dpp.templates.aas.getSubmodels(aasWrapperId, paginationParams)
-      expect(response.data).toEqual([submodelResponse])
+      expect(response.data).toEqual([submodelCarbonFootprintResponse])
     })
     it('should return submodel by id', async () => {
       const sdk = new OpenDppClient({
         dpp: { baseURL },
       })
-      const response = await sdk.dpp.templates.aas.getSubmodelById(aasWrapperId, btoa(submodelResponse.id))
-      expect(response.data).toEqual(submodelResponse)
+      const response = await sdk.dpp.templates.aas.getSubmodelById(aasWrapperId, btoa(submodelCarbonFootprintResponse.id))
+      expect(response.data).toEqual(submodelCarbonFootprintResponse)
+    })
+    it('should return submodel as value', async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      })
+      const response = await sdk.dpp.templates.aas.getSubmodelValue(aasWrapperId, btoa(submodelDesignOfProduct.id))
+      expect(response.data).toEqual(submodelValueResponse)
     })
     it('should return submodel elements of submodel', async () => {
       const sdk = new OpenDppClient({
         dpp: { baseURL },
       })
-      const response = await sdk.dpp.templates.aas.getSubmodelElements(aasWrapperId, btoa(submodelResponse.id))
-      expect(response.data).toEqual(submodelResponse.submodelElements)
+      const response = await sdk.dpp.templates.aas.getSubmodelElements(aasWrapperId, btoa(submodelCarbonFootprintResponse.id))
+      expect(response.data).toEqual(submodelCarbonFootprintResponse.submodelElements)
     })
 
     it('should return submodel element by id', async () => {
       const sdk = new OpenDppClient({
         dpp: { baseURL },
       })
-      const response = await sdk.dpp.templates.aas.getSubmodelElementById(aasWrapperId, btoa(submodelResponse.id), submodelElement0.idShort)
-      expect(response.data).toEqual(submodelResponse.submodelElements[0])
+      const response = await sdk.dpp.templates.aas.getSubmodelElementById(aasWrapperId, btoa(submodelCarbonFootprintResponse.id), submodelElement0.idShort)
+      expect(response.data).toEqual(submodelCarbonFootprintResponse.submodelElements[0])
     })
   })
 
