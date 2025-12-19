@@ -39,6 +39,10 @@ export class AasNamespace {
     return this.axiosInstance.get<SubmodelElementPaginationResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements`)
   }
 
+  public async getSubmodelElementValue(id: string, submodelId: string, idShortPath: string): Promise<AxiosResponse<ValueResponseDto>> {
+    return this.axiosInstance.get<ValueResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/$value`)
+  }
+
   public async getSubmodelElementById(id: string, submodelId: string, idShortPath: string) {
     return this.axiosInstance.get<SubmodelElementResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}`)
   }

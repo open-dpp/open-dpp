@@ -8,6 +8,7 @@ import {
 import {
   aasPlainFactory,
   submodelCarbonFootprintPlainFactory,
+  submodelDesignOfProductPlainFactory,
   submodelDesignOfProductValuePlainFactory,
 } from '@open-dpp/testing'
 import { http, HttpResponse } from 'msw'
@@ -19,9 +20,10 @@ export const aasWrapperId = randomUUID()
 export const iriDomain = `https://open-dpp.de/${randomUUID()}`
 export const aasResponse = AssetAdministrationShellJsonSchema.parse(aasPlainFactory.build(undefined, { transient: { iriDomain } }))
 export const submodelCarbonFootprintResponse = SubmodelJsonSchema.parse(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }))
-export const submodelElement0 = SubmodelBaseJsonSchema.parse(submodelCarbonFootprintResponse.submodelElements[0])
-export const submodelDesignOfProduct = submodelDesignOfProductValuePlainFactory.build()
-export const submodelValueResponse = ValueResponseDtoSchema.parse(submodelDesignOfProduct)
+export const submodelCarbonFootprintElement0 = SubmodelBaseJsonSchema.parse(submodelCarbonFootprintResponse.submodelElements[0])
+export const submodelDesignOfProduct = SubmodelJsonSchema.parse(submodelDesignOfProductPlainFactory.build())
+export const submodelDesignOfProductElement0 = SubmodelBaseJsonSchema.parse(submodelDesignOfProduct.submodelElements[0])
+export const submodelValueResponse: { Design_V01: any } = ValueResponseDtoSchema.parse(submodelDesignOfProductValuePlainFactory.build()) as { Design_V01: any }
 export function aasHandlers(basePath: string) {
   const templatesEndpointUrl = `${baseURL}/${basePath}`
 
@@ -55,8 +57,13 @@ export function aasHandlers(basePath: string) {
         status: 200,
       })
     }),
-    http.get(`${templatesEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements/${submodelElement0.idShort}`, async () => {
+    http.get(`${templatesEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements/${submodelCarbonFootprintElement0.idShort}`, async () => {
       return HttpResponse.json(submodelCarbonFootprintResponse.submodelElements[0], {
+        status: 200,
+      })
+    }),
+    http.get(`${templatesEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/${submodelDesignOfProductElement0.idShort}/$value`, async () => {
+      return HttpResponse.json(submodelValueResponse.Design_V01, {
         status: 200,
       })
     }),
