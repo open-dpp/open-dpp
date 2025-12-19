@@ -10,7 +10,7 @@ import {
   VisibilityLevel,
 } from '../../src'
 import { activeOrganization, organizations } from '../organization'
-import { templateId } from './handlers/aas'
+import { aasResponse, aasWrapperId, paginationParams, submodelResponse } from './handlers/aas'
 import { aasPropertiesWithParent, connection, connectionList } from './handlers/aas-integration'
 import { item1, item2 } from './handlers/item'
 import { mediaReferences, mediaReferenceUpdate, model, responseDataValues, updateDataValues } from './handlers/model'
@@ -61,8 +61,22 @@ describe('apiClient', () => {
       const sdk = new OpenDppClient({
         dpp: { baseURL },
       })
-      const response = await sdk.dpp.templates.aas.getShells(templateId)
-      expect(response.data).toEqual(organizations)
+      const response = await sdk.dpp.templates.aas.getShells(aasWrapperId, paginationParams)
+      expect(response.data).toEqual([aasResponse])
+    })
+    it('should return submodels', async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      })
+      const response = await sdk.dpp.templates.aas.getSubmodels(aasWrapperId, paginationParams)
+      expect(response.data).toEqual([submodelResponse])
+    })
+    it('should return submodel by id', async () => {
+      const sdk = new OpenDppClient({
+        dpp: { baseURL },
+      })
+      const response = await sdk.dpp.templates.aas.getSubmodelById(aasWrapperId, btoa(submodelResponse.id))
+      expect(response.data).toEqual(submodelResponse)
     })
   })
 
