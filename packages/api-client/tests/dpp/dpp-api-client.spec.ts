@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto'
+import { SubmodelElementSchema } from '@open-dpp/dto'
+import { submodelCarbonFootprintPlainFactory } from '@open-dpp/testing'
 import {
   AssetAdministrationShellType,
   DataFieldType,
@@ -14,6 +16,7 @@ import {
   aasResponse,
   aasWrapperId,
   paginationParams,
+  propertyToAdd,
   submodelCarbonFootprintElement0,
   submodelCarbonFootprintResponse,
   submodelDesignOfProduct,
@@ -98,6 +101,16 @@ describe('apiClient', () => {
     it('should return submodel element value', async () => {
       const response = await sdk.dpp.templates.aas.getSubmodelElementValue(aasWrapperId, btoa(submodelDesignOfProduct.id), submodelDesignOfProductElement0.idShort)
       expect(response.data).toEqual(submodelValueResponse.Design_V01)
+    })
+
+    it('should create submodel', async () => {
+      const response = await sdk.dpp.templates.aas.createSubmodel(aasWrapperId, submodelCarbonFootprintPlainFactory.build())
+      expect(response.data).toEqual(submodelCarbonFootprintResponse)
+    })
+
+    it('should create submodel element', async () => {
+      const response = await sdk.dpp.templates.aas.createSubmodelElement(aasWrapperId, btoa(submodelCarbonFootprintResponse.id), propertyToAdd)
+      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd))
     })
   })
 

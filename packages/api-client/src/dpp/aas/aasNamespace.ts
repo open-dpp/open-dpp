@@ -1,8 +1,11 @@
 import type {
   AssetAdministrationShellPaginationResponseDto,
   SubmodelElementPaginationResponseDto,
+  SubmodelElementRequestDto,
   SubmodelElementResponseDto,
   SubmodelPaginationResponseDto,
+  SubmodelRequestDto,
+  SubmodelResponseDto,
   ValueResponseDto,
 } from '@open-dpp/dto'
 import type { AxiosInstance, AxiosResponse } from 'axios'
@@ -45,5 +48,13 @@ export class AasNamespace {
 
   public async getSubmodelElementById(id: string, submodelId: string, idShortPath: string) {
     return this.axiosInstance.get<SubmodelElementResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}`)
+  }
+
+  public async createSubmodel(id: string, data: SubmodelRequestDto) {
+    return this.axiosInstance.post<SubmodelResponseDto>(`${this.aasEndpoint}/${id}/submodels`, data)
+  }
+
+  public async createSubmodelElement(id: string, submodelId: string, data: SubmodelElementRequestDto) {
+    return this.axiosInstance.post<SubmodelElementResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements`, data)
   }
 }

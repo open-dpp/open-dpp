@@ -2,11 +2,13 @@ import { randomUUID } from 'node:crypto'
 import {
   AssetAdministrationShellJsonSchema,
   SubmodelBaseJsonSchema,
+  SubmodelElementSchema,
   SubmodelJsonSchema,
   ValueResponseDtoSchema,
 } from '@open-dpp/dto'
 import {
   aasPlainFactory,
+  propertyPlainFactory,
   submodelCarbonFootprintPlainFactory,
   submodelDesignOfProductPlainFactory,
   submodelDesignOfProductValuePlainFactory,
@@ -24,6 +26,7 @@ export const submodelCarbonFootprintElement0 = SubmodelBaseJsonSchema.parse(subm
 export const submodelDesignOfProduct = SubmodelJsonSchema.parse(submodelDesignOfProductPlainFactory.build())
 export const submodelDesignOfProductElement0 = SubmodelBaseJsonSchema.parse(submodelDesignOfProduct.submodelElements[0])
 export const submodelValueResponse: { Design_V01: any } = ValueResponseDtoSchema.parse(submodelDesignOfProductValuePlainFactory.build()) as { Design_V01: any }
+export const propertyToAdd = propertyPlainFactory.build(undefined, { transient: { iriDomain } })
 export function aasHandlers(basePath: string) {
   const templatesEndpointUrl = `${baseURL}/${basePath}`
 
@@ -64,6 +67,16 @@ export function aasHandlers(basePath: string) {
     }),
     http.get(`${templatesEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/${submodelDesignOfProductElement0.idShort}/$value`, async () => {
       return HttpResponse.json(submodelValueResponse.Design_V01, {
+        status: 200,
+      })
+    }),
+    http.post(`${templatesEndpointUrl}/${aasWrapperId}/submodels`, async () => {
+      return HttpResponse.json(submodelCarbonFootprintResponse, {
+        status: 200,
+      })
+    }),
+    http.post(`${templatesEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements`, async () => {
+      return HttpResponse.json(SubmodelElementSchema.parse(propertyToAdd), {
         status: 200,
       })
     }),
