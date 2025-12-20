@@ -114,7 +114,7 @@ importers:
         version: 6.0.2(cypress@15.6.0)(vue@3.5.23(typescript@5.9.3))
       '@eslint/js':
         specifier: ^9.38.0
-        version: 9.39.1
+        version: 9.39.2
       '@open-dpp/config-eslint':
         specifier: workspace:*
         version: link:../../packages/config-eslint
@@ -270,7 +270,7 @@ importers:
         version: link:../../packages/exception
       '@open-dpp/permission':
         specifier: workspace:*
-        version: link:../../packages/permission
+        version: file:packages/permission
       axios:
         specifier: ^1.12.2
         version: 1.13.2
@@ -355,7 +355,7 @@ importers:
         version: 3.3.3
       '@eslint/js':
         specifier: ^9.38.0
-        version: 9.39.1
+        version: 9.39.2
       '@nestjs/cli':
         specifier: ^11.0.14
         version: 11.0.14(@swc/core@1.15.3)(@types/node@24.10.1)
@@ -567,7 +567,7 @@ importers:
         version: 3.3.3
       '@eslint/js':
         specifier: ^9.38.0
-        version: 9.39.1
+        version: 9.39.2
       '@rollup/plugin-typescript':
         specifier: ^12.1.4
         version: 12.3.0(rollup@4.52.5)(tslib@2.8.1)(typescript@5.9.3)
@@ -1248,6 +1248,9 @@ packages:
   '@casl/ability@6.7.3':
     resolution: {integrity: sha512-A4L28Ko+phJAsTDhRjzCOZWECQWN2jzZnJPnROWWHjJpyMq1h7h9ZqjwS2WbIUa3Z474X1ZPSgW0f1PboZGC0A==}
 
+  '@casl/ability@6.7.5':
+    resolution: {integrity: sha512-NaOHPi9JMn8Kesh+GRkjNKAYkl4q8qMFAlqw7w2yrE+cBQZSbV9GkBGKvgzs3CdzEc5Yl1cn3JwDxxbBN5gjog==}
+
   '@cfworker/json-schema@4.1.1':
     resolution: {integrity: sha512-gAmrUZSGtKc3AiBL71iNWxDsyUC5uMaKKGdvzYsBoTW/xi42JQHl7eKV2OYzCUqvc+D2RCcf7EXY2iCyFIk6og==}
 
@@ -1558,6 +1561,10 @@ packages:
 
   '@eslint/js@9.39.1':
     resolution: {integrity: sha512-S26Stp4zCy88tH94QbBv3XCuzRQiZ9yXofEILmglYTh/Ug/a9/umqvgFtYBAo3Lp0nsI/5/qH1CCrbdK3AP1Tw==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@eslint/js@9.39.2':
+    resolution: {integrity: sha512-q1mjIoW1VX4IvSocvM/vbTiveKC4k9eLrajNEuSsmjymSDEbpGddtpfOoN7YGAqBK3NG+uqo8ia4PDTt8buCYA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@eslint/markdown@7.5.1':
@@ -2451,6 +2458,9 @@ packages:
 
   '@open-dpp/api-client@2.2.2':
     resolution: {integrity: sha512-OENvKj3Zl4LnWWJaEcs2VjlWvKoZD49B+VxLkcQziCc+ltCfkyQASYhJmitmKAo96YQ2zSlD+gM62Tg3ZrP5mg==}
+
+  '@open-dpp/permission@file:packages/permission':
+    resolution: {directory: packages/permission, type: directory}
 
   '@open-draft/deferred-promise@2.2.0':
     resolution: {integrity: sha512-CecwLWx3rhxVQF6V4bAgPS5t+So2sTbPgAzafKkVizyi7tlwpcFpdFqq+wqF2OwNBmqFuu6tOyouTuxgpMfzmA==}
@@ -10016,6 +10026,10 @@ snapshots:
     dependencies:
       '@ucast/mongo2js': 1.4.0
 
+  '@casl/ability@6.7.5':
+    dependencies:
+      '@ucast/mongo2js': 1.4.0
+
   '@cfworker/json-schema@4.1.1': {}
 
   '@clack/core@0.5.0':
@@ -10289,6 +10303,8 @@ snapshots:
       - supports-color
 
   '@eslint/js@9.39.1': {}
+
+  '@eslint/js@9.39.2': {}
 
   '@eslint/markdown@7.5.1':
     dependencies:
@@ -11310,6 +11326,10 @@ snapshots:
       axios: 1.13.2
     transitivePeerDependencies:
       - debug
+
+  '@open-dpp/permission@file:packages/permission':
+    dependencies:
+      '@casl/ability': 6.7.5
 
   '@open-draft/deferred-promise@2.2.0': {}
 
