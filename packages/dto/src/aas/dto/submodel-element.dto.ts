@@ -1,8 +1,8 @@
 import { z } from 'zod'
+import { PagingMetadataDtoSchema } from '../../paging-metadata.dto'
 import {
   SubmodelElementSchema,
 } from '../submodel-base/submodel-element-schema'
-import { PagingMetadataDtoSchema } from './paging-metadata.dto'
 
 export const SubmodelBaseUnionDtoSchema = SubmodelElementSchema.meta({ id: 'SubmodelElement' })
 

@@ -1,8 +1,8 @@
 import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { findOne, findOneOrFail, save } from "../../lib/repositories";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
-import { findOne, findOneOrFail, save } from "./repository-helpers";
 import { AssetAdministrationShellDbSchema } from "./schemas/asset-administration-shell-db-schema";
 import {
   AssetAdministrationShellDoc,

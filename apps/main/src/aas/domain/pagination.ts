@@ -1,5 +1,5 @@
 export class Pagination {
-  private constructor(private _cursor: string | null, private readonly limit: number | null) {
+  private constructor(private _cursor: string | null, public readonly limit: number | null) {
   }
 
   static create(data: { cursor?: string; limit?: number }): Pagination {
@@ -8,6 +8,10 @@ export class Pagination {
 
   get cursor() {
     return this._cursor;
+  }
+
+  setCursor(cursor: string) {
+    this._cursor = cursor;
   }
 
   nextPages(pageIds: string[]) {

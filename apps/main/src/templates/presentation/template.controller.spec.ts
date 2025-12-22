@@ -1,11 +1,12 @@
 import { randomUUID } from "node:crypto";
 
-import { expect } from "@jest/globals";
+import { expect, jest } from "@jest/globals";
 
 import { AssetKind } from "@open-dpp/dto";
 import request from "supertest";
 import { Environment } from "../../aas/domain/environment";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
+import { DateTime } from "../../lib/date-time";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../infrastructure/template.schema";
@@ -16,7 +17,7 @@ describe("templateController", () => {
   const basePath = "/templates";
   const ctx = createAasTestContext(basePath, { imports: [TemplatesModule], providers: [TemplateRepository], controllers: [TemplateController] }, [{ name: TemplateDoc.name, schema: TemplateSchema }], TemplateRepository);
 
-  async function createTemplate(orgId: string): Promise<Template> {
+  async function createTemplate(orgId: string, createdAt?: Date, updatedAt?: Date): Promise<Template> {
     const { aas, submodels } = ctx.getAasObjects();
     return ctx.getRepositories().dppIdentifiableRepository.save(Template.create({
       id: randomUUID(),
@@ -26,6 +27,8 @@ describe("templateController", () => {
         submodels: submodels.map(s => s.id),
         conceptDescriptions: [],
       }),
+      createdAt,
+      updatedAt,
     }));
   }
 
@@ -69,9 +72,29 @@ describe("templateController", () => {
     await ctx.asserts.getSubmodelElementValue(createTemplate);
   });
 
+  it("/GET all templates", async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const date1 = new Date("2022-01-01T00:00:00.000Z");
+    const date2 = new Date("2022-01-02T00:00:00.000Z");
+
+    const t1 = await createTemplate(org.id, date1, date1);
+    const t2 = await createTemplate(org.id, date2, date2);
+    const response = await request(app.getHttpServer())
+      .get(basePath)
+      .set("Cookie", userCookie);
+    expect(response.status).toEqual(200);
+    expect(response.body.paging_metadata.cursor).toEqual(t2.createdAt.toISOString());
+    expect(response.body.result).toEqual([t1.toPlain(), t2.toPlain()]);
+  });
+
   it(`/POST a template`, async () => {
     const { betterAuthHelper, app } = ctx.globals();
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const now = new Date(
+      "2022-01-01T00:00:00.000Z",
+    );
+    jest.spyOn(DateTime, "now").mockReturnValue(now);
     const response = await request(app.getHttpServer())
       .post(basePath)
       .set("Cookie", userCookie)
@@ -87,6 +110,8 @@ describe("templateController", () => {
         submodels: [],
         conceptDescriptions: [],
       },
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
     });
     const foundAas = await ctx.getRepositories().aasRepository.findOneOrFail(response.body.environment.assetAdministrationShells[0]);
     expect(foundAas.assetInformation.assetKind).toEqual(AssetKind.Type);

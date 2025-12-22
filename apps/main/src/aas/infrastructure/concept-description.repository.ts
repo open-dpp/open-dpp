@@ -1,8 +1,8 @@
 import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { findOne, findOneOrFail, save } from "../../lib/repositories";
 import { ConceptDescription } from "../domain/concept-description";
-import { findOne, findOneOrFail, save } from "./repository-helpers";
 import { ConceptDescriptionDbSchema } from "./schemas/concept-description-db-schema";
 import { ConceptDescriptionDoc, ConceptDescriptionDocSchemaVersion } from "./schemas/concept-description.schema";
 

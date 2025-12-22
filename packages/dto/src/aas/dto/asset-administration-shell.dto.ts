@@ -1,6 +1,6 @@
 import { z } from 'zod'
+import { PagingMetadataDtoSchema } from '../../paging-metadata.dto'
 import { AssetAdministrationShellJsonSchema } from '../asset-administration-shell-json-schema'
-import { PagingMetadataDtoSchema } from './paging-metadata.dto'
 
 export const AssetAdministrationShellPaginationResponseDtoSchema = z
   .object({

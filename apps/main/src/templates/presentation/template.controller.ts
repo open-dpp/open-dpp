@@ -1,17 +1,18 @@
-import type { SubmodelElementRequestDto, SubmodelRequestDto } from "@open-dpp/dto";
-import type express from "express";
-import { Controller, Post, Req, UnauthorizedException } from "@nestjs/common";
-import {
+import type {
   AssetAdministrationShellPaginationResponseDto,
-  AssetKind,
   SubmodelElementPaginationResponseDto,
+  SubmodelElementRequestDto,
   SubmodelElementResponseDto,
   SubmodelPaginationResponseDto,
+  SubmodelRequestDto,
   SubmodelResponseDto,
   TemplateDto,
-  TemplateDtoSchema,
+  TemplatePaginationDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
+import type express from "express";
+import { Controller, Get, Post, Req, UnauthorizedException } from "@nestjs/common";
+import { AssetKind, TemplateDtoSchema, TemplatePaginationDtoSchema } from "@open-dpp/dto";
 import { fromNodeHeaders } from "better-auth/node";
 import { Pagination } from "../../aas/domain/pagination";
 import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
@@ -145,6 +146,18 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     const environment = await this.environmentService.createEnvironmentWithEmptyAas(AssetKind.Type);
     const template = Template.create({ organizationId: await this.getActiveOrganizationId(req), environment });
     return TemplateDtoSchema.parse((await this.templateRepository.save(template)).toPlain());
+  }
+
+  @Get()
+  async getTemplates(
+    @LimitQueryParam() limit: number | undefined,
+    @CursorQueryParam() cursor: string | undefined,
+    @RequestParam() req: express.Request,
+  ): Promise<TemplatePaginationDto> {
+    const pagination = Pagination.create({ limit, cursor });
+    return TemplatePaginationDtoSchema.parse(
+      (await this.templateRepository.findAllByOrganizationId(await this.getActiveOrganizationId(req), pagination)).toPlain(),
+    );
   }
 
   private async getActiveOrganizationId(req: express.Request) {

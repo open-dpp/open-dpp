@@ -2,7 +2,11 @@ import { ReferenceJsonSchema } from "@open-dpp/dto";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { Document, Model as MongooseModel } from "mongoose";
 import { ZodObject } from "zod";
-import { IPersistable } from "../domain/persistable";
+import { IConvertableToPlain } from "../aas/domain/convertable-to-plain";
+import { Pagination } from "../aas/domain/pagination";
+import { PagingResult } from "../aas/domain/paging-result";
+import { IPersistable } from "../aas/domain/persistable";
+import { HasCreatedAt } from "./has-created-at";
 
 export async function convertToDomain<T>(
   mongoDoc: Document<string>,
@@ -52,4 +56,16 @@ export async function findOne<T extends Document<string>, V>(id: string, docMode
     mongoDoc,
     fromPlain,
   );
+}
+
+export async function findAllByOrganizationId<T extends Document<string>, V extends HasCreatedAt & IConvertableToPlain>(docModel: MongooseModel<T>, fromPlain: (plain: unknown) => V, organizationId: string, pagination?: Pagination) {
+  const tmpPagination = pagination ?? Pagination.create({ limit: 100 });
+  const docs = await docModel.find(
+    { organizationId, ...(tmpPagination.cursor && { createdAt: { $gte: new Date(tmpPagination.cursor) } }) },
+  ).sort({ createdAt: 1 }).limit(tmpPagination.limit ?? 100).exec();
+  const domainObjects = docs.map(fromPlain);
+  if (domainObjects.length > 0) {
+    tmpPagination.setCursor(domainObjects[domainObjects.length - 1].createdAt.toISOString());
+  }
+  return PagingResult.create({ pagination: tmpPagination, items: domainObjects });
 }

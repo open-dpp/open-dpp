@@ -1,8 +1,8 @@
 import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { findOne, findOneOrFail, save } from "../../lib/repositories";
 import { Submodel } from "../domain/submodel-base/submodel";
-import { findOne, findOneOrFail, save } from "./repository-helpers";
 import { SubmodelDbSchema } from "./schemas/submodel-base/submodel-db-schema";
 import { SubmodelDoc, SubmodelDocSchemaVersion } from "./schemas/submodel.schema";
 

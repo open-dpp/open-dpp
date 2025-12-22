@@ -24,6 +24,13 @@ export class TemplateDoc extends Document<string> {
 
   @Prop({ type: EnvironmentSchema, required: true })
   environment: EnvironmentDoc;
+
+  @Prop({ required: true, immutable: true })
+  createdAt: Date;
+
+  @Prop({ required: true })
+  updatedAt: Date;
 }
 
 export const TemplateSchema = SchemaFactory.createForClass(TemplateDoc);
+TemplateSchema.index({ organizationId: 1, createdAt: 1 });
