@@ -1,5 +1,6 @@
 import { setupServer } from 'msw/node'
 import { organizationHandlers } from '../organization'
+import { aasHandlers } from './handlers/aas'
 import { aasIntegrationHandlers } from './handlers/aas-integration'
 import { itemHandlers } from './handlers/item'
 import { modelHandlers } from './handlers/model'
@@ -17,6 +18,7 @@ const handlers = [
   ...productPassportHandlers,
   ...organizationHandlers,
   ...aasIntegrationHandlers,
+  ...aasHandlers('templates'),
 ]
 
 export const server = setupServer(...handlers)

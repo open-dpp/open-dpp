@@ -1,12 +1,19 @@
 import type { DataFieldType_TYPE } from "../../data-modelling/domain/data-field-base";
 import type { GranularityLevel_TYPE } from "../../data-modelling/domain/granularity-level";
 import { randomUUID } from "node:crypto";
+import { DataTypeDef, KeyTypes, Language, QualifierKind, ReferenceTypes } from "@open-dpp/dto";
 import { NotSupportedError } from "@open-dpp/exception";
 import { z } from "zod";
-import {
-  DataFieldBase,
-  DataFieldType,
-} from "../../data-modelling/domain/data-field-base";
+import { Key } from "../../aas/domain/common/key";
+import { LanguageText } from "../../aas/domain/common/language-text";
+import { Qualifier } from "../../aas/domain/common/qualififiable";
+import { Reference } from "../../aas/domain/common/reference";
+import { File } from "../../aas/domain/submodel-base/file";
+import { MultiLanguageProperty } from "../../aas/domain/submodel-base/multi-language-property";
+import { Property } from "../../aas/domain/submodel-base/property";
+import { ReferenceElement } from "../../aas/domain/submodel-base/reference-element";
+import { ISubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
+import { DataFieldBase, DataFieldType } from "../../data-modelling/domain/data-field-base";
 
 export class DataFieldValidationResult {
   public readonly dataFieldId: string;
@@ -105,6 +112,8 @@ export abstract class DataField extends DataFieldBase {
       granularityLevel: this.granularityLevel,
     };
   }
+
+  abstract toAas(): ISubmodelElement;
 }
 
 function validateString(
@@ -136,6 +145,12 @@ export class TextField extends DataField {
   validate(version: string, value: unknown): DataFieldValidationResult {
     return validateString(this.id, this.name, value);
   }
+
+  toAas() {
+    return MultiLanguageProperty.create({ idShort: this.id, displayName: [
+      LanguageText.create({ language: Language.de, text: this.name }),
+    ] });
+  }
 }
 
 export class ProductPassportLink extends DataField {
@@ -156,6 +171,13 @@ export class ProductPassportLink extends DataField {
 
   validate(version: string, value: unknown): DataFieldValidationResult {
     return validateString(this.id, this.name, value);
+  }
+
+  toAas() {
+    return ReferenceElement.create({
+      idShort: this.id,
+      displayName: [LanguageText.create({ language: Language.de, text: this.name })],
+    });
   }
 }
 
@@ -186,6 +208,31 @@ export class NumericField extends DataField {
         : undefined,
     });
   }
+
+  toAas() {
+    const qualifiers = this.options.min !== undefined && this.options.max !== undefined
+      ? [Qualifier.create({
+          semanticId: Reference.create({
+            keys: [Key.create(
+              {
+                type: KeyTypes.GlobalReference,
+                value: "https://admin-shell.io/SubmodelTemplates/AllowedRange/1/0",
+              },
+            )],
+            type: ReferenceTypes.ExternalReference,
+          }),
+          valueType: DataTypeDef.Double,
+          type: "SMT/AllowedRange",
+          value: `[${this.options.min},${this.options.max}]`,
+          kind: QualifierKind.TemplateQualifier,
+          supplementalSemanticIds: [],
+        })]
+      : undefined;
+
+    return Property.create({ valueType: DataTypeDef.Double, idShort: this.id, displayName: [
+      LanguageText.create({ language: Language.de, text: this.name }),
+    ], qualifiers });
+  }
 }
 
 export class FileField extends DataField {
@@ -202,6 +249,10 @@ export class FileField extends DataField {
 
   validate(version: string, value: unknown): DataFieldValidationResult {
     return validateString(this.id, this.name, value);
+  }
+
+  toAas() {
+    return File.create({ idShort: this.id, contentType: "application/octet-stream", displayName: [LanguageText.create({ language: Language.de, text: this.name })] });
   }
 }
 

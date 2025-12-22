@@ -1,23 +1,12 @@
 import type { AxiosInstance } from 'axios'
-import type { TemplateDto, TemplateGetAllDto } from './template.dtos'
+import { AasNamespace } from '../aas/aasNamespace'
 
 export class TemplatesNamespace {
-  private readonly templatesEndpoint
+  public aas!: AasNamespace
 
   constructor(
     private readonly axiosInstance: AxiosInstance,
-    private readonly organizationId?: string,
   ) {
-    this.templatesEndpoint = `/organizations/${this.organizationId}/templates`
-  }
-
-  public async getAll() {
-    return this.axiosInstance.get<TemplateGetAllDto[]>(this.templatesEndpoint)
-  }
-
-  public async getById(id: string) {
-    return this.axiosInstance.get<TemplateDto>(
-      `${this.templatesEndpoint}/${id}`,
-    )
+    this.aas = new AasNamespace(this.axiosInstance, 'templates')
   }
 }

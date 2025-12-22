@@ -2,8 +2,8 @@ import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { Item } from "../../items/domain/item";
 import { Model } from "../../models/domain/model";
-import { Section } from "../../templates/domain/section";
-import { Template } from "../../templates/domain/template";
+import { Section } from "../../old-templates/domain/section";
+import { Template } from "../../old-templates/domain/template";
 import {
   PhoneFactory,
   phoneFactory,

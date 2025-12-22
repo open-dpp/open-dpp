@@ -18,7 +18,7 @@ import { ItemsService } from "../../items/infrastructure/items.service";
 import { itemToDto } from "../../items/presentation/dto/item.dto";
 import { ItemsApplicationService } from "../../items/presentation/items-application.service";
 import { ModelsService } from "../../models/infrastructure/models.service";
-import { TemplateService } from "../../templates/infrastructure/template.service";
+import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { AasConnection } from "../domain/aas-connection";
 import {

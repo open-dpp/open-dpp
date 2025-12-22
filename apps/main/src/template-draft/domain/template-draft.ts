@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 import { NotFoundError, ValueError } from "@open-dpp/exception";
 import * as semver from "semver";
 import { SectionType } from "../../data-modelling/domain/section-base";
-import { Template } from "../../templates/domain/template";
+import { Template } from "../../old-templates/domain/template";
 import { SectionDraft } from "./section-draft";
 
 export interface Publication {

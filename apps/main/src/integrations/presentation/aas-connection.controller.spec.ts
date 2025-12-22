@@ -23,12 +23,12 @@ import { ItemsApplicationService } from "../../items/presentation/items-applicat
 import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
-import { Template, TemplateDbProps } from "../../templates/domain/template";
-import { dataFieldDbPropsFactory } from "../../templates/fixtures/data-field.factory";
-import { laptopFactory } from "../../templates/fixtures/laptop.factory";
-import { sectionDbPropsFactory } from "../../templates/fixtures/section.factory";
-import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
-import { TemplateService } from "../../templates/infrastructure/template.service";
+import { Template, TemplateDbProps } from "../../old-templates/domain/template";
+import { dataFieldDbPropsFactory } from "../../old-templates/fixtures/data-field.factory";
+import { laptopFactory } from "../../old-templates/fixtures/laptop.factory";
+import { sectionDbPropsFactory } from "../../old-templates/fixtures/section.factory";
+import { TemplateDoc, TemplateSchema } from "../../old-templates/infrastructure/template.schema";
+import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import {
   DppEventSchema,
   TraceabilityEventDocument,

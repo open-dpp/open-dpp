@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { OpenDppClient } from '../../src'
-import { expectWithDetailedError } from '../error-utils'
 import { activeOrganization } from '../organization'
+import { expectWithDetailedError } from '../utils'
 import { analyticsUrl } from './handlers'
 import {
   pageViewDto,

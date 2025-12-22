@@ -4,12 +4,12 @@ import { ignoreIds } from "@open-dpp/testing";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { Model } from "../../models/domain/model";
+import { Template, TemplateDbProps } from "../../old-templates/domain/template";
+import { dataFieldDbPropsFactory } from "../../old-templates/fixtures/data-field.factory";
+import { laptopFactory } from "../../old-templates/fixtures/laptop.factory";
+import { sectionDbPropsFactory } from "../../old-templates/fixtures/section.factory";
+import { templateCreatePropsFactory } from "../../old-templates/fixtures/template.factory";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import { Template, TemplateDbProps } from "../../templates/domain/template";
-import { dataFieldDbPropsFactory } from "../../templates/fixtures/data-field.factory";
-import { laptopFactory } from "../../templates/fixtures/laptop.factory";
-import { sectionDbPropsFactory } from "../../templates/fixtures/section.factory";
-import { templateCreatePropsFactory } from "../../templates/fixtures/template.factory";
 import { AasConnection, AasFieldAssignment } from "./aas-connection";
 import {
   AssetAdministrationShell,

@@ -1,6 +1,6 @@
 import type { GranularityLevel_TYPE } from "../../data-modelling/domain/granularity-level";
 import type { SectionType_TYPE } from "../../data-modelling/domain/section-base";
-import type { SectionDbProps } from "../../templates/domain/section";
+import type { SectionDbProps } from "../../old-templates/domain/section";
 import type { DataFieldDraftDbProps } from "./data-field-draft";
 import type { MoveDirection_TYPE } from "./template-draft";
 import { randomUUID } from "node:crypto";

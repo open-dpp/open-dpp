@@ -6,8 +6,8 @@ import { ItemsService } from "../items/infrastructure/items.service";
 import { ItemsApplicationService } from "../items/presentation/items-application.service";
 import { ModelDoc, ModelSchema } from "../models/infrastructure/model.schema";
 import { ModelsService } from "../models/infrastructure/models.service";
+import { TemplateModule } from "../old-templates/template.module";
 import { OrganizationsModule } from "../organizations/organizations.module";
-import { TemplateModule } from "../templates/template.module";
 import { TraceabilityEventsModule } from "../traceability-events/traceability-events.module";
 import { UniqueProductIdentifierModule } from "../unique-product-identifier/unique.product.identifier.module";
 import {

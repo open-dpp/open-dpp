@@ -39,7 +39,7 @@ vi.mock("../lib/api-client", () => ({
       models: {
         getById: mocks.getModelById,
       },
-      templates: {
+      oldTemplates: {
         getById: mocks.getTemplateById,
       },
     },

@@ -16,7 +16,7 @@ import { ZodValidationPipe } from "@open-dpp/exception";
 import { AuthService } from "../../auth/auth.service";
 import { Session } from "../../auth/session.decorator";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
-import { TemplateService } from "../../templates/infrastructure/template.service";
+import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import { User } from "../../users/domain/user";
 import { DataFieldDraft } from "../domain/data-field-draft";
 import { SectionDraft } from "../domain/section-draft";
