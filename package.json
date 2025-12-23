@@ -7,8 +7,8 @@
   "license": "LGPL-3.0-only",
   "packageManager": "pnpm@10.26.1+sha512.664074abc367d2c9324fdc18037097ce0a8f126034160f709928e9e9f95d98714347044e5c3164d65bd5da6c59c6be362b107546292a8eecb7999196e5ce58fa",
   "devDependencies": {
-    "@dotenvx/dotenvx": "^1.51.0",
-    "turbo": "^2.6.1"
+    "@dotenvx/dotenvx": "^1.51.2",
+    "turbo": "^2.7.1"
   },
   "scripts": {
     "lint": "turbo lint",
