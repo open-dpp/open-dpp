@@ -220,11 +220,34 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       plugins.push(genericOAuthPlugin as any);
     }
 
+    const logger = this.logger;
     this.auth = betterAuth({
       baseURL: this.configService.get("OPEN_DPP_URL"),
       basePath: "/api/auth",
       secret: this.configService.get("OPEN_DPP_AUTH_SECRET"),
       trustedOrigins: [this.configService.get("OPEN_DPP_URL")],
+      logger: {
+        disabled: false,
+        log: (level, message, ...args) => {
+          const formattedMessage
+            = args.length > 0 ? `${message} ${JSON.stringify(args)}` : message;
+          switch (level) {
+            case "error":
+              logger.error(formattedMessage);
+              break;
+            case "warn":
+              logger.warn(formattedMessage);
+              break;
+            case "debug":
+              logger.debug(formattedMessage);
+              break;
+            case "info":
+            default:
+              logger.log(formattedMessage);
+              break;
+          }
+        },
+      },
       user: {
         additionalFields: {
           firstName: {
