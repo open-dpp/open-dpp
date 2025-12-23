@@ -203,8 +203,8 @@ importers:
         specifier: ^0.2.3
         version: 0.2.3(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))
       '@langchain/ollama':
-        specifier: ^0.2.4
-        version: 0.2.4(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))
+        specifier: ^1.0.0
+        version: 1.1.0(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))
       '@modelcontextprotocol/sdk':
         specifier: ^1.25.1
         version: 1.25.1(@cfworker/json-schema@4.1.1)(hono@4.11.1)(zod@4.2.1)
@@ -294,7 +294,7 @@ importers:
         version: 1.23.2
       langchain:
         specifier: ^0.3.37
-        version: 0.3.37(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))(@langchain/mistralai@0.2.3(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1))))(@langchain/ollama@0.2.4(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1))))(axios@1.13.2)(handlebars@4.7.8)(openai@5.12.2(ws@8.18.3)(zod@4.2.1))(ws@8.18.3)
+        version: 0.3.37(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))(@langchain/mistralai@0.2.3(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1))))(@langchain/ollama@1.1.0(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1))))(axios@1.13.2)(handlebars@4.7.8)(openai@5.12.2(ws@8.18.3)(zod@4.2.1))(ws@8.18.3)
       load-esm:
         specifier: ^1.0.3
         version: 1.0.3
@@ -2057,11 +2057,11 @@ packages:
     peerDependencies:
       '@langchain/core': '>=0.3.58 <0.4.0'
 
-  '@langchain/ollama@0.2.4':
-    resolution: {integrity: sha512-XThDrZurNPcUO6sasN13rkes1aGgu5gWAtDkkyIGT3ZeMOvrYgPKGft+bbhvsigTIH9C01TfPzrSp8LAmvHIjA==}
-    engines: {node: '>=18'}
+  '@langchain/ollama@1.1.0':
+    resolution: {integrity: sha512-kEP0zvj+xtJ84QcK1ALKkz71ynpWMgzXbASzabMhkRAMSN/wTVm28HUNPRDHxbS9+BZnq1zcZeuzOf29XCal5g==}
+    engines: {node: '>=20'}
     peerDependencies:
-      '@langchain/core': '>=0.3.58 <0.4.0'
+      '@langchain/core': ^1.0.0
 
   '@langchain/openai@0.6.17':
     resolution: {integrity: sha512-JVSzD+FL5v/2UQxKd+ikB1h4PQOtn0VlK8nqW2kPp0fshItCv4utrjBKXC/rubBnSXoRTyonBINe8QRZ6OojVQ==}
@@ -7313,8 +7313,8 @@ packages:
     resolution: {integrity: sha512-tqa/UMy/CCoYmj+H5qc07qvSL9dqcs/WZENZ1JbtWBlATP+iVOe778gE6MSijnyCnORzDuX6hU+LA4SZ09YjFQ==}
     engines: {node: '>=0.10.0'}
 
-  ollama@0.5.18:
-    resolution: {integrity: sha512-lTFqTf9bo7Cd3hpF6CviBe/DEhewjoZYd9N/uCe7O20qYTvGqrNOFOBDj3lbZgFWHUgDv5EeyusYxsZSLS8nvg==}
+  ollama@0.6.3:
+    resolution: {integrity: sha512-KEWEhIqE5wtfzEIZbDCLH51VFZ6Z3ZSa6sIOg/E/tBV8S51flyqBOXi+bRxlOYKDf8i327zG9eSTb8IJxvm3Zg==}
 
   on-finished@2.4.1:
     resolution: {integrity: sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg==}
@@ -10717,10 +10717,10 @@ snapshots:
       '@mistralai/mistralai': 1.11.0
       uuid: 10.0.0
 
-  '@langchain/ollama@0.2.4(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))':
+  '@langchain/ollama@1.1.0(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))':
     dependencies:
       '@langchain/core': 0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1))
-      ollama: 0.5.18
+      ollama: 0.6.3
       uuid: 10.0.0
 
   '@langchain/openai@0.6.17(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))(ws@8.18.3)':
@@ -15645,7 +15645,7 @@ snapshots:
 
   kysely@0.28.9: {}
 
-  langchain@0.3.37(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))(@langchain/mistralai@0.2.3(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1))))(@langchain/ollama@0.2.4(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1))))(axios@1.13.2)(handlebars@4.7.8)(openai@5.12.2(ws@8.18.3)(zod@4.2.1))(ws@8.18.3):
+  langchain@0.3.37(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))(@langchain/mistralai@0.2.3(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1))))(@langchain/ollama@1.1.0(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1))))(axios@1.13.2)(handlebars@4.7.8)(openai@5.12.2(ws@8.18.3)(zod@4.2.1))(ws@8.18.3):
     dependencies:
       '@langchain/core': 0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1))
       '@langchain/openai': 0.6.17(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))(ws@8.18.3)
@@ -15661,7 +15661,7 @@ snapshots:
       zod: 3.25.76
     optionalDependencies:
       '@langchain/mistralai': 0.2.3(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))
-      '@langchain/ollama': 0.2.4(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))
+      '@langchain/ollama': 1.1.0(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))
       axios: 1.13.2
       handlebars: 4.7.8
     transitivePeerDependencies:
@@ -16941,7 +16941,7 @@ snapshots:
     dependencies:
       isobject: 3.0.1
 
-  ollama@0.5.18:
+  ollama@0.6.3:
     dependencies:
       whatwg-fetch: 3.6.20
 
