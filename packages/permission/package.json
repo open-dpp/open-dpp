@@ -1,7 +1,7 @@
 {
   "name": "@open-dpp/permission",
   "version": "1.0.0",
-  "packageManager": "pnpm@10.19.0",
+  "packageManager": "pnpm@10.26.2",
   "description": "",
   "author": "",
   "license": "ISC",
