@@ -39,7 +39,10 @@ export class Quota extends Cap {
     const currentDate = new Date();
     const sameYear = currentDate.getFullYear() === this.lastSetBack.getFullYear();
     const sameMonth = currentDate.getMonth() === this.lastSetBack.getMonth();
-    const sameDay = currentDate.getDay() === this.lastSetBack.getDay();
+    const sameDay
+      = currentDate.getFullYear() === this.lastSetBack.getFullYear()
+        && currentDate.getMonth() === this.lastSetBack.getMonth()
+        && currentDate.getDate() === this.lastSetBack.getDate();
 
     let result = false;
 
