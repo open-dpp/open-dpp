@@ -264,6 +264,7 @@ jobs:
     steps:
       - name: Download digests
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           path: /tmp/digests/${{ matrix.target }}
           pattern: digests-${{ matrix.target }}-*
@@ -291,8 +292,13 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Create manifest list and push
-        working-directory: /tmp/digests/${{ matrix.target }}
         run: |
+          dir="/tmp/digests/${{ matrix.target }}"
+          if [ ! -d "$dir" ] || [ -z "$(ls -A "$dir")" ]; then
+            echo "No digests found in $dir, skipping manifest creation."
+            exit 0
+          fi
+          cd "$dir"
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}@sha256:%s ' *)
 
