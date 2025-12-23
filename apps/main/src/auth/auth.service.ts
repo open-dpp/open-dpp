@@ -252,7 +252,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       hooks: {},
       plugins,
       database: mongodbAdapter(this.db!, {
-        client: mongoClient,
+        client: this.configService.get("NODE_ENV") === "test" ? undefined : mongoClient,
       }),
     });
     this.logger.log("Auth initialized");
