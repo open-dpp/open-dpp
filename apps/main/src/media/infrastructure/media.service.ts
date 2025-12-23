@@ -357,4 +357,24 @@ export class MediaService {
       this.convertToDomain(mediaDocument),
     );
   }
+
+  /**
+   * Calculates the total storage usage for an organization.
+   * @param organizationId The organization ID
+   * @returns The total storage usage in bytes
+   */
+  async calculateOrganizationStorageUsage(organizationId: string): Promise<number> {
+    const result = await this.mediaDoc.aggregate([
+      {
+        $match: { ownedByOrganizationId: organizationId },
+      },
+      {
+        $group: {
+          _id: null,
+          totalSize: { $sum: "$size" },
+        },
+      },
+    ]);
+    return result.length > 0 ? result[0].totalSize : 0;
+  }
 }

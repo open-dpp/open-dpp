@@ -1,7 +1,9 @@
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
+import { EnvModule } from "@open-dpp/env";
 import { MarketplaceModule } from "../marketplace/marketplace.module";
 import { OrganizationsModule } from "../organizations/organizations.module";
+import { PolicyModule } from "../policy/policy.module";
 import {
   TemplateDoc,
   TemplateSchema,
@@ -28,6 +30,8 @@ import { ModelsController } from "./presentation/models.controller";
     ]),
     TemplateModule,
     OrganizationsModule,
+    EnvModule,
+    forwardRef(() => PolicyModule),
     UniqueProductIdentifierModule,
     UsersModule,
     TraceabilityEventsModule,

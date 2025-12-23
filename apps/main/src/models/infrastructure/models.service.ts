@@ -100,6 +100,12 @@ export class ModelsService {
     );
   }
 
+  async countByOrganization(organizationId: string): Promise<number> {
+    return await this.modelDoc
+      .countDocuments({ ownedByOrganizationId: organizationId })
+      .exec();
+  }
+
   async findOneOrFail(id: string): Promise<Model> {
     const model = await this.findOne(id);
     if (!model) {

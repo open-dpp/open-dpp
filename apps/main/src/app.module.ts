@@ -20,6 +20,7 @@ import { MarketplaceModule } from "./marketplace/marketplace.module";
 import { MediaModule } from "./media/media.module";
 import { ModelsModule } from "./models/models.module";
 import { OrganizationsModule } from "./organizations/organizations.module";
+import { PolicyModule } from "./policy/policy.module";
 import { ProductPassportModule } from "./product-passport/product-passport.module";
 import { TemplateDraftModule } from "./template-draft/template-draft.module";
 import { TemplateModule } from "./templates/template.module";
@@ -62,6 +63,7 @@ import { UsersModule } from "./users/users.module";
     AnalyticsModule,
     AuthModule,
     EmailModule,
+    PolicyModule,
   ],
   controllers: [],
   providers: [
