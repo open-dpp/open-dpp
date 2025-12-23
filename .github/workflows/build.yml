@@ -232,8 +232,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           target: ${{ matrix.target }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=${{ matrix.target }}-${{ env.PLATFORM_PAIR }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.target }}-${{ env.PLATFORM_PAIR }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}:build-cache-${{ matrix.target }}-${{ env.PLATFORM_PAIR }}
+          cache-to: type=registry,mode=max,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}:build-cache-${{ matrix.target }}-${{ env.PLATFORM_PAIR }}
           outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }},push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
