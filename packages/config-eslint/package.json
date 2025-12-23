@@ -8,7 +8,7 @@
     "./create-config": "./create-config.js"
   },
   "license": "MIT",
-  "packageManager": "pnpm@10.19.0",
+  "packageManager": "pnpm@10.26.2",
   "devDependencies": {
     "@antfu/eslint-config": "^6.7.3",
     "eslint-plugin-format": "^1.1.0"
