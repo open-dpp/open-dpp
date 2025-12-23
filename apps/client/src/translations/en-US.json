@@ -251,10 +251,18 @@
       "createdBy": "Created by",
       "administeredBy": "Administered by",
       "description": "Description",
+      "image": {
+        "label": "Image for organization profile",
+        "help": "Upload an image for the organization",
+        "shortLabel": "Logo"
+      },
       "name": {
         "help": "Give your organization a name",
-        "label": "Name"
-      }
+        "label": "Name of organization",
+        "error": "Please enter a name."
+      },
+      "updateError": "Failed to update organization.",
+      "updateSuccess": "Organization settings saved successfully."
     },
     "invitation": {
       "name": "Name",
@@ -273,6 +281,9 @@
     "organizationInvitations": {
       "title": "Invitations",
       "description": "Invitations to this organizations"
+    },
+    "settings": {
+      "title": "Configure organization"
     }
   },
   "marketplace": {

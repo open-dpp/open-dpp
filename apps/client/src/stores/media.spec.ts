@@ -2,63 +2,58 @@ import type { AxiosRequestConfig } from "axios";
 import type { MediaInfo } from "../components/media/MediaInfo.interface";
 import { createPinia, setActivePinia } from "pinia";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import apiClient from "../lib/api-client.ts";
 import { useMediaStore } from "./media";
 
 // Mocks
 const postMock = vi.fn();
-vi.mock("../lib/axios", () => ({
-  default: {
-    post: (...args: never[]) => postMock(...args),
-  },
-}));
-vi.mock("../const", () => ({
-  MEDIA_SERVICE_URL: "http://media-service",
-}));
+const getMock = vi.fn();
 
-const mocks = vi.hoisted(() => {
+vi.mock("axios", () => {
   return {
-
-    getMediaInfoByOrganization: vi.fn(),
-    getMediaInfo: vi.fn(),
-    getMediaInfoOfDataField: vi.fn(),
-    download: vi.fn(),
-    downloadMediaOfDataField: vi.fn(),
+    default: {
+      create: () => ({
+        post: (...args: never[]) => postMock(...args),
+        get: (...args: never[]) => getMock(...args),
+        interceptors: {
+          request: { use: vi.fn() },
+          response: { use: vi.fn() },
+        },
+        defaults: {
+          headers: {
+            common: {},
+          },
+        },
+      }),
+    },
   };
 });
 
-vi.mock("../lib/api-client", () => ({
-  default: {
-    setActiveOrganizationId: vi.fn(),
-    media: {
-      media: {
-        getMediaInfoByOrganization: mocks.getMediaInfoByOrganization,
-        getMediaInfo: mocks.getMediaInfo,
-        getMediaInfoOfDataField: mocks.getMediaInfoOfDataField,
-        download: mocks.download,
-        downloadMediaOfDataField: mocks.downloadMediaOfDataField,
-      },
-    },
-  },
+vi.mock("../const", () => ({
+  MEDIA_SERVICE_URL: "http://media-service",
+  API_URL: "http://api",
+  MARKETPLACE_URL: "http://marketplace",
+  AGENT_SERVER_URL: "http://agent-server",
+  ANALYTICS_URL: "http://analytics",
 }));
 
 describe("media store", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     postMock.mockReset();
+    getMock.mockReset();
   });
 
   describe("uploadDppMedia", () => {
     it("throws if no organization selected", async () => {
-      const store = useMediaStore();
       await expect(
-        store.uploadDppMedia(null, "uuid", "field", new File(["a"], "a.txt")),
+        apiClient.media.media.uploadDppMedia(null, "uuid", "field", new File(["a"], "a.txt")),
       ).rejects.toThrow("No organization selected");
     });
 
     it("throws if no uuid provided", async () => {
-      const store = useMediaStore();
       await expect(
-        store.uploadDppMedia(
+        apiClient.media.media.uploadDppMedia(
           "org",
           undefined,
           "field",
@@ -68,7 +63,6 @@ describe("media store", () => {
     });
 
     it("returns mediaId on 200/201/304 and calls progress handler", async () => {
-      const store = useMediaStore();
       const statuses = [200, 201, 304] as const;
       for (const status of statuses) {
         postMock.mockImplementationOnce(
@@ -82,7 +76,7 @@ describe("media store", () => {
           },
         );
         const progressCalls: number[] = [];
-        const mediaId = await store.uploadDppMedia(
+        const mediaId = await apiClient.media.media.uploadDppMedia(
           "org",
           "uuid",
           "field",
@@ -93,7 +87,7 @@ describe("media store", () => {
         // Verify URL formatting
         expect(postMock).toHaveBeenLastCalledWith(
           expect.stringMatching(
-            /^http:\/\/media-service\/media\/dpp\/org\/uuid\/field$/,
+            /\/media\/media\/dpp\/org\/uuid\/field$/,
           ),
           expect.any(FormData),
           expect.objectContaining({ onUploadProgress: expect.any(Function) }),
@@ -103,7 +97,6 @@ describe("media store", () => {
     });
 
     it("computes progress even if total is undefined (uses 1)", async () => {
-      const store = useMediaStore();
       postMock.mockImplementationOnce(
         (url: string, formData: FormData, config: AxiosRequestConfig) => {
           config?.onUploadProgress?.({
@@ -114,7 +107,7 @@ describe("media store", () => {
         },
       );
       const progressCalls: number[] = [];
-      await store.uploadDppMedia(
+      await apiClient.media.media.uploadDppMedia(
         "org",
         "uuid",
         "field",
@@ -125,10 +118,9 @@ describe("media store", () => {
     });
 
     it("throws on unexpected status", async () => {
-      const store = useMediaStore();
       postMock.mockResolvedValueOnce({ status: 418, data: {} });
       await expect(
-        store.uploadDppMedia("org", "uuid", "field", new File(["a"], "a.txt")),
+        apiClient.media.media.uploadDppMedia("org", "uuid", "field", new File(["a"], "a.txt")),
       ).rejects.toThrow("Unexpected upload status 418");
     });
   });
@@ -149,12 +141,11 @@ describe("media store", () => {
         size: 5,
         mimeType: "image/png",
       };
-      mocks.getMediaInfoOfDataField.mockResolvedValueOnce({ data: info });
+      getMock.mockResolvedValueOnce({ data: info });
       const result = await store.getDppMediaInfo("uuid", "field");
       expect(result).toEqual(info);
-      expect(mocks.getMediaInfoOfDataField).toHaveBeenCalledWith(
-        "uuid",
-        "field",
+      expect(getMock).toHaveBeenCalledWith(
+        expect.stringMatching(/\/media\/dpp\/uuid\/field\/info$/),
       );
     });
   });
@@ -170,12 +161,12 @@ describe("media store", () => {
     it("returns blob from endpoint", async () => {
       const store = useMediaStore();
       const blob = new Blob(["hello"], { type: "text/plain" });
-      mocks.downloadMediaOfDataField.mockResolvedValueOnce({ data: blob });
+      getMock.mockResolvedValueOnce({ data: blob });
       const result = await store.downloadDppMedia("uuid", "field");
       expect(result).toEqual(blob);
-      expect(mocks.downloadMediaOfDataField).toHaveBeenCalledWith(
-        "uuid",
-        "field",
+      expect(getMock).toHaveBeenCalledWith(
+        expect.stringMatching(/\/media\/dpp\/uuid\/field\/download$/),
+        expect.any(Object),
       );
     });
   });
@@ -186,25 +177,27 @@ describe("media store", () => {
       const blob = new Blob(["data"], { type: "application/octet-stream" });
 
       // Mock axios GET to return appropriate responses irrespective of call order
-      mocks.getMediaInfoOfDataField.mockResolvedValue({ data: {
-        id: "",
-        title: "",
-        size: 5,
-        mimeType: "image/jpeg",
-      } });
-      mocks.downloadMediaOfDataField.mockResolvedValue({ data: blob });
+      getMock.mockImplementation((url: string) => {
+        if (url.includes("/info")) {
+          return Promise.resolve({
+            data: {
+              id: "",
+              title: "",
+              size: 5,
+              mimeType: "image/jpeg",
+            },
+          });
+        }
+        if (url.includes("/download")) {
+          return Promise.resolve({ data: blob });
+        }
+        return Promise.reject(new Error(`Unexpected URL ${url}`));
+      });
 
       const result = await store.fetchDppMedia("uuid", "field");
       expect(result.blob).toEqual(blob);
       expect(result.mediaInfo.mimeType).toEqual("image/jpeg");
-      expect(mocks.getMediaInfoOfDataField).toHaveBeenCalledWith(
-        "uuid",
-        "field",
-      );
-      expect(mocks.downloadMediaOfDataField).toHaveBeenCalledWith(
-        "uuid",
-        "field",
-      );
+      expect(getMock).toHaveBeenCalledTimes(2);
     });
   });
 });
