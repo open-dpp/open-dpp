@@ -139,6 +139,7 @@ export class PolicyService {
       {
         $set: {
           key: quota.getKey(),
+          organizationId: quota.getOrganizationId(),
           limit: quota.getLimit(),
           count: quota.getCount(),
           period: quota.getPeriod(),
