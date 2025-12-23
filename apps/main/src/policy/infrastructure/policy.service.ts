@@ -162,8 +162,14 @@ export class PolicyService {
     return this.envService.get(rule.defaultlimit);
   }
 
-  private getQuotaRule(key: PolicyKey) {
-    return PolicyDefinitions[key] as PolicyQuotaRule;
+  private getQuotaRule(key: PolicyKey): PolicyQuotaRule {
+    const rule = PolicyDefinitions[key];
+
+    if (rule.type !== "quota") {
+      throw new Error(`Policy ${PolicyKey[key]} is not a quota rule`);
+    }
+
+    return rule as PolicyQuotaRule;
   }
 
   async enforce(organizationId: string, keys: PolicyKey[]): Promise<void> {
