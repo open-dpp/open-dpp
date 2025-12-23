@@ -304,6 +304,11 @@ jobs:
 
       - name: Inspect image
         run: |
+          dir="/tmp/digests/${{ matrix.target }}"
+          if [ ! -d "$dir" ] || [ -z "$(ls -A "$dir")" ]; then
+            echo "No digests found in $dir, skipping image inspection."
+            exit 0
+          fi
           docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}:${{ steps.meta.outputs.version }}
 
   delete-runner:
