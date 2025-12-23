@@ -136,6 +136,33 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     return (organization as any).name ?? null;
   }
 
+  async getOrganizationDataForPermalink(organizationId: string): Promise<{ name: string; image: string } | null> {
+    if (!this.db)
+      return null;
+
+    // Validate organizationId and prepare ObjectId if possible
+    let orgObjectId: ObjectId | null = null;
+    try {
+      orgObjectId = new ObjectId(organizationId);
+    }
+    catch {
+      // ignore invalid ObjectId; return null if organizationId is not a valid ObjectId
+    }
+    // Fetch organization to return its name
+    if (!orgObjectId) {
+      // If we couldn't parse a valid ObjectId for the organization, we cannot fetch the org document reliably
+      return null;
+    }
+
+    const organization = await this.db.collection("organization").findOne({ _id: orgObjectId });
+    if (!organization)
+      return null;
+    return {
+      name: organization.name ?? "",
+      image: organization.image ?? "",
+    };
+  }
+
   async onModuleInit() {
     this.db = this.mongooseConnection.db;
     const mongoClient = this.mongooseConnection.getClient();
@@ -157,6 +184,17 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     const emailSvc = this.emailService;
     const configSvc = this.configService;
     const organizationPlugin = organization({
+      schema: {
+        organization: {
+          additionalFields: {
+            image: {
+              type: "string",
+              input: true,
+              required: false,
+            },
+          },
+        },
+      },
       async sendInvitationEmail(data) {
         const inviteLink = `${configSvc.get("OPEN_DPP_URL")}/accept-invitation/${data.id}`;
         await emailSvc.send(InviteUserToOrganizationMail.create({
@@ -181,8 +219,6 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     if (genericOAuthPlugin) {
       plugins.push(genericOAuthPlugin as any);
     }
-
-    const migrationEnabled = !!this.configService.get("OPEN_DPP_MIGRATE_KEYCLOAK_ENABLED");
 
     this.auth = betterAuth({
       baseURL: this.configService.get("OPEN_DPP_URL"),
@@ -223,7 +259,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         },
       },
       emailVerification: {
-        sendOnSignUp: !migrationEnabled,
+        sendOnSignUp: true,
         sendVerificationEmail: async ({ user, url }: { user: User; url: string; token: string }) => {
           const firstName = (user as any).firstName ?? "User";
           await this.emailService.send(VerifyEmailMail.create({
@@ -254,7 +290,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       hooks: {},
       plugins,
       database: mongodbAdapter(this.db!, {
-        client: mongoClient,
+        client: this.configService.get("NODE_ENV") === "test" ? undefined : mongoClient,
       }),
     });
     this.logger.log("Auth initialized");

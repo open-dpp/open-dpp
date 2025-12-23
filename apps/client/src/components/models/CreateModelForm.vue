@@ -1,5 +1,9 @@
 <script lang="ts" setup>
 import type { TemplateGetAllDto } from "@open-dpp/api-client";
+import Button from "primevue/button";
+import InputText from "primevue/inputtext";
+import Select from "primevue/select";
+import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 const props = defineProps<{ templates: TemplateGetAllDto[] }>();
@@ -12,63 +16,70 @@ const selectableDataModels = props.templates.map(p => ({
   value: p.id,
 }));
 
-async function create(fields: {
-  stepper: {
-    generalInfo: {
-      name: string;
-      productDataModelId: string;
-    };
-  };
-}) {
-  emits(
-    "submit",
-    fields.stepper.generalInfo.productDataModelId,
-    fields.stepper.generalInfo.name,
-  );
+const name = ref("");
+const productDataModelId = ref("");
+const errors = ref<{ name?: string; productDataModelId?: string }>({});
+
+function validate() {
+  errors.value = {};
+  let isValid = true;
+  if (!name.value) {
+    errors.value.name = t("validation.required");
+    isValid = false;
+  }
+  if (!productDataModelId.value) {
+    errors.value.productDataModelId = t("validation.required");
+    isValid = false;
+  }
+  return isValid;
+}
+
+function create() {
+  if (validate()) {
+    emits("submit", productDataModelId.value, name.value);
+  }
 }
 </script>
 
 <template>
-  <form-kit
-    id="createProductForm"
-    :actions="false"
-    type="form"
-    @submit="create"
-  >
-    <form-kit
-      :allow-incomplete="false"
-      :wrapper-class="{ 'w-full': true }"
-      name="stepper"
-      tab-style="tab"
-      type="multi-step"
-    >
-      <form-kit
-        :wrapper-class="{ 'w-full': true }"
-        :label="t('models.general')"
-        name="generalInfo"
-        type="step"
-      >
-        <form-kit
-          data-cy="name"
-          :help="t('models.form.name.help')"
-          :label="t('models.form.name.label')"
-          name="name"
-          type="text"
-          validation="required"
-        />
-        <form-kit
-          :options="selectableDataModels"
-          data-cy="productDataModelId"
-          :help="t('models.form.passportDraft.help')"
-          :label="t('models.form.passportDraft.label')"
-          name="productDataModelId"
-          type="select"
-          validation="required"
-        />
-        <template #stepNext>
-          <FormKit :label="t('common.create')" type="submit" />
-        </template>
-      </form-kit>
-    </form-kit>
-  </form-kit>
+  <form class="flex flex-col gap-4" @submit.prevent="create">
+    <div class="flex flex-col gap-2">
+      <label for="name" class="block text-sm font-medium text-gray-700">
+        {{ t('models.form.name.label') }}
+      </label>
+      <InputText
+        id="name"
+        v-model="name"
+        type="text"
+        :invalid="!!errors.name"
+        class="w-full"
+        data-cy="name"
+      />
+      <small v-if="errors.name" class="text-red-600">{{ errors.name }}</small>
+      <small v-else class="text-gray-500">{{ t('models.form.name.help') }}</small>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <label for="productDataModelId" class="block text-sm font-medium text-gray-700">
+        {{ t('models.form.passportDraft.label') }}
+      </label>
+      <Select
+        id="productDataModelId"
+        v-model="productDataModelId"
+        :options="selectableDataModels"
+        option-label="label"
+        option-value="value"
+        :invalid="!!errors.productDataModelId"
+        class="w-full"
+        data-cy="productDataModelId"
+        placeholder="Select a template"
+      />
+      <small v-if="errors.productDataModelId" class="text-red-600">{{ errors.productDataModelId }}</small>
+      <small v-else class="text-gray-500">{{ t('models.form.passportDraft.help') }}</small>
+    </div>
+
+    <div class="mt-4">
+      <Button :label="t('common.create')" type="submit" />
+    </div>
+  </form>
 </template>

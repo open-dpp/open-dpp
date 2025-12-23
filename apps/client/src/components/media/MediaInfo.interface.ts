@@ -4,3 +4,8 @@ export interface MediaInfo {
   size: number;
   title: string;
 }
+
+export interface MediaResult {
+  blob: Blob | null;
+  mediaInfo: MediaInfo;
+}
