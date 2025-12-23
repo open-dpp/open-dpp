@@ -44,22 +44,16 @@ export class Quota extends Cap {
         && currentDate.getMonth() === this.lastSetBack.getMonth()
         && currentDate.getDate() === this.lastSetBack.getDate();
 
-    let result = false;
-
     switch (this.period) {
       case "day":
-        result = result || !sameDay;
-        // falls through
+        return !sameDay;
       case "month":
-        result = result || !sameMonth;
-        // falls through
+        return !sameYear || !sameMonth;
       case "year":
-        result = result || !sameYear;
-        break;
+        return !sameYear;
       default:
+        return false;
     }
-
-    return result;
   }
 
   isExceeded() {
