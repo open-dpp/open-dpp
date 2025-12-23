@@ -1,4 +1,7 @@
 {
+  "validation": {
+    "required": "Required"
+  },
   "common": {
     "actions": "Actions",
     "clipboardSuccess": "Copied to clipboard.",
@@ -27,7 +30,8 @@
       "email": {
         "help": "Enter an email address.",
         "label": "Email address",
-        "error": "Please enter an email address."
+        "error": "Please enter an email address.",
+        "invalid": "Please enter a valid email address."
       }
     },
     "id": "ID",
@@ -197,7 +201,8 @@
         "inactive": "Inactive"
       },
       "fieldAssignments": "Field assignments",
-      "addFieldAssignments": "Add new field assignment"
+      "addFieldAssignments": "Add new field assignment",
+      "addRow": "Add Row"
     },
     "apiKey": {
       "create": "Create API Key",
