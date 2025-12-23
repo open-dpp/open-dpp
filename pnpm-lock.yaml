@@ -28,8 +28,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/api-client
       '@primeuix/themes':
-        specifier: ^1.2.5
-        version: 1.2.5
+        specifier: ^2.0.0
+        version: 2.0.2
       '@tailwindcss/aspect-ratio':
         specifier: ^0.4.2
         version: 0.4.2(tailwindcss@4.1.18)
@@ -2364,8 +2364,8 @@ packages:
   '@primeuix/styles@2.0.2':
     resolution: {integrity: sha512-LNtkJsTonNHF5ag+9s3+zQzm00+LRmffw68QRIHy6S/dam1JpdrrAnUzNYlWbaY7aE2EkZvQmx7Np7+PyHn+ow==}
 
-  '@primeuix/themes@1.2.5':
-    resolution: {integrity: sha512-n3YkwJrHQaEESc/D/A/iD815sxp8cKnmzscA6a8Tm8YvMtYU32eCahwLLe6h5rywghVwxASWuG36XBgISYOIjQ==}
+  '@primeuix/themes@2.0.2':
+    resolution: {integrity: sha512-prwQvA3tDGBz8yWSUenaJUttEMCEvPvxwOfFhDPmSe1vwsfVKL2Nmh5eZvtPFQnxmIOPsHZS7zc0/L3CzJ83Eg==}
 
   '@primeuix/utils@0.6.2':
     resolution: {integrity: sha512-l+li4z6UAwamqbu4xodN3lqr1G4S37DKEJ7Y/nE3MjEx7zJ+KIBkb5voF26Nuly1UCmIcRWQJokhLRF7+sRhyg==}
@@ -11053,7 +11053,7 @@ snapshots:
     dependencies:
       '@primeuix/styled': 0.7.4
 
-  '@primeuix/themes@1.2.5':
+  '@primeuix/themes@2.0.2':
     dependencies:
       '@primeuix/styled': 0.7.4
 
