@@ -8,7 +8,7 @@ export class QuotaDoc extends CapDoc {
   period: QuotaPeriod;
 
   @Prop({ required: true })
-  lastSetBac: Date;
+  lastSetBack: Date;
 }
 
 export const QuotaSchema = SchemaFactory.createForClass(QuotaDoc);

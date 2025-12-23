@@ -43,7 +43,7 @@ export class PolicyService {
       limit: quotaDoc.limit,
       count: quotaDoc.count,
       period: quotaDoc.period,
-      lastSetBack: quotaDoc.lastSetBac,
+      lastSetBack: quotaDoc.lastSetBack,
     });
   }
 
