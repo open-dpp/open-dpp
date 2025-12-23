@@ -31,11 +31,11 @@ describe("PolicyGuard", () => {
     });
 
     // Mock reflector to return some keys so enforce is called
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([PolicyKey.MAX_ITEMS]);
+    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([PolicyKey.AI_TOKEN_QUOTA]);
 
     await guard.canActivate(context);
 
-    expect(policyService.enforce).toHaveBeenCalledWith("org-1", [PolicyKey.MAX_ITEMS]);
+    expect(policyService.enforce).toHaveBeenCalledWith("org-1", [PolicyKey.AI_TOKEN_QUOTA]);
   });
 
   it("should enforce policy using orgaId from params (reproduction)", async () => {
@@ -43,11 +43,11 @@ describe("PolicyGuard", () => {
       params: { orgaId: "org-2" },
     });
 
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([PolicyKey.MAX_ITEMS]);
+    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([PolicyKey.AI_TOKEN_QUOTA]);
 
     await guard.canActivate(context);
 
-    expect(policyService.enforce).toHaveBeenCalledWith("org-2", [PolicyKey.MAX_ITEMS]);
+    expect(policyService.enforce).toHaveBeenCalledWith("org-2", [PolicyKey.AI_TOKEN_QUOTA]);
   });
 
   it("should enforce policy using orgId from params", async () => {
@@ -55,11 +55,11 @@ describe("PolicyGuard", () => {
       params: { orgId: "org-3" },
     });
 
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([PolicyKey.MAX_ITEMS]);
+    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([PolicyKey.AI_TOKEN_QUOTA]);
 
     await guard.canActivate(context);
 
-    expect(policyService.enforce).toHaveBeenCalledWith("org-3", [PolicyKey.MAX_ITEMS]);
+    expect(policyService.enforce).toHaveBeenCalledWith("org-3", [PolicyKey.AI_TOKEN_QUOTA]);
   });
 });
 
