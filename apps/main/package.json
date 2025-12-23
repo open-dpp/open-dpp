@@ -22,7 +22,7 @@
     "check-ts": "tsc --noEmit"
   },
   "dependencies": {
-    "@langchain/core": "^0.3.80",
+    "@langchain/core": "^1.0.0",
     "@langchain/langgraph": "^0.4.9",
     "@langchain/mcp-adapters": "^0.6.0",
     "@langchain/mistralai": "^0.2.3",
