@@ -1,4 +1,4 @@
-import type { MediaInfo } from "../components/media/MediaInfo.interface";
+import type { MediaInfo, MediaResult } from "../components/media/MediaInfo.interface";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { MEDIA_SERVICE_URL } from "../const";
@@ -8,25 +8,20 @@ import axiosIns from "../lib/axios";
 export const useMediaStore = defineStore("media", () => {
   const organizationMedia = ref<Array<MediaInfo>>([]);
 
-  const uploadDppMedia = async (
+  const uploadMedia = async (
     organizationId: string | null,
-    uuid: string | undefined,
-    dataFieldId: string,
     file: File,
     onUploadProgress?: (progress: number) => void,
   ): Promise<string> => {
     if (!organizationId) {
       throw new Error("No organization selected");
     }
-    if (!uuid) {
-      throw new Error("No UUID provided");
-    }
 
     const formData = new FormData();
     formData.append("file", file);
 
     const response = await axiosIns.post(
-      `${MEDIA_SERVICE_URL}/media/dpp/${organizationId}/${uuid}/${dataFieldId}`,
+      `${MEDIA_SERVICE_URL}/media/${organizationId}`,
       formData,
       {
         onUploadProgress: (progressEvent) => {
@@ -50,20 +45,25 @@ export const useMediaStore = defineStore("media", () => {
     throw new Error(`Unexpected upload status ${response.status}`);
   };
 
-  const uploadMedia = async (
+  const uploadDppMedia = async (
     organizationId: string | null,
+    uuid: string | undefined,
+    dataFieldId: string,
     file: File,
     onUploadProgress?: (progress: number) => void,
   ): Promise<string> => {
     if (!organizationId) {
       throw new Error("No organization selected");
     }
+    if (!uuid) {
+      throw new Error("No UUID provided");
+    }
 
     const formData = new FormData();
     formData.append("file", file);
 
     const response = await axiosIns.post(
-      `${MEDIA_SERVICE_URL}/media/${organizationId}`,
+      `${MEDIA_SERVICE_URL}/media/dpp/${organizationId}/${uuid}/${dataFieldId}`,
       formData,
       {
         onUploadProgress: (progressEvent) => {
@@ -145,7 +145,7 @@ export const useMediaStore = defineStore("media", () => {
 
   const fetchMedia = async (
     id: string,
-  ): Promise<{ blob: Blob | null; mediaInfo: MediaInfo }> => {
+  ): Promise<MediaResult> => {
     const [info, blob] = await Promise.all([
       getMediaInfo(id),
       downloadMedia(id),
@@ -161,7 +161,6 @@ export const useMediaStore = defineStore("media", () => {
   };
 
   return {
-    uploadDppMedia,
     getDppMediaInfo,
     downloadDppMedia,
     fetchDppMedia,
@@ -170,6 +169,7 @@ export const useMediaStore = defineStore("media", () => {
     getMediaInfo,
     fetchMedia,
     uploadMedia,
+    uploadDppMedia,
     organizationMedia,
   };
 });

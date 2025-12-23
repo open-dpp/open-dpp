@@ -20,14 +20,14 @@ const emits = defineEmits<{
       'hover:cursor-default': !selectable,
       'ring-2 ring-[#6BAD87] ring-offset-2 ring-offset-gray-100': isSelected,
     }"
-    class="p-2 rounded"
+    class="rounded flex flex-col gap-2 w-64 h-64"
     @click="selectable && emits('onSelect', media)"
   >
-    <MediaPreview :media="media" :show-type="true" :preview="false" />
-    <p class="mt-2 block truncate text-sm font-medium text-gray-900">
+    <MediaPreview :media="media" :show-type="true" :preview="false" class="grow" />
+    <p class="mt-2 truncate text-sm font-medium text-gray-900 min-h-4">
       {{ media.title }}
     </p>
-    <p class="block text-sm font-medium text-gray-500">
+    <p class="text-sm font-medium text-gray-500">
       {{ (media.size / 1024 / 1024).toFixed(2) }} MB
     </p>
   </div>

@@ -133,6 +133,7 @@ describe("productPassport", () => {
       template,
       model,
       item,
+      organizationName: "Test Organization",
     });
 
     expect(productPassport.id).toEqual(item.uniqueProductIdentifiers[0].uuid);
