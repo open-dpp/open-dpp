@@ -11,6 +11,7 @@ const envSchema = z.object({
   OPEN_DPP_SERVICE_TOKEN: z.coerce.string().min(16),
   OPEN_DPP_AAS_TOKEN: z.coerce.string().min(16),
   OPEN_DPP_MSG_PORT: z.coerce.number().optional().default(5002),
+  OPEN_DPP_LOG_FORMAT: z.enum(["json", "plain"]).optional().default("plain"),
   // MongoDB
   OPEN_DPP_MONGODB_URI: z.coerce.string().optional(),
   OPEN_DPP_MONGODB_PORT: z.coerce.number().max(65535).min(0).optional(),

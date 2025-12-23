@@ -136,6 +136,33 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     return (organization as any).name ?? null;
   }
 
+  async getOrganizationDataForPermalink(organizationId: string): Promise<{ name: string; image: string } | null> {
+    if (!this.db)
+      return null;
+
+    // Validate organizationId and prepare ObjectId if possible
+    let orgObjectId: ObjectId | null = null;
+    try {
+      orgObjectId = new ObjectId(organizationId);
+    }
+    catch {
+      // ignore invalid ObjectId; return null if organizationId is not a valid ObjectId
+    }
+    // Fetch organization to return its name
+    if (!orgObjectId) {
+      // If we couldn't parse a valid ObjectId for the organization, we cannot fetch the org document reliably
+      return null;
+    }
+
+    const organization = await this.db.collection("organization").findOne({ _id: orgObjectId });
+    if (!organization)
+      return null;
+    return {
+      name: organization.name ?? "",
+      image: organization.image ?? "",
+    };
+  }
+
   async onModuleInit() {
     this.db = this.mongooseConnection.db;
     const mongoClient = this.mongooseConnection.getClient();
@@ -157,6 +184,17 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     const emailSvc = this.emailService;
     const configSvc = this.configService;
     const organizationPlugin = organization({
+      schema: {
+        organization: {
+          additionalFields: {
+            image: {
+              type: "string",
+              input: true,
+              required: false,
+            },
+          },
+        },
+      },
       async sendInvitationEmail(data) {
         const inviteLink = `${configSvc.get("OPEN_DPP_URL")}/accept-invitation/${data.id}`;
         await emailSvc.send(InviteUserToOrganizationMail.create({
@@ -182,11 +220,34 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       plugins.push(genericOAuthPlugin as any);
     }
 
+    const logger = this.logger;
     this.auth = betterAuth({
       baseURL: this.configService.get("OPEN_DPP_URL"),
       basePath: "/api/auth",
       secret: this.configService.get("OPEN_DPP_AUTH_SECRET"),
       trustedOrigins: [this.configService.get("OPEN_DPP_URL")],
+      logger: {
+        disabled: false,
+        log: (level, message, ...args) => {
+          const formattedMessage
+            = args.length > 0 ? `${message} ${JSON.stringify(args)}` : message;
+          switch (level) {
+            case "error":
+              logger.error(formattedMessage);
+              break;
+            case "warn":
+              logger.warn(formattedMessage);
+              break;
+            case "debug":
+              logger.debug(formattedMessage);
+              break;
+            case "info":
+            default:
+              logger.log(formattedMessage);
+              break;
+          }
+        },
+      },
       user: {
         additionalFields: {
           firstName: {
@@ -252,7 +313,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       hooks: {},
       plugins,
       database: mongodbAdapter(this.db!, {
-        client: mongoClient,
+        client: this.configService.get("NODE_ENV") === "test" ? undefined : mongoClient,
       }),
     });
     this.logger.log("Auth initialized");

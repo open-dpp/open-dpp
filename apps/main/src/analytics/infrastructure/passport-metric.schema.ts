@@ -29,7 +29,7 @@ const MetricValueSchema = SchemaFactory.createForClass(MetricValueDoc);
   },
 })
 export class PassportMetricDoc extends Document {
-  @Prop({ type: String, required: true, unique: true })
+  @Prop({ type: String, required: true })
   // @ts-expect-error uses mongo id
   _id: string;
 

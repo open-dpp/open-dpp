@@ -55,5 +55,10 @@ export const useOrganizationsStore = defineStore("organizations", () => {
     return data;
   };
 
-  return { organizations, fetchOrganizations, createOrganization };
+  async function fetchCurrentOrganization() {
+    const { data } = await authClient.organization.getFullOrganization();
+    return data;
+  }
+
+  return { organizations, fetchOrganizations, createOrganization, fetchCurrentOrganization };
 });

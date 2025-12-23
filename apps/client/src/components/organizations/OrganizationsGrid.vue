@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { CheckIcon, Cog8ToothIcon } from "@heroicons/vue/20/solid";
+import Checkbox from "primevue/checkbox";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { useIndexStore } from "../../stores";
@@ -61,21 +62,24 @@ function setOrganization(organizationId: string) {
           class="col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow-sm"
         >
           <div class="flex w-full items-center justify-between space-x-6 p-6">
-            <div>
-              <FormKit
+            <div class="flex items-center gap-2">
+              <Checkbox
+                :model-value="organization.id === indexStore.selectedOrganization"
+                binary
                 :disabled="organization.id === indexStore.selectedOrganization"
-                :label="
+                :input-id="`org-checkbox-${organization.id}`"
+                @update:model-value="setOrganization(organization.id)"
+              />
+              <label
+                :for="`org-checkbox-${organization.id}`"
+                class="text-sm font-medium text-gray-700"
+              >
+                {{
                   organization.id === indexStore.selectedOrganization
                     ? t('common.selected')
                     : t('common.select')
-                "
-                :value="organization.id === indexStore.selectedOrganization"
-                name="terms"
-                type="checkbox"
-                validation="accepted"
-                validation-visibility="dirty"
-                @input="setOrganization(organization.id)"
-              />
+                }}
+              </label>
             </div>
             <div class="flex-1 truncate">
               <div class="flex items-center space-x-3">

@@ -12,8 +12,9 @@ import { Media } from "../domain/media";
 import { fileTypeFromBuffer } from "./file-type-util";
 import { MediaDoc } from "./media.schema";
 
-const BucketDefaultPaths = {
+export const BucketDefaultPaths = {
   PRODUCT_PASSPORT_FILES: "product-passport-files",
+  ORGANIZATION_PROFILE_PICTURES: "organization-profile-pictures",
 } as const;
 
 @Injectable()
@@ -162,6 +163,7 @@ export class MediaService {
     buffer: Buffer,
     createdByUserId: string,
     ownedByOrganizationId: string,
+    remoteFolders?: string[],
   ) {
     const fileType = await fileTypeFromBuffer(buffer);
     if (!fileType) {
@@ -178,7 +180,7 @@ export class MediaService {
       this.bucketNameDefault,
       uploadBuffer,
       uuid,
-      [BucketDefaultPaths.PRODUCT_PASSPORT_FILES],
+      remoteFolders ?? [BucketDefaultPaths.PRODUCT_PASSPORT_FILES],
       uploadBuffer.length,
       fileTypeMime,
     );

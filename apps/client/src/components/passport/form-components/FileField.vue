@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { MediaInfo } from "../../media/MediaInfo.interface";
 import { DocumentIcon, PencilIcon } from "@heroicons/vue/16/solid";
-import { computed, onMounted, onUnmounted, ref, useAttrs } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useIndexStore } from "../../../stores";
 import { useMediaStore } from "../../../stores/media";
@@ -15,9 +15,13 @@ const props = defineProps<{
   label: string;
   dataCy: string;
   className?: string;
+  modelValue?: string;
+  required?: boolean;
 }>();
+
 const emits = defineEmits<{
   (e: "clicked"): void;
+  (e: "update:modelValue", value: string | undefined): void;
 }>();
 const { t } = useI18n();
 const passportFormStore = usePassportFormStore();
@@ -25,20 +29,27 @@ const indexStore = useIndexStore();
 const notificationStore = useNotificationStore();
 const mediaStore = useMediaStore();
 
-const attrs = useAttrs() as Record<string, unknown>;
-
 const fileInput = ref<HTMLInputElement>();
 const selectedLocalFile = ref<File | null>(null);
 const selectedFile = ref<MediaInfo | null>(null);
 const uploadedMedia = ref<MediaInfo | null>(null);
 const uploadProgress = ref<number>(0);
-const uploadedMediaId = ref<string | undefined>(undefined);
+const uploadedMediaId = ref<string | undefined>(props.modelValue);
 const uploadedFileUrl = ref<string | undefined>(undefined);
 const openFileModal = ref<boolean>(false);
 
-const computedAttrs = computed(() => ({
-  ...attrs,
-}));
+watch(() => props.modelValue, (newVal) => {
+  if (newVal !== uploadedMediaId.value) {
+    uploadedMediaId.value = newVal;
+    if (newVal) {
+      loadFile();
+    }
+  }
+});
+
+watch(uploadedMediaId, (newVal) => {
+  emits("update:modelValue", newVal);
+});
 
 const isImage = computed(() => {
   if (!selectedLocalFile.value) {
@@ -88,7 +99,7 @@ async function uploadFile() {
       passportFormStore.getUUID(),
       props.id,
       selectedLocalFile.value,
-      progress => (uploadProgress.value = progress),
+      (progress: number) => (uploadProgress.value = progress),
     );
     notificationStore.addSuccessNotification(
       t("models.form.file.uploadSuccess"),
@@ -193,46 +204,32 @@ onUnmounted(() => {
 
 <template>
   <div
-    class="group grow min-w-0 text-base mb-4 data-disabled:select-none data-disabled:opacity-50 data-disabled:pointer-events-none formkit-outer" :class="[
+    class="group grow min-w-0 text-base mb-4" :class="[
       props.className,
     ]"
     :data-cy="props.dataCy"
-    data-auto-animate="true"
-    data-complete="true"
-    data-family="text"
-    data-type="text"
     style="position: relative"
   >
     <div
-      class="mb-1.5 flex flex-col items-start justify-start last:mb-0 formkit-wrapper"
+      class="mb-1.5 flex flex-col items-start justify-start last:mb-0"
     >
       <label
-        class="block text-neutral-900 text-sm mb-1 dark:text-neutral-100 formkit-label"
-        for="input_1"
+        class="block text-neutral-900 text-sm mb-1 dark:text-neutral-100"
+        :for="id"
       >{{ props.label }}</label>
       <div
         class="flex flex-row gap-4 p-2 w-full shadow-xs ring-1 ring-inset ring-gray-300 rounded-md border-0"
       >
-        <FormKit
-          v-model="uploadedMediaId"
-          :data-cy="id"
-          :name="id"
-          inner-class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300"
-          type="hidden"
-          v-bind="computedAttrs"
-        />
-        <form>
-          <input
-            v-show="false"
-            ref="fileInput"
-            :placeholder="label"
-            class="cursor-pointer select-none py-1.5 text-gray-900 placeholder:text-gray-400 sm:text-sm sm:leading-6"
-            readonly
-            type="file"
-            @change="selectFile"
-            @mousedown.prevent="emits('clicked')"
-          >
-        </form>
+        <input
+          v-show="false"
+          ref="fileInput"
+          :placeholder="label"
+          class="cursor-pointer select-none py-1.5 text-gray-900 placeholder:text-gray-400 sm:text-sm sm:leading-6"
+          readonly
+          type="file"
+          @change="selectFile"
+          @mousedown.prevent="emits('clicked')"
+        >
         <div v-if="selectedLocalFile" class="flex flex-row gap-4">
           <img
             v-if="isImage && fileUrl"
@@ -261,7 +258,7 @@ onUnmounted(() => {
         </div>
         <div v-else-if="uploadedMedia" class="max-w-full flex flex-col gap-4">
           <div class="flex flex-row gap-4 w-full justify-between">
-            <MediaPreview :media="uploadedMedia" class="grow" />
+            <MediaPreview :media="uploadedMedia" class="grow h-48" />
             <button
               class="shrink bg-[#6BAD87]/50 rounded-sm p-2 hover:cursor-pointer my-auto"
               @click.prevent="openFileModal = true"

@@ -39,7 +39,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Step 5: Run linting
+      # Step 5: Build API Client
+      - name: Build API Client
+        run: pnpm --filter @open-dpp/api-client build
+
+      # Step 6: Run linting
       - name: Run linter
         run: pnpm run lint
 
@@ -123,6 +127,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build API Client
+        run: pnpm --filter @open-dpp/api-client build
+
       # Step 6: Build project
       - name: Build project
         run: pnpm build
@@ -135,24 +142,162 @@ jobs:
       - name: Run tests
         run: pnpm test:ci
 
-  build-and-push:
+  create-runner:
+    name: Create Hetzner ARM Runner
     runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.create-hcloud-runner.outputs.label }}
+      server_id: ${{ steps.create-hcloud-runner.outputs.server_id }}
+    steps:
+      - name: Create runner
+        id: create-hcloud-runner
+        uses: Cyclenerd/hcloud-github-runner@1d464319145d45966cd0344f3e2038cf2152dc1d # v1.3.0
+        with:
+          mode: create
+          github_token: ${{ secrets.HETZNER_PAT }}
+          hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+          server_type: cax21
+          location: nbg1 # Nuremberg, Germany
+          image: docker-ce
+
+  build-and-push:
+    needs: create-runner
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+            target: production
+            image_suffix: ""
+            filter_path: main
+          - platform: linux/amd64
+            runner: ubuntu-latest
+            target: mcpserver
+            image_suffix: /mcp
+            filter_path: mcp
+          - platform: linux/arm64
+            runner: ${{ needs.create-runner.outputs.label }}
+            target: production
+            image_suffix: ""
+            filter_path: main
+          - platform: linux/arm64
+            runner: ${{ needs.create-runner.outputs.label }}
+            target: mcpserver
+            image_suffix: /mcp
+            filter_path: mcp
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check which folders changed
-        id: changes
+      - name: Check for changes
         uses: dorny/paths-filter@v3
+        id: changes
         with:
           filters: |
-            mcp:
-              - 'apps/mcp/**'
-              - 'packages/**'
             main:
               - 'apps/main/**'
               - 'apps/client/**'
               - 'packages/**'
+              - 'Dockerfile'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+            mcp:
+              - 'apps/mcp/**'
+              - 'packages/**'
+              - 'Dockerfile'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+
+      - name: Prepare
+        if: contains(fromJSON(steps.changes.outputs.changes), matrix.filter_path)
+        run: |
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+
+      - name: Log in to the Container registry
+        if: contains(fromJSON(steps.changes.outputs.changes), matrix.filter_path)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        if: contains(fromJSON(steps.changes.outputs.changes), matrix.filter_path)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        if: contains(fromJSON(steps.changes.outputs.changes), matrix.filter_path)
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract Docker metadata
+        if: contains(fromJSON(steps.changes.outputs.changes), matrix.filter_path)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=ref,event=tag
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and push by digest
+        if: contains(fromJSON(steps.changes.outputs.changes), matrix.filter_path)
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: ${{ matrix.platform }}
+          target: ${{ matrix.target }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}:build-cache-${{ matrix.target }}-${{ env.PLATFORM_PAIR }}
+          cache-to: type=registry,mode=max,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}:build-cache-${{ matrix.target }}-${{ env.PLATFORM_PAIR }}
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }},push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest
+        if: contains(fromJSON(steps.changes.outputs.changes), matrix.filter_path)
+        run: |
+          mkdir -p /tmp/digests/${{ matrix.target }}
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${{ matrix.target }}/${digest#sha256:}"
+
+      - name: Upload digest
+        if: contains(fromJSON(steps.changes.outputs.changes), matrix.filter_path)
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.target }}-${{ env.PLATFORM_PAIR }}
+          path: /tmp/digests/${{ matrix.target }}/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [production, mcpserver]
+        include:
+          - target: production
+            image_suffix: ""
+          - target: mcpserver
+            image_suffix: /mcp
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          path: /tmp/digests/${{ matrix.target }}
+          pattern: digests-${{ matrix.target }}-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
@@ -161,60 +306,50 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Extract Docker production metadata
-        if: steps.changes.outputs.main == 'true'
-        id: meta-production
+      - name: Extract Docker metadata
+        id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}
           tags: |
             type=sha
             type=ref,event=branch
             type=ref,event=tag
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
-      - name: Extract Docker mcp metadata
-        if: steps.changes.outputs.mcp == 'true'
-        id: meta-mcp
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/mcp
-          tags: |
-            type=sha
-            type=ref,event=branch
-            type=ref,event=tag
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+      - name: Create manifest list and push
+        run: |
+          dir="/tmp/digests/${{ matrix.target }}"
+          if [ ! -d "$dir" ] || [ -z "$(ls -A "$dir")" ]; then
+            echo "No digests found in $dir, skipping manifest creation."
+            exit 0
+          fi
+          cd "$dir"
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}@sha256:%s ' *)
 
-      - name: Build and push Production
-        uses: docker/build-push-action@v6
-        if: steps.changes.outputs.main == 'true'
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
-          target: production
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta-production.outputs.tags }}
-          labels: ${{ steps.meta-production.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Inspect image
+        run: |
+          dir="/tmp/digests/${{ matrix.target }}"
+          if [ ! -d "$dir" ] || [ -z "$(ls -A "$dir")" ]; then
+            echo "No digests found in $dir, skipping image inspection."
+            exit 0
+          fi
+          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}:${{ steps.meta.outputs.version }}
 
-      - name: Build and push MCP Server
-        uses: docker/build-push-action@v6
-        if: steps.changes.outputs.mcp == 'true'
+  delete-runner:
+    name: Delete Hetzner Cloud runner
+    needs:
+      - create-runner # required to get output from the create-runner job
+      - merge # required to wait when the main job is done
+    runs-on: ubuntu-latest
+    if: ${{ always() }} # required to stop the runner even if the error happened in the previous jobs
+    steps:
+      - name: Delete runner
+        uses: Cyclenerd/hcloud-github-runner@1d464319145d45966cd0344f3e2038cf2152dc1d # v1.3.0
         with:
-          context: .
-          file: ./Dockerfile
-          platforms: ${{ github.ref == 'refs/heads/main' && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
-          target: mcpserver
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta-mcp.outputs.tags }}
-          labels: ${{ steps.meta-mcp.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          mode: delete
+          github_token: ${{ secrets.HETZNER_PAT }}
+          hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+          name: ${{ needs.create-runner.outputs.label }}
+          server_id: ${{ needs.create-runner.outputs.server_id }}

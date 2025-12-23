@@ -9,7 +9,7 @@ const props = defineProps<{
 
 <template>
   <div
-    class="group grow max-w-[20em] min-w-0 text-base mb-4 data-disabled:select-none data-disabled:opacity-50 data-disabled:pointer-events-none formkit-outer" :class="[
+    class="group grow max-w-[20em] min-w-0 text-base mb-4 data-disabled:select-none data-disabled:opacity-50 data-disabled:pointer-events-none" :class="[
       props.className,
     ]"
     data-family="text"
@@ -21,14 +21,14 @@ const props = defineProps<{
     :data-cy="props.dataCy"
   >
     <div
-      class="mb-1.5 flex flex-col items-start justify-start last:mb-0 formkit-wrapper"
+      class="mb-1.5 flex flex-col items-start justify-start last:mb-0"
     >
       <label
-        class="block text-neutral-900 text-sm mb-1 dark:text-neutral-100 formkit-label"
+        class="block text-neutral-900 text-sm mb-1 dark:text-neutral-100"
         for="input_1"
       >{{ props.label }}</label>
       <div
-        class="text-base w-full py-2 px-3 rounded-none border-neutral-900 items-center focus-within:ring-2 group-data-disabled:cursor-not-allowed! dark:border-neutral-100 formkit-inner block border-0 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300"
+        class="text-base w-full py-2 px-3 rounded-none border-neutral-900 items-center focus-within:ring-2 group-data-disabled:cursor-not-allowed! dark:border-neutral-100 block border-0 text-gray-900 shadow-xs ring-1 ring-inset ring-gray-300"
       >
         {{ props.placeholder }}
       </div>

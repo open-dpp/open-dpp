@@ -1,4 +1,3 @@
-import { changeLocale } from "@formkit/i18n";
 import dayjs from "dayjs";
 import { defineStore } from "pinia";
 import { usePrimeVue } from "primevue";
@@ -28,7 +27,6 @@ export const useLanguageStore = defineStore("language", () => {
     // update primevue locale
     primevue.config.locale
       = shortLocale.value === "de" ? dePrimeVue : enPrimeVue;
-    changeLocale(shortLocale.value);
   };
 
   return { shortLocale, onI18nLocaleChange };

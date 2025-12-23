@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { HttpModule } from "@nestjs/axios";
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ServeStaticModule } from "@nestjs/serve-static";
@@ -11,6 +11,7 @@ import { ChatGateway } from "./ai/presentation/chat.gateway";
 import { AnalyticsModule } from "./analytics/analytics.module";
 import { AuthGuard } from "./auth/auth.guard";
 import { AuthModule } from "./auth/auth.module";
+import { LoggerMiddleware } from "./common/middleware/logger.middleware";
 import { generateMongoConfig } from "./database/config";
 import { EmailModule } from "./email/email.module";
 import { IntegrationModule } from "./integrations/integration.module";
@@ -73,4 +74,8 @@ import { UsersModule } from "./users/users.module";
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes("*");
+  }
+}
