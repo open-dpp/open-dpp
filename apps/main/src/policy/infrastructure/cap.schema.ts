@@ -4,7 +4,7 @@ import { PolicyKey } from "../domain/policy";
 
 @Schema({ collection: "caps", timestamps: true })
 export class CapDoc extends Document {
-  @Prop({ required: true })
+  @Prop({ required: true, type: Number, enum: PolicyKey })
   key: PolicyKey;
 
   @Prop({ required: true })
