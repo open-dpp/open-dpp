@@ -197,8 +197,8 @@ importers:
         specifier: ^0.4.9
         version: 0.4.9(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))(zod-to-json-schema@3.25.0(zod@4.2.1))
       '@langchain/mcp-adapters':
-        specifier: ^0.6.0
-        version: 0.6.0(@cfworker/json-schema@4.1.1)(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))(hono@4.11.1)
+        specifier: ^1.0.0
+        version: 1.1.1(@cfworker/json-schema@4.1.1)(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))(@langchain/langgraph@0.4.9(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))(zod-to-json-schema@3.25.0(zod@4.2.1)))(hono@4.11.1)
       '@langchain/mistralai':
         specifier: ^0.2.3
         version: 0.2.3(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))
@@ -2045,11 +2045,12 @@ packages:
       zod-to-json-schema:
         optional: true
 
-  '@langchain/mcp-adapters@0.6.0':
-    resolution: {integrity: sha512-NHQNH9NciLhxlCnL/4HDebiYT3UQvpBfF5KPlIi/uSXn8te/bYjPV64gUyAloNNo+fjj4qDvKP1/nHj0r7fKFw==}
-    engines: {node: '>=18'}
+  '@langchain/mcp-adapters@1.1.1':
+    resolution: {integrity: sha512-oMnozcaZ9e4SzPIcA8EfrSxT7TForMvPfGrUj+l/a+qHS2zcSMOSUH11joy4YwGiRVQgO/68TK8ceukWaeLbDw==}
+    engines: {node: '>=20.10.0'}
     peerDependencies:
-      '@langchain/core': ^0.3.66
+      '@langchain/core': ^1.0.0
+      '@langchain/langgraph': ^1.0.0
 
   '@langchain/mistralai@0.2.3':
     resolution: {integrity: sha512-U2gaoRF7zilpc5pvdSoPTpYWo/vF47PPeHwCwd98RSFBracEZ3WGJ4zoXTqM7+4/WF3bTbDZ5f6+YO2PDX66qQ==}
@@ -10708,12 +10709,13 @@ snapshots:
       - react
       - react-dom
 
-  '@langchain/mcp-adapters@0.6.0(@cfworker/json-schema@4.1.1)(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))(hono@4.11.1)':
+  '@langchain/mcp-adapters@1.1.1(@cfworker/json-schema@4.1.1)(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))(@langchain/langgraph@0.4.9(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))(zod-to-json-schema@3.25.0(zod@4.2.1)))(hono@4.11.1)':
     dependencies:
       '@langchain/core': 0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1))
-      '@modelcontextprotocol/sdk': 1.25.1(@cfworker/json-schema@4.1.1)(hono@4.11.1)(zod@3.25.76)
+      '@langchain/langgraph': 0.4.9(@langchain/core@0.3.80(openai@5.12.2(ws@8.18.3)(zod@4.2.1)))(zod-to-json-schema@3.25.0(zod@4.2.1))
+      '@modelcontextprotocol/sdk': 1.25.1(@cfworker/json-schema@4.1.1)(hono@4.11.1)(zod@4.2.1)
       debug: 4.4.3(supports-color@8.1.1)
-      zod: 3.25.76
+      zod: 4.2.1
     optionalDependencies:
       extended-eventsource: 1.7.0
     transitivePeerDependencies:
