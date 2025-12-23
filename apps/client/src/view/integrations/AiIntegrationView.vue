@@ -1,5 +1,7 @@
 <script lang="ts" setup>
 import { AiProvider } from "@open-dpp/api-client";
+import Button from "primevue/button";
+import Checkbox from "primevue/checkbox";
 import { ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useAiIntegrationStore } from "../../stores/ai.integration";
@@ -46,20 +48,22 @@ async function onSubmit() {
       </div>
     </div>
     <div>
-      <form-kit
-        v-model="formData"
-        :actions="false"
-        type="form"
-        @submit="onSubmit"
-      >
-        <FormKit
-          data-cy="toggle-integration"
-          type="checkbox"
-          :label="t('integrations.ai.activate')"
-          name="isEnabled"
-        />
-        <form-kit :label="t('common.save')" type="submit" />
-      </form-kit>
+      <form class="flex flex-col gap-4" @submit.prevent="onSubmit">
+        <div class="flex items-center gap-2">
+          <Checkbox
+            v-model="formData.isEnabled"
+            binary
+            input-id="isEnabled"
+            data-cy="toggle-integration"
+          />
+          <label for="isEnabled" class="cursor-pointer text-sm font-medium text-gray-700">
+            {{ t('integrations.ai.activate') }}
+          </label>
+        </div>
+        <div class="mt-2">
+          <Button :label="t('common.save')" type="submit" />
+        </div>
+      </form>
     </div>
   </div>
 </template>

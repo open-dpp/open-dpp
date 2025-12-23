@@ -10,8 +10,7 @@ export const AssetAdministrationShellType = {
 } as const;
 
 export type AssetAdministrationShellType_TYPE = (
-  typeof AssetAdministrationShellType
-)[keyof typeof AssetAdministrationShellType];
+  typeof AssetAdministrationShellType[keyof typeof AssetAdministrationShellType]);
 
 const AASPropertySchema = z.object({
   idShort: z.string(),

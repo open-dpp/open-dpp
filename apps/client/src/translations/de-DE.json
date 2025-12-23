@@ -1,4 +1,7 @@
 {
+  "validation": {
+    "required": "Erforderlich"
+  },
   "common": {
     "id": "ID",
     "identification": "Identifikation",
@@ -35,7 +38,8 @@
       "email": {
         "help": "Geben Sie eine E-Mail Adresse ein.",
         "label": "E-Mail Adresse",
-        "error": "Bitte geben Sie eine E-Mail Adresse ein."
+        "error": "Bitte geben Sie eine E-Mail Adresse ein.",
+        "invalid": "Bitte geben Sie eine gültige E-Mail Adresse ein."
       }
     }
   },
@@ -197,7 +201,8 @@
         "inactive": "Inaktiv"
       },
       "fieldAssignments": "Feldverknüpfungen",
-      "addFieldAssignments": "Neue Feldverknüpfung hinzufügen"
+      "addFieldAssignments": "Neue Feldverknüpfung hinzufügen",
+      "addRow": "Zeile hinzufügen"
     },
     "apiKey": {
       "create": "API Key erstellen",

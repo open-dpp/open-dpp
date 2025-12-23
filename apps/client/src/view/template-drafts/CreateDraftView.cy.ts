@@ -38,7 +38,7 @@ describe("<CreateDraftView />", () => {
     const valuesToSelect = ["Batterie", "Elektronik"];
 
     valuesToSelect.forEach((value) => {
-      cy.get(".formkit-options")
+      cy.get("[data-cy=\"sectors\"]")
         .contains("label", value)
         .find("input[type=\"checkbox\"]")
         .check({ force: true });

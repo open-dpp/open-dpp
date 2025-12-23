@@ -7,8 +7,12 @@ import {
   TransitionRoot,
 } from "@headlessui/vue";
 import { EnvelopeIcon, XMarkIcon } from "@heroicons/vue/24/outline";
+import Button from "primevue/button";
+import InputText from "primevue/inputtext";
+import Message from "primevue/message";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
+import { z } from "zod";
 import { authClient } from "../../auth-client.ts";
 import RingLoader from "../RingLoader.vue";
 
@@ -23,30 +27,38 @@ const { t } = useI18n();
 const loading = ref<boolean>(false);
 const errors = ref<Array<string>>([]);
 const success = ref<boolean>(false);
+const email = ref("");
+const emailError = ref("");
 
-async function inviteUser(fields: { email: string }) {
+async function inviteUser() {
   success.value = false;
   errors.value = [];
+  emailError.value = "";
+
+  const emailSchema = z.email();
+  const result = emailSchema.safeParse(email.value);
+
+  if (!result.success) {
+    emailError.value = t("common.form.email.invalid");
+    return;
+  }
+
   try {
-    if (fields.email) {
-      loading.value = true;
-      const { error } = await authClient.organization.inviteMember({
-        email: fields.email,
-        role: "member",
-        organizationId: props.organizationId,
-        resend: true,
-      });
-      loading.value = false;
-      if (!error) {
-        success.value = true;
-        emit("invitedUser");
-      }
-      else {
-        errors.value.push("Ein Fehler ist aufgetreten.");
-      }
+    loading.value = true;
+    const { error } = await authClient.organization.inviteMember({
+      email: email.value,
+      role: "member",
+      organizationId: props.organizationId,
+      resend: true,
+    });
+    loading.value = false;
+    if (!error) {
+      success.value = true;
+      emit("invitedUser");
+      email.value = ""; // Reset form
     }
     else {
-      errors.value.push("Bitte geben Sie eine E-Mail Adresse ein.");
+      errors.value.push("Ein Fehler ist aufgetreten.");
     }
   }
   catch (error) {
@@ -127,26 +139,38 @@ async function inviteUser(fields: { email: string }) {
                     </button>
                   </div>
                   <div v-else class="mt-3">
-                    <FormKit
-                      v-show="!loading"
-                      :actions="false"
-                      :errors="errors"
-                      type="form"
-                      @submit="inviteUser"
-                    >
-                      <FormKit
-                        :help="t('common.form.email.help')"
-                        :label="t('common.form.email.label')"
-                        name="email"
-                        type="text"
-                        validation="required|email"
-                      />
-                      <FormKit
-                        :disabled="loading"
+                    <form v-show="!loading" class="flex flex-col gap-4" @submit.prevent="inviteUser">
+                      <div v-if="errors.length" class="flex flex-col gap-1">
+                        <Message v-for="error in errors" :key="error" severity="error" :closable="false">
+                          {{ error }}
+                        </Message>
+                      </div>
+
+                      <div class="flex flex-col gap-2">
+                        <label for="email" class="block text-sm font-medium text-gray-700">
+                          {{ t('common.form.email.label') }}
+                        </label>
+                        <InputText
+                          id="email"
+                          v-model="email"
+                          type="text"
+                          :invalid="!!emailError"
+                          class="w-full"
+                          :aria-describedby="emailError ? 'email-error' : 'email-help'"
+                        />
+                        <small v-if="emailError" id="email-error" class="text-red-600">{{ emailError }}</small>
+                        <small v-else id="email-help" class="text-gray-500">
+                          {{ t('common.form.email.help') }}
+                        </small>
+                      </div>
+
+                      <Button
                         :label="t('organizations.invite')"
                         type="submit"
+                        :loading="loading"
+                        class="w-full"
                       />
-                    </FormKit>
+                    </form>
                     <RingLoader v-show="loading" class="mx-auto w-fit" />
                   </div>
                 </div>

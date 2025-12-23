@@ -76,6 +76,7 @@ export class BetterAuthHelper {
     const body = {
       firstName: "First",
       lastName: "Last",
+      name: "First Last",
       email: userEmail,
       password: this.defaultPassword,
     } as any;
