@@ -151,7 +151,7 @@ jobs:
     steps:
       - name: Create runner
         id: create-hcloud-runner
-        uses: Cyclenerd/hcloud-github-runner@v1
+        uses: Cyclenerd/hcloud-github-runner@1d464319145d45966cd0344f3e2038cf2152dc1d # v1.3.0
         with:
           mode: create
           github_token: ${{ secrets.HETZNER_PAT }}
@@ -346,7 +346,7 @@ jobs:
     if: ${{ always() }} # required to stop the runner even if the error happened in the previous jobs
     steps:
       - name: Delete runner
-        uses: Cyclenerd/hcloud-github-runner@v1
+        uses: Cyclenerd/hcloud-github-runner@1d464319145d45966cd0344f3e2038cf2152dc1d # v1.3.0
         with:
           mode: delete
           github_token: ${{ secrets.HETZNER_PAT }}
