@@ -19,7 +19,7 @@
     "@headlessui/vue": "^1.7.23",
     "@heroicons/vue": "^2.2.0",
     "@open-dpp/api-client": "workspace:*",
-    "@primeuix/themes": "^1.2.5",
+    "@primeuix/themes": "^2.0.0",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.11",
     "@types/qrcode": "^1.5.6",
