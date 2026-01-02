@@ -28,8 +28,8 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.9",
     "@nestjs/mongoose": "^11.0.3",
-    "@open-dpp/env": "workspace:*",
     "@open-dpp/dto": "workspace:*",
+    "@open-dpp/env": "workspace:*",
     "class-transformer": "^0.5.1",
     "fishery": "^2.3.1"
   },

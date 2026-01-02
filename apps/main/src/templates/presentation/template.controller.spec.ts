@@ -80,12 +80,18 @@ describe("templateController", () => {
 
     const t1 = await createTemplate(org.id, date1, date1);
     const t2 = await createTemplate(org.id, date2, date2);
+
     const response = await request(app.getHttpServer())
-      .get(basePath)
+      .get(`${basePath}?limit=2&cursor=${date1.toISOString()}`)
       .set("Cookie", userCookie);
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toEqual(t2.createdAt.toISOString());
-    expect(response.body.result).toEqual([t1.toPlain(), t2.toPlain()]);
+    const expected = [t1.toPlain(), t2.toPlain()];
+    expect(response.body.result).toEqual(expected.map(t => ({
+      ...t,
+      createdAt: t.createdAt.toISOString(),
+      updatedAt: t.updatedAt.toISOString(),
+    })));
   });
 
   it(`/POST a template`, async () => {
