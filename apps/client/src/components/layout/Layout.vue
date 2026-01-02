@@ -135,10 +135,10 @@ const sidebarOpen = ref(false);
 <template>
   <NotificationHandler />
   <div>
-    <TransitionRoot :show="sidebarOpen" as="template">
+    <TransitionRoot :show="sidebarOpen" as="oldTemplate">
       <Dialog class="relative z-50 lg:hidden" @close="sidebarOpen = false">
         <TransitionChild
-          as="template"
+          as="oldTemplate"
           enter="transition-opacity ease-linear duration-300"
           enter-from="opacity-0"
           enter-to="opacity-100"
@@ -151,7 +151,7 @@ const sidebarOpen = ref(false);
 
         <div class="fixed inset-0 flex">
           <TransitionChild
-            as="template"
+            as="oldTemplate"
             enter="transition ease-in-out duration-300 transform"
             enter-from="-translate-x-full"
             enter-to="translate-x-0"
@@ -161,7 +161,7 @@ const sidebarOpen = ref(false);
           >
             <DialogPanel class="relative mr-16 flex w-full max-w-xs flex-1">
               <TransitionChild
-                as="template"
+                as="oldTemplate"
                 enter="ease-in-out duration-300"
                 enter-from="opacity-0"
                 enter-to="opacity-100"

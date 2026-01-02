@@ -1,5 +1,6 @@
 import type {
   AssetAdministrationShellPaginationResponseDto,
+  PagingParamsDto,
   SubmodelElementPaginationResponseDto,
   SubmodelElementRequestDto,
   SubmodelElementResponseDto,
@@ -9,8 +10,6 @@ import type {
   ValueResponseDto,
 } from '@open-dpp/dto'
 import type { AxiosInstance, AxiosResponse } from 'axios'
-
-interface PaginationParams { limit?: number, cursor?: string }
 
 export class AasNamespace {
   private readonly aasEndpoint
@@ -22,11 +21,11 @@ export class AasNamespace {
     this.aasEndpoint = `/${basePath}`
   }
 
-  public async getShells(id: string, params: PaginationParams) {
+  public async getShells(id: string, params: PagingParamsDto) {
     return this.axiosInstance.get<AssetAdministrationShellPaginationResponseDto>(`${this.aasEndpoint}/${id}/shells`, { params })
   }
 
-  public async getSubmodels(id: string, params: PaginationParams) {
+  public async getSubmodels(id: string, params: PagingParamsDto) {
     return this.axiosInstance.get<SubmodelPaginationResponseDto>(`${this.aasEndpoint}/${id}/submodels`, { params })
   }
 

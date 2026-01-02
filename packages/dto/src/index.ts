@@ -47,9 +47,10 @@ export * from './aas/submodel-base/submodel-element-collection-json-schema'
 export * from './aas/submodel-base/submodel-element-list-json-schema'
 export * from './aas/submodel-base/submodel-element-schema'
 export * from './aas/submodel-base/submodel-json-schema'
-export * from './paging-metadata.dto'
 export * from './passports/passport.dto'
-
 export { SharedDppDtoSchema } from './shared/dpp.schemas'
+
 export { DateTimeSchema } from './shared/dpp.schemas'
+export * from './shared/pagination.dto'
+export { PagingMetadataDtoSchema } from './shared/pagination.dto'
 export * from './templates/template.dto'

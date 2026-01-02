@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { PagingMetadataDtoSchema } from '../../paging-metadata.dto'
+import { PagingMetadataDtoSchema } from '../../shared/pagination.dto'
 import {
   SubmodelElementSchema,
 } from '../submodel-base/submodel-element-schema'

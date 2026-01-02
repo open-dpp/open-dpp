@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
-import { PagingMetadataDtoSchema } from '../../paging-metadata.dto'
+import { PagingMetadataDtoSchema } from '../../shared/pagination.dto'
 import { SubmodelJsonSchema } from '../submodel-base/submodel-json-schema'
 
 export const SubmodelPaginationResponseDtoSchema = z

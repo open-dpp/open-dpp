@@ -19,7 +19,7 @@ describe("templateController", () => {
 
   async function createTemplate(orgId: string, createdAt?: Date, updatedAt?: Date): Promise<Template> {
     const { aas, submodels } = ctx.getAasObjects();
-    return ctx.getRepositories().dppIdentifiableRepository.save(Template.create({
+    const template = Template.create({
       id: randomUUID(),
       organizationId: orgId,
       environment: Environment.create({
@@ -29,7 +29,8 @@ describe("templateController", () => {
       }),
       createdAt,
       updatedAt,
-    }));
+    });
+    return ctx.getRepositories().dppIdentifiableRepository.save(template);
   }
 
   it(`/GET shells`, async () => {

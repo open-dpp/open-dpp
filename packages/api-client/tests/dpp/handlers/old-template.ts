@@ -13,7 +13,7 @@ import { baseURL } from './index'
 
 const dataModelId = randomUUID()
 
-export const template: TemplateDto = {
+export const oldTemplate: TemplateDto = {
   id: dataModelId,
   name: 'Laptop neu',
   version: '1.0',
@@ -44,11 +44,11 @@ const templatesEndpointUrl = `${baseURL}/organizations/${activeOrganization.id}/
 
 export const templateHandlers = [
   http.get(templatesEndpointUrl, async () => {
-    return HttpResponse.json([{ id: template.id, name: template.name }], {
+    return HttpResponse.json([{ id: oldTemplate.id, name: oldTemplate.name }], {
       status: 200,
     })
   }),
-  http.get(`${templatesEndpointUrl}/${template.id}`, async () => {
-    return HttpResponse.json(template, { status: 200 })
+  http.get(`${templatesEndpointUrl}/${oldTemplate.id}`, async () => {
+    return HttpResponse.json(oldTemplate, { status: 200 })
   }),
 ]

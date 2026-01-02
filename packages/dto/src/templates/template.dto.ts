@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import { PagingMetadataDtoSchema } from '../paging-metadata.dto'
 import { SharedDppDtoSchema } from '../shared/dpp.schemas'
+import { PagingMetadataDtoSchema } from '../shared/pagination.dto'
 
 export const TemplateDtoSchema = SharedDppDtoSchema
 

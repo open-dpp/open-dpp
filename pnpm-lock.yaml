@@ -577,6 +577,9 @@ importers:
       '@eslint/js':
         specifier: ^9.38.0
         version: 9.39.1
+      '@open-dpp/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@rollup/plugin-typescript':
         specifier: ^12.1.4
         version: 12.3.0(rollup@4.52.5)(tslib@2.8.1)(typescript@5.9.3)

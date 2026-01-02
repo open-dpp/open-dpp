@@ -26,9 +26,10 @@ import {
 import { aasPropertiesWithParent, connection, connectionList } from './handlers/aas-integration'
 import { item1, item2 } from './handlers/item'
 import { mediaReferences, mediaReferenceUpdate, model, responseDataValues, updateDataValues } from './handlers/model'
+import { oldTemplate } from './handlers/old-template'
 import { productPassport } from './handlers/product-passport'
-import { template } from './handlers/template'
 import { dataFieldDraft, draftsOfOrganization, sectionDraft, templateDraft } from './handlers/template-draft'
+import { template1, template2 } from './handlers/templates'
 import {
   uniqueProductIdentifierId,
   uniqueProductIdentifierMetadata,
@@ -52,20 +53,36 @@ describe('apiClient', () => {
     })
   })
 
-  describe('templates', () => {
+  describe('old templates', () => {
     const sdk = new OpenDppClient({
       dpp: { baseURL },
     })
     sdk.setActiveOrganizationId(activeOrganization.id)
     it('should get all templates', async () => {
       const response = await sdk.dpp.oldTemplates.getAll()
-      expect(response.data).toEqual([{ id: template.id, name: template.name }])
+      expect(response.data).toEqual([{ id: oldTemplate.id, name: oldTemplate.name }])
     })
 
     it('should get template by id', async () => {
-      const response = await sdk.dpp.oldTemplates.getById(template.id)
-      expect(response.data).toEqual(template)
+      const response = await sdk.dpp.oldTemplates.getById(oldTemplate.id)
+      expect(response.data).toEqual(oldTemplate)
     })
+  })
+
+  describe('templates', () => {
+    const sdk = new OpenDppClient({
+      dpp: { baseURL },
+    })
+    sdk.setActiveOrganizationId(activeOrganization.id)
+    it('should get all templates', async () => {
+      const response = await sdk.dpp.templates.getAll(paginationParams)
+      expect(response.data.result).toEqual([template1, template2].map(t => ({ ...t, createdAt: t.createdAt.toISOString(), updatedAt: t.updatedAt.toISOString() })))
+    })
+
+    // it('should get template by id', async () => {
+    //   const response = await sdk.dpp.oldTemplates.getById(oldTemplate.id)
+    //   expect(response.data).toEqual(oldTemplate)
+    // })
   })
 
   describe.each(['templates'])('aas', () => {
@@ -74,7 +91,8 @@ describe('apiClient', () => {
     })
     it('should return shells', async () => {
       const response = await sdk.dpp.templates.aas.getShells(aasWrapperId, paginationParams)
-      expect(response.data).toEqual([aasResponse])
+      expect(response.data.paging_metadata.cursor).toEqual(aasResponse.id)
+      expect(response.data.result).toEqual([aasResponse])
     })
     it('should return submodels', async () => {
       const response = await sdk.dpp.templates.aas.getSubmodels(aasWrapperId, paginationParams)
@@ -456,7 +474,7 @@ describe('apiClient', () => {
       const response = await sdk.dpp.templateDrafts.publish(templateDraft.id, {
         visibility: VisibilityLevel.PRIVATE,
       })
-      expect(response.data).toEqual({ ...template })
+      expect(response.data).toEqual({ ...oldTemplate })
     })
   })
 

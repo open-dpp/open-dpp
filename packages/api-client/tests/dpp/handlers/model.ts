@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { http, HttpResponse } from 'msw'
 import { activeOrganization } from '../../organization'
 import { baseURL } from './index'
-import { template } from './template'
+import { oldTemplate } from './old-template'
 
 export const updateDataValues: DataValueDto[] = [
   {
@@ -145,10 +145,10 @@ export const modelHandlers = [
     },
   ),
   http.post(
-    `${baseURL}/organizations/${activeOrganization.id}/models/${model.id}/templates/${template.id}`,
+    `${baseURL}/organizations/${activeOrganization.id}/models/${model.id}/templates/${oldTemplate.id}`,
     async () => {
       return HttpResponse.json(
-        { ...model, productDataModelId: template.id },
+        { ...model, productDataModelId: oldTemplate.id },
         { status: 201 },
       )
     },

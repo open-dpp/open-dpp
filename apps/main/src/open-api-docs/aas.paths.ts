@@ -6,6 +6,7 @@ import {
   SubmodelPaginationResponseDtoSchema,
   SubmodelRequestDtoSchema,
   TemplateDtoSchema,
+  TemplatePaginationDtoSchema,
   ValueResponseDtoSchema,
 } from "@open-dpp/dto";
 import {
@@ -192,6 +193,18 @@ function createTemplatePaths() {
   return {
     ...createAasPaths(tag),
     [`${tag}`]: {
+      get: {
+        tags: [tag],
+        summary: `Get templates`,
+        parameters: [LimitQueryParamSchema, CursorQueryParamSchema],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: TemplatePaginationDtoSchema },
+            },
+          },
+        },
+      },
       post: {
         tags: [tag],
         summary: `Creates template`,

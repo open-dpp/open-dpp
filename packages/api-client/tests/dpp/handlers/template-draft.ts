@@ -14,7 +14,7 @@ import {
 } from '../../../src'
 import { activeOrganization } from '../../organization'
 import { baseURL } from './index'
-import { template } from './template'
+import { oldTemplate } from './old-template'
 
 const dataModelId = randomUUID()
 
@@ -168,7 +168,7 @@ export const templateDraftsHandlers = [
   }),
 
   http.post(`${draftEndpointUrl}/${templateDraft.id}/publish`, async () => {
-    return HttpResponse.json(template, {
+    return HttpResponse.json(oldTemplate, {
       status: 201,
     })
   }),

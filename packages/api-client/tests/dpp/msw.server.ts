@@ -4,9 +4,10 @@ import { aasHandlers } from './handlers/aas'
 import { aasIntegrationHandlers } from './handlers/aas-integration'
 import { itemHandlers } from './handlers/item'
 import { modelHandlers } from './handlers/model'
+import { templateHandlers } from './handlers/old-template'
 import { productPassportHandlers } from './handlers/product-passport'
-import { templateHandlers } from './handlers/template'
 import { templateDraftsHandlers } from './handlers/template-draft'
+import { templatesHandlers } from './handlers/templates'
 import { uniqueProductIdentifierHandlers } from './handlers/unique-product-identifiers'
 
 const handlers = [
@@ -19,6 +20,7 @@ const handlers = [
   ...organizationHandlers,
   ...aasIntegrationHandlers,
   ...aasHandlers('templates'),
+  ...templatesHandlers(),
 ]
 
 export const server = setupServer(...handlers)
