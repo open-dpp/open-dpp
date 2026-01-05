@@ -8,6 +8,7 @@ import { ORGANIZATION_ANALYTICS_PARENT } from "./analytics.ts";
 import { ORGANIZATION_INTEGRATIONS_PARENT } from "./integrations";
 import { ORGANIZATION_MODELS_PARENT } from "./models/models";
 import { ORGANIZATION_DRAFTS_PARENT } from "./product-data-model-drafts/drafts";
+import { ORGANIZATION_TEMPLATES_PARENT } from "./templates/templates.ts";
 
 export const ORGANIZATION_LIST: RouteRecordRaw = {
   path: "",
@@ -71,6 +72,7 @@ export const ORGANIZATION_PARENT: RouteRecordRaw = {
     ORGANIZATION,
     ORGANIZATION_MEMBERS,
     ORGANIZATION_MODELS_PARENT,
+    ORGANIZATION_TEMPLATES_PARENT,
     ORGANIZATION_DRAFTS_PARENT,
     ORGANIZATION_INTEGRATIONS_PARENT,
     ORGANIZATION_ANALYTICS_PARENT,

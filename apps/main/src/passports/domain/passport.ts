@@ -39,8 +39,8 @@ export class Passport implements IPersistable, IDigitalProductPassportIdentifiab
       parsed.id,
       parsed.organizationId,
       Environment.fromPlain(parsed.environment),
-      parsed.createdAt,
-      parsed.updatedAt,
+      new Date(parsed.createdAt),
+      new Date(parsed.updatedAt),
     );
   }
 

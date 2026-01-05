@@ -1,6 +1,5 @@
 import type { INestApplication } from '@nestjs/common'
 import type { App } from 'supertest/types'
-import { expect } from '@jest/globals'
 import _ from 'lodash'
 
 export function ignoreIds(plain: any) {

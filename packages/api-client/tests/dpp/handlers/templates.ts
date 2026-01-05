@@ -14,6 +14,12 @@ export function templatesHandlers() {
   const templatesEndpointUrl = `${baseURL}/templates`
 
   return [
+    http.post(
+      `${templatesEndpointUrl}`,
+      async () => {
+        return HttpResponse.json(template1, { status: 201 })
+      },
+    ),
     http.get(
       `${templatesEndpointUrl}`,
       async ({ request }) => {

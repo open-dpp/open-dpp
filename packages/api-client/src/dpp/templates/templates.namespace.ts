@@ -19,4 +19,8 @@ export class TemplatesNamespace {
   public async getAll(params: PagingParamsDto) {
     return await this.axiosInstance.get<TemplatePaginationDto>(this.templatesEndpoint, { params })
   }
+
+  public async create() {
+    return await this.axiosInstance.post<TemplatePaginationDto>(this.templatesEndpoint)
+  }
 }

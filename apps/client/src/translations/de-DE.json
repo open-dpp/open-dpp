@@ -294,6 +294,9 @@
     "media": "Medien",
     "preview": "Vorschau"
   },
+  "templates": {
+    "label": "Passvorlagen"
+  },
   "models": {
     "models": "Produktpässe",
     "pass": "Modellpass",

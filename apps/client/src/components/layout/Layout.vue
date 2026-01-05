@@ -65,6 +65,12 @@ const unfilteredNavigation = computed<Array<MenuItemInterface>>(() => [
     show: () => indexStore.selectedOrganization !== null,
   },
   {
+    name: t("templates.label", 2),
+    to: `/organizations/${indexStore.selectedOrganization}/templates`,
+    icon: Square3Stack3DIcon,
+    show: () => indexStore.selectedOrganization !== null,
+  },
+  {
     name: t("integrations.integrations"),
     to: `/organizations/${indexStore.selectedOrganization}/integrations`,
     icon: LinkIcon,

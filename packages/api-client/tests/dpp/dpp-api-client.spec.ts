@@ -76,13 +76,13 @@ describe('apiClient', () => {
     sdk.setActiveOrganizationId(activeOrganization.id)
     it('should get all templates', async () => {
       const response = await sdk.dpp.templates.getAll(paginationParams)
-      expect(response.data.result).toEqual([template1, template2].map(t => ({ ...t, createdAt: t.createdAt.toISOString(), updatedAt: t.updatedAt.toISOString() })))
+      expect(response.data.result).toEqual([template1, template2])
     })
 
-    // it('should get template by id', async () => {
-    //   const response = await sdk.dpp.oldTemplates.getById(oldTemplate.id)
-    //   expect(response.data).toEqual(oldTemplate)
-    // })
+    it('should create template', async () => {
+      const response = await sdk.dpp.templates.create()
+      expect(response.data).toEqual(template1)
+    })
   })
 
   describe.each(['templates'])('aas', () => {

@@ -273,6 +273,9 @@
   "marketplace": {
     "marketplace": "Marketplace"
   },
+  "templates": {
+    "label": "Passport templates"
+  },
   "models": {
     "models": "Passports",
     "pass": "Model passport",

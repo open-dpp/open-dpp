@@ -12,6 +12,6 @@ export const templatesPlainFactory
       submodels: [],
       conceptDescriptions: [],
     },
-    createdAt: new Date(Date.now()),
-    updatedAt: new Date(Date.now()),
+    createdAt: new Date(Date.now()).toISOString(),
+    updatedAt: new Date(Date.now()).toISOString(),
   }))
