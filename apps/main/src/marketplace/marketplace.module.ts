@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import {
-  TemplateDoc,
+  OldTemplateDoc,
   TemplateSchema,
 } from "../old-templates/infrastructure/template.schema";
 import { TemplateService } from "../old-templates/infrastructure/template.service";
@@ -22,7 +22,7 @@ import { PassportTemplatePublicationController } from "./presentation/passport-t
         schema: PassportTemplatePublicationDbSchema,
       },
       {
-        name: TemplateDoc.name,
+        name: OldTemplateDoc.name,
         schema: TemplateSchema,
       },
     ]),

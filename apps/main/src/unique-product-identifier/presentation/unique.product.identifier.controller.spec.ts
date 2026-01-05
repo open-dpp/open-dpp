@@ -22,7 +22,7 @@ import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { Template } from "../../old-templates/domain/template";
-import { TemplateDoc, TemplateSchema } from "../../old-templates/infrastructure/template.schema";
+import { OldTemplateDoc, TemplateSchema } from "../../old-templates/infrastructure/template.schema";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import { phoneFactory } from "../../product-passport/fixtures/product-passport.factory";
 import {
@@ -68,7 +68,7 @@ describe("uniqueProductIdentifierController", () => {
             schema: ItemSchema,
           },
           {
-            name: TemplateDoc.name,
+            name: OldTemplateDoc.name,
             schema: TemplateSchema,
           },
         ]),

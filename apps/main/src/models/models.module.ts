@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { MarketplaceModule } from "../marketplace/marketplace.module";
 import {
-  TemplateDoc,
+  OldTemplateDoc,
   TemplateSchema,
 } from "../old-templates/infrastructure/template.schema";
 import { TemplateModule } from "../old-templates/template.module";
@@ -22,7 +22,7 @@ import { ModelsController } from "./presentation/models.controller";
         schema: ModelSchema,
       },
       {
-        name: TemplateDoc.name,
+        name: OldTemplateDoc.name,
         schema: TemplateSchema,
       },
     ]),

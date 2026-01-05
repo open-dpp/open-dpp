@@ -3,7 +3,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { AuthModule } from "../auth/auth.module";
 import { MarketplaceModule } from "../marketplace/marketplace.module";
 import {
-  TemplateDoc,
+  OldTemplateDoc,
   TemplateSchema,
 } from "../old-templates/infrastructure/template.schema";
 import { TemplateService } from "../old-templates/infrastructure/template.service";
@@ -23,7 +23,7 @@ import { TemplateDraftController } from "./presentation/template-draft.controlle
         schema: TemplateDraftSchema,
       },
       {
-        name: TemplateDoc.name,
+        name: OldTemplateDoc.name,
         schema: TemplateSchema,
       },
     ]),

@@ -1,18 +1,18 @@
-import type {
+import type express from "express";
+import { Controller, Get, Logger, Post, Req, UnauthorizedException } from "@nestjs/common";
+import {
   AssetAdministrationShellPaginationResponseDto,
+  AssetKind,
   SubmodelElementPaginationResponseDto,
   SubmodelElementRequestDto,
   SubmodelElementResponseDto,
   SubmodelPaginationResponseDto,
   SubmodelRequestDto,
   SubmodelResponseDto,
-  TemplateDto,
   TemplatePaginationDto,
+  TemplatePaginationDtoSchema,
   ValueResponseDto,
 } from "@open-dpp/dto";
-import type express from "express";
-import { Controller, Get, Post, Req, UnauthorizedException } from "@nestjs/common";
-import { AssetKind, TemplateDtoSchema, TemplatePaginationDtoSchema } from "@open-dpp/dto";
 import { fromNodeHeaders } from "better-auth/node";
 import { Pagination } from "../../aas/domain/pagination";
 import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
@@ -44,6 +44,8 @@ import { TemplateRepository } from "../infrastructure/template.repository";
 
 @Controller("/templates")
 export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoints {
+  private readonly logger = new Logger(TemplateController.name);
+
   constructor(private readonly environmentService: EnvironmentService, private readonly authService: AuthService, private readonly templateRepository: TemplateRepository) {
   }
 
@@ -142,10 +144,11 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
   @Post()
   async createTemplate(
     @RequestParam() req: express.Request,
-  ): Promise<TemplateDto> {
+  ): Promise<void> {
     const environment = await this.environmentService.createEnvironmentWithEmptyAas(AssetKind.Type);
     const template = Template.create({ organizationId: await this.getActiveOrganizationId(req), environment });
-    return TemplateDtoSchema.parse((await this.templateRepository.save(template)).toPlain());
+    await this.templateRepository.save(template);
+    // return TemplateDtoSchema.parse((await this.templateRepository.save(template)).toPlain());
   }
 
   @Get()

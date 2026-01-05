@@ -30,7 +30,7 @@ import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { Template, TemplateDbProps } from "../../old-templates/domain/template";
-import { TemplateDoc, TemplateSchema } from "../../old-templates/infrastructure/template.schema";
+import { OldTemplateDoc, TemplateSchema } from "../../old-templates/infrastructure/template.schema";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import {
@@ -196,7 +196,7 @@ describe("itemsController", () => {
             schema: ItemSchema,
           },
           {
-            name: TemplateDoc.name,
+            name: OldTemplateDoc.name,
             schema: TemplateSchema,
           },
           {

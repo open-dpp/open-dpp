@@ -16,7 +16,7 @@ import { Template } from "../../old-templates/domain/template";
 import { laptopFactory } from "../../old-templates/fixtures/laptop.factory";
 import { templateCreatePropsFactory } from "../../old-templates/fixtures/template.factory";
 import {
-  TemplateDoc,
+  OldTemplateDoc,
   TemplateDocSchemaVersion,
   TemplateSchema,
 } from "../../old-templates/infrastructure/template.schema";
@@ -55,7 +55,7 @@ describe("marketplaceService", () => {
             schema: PassportTemplatePublicationDbSchema,
           },
           {
-            name: TemplateDoc.name,
+            name: OldTemplateDoc.name,
             schema: TemplateSchema,
           },
         ]),

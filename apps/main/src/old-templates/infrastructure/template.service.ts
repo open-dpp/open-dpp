@@ -7,20 +7,20 @@ import {
   serializeTemplate,
 } from "../domain/serialization";
 import { Template } from "../domain/template";
-import { TemplateDoc } from "./template.schema";
+import { OldTemplateDoc } from "./template.schema";
 
 @Injectable()
 export class TemplateService {
-  private templateDoc: Model<TemplateDoc>;
+  private templateDoc: Model<OldTemplateDoc>;
 
   constructor(
-    @InjectModel(TemplateDoc.name)
-    templateDoc: Model<TemplateDoc>,
+    @InjectModel(OldTemplateDoc.name)
+    templateDoc: Model<OldTemplateDoc>,
   ) {
     this.templateDoc = templateDoc;
   }
 
-  convertToDomain(templateDoc: TemplateDoc): Template {
+  convertToDomain(templateDoc: OldTemplateDoc): Template {
     const plain = templateDoc.toObject();
     return deserializeTemplate(plain);
   }

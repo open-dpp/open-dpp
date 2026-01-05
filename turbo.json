@@ -32,6 +32,10 @@
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "cache": false
     },
+    "e2e-test": {
+      "inputs": ["$TURBO_DEFAULT$", ".env"],
+      "cache": false
+    },
     "test:debug": {
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "cache": false,

@@ -30,7 +30,7 @@ import {
   LaptopFactory,
   laptopFactory,
 } from "../../old-templates/fixtures/laptop.factory";
-import { TemplateDoc, TemplateSchema } from "../../old-templates/infrastructure/template.schema";
+import { OldTemplateDoc, TemplateSchema } from "../../old-templates/infrastructure/template.schema";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import {
@@ -87,7 +87,7 @@ describe("modelsController", () => {
             schema: ItemSchema,
           },
           {
-            name: TemplateDoc.name,
+            name: OldTemplateDoc.name,
             schema: TemplateSchema,
           },
           {

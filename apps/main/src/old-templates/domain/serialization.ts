@@ -3,7 +3,7 @@ import type {
   SectionDoc,
 } from "../../data-modelling/infrastructure/template-base.schema";
 import type {
-  TemplateDoc,
+  OldTemplateDoc,
 } from "../infrastructure/template.schema";
 import type { DataFieldDbProps } from "./data-field";
 import type { SectionDbProps } from "./section";
@@ -43,7 +43,7 @@ export function serializeTemplate(t: Template) {
   };
 }
 
-export function deserializeTemplate(plain: TemplateDoc) {
+export function deserializeTemplate(plain: OldTemplateDoc) {
   const tmp = {
     id: plain._id,
     marketplaceResourceId: plain.marketplaceResourceId,

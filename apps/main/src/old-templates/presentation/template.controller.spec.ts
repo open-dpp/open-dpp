@@ -17,7 +17,7 @@ import { EmailService } from "../../email/email.service";
 import { Template } from "../domain/template";
 import { laptopFactory } from "../fixtures/laptop.factory";
 import { templateCreatePropsFactory } from "../fixtures/template.factory";
-import { TemplateDoc, TemplateSchema } from "../infrastructure/template.schema";
+import { OldTemplateDoc, TemplateSchema } from "../infrastructure/template.schema";
 import { TemplateService } from "../infrastructure/template.service";
 import { templateToDto } from "./dto/template.dto";
 import { TemplateController } from "./template.controller";
@@ -42,7 +42,7 @@ describe("templateController", () => {
         }),
         MongooseModule.forFeature([
           {
-            name: TemplateDoc.name,
+            name: OldTemplateDoc.name,
             schema: TemplateSchema,
           },
         ]),

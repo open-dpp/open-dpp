@@ -8,7 +8,7 @@ import {
   deserializeTemplate,
   serializeTemplate,
 } from "../../old-templates/domain/serialization";
-import { TemplateDoc } from "../../old-templates/infrastructure/template.schema";
+import { OldTemplateDoc } from "../../old-templates/infrastructure/template.schema";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import { PassportTemplatePublication } from "../domain/passport-template-publication";
 import { PassportTemplatePublicationService } from "../infrastructure/passport-template-publication.service";
@@ -18,8 +18,8 @@ export class MarketplaceApplicationService {
   private readonly logger = new Logger(MarketplaceApplicationService.name);
 
   constructor(
-    @InjectModel(TemplateDoc.name)
-    private TemplateDoc: Model<TemplateDoc>,
+    @InjectModel(OldTemplateDoc.name)
+    private TemplateDoc: Model<OldTemplateDoc>,
     private templateService: TemplateService,
     private passportTemplateService: PassportTemplatePublicationService,
   ) {}

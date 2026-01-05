@@ -27,7 +27,7 @@ import { Template, TemplateDbProps } from "../../old-templates/domain/template";
 import { dataFieldDbPropsFactory } from "../../old-templates/fixtures/data-field.factory";
 import { laptopFactory } from "../../old-templates/fixtures/laptop.factory";
 import { sectionDbPropsFactory } from "../../old-templates/fixtures/section.factory";
-import { TemplateDoc, TemplateSchema } from "../../old-templates/infrastructure/template.schema";
+import { OldTemplateDoc, TemplateSchema } from "../../old-templates/infrastructure/template.schema";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import {
   DppEventSchema,
@@ -82,7 +82,7 @@ describe("aasConnectionController", () => {
             schema: ItemSchema,
           },
           {
-            name: TemplateDoc.name,
+            name: OldTemplateDoc.name,
             schema: TemplateSchema,
           },
           {

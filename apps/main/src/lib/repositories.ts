@@ -22,7 +22,6 @@ export async function convertToDomain<T>(
 export async function save<T extends Document<string>, V>(domainObject: IPersistable, docModel: MongooseModel<T>, schemaVersion: string, fromPlain: (plain: unknown) => V, ValidationSchema?: ZodObject<any>): Promise<V> {
   // 1. Try to find an existing document
   let doc = await docModel.findById(domainObject.id);
-
   // 2. If none exists, create a new discriminator document
   if (!doc) {
     // eslint-disable-next-line new-cap

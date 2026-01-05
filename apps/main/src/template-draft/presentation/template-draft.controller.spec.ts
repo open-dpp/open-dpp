@@ -30,7 +30,7 @@ import {
 } from "../../marketplace/infrastructure/passport-template-publication.service";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import {
-  TemplateDoc,
+  OldTemplateDoc,
   TemplateSchema,
 } from "../../old-templates/infrastructure/template.schema";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";
@@ -79,7 +79,7 @@ describe("templateDraftController", () => {
             schema: TemplateDraftSchema,
           },
           {
-            name: TemplateDoc.name,
+            name: OldTemplateDoc.name,
             schema: TemplateSchema,
           },
           {

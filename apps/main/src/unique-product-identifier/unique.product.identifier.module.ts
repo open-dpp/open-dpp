@@ -5,7 +5,7 @@ import { ItemsService } from "../items/infrastructure/items.service";
 import { ModelDoc, ModelSchema } from "../models/infrastructure/model.schema";
 import { ModelsService } from "../models/infrastructure/models.service";
 import {
-  TemplateDoc,
+  OldTemplateDoc,
   TemplateSchema,
 } from "../old-templates/infrastructure/template.schema";
 import { TemplateService } from "../old-templates/infrastructure/template.service";
@@ -36,7 +36,7 @@ import { UniqueProductIdentifierController } from "./presentation/unique.product
         schema: ModelSchema,
       },
       {
-        name: TemplateDoc.name,
+        name: OldTemplateDoc.name,
         schema: TemplateSchema,
       },
     ]),

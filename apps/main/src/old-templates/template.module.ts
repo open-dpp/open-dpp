@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { OrganizationsModule } from "../organizations/organizations.module";
-import { TemplateDoc, TemplateSchema } from "./infrastructure/template.schema";
+import { OldTemplateDoc, TemplateSchema } from "./infrastructure/template.schema";
 import { TemplateService } from "./infrastructure/template.service";
 import { TemplateController } from "./presentation/template.controller";
 
@@ -9,7 +9,7 @@ import { TemplateController } from "./presentation/template.controller";
   imports: [
     MongooseModule.forFeature([
       {
-        name: TemplateDoc.name,
+        name: OldTemplateDoc.name,
         schema: TemplateSchema,
       },
     ]),

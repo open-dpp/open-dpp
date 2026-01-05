@@ -14,7 +14,7 @@ export const TemplateDocSchemaVersion = {
 export type TemplateDocSchemaVersion_TYPE = (typeof TemplateDocSchemaVersion)[keyof typeof TemplateDocSchemaVersion];
 
 @Schema({ collection: "product_data_models" })
-export class TemplateDoc extends TemplateBaseDoc {
+export class OldTemplateDoc extends TemplateBaseDoc {
   @Prop({
     default: TemplateDocSchemaVersion.v1_0_3,
     enum: Object.values(TemplateDocSchemaVersion),
@@ -29,7 +29,7 @@ export class TemplateDoc extends TemplateBaseDoc {
   marketplaceResourceId: string;
 }
 
-export const TemplateSchema = SchemaFactory.createForClass(TemplateDoc);
+export const TemplateSchema = SchemaFactory.createForClass(OldTemplateDoc);
 
 createCommonIndexesForTemplate(TemplateSchema);
 TemplateSchema.index({ marketplaceResourceId: 1 });

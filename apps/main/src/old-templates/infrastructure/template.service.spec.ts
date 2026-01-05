@@ -15,7 +15,7 @@ import { laptopFactory } from "../fixtures/laptop.factory";
 import { sectionDbPropsFactory } from "../fixtures/section.factory";
 import { templateCreatePropsFactory } from "../fixtures/template.factory";
 import {
-  TemplateDoc,
+  OldTemplateDoc,
   TemplateDocSchemaVersion,
   TemplateSchema,
 } from "./template.schema";
@@ -27,7 +27,7 @@ describe("templateService", () => {
   const organizationId = randomUUID();
   let mongoConnection: Connection;
   let module: TestingModule;
-  let templateDoc: MongooseModel<TemplateDoc>;
+  let templateDoc: MongooseModel<OldTemplateDoc>;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -42,7 +42,7 @@ describe("templateService", () => {
         }),
         MongooseModule.forFeature([
           {
-            name: TemplateDoc.name,
+            name: OldTemplateDoc.name,
             schema: TemplateSchema,
           },
         ]),
@@ -51,7 +51,7 @@ describe("templateService", () => {
     }).compile();
     service = module.get<TemplateService>(TemplateService);
     mongoConnection = module.get<Connection>(getConnectionToken());
-    templateDoc = mongoConnection.model(TemplateDoc.name, TemplateSchema);
+    templateDoc = mongoConnection.model(OldTemplateDoc.name, TemplateSchema);
   });
 
   const laptopModelPlain = laptopFactory.build({
