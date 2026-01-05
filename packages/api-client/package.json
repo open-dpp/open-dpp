@@ -37,9 +37,9 @@
     "axios": "^1.12.2"
   },
   "devDependencies": {
-    "@open-dpp/testing": "workspace:*",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.38.0",
+    "@open-dpp/testing": "workspace:*",
     "@rollup/plugin-typescript": "^12.1.4",
     "@swc/core": "^1.13.5",
     "@swc/jest": "^0.2.39",

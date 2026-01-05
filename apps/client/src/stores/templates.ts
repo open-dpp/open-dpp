@@ -1,9 +1,10 @@
-import type { ModelDto } from "@open-dpp/api-client";
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import apiClient from "../lib/api-client.ts";
 
 export const useTemplatesStore = defineStore("templates", () => {
-  const models = ref<ModelDto[]>([]);
-
-  return { models };
+  const createTemplate = async () => {
+    const response = await apiClient.dpp.templates.create();
+    return response.data;
+  };
+  return { createTemplate };
 });

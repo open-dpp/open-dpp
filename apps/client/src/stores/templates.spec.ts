@@ -1,6 +1,6 @@
 import { templatesPlainFactory } from "@open-dpp/testing";
 import { createPinia, setActivePinia } from "pinia";
-import { it, vi } from "vitest";
+import { expect, it, vi } from "vitest";
 import { useTemplatesStore } from "./templates.ts";
 
 const mocks = vi.hoisted(() => {
@@ -28,7 +28,7 @@ describe("templates", () => {
   it("should merge data values with form data", async () => {
     const templatesStore = useTemplatesStore();
     mocks.createTemplate.mockResolvedValueOnce({ data: templatesPlainFactory.build() });
-    // await templatesStore.createTemplate();
-    // expect(mocks.createTemplate).toHaveBeenCalledWith();
+    await templatesStore.createTemplate();
+    expect(mocks.createTemplate).toHaveBeenCalledWith();
   });
 });
