@@ -12,3 +12,5 @@ export const SharedDppDtoSchema = z.object({
   createdAt: DateTimeSchema,
   updatedAt: DateTimeSchema,
 })
+
+export type SharedDppDto = z.infer<typeof SharedDppDtoSchema>

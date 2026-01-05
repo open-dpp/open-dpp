@@ -24,6 +24,7 @@
     "@headlessui/vue": "^1.7.23",
     "@heroicons/vue": "^2.2.0",
     "@open-dpp/api-client": "workspace:*",
+    "@open-dpp/dto": "workspace:*",
     "@primeuix/themes": "^1.2.5",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.10",
