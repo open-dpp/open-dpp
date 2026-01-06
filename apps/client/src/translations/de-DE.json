@@ -295,7 +295,9 @@
     "preview": "Vorschau"
   },
   "templates": {
-    "label": "Passvorlagen"
+    "label": "Passvorlagen",
+    "createdAt": "Erstellt am",
+    "updatedAt": "Aktualisiert am"
   },
   "models": {
     "models": "Produktpässe",

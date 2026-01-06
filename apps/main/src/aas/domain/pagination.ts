@@ -1,3 +1,5 @@
+import { Buffer } from "node:buffer";
+
 export class Pagination {
   private constructor(private _cursor: string | null, public readonly limit: number | null) {
   }
@@ -20,4 +22,14 @@ export class Pagination {
     this._cursor = nextPages[nextPages.length - 1];
     return nextPages;
   }
+}
+
+export function encodeCursor(createdAtIsoString: string, id: string) {
+  const payload = JSON.stringify({ createdAt: createdAtIsoString, id });
+  return Buffer.from(payload).toString("base64url");
+}
+
+export function decodeCursor(cursor: string) {
+  const json = Buffer.from(cursor, "base64url").toString("utf8");
+  return JSON.parse(json);
 }

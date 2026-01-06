@@ -1,14 +1,18 @@
+import type {
+  SubmodelElementRequestDto,
+  SubmodelRequestDto,
+} from "@open-dpp/dto";
 import type express from "express";
 import { Controller, Get, Logger, Post, Req, UnauthorizedException } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
   AssetKind,
   SubmodelElementPaginationResponseDto,
-  SubmodelElementRequestDto,
   SubmodelElementResponseDto,
   SubmodelPaginationResponseDto,
-  SubmodelRequestDto,
   SubmodelResponseDto,
+  TemplateDto,
+  TemplateDtoSchema,
   TemplatePaginationDto,
   TemplatePaginationDtoSchema,
   ValueResponseDto,
@@ -144,11 +148,10 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
   @Post()
   async createTemplate(
     @RequestParam() req: express.Request,
-  ): Promise<void> {
+  ): Promise<TemplateDto> {
     const environment = await this.environmentService.createEnvironmentWithEmptyAas(AssetKind.Type);
     const template = Template.create({ organizationId: await this.getActiveOrganizationId(req), environment });
-    await this.templateRepository.save(template);
-    // return TemplateDtoSchema.parse((await this.templateRepository.save(template)).toPlain());
+    return TemplateDtoSchema.parse((await this.templateRepository.save(template)).toPlain());
   }
 
   @Get()

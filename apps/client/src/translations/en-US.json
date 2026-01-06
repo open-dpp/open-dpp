@@ -274,7 +274,9 @@
     "marketplace": "Marketplace"
   },
   "templates": {
-    "label": "Passport templates"
+    "label": "Passport templates",
+    "createdAt": "Created at",
+    "updatedAt": "Updated at"
   },
   "models": {
     "models": "Passports",

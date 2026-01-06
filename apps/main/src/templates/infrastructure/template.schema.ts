@@ -33,4 +33,4 @@ export class TemplateDoc extends Document<string> {
 }
 
 export const TemplateSchema = SchemaFactory.createForClass(TemplateDoc);
-TemplateSchema.index({ organizationId: 1, createdAt: 1 });
+TemplateSchema.index({ organizationId: 1, createdAt: 1, _id: 1 });

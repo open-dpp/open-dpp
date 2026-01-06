@@ -5,6 +5,7 @@ import { expect, jest } from "@jest/globals";
 import { AssetKind } from "@open-dpp/dto";
 import request from "supertest";
 import { Environment } from "../../aas/domain/environment";
+import { encodeCursor } from "../../aas/domain/pagination";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { DateTime } from "../../lib/date-time";
 import { Template } from "../domain/template";
@@ -78,16 +79,18 @@ describe("templateController", () => {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const date1 = new Date("2022-01-01T00:00:00.000Z");
     const date2 = new Date("2022-01-02T00:00:00.000Z");
+    const date3 = new Date("2022-01-03T00:00:00.000Z");
 
     const t1 = await createTemplate(org.id, date1, date1);
     const t2 = await createTemplate(org.id, date2, date2);
+    const t3 = await createTemplate(org.id, date3, date3);
 
     const response = await request(app.getHttpServer())
-      .get(`${basePath}?limit=2&cursor=${date1.toISOString()}`)
+      .get(`${basePath}?limit=2&cursor=${encodeCursor(t1.createdAt.toISOString(), t1.id)}`)
       .set("Cookie", userCookie);
     expect(response.status).toEqual(200);
-    expect(response.body.paging_metadata.cursor).toEqual(t2.createdAt.toISOString());
-    const expected = [t1.toPlain(), t2.toPlain()];
+    expect(response.body.paging_metadata.cursor).toEqual(encodeCursor(t3.createdAt.toISOString(), t3.id));
+    const expected = [t2.toPlain(), t3.toPlain()];
     expect(response.body.result).toEqual(expected.map(t => ({
       ...t,
       createdAt: t.createdAt.toISOString(),

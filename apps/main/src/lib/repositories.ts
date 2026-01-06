@@ -3,7 +3,7 @@ import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { Document, Model as MongooseModel } from "mongoose";
 import { ZodObject } from "zod";
 import { IConvertableToPlain } from "../aas/domain/convertable-to-plain";
-import { Pagination } from "../aas/domain/pagination";
+import { decodeCursor, encodeCursor, Pagination } from "../aas/domain/pagination";
 import { PagingResult } from "../aas/domain/paging-result";
 import { IPersistable } from "../aas/domain/persistable";
 import { HasCreatedAt } from "./has-created-at";
@@ -57,14 +57,21 @@ export async function findOne<T extends Document<string>, V>(id: string, docMode
   );
 }
 
-export async function findAllByOrganizationId<T extends Document<string>, V extends HasCreatedAt & IConvertableToPlain>(docModel: MongooseModel<T>, fromPlain: (plain: unknown) => V, organizationId: string, pagination?: Pagination) {
+export async function findAllByOrganizationId<T extends Document<string>, V extends IPersistable & HasCreatedAt & IConvertableToPlain>(docModel: MongooseModel<T>, fromPlain: (plain: unknown) => V, organizationId: string, pagination?: Pagination) {
   const tmpPagination = pagination ?? Pagination.create({ limit: 100 });
   const docs = await docModel.find(
-    { organizationId, ...(tmpPagination.cursor && { createdAt: { $gte: new Date(tmpPagination.cursor) } }) },
-  ).sort({ createdAt: 1 }).limit(tmpPagination.limit ?? 100).exec();
+    { organizationId, ...(tmpPagination.cursor && { $or: [
+      { createdAt: { $gt: decodeCursor(tmpPagination.cursor).createdAt } },
+      {
+        createdAt: decodeCursor(tmpPagination.cursor).createdAt,
+        id: { $gt: decodeCursor(tmpPagination.cursor).id },
+      },
+    ] }) },
+  ).sort({ createdAt: 1, id: 1 }).limit(tmpPagination.limit ?? 100).exec();
   const domainObjects = docs.map(fromPlain);
   if (domainObjects.length > 0) {
-    tmpPagination.setCursor(domainObjects[domainObjects.length - 1].createdAt.toISOString());
+    const lastObject = domainObjects[domainObjects.length - 1];
+    tmpPagination.setCursor(encodeCursor(lastObject.createdAt.toISOString(), lastObject.id));
   }
   return PagingResult.create({ pagination: tmpPagination, items: domainObjects });
 }

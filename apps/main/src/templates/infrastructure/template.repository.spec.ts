@@ -6,7 +6,7 @@ import { EnvModule, EnvService } from "@open-dpp/env";
 
 import { Environment } from "../../aas/domain/environment";
 
-import { Pagination } from "../../aas/domain/pagination";
+import { encodeCursor, Pagination } from "../../aas/domain/pagination";
 import { PagingResult } from "../../aas/domain/paging-result";
 import { generateMongoConfig } from "../../database/config";
 import { Template } from "../domain/template";
@@ -109,24 +109,24 @@ describe("templateRepository", () => {
     let foundTemplates = await templateRepository.findAllByOrganizationId(organizationId);
 
     expect(foundTemplates).toEqual(PagingResult.create({
-      pagination: Pagination.create({ cursor: t4.createdAt.toISOString(), limit: 100 }),
+      pagination: Pagination.create({ cursor: encodeCursor(t4.createdAt.toISOString(), t4.id), limit: 100 }),
       items: [t1, t3, t4],
     }));
     let pagination = Pagination.create({
-      cursor: date3.toISOString(),
+      cursor: encodeCursor(t2.createdAt.toISOString(), t2.id),
     });
     foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, pagination);
     expect(foundTemplates).toEqual(PagingResult.create({
-      pagination: Pagination.create({ cursor: t4.createdAt.toISOString() }),
+      pagination: Pagination.create({ cursor: encodeCursor(t4.createdAt.toISOString(), t4.id) }),
       items: [t3, t4],
     }));
     pagination = Pagination.create({
-      cursor: date3.toISOString(),
+      cursor: encodeCursor(t2.createdAt.toISOString(), t2.id),
       limit: 1,
     });
     foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, pagination);
     expect(foundTemplates).toEqual(PagingResult.create({
-      pagination: Pagination.create({ cursor: t3.createdAt.toISOString(), limit: 1 }),
+      pagination: Pagination.create({ cursor: encodeCursor(t3.createdAt.toISOString(), t3.id), limit: 1 }),
       items: [t3],
     }));
   });
