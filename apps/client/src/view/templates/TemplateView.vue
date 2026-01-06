@@ -8,12 +8,13 @@ const templateStore = useTemplatesStore();
 const { t } = useI18n();
 
 onMounted(async () => {
-  await templateStore.fetchTemplates();
+  await templateStore.nextTemplates();
 });
 </script>
 
 <template>
   <DppTable
+    :current-page="templateStore.currentPage"
     :items="templateStore.templates ? templateStore.templates.result : []"
     :loading="templateStore.loading"
     :title="t('templates.label')"

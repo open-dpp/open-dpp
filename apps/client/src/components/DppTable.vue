@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { SharedDppDto } from "@open-dpp/dto";
+import type { Page } from "../stores/pagination.ts";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
@@ -10,6 +11,7 @@ const props = defineProps<{
   title: string;
   items: SharedDppDto[];
   loading: boolean;
+  currentPage: Page;
 }>();
 
 const emits = defineEmits<{
@@ -50,14 +52,13 @@ const { t } = useI18n();
         </p>
       </template>
     </Column>
-    <template #paginatorcontainer="{ first, last, page }">
+    <template #paginatorcontainer>
       <div class="flex items-center gap-4 border border-primary bg-transparent rounded-full w-full py-1 px-2 justify-between">
-        <Button icon="pi pi-chevron-left" rounded text @click="emits('previousPage')" />
+        <Button icon="pi pi-chevron-left" rounded text :disabled="!currentPage.cursor" @click="emits('previousPage')" />
         <div class="text-color font-medium">
-          <span class="hidden sm:block">Showing {{ first }} to {{ last }}</span>
-          <span class="block sm:hidden">Page {{ page + 1 }} of {{ pageCount }}</span>
+          <span class="hidden sm:block">Showing: {{ currentPage.from + 1 }} to {{ currentPage.to + 1 }}, Count: {{ currentPage.itemCount }}</span>
         </div>
-        <Button icon="pi pi-chevron-right" rounded text @click="emits('nextPage')" />
+        <Button icon="pi pi-chevron-right" rounded text :disabled="currentPage.itemCount < currentPage.to - currentPage.from" @click="emits('nextPage')" />
       </div>
     </template>
   </DataTable>
