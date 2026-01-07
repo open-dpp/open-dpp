@@ -76,7 +76,7 @@ describe("templateRepository", () => {
       }),
       createdAt: date1,
     });
-    const t2 = Template.create({
+    const t2OtherOrganization = Template.create({
       id: randomUUID(),
       organizationId: otherOrganizationId,
       environment: Environment.create({
@@ -102,26 +102,26 @@ describe("templateRepository", () => {
       createdAt: date4,
     });
     await templateRepository.save(t1);
-    await templateRepository.save(t2);
+    await templateRepository.save(t2OtherOrganization);
     await templateRepository.save(t3);
     await templateRepository.save(t4);
 
     let foundTemplates = await templateRepository.findAllByOrganizationId(organizationId);
 
     expect(foundTemplates).toEqual(PagingResult.create({
-      pagination: Pagination.create({ cursor: encodeCursor(t4.createdAt.toISOString(), t4.id), limit: 100 }),
-      items: [t1, t3, t4],
+      pagination: Pagination.create({ cursor: encodeCursor(t1.createdAt.toISOString(), t1.id), limit: 100 }),
+      items: [t4, t3, t1],
     }));
     let pagination = Pagination.create({
-      cursor: encodeCursor(t2.createdAt.toISOString(), t2.id),
+      cursor: encodeCursor(t4.createdAt.toISOString(), t4.id),
     });
     foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, pagination);
     expect(foundTemplates).toEqual(PagingResult.create({
-      pagination: Pagination.create({ cursor: encodeCursor(t4.createdAt.toISOString(), t4.id) }),
-      items: [t3, t4],
+      pagination: Pagination.create({ cursor: encodeCursor(t1.createdAt.toISOString(), t1.id) }),
+      items: [t3, t1],
     }));
     pagination = Pagination.create({
-      cursor: encodeCursor(t2.createdAt.toISOString(), t2.id),
+      cursor: encodeCursor(t4.createdAt.toISOString(), t4.id),
       limit: 1,
     });
     foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, pagination);

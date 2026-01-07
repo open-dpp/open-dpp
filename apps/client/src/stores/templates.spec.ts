@@ -49,7 +49,7 @@ describe("templates", () => {
     const t1 = templatesPlainFactory.build();
     const templates = { paging_metadata: { cursor: t1.id }, result: [t1] };
     mocks.fetchTemplates.mockResolvedValueOnce({ data: templates });
-    await templatesStore.fetchTemplates();
+    await templatesStore.nextTemplates();
     expect(mocks.fetchTemplates).toHaveBeenCalledWith({ limit: 10, cursor: undefined });
     expect(templatesStore.templates).toEqual(templates);
   });
@@ -63,7 +63,7 @@ describe("templates", () => {
     const secondBlock = { paging_metadata: { cursor: templates[19]?.id }, result: templates.slice(10, 20) };
 
     mocks.fetchTemplates.mockImplementation(({ cursor }: PagingParamsDto) => cursor === undefined ? { data: firstBlock } : { data: secondBlock });
-    await templatesStore.fetchTemplates();
+    await templatesStore.nextTemplates();
     await templatesStore.nextTemplates();
     expect(mocks.fetchTemplates).toHaveBeenCalledWith({ limit: 10, cursor: templates[9]?.id });
     expect(templatesStore.templates).toEqual(secondBlock);

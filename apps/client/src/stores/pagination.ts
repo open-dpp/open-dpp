@@ -9,6 +9,7 @@ export interface Page {
   itemCount: number;
   cursor: Cursor;
 }
+
 export interface PagingResult { paging_metadata: { cursor: Cursor }; result: any[] }
 interface PaginationProps { limit: number; fetchCallback: (pagingParams: PagingParamsDto) => Promise<PagingResult> }
 export function usePagination({ limit, fetchCallback }: PaginationProps) {
@@ -16,7 +17,7 @@ export function usePagination({ limit, fetchCallback }: PaginationProps) {
   const pages = ref<Page[]>([startPage]);
   const currentPageIndex = ref<number>(0);
   const currentPage = ref<Page>(startPage);
-  const updateCurrentPage = () => {
+  const updateCurrentPage = async () => {
     currentPage.value = pages.value[currentPageIndex.value] ?? startPage;
   };
   const lastPage = (): Page => {
@@ -43,7 +44,7 @@ export function usePagination({ limit, fetchCallback }: PaginationProps) {
     if (!findPageByCursor(response.paging_metadata.cursor)) {
       addPage(response.paging_metadata.cursor);
     }
-    updateCurrentPage();
+    await updateCurrentPage();
 
     return nextPage;
   };
@@ -56,7 +57,7 @@ export function usePagination({ limit, fetchCallback }: PaginationProps) {
       previousPage = currentPage.value;
     }
     await fetchCallback({ cursor: previousPage.cursor ?? undefined, limit });
-    updateCurrentPage();
+    await updateCurrentPage();
     return previousPage;
   };
 
@@ -72,7 +73,7 @@ export function usePagination({ limit, fetchCallback }: PaginationProps) {
     if (pagePreviousToLastPage && pagePreviousToLastPage.itemCount < limit) {
       await reloadPage(pagePreviousToLastPage);
       currentPageIndex.value = pageIndexPreviousToLastPage;
-      updateCurrentPage();
+      await updateCurrentPage();
     }
     else {
       currentPageIndex.value = pageIndexPreviousToLastPage;

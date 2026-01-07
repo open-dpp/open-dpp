@@ -86,11 +86,11 @@ describe("templateController", () => {
     const t3 = await createTemplate(org.id, date3, date3);
 
     const response = await request(app.getHttpServer())
-      .get(`${basePath}?limit=2&cursor=${encodeCursor(t1.createdAt.toISOString(), t1.id)}`)
+      .get(`${basePath}?limit=2&cursor=${encodeCursor(t3.createdAt.toISOString(), t3.id)}`)
       .set("Cookie", userCookie);
     expect(response.status).toEqual(200);
-    expect(response.body.paging_metadata.cursor).toEqual(encodeCursor(t3.createdAt.toISOString(), t3.id));
-    const expected = [t2.toPlain(), t3.toPlain()];
+    expect(response.body.paging_metadata.cursor).toEqual(encodeCursor(t1.createdAt.toISOString(), t1.id));
+    const expected = [t2.toPlain(), t1.toPlain()];
     expect(response.body.result).toEqual(expected.map(t => ({
       ...t,
       createdAt: t.createdAt.toISOString(),

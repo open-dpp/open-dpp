@@ -14,6 +14,7 @@ onMounted(async () => {
 
 <template>
   <DppTable
+    key="templates-list"
     :current-page="templateStore.currentPage"
     :items="templateStore.templates ? templateStore.templates.result : []"
     :loading="templateStore.loading"

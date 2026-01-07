@@ -61,13 +61,13 @@ export async function findAllByOrganizationId<T extends Document<string>, V exte
   const tmpPagination = pagination ?? Pagination.create({ limit: 100 });
   const docs = await docModel.find(
     { organizationId, ...(tmpPagination.cursor && { $or: [
-      { createdAt: { $gt: decodeCursor(tmpPagination.cursor).createdAt } },
+      { createdAt: { $lt: decodeCursor(tmpPagination.cursor).createdAt } },
       {
         createdAt: decodeCursor(tmpPagination.cursor).createdAt,
-        id: { $gt: decodeCursor(tmpPagination.cursor).id },
+        id: { $lt: decodeCursor(tmpPagination.cursor).id },
       },
     ] }) },
-  ).sort({ createdAt: 1, id: 1 }).limit(tmpPagination.limit ?? 100).exec();
+  ).sort({ createdAt: -1, id: -1 }).limit(tmpPagination.limit ?? 100).exec();
   const domainObjects = docs.map(fromPlain);
   if (domainObjects.length > 0) {
     const lastObject = domainObjects[domainObjects.length - 1];
