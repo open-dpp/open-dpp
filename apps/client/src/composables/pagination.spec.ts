@@ -5,13 +5,13 @@ import { usePagination } from "./pagination.ts";
 
 describe("pagination", () => {
   it("should navigate through pages", async () => {
-    const items = [0, 1, 2, 3, 4, 5];
+    const items = [0, 1, 2, 3, 4, 5, 6];
     async function fetchCallback(params: PagingParamsDto): Promise<PagingResult> {
       const fromIndex = params.cursor ? Number(params.cursor) + 1 : 0;
       const result = items.slice(fromIndex, fromIndex + params.limit!);
       return { paging_metadata: { cursor: String(result[result.length - 1]) }, result };
     }
-    const { previousPage, nextPage, currentPage, onAddItem } = usePagination({ limit: 2, fetchCallback });
+    const { previousPage, nextPage, currentPage, reloadCurrentPage } = usePagination({ limit: 2, fetchCallback });
 
     const firstPageExpect: Page = {
       cursor: null,
@@ -38,8 +38,8 @@ describe("pagination", () => {
       to: 7,
     };
     const fifthPageExpect = {
-      cursor: "7",
-      itemCount: 1,
+      cursor: "6",
+      itemCount: 0,
       from: 8,
       to: 9,
     };
@@ -57,24 +57,15 @@ describe("pagination", () => {
     await nextPage();
     await nextPage();
     expect(currentPage.value).toEqual(thirdPageExpect);
-    items.push(6);
-    await onAddItem();
-    expect(currentPage.value).toEqual(fourthPageExpect);
-    items.push(7);
-    await onAddItem();
-    expect(currentPage.value).toEqual({ ...fourthPageExpect, itemCount: 2 });
-    await previousPage();
-    await previousPage();
-    expect(currentPage.value).toEqual(secondPageExpect);
-    items.push(8);
-    await onAddItem();
+    await nextPage();
+    await nextPage();
     expect(currentPage.value).toEqual(fifthPageExpect);
     await previousPage();
-    await previousPage();
-    await previousPage();
-    expect(currentPage.value).toEqual(secondPageExpect);
-    items.push(9);
-    await onAddItem();
-    expect(currentPage.value).toEqual({ ...fifthPageExpect, itemCount: 2 });
+    expect(currentPage.value).toEqual(fourthPageExpect);
+    items.push(7);
+    await reloadCurrentPage();
+    expect(currentPage.value).toEqual({ ...fourthPageExpect, itemCount: 2 });
+    await nextPage();
+    expect(currentPage.value).toEqual({ ...fifthPageExpect, cursor: "7" });
   });
 });

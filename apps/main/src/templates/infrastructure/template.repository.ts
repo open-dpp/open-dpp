@@ -1,13 +1,16 @@
 import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Pagination } from "../../aas/domain/pagination";
+import {
+  IDigitalProductPassportIdentifiableRepository,
+} from "../../aas/infrastructure/digital-product-passport-identifiable.repository";
 import { findAllByOrganizationId, findOne, findOneOrFail, save } from "../../lib/repositories";
+import { Pagination } from "../../pagination/pagination";
 import { Template } from "../domain/template";
 import { TemplateDoc, TemplateDocVersion } from "./template.schema";
 
 @Injectable()
-export class TemplateRepository {
+export class TemplateRepository implements IDigitalProductPassportIdentifiableRepository {
   private templateDoc: MongooseModel<TemplateDoc>;
 
   constructor(

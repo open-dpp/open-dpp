@@ -8,7 +8,7 @@ import { useLayoutStore } from "../../../stores/layout";
 export const TEMPLATES_LIST: RouteRecordRaw = {
   path: "",
   name: "templates",
-  component: () => import("../../../view/templates/TemplateView.vue"),
+  component: () => import("../../../view/templates/TemplateListView.vue"),
   beforeEnter: async (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = await templatesListBreadcrumbs(to);
@@ -25,7 +25,36 @@ async function templatesListBreadcrumbs(to: RouteLocationNormalizedGeneric) {
   ];
 }
 
+export const TEMPLATE: RouteRecordRaw = {
+  path: "",
+  name: "template",
+  component: () => import("../../../view/templates/TemplateView.vue"),
+  beforeEnter: async (to: RouteLocationNormalizedGeneric) => {
+    const layoutStore = useLayoutStore();
+    layoutStore.breadcrumbs = await templateBreadcrumbs(to);
+  },
+};
+
+export async function templateBreadcrumbs(to: RouteLocationNormalizedGeneric) {
+  return [
+    ...(await templatesListBreadcrumbs(to)),
+    {
+      name: {
+        text: String(to.params.templateId),
+        localized: false,
+      },
+      route: TEMPLATE,
+      params: to.params,
+    },
+  ];
+}
+
+const TEMPLATE_PARENT: RouteRecordRaw = {
+  path: ":templateId",
+  children: [TEMPLATE],
+};
+
 export const ORGANIZATION_TEMPLATES_PARENT: RouteRecordRaw = {
   path: "templates",
-  children: [TEMPLATES_LIST],
+  children: [TEMPLATES_LIST, TEMPLATE_PARENT],
 };

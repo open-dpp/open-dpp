@@ -26,6 +26,12 @@ export function usePagination({ limit, fetchCallback }: PaginationProps) {
   const findPageByCursor = (cursor: Cursor): Page | undefined => {
     return pages.value.find(page => page.cursor === cursor);
   };
+
+  const findNextPage = (page: Page): Page | undefined => {
+    const pageIndex = pages.value.findIndex(p => p === page);
+    return pages.value[pageIndex + 1];
+  };
+
   const addPage = (cursor: Cursor) => {
     const fromIndex = lastPage().to + 1;
     pages.value.push({ from: fromIndex, to: fromIndex + limit - 1, cursor, itemCount: 0 });
@@ -64,22 +70,15 @@ export function usePagination({ limit, fetchCallback }: PaginationProps) {
   const reloadPage = async (page: Page) => {
     const response = await fetchCallback({ cursor: page.cursor ?? undefined, limit });
     page.itemCount = response.result.length;
-    lastPage().cursor = response.paging_metadata.cursor;
-  };
-
-  const onAddItem = async () => {
-    const pageIndexPreviousToLastPage = pages.value.length > 1 ? pages.value.length - 2 : 0;
-    const pagePreviousToLastPage = pages.value[pageIndexPreviousToLastPage];
-    if (pagePreviousToLastPage && pagePreviousToLastPage.itemCount < limit) {
-      await reloadPage(pagePreviousToLastPage);
-      currentPageIndex.value = pageIndexPreviousToLastPage;
-      await updateCurrentPage();
-    }
-    else {
-      currentPageIndex.value = pageIndexPreviousToLastPage;
-      await nextPage();
+    const nextPage = findNextPage(page);
+    if (nextPage) {
+      nextPage.cursor = response.paging_metadata.cursor;
     }
   };
 
-  return { nextPage, previousPage, currentPage, onAddItem };
+  const reloadCurrentPage = async () => {
+    await reloadPage(currentPage.value);
+  };
+
+  return { nextPage, previousPage, currentPage, reloadCurrentPage };
 }

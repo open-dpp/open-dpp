@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { SharedDppDto } from "@open-dpp/dto";
-import type { Page } from "../stores/pagination.ts";
+import type { Page } from "../composables/pagination.ts";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";

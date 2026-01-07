@@ -4,15 +4,14 @@ import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/com
 import { AssetAdministrationShellPaginationResponseDto, AssetAdministrationShellPaginationResponseDtoSchema, AssetKindType, SubmodelElementPaginationResponseDto, SubmodelElementPaginationResponseDtoSchema, SubmodelElementRequestDto, SubmodelElementResponseDto, SubmodelElementSchema, SubmodelJsonSchema, SubmodelPaginationResponseDto, SubmodelPaginationResponseDtoSchema, SubmodelRequestDto, SubmodelResponseDto, ValueResponseDto, ValueResponseDtoSchema } from "@open-dpp/dto";
 import { fromNodeHeaders } from "better-auth/node";
 import { AuthService } from "../../auth/auth.service";
+import { Pagination } from "../../pagination/pagination";
+import { PagingResult } from "../../pagination/paging-result";
+import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
-import { Pagination } from "../domain/pagination";
-import { PagingResult } from "../domain/paging-result";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath, parseSubmodelBaseUnion } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
-import {
-  IDigitalProductPassportIdentifiableRepository,
-} from "../infrastructure/digital-product-passport-identifiable.repository";
+
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
@@ -45,9 +44,10 @@ export class EnvironmentService {
     return SubmodelPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodels }).toPlain());
   }
 
-  async addSubmodelToEnvironment(environment: Environment, submodelPlain: SubmodelRequestDto): Promise<SubmodelResponseDto> {
+  async addSubmodelToEnvironment(environment: Environment, submodelPlain: SubmodelRequestDto, saveEnvironment: () => Promise<void>): Promise<SubmodelResponseDto> {
     const submodel = environment.addSubmodel(Submodel.fromPlain(submodelPlain));
     await this.submodelRepository.save(submodel);
+    await saveEnvironment();
     return SubmodelJsonSchema.parse(submodel.toPlain());
   }
 
@@ -96,11 +96,10 @@ export class EnvironmentService {
   }
 }
 
-export async function loadEnvironmentAndCheckOwnership(authService: AuthService, envRepository: IDigitalProductPassportIdentifiableRepository, environmentId: string, req: express.Request): Promise<Environment> {
-  const dppIdentifiable = await envRepository.findOneOrFail(environmentId);
+export async function checkOwnerShipOfDppIdentifiable<T extends IDigitalProductPassportIdentifiable>(dppIdentifiable: T, authService: AuthService, req: express.Request): Promise<T> {
   const session = await authService.getSession(fromNodeHeaders(req.headers || []));
   if (session?.user.id && await authService.isMemberOfOrganization(session.user.id, dppIdentifiable.getOrganizationId())) {
-    return dppIdentifiable.getEnvironment();
+    return dppIdentifiable;
   }
   else {
     throw new ForbiddenException();

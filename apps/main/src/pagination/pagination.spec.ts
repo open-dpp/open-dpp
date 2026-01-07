@@ -14,6 +14,18 @@ describe("pagination", () => {
     expect(pagination.cursor).toEqual("3");
   });
 
+  it("should evaluate next pages where pages are empty", () => {
+    const pagination = Pagination.create({ limit: 3 });
+    expect(pagination.nextPages([])).toEqual([]);
+    expect(pagination.cursor).toEqual(null);
+  });
+
+  it("should convert undefined to null", () => {
+    const pagination = Pagination.create({ cursor: undefined, limit: undefined });
+    expect(pagination.cursor).toEqual(null);
+    expect(pagination.limit).toEqual(null);
+  });
+
   it("should evaluate next pages where limit undefined", () => {
     const pagination = Pagination.create({ cursor: "2" });
     expect(pagination.nextPages(pages)).toEqual(["3", "4"]);

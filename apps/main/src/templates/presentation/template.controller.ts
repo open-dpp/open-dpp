@@ -18,8 +18,8 @@ import {
   ValueResponseDto,
 } from "@open-dpp/dto";
 import { fromNodeHeaders } from "better-auth/node";
-import { Pagination } from "../../aas/domain/pagination";
 import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
+
 import {
   ApiGetShells,
   ApiGetSubmodelById,
@@ -41,8 +41,12 @@ import {
   SubmodelRequestBody,
 } from "../../aas/presentation/aas.decorators";
 import { IAasCreateEndpoints, IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
-import { EnvironmentService, loadEnvironmentAndCheckOwnership } from "../../aas/presentation/environment.service";
+import {
+  checkOwnerShipOfDppIdentifiable,
+  EnvironmentService,
+} from "../../aas/presentation/environment.service";
 import { AuthService } from "../../auth/auth.service";
+import { Pagination } from "../../pagination/pagination";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 
@@ -55,16 +59,16 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
 
   @ApiGetShells()
   async getShells(@IdParam() id: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @Req() req: express.Request): Promise<AssetAdministrationShellPaginationResponseDto> {
-    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getAasShells(environment, pagination);
+    return await this.environmentService.getAasShells(template.getEnvironment(), pagination);
   }
 
   @ApiGetSubmodels()
   async getSubmodels(@IdParam() id: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @Req() req: express.Request): Promise<SubmodelPaginationResponseDto> {
-    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodels(environment, pagination);
+    return await this.environmentService.getSubmodels(template.getEnvironment(), pagination);
   }
 
   @ApiPostSubmodel()
@@ -73,14 +77,18 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelRequestBody() body: SubmodelRequestDto,
     @Req() req: express.Request,
   ): Promise<SubmodelResponseDto> {
-    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
-    return await this.environmentService.addSubmodelToEnvironment(environment, body);
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.addSubmodelToEnvironment(
+      template.getEnvironment(),
+      body,
+      this.saveEnvironmentCallback(template),
+    );
   }
 
   @ApiGetSubmodelById()
   async getSubmodelById(@IdParam() id: string, @SubmodelIdParam() submodelId: string, @RequestParam() req: express.Request): Promise<SubmodelResponseDto> {
-    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
-    return await this.environmentService.getSubmodelById(environment, submodelId);
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.getSubmodelById(template.getEnvironment(), submodelId);
   }
 
   @ApiGetSubmodelValue()
@@ -89,15 +97,15 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelIdParam() submodelId: string,
     @RequestParam() req: express.Request,
   ): Promise<ValueResponseDto> {
-    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
-    return await this.environmentService.getSubmodelValue(environment, submodelId);
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.getSubmodelValue(template.getEnvironment(), submodelId);
   }
 
   @ApiGetSubmodelElements()
   async getSubmodelElements(@IdParam() id: string, @SubmodelIdParam() submodelId: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @RequestParam() req: express.Request): Promise<SubmodelElementPaginationResponseDto> {
-    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodelElements(environment, submodelId, pagination);
+    return await this.environmentService.getSubmodelElements(template.getEnvironment(), submodelId, pagination);
   }
 
   @ApiPostSubmodelElement()
@@ -107,8 +115,8 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
     @RequestParam() req: express.Request,
   ): Promise<SubmodelElementResponseDto> {
-    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
-    return await this.environmentService.addSubmodelElement(environment, submodelId, body);
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body);
   }
 
   @ApiGetSubmodelElementById()
@@ -118,8 +126,8 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @IdShortPathParam() idShortPath: IdShortPath,
     @RequestParam() req: express.Request,
   ): Promise<SubmodelElementResponseDto> {
-    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
-    return await this.environmentService.getSubmodelElementById(environment, submodelId, idShortPath);
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.getSubmodelElementById(template.getEnvironment(), submodelId, idShortPath);
   }
 
   @ApiPostSubmodelElementAtIdShortPath()
@@ -130,8 +138,8 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
     @RequestParam() req: express.Request,
   ): Promise<SubmodelElementResponseDto> {
-    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
-    return await this.environmentService.addSubmodelElement(environment, submodelId, body, idShortPath);
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body, idShortPath);
   }
 
   @ApiGetSubmodelElementValue()
@@ -141,8 +149,8 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @IdShortPathParam() idShortPath: IdShortPath,
     @RequestParam() req: express.Request,
   ): Promise<ValueResponseDto> {
-    const environment = await loadEnvironmentAndCheckOwnership(this.authService, this.templateRepository, id, req);
-    return await this.environmentService.getSubmodelElementValue(environment, submodelId, idShortPath);
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.getSubmodelElementValue(template.getEnvironment(), submodelId, idShortPath);
   }
 
   @Post()
@@ -176,5 +184,16 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
       throw new UnauthorizedException("User is not part of any organization");
     }
     return activeOrganization._id.toString();
+  }
+
+  private saveEnvironmentCallback(template: Template) {
+    return async () => {
+      await this.templateRepository.save(template);
+    };
+  }
+
+  private async loadTemplateAndCheckOwnership(authService: AuthService, id: string, req: express.Request): Promise<Template> {
+    const template = await this.templateRepository.findOneOrFail(id);
+    return checkOwnerShipOfDppIdentifiable(template, authService, req);
   }
 }

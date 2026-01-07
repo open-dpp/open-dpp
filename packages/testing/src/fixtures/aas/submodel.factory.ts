@@ -1,5 +1,6 @@
-import type { SubmodelJsonSchema } from '@open-dpp/dto'
 import type { z } from 'zod'
+import { randomUUID } from 'node:crypto'
+import { SubmodelJsonSchema } from '@open-dpp/dto'
 import { Factory } from 'fishery'
 
 interface SubmodelTransientParams {
@@ -284,6 +285,10 @@ export const submodelDesignOfProductPlainFactory
         },
       ],
     }))
+
+export const submodelDesignOfProductPlainResponseFactory
+  = submodelDesignOfProductPlainFactory.transient({ iriDomain: `https://open-dpp.de/${() => randomUUID()}` })
+    .afterBuild(submodel => SubmodelJsonSchema.parse(submodel))
 
 export const submodelDesignOfProductValuePlainFactory
   = Factory.define<any> (() => (

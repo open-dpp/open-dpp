@@ -15,8 +15,8 @@ export type SubmodelPaginationResponseDto = z.infer<
 >
 
 export const SubmodelRequestDtoSchema = SubmodelJsonSchema.extend({
-  id: z.string().default(randomUUID()),
+  id: z.string().default(() => randomUUID()),
 })
 
-export type SubmodelRequestDto = z.infer<typeof SubmodelRequestDtoSchema>
+export type SubmodelRequestDto = z.input<typeof SubmodelRequestDtoSchema>
 export type SubmodelResponseDto = z.infer<typeof SubmodelJsonSchema>

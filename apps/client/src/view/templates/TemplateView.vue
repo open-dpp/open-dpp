@@ -1,26 +1,14 @@
 <script lang="ts" setup>
-import { onMounted } from "vue";
-import { useI18n } from "vue-i18n";
-import DppTable from "../../components/DppTable.vue";
-import { useTemplatesStore } from "../../stores/templates.ts";
+import { computed } from "vue";
+import { useRoute } from "vue-router";
+import AASEditor from "../../components/aas/AASEditor.vue";
+import { AasEditMode } from "../../lib/aas-editor.ts";
 
-const templateStore = useTemplatesStore();
-const { t } = useI18n();
+const route = useRoute();
 
-onMounted(async () => {
-  await templateStore.nextTemplates();
-});
+const id = computed(() => route.params.templateId ? String(route.params.templateId) : undefined);
 </script>
 
 <template>
-  <DppTable
-    key="templates-list"
-    :current-page="templateStore.currentPage"
-    :items="templateStore.templates ? templateStore.templates.result : []"
-    :loading="templateStore.loading"
-    :title="t('templates.label')"
-    @create="templateStore.createTemplate"
-    @next-page="templateStore.nextTemplates"
-    @previous-page="templateStore.previousTemplates"
-  />
+  <AASEditor v-if="id" :id="id" :editor-mode="AasEditMode.Template" />
 </template>

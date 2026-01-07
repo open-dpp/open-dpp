@@ -1,4 +1,4 @@
-import { IConvertableToPlain } from "./convertable-to-plain";
+import { IConvertableToPlain } from "../aas/domain/convertable-to-plain";
 import { Pagination } from "./pagination";
 
 export class PagingResult {

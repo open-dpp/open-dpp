@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => {
   return {
     createTemplate: vi.fn(),
     fetchTemplates: vi.fn(),
+    routerPush: vi.fn(),
   };
 });
 
@@ -24,8 +25,16 @@ vi.mock("../lib/api-client", () => ({
   },
 }));
 
+vi.mock("vue-router", () => ({
+  useRoute: () => ({ path: "/templates" }),
+  useRouter: () => ({
+    push: mocks.routerPush,
+  }),
+}));
+
 describe("templates", () => {
   beforeEach(() => {
+    vi.resetAllMocks();
     setActivePinia(createPinia());
   });
 
@@ -39,9 +48,7 @@ describe("templates", () => {
 
     await templatesStore.createTemplate();
     expect(mocks.createTemplate).toHaveBeenCalledWith();
-    expect(mocks.fetchTemplates).toHaveBeenCalledWith({ limit: 10, cursor: undefined });
-
-    expect(templatesStore.templates).toEqual(templates);
+    expect(mocks.routerPush).toHaveBeenCalledWith(`/templates/${t1.id}`);
   });
 
   it("should fetch templates", async () => {

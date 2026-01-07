@@ -6,9 +6,9 @@ import { EnvModule, EnvService } from "@open-dpp/env";
 
 import { Environment } from "../../aas/domain/environment";
 
-import { encodeCursor, Pagination } from "../../aas/domain/pagination";
-import { PagingResult } from "../../aas/domain/paging-result";
 import { generateMongoConfig } from "../../database/config";
+import { encodeCursor, Pagination } from "../../pagination/pagination";
+import { PagingResult } from "../../pagination/paging-result";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "./template.repository";
 import { TemplateDoc, TemplateSchema } from "./template.schema";

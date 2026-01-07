@@ -1,11 +1,10 @@
-import { ReferenceJsonSchema } from "@open-dpp/dto";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { Document, Model as MongooseModel } from "mongoose";
 import { ZodObject } from "zod";
 import { IConvertableToPlain } from "../aas/domain/convertable-to-plain";
-import { decodeCursor, encodeCursor, Pagination } from "../aas/domain/pagination";
-import { PagingResult } from "../aas/domain/paging-result";
 import { IPersistable } from "../aas/domain/persistable";
+import { decodeCursor, encodeCursor, Pagination } from "../pagination/pagination";
+import { PagingResult } from "../pagination/paging-result";
 import { HasCreatedAt } from "./has-created-at";
 
 export async function convertToDomain<T>(
@@ -13,9 +12,6 @@ export async function convertToDomain<T>(
   fromPlain: (plain: unknown) => T,
 ): Promise<T> {
   const plain = mongoDoc.toObject();
-  if (plain.submodelElements?.[0].semanticId) {
-    ReferenceJsonSchema.parse(plain.submodelElements[0].semanticId);
-  }
   return fromPlain({ ...plain, id: plain._id });
 }
 

@@ -19,7 +19,7 @@ export class Pagination {
   nextPages(pageIds: string[]) {
     const startIndex = this._cursor ? pageIds.indexOf(this._cursor) + 1 : 0;
     const nextPages = this.limit ? pageIds.slice(startIndex, startIndex + this.limit) : pageIds.slice(startIndex);
-    this._cursor = nextPages[nextPages.length - 1];
+    this._cursor = nextPages[nextPages.length - 1] ?? null;
     return nextPages;
   }
 }
