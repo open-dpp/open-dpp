@@ -1,11 +1,10 @@
-import type { Auth } from "better-auth";
 import type { Connection } from "mongoose";
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import { EnvService } from "@open-dpp/env";
-import { betterAuth, User } from "better-auth";
+import { APIError, Auth, betterAuth, User } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { apiKey, genericOAuth, organization } from "better-auth/plugins";
+import { admin, apiKey, genericOAuth, organization } from "better-auth/plugins";
 import { Db, MongoClient, ObjectId } from "mongodb";
 import { InviteUserToOrganizationMail } from "../email/domain/invite-user-to-organization-mail";
 import { PasswordResetMail } from "../email/domain/password-reset-mail";
@@ -215,7 +214,9 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         enabled: false,
       },
     });
-    const plugins = [apiKeyPlugin, organizationPlugin];
+
+    const adminPlugin = admin({});
+    const plugins = [apiKeyPlugin, organizationPlugin, adminPlugin];
     if (genericOAuthPlugin) {
       plugins.push(genericOAuthPlugin as any);
     }
