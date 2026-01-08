@@ -1,12 +1,14 @@
 services:
   api-mongo-db:
     ports:
-      - ${OPEN_DPP_MONGODB_PORT}:27017
+      - "${OPEN_DPP_MONGODB_PORT}:${OPEN_DPP_MONGODB_PORT}"
     container_name: api-mongo-db
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "${OPEN_DPP_MONGODB_PORT}", "--keyFile", "/etc/mongo/mongo_keyfile"]
     logging:
       options:
         max-size: 1g
     volumes:
+      - ./docker/mongo_keyfile:/etc/mongo/mongo_keyfile:ro
       - mongo_db:/data/db
       - mongo_config:/data/configdb
     environment:
@@ -14,6 +16,15 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=${OPEN_DPP_MONGODB_PASSWORD}
       - MONGO_INITDB_DATABASE=${OPEN_DPP_MONGODB_DATABASE}
     image: mongo:6.0
+    networks:
+      - open-dpp-local
+
+  mongo-init:
+    image: mongo:6.0
+    depends_on:
+      - api-mongo-db
+    command: >
+      bash -c "sleep 10 && mongosh --host api-mongo-db --port ${OPEN_DPP_MONGODB_PORT} -u ${OPEN_DPP_MONGODB_USER} -p ${OPEN_DPP_MONGODB_PASSWORD} --eval 'try { var c = rs.conf(); if (c.members[0].host !== \"localhost:${OPEN_DPP_MONGODB_PORT}\") { c.members[0].host = \"localhost:${OPEN_DPP_MONGODB_PORT}\"; rs.reconfig(c, {force: true}); } } catch (e) { rs.initiate({_id: \"rs0\", members: [{_id: 0, host: \"localhost:${OPEN_DPP_MONGODB_PORT}\"}]}) }'"
     networks:
       - open-dpp-local
 
