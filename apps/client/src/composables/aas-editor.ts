@@ -1,5 +1,10 @@
 import type { AasNamespace } from "@open-dpp/api-client";
-import type { PagingParamsDto, SubmodelPaginationResponseDto } from "@open-dpp/dto";
+import type { PagingParamsDto, SubmodelResponseDto,
+} from "@open-dpp/dto";
+import type { TreeNode } from "primevue/treenode";
+import { KeyTypes } from "@open-dpp/dto";
+
+import { omit } from "lodash";
 import { v4 as uuid4 } from "uuid";
 import { ref } from "vue";
 import { usePagination } from "./pagination.ts";
@@ -16,13 +21,26 @@ export interface Page {
 export interface PagingResult { paging_metadata: { cursor: Cursor }; result: any[] }
 interface AasEditorProps { id: string; aasNamespace: AasNamespace }
 export function useAasEditor({ id, aasNamespace }: AasEditorProps) {
-  const submodels = ref<SubmodelPaginationResponseDto>();
+  const submodels = ref<TreeNode[]>();
   const loading = ref(false);
+
+  const convertSubmodelsToTree = (submodels: SubmodelResponseDto[]) => {
+    return submodels.map(submodel => (
+      {
+        key: submodel.id,
+        data: {
+          idShort: submodel.idShort,
+          modelType: KeyTypes.Submodel,
+          plain: omit(submodel, "submodelElements"),
+        },
+      }
+    ));
+  };
 
   const fetchSubmodels = async (pagingParams: PagingParamsDto): Promise<PagingResult> => {
     loading.value = true;
     const response = await aasNamespace.getSubmodels(id, pagingParams);
-    submodels.value = response.data;
+    submodels.value = convertSubmodelsToTree(response.data.result);
     loading.value = false;
     return response.data;
   };

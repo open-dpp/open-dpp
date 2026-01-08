@@ -10,5 +10,5 @@ const id = computed(() => route.params.templateId ? String(route.params.template
 </script>
 
 <template>
-  <AASEditor v-if="id" :id="id" :editor-mode="AasEditMode.Template" />
+  <AASEditor v-if="id" :id="id" class="h-[calc(100vh-64px)]" :editor-mode="AasEditMode.Template" />
 </template>

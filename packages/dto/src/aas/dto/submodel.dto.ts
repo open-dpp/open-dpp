@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto'
+import { v4 as uuidv4 } from 'uuid'
 import { z } from 'zod'
 import { PagingMetadataDtoSchema } from '../../shared/pagination.dto'
 import { SubmodelJsonSchema } from '../submodel-base/submodel-json-schema'
@@ -15,7 +15,7 @@ export type SubmodelPaginationResponseDto = z.infer<
 >
 
 export const SubmodelRequestDtoSchema = SubmodelJsonSchema.extend({
-  id: z.string().default(() => randomUUID()),
+  id: z.string().default(() => uuidv4()),
 })
 
 export type SubmodelRequestDto = z.input<typeof SubmodelRequestDtoSchema>

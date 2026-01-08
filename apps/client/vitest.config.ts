@@ -17,11 +17,6 @@ export default defineConfig({
         find: /^@open-dpp\/(.*)$/,
         replacement: path.resolve(__dirname, "../../packages/$1/src"),
       },
-      {
-        // removes .js extension from relative imports
-        find: /^(\.{1,2}\/.*)\.js$/,
-        replacement: "$1",
-      },
     ],
   },
   envDir: path.resolve(__dirname, "../../../"),
