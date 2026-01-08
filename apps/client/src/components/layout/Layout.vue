@@ -52,65 +52,122 @@ interface MenuItemInterface {
   show: () => boolean;
 }
 
-const unfilteredNavigation = computed<Array<MenuItemInterface>>(() => [
-  {
-    name: t("models.models"),
-    to: `/organizations/${indexStore.selectedOrganization}/models`,
-    icon: CubeIcon,
-    show: () => indexStore.selectedOrganization !== null,
-  },
-  {
-    name: t("draft.passportDraft", 2),
-    to: `/organizations/${indexStore.selectedOrganization}/data-model-drafts`,
-    icon: Square3Stack3DIcon,
-    show: () => indexStore.selectedOrganization !== null,
-  },
-  {
-    name: t("integrations.integrations"),
-    to: `/organizations/${indexStore.selectedOrganization}/integrations`,
-    icon: LinkIcon,
-    show: () => indexStore.selectedOrganization !== null,
-  },
-  {
-    name: t("analytics.analytics"),
-    to: `/organizations/${indexStore.selectedOrganization}/analytics`,
-    icon: ChartBarIcon,
-    show: () => indexStore.selectedOrganization !== null,
-  },
-  {
-    name: t("members.members"),
-    to: `/organizations/${indexStore.selectedOrganization}/members`,
-    icon: UsersIcon,
-    show: () => indexStore.selectedOrganization !== null,
-  },
-  {
-    name: t("organizations.settings.title"),
-    to: `/organizations/${indexStore.selectedOrganization}/settings`,
-    icon: Cog6ToothIcon,
-    show: () => indexStore.selectedOrganization !== null,
-  },
-  {
-    name: t("organizations.pick"),
-    to: "/organizations",
-    icon: BuildingOfficeIcon,
-    show: () => indexStore.selectedOrganization === null,
-  },
-  {
-    name: t("marketplace.marketplace"),
-    to: "/marketplace",
-    icon: Squares2X2Icon,
-    show: () => indexStore.selectedOrganization !== null,
-  },
-  {
-    name: t("media.media"),
-    to: "/media",
-    icon: CloudIcon,
-    show: () => indexStore.selectedOrganization !== null,
-  },
-]);
-const navigation = computed<Array<MenuItemInterface>>(() =>
-  unfilteredNavigation.value.filter(item => item.show()),
-);
+interface MenuItemGroupInterface {
+  name: string;
+  items: Array<MenuItemInterface>;
+}
+
+const role = computed<string>(() => {
+  const session = authClient.useSession();
+  if (!session.value.data) {
+    return "user";
+  }
+  const userSession = session.value.data;
+  return userSession.user.role ?? "user";
+});
+
+const navigation = computed<Array<MenuItemGroupInterface>>(() => {
+  const navigationGroups: Array<MenuItemGroupInterface> = [
+    {
+      name: "",
+      items: [
+        {
+          name: t("models.models"),
+          to: `/organizations/${indexStore.selectedOrganization}/models`,
+          icon: CubeIcon,
+          show: () => indexStore.selectedOrganization !== null,
+        },
+        {
+          name: t("draft.passportDraft", 2),
+          to: `/organizations/${indexStore.selectedOrganization}/data-model-drafts`,
+          icon: Square3Stack3DIcon,
+          show: () => indexStore.selectedOrganization !== null,
+        },
+      ],
+    },
+    {
+      name: "Organization",
+      items: [
+        {
+          name: t("integrations.integrations"),
+          to: `/organizations/${indexStore.selectedOrganization}/integrations`,
+          icon: LinkIcon,
+          show: () => indexStore.selectedOrganization !== null,
+        },
+        {
+          name: t("analytics.analytics"),
+          to: `/organizations/${indexStore.selectedOrganization}/analytics`,
+          icon: ChartBarIcon,
+          show: () => indexStore.selectedOrganization !== null,
+        },
+        {
+          name: t("members.members"),
+          to: `/organizations/${indexStore.selectedOrganization}/members`,
+          icon: UsersIcon,
+          show: () => indexStore.selectedOrganization !== null,
+        },
+        {
+          name: t("organizations.settings.title"),
+          to: `/organizations/${indexStore.selectedOrganization}/settings`,
+          icon: Cog6ToothIcon,
+          show: () => indexStore.selectedOrganization !== null,
+        },
+        {
+          name: t("organizations.pick"),
+          to: "/organizations",
+          icon: BuildingOfficeIcon,
+          show: () => indexStore.selectedOrganization === null,
+        },
+      ],
+    },
+    {
+      name: t("marketplace.marketplace"),
+      items: [
+        {
+          name: t("marketplace.marketplace"),
+          to: "/marketplace",
+          icon: Squares2X2Icon,
+          show: () => indexStore.selectedOrganization !== null,
+        },
+      ],
+    },
+    {
+      name: t("media.media"),
+      items: [
+        {
+          name: t("media.media"),
+          to: "/media",
+          icon: CloudIcon,
+          show: () => indexStore.selectedOrganization !== null,
+        },
+      ],
+    },
+  ];
+  if (role.value === "admin") {
+    navigationGroups.push(
+      {
+        name: t("organizations.admin.title"),
+        items: [
+          {
+            name: t("organizations.admin.title"),
+            to: "/media",
+            icon: BuildingOfficeIcon,
+            show: () => indexStore.selectedOrganization === null && role.value === "admin",
+          },
+        ],
+      },
+    );
+  }
+  return navigationGroups
+    .map((group) => {
+      return {
+        ...group,
+        items: group.items.filter(item => item.show()),
+      };
+    })
+    .filter(group => group.items.length > 0);
+});
+
 const userNavigation = [
   { name: t("user.profile"), to: "/profile" },
   { name: t("user.logout"), to: "/logout" },
@@ -200,9 +257,14 @@ const sidebarOpen = ref(false);
                 </div>
                 <nav class="flex flex-1 flex-col">
                   <ul class="flex flex-1 flex-col gap-y-7" role="list">
-                    <li>
+                    <li v-for="group in navigation" :key="group.name">
+                      <div
+                        class="text-xs font-semibold leading-6 text-gray-400"
+                      >
+                        {{ group.name }}
+                      </div>
                       <ul class="-mx-2 space-y-1" role="list">
-                        <li v-for="item in navigation" :key="item.name">
+                        <li v-for="item in group.items" :key="item.name">
                           <router-link
                             class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6" :class="[
                               item.to === route.path
@@ -285,9 +347,14 @@ const sidebarOpen = ref(false);
         </div>
         <nav class="flex flex-1 flex-col">
           <ul class="flex flex-1 flex-col gap-y-7" role="list">
-            <li>
+            <li v-for="group in navigation" :key="group.name">
+              <div
+                class="text-xs font-semibold leading-6 text-gray-400"
+              >
+                {{ group.name }}
+              </div>
               <ul class="-mx-2 space-y-1" role="list">
-                <li v-for="item in navigation" :key="item.name">
+                <li v-for="item in group.items" :key="item.name">
                   <router-link
                     class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6" :class="[
                       item.to === route.path

@@ -284,6 +284,9 @@
     },
     "settings": {
       "title": "Configure organization"
+    },
+    "admin": {
+      "title": "All organizations"
     }
   },
   "marketplace": {
