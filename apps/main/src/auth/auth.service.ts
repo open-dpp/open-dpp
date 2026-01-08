@@ -317,6 +317,31 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         client: this.configService.get("NODE_ENV") === "test" ? undefined : mongoClient,
       }),
     });
+    const isAuthAdminProvided = !!this.configService.get("OPEN_DPP_AUTH_ADMIN_USERNAME") && !!this.configService.get("OPEN_DPP_AUTH_ADMIN_PASSWORD");
+    if (isAuthAdminProvided) {
+      const adminUsername = this.configService.get("OPEN_DPP_AUTH_ADMIN_USERNAME");
+      const adminPassword = this.configService.get("OPEN_DPP_AUTH_ADMIN_PASSWORD");
+      try {
+        await (this.auth?.api as any).createUser({
+          body: {
+            name: "open-dpp admin",
+            data: {
+              firstName: "open-dpp",
+              lastName: "admin",
+            },
+            email: adminUsername,
+            password: adminPassword,
+            role: "admin",
+          },
+        });
+        this.logger.log("Admin Account created");
+      }
+      catch (error) {
+        if (error instanceof APIError) {
+          this.logger.warn("Account with set admin username already exists and wont be updated.");
+        }
+      }
+    }
     this.logger.log("Auth initialized");
   }
 
