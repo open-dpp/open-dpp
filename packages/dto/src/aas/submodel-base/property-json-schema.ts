@@ -11,3 +11,5 @@ export const PropertyJsonSchema = z.object({
   value: z.nullish(z.string()),
   valueId: z.nullish(ReferenceJsonSchema),
 })
+
+export type PropertyResponseDto = z.infer<typeof PropertyJsonSchema>

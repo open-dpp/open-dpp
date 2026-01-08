@@ -1,12 +1,12 @@
 import type { AasNamespace } from "@open-dpp/api-client";
-import type { PagingParamsDto, SubmodelResponseDto,
-} from "@open-dpp/dto";
+import type { PagingParamsDto, SubmodelResponseDto } from "@open-dpp/dto";
 import type { TreeNode } from "primevue/treenode";
-import { KeyTypes } from "@open-dpp/dto";
-
+import type { EditorModeType, EditorType, OpenDrawerCallback } from "./aas-drawer.ts";
+import { DataTypeDef, KeyTypes } from "@open-dpp/dto";
 import { omit } from "lodash";
 import { v4 as uuid4 } from "uuid";
 import { ref } from "vue";
+import { EditorMode } from "./aas-drawer.ts";
 import { usePagination } from "./pagination.ts";
 
 export type Cursor = string | null;
@@ -18,26 +18,51 @@ export interface Page {
   cursor: Cursor;
 }
 
-export interface PagingResult { paging_metadata: { cursor: Cursor }; result: any[] }
-interface AasEditorProps { id: string; aasNamespace: AasNamespace }
-export function useAasEditor({ id, aasNamespace }: AasEditorProps) {
+export interface PagingResult {
+  paging_metadata: { cursor: Cursor };
+  result: any[];
+}
+interface AasEditorProps {
+  id: string;
+  aasNamespace: AasNamespace;
+  openDrawer: OpenDrawerCallback<EditorType, EditorModeType>;
+}
+export function useAasEditor({ id, aasNamespace, openDrawer }: AasEditorProps) {
   const submodels = ref<TreeNode[]>();
   const loading = ref(false);
+  const submodelElementsToAdd = ref([
+    {
+      label: "Datenfelder",
+      items: [
+        {
+          label: "Textfeld",
+          icon: "pi pi-align-left",
+          command: () => {
+            openDrawer({ type: KeyTypes.Property, data: { idShort: "test", valueType: DataTypeDef.String }, title: "Textfeld hinzufügen", mode: EditorMode.CREATE });
+          },
+        },
+        {
+          label: "Export",
+          icon: "pi pi-upload",
+        },
+      ],
+    },
+  ]);
 
   const convertSubmodelsToTree = (submodels: SubmodelResponseDto[]) => {
-    return submodels.map(submodel => (
-      {
-        key: submodel.id,
-        data: {
-          idShort: submodel.idShort,
-          modelType: KeyTypes.Submodel,
-          plain: omit(submodel, "submodelElements"),
-        },
-      }
-    ));
+    return submodels.map(submodel => ({
+      key: submodel.id,
+      data: {
+        idShort: submodel.idShort,
+        modelType: KeyTypes.Submodel,
+        plain: omit(submodel, "submodelElements"),
+      },
+    }));
   };
 
-  const fetchSubmodels = async (pagingParams: PagingParamsDto): Promise<PagingResult> => {
+  const fetchSubmodels = async (
+    pagingParams: PagingParamsDto,
+  ): Promise<PagingResult> => {
     loading.value = true;
     const response = await aasNamespace.getSubmodels(id, pagingParams);
     submodels.value = convertSubmodelsToTree(response.data.result);
@@ -45,7 +70,8 @@ export function useAasEditor({ id, aasNamespace }: AasEditorProps) {
     return response.data;
   };
 
-  const { previousPage, nextPage, currentPage, reloadCurrentPage } = usePagination({ limit: 10, fetchCallback: fetchSubmodels });
+  const { previousPage, nextPage, currentPage, reloadCurrentPage }
+    = usePagination({ limit: 10, fetchCallback: fetchSubmodels });
 
   const createSubmodel = async () => {
     const response = await aasNamespace.createSubmodel(id, {
@@ -56,5 +82,5 @@ export function useAasEditor({ id, aasNamespace }: AasEditorProps) {
     }
   };
 
-  return { submodels, nextPage, createSubmodel };
+  return { submodels, submodelElementsToAdd, nextPage, createSubmodel };
 }
