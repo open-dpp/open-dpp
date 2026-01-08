@@ -63,6 +63,8 @@ const envSchema = z.object({
   OPEN_DPP_AUTH_CLOUD_CLIENT_ID: z.string().optional(),
   OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET: z.string().optional(),
   OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL: z.string().optional(),
+  OPEN_DPP_AUTH_ADMIN_USERNAME: z.string().optional(),
+  OPEN_DPP_AUTH_ADMIN_PASSWORD: z.string().optional(),
   // Default Caps
   OPEN_DPP_DEFAULT_MODEL_CREATE_CAP: z.coerce.number().min(0).optional().default(10),
   OPEN_DPP_DEFAULT_AI_TOKEN_QUOTA: z.coerce.number().min(0).optional().default(10_000),
@@ -91,6 +93,15 @@ const envSchema = z.object({
         path: ["OPEN_DPP_AUTH_CLOUD_PROVIDER", "OPEN_DPP_AUTH_CLOUD_CLIENT_ID", "OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET", "OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL"],
       });
     }
+  }
+  const hasAuthAdminUsername = !!val.OPEN_DPP_AUTH_ADMIN_USERNAME;
+  const hasAuthAdminPassword = !!val.OPEN_DPP_AUTH_ADMIN_PASSWORD;
+  if ((hasAuthAdminUsername && !hasAuthAdminPassword) || (!hasAuthAdminUsername && hasAuthAdminPassword)) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Provide both OPEN_DPP_AUTH_ADMIN_USERNAME and OPEN_DPP_AUTH_ADMIN_PASSWORD if you provide at least one of both.",
+      path: ["OPEN_DPP_AUTH_ADMIN_USERNAME", "OPEN_DPP_AUTH_ADMIN_PASSWORD"],
+    });
   }
 });
 
