@@ -58,11 +58,12 @@ describe("aasEditor composable", () => {
     });
     expect(submodels.value).toEqual([
       {
-        key: submodel.id,
+        key: `${submodel.id}`,
         data: {
           idShort: submodel.idShort,
           modelType: KeyTypes.Submodel,
           plain: omit(submodel, "submodelElements"),
+          path: { idShortPath: submodel.idShort, submodelId: submodel.id },
         },
       },
     ]);

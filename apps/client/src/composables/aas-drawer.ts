@@ -36,11 +36,14 @@ interface EditorDataMap {
 }
 export type EditorType = typeof KeyTypes.Submodel | typeof KeyTypes.Property;
 
+export interface AasEditorPath { submodelId?: string; idShortPath: string }
+
 export type OpenDrawerCallback<K extends EditorType, M extends EditorModeType> = (config: {
   type: K;
   data: EditorDataMap[M][K];
   title: string;
   mode: M;
+  path: AasEditorPath;
 },
 ) => void;
 
@@ -50,13 +53,15 @@ export function useAasDrawer() {
   const activeEditor = ref<EditorType | null>(null);
   const activeMode = ref<EditorModeType>(EditorMode.EDIT);
   const activeData = ref<SubmodelEditorProps | PropertyCreateEditorProps | PropertyEditorProps | null>(null);
+  const activePath = ref<AasEditorPath>({ idShortPath: "" });
 
   const openDrawer: OpenDrawerCallback<EditorType, EditorModeType> = (
-    { type, data, title, mode },
+    { type, data, title, mode, path },
   ) => {
     activeEditor.value = type;
     activeData.value = structuredClone(data);
     activeMode.value = structuredClone(mode);
+    activePath.value = structuredClone(path);
     drawerHeader.value = title;
     drawerVisible.value = true;
   };
@@ -80,6 +85,7 @@ export function useAasDrawer() {
     return {
       component: foundEditor.component,
       props: {
+        path: activePath.value,
         data: foundEditor.parser.parse(activeData.value),
       },
     };

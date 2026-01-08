@@ -20,17 +20,20 @@ describe("aasDrawer composable", () => {
     const { openDrawer, drawerHeader, editorVNode } = useAasDrawer();
     const data = omit(submodel, "submodelElements");
     const title = "Edit section";
-    openDrawer({ type: KeyTypes.Submodel, data, title, mode: EditorMode.EDIT });
+    let path = { submodelId: submodel.id, idShortPath: data.idShort };
+    openDrawer({ type: KeyTypes.Submodel, data, title, mode: EditorMode.EDIT, path });
 
     expect(drawerHeader.value).toEqual(title);
     expect(editorVNode.value?.component).toEqual(SubmodelEditor);
-    expect(editorVNode.value?.props).toEqual({ data });
+    expect(editorVNode.value?.props).toEqual({ data, path });
 
-    openDrawer({ type: KeyTypes.Submodel, data, title, mode: EditorMode.CREATE });
+    path = omit(path, "submodelId");
+
+    openDrawer({ type: KeyTypes.Submodel, data, title, mode: EditorMode.CREATE, path });
 
     expect(drawerHeader.value).toEqual(title);
     expect(editorVNode.value?.component).toEqual(SubmodelCreateEditor);
-    expect(editorVNode.value?.props).toEqual({ data });
+    expect(editorVNode.value?.props).toEqual({ data, path });
   });
 
   it("should open drawer with property", async () => {
@@ -38,17 +41,18 @@ describe("aasDrawer composable", () => {
 
     const { openDrawer, drawerHeader, editorVNode } = useAasDrawer();
     const title = "Edit section";
-    openDrawer({ type: KeyTypes.Property, data, title, mode: EditorMode.EDIT });
+    const path = { submodelId: "s1", idShortPath: data.idShort };
+    openDrawer({ type: KeyTypes.Property, data, title, mode: EditorMode.EDIT, path });
 
     expect(drawerHeader.value).toEqual(title);
     expect(editorVNode.value?.component).toEqual(PropertyEditor);
-    expect(editorVNode.value?.props).toEqual({ data });
+    expect(editorVNode.value?.props).toEqual({ data, path });
 
     data = { idShort: "newShort", valueType: DataTypeDef.String };
-    openDrawer({ type: KeyTypes.Property, data, title, mode: EditorMode.CREATE });
+    openDrawer({ type: KeyTypes.Property, data, title, mode: EditorMode.CREATE, path });
 
     expect(drawerHeader.value).toEqual(title);
     expect(editorVNode.value?.component).toEqual(PropertyCreateEditor);
-    expect(editorVNode.value?.props).toEqual({ data });
+    expect(editorVNode.value?.props).toEqual({ data, path });
   });
 });

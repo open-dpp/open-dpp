@@ -16,7 +16,7 @@ const props = defineProps<{
 
 const { openDrawer, drawerHeader, drawerVisible, editorVNode } = useAasDrawer();
 
-const { submodels, nextPage, createSubmodel, submodelElementsToAdd } = useAasEditor({
+const { submodels, buildAddSubmodelElementMenu, nextPage, selectedKey, createSubmodel, submodelElementsToAdd } = useAasEditor({
   id: props.id,
   aasNamespace:
     props.editorMode === AasEditMode.Passport
@@ -24,7 +24,6 @@ const { submodels, nextPage, createSubmodel, submodelElementsToAdd } = useAasEdi
       : apiClient.dpp.templates.aas,
   openDrawer,
 });
-const selectedKey = ref();
 
 onMounted(async () => {
   await nextPage();
@@ -35,19 +34,13 @@ function onHideDrawer() {
 }
 const popover = ref();
 
-// const emits = defineEmits<{
-//   (e: "create"): Promise<void>;
-//   (e: "nextPage"): Promise<void>;
-//   (e: "previousPage"): Promise<void>;
-// }>();
-
 const { t } = useI18n();
 
 function onNodeSelect(node: TreeNode) {
   openDrawer({ type: node.data.modelType, data: toRaw(node.data.plain), title: node.data.idShort, mode: EditorMode.EDIT });
 }
-function addClicked(event: any, key: string) {
-  console.log(key);
+function addClicked(event: any, node: TreeNode) {
+  buildAddSubmodelElementMenu(node);
   popover.value.toggle(event);
 }
 </script>
@@ -74,7 +67,7 @@ function addClicked(event: any, key: string) {
         <template #body="{ node }">
           <div class="flex w-full justify-end">
             <div class="flex items-center rounded-md gap-2">
-              <Button icon="pi pi-plus" severity="primary" @click="addClicked($event, node.key)" />
+              <Button icon="pi pi-plus" severity="primary" @click="addClicked($event, node)" />
             </div>
           </div>
         </template>

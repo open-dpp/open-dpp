@@ -1,5 +1,6 @@
 import type { AasNamespace } from "@open-dpp/api-client";
 import type { PagingParamsDto, SubmodelResponseDto } from "@open-dpp/dto";
+import type { MenuItem } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
 import type { EditorModeType, EditorType, OpenDrawerCallback } from "./aas-drawer.ts";
 import { DataTypeDef, KeyTypes } from "@open-dpp/dto";
@@ -29,25 +30,34 @@ interface AasEditorProps {
 }
 export function useAasEditor({ id, aasNamespace, openDrawer }: AasEditorProps) {
   const submodels = ref<TreeNode[]>();
+  const selectedKey = ref();
+
   const loading = ref(false);
-  const submodelElementsToAdd = ref([
-    {
-      label: "Datenfelder",
-      items: [
-        {
-          label: "Textfeld",
-          icon: "pi pi-align-left",
-          command: () => {
-            openDrawer({ type: KeyTypes.Property, data: { idShort: "test", valueType: DataTypeDef.String }, title: "Textfeld hinzufügen", mode: EditorMode.CREATE });
-          },
-        },
-        {
-          label: "Export",
-          icon: "pi pi-upload",
-        },
-      ],
-    },
+  const submodelElementsToAdd = ref<MenuItem[]>([
   ]);
+
+  const buildAddSubmodelElementMenu = (node: TreeNode) => {
+    submodelElementsToAdd.value = [
+      {
+        label: "Textfeld hinzufügen",
+        icon: "pi pi-pencil",
+        command: () => {
+          openDrawer({
+            type: KeyTypes.Property,
+            data: { valueType: DataTypeDef.String, idShort: "test" },
+            mode: EditorMode.CREATE,
+            title: "Textfeld hinzufügen",
+            path: { idShortPath: node.data.idShort },
+          });
+        },
+      },
+      {
+        label: "Delete",
+        icon: "pi pi-trash",
+        command: () => onDelete(nodeData.id),
+      },
+    ];
+  };
 
   const convertSubmodelsToTree = (submodels: SubmodelResponseDto[]) => {
     return submodels.map(submodel => ({
@@ -56,6 +66,7 @@ export function useAasEditor({ id, aasNamespace, openDrawer }: AasEditorProps) {
         idShort: submodel.idShort,
         modelType: KeyTypes.Submodel,
         plain: omit(submodel, "submodelElements"),
+        path: { idShortPath: submodel.idShort, submodelId: submodel.id },
       },
     }));
   };
@@ -82,5 +93,5 @@ export function useAasEditor({ id, aasNamespace, openDrawer }: AasEditorProps) {
     }
   };
 
-  return { submodels, submodelElementsToAdd, nextPage, createSubmodel };
+  return { submodels, submodelElementsToAdd, selectedKey, buildAddSubmodelElementMenu, nextPage, createSubmodel };
 }
