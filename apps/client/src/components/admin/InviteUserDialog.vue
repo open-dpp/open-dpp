@@ -17,7 +17,7 @@ import RingLoader from "../RingLoader.vue";
 
 const emit = defineEmits<{
   (e: "close"): void;
-  (e: "invitedUser"): void;
+  (e: "success"): void;
 }>();
 const { t } = useI18n();
 const loading = ref<boolean>(false);
@@ -49,7 +49,7 @@ async function inviteUser() {
     loading.value = false;
     if (!error) {
       success.value = true;
-      emit("invitedUser");
+      emit("success");
       email.value = "";
       password.value = "";
       firstName.value = "";

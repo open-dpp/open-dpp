@@ -31,6 +31,11 @@ async function onAdd() {
   layoutStore.openModal(ModalType.INVITE_USER_MODAL);
 }
 
+async function onInviteSuccess() {
+  await fetchUsers();
+  layoutStore.closeModal();
+}
+
 onMounted(async () => {
   await fetchUsers();
 });
@@ -42,6 +47,7 @@ onMounted(async () => {
       <InviteUserDialog
         v-if="layoutStore.modalOpen === ModalType.INVITE_USER_MODAL"
         @close="layoutStore.closeModal()"
+        @success="onInviteSuccess"
       />
       <AdminUsersList v-if="users.length > 0" :users="users" @add="onAdd" />
     </div>
