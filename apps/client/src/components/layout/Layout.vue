@@ -22,6 +22,7 @@ import {
   Cog6ToothIcon,
   CubeIcon,
   Square3Stack3DIcon,
+  UserGroupIcon,
   UsersIcon,
   XMarkIcon,
 } from "@heroicons/vue/24/outline";
@@ -149,10 +150,16 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
         name: t("organizations.admin.title"),
         items: [
           {
-            name: t("organizations.admin.title"),
-            to: "/media",
+            name: t("organizations.admin.organizations"),
+            to: "/admin/organizations",
             icon: BuildingOfficeIcon,
-            show: () => indexStore.selectedOrganization === null && role.value === "admin",
+            show: () => role.value === "admin",
+          },
+          {
+            name: t("organizations.admin.users"),
+            to: "/admin/users",
+            icon: UserGroupIcon,
+            show: () => role.value === "admin",
           },
         ],
       },
