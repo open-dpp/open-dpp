@@ -328,6 +328,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
             data: {
               firstName: "open-dpp",
               lastName: "admin",
+              emailVerified: true,
             },
             email: adminUsername,
             password: adminPassword,
