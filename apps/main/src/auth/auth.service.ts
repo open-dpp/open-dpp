@@ -5,6 +5,7 @@ import { EnvService } from "@open-dpp/env";
 import { APIError, Auth, betterAuth, User } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { admin, apiKey, genericOAuth, organization } from "better-auth/plugins";
+import dayjs from "dayjs";
 import { Db, MongoClient, ObjectId } from "mongodb";
 import { InviteUserToOrganizationMail } from "../email/domain/invite-user-to-organization-mail";
 import { PasswordResetMail } from "../email/domain/password-reset-mail";
@@ -160,6 +161,24 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       name: organization.name ?? "",
       image: organization.image ?? "",
     };
+  }
+
+  async getAllOrganizations(): Promise<Array<{ name: string; image: string }>> {
+    if (!this.db)
+      return [];
+
+    const organizations = await this.db.collection("organization")
+      .find()
+      .limit(100)
+      .toArray();
+    if (!organizations)
+      return [];
+    return organizations.map(org => ({
+      id: org._id.toString(),
+      name: org.name ?? "",
+      image: org.image ?? "",
+      createdAt: dayjs(org.createdAt).format("DD.MM.YYYY") ?? null,
+    }));
   }
 
   async onModuleInit() {
