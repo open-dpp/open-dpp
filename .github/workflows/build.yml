@@ -154,7 +154,7 @@ jobs:
         uses: Cyclenerd/hcloud-github-runner@1d464319145d45966cd0344f3e2038cf2152dc1d # v1.3.0
         with:
           mode: create
-          github_token: ${{ secrets.HETZNER_PAT }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
           server_type: cax21
           location: nbg1 # Nuremberg, Germany
