@@ -21,7 +21,7 @@ const rows = computed(() => {
     id: i.id,
     email: i.email,
     role: i.role ?? "user",
-    name: i.name ?? `${i.firstName ?? ""} ${i.lastName ?? ""}`,
+    name: i.name ?? (`${i.firstName ?? ""} ${i.lastName ?? ""}`.trim() || "N/A"),
     emailVerified: i.emailVerified ? "Verified" : "Not verified",
   }));
 });
