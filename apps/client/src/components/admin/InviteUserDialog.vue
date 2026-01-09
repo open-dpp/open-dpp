@@ -171,7 +171,7 @@ async function inviteUser() {
                       </div>
 
                       <div class="flex flex-col gap-2">
-                        <label for="email" class="block text-sm font-medium text-gray-700">
+                        <label for="firstName" class="block text-sm font-medium text-gray-700">
                           {{ t('user.firstName') }}
                         </label>
                         <InputText
@@ -183,7 +183,7 @@ async function inviteUser() {
                       </div>
 
                       <div class="flex flex-col gap-2">
-                        <label for="email" class="block text-sm font-medium text-gray-700">
+                        <label for="lastName" class="block text-sm font-medium text-gray-700">
                           {{ t('user.lastName') }}
                         </label>
                         <InputText
