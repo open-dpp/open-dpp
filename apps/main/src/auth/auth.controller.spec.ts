@@ -54,7 +54,14 @@ describe("authController", () => {
     });
 
     it("should return organizations if user is admin", async () => {
-      const orgs = [{ id: 1, name: "Org 1" }];
+      const orgs = [
+        {
+          id: "1",
+          name: "Org 1",
+          image: "https://example.com/logo.png",
+          createdAt: new Date().toISOString(),
+        },
+      ];
       jest.spyOn(authService, "getSession").mockResolvedValue({
         session: {},
         user: { role: "admin" },
