@@ -36,7 +36,7 @@
     "@nestjs/microservices": "^11.1.10",
     "@nestjs/mongoose": "^11.0.4",
     "@nestjs/platform-express": "^11.1.10",
-    "@nestjs/platform-socket.io": "^11.1.10",
+    "@nestjs/platform-socket.io": "^11.1.11",
     "@nestjs/serve-static": "^5.0.4",
     "@nestjs/swagger": "^11.2.3",
     "@nestjs/websockets": "^11.1.10",
