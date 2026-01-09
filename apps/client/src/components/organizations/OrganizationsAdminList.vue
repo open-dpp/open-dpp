@@ -17,7 +17,10 @@ const rows = computed(() => {
   return props.organizations.map(i => ({
     id: i.id,
     name: i.name,
-    createdAt: dayjs(i.createdAt).format("DD.MM.YYYY"),
+    createdAt:
+      i.createdAt && dayjs(i.createdAt).isValid()
+        ? dayjs(i.createdAt).format("DD.MM.YYYY")
+        : "",
   }));
 });
 </script>
