@@ -44,9 +44,14 @@ export class AuthController {
     @Req() request: express.Request,
   ) {
     const session = await this.authService.getSession(fromNodeHeaders(request.headers || []));
-    const userRole = (session?.user as any).role;
 
-    if (userRole !== "admin") {
+    if (!session || !session.user) {
+      throw new ForbiddenException();
+    }
+
+    const user = session.user as unknown as { role: string };
+
+    if (user.role !== "admin") {
       throw new ForbiddenException();
     }
 

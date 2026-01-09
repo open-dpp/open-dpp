@@ -163,7 +163,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     };
   }
 
-  async getAllOrganizations(): Promise<Array<{ name: string; image: string }>> {
+  async getAllOrganizations(): Promise<Array<{ id: string; name: string; image: string; createdAt: string | null }>> {
     if (!this.db)
       return [];
 
@@ -171,13 +171,11 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       .find()
       .limit(100)
       .toArray();
-    if (!organizations)
-      return [];
     return organizations.map(org => ({
       id: org._id.toString(),
       name: org.name ?? "",
       image: org.image ?? "",
-      createdAt: dayjs(org.createdAt).format("DD.MM.YYYY") ?? null,
+      createdAt: org.createdAt ? dayjs(org.createdAt).format("DD.MM.YYYY") : null,
     }));
   }
 
@@ -359,6 +357,9 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       catch (error) {
         if (error instanceof APIError) {
           this.logger.warn("Account with set admin username already exists and wont be updated.");
+        }
+        else {
+          this.logger.error("Failed to create admin account", error);
         }
       }
     }

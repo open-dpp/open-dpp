@@ -9,15 +9,14 @@ const props = defineProps<{
   organizations: Organization[];
 }>();
 
-const emits = defineEmits<{
-  (e: "add"): void;
-}>();
-
 const rows = computed(() => {
   return props.organizations.map(i => ({
     id: i.id,
     name: i.name,
-    createdAt: dayjs(i.createdAt).format("DD.MM.YYYY"),
+    createdAt:
+      i.createdAt && dayjs(i.createdAt).isValid()
+        ? dayjs(i.createdAt).format("DD.MM.YYYY")
+        : "",
   }));
 });
 </script>
@@ -27,7 +26,6 @@ const rows = computed(() => {
     <ListHeader
       description="All organizations on this instance."
       title="Organizations"
-      @add="emits('add')"
     />
     <SimpleTable
       :headers="['ID', 'name', 'createdAt']"

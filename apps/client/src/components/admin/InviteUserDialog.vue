@@ -17,7 +17,7 @@ import RingLoader from "../RingLoader.vue";
 
 const emit = defineEmits<{
   (e: "close"): void;
-  (e: "invitedUser"): void;
+  (e: "success"): void;
 }>();
 const { t } = useI18n();
 const loading = ref<boolean>(false);
@@ -49,16 +49,21 @@ async function inviteUser() {
     loading.value = false;
     if (!error) {
       success.value = true;
-      emit("invitedUser");
-      email.value = ""; // Reset form
+      emit("success");
+      email.value = "";
+      password.value = "";
+      firstName.value = "";
+      lastName.value = "";
+      errors.value = [];
+      loading.value = false;
     }
     else {
-      errors.value.push("Ein Fehler ist aufgetreten.");
+      errors.value.push(t("common.errorOccured"));
     }
   }
   catch (error) {
     console.error(error);
-    errors.value.push("Ein Fehler ist aufgetreten.");
+    errors.value.push(t("common.errorOccured"));
     loading.value = false;
   }
 }
@@ -166,7 +171,7 @@ async function inviteUser() {
                       </div>
 
                       <div class="flex flex-col gap-2">
-                        <label for="email" class="block text-sm font-medium text-gray-700">
+                        <label for="firstName" class="block text-sm font-medium text-gray-700">
                           {{ t('user.firstName') }}
                         </label>
                         <InputText
@@ -178,7 +183,7 @@ async function inviteUser() {
                       </div>
 
                       <div class="flex flex-col gap-2">
-                        <label for="email" class="block text-sm font-medium text-gray-700">
+                        <label for="lastName" class="block text-sm font-medium text-gray-700">
                           {{ t('user.lastName') }}
                         </label>
                         <InputText
