@@ -358,6 +358,9 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         if (error instanceof APIError) {
           this.logger.warn("Account with set admin username already exists and wont be updated.");
         }
+        else {
+          this.logger.error("Failed to create admin account", error);
+        }
       }
     }
     this.logger.log("Auth initialized");
