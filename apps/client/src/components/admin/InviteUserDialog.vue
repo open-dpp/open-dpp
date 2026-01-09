@@ -50,15 +50,20 @@ async function inviteUser() {
     if (!error) {
       success.value = true;
       emit("invitedUser");
-      email.value = ""; // Reset form
+      email.value = "";
+      password.value = "";
+      firstName.value = "";
+      lastName.value = "";
+      errors.value = [];
+      loading.value = false;
     }
     else {
-      errors.value.push("Ein Fehler ist aufgetreten.");
+      errors.value.push(t("common.errorOccured"));
     }
   }
   catch (error) {
     console.error(error);
-    errors.value.push("Ein Fehler ist aufgetreten.");
+    errors.value.push(t("common.errorOccured"));
     loading.value = false;
   }
 }
