@@ -40,6 +40,12 @@
         "label": "E-Mail Adresse",
         "error": "Bitte geben Sie eine E-Mail Adresse ein.",
         "invalid": "Bitte geben Sie eine gültige E-Mail Adresse ein."
+      },
+      "password": {
+        "help": "Geben Sie ein Passwort ein.",
+        "label": "Passwort",
+        "error": "Bitte geben Sie ein Passwort ein.",
+        "invalid": "Bitte geben Sie ein gültiges Passwort ein."
       }
     }
   },
@@ -286,7 +292,15 @@
       "title": "Organisation anpassen"
     },
     "admin": {
-      "title": "Alle Organisationen"
+      "title": "Administration",
+      "organizations": "Alle Organisationen",
+      "users": "Alle Benutzer",
+      "inviteUserDialog": {
+        "title": "Benutzer erstellen",
+        "create": "Erstellen",
+        "success": "Benutzer erfolgreich erstellt",
+        "error": "Fehler beim Erstellen des Benutzers"
+      }
     }
   },
   "marketplace": {
