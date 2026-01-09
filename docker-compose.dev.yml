@@ -1,9 +1,9 @@
 services:
   api-mongo-db:
     ports:
-      - "${OPEN_DPP_MONGODB_PORT}:${OPEN_DPP_MONGODB_PORT}"
+      - "${OPEN_DPP_MONGODB_PORT:-27017}:${OPEN_DPP_MONGODB_PORT:-27017}"
     container_name: api-mongo-db
-    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "${OPEN_DPP_MONGODB_PORT}", "--keyFile", "/etc/mongo/mongo_keyfile"]
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "${OPEN_DPP_MONGODB_PORT:-27017}", "--keyFile", "/etc/mongo/mongo_keyfile"]
     logging:
       options:
         max-size: 1g
