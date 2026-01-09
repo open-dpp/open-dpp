@@ -37,6 +37,22 @@ export class AuthController {
     return { name };
   }
 
+  // Returns all organizations for admin users
+  // Otherwise responds with 403
+  @Get("organizations")
+  async getOrganizations(
+    @Req() request: express.Request,
+  ) {
+    const session = await this.authService.getSession(fromNodeHeaders(request.headers || []));
+    const userRole = (session?.user as any).role;
+
+    if (userRole !== "admin") {
+      throw new ForbiddenException();
+    }
+
+    return this.authService.getAllOrganizations();
+  }
+
   @Post("*path")
   @OptionalAuth()
   async handleBetterAuthPostRequest(

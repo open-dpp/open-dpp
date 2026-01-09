@@ -1,11 +1,11 @@
-import type { Auth } from "better-auth";
 import type { Connection } from "mongoose";
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import { EnvService } from "@open-dpp/env";
-import { betterAuth, User } from "better-auth";
+import { APIError, Auth, betterAuth, User } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { apiKey, genericOAuth, organization } from "better-auth/plugins";
+import { admin, apiKey, genericOAuth, organization } from "better-auth/plugins";
+import dayjs from "dayjs";
 import { Db, MongoClient, ObjectId } from "mongodb";
 import { InviteUserToOrganizationMail } from "../email/domain/invite-user-to-organization-mail";
 import { PasswordResetMail } from "../email/domain/password-reset-mail";
@@ -163,6 +163,24 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     };
   }
 
+  async getAllOrganizations(): Promise<Array<{ name: string; image: string }>> {
+    if (!this.db)
+      return [];
+
+    const organizations = await this.db.collection("organization")
+      .find()
+      .limit(100)
+      .toArray();
+    if (!organizations)
+      return [];
+    return organizations.map(org => ({
+      id: org._id.toString(),
+      name: org.name ?? "",
+      image: org.image ?? "",
+      createdAt: dayjs(org.createdAt).format("DD.MM.YYYY") ?? null,
+    }));
+  }
+
   async onModuleInit() {
     this.db = this.mongooseConnection.db;
     const mongoClient = this.mongooseConnection.getClient();
@@ -215,7 +233,9 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         enabled: false,
       },
     });
-    const plugins = [apiKeyPlugin, organizationPlugin];
+
+    const adminPlugin = admin({});
+    const plugins = [apiKeyPlugin, organizationPlugin, adminPlugin];
     if (genericOAuthPlugin) {
       plugins.push(genericOAuthPlugin as any);
     }
@@ -316,6 +336,32 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         client: this.configService.get("NODE_ENV") === "test" ? undefined : mongoClient,
       }),
     });
+    const isAuthAdminProvided = !!this.configService.get("OPEN_DPP_AUTH_ADMIN_USERNAME") && !!this.configService.get("OPEN_DPP_AUTH_ADMIN_PASSWORD");
+    if (isAuthAdminProvided) {
+      const adminUsername = this.configService.get("OPEN_DPP_AUTH_ADMIN_USERNAME");
+      const adminPassword = this.configService.get("OPEN_DPP_AUTH_ADMIN_PASSWORD");
+      try {
+        await (this.auth?.api as any).createUser({
+          body: {
+            name: "open-dpp admin",
+            data: {
+              firstName: "open-dpp",
+              lastName: "admin",
+              emailVerified: true,
+            },
+            email: adminUsername,
+            password: adminPassword,
+            role: "admin",
+          },
+        });
+        this.logger.log("Admin Account created");
+      }
+      catch (error) {
+        if (error instanceof APIError) {
+          this.logger.warn("Account with set admin username already exists and wont be updated.");
+        }
+      }
+    }
     this.logger.log("Auth initialized");
   }
 

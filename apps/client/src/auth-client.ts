@@ -1,4 +1,10 @@
-import { apiKeyClient, genericOAuthClient, inferAdditionalFields, organizationClient } from "better-auth/client/plugins";
+import {
+  adminClient,
+  apiKeyClient,
+  genericOAuthClient,
+  inferAdditionalFields,
+  organizationClient,
+} from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/vue";
 import { API_URL } from "./const.ts";
 
@@ -35,5 +41,6 @@ export const authClient = createAuthClient({
     genericOAuthClient(),
     organizationClient(),
     apiKeyClient(),
+    adminClient(),
   ],
 });

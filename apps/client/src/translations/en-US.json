@@ -32,6 +32,12 @@
         "label": "Email address",
         "error": "Please enter an email address.",
         "invalid": "Please enter a valid email address."
+      },
+      "password": {
+        "help": "Enter a password.",
+        "label": "Password",
+        "error": "Please enter a password.",
+        "invalid": "Please enter a valid password."
       }
     },
     "id": "ID",
@@ -284,6 +290,17 @@
     },
     "settings": {
       "title": "Configure organization"
+    },
+    "admin": {
+      "title": "Administration",
+      "organizations": "All organizations",
+      "users": "All users",
+      "inviteUserDialog": {
+        "title": "Create user",
+        "create": "Create",
+        "success": "User created successfully",
+        "error": "Error on creating user"
+      }
     }
   },
   "marketplace": {
