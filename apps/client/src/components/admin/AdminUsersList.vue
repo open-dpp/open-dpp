@@ -5,7 +5,11 @@ import ListHeader from "../lists/ListHeader.vue";
 import SimpleTable from "../lists/SimpleTable.vue";
 
 const props = defineProps<{
-  users: UserWithRole[];
+  users: (UserWithRole & {
+    firstName?: string;
+    lastName?: string;
+    name?: string;
+  })[];
 }>();
 
 const emits = defineEmits<{
@@ -17,7 +21,7 @@ const rows = computed(() => {
     id: i.id,
     email: i.email,
     role: i.role ?? "user",
-    name: `${(i as any).firstName} ${(i as any).lastName}`,
+    name: i.name ?? `${i.firstName ?? ""} ${i.lastName ?? ""}`,
     emailVerified: i.emailVerified ? "Verified" : "Not verified",
   }));
 });
