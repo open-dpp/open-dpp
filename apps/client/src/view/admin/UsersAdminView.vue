@@ -4,18 +4,26 @@ import { onMounted, ref } from "vue";
 import { authClient } from "../../auth-client.ts";
 import AdminUsersList from "../../components/admin/AdminUsersList.vue";
 import InviteUserDialog from "../../components/admin/InviteUserDialog.vue";
+import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { ModalType, useLayoutStore } from "../../stores/layout.ts";
 
 const layoutStore = useLayoutStore();
+const errorHandlingStore = useErrorHandlingStore();
 
 const users = ref<UserWithRole[]>([]);
 
 async function fetchUsers() {
-  const res = await authClient.admin.listUsers({
-    query: {},
-  });
-  if (res.data) {
-    users.value = res.data.users;
+  try {
+    const res = await authClient.admin.listUsers({
+      query: {},
+    });
+    if (res.data) {
+      users.value = res.data.users;
+    }
+  }
+  catch (error) {
+    errorHandlingStore.logErrorWithNotification("Failed to fetch users", error);
+    users.value = [];
   }
 }
 
