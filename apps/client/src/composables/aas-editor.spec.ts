@@ -65,6 +65,17 @@ describe("aasEditor composable", () => {
           plain: omit(submodel, "submodelElements"),
           path: { submodelId: submodel.id },
         },
+        children: [
+          {
+            key: `${submodel.idShort}.Design_V01`,
+            data: {
+              idShort: "Design_V01",
+              modelType: "SubmodelElementCollection",
+              path: { submodelId: submodel.id, idShortPath: `${submodel.idShort}.Design_V01` },
+              plain: submodel.submodelElements[0],
+            },
+          },
+        ],
       },
     ]);
   });

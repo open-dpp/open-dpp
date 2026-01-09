@@ -14,24 +14,26 @@ const props = defineProps<{
   editorMode: AasEditModeType;
 }>();
 
-const { openDrawer, drawerHeader, drawerVisible, editorVNode } = useAasDrawer();
+const selectedKey = ref();
+function onHideDrawer() {
+  selectedKey.value = null;
+}
+const { openDrawer, hideDrawer, drawerHeader, drawerVisible, editorVNode } = useAasDrawer({ onHideDrawer });
 
-const { submodels, buildAddSubmodelElementMenu, nextPage, selectedKey, createSubmodel, submodelElementsToAdd } = useAasEditor({
+const { submodels, buildAddSubmodelElementMenu, nextPage, createSubmodel, submodelElementsToAdd } = useAasEditor({
   id: props.id,
   aasNamespace:
     props.editorMode === AasEditMode.Passport
       ? apiClient.dpp.templates.aas // TODO: Replace templates here by passports
       : apiClient.dpp.templates.aas,
   openDrawer,
+  hideDrawer,
 });
 
 onMounted(async () => {
   await nextPage();
 });
 
-function onHideDrawer() {
-  selectedKey.value = null;
-}
 const popover = ref();
 
 const { t } = useI18n();

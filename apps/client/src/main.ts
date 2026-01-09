@@ -11,6 +11,7 @@ import Aura from "@primeuix/themes/aura";
 import { createPinia } from "pinia";
 import PrimeVue from "primevue/config";
 import ConfirmationService from "primevue/confirmationservice";
+import Tooltip from "primevue/tooltip";
 import { createApp, watch } from "vue";
 import { rootClasses } from "../formkit.theme";
 import App from "./App.vue";
@@ -47,6 +48,7 @@ async function startApp() {
       },
     },
   });
+  app.directive("tooltip", Tooltip);
 
   app.use(ConfirmationService);
 

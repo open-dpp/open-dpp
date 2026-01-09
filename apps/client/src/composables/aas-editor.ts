@@ -1,9 +1,14 @@
 import type { AasNamespace } from "@open-dpp/api-client";
-import type { PagingParamsDto, SubmodelResponseDto } from "@open-dpp/dto";
+import type { PagingParamsDto, PropertyRequestDto, SubmodelResponseDto } from "@open-dpp/dto";
 import type { MenuItem } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
-import type { EditorModeType, EditorType, OpenDrawerCallback } from "./aas-drawer.ts";
-import { DataTypeDef, KeyTypes } from "@open-dpp/dto";
+import type { AasEditorPath, EditorModeType, EditorType, OpenDrawerCallback } from "./aas-drawer.ts";
+import {
+  AasSubmodelElements,
+  DataTypeDef,
+  KeyTypes,
+
+} from "@open-dpp/dto";
 import { omit } from "lodash";
 import { v4 as uuid4 } from "uuid";
 import { ref, toRaw } from "vue";
@@ -27,16 +32,17 @@ interface AasEditorProps {
   id: string;
   aasNamespace: AasNamespace;
   openDrawer: OpenDrawerCallback<EditorType, EditorModeType>;
+  hideDrawer: () => void;
 }
-export function useAasEditor({ id, aasNamespace, openDrawer }: AasEditorProps) {
+export function useAasEditor({ id, aasNamespace, openDrawer, hideDrawer }: AasEditorProps) {
   const submodels = ref<TreeNode[]>();
-  const selectedKey = ref();
 
   const loading = ref(false);
   const submodelElementsToAdd = ref<MenuItem[]>([
   ]);
 
   const buildAddSubmodelElementMenu = (node: TreeNode) => {
+    const path = toRaw(node.data.path);
     submodelElementsToAdd.value = [
       {
         label: "Textfeld hinzufügen",
@@ -47,14 +53,10 @@ export function useAasEditor({ id, aasNamespace, openDrawer }: AasEditorProps) {
             data: { valueType: DataTypeDef.String, idShort: "test" },
             mode: EditorMode.CREATE,
             title: "Textfeld hinzufügen",
-            path: toRaw(node.data.path),
+            path,
+            callback: async (data: PropertyRequestDto) => createProperty(path, data),
           });
         },
-      },
-      {
-        label: "Delete",
-        icon: "pi pi-trash",
-        command: () => onDelete(nodeData.id),
       },
     ];
   };
@@ -68,6 +70,18 @@ export function useAasEditor({ id, aasNamespace, openDrawer }: AasEditorProps) {
         plain: omit(submodel, "submodelElements"),
         path: { submodelId: submodel.id },
       },
+      children: submodel.submodelElements.map(submodelElement => ({
+        key: `${submodel.idShort}.${submodelElement.idShort}`,
+        data: {
+          idShort: submodelElement.idShort,
+          modelType: submodelElement.modelType,
+          plain: submodelElement,
+          path: {
+            submodelId: submodel.id,
+            idShortPath: `${submodel.idShort}.${submodelElement.idShort}`,
+          },
+        },
+      })),
     }));
   };
 
@@ -93,5 +107,18 @@ export function useAasEditor({ id, aasNamespace, openDrawer }: AasEditorProps) {
     }
   };
 
-  return { submodels, submodelElementsToAdd, selectedKey, buildAddSubmodelElementMenu, nextPage, createSubmodel };
-}
+  async function createProperty(path: AasEditorPath, data: PropertyRequestDto) {
+    console.log("Calling create propert");
+    const response = await aasNamespace.createSubmodelElement(
+      id,
+      path.submodelId,
+      { modelType: AasSubmodelElements.Property, ...data },
+    );
+    if (response.status === 201) {
+      await reloadCurrentPage();
+      hideDrawer();
+    }
+  };
+
+  return { submodels, submodelElementsToAdd, buildAddSubmodelElementMenu, nextPage, createSubmodel, createProperty };
+};

@@ -1,121 +1,80 @@
 <script setup lang="ts">
+import type { PropertyRequestDto } from "@open-dpp/dto";
 import type { AasEditorPath, PropertyCreateEditorProps } from "../../composables/aas-drawer.ts";
+import { DataTypeDef } from "@open-dpp/dto";
 
 import { toTypedSchema } from "@vee-validate/zod";
-import { Button, Dropdown, InputText, Message } from "primevue";
-import { useFieldArray, useForm } from "vee-validate";
-import { computed, watch } from "vue";
+import { Button, InputNumber, InputText } from "primevue";
+import { useForm } from "vee-validate";
+import { computed } from "vue";
 import { z } from "zod";
+import FormField from "../basics/form/FormField.vue";
+import IdField from "../basics/form/IdField.vue";
 
 const props = defineProps<{
   path: AasEditorPath;
   data: PropertyCreateEditorProps;
+  callback: (data: PropertyRequestDto) => Promise<void>;
 }>();
 
-const userSchema = z.object({
-  email: z.string().email("Invalid email"),
-  role: z.string().min(1, "Role is required"),
+const propertyFormSchema = z.object({
+  idShort: z.string().min(1, "IdShort is required"),
+  value: props.data.valueType === DataTypeDef.Double ? z.number() : z.string().min(1, "Value is required"),
+  test: z.number(),
 });
 
-const formSchema = z.object({
-  users: z.array(userSchema).min(1, "At least one user is required"),
-});
+export type FormValues = z.infer<typeof propertyFormSchema>;
 
-export type FormValues = z.infer<typeof formSchema>;
-
-const roles = [
-  { label: "Admin", value: "admin" },
-  { label: "User", value: "user" },
-];
-
-const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
-  validationSchema: toTypedSchema(formSchema),
+const { defineField, handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
+  validationSchema: toTypedSchema(propertyFormSchema),
   validateOnInput: true, // Add this line
-  initialValues: {
-    users: [{ email: "", role: "" }],
-  },
+  initialValues: { idShort: "", value: "", test: 123 },
 });
 
-const { fields, push, remove } = useFieldArray<FormValues["users"]>("users");
-
-watch(() => meta.value, newValue => console.log(newValue));
+const [idShort] = defineField("idShort");
+const [value] = defineField("value");
+const [test] = defineField("test");
 
 const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
 });
 
-const onSubmit = handleSubmit((data) => {
-  console.log("Valid form data:", data);
-});
+const onSubmit
+  = handleSubmit(async (data) => {
+    console.log(data);
+    await props.callback({ ...data, valueType: props.data.valueType });
+  });
 </script>
 
 <template>
   <div class="flex flex-col">
-    <div>
-      Create Property
-      {{ props.data.valueType }}
-      {{ props.path }}
-    </div>
-    <div>
-      <form class="p-fluid" @submit.prevent="onSubmit">
-        <div
-          v-for="(field, index) in fields"
-          :key="field.key"
-          class="p-3 mb-3 border-round border-1 surface-border"
-        >
-          <!-- Email -->
-          <div class="flex flex-col gap-2 field">
-            <label>Email</label>
-            <InputText
-              v-model="field.value.email"
-              :invalid="showErrors && errors[`users[${index}].email`]"
-            />
-            <Message v-if="showErrors" size="small" severity="error" variant="simple">
-              {{ errors[`users[${index}].email`] }}
-            </Message>
-          </div>
-
-          <!-- Role -->
-          <div class="field mb-2">
-            <label>Role</label>
-            <Dropdown
-              v-model="field.value.role"
-              :options="roles"
-              option-label="label"
-              option-value="value"
-              placeholder="Select role"
-              :class="{ 'p-invalid': errors[`users.${index}.role`] }"
-            />
-            <small class="p-error">
-              {{ errors[`users.${index}.role`] }}
-            </small>
-          </div>
-
-          <!-- Remove -->
-          <Button
-            v-if="fields.length > 1"
-            icon="pi pi-trash"
-            severity="danger"
-            text
-            @click="remove(index)"
-          />
-        </div>
-
-        <!-- Array-level error -->
-        <Message v-if="errors.users" severity="error">
-          {{ errors.users }}
-        </Message>
-
-        <div class="flex gap-2 mt-3">
-          <Button
-            type="button"
-            icon="pi pi-plus"
-            label="Add User"
-            @click="push({ email: '', role: '' })"
-          />
-          <Button type="submit" label="Submit" />
-        </div>
-      </form>
-    </div>
+    <form class="flex flex-col gap-1 p-2" @submit.prevent="onSubmit">
+      <div class="grid lg:grid-cols-3 grid-cols-1 gap-2">
+        <IdField
+          id="idShort"
+          v-model="idShort"
+          label="Id"
+          :show-error="showErrors"
+          :error="errors.idShort"
+        />
+        <FormField
+          id="test"
+          v-model="test"
+          :component="InputNumber"
+          label="Test"
+          :show-error="showErrors"
+          :error="errors.test"
+        />
+        <FormField
+          id="value"
+          v-model="value"
+          :component="InputText"
+          label="Wert"
+          :show-error="showErrors"
+          :error="errors.value"
+        />
+      </div>
+      <Button class="w-fit" type="submit" label="Submit" />
+    </form>
   </div>
 </template>

@@ -13,3 +13,4 @@ export const PropertyJsonSchema = z.object({
 })
 
 export type PropertyResponseDto = z.infer<typeof PropertyJsonSchema>
+export type PropertyRequestDto = z.input<typeof PropertyJsonSchema>

@@ -11,7 +11,6 @@ import SubmodelEditor from "../components/aas/SubmodelEditor.vue";
 export type SubmodelEditorProps = Omit<SubmodelResponseDto, "submodelElements">;
 
 const PropertyCreateEditorPropsSchema = z.object({
-  idShort: z.string(),
   valueType: ValueTypeSchema,
 });
 export type PropertyEditorProps = PropertyResponseDto;
@@ -34,6 +33,7 @@ interface EditorDataMap {
     [AasKeyTypes.Property]: PropertyEditorProps;
   };
 }
+
 export type EditorType = typeof KeyTypes.Submodel | typeof KeyTypes.Property;
 
 export interface AasEditorPath { submodelId?: string; idShortPath?: string }
@@ -44,24 +44,29 @@ export type OpenDrawerCallback<K extends EditorType, M extends EditorModeType> =
   title: string;
   mode: M;
   path: AasEditorPath;
+  callback?: (data: EditorDataMap[M][K]) => Promise<void>;
 },
 ) => void;
-
-export function useAasDrawer() {
+interface AasDrawerProps {
+  onHideDrawer: () => void;
+}
+export function useAasDrawer({ onHideDrawer }: AasDrawerProps) {
   const drawerHeader = ref<string>("");
   const drawerVisible = ref(false);
   const activeEditor = ref<EditorType | null>(null);
   const activeMode = ref<EditorModeType>(EditorMode.EDIT);
   const activeData = ref<SubmodelEditorProps | PropertyCreateEditorProps | PropertyEditorProps | null>(null);
   const activePath = ref<AasEditorPath>({ idShortPath: "" });
+  const activeCallback = ref<(...args: any[]) => any | null>(null);
 
   const openDrawer: OpenDrawerCallback<EditorType, EditorModeType> = (
-    { type, data, title, mode, path },
+    { type, data, title, mode, path, callback },
   ) => {
     activeEditor.value = type;
     activeData.value = structuredClone(data);
     activeMode.value = structuredClone(mode);
     activePath.value = structuredClone(path);
+    activeCallback.value = callback;
     drawerHeader.value = title;
     drawerVisible.value = true;
   };
@@ -87,9 +92,15 @@ export function useAasDrawer() {
       props: {
         path: activePath.value,
         data: foundEditor.parser.parse(activeData.value),
+        callback: activeCallback.value,
       },
     };
   });
 
-  return { openDrawer, drawerHeader, drawerVisible, editorVNode };
+  const hideDrawer = () => {
+    drawerVisible.value = false;
+    onHideDrawer();
+  };
+
+  return { openDrawer, hideDrawer, drawerHeader, drawerVisible, editorVNode };
 }
