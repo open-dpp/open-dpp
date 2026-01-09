@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { SubmodelEditorProps } from "../../composables/aas-drawer.ts";
+import type { AasEditorPath, SubmodelEditorProps } from "../../composables/aas-drawer.ts";
 
 const props = defineProps<{
+  path: AasEditorPath;
   data: SubmodelEditorProps;
 }>();
 </script>

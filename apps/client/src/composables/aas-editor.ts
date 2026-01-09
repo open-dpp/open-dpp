@@ -6,7 +6,7 @@ import type { EditorModeType, EditorType, OpenDrawerCallback } from "./aas-drawe
 import { DataTypeDef, KeyTypes } from "@open-dpp/dto";
 import { omit } from "lodash";
 import { v4 as uuid4 } from "uuid";
-import { ref } from "vue";
+import { ref, toRaw } from "vue";
 import { EditorMode } from "./aas-drawer.ts";
 import { usePagination } from "./pagination.ts";
 
@@ -47,7 +47,7 @@ export function useAasEditor({ id, aasNamespace, openDrawer }: AasEditorProps) {
             data: { valueType: DataTypeDef.String, idShort: "test" },
             mode: EditorMode.CREATE,
             title: "Textfeld hinzufügen",
-            path: { idShortPath: node.data.idShort },
+            path: toRaw(node.data.path),
           });
         },
       },
@@ -66,7 +66,7 @@ export function useAasEditor({ id, aasNamespace, openDrawer }: AasEditorProps) {
         idShort: submodel.idShort,
         modelType: KeyTypes.Submodel,
         plain: omit(submodel, "submodelElements"),
-        path: { idShortPath: submodel.idShort, submodelId: submodel.id },
+        path: { submodelId: submodel.id },
       },
     }));
   };

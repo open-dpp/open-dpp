@@ -36,7 +36,7 @@ interface EditorDataMap {
 }
 export type EditorType = typeof KeyTypes.Submodel | typeof KeyTypes.Property;
 
-export interface AasEditorPath { submodelId?: string; idShortPath: string }
+export interface AasEditorPath { submodelId?: string; idShortPath?: string }
 
 export type OpenDrawerCallback<K extends EditorType, M extends EditorModeType> = (config: {
   type: K;

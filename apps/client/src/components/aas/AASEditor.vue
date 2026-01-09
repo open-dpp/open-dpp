@@ -37,7 +37,7 @@ const popover = ref();
 const { t } = useI18n();
 
 function onNodeSelect(node: TreeNode) {
-  openDrawer({ type: node.data.modelType, data: toRaw(node.data.plain), title: node.data.idShort, mode: EditorMode.EDIT });
+  openDrawer({ type: node.data.modelType, data: toRaw(node.data.plain), title: node.data.idShort, mode: EditorMode.EDIT, path: toRaw(node.data.path) });
 }
 function addClicked(event: any, node: TreeNode) {
   buildAddSubmodelElementMenu(node);
@@ -74,9 +74,6 @@ function addClicked(event: any, node: TreeNode) {
       </Column>
     </TreeTable>
     <Menu id="overlay_menu" ref="popover" :model="submodelElementsToAdd" :popup="true" position="right" />
-    <!--    <Popover ref="popover" position="right" append-to="body"> -->
-    <!--      Content here -->
-    <!--    </Popover> -->
     <Drawer
       v-model:visible="drawerVisible"
       :header="drawerHeader"
