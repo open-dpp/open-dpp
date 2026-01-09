@@ -1,9 +1,7 @@
 <script lang="ts" setup>
 import type { Organization } from "better-auth/client";
+import dayjs from "dayjs";
 import { computed } from "vue";
-import { useI18n } from "vue-i18n";
-import { useRoute } from "vue-router";
-import { useIndexStore } from "../../stores";
 import ListHeader from "../lists/ListHeader.vue";
 import SimpleTable from "../lists/SimpleTable.vue";
 
@@ -15,42 +13,24 @@ const emits = defineEmits<{
   (e: "add"): void;
 }>();
 
-const { t } = useI18n();
-
-const indexStore = useIndexStore();
-const route = useRoute();
-
 const rows = computed(() => {
   return props.organizations.map(i => ({
     id: i.id,
+    name: i.name,
+    createdAt: dayjs(i.createdAt).format("DD.MM.YYYY"),
   }));
 });
-
-const actions = [
-  {
-    name: t("common.edit"),
-    actionLinkBuilder: (row: Record<string, string>) =>
-      `/organizations/${indexStore.selectedOrganization}/models/${route.params.modelId as string}/items/${row.id}`,
-  },
-  {
-    name: t("common.qrCode"),
-    actionLinkBuilder: (row: Record<string, string>) =>
-      `/organizations/${indexStore.selectedOrganization}/models/${route.params.modelId as string}/items/${row.id}/qr-code`,
-  },
-];
 </script>
 
 <template>
   <div>
     <ListHeader
-      creation-label="Add organization"
-      description="Alle Pässe auf Einzelartikelebene."
+      description="All organizations on this instance."
       title="Organizations"
       @add="emits('add')"
     />
     <SimpleTable
-      :headers="['ID']"
-      :ignore-row-keys="['id']"
+      :headers="['ID', 'name', 'createdAt']"
       :row-actions="[]"
       :rows="rows"
     />
