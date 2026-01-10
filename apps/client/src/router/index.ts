@@ -103,7 +103,11 @@ export const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const layoutStore = useLayoutStore();
 
-  layoutStore.isPageLoading = true;
+  // avoid loading page when only query params changed
+  if (to.path !== from.path) {
+    layoutStore.isPageLoading = true;
+  }
+
   const { data: session } = await authClient.getSession();
   const isSignedIn = session !== null;
 
@@ -138,8 +142,10 @@ router.beforeEach(async (to, from, next) => {
   next();
 });
 
-router.afterEach(async () => {
+router.afterEach(async (to, from) => {
   const layoutStore = useLayoutStore();
-  // await new Promise((resolve) => setTimeout(resolve, 75));
-  layoutStore.isPageLoading = false;
+  // avoid loading page when only query params changed
+  if (to.path !== from.path) {
+    layoutStore.isPageLoading = false;
+  }
 });

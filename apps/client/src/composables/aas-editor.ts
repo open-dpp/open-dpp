@@ -120,5 +120,5 @@ export function useAasEditor({ id, aasNamespace, openDrawer, hideDrawer }: AasEd
     }
   };
 
-  return { submodels, submodelElementsToAdd, buildAddSubmodelElementMenu, nextPage, createSubmodel, createProperty };
+  return { submodels, submodelElementsToAdd, buildAddSubmodelElementMenu, nextPage, createSubmodel, createProperty, loading };
 };

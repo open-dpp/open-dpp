@@ -36,11 +36,12 @@ export const TEMPLATE: RouteRecordRaw = {
 };
 
 export async function templateBreadcrumbs(to: RouteLocationNormalizedGeneric) {
+  const text = to.params.templateId ? String(to.params.templateId) : "Editor";
   return [
     ...(await templatesListBreadcrumbs(to)),
     {
       name: {
-        text: String(to.params.templateId),
+        text,
         localized: false,
       },
       route: TEMPLATE,
