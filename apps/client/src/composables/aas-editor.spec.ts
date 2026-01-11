@@ -1,5 +1,4 @@
 import type { SubmodelResponseDto } from "@open-dpp/dto";
-import type { EditorModeType, EditorType, OpenDrawerCallback } from "./aas-drawer.ts";
 import { KeyTypes } from "@open-dpp/dto";
 import { submodelDesignOfProductPlainFactory, submodelPlainToResponse } from "@open-dpp/testing";
 import { omit } from "lodash";
@@ -33,10 +32,6 @@ vi.mock("../lib/api-client", () => ({
 describe("aasEditor composable", () => {
   const aasId = "1";
   const iriDomain = `https://open-dpp.de/${uuid4()}`;
-  const openDrawer: OpenDrawerCallback<EditorType, EditorModeType> = (
-    _config,
-  ) => {
-  };
   it("should get submodels", async () => {
     const submodel: SubmodelResponseDto = submodelPlainToResponse(
       submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } }),
@@ -49,7 +44,6 @@ describe("aasEditor composable", () => {
     const { nextPage, submodels } = useAasEditor({
       id: aasId,
       aasNamespace: apiClient.dpp.templates.aas,
-      openDrawer,
     });
     await nextPage();
     expect(mocks.getSubmodels).toHaveBeenCalledWith(aasId, {
@@ -94,10 +88,9 @@ describe("aasEditor composable", () => {
     });
     mocks.getSubmodels.mockResolvedValue({ data: paginationResponse });
 
-    const { createSubmodel } = useAasEditor({
+    const { createSubmodel, drawerVisible } = useAasEditor({
       id: aasId,
       aasNamespace: apiClient.dpp.templates.aas,
-      openDrawer,
     });
     await createSubmodel();
     expect(mocks.createSubmodel).toHaveBeenCalledWith(aasId, {
@@ -107,5 +100,6 @@ describe("aasEditor composable", () => {
       cursor: undefined,
       limit: 10,
     });
+    expect(drawerVisible.value).toBe(false);
   });
 });

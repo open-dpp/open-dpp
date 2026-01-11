@@ -2,10 +2,9 @@
 import type { TreeNode } from "primevue/treenode";
 import type { AasEditModeType } from "../../lib/aas-editor.ts";
 import { Button, Column, Drawer, Menu, TreeTable } from "primevue";
-import { onMounted, ref, toRaw, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
-import { EditorMode, useAasDrawer } from "../../composables/aas-drawer.ts";
 import { useAasEditor } from "../../composables/aas-editor.ts";
 import { AasEditMode } from "../../lib/aas-editor.ts";
 import apiClient from "../../lib/api-client.ts";
@@ -16,48 +15,31 @@ const props = defineProps<{
 }>();
 const route = useRoute();
 const router = useRouter();
-const selectedKey = ref();
-function onHideDrawer() {
-  selectedKey.value = null;
-  router.replace({
-    path: route.path,
-    query: {
-      ...route.query,
-      edit: undefined,
-    },
-  });
-}
-const { openDrawer, hideDrawer, drawerHeader, drawerVisible, editorVNode }
-  = useAasDrawer({ onHideDrawer });
 
 const {
+  selectedKey,
   submodels,
   buildAddSubmodelElementMenu,
   nextPage,
   createSubmodel,
   submodelElementsToAdd,
   loading,
+  selectTreeNode,
+  drawerVisible,
+  drawerHeader,
+  hideDrawer,
+  editorVNode,
 } = useAasEditor({
   id: props.id,
   aasNamespace:
     props.editorMode === AasEditMode.Passport
       ? apiClient.dpp.templates.aas // TODO: Replace templates here by passports
       : apiClient.dpp.templates.aas,
-  openDrawer,
-  hideDrawer,
 });
 
 watch([() => route.query.edit, () => loading.value], ([newVal, newLoading]) => {
   if (newVal && !newLoading) {
-    const node = submodels.value.find(n => n.key === String(newVal));
-    selectedKey.value = { [newVal]: true };
-    openDrawer({
-      type: node.data.modelType,
-      data: toRaw(node.data.plain),
-      title: node.data.idShort,
-      mode: EditorMode.EDIT,
-      path: toRaw(node.data.path),
-    });
+    selectTreeNode(String(newVal));
   }
 }, { immediate: false });
 
@@ -78,6 +60,18 @@ function onNodeSelect(node: TreeNode) {
     },
   });
 }
+
+function onHideDrawer() {
+  hideDrawer();
+  router.replace({
+    path: route.path,
+    query: {
+      ...route.query,
+      edit: undefined,
+    },
+  });
+}
+
 function addClicked(event: any, node: TreeNode) {
   buildAddSubmodelElementMenu(node);
   popover.value.toggle(event);

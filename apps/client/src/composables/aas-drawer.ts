@@ -87,6 +87,7 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps) {
       return null;
 
     const foundEditor = Editors[activeMode.value][activeEditor.value];
+
     return {
       component: foundEditor.component,
       props: {
