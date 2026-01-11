@@ -1,5 +1,6 @@
 import type { AasNamespace } from "@open-dpp/api-client";
 import type { PagingParamsDto, PropertyRequestDto, SubmodelResponseDto } from "@open-dpp/dto";
+import type { TreeTableSelectionKeys } from "primevue";
 import type { MenuItem } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
 import type { AasEditorPath } from "./aas-drawer.ts";
@@ -35,14 +36,16 @@ export interface PagingResult {
 interface AasEditorProps {
   id: string;
   aasNamespace: AasNamespace;
+  initialSelectedKeys?: string;
+  changeQueryParams?: (params: Record<string, string>) => void;
 }
-export function useAasEditor({ id, aasNamespace }: AasEditorProps) {
+export function useAasEditor({ id, aasNamespace, initialSelectedKeys, changeQueryParams }: AasEditorProps) {
   const submodels = ref<TreeNode[]>();
-  const selectedKey = ref();
+  const selectedKeys = ref<TreeTableSelectionKeys | null>();
 
   const onHideDrawer = () => {
-    selectedKey.value = null;
-    console.log("hide Drawer");
+    selectedKeys.value = null;
+    changeQueryParams({ edit: undefined });
   };
 
   const drawer
@@ -74,7 +77,7 @@ export function useAasEditor({ id, aasNamespace }: AasEditorProps) {
 
   const selectTreeNode = (key: string) => {
     const node = submodels.value.find(n => n.key === key);
-    selectedKey.value = { [key]: true };
+    selectedKeys.value = { [key]: true };
 
     drawer.openDrawer({
       type: node.data.modelType,
@@ -83,6 +86,7 @@ export function useAasEditor({ id, aasNamespace }: AasEditorProps) {
       mode: EditorMode.EDIT,
       path: toRaw(node.data.path),
     });
+    changeQueryParams({ edit: key });
   };
 
   const convertSubmodelsToTree = (submodels: SubmodelResponseDto[]) => {
@@ -143,7 +147,15 @@ export function useAasEditor({ id, aasNamespace }: AasEditorProps) {
     }
   };
 
+  async function init() {
+    await nextPage();
+    if (initialSelectedKeys) {
+      await selectTreeNode(initialSelectedKeys);
+    }
+  }
+
   return {
+    init,
     submodels,
     submodelElementsToAdd,
     buildAddSubmodelElementMenu,
@@ -151,7 +163,7 @@ export function useAasEditor({ id, aasNamespace }: AasEditorProps) {
     createSubmodel,
     createProperty,
     loading,
-    selectedKey,
+    selectedKeys,
     selectTreeNode,
     ...drawer,
   };

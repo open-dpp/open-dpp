@@ -2,7 +2,7 @@
 import type { TreeNode } from "primevue/treenode";
 import type { AasEditModeType } from "../../lib/aas-editor.ts";
 import { Button, Column, Drawer, Menu, TreeTable } from "primevue";
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useAasEditor } from "../../composables/aas-editor.ts";
@@ -17,15 +17,24 @@ const route = useRoute();
 const router = useRouter();
 const componentRef = ref(null);
 
+function changeQueryParams(newQuery: Record<string, string>) {
+  router.replace({
+    query: {
+      ...route.query,
+      ...newQuery,
+    },
+  });
+}
+
 const {
-  selectedKey,
+  selectedKeys,
   submodels,
+  selectTreeNode,
   buildAddSubmodelElementMenu,
-  nextPage,
+  init,
   createSubmodel,
   submodelElementsToAdd,
   loading,
-  selectTreeNode,
   drawerVisible,
   drawerHeader,
   hideDrawer,
@@ -36,16 +45,12 @@ const {
     props.editorMode === AasEditMode.Passport
       ? apiClient.dpp.templates.aas // TODO: Replace templates here by passports
       : apiClient.dpp.templates.aas,
+  initialSelectedKeys: route.query.edit ? String(route.query.edit) : undefined,
+  changeQueryParams,
 });
 
-watch([() => route.query.edit, () => loading.value], ([newVal, newLoading]) => {
-  if (newVal && !newLoading) {
-    selectTreeNode(String(newVal));
-  }
-}, { immediate: false });
-
 onMounted(async () => {
-  await nextPage();
+  await init();
 });
 
 const popover = ref();
@@ -53,13 +58,7 @@ const popover = ref();
 const { t } = useI18n();
 
 function onNodeSelect(node: TreeNode) {
-  router.replace({
-    path: route.path,
-    query: {
-      ...route.query,
-      edit: node.key,
-    },
-  });
+  selectTreeNode(node.key);
 }
 
 function onHideDrawer() {
@@ -85,7 +84,7 @@ function onSubmit() {
 <template>
   <div v-if="submodels">
     <TreeTable
-      v-model:selection-keys="selectedKey"
+      v-model:selection-keys="selectedKeys"
       selection-mode="single"
       :value="submodels"
       table-style="min-width: 50rem"
