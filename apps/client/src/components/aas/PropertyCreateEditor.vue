@@ -44,11 +44,17 @@ const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
 });
 
-const onSubmit
+const submit
   = handleSubmit(async (data) => {
     console.log(data);
     await props.callback({ ...data, valueType: props.data.valueType });
   });
+
+defineExpose<{
+  submit: () => Promise<void>;
+}>({
+  submit,
+});
 </script>
 
 <template>
@@ -94,9 +100,6 @@ const onSubmit
           </div>
         </template>
       </DataView>
-      <Button
-        class="w-fit" type="submit" label="Submit"
-      />
     </form>
   </div>
 </template>

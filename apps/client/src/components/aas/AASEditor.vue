@@ -15,6 +15,7 @@ const props = defineProps<{
 }>();
 const route = useRoute();
 const router = useRouter();
+const componentRef = ref(null);
 
 const {
   selectedKey,
@@ -76,6 +77,9 @@ function addClicked(event: any, node: TreeNode) {
   buildAddSubmodelElementMenu(node);
   popover.value.toggle(event);
 }
+function onSubmit() {
+  componentRef.value.submit();
+}
 </script>
 
 <template>
@@ -126,12 +130,13 @@ function addClicked(event: any, node: TreeNode) {
       <template #header>
         <div class="flex flex-row items-center justify-between w-full pr-2 gap-1">
           <span class="text-xl font-bold">{{ drawerHeader }}</span>
-          <Button label="Save" />
+          <Button label="Save" @click="onSubmit" />
         </div>
       </template>
       <component
         :is="editorVNode.component"
         v-if="editorVNode"
+        ref="componentRef"
         v-bind="editorVNode.props"
       />
     </Drawer>
