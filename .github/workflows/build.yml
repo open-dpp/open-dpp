@@ -142,26 +142,7 @@ jobs:
       - name: Run tests
         run: pnpm test:ci
 
-  create-runner:
-    name: Create Hetzner ARM Runner
-    runs-on: ubuntu-latest
-    outputs:
-      label: ${{ steps.create-hcloud-runner.outputs.label }}
-      server_id: ${{ steps.create-hcloud-runner.outputs.server_id }}
-    steps:
-      - name: Create runner
-        id: create-hcloud-runner
-        uses: Cyclenerd/hcloud-github-runner@1d464319145d45966cd0344f3e2038cf2152dc1d # v1.3.0
-        with:
-          mode: create
-          github_token: ${{ secrets.HETZNER_PAT }}
-          hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
-          server_type: cax21
-          location: nbg1 # Nuremberg, Germany
-          image: docker-ce
-
   build-and-push:
-    needs: create-runner
     strategy:
       fail-fast: false
       matrix:
@@ -177,12 +158,12 @@ jobs:
             image_suffix: /mcp
             filter_path: mcp
           - platform: linux/arm64
-            runner: ${{ needs.create-runner.outputs.label }}
+            runner: ubuntu-24.04-arm
             target: production
             image_suffix: ""
             filter_path: main
           - platform: linux/arm64
-            runner: ${{ needs.create-runner.outputs.label }}
+            runner: ubuntu-24.04-arm
             target: mcpserver
             image_suffix: /mcp
             filter_path: mcp
@@ -337,19 +318,3 @@ jobs:
           fi
           docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}:${{ steps.meta.outputs.version }}
 
-  delete-runner:
-    name: Delete Hetzner Cloud runner
-    needs:
-      - create-runner # required to get output from the create-runner job
-      - merge # required to wait when the main job is done
-    runs-on: ubuntu-latest
-    if: ${{ always() }} # required to stop the runner even if the error happened in the previous jobs
-    steps:
-      - name: Delete runner
-        uses: Cyclenerd/hcloud-github-runner@1d464319145d45966cd0344f3e2038cf2152dc1d # v1.3.0
-        with:
-          mode: delete
-          github_token: ${{ secrets.HETZNER_PAT }}
-          hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
-          name: ${{ needs.create-runner.outputs.label }}
-          server_id: ${{ needs.create-runner.outputs.server_id }}
