@@ -4,6 +4,8 @@ import { expect, it } from "vitest";
 import { usePagination } from "./pagination.ts";
 
 describe("pagination", () => {
+  const changeQueryParams = vi.fn();
+
   it("should navigate through pages", async () => {
     const items = [0, 1, 2, 3, 4, 5, 6];
     async function fetchCallback(params: PagingParamsDto): Promise<PagingResult> {
@@ -11,7 +13,7 @@ describe("pagination", () => {
       const result = items.slice(fromIndex, fromIndex + params.limit!);
       return { paging_metadata: { cursor: String(result[result.length - 1]) }, result };
     }
-    const { previousPage, nextPage, currentPage, reloadCurrentPage } = usePagination({ limit: 2, fetchCallback });
+    const { hasNext, resetCursor, hasPrevious, previousPage, nextPage, currentPage, reloadCurrentPage } = usePagination({ limit: 2, fetchCallback, changeQueryParams });
 
     const firstPageExpect: Page = {
       cursor: null,
@@ -46,14 +48,23 @@ describe("pagination", () => {
 
     await nextPage();
     expect(currentPage.value).toEqual(firstPageExpect);
+    expect(changeQueryParams).toHaveBeenCalledWith({ cursor: undefined });
+    expect(hasNext.value).toBeTruthy();
+    expect(hasPrevious.value).toBeFalsy();
     await nextPage();
     expect(currentPage.value).toEqual(secondPageExpect);
+    expect(changeQueryParams).toHaveBeenCalledWith({ cursor: "1" });
+    expect(hasNext.value).toBeTruthy();
+    expect(hasPrevious.value).toBeTruthy();
     await nextPage();
     expect(currentPage.value).toEqual(thirdPageExpect);
+    expect(changeQueryParams).toHaveBeenCalledWith({ cursor: "3" });
     await previousPage();
     expect(currentPage.value).toEqual(secondPageExpect);
+    expect(changeQueryParams).toHaveBeenCalledWith({ cursor: "1" });
     await previousPage();
     expect(currentPage.value).toEqual(firstPageExpect);
+    expect(changeQueryParams).toHaveBeenCalledWith({ cursor: undefined });
     await nextPage();
     await nextPage();
     expect(currentPage.value).toEqual(thirdPageExpect);
@@ -67,5 +78,11 @@ describe("pagination", () => {
     expect(currentPage.value).toEqual({ ...fourthPageExpect, itemCount: 2 });
     await nextPage();
     expect(currentPage.value).toEqual({ ...fifthPageExpect, cursor: "7" });
+    expect(hasNext.value).toBeFalsy();
+    await resetCursor();
+    expect(currentPage.value).toEqual(firstPageExpect);
+    expect(changeQueryParams).toHaveBeenCalledWith({ cursor: undefined });
+    expect(hasNext.value).toBeTruthy();
+    expect(hasPrevious.value).toBeFalsy();
   });
 });

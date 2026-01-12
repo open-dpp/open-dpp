@@ -6,18 +6,22 @@ import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
 import { Button, Column, DataTable } from "primevue";
 import { useI18n } from "vue-i18n";
+import TablePagination from "./pagination/TablePagination.vue";
 
 const props = defineProps<{
   title: string;
   items: SharedDppDto[];
   loading: boolean;
   currentPage: Page;
+  hasPrevious: boolean;
+  hasNext: boolean;
 }>();
 
 const emits = defineEmits<{
   (e: "create"): Promise<void>;
   (e: "nextPage"): Promise<void>;
   (e: "previousPage"): Promise<void>;
+  (e: "resetCursor"): Promise<void>;
 }>();
 
 dayjs.extend(utc);
@@ -53,13 +57,14 @@ const { t } = useI18n();
       </template>
     </Column>
     <template #paginatorcontainer>
-      <div class="flex items-center gap-4 border border-primary bg-transparent rounded-full w-full py-1 px-2 justify-between">
-        <Button icon="pi pi-chevron-left" rounded text :disabled="!currentPage.cursor" @click="emits('previousPage')" />
-        <div class="text-color font-medium">
-          <span class="hidden sm:block">Showing: {{ currentPage.from + 1 }} to {{ currentPage.to + 1 }}, Count: {{ currentPage.itemCount }}</span>
-        </div>
-        <Button icon="pi pi-chevron-right" rounded text :disabled="currentPage.itemCount < currentPage.to - currentPage.from" @click="emits('nextPage')" />
-      </div>
+      <TablePagination
+        :current-page="props.currentPage"
+        :has-previous="props.hasPrevious"
+        :has-next="props.hasNext"
+        @reset-cursor="emits('resetCursor')"
+        @previous-page="emits('previousPage')"
+        @next-page="emits('nextPage')"
+      />
     </template>
   </DataTable>
 </template>

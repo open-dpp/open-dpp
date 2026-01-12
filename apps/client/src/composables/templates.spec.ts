@@ -2,8 +2,8 @@ import type { PagingParamsDto, TemplateDto } from "@open-dpp/dto";
 import { templatesPlainFactory } from "@open-dpp/testing";
 import { createPinia, setActivePinia } from "pinia";
 import { expect, it, vi } from "vitest";
-import { HTTPCode } from "./http-codes.ts";
-import { useTemplatesStore } from "./templates.ts";
+import { HTTPCode } from "../stores/http-codes.ts";
+import { useTemplates } from "./templates.ts";
 
 const mocks = vi.hoisted(() => {
   return {
@@ -38,8 +38,10 @@ describe("templates", () => {
     setActivePinia(createPinia());
   });
 
+  function changeQueryParams(_params: Record<string, string>) {}
+
   it("should create template", async () => {
-    const templatesStore = useTemplatesStore();
+    const templatesStore = useTemplates({ changeQueryParams });
     const t1 = templatesPlainFactory.build();
 
     mocks.createTemplate.mockResolvedValueOnce({ data: t1, status: HTTPCode.CREATED });
@@ -51,31 +53,31 @@ describe("templates", () => {
     expect(mocks.routerPush).toHaveBeenCalledWith(`/templates/${t1.id}`);
   });
 
-  it("should fetch templates", async () => {
-    const templatesStore = useTemplatesStore();
+  it("should init templates", async () => {
+    const { templates, init } = useTemplates({ changeQueryParams });
     const t1 = templatesPlainFactory.build();
-    const templates = { paging_metadata: { cursor: t1.id }, result: [t1] };
-    mocks.fetchTemplates.mockResolvedValueOnce({ data: templates });
-    await templatesStore.nextTemplates();
+    const templatesResponse = { paging_metadata: { cursor: t1.id }, result: [t1] };
+    mocks.fetchTemplates.mockResolvedValueOnce({ data: templatesResponse });
+    await init();
     expect(mocks.fetchTemplates).toHaveBeenCalledWith({ limit: 10, cursor: undefined });
-    expect(templatesStore.templates).toEqual(templates);
+    expect(templates.value).toEqual(templatesResponse);
   });
 
   it("should fetch next or previous templates", async () => {
-    const templatesStore = useTemplatesStore();
-    const templates: TemplateDto[] = [...Array.from({ length: 20 }).keys()].map(
+    const { templates, init, nextPage, previousPage } = useTemplates({ changeQueryParams });
+    const templatesResponse: TemplateDto[] = [...Array.from({ length: 20 }).keys()].map(
       key => templatesPlainFactory.build({ id: key.toFixed() }),
     );
-    const firstBlock = { paging_metadata: { cursor: templates[9]?.id }, result: templates.slice(0, 10) };
-    const secondBlock = { paging_metadata: { cursor: templates[19]?.id }, result: templates.slice(10, 20) };
+    const firstBlock = { paging_metadata: { cursor: templatesResponse[9]?.id }, result: templatesResponse.slice(0, 10) };
+    const secondBlock = { paging_metadata: { cursor: templatesResponse[19]?.id }, result: templatesResponse.slice(10, 20) };
 
     mocks.fetchTemplates.mockImplementation(({ cursor }: PagingParamsDto) => cursor === undefined ? { data: firstBlock } : { data: secondBlock });
-    await templatesStore.nextTemplates();
-    await templatesStore.nextTemplates();
-    expect(mocks.fetchTemplates).toHaveBeenCalledWith({ limit: 10, cursor: templates[9]?.id });
-    expect(templatesStore.templates).toEqual(secondBlock);
-    await templatesStore.previousTemplates();
+    await init();
+    await nextPage();
+    expect(mocks.fetchTemplates).toHaveBeenCalledWith({ limit: 10, cursor: templatesResponse[9]?.id });
+    expect(templates.value).toEqual(secondBlock);
+    await previousPage();
     expect(mocks.fetchTemplates).toHaveBeenCalledWith({ limit: 10, cursor: undefined });
-    expect(templatesStore.templates).toEqual(firstBlock);
+    expect(templates.value).toEqual(firstBlock);
   });
 });

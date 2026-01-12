@@ -8,6 +8,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useAasEditor } from "../../composables/aas-editor.ts";
 import { AasEditMode } from "../../lib/aas-editor.ts";
 import apiClient from "../../lib/api-client.ts";
+import TablePagination from "../pagination/TablePagination.vue";
 
 const props = defineProps<{
   id: string;
@@ -39,6 +40,12 @@ const {
   drawerHeader,
   hideDrawer,
   editorVNode,
+  currentPage,
+  hasPrevious,
+  hasNext,
+  previousPage,
+  resetCursor,
+  nextPage,
 } = useAasEditor({
   id: props.id,
   aasNamespace:
@@ -46,6 +53,7 @@ const {
       ? apiClient.dpp.templates.aas // TODO: Replace templates here by passports
       : apiClient.dpp.templates.aas,
   initialSelectedKeys: route.query.edit ? String(route.query.edit) : undefined,
+  initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
   changeQueryParams,
 });
 
@@ -89,7 +97,9 @@ function onSubmit() {
       :value="submodels"
       table-style="min-width: 50rem"
       :meta-key-selection="false"
-      @node-select="onNodeSelect"
+      paginator
+      :loading="loading"
+      :rows="10" :rows-per-page-options="[10]" @node-select="onNodeSelect"
     >
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
@@ -112,6 +122,16 @@ function onSubmit() {
           </div>
         </template>
       </Column>
+      <template #paginatorcontainer>
+        <TablePagination
+          :current-page="currentPage"
+          :has-previous="hasPrevious"
+          :has-next="hasNext"
+          @reset-cursor="resetCursor"
+          @previous-page="previousPage"
+          @next-page="nextPage"
+        />
+      </template>
     </TreeTable>
     <Menu
       id="overlay_menu"

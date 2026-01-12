@@ -1,26 +1,45 @@
 <script lang="ts" setup>
 import { onMounted } from "vue";
 import { useI18n } from "vue-i18n";
+import { useRoute, useRouter } from "vue-router";
 import DppTable from "../../components/DppTable.vue";
-import { useTemplatesStore } from "../../stores/templates.ts";
+import { useTemplates } from "../../composables/templates.ts";
 
-const templateStore = useTemplatesStore();
+const route = useRoute();
+const router = useRouter();
+
+function changeQueryParams(newQuery: Record<string, string>) {
+  router.replace({
+    query: {
+      ...route.query,
+      ...newQuery,
+    },
+  });
+}
+
+const { createTemplate, resetCursor, hasPrevious, hasNext, previousPage, nextPage, currentPage, templates, loading, init } = useTemplates({
+  changeQueryParams,
+  initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
+});
 const { t } = useI18n();
 
 onMounted(async () => {
-  await templateStore.nextTemplates();
+  await init();
 });
 </script>
 
 <template>
   <DppTable
     key="templates-list"
-    :current-page="templateStore.currentPage"
-    :items="templateStore.templates ? templateStore.templates.result : []"
-    :loading="templateStore.loading"
+    :has-previous="hasPrevious"
+    :has-next="hasNext"
+    :current-page="currentPage"
+    :items="templates ? templates.result : []"
+    :loading="loading"
     :title="t('templates.label')"
-    @create="templateStore.createTemplate"
-    @next-page="templateStore.nextTemplates"
-    @previous-page="templateStore.previousTemplates"
+    @reset-cursor="resetCursor"
+    @create="createTemplate"
+    @next-page="nextPage"
+    @previous-page="previousPage"
   />
 </template>

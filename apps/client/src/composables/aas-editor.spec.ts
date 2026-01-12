@@ -30,6 +30,8 @@ vi.mock("../lib/api-client", () => ({
 }));
 
 describe("aasEditor composable", () => {
+  function changeQueryParams(_params: Record<string, string>) {}
+
   const aasId = "1";
   const iriDomain = `https://open-dpp.de/${uuid4()}`;
   it("should get submodels", async () => {
@@ -41,11 +43,12 @@ describe("aasEditor composable", () => {
       data: response,
     });
 
-    const { nextPage, submodels } = useAasEditor({
+    const { init, submodels } = useAasEditor({
       id: aasId,
       aasNamespace: apiClient.dpp.templates.aas,
+      changeQueryParams,
     });
-    await nextPage();
+    await init();
     expect(mocks.getSubmodels).toHaveBeenCalledWith(aasId, {
       cursor: undefined,
       limit: 10,
@@ -88,10 +91,12 @@ describe("aasEditor composable", () => {
     });
     mocks.getSubmodels.mockResolvedValue({ data: paginationResponse });
 
-    const { createSubmodel, drawerVisible } = useAasEditor({
+    const { createSubmodel, init, drawerVisible } = useAasEditor({
       id: aasId,
       aasNamespace: apiClient.dpp.templates.aas,
+      changeQueryParams,
     });
+    await init();
     await createSubmodel();
     expect(mocks.createSubmodel).toHaveBeenCalledWith(aasId, {
       idShort: expect.any(String),

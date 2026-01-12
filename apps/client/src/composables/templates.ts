@@ -1,13 +1,17 @@
 import type { PagingParamsDto, TemplatePaginationDto } from "@open-dpp/dto";
-import type { PagingResult } from "../composables/pagination.ts";
-import { defineStore } from "pinia";
+import type { PagingResult } from "./pagination.ts";
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { usePagination } from "../composables/pagination.ts";
 import apiClient from "../lib/api-client.ts";
-import { HTTPCode } from "./http-codes.ts";
+import { HTTPCode } from "../stores/http-codes.ts";
+import { usePagination } from "./pagination.ts";
 
-export const useTemplatesStore = defineStore("templates", () => {
+interface TemplateProps {
+  initialCursor?: string;
+  changeQueryParams: (params: Record<string, string>) => void;
+}
+
+export function useTemplates({ changeQueryParams, initialCursor }: TemplateProps) {
   const templates = ref<TemplatePaginationDto>();
   const loading = ref(false);
   const route = useRoute();
@@ -20,15 +24,11 @@ export const useTemplatesStore = defineStore("templates", () => {
     loading.value = false;
     return response.data;
   };
-  const { previousPage, nextPage, currentPage } = usePagination({ limit: 10, fetchCallback: fetchTemplates });
+  const pagination = usePagination({ initialCursor, limit: 10, fetchCallback: fetchTemplates, changeQueryParams });
 
-  const nextTemplates = async () => {
-    await nextPage();
-  };
-
-  const previousTemplates = async () => {
-    await previousPage();
-  };
+  async function init() {
+    await pagination.nextPage();
+  }
 
   const createTemplate = async () => {
     const response = await apiClient.dpp.templates.create();
@@ -37,5 +37,5 @@ export const useTemplatesStore = defineStore("templates", () => {
     }
   };
 
-  return { createTemplate, previousTemplates, nextTemplates, currentPage, templates, loading };
-});
+  return { createTemplate, templates, loading, init, ...pagination };
+}

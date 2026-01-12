@@ -1,45 +1,35 @@
 import type { AasNamespace } from "@open-dpp/api-client";
-import type { PagingParamsDto, PropertyRequestDto, SubmodelResponseDto } from "@open-dpp/dto";
+import type {
+  PagingParamsDto,
+  PropertyRequestDto,
+  SubmodelResponseDto,
+} from "@open-dpp/dto";
 import type { TreeTableSelectionKeys } from "primevue";
 import type { MenuItem } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
 import type { AasEditorPath } from "./aas-drawer.ts";
-import {
-  AasSubmodelElements,
-  DataTypeDef,
-  KeyTypes,
-
-} from "@open-dpp/dto";
+import type { PagingResult } from "./pagination.ts";
+import { AasSubmodelElements, DataTypeDef, KeyTypes } from "@open-dpp/dto";
 import { omit } from "lodash";
 import { v4 as uuid4 } from "uuid";
 import { ref, toRaw } from "vue";
-import {
-
-  EditorMode,
-  useAasDrawer,
-} from "./aas-drawer.ts";
+import { EditorMode, useAasDrawer } from "./aas-drawer.ts";
 import { usePagination } from "./pagination.ts";
 
-export type Cursor = string | null;
-
-export interface Page {
-  from: number;
-  to: number;
-  itemCount: number;
-  cursor: Cursor;
-}
-
-export interface PagingResult {
-  paging_metadata: { cursor: Cursor };
-  result: any[];
-}
 interface AasEditorProps {
   id: string;
   aasNamespace: AasNamespace;
   initialSelectedKeys?: string;
-  changeQueryParams?: (params: Record<string, string>) => void;
+  initialCursor?: string;
+  changeQueryParams: (params: Record<string, string>) => void;
 }
-export function useAasEditor({ id, aasNamespace, initialSelectedKeys, changeQueryParams }: AasEditorProps) {
+export function useAasEditor({
+  id,
+  aasNamespace,
+  initialSelectedKeys,
+  initialCursor,
+  changeQueryParams,
+}: AasEditorProps) {
   const submodels = ref<TreeNode[]>();
   const selectedKeys = ref<TreeTableSelectionKeys | null>();
 
@@ -48,12 +38,10 @@ export function useAasEditor({ id, aasNamespace, initialSelectedKeys, changeQuer
     changeQueryParams({ edit: undefined });
   };
 
-  const drawer
-    = useAasDrawer({ onHideDrawer });
+  const drawer = useAasDrawer({ onHideDrawer });
 
   const loading = ref(false);
-  const submodelElementsToAdd = ref<MenuItem[]>([
-  ]);
+  const submodelElementsToAdd = ref<MenuItem[]>([]);
 
   const buildAddSubmodelElementMenu = (node: TreeNode) => {
     const path = toRaw(node.data.path);
@@ -68,7 +56,8 @@ export function useAasEditor({ id, aasNamespace, initialSelectedKeys, changeQuer
             mode: EditorMode.CREATE,
             title: "Textfeld hinzufügen",
             path,
-            callback: async (data: PropertyRequestDto) => createProperty(path, data),
+            callback: async (data: PropertyRequestDto) =>
+              createProperty(path, data),
           });
         },
       },
@@ -76,17 +65,21 @@ export function useAasEditor({ id, aasNamespace, initialSelectedKeys, changeQuer
   };
 
   const selectTreeNode = (key: string) => {
-    const node = submodels.value.find(n => n.key === key);
-    selectedKeys.value = { [key]: true };
+    if (submodels.value) {
+      const node = submodels.value.find(n => n.key === key);
+      selectedKeys.value = { [key]: true };
 
-    drawer.openDrawer({
-      type: node.data.modelType,
-      data: toRaw(node.data.plain),
-      title: node.data.idShort,
-      mode: EditorMode.EDIT,
-      path: toRaw(node.data.path),
-    });
-    changeQueryParams({ edit: key });
+      if (node) {
+        drawer.openDrawer({
+          type: node.data.modelType,
+          data: toRaw(node.data.plain),
+          title: node.data.idShort,
+          mode: EditorMode.EDIT,
+          path: toRaw(node.data.path),
+        });
+      }
+      changeQueryParams({ edit: key });
+    }
   };
 
   const convertSubmodelsToTree = (submodels: SubmodelResponseDto[]) => {
@@ -123,32 +116,34 @@ export function useAasEditor({ id, aasNamespace, initialSelectedKeys, changeQuer
     return response.data;
   };
 
-  const { previousPage, nextPage, currentPage, reloadCurrentPage }
-    = usePagination({ limit: 10, fetchCallback: fetchSubmodels });
+  const pagination
+    = usePagination({ initialCursor, limit: 10, fetchCallback: fetchSubmodels, changeQueryParams });
 
   const createSubmodel = async () => {
     const response = await aasNamespace.createSubmodel(id, {
       idShort: uuid4(),
     });
     if (response.status === 201) {
-      await reloadCurrentPage();
+      await pagination.reloadCurrentPage();
     }
   };
 
   async function createProperty(path: AasEditorPath, data: PropertyRequestDto) {
-    const response = await aasNamespace.createSubmodelElement(
-      id,
-      path.submodelId,
-      { modelType: AasSubmodelElements.Property, ...data },
-    );
-    if (response.status === 201) {
-      await reloadCurrentPage();
-      drawer.hideDrawer();
+    if (path.submodelId) {
+      const response = await aasNamespace.createSubmodelElement(
+        id,
+        path.submodelId,
+        { modelType: AasSubmodelElements.Property, ...data },
+      );
+      if (response.status === 201) {
+        await pagination.reloadCurrentPage();
+        drawer.hideDrawer();
+      }
     }
-  };
+  }
 
   async function init() {
-    await nextPage();
+    await pagination.nextPage();
     if (initialSelectedKeys) {
       await selectTreeNode(initialSelectedKeys);
     }
@@ -159,12 +154,12 @@ export function useAasEditor({ id, aasNamespace, initialSelectedKeys, changeQuer
     submodels,
     submodelElementsToAdd,
     buildAddSubmodelElementMenu,
-    nextPage,
     createSubmodel,
     createProperty,
     loading,
     selectedKeys,
     selectTreeNode,
+    ...pagination,
     ...drawer,
   };
 }
