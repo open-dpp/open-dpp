@@ -6,3 +6,5 @@ export const LanguageTextJsonSchema = z.object({
   language: LanguageEnum,
   text: z.string(),
 })
+
+export type LanguageTextDto = z.infer<typeof LanguageTextJsonSchema>

@@ -1,7 +1,11 @@
 import { defineStore } from "pinia";
 import { useNotificationStore } from "./notification";
 
-export const useErrorHandlingStore = defineStore("error-handling-store", () => {
+export interface IErrorHandlingStore {
+  logErrorWithNotification: (message: string, error?: unknown) => void;
+}
+
+export const useErrorHandlingStore = defineStore("error-handling-store", (): IErrorHandlingStore => {
   const notificationStore = useNotificationStore();
 
   const logErrorWithNotification = (message: string, error?: unknown) => {

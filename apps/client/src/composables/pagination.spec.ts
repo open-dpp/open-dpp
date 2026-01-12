@@ -5,15 +5,23 @@ import { usePagination } from "./pagination.ts";
 
 describe("pagination", () => {
   const changeQueryParams = vi.fn();
-
+  async function fetchCallback(params: PagingParamsDto, items: number[]): Promise<PagingResult> {
+    const fromIndex = params.cursor ? Number(params.cursor) + 1 : 0;
+    const result = items.slice(fromIndex, fromIndex + params.limit!);
+    return { paging_metadata: { cursor: String(result[result.length - 1]) }, result };
+  }
   it("should navigate through pages", async () => {
     const items = [0, 1, 2, 3, 4, 5, 6];
-    async function fetchCallback(params: PagingParamsDto): Promise<PagingResult> {
-      const fromIndex = params.cursor ? Number(params.cursor) + 1 : 0;
-      const result = items.slice(fromIndex, fromIndex + params.limit!);
-      return { paging_metadata: { cursor: String(result[result.length - 1]) }, result };
-    }
-    const { hasNext, resetCursor, hasPrevious, previousPage, nextPage, currentPage, reloadCurrentPage } = usePagination({ limit: 2, fetchCallback, changeQueryParams });
+
+    const {
+      hasNext,
+      resetCursor,
+      hasPrevious,
+      previousPage,
+      nextPage,
+      currentPage,
+      reloadCurrentPage,
+    } = usePagination({ limit: 2, fetchCallback: params => fetchCallback(params, items), changeQueryParams });
 
     const firstPageExpect: Page = {
       cursor: null,
@@ -84,5 +92,45 @@ describe("pagination", () => {
     expect(changeQueryParams).toHaveBeenCalledWith({ cursor: undefined });
     expect(hasNext.value).toBeTruthy();
     expect(hasPrevious.value).toBeFalsy();
+  });
+
+  it("should navigate from initial cursor onwards", async () => {
+    const items = [0, 1, 2, 3, 4, 5, 6];
+
+    const {
+      nextPage,
+      currentPage,
+      resetCursor,
+    } = usePagination({ initialCursor: "3", limit: 2, fetchCallback: params => fetchCallback(params, items), changeQueryParams });
+
+    const pageAfterReset = {
+      cursor: null,
+      from: 0,
+      itemCount: 2,
+      to: 1,
+    };
+
+    const firstPageExpect = {
+      cursor: "3",
+      from: 0,
+      itemCount: 2,
+      to: 1,
+    };
+
+    const secondPageExpect = {
+      cursor: "5",
+      from: 2,
+      itemCount: 1,
+      to: 3,
+    };
+
+    await nextPage();
+    expect(currentPage.value).toEqual(firstPageExpect);
+
+    await nextPage();
+    expect(currentPage.value).toEqual(secondPageExpect);
+
+    await resetCursor();
+    expect(currentPage.value).toEqual(pageAfterReset);
   });
 });

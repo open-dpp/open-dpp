@@ -1,3 +1,5 @@
+import type { LanguageType } from "@open-dpp/dto";
+import { Language } from "@open-dpp/dto";
 import { createI18n } from "vue-i18n";
 import { LAST_SELECTED_LANGUAGE } from "../const.ts";
 import deDE from "./de-DE.json";
@@ -16,3 +18,10 @@ export const i18n = createI18n<[MessageSchema], "en-US" | "de-DE">({
     "de-DE": deDE,
   },
 });
+
+export function convertLocaleToLanguage(locale: string): LanguageType {
+  switch (locale) {
+    case "de-DE": return Language.de;
+    default: return Language.en;
+  }
+}

@@ -8,6 +8,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useAasEditor } from "../../composables/aas-editor.ts";
 import { AasEditMode } from "../../lib/aas-editor.ts";
 import apiClient from "../../lib/api-client.ts";
+import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import TablePagination from "../pagination/TablePagination.vue";
 
 const props = defineProps<{
@@ -17,6 +18,8 @@ const props = defineProps<{
 const route = useRoute();
 const router = useRouter();
 const componentRef = ref(null);
+
+const { t, locale } = useI18n();
 
 function changeQueryParams(newQuery: Record<string, string>) {
   router.replace({
@@ -55,6 +58,7 @@ const {
   initialSelectedKeys: route.query.edit ? String(route.query.edit) : undefined,
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
   changeQueryParams,
+  selectedLanguage: convertLocaleToLanguage(locale.value),
 });
 
 onMounted(async () => {
@@ -62,8 +66,6 @@ onMounted(async () => {
 });
 
 const popover = ref();
-
-const { t } = useI18n();
 
 function onNodeSelect(node: TreeNode) {
   selectTreeNode(node.key);
@@ -107,8 +109,8 @@ function onSubmit() {
           <Button label="Abschnitt hinzufügen" @click="createSubmodel" />
         </div>
       </template>
-      <Column field="idShort" header="Name" expander style="width: 34%" />
-      <Column field="modelType" header="Type" style="width: 33%" />
+      <Column field="label" header="Name" expander style="width: 34%" />
+      <Column field="type" header="Type" style="width: 33%" />
       <Column>
         <template #body="{ node }">
           <div class="flex w-full justify-end">

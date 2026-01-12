@@ -6,14 +6,13 @@ import { v4 as uuid4 } from "uuid";
 import { expect, it } from "vitest";
 import PropertyCreateEditor from "../components/aas/PropertyCreateEditor.vue";
 import PropertyEditor from "../components/aas/PropertyEditor.vue";
-import SubmodelCreateEditor from "../components/aas/SubmodelCreateEditor.vue";
 import SubmodelEditor from "../components/aas/SubmodelEditor.vue";
 import { EditorMode, useAasDrawer } from "./aas-drawer.ts";
 
 describe("aasDrawer composable", () => {
   const iriDomain = `https://open-dpp.de/${uuid4()}`;
   const onHideDrawer = vi.fn();
-  it("should open drawer with submodel", async () => {
+  it("should open drawer with SubmodelEditor", async () => {
     const submodel: SubmodelResponseDto = submodelPlainToResponse(
       submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } }),
     );
@@ -29,14 +28,14 @@ describe("aasDrawer composable", () => {
 
     path = omit(path, "submodelId");
 
-    openDrawer({ type: KeyTypes.Submodel, data, title, mode: EditorMode.CREATE, path });
+    openDrawer({ type: KeyTypes.Submodel, data, title, mode: EditorMode.EDIT, path });
 
     expect(drawerHeader.value).toEqual(title);
-    expect(editorVNode.value?.component).toEqual(SubmodelCreateEditor);
+    expect(editorVNode.value?.component).toEqual(SubmodelEditor);
     expect(editorVNode.value?.props).toEqual({ data, path });
   });
 
-  it("should open drawer with property", async () => {
+  it("should open drawer with PropertyEditor, PropertyCreateEditor", async () => {
     let data = PropertyJsonSchema.parse(propertyPlainFactory.build());
 
     const { openDrawer, drawerVisible, hideDrawer, drawerHeader, editorVNode } = useAasDrawer({ onHideDrawer });

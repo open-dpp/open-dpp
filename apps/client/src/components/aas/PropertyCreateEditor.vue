@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import type { PropertyRequestDto } from "@open-dpp/dto";
 import type { AasEditorPath, PropertyCreateEditorProps } from "../../composables/aas-drawer.ts";
-import { DataTypeDef, Language, LanguageTextJsonSchema } from "@open-dpp/dto";
+import { DataTypeDef } from "@open-dpp/dto";
 
 import { toTypedSchema } from "@vee-validate/zod";
-import { Button, DataView, InputText, Select } from "primevue";
-import { useFieldArray, useForm } from "vee-validate";
-import { computed, ref } from "vue";
+import { InputText } from "primevue";
+import { useForm } from "vee-validate";
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import { z } from "zod";
+import { submodelBaseFormDefaultValues, SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
+import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import FormField from "../basics/form/FormField.vue";
-import IdField from "../basics/form/IdField.vue";
+import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
 const props = defineProps<{
   path: AasEditorPath;
@@ -17,28 +20,20 @@ const props = defineProps<{
   callback: (data: PropertyRequestDto) => Promise<void>;
 }>();
 
-const languageOptions = ref([
-  { name: "English", language: Language.en },
-  { name: "Deutsch", language: Language.de },
-]);
-
 const propertyFormSchema = z.object({
-  idShort: z.string().min(1, "IdShort is required"),
+  ...SubmodelBaseFormSchema.shape,
   value: props.data.valueType === DataTypeDef.Double ? z.number() : z.string().min(1, "Value is required"),
-  displayName: LanguageTextJsonSchema.array(),
 });
-
+const { locale } = useI18n();
 export type FormValues = z.infer<typeof propertyFormSchema>;
 
 const { defineField, handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(propertyFormSchema),
   validateOnInput: true, // Add this line
-  initialValues: { idShort: "", value: "", displayName: [{ language: "en" }] },
+  initialValues: { value: "", ...submodelBaseFormDefaultValues(convertLocaleToLanguage(locale.value)) },
 });
 
-const [idShort] = defineField("idShort");
 const [value] = defineField("value");
-const { fields: displayName, push, remove } = useFieldArray<FormValues["displayName"]>("displayName");
 
 const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
@@ -46,7 +41,6 @@ const showErrors = computed(() => {
 
 const submit
   = handleSubmit(async (data) => {
-    console.log(data);
     await props.callback({ ...data, valueType: props.data.valueType });
   });
 
@@ -58,48 +52,17 @@ defineExpose<{
 </script>
 
 <template>
-  <div class="flex flex-col">
-    <form class="flex flex-col gap-1 p-2" @submit.prevent="onSubmit">
-      <div class="grid lg:grid-cols-3 grid-cols-1 gap-2">
-        <IdField
-          id="idShort"
-          v-model="idShort"
-          label="Id"
-          :show-error="showErrors"
-          :error="errors.idShort"
-        />
-        <FormField
-          id="value"
-          v-model="value"
-          :component="InputText"
-          label="Wert"
-          :show-error="showErrors"
-          :error="errors.value"
-        />
-      </div>
-      <DataView :value="displayName">
-        <template #header>
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="text-xl font-bold">Name</span>
-            <Button icon="pi pi-plus" raised @click="push({ text: '', language: '' })" />
-          </div>
-        </template>
-        <template #list="slotProps">
-          <div class="p-1">
-            <div v-for="(field, index) in slotProps.items" :key="index" class="grid lg:grid-cols-2 p-2 gap-4">
-              <Select v-model="field.value.language" :options="languageOptions" option-value="language" option-label="name" placeholder="Select a Language" />
-              <FormField
-                :id="`displayName.${index}.text`"
-                v-model="field.value.text"
-                :component="InputText"
-                label="Name"
-                :show-error="showErrors"
-                :error="errors[`displayName[${index}].text`]"
-              />
-            </div>
-          </div>
-        </template>
-      </DataView>
-    </form>
-  </div>
+  <form class="flex flex-col gap-1 p-2" @submit.prevent="onSubmit">
+    <SubmodelBaseForm :show-errors="showErrors" :errors="errors" />
+    <div class="grid lg:grid-cols-3 grid-cols-1 gap-2">
+      <FormField
+        id="value"
+        v-model="value"
+        :component="InputText"
+        label="Wert"
+        :show-error="showErrors"
+        :error="errors.value"
+      />
+    </div>
+  </form>
 </template>
