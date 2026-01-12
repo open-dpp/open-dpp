@@ -64,7 +64,7 @@ describe("policyService", () => {
     it("should throw an error when called with a CAP key", async () => {
       // Setup: Quota not found in DB, so it tries to create one
       quotaModel.findOne.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(null),
+        exec: jest.fn<() => Promise<null>>().mockResolvedValue(null),
       });
 
       // Mock environment service to return a default limit
@@ -76,7 +76,6 @@ describe("policyService", () => {
       // but after fix it should throw a clear error.
       // For reproduction, we check what happens now.
       // Since 'period' is undefined, Quota.create will have undefined period.
-
       await expect(service.isQuotaExceeded("org-1", capKey)).rejects.toThrow(
         "Policy MODEL_CREATE_CAP is not a quota rule",
       );

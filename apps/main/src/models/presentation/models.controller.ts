@@ -28,7 +28,8 @@ import {
   modelDocumentation,
   updateModelDocumentation,
 } from "../../open-api-docs/model.doc";
-import { PolicyService } from "../../policy/infrastructure/policy.service";
+import { PolicyKey } from "../../policy/domain/policy";
+import { Policy } from "../../policy/policy.decorator";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import { DataValueDtoSchema } from "../../product-passport-data/presentation/dto/data-value.dto";
 import {
@@ -51,18 +52,15 @@ export class ModelsController {
   private readonly modelsService: ModelsService;
   private readonly templateService: TemplateService;
   private readonly marketplaceService: MarketplaceApplicationService;
-  private readonly policyService: PolicyService;
 
   constructor(
     modelsService: ModelsService,
     templateService: TemplateService,
     marketplaceService: MarketplaceApplicationService,
-    policyService: PolicyService,
   ) {
     this.modelsService = modelsService;
     this.templateService = templateService;
     this.marketplaceService = marketplaceService;
-    this.policyService = policyService;
   }
 
   @ApiOperation({
@@ -77,6 +75,7 @@ export class ModelsController {
     schema: modelDocumentation,
   })
   @Post()
+  @Policy(PolicyKey.MODEL_CREATE_CAP)
   async create(
     @Param("orgaId") organizationId: string,
     @Body(new ZodValidationPipe(createModelDto_1.CreateModelDtoSchema))
