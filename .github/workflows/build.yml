@@ -151,22 +151,18 @@ jobs:
             runner: ubuntu-latest
             target: production
             image_suffix: ""
-            filter_path: main
           - platform: linux/amd64
             runner: ubuntu-latest
             target: mcpserver
             image_suffix: /mcp
-            filter_path: mcp
           - platform: linux/arm64
             runner: ubuntu-24.04-arm
             target: production
             image_suffix: ""
-            filter_path: main
           - platform: linux/arm64
             runner: ubuntu-24.04-arm
             target: mcpserver
             image_suffix: /mcp
-            filter_path: mcp
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
