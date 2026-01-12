@@ -76,6 +76,7 @@ export class BetterAuthHelper {
     const body = {
       firstName: "First",
       lastName: "Last",
+      name: "First Last",
       email: userEmail,
       password: this.defaultPassword,
     } as any;
@@ -116,6 +117,7 @@ export class BetterAuthHelper {
         slug: randomUUID(),
         userId,
         keepCurrentActiveOrganization: false,
+        image: "org-image-media-id",
       },
     }) as BetterAuthOrganization;
     this.organizationMap.set(dataOrg.id, dataOrg);

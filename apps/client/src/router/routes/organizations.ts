@@ -66,11 +66,29 @@ export const ORGANIZATION_MEMBERS: RouteRecordRaw = {
   },
 };
 
+export const ORGANIZATION_SETTINGS: RouteRecordRaw = {
+  path: "settings",
+  name: "OrganizationSettings",
+  component: () =>
+    import("../../view/organizations/OrganizationSettingsView.vue"),
+  beforeEnter: (to: RouteLocationNormalizedGeneric) => {
+    const layoutStore = useLayoutStore();
+    layoutStore.breadcrumbs = [
+      {
+        name: localizedBreadcrumb("organizations.settings.title"),
+        route: ORGANIZATION_SETTINGS,
+        params: to.params,
+      },
+    ];
+  },
+};
+
 export const ORGANIZATION_PARENT: RouteRecordRaw = {
   path: ":organizationId",
   children: [
     ORGANIZATION,
     ORGANIZATION_MEMBERS,
+    ORGANIZATION_SETTINGS,
     ORGANIZATION_MODELS_PARENT,
     ORGANIZATION_TEMPLATES_PARENT,
     ORGANIZATION_DRAFTS_PARENT,

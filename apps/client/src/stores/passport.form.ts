@@ -2,7 +2,6 @@ import type {
   DataSectionDto,
   DataValueDto,
   ProductPassportDto,
-  SectionDto,
   UniqueProductIdentifierDto,
 } from "@open-dpp/api-client";
 import type { MediaFile } from "../lib/media.ts";
@@ -15,22 +14,6 @@ import { createObjectUrl, revokeObjectUrl } from "../lib/media.ts";
 import { i18n } from "../translations/i18n.ts";
 import { useErrorHandlingStore } from "./error.handling.ts";
 import { useMediaStore } from "./media.ts";
-
-type FormKitSchemaNode
-  = | string // Text content
-    | number // Number content
-    | boolean // Boolean content
-    | null
-    | FormKitSchemaObject // Actual schema object
-    | FormKitSchemaNode[]; // Array of nodes (for children or conditional rendering)
-
-interface FormKitSchemaObject {
-  $el?: string; // HTML tag or FormKit component (e.g., 'div', 'FormKit')
-  $cmp?: string; // Custom Vue component (alternative to $el)
-  props?: Record<string, unknown>; // Props passed to the element/component
-  attrs?: Record<string, unknown>;
-  children?: FormKitSchemaNode; // Child nodes (can be a node, string, or array)
-}
 
 export type DataValues = Record<string, unknown>;
 
@@ -82,46 +65,6 @@ export const usePassportFormStore = defineStore("passport.form", () => {
 
   const findSectionById = (sectionId: string) => {
     return productPassport.value?.dataSections.find(s => s.id === sectionId);
-  };
-
-  const getFormSchema = (section: SectionDto): FormKitSchemaObject[] => {
-    const children = [];
-    for (const dataField of section.dataFields) {
-      if (dataField.granularityLevel !== granularityLevel.value) {
-        children.push({
-          $cmp: "FakeField",
-          props: {
-            dataCy: dataField.id,
-            placeholder: getValueForOtherGranularityLevel(),
-            label: dataField.name,
-            options: dataField.options,
-          },
-        });
-      }
-      else {
-        children.push({
-          $cmp: dataField.type,
-          props: {
-            id: dataField.id,
-            name: dataField.id,
-            label: dataField.name,
-            validation: "required",
-            options: dataField.options,
-            dataCy: dataField.id,
-          },
-        });
-      }
-    }
-
-    return [
-      {
-        $el: "div",
-        attrs: {
-          class: `grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 items-center`,
-        },
-        children,
-      },
-    ];
   };
 
   const generateDataValues = (sectionId: string): DataValueDto[] => {
@@ -280,6 +223,5 @@ export const usePassportFormStore = defineStore("passport.form", () => {
     updateDataValues,
     addRowToSection,
     getFormData,
-    getFormSchema,
   };
 });

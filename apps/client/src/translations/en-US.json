@@ -1,4 +1,7 @@
 {
+  "validation": {
+    "required": "Required"
+  },
   "common": {
     "actions": "Actions",
     "clipboardSuccess": "Copied to clipboard.",
@@ -27,7 +30,14 @@
       "email": {
         "help": "Enter an email address.",
         "label": "Email address",
-        "error": "Please enter an email address."
+        "error": "Please enter an email address.",
+        "invalid": "Please enter a valid email address."
+      },
+      "password": {
+        "help": "Enter a password.",
+        "label": "Password",
+        "error": "Please enter a password.",
+        "invalid": "Please enter a valid password."
       }
     },
     "id": "ID",
@@ -197,7 +207,8 @@
         "inactive": "Inactive"
       },
       "fieldAssignments": "Field assignments",
-      "addFieldAssignments": "Add new field assignment"
+      "addFieldAssignments": "Add new field assignment",
+      "addRow": "Add Row"
     },
     "apiKey": {
       "create": "Create API Key",
@@ -246,10 +257,18 @@
       "createdBy": "Created by",
       "administeredBy": "Administered by",
       "description": "Description",
+      "image": {
+        "label": "Image for organization profile",
+        "help": "Upload an image for the organization",
+        "shortLabel": "Logo"
+      },
       "name": {
         "help": "Give your organization a name",
-        "label": "Name"
-      }
+        "label": "Name of organization",
+        "error": "Please enter a name."
+      },
+      "updateError": "Failed to update organization.",
+      "updateSuccess": "Organization settings saved successfully."
     },
     "invitation": {
       "name": "Name",
@@ -268,6 +287,20 @@
     "organizationInvitations": {
       "title": "Invitations",
       "description": "Invitations to this organizations"
+    },
+    "settings": {
+      "title": "Configure organization"
+    },
+    "admin": {
+      "title": "Administration",
+      "organizations": "All organizations",
+      "users": "All users",
+      "inviteUserDialog": {
+        "title": "Create user",
+        "create": "Create",
+        "success": "User created successfully",
+        "error": "Error on creating user"
+      }
     }
   },
   "marketplace": {

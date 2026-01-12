@@ -40,37 +40,14 @@ function dataFieldDropdownValueToDppId(dropdownValue: string) {
   };
 }
 
-function aasFieldId(index: number) {
-  return `aas-${index}`;
-}
-
-function dppFieldId(index: number) {
-  return `dpp-${index}`;
-}
-
-interface FieldAssignmentRow {
-  rowIndex: number;
-}
-
-function isFieldAssignmentRow(item: unknown): item is FieldAssignmentRow {
-  return (
-    typeof item === "object"
-    && item !== null
-    && "rowIndex" in item
-    && typeof item.rowIndex === "number"
-  );
-}
-
 export const useAasConnectionFormStore = defineStore(
   "aas-connection-form",
   () => {
     const { t } = i18n.global;
-    const formData = ref<Record<string, string>>({});
-    const formSchema = ref();
+    const fieldAssignments = ref<{ id: string; aas: string; dpp: string }[]>([]);
     const errorHandlingStore = useErrorHandlingStore();
     const granularityLevel = GranularityLevel.ITEM;
     const fetchInFlight = ref<boolean>(false);
-    const lastRowIndex = ref<number>(0);
 
     const aasConnection = ref<AasConnectionDto>();
     const aasProperties = ref<
@@ -94,141 +71,51 @@ export const useAasConnectionFormStore = defineStore(
       }[]
     >([]);
 
-    const horizontalLine = () => {
-      return {
-        $el: "div",
-        attrs: {
-          class: "w-full border-t border-gray-300 m-2",
-        },
-      };
-    };
-
-    const newFieldAssignmentRow = (index: number) => {
-      return {
-        $el: "div",
-        rowIndex: index,
-        attrs: {
-          class: "flex flex-col md:flex-row justify-around gap-2 items-center",
-        },
-        children: [
-          {
-            $el: "div",
-            attrs: {
-              class: "flex",
-            },
-            children: [
-              {
-                "$formkit": "select",
-                "required": true,
-                "label": t("integrations.connections.aas.field"),
-                "name": aasFieldId(index),
-                "placeholder": t("integrations.connections.aas.selectField"),
-                "options": aasProperties.value,
-                "data-cy": `aas-select-${index}`,
-              },
-            ],
-          },
-          {
-            $el: "div",
-            children: t("integrations.connections.aas.isLinked"),
-            attrs: {
-              class: "flex",
-            },
-          },
-          {
-            $el: "div",
-            attrs: {
-              class: "flex",
-            },
-            children: [
-              {
-                "$formkit": "select",
-                "required": true,
-                "label": t("integrations.connections.aas.modelField"),
-                "placeholder": t("integrations.connections.aas.selectModelField"), // Add this line
-                "name": dppFieldId(index),
-                "options": templateOptions.value,
-                "data-cy": `dpp-select-${index}`,
-              },
-            ],
-          },
-        ],
-      };
-    };
-
-    const initializeFormSchema = () => {
-      if (aasConnection.value) {
-        formSchema.value = [];
-        for (const [index] of aasConnection.value.fieldAssignments.entries()) {
-          lastRowIndex.value = index;
-          formSchema.value.push(newFieldAssignmentRow(index));
-          if (index !== aasConnection.value.fieldAssignments.length - 1) {
-            formSchema.value.push(horizontalLine());
-          }
-        }
-      }
-    };
-
     const initializeFormData = () => {
       if (!aasConnection.value) {
-        return {};
+        fieldAssignments.value = [];
+        return;
       }
-      formData.value = Object.fromEntries(
-        aasConnection.value.fieldAssignments
-          .map((fm, index) => [
-            [aasFieldId(index), aasDropdownValue(fm.idShortParent, fm.idShort)],
-            [
-              dppFieldId(index),
-              dataFieldDropdownValue(fm.sectionId, fm.dataFieldId),
-            ],
-          ])
-          .flat(),
-      );
-      return formData;
+      fieldAssignments.value = aasConnection.value.fieldAssignments.map(fm => ({
+        id: crypto.randomUUID(),
+        aas: aasDropdownValue(fm.idShortParent, fm.idShort),
+        dpp: dataFieldDropdownValue(fm.sectionId, fm.dataFieldId),
+      }));
     };
 
     const addFieldAssignmentRow = () => {
-      const newIndex = lastRowIndex.value + 1;
-      if (lastRowIndex.value > 0) {
-        formSchema.value.push(horizontalLine());
-      }
-      formSchema.value.push(newFieldAssignmentRow(newIndex));
-      lastRowIndex.value = newIndex;
-      return formSchema.value;
+      fieldAssignments.value.push({ id: crypto.randomUUID(), aas: "", dpp: "" });
+    };
+
+    const removeFieldAssignmentRow = (index: number) => {
+      fieldAssignments.value.splice(index, 1);
     };
 
     const submitModifications = async () => {
       try {
         if (aasConnection.value) {
-          const fieldAssignments = Object.entries(formData.value)
-            .map(([key, value]) => {
-              const [source, keyIndex] = key.split("-");
-              if (source === "aas") {
-                const ddpField = formData.value[`dpp-${keyIndex}`];
-                if (!ddpField) {
-                  return undefined;
-                }
-                const aasValues = aasDropdownValueToAasId(value);
-                const dppValues = dataFieldDropdownValueToDppId(ddpField);
-                return {
-                  dataFieldId: dppValues.dataFieldId,
-                  sectionId: dppValues.sectionId,
-                  idShortParent: aasValues.parentIdShort,
-                  idShort: aasValues.idShort,
-                };
-              }
-              else {
+          const assignments = fieldAssignments.value
+            .map(({ aas, dpp }) => {
+              if (!aas || !dpp) {
                 return undefined;
               }
+              const aasValues = aasDropdownValueToAasId(aas);
+              const dppValues = dataFieldDropdownValueToDppId(dpp);
+              return {
+                dataFieldId: dppValues.dataFieldId,
+                sectionId: dppValues.sectionId,
+                idShortParent: aasValues.parentIdShort,
+                idShort: aasValues.idShort,
+              };
             })
-            .filter(a => a !== undefined);
+            .filter((item): item is AasFieldAssignmentDto => item !== undefined);
 
           const response = await apiClient.dpp.aasIntegration.modifyConnection(
             aasConnection.value.id,
             {
               name: aasConnection.value.name,
               modelId: aasConnection.value.modelId,
-              fieldAssignments: fieldAssignments as AasFieldAssignmentDto[],
+              fieldAssignments: assignments,
             },
           );
           aasConnection.value = response.data;
@@ -273,27 +160,21 @@ export const useAasConnectionFormStore = defineStore(
           );
           const template = response.data;
           await updateTemplateOptions(template);
-          formSchema.value = formSchema.value.map((schemaItem: unknown) => {
-            return isFieldAssignmentRow(schemaItem)
-              ? newFieldAssignmentRow(schemaItem.rowIndex)
-              : schemaItem;
-          });
-          formData.value = Object.fromEntries(
-            Object.entries(formData.value).map(([key, value]) => {
-              if (key.startsWith("dpp") && value) {
-                const { sectionId, dataFieldId }
-                  = dataFieldDropdownValueToDppId(value);
-                const foundValue = template.sections
-                  .find(s => s.id === sectionId)
-                  ?.dataFields
-                  .find(f => f.id === dataFieldId);
-                if (!foundValue) {
-                  return [key, ""];
-                }
+
+          fieldAssignments.value = fieldAssignments.value.map((assignment) => {
+            if (assignment.dpp) {
+              const { sectionId, dataFieldId }
+                = dataFieldDropdownValueToDppId(assignment.dpp);
+              const foundValue = template.sections
+                .find(s => s.id === sectionId)
+                ?.dataFields
+                .find(f => f.id === dataFieldId);
+              if (!foundValue) {
+                return { ...assignment, dpp: "" };
               }
-              return [key, value];
-            }),
-          );
+            }
+            return assignment;
+          });
         }
       }
       catch (e) {
@@ -331,7 +212,6 @@ export const useAasConnectionFormStore = defineStore(
         await updateTemplateOptions(templateResponse.data);
       }
       initializeFormData();
-      initializeFormSchema();
       fetchInFlight.value = false;
     };
 
@@ -341,8 +221,10 @@ export const useAasConnectionFormStore = defineStore(
       fetchInFlight,
       submitModifications,
       addFieldAssignmentRow,
-      formData,
-      formSchema,
+      removeFieldAssignmentRow,
+      fieldAssignments,
+      aasProperties,
+      templateOptions,
       switchModel,
     };
   },

@@ -11,6 +11,7 @@ export const envSchema = z.object({
   OPEN_DPP_SERVICE_TOKEN: z.coerce.string().min(16),
   OPEN_DPP_AAS_TOKEN: z.coerce.string().min(16),
   OPEN_DPP_MSG_PORT: z.coerce.number().optional().default(5002),
+  OPEN_DPP_LOG_FORMAT: z.enum(["json", "plain"]).optional().default("plain"),
   // MongoDB
   OPEN_DPP_MONGODB_URI: z.coerce.string().optional(),
   OPEN_DPP_MONGODB_PORT: z.coerce.number().max(65535).min(0).optional(),
@@ -62,6 +63,12 @@ export const envSchema = z.object({
   OPEN_DPP_AUTH_CLOUD_CLIENT_ID: z.string().optional(),
   OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET: z.string().optional(),
   OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL: z.string().optional(),
+  OPEN_DPP_AUTH_ADMIN_USERNAME: z.string().optional(),
+  OPEN_DPP_AUTH_ADMIN_PASSWORD: z.string().optional(),
+  // Default Caps
+  OPEN_DPP_DEFAULT_MODEL_CREATE_CAP: z.coerce.number().min(0).optional().default(10),
+  OPEN_DPP_DEFAULT_AI_TOKEN_QUOTA: z.coerce.number().min(0).optional().default(10_000),
+  OPEN_DPP_DEFAULT_MEDIA_STORAGE_CAP: z.coerce.number().min(0).optional().default(1000),
 }).superRefine((val, ctx) => {
   const hasUri = !!val.OPEN_DPP_MONGODB_URI;
   const hasHostPort = !!val.OPEN_DPP_MONGODB_HOST && !!val.OPEN_DPP_MONGODB_PORT;
@@ -87,6 +94,15 @@ export const envSchema = z.object({
       });
     }
   }
+  const hasAuthAdminUsername = !!val.OPEN_DPP_AUTH_ADMIN_USERNAME;
+  const hasAuthAdminPassword = !!val.OPEN_DPP_AUTH_ADMIN_PASSWORD;
+  if ((hasAuthAdminUsername && !hasAuthAdminPassword) || (!hasAuthAdminUsername && hasAuthAdminPassword)) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Provide both OPEN_DPP_AUTH_ADMIN_USERNAME and OPEN_DPP_AUTH_ADMIN_PASSWORD if you provide at least one of both.",
+      path: ["OPEN_DPP_AUTH_ADMIN_USERNAME", "OPEN_DPP_AUTH_ADMIN_PASSWORD"],
+    });
+  }
 });
 
 export function validateEnv(env: Record<string, any>): Record<string, any> {
@@ -103,3 +119,7 @@ export function validateEnv(env: Record<string, any>): Record<string, any> {
 }
 
 export type Env = z.infer<typeof envSchema>;
+
+export type NumericEnvKeys = Exclude<{
+  [K in keyof Env]: Env[K] extends number ? K : never;
+}[keyof Env], undefined>;

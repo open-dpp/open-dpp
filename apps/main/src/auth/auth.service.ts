@@ -1,11 +1,11 @@
-import type { Auth } from "better-auth";
 import type { Connection } from "mongoose";
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import { EnvService } from "@open-dpp/env";
-import { betterAuth, User } from "better-auth";
+import { APIError, Auth, betterAuth, User } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { apiKey, genericOAuth, organization } from "better-auth/plugins";
+import { admin, apiKey, genericOAuth, organization } from "better-auth/plugins";
+import dayjs from "dayjs";
 import { Db, MongoClient, ObjectId } from "mongodb";
 import { InviteUserToOrganizationMail } from "../email/domain/invite-user-to-organization-mail";
 import { PasswordResetMail } from "../email/domain/password-reset-mail";
@@ -136,6 +136,49 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     return (organization as any).name ?? null;
   }
 
+  async getOrganizationDataForPermalink(organizationId: string): Promise<{ name: string; image: string } | null> {
+    if (!this.db)
+      return null;
+
+    // Validate organizationId and prepare ObjectId if possible
+    let orgObjectId: ObjectId | null = null;
+    try {
+      orgObjectId = new ObjectId(organizationId);
+    }
+    catch {
+      // ignore invalid ObjectId; return null if organizationId is not a valid ObjectId
+    }
+    // Fetch organization to return its name
+    if (!orgObjectId) {
+      // If we couldn't parse a valid ObjectId for the organization, we cannot fetch the org document reliably
+      return null;
+    }
+
+    const organization = await this.db.collection("organization").findOne({ _id: orgObjectId });
+    if (!organization)
+      return null;
+    return {
+      name: organization.name ?? "",
+      image: organization.image ?? "",
+    };
+  }
+
+  async getAllOrganizations(): Promise<Array<{ id: string; name: string; image: string; createdAt: string | null }>> {
+    if (!this.db)
+      return [];
+
+    const organizations = await this.db.collection("organization")
+      .find()
+      .limit(100)
+      .toArray();
+    return organizations.map(org => ({
+      id: org._id.toString(),
+      name: org.name ?? "",
+      image: org.image ?? "",
+      createdAt: org.createdAt ? dayjs(org.createdAt).format("DD.MM.YYYY") : null,
+    }));
+  }
+
   async onModuleInit() {
     this.db = this.mongooseConnection.db;
     const mongoClient = this.mongooseConnection.getClient();
@@ -157,6 +200,17 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     const emailSvc = this.emailService;
     const configSvc = this.configService;
     const organizationPlugin = organization({
+      schema: {
+        organization: {
+          additionalFields: {
+            image: {
+              type: "string",
+              input: true,
+              required: false,
+            },
+          },
+        },
+      },
       async sendInvitationEmail(data) {
         const inviteLink = `${configSvc.get("OPEN_DPP_URL")}/accept-invitation/${data.id}`;
         await emailSvc.send(InviteUserToOrganizationMail.create({
@@ -177,16 +231,41 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         enabled: false,
       },
     });
-    const plugins = [apiKeyPlugin, organizationPlugin];
+
+    const adminPlugin = admin({});
+    const plugins = [apiKeyPlugin, organizationPlugin, adminPlugin];
     if (genericOAuthPlugin) {
       plugins.push(genericOAuthPlugin as any);
     }
 
+    const logger = this.logger;
     this.auth = betterAuth({
       baseURL: this.configService.get("OPEN_DPP_URL"),
       basePath: "/api/auth",
       secret: this.configService.get("OPEN_DPP_AUTH_SECRET"),
       trustedOrigins: [this.configService.get("OPEN_DPP_URL")],
+      logger: {
+        disabled: false,
+        log: (level, message, ...args) => {
+          const formattedMessage
+            = args.length > 0 ? `${message} ${JSON.stringify(args)}` : message;
+          switch (level) {
+            case "error":
+              logger.error(formattedMessage);
+              break;
+            case "warn":
+              logger.warn(formattedMessage);
+              break;
+            case "debug":
+              logger.debug(formattedMessage);
+              break;
+            case "info":
+            default:
+              logger.log(formattedMessage);
+              break;
+          }
+        },
+      },
       user: {
         additionalFields: {
           firstName: {
@@ -252,9 +331,38 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       hooks: {},
       plugins,
       database: mongodbAdapter(this.db!, {
-        client: mongoClient,
+        client: this.configService.get("NODE_ENV") === "test" ? undefined : mongoClient,
       }),
     });
+    const isAuthAdminProvided = !!this.configService.get("OPEN_DPP_AUTH_ADMIN_USERNAME") && !!this.configService.get("OPEN_DPP_AUTH_ADMIN_PASSWORD");
+    if (isAuthAdminProvided) {
+      const adminUsername = this.configService.get("OPEN_DPP_AUTH_ADMIN_USERNAME");
+      const adminPassword = this.configService.get("OPEN_DPP_AUTH_ADMIN_PASSWORD");
+      try {
+        await (this.auth?.api as any).createUser({
+          body: {
+            name: "open-dpp admin",
+            data: {
+              firstName: "open-dpp",
+              lastName: "admin",
+              emailVerified: true,
+            },
+            email: adminUsername,
+            password: adminPassword,
+            role: "admin",
+          },
+        });
+        this.logger.log("Admin Account created");
+      }
+      catch (error) {
+        if (error instanceof APIError) {
+          this.logger.warn("Account with set admin username already exists and wont be updated.");
+        }
+        else {
+          this.logger.error("Failed to create admin account", error);
+        }
+      }
+    }
     this.logger.log("Auth initialized");
   }
 

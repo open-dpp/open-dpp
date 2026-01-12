@@ -111,6 +111,8 @@ describe("<ItemView />", () => {
       description: "Laptop neu desc",
       mediaReferences: [],
       dataSections: [section1, section2, section3],
+      organizationName: "Org A",
+      organizationImage: "orga-a-image",
     };
 
     const productPassportOther: ProductPassportDto = {
@@ -119,6 +121,8 @@ describe("<ItemView />", () => {
       description: "Laptop neu desc",
       mediaReferences: [],
       dataSections: [section1OtherPassport, section2, section3],
+      organizationName: "Org A",
+      organizationImage: "orga-a-image",
     };
     const item: ItemDto = {
       dataValues: [],

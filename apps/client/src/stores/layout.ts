@@ -3,6 +3,7 @@ import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 
 export enum ModalType {
+  INVITE_MEMBER_MODAL = "inviteMemberModal",
   INVITE_USER_MODAL = "inviteUserModal",
 }
 

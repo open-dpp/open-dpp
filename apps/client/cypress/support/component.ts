@@ -24,13 +24,6 @@ import type { MountingOptions } from "@vue/test-utils";
 import type { Pinia } from "pinia";
 import type { App, Component } from "vue";
 import type { Router } from "vue-router";
-import {
-  createAutoAnimatePlugin,
-  createMultiStepPlugin,
-} from "@formkit/addons";
-import { de } from "@formkit/i18n";
-import { genesisIcons } from "@formkit/icons";
-import { defaultConfig, plugin as FormKit } from "@formkit/vue";
 import Aura from "@primeuix/themes/aura";
 import { mount } from "cypress/vue";
 import { diff } from "jest-diff";
@@ -38,7 +31,6 @@ import _ from "lodash";
 import { createPinia, setActivePinia } from "pinia";
 import PrimeVue from "primevue/config";
 import ConfirmationService from "primevue/confirmationservice";
-import { rootClasses } from "../../formkit.theme.js";
 import { i18n } from "../../src/translations/i18n.ts";
 // Import commands.js using ES2015 syntax:
 import "./commands.js";
@@ -98,16 +90,6 @@ Cypress.Commands.add(
       }],
       ConfirmationService,
       i18n,
-      [
-        FormKit,
-        defaultConfig({
-          config: { rootClasses },
-          icons: { ...genesisIcons },
-          locales: { de },
-          locale: "de",
-          plugins: [createMultiStepPlugin(), createAutoAnimatePlugin()],
-        }),
-      ],
     ] as NonNullable<
       NonNullable<MountingOptions<any>["global"]>["plugins"]
     >;

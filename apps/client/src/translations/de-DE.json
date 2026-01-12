@@ -1,4 +1,7 @@
 {
+  "validation": {
+    "required": "Erforderlich"
+  },
   "common": {
     "id": "ID",
     "identification": "Identifikation",
@@ -35,7 +38,14 @@
       "email": {
         "help": "Geben Sie eine E-Mail Adresse ein.",
         "label": "E-Mail Adresse",
-        "error": "Bitte geben Sie eine E-Mail Adresse ein."
+        "error": "Bitte geben Sie eine E-Mail Adresse ein.",
+        "invalid": "Bitte geben Sie eine gültige E-Mail Adresse ein."
+      },
+      "password": {
+        "help": "Geben Sie ein Passwort ein.",
+        "label": "Passwort",
+        "error": "Bitte geben Sie ein Passwort ein.",
+        "invalid": "Bitte geben Sie ein gültiges Passwort ein."
       }
     }
   },
@@ -197,7 +207,8 @@
         "inactive": "Inaktiv"
       },
       "fieldAssignments": "Feldverknüpfungen",
-      "addFieldAssignments": "Neue Feldverknüpfung hinzufügen"
+      "addFieldAssignments": "Neue Feldverknüpfung hinzufügen",
+      "addRow": "Zeile hinzufügen"
     },
     "apiKey": {
       "create": "API Key erstellen",
@@ -246,10 +257,18 @@
       "createdBy": "Erstellt von",
       "administeredBy": "Administriert von",
       "description": "Beschreibung",
+      "image": {
+        "label": "Logo Ihrer Organisation",
+        "help": "Lade ein Bild für die Organisation hoch",
+        "shortLabel": "Logo"
+      },
       "name": {
         "help": "Geben Sie Ihrer Organisation einen Namen",
-        "label": "Name"
-      }
+        "label": "Name der Organisation",
+        "error": "Bitte geben Sie einen Namen ein."
+      },
+      "updateError": "Fehler beim Aktualisieren der Organisation.",
+      "updateSuccess": "Organisationseinstellungen erfolgreich gespeichert."
     },
     "invitation": {
       "name": "Name",
@@ -268,6 +287,20 @@
     "organizationInvitations": {
       "title": "Einladungen",
       "description": "Einladungen zu dieser Organisation"
+    },
+    "settings": {
+      "title": "Organisation anpassen"
+    },
+    "admin": {
+      "title": "Administration",
+      "organizations": "Alle Organisationen",
+      "users": "Alle Benutzer",
+      "inviteUserDialog": {
+        "title": "Benutzer erstellen",
+        "create": "Erstellen",
+        "success": "Benutzer erfolgreich erstellt",
+        "error": "Fehler beim Erstellen des Benutzers"
+      }
     }
   },
   "marketplace": {

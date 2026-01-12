@@ -29,6 +29,7 @@ import {
   modelDocumentation,
   updateModelDocumentation,
 } from "../../open-api-docs/model.doc";
+import { PolicyService } from "../../policy/infrastructure/policy.service";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import { DataValueDtoSchema } from "../../product-passport-data/presentation/dto/data-value.dto";
 import {
@@ -50,15 +51,18 @@ export class ModelsController {
   private readonly modelsService: ModelsService;
   private readonly templateService: TemplateService;
   private readonly marketplaceService: MarketplaceApplicationService;
+  private readonly policyService: PolicyService;
 
   constructor(
     modelsService: ModelsService,
     templateService: TemplateService,
     marketplaceService: MarketplaceApplicationService,
+    policyService: PolicyService,
   ) {
     this.modelsService = modelsService;
     this.templateService = templateService;
     this.marketplaceService = marketplaceService;
+    this.policyService = policyService;
   }
 
   @ApiOperation({
@@ -122,6 +126,7 @@ export class ModelsController {
       template,
     });
     model.createUniqueProductIdentifier();
+
     return modelToDto(await this.modelsService.save(model));
   }
 

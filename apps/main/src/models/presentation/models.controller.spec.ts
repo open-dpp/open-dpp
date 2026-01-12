@@ -25,6 +25,12 @@ import {
   PassportTemplatePublicationService,
 } from "../../marketplace/infrastructure/passport-template-publication.service";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
+import { MediaDbSchema, MediaDoc } from "../../media/infrastructure/media.schema";
+import { MediaService } from "../../media/infrastructure/media.service";
+import { CapEvaluatorService } from "../../policy/infrastructure/cap-evaluator.service";
+import { CapDoc, CapSchema } from "../../policy/infrastructure/cap.schema";
+import { PolicyService } from "../../policy/infrastructure/policy.service";
+import { QuotaDoc, QuotaSchema } from "../../policy/infrastructure/quota.schema";
 import { Template } from "../../old-templates/domain/template";
 import {
   LaptopFactory,
@@ -102,6 +108,18 @@ describe("modelsController", () => {
             name: PassportTemplatePublicationDoc.name,
             schema: PassportTemplatePublicationDbSchema,
           },
+          {
+            name: CapDoc.name,
+            schema: CapSchema,
+          },
+          {
+            name: QuotaDoc.name,
+            schema: QuotaSchema,
+          },
+          {
+            name: MediaDoc.name,
+            schema: MediaDbSchema,
+          },
         ]),
         AuthModule,
       ],
@@ -112,6 +130,9 @@ describe("modelsController", () => {
         TemplateService,
         MarketplaceApplicationService,
         PassportTemplatePublicationService,
+        PolicyService,
+        CapEvaluatorService,
+        MediaService,
         {
           provide: APP_GUARD,
           useClass: AuthGuard,
