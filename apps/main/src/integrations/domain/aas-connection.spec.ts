@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
+import { ignoreIds } from "../../../test/utils.for.test";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { Model } from "../../models/domain/model";
@@ -9,7 +10,6 @@ import { laptopFactory } from "../../old-templates/fixtures/laptop.factory";
 import { sectionDbPropsFactory } from "../../old-templates/fixtures/section.factory";
 import { templateCreatePropsFactory } from "../../old-templates/fixtures/template.factory";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import { ignoreIds } from "../../utils.for.test";
 import { AasConnection, AasFieldAssignment } from "./aas-connection";
 import {
   AssetAdministrationShell,

@@ -9,6 +9,7 @@ import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
+import { ignoreIds } from "../../../test/utils.for.test";
 import { AuthGuard } from "../../auth/auth.guard";
 import { AuthModule } from "../../auth/auth.module";
 import { AuthService } from "../../auth/auth.service";
@@ -23,7 +24,6 @@ import {
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { UsersService } from "../../users/infrastructure/users.service";
-import { ignoreIds } from "../../utils.for.test";
 import { Model } from "../domain/model";
 import { ModelDoc, ModelDocSchemaVersion, ModelSchema } from "./model.schema";
 import { ModelsService } from "./models.service";

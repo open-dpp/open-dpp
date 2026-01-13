@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
+import { ignoreIds } from "../../../test/utils.for.test";
 import { Model } from "../../models/domain/model";
 import { Template, TemplateDbProps } from "../../old-templates/domain/template";
 import {
@@ -8,7 +9,6 @@ import {
 } from "../../old-templates/fixtures/laptop.factory";
 import { templateCreatePropsFactory } from "../../old-templates/fixtures/template.factory";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import { ignoreIds } from "../../utils.for.test";
 import { Item } from "./item";
 
 describe("item", () => {
