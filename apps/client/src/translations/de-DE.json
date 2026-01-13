@@ -466,7 +466,7 @@
   "api": {
     "error": {
       "limit": {
-        "MODEL_CREATE_CAP": "Limit von {limit} Produkpässen ist erreicht.",
+        "MODEL_CREATE_CAP": "Limit von {limit} Produktpässen ist erreicht.",
         "MEDIA_STORAGE_CAP": "Limit von {limit}MB Speicherplatz ist erreicht.",
         "AI_TOKEN_QUOTA": "Limit von {limit} Tokens pro Monat ist erreicht."
       }
