@@ -22,9 +22,7 @@ import {
 import {
   UniqueProductIdentifierService,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
-import {
-  ignoreIds,
-} from "../../utils";
+import { ignoreIds } from "../../utils.for.test";
 import { Item } from "../domain/item";
 import { ItemDoc, ItemDocSchemaVersion, ItemSchema } from "./item.schema";
 import { ItemsService } from "./items.service";

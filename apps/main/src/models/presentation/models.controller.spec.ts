@@ -47,7 +47,7 @@ import {
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
-import { getApp, ignoreIds } from "../../utils";
+import { getApp, ignoreIds } from "../../utils.for.test";
 import { Model } from "../domain/model";
 import { ModelDoc, ModelSchema } from "../infrastructure/model.schema";
 import { ModelsService } from "../infrastructure/models.service";

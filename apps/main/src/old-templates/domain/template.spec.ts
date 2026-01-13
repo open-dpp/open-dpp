@@ -15,7 +15,7 @@ import { SubmodelElementCollection } from "../../aas/domain/submodel-base/submod
 import { SubmodelElementList } from "../../aas/domain/submodel-base/submodel-element-list";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import { ignoreIds } from "../../utils";
+import { ignoreIds } from "../../utils.for.test";
 import { laptopFactory, LaptopFactory } from "../fixtures/laptop.factory";
 import { DataFieldValidationResult } from "./data-field";
 import { Template } from "./template";

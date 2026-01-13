@@ -23,7 +23,7 @@ import {
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { UsersService } from "../../users/infrastructure/users.service";
-import { ignoreIds } from "../../utils";
+import { ignoreIds } from "../../utils.for.test";
 import { Model } from "../domain/model";
 import { ModelDoc, ModelDocSchemaVersion, ModelSchema } from "./model.schema";
 import { ModelsService } from "./models.service";

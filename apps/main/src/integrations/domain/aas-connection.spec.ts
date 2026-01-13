@@ -9,7 +9,7 @@ import { laptopFactory } from "../../old-templates/fixtures/laptop.factory";
 import { sectionDbPropsFactory } from "../../old-templates/fixtures/section.factory";
 import { templateCreatePropsFactory } from "../../old-templates/fixtures/template.factory";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import { ignoreIds } from "../../utils";
+import { ignoreIds } from "../../utils.for.test";
 import { AasConnection, AasFieldAssignment } from "./aas-connection";
 import {
   AssetAdministrationShell,

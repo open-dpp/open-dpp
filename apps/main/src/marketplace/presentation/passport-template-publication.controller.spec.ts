@@ -13,7 +13,7 @@ import { AuthModule } from "../../auth/auth.module";
 import { AuthService } from "../../auth/auth.service";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
-import { getApp } from "../../utils";
+import { getApp } from "../../utils.for.test";
 import { PassportTemplatePublication } from "../domain/passport-template-publication";
 import { passportTemplatePublicationPropsFactory } from "../fixtures/passport.template.factory";
 import {

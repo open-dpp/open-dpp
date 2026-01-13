@@ -8,7 +8,7 @@ import {
 } from "../../old-templates/fixtures/laptop.factory";
 import { templateCreatePropsFactory } from "../../old-templates/fixtures/template.factory";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import { ignoreIds } from "../../utils";
+import { ignoreIds } from "../../utils.for.test";
 import { Item } from "./item";
 
 describe("item", () => {

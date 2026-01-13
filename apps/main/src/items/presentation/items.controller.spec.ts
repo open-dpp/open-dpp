@@ -42,7 +42,7 @@ import {
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
-import { getApp, ignoreIds } from "../../utils";
+import { getApp, ignoreIds } from "../../utils.for.test";
 import { Item } from "../domain/item";
 import { ItemDoc, ItemSchema } from "../infrastructure/item.schema";
 import { ItemsService } from "../infrastructure/items.service";
