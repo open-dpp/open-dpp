@@ -13,6 +13,6 @@ export default [
         declaration: false, // don't emit declarations here
       }),
     ],
-    external: ['axios'],
+    external: ['axios', '@open-dpp/dto'],
   },
 ]
