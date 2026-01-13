@@ -32,5 +32,5 @@ export function handleApiError(error: unknown): Error {
     return error;
   }
 
-  return new Error("unkown error");
+  return new Error("unknown error");
 }
