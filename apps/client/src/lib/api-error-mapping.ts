@@ -24,7 +24,7 @@ export function handleApiError(error: unknown): Error {
   if (error instanceof AxiosError) {
     if (error.response?.status === 429) {
       const data = error.response.data as LimitErrorResponse;
-      if (data.key) {
+      if (data.key && typeof data.limit === "number" && typeof data.used === "number") {
         return new LimitError(data.key, data.limit, data.used, data.message);
       }
     }
