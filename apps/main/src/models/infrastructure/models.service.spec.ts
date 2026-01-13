@@ -8,7 +8,6 @@ import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { ignoreIds } from "@open-dpp/testing";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import { AuthGuard } from "../../auth/auth.guard";
 import { AuthModule } from "../../auth/auth.module";
@@ -24,6 +23,7 @@ import {
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { UsersService } from "../../users/infrastructure/users.service";
+import { ignoreIds } from "../../utils";
 import { Model } from "../domain/model";
 import { ModelDoc, ModelDocSchemaVersion, ModelSchema } from "./model.schema";
 import { ModelsService } from "./models.service";

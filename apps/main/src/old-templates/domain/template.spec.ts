@@ -2,7 +2,6 @@ import type { TemplateDbProps } from "./template";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import { AasSubmodelElements, AssetKind, DataTypeDef, KeyTypes, Language, ReferenceTypes } from "@open-dpp/dto";
-import { ignoreIds } from "@open-dpp/testing";
 import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
 import { AssetInformation } from "../../aas/domain/asset-information";
 import { AdministrativeInformation } from "../../aas/domain/common/administrative-information";
@@ -16,6 +15,7 @@ import { SubmodelElementCollection } from "../../aas/domain/submodel-base/submod
 import { SubmodelElementList } from "../../aas/domain/submodel-base/submodel-element-list";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { DataValue } from "../../product-passport-data/domain/data-value";
+import { ignoreIds } from "../../utils";
 import { laptopFactory, LaptopFactory } from "../fixtures/laptop.factory";
 import { DataFieldValidationResult } from "./data-field";
 import { Template } from "./template";

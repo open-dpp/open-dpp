@@ -5,7 +5,6 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { getApp, ignoreIds } from "@open-dpp/testing";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import { AuthGuard } from "../../auth/auth.guard";
@@ -43,6 +42,7 @@ import {
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { getApp, ignoreIds } from "../../utils";
 import { Item } from "../domain/item";
 import { ItemDoc, ItemSchema } from "../infrastructure/item.schema";
 import { ItemsService } from "../infrastructure/items.service";

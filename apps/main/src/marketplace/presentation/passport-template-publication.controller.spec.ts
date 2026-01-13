@@ -6,7 +6,6 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { getApp } from "@open-dpp/testing";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import { AuthGuard } from "../../auth/auth.guard";
@@ -14,6 +13,7 @@ import { AuthModule } from "../../auth/auth.module";
 import { AuthService } from "../../auth/auth.service";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
+import { getApp } from "../../utils";
 import { PassportTemplatePublication } from "../domain/passport-template-publication";
 import { passportTemplatePublicationPropsFactory } from "../fixtures/passport.template.factory";
 import {

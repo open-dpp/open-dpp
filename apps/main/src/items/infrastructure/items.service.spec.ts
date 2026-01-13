@@ -6,9 +6,6 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { Sector } from "@open-dpp/api-client";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import {
-  ignoreIds,
-} from "@open-dpp/testing";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
@@ -25,6 +22,9 @@ import {
 import {
   UniqueProductIdentifierService,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import {
+  ignoreIds,
+} from "../../utils";
 import { Item } from "../domain/item";
 import { ItemDoc, ItemDocSchemaVersion, ItemSchema } from "./item.schema";
 import { ItemsService } from "./items.service";
