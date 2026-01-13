@@ -466,9 +466,9 @@
   "api": {
     "error": {
       "limit": {
-        "MODEL_CREATE_CAP": "Limit number of {limit} models are reached.",
-        "MEDIA_STORAGE_CAP": "Limit number of {limit} MB storage are reached.",
-        "AI_TOKEN_QUOTA": "Limit number of {limit} Tokens per month is reached."
+        "MODEL_CREATE_CAP": "Model limit of {limit} has been reached.",
+        "MEDIA_STORAGE_CAP": "Storage limit of {limit} MB has been reached.",
+        "AI_TOKEN_QUOTA": "Monthly token limit of {limit} has been reached."
       }
     }
   },
