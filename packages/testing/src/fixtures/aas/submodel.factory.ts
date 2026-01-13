@@ -6,10 +6,10 @@ import { Factory } from 'fishery'
 interface SubmodelTransientParams {
   iriDomain: string
 }
-type Input = z.infer<typeof SubmodelJsonSchema>
+type Input = z.input<typeof SubmodelJsonSchema>
 export const submodelDesignOfProductPlainFactory
-  = Factory.define<Partial<Input>, SubmodelTransientParams> (({ transientParams }) => (
-    {
+  = Factory.define<Partial<Input>, SubmodelTransientParams> (({ transientParams }) => {
+    return {
       modelType: 'Submodel',
       kind: 'Instance',
       semanticId: {
@@ -284,9 +284,10 @@ export const submodelDesignOfProductPlainFactory
           ],
         },
       ],
-    }))
+    }
+  })
 
-export function submodelPlainToResponse(submodelPlain: Partial<Input>): SubmodelResponseDto {
+export function submodelPlainToResponse(submodelPlain: any): SubmodelResponseDto {
   return SubmodelJsonSchema.parse(submodelPlain)
 }
 
@@ -338,7 +339,7 @@ export const submodelDesignOfProductValuePlainFactory
       ModelDescription: 'prt',
     } }))
 
-export const submodelCarbonFootprintPlainFactory = Factory.define<any, SubmodelTransientParams>(({ transientParams }) => ({
+export const submodelCarbonFootprintPlainFactory = Factory.define<Partial<Input>, SubmodelTransientParams>(({ transientParams }) => ({
   modelType: 'Submodel',
   kind: 'Instance',
   semanticId: {

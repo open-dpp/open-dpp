@@ -1,5 +1,6 @@
 import type { SubmodelResponseDto } from "@open-dpp/dto";
-import { DataTypeDef, KeyTypes } from "@open-dpp/dto";
+import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
+import { DataTypeDef, KeyTypes, Language } from "@open-dpp/dto";
 import {
   submodelCarbonFootprintPlainFactory,
   submodelDesignOfProductPlainFactory,
@@ -51,11 +52,12 @@ describe("aasEditor composable", () => {
   const aasId = "1";
   const iriDomain = `https://open-dpp.de/${uuid4()}`;
   const submodel1: SubmodelResponseDto = submodelPlainToResponse(
-    submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } }),
+    submodelDesignOfProductPlainFactory.transient({ iriDomain }).build(),
   );
   const submodel2: SubmodelResponseDto = submodelPlainToResponse(
-    submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }),
+    submodelCarbonFootprintPlainFactory.transient({ iriDomain }).build(),
   );
+  const selectedLanguage = Language.en;
   it("should initialize submodels", async () => {
     const response = { paging_metadata: { cursor: null }, result: [submodel1, submodel2] };
     mocks.getSubmodels.mockResolvedValue({
@@ -67,6 +69,7 @@ describe("aasEditor composable", () => {
       aasNamespace: apiClient.dpp.templates.aas,
       changeQueryParams,
       errorHandlingStore,
+      selectedLanguage,
     });
     await init();
     expect(mocks.getSubmodels).toHaveBeenCalledWith(aasId, {
@@ -156,6 +159,7 @@ describe("aasEditor composable", () => {
       aasNamespace: apiClient.dpp.templates.aas,
       changeQueryParams,
       errorHandlingStore,
+      selectedLanguage,
     });
     await init();
     selectTreeNode(keyToSelect);
@@ -167,7 +171,7 @@ describe("aasEditor composable", () => {
 
   describe("should create", () => {
     const submodel: SubmodelResponseDto = submodelPlainToResponse(
-      submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } }),
+      submodelDesignOfProductPlainFactory.transient({ iriDomain }).build(),
     );
     const paginationResponse = {
       paging_metadata: { cursor: null },
@@ -183,6 +187,7 @@ describe("aasEditor composable", () => {
         aasNamespace: apiClient.dpp.templates.aas,
         changeQueryParams,
         errorHandlingStore,
+        selectedLanguage,
       });
       await init();
       await createSubmodel();
@@ -191,7 +196,7 @@ describe("aasEditor composable", () => {
       expect(editorVNode.value!.props.data).toEqual({ });
       expect(editorVNode.value!.component).toEqual(SubmodelCreateEditor);
       const data = { idShort: "newSubmodel" };
-      await editorVNode.value?.props.callback(data);
+      await editorVNode.value!.props.callback!(data);
       expect(mocks.createSubmodel).toHaveBeenCalledWith(aasId, data);
     });
 
@@ -203,17 +208,18 @@ describe("aasEditor composable", () => {
         aasNamespace: apiClient.dpp.templates.aas,
         changeQueryParams,
         errorHandlingStore,
+        selectedLanguage,
       });
       await init();
-      buildAddSubmodelElementMenu(submodels.value?.find(s => s.key === submodel1.id));
-      const addPropertyMenuItem = submodelElementsToAdd.value.find(e => e.label === "Textfeld hinzufügen");
-      await addPropertyMenuItem.command();
+      buildAddSubmodelElementMenu(submodels.value!.find(s => s.key === submodel1.id)!);
+      const addPropertyMenuItem: MenuItem = submodelElementsToAdd.value.find(e => e.label === "Textfeld hinzufügen")!;
+      addPropertyMenuItem.command!({} as MenuItemCommandEvent);
       expect(drawerVisible.value).toBeTruthy();
       expect(editorVNode.value!.props.path).toEqual({ submodelId: submodel1.id });
       expect(editorVNode.value!.props.data).toEqual({ valueType: DataTypeDef.String });
       expect(editorVNode.value!.component).toEqual(PropertyCreateEditor);
       const data = { idShort: "newProperty" };
-      await editorVNode.value?.props.callback(data);
+      await editorVNode.value!.props.callback!(data);
       expect(mocks.createSubmodelElement).toHaveBeenCalledWith(aasId, submodel1.id, { ...data, modelType: KeyTypes.Property });
     });
   });

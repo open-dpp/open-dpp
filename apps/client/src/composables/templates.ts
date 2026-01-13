@@ -8,7 +8,7 @@ import { usePagination } from "./pagination.ts";
 
 interface TemplateProps {
   initialCursor?: string;
-  changeQueryParams: (params: Record<string, string>) => void;
+  changeQueryParams: (params: Record<string, string | undefined>) => void;
 }
 
 export function useTemplates({ changeQueryParams, initialCursor }: TemplateProps) {

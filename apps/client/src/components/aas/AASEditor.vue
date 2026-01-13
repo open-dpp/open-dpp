@@ -8,6 +8,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useAasEditor } from "../../composables/aas-editor.ts";
 import { AasEditMode } from "../../lib/aas-editor.ts";
 import apiClient from "../../lib/api-client.ts";
+import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import TablePagination from "../pagination/TablePagination.vue";
 
@@ -17,11 +18,11 @@ const props = defineProps<{
 }>();
 const route = useRoute();
 const router = useRouter();
-const componentRef = ref(null);
+const componentRef = ref<{ submit: () => Promise<Promise<void> | undefined> } | null>(null);
 
-const { t, locale } = useI18n();
+const { locale } = useI18n();
 
-function changeQueryParams(newQuery: Record<string, string>) {
+function changeQueryParams(newQuery: Record<string, string | undefined>) {
   router.replace({
     query: {
       ...route.query,
@@ -29,6 +30,8 @@ function changeQueryParams(newQuery: Record<string, string>) {
     },
   });
 }
+
+const errorHandlingStore = useErrorHandlingStore();
 
 const {
   selectedKeys,
@@ -59,6 +62,7 @@ const {
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
   changeQueryParams,
   selectedLanguage: convertLocaleToLanguage(locale.value),
+  errorHandlingStore,
 });
 
 onMounted(async () => {
@@ -87,7 +91,9 @@ function addClicked(event: any, node: TreeNode) {
   popover.value.toggle(event);
 }
 function onSubmit() {
-  componentRef.value.submit();
+  if (componentRef.value) {
+    componentRef.value.submit();
+  }
 }
 </script>
 

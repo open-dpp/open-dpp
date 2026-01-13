@@ -1,19 +1,22 @@
 import type { AasNamespace } from "@open-dpp/api-client";
-import type {
-  LanguageTextDto,
-  LanguageType,
-  PagingParamsDto,
-  PropertyRequestDto,
-  SubmodelRequestDto,
-  SubmodelResponseDto,
-} from "@open-dpp/dto";
+import type { LanguageTextDto, LanguageType, PagingParamsDto, PropertyRequestDto, SubmodelElementResponseDto, SubmodelRequestDto, SubmodelResponseDto } from "@open-dpp/dto";
 import type { TreeTableSelectionKeys } from "primevue";
-import type { MenuItem } from "primevue/menuitem";
+import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import type { AasEditorPath } from "./aas-drawer.ts";
 import type { PagingResult } from "./pagination.ts";
-import { AasSubmodelElements, DataTypeDef, KeyTypes } from "@open-dpp/dto";
+import {
+
+  AasSubmodelElements,
+
+  DataTypeDef,
+  KeyTypes,
+  PropertyJsonSchema,
+  SubmodelElementSchema,
+  SubmodelJsonSchema,
+
+} from "@open-dpp/dto";
 import { omit } from "lodash";
 import { ref, toRaw } from "vue";
 import { EditorMode, useAasDrawer } from "./aas-drawer.ts";
@@ -24,7 +27,7 @@ interface AasEditorProps {
   aasNamespace: AasNamespace;
   initialSelectedKeys?: string;
   initialCursor?: string;
-  changeQueryParams: (params: Record<string, string>) => void;
+  changeQueryParams: (params: Record<string, string | undefined>) => void;
   errorHandlingStore: IErrorHandlingStore;
   selectedLanguage: LanguageType;
 }
@@ -38,10 +41,10 @@ export function useAasEditor({
   selectedLanguage,
 }: AasEditorProps) {
   const submodels = ref<TreeNode[]>();
-  const selectedKeys = ref<TreeTableSelectionKeys | null>();
+  const selectedKeys = ref<TreeTableSelectionKeys | undefined>(undefined);
 
   const onHideDrawer = () => {
-    selectedKeys.value = null;
+    selectedKeys.value = undefined;
     changeQueryParams({ edit: undefined });
   };
 
@@ -56,7 +59,7 @@ export function useAasEditor({
       {
         label: "Textfeld hinzufügen",
         icon: "pi pi-pencil",
-        command: () => {
+        command: (_event: MenuItemCommandEvent) => {
           drawer.openDrawer({
             type: KeyTypes.Property,
             data: { valueType: DataTypeDef.String },
@@ -71,7 +74,11 @@ export function useAasEditor({
     ];
   };
 
-  const findTreeNodeByKey = (key: string, treeNodes: TreeNode[] = submodels.value): TreeNode | undefined => {
+  const findTreeNodeByKey = (key: string, children?: TreeNode[]): TreeNode | undefined => {
+    if (!submodels.value) {
+      return undefined;
+    }
+    const treeNodes = children ?? submodels.value;
     const node = treeNodes.find(n => n.key === key);
     if (node) {
       return node;
@@ -112,41 +119,45 @@ export function useAasEditor({
     return displayName.find(d => d.language === selectedLanguage)?.text;
   };
 
-  const getVisualType = (modelType: string, valueType?: string): string => {
-    if (modelType === AasSubmodelElements.Submodel || modelType === AasSubmodelElements.SubmodelElementCollection) {
+  const getVisualType = (submodelBase: SubmodelElementResponseDto): string => {
+    if (submodelBase.modelType === KeyTypes.Submodel || submodelBase.modelType === AasSubmodelElements.SubmodelElementCollection) {
       return "Abschnitt";
     }
-    if (modelType === AasSubmodelElements.Property) {
+    if (submodelBase.modelType === AasSubmodelElements.Property) {
+      const { valueType } = PropertyJsonSchema.pick({ valueType: true }).parse(submodelBase);
       if (valueType === DataTypeDef.String) {
         return "Textfeld";
       }
     }
-    return modelType;
+    return submodelBase.modelType;
   };
 
   const convertSubmodelsToTree = (submodels: SubmodelResponseDto[]) => {
-    return submodels.map(submodel => ({
+    return submodels.map((submodel: SubmodelResponseDto) => ({
       key: submodel.id,
       data: {
         label: translateDisplayName(submodel.displayName) ?? submodel.idShort,
-        type: getVisualType(submodel.modelType, submodel.valueType),
+        type: getVisualType({ modelType: KeyTypes.Submodel, ...submodel }),
         modelType: KeyTypes.Submodel,
         plain: omit(submodel, "submodelElements"),
         path: { submodelId: submodel.id },
       },
-      children: submodel.submodelElements.map(submodelElement => ({
-        key: `${submodel.idShort}.${submodelElement.idShort}`,
-        data: {
-          type: getVisualType(submodelElement.modelType, submodelElement.valueType),
-          label: translateDisplayName(submodelElement.displayName) ?? submodelElement.idShort,
-          modelType: submodelElement.modelType,
-          plain: submodelElement,
-          path: {
-            submodelId: submodel.id,
-            idShortPath: `${submodel.idShort}.${submodelElement.idShort}`,
+      children: submodel.submodelElements.map((sE) => {
+        const submodelElement = SubmodelElementSchema.parse(sE);
+        return {
+          key: `${submodel.idShort}.${submodelElement.idShort}`,
+          data: {
+            type: getVisualType(submodelElement),
+            label: translateDisplayName(submodelElement.displayName) ?? submodelElement.idShort,
+            modelType: submodelElement.modelType,
+            plain: submodelElement,
+            path: {
+              submodelId: submodel.id,
+              idShortPath: `${submodel.idShort}.${submodelElement.idShort}`,
+            },
           },
-        },
-      })),
+        };
+      }),
     }));
   };
 
@@ -155,8 +166,10 @@ export function useAasEditor({
   ): Promise<PagingResult> => {
     loading.value = true;
     const response = await aasNamespace.getSubmodels(id, pagingParams);
-    submodels.value = convertSubmodelsToTree(response.data.result);
-    loading.value = false;
+    if (response.status === 200) {
+      submodels.value = convertSubmodelsToTree(SubmodelJsonSchema.array().parse(response.data.result));
+      loading.value = false;
+    }
     return response.data;
   };
 
@@ -186,7 +199,7 @@ export function useAasEditor({
       const response = await aasNamespace.createSubmodelElement(
         id,
         path.submodelId,
-        { modelType: AasSubmodelElements.Property, ...data },
+        SubmodelElementSchema.parse({ modelType: AasSubmodelElements.Property, ...data }),
       );
       if (response.status === 201) {
         await pagination.reloadCurrentPage();
@@ -198,7 +211,7 @@ export function useAasEditor({
   async function init() {
     await pagination.nextPage();
     if (initialSelectedKeys) {
-      await selectTreeNode(initialSelectedKeys);
+      selectTreeNode(initialSelectedKeys);
     }
   }
 

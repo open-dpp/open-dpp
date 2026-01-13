@@ -1,6 +1,6 @@
 import type { PagingParamsDto } from "@open-dpp/dto";
 import type { Page, PagingResult } from "./pagination.ts";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { usePagination } from "./pagination.ts";
 
 describe("pagination", () => {

@@ -11,6 +11,7 @@ import {
   ValueTypeSchema,
 } from "@open-dpp/dto";
 
+import { data } from "autoprefixer";
 import { computed, ref } from "vue";
 import { z } from "zod";
 import PropertyCreateEditor from "../components/aas/PropertyCreateEditor.vue";
@@ -22,7 +23,7 @@ import SubmodelElementCollectionEditor from "../components/aas/SubmodelElementCo
 export type SubmodelEditorProps = Omit<SubmodelResponseDto, "submodelElements">;
 const SubmodelCreateEditorPropsSchema = z.object({
 });
-export const SubmodelCreateEditorProps = z.infer<typeof SubmodelCreateEditorPropsSchema>;
+export type SubmodelCreateEditorProps = z.infer<typeof SubmodelCreateEditorPropsSchema>;
 
 const PropertyCreateEditorPropsSchema = z.object({
   valueType: ValueTypeSchema,
@@ -46,6 +47,7 @@ interface EditorDataMap {
   [EditorMode.CREATE]: {
     [AasKeyTypes.Submodel]: SubmodelCreateEditorProps;
     [AasKeyTypes.Property]: PropertyCreateEditorProps;
+    [AasKeyTypes.SubmodelElementCollection]: SubmodelElementCollectionEditorProps;
   };
   [EditorMode.EDIT]: {
     [AasKeyTypes.Submodel]: SubmodelEditorProps;
@@ -54,12 +56,14 @@ interface EditorDataMap {
   };
 }
 
-export type EditorType = typeof KeyTypes.Submodel | typeof KeyTypes.Property;
+export type EditorType = typeof KeyTypes.Submodel | typeof KeyTypes.Property | typeof AasKeyTypes.SubmodelElementCollection;
 
 export interface AasEditorPath {
   submodelId?: string;
   idShortPath?: string;
 }
+
+type callbackType = (data: any) => Promise<void>;
 
 export type OpenDrawerCallback<
   K extends EditorType,
@@ -70,21 +74,22 @@ export type OpenDrawerCallback<
   title: string;
   mode: M;
   path: AasEditorPath;
-  callback?: (data: EditorDataMap[M][K]) => Promise<void>;
+  callback?: callbackType;
 }) => void;
 interface AasDrawerProps {
   onHideDrawer: () => void;
 }
+
 export function useAasDrawer({ onHideDrawer }: AasDrawerProps) {
   const drawerHeader = ref<string>("");
   const drawerVisible = ref(false);
   const activeEditor = ref<EditorType | null>(null);
   const activeMode = ref<EditorModeType>(EditorMode.EDIT);
   const activeData = ref<
-    SubmodelEditorProps | PropertyCreateEditorProps | PropertyEditorProps | null
+    any | null
   >(null);
   const activePath = ref<AasEditorPath>({ idShortPath: "" });
-  const activeCallback = ref<(...args: any[]) => any | null>(null);
+  const activeCallback = ref<callbackType | null>(null);
 
   const openDrawer: OpenDrawerCallback<EditorType, EditorModeType> = ({
     type,
@@ -98,37 +103,41 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps) {
     activeData.value = structuredClone(data);
     activeMode.value = structuredClone(mode);
     activePath.value = structuredClone(path);
-    activeCallback.value = callback;
+    activeCallback.value = callback ?? null;
     drawerHeader.value = title;
     drawerVisible.value = true;
   };
 
   const Editors: Record<
     EditorModeType,
-    Record<EditorType, { parser: z.ZodTypeAny; component: any }>
+    Record<EditorType, { parse: (data: any) => void; component: any }>
   > = {
     [EditorMode.CREATE]: {
       [AasKeyTypes.Submodel]: {
         component: SubmodelCreateEditor,
-        parser: SubmodelCreateEditorPropsSchema,
+        parse: data => SubmodelCreateEditorPropsSchema.parse(data),
       },
       [AasKeyTypes.Property]: {
         component: PropertyCreateEditor,
-        parser: PropertyCreateEditorPropsSchema,
+        parse: data => PropertyCreateEditorPropsSchema.parse(data),
+      },
+      [AasKeyTypes.SubmodelElementCollection]: {
+        component: SubmodelElementCollectionEditor,
+        parse: data => SubmodelElementCollectionJsonSchema.parse(data),
       },
     },
     [EditorMode.EDIT]: {
       [AasKeyTypes.Submodel]: {
         component: SubmodelEditor,
-        parser: SubmodelJsonSchema.omit({ submodelElements: true }),
+        parse: data => SubmodelJsonSchema.parse(data),
       },
       [AasKeyTypes.Property]: {
         component: PropertyEditor,
-        parser: PropertyJsonSchema,
+        parse: data => PropertyJsonSchema.parse(data),
       },
       [AasKeyTypes.SubmodelElementCollection]: {
         component: SubmodelElementCollectionEditor,
-        parser: SubmodelElementCollectionJsonSchema,
+        parse: data => SubmodelElementCollectionJsonSchema.parse(data),
       },
     },
   };
@@ -146,7 +155,7 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps) {
       component: foundEditor.component,
       props: {
         path: activePath.value,
-        data: foundEditor.parser.parse(activeData.value),
+        data: foundEditor.parse(activeData.value),
         callback: activeCallback.value,
       },
     };

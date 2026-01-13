@@ -13,7 +13,6 @@ const props = defineProps<{
 <template>
   <div>
     SubmodelElementCollection
-    {{ props.data.id }}
     {{ props.data.idShort }}
   </div>
 </template>

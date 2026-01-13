@@ -10,7 +10,7 @@ const props = defineProps<{
   error: string | undefined | null;
 }>();
 
-const model = defineModel();
+const model = defineModel<string | undefined | null>();
 
 function generateIdShort() {
   model.value = uuid4();
@@ -22,7 +22,7 @@ function generateIdShort() {
     v-model="model"
     v-bind="props"
     label="Id"
-    :component="InputText"
+    :type="InputText"
   >
     <template #addon-right>
       <InputGroupAddon>

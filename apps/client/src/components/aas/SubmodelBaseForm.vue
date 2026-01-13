@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Button, DataView, InputText } from "primevue";
+import type { FormErrors } from "vee-validate";
+import { Button, DataView } from "primevue";
 import { useField, useFieldArray } from "vee-validate";
 import FormField from "../basics/form/FormField.vue";
 import IdField from "../basics/form/IdField.vue";
@@ -7,13 +8,13 @@ import LanguageSelect from "../basics/LanguageSelect.vue";
 
 const props = defineProps<{ showErrors: boolean; errors: FormErrors<any> }>();
 
-const { value: idShort, errorMessage } = useField("idShort");
+const { value: idShort, errorMessage } = useField<string | undefined | null>("idShort");
 
 const {
   fields: displayName,
   push: pushDisplayName,
   remove: removeDisplayName,
-} = useFieldArray<FormValues["displayName"]>("displayName");
+} = useFieldArray("displayName");
 </script>
 
 <template>
@@ -50,7 +51,6 @@ const {
           <FormField
             :id="`displayName.${index}.text`"
             v-model="field.value.text"
-            :component="InputText"
             label="Name"
             :show-error="props.showErrors"
             :error="props.errors[`displayName[${index}].text`]"
@@ -58,7 +58,7 @@ const {
           <Button
             icon="pi pi-trash"
             severity="danger"
-            @click="removeDisplayName(index)"
+            @click="removeDisplayName(Number(index))"
           />
         </div>
       </div>

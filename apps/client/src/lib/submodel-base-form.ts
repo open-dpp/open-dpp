@@ -1,3 +1,4 @@
+import type { LanguageType } from "@open-dpp/dto";
 import { LanguageTextJsonSchema } from "@open-dpp/dto";
 import { z } from "zod";
 
@@ -6,9 +7,9 @@ export const SubmodelBaseFormSchema = z.object({
   displayName: LanguageTextJsonSchema.array(),
 });
 
-export function submodelBaseFormDefaultValues(language: string) {
+export function submodelBaseFormDefaultValues(language: LanguageType) {
   return {
     idShort: "",
-    displayName: [{ language }],
+    displayName: [{ language, text: "" }],
   };
 }

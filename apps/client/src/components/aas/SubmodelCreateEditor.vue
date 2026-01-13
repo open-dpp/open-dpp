@@ -28,7 +28,6 @@ export type FormValues = z.infer<typeof propertyFormSchema>;
 
 const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(propertyFormSchema),
-  validateOnInput: true, // Add this line
   initialValues: {
     ...submodelBaseFormDefaultValues(convertLocaleToLanguage(locale.value)),
   },
@@ -43,14 +42,14 @@ const submit = handleSubmit(async (data) => {
 });
 
 defineExpose<{
-  submit: () => Promise<void>;
+  submit: () => Promise<Promise<void> | undefined>;
 }>({
   submit,
 });
 </script>
 
 <template>
-  <form class="flex flex-col gap-1 p-2" @submit.prevent="onSubmit">
+  <form class="flex flex-col gap-1 p-2">
     <SubmodelBaseForm :show-errors="showErrors" :errors="errors" />
   </form>
 </template>

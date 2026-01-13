@@ -1,4 +1,5 @@
 import type { PagingParamsDto } from "@open-dpp/dto";
+
 import { computed, ref } from "vue";
 
 export type Cursor = string | null;
@@ -18,13 +19,13 @@ interface PaginationProps {
   initialCursor?: string;
   limit: number;
   fetchCallback: (pagingParams: PagingParamsDto) => Promise<PagingResult>;
-  changeQueryParams: (params: Record<string, string>) => void;
+  changeQueryParams: (params: Record<string, string | undefined>) => void;
 }
 export function usePagination({ initialCursor, limit, fetchCallback, changeQueryParams }: PaginationProps) {
-  const startCursor = ref<string>(initialCursor ?? null);
+  const startCursor = ref<string | null>(initialCursor ?? null);
   const pages = ref<Page[]>([{ cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 }]);
   const currentPageIndex = ref<number>(0);
-  const currentPage = ref<Page>(pages.value[0]);
+  const currentPage = ref<Page>({ cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 });
 
   const hasPrevious = computed(() => {
     return currentPage.value.cursor !== startCursor.value;

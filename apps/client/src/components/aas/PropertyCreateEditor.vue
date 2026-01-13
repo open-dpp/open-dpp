@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import type { PropertyRequestDto } from "@open-dpp/dto";
 import type { AasEditorPath, PropertyCreateEditorProps } from "../../composables/aas-drawer.ts";
-import { DataTypeDef } from "@open-dpp/dto";
+import { DataTypeDef, PropertyJsonSchema } from "@open-dpp/dto";
 
 import { toTypedSchema } from "@vee-validate/zod";
-import { InputText } from "primevue";
 import { useForm } from "vee-validate";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
@@ -29,7 +28,6 @@ export type FormValues = z.infer<typeof propertyFormSchema>;
 
 const { defineField, handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(propertyFormSchema),
-  validateOnInput: true, // Add this line
   initialValues: { value: "", ...submodelBaseFormDefaultValues(convertLocaleToLanguage(locale.value)) },
 });
 
@@ -41,24 +39,23 @@ const showErrors = computed(() => {
 
 const submit
   = handleSubmit(async (data) => {
-    await props.callback({ ...data, valueType: props.data.valueType });
+    await props.callback(PropertyJsonSchema.parse({ ...data, valueType: props.data.valueType }));
   });
 
 defineExpose<{
-  submit: () => Promise<void>;
+  submit: () => Promise<Promise<void> | undefined>;
 }>({
   submit,
 });
 </script>
 
 <template>
-  <form class="flex flex-col gap-1 p-2" @submit.prevent="onSubmit">
+  <form class="flex flex-col gap-1 p-2">
     <SubmodelBaseForm :show-errors="showErrors" :errors="errors" />
     <div class="grid lg:grid-cols-3 grid-cols-1 gap-2">
       <FormField
         id="value"
         v-model="value"
-        :component="InputText"
         label="Wert"
         :show-error="showErrors"
         :error="errors.value"

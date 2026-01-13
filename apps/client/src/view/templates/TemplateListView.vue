@@ -8,7 +8,7 @@ import { useTemplates } from "../../composables/templates.ts";
 const route = useRoute();
 const router = useRouter();
 
-function changeQueryParams(newQuery: Record<string, string>) {
+function changeQueryParams(newQuery: Record<string, string | undefined>) {
   router.replace({
     query: {
       ...route.query,

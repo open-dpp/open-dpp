@@ -38,7 +38,7 @@ describe("templates", () => {
     setActivePinia(createPinia());
   });
 
-  function changeQueryParams(_params: Record<string, string>) {}
+  const changeQueryParams = vi.fn();
 
   it("should create template", async () => {
     const templatesStore = useTemplates({ changeQueryParams });
