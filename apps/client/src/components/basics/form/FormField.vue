@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FloatLabel, InputGroup, Message } from "primevue";
+import { FloatLabel, InputGroup, InputNumber, InputText, Message } from "primevue";
 import { computed } from "vue";
 import { z } from "zod/v4";
 
