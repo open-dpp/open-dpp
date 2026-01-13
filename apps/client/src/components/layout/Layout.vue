@@ -85,16 +85,11 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
           show: () => indexStore.selectedOrganization !== null,
         },
         {
-          name: t("templates.label", 2),
+          name: `${t("templates.label", 2)} AAS @beta`,
           to: `/organizations/${indexStore.selectedOrganization}/templates`,
           icon: Square3Stack3DIcon,
           show: () => indexStore.selectedOrganization !== null,
         },
-      ],
-    },
-    {
-      name: "Organization",
-      items: [
         {
           name: t("integrations.integrations"),
           to: `/organizations/${indexStore.selectedOrganization}/integrations`,
@@ -107,6 +102,12 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
           icon: ChartBarIcon,
           show: () => indexStore.selectedOrganization !== null,
         },
+      ],
+    },
+    {
+      name: "Organization",
+      items: [
+
         {
           name: t("members.members"),
           to: `/organizations/${indexStore.selectedOrganization}/members`,

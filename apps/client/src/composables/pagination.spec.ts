@@ -53,7 +53,6 @@ describe("pagination", () => {
       from: 8,
       to: 9,
     };
-
     await nextPage();
     expect(currentPage.value).toEqual(firstPageExpect);
     expect(changeQueryParams).toHaveBeenCalledWith({ cursor: undefined });

@@ -67,7 +67,7 @@ export function usePagination({ initialCursor, limit, fetchCallback, changeQuery
       currentPageIndex.value++;
     }
     else {
-      nextPage = currentPage.value;
+      nextPage = pages.value[currentPageIndex.value]!;
     }
 
     const response = await fetchCallback({

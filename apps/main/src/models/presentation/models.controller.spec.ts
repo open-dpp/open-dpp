@@ -27,10 +27,6 @@ import {
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { MediaDbSchema, MediaDoc } from "../../media/infrastructure/media.schema";
 import { MediaService } from "../../media/infrastructure/media.service";
-import { CapEvaluatorService } from "../../policy/infrastructure/cap-evaluator.service";
-import { CapDoc, CapSchema } from "../../policy/infrastructure/cap.schema";
-import { PolicyService } from "../../policy/infrastructure/policy.service";
-import { QuotaDoc, QuotaSchema } from "../../policy/infrastructure/quota.schema";
 import { Template } from "../../old-templates/domain/template";
 import {
   LaptopFactory,
@@ -38,6 +34,10 @@ import {
 } from "../../old-templates/fixtures/laptop.factory";
 import { OldTemplateDoc, TemplateSchema } from "../../old-templates/infrastructure/template.schema";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";
+import { CapEvaluatorService } from "../../policy/infrastructure/cap-evaluator.service";
+import { CapDoc, CapSchema } from "../../policy/infrastructure/cap.schema";
+import { PolicyService } from "../../policy/infrastructure/policy.service";
+import { QuotaDoc, QuotaSchema } from "../../policy/infrastructure/quota.schema";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import {
   DppEventSchema,
