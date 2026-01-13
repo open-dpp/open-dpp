@@ -9,7 +9,6 @@ export default defineConfig({
     target: "es2022",
   },
   resolve: {
-    preserveSymlinks: true,
     alias: [
       {
         find: /^@open-dpp\/(.*)$/,
