@@ -29,7 +29,7 @@ import {
   updateModelDocumentation,
 } from "../../open-api-docs/model.doc";
 import { PolicyKey } from "../../policy/domain/policy";
-import { Policy } from "../../policy/policy.decorator";
+import { Policy } from "../../policy/presentation/policy.decorator";
 import { DataValue } from "../../product-passport-data/domain/data-value";
 import { DataValueDtoSchema } from "../../product-passport-data/presentation/dto/data-value.dto";
 import {

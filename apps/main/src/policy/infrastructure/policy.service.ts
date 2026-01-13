@@ -10,6 +10,17 @@ import { CapEvaluatorService } from "./cap-evaluator.service";
 import { CapDoc } from "./cap.schema";
 import { QuotaDoc } from "./quota.schema";
 
+interface EnforceResult {
+  key: string;
+  used: number;
+  limit: number;
+}
+
+interface LimitAndValue {
+  limit: number;
+  used: number;
+}
+
 @Injectable()
 export class PolicyService {
   private readonly envService: EnvService;
@@ -83,11 +94,14 @@ export class PolicyService {
     return this.convertCapToDomain(capDoc);
   }
 
-  async isCapReached(orgaId: string, key: PolicyKey) {
+  async isCapReached(orgaId: string, key: PolicyKey): Promise<LimitAndValue> {
     const cap = await this.getCap(orgaId, key);
     const currentCapCount = await this.capEvaluatorService.getCurrent(orgaId, key);
 
-    return currentCapCount >= cap.getLimit();
+    return {
+      limit: cap.getLimit(),
+      used: currentCapCount,
+    };
   }
 
   async getQuota(organizationId: string, key: PolicyKey): Promise<Quota | undefined> {
@@ -107,7 +121,7 @@ export class PolicyService {
     return quota;
   }
 
-  async isQuotaExceeded(orgaId: string, key: PolicyKey) {
+  async isQuotaExceeded(orgaId: string, key: PolicyKey): Promise<LimitAndValue> {
     let quota = await this.getQuota(orgaId, key);
     if (!quota) {
       const defaultLimit = this.getDefaultLimit(key);
@@ -122,7 +136,10 @@ export class PolicyService {
       quota = await this.saveQuota(quota);
     }
 
-    return quota.isExceeded();
+    return {
+      limit: quota.getLimit(),
+      used: quota.getCount(),
+    };
   }
 
   async getQuotaOrFail(organizationId: string, key: PolicyKey): Promise<Quota> {
@@ -172,22 +189,47 @@ export class PolicyService {
     return rule as PolicyQuotaRule;
   }
 
-  async enforce(organizationId: string, keys: PolicyKey[]): Promise<void> {
+  async enforce(organizationId: string, keys: PolicyKey[]): Promise<EnforceResult | null> {
+    let result: EnforceResult | null = null;
+
     for (const key of keys) {
       const rule = PolicyDefinitions[key];
 
+      let limitAndValue: LimitAndValue;
       if (rule.type === "cap") {
-        const capReached = await this.isCapReached(organizationId, key);
-        if (capReached) {
-          throw new Error(`Cap reached for policy: ${rule.description}`);
-        }
+        limitAndValue = await this.isCapReached(organizationId, key);
       }
-      else if (rule.type === "quota") {
-        const quotaExceeded = await this.isQuotaExceeded(organizationId, key);
-        if (quotaExceeded) {
-          throw new Error(`Quota exceeded for policy: ${rule.description}`);
-        }
+      else {
+        limitAndValue = await this.isQuotaExceeded(organizationId, key);
+      }
+
+      if (limitAndValue.used >= limitAndValue.limit) {
+        result = {
+          key: PolicyKey[key],
+          limit: limitAndValue.limit,
+          used: limitAndValue.used,
+        };
       }
     }
+
+    return result;
+  }
+
+  async incrementQuota(organizationId: string, key: PolicyKey, amount: number = 1): Promise<Quota> {
+    let quota = await this.getQuota(organizationId, key);
+
+    if (!quota) {
+      const defaultLimit = this.getDefaultLimit(key);
+      const quotaRule = this.getQuotaRule(key);
+      quota = Quota.create({
+        key,
+        organizationId,
+        limit: defaultLimit,
+        period: quotaRule.period,
+      });
+    }
+
+    quota.increment(amount);
+    return await this.saveQuota(quota);
   }
 }

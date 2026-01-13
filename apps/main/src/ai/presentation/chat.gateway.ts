@@ -33,13 +33,22 @@ export class ChatGateway {
   ) {
     const startTime = Date.now();
     this.logger.log("Start to process message:", message);
-    const reply = await this.chatService.askAgent(
-      message.msg,
-      message.passportUUID,
-    );
-    client.emit("botMessage", reply);
-    const endTime = Date.now();
-    const executionTime = endTime - startTime;
-    this.logger.log(`Processing time: ${executionTime}ms`);
+
+    try {
+      const reply = await this.chatService.askAgent(
+        message.msg,
+        message.passportUUID,
+      );
+      client.emit("botMessage", reply);
+      const endTime = Date.now();
+      const executionTime = endTime - startTime;
+      this.logger.log(`Processing time: ${executionTime}ms`);
+    }
+    catch (error) {
+      client.emit("limitError", {
+        msg: error.message || "An error occurred",
+        code: error.name === "QuotaExceededError" ? "QUOTA_EXCEEDED" : "ERROR",
+      });
+    }
   }
 }

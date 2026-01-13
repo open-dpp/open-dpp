@@ -463,6 +463,15 @@
       "ctaSignIn": "Sign in now"
     }
   },
+  "api": {
+    "error": {
+      "limit": {
+        "MODEL_CREATE_CAP": "Limit number of {limit} models are reached.",
+        "MEDIA_STORAGE_CAP": "Limit number of {limit} MB storage are reached.",
+        "AI_TOKEN_QUOTA": "Limit number of {limit} Tokens per month is reached."
+      }
+    }
+  },
   "presentation": {
     "productDetails": "Product details",
     "productDetailsDesc": "General information about the product.",

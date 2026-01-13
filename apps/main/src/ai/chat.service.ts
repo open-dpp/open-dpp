@@ -2,6 +2,8 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { Injectable, Logger } from "@nestjs/common";
+import { PolicyKey } from "../policy/domain/policy";
+import { PolicyService } from "../policy/infrastructure/policy.service";
 import {
   UniqueProductIdentifierApplicationService,
 } from "../unique-product-identifier/presentation/unique.product.identifier.application.service";
@@ -17,17 +19,20 @@ export class ChatService {
   private aiService: AiService;
   private uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService;
   private aiConfigurationService: AiConfigurationService;
+  private policyService: PolicyService;
 
   constructor(
     mcpClientService: McpClientService,
     aiService: AiService,
     uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
     aiConfigurationService: AiConfigurationService,
+    policyService: PolicyService,
   ) {
     this.mcpClientService = mcpClientService;
     this.aiService = aiService;
     this.uniqueProductIdentifierApplicationService = uniqueProductIdentifierApplicationService;
     this.aiConfigurationService = aiConfigurationService;
+    this.policyService = policyService;
   }
 
   async askAgent(query: string, passportUuid: string) {
@@ -38,6 +43,19 @@ export class ChatService {
     if (!passport) {
       throw new Error("Passport not found");
     }
+
+    // Check quota BEFORE processing
+    const quotaCheck = await this.policyService.enforce(
+      passport.organizationId,
+      [PolicyKey.AI_TOKEN_QUOTA],
+    );
+
+    if (quotaCheck) {
+      const error = new Error(`Quota exceeded: ${quotaCheck.used}/${quotaCheck.limit} tokens used.`);
+      error.name = "QuotaExceededError";
+      throw error;
+    }
+
     this.logger.log(`Fetch ai configuration`);
     const aiConfiguration
       = await this.aiConfigurationService.findOneByOrganizationId(
@@ -83,6 +101,29 @@ export class ChatService {
     ]);
     this.logger.log(`Ask agent`);
 
-    return await chain.invoke({ input: query });
+    const result = await chain.invoke({ input: query }, {
+      callbacks: [
+        {
+          handleLLMEnd: async (output) => {
+            const generation = output.generations?.[0]?.[0];
+            const usageMetadata = (generation as any)?.message?.usage_metadata || output.llmOutput?.tokenUsage;
+
+            if (usageMetadata?.total_tokens || usageMetadata?.totalTokens) {
+              this.logger.debug(`Tokens used: ${usageMetadata.total_tokens} (input: ${usageMetadata.input_tokens}, output: ${usageMetadata.output_tokens})`);
+              await this.policyService.incrementQuota(
+                passport.organizationId,
+                PolicyKey.AI_TOKEN_QUOTA,
+                usageMetadata.total_tokens,
+              );
+            }
+            else {
+              this.logger.warn("No token usage information available");
+            }
+          },
+        },
+      ],
+    });
+
+    return result;
   }
 }

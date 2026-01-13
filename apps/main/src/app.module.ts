@@ -20,6 +20,7 @@ import { MarketplaceModule } from "./marketplace/marketplace.module";
 import { MediaModule } from "./media/media.module";
 import { ModelsModule } from "./models/models.module";
 import { OrganizationsModule } from "./organizations/organizations.module";
+import { PolicyGuard } from "./policy/presentation/policy.guard";
 import { PolicyModule } from "./policy/policy.module";
 import { ProductPassportModule } from "./product-passport/product-passport.module";
 import { TemplateDraftModule } from "./template-draft/template-draft.module";
@@ -71,6 +72,10 @@ import { UsersModule } from "./users/users.module";
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PolicyGuard,
     },
   ],
 })
