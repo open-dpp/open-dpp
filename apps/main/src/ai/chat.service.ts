@@ -108,7 +108,7 @@ export class ChatService {
             const generation = output.generations?.[0]?.[0];
             const usageMetadata = (generation as any)?.message?.usage_metadata || output.llmOutput?.tokenUsage;
 
-            if (usageMetadata?.total_tokens || usageMetadata?.totalTokens) {
+            if (usageMetadata?.total_tokens) {
               this.logger.debug(`Tokens used: ${usageMetadata.total_tokens} (input: ${usageMetadata.input_tokens}, output: ${usageMetadata.output_tokens})`);
               await this.policyService.incrementQuota(
                 passport.organizationId,
