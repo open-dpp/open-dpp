@@ -13,7 +13,7 @@ const draftSidebarStore = useDraftSidebarStore();
 </script>
 
 <template>
-  <TransitionRoot :show="draftSidebarStore.isOpen" as="template">
+  <TransitionRoot :show="draftSidebarStore.isOpen" as="oldTemplate">
     <Dialog class="relative z-20" @close="draftSidebarStore.close">
       <div class="fixed inset-0" />
 
@@ -23,7 +23,7 @@ const draftSidebarStore = useDraftSidebarStore();
             class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10 sm:pl-16 pt-12"
           >
             <TransitionChild
-              as="template"
+              as="oldTemplate"
               enter="transform transition ease-in-out duration-500 sm:duration-700"
               enter-from="translate-x-full"
               enter-to="translate-x-0"

@@ -1,5 +1,5 @@
+import type { Section } from "../../../old-templates/domain/section";
 import type { SectionDraft } from "../../../template-draft/domain/section-draft";
-import type { Section } from "../../../templates/domain/section";
 import { z } from "zod";
 import { GranularityLevel } from "../../domain/granularity-level";
 import { SectionType } from "../../domain/section-base";

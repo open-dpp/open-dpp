@@ -28,7 +28,7 @@ watch(
 );
 
 onMounted(async () => {
-  const response = await apiClient.dpp.templates.getAll();
+  const response = await apiClient.dpp.oldTemplates.getAll();
   localTemplates.value = response.data;
   const marketplaceResponse
     = await apiClient.marketplace.passportTemplates.getAll();

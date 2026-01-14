@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto'
+import { SubmodelElementSchema } from '@open-dpp/dto'
+import { submodelCarbonFootprintPlainFactory } from '@open-dpp/testing'
 import {
   AssetAdministrationShellType,
   DataFieldType,
@@ -10,12 +12,24 @@ import {
   VisibilityLevel,
 } from '../../src'
 import { activeOrganization, organizations } from '../organization'
+import {
+  aasResponse,
+  aasWrapperId,
+  paginationParams,
+  propertyToAdd,
+  submodelCarbonFootprintElement0,
+  submodelCarbonFootprintResponse,
+  submodelDesignOfProduct,
+  submodelDesignOfProductElement0,
+  submodelValueResponse,
+} from './handlers/aas'
 import { aasPropertiesWithParent, connection, connectionList } from './handlers/aas-integration'
 import { item1, item2 } from './handlers/item'
 import { mediaReferences, mediaReferenceUpdate, model, responseDataValues, updateDataValues } from './handlers/model'
+import { oldTemplate } from './handlers/old-template'
 import { productPassport } from './handlers/product-passport'
-import { template } from './handlers/template'
 import { dataFieldDraft, draftsOfOrganization, sectionDraft, templateDraft } from './handlers/template-draft'
+import { template1, template2 } from './handlers/templates'
 import {
   uniqueProductIdentifierId,
   uniqueProductIdentifierMetadata,
@@ -39,19 +53,92 @@ describe('apiClient', () => {
     })
   })
 
+  describe('old templates', () => {
+    const sdk = new OpenDppClient({
+      dpp: { baseURL },
+    })
+    sdk.setActiveOrganizationId(activeOrganization.id)
+    it('should get all templates', async () => {
+      const response = await sdk.dpp.oldTemplates.getAll()
+      expect(response.data).toEqual([{ id: oldTemplate.id, name: oldTemplate.name }])
+    })
+
+    it('should get template by id', async () => {
+      const response = await sdk.dpp.oldTemplates.getById(oldTemplate.id)
+      expect(response.data).toEqual(oldTemplate)
+    })
+  })
+
   describe('templates', () => {
     const sdk = new OpenDppClient({
       dpp: { baseURL },
     })
     sdk.setActiveOrganizationId(activeOrganization.id)
     it('should get all templates', async () => {
-      const response = await sdk.dpp.templates.getAll()
-      expect(response.data).toEqual([{ id: template.id, name: template.name }])
+      const response = await sdk.dpp.templates.getAll(paginationParams)
+      expect(response.data.result).toEqual([template1, template2])
     })
 
-    it('should get template by id', async () => {
-      const response = await sdk.dpp.templates.getById(template.id)
-      expect(response.data).toEqual(template)
+    it('should create template', async () => {
+      const response = await sdk.dpp.templates.create()
+      expect(response.data).toEqual(template1)
+    })
+  })
+
+  describe.each(['templates'])('aas', () => {
+    const sdk = new OpenDppClient({
+      dpp: { baseURL },
+    })
+    it('should return shells', async () => {
+      const response = await sdk.dpp.templates.aas.getShells(aasWrapperId, paginationParams)
+      expect(response.data.paging_metadata.cursor).toEqual(aasResponse.id)
+      expect(response.data.result).toEqual([aasResponse])
+    })
+    it('should return submodels', async () => {
+      const response = await sdk.dpp.templates.aas.getSubmodels(aasWrapperId, paginationParams)
+      expect(response.data).toEqual([submodelCarbonFootprintResponse])
+    })
+    it('should return submodel by id', async () => {
+      const response = await sdk.dpp.templates.aas.getSubmodelById(aasWrapperId, btoa(submodelCarbonFootprintResponse.id))
+      expect(response.data).toEqual(submodelCarbonFootprintResponse)
+    })
+    it('should return submodel as value', async () => {
+      const response = await sdk.dpp.templates.aas.getSubmodelValue(aasWrapperId, btoa(submodelDesignOfProduct.id))
+      expect(response.data).toEqual(submodelValueResponse)
+    })
+    it('should return submodel elements of submodel', async () => {
+      const response = await sdk.dpp.templates.aas.getSubmodelElements(aasWrapperId, btoa(submodelCarbonFootprintResponse.id))
+      expect(response.data).toEqual(submodelCarbonFootprintResponse.submodelElements)
+    })
+
+    it('should return submodel element by id', async () => {
+      const response = await sdk.dpp.templates.aas.getSubmodelElementById(aasWrapperId, btoa(submodelCarbonFootprintResponse.id), submodelCarbonFootprintElement0.idShort)
+      expect(response.data).toEqual(submodelCarbonFootprintResponse.submodelElements[0])
+    })
+
+    it('should return submodel element value', async () => {
+      const response = await sdk.dpp.templates.aas.getSubmodelElementValue(aasWrapperId, btoa(submodelDesignOfProduct.id), submodelDesignOfProductElement0.idShort)
+      expect(response.data).toEqual(submodelValueResponse.Design_V01)
+    })
+
+    it('should create submodel', async () => {
+      const response = await sdk.dpp.templates.aas.createSubmodel(aasWrapperId, submodelCarbonFootprintPlainFactory.build())
+      expect(response.data).toEqual(submodelCarbonFootprintResponse)
+    })
+
+    it('should create submodel element', async () => {
+      const response = await sdk.dpp.templates.aas.createSubmodelElement(aasWrapperId, btoa(submodelCarbonFootprintResponse.id), propertyToAdd)
+      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd))
+    })
+
+    it('should create submodel element at idShortPath', async () => {
+      const response = await sdk.dpp.templates.aas.createSubmodelElementAtIdShortPath(
+        aasWrapperId,
+        btoa(submodelCarbonFootprintResponse.id),
+        submodelCarbonFootprintElement0.idShort,
+        propertyToAdd,
+      )
+      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd))
     })
   })
 
@@ -387,7 +474,7 @@ describe('apiClient', () => {
       const response = await sdk.dpp.templateDrafts.publish(templateDraft.id, {
         visibility: VisibilityLevel.PRIVATE,
       })
-      expect(response.data).toEqual({ ...template })
+      expect(response.data).toEqual({ ...oldTemplate })
     })
   })
 

@@ -39,11 +39,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Step 5: Build API Client
-      - name: Build API Client
-        run: pnpm --filter @open-dpp/api-client build
-
-      # Step 6: Run linting
+      # Step 5: Run linting
       - name: Run linter
         run: pnpm run lint
 
@@ -126,9 +122,6 @@ jobs:
       # Step 5: Install dependencies
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Build API Client
-        run: pnpm --filter @open-dpp/api-client build
 
       # Step 6: Build project
       - name: Build project

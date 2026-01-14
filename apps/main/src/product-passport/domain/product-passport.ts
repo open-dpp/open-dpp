@@ -1,12 +1,12 @@
 import type { Item } from "../../items/domain/item";
 import type { Model } from "../../models/domain/model";
+import type { Template } from "../../old-templates/domain/template";
 import type { DataValue } from "../../product-passport-data/domain/data-value";
-import type { Template } from "../../templates/domain/template";
 import type { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
 import _ from "lodash";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
-import { Section } from "../../templates/domain/section";
+import { Section } from "../../old-templates/domain/section";
 
 export class DataSection extends Section {
   section: Section;

@@ -5,12 +5,12 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import {
-  getApp,
-} from "@open-dpp/testing";
 import { json } from "express";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
+import {
+  getApp,
+} from "../../../test/utils.for.test";
 import { AuthGuard } from "../../auth/auth.guard";
 import { AuthModule } from "../../auth/auth.module";
 import { AuthService } from "../../auth/auth.service";
@@ -23,12 +23,12 @@ import { ItemsApplicationService } from "../../items/presentation/items-applicat
 import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
-import { Template, TemplateDbProps } from "../../templates/domain/template";
-import { dataFieldDbPropsFactory } from "../../templates/fixtures/data-field.factory";
-import { laptopFactory } from "../../templates/fixtures/laptop.factory";
-import { sectionDbPropsFactory } from "../../templates/fixtures/section.factory";
-import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
-import { TemplateService } from "../../templates/infrastructure/template.service";
+import { Template, TemplateDbProps } from "../../old-templates/domain/template";
+import { dataFieldDbPropsFactory } from "../../old-templates/fixtures/data-field.factory";
+import { laptopFactory } from "../../old-templates/fixtures/laptop.factory";
+import { sectionDbPropsFactory } from "../../old-templates/fixtures/section.factory";
+import { OldTemplateDoc, TemplateSchema } from "../../old-templates/infrastructure/template.schema";
+import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import {
   DppEventSchema,
   TraceabilityEventDocument,
@@ -82,7 +82,7 @@ describe("aasConnectionController", () => {
             schema: ItemSchema,
           },
           {
-            name: TemplateDoc.name,
+            name: OldTemplateDoc.name,
             schema: TemplateSchema,
           },
           {
