@@ -53,7 +53,8 @@ export class ChatGateway {
           msg: error.message,
           code: error.name === "QuotaExceededError" ? "QUOTA_EXCEEDED" : "ERROR",
         });
-      } else {
+      }
+      else {
         this.logger.error("Unknown error in chat handler", error);
         client.emit("limitError", {
           msg: "An error occurred",
