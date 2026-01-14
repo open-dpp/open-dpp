@@ -30,7 +30,7 @@
     "@open-dpp/api-client": "workspace:*",
     "@open-dpp/env": "workspace:*",
     "@rekog/mcp-nest": "^1.8.4",
-    "zod": "^3.25.76"
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.14",
