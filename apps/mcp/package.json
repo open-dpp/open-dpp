@@ -29,7 +29,7 @@
     "@nestjs/platform-express": "^11.1.10",
     "@open-dpp/api-client": "workspace:*",
     "@open-dpp/env": "workspace:*",
-    "@rekog/mcp-nest": "^1.8.4",
+    "@rekog/mcp-nest": "^1.9.2",
     "zod": "^3.25.76"
   },
   "devDependencies": {
