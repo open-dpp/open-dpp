@@ -45,10 +45,21 @@ export class ChatGateway {
       this.logger.log(`Processing time: ${executionTime}ms`);
     }
     catch (error) {
-      client.emit("limitError", {
-        msg: error.message || "An error occurred",
-        code: error.name === "QuotaExceededError" ? "QUOTA_EXCEEDED" : "ERROR",
-      });
+      if (error instanceof Error) {
+        if (error.name !== "QuotaExceededError") {
+          this.logger.error("Unexpected error in chat handler", error);
+        }
+        client.emit("limitError", {
+          msg: error.message,
+          code: error.name === "QuotaExceededError" ? "QUOTA_EXCEEDED" : "ERROR",
+        });
+      } else {
+        this.logger.error("Unknown error in chat handler", error);
+        client.emit("limitError", {
+          msg: "An error occurred",
+          code: "ERROR",
+        });
+      }
     }
   }
 }
