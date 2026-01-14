@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Page } from "../../composables/pagination.ts";
 import { Button } from "primevue";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps<{
   currentPage: Page;
@@ -13,6 +14,8 @@ const emits = defineEmits<{
   (e: "previousPage"): Promise<void>;
   (e: "resetCursor"): Promise<void>;
 }>();
+
+const { t } = useI18n();
 </script>
 
 <template>
@@ -22,7 +25,7 @@ const emits = defineEmits<{
       <Button :disabled="!props.hasPrevious" icon="pi pi-chevron-left" rounded text @click="emits('previousPage')" />
     </div>
     <div class="text-color font-medium">
-      <span class="hidden sm:block">Showing: {{ currentPage.from + 1 }} to {{ currentPage.to + 1 }}, Count: {{ currentPage.itemCount }}</span>
+      <span class="hidden sm:block">{{ t('pagination.footer', { from: currentPage.from + 1, to: currentPage.to + 1, count: currentPage.itemCount }) }}</span>
     </div>
     <Button icon="pi pi-chevron-right" rounded text :disabled="!props.hasNext" @click="emits('nextPage')" />
   </div>

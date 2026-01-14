@@ -1,14 +1,20 @@
 <script setup lang="ts">
 import { Language } from "@open-dpp/dto";
 import { Select } from "primevue";
-import { ref } from "vue";
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 
 const model = defineModel();
 
-const languageOptions = ref([
-  { name: "English", language: Language.en },
-  { name: "Deutsch", language: Language.de },
-]);
+const { t } = useI18n();
+
+const languageOptions = computed(() => {
+  return [
+    { name: t("languages.english"), language: Language.en },
+    { name: t("languages.german"), language: Language.de },
+  ];
+},
+);
 </script>
 
 <template>

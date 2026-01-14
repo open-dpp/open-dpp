@@ -6,6 +6,7 @@ import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
 import { Button, Column, DataTable } from "primevue";
 import { useI18n } from "vue-i18n";
+import { useRoute, useRouter } from "vue-router";
 import TablePagination from "./pagination/TablePagination.vue";
 
 const props = defineProps<{
@@ -26,6 +27,13 @@ const emits = defineEmits<{
 
 dayjs.extend(utc);
 dayjs.extend(localizedFormat);
+
+const route = useRoute();
+const router = useRouter();
+
+async function editItem(id: string) {
+  await router.push(`${route.path}/${id}`);
+}
 
 const { t } = useI18n();
 </script>
@@ -54,6 +62,19 @@ const { t } = useI18n();
         <p>
           {{ dayjs(slotProps.data.updatedAt).format('LLL') }}
         </p>
+      </template>
+    </Column>
+    <Column>
+      <template #body="{ data }">
+        <div class="flex w-full justify-end">
+          <div class="flex items-center rounded-md gap-2">
+            <Button
+              icon="pi pi-pencil"
+              severity="primary"
+              @click="editItem(data.id)"
+            />
+          </div>
+        </div>
       </template>
     </Column>
     <template #paginatorcontainer>

@@ -49,6 +49,20 @@
     "website": "Website",
     "contact": "Contact"
   },
+  "aasEditor": {
+    "addTextField": "Add text field",
+    "addSubmodel": "Add section",
+    "submodel": "Section",
+    "textField": "Text field",
+    "type": "Type"
+  },
+  "languages": {
+    "english": "English",
+    "german": "German"
+  },
+  "pagination": {
+    "footer": "Showing: {from} - {to}, Count: {count}"
+  },
   "builder": {
     "repeater": {
       "label": "Repeater",

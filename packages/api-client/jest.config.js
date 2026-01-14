@@ -21,7 +21,7 @@ export default {
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!((?:\\.pnpm/.*?/)?(?:@(?:open-dpp)|until-async))(?:/|$))',
+    'node_modules/(?!((?:\\.pnpm/.*?/)?(?:@(?:open-dpp)|until-async|uuid))(?:/|$))',
   ],
   moduleNameMapper: {
     '^@open-dpp/(.*)$': '<rootDir>/../../packages/$1/src',

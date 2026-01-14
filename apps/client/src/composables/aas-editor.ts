@@ -30,6 +30,7 @@ interface AasEditorProps {
   changeQueryParams: (params: Record<string, string | undefined>) => void;
   errorHandlingStore: IErrorHandlingStore;
   selectedLanguage: LanguageType;
+  translate: (label: string) => string;
 }
 export function useAasEditor({
   id,
@@ -39,6 +40,7 @@ export function useAasEditor({
   changeQueryParams,
   errorHandlingStore,
   selectedLanguage,
+  translate,
 }: AasEditorProps) {
   const submodels = ref<TreeNode[]>();
   const selectedKeys = ref<TreeTableSelectionKeys | undefined>(undefined);
@@ -57,14 +59,14 @@ export function useAasEditor({
     const path = toRaw(node.data.path);
     submodelElementsToAdd.value = [
       {
-        label: "Textfeld hinzufügen",
+        label: translate("aasEditor.addTextField"),
         icon: "pi pi-pencil",
         command: (_event: MenuItemCommandEvent) => {
           drawer.openDrawer({
             type: KeyTypes.Property,
             data: { valueType: DataTypeDef.String },
             mode: EditorMode.CREATE,
-            title: "Textfeld hinzufügen",
+            title: translate("aasEditor.addTextField"),
             path,
             callback: async (data: PropertyRequestDto) =>
               createProperty(path, data),
@@ -120,14 +122,17 @@ export function useAasEditor({
   };
 
   const getVisualType = (submodelBase: SubmodelElementResponseDto): string => {
-    if (submodelBase.modelType === KeyTypes.Submodel || submodelBase.modelType === AasSubmodelElements.SubmodelElementCollection) {
-      return "Abschnitt";
+    if (submodelBase.modelType === KeyTypes.Submodel) {
+      return translate("aasEditor.submodel");
     }
     if (submodelBase.modelType === AasSubmodelElements.Property) {
       const { valueType } = PropertyJsonSchema.pick({ valueType: true }).parse(submodelBase);
       if (valueType === DataTypeDef.String) {
-        return "Textfeld";
+        return translate("aasEditor.textField");
       }
+    }
+    if (submodelBase.modelType === AasSubmodelElements.SubmodelElementCollection) {
+      return translate("aasEditor.submodelElementCollection");
     }
     return submodelBase.modelType;
   };
@@ -187,7 +192,7 @@ export function useAasEditor({
     drawer.openDrawer({
       type: KeyTypes.Submodel,
       data: {},
-      title: "Abschnitt hinzufügen",
+      title: translate("aasEditor.addSubmodel"),
       mode: EditorMode.CREATE,
       path: {},
       callback: createCallback,

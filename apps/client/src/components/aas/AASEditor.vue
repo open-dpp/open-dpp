@@ -20,10 +20,10 @@ const route = useRoute();
 const router = useRouter();
 const componentRef = ref<{ submit: () => Promise<Promise<void> | undefined> } | null>(null);
 
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 
 function changeQueryParams(newQuery: Record<string, string | undefined>) {
-  router.replace({
+  router.push({
     query: {
       ...route.query,
       ...newQuery,
@@ -63,6 +63,7 @@ const {
   changeQueryParams,
   selectedLanguage: convertLocaleToLanguage(locale.value),
   errorHandlingStore,
+  translate: label => t(label),
 });
 
 onMounted(async () => {
@@ -77,8 +78,7 @@ function onNodeSelect(node: TreeNode) {
 
 function onHideDrawer() {
   hideDrawer();
-  router.replace({
-    path: route.path,
+  router.push({
     query: {
       ...route.query,
       edit: undefined,
@@ -112,11 +112,11 @@ function onSubmit() {
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="text-xl font-bold">Editor</span>
-          <Button label="Abschnitt hinzufügen" @click="createSubmodel" />
+          <Button :label="t('aasEditor.addSubmodel')" @click="createSubmodel" />
         </div>
       </template>
       <Column field="label" header="Name" expander style="width: 34%" />
-      <Column field="type" header="Type" style="width: 33%" />
+      <Column field="type" :header="t('aasEditor.type')" style="width: 33%" />
       <Column>
         <template #body="{ node }">
           <div class="flex w-full justify-end">
@@ -157,7 +157,7 @@ function onSubmit() {
       <template #header>
         <div class="flex flex-row items-center justify-between w-full pr-2 gap-1">
           <span class="text-xl font-bold">{{ drawerHeader }}</span>
-          <Button label="Save" @click="onSubmit" />
+          <Button :label="t('common.save')" @click="onSubmit" />
         </div>
       </template>
       <component
