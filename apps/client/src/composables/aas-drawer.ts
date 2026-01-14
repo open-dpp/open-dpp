@@ -10,8 +10,6 @@ import {
   SubmodelJsonSchema,
   ValueTypeSchema,
 } from "@open-dpp/dto";
-
-import { data } from "autoprefixer";
 import { computed, ref } from "vue";
 import { z } from "zod";
 import PropertyCreateEditor from "../components/aas/PropertyCreateEditor.vue";
@@ -21,9 +19,10 @@ import SubmodelEditor from "../components/aas/SubmodelEditor.vue";
 import SubmodelElementCollectionEditor from "../components/aas/SubmodelElementCollectionEditor.vue";
 
 export type SubmodelEditorProps = Omit<SubmodelResponseDto, "submodelElements">;
-const SubmodelCreateEditorPropsSchema = z.object({
-});
-export type SubmodelCreateEditorProps = z.infer<typeof SubmodelCreateEditorPropsSchema>;
+const SubmodelCreateEditorPropsSchema = z.object({});
+export type SubmodelCreateEditorProps = z.infer<
+  typeof SubmodelCreateEditorPropsSchema
+>;
 
 const PropertyCreateEditorPropsSchema = z.object({
   valueType: ValueTypeSchema,
@@ -56,7 +55,10 @@ interface EditorDataMap {
   };
 }
 
-export type EditorType = typeof KeyTypes.Submodel | typeof KeyTypes.Property | typeof AasKeyTypes.SubmodelElementCollection;
+export type EditorType
+  = | typeof KeyTypes.Submodel
+    | typeof KeyTypes.Property
+    | typeof AasKeyTypes.SubmodelElementCollection;
 
 export interface AasEditorPath {
   submodelId?: string;
@@ -85,9 +87,7 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps) {
   const drawerVisible = ref(false);
   const activeEditor = ref<EditorType | null>(null);
   const activeMode = ref<EditorModeType>(EditorMode.EDIT);
-  const activeData = ref<
-    any | null
-  >(null);
+  const activeData = ref<any | null>(null);
   const activePath = ref<AasEditorPath>({ idShortPath: "" });
   const activeCallback = ref<callbackType | null>(null);
 
