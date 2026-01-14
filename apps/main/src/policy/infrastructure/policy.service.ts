@@ -203,7 +203,7 @@ export class PolicyService {
         limitAndValue = await this.isQuotaExceeded(organizationId, key);
       }
 
-      if (limitAndValue.used >= limitAndValue.limit) {
+      if (limitAndValue.limit !== 0 && limitAndValue.used >= limitAndValue.limit) {
         result = {
           key: PolicyKey[key],
           limit: limitAndValue.limit,
