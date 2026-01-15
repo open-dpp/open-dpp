@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@open-dpp/config-eslint": "workspace:*",
-    "@swc/core": "^1.15.7",
+    "@swc/core": "^1.15.8",
     "@swc/jest": "^0.2.39",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/node-ts": "^23.6.2",
