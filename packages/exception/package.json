@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@nestjs/common": "^11.1.10",
-    "@nestjs/core": "^11.1.10"
+    "@nestjs/core": "^11.1.11"
   },
   "devDependencies": {
     "@nestjs/testing": "^11.1.10",
