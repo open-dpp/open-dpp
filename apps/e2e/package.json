@@ -1,0 +1,20 @@
+{
+  "name": "e2e",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "e2e-test": "pnpm exec playwright test --ui"
+  },
+  "keywords": [],
+  "author": "mrudolph",
+  "license": "ISC",
+  "packageManager": "pnpm@10.19.0",
+  "devDependencies": {
+    "@open-dpp/env": "workspace:*",
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^24.10.4",
+    "uuid": "^13.0.0",
+    "zod": "^4.3.5"
+  }
+}

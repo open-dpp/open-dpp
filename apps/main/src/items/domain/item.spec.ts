@@ -1,14 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
-import { ignoreIds } from "@open-dpp/testing";
+import { ignoreIds } from "../../../test/utils.for.test";
 import { Model } from "../../models/domain/model";
-import { DataValue } from "../../product-passport-data/domain/data-value";
-import { Template, TemplateDbProps } from "../../templates/domain/template";
+import { Template, TemplateDbProps } from "../../old-templates/domain/template";
 import {
   LaptopFactory,
   laptopFactory,
-} from "../../templates/fixtures/laptop.factory";
-import { templateCreatePropsFactory } from "../../templates/fixtures/template.factory";
+} from "../../old-templates/fixtures/laptop.factory";
+import { templateCreatePropsFactory } from "../../old-templates/fixtures/template.factory";
+import { DataValue } from "../../product-passport-data/domain/data-value";
 import { Item } from "./item";
 
 describe("item", () => {

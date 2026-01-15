@@ -5,11 +5,11 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import {
-  getApp,
-} from "@open-dpp/testing";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
+import {
+  getApp,
+} from "../../../test/utils.for.test";
 import { AuthGuard } from "../../auth/auth.guard";
 import { AuthModule } from "../../auth/auth.module";
 import { AuthService } from "../../auth/auth.service";
@@ -30,10 +30,10 @@ import {
 } from "../../marketplace/infrastructure/passport-template-publication.service";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import {
-  TemplateDoc,
+  OldTemplateDoc,
   TemplateSchema,
-} from "../../templates/infrastructure/template.schema";
-import { TemplateService } from "../../templates/infrastructure/template.service";
+} from "../../old-templates/infrastructure/template.schema";
+import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import { DataFieldDraft } from "../domain/data-field-draft";
 import { SectionDraft } from "../domain/section-draft";
 import { MoveDirection, TemplateDraft } from "../domain/template-draft";
@@ -79,7 +79,7 @@ describe("templateDraftController", () => {
             schema: TemplateDraftSchema,
           },
           {
-            name: TemplateDoc.name,
+            name: OldTemplateDoc.name,
             schema: TemplateSchema,
           },
           {

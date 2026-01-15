@@ -1,6 +1,6 @@
 import type { DataFieldType_TYPE } from "../../data-modelling/domain/data-field-base";
 import type { Model } from "../../models/domain/model";
-import type { Template } from "../../templates/domain/template";
+import type { Template } from "../../old-templates/domain/template";
 import type {
   AasProperty,
   AssetAdministrationShell,

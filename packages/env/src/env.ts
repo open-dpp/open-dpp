@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const asBoolean = z.string().transform(val => val.toLowerCase() === "true");
 
-const envSchema = z.object({
+export const envSchema = z.object({
   // Misc
   NODE_ENV: z.coerce.string().optional(),
   // Common

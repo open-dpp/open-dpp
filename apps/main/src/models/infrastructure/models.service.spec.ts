@@ -8,16 +8,16 @@ import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { ignoreIds } from "@open-dpp/testing";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
+import { ignoreIds } from "../../../test/utils.for.test";
 import { AuthGuard } from "../../auth/auth.guard";
 import { AuthModule } from "../../auth/auth.module";
 import { AuthService } from "../../auth/auth.service";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
+import { Template } from "../../old-templates/domain/template";
+import { laptopFactory } from "../../old-templates/fixtures/laptop.factory";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import { Template } from "../../templates/domain/template";
-import { laptopFactory } from "../../templates/fixtures/laptop.factory";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,

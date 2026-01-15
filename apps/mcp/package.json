@@ -27,7 +27,7 @@
     "@nestjs/core": "^11.1.10",
     "@nestjs/mapped-types": "^2.1.0",
     "@nestjs/platform-express": "^11.1.10",
-    "@open-dpp/api-client": "^2.2.2",
+    "@open-dpp/api-client": "workspace:*",
     "@open-dpp/env": "workspace:*",
     "@rekog/mcp-nest": "^1.8.4",
     "zod": "^3.25.76"

@@ -6,9 +6,9 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
-import { getApp, ignoreIds } from "@open-dpp/testing";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
+import { getApp, ignoreIds } from "../../../test/utils.for.test";
 import { AuthGuard } from "../../auth/auth.guard";
 import { AuthModule } from "../../auth/auth.module";
 import { AuthService } from "../../auth/auth.service";
@@ -27,18 +27,18 @@ import {
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { MediaDbSchema, MediaDoc } from "../../media/infrastructure/media.schema";
 import { MediaService } from "../../media/infrastructure/media.service";
+import { Template } from "../../old-templates/domain/template";
+import {
+  LaptopFactory,
+  laptopFactory,
+} from "../../old-templates/fixtures/laptop.factory";
+import { OldTemplateDoc, TemplateSchema } from "../../old-templates/infrastructure/template.schema";
+import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import { CapEvaluatorService } from "../../policy/infrastructure/cap-evaluator.service";
 import { CapDoc, CapSchema } from "../../policy/infrastructure/cap.schema";
 import { PolicyService } from "../../policy/infrastructure/policy.service";
 import { QuotaDoc, QuotaSchema } from "../../policy/infrastructure/quota.schema";
 import { DataValue } from "../../product-passport-data/domain/data-value";
-import { Template } from "../../templates/domain/template";
-import {
-  LaptopFactory,
-  laptopFactory,
-} from "../../templates/fixtures/laptop.factory";
-import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
-import { TemplateService } from "../../templates/infrastructure/template.service";
 import {
   DppEventSchema,
   TraceabilityEventDocument,
@@ -93,7 +93,7 @@ describe("modelsController", () => {
             schema: ItemSchema,
           },
           {
-            name: TemplateDoc.name,
+            name: OldTemplateDoc.name,
             schema: TemplateSchema,
           },
           {

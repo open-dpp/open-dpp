@@ -5,6 +5,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { AasModule } from "./aas/aas.module";
 import { AiConfigurationModule } from "./ai/ai-configuration/ai-configuration.module";
 import { AiModule } from "./ai/ai.module";
 import { ChatGateway } from "./ai/presentation/chat.gateway";
@@ -19,11 +20,13 @@ import { ItemsModule } from "./items/items.module";
 import { MarketplaceModule } from "./marketplace/marketplace.module";
 import { MediaModule } from "./media/media.module";
 import { ModelsModule } from "./models/models.module";
+import { TemplateModule as OldTemplateModule } from "./old-templates/template.module";
 import { OrganizationsModule } from "./organizations/organizations.module";
+import { PassportsModule } from "./passports/passports.module";
 import { PolicyModule } from "./policy/policy.module";
 import { ProductPassportModule } from "./product-passport/product-passport.module";
 import { TemplateDraftModule } from "./template-draft/template-draft.module";
-import { TemplateModule } from "./templates/template.module";
+import { TemplatesModule } from "./templates/templates.module";
 import { TraceabilityEventsModule } from "./traceability-events/traceability-events.module";
 import { UniqueProductIdentifierModule } from "./unique-product-identifier/unique.product.identifier.module";
 import { UsersModule } from "./users/users.module";
@@ -38,8 +41,11 @@ import { UsersModule } from "./users/users.module";
       }),
       inject: [EnvService],
     }),
+    AasModule,
     TemplateDraftModule,
-    TemplateModule,
+    OldTemplateModule,
+    TemplatesModule,
+    PassportsModule,
     ItemsModule,
     ModelsModule,
     OrganizationsModule,

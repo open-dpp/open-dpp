@@ -4,6 +4,7 @@ import Aura from "@primeuix/themes/aura";
 import { createPinia } from "pinia";
 import PrimeVue from "primevue/config";
 import ConfirmationService from "primevue/confirmationservice";
+import Tooltip from "primevue/tooltip";
 import { createApp, watch } from "vue";
 import App from "./App.vue";
 import { authClient } from "./auth-client.ts";
@@ -38,6 +39,7 @@ async function startApp() {
       },
     },
   });
+  app.directive("tooltip", Tooltip);
 
   app.use(ConfirmationService);
 

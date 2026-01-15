@@ -1,214 +1,64 @@
-import type { GranularityLevel_TYPE } from "../../data-modelling/domain/granularity-level";
-import type { DataFieldValidationResult } from "./data-field";
-import type {
-  Section,
-  SectionDbProps,
-} from "./section";
 import { randomUUID } from "node:crypto";
-import { SectionType } from "../../data-modelling/domain/section-base";
-import { Sector_TYPE } from "../../data-modelling/domain/sectors";
-import { DataValue } from "../../product-passport-data/domain/data-value";
-import {
-  findSectionClassByTypeOrFail,
-} from "./section";
+import { TemplateDtoSchema } from "@open-dpp/dto";
+import { IDigitalProductPassportIdentifiable } from "../../aas/domain/digital-product-passport-identifiable";
+import { Environment } from "../../aas/domain/environment";
+import { IPersistable } from "../../aas/domain/persistable";
+import { DateTime } from "../../lib/date-time";
+import { HasCreatedAt } from "../../lib/has-created-at";
 
-export class ValidationResult {
-  private readonly _validationResults: DataFieldValidationResult[] = [];
-  private _isValid: boolean = true;
-
-  public get isValid() {
-    return this._isValid;
+export class Template implements IPersistable, IDigitalProductPassportIdentifiable, HasCreatedAt {
+  private constructor(
+    public readonly id: string,
+    public readonly organizationId: string,
+    public readonly environment: Environment,
+    public readonly createdAt: Date,
+    public readonly updatedAt: Date,
+  ) {
   }
 
-  public get validationResults() {
-    return this._validationResults;
+  static create(data: {
+    id?: string;
+    organizationId: string;
+    environment?: Environment;
+    createdAt?: Date;
+    updatedAt?: Date;
+  }) {
+    const now = DateTime.now();
+    return new Template(
+      data.id ?? randomUUID(),
+      data.organizationId,
+      data.environment ?? Environment.create({}),
+      data.createdAt ?? now,
+      data.updatedAt ?? now,
+    );
   }
 
-  public addValidationResult(validationResult: DataFieldValidationResult) {
-    if (!validationResult.isValid) {
-      this._isValid = false;
-    }
-    this._validationResults.push(validationResult);
+  static fromPlain(data: unknown) {
+    const parsed = TemplateDtoSchema.parse(data);
+    return new Template(
+      parsed.id,
+      parsed.organizationId,
+      Environment.fromPlain(parsed.environment),
+      new Date(parsed.createdAt),
+      new Date(parsed.updatedAt),
+    );
   }
 
-  public toJson() {
+  toPlain() {
     return {
-      isValid: this.isValid,
-      errors: this.validationResults
-        .filter(v => !v.isValid)
-        .map(v => v.toJson()),
+      id: this.id,
+      organizationId: this.organizationId,
+      environment: this.environment.toPlain(),
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
     };
   }
-}
 
-export interface TemplateCreateProps {
-  name: string;
-  description: string;
-  sectors: Sector_TYPE[];
-  userId: string;
-  organizationId: string;
-}
-
-export type TemplateDbProps = TemplateCreateProps & {
-  id: string;
-  version: string;
-  sections: SectionDbProps[];
-  marketplaceResourceId: string | null;
-};
-
-export class Template {
-  public readonly id: string;
-  public readonly name: string;
-  public description: string;
-  public sectors: Sector_TYPE[];
-  public readonly version: string;
-  private _createdByUserId: string;
-  private _ownedByOrganizationId: string;
-  public readonly sections: Section[];
-  public marketplaceResourceId: string | null;
-
-  private constructor(
-    id: string,
-    name: string,
-    description: string,
-    sectors: Sector_TYPE[],
-    version: string,
-    _createdByUserId: string,
-    _ownedByOrganizationId: string,
-    sections: Section[],
-    marketplaceResourceId: string | null,
-  ) {
-    this.id = id;
-    this.name = name;
-    this.description = description;
-    this.sectors = sectors;
-    this.version = version;
-    this._createdByUserId = _createdByUserId;
-    this._ownedByOrganizationId = _ownedByOrganizationId;
-    this.sections = sections;
-    this.marketplaceResourceId = marketplaceResourceId;
+  getEnvironment(): Environment {
+    return this.environment;
   }
 
-  static create(plain: {
-    name: string;
-    description: string;
-    sectors: Sector_TYPE[];
-    userId: string;
-    organizationId: string;
-  }) {
-    return new Template(
-      randomUUID(),
-      plain.name,
-      plain.description,
-      plain.sectors,
-      "1.0.0",
-      plain.userId,
-      plain.organizationId,
-      [],
-      null,
-    );
-  }
-
-  static loadFromDb(data: TemplateDbProps) {
-    return new Template(
-      data.id,
-      data.name,
-      data.description,
-      data.sectors,
-      data.version,
-      data.userId,
-      data.organizationId,
-      data.sections.map((s) => {
-        const SectionClass = findSectionClassByTypeOrFail(s.type);
-        return SectionClass.loadFromDb(s);
-      }),
-      data.marketplaceResourceId,
-    );
-  }
-
-  public isOwnedBy(organizationId: string) {
-    return this.ownedByOrganizationId === organizationId;
-  }
-
-  public get createdByUserId() {
-    return this._createdByUserId;
-  }
-
-  public get ownedByOrganizationId() {
-    return this._ownedByOrganizationId;
-  }
-
-  findSectionByIdOrFail(id: string): Section {
-    const section = this.findSectionById(id);
-    if (!section) {
-      throw new Error(`Section with id ${id} not found`);
-    }
-    return section;
-  }
-
-  findSectionById(id: string): Section | undefined {
-    return this.sections.find(s => s.id === id);
-  }
-
-  assignMarketplaceResource(marketplaceResourceId: string) {
-    this.marketplaceResourceId = marketplaceResourceId;
-  }
-
-  validate(
-    values: DataValue[],
-    granularity: GranularityLevel_TYPE,
-    includeSectionIds: string[] = [],
-  ): ValidationResult {
-    const validationOutput = new ValidationResult();
-    const sectionsToValidate
-      = includeSectionIds.length === 0
-        ? this.sections
-        : this.sections.filter(s => includeSectionIds.includes(s.id));
-    for (const section of sectionsToValidate) {
-      section
-        .validate(this.version, values, granularity)
-        .map(v => validationOutput.addValidationResult(v));
-    }
-    return validationOutput;
-  }
-
-  copy(organizationId: string, userId: string) {
-    return Template.loadFromDb({
-      id: randomUUID(),
-      name: this.name,
-      description: this.description,
-      sectors: this.sectors,
-      version: this.version,
-      userId,
-      organizationId,
-      sections: this.sections.map(s => s.toDbProps()),
-      marketplaceResourceId: this.marketplaceResourceId,
-    });
-  }
-
-  public createInitialDataValues(granularity: GranularityLevel_TYPE): DataValue[] {
-    const rootGroupSections = this.sections
-      .filter(s => s.parentId === undefined)
-      .filter(s => s.type === SectionType.GROUP);
-    const relevantGroupSections = rootGroupSections.concat(
-      rootGroupSections
-        .map(g => g.subSections.map(s => this.findSectionByIdOrFail(s)))
-        .flat(),
-    );
-
-    return relevantGroupSections
-      .map(s =>
-        s.dataFields
-          .filter(f => f.granularityLevel === granularity)
-          .map(f =>
-            DataValue.create({
-              dataSectionId: s.id,
-              dataFieldId: f.id,
-              value: undefined,
-              row: 0,
-            }),
-          ),
-      )
-      .flat();
+  getOrganizationId(): string {
+    return this.organizationId;
   }
 }

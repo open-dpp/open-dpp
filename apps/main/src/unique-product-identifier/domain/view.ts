@@ -1,19 +1,19 @@
 import type { DataFieldType_TYPE } from "../../data-modelling/domain/data-field-base";
 import type { Item } from "../../items/domain/item";
 import type { Model } from "../../models/domain/model";
-import type { DataValue } from "../../product-passport-data/domain/data-value";
 import type {
   RepeaterSection,
   Section,
-} from "../../templates/domain/section";
-import type { Template } from "../../templates/domain/template";
+} from "../../old-templates/domain/section";
+import type { Template } from "../../old-templates/domain/template";
+import type { DataValue } from "../../product-passport-data/domain/data-value";
 import _ from "lodash";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
 import {
   isGroupSection,
   isRepeaterSection,
-} from "../../templates/domain/section";
+} from "../../old-templates/domain/section";
 
 export class View {
   private readonly template: Template;
