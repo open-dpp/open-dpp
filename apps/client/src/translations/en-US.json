@@ -55,7 +55,9 @@
       "name": "Name"
     },
     "addSubmodel": "Add section",
+    "submodelElementCollection": "Sub section",
     "edit": "Edit {formItem}",
+    "creation": "Creation of the {formItem}",
     "submodel": "Section",
     "textField": "Text field",
     "numberField": "Number field",

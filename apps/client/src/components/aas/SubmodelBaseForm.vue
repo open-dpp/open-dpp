@@ -4,6 +4,7 @@ import type { EditorModeType } from "../../composables/aas-drawer.ts";
 import { Button, DataView } from "primevue";
 import { useField, useFieldArray } from "vee-validate";
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import { EditorMode } from "../../composables/aas-drawer.ts";
 import FormField from "../basics/form/FormField.vue";
 import IdField from "../basics/form/IdField.vue";
@@ -13,6 +14,7 @@ const props = defineProps<{ showErrors: boolean; errors: FormErrors<any>; editor
 
 const { value: idShort, errorMessage } = useField<string | undefined | null>("idShort");
 
+const { t } = useI18n();
 const isEditMode = computed(() => props.editorMode === EditorMode.EDIT);
 
 const {
@@ -37,7 +39,7 @@ const {
   <DataView :value="displayName">
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="text-xl font-bold">Name</span>
+        <span class="text-xl font-bold">{{ t('aasEditor.formLabels.name') }}</span>
         <Button
           icon="pi pi-plus"
           raised

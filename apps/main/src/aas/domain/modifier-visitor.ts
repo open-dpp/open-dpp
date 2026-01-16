@@ -52,79 +52,79 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
 
   visitAdministrativeInformation(_element: AdministrativeInformation, _context: unknown): void {
     throw new NotSupportedError(
-      "AdministrativeInformation is not supported for value serialization.",
+      "AdministrativeInformation is not supported.",
     );
   }
 
   visitAnnotatedRelationshipElement(_element: AnnotatedRelationshipElement, _context: unknown): void {
     throw new NotSupportedError(
-      "AnnotatedRelationshipElement is not supported for value serialization.",
+      "AnnotatedRelationshipElement is not supported.",
     );
   }
 
   visitAssetAdministrationShell(_element: AssetAdministrationShell, _context: unknown): void {
     throw new NotSupportedError(
-      "AssetAdministrationShell is not supported for value serialization.",
+      "AssetAdministrationShell is not supported.",
     );
   }
 
   visitAssetInformation(_element: AssetInformation, _context: unknown): void {
     throw new NotSupportedError(
-      "AssetInformation is not supported for value serialization.",
+      "AssetInformation is not supported.",
     );
   }
 
   visitBlob(_element: Blob, _context: unknown): void {
     throw new NotSupportedError(
-      "Blob is not supported for value serialization.",
+      "Blob is not supported.",
     );
   }
 
   visitConceptDescription(_element: ConceptDescription, _context: unknown): void {
     throw new NotSupportedError(
-      "ConceptDescription is not supported for value serialization.",
+      "ConceptDescription is not supported.",
     );
   }
 
   visitEmbeddedDataSpecification(_element: EmbeddedDataSpecification, _context: unknown): void {
     throw new NotSupportedError(
-      "EmbeddedDataSpecification is not supported for value serialization.",
+      "EmbeddedDataSpecification is not supported.",
     );
   }
 
   visitEntity(_element: Entity, _context: unknown): void {
     throw new NotSupportedError(
-      "Entity is not supported for value serialization.",
+      "Entity is not supported.",
     );
   }
 
   visitExtension(_element: Extension, _context: unknown): void {
     throw new NotSupportedError(
-      "Extension is not supported for value serialization.",
+      "Extension is not supported.",
     );
   }
 
   visitFile(_element: File, _context: unknown): void {
     throw new NotSupportedError(
-      "File is not supported for value serialization.",
+      "File is not supported.",
     );
   }
 
   visitKey(_element: Key, _context: unknown): void {
     throw new NotSupportedError(
-      "Key is not supported for value serialization.",
+      "Key is not supported.",
     );
   }
 
   visitLanguageText(_element: LanguageText, _context: unknown): void {
     throw new NotSupportedError(
-      "LanguageText is not supported for value serialization.",
+      "LanguageText is not supported.",
     );
   }
 
   visitMultiLanguageProperty(_element: MultiLanguageProperty, _context: unknown): void {
     throw new NotSupportedError(
-      "MultiLanguageProperty is not supported for value serialization.",
+      "MultiLanguageProperty is not supported.",
     );
   }
 
@@ -138,43 +138,43 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
 
   visitQualifier(_element: Qualifier, _context: unknown): void {
     throw new NotSupportedError(
-      "Qualifier is not supported for value serialization.",
+      "Qualifier is not supported.",
     );
   }
 
   visitRange(_element: Range, _context: unknown): void {
     throw new NotSupportedError(
-      "Range is not supported for value serialization.",
+      "Range is not supported.",
     );
   }
 
   visitReference(_element: Reference, _context: unknown): void {
     throw new NotSupportedError(
-      "Reference is not supported for value serialization.",
+      "Reference is not supported.",
     );
   }
 
   visitReferenceElement(_element: ReferenceElement, _context: unknown): void {
     throw new NotSupportedError(
-      "ReferenceElement is not supported for value serialization.",
+      "ReferenceElement is not supported.",
     );
   }
 
   visitRelationshipElement(_element: RelationshipElement, _context: unknown): void {
     throw new NotSupportedError(
-      "RelationshipElement is not supported for value serialization.",
+      "RelationshipElement is not supported.",
     );
   }
 
   visitResource(_element: Resource, _context: unknown): void {
     throw new NotSupportedError(
-      "Resource is not supported for value serialization.",
+      "Resource is not supported.",
     );
   }
 
   visitSpecificAssetId(_element: SpecificAssetId, _context: unknown): void {
     throw new NotSupportedError(
-      "SpecificAssetId is not supported for value serialization.",
+      "SpecificAssetId is not supported.",
     );
   }
 
@@ -182,15 +182,14 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
     this.modifySubmodelBase(element, context);
   }
 
-  visitSubmodelElementCollection(_element: SubmodelElementCollection, _context: unknown): void {
-    throw new NotSupportedError(
-      "SubmodelElementCollection is not supported for value serialization.",
-    );
+  visitSubmodelElementCollection(element: SubmodelElementCollection, context: unknown): void {
+    this.modifySubmodelBase(element, context);
+    // TODO: implement submodel element collection value modification
   }
 
   visitSubmodelElementList(_element: SubmodelElementList, _context: unknown): void {
     throw new NotSupportedError(
-      "SubmodelElementList is not supported for value serialization.",
+      "SubmodelElementList is not supported.",
     );
   }
 }

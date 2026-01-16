@@ -1,6 +1,7 @@
 import type {
   KeyTypes,
   PropertyResponseDto,
+  SubmodelElementCollectionResponseDto,
   SubmodelResponseDto,
 } from "@open-dpp/dto";
 import {
@@ -18,10 +19,14 @@ import SubmodelCreateEditor from "../components/aas/SubmodelCreateEditor.vue";
 import SubmodelEditor from "../components/aas/SubmodelEditor.vue";
 import SubmodelElementCollectionEditor from "../components/aas/SubmodelElementCollectionEditor.vue";
 
-export type SubmodelEditorProps = Omit<SubmodelResponseDto, "submodelElements">;
-const SubmodelCreateEditorPropsSchema = z.object({});
+export type SubmodelEditorProps = SubmodelResponseDto;
+const SubmodelBaseCreatePropsSchema = z.object({});
 export type SubmodelCreateEditorProps = z.infer<
-  typeof SubmodelCreateEditorPropsSchema
+  typeof SubmodelBaseCreatePropsSchema
+>;
+
+export type SubmodelElementCollectionCreateEditorProps = z.infer<
+  typeof SubmodelBaseCreatePropsSchema
 >;
 
 const PropertyCreateEditorPropsSchema = z.object({
@@ -31,9 +36,8 @@ export type PropertyEditorProps = PropertyResponseDto;
 export type PropertyCreateEditorProps = z.infer<
   typeof PropertyCreateEditorPropsSchema
 >;
-export type SubmodelElementCollectionEditorProps = z.infer<
-  typeof SubmodelElementCollectionJsonSchema
->;
+export type SubmodelElementCollectionEditorProps
+  = SubmodelElementCollectionResponseDto;
 
 export const EditorMode = {
   CREATE: "CREATE",
@@ -46,7 +50,7 @@ interface EditorDataMap {
   [EditorMode.CREATE]: {
     [AasKeyTypes.Submodel]: SubmodelCreateEditorProps;
     [AasKeyTypes.Property]: PropertyCreateEditorProps;
-    [AasKeyTypes.SubmodelElementCollection]: SubmodelElementCollectionEditorProps;
+    [AasKeyTypes.SubmodelElementCollection]: SubmodelElementCollectionCreateEditorProps;
   };
   [EditorMode.EDIT]: {
     [AasKeyTypes.Submodel]: SubmodelEditorProps;
@@ -115,7 +119,7 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps) {
     [EditorMode.CREATE]: {
       [AasKeyTypes.Submodel]: {
         component: SubmodelCreateEditor,
-        parse: data => SubmodelCreateEditorPropsSchema.parse(data),
+        parse: data => SubmodelBaseCreatePropsSchema.parse(data),
       },
       [AasKeyTypes.Property]: {
         component: PropertyCreateEditor,
@@ -123,7 +127,7 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps) {
       },
       [AasKeyTypes.SubmodelElementCollection]: {
         component: SubmodelElementCollectionEditor,
-        parse: data => SubmodelElementCollectionJsonSchema.parse(data),
+        parse: data => SubmodelBaseCreatePropsSchema.parse(data),
       },
     },
     [EditorMode.EDIT]: {

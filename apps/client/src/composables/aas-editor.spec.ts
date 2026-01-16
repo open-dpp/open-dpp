@@ -268,5 +268,37 @@ describe("aasEditor composable", () => {
         supplementalSemanticIds: [],
       });
     });
+
+    it("should create submodel element collection", async () => {
+      mocks.createSubmodelElement.mockResolvedValue({ status: HTTPCode.CREATED });
+
+      const { submodels, submodelElementsToAdd, init, drawerVisible, buildAddSubmodelElementMenu, editorVNode } = useAasEditor({
+        id: aasId,
+        aasNamespace: apiClient.dpp.templates.aas,
+        changeQueryParams,
+        errorHandlingStore,
+        selectedLanguage,
+        translate,
+      });
+      await init();
+      buildAddSubmodelElementMenu(submodels.value!.find(s => s.key === submodel1.id)!);
+      const addPropertyMenuItem: MenuItem = submodelElementsToAdd.value.find(e => e.label === "aasEditor.submodelElementCollection")!;
+      addPropertyMenuItem.command!({} as MenuItemCommandEvent);
+      expect(drawerVisible.value).toBeTruthy();
+      expect(editorVNode.value!.props.path).toEqual({ submodelId: submodel1.id });
+      expect(editorVNode.value!.props.data).toEqual({ });
+      expect(editorVNode.value!.component).toEqual(SubmodelElementCollectionEditor);
+      const data = { idShort: "newProperty" };
+      await editorVNode.value!.props.callback!(data);
+      expect(mocks.createSubmodelElement).toHaveBeenCalledWith(aasId, submodel1.id, {
+        ...data,
+        modelType: KeyTypes.SubmodelElementCollection,
+        description: [],
+        displayName: [],
+        embeddedDataSpecifications: [],
+        qualifiers: [],
+        supplementalSemanticIds: [],
+      });
+    });
   });
 });

@@ -8,3 +8,6 @@ export const SubmodelElementCollectionJsonSchema = z.object({
   extensions: ExtensionJsonSchema.array().default([]),
   value: SubmodelElementSchema.array().default([]),
 })
+
+export type SubmodelElementCollectionRequestDto = z.input<typeof SubmodelElementCollectionJsonSchema>
+export type SubmodelElementCollectionResponseDto = z.infer<typeof SubmodelElementCollectionJsonSchema>

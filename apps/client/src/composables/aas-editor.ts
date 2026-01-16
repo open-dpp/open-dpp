@@ -1,15 +1,5 @@
 import type { AasNamespace } from "@open-dpp/api-client";
-import type {
-  DataTypeDefType,
-  LanguageTextDto,
-  LanguageType,
-  PagingParamsDto,
-  PropertyRequestDto,
-  SubmodelElementResponseDto,
-  SubmodelModificationDto,
-  SubmodelRequestDto,
-  SubmodelResponseDto,
-} from "@open-dpp/dto";
+import type { DataTypeDefType, LanguageTextDto, LanguageType, PagingParamsDto, PropertyRequestDto, SubmodelElementCollectionRequestDto, SubmodelElementResponseDto, SubmodelModificationDto, SubmodelRequestDto, SubmodelResponseDto } from "@open-dpp/dto";
 import type { TreeTableSelectionKeys } from "primevue";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
@@ -18,11 +8,13 @@ import type { AasEditorPath } from "./aas-drawer.ts";
 import type { PagingResult } from "./pagination.ts";
 import {
   AasSubmodelElements,
+  AasSubmodelElementsEnum,
   DataTypeDef,
   KeyTypes,
   PropertyJsonSchema,
   SubmodelElementSchema,
   SubmodelJsonSchema,
+
 } from "@open-dpp/dto";
 import { omit } from "lodash";
 import { ref, toRaw } from "vue";
@@ -98,6 +90,21 @@ export function useAasEditor({
     submodelElementsToAdd.value = [
       buildPropertyEntry(translate(`${labelPrefix}.textField`), "pi pi-pencil", DataTypeDef.String),
       buildPropertyEntry(translate(`${labelPrefix}.numberField`), "pi pi-pencil", DataTypeDef.Double),
+      {
+        label: translate(`${labelPrefix}.submodelElementCollection`),
+        icon: "pi pi-pencil",
+        command: (_event: MenuItemCommandEvent) => {
+          drawer.openDrawer({
+            type: KeyTypes.SubmodelElementCollection,
+            data: { },
+            mode: EditorMode.CREATE,
+            title: translate(`${labelPrefix}.submodelElementCollection`),
+            path,
+            callback: async (data: SubmodelElementCollectionRequestDto) =>
+              createSubmodelElementCollection(path, data),
+          });
+        },
+      },
     ];
   };
 
@@ -146,7 +153,7 @@ export function useAasEditor({
         { message: errorMessage },
       );
     }
-    else if (node.data.modelType === AasSubmodelElements.Property) {
+    else if (AasSubmodelElementsEnum.safeParse(node.data.modelType).success) {
       return (data: any) => errorHandlingStore.withErrorHandling(
         modifySubmodelElement(toRaw(node.data.path), data),
         { message: errorMessage },
@@ -243,6 +250,23 @@ export function useAasEditor({
       callback: createCallback,
     });
   };
+
+  async function createSubmodelElementCollection(path: AasEditorPath, data: SubmodelElementCollectionRequestDto) {
+    const call = async () => {
+      const response = await aasNamespace.createSubmodelElement(
+        id,
+        path.submodelId!,
+        SubmodelElementSchema.parse({ modelType: AasSubmodelElements.SubmodelElementCollection, ...data }),
+      );
+      await finalizeApiRequest(response);
+    };
+    await errorHandlingStore.withErrorHandling(
+      call(),
+      { message: translate("aasEditor.error", {
+        method: translate("aasEditor.creation", { formItem: translate("aasEditor.submodelElementCollection") }),
+      }) },
+    );
+  }
 
   async function createProperty(path: AasEditorPath, data: PropertyRequestDto) {
     if (path.submodelId) {
