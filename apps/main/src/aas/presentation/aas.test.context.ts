@@ -19,9 +19,10 @@ import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
 import { AasModule } from "../aas.module";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
+
+import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { IPersistable } from "../domain/persistable";
 import { Submodel } from "../domain/submodel-base/submodel";
-
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
 import {
@@ -103,7 +104,8 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     await betterAuthHelper.createOrganization(user2data?.user.id as string);
   });
 
-  type CreateEntity = (orgaId: string) => Promise<IPersistable>;
+  type CreateEntity = (orgaId: string) => Promise<IPersistable & IDigitalProductPassportIdentifiable>;
+  type SaveEntity = (entity: any) => Promise<IPersistable & IDigitalProductPassportIdentifiable>;
 
   async function assertGetShells(createEntity: CreateEntity) {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
@@ -344,6 +346,29 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     );
   }
 
+  async function assertModifySubmodel(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const entity = await createEntity(org.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+
+    const modificationBody = {
+      displayName: [{ language: "en", text: "Bill of Materials" }],
+      description: [{ language: "en", text: "A list of all products in the factory" }],
+    };
+
+    const response = await request(app.getHttpServer())
+      .patch(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}`)
+      .set("Cookie", userCookie)
+      .send(modificationBody);
+    expect(response.status).toEqual(200);
+    expect({ displayName: response.body.displayName, description: response.body.description }).toEqual(modificationBody);
+  }
+
   afterAll(async () => {
     await app.close();
   });
@@ -360,6 +385,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       getSubmodels: assertGetSubmodels,
       getSubmodelById: assertGetSubmodelById,
       postSubmodel: assertPostSubmodel,
+      modifySubmodel: assertModifySubmodel,
       getSubmodelValue: assertGetSubmodelValue,
       getSubmodelElements: assertGetSubmodelElements,
       postSubmodelElement: assertPostSubmodelElement,

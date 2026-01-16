@@ -8,6 +8,7 @@ import {
   submodelDesignOfProductPlainFactory,
   submodelDesignOfProductValuePlainFactory,
 } from "@open-dpp/testing";
+import { LanguageText } from "../common/language-text";
 import { Property } from "./property";
 import { registerSubmodelElementClasses } from "./register-submodel-element-classes";
 import { Submodel } from "./submodel";
@@ -202,5 +203,32 @@ describe("submodel", () => {
         ],
       },
     });
+  });
+
+  it("should be modified", () => {
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const newGermanDisplayName = {
+      language: "de",
+      text: "CO2 Footprint New Text",
+    };
+    const newDescriptions = [{
+      language: "en",
+      text: "The Submodel Carbon Footprint NEW",
+    }, {
+      language: "de",
+      text: "Das Submodel liefert CO2",
+    }];
+    submodel.modify({ displayName: [
+      newGermanDisplayName,
+    ], description: newDescriptions });
+    expect(submodel.displayName).toEqual([
+      LanguageText.fromPlain(
+        newGermanDisplayName,
+      ),
+      submodel.displayName.find(languageText => languageText.language === "en")!,
+    ]);
+    expect(submodel.description).toEqual(newDescriptions.map(description => LanguageText.fromPlain(description)));
   });
 });

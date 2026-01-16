@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => {
     createSubmodel: vi.fn(),
     createSubmodelElement: vi.fn(),
     getSubmodels: vi.fn(),
+    modifySubmodel: vi.fn(),
   };
 });
 
@@ -32,6 +33,7 @@ vi.mock("../lib/api-client", () => ({
       templates: {
         aas: {
           createSubmodel: mocks.createSubmodel,
+          modifySubmodel: mocks.modifySubmodel,
           getSubmodels: mocks.getSubmodels,
           createSubmodelElement: mocks.createSubmodelElement,
         },
@@ -48,6 +50,7 @@ describe("aasEditor composable", () => {
   const changeQueryParams = vi.fn();
   const errorHandlingStore = {
     logErrorWithNotification: vi.fn(),
+    withErrorHandling: vi.fn(),
   };
 
   const aasId = "1";
@@ -152,10 +155,10 @@ describe("aasEditor composable", () => {
   });
 
   it.each([
-    { keyToSelect: submodel2.id, expected: { path: { submodelId: submodel2.id }, component: SubmodelEditor } },
+    { keyToSelect: submodel2.id, expected: { path: { submodelId: submodel2.id }, component: SubmodelEditor, haveBeenCalled: mocks.modifySubmodel } },
     {
       keyToSelect: `${submodel2.idShort}.ProductCarbonFootprint_A4`,
-      expected: { path: { submodelId: submodel2.id, idShortPath: `${submodel2.idShort}.ProductCarbonFootprint_A4` }, component: SubmodelElementCollectionEditor },
+      expected: { path: { submodelId: submodel2.id, idShortPath: `${submodel2.idShort}.ProductCarbonFootprint_A4` }, component: SubmodelElementCollectionEditor, haveBeenCalled: undefined },
     },
   ])("should select node $keyToSelect", async ({ keyToSelect, expected }) => {
     const response = { paging_metadata: { cursor: null }, result: [submodel1, submodel2] };
@@ -178,6 +181,12 @@ describe("aasEditor composable", () => {
     expect(selectedKeys.value).toEqual({ [keyToSelect]: true });
     expect(editorVNode.value!.props.path).toEqual(expected.path);
     expect(editorVNode.value!.component).toEqual(expected.component);
+    if (expected.haveBeenCalled) {
+      expected.haveBeenCalled.mockResolvedValue({ status: HTTPCode.OK });
+      const data = { displayName: [] };
+      await editorVNode.value!.props.callback!(data);
+      expect(expected.haveBeenCalled).toHaveBeenCalled();
+    }
   });
 
   describe("should create", () => {

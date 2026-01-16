@@ -16,7 +16,12 @@ import { TemplateController } from "./template.controller";
 
 describe("templateController", () => {
   const basePath = "/templates";
-  const ctx = createAasTestContext(basePath, { imports: [TemplatesModule], providers: [TemplateRepository], controllers: [TemplateController] }, [{ name: TemplateDoc.name, schema: TemplateSchema }], TemplateRepository);
+  const ctx = createAasTestContext(
+    basePath,
+    { imports: [TemplatesModule], providers: [TemplateRepository], controllers: [TemplateController] },
+    [{ name: TemplateDoc.name, schema: TemplateSchema }],
+    TemplateRepository,
+  );
 
   async function createTemplate(orgId: string, createdAt?: Date, updatedAt?: Date): Promise<Template> {
     const { aas, submodels } = ctx.getAasObjects();
@@ -34,6 +39,10 @@ describe("templateController", () => {
     return ctx.getRepositories().dppIdentifiableRepository.save(template);
   }
 
+  async function saveTemplate(template: Template): Promise<Template> {
+    return ctx.getRepositories().dppIdentifiableRepository.save(template);
+  }
+
   it(`/GET shells`, async () => {
     await ctx.asserts.getShells(createTemplate);
   });
@@ -44,6 +53,10 @@ describe("templateController", () => {
 
   it(`/POST submodel`, async () => {
     await ctx.asserts.postSubmodel(createTemplate);
+  });
+
+  it(`/PATCH submodel`, async () => {
+    await ctx.asserts.modifySubmodel(createTemplate, saveTemplate);
   });
 
   it(`/GET submodel by id`, async () => {

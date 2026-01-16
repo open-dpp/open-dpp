@@ -20,6 +20,7 @@ const handlers = [
   ...organizationHandlers,
   ...aasIntegrationHandlers,
   ...aasHandlers('templates'),
+  ...aasHandlers('passports'),
   ...templatesHandlers(),
 ]
 

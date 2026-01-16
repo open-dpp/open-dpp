@@ -1,6 +1,6 @@
-import { applyDecorators, Body, Get, Param, Post, Query, Req } from "@nestjs/common";
+import { applyDecorators, Body, Get, Param, Patch, Post, Query, Req } from "@nestjs/common";
 
-import { SubmodelElementSchema, SubmodelRequestDtoSchema } from "@open-dpp/dto";
+import { SubmodelElementSchema, SubmodelModificationSchema, SubmodelRequestDtoSchema } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { z } from "zod";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
@@ -28,6 +28,12 @@ export const ApiGetSubmodelByIdPath = "/:id/submodels/:submodelId";
 export function ApiGetSubmodelById() {
   return applyDecorators(
     Get(ApiGetSubmodelByIdPath),
+  );
+}
+
+export function ApiPatchSubmodel() {
+  return applyDecorators(
+    Patch(ApiGetSubmodelByIdPath),
   );
 }
 
@@ -128,4 +134,6 @@ export const CursorQueryParamSchema = z.string().optional().meta({
 export const CursorQueryParam = () => Query("cursor", new ZodValidationPipe(CursorQueryParamSchema));
 
 export const SubmodelRequestBody = () => Body(new ZodValidationPipe(SubmodelRequestDtoSchema));
+export const SubmodelModificationRequestBody = () => Body(new ZodValidationPipe(SubmodelModificationSchema));
+
 export const SubmodelElementRequestBody = () => Body(new ZodValidationPipe(SubmodelElementSchema));

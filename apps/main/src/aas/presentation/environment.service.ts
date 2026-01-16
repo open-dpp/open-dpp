@@ -1,7 +1,24 @@
 import type express from "express";
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
 
-import { AssetAdministrationShellPaginationResponseDto, AssetAdministrationShellPaginationResponseDtoSchema, AssetKindType, SubmodelElementPaginationResponseDto, SubmodelElementPaginationResponseDtoSchema, SubmodelElementRequestDto, SubmodelElementResponseDto, SubmodelElementSchema, SubmodelJsonSchema, SubmodelPaginationResponseDto, SubmodelPaginationResponseDtoSchema, SubmodelRequestDto, SubmodelResponseDto, ValueResponseDto, ValueResponseDtoSchema } from "@open-dpp/dto";
+import {
+  AssetAdministrationShellPaginationResponseDto,
+  AssetAdministrationShellPaginationResponseDtoSchema,
+  AssetKindType,
+  SubmodelElementPaginationResponseDto,
+  SubmodelElementPaginationResponseDtoSchema,
+  SubmodelElementRequestDto,
+  SubmodelElementResponseDto,
+  SubmodelElementSchema,
+  SubmodelJsonSchema,
+  SubmodelModificationDto,
+  SubmodelPaginationResponseDto,
+  SubmodelPaginationResponseDtoSchema,
+  SubmodelRequestDto,
+  SubmodelResponseDto,
+  ValueResponseDto,
+  ValueResponseDtoSchema,
+} from "@open-dpp/dto";
 import { fromNodeHeaders } from "better-auth/node";
 import { AuthService } from "../../auth/auth.service";
 import { Pagination } from "../../pagination/pagination";
@@ -44,9 +61,17 @@ export class EnvironmentService {
     return SubmodelPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodels }).toPlain());
   }
 
+  async modifySubmodel(environment: Environment, submodelId: string, modification: SubmodelModificationDto): Promise<SubmodelResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    submodel.modify(modification);
+    await this.submodelRepository.save(submodel);
+    return SubmodelJsonSchema.parse(submodel.toPlain());
+  }
+
   async addSubmodelToEnvironment(environment: Environment, submodelPlain: SubmodelRequestDto, saveEnvironment: () => Promise<void>): Promise<SubmodelResponseDto> {
     const submodel = environment.addSubmodel(Submodel.fromPlain(submodelPlain));
     await this.submodelRepository.save(submodel);
+    // TODO: Add submodel to AAS as reference
     await saveEnvironment();
     return SubmodelJsonSchema.parse(submodel.toPlain());
   }

@@ -18,6 +18,7 @@ import {
   parseSubmodelBaseUnion,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
+  withSubmodelBase,
 } from "./submodel-base";
 
 export class Submodel implements ISubmodelBase, IPersistable {
@@ -83,6 +84,10 @@ export class Submodel implements ISubmodelBase, IPersistable {
       parsed.submodelElements.map(parseSubmodelBaseUnion),
     );
   };
+
+  modify(data: unknown) {
+    withSubmodelBase(this).modify(data);
+  }
 
   getValueRepresentation(idShortPath?: IdShortPath): JsonType {
     const element = idShortPath ? this.findSubmodelElementOrFail(idShortPath) : this;

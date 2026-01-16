@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { Environment } from "../../aas/domain/environment";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
+import { Template } from "../../templates/domain/template";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../infrastructure/passport.schema";
@@ -24,6 +25,10 @@ describe("passportController", () => {
     }));
   }
 
+  async function savePassport(passport: Passport): Promise<Template> {
+    return ctx.getRepositories().dppIdentifiableRepository.save(passport);
+  }
+
   it(`/GET shells`, async () => {
     await ctx.asserts.getShells(createPassport);
   });
@@ -35,6 +40,11 @@ describe("passportController", () => {
   it(`/POST submodel`, async () => {
     await ctx.asserts.postSubmodel(createPassport);
   });
+
+  it(`/PATCH submodel`, async () => {
+    await ctx.asserts.modifySubmodel(createPassport, savePassport);
+  });
+
   //
   it(`/GET submodel by id`, async () => {
     await ctx.asserts.getSubmodelById(createPassport);

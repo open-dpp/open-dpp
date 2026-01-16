@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import type { FormErrors } from "vee-validate";
+import type { EditorModeType } from "../../composables/aas-drawer.ts";
 import { Button, DataView } from "primevue";
 import { useField, useFieldArray } from "vee-validate";
+import { computed } from "vue";
+import { EditorMode } from "../../composables/aas-drawer.ts";
 import FormField from "../basics/form/FormField.vue";
 import IdField from "../basics/form/IdField.vue";
 import LanguageSelect from "../basics/LanguageSelect.vue";
 
-const props = defineProps<{ showErrors: boolean; errors: FormErrors<any> }>();
+const props = defineProps<{ showErrors: boolean; errors: FormErrors<any>; editorMode: EditorModeType }>();
 
 const { value: idShort, errorMessage } = useField<string | undefined | null>("idShort");
+
+const isEditMode = computed(() => props.editorMode === EditorMode.EDIT);
 
 const {
   fields: displayName,
@@ -22,6 +27,8 @@ const {
     <IdField
       id="idShort"
       v-model="idShort"
+      class="col-span-3"
+      :disabled="isEditMode"
       label="Id"
       :show-error="showErrors"
       :error="errorMessage"

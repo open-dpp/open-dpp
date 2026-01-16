@@ -134,6 +134,11 @@ export function aasHandlers(basePath: string) {
         status: 200,
       })
     }),
+    http.patch(`${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}`, async () => {
+      return HttpResponse.json(submodelCarbonFootprintResponse, {
+        status: 200,
+      })
+    }),
     http.post(
       `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements`,
       async () => {

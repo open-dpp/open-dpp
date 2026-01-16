@@ -1,4 +1,9 @@
-import { AasSubmodelElementsType, KeyTypes, SubmodelBaseJsonSchema } from "@open-dpp/dto";
+import {
+  AasSubmodelElementsType,
+  KeyTypes,
+  SubmodelBaseJsonSchema,
+  SubmodelBaseModificationSchema,
+} from "@open-dpp/dto";
 import { z } from "zod";
 import { IHasDataSpecification } from "../common/has-data-specification";
 import { IHasSemantics } from "../common/has-semantics";
@@ -23,6 +28,30 @@ export interface SubmodelBaseProps {
 }
 
 export interface SubmodelBaseObjects extends IReferable, IHasSemantics, IQualifiable, IHasDataSpecification {
+}
+
+export function withSubmodelBase(submodelBase: ISubmodelBase) {
+  function modifyLanguageTexts(entries: LanguageText[], newEntries?: unknown[]) {
+    if (newEntries) {
+      const newEntriesObjects = newEntries.map(LanguageText.fromPlain);
+      for (const newEntry of newEntriesObjects) {
+        const foundEntry = entries.find(d => d.language === newEntry.language);
+        if (foundEntry) {
+          foundEntry.changeText(newEntry.text);
+        }
+        else {
+          entries.push(newEntry);
+        }
+      }
+    }
+  }
+
+  function modify(data: unknown) {
+    const { displayName, description } = SubmodelBaseModificationSchema.parse(data);
+    modifyLanguageTexts(submodelBase.displayName, displayName);
+    modifyLanguageTexts(submodelBase.description, description);
+  }
+  return { modify };
 }
 
 export function submodelBasePropsFromPlain(data: Record<string, unknown>): SubmodelBaseObjects {

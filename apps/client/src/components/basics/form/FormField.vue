@@ -9,6 +9,7 @@ const props = defineProps<{
   showError: boolean;
   error: string | undefined | null;
   modelValue: string | number | undefined | null;
+  disabled?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -31,19 +32,21 @@ const textValue = computed<string>({
 </script>
 
 <template>
-  <div class="flex flex-col gap-2 field">
+  <div class="flex flex-col gap-2">
     <InputGroup>
       <FloatLabel variant="on">
         <InputNumber
           v-if="isNumeric"
           :id="props.id"
           v-model="numericValue"
+          :disabled="props.disabled"
           :invalid="props.showError && !!props.error"
         />
         <InputText
           v-else
           :id="props.id"
           v-model="textValue"
+          :disabled="props.disabled"
           :invalid="props.showError && !!props.error"
         />
         <label :for="props.id">{{ props.label }}</label>

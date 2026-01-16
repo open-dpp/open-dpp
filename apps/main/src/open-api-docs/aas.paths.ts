@@ -3,6 +3,7 @@ import {
   SubmodelElementPaginationResponseDtoSchema,
   SubmodelElementSchema,
   SubmodelJsonSchema,
+  SubmodelModificationSchema,
   SubmodelPaginationResponseDtoSchema,
   SubmodelRequestDtoSchema,
   TemplateDtoSchema,
@@ -70,6 +71,24 @@ export function createAasPaths(tag: string) {
         requestBody: {
           content: {
             [ContentType.JSON]: { schema: SubmodelRequestDtoSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.CREATED]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelJsonSchema },
+            },
+          },
+        },
+      },
+      patch: {
+        operationId: "patchSubmodel",
+        tags: [tag],
+        summary: `Modify submodel with id`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: SubmodelModificationSchema },
           },
         },
         responses: {

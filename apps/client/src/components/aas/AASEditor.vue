@@ -63,7 +63,7 @@ const {
   changeQueryParams,
   selectedLanguage: convertLocaleToLanguage(locale.value),
   errorHandlingStore,
-  translate: label => t(label),
+  translate: t,
 });
 
 onMounted(async () => {

@@ -8,6 +8,7 @@ import { useForm } from "vee-validate";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
+import { EditorMode } from "../../composables/aas-drawer.ts";
 import { submodelBaseFormDefaultValues, SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import FormField from "../basics/form/FormField.vue";
@@ -51,7 +52,7 @@ defineExpose<{
 
 <template>
   <form class="flex flex-col gap-1 p-2">
-    <SubmodelBaseForm :show-errors="showErrors" :errors="errors" />
+    <SubmodelBaseForm :show-errors="showErrors" :errors="errors" :editor-mode="EditorMode.CREATE" />
     <div class="grid lg:grid-cols-3 grid-cols-1 gap-2">
       <FormField
         id="value"

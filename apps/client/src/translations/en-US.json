@@ -52,9 +52,11 @@
   "aasEditor": {
     "addTextField": "Add text field",
     "addSubmodel": "Add section",
+    "editSubmodel": "Edit section",
     "submodel": "Section",
     "textField": "Text field",
-    "type": "Type"
+    "type": "Type",
+    "error": "{method} failed"
   },
   "languages": {
     "english": "English",

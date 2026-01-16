@@ -8,6 +8,7 @@ const props = defineProps<{
   label: string;
   showError: boolean;
   error: string | undefined | null;
+  disabled?: boolean;
 }>();
 
 const model = defineModel<string | undefined | null>();
@@ -22,12 +23,15 @@ function generateIdShort() {
     v-model="model"
     v-bind="props"
     label="Id"
+
+    :disabled="props.disabled"
     :type="InputText"
   >
     <template #addon-right>
       <InputGroupAddon>
         <Button
           v-tooltip.top="'Generate Id'"
+          :disabled="props.disabled"
           icon="pi pi-sparkles"
           severity="secondary"
           variant="text"

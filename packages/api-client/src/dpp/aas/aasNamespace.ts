@@ -4,6 +4,7 @@ import type {
   SubmodelElementPaginationResponseDto,
   SubmodelElementRequestDto,
   SubmodelElementResponseDto,
+  SubmodelModificationDto,
   SubmodelPaginationResponseDto,
   SubmodelRequestDto,
   SubmodelResponseDto,
@@ -51,6 +52,10 @@ export class AasNamespace {
 
   public async createSubmodel(id: string, data: SubmodelRequestDto) {
     return this.axiosInstance.post<SubmodelResponseDto>(`${this.aasEndpoint}/${id}/submodels`, data)
+  }
+
+  public async modifySubmodel(id: string, submodelId: string, data: SubmodelModificationDto) {
+    return this.axiosInstance.patch<SubmodelResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}`, data)
   }
 
   public async createSubmodelElement(id: string, submodelId: string, data: SubmodelElementRequestDto) {
