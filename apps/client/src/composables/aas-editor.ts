@@ -95,6 +95,21 @@ export function useAasEditor({
           });
         },
       },
+      {
+        label: "Zahl",
+        icon: "pi pi-pencil",
+        command: (_event: MenuItemCommandEvent) => {
+          drawer.openDrawer({
+            type: KeyTypes.Property,
+            data: { valueType: DataTypeDef.Double },
+            mode: EditorMode.CREATE,
+            title: "Zahl",
+            path,
+            callback: async (data: PropertyRequestDto) =>
+              createProperty(path, data),
+          });
+        },
+      },
     ];
   };
 

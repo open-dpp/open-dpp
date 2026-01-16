@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Button, InputGroupAddon, InputText } from "primevue";
+import { Button, InputGroupAddon } from "primevue";
 import { v4 as uuid4 } from "uuid";
 import FormField from "./FormField.vue";
 
@@ -23,9 +23,7 @@ function generateIdShort() {
     v-model="model"
     v-bind="props"
     label="Id"
-
     :disabled="props.disabled"
-    :type="InputText"
   >
     <template #addon-right>
       <InputGroupAddon>
