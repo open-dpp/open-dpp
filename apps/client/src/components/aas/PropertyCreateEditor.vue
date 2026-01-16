@@ -11,8 +11,7 @@ import { z } from "zod";
 import { EditorMode } from "../../composables/aas-drawer.ts";
 import { submodelBaseFormDefaultValues, SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
-import FormField from "../basics/form/FormField.vue";
-import SubmodelBaseForm from "./SubmodelBaseForm.vue";
+import PropertyForm from "./PropertyForm.vue";
 
 const props = defineProps<{
   path: AasEditorPath;
@@ -27,12 +26,10 @@ const propertyFormSchema = z.object({
 const { locale } = useI18n();
 export type FormValues = z.infer<typeof propertyFormSchema>;
 
-const { defineField, handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
+const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(propertyFormSchema),
   initialValues: { ...submodelBaseFormDefaultValues(convertLocaleToLanguage(locale.value)) },
 });
-
-const [value] = defineField("value");
 
 const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
@@ -52,16 +49,11 @@ defineExpose<{
 
 <template>
   <form class="flex flex-col gap-4 p-2">
-    <SubmodelBaseForm :show-errors="showErrors" :errors="errors" :editor-mode="EditorMode.CREATE" />
-    <div class="grid lg:grid-cols-3 grid-cols-1 gap-2">
-      <FormField
-        id="value"
-        v-model="value"
-        label="Wert"
-        :value-type="props.data.valueType"
-        :show-error="showErrors"
-        :error="errors.value"
-      />
-    </div>
+    <PropertyForm
+      :data="props.data"
+      :show-errors="showErrors"
+      :errors="errors"
+      :editor-mode="EditorMode.CREATE"
+    />
   </form>
 </template>

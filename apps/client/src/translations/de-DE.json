@@ -50,11 +50,15 @@
     }
   },
   "aasEditor": {
-    "addTextField": "Textfeld hinzufügen",
+    "formLabels": {
+      "value": "Value",
+      "name": "Name"
+    },
     "addSubmodel": "Abschnitt hinzufügen",
-    "editSubmodel": "Abschnitt bearbeiten",
+    "edit": "{formItem} bearbeiten",
     "submodel": "Abschnitt",
     "textField": "Textfeld",
+    "numberField": "Zahlenfeld",
     "type": "Typ",
     "error": "{method} fehlgeschlagen"
   },

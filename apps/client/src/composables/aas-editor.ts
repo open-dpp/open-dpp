@@ -1,5 +1,6 @@
 import type { AasNamespace } from "@open-dpp/api-client";
 import type {
+  DataTypeDefType,
   LanguageTextDto,
   LanguageType,
   PagingParamsDto,
@@ -79,37 +80,24 @@ export function useAasEditor({
 
   const buildAddSubmodelElementMenu = (node: TreeNode) => {
     const path = toRaw(node.data.path);
+
+    function buildPropertyEntry(label: string, icon: string, valueType: DataTypeDefType) {
+      return { label, icon, command: (_event: MenuItemCommandEvent) => {
+        drawer.openDrawer({
+          type: KeyTypes.Property,
+          data: { valueType },
+          mode: EditorMode.CREATE,
+          title: label,
+          path,
+          callback: async (data: PropertyRequestDto) =>
+            createProperty(path, data),
+        });
+      } };
+    }
+    const labelPrefix = "aasEditor";
     submodelElementsToAdd.value = [
-      {
-        label: translate("aasEditor.addTextField"),
-        icon: "pi pi-pencil",
-        command: (_event: MenuItemCommandEvent) => {
-          drawer.openDrawer({
-            type: KeyTypes.Property,
-            data: { valueType: DataTypeDef.String },
-            mode: EditorMode.CREATE,
-            title: translate("aasEditor.addTextField"),
-            path,
-            callback: async (data: PropertyRequestDto) =>
-              createProperty(path, data),
-          });
-        },
-      },
-      {
-        label: "Zahl",
-        icon: "pi pi-pencil",
-        command: (_event: MenuItemCommandEvent) => {
-          drawer.openDrawer({
-            type: KeyTypes.Property,
-            data: { valueType: DataTypeDef.Double },
-            mode: EditorMode.CREATE,
-            title: "Zahl",
-            path,
-            callback: async (data: PropertyRequestDto) =>
-              createProperty(path, data),
-          });
-        },
-      },
+      buildPropertyEntry(translate(`${labelPrefix}.textField`), "pi pi-pencil", DataTypeDef.String),
+      buildPropertyEntry(translate(`${labelPrefix}.numberField`), "pi pi-pencil", DataTypeDef.Double),
     ];
   };
 
@@ -176,7 +164,7 @@ export function useAasEditor({
       }
       selectedKeys.value = { [key]: true };
 
-      const title = translate("aasEditor.editSubmodel");
+      const title = translate("aasEditor.edit", { formItem: node.data.type });
       drawer.openDrawer({
         type: node.data.modelType,
         data: toRaw(node.data.plain),
@@ -201,6 +189,9 @@ export function useAasEditor({
       const { valueType } = PropertyJsonSchema.pick({ valueType: true }).parse(submodelBase);
       if (valueType === DataTypeDef.String) {
         return translate("aasEditor.textField");
+      }
+      if (valueType === DataTypeDef.Double) {
+        return translate("aasEditor.numberField");
       }
     }
     if (submodelBase.modelType === AasSubmodelElements.SubmodelElementCollection) {

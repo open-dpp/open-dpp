@@ -234,7 +234,10 @@ describe("aasEditor composable", () => {
       expect(mocks.createSubmodel).toHaveBeenCalledWith(aasId, data);
     });
 
-    it("should create property", async () => {
+    it.each([
+      { label: "aasEditor.textField", valueType: DataTypeDef.String },
+      { label: "aasEditor.numberField", valueType: DataTypeDef.Double },
+    ])("should create property for %label", async ({ label, valueType }) => {
       mocks.createSubmodelElement.mockResolvedValue({ status: HTTPCode.CREATED });
 
       const { submodels, submodelElementsToAdd, init, drawerVisible, buildAddSubmodelElementMenu, editorVNode } = useAasEditor({
@@ -247,11 +250,11 @@ describe("aasEditor composable", () => {
       });
       await init();
       buildAddSubmodelElementMenu(submodels.value!.find(s => s.key === submodel1.id)!);
-      const addPropertyMenuItem: MenuItem = submodelElementsToAdd.value.find(e => e.label === "aasEditor.addTextField")!;
+      const addPropertyMenuItem: MenuItem = submodelElementsToAdd.value.find(e => e.label === label)!;
       addPropertyMenuItem.command!({} as MenuItemCommandEvent);
       expect(drawerVisible.value).toBeTruthy();
       expect(editorVNode.value!.props.path).toEqual({ submodelId: submodel1.id });
-      expect(editorVNode.value!.props.data).toEqual({ valueType: DataTypeDef.String });
+      expect(editorVNode.value!.props.data).toEqual({ valueType });
       expect(editorVNode.value!.component).toEqual(PropertyCreateEditor);
       const data = { idShort: "newProperty" };
       await editorVNode.value!.props.callback!(data);

@@ -50,11 +50,15 @@
     "contact": "Contact"
   },
   "aasEditor": {
-    "addTextField": "Add text field",
+    "formLabels": {
+      "value": "Value",
+      "name": "Name"
+    },
     "addSubmodel": "Add section",
-    "editSubmodel": "Edit section",
+    "edit": "Edit {formItem}",
     "submodel": "Section",
     "textField": "Text field",
+    "numberField": "Number field",
     "type": "Type",
     "error": "{method} failed"
   },
