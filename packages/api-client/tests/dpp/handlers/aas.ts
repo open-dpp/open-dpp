@@ -155,5 +155,10 @@ export function aasHandlers(basePath: string) {
         })
       },
     ),
+    http.patch(`${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements/${submodelCarbonFootprintElement0.idShort}`, async () => {
+      return HttpResponse.json(SubmodelElementSchema.parse(propertyToAdd), {
+        status: 200,
+      })
+    }),
   ]
 }

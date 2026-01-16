@@ -1,6 +1,7 @@
 import type express from "express";
 import {
   AssetAdministrationShellPaginationResponseDto,
+  SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
   SubmodelElementRequestDto,
   SubmodelElementResponseDto,
@@ -57,4 +58,11 @@ export interface IAasCreateEndpoints {
 
 export interface IAasModifyEndpoints {
   modifySubmodel: (id: string, submodelId: string, body: SubmodelModificationDto, req: express.Request) => Promise<SubmodelResponseDto>;
+  modifySubmodelElement: (
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    body: SubmodelElementModificationDto,
+    req: express.Request,
+  ) => Promise<SubmodelElementResponseDto>;
 }

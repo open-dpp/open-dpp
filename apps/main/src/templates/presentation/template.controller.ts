@@ -1,4 +1,5 @@
 import type {
+  SubmodelElementModificationDto,
   SubmodelElementRequestDto,
   SubmodelModificationDto,
   SubmodelRequestDto,
@@ -30,6 +31,7 @@ import {
   ApiGetSubmodels,
   ApiGetSubmodelValue,
   ApiPatchSubmodel,
+  ApiPatchSubmodelElement,
   ApiPostSubmodel,
   ApiPostSubmodelElement,
   ApiPostSubmodelElementAtIdShortPath,
@@ -38,6 +40,7 @@ import {
   IdShortPathParam,
   LimitQueryParam,
   RequestParam,
+  SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
   SubmodelIdParam,
   SubmodelModificationRequestBody,
@@ -131,6 +134,18 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
   ): Promise<SubmodelElementResponseDto> {
     const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
     return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body);
+  }
+
+  @ApiPatchSubmodelElement()
+  async modifySubmodelElement(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.modifySubmodelElement(template.getEnvironment(), submodelId, body, idShortPath);
   }
 
   @ApiGetSubmodelElementById()

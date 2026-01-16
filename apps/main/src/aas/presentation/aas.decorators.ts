@@ -1,6 +1,11 @@
 import { applyDecorators, Body, Get, Param, Patch, Post, Query, Req } from "@nestjs/common";
 
-import { SubmodelElementSchema, SubmodelModificationSchema, SubmodelRequestDtoSchema } from "@open-dpp/dto";
+import {
+  SubmodelElementModificationSchema,
+  SubmodelElementSchema,
+  SubmodelModificationSchema,
+  SubmodelRequestDtoSchema,
+} from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { z } from "zod";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
@@ -61,6 +66,12 @@ export const ApiGetSubmodelElementByIdPath = "/:id/submodels/:submodelId/submode
 export function ApiGetSubmodelElementById() {
   return applyDecorators(
     Get(ApiGetSubmodelElementByIdPath),
+  );
+}
+
+export function ApiPatchSubmodelElement() {
+  return applyDecorators(
+    Patch(ApiGetSubmodelElementByIdPath),
   );
 }
 
@@ -137,3 +148,4 @@ export const SubmodelRequestBody = () => Body(new ZodValidationPipe(SubmodelRequ
 export const SubmodelModificationRequestBody = () => Body(new ZodValidationPipe(SubmodelModificationSchema));
 
 export const SubmodelElementRequestBody = () => Body(new ZodValidationPipe(SubmodelElementSchema));
+export const SubmodelElementModificationRequestBody = () => Body(new ZodValidationPipe(SubmodelElementModificationSchema));

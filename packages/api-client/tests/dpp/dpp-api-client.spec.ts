@@ -1,6 +1,10 @@
 import { randomUUID } from 'node:crypto'
 import { SubmodelElementSchema } from '@open-dpp/dto'
-import { submodelCarbonFootprintPlainFactory, submodelModificationPlainFactory } from '@open-dpp/testing'
+import {
+  propertyModificationPlainFactory,
+  submodelCarbonFootprintPlainFactory,
+  submodelModificationPlainFactory,
+} from '@open-dpp/testing'
 import {
   AssetAdministrationShellType,
   DataFieldType,
@@ -142,6 +146,16 @@ describe('apiClient', () => {
         btoa(submodelCarbonFootprintResponse.id),
         submodelCarbonFootprintElement0.idShort,
         propertyToAdd,
+      )
+      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd))
+    })
+
+    it('should modify submodel element', async () => {
+      const response = await sdk.dpp[dppIdentfiable].aas.modifySubmodelElement(
+        aasWrapperId,
+        btoa(submodelCarbonFootprintResponse.id),
+        submodelCarbonFootprintElement0.idShort,
+        propertyModificationPlainFactory.build(),
       )
       expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd))
     })

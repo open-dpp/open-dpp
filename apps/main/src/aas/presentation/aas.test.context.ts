@@ -22,6 +22,7 @@ import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { IPersistable } from "../domain/persistable";
+import { Property } from "../domain/submodel-base/property";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
@@ -369,6 +370,31 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     expect({ displayName: response.body.displayName, description: response.body.description }).toEqual(modificationBody);
   }
 
+  async function assertModifySubmodelElement(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const entity = await createEntity(org.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const property = Property.fromPlain(propertyPlainFactory.build({ idShort: "Property01" }));
+    submodel.addSubmodelElement(property);
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+
+    const modificationBody = {
+      displayName: [{ language: "en", text: "Bill of Materials" }],
+      description: [{ language: "en", text: "A list of all products in the factory" }],
+    };
+
+    const response = await request(app.getHttpServer())
+      .patch(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/Property01`)
+      .set("Cookie", userCookie)
+      .send(modificationBody);
+    expect(response.status).toEqual(200);
+    expect({ displayName: response.body.displayName, description: response.body.description }).toEqual(modificationBody);
+  }
+
   afterAll(async () => {
     await app.close();
   });
@@ -386,6 +412,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       getSubmodelById: assertGetSubmodelById,
       postSubmodel: assertPostSubmodel,
       modifySubmodel: assertModifySubmodel,
+      modifySubmodelElement: assertModifySubmodelElement,
       getSubmodelValue: assertGetSubmodelValue,
       getSubmodelElements: assertGetSubmodelElements,
       postSubmodelElement: assertPostSubmodelElement,

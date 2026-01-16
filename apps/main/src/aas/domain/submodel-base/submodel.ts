@@ -8,6 +8,7 @@ import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import { JsonVisitor } from "../json-visitor";
+import { ModifierVisitor } from "../modifier-visitor";
 import { IPersistable } from "../persistable";
 import { JsonType, ValueVisitor } from "../value-visitor";
 import { IVisitor } from "../visitor";
@@ -18,7 +19,6 @@ import {
   parseSubmodelBaseUnion,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
-  withSubmodelBase,
 } from "./submodel-base";
 
 export class Submodel implements ISubmodelBase, IPersistable {
@@ -86,7 +86,13 @@ export class Submodel implements ISubmodelBase, IPersistable {
   };
 
   modify(data: unknown) {
-    withSubmodelBase(this).modify(data);
+    this.accept(new ModifierVisitor(), data);
+  }
+
+  modifySubmodelElement(data: unknown, idShortPath: IdShortPath) {
+    const submodelElement = this.findSubmodelElementOrFail(idShortPath);
+    submodelElement.accept(new ModifierVisitor(), data);
+    return submodelElement;
   }
 
   getValueRepresentation(idShortPath?: IdShortPath): JsonType {

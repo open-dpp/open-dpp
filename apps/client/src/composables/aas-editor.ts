@@ -130,6 +130,28 @@ export function useAasEditor({
     await finalizeApiRequest(response);
   }
 
+  async function modifySubmodelElement(path: AasEditorPath, data: SubmodelModificationDto) {
+    const response = await aasNamespace.modifySubmodelElement(id, path.submodelId!, path.idShortPath!, data);
+    await finalizeApiRequest(response);
+  }
+
+  function getEditCallback(node: TreeNode, title: string) {
+    const errorMessage = translate("aasEditor.error", { method: title });
+    if (node.data.modelType === KeyTypes.Submodel) {
+      return (data: any) => errorHandlingStore.withErrorHandling(
+        modifySubmodel(toRaw(node.data.path), data),
+        { message: errorMessage },
+      );
+    }
+    else if (node.data.modelType === AasSubmodelElements.Property) {
+      return (data: any) => errorHandlingStore.withErrorHandling(
+        modifySubmodelElement(toRaw(node.data.path), data),
+        { message: errorMessage },
+      );
+    }
+    return undefined;
+  }
+
   const selectTreeNode = (key: string) => {
     if (submodels.value) {
       const node = findTreeNodeByKey(key);
@@ -140,18 +162,14 @@ export function useAasEditor({
       selectedKeys.value = { [key]: true };
 
       const title = translate("aasEditor.editSubmodel");
-      const errorMessage = translate("aasEditor.error", { method: title });
       drawer.openDrawer({
         type: node.data.modelType,
         data: toRaw(node.data.plain),
         title,
         mode: EditorMode.EDIT,
         path: toRaw(node.data.path),
-        callback: node.data.modelType === KeyTypes.Submodel
-          ? (data: any) => errorHandlingStore.withErrorHandling(modifySubmodel(toRaw(node.data.path), data), { message: errorMessage })
-          : undefined,
+        callback: getEditCallback(node, title),
       });
-
       changeQueryParams({ edit: key });
     }
   };
@@ -197,7 +215,7 @@ export function useAasEditor({
             plain: submodelElement,
             path: {
               submodelId: submodel.id,
-              idShortPath: `${submodel.idShort}.${submodelElement.idShort}`,
+              idShortPath: `${submodelElement.idShort}`,
             },
           },
         };

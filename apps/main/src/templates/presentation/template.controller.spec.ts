@@ -75,6 +75,10 @@ describe("templateController", () => {
     await ctx.asserts.postSubmodelElement(createTemplate);
   });
 
+  it(`/PATCH submodel element`, async () => {
+    await ctx.asserts.modifySubmodelElement(createTemplate, saveTemplate);
+  });
+
   it(`/POST submodel element at a specified path within submodel elements hierarchy`, async () => {
     await ctx.asserts.postSubmodelElementAtIdShortPath(createTemplate);
   });

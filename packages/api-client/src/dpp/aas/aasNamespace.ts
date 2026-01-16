@@ -1,6 +1,7 @@
 import type {
   AssetAdministrationShellPaginationResponseDto,
   PagingParamsDto,
+  SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
   SubmodelElementRequestDto,
   SubmodelElementResponseDto,
@@ -64,5 +65,9 @@ export class AasNamespace {
 
   public async createSubmodelElementAtIdShortPath(id: string, submodelId: string, idShortPath: string, data: SubmodelElementRequestDto) {
     return this.axiosInstance.post<SubmodelElementResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}`, data)
+  }
+
+  public async modifySubmodelElement(id: string, submodelId: string, idShortPath: string, data: SubmodelElementModificationDto) {
+    return this.axiosInstance.patch<SubmodelElementResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}`, data)
   }
 }

@@ -1,5 +1,6 @@
 import {
   AssetAdministrationShellPaginationResponseDtoSchema,
+  SubmodelElementModificationSchema,
   SubmodelElementPaginationResponseDtoSchema,
   SubmodelElementSchema,
   SubmodelJsonSchema,
@@ -148,6 +149,23 @@ export function createAasPaths(tag: string) {
         requestBody: {
           content: {
             [ContentType.JSON]: { schema: SubmodelElementSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelElementSchema },
+            },
+          },
+        },
+      },
+      patch: {
+        tags: [tag],
+        summary: `Modify Submodel Element`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: SubmodelElementModificationSchema },
           },
         },
         responses: {

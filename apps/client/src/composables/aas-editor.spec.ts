@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => {
     createSubmodelElement: vi.fn(),
     getSubmodels: vi.fn(),
     modifySubmodel: vi.fn(),
+    modifySubmodelElement: vi.fn(),
   };
 });
 
@@ -36,6 +37,7 @@ vi.mock("../lib/api-client", () => ({
           modifySubmodel: mocks.modifySubmodel,
           getSubmodels: mocks.getSubmodels,
           createSubmodelElement: mocks.createSubmodelElement,
+          modifySubmodelElement: mocks.modifySubmodelElement,
         },
       },
     },
@@ -98,7 +100,7 @@ describe("aasEditor composable", () => {
           data: {
             label: "Design_V01",
             modelType: "SubmodelElementCollection",
-            path: { submodelId: submodel1.id, idShortPath: `${submodel1.idShort}.Design_V01` },
+            path: { submodelId: submodel1.id, idShortPath: `Design_V01` },
             plain: submodel1.submodelElements[0],
             type: "aasEditor.submodelElementCollection",
           },
@@ -120,7 +122,7 @@ describe("aasEditor composable", () => {
           data: {
             label: "Product carbon footprint",
             modelType: "SubmodelElementCollection",
-            path: { submodelId: submodel2.id, idShortPath: `${submodel2.idShort}.ProductCarbonFootprint_A1A3` },
+            path: { submodelId: submodel2.id, idShortPath: `ProductCarbonFootprint_A1A3` },
             plain: submodel2.submodelElements[0],
             type: "aasEditor.submodelElementCollection",
           },
@@ -130,7 +132,7 @@ describe("aasEditor composable", () => {
           data: {
             label: "Product carbon footprint",
             modelType: "SubmodelElementCollection",
-            path: { submodelId: submodel2.id, idShortPath: `${submodel2.idShort}.ProductCarbonFootprint_A4` },
+            path: { submodelId: submodel2.id, idShortPath: `ProductCarbonFootprint_A4` },
             plain: submodel2.submodelElements[1],
             type: "aasEditor.submodelElementCollection",
           },
@@ -140,7 +142,7 @@ describe("aasEditor composable", () => {
           data: {
             label: "Product carbon footprint",
             modelType: "SubmodelElementCollection",
-            path: { submodelId: submodel2.id, idShortPath: `${submodel2.idShort}.ProductCarbonFootprint_B5` },
+            path: { submodelId: submodel2.id, idShortPath: `ProductCarbonFootprint_B5` },
             plain: submodel2.submodelElements[2],
             type: "aasEditor.submodelElementCollection",
           },
@@ -155,10 +157,21 @@ describe("aasEditor composable", () => {
   });
 
   it.each([
-    { keyToSelect: submodel2.id, expected: { path: { submodelId: submodel2.id }, component: SubmodelEditor, haveBeenCalled: mocks.modifySubmodel } },
+    {
+      keyToSelect: submodel2.id,
+      expected: {
+        path: { submodelId: submodel2.id },
+        component: SubmodelEditor,
+        haveBeenCalled: mocks.modifySubmodel,
+      },
+    },
     {
       keyToSelect: `${submodel2.idShort}.ProductCarbonFootprint_A4`,
-      expected: { path: { submodelId: submodel2.id, idShortPath: `${submodel2.idShort}.ProductCarbonFootprint_A4` }, component: SubmodelElementCollectionEditor, haveBeenCalled: undefined },
+      expected: {
+        path: { submodelId: submodel2.id, idShortPath: `ProductCarbonFootprint_A4` },
+        component: SubmodelElementCollectionEditor,
+        haveBeenCalled: null,
+      },
     },
   ])("should select node $keyToSelect", async ({ keyToSelect, expected }) => {
     const response = { paging_metadata: { cursor: null }, result: [submodel1, submodel2] };

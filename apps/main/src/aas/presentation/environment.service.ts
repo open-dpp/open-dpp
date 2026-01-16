@@ -5,6 +5,7 @@ import {
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellPaginationResponseDtoSchema,
   AssetKindType,
+  SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
   SubmodelElementPaginationResponseDtoSchema,
   SubmodelElementRequestDto,
@@ -105,6 +106,13 @@ export class EnvironmentService {
   async addSubmodelElement(environment: Environment, submodelId: string, submodelElementPlain: SubmodelElementRequestDto, idShortPath?: IdShortPath): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const submodelElement = submodel.addSubmodelElement(parseSubmodelBaseUnion(submodelElementPlain), idShortPath);
+    await this.submodelRepository.save(submodel);
+    return SubmodelElementSchema.parse(submodelElement.toPlain());
+  }
+
+  async modifySubmodelElement(environment: Environment, submodelId: string, modification: SubmodelElementModificationDto, idShortPath: IdShortPath): Promise<SubmodelElementResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const submodelElement = submodel.modifySubmodelElement(modification, idShortPath);
     await this.submodelRepository.save(submodel);
     return SubmodelElementSchema.parse(submodelElement.toPlain());
   }

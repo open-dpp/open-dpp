@@ -4,7 +4,6 @@ import type { AasEditorPath } from "../../composables/aas-drawer.ts";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { computed } from "vue";
-import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import { EditorMode } from "../../composables/aas-drawer.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
@@ -20,8 +19,6 @@ const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
 });
 
-const { locale } = useI18n();
-
 export type FormValues = z.infer<typeof formSchema>;
 
 const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
@@ -34,7 +31,6 @@ const showErrors = computed(() => {
 });
 
 const submit = handleSubmit(async (data) => {
-  console.log(data);
   await props.callback({ ...data });
 });
 

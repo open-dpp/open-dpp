@@ -1,0 +1,196 @@
+import { PropertyModificationSchema, SubmodelBaseModificationSchema } from "@open-dpp/dto";
+import { NotSupportedError } from "@open-dpp/exception";
+import { AssetAdministrationShell } from "./asset-adminstration-shell";
+import { AssetInformation } from "./asset-information";
+import { AdministrativeInformation } from "./common/administrative-information";
+import { Key } from "./common/key";
+import { LanguageText } from "./common/language-text";
+import { Qualifier } from "./common/qualififiable";
+import { Reference } from "./common/reference";
+import { ConceptDescription } from "./concept-description";
+import { EmbeddedDataSpecification } from "./embedded-data-specification";
+import { Extension } from "./extension";
+import { Resource } from "./resource";
+import { SpecificAssetId } from "./specific-asset-id";
+import { AnnotatedRelationshipElement } from "./submodel-base/annotated-relationship-element";
+import { Blob } from "./submodel-base/blob";
+import { Entity } from "./submodel-base/entity";
+import { File } from "./submodel-base/file";
+import { MultiLanguageProperty } from "./submodel-base/multi-language-property";
+import { Property } from "./submodel-base/property";
+import { Range } from "./submodel-base/range";
+import { ReferenceElement } from "./submodel-base/reference-element";
+import { RelationshipElement } from "./submodel-base/relationship-element";
+import { Submodel } from "./submodel-base/submodel";
+import { ISubmodelBase } from "./submodel-base/submodel-base";
+import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
+
+import { SubmodelElementList } from "./submodel-base/submodel-element-list";
+import { IVisitor } from "./visitor";
+
+export class ModifierVisitor implements IVisitor<unknown, void> {
+  private modifyLanguageTexts(entries: LanguageText[], newEntries?: unknown[]) {
+    if (newEntries) {
+      const newEntriesObjects = newEntries.map(LanguageText.fromPlain);
+      for (const newEntry of newEntriesObjects) {
+        const foundEntry = entries.find(d => d.language === newEntry.language);
+        if (foundEntry) {
+          foundEntry.changeText(newEntry.text);
+        }
+        else {
+          entries.push(newEntry);
+        }
+      }
+    }
+  }
+
+  private modifySubmodelBase(submodelBase: ISubmodelBase, data: unknown) {
+    const { displayName, description } = SubmodelBaseModificationSchema.parse(data);
+    this.modifyLanguageTexts(submodelBase.displayName, displayName);
+    this.modifyLanguageTexts(submodelBase.description, description);
+  }
+
+  visitAdministrativeInformation(_element: AdministrativeInformation, _context: unknown): void {
+    throw new NotSupportedError(
+      "AdministrativeInformation is not supported for value serialization.",
+    );
+  }
+
+  visitAnnotatedRelationshipElement(_element: AnnotatedRelationshipElement, _context: unknown): void {
+    throw new NotSupportedError(
+      "AnnotatedRelationshipElement is not supported for value serialization.",
+    );
+  }
+
+  visitAssetAdministrationShell(_element: AssetAdministrationShell, _context: unknown): void {
+    throw new NotSupportedError(
+      "AssetAdministrationShell is not supported for value serialization.",
+    );
+  }
+
+  visitAssetInformation(_element: AssetInformation, _context: unknown): void {
+    throw new NotSupportedError(
+      "AssetInformation is not supported for value serialization.",
+    );
+  }
+
+  visitBlob(_element: Blob, _context: unknown): void {
+    throw new NotSupportedError(
+      "Blob is not supported for value serialization.",
+    );
+  }
+
+  visitConceptDescription(_element: ConceptDescription, _context: unknown): void {
+    throw new NotSupportedError(
+      "ConceptDescription is not supported for value serialization.",
+    );
+  }
+
+  visitEmbeddedDataSpecification(_element: EmbeddedDataSpecification, _context: unknown): void {
+    throw new NotSupportedError(
+      "EmbeddedDataSpecification is not supported for value serialization.",
+    );
+  }
+
+  visitEntity(_element: Entity, _context: unknown): void {
+    throw new NotSupportedError(
+      "Entity is not supported for value serialization.",
+    );
+  }
+
+  visitExtension(_element: Extension, _context: unknown): void {
+    throw new NotSupportedError(
+      "Extension is not supported for value serialization.",
+    );
+  }
+
+  visitFile(_element: File, _context: unknown): void {
+    throw new NotSupportedError(
+      "File is not supported for value serialization.",
+    );
+  }
+
+  visitKey(_element: Key, _context: unknown): void {
+    throw new NotSupportedError(
+      "Key is not supported for value serialization.",
+    );
+  }
+
+  visitLanguageText(_element: LanguageText, _context: unknown): void {
+    throw new NotSupportedError(
+      "LanguageText is not supported for value serialization.",
+    );
+  }
+
+  visitMultiLanguageProperty(_element: MultiLanguageProperty, _context: unknown): void {
+    throw new NotSupportedError(
+      "MultiLanguageProperty is not supported for value serialization.",
+    );
+  }
+
+  visitProperty(element: Property, context: unknown): void {
+    const parsed = PropertyModificationSchema.parse(context);
+    this.modifySubmodelBase(element, parsed);
+    if (parsed.value !== undefined) {
+      element.value = parsed.value;
+    }
+  }
+
+  visitQualifier(_element: Qualifier, _context: unknown): void {
+    throw new NotSupportedError(
+      "Qualifier is not supported for value serialization.",
+    );
+  }
+
+  visitRange(_element: Range, _context: unknown): void {
+    throw new NotSupportedError(
+      "Range is not supported for value serialization.",
+    );
+  }
+
+  visitReference(_element: Reference, _context: unknown): void {
+    throw new NotSupportedError(
+      "Reference is not supported for value serialization.",
+    );
+  }
+
+  visitReferenceElement(_element: ReferenceElement, _context: unknown): void {
+    throw new NotSupportedError(
+      "ReferenceElement is not supported for value serialization.",
+    );
+  }
+
+  visitRelationshipElement(_element: RelationshipElement, _context: unknown): void {
+    throw new NotSupportedError(
+      "RelationshipElement is not supported for value serialization.",
+    );
+  }
+
+  visitResource(_element: Resource, _context: unknown): void {
+    throw new NotSupportedError(
+      "Resource is not supported for value serialization.",
+    );
+  }
+
+  visitSpecificAssetId(_element: SpecificAssetId, _context: unknown): void {
+    throw new NotSupportedError(
+      "SpecificAssetId is not supported for value serialization.",
+    );
+  }
+
+  visitSubmodel(element: Submodel, context: unknown): void {
+    this.modifySubmodelBase(element, context);
+  }
+
+  visitSubmodelElementCollection(_element: SubmodelElementCollection, _context: unknown): void {
+    throw new NotSupportedError(
+      "SubmodelElementCollection is not supported for value serialization.",
+    );
+  }
+
+  visitSubmodelElementList(_element: SubmodelElementList, _context: unknown): void {
+    throw new NotSupportedError(
+      "SubmodelElementList is not supported for value serialization.",
+    );
+  }
+}

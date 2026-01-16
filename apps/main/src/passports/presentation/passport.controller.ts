@@ -1,4 +1,9 @@
-import type { SubmodelElementRequestDto, SubmodelModificationDto, SubmodelRequestDto } from "@open-dpp/dto";
+import type {
+  SubmodelElementModificationDto,
+  SubmodelElementRequestDto,
+  SubmodelModificationDto,
+  SubmodelRequestDto,
+} from "@open-dpp/dto";
 import type express from "express";
 import { Controller } from "@nestjs/common";
 import { AssetAdministrationShellPaginationResponseDto, SubmodelElementPaginationResponseDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/dto";
@@ -13,6 +18,7 @@ import {
   ApiGetSubmodels,
   ApiGetSubmodelValue,
   ApiPatchSubmodel,
+  ApiPatchSubmodelElement,
   ApiPostSubmodel,
   ApiPostSubmodelElement,
   ApiPostSubmodelElementAtIdShortPath,
@@ -21,6 +27,7 @@ import {
   IdShortPathParam,
   LimitQueryParam,
   RequestParam,
+  SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
   SubmodelIdParam,
   SubmodelModificationRequestBody,
@@ -119,6 +126,18 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
   ): Promise<SubmodelElementResponseDto> {
     const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
     return await this.environmentService.addSubmodelElement(passport.getEnvironment(), submodelId, body);
+  }
+
+  @ApiPatchSubmodelElement()
+  async modifySubmodelElement(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementResponseDto> {
+    const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.modifySubmodelElement(passport.getEnvironment(), submodelId, body, idShortPath);
   }
 
   @ApiGetSubmodelElements()
