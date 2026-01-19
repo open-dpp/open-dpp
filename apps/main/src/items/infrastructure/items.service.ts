@@ -28,7 +28,7 @@ export class ItemsService {
   ) {
     migrateItemDoc(itemDoc);
     return Item.loadFromDb({
-      id: itemDoc.id,
+      id: itemDoc._id,
       uniqueProductIdentifiers,
       organizationId: itemDoc.ownedByOrganizationId,
       userId: itemDoc.createdByUserId,
