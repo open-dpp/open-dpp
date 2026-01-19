@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { OrganizationDto } from "@open-dpp/api-client";
+import type { MemberDto, OrganizationDto } from "@open-dpp/api-client";
 import { UserCircleIcon } from "@heroicons/vue/20/solid";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
@@ -12,6 +12,7 @@ const props = defineProps<{
 const { t } = useI18n();
 const userEmailToAdd = ref<string>("");
 const organization = ref<OrganizationDto>();
+const members = ref<MemberDto[]>([]);
 
 async function inviteUserToOrg() {
   if (userEmailToAdd.value) {
@@ -31,6 +32,8 @@ async function fetchOrganization() {
     props.organizationId,
   );
   organization.value = response.data;
+  const membersResponse = await apiClient.dpp.organizations.getMembers(props.organizationId);
+  members.value = membersResponse.data;
 }
 
 onMounted(async () => {
@@ -66,22 +69,9 @@ onMounted(async () => {
             {{ organization.name }}
           </dd>
         </div>
-        <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-          <dt class="text-sm font-medium text-gray-900">
-            {{ t('organizations.form.createdBy') }}
-          </dt>
-          <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-            {{ organization.createdByUserId }}
-          </dd>
-        </div>
-        <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-          <dt class="text-sm font-medium text-gray-900">
-            {{ t('organizations.form.administeredBy') }}
-          </dt>
-          <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-            {{ organization.ownedByUserId }}
-          </dd>
-        </div>
+        <!-- CreatedBy and OwnedBy removed as they are not in OrganizationDto directly. 
+             If needed, compute from members or fetch additional info. 
+        -->
         <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
           <dt class="text-sm font-medium text-gray-900">
             {{ t('organizations.form.description') }}
@@ -104,7 +94,7 @@ onMounted(async () => {
               role="list"
             >
               <li
-                v-for="member of organization.members"
+                v-for="member of members"
                 :key="member.id"
                 class="flex items-center justify-between py-4 pl-4 pr-5 text-sm/6"
               >
@@ -114,13 +104,13 @@ onMounted(async () => {
                     class="h-5 w-5 shrink-0 text-gray-400"
                   />
                   <div class="ml-4 flex min-w-0 flex-1 gap-2">
-                    <span class="truncate font-medium">{{ member.email }}</span>
+                    <span class="truncate font-medium">{{ member.user?.email }}</span>
                     <span
-                      v-if="organization.ownedByUserId === member.id"
+                      v-if="member.role === 'owner'"
                       class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
                     >{{ t('organizations.memberAdmin') }}</span>
                     <span
-                      v-if="organization.createdByUserId === member.id"
+                      v-if="member.role === 'admin'"
                       class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
                     >{{ t('organizations.memberCreator') }}</span>
                   </div>

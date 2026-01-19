@@ -1,23 +1,18 @@
 <script lang="ts" setup>
-import type { OrganizationDto, UserDto } from "@open-dpp/api-client";
+import type { MemberDto, OrganizationDto } from "@open-dpp/api-client";
 import { onMounted, ref } from "vue";
 import { authClient } from "../../auth-client.ts";
+import apiClient from "../../lib/api-client";
 import OrganizationInvitationsList from "../../components/organizations/OrganizationInvitationsList.vue";
 import OrganizationMembersList from "../../components/organizations/OrganizationMembersList.vue";
 
-const members = ref<Array<UserDto>>([]);
+const members = ref<Array<MemberDto>>([]);
 const organization = ref<OrganizationDto | null>(null);
 
 async function fetchMembers() {
-  const { data } = await authClient.organization.listMembers();
-  members.value = data
-    ? data.members.map((member) => {
-        return {
-          id: member.user.id,
-          email: member.user.email,
-        };
-      })
-    : [];
+  if (!organization.value) return;
+  const { data } = await apiClient.dpp.organizations.getMembers(organization.value.id);
+  members.value = data;
 }
 
 onMounted(async () => {
@@ -26,10 +21,10 @@ onMounted(async () => {
     organization.value = {
       id: data.id,
       name: data.name,
-      members: [],
-      createdByUserId: "",
-      ownedByUserId: "",
-    };
+      slug: data.slug || data.name, // Fallback if better-auth response differs
+      createdAt: data.createdAt || new Date(),
+      updatedAt: new Date(),
+    } as OrganizationDto;
     await fetchMembers();
   }
 });
