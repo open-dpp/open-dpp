@@ -184,6 +184,7 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
 
   visitSubmodelElementCollection(element: SubmodelElementCollection, context: unknown): void {
     this.modifySubmodelBase(element, context);
+
     // TODO: implement submodel element collection value modification
   }
 

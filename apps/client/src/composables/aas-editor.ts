@@ -1,5 +1,5 @@
 import type { AasNamespace } from "@open-dpp/api-client";
-import type { DataTypeDefType, LanguageTextDto, LanguageType, PagingParamsDto, PropertyRequestDto, SubmodelElementCollectionRequestDto, SubmodelElementResponseDto, SubmodelModificationDto, SubmodelRequestDto, SubmodelResponseDto } from "@open-dpp/dto";
+import type { DataTypeDefType, LanguageTextDto, LanguageType, PagingParamsDto, PropertyRequestDto, SubmodelElementCollectionRequestDto, SubmodelElementSharedResponseDto, SubmodelModificationDto, SubmodelRequestDto, SubmodelResponseDto } from "@open-dpp/dto";
 import type { TreeTableSelectionKeys } from "primevue";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
@@ -7,6 +7,7 @@ import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import type { AasEditorPath } from "./aas-drawer.ts";
 import type { PagingResult } from "./pagination.ts";
 import {
+
   AasSubmodelElements,
   AasSubmodelElementsEnum,
   DataTypeDef,
@@ -188,7 +189,7 @@ export function useAasEditor({
     return displayName.find(d => d.language === selectedLanguage)?.text;
   };
 
-  const getVisualType = (submodelBase: SubmodelElementResponseDto): string => {
+  const getVisualType = (submodelBase: SubmodelElementSharedResponseDto): string => {
     if (submodelBase.modelType === KeyTypes.Submodel) {
       return translate("aasEditor.submodel");
     }
@@ -217,8 +218,7 @@ export function useAasEditor({
         plain: omit(submodel, "submodelElements"),
         path: { submodelId: submodel.id },
       },
-      children: submodel.submodelElements.map((sE) => {
-        const submodelElement = SubmodelElementSchema.parse(sE);
+      children: submodel.submodelElements.map((submodelElement) => {
         return {
           key: `${submodel.idShort}.${submodelElement.idShort}`,
           data: {

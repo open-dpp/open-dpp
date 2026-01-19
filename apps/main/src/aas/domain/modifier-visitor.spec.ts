@@ -51,7 +51,7 @@ describe("modifier visitor", () => {
   }, {
     item: SubmodelElementCollection.create({ idShort: "prop2", displayName: existingDisplayNames, description: existingDescriptions }),
     modifications: { ...sharedModifications, value: [] },
-  }])("should modify submodel element with type $type", ({ item, modifications }) => {
+  }])("should modify submodel element with type", ({ item, modifications }) => {
     const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames, description: existingDescriptions });
     submodel.addSubmodelElement(item);
     submodel.modifySubmodelElement(modifications, IdShortPath.create({ path: item.idShort }));

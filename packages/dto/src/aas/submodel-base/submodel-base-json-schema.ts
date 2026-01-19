@@ -14,6 +14,7 @@ export const SubmodelBaseJsonSchema = z.object({
   qualifiers: z.array(QualifierJsonSchema).default([]),
   embeddedDataSpecifications: z.array(EmbeddedDataSpecificationJsonSchema).default([]),
 })
+
 export const SubmodelBaseModificationSchema = z.object({
   displayName: LanguageTextJsonSchema.array().optional(),
   description: LanguageTextJsonSchema.array().optional(),

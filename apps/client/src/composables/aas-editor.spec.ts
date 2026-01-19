@@ -211,6 +211,7 @@ describe("aasEditor composable", () => {
       result: [submodel],
     };
     beforeEach(() => {
+      vi.resetAllMocks();
       mocks.getSubmodels.mockResolvedValue({ data: paginationResponse, status: HTTPCode.OK });
     });
     it("should create submodel", async () => {
@@ -256,15 +257,17 @@ describe("aasEditor composable", () => {
       expect(editorVNode.value!.props.path).toEqual({ submodelId: submodel1.id });
       expect(editorVNode.value!.props.data).toEqual({ valueType });
       expect(editorVNode.value!.component).toEqual(PropertyCreateEditor);
-      const data = { idShort: "newProperty" };
+      const data = { idShort: "newProperty", valueType };
       await editorVNode.value!.props.callback!(data);
       expect(mocks.createSubmodelElement).toHaveBeenCalledWith(aasId, submodel1.id, {
         ...data,
         modelType: KeyTypes.Property,
+        valueType,
         description: [],
         displayName: [],
         embeddedDataSpecifications: [],
         qualifiers: [],
+        extensions: [],
         supplementalSemanticIds: [],
       });
     });
@@ -298,6 +301,8 @@ describe("aasEditor composable", () => {
         embeddedDataSpecifications: [],
         qualifiers: [],
         supplementalSemanticIds: [],
+        extensions: [],
+        value: [],
       });
     });
   });
