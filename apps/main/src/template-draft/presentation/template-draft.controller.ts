@@ -159,6 +159,9 @@ export class TemplateDraftController {
       const user = User.loadFromDb({
         id: session.user.id,
         email: session.user.email,
+        emailVerified: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
       const organization = await this.authService.getActiveOrganization(session.user.id);
       if (!organization) {
