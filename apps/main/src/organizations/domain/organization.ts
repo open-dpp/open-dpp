@@ -1,12 +1,32 @@
-import { randomUUID } from "node:crypto";
+import { randomBytes } from "node:crypto";
+
+export interface OrganizationCreateProps {
+  name: string;
+  slug: string;
+  logo?: string | null;
+  metadata?: any;
+}
+
+export type OrganizationDbProps = OrganizationCreateProps & {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+function generate24CharId(): string {
+  const timestamp = Math.floor(Date.now() / 1000).toString(16).padStart(8, "0");
+  const random = randomBytes(8).toString("hex");
+  return timestamp + random;
+}
 
 export class Organization {
-  readonly id: string = randomUUID();
-  readonly name: string = "";
-  readonly slug: string = "";
-  readonly logo: string | null = null;
-  readonly metadata: any = {};
-  readonly createdAt: Date = new Date();
+  public readonly id: string;
+  public readonly name: string;
+  public readonly slug: string;
+  public readonly logo: string | null;
+  public readonly metadata: any;
+  public readonly createdAt: Date;
+  public readonly updatedAt: Date;
 
   private constructor(
     id: string,
@@ -15,6 +35,7 @@ export class Organization {
     logo: string | null,
     metadata: any,
     createdAt: Date,
+    updatedAt: Date,
   ) {
     this.id = id;
     this.name = name;
@@ -22,5 +43,31 @@ export class Organization {
     this.logo = logo;
     this.metadata = metadata;
     this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
+  }
+
+  public static create(data: OrganizationCreateProps) {
+    const now = new Date();
+    return new Organization(
+      generate24CharId(),
+      data.name,
+      data.slug,
+      data.logo ?? null,
+      data.metadata ?? {},
+      now,
+      now,
+    );
+  }
+
+  public static loadFromDb(data: OrganizationDbProps) {
+    return new Organization(
+      data.id,
+      data.name,
+      data.slug,
+      data.logo ?? null,
+      data.metadata ?? {},
+      data.createdAt,
+      data.updatedAt,
+    );
   }
 }
