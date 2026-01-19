@@ -1,23 +1,27 @@
-import type { AxiosInstance } from 'axios'
-import type { TemplateDto, TemplateGetAllDto } from './template.dtos'
+import type {
+  PagingParamsDto,
+  TemplateDto,
+  TemplatePaginationDto,
+} from '@open-dpp/dto'
+import type { AxiosInstance, AxiosResponse } from 'axios'
+
+import { AasNamespace } from '../aas/aasNamespace'
 
 export class TemplatesNamespace {
-  private readonly templatesEndpoint
+  public aas!: AasNamespace
+  private readonly templatesEndpoint = '/templates'
 
   constructor(
     private readonly axiosInstance: AxiosInstance,
-    private readonly organizationId?: string,
   ) {
-    this.templatesEndpoint = `/organizations/${this.organizationId}/templates`
+    this.aas = new AasNamespace(this.axiosInstance, 'templates')
   }
 
-  public async getAll() {
-    return this.axiosInstance.get<TemplateGetAllDto[]>(this.templatesEndpoint)
+  public async getAll(params: PagingParamsDto) {
+    return await this.axiosInstance.get<TemplatePaginationDto>(this.templatesEndpoint, { params })
   }
 
-  public async getById(id: string) {
-    return this.axiosInstance.get<TemplateDto>(
-      `${this.templatesEndpoint}/${id}`,
-    )
+  public async create(): Promise<AxiosResponse<TemplateDto>> {
+    return await this.axiosInstance.post<TemplateDto>(this.templatesEndpoint)
   }
 }

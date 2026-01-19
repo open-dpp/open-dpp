@@ -1,5 +1,5 @@
 import type { INestApplication } from "@nestjs/common";
-import type { TemplateDbProps } from "../../templates/domain/template";
+import type { TemplateDbProps } from "../../old-templates/domain/template";
 import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
 import { APP_GUARD } from "@nestjs/core";
@@ -21,10 +21,10 @@ import { ItemsService } from "../../items/infrastructure/items.service";
 import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
+import { Template } from "../../old-templates/domain/template";
+import { OldTemplateDoc, TemplateSchema } from "../../old-templates/infrastructure/template.schema";
+import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import { phoneFactory } from "../../product-passport/fixtures/product-passport.factory";
-import { Template } from "../../templates/domain/template";
-import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
-import { TemplateService } from "../../templates/infrastructure/template.service";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
@@ -68,7 +68,7 @@ describe("uniqueProductIdentifierController", () => {
             schema: ItemSchema,
           },
           {
-            name: TemplateDoc.name,
+            name: OldTemplateDoc.name,
             schema: TemplateSchema,
           },
         ]),

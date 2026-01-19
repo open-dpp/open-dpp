@@ -1,4 +1,4 @@
-import type { TemplateDbProps } from "../../templates/domain/template";
+import type { TemplateDbProps } from "../../old-templates/domain/template";
 import type {
   TemplateDraftDbProps,
 } from "./template-draft";
@@ -9,7 +9,7 @@ import { NotFoundError, ValueError } from "@open-dpp/exception";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
-import { Template } from "../../templates/domain/template";
+import { Template } from "../../old-templates/domain/template";
 import { textFieldProps } from "../fixtures/data-field-draft.factory";
 import { sectionDraftDbPropsFactory } from "../fixtures/section-draft.factory";
 import {

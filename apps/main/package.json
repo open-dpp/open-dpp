@@ -41,6 +41,7 @@
     "@nestjs/swagger": "^11.2.3",
     "@nestjs/websockets": "^11.1.10",
     "@open-dpp/api-client": "workspace:*",
+    "@open-dpp/dto": "workspace:*",
     "@open-dpp/env": "workspace:*",
     "@open-dpp/exception": "workspace:*",
     "@open-dpp/permission": "workspace:*",
@@ -58,6 +59,7 @@
     "http-proxy-3": "^1.23.2",
     "langchain": "^0.3.37",
     "load-esm": "^1.0.3",
+    "lodash": "^4.17.21",
     "minio": "^8.0.6",
     "mjml": "^4.18.0",
     "mjml-core": "^4.18.0",
@@ -65,11 +67,11 @@
     "nodemailer": "^7.0.12",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
-    "semver": "^7.7.3",
     "sharp": "^0.34.5",
     "socket.io": "^4.8.2",
     "socket.io-client": "^4.8.2",
-    "zod": "^4.2.1"
+    "zod": "^4.2.1",
+    "zod-openapi": "^5.4.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",

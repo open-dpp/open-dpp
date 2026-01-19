@@ -73,7 +73,7 @@ const queryOptions = computed(() => {
               v-if="queryOptions"
               v-slot="{ active }"
               :value="queryOptions"
-              as="template"
+              as="oldTemplate"
             >
               <li
                 class="relative cursor-default px-3 py-2 select-none" :class="[
@@ -92,7 +92,7 @@ const queryOptions = computed(() => {
               :key="option.id"
               v-slot="{ active }"
               :value="option"
-              as="template"
+              as="oldTemplate"
             >
               <li
                 class="relative cursor-default px-3 py-2 select-none" :class="[

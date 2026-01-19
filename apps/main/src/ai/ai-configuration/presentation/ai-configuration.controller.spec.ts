@@ -5,11 +5,11 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
-import {
-  getApp,
-} from "@open-dpp/testing";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../../test/better-auth-helper";
+import {
+  getApp,
+} from "../../../../test/utils.for.test";
 import { AuthGuard } from "../../../auth/auth.guard";
 import { AuthModule } from "../../../auth/auth.module";
 import { AuthService } from "../../../auth/auth.service";

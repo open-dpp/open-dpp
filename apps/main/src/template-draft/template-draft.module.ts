@@ -2,12 +2,12 @@ import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AuthModule } from "../auth/auth.module";
 import { MarketplaceModule } from "../marketplace/marketplace.module";
-import { OrganizationsModule } from "../organizations/organizations.module";
 import {
-  TemplateDoc,
+  OldTemplateDoc,
   TemplateSchema,
-} from "../templates/infrastructure/template.schema";
-import { TemplateService } from "../templates/infrastructure/template.service";
+} from "../old-templates/infrastructure/template.schema";
+import { TemplateService } from "../old-templates/infrastructure/template.service";
+import { OrganizationsModule } from "../organizations/organizations.module";
 import {
   TemplateDraftDoc,
   TemplateDraftSchema,
@@ -23,7 +23,7 @@ import { TemplateDraftController } from "./presentation/template-draft.controlle
         schema: TemplateDraftSchema,
       },
       {
-        name: TemplateDoc.name,
+        name: OldTemplateDoc.name,
         schema: TemplateSchema,
       },
     ]),

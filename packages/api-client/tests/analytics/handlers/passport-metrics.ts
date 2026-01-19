@@ -10,6 +10,7 @@ import {
   TimePeriod,
 } from '../../../src'
 import { activeOrganization } from '../../organization'
+import { checkQueryParameters } from '../../utils'
 import { analyticsUrl } from './index'
 
 export const passportMetricQueryDto: PassportMetricQueryDto = {
@@ -20,7 +21,6 @@ export const passportMetricQueryDto: PassportMetricQueryDto = {
   type: MeasurementType.PAGE_VIEWS,
   valueKey: 'https://example.com/passport',
   period: TimePeriod.MONTH,
-  timezone: 'Europe/Berlin',
 }
 
 export const passportMeasurementDto: PassportMeasurementDto = {
@@ -38,45 +38,15 @@ export const passportMetricHandler = [
   http.get(
     `${analyticsUrl}/organizations/${activeOrganization.id}/passport-metrics`,
     ({ request }) => {
-      const url = new URL(request.url)
-
-      const errors: string[] = []
-
-      const assertParam = (
-        paramName: keyof PassportMetricQueryDto,
-        expected: string,
-      ) => {
-        const received = url.searchParams.get(paramName)
-        if (received !== expected) {
-          errors.push(
-            `Parameter "${paramName}" mismatch:\n`
-            + `  Expected: ${expected}\n`
-            + `  Received: ${received}`,
-          )
-        }
-      }
-
-      // Check each parameter
-      assertParam('endDate', passportMetricQueryDto.endDate.toISOString())
-      assertParam('startDate', passportMetricQueryDto.startDate.toISOString())
-      assertParam('templateId', passportMetricQueryDto.templateId)
-      assertParam('modelId', passportMetricQueryDto.modelId || '')
-      assertParam('type', passportMetricQueryDto.type)
-      assertParam('valueKey', passportMetricQueryDto.valueKey)
-      assertParam('period', passportMetricQueryDto.period)
-
-      // If there are any errors, throw them with detailed information
-      if (errors.length > 0) {
-        return HttpResponse.json(
-          {
-            message: 'Query parameters validation failed',
-            details: errors,
-            receivedUrl: request.url,
-            expectedParams: passportMetricQueryDto,
-          },
-          { status: 500 },
-        )
-      }
+      checkQueryParameters(request, {
+        endDate: passportMetricQueryDto.endDate.toISOString(),
+        startDate: passportMetricQueryDto.startDate.toISOString(),
+        templateId: passportMetricQueryDto.templateId,
+        modelId: passportMetricQueryDto.modelId || '',
+        type: passportMetricQueryDto.type,
+        valueKey: passportMetricQueryDto.valueKey,
+        period: passportMetricQueryDto.period,
+      })
 
       return HttpResponse.json([passportMeasurementDto])
     },

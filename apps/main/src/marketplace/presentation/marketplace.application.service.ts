@@ -1,5 +1,5 @@
 import type { Model } from "mongoose";
-import type { Template } from "../../templates/domain/template";
+import type { Template } from "../../old-templates/domain/template";
 import type { User } from "../../users/domain/user";
 import { randomUUID } from "node:crypto";
 import { Injectable, Logger } from "@nestjs/common";
@@ -7,9 +7,9 @@ import { InjectModel } from "@nestjs/mongoose";
 import {
   deserializeTemplate,
   serializeTemplate,
-} from "../../templates/domain/serialization";
-import { TemplateDoc } from "../../templates/infrastructure/template.schema";
-import { TemplateService } from "../../templates/infrastructure/template.service";
+} from "../../old-templates/domain/serialization";
+import { OldTemplateDoc } from "../../old-templates/infrastructure/template.schema";
+import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import { PassportTemplatePublication } from "../domain/passport-template-publication";
 import { PassportTemplatePublicationService } from "../infrastructure/passport-template-publication.service";
 
@@ -18,8 +18,8 @@ export class MarketplaceApplicationService {
   private readonly logger = new Logger(MarketplaceApplicationService.name);
 
   constructor(
-    @InjectModel(TemplateDoc.name)
-    private TemplateDoc: Model<TemplateDoc>,
+    @InjectModel(OldTemplateDoc.name)
+    private TemplateDoc: Model<OldTemplateDoc>,
     private templateService: TemplateService,
     private passportTemplateService: PassportTemplatePublicationService,
   ) {}

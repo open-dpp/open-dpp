@@ -49,6 +49,20 @@
       }
     }
   },
+  "aasEditor": {
+    "addTextField": "Textfeld hinzufügen",
+    "addSubmodel": "Abschnitt hinzufügen",
+    "submodel": "Abschnitt",
+    "textField": "Textfeld",
+    "type": "Typ"
+  },
+  "languages": {
+    "english": "Englisch",
+    "german": "Deutsch"
+  },
+  "pagination": {
+    "footer": "Zeigt: {from} - {to}, Anzahl: {count}"
+  },
   "builder": {
     "repeater": {
       "label": "Repeater",
@@ -326,6 +340,11 @@
     "title": "Titel",
     "media": "Medien",
     "preview": "Vorschau"
+  },
+  "templates": {
+    "label": "Passvorlagen",
+    "createdAt": "Erstellt am",
+    "updatedAt": "Aktualisiert am"
   },
   "models": {
     "models": "Produktpässe",

@@ -79,7 +79,7 @@ function setOrganization(organizationId: string) {
               v-for="organization in organizationsStore.organizations"
               :key="organization.id"
               v-slot="{ active, selected }"
-              as="template"
+              as="oldTemplate"
               :data-cy="organization.id"
               :value="organization"
             >

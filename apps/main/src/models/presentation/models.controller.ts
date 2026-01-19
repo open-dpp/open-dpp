@@ -20,6 +20,7 @@ import { ZodValidationPipe } from "@open-dpp/exception";
 import { Session } from "../../auth/session.decorator";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
+import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import { mediaParamDocumentation, modelParamDocumentation } from "../../open-api-docs/item.doc";
 import {
   createModelDocumentation,
@@ -36,7 +37,6 @@ import {
   dataValueDocumentation,
   orgaParamDocumentation,
 } from "../../product-passport-data/presentation/dto/docs/product-passport-data.doc";
-import { TemplateService } from "../../templates/infrastructure/template.service";
 import { Model } from "../domain/model";
 import { ModelsService } from "../infrastructure/models.service";
 import * as createModelDto_1 from "./dto/create-model.dto";

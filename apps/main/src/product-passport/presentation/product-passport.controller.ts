@@ -3,7 +3,7 @@ import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
 import { AuthService } from "../../auth/auth.service";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { ModelsService } from "../../models/infrastructure/models.service";
-import { TemplateService } from "../../templates/infrastructure/template.service";
+import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { ProductPassport } from "../domain/product-passport";
 import { productPassportToDto } from "./dto/product-passport.dto";

@@ -1,60 +1,199 @@
+import type {
+  SubmodelElementRequestDto,
+  SubmodelRequestDto,
+} from "@open-dpp/dto";
+import type express from "express";
+import { Controller, Get, Logger, Post, Req, UnauthorizedException } from "@nestjs/common";
 import {
-  Controller,
-  ForbiddenException,
-  Get,
-  Param,
-} from "@nestjs/common";
-import { ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
+  AssetAdministrationShellPaginationResponseDto,
+  AssetKind,
+  SubmodelElementPaginationResponseDto,
+  SubmodelElementResponseDto,
+  SubmodelPaginationResponseDto,
+  SubmodelResponseDto,
+  TemplateDto,
+  TemplateDtoSchema,
+  TemplatePaginationDto,
+  TemplatePaginationDtoSchema,
+  ValueResponseDto,
+} from "@open-dpp/dto";
+import { fromNodeHeaders } from "better-auth/node";
+import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
+
 import {
-  templateDocumentation,
-  templateGetAllDocumentation,
-} from "../../open-api-docs/template.doc";
-import { TemplateService } from "../infrastructure/template.service";
-import { templateParamDocumentation, templateToDto } from "./dto/template.dto";
+  ApiGetShells,
+  ApiGetSubmodelById,
+  ApiGetSubmodelElementById,
+  ApiGetSubmodelElements,
+  ApiGetSubmodelElementValue,
+  ApiGetSubmodels,
+  ApiGetSubmodelValue,
+  ApiPostSubmodel,
+  ApiPostSubmodelElement,
+  ApiPostSubmodelElementAtIdShortPath,
+  CursorQueryParam,
+  IdParam,
+  IdShortPathParam,
+  LimitQueryParam,
+  RequestParam,
+  SubmodelElementRequestBody,
+  SubmodelIdParam,
+  SubmodelRequestBody,
+} from "../../aas/presentation/aas.decorators";
+import { IAasCreateEndpoints, IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
+import {
+  checkOwnerShipOfDppIdentifiable,
+  EnvironmentService,
+} from "../../aas/presentation/environment.service";
+import { AuthService } from "../../auth/auth.service";
+import { Pagination } from "../../pagination/pagination";
+import { Template } from "../domain/template";
+import { TemplateRepository } from "../infrastructure/template.repository";
 
-@Controller("/organizations/:organizationId/templates")
-export class TemplateController {
-  private readonly templateService: TemplateService;
+@Controller("/templates")
+export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoints {
+  private readonly logger = new Logger(TemplateController.name);
 
-  constructor(
-    templateService: TemplateService,
-  ) {
-    this.templateService = templateService;
+  constructor(private readonly environmentService: EnvironmentService, private readonly authService: AuthService, private readonly templateRepository: TemplateRepository) {
   }
 
-  @ApiOperation({
-    summary: "Find template by id",
-    description: "Find template by id.",
-  })
-  @ApiParam(templateParamDocumentation)
-  @ApiResponse({
-    schema: templateDocumentation,
-  })
-  @Get(":templateId")
-  async get(
-    @Param("organizationId") organizationId: string,
-    @Param("templateId") id: string,
-  ) {
-    const found = await this.templateService.findOneOrFail(id);
-
-    if (!found.isOwnedBy(organizationId)) {
-      throw new ForbiddenException();
-    }
-
-    return templateToDto(found);
+  @ApiGetShells()
+  async getShells(@IdParam() id: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @Req() req: express.Request): Promise<AssetAdministrationShellPaginationResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    const pagination = Pagination.create({ limit, cursor });
+    return await this.environmentService.getAasShells(template.getEnvironment(), pagination);
   }
 
-  @ApiOperation({
-    summary: "Find all templates",
-    description: "Find all templates which belong to the user's organization.",
-  })
-  @ApiResponse({
-    schema: templateGetAllDocumentation,
-  })
+  @ApiGetSubmodels()
+  async getSubmodels(@IdParam() id: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @Req() req: express.Request): Promise<SubmodelPaginationResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    const pagination = Pagination.create({ limit, cursor });
+    return await this.environmentService.getSubmodels(template.getEnvironment(), pagination);
+  }
+
+  @ApiPostSubmodel()
+  async createSubmodel(
+    @IdParam() id: string,
+    @SubmodelRequestBody() body: SubmodelRequestDto,
+    @Req() req: express.Request,
+  ): Promise<SubmodelResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.addSubmodelToEnvironment(
+      template.getEnvironment(),
+      body,
+      this.saveEnvironmentCallback(template),
+    );
+  }
+
+  @ApiGetSubmodelById()
+  async getSubmodelById(@IdParam() id: string, @SubmodelIdParam() submodelId: string, @RequestParam() req: express.Request): Promise<SubmodelResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.getSubmodelById(template.getEnvironment(), submodelId);
+  }
+
+  @ApiGetSubmodelValue()
+  async getSubmodelValue(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @RequestParam() req: express.Request,
+  ): Promise<ValueResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.getSubmodelValue(template.getEnvironment(), submodelId);
+  }
+
+  @ApiGetSubmodelElements()
+  async getSubmodelElements(@IdParam() id: string, @SubmodelIdParam() submodelId: string, @LimitQueryParam() limit: number | undefined, @CursorQueryParam() cursor: string | undefined, @RequestParam() req: express.Request): Promise<SubmodelElementPaginationResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    const pagination = Pagination.create({ limit, cursor });
+    return await this.environmentService.getSubmodelElements(template.getEnvironment(), submodelId, pagination);
+  }
+
+  @ApiPostSubmodelElement()
+  async createSubmodelElement(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body);
+  }
+
+  @ApiGetSubmodelElementById()
+  async getSubmodelElementById(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.getSubmodelElementById(template.getEnvironment(), submodelId, idShortPath);
+  }
+
+  @ApiPostSubmodelElementAtIdShortPath()
+  async createSubmodelElementAtIdShortPath(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body, idShortPath);
+  }
+
+  @ApiGetSubmodelElementValue()
+  async getSubmodelElementValue(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @RequestParam() req: express.Request,
+  ): Promise<ValueResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.getSubmodelElementValue(template.getEnvironment(), submodelId, idShortPath);
+  }
+
+  @Post()
+  async createTemplate(
+    @RequestParam() req: express.Request,
+  ): Promise<TemplateDto> {
+    const environment = await this.environmentService.createEnvironmentWithEmptyAas(AssetKind.Type);
+    const template = Template.create({ organizationId: await this.getActiveOrganizationId(req), environment });
+    return TemplateDtoSchema.parse((await this.templateRepository.save(template)).toPlain());
+  }
+
   @Get()
-  async getAll(
-    @Param("organizationId") organizationId: string,
-  ) {
-    return await this.templateService.findAllByOrganization(organizationId);
+  async getTemplates(
+    @LimitQueryParam() limit: number | undefined,
+    @CursorQueryParam() cursor: string | undefined,
+    @RequestParam() req: express.Request,
+  ): Promise<TemplatePaginationDto> {
+    const pagination = Pagination.create({ limit, cursor });
+    return TemplatePaginationDtoSchema.parse(
+      (await this.templateRepository.findAllByOrganizationId(await this.getActiveOrganizationId(req), pagination)).toPlain(),
+    );
+  }
+
+  private async getActiveOrganizationId(req: express.Request) {
+    const session = await this.authService.getSession(fromNodeHeaders(req.headers || []));
+    if (!session?.user) {
+      throw new UnauthorizedException("User is not logged in");
+    }
+    const activeOrganization = await this.authService.getActiveOrganization(session.user.id);
+    if (!activeOrganization) {
+      throw new UnauthorizedException("User is not part of any organization");
+    }
+    return activeOrganization._id.toString();
+  }
+
+  private saveEnvironmentCallback(template: Template) {
+    return async () => {
+      await this.templateRepository.save(template);
+    };
+  }
+
+  private async loadTemplateAndCheckOwnership(authService: AuthService, id: string, req: express.Request): Promise<Template> {
+    const template = await this.templateRepository.findOneOrFail(id);
+    return checkOwnerShipOfDppIdentifiable(template, authService, req);
   }
 }

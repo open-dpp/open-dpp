@@ -8,5 +8,13 @@ export default defineConfig({
   build: {
     target: "es2022",
   },
+  resolve: {
+    alias: [
+      {
+        find: /^@open-dpp\/(.*)$/,
+        replacement: path.resolve(__dirname, "../../packages/$1/src"),
+      },
+    ],
+  },
   envDir: path.resolve(__dirname, "../../../"),
 });

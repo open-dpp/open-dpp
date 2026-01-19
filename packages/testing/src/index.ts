@@ -1,1 +1,4 @@
-export * from './utils'
+export * from './fixtures/aas/aas.factory'
+export * from './fixtures/aas/submodel-element.factory'
+export * from './fixtures/aas/submodel.factory'
+export * from './fixtures/templates/templates.factory'
