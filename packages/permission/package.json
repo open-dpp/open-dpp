@@ -29,7 +29,7 @@
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
-    "@casl/ability": "^6.7.5"
+    "@casl/ability": "^6.8.0"
   },
   "devDependencies": {
     "@open-dpp/config-eslint": "workspace:*",
