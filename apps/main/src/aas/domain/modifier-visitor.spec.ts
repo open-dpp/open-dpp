@@ -37,7 +37,6 @@ describe("modifier visitor", () => {
     const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames, description: existingDescriptions });
     submodel.modify(sharedModifications);
     expect(submodel.displayName).toEqual([
-      existingDisplayNames.find(languageText => languageText.language === "en")!,
       LanguageText.fromPlain(
         newGermanDisplayName,
       ),
@@ -59,12 +58,11 @@ describe("modifier visitor", () => {
       {
         ...modifications,
         displayName: [
-          existingDisplayNames.find(languageText => languageText.language === "en")!,
           LanguageText.fromPlain(
             newGermanDisplayName,
           ),
         ],
-        description: existingDescriptions,
+        description: newDescriptions.map(LanguageText.fromPlain),
       },
     );
   });

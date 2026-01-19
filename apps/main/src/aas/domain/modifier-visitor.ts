@@ -29,25 +29,10 @@ import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
 
 export class ModifierVisitor implements IVisitor<unknown, void> {
-  private modifyLanguageTexts(entries: LanguageText[], newEntries?: unknown[]) {
-    if (newEntries) {
-      const newEntriesObjects = newEntries.map(LanguageText.fromPlain);
-      for (const newEntry of newEntriesObjects) {
-        const foundEntry = entries.find(d => d.language === newEntry.language);
-        if (foundEntry) {
-          foundEntry.changeText(newEntry.text);
-        }
-        else {
-          entries.push(newEntry);
-        }
-      }
-    }
-  }
-
   private modifySubmodelBase(submodelBase: ISubmodelBase, data: unknown) {
     const { displayName, description } = SubmodelBaseModificationSchema.parse(data);
-    this.modifyLanguageTexts(submodelBase.displayName, displayName);
-    this.modifyLanguageTexts(submodelBase.description, description);
+    submodelBase.displayName = displayName?.map(LanguageText.fromPlain) ?? submodelBase.displayName;
+    submodelBase.description = description?.map(LanguageText.fromPlain) ?? submodelBase.displayName;
   }
 
   visitAdministrativeInformation(_element: AdministrativeInformation, _context: unknown): void {
