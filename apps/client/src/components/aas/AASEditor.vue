@@ -153,6 +153,7 @@ function onSubmit() {
       v-model:visible="drawerVisible"
       position="right"
       class="!w-full md:!w-80 lg:!w-1/2"
+      :auto-z-index="false"
       @hide="onHideDrawer"
     >
       <template #header>
@@ -170,3 +171,9 @@ function onSubmit() {
     </Drawer>
   </div>
 </template>
+
+<style>
+.p-drawer-mask {
+  z-index: 40;
+}
+</style>

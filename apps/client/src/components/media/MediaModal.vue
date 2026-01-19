@@ -90,7 +90,7 @@ watch(
 
 <template>
   <TransitionRoot :show="props.open" as="oldTemplate">
-    <Dialog class="relative z-2200" @close="emits('cancel')">
+    <Dialog class="relative z-50" @close="emits('cancel')">
       <TransitionChild
         as="oldTemplate"
         enter="ease-out duration-300"
