@@ -17,6 +17,7 @@ import PropertyCreateEditor from "../components/aas/PropertyCreateEditor.vue";
 import PropertyEditor from "../components/aas/PropertyEditor.vue";
 import SubmodelCreateEditor from "../components/aas/SubmodelCreateEditor.vue";
 import SubmodelEditor from "../components/aas/SubmodelEditor.vue";
+import SubmodelElementCollectionCreateEditor from "../components/aas/SubmodelElementCollectionCreateEditor.vue";
 import SubmodelElementCollectionEditor from "../components/aas/SubmodelElementCollectionEditor.vue";
 
 export type SubmodelEditorProps = SubmodelResponseDto;
@@ -126,7 +127,7 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps) {
         parse: data => PropertyCreateEditorPropsSchema.parse(data),
       },
       [AasKeyTypes.SubmodelElementCollection]: {
-        component: SubmodelElementCollectionEditor,
+        component: SubmodelElementCollectionCreateEditor,
         parse: data => SubmodelBaseCreatePropsSchema.parse(data),
       },
     },

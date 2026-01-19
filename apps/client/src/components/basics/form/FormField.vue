@@ -31,9 +31,9 @@ const numericValue = computed({
   set: v => emit("update:modelValue", z.coerce.string().nullish().parse(v)),
 });
 
-const textValue = computed<string>({
-  get: () => String(props.modelValue),
-  set: v => emit("update:modelValue", v),
+const textValue = computed({
+  get: () => z.coerce.string().nullish().parse(props.modelValue),
+  set: v => emit("update:modelValue", z.coerce.string().nullish().parse(v)),
 });
 </script>
 

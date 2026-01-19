@@ -9,16 +9,19 @@ import type { PagingResult } from "./pagination.ts";
 import {
 
   AasSubmodelElements,
+
   AasSubmodelElementsEnum,
   DataTypeDef,
   KeyTypes,
   PropertyJsonSchema,
   SubmodelElementSchema,
+  SubmodelElementSharedSchema,
   SubmodelJsonSchema,
 
 } from "@open-dpp/dto";
 import { omit } from "lodash";
 import { ref, toRaw } from "vue";
+import { z } from "zod/v4";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { EditorMode, useAasDrawer } from "./aas-drawer.ts";
 import { usePagination } from "./pagination.ts";
@@ -208,6 +211,45 @@ export function useAasEditor({
     return submodelBase.modelType;
   };
 
+  function submodelElementCanHaveChildren(submodelElement: SubmodelElementSharedResponseDto): boolean {
+    if (submodelElement.modelType === AasSubmodelElements.SubmodelElementCollection) {
+      return true;
+    }
+    return false;
+  }
+
+  function getChildrenOfSubmodelElement(submodelElement: SubmodelElementSharedResponseDto): SubmodelElementSharedResponseDto[] | undefined {
+    const ChildrenParser = z.object({ value: SubmodelElementSharedSchema.array() });
+    if (submodelElementCanHaveChildren(submodelElement)) {
+      return ChildrenParser.parse(submodelElement).value;
+    }
+    return undefined;
+  }
+
+  function convertSubmodelElementsToTree(submodelIdShort: string, pathOfParent: AasEditorPath, submodelElements: SubmodelElementSharedResponseDto[]) {
+    return submodelElements.map((submodelElement): TreeNode => {
+      const key = pathOfParent.idShortPath ? `${pathOfParent.idShortPath}.${submodelElement.idShort}` : `${submodelIdShort}.${submodelElement.idShort}`;
+      const idShortPath = pathOfParent.idShortPath ? `${pathOfParent.idShortPath}.${submodelElement.idShort}` : submodelElement.idShort;
+      const path = { submodelId: pathOfParent.submodelId, idShortPath };
+      const canHaveChildren = submodelElementCanHaveChildren(submodelElement);
+      const children = getChildrenOfSubmodelElement(submodelElement);
+      return {
+        key,
+        data: {
+          type: getVisualType(submodelElement),
+          label: translateDisplayName(submodelElement.displayName) ?? submodelElement.idShort,
+          modelType: submodelElement.modelType,
+          plain: submodelElement,
+          actions: {
+            addChildren: canHaveChildren,
+          },
+          path,
+        },
+        children: children ? convertSubmodelElementsToTree(submodelIdShort, path, children) : undefined,
+      };
+    });
+  }
+
   function convertSubmodelsToTree(submodels: SubmodelResponseDto[]) {
     return submodels.map((submodel: SubmodelResponseDto) => ({
       key: submodel.id,
@@ -216,23 +258,12 @@ export function useAasEditor({
         type: getVisualType({ modelType: KeyTypes.Submodel, ...submodel }),
         modelType: KeyTypes.Submodel,
         plain: omit(submodel, "submodelElements"),
+        actions: {
+          addChildren: true,
+        },
         path: { submodelId: submodel.id },
       },
-      children: submodel.submodelElements.map((submodelElement) => {
-        return {
-          key: `${submodel.idShort}.${submodelElement.idShort}`,
-          data: {
-            type: getVisualType(submodelElement),
-            label: translateDisplayName(submodelElement.displayName) ?? submodelElement.idShort,
-            modelType: submodelElement.modelType,
-            plain: submodelElement,
-            path: {
-              submodelId: submodel.id,
-              idShortPath: `${submodelElement.idShort}`,
-            },
-          },
-        };
-      }),
+      children: convertSubmodelElementsToTree(submodel.idShort, { submodelId: submodel.id }, submodel.submodelElements),
     }));
   };
 
@@ -253,11 +284,14 @@ export function useAasEditor({
 
   async function createSubmodelElementCollection(path: AasEditorPath, data: SubmodelElementCollectionRequestDto) {
     const call = async () => {
-      const response = await aasNamespace.createSubmodelElement(
-        id,
-        path.submodelId!,
-        SubmodelElementSchema.parse({ modelType: AasSubmodelElements.SubmodelElementCollection, ...data }),
-      );
+      const requestBody = SubmodelElementSchema.parse({ modelType: AasSubmodelElements.SubmodelElementCollection, ...data });
+      const response = path.idShortPath
+        ? await aasNamespace.createSubmodelElementAtIdShortPath(id, path.submodelId!, path.idShortPath, requestBody)
+        : await aasNamespace.createSubmodelElement(
+            id,
+            path.submodelId!,
+            requestBody,
+          );
       await finalizeApiRequest(response);
     };
     await errorHandlingStore.withErrorHandling(
@@ -270,11 +304,14 @@ export function useAasEditor({
 
   async function createProperty(path: AasEditorPath, data: PropertyRequestDto) {
     if (path.submodelId) {
-      const response = await aasNamespace.createSubmodelElement(
-        id,
-        path.submodelId,
-        SubmodelElementSchema.parse({ modelType: AasSubmodelElements.Property, ...data }),
-      );
+      const requestBody = SubmodelElementSchema.parse({ modelType: AasSubmodelElements.Property, ...data });
+      const response = path.idShortPath
+        ? await aasNamespace.createSubmodelElementAtIdShortPath(id, path.submodelId, path.idShortPath, requestBody)
+        : await aasNamespace.createSubmodelElement(
+            id,
+            path.submodelId,
+            requestBody,
+          );
       await finalizeApiRequest(response);
     }
   }
@@ -292,6 +329,7 @@ export function useAasEditor({
     submodelElementsToAdd,
     buildAddSubmodelElementMenu,
     createSubmodel,
+    findTreeNodeByKey,
     loading,
     selectedKeys,
     selectTreeNode,

@@ -122,6 +122,7 @@ function onSubmit() {
           <div class="flex w-full justify-end">
             <div class="flex items-center rounded-md gap-2">
               <Button
+                v-if="node.data.actions.addChildren"
                 icon="pi pi-plus"
                 severity="primary"
                 @click="addClicked($event, node)"

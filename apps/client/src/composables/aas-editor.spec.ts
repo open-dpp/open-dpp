@@ -1,6 +1,6 @@
 import type { SubmodelResponseDto } from "@open-dpp/dto";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
-import { DataTypeDef, KeyTypes, Language } from "@open-dpp/dto";
+import { DataTypeDef, KeyTypes, Language, SubmodelElementCollectionJsonSchema } from "@open-dpp/dto";
 import {
   submodelCarbonFootprintPlainFactory,
   submodelDesignOfProductPlainFactory,
@@ -12,6 +12,7 @@ import { expect, it, vi } from "vitest";
 import PropertyCreateEditor from "../components/aas/PropertyCreateEditor.vue";
 import SubmodelCreateEditor from "../components/aas/SubmodelCreateEditor.vue";
 import SubmodelEditor from "../components/aas/SubmodelEditor.vue";
+import SubmodelElementCollectionCreateEditor from "../components/aas/SubmodelElementCollectionCreateEditor.vue";
 import SubmodelElementCollectionEditor from "../components/aas/SubmodelElementCollectionEditor.vue";
 import apiClient from "../lib/api-client.ts";
 import { HTTPCode } from "../stores/http-codes.ts";
@@ -21,6 +22,7 @@ const mocks = vi.hoisted(() => {
   return {
     createSubmodel: vi.fn(),
     createSubmodelElement: vi.fn(),
+    createSubmodelElementAtIdShortPath: vi.fn(),
     getSubmodels: vi.fn(),
     modifySubmodel: vi.fn(),
     modifySubmodelElement: vi.fn(),
@@ -37,6 +39,7 @@ vi.mock("../lib/api-client", () => ({
           modifySubmodel: mocks.modifySubmodel,
           getSubmodels: mocks.getSubmodels,
           createSubmodelElement: mocks.createSubmodelElement,
+          createSubmodelElementAtIdShortPath: mocks.createSubmodelElementAtIdShortPath,
           modifySubmodelElement: mocks.modifySubmodelElement,
         },
       },
@@ -71,7 +74,7 @@ describe("aasEditor composable", () => {
       status: HTTPCode.OK,
     });
 
-    const { init, submodels } = useAasEditor({
+    const { init, submodels, findTreeNodeByKey } = useAasEditor({
       id: aasId,
       aasNamespace: apiClient.dpp.templates.aas,
       changeQueryParams,
@@ -85,29 +88,20 @@ describe("aasEditor composable", () => {
       limit: 10,
     });
     expect(changeQueryParams).toHaveBeenCalledWith({ cursor: undefined });
-    const expectedSubmodel1TreeNodes = {
-      key: `${submodel1.id}`,
-      data: {
-        label: submodel1.idShort,
-        modelType: KeyTypes.Submodel,
-        plain: omit(submodel1, "submodelElements"),
-        path: { submodelId: submodel1.id },
-        type: "aasEditor.submodel",
-      },
-      children: [
-        {
-          key: `${submodel1.idShort}.Design_V01`,
-          data: {
-            label: "Design_V01",
-            modelType: "SubmodelElementCollection",
-            path: { submodelId: submodel1.id, idShortPath: `Design_V01` },
-            plain: submodel1.submodelElements[0],
-            type: "aasEditor.submodelElementCollection",
-          },
-        },
-      ],
-    };
-    const expectedSubmodel2TreeNodes = {
+    const actionsOfParent = { addChildren: true };
+    const actionsOfLeaveNode = { addChildren: false };
+
+    const withoutChildren = (value: any) => omit(value, "children");
+    const expectedSubmodel1 = { key: `${submodel1.id}`, data: {
+      label: submodel1.idShort,
+      modelType: KeyTypes.Submodel,
+      plain: omit(submodel1, "submodelElements"),
+      path: { submodelId: submodel1.id },
+      type: "aasEditor.submodel",
+      actions: actionsOfParent,
+    } };
+
+    const expectedSubmodel2 = {
       key: `${submodel2.id}`,
       data: {
         label: "Carbon Footprint",
@@ -115,45 +109,36 @@ describe("aasEditor composable", () => {
         plain: omit(submodel2, "submodelElements"),
         path: { submodelId: submodel2.id },
         type: "aasEditor.submodel",
+        actions: {
+          addChildren: true,
+        },
       },
-      children: [
-        {
-          key: `${submodel2.idShort}.ProductCarbonFootprint_A1A3`,
-          data: {
-            label: "Product carbon footprint",
-            modelType: "SubmodelElementCollection",
-            path: { submodelId: submodel2.id, idShortPath: `ProductCarbonFootprint_A1A3` },
-            plain: submodel2.submodelElements[0],
-            type: "aasEditor.submodelElementCollection",
-          },
-        },
-        {
-          key: `${submodel2.idShort}.ProductCarbonFootprint_A4`,
-          data: {
-            label: "Product carbon footprint",
-            modelType: "SubmodelElementCollection",
-            path: { submodelId: submodel2.id, idShortPath: `ProductCarbonFootprint_A4` },
-            plain: submodel2.submodelElements[1],
-            type: "aasEditor.submodelElementCollection",
-          },
-        },
-        {
-          key: `${submodel2.idShort}.ProductCarbonFootprint_B5`,
-          data: {
-            label: "Product carbon footprint",
-            modelType: "SubmodelElementCollection",
-            path: { submodelId: submodel2.id, idShortPath: `ProductCarbonFootprint_B5` },
-            plain: submodel2.submodelElements[2],
-            type: "aasEditor.submodelElementCollection",
-          },
-        },
-      ],
     };
+    expect(submodels.value!.map(withoutChildren)).toEqual([expectedSubmodel1, expectedSubmodel2]);
+    const actualDesignV01 = findTreeNodeByKey(`${submodel1.idShort}.Design_V01`);
+    const expectedDesignV01 = { key: `${submodel1.idShort}.Design_V01`, data: {
+      label: "Design_V01",
+      modelType: "SubmodelElementCollection",
+      path: { submodelId: submodel1.id, idShortPath: `Design_V01` },
+      plain: submodel1.submodelElements[0],
+      type: "aasEditor.submodelElementCollection",
+      actions: actionsOfParent,
+    } };
+    expect(withoutChildren(actualDesignV01)).toEqual(expectedDesignV01);
+    const actualAuthorName = findTreeNodeByKey(`Design_V01.Author.AuthorName`);
 
-    expect(submodels.value).toEqual([
-      expectedSubmodel1TreeNodes,
-      expectedSubmodel2TreeNodes,
-    ]);
+    const expectedAuthorName = {
+      key: `Design_V01.Author.AuthorName`,
+      data: {
+        label: "AuthorName",
+        modelType: "Property",
+        path: { submodelId: submodel1.id, idShortPath: `Design_V01.Author.AuthorName` },
+        plain: SubmodelElementCollectionJsonSchema.parse(SubmodelElementCollectionJsonSchema.parse(submodel1.submodelElements[0]).value[0]).value[0],
+        type: "aasEditor.textField",
+        actions: actionsOfLeaveNode,
+      },
+    };
+    expect(withoutChildren(actualAuthorName)).toEqual(expectedAuthorName);
   });
 
   it.each([
@@ -240,8 +225,16 @@ describe("aasEditor composable", () => {
       { label: "aasEditor.numberField", valueType: DataTypeDef.Double },
     ])("should create property for %label", async ({ label, valueType }) => {
       mocks.createSubmodelElement.mockResolvedValue({ status: HTTPCode.CREATED });
+      mocks.createSubmodelElementAtIdShortPath.mockResolvedValue({ status: HTTPCode.CREATED });
 
-      const { submodels, submodelElementsToAdd, init, drawerVisible, buildAddSubmodelElementMenu, editorVNode } = useAasEditor({
+      const {
+        findTreeNodeByKey,
+        submodelElementsToAdd,
+        init,
+        drawerVisible,
+        buildAddSubmodelElementMenu,
+        editorVNode,
+      } = useAasEditor({
         id: aasId,
         aasNamespace: apiClient.dpp.templates.aas,
         changeQueryParams,
@@ -250,8 +243,8 @@ describe("aasEditor composable", () => {
         translate,
       });
       await init();
-      buildAddSubmodelElementMenu(submodels.value!.find(s => s.key === submodel1.id)!);
-      const addPropertyMenuItem: MenuItem = submodelElementsToAdd.value.find(e => e.label === label)!;
+      buildAddSubmodelElementMenu(findTreeNodeByKey(submodel1.id)!);
+      let addPropertyMenuItem: MenuItem = submodelElementsToAdd.value.find(e => e.label === label)!;
       addPropertyMenuItem.command!({} as MenuItemCommandEvent);
       expect(drawerVisible.value).toBeTruthy();
       expect(editorVNode.value!.props.path).toEqual({ submodelId: submodel1.id });
@@ -259,7 +252,7 @@ describe("aasEditor composable", () => {
       expect(editorVNode.value!.component).toEqual(PropertyCreateEditor);
       const data = { idShort: "newProperty", valueType };
       await editorVNode.value!.props.callback!(data);
-      expect(mocks.createSubmodelElement).toHaveBeenCalledWith(aasId, submodel1.id, {
+      const expectedRequestBody = {
         ...data,
         modelType: KeyTypes.Property,
         valueType,
@@ -269,13 +262,20 @@ describe("aasEditor composable", () => {
         qualifiers: [],
         extensions: [],
         supplementalSemanticIds: [],
-      });
+      };
+      expect(mocks.createSubmodelElement).toHaveBeenCalledWith(aasId, submodel1.id, expectedRequestBody);
+      buildAddSubmodelElementMenu(findTreeNodeByKey("Design_V01.Author")!);
+      addPropertyMenuItem = submodelElementsToAdd.value.find(e => e.label === label)!;
+      addPropertyMenuItem.command!({} as MenuItemCommandEvent);
+      await editorVNode.value!.props.callback!(data);
+      expect(mocks.createSubmodelElementAtIdShortPath).toHaveBeenCalledWith(aasId, submodel1.id, "Design_V01.Author", expectedRequestBody);
     });
 
     it("should create submodel element collection", async () => {
       mocks.createSubmodelElement.mockResolvedValue({ status: HTTPCode.CREATED });
+      mocks.createSubmodelElementAtIdShortPath.mockResolvedValue({ status: HTTPCode.CREATED });
 
-      const { submodels, submodelElementsToAdd, init, drawerVisible, buildAddSubmodelElementMenu, editorVNode } = useAasEditor({
+      const { findTreeNodeByKey, submodelElementsToAdd, init, drawerVisible, buildAddSubmodelElementMenu, editorVNode } = useAasEditor({
         id: aasId,
         aasNamespace: apiClient.dpp.templates.aas,
         changeQueryParams,
@@ -284,16 +284,16 @@ describe("aasEditor composable", () => {
         translate,
       });
       await init();
-      buildAddSubmodelElementMenu(submodels.value!.find(s => s.key === submodel1.id)!);
-      const addPropertyMenuItem: MenuItem = submodelElementsToAdd.value.find(e => e.label === "aasEditor.submodelElementCollection")!;
+      buildAddSubmodelElementMenu(findTreeNodeByKey(submodel1.id)!);
+      let addPropertyMenuItem: MenuItem = submodelElementsToAdd.value.find(e => e.label === "aasEditor.submodelElementCollection")!;
       addPropertyMenuItem.command!({} as MenuItemCommandEvent);
       expect(drawerVisible.value).toBeTruthy();
       expect(editorVNode.value!.props.path).toEqual({ submodelId: submodel1.id });
       expect(editorVNode.value!.props.data).toEqual({ });
-      expect(editorVNode.value!.component).toEqual(SubmodelElementCollectionEditor);
+      expect(editorVNode.value!.component).toEqual(SubmodelElementCollectionCreateEditor);
       const data = { idShort: "newProperty" };
       await editorVNode.value!.props.callback!(data);
-      expect(mocks.createSubmodelElement).toHaveBeenCalledWith(aasId, submodel1.id, {
+      const expectedRequestBody = {
         ...data,
         modelType: KeyTypes.SubmodelElementCollection,
         description: [],
@@ -303,7 +303,13 @@ describe("aasEditor composable", () => {
         supplementalSemanticIds: [],
         extensions: [],
         value: [],
-      });
+      };
+      expect(mocks.createSubmodelElement).toHaveBeenCalledWith(aasId, submodel1.id, expectedRequestBody);
+      buildAddSubmodelElementMenu(findTreeNodeByKey("Design_V01.Author")!);
+      addPropertyMenuItem = submodelElementsToAdd.value.find(e => e.label === "aasEditor.submodelElementCollection")!;
+      addPropertyMenuItem.command!({} as MenuItemCommandEvent);
+      await editorVNode.value!.props.callback!(data);
+      expect(mocks.createSubmodelElementAtIdShortPath).toHaveBeenCalledWith(aasId, submodel1.id, "Design_V01.Author", expectedRequestBody);
     });
   });
 });
