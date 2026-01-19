@@ -1,6 +1,7 @@
 import { beforeAll, expect } from "@jest/globals";
 import { DataTypeDef } from "@open-dpp/dto";
 import { LanguageText } from "./common/language-text";
+import { File } from "./submodel-base/file";
 import { Property } from "./submodel-base/property";
 import { registerSubmodelElementClasses } from "./submodel-base/register-submodel-element-classes";
 import { Submodel } from "./submodel-base/submodel";
@@ -48,21 +49,18 @@ describe("modifier visitor", () => {
     item: Property.create({ idShort: "prop1", displayName: existingDisplayNames, description: existingDescriptions, valueType: DataTypeDef.String }),
     modifications: { ...sharedModifications, value: "prop New" },
   }, {
+    item: File.create({ idShort: "prop1", displayName: existingDisplayNames, description: existingDescriptions, contentType: "image/png" }),
+    modifications: { ...sharedModifications, value: "path New", contentType: "image/jpeg" },
+  }, {
     item: SubmodelElementCollection.create({ idShort: "prop2", displayName: existingDisplayNames, description: existingDescriptions }),
     modifications: { ...sharedModifications, value: [] },
   }])("should modify submodel element with type", ({ item, modifications }) => {
     const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames, description: existingDescriptions });
     submodel.addSubmodelElement(item);
     submodel.modifySubmodelElement(modifications, IdShortPath.create({ path: item.idShort }));
-    expect({ displayName: item.displayName, description: item.description, value: item.value }).toEqual(
+    expect(item.toPlain()).toMatchObject(
       {
         ...modifications,
-        displayName: [
-          LanguageText.fromPlain(
-            newGermanDisplayName,
-          ),
-        ],
-        description: newDescriptions.map(LanguageText.fromPlain),
       },
     );
   });

@@ -1,4 +1,4 @@
-import { PropertyModificationSchema, SubmodelBaseModificationSchema } from "@open-dpp/dto";
+import { FileModificationSchema, PropertyModificationSchema, SubmodelBaseModificationSchema } from "@open-dpp/dto";
 import { NotSupportedError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";
@@ -89,10 +89,11 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
     );
   }
 
-  visitFile(_element: File, _context: unknown): void {
-    throw new NotSupportedError(
-      "File is not supported.",
-    );
+  visitFile(element: File, context: unknown): void {
+    const parsed = FileModificationSchema.parse(context);
+    this.modifySubmodelBase(element, parsed);
+    element.value = parsed.value ?? element.value;
+    element.contentType = parsed.contentType ?? element.contentType;
   }
 
   visitKey(_element: Key, _context: unknown): void {

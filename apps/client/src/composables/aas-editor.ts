@@ -1,5 +1,18 @@
 import type { AasNamespace } from "@open-dpp/api-client";
-import type { DataTypeDefType, LanguageTextDto, LanguageType, PagingParamsDto, PropertyRequestDto, SubmodelElementCollectionRequestDto, SubmodelElementSharedResponseDto, SubmodelModificationDto, SubmodelRequestDto, SubmodelResponseDto } from "@open-dpp/dto";
+import type {
+  DataTypeDefType,
+  FileRequestDto,
+  LanguageTextDto,
+  LanguageType,
+  PagingParamsDto,
+  PropertyRequestDto,
+  SubmodelElementCollectionRequestDto,
+  SubmodelElementSharedRequestDto,
+  SubmodelElementSharedResponseDto,
+  SubmodelModificationDto,
+  SubmodelRequestDto,
+  SubmodelResponseDto,
+} from "@open-dpp/dto";
 import type { TreeTableSelectionKeys } from "primevue";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
@@ -48,6 +61,7 @@ export function useAasEditor({
 }: AasEditorProps) {
   const submodels = ref<TreeNode[]>();
   const selectedKeys = ref<TreeTableSelectionKeys | undefined>(undefined);
+  const translatePrefix = "aasEditor";
 
   const onHideDrawer = () => {
     selectedKeys.value = undefined;
@@ -73,44 +87,6 @@ export function useAasEditor({
 
   const pagination
     = usePagination({ initialCursor, limit: 10, fetchCallback: fetchSubmodels, changeQueryParams });
-
-  const buildAddSubmodelElementMenu = (node: TreeNode) => {
-    const path = toRaw(node.data.path);
-
-    function buildPropertyEntry(label: string, icon: string, valueType: DataTypeDefType) {
-      return { label, icon, command: (_event: MenuItemCommandEvent) => {
-        drawer.openDrawer({
-          type: KeyTypes.Property,
-          data: { valueType },
-          mode: EditorMode.CREATE,
-          title: label,
-          path,
-          callback: async (data: PropertyRequestDto) =>
-            createProperty(path, data),
-        });
-      } };
-    }
-    const labelPrefix = "aasEditor";
-    submodelElementsToAdd.value = [
-      buildPropertyEntry(translate(`${labelPrefix}.textField`), "pi pi-pencil", DataTypeDef.String),
-      buildPropertyEntry(translate(`${labelPrefix}.numberField`), "pi pi-pencil", DataTypeDef.Double),
-      {
-        label: translate(`${labelPrefix}.submodelElementCollection`),
-        icon: "pi pi-pencil",
-        command: (_event: MenuItemCommandEvent) => {
-          drawer.openDrawer({
-            type: KeyTypes.SubmodelElementCollection,
-            data: { },
-            mode: EditorMode.CREATE,
-            title: translate(`${labelPrefix}.submodelElementCollection`),
-            path,
-            callback: async (data: SubmodelElementCollectionRequestDto) =>
-              createSubmodelElementCollection(path, data),
-          });
-        },
-      },
-    ];
-  };
 
   const findTreeNodeByKey = (key: string, children?: TreeNode[]): TreeNode | undefined => {
     if (!submodels.value) {
@@ -150,7 +126,7 @@ export function useAasEditor({
   }
 
   function getEditCallback(node: TreeNode, title: string) {
-    const errorMessage = translate("aasEditor.error", { method: title });
+    const errorMessage = translate(`${translatePrefix}.error`, { method: title });
     if (node.data.modelType === KeyTypes.Submodel) {
       return (data: any) => errorHandlingStore.withErrorHandling(
         modifySubmodel(toRaw(node.data.path), data),
@@ -175,7 +151,7 @@ export function useAasEditor({
       }
       selectedKeys.value = { [key]: true };
 
-      const title = translate("aasEditor.edit", { formItem: node.data.type });
+      const title = translate(`${translatePrefix}.edit`, { formItem: node.data.type });
       drawer.openDrawer({
         type: node.data.modelType,
         data: toRaw(node.data.plain),
@@ -187,44 +163,6 @@ export function useAasEditor({
       changeQueryParams({ edit: key });
     }
   };
-
-  const translateDisplayName = (displayName: LanguageTextDto[]): string | undefined => {
-    return displayName.find(d => d.language === selectedLanguage)?.text;
-  };
-
-  const getVisualType = (submodelBase: SubmodelElementSharedResponseDto): string => {
-    if (submodelBase.modelType === KeyTypes.Submodel) {
-      return translate("aasEditor.submodel");
-    }
-    if (submodelBase.modelType === AasSubmodelElements.Property) {
-      const { valueType } = PropertyJsonSchema.pick({ valueType: true }).parse(submodelBase);
-      if (valueType === DataTypeDef.String) {
-        return translate("aasEditor.textField");
-      }
-      if (valueType === DataTypeDef.Double) {
-        return translate("aasEditor.numberField");
-      }
-    }
-    if (submodelBase.modelType === AasSubmodelElements.SubmodelElementCollection) {
-      return translate("aasEditor.submodelElementCollection");
-    }
-    return submodelBase.modelType;
-  };
-
-  function submodelElementCanHaveChildren(submodelElement: SubmodelElementSharedResponseDto): boolean {
-    if (submodelElement.modelType === AasSubmodelElements.SubmodelElementCollection) {
-      return true;
-    }
-    return false;
-  }
-
-  function getChildrenOfSubmodelElement(submodelElement: SubmodelElementSharedResponseDto): SubmodelElementSharedResponseDto[] | undefined {
-    const ChildrenParser = z.object({ value: SubmodelElementSharedSchema.array() });
-    if (submodelElementCanHaveChildren(submodelElement)) {
-      return ChildrenParser.parse(submodelElement).value;
-    }
-    return undefined;
-  }
 
   function convertSubmodelElementsToTree(submodelIdShort: string, pathOfParent: AasEditorPath, submodelElements: SubmodelElementSharedResponseDto[]) {
     return submodelElements.map((submodelElement): TreeNode => {
@@ -250,6 +188,44 @@ export function useAasEditor({
     });
   }
 
+  function translateDisplayName(displayName: LanguageTextDto[]): string | undefined {
+    return displayName.find(d => d.language === selectedLanguage)?.text;
+  }
+
+  function getVisualType(submodelBase: SubmodelElementSharedResponseDto): string {
+    if (submodelBase.modelType === KeyTypes.Submodel) {
+      return translate(`${translatePrefix}.submodel`);
+    }
+    if (submodelBase.modelType === AasSubmodelElements.Property) {
+      const { valueType } = PropertyJsonSchema.pick({ valueType: true }).parse(submodelBase);
+      if (valueType === DataTypeDef.String) {
+        return translate(`${translatePrefix}.textField`);
+      }
+      if (valueType === DataTypeDef.Double) {
+        return translate(`${translatePrefix}.numberField`);
+      }
+    }
+    if (submodelBase.modelType === AasSubmodelElements.File) {
+      return translate(`${translatePrefix}.file`);
+    }
+    if (submodelBase.modelType === AasSubmodelElements.SubmodelElementCollection) {
+      return translate(`${translatePrefix}.submodelElementCollection`);
+    }
+    return submodelBase.modelType;
+  }
+
+  function submodelElementCanHaveChildren(submodelElement: SubmodelElementSharedResponseDto): boolean {
+    return submodelElement.modelType === AasSubmodelElements.SubmodelElementCollection;
+  }
+
+  function getChildrenOfSubmodelElement(submodelElement: SubmodelElementSharedResponseDto): SubmodelElementSharedResponseDto[] | undefined {
+    const ChildrenParser = z.object({ value: SubmodelElementSharedSchema.array() });
+    if (submodelElementCanHaveChildren(submodelElement)) {
+      return ChildrenParser.parse(submodelElement).value;
+    }
+    return undefined;
+  }
+
   function convertSubmodelsToTree(submodels: SubmodelResponseDto[]) {
     return submodels.map((submodel: SubmodelResponseDto) => ({
       key: submodel.id,
@@ -265,6 +241,58 @@ export function useAasEditor({
       },
       children: convertSubmodelElementsToTree(submodel.idShort, { submodelId: submodel.id }, submodel.submodelElements),
     }));
+  }
+
+  const buildAddSubmodelElementMenu = (node: TreeNode) => {
+    const path = toRaw(node.data.path);
+
+    function buildPropertyEntry(label: string, icon: string, valueType: DataTypeDefType) {
+      return { label, icon, command: (_event: MenuItemCommandEvent) => {
+        drawer.openDrawer({
+          type: KeyTypes.Property,
+          data: { valueType },
+          mode: EditorMode.CREATE,
+          title: label,
+          path,
+          callback: async (data: PropertyRequestDto) =>
+            createProperty(path, data),
+        });
+      } };
+    }
+    submodelElementsToAdd.value = [
+      buildPropertyEntry(translate(`${translatePrefix}.textField`), "pi pi-pencil", DataTypeDef.String),
+      buildPropertyEntry(translate(`${translatePrefix}.numberField`), "pi pi-pencil", DataTypeDef.Double),
+      {
+        label: translate(`${translatePrefix}.file`),
+        icon: "pi pi-pencil",
+        command: (_event: MenuItemCommandEvent) => {
+          drawer.openDrawer({
+            type: KeyTypes.File,
+            data: { },
+            mode: EditorMode.CREATE,
+            title: translate(`${translatePrefix}.file`),
+            path,
+            callback: async (data: FileRequestDto) =>
+              createFile(path, data),
+          });
+        },
+      },
+      {
+        label: translate(`${translatePrefix}.submodelElementCollection`),
+        icon: "pi pi-pencil",
+        command: (_event: MenuItemCommandEvent) => {
+          drawer.openDrawer({
+            type: KeyTypes.SubmodelElementCollection,
+            data: { },
+            mode: EditorMode.CREATE,
+            title: translate(`${translatePrefix}.submodelElementCollection`),
+            path,
+            callback: async (data: SubmodelElementCollectionRequestDto) =>
+              createSubmodelElementCollection(path, data),
+          });
+        },
+      },
+    ];
   };
 
   const createSubmodel = async () => {
@@ -275,7 +303,7 @@ export function useAasEditor({
     drawer.openDrawer({
       type: KeyTypes.Submodel,
       data: {},
-      title: translate("aasEditor.addSubmodel"),
+      title: translate(`${translatePrefix}.addSubmodel`),
       mode: EditorMode.CREATE,
       path: {},
       callback: createCallback,
@@ -283,8 +311,20 @@ export function useAasEditor({
   };
 
   async function createSubmodelElementCollection(path: AasEditorPath, data: SubmodelElementCollectionRequestDto) {
+    await createSubmodelElement(path, { modelType: AasSubmodelElements.SubmodelElementCollection, ...data }, "submodelElementCollection");
+  }
+
+  async function createFile(path: AasEditorPath, data: FileRequestDto) {
+    await createSubmodelElement(path, { modelType: AasSubmodelElements.File, ...data }, "file");
+  }
+
+  async function createProperty(path: AasEditorPath, data: PropertyRequestDto) {
+    await createSubmodelElement(path, { modelType: AasSubmodelElements.Property, ...data }, "textField");
+  }
+
+  async function createSubmodelElement(path: AasEditorPath, data: SubmodelElementSharedRequestDto, translateKey: string) {
     const call = async () => {
-      const requestBody = SubmodelElementSchema.parse({ modelType: AasSubmodelElements.SubmodelElementCollection, ...data });
+      const requestBody = SubmodelElementSchema.parse({ ...data });
       const response = path.idShortPath
         ? await aasNamespace.createSubmodelElementAtIdShortPath(id, path.submodelId!, path.idShortPath, requestBody)
         : await aasNamespace.createSubmodelElement(
@@ -296,24 +336,10 @@ export function useAasEditor({
     };
     await errorHandlingStore.withErrorHandling(
       call(),
-      { message: translate("aasEditor.error", {
-        method: translate("aasEditor.creation", { formItem: translate("aasEditor.submodelElementCollection") }),
+      { message: translate(`${translatePrefix}.error`, {
+        method: translate(`${translatePrefix}.creation`, { formItem: translate(`${translatePrefix}.${translateKey}`) }),
       }) },
     );
-  }
-
-  async function createProperty(path: AasEditorPath, data: PropertyRequestDto) {
-    if (path.submodelId) {
-      const requestBody = SubmodelElementSchema.parse({ modelType: AasSubmodelElements.Property, ...data });
-      const response = path.idShortPath
-        ? await aasNamespace.createSubmodelElementAtIdShortPath(id, path.submodelId, path.idShortPath, requestBody)
-        : await aasNamespace.createSubmodelElement(
-            id,
-            path.submodelId,
-            requestBody,
-          );
-      await finalizeApiRequest(response);
-    }
   }
 
   async function init() {

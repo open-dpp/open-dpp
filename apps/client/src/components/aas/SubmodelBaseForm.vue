@@ -6,9 +6,9 @@ import { useField, useFieldArray } from "vee-validate";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { EditorMode } from "../../composables/aas-drawer.ts";
-import FormField from "../basics/form/FormField.vue";
-import IdField from "../basics/form/IdField.vue";
 import LanguageSelect from "../basics/LanguageSelect.vue";
+import IdField from "./form/IdField.vue";
+import PropertyValueField from "./form/PropertyValueField.vue";
 
 const props = defineProps<{ showErrors: boolean; errors: FormErrors<any>; editorMode: EditorModeType }>();
 
@@ -57,7 +57,7 @@ const {
           <LanguageSelect
             v-model="field.value.language"
           />
-          <FormField
+          <PropertyValueField
             :id="`displayName.${index}.text`"
             v-model="field.value.text"
             label="Name"

@@ -60,6 +60,7 @@
     "submodelElementCollection": "Unterabschnitt",
     "creation": "Erstellung des {formItem}",
     "textField": "Textfeld",
+    "file": "Datei",
     "numberField": "Zahlenfeld",
     "type": "Typ",
     "error": "{method} fehlgeschlagen"

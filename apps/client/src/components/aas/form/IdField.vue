@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Button, InputGroupAddon } from "primevue";
 import { v4 as uuid4 } from "uuid";
-import FormField from "./FormField.vue";
+import PropertyValueField from "./PropertyValueField.vue";
 
 const props = defineProps<{
   id: string;
@@ -19,7 +19,7 @@ function generateIdShort() {
 </script>
 
 <template>
-  <FormField
+  <PropertyValueField
     v-model="model"
     v-bind="props"
     label="Id"
@@ -37,5 +37,5 @@ function generateIdShort() {
         />
       </InputGroupAddon>
     </template>
-  </FormField>
+  </PropertyValueField>
 </template>

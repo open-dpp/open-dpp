@@ -1,18 +1,17 @@
-import type {
-  KeyTypes,
-  PropertyResponseDto,
-  SubmodelElementCollectionResponseDto,
-  SubmodelResponseDto,
-} from "@open-dpp/dto";
+import type { FileResponseDto, KeyTypes, PropertyResponseDto, SubmodelElementCollectionResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
 import {
   KeyTypes as AasKeyTypes,
+  FileJsonSchema,
   PropertyJsonSchema,
   SubmodelElementCollectionJsonSchema,
   SubmodelJsonSchema,
   ValueTypeSchema,
+
 } from "@open-dpp/dto";
 import { computed, ref } from "vue";
 import { z } from "zod";
+import FileCreateEditor from "../components/aas/FileCreateEditor.vue";
+import FileEditor from "../components/aas/FileEditor.vue";
 import PropertyCreateEditor from "../components/aas/PropertyCreateEditor.vue";
 import PropertyEditor from "../components/aas/PropertyEditor.vue";
 import SubmodelCreateEditor from "../components/aas/SubmodelCreateEditor.vue";
@@ -30,6 +29,10 @@ export type SubmodelElementCollectionCreateEditorProps = z.infer<
   typeof SubmodelBaseCreatePropsSchema
 >;
 
+export type FileCreateEditorProps = z.infer<
+  typeof SubmodelBaseCreatePropsSchema
+>;
+
 const PropertyCreateEditorPropsSchema = z.object({
   valueType: ValueTypeSchema,
 });
@@ -37,6 +40,7 @@ export type PropertyEditorProps = PropertyResponseDto;
 export type PropertyCreateEditorProps = z.infer<
   typeof PropertyCreateEditorPropsSchema
 >;
+export type FileEditorProps = FileResponseDto;
 export type SubmodelElementCollectionEditorProps
   = SubmodelElementCollectionResponseDto;
 
@@ -52,17 +56,20 @@ interface EditorDataMap {
     [AasKeyTypes.Submodel]: SubmodelCreateEditorProps;
     [AasKeyTypes.Property]: PropertyCreateEditorProps;
     [AasKeyTypes.SubmodelElementCollection]: SubmodelElementCollectionCreateEditorProps;
+    [AasKeyTypes.File]: FileCreateEditorProps;
   };
   [EditorMode.EDIT]: {
     [AasKeyTypes.Submodel]: SubmodelEditorProps;
     [AasKeyTypes.Property]: PropertyEditorProps;
     [AasKeyTypes.SubmodelElementCollection]: SubmodelElementCollectionEditorProps;
+    [AasKeyTypes.File]: FileEditorProps;
   };
 }
 
 export type EditorType
   = | typeof KeyTypes.Submodel
-    | typeof KeyTypes.Property
+    | typeof AasKeyTypes.Property
+    | typeof AasKeyTypes.File
     | typeof AasKeyTypes.SubmodelElementCollection;
 
 export interface AasEditorPath {
@@ -130,6 +137,10 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps) {
         component: SubmodelElementCollectionCreateEditor,
         parse: data => SubmodelBaseCreatePropsSchema.parse(data),
       },
+      [AasKeyTypes.File]: {
+        component: FileCreateEditor,
+        parse: data => SubmodelBaseCreatePropsSchema.parse(data),
+      },
     },
     [EditorMode.EDIT]: {
       [AasKeyTypes.Submodel]: {
@@ -143,6 +154,10 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps) {
       [AasKeyTypes.SubmodelElementCollection]: {
         component: SubmodelElementCollectionEditor,
         parse: data => SubmodelElementCollectionJsonSchema.parse(data),
+      },
+      [AasKeyTypes.File]: {
+        component: FileEditor,
+        parse: data => FileJsonSchema.parse(data),
       },
     },
   };

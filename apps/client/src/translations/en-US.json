@@ -60,6 +60,7 @@
     "creation": "Creation of the {formItem}",
     "submodel": "Section",
     "textField": "Text field",
+    "file": "File",
     "numberField": "Number field",
     "type": "Type",
     "error": "{method} failed"
