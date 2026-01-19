@@ -1,9 +1,9 @@
 import type { AxiosInstance } from 'axios'
-import type { UserDto } from '../users/user.dtos'
+import type { MemberDto } from './member.dtos'
 import type { OrganizationCreateDto, OrganizationDto } from './organization.dtos'
 
 export class OrganizationsNamespace {
-  constructor(private readonly axiosInstance: AxiosInstance) {}
+  constructor(private readonly axiosInstance: AxiosInstance) { }
 
   public async getAll() {
     return this.axiosInstance.get<OrganizationDto[]>(`/organizations`)
@@ -25,7 +25,7 @@ export class OrganizationsNamespace {
   }
 
   public async getMembers(organizationId: string) {
-    return this.axiosInstance.get<Array<UserDto>>(
+    return this.axiosInstance.get<Array<MemberDto>>(
       `/organizations/${organizationId}/members`,
     )
   }
