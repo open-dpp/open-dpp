@@ -1,7 +1,7 @@
 import { Organization } from "../organization";
 
-export const ORGANIZATIONS_REPO = Symbol("ORGANIZATIONS_REPO");
-
-export interface OrganizationsRepositoryPort {
-  save: (organization: Organization) => Promise<Organization>;
+export abstract class OrganizationsRepositoryPort {
+  abstract save(organization: Organization): Promise<void>;
+  abstract findOneById(id: string): Promise<Organization | null>;
+  abstract findOneBySlug(slug: string): Promise<Organization | null>;
 }
