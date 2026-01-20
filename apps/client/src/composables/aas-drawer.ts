@@ -1,10 +1,12 @@
-import type { FileResponseDto, KeyTypes, PropertyResponseDto, SubmodelElementCollectionResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
+import type { FileResponseDto, KeyTypes, PropertyResponseDto, SubmodelElementCollectionResponseDto, SubmodelElementListResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
 import type { Component, ComputedRef, Ref } from "vue";
 import {
+
   KeyTypes as AasKeyTypes,
   FileJsonSchema,
   PropertyJsonSchema,
   SubmodelElementCollectionJsonSchema,
+  SubmodelElementListJsonSchema,
   SubmodelJsonSchema,
   ValueTypeSchema,
 
@@ -20,6 +22,7 @@ import SubmodelEditor from "../components/aas/SubmodelEditor.vue";
 import SubmodelElementCollectionCreateEditor from "../components/aas/SubmodelElementCollectionCreateEditor.vue";
 import SubmodelElementCollectionEditor from "../components/aas/SubmodelElementCollectionEditor.vue";
 import SubmodelElementListCreateEditor from "../components/aas/SubmodelElementListCreateEditor.vue";
+import SubmodelElementListEditor from "../components/aas/SubmodelElementListEditor.vue";
 
 export type SubmodelEditorProps = SubmodelResponseDto;
 const SubmodelBaseCreatePropsSchema = z.object({});
@@ -49,6 +52,7 @@ export type PropertyCreateEditorProps = z.infer<
 export type FileEditorProps = FileResponseDto;
 export type SubmodelElementCollectionEditorProps
   = SubmodelElementCollectionResponseDto;
+export type SubmodelElementListEditorProps = SubmodelElementListResponseDto;
 
 export const EditorMode = {
   CREATE: "CREATE",
@@ -69,7 +73,7 @@ interface EditorDataMap {
     [AasKeyTypes.Submodel]: SubmodelEditorProps;
     [AasKeyTypes.Property]: PropertyEditorProps;
     [AasKeyTypes.SubmodelElementCollection]: SubmodelElementCollectionEditorProps;
-    [AasKeyTypes.SubmodelElementList]: SubmodelElementListCreateEditorProps; // TODO
+    [AasKeyTypes.SubmodelElementList]: SubmodelElementListEditorProps;
     [AasKeyTypes.File]: FileEditorProps;
   };
 }
@@ -178,9 +182,9 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
         component: SubmodelElementCollectionEditor,
         parse: data => SubmodelElementCollectionJsonSchema.parse(data),
       },
-      [AasKeyTypes.SubmodelElementList]: { // TODO
-        component: SubmodelElementListCreateEditor,
-        parse: data => SubmodelBaseCreatePropsSchema.parse(data),
+      [AasKeyTypes.SubmodelElementList]: {
+        component: SubmodelElementListEditor,
+        parse: data => SubmodelElementListJsonSchema.parse(data),
       },
       [AasKeyTypes.File]: {
         component: FileEditor,

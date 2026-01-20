@@ -20,6 +20,7 @@ import SubmodelEditor from "../components/aas/SubmodelEditor.vue";
 import SubmodelElementCollectionCreateEditor from "../components/aas/SubmodelElementCollectionCreateEditor.vue";
 import SubmodelElementCollectionEditor from "../components/aas/SubmodelElementCollectionEditor.vue";
 import SubmodelElementListCreateEditor from "../components/aas/SubmodelElementListCreateEditor.vue";
+import SubmodelElementListEditor from "../components/aas/SubmodelElementListEditor.vue";
 import apiClient from "../lib/api-client.ts";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { useAasEditor } from "./aas-editor.ts";
@@ -215,6 +216,14 @@ describe("aasEditor composable", () => {
       expected: {
         path: { submodelId: submodel1.id, idShortPath: `Design_V01.AdditionalInformation.FileProp` },
         component: FileEditor,
+        haveBeenCalled: mocks.modifySubmodelElement,
+      },
+    },
+    {
+      keyToSelect: `Design_V01.Author.ListProp`,
+      expected: {
+        path: { submodelId: submodel1.id, idShortPath: `Design_V01.Author.ListProp` },
+        component: SubmodelElementListEditor,
         haveBeenCalled: mocks.modifySubmodelElement,
       },
     },
