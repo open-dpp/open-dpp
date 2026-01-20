@@ -35,7 +35,7 @@ export async function save<T extends Document<string>, V>(domainObject: IPersist
 }
 
 export async function findOneOrFail<T extends Document<string>, V>(id: string, docModel: MongooseModel<T>, fromPlain: (plain: unknown) => V): Promise<V> {
-  const domainObject = await findOne(id, docModel, fromPlain);
+  const domainObject = await findOne(id, docModel as any, fromPlain);
   if (!domainObject) {
     throw new NotFoundInDatabaseException(docModel.modelName);
   }
@@ -56,13 +56,18 @@ export async function findOne<T extends Document<string>, V>(id: string, docMode
 export async function findAllByOrganizationId<T extends Document<string>, V extends IPersistable & HasCreatedAt & IConvertableToPlain>(docModel: MongooseModel<T>, fromPlain: (plain: unknown) => V, organizationId: string, pagination?: Pagination) {
   const tmpPagination = pagination ?? Pagination.create({ limit: 100 });
   const docs = await docModel.find(
-    { organizationId, ...(tmpPagination.cursor && { $or: [
-      { createdAt: { $lt: decodeCursor(tmpPagination.cursor).createdAt } },
-      {
-        createdAt: decodeCursor(tmpPagination.cursor).createdAt,
-        id: { $lt: decodeCursor(tmpPagination.cursor).id },
-      },
-    ] }) },
+    {
+      organizationId,
+      ...(tmpPagination.cursor && {
+        $or: [
+          { createdAt: { $lt: decodeCursor(tmpPagination.cursor).createdAt } },
+          {
+            createdAt: decodeCursor(tmpPagination.cursor).createdAt,
+            id: { $lt: decodeCursor(tmpPagination.cursor).id },
+          },
+        ],
+      }),
+    },
   ).sort({ createdAt: -1, id: -1 }).limit(tmpPagination.limit ?? 100).exec();
   const domainObjects = docs.map(fromPlain);
   if (domainObjects.length > 0) {
