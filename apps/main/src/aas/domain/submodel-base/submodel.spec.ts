@@ -220,7 +220,7 @@ describe("submodel", () => {
       language: "de",
       text: "Das Submodel liefert CO2",
     }];
-    submodel.modify({ displayName: [
+    submodel.modify({ idShort: submodel.idShort, displayName: [
       newGermanDisplayName,
     ], description: newDescriptions });
     expect(submodel.displayName).toEqual([

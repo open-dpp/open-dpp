@@ -358,6 +358,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     await saveEntity(entity);
 
     const modificationBody = {
+      idShort: submodel.idShort,
       displayName: [{ language: "en", text: "Bill of Materials" }],
       description: [{ language: "en", text: "A list of all products in the factory" }],
     };
@@ -367,7 +368,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       .set("Cookie", userCookie)
       .send(modificationBody);
     expect(response.status).toEqual(200);
-    expect({ displayName: response.body.displayName, description: response.body.description }).toEqual(modificationBody);
+    expect({ idShort: response.body.idShort, displayName: response.body.displayName, description: response.body.description }).toEqual(modificationBody);
   }
 
   async function assertModifySubmodelElement(createEntity: CreateEntity, saveEntity: SaveEntity) {
@@ -383,6 +384,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     await saveEntity(entity);
 
     const modificationBody = {
+      idShort: property.idShort,
       displayName: [{ language: "en", text: "Bill of Materials" }],
       description: [{ language: "en", text: "A list of all products in the factory" }],
     };
@@ -392,7 +394,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       .set("Cookie", userCookie)
       .send(modificationBody);
     expect(response.status).toEqual(200);
-    expect({ displayName: response.body.displayName, description: response.body.description }).toEqual(modificationBody);
+    expect({ idShort: response.body.idShort, displayName: response.body.displayName, description: response.body.description }).toEqual(modificationBody);
   }
 
   afterAll(async () => {
