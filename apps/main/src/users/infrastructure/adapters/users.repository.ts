@@ -24,8 +24,17 @@ export class UsersRepository implements UsersRepositoryPort {
 
   async findOneById(id: string): Promise<User | null> {
     const document = await this.userModel.findById(id);
+    if (!document)
+      return null;
+    return UserMapper.toDomain(document);
+  }
 
   async findOneByEmail(email: string): Promise<User | null> {
+    const document = await this.userModel.findOne({ email });
+    if (!document)
+      return null;
+    return UserMapper.toDomain(document);
+  }
 
   async findAllByIds(ids: string[]): Promise<User[]> {
     // Use find with $in operator

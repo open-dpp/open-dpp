@@ -11,6 +11,10 @@ export class GetMembersQueryHandler implements IQueryHandler<GetMembersQuery> {
   ) { }
 
   async execute(query: GetMembersQuery): Promise<any[]> {
+    const members = await this.membersRepository.findByOrganizationId(query.organizationId);
+    if (members.length === 0) {
+      return [];
+    }
 
     const userIds = members.map(member => member.userId);
     const users = await this.usersRepository.findAllByIds(userIds);

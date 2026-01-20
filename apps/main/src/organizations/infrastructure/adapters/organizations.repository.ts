@@ -25,13 +25,15 @@ export class OrganizationsRepository implements OrganizationsRepositoryPort {
 
   async findOneById(id: string): Promise<Organization | null> {
     const document = await this.organizationModel.findById(id);
-    if (!document) return null;
+    if (!document)
+      return null;
     return OrganizationMapper.toDomain(document);
   }
 
   async findOneBySlug(slug: string): Promise<Organization | null> {
     const document = await this.organizationModel.findOne({ slug });
-    if (!document) return null;
+    if (!document)
+      return null;
     return OrganizationMapper.toDomain(document);
   }
 }
