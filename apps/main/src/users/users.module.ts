@@ -1,15 +1,15 @@
 import { forwardRef, Module } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
 import { CqrsModule } from "@nestjs/cqrs";
+import { MongooseModule } from "@nestjs/mongoose";
 import { AuthModule } from "../auth/auth.module";
 import { OrganizationsModule } from "../organizations/organizations.module";
-import { UsersService } from "./infrastructure/users.service";
+import { CreateUserCommandHandler } from "./application/commands/create-user.command-handler";
+import { GetUserQueryHandler } from "./application/queries/get-user.query-handler";
 import { UsersRepositoryPort } from "./domain/ports/users.repository.port";
 import { UsersRepository } from "./infrastructure/adapters/users.repository";
 import { UserMapper } from "./infrastructure/mappers/user.mapper";
 import { User, UserSchema } from "./infrastructure/schemas/user.schema";
-import { CreateUserCommandHandler } from "./application/commands/create-user.command-handler";
-import { GetUserQueryHandler } from "./application/queries/get-user.query-handler";
+import { UsersService } from "./infrastructure/users.service";
 import { UsersController } from "./presentation/users.controller";
 
 @Module({
