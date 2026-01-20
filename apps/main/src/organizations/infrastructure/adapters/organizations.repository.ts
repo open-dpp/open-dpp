@@ -19,7 +19,7 @@ export class OrganizationsRepository implements OrganizationsRepositoryPort {
     await this.organizationModel.findByIdAndUpdate(
       organization.id,
       persistenceModel,
-      { upsert: true }
+      { upsert: true },
     );
   }
 

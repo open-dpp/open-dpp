@@ -1,8 +1,8 @@
 import type { OrganizationDto } from "@open-dpp/api-client";
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import apiClient from "../lib/api-client";
 import { authClient } from "../auth-client.ts";
+import apiClient from "../lib/api-client";
 import { useNotificationStore } from "./notification.ts";
 
 export const useOrganizationsStore = defineStore("organizations", () => {
@@ -28,7 +28,8 @@ export const useOrganizationsStore = defineStore("organizations", () => {
         addOrganization(data);
         return data;
       }
-    } catch (error: any) {
+    }
+    catch (error: any) {
       notificationsStore.addErrorNotification(error.message ?? "Error creating organization");
       return null;
     }
@@ -36,7 +37,7 @@ export const useOrganizationsStore = defineStore("organizations", () => {
   };
 
   async function fetchCurrentOrganization() {
-    // getFullOrganization likely fetched by ID or current active one. 
+    // getFullOrganization likely fetched by ID or current active one.
     // If better-auth had a context, we need to know WHICH org.
     // Assuming this function used fetching by ID from session or something?
     // authClient.organization.getFullOrganization() gets the organization in the active session.

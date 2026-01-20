@@ -2,15 +2,16 @@
 import type { MemberDto, OrganizationDto } from "@open-dpp/api-client";
 import { onMounted, ref } from "vue";
 import { authClient } from "../../auth-client.ts";
-import apiClient from "../../lib/api-client";
 import OrganizationInvitationsList from "../../components/organizations/OrganizationInvitationsList.vue";
 import OrganizationMembersList from "../../components/organizations/OrganizationMembersList.vue";
+import apiClient from "../../lib/api-client";
 
 const members = ref<Array<MemberDto>>([]);
 const organization = ref<OrganizationDto | null>(null);
 
 async function fetchMembers() {
-  if (!organization.value) return;
+  if (!organization.value)
+    return;
   const { data } = await apiClient.dpp.organizations.getMembers(organization.value.id);
   members.value = data;
 }

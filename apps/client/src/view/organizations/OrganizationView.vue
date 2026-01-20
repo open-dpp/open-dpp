@@ -69,8 +69,8 @@ onMounted(async () => {
             {{ organization.name }}
           </dd>
         </div>
-        <!-- CreatedBy and OwnedBy removed as they are not in OrganizationDto directly. 
-             If needed, compute from members or fetch additional info. 
+        <!-- CreatedBy and OwnedBy removed as they are not in OrganizationDto directly.
+             If needed, compute from members or fetch additional info.
         -->
         <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
           <dt class="text-sm font-medium text-gray-900">
