@@ -13,10 +13,6 @@ const router = createRouter({
 });
 
 describe("<SelectOrganizationView />", () => {
-  const member1 = {
-    id: "member1",
-    email: "m1@example.com",
-  };
   const organizations: Array<OrganizationDto> = [
     {
       id: "orga1",
