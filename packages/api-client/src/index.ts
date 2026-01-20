@@ -44,11 +44,11 @@ export type {
   TemplateDto,
   TemplateGetAllDto,
 } from './dpp/old-templates/template.dtos'
+export type { MemberDto } from './dpp/organizations/member.dtos'
 export type {
   OrganizationCreateDto,
   OrganizationDto,
 } from './dpp/organizations/organization.dtos'
-export type { MemberDto } from './dpp/organizations/member.dtos'
 export { OrganizationsNamespace } from './dpp/organizations/organizations.namespace'
 export type {
   DataValueDto,
