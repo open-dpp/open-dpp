@@ -296,9 +296,9 @@ describe("itemsService", () => {
     const itemId = randomUUID();
     const modelId = randomUUID();
     const itemEntity = {
-      id: itemId,
+      _id: itemId,
       modelId,
-    } as ItemDoc;
+    } as unknown as ItemDoc;
 
     // Create mock UPIs
     const upi1 = UniqueProductIdentifier.create({ referenceId: itemId });
