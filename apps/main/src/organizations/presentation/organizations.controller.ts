@@ -4,6 +4,7 @@ import { AuthService } from "../../auth/auth.service";
 import { CreateOrganizationCommand } from "../application/commands/create-organization.command";
 import { UpdateOrganizationCommand } from "../application/commands/update-organization.command";
 import { GetMembersQuery } from "../application/queries/get-members.query";
+import { GetMemberOrganizationsQuery } from "../application/queries/get-member-organizations.query";
 import { GetOrganizationQuery } from "../application/queries/get-organization.query";
 import { Member } from "../domain/member";
 import { Organization } from "../domain/organization";
@@ -53,6 +54,15 @@ export class OrganizationsController {
   @Get(":id")
   async getOrganization(@Param("id") id: string): Promise<Organization | null> {
     return this.queryBus.execute(new GetOrganizationQuery(id));
+  }
+
+  @Get("member")
+  async getMemberOrganizations(@Headers() headers: Record<string, string>): Promise<Organization[]> {
+    const session = await this.authService.getSession(headers as any);
+    if (!session) {
+      throw new Error("Unauthorized");
+    }
+    return this.queryBus.execute(new GetMemberOrganizationsQuery(session.user.id));
   }
 
   @Get(":id/members")

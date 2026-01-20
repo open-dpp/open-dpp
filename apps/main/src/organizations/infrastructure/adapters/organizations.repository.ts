@@ -36,4 +36,9 @@ export class OrganizationsRepository implements OrganizationsRepositoryPort {
       return null;
     return OrganizationMapper.toDomain(document);
   }
+
+  async findManyByIds(ids: string[]): Promise<Organization[]> {
+    const documents = await this.organizationModel.find({ _id: { $in: ids } });
+    return documents.map(OrganizationMapper.toDomain);
+  }
 }

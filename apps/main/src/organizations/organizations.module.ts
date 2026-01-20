@@ -7,6 +7,7 @@ import { UsersModule } from "../users/users.module";
 import { CreateOrganizationCommandHandler } from "./application/commands/create-organization.command-handler";
 import { InviteMemberCommandHandler } from "./application/commands/invite-member.command-handler";
 import { UpdateOrganizationCommandHandler } from "./application/commands/update-organization.command-handler";
+import { GetMemberOrganizationsHandler } from "./application/queries/get-member-organizations.handler";
 import { GetMembersQueryHandler } from "./application/queries/get-members.query-handler";
 import { GetOrganizationQueryHandler } from "./application/queries/get-organization.query-handler";
 import { MembersRepositoryPort } from "./domain/ports/members.repository.port";
@@ -45,6 +46,7 @@ import { OrganizationsController } from "./presentation/organizations.controller
     CreateOrganizationCommandHandler,
     UpdateOrganizationCommandHandler,
     GetOrganizationQueryHandler,
+    GetMemberOrganizationsHandler,
     GetMembersQueryHandler,
     InviteMemberCommandHandler,
   ],
