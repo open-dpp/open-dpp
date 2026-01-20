@@ -1,8 +1,9 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from "@nestjs/common";
+import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { PolicyKey } from "./domain/policy";
-import { PolicyService } from "./infrastructure/policy.service";
+import { PolicyKey } from "../domain/policy";
+import { PolicyService } from "../infrastructure/policy.service";
 import { POLICY_META } from "./policy.decorator";
+import { LimitExceededException } from "./policy.exception";
 
 @Injectable()
 export class PolicyGuard implements CanActivate {
@@ -20,11 +21,9 @@ export class PolicyGuard implements CanActivate {
 
     const orgId = req.params.organizationId || req.params.orgaId || req.params.orgId;
 
-    try {
-      await this.policy.enforce(orgId, keys);
-    }
-    catch (error) {
-      throw new ForbiddenException(error.message);
+    const result = await this.policy.enforce(orgId, keys);
+    if (result) {
+      throw new LimitExceededException(result);
     }
 
     // stash for interceptor consumption

@@ -69,7 +69,7 @@ export class Quota extends Cap {
     return this.period;
   }
 
-  increase(amount: number) {
+  increment(amount: number = 1): void {
     this.count += amount;
   }
 
