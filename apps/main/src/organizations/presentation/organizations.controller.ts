@@ -1,13 +1,12 @@
 import { Body, Controller, Get, Headers, Param, Patch, Post } from "@nestjs/common";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
-import { CreateOrganizationCommand } from "../../application/commands/create-organization.command";
-import { UpdateOrganizationCommand } from "../../application/commands/update-organization.command";
-import { GetOrganizationQuery } from "../../application/queries/get-organization.query";
-import { GetMembersQuery } from "../../application/queries/get-members.query";
-import { InviteMemberCommand } from "../../application/commands/invite-member.command";
-import { Organization } from "../../domain/organization";
-import { Member } from "../../domain/member";
 import { AuthService } from "../../auth/auth.service";
+import { CreateOrganizationCommand } from "../application/commands/create-organization.command";
+import { UpdateOrganizationCommand } from "../application/commands/update-organization.command";
+import { GetMembersQuery } from "../application/queries/get-members.query";
+import { GetOrganizationQuery } from "../application/queries/get-organization.query";
+import { Member } from "../domain/member";
+import { Organization } from "../domain/organization";
 
 @Controller("organizations")
 export class OrganizationsController {
