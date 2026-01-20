@@ -1,6 +1,6 @@
 import type { PagingParamsDto } from "@open-dpp/dto";
 
-import type { ComputedRef } from "vue";
+import type { ComputedRef, Ref } from "vue";
 import { computed, ref } from "vue";
 
 export type Cursor = string | null;
@@ -29,7 +29,7 @@ export interface IPagination {
   hasNext: ComputedRef<boolean>;
   nextPage: () => Promise<Page>;
   previousPage: () => Promise<Page>;
-  currentPage: ComputedRef<Page>;
+  currentPage: Ref<Page>;
   reloadCurrentPage: () => Promise<void>;
 }
 

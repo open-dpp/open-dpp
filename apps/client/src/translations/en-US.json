@@ -59,6 +59,7 @@
     "edit": "Edit {formItem}",
     "creation": "Creation of the {formItem}",
     "submodel": "Section",
+    "submodelElementList": "List",
     "textField": "Text field",
     "file": "File",
     "numberField": "Number field",

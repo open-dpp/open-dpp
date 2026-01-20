@@ -220,6 +220,9 @@ export function useAasEditor({
         return translate(`${translatePrefix}.numberField`);
       }
     }
+    if (submodelBase.modelType === AasSubmodelElements.SubmodelElementList) {
+      return translate(`${translatePrefix}.submodelElementList`);
+    }
     if (submodelBase.modelType === AasSubmodelElements.File) {
       return translate(`${translatePrefix}.file`);
     }

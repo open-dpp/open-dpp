@@ -154,7 +154,7 @@ describe("aasEditor composable", () => {
     expect(withoutChildren(actualAuthorName)).toEqual(expectedAuthorName);
 
     // Test file
-    const key = `Design_V01.AdditionalInformation.FileProp`;
+    let key = `Design_V01.AdditionalInformation.FileProp`;
     const actualFile = findTreeNodeByKey(key);
     const expectedFile = {
       key,
@@ -168,6 +168,21 @@ describe("aasEditor composable", () => {
       },
     };
     expect(withoutChildren(actualFile)).toEqual(expectedFile);
+
+    key = `Design_V01.Author.ListProp`;
+    const actualListProp = findTreeNodeByKey(key);
+    const expectedListProp = {
+      key,
+      data: {
+        label: "ListProp",
+        modelType: KeyTypes.SubmodelElementList,
+        path: { submodelId: submodel1.id, idShortPath: `Design_V01.Author.ListProp` },
+        plain: SubmodelElementCollectionJsonSchema.parse(SubmodelElementCollectionJsonSchema.parse(submodel1.submodelElements[0]).value[0]).value[2],
+        type: "aasEditor.submodelElementList",
+        actions: actionsOfLeaveNode,
+      },
+    };
+    expect(withoutChildren(actualListProp)).toEqual(expectedListProp);
   });
 
   it.each([

@@ -58,6 +58,7 @@
     "edit": "{formItem} bearbeiten",
     "submodel": "Abschnitt",
     "submodelElementCollection": "Unterabschnitt",
+    "submodelElementList": "Liste",
     "creation": "Erstellung des {formItem}",
     "textField": "Textfeld",
     "file": "Datei",
