@@ -5,7 +5,7 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import ModelTemplateList from "../../components/models/ModelTemplateList.vue";
-import apiClient from "../../lib/api-client";
+import { useModelsStore } from "../../stores/models";
 import { useNotificationStore } from "../../stores/notification";
 
 const props = defineProps<{
@@ -19,6 +19,7 @@ const name = ref<string>("");
 const selectedTemplate = ref<TemplateGetAllDto | null>(null);
 const isMarketplaceSelected = ref<boolean>(false);
 const errors = ref<{ name?: string }>({});
+const models = useModelsStore();
 
 async function onSubmit() {
   errors.value = {};
@@ -34,7 +35,7 @@ async function onSubmit() {
     return;
   }
 
-  const response = await apiClient.dpp.models.create({
+  const response = await models.createModel({
     name: name.value,
     templateId: isMarketplaceSelected.value
       ? undefined
@@ -44,9 +45,11 @@ async function onSubmit() {
       : undefined,
   });
 
-  await router.push(
-    `/organizations/${props.organizationId}/models/${response.data.id}`,
-  );
+  if (response) {
+    await router.push(
+      `/organizations/${props.organizationId}/models/${response.id}`,
+    );
+  }
 }
 </script>
 

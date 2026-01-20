@@ -1,7 +1,9 @@
 import type { ModelCreateDto, ModelDto } from "@open-dpp/api-client";
+import { AxiosError } from "axios";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import apiClient from "../lib/api-client";
+import { handleApiError, LimitError } from "../lib/api-error-mapping.ts";
 import { i18n } from "../translations/i18n.ts";
 import { useErrorHandlingStore } from "./error.handling";
 
@@ -26,8 +28,19 @@ export const useModelsStore = defineStore("models", () => {
   };
 
   const createModel = async (data: ModelCreateDto) => {
-    const response = await apiClient.dpp.models.create(data);
-    return response.data;
+    try {
+      const response = await apiClient.dpp.models.create(data);
+      return response.data;
+    }
+    catch (e) {
+      const err = handleApiError(e);
+      if (err instanceof LimitError) {
+        errorHandlingStore.logErrorWithNotification(t(`api.error.limit.${err.key}`, { limit: err.limit }), e);
+      }
+      else if (err instanceof AxiosError) {
+        errorHandlingStore.logErrorWithNotification(t("notifications.error"), e);
+      }
+    }
   };
 
   return { models, getModels, getModelById, createModel };
