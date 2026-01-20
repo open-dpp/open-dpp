@@ -16,6 +16,7 @@ export const SubmodelBaseJsonSchema = z.object({
 })
 
 export const SubmodelBaseModificationSchema = z.object({
+  idShort: z.string(),
   displayName: LanguageTextJsonSchema.array().optional(),
   description: LanguageTextJsonSchema.array().optional(),
 })

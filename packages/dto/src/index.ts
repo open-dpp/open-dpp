@@ -42,6 +42,7 @@ export * from './aas/submodel-base/submodel-base-json-schema'
 export * from './aas/submodel-base/submodel-element-collection-json-schema'
 
 export * from './aas/submodel-base/submodel-element-list-json-schema'
+export * from './aas/submodel-base/submodel-element-modification-schema'
 export * from './aas/submodel-base/submodel-element-schema'
 export * from './aas/submodel-base/submodel-json-schema'
 export * from './passports/passport.dto'

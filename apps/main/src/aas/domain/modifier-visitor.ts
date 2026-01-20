@@ -1,5 +1,12 @@
-import { FileModificationSchema, PropertyModificationSchema, SubmodelBaseModificationSchema } from "@open-dpp/dto";
-import { NotSupportedError } from "@open-dpp/exception";
+import {
+  FileModificationSchema,
+  PropertyModificationSchema,
+  SubmodelBaseModificationSchema,
+  SubmodelElementCollectionModificationSchema,
+  SubmodelElementListModificationSchema,
+  SubmodelElementModificationDto,
+} from "@open-dpp/dto";
+import { NotSupportedError, ValueError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";
 import { AdministrativeInformation } from "./common/administrative-information";
@@ -22,7 +29,7 @@ import { Range } from "./submodel-base/range";
 import { ReferenceElement } from "./submodel-base/reference-element";
 import { RelationshipElement } from "./submodel-base/relationship-element";
 import { Submodel } from "./submodel-base/submodel";
-import { ISubmodelBase } from "./submodel-base/submodel-base";
+import { ISubmodelBase, ISubmodelElement } from "./submodel-base/submodel-base";
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
@@ -169,13 +176,28 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
   }
 
   visitSubmodelElementCollection(element: SubmodelElementCollection, context: unknown): void {
+    const parsed = SubmodelElementCollectionModificationSchema.parse(context);
     this.modifySubmodelBase(element, context);
-    // TODO: implement submodel element collection value modification
+    if (parsed.value !== undefined) {
+      this.visitSubmodelElements(element, parsed.value);
+    }
   }
 
-  visitSubmodelElementList(_element: SubmodelElementList, _context: unknown): void {
-    throw new NotSupportedError(
-      "SubmodelElementList is not supported.",
-    );
+  visitSubmodelElementList(element: SubmodelElementList, context: unknown): void {
+    const parsed = SubmodelElementListModificationSchema.parse(context);
+    this.modifySubmodelBase(element, parsed);
+    if (parsed.value !== undefined) {
+      this.visitSubmodelElements(element, parsed.value);
+    }
+  }
+
+  visitSubmodelElements(element: ISubmodelElement, submodelElementModifications: SubmodelElementModificationDto[]): void {
+    for (const submodelElement of submodelElementModifications) {
+      const foundElement = [...element.getSubmodelElements()].find(e => e.idShort === submodelElement.idShort);
+      if (!foundElement) {
+        throw new ValueError(`Could not find element with idShort ${submodelElement.idShort} within submodel element ${element.idShort}.`);
+      }
+      foundElement.accept(this, submodelElement);
+    }
   }
 }

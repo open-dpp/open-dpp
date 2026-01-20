@@ -7,6 +7,7 @@ import type {
   PagingParamsDto,
   PropertyRequestDto,
   SubmodelElementCollectionRequestDto,
+  SubmodelElementListRequestDto,
   SubmodelElementSharedRequestDto,
   SubmodelElementSharedResponseDto,
   SubmodelModificationDto,
@@ -16,9 +17,10 @@ import type {
 import type { TreeTableSelectionKeys } from "primevue";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
+import type { Ref } from "vue";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
-import type { AasEditorPath } from "./aas-drawer.ts";
-import type { PagingResult } from "./pagination.ts";
+import type { AasEditorPath, IAasDrawer } from "./aas-drawer.ts";
+import type { IPagination, PagingResult } from "./pagination.ts";
 import {
 
   AasSubmodelElements,
@@ -49,6 +51,19 @@ interface AasEditorProps {
   selectedLanguage: LanguageType;
   translate: (label: string, ...args: unknown[]) => string;
 }
+
+export interface IAasEditor extends IAasDrawer, IPagination {
+  init: () => Promise<void>;
+  findTreeNodeByKey: (key: string, children?: TreeNode[]) => (TreeNode | undefined);
+  submodels: Ref<TreeNode[]>;
+  buildAddSubmodelElementMenu: (node: TreeNode) => void;
+  submodelElementsToAdd: Ref<MenuItem[]>;
+  createSubmodel: () => Promise<void>;
+  loading: Ref<boolean>;
+  selectedKeys: Ref<TreeTableSelectionKeys | undefined>;
+  selectTreeNode: (key: string) => void;
+}
+
 export function useAasEditor({
   id,
   aasNamespace,
@@ -58,8 +73,8 @@ export function useAasEditor({
   errorHandlingStore,
   selectedLanguage,
   translate,
-}: AasEditorProps) {
-  const submodels = ref<TreeNode[]>();
+}: AasEditorProps): IAasEditor {
+  const submodels = ref<TreeNode[]>([]);
   const selectedKeys = ref<TreeTableSelectionKeys | undefined>(undefined);
   const translatePrefix = "aasEditor";
 
@@ -292,6 +307,21 @@ export function useAasEditor({
           });
         },
       },
+      {
+        label: translate(`${translatePrefix}.submodelElementList`),
+        icon: "pi pi-pencil",
+        command: (_event: MenuItemCommandEvent) => {
+          drawer.openDrawer({
+            type: KeyTypes.SubmodelElementList,
+            data: { },
+            mode: EditorMode.CREATE,
+            title: translate(`${translatePrefix}.submodelElementList`),
+            path,
+            callback: async (data: SubmodelElementListRequestDto) =>
+              createSubmodelElementList(path, data),
+          });
+        },
+      },
     ];
   };
 
@@ -309,6 +339,10 @@ export function useAasEditor({
       callback: createCallback,
     });
   };
+
+  async function createSubmodelElementList(path: AasEditorPath, data: SubmodelElementListRequestDto) {
+    await createSubmodelElement(path, { modelType: AasSubmodelElements.SubmodelElementList, ...data }, "submodelElementList");
+  }
 
   async function createSubmodelElementCollection(path: AasEditorPath, data: SubmodelElementCollectionRequestDto) {
     await createSubmodelElement(path, { modelType: AasSubmodelElements.SubmodelElementCollection, ...data }, "submodelElementCollection");

@@ -3,7 +3,8 @@ import { ValueTypeSchema } from '../common/basic-json-schema'
 import { ReferenceJsonSchema } from '../common/reference-json-schema'
 import { AasSubmodelElementsEnum } from '../enums/aas-submodel-elements'
 import { ExtensionJsonSchema } from '../extension-json-schema'
-import { SubmodelBaseJsonSchema } from './submodel-base-json-schema'
+import { SubmodelBaseJsonSchema, SubmodelBaseModificationSchema } from './submodel-base-json-schema'
+import { SubmodelElementModificationSchema } from './submodel-element-modification-schema'
 import { SubmodelElementSchema } from './submodel-element-schema'
 
 export const SubmodelElementListJsonSchema = z.lazy(() =>
@@ -21,3 +22,13 @@ export function SubmodelElementListJsonSchemaImpl() {
     value: SubmodelElementSchema.array().default([]),
   })
 };
+
+export type SubmodelElementListRequestDto = z.input<typeof SubmodelElementListJsonSchema>
+export type SubmodelElementListResponseDto = z.infer<typeof SubmodelElementListJsonSchema>
+
+export const SubmodelElementListModificationSchema = z.object({
+  ...SubmodelBaseModificationSchema.shape,
+  value: SubmodelElementModificationSchema.array().optional(),
+}).meta({ id: 'SubmodelElementListModification' })
+
+export type SubmodelElementListModificationDto = z.input<typeof SubmodelElementListModificationSchema>

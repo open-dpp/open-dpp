@@ -1,5 +1,5 @@
 import { beforeAll, expect } from "@jest/globals";
-import { DataTypeDef } from "@open-dpp/dto";
+import { AasSubmodelElements, DataTypeDef } from "@open-dpp/dto";
 import { LanguageText } from "./common/language-text";
 import { File } from "./submodel-base/file";
 import { Property } from "./submodel-base/property";
@@ -7,6 +7,7 @@ import { registerSubmodelElementClasses } from "./submodel-base/register-submode
 import { Submodel } from "./submodel-base/submodel";
 import { IdShortPath } from "./submodel-base/submodel-base";
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
+import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 
 describe("modifier visitor", () => {
   beforeAll(() => {
@@ -19,10 +20,10 @@ describe("modifier visitor", () => {
     text: "The Submodel Carbon Footprint OLD",
   })];
 
-  const newGermanDisplayName = {
+  const newDisplayNames = [{
     language: "de",
     text: "CO2 Footprint New Text",
-  };
+  }];
   const newDescriptions = [{
     language: "en",
     text: "The Submodel Carbon Footprint NEW",
@@ -30,19 +31,14 @@ describe("modifier visitor", () => {
     language: "de",
     text: "Das Submodel liefert CO2",
   }];
-  const sharedModifications = { displayName: [
-    newGermanDisplayName,
-  ], description: newDescriptions };
+  const sharedModifications = { displayName:
+    newDisplayNames, description: newDescriptions };
 
   it("should modify submodel", () => {
     const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames, description: existingDescriptions });
-    submodel.modify(sharedModifications);
-    expect(submodel.displayName).toEqual([
-      LanguageText.fromPlain(
-        newGermanDisplayName,
-      ),
-    ]);
-    expect(submodel.description).toEqual(newDescriptions.map(description => LanguageText.fromPlain(description)));
+    submodel.modify({ idShort: "s1", ...sharedModifications });
+    expect(submodel.displayName).toEqual(newDisplayNames.map(LanguageText.fromPlain));
+    expect(submodel.description).toEqual(newDescriptions.map(LanguageText.fromPlain));
   });
 
   it.each([{
@@ -57,11 +53,32 @@ describe("modifier visitor", () => {
   }])("should modify submodel element with type", ({ item, modifications }) => {
     const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames, description: existingDescriptions });
     submodel.addSubmodelElement(item);
-    submodel.modifySubmodelElement(modifications, IdShortPath.create({ path: item.idShort }));
+    submodel.modifySubmodelElement({ idShort: item.idShort, ...modifications }, IdShortPath.create({ path: item.idShort }));
     expect(item.toPlain()).toMatchObject(
       {
         ...modifications,
       },
     );
+  });
+
+  it("should modify submodel element list", () => {
+    const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames, description: existingDescriptions });
+    const listItem = SubmodelElementList.create({ idShort: "list", displayName: existingDisplayNames, description: existingDescriptions, typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    const collection = SubmodelElementCollection.create({ idShort: "collection", displayName: existingDisplayNames, description: existingDescriptions });
+    const property = Property.create({ idShort: "prop1", displayName: existingDisplayNames, description: existingDescriptions, valueType: DataTypeDef.String });
+    collection.addSubmodelElement(property);
+    listItem.addSubmodelElement(collection);
+    submodel.addSubmodelElement(listItem);
+    const modifications = {
+      idShort: "list",
+      displayName: newDisplayNames,
+      description: newDescriptions,
+      value: [{ idShort: "collection", displayName: newDisplayNames, value: [{ idShort: "prop1", value: "prop New" }] }],
+    };
+    submodel.modifySubmodelElement(modifications, IdShortPath.create({ path: "list" }));
+    expect(listItem.displayName).toEqual(newDisplayNames.map(LanguageText.fromPlain));
+    expect(listItem.description).toEqual(newDescriptions.map(LanguageText.fromPlain));
+    expect(collection.displayName).toEqual(newDisplayNames.map(LanguageText.fromPlain));
+    expect(property.value).toEqual("prop New");
   });
 });

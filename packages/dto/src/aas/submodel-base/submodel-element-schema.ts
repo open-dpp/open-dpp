@@ -10,7 +10,7 @@ import { PropertyJsonSchema } from './property-json-schema'
 import { RangeJsonSchema } from './range-json-schema'
 import { ReferenceElementJsonSchema } from './reference-element-json-schema'
 import { RelationshipElementJsonSchema } from './relationship-element-json-schema'
-import { SubmodelBaseJsonSchema, SubmodelBaseModificationSchema } from './submodel-base-json-schema'
+import { SubmodelBaseJsonSchema } from './submodel-base-json-schema'
 import { SubmodelElementCollectionJsonSchemaImpl } from './submodel-element-collection-json-schema'
 import { SubmodelElementListJsonSchemaImpl } from './submodel-element-list-json-schema'
 
@@ -69,9 +69,3 @@ export const SubmodelElementPaginationResponseDtoSchema = z.object({
 export type SubmodelElementPaginationResponseDto = z.infer<typeof SubmodelElementPaginationResponseDtoSchema>
 export type SubmodelElementRequestDto = z.infer<typeof SubmodelElementSchema>
 export type SubmodelElementResponseDto = z.infer<typeof SubmodelElementSchema>
-
-export const SubmodelElementModificationSchema = z.looseObject({
-  ...SubmodelBaseModificationSchema.shape,
-})
-
-export type SubmodelElementModificationDto = z.infer<typeof SubmodelElementModificationSchema>
