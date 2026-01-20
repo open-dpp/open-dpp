@@ -18,6 +18,11 @@ export class UsersService {
     return User.loadFromDb({
       id: userDoc.id,
       email: userDoc.email,
+      createdAt: userDoc.createdAt,
+      updatedAt: userDoc.updatedAt,
+      name: userDoc.name || undefined,
+      image: userDoc.image || undefined,
+      emailVerified: userDoc.emailVerified || false,
     });
   }
 
