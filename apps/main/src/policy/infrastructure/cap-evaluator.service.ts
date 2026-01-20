@@ -13,7 +13,8 @@ export class CapEvaluatorService {
         return this.modelService.countByOrganization(orgId);
       case PolicyKey.MEDIA_STORAGE_CAP: {
         const bytesUsed = await this.mediaService.calculateOrganizationStorageUsage(orgId);
-        return Math.floor(bytesUsed / (1024 * 1024));
+        const mbUsed = Math.round(bytesUsed / (1024 * 1024) * 100) / 100;
+        return mbUsed;
       }
       default:
         throw new Error(`No cap evaluator registered for ${key}`);

@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { ExecutionContext } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { PolicyKey } from "./domain/policy";
-import { PolicyService } from "./infrastructure/policy.service";
+import { PolicyKey } from "../domain/policy";
+import { PolicyService } from "../infrastructure/policy.service";
 import { PolicyGuard } from "./policy.guard";
 
 describe("PolicyGuard", () => {

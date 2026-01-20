@@ -24,6 +24,7 @@ import { TemplateModule as OldTemplateModule } from "./old-templates/template.mo
 import { OrganizationsModule } from "./organizations/organizations.module";
 import { PassportsModule } from "./passports/passports.module";
 import { PolicyModule } from "./policy/policy.module";
+import { PolicyGuard } from "./policy/presentation/policy.guard";
 import { ProductPassportModule } from "./product-passport/product-passport.module";
 import { TemplateDraftModule } from "./template-draft/template-draft.module";
 import { TemplatesModule } from "./templates/templates.module";
@@ -77,6 +78,10 @@ import { UsersModule } from "./users/users.module";
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PolicyGuard,
     },
   ],
 })

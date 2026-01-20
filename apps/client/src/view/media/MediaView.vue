@@ -5,6 +5,7 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import MediaDetailsSidebar from "../../components/media/MediaDetailsSidebar.vue";
 import MediaGrid from "../../components/media/MediaGrid.vue";
+import { handleApiError, LimitError } from "../../lib/api-error-mapping";
 import { useIndexStore } from "../../stores";
 import { useMediaStore } from "../../stores/media";
 import { useNotificationStore } from "../../stores/notification";
@@ -40,10 +41,16 @@ async function uploadFile() {
     await mediaStore.fetchMediaByOrganizationId();
   }
   catch (error: unknown) {
-    console.error("Fehler beim Hochladen der Datei:", error);
-    notificationStore.addErrorNotification(
-      t("file.uploadError"),
-    );
+    const err = handleApiError(error);
+    if (err instanceof LimitError) {
+      notificationStore.addErrorNotification(t(`api.error.limit.${err.key}`, { limit: err.limit }));
+    }
+    else {
+      console.error("Fehler beim Hochladen der Datei:", error);
+      notificationStore.addErrorNotification(
+        t("file.uploadError"),
+      );
+    }
     selectedFile.value = null;
   }
   finally {

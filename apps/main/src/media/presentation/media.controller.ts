@@ -17,6 +17,8 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import { memoryStorage } from "multer";
 import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
 import { Session } from "../../auth/session.decorator";
+import { PolicyKey } from "../../policy/domain/policy";
+import { Policy } from "../../policy/presentation/policy.decorator";
 import { BucketDefaultPaths, MediaService } from "../infrastructure/media.service";
 import { VirusScanFileValidator } from "./virus-scan.file-validator";
 
@@ -29,6 +31,7 @@ export class MediaController {
   }
 
   @Post("profileImage")
+  @Policy(PolicyKey.MEDIA_STORAGE_CAP)
   @UseInterceptors(
     FileInterceptor("file", {
       storage: memoryStorage(),
@@ -58,6 +61,7 @@ export class MediaController {
   }
 
   @Post("dpp/:orgId/:upi/:dataFieldId")
+  @Policy(PolicyKey.MEDIA_STORAGE_CAP)
   @UseInterceptors(
     FileInterceptor("file", {
       storage: memoryStorage(),
@@ -177,6 +181,7 @@ export class MediaController {
   }
 
   @Post(":orgId")
+  @Policy(PolicyKey.MEDIA_STORAGE_CAP)
   @UseInterceptors(
     FileInterceptor("file", {
       storage: memoryStorage(),
@@ -214,6 +219,7 @@ export class MediaController {
   }
 
   @Post("organization-profile/:orgId")
+  @Policy(PolicyKey.MEDIA_STORAGE_CAP)
   @UseInterceptors(
     FileInterceptor("file", {
       storage: memoryStorage(),

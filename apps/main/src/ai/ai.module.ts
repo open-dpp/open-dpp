@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { EnvModule } from "@open-dpp/env";
+import { PolicyModule } from "../policy/policy.module";
 import { UniqueProductIdentifierModule } from "../unique-product-identifier/unique.product.identifier.module";
 import { AiConfigurationDbSchema, AiConfigurationDoc } from "./ai-configuration/infrastructure/ai-configuration.schema";
 import { AiConfigurationService } from "./ai-configuration/infrastructure/ai-configuration.service";
@@ -20,6 +21,7 @@ import { McpClientModule } from "./mcp-client/mcp-client.module";
     UniqueProductIdentifierModule,
     EnvModule,
     McpClientModule,
+    PolicyModule,
   ],
   controllers: [AiConfigurationController],
   providers: [

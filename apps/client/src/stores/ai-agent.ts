@@ -74,6 +74,16 @@ export const useAiAgentStore = defineStore("socket", () => {
       socket.value.on("connect_error", (err) => {
         console.error("AI agent socket connect_error:", err.message);
       });
+      socket.value.on("limitError", (err) => {
+        messages.value.pop();
+        messages.value.push({
+          id: Date.now(),
+          sender: Sender.Bot,
+          text: err.msg,
+          status: MsgStatus.Error,
+        });
+        isLastMessagePendingFromBot.value = false;
+      });
       listenersBound = true;
     }
   };

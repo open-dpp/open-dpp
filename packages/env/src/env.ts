@@ -66,9 +66,9 @@ export const envSchema = z.object({
   OPEN_DPP_AUTH_ADMIN_USERNAME: z.string().optional(),
   OPEN_DPP_AUTH_ADMIN_PASSWORD: z.string().optional(),
   // Default Caps
-  OPEN_DPP_DEFAULT_MODEL_CREATE_CAP: z.coerce.number().min(0).optional().default(10),
-  OPEN_DPP_DEFAULT_AI_TOKEN_QUOTA: z.coerce.number().min(0).optional().default(10_000),
-  OPEN_DPP_DEFAULT_MEDIA_STORAGE_CAP: z.coerce.number().min(0).optional().default(1000),
+  OPEN_DPP_DEFAULT_MODEL_CREATE_CAP: z.coerce.number().min(0).optional().default(0),
+  OPEN_DPP_DEFAULT_AI_TOKEN_QUOTA: z.coerce.number().min(0).optional().default(0),
+  OPEN_DPP_DEFAULT_MEDIA_STORAGE_CAP: z.coerce.number().min(0).optional().default(0),
 }).superRefine((val, ctx) => {
   const hasUri = !!val.OPEN_DPP_MONGODB_URI;
   const hasHostPort = !!val.OPEN_DPP_MONGODB_HOST && !!val.OPEN_DPP_MONGODB_PORT;
