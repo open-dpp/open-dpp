@@ -1,3 +1,4 @@
+import { Logger } from "@nestjs/common";
 import { IQueryHandler, QueryHandler } from "@nestjs/cqrs";
 import { Organization } from "../../domain/organization";
 import { MembersRepositoryPort } from "../../domain/ports/members.repository.port";
@@ -6,19 +7,24 @@ import { GetMemberOrganizationsQuery } from "./get-member-organizations.query";
 
 @QueryHandler(GetMemberOrganizationsQuery)
 export class GetMemberOrganizationsHandler implements IQueryHandler<GetMemberOrganizationsQuery> {
-    constructor(
-        private readonly membersRepository: MembersRepositoryPort,
-        private readonly organizationsRepository: OrganizationsRepositoryPort,
-    ) { }
+  private readonly logger = new Logger(GetMemberOrganizationsHandler.name);
 
-    async execute(query: GetMemberOrganizationsQuery): Promise<Organization[]> {
-        const members = await this.membersRepository.findByUserId(query.userId);
+  constructor(
+    private readonly membersRepository: MembersRepositoryPort,
+    private readonly organizationsRepository: OrganizationsRepositoryPort,
+  ) { }
 
-        if (members.length === 0) {
-            return [];
-        }
+  async execute(query: GetMemberOrganizationsQuery): Promise<Organization[]> {
+    this.logger.log(`Getting organizations for user: ${query.userId}`);
+    const members = await this.membersRepository.findByUserId(query.userId);
+    this.logger.log(`Found ${members.length} memberships for user ${query.userId}`);
 
-        const organizationIds = members.map((member) => member.organizationId);
-        return this.organizationsRepository.findManyByIds(organizationIds);
+    if (members.length === 0) {
+      return [];
     }
+
+    const organizationIds = members.map(member => member.organizationId);
+    this.logger.log(`Organization IDs: ${organizationIds.join(", ")}`);
+    return this.organizationsRepository.findManyByIds(organizationIds);
+  }
 }

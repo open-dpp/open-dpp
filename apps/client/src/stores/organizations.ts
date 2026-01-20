@@ -13,7 +13,7 @@ export const useOrganizationsStore = defineStore("organizations", () => {
   };
 
   const fetchOrganizations = async () => {
-    const { data } = await apiClient.dpp.organizations.getAll();
+    const { data } = await apiClient.dpp.organizations.getMemberOrganizations();
     organizations.value = data || [];
   };
 

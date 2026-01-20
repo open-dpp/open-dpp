@@ -13,6 +13,10 @@ export class OrganizationsNamespace {
     return this.axiosInstance.get<OrganizationDto>(`/organizations/${id}`)
   }
 
+  public async getMemberOrganizations() {
+    return this.axiosInstance.get<OrganizationDto[]>('/organizations/member')
+  }
+
   public async post(data: OrganizationCreateDto) {
     return this.axiosInstance.post<OrganizationDto>('/organizations', data)
   }
