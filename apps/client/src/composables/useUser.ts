@@ -1,6 +1,6 @@
+import type { UserDto } from "@open-dpp/api-client";
 import { ref } from "vue";
 import apiClient from "../lib/api-client";
-import type { UserDto } from "@open-dpp/api-client";
 
 export function useUser() {
   const user = ref<UserDto | null>(null);
