@@ -21,14 +21,16 @@ export const AuthProvider: Provider = {
 
     if (mongooseConnection.readyState !== 1) {
       await new Promise<void>((resolve, reject) => {
-        const onOpen = () => {
+        function onOpen() {
           mongooseConnection.off("error", onError);
           resolve();
-        };
-        const onError = (error: any) => {
+        }
+
+        function onError(error: any) {
           mongooseConnection.off("open", onOpen);
           reject(error);
-        };
+        }
+
         mongooseConnection.once("open", onOpen);
         mongooseConnection.once("error", onError);
       });
