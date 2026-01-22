@@ -1,5 +1,5 @@
 import { Logger, Provider } from "@nestjs/common";
-import { InjectConnection, getConnectionToken } from "@nestjs/mongoose";
+import { getConnectionToken } from "@nestjs/mongoose";
 import { EnvService } from "@open-dpp/env";
 import { APIError, betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
