@@ -144,18 +144,10 @@ jobs:
             runner: ubuntu-latest
             target: production
             image_suffix: ""
-          - platform: linux/amd64
-            runner: ubuntu-latest
-            target: mcpserver
-            image_suffix: /mcp
           - platform: linux/arm64
             runner: ubuntu-24.04-arm
             target: production
             image_suffix: ""
-          - platform: linux/arm64
-            runner: ubuntu-24.04-arm
-            target: mcpserver
-            image_suffix: /mcp
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
@@ -222,12 +214,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        target: [production, mcpserver]
+        target: [production]
         include:
           - target: production
             image_suffix: ""
-          - target: mcpserver
-            image_suffix: /mcp
     steps:
       - name: Download digests
         uses: actions/download-artifact@v4
