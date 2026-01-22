@@ -1,16 +1,12 @@
+import type { Auth, User } from "better-auth";
 import type { Connection } from "mongoose";
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
+import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import { EnvService } from "@open-dpp/env";
-import { APIError, Auth, betterAuth, User } from "better-auth";
-import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { admin, apiKey, genericOAuth, organization } from "better-auth/plugins";
 import dayjs from "dayjs";
 import { Db, MongoClient, ObjectId } from "mongodb";
-import { InviteUserToOrganizationMail } from "../email/domain/invite-user-to-organization-mail";
-import { PasswordResetMail } from "../email/domain/password-reset-mail";
-import { VerifyEmailMail } from "../email/domain/verify-email-mail";
 import { EmailService } from "../email/email.service";
+import { AUTH } from "./auth.provider";
 
 @Injectable()
 export class AuthService implements OnModuleInit, OnModuleDestroy {
@@ -19,7 +15,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   private readonly emailService: EmailService;
   private readonly mongooseConnection: Connection;
 
-  public auth: Auth | undefined;
+  public readonly auth: Auth;
   private db: Db | undefined;
   private client: MongoClient | undefined;
 
@@ -28,10 +24,12 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     emailService: EmailService,
     @InjectConnection()
     mongooseConnection: Connection,
+    @Inject(AUTH) private readonly authInstance: Auth,
   ) {
     this.configService = configService;
     this.emailService = emailService;
     this.mongooseConnection = mongooseConnection;
+    this.auth = authInstance;
   }
 
   async getUserById(userId: string): Promise<User | null> {
@@ -53,7 +51,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   }
 
   async getSession(headers: Headers) {
-    return await this.auth!.api.getSession({
+    return await this.auth.api.getSession({
       headers,
     });
   }
@@ -181,206 +179,6 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     this.db = this.mongooseConnection.db;
-    const mongoClient = this.mongooseConnection.getClient();
-    const logger = this.logger;
-
-    const isCloudAuthEnabled = !!this.configService.get("OPEN_DPP_AUTH_CLOUD_ENABLED");
-    let genericOAuthPlugin;
-    if (isCloudAuthEnabled) {
-      genericOAuthPlugin = genericOAuth({
-        config: [
-          {
-            providerId: this.configService.get("OPEN_DPP_AUTH_CLOUD_PROVIDER") as string,
-            clientId: this.configService.get("OPEN_DPP_AUTH_CLOUD_CLIENT_ID") as string,
-            clientSecret: this.configService.get("OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET") as string,
-            discoveryUrl: this.configService.get("OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL") as string,
-          },
-        ],
-      });
-    }
-    const emailSvc = this.emailService;
-    const configSvc = this.configService;
-    const organizationPlugin = organization({
-      schema: {
-        organization: {
-          additionalFields: {
-            image: {
-              type: "string",
-              input: true,
-              required: false,
-            },
-          },
-        },
-      },
-      async sendInvitationEmail(data) {
-        try {
-          if (!data.organization) {
-            logger.error("Organization data is missing in sendInvitationEmail", data);
-            return;
-          }
-          const inviteLink = `${configSvc.get("OPEN_DPP_URL")}/accept-invitation/${data.id}`;
-          await emailSvc.send(InviteUserToOrganizationMail.create({
-            to: data.email,
-            subject: "Invitation to join organization",
-            templateProperties: {
-              link: inviteLink,
-              firstName: "User",
-              organizationName: data.organization.name,
-            },
-          }));
-        }
-        catch (error) {
-          logger.error("Failed to send invitation email", error);
-        }
-      },
-    });
-
-    const apiKeyPlugin = apiKey({
-      enableSessionForAPIKeys: true,
-      rateLimit: {
-        enabled: false,
-      },
-    });
-
-    const adminPlugin = admin({});
-    const plugins = [apiKeyPlugin, organizationPlugin, adminPlugin];
-    if (genericOAuthPlugin) {
-      plugins.push(genericOAuthPlugin as any);
-    }
-
-    this.auth = betterAuth({
-      baseURL: this.configService.get("OPEN_DPP_URL"),
-      basePath: "/api/auth",
-      secret: this.configService.get("OPEN_DPP_AUTH_SECRET"),
-      trustedOrigins: [this.configService.get("OPEN_DPP_URL")],
-      logger: {
-        disabled: false,
-        log: (level, message, ...args) => {
-          const formattedMessage
-            = args.length > 0 ? `${message} ${JSON.stringify(args)}` : message;
-          switch (level) {
-            case "error":
-              logger.error(formattedMessage);
-              break;
-            case "warn":
-              logger.warn(formattedMessage);
-              break;
-            case "debug":
-              logger.debug(formattedMessage);
-              break;
-            case "info":
-            default:
-              logger.log(formattedMessage);
-              break;
-          }
-        },
-      },
-      user: {
-        additionalFields: {
-          firstName: {
-            type: "string",
-            required: true,
-            input: true,
-          },
-          lastName: {
-            type: "string",
-            required: true,
-            input: true,
-          },
-          name: {
-            type: "string",
-            required: false,
-            input: true,
-          },
-        },
-      },
-      emailAndPassword: {
-        enabled: true,
-        sendResetPassword: async ({ user, token }) => {
-          const firstName = (user as any).firstName ?? "User";
-          await this.emailService.send(PasswordResetMail.create({
-            to: user.email,
-            subject: "Password reset",
-            templateProperties: {
-              link: `${this.configService.get("OPEN_DPP_URL")}/password-reset?token=${token}`,
-              firstName,
-            },
-          }));
-        },
-      },
-      emailVerification: {
-        sendOnSignUp: true,
-        sendVerificationEmail: async ({ user, url }: { user: User; url: string; token: string }) => {
-          const firstName = (user as any).firstName ?? "User";
-          await this.emailService.send(VerifyEmailMail.create({
-            to: user.email,
-            subject: "Verify E-Mail address",
-            templateProperties: {
-              link: url,
-              firstName,
-            },
-          }));
-        },
-      },
-      databaseHooks: {
-        session: {
-          create: {
-            before: async (session) => {
-              try {
-                const organization = await this.getActiveOrganization(session.userId);
-                return {
-                  data: {
-                    ...session,
-                    activeOrganizationId: organization?._id,
-                  },
-                };
-              }
-              catch (error) {
-                this.logger.error("Failed to get active organization for session", error);
-                return {
-                  data: session,
-                };
-              }
-            },
-          },
-        },
-      },
-      hooks: {},
-      plugins,
-      database: mongodbAdapter(this.db!, {
-        client: this.configService.get("NODE_ENV") === "test" ? undefined : mongoClient,
-      }),
-    });
-    const isAuthAdminProvided = !!this.configService.get("OPEN_DPP_AUTH_ADMIN_USERNAME") && !!this.configService.get("OPEN_DPP_AUTH_ADMIN_PASSWORD");
-    if (isAuthAdminProvided) {
-      const adminUsername = this.configService.get("OPEN_DPP_AUTH_ADMIN_USERNAME");
-      const adminPassword = this.configService.get("OPEN_DPP_AUTH_ADMIN_PASSWORD");
-      try {
-        await (this.auth?.api as any).createUser({
-          body: {
-            name: "open-dpp admin",
-            data: {
-              firstName: "open-dpp",
-              lastName: "admin",
-              emailVerified: true,
-            },
-            email: adminUsername,
-            password: adminPassword,
-            role: "admin",
-          },
-        });
-        this.logger.log("Admin Account created");
-      }
-      catch (error) {
-        if (error instanceof APIError) {
-          this.logger.warn("Account with set admin username already exists and wont be updated.");
-        }
-        else {
-          this.logger.error("Failed to create admin account", error);
-        }
-      }
-    }
-    this.logger.log("Auth initialized");
   }
 
   async onModuleDestroy() {

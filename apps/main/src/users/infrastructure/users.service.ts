@@ -1,6 +1,6 @@
+import type { User as BetterAuthUser } from "better-auth";
 import { Injectable } from "@nestjs/common";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { User as BetterAuthUser } from "better-auth";
 import { AuthService } from "../../auth/auth.service";
 import { User } from "../domain/user";
 
