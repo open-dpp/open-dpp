@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Param, Patch, Post } from "@nestjs/common";
+import { Body, Controller, Get, Headers, Logger, Param, Patch, Post, UseFilters } from "@nestjs/common";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { AuthService } from "../../auth/auth.service";
 import { CreateOrganizationCommand } from "../application/commands/create-organization.command";
@@ -8,9 +8,13 @@ import { GetMembersQuery } from "../application/queries/get-members.query";
 import { GetOrganizationQuery } from "../application/queries/get-organization.query";
 import { Member } from "../domain/member";
 import { Organization } from "../domain/organization";
+import { OrganizationExceptionFilter } from "./organization-exception.filter";
 
 @Controller("organizations")
+@UseFilters(OrganizationExceptionFilter)
 export class OrganizationsController {
+  private readonly logger = new Logger(OrganizationsController.name);
+
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
@@ -51,18 +55,19 @@ export class OrganizationsController {
     ));
   }
 
-  @Get(":id")
-  async getOrganization(@Param("id") id: string): Promise<Organization | null> {
-    return this.queryBus.execute(new GetOrganizationQuery(id));
-  }
-
   @Get("member")
   async getMemberOrganizations(@Headers() headers: Record<string, string>): Promise<Organization[]> {
+    this.logger.log("Member");
     const session = await this.authService.getSession(headers as any);
     if (!session) {
       throw new Error("Unauthorized");
     }
     return this.queryBus.execute(new GetMemberOrganizationsQuery(session.user.id));
+  }
+
+  @Get(":id")
+  async getOrganization(@Param("id") id: string): Promise<Organization | null> {
+    return this.queryBus.execute(new GetOrganizationQuery(id));
   }
 
   @Get(":id/members")

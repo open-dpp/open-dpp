@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { Organization } from "../../domain/organization";
+import { DuplicateOrganizationSlugError } from "../../domain/organization.errors";
 import { OrganizationsRepositoryPort } from "../../domain/ports/organizations.repository.port";
 import { OrganizationMapper } from "../mappers/organization.mapper";
 import { Organization as OrganizationSchema } from "../schemas/organization.schema";
@@ -16,11 +17,19 @@ export class OrganizationsRepository implements OrganizationsRepositoryPort {
   async save(organization: Organization): Promise<void> {
     const persistenceModel = OrganizationMapper.toPersistence(organization);
     // Use findByIdAndUpdate with upsert to handle both create and update
-    await this.organizationModel.findByIdAndUpdate(
-      organization.id,
-      persistenceModel,
-      { upsert: true },
-    );
+    try {
+      await this.organizationModel.findByIdAndUpdate(
+        organization.id,
+        persistenceModel,
+        { upsert: true },
+      );
+    }
+    catch (error: any) {
+      if (error.code === 11000 && error.keyPattern?.slug) {
+        throw new DuplicateOrganizationSlugError(organization.slug);
+      }
+      throw error;
+    }
   }
 
   async findOneById(id: string): Promise<Organization | null> {
