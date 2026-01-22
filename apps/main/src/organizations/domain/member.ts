@@ -1,9 +1,11 @@
 import { randomBytes } from "node:crypto";
 
+import { OrganizationRole } from "./organization-role.enum";
+
 export interface MemberCreateProps {
   organizationId: string;
   userId: string;
-  role: string;
+  role: OrganizationRole;
 }
 
 export type MemberDbProps = MemberCreateProps & {
@@ -22,7 +24,7 @@ export class Member {
   public readonly id: string;
   public readonly organizationId: string;
   public readonly userId: string;
-  public readonly role: string;
+  public readonly role: OrganizationRole;
   public readonly createdAt: Date;
   public readonly updatedAt: Date;
 
@@ -30,7 +32,7 @@ export class Member {
     id: string,
     organizationId: string,
     userId: string,
-    role: string,
+    role: OrganizationRole,
     createdAt: Date,
     updatedAt: Date,
   ) {

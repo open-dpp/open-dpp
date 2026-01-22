@@ -1,8 +1,10 @@
 import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
 import { Member } from "../../domain/member";
 import { Organization } from "../../domain/organization";
+import { OrganizationRole } from "../../domain/organization-role.enum";
 import { MembersRepositoryPort } from "../../domain/ports/members.repository.port";
 import { OrganizationsRepositoryPort } from "../../domain/ports/organizations.repository.port";
+
 import { CreateOrganizationCommand } from "./create-organization.command";
 
 @CommandHandler(CreateOrganizationCommand)
@@ -24,7 +26,7 @@ export class CreateOrganizationCommandHandler implements ICommandHandler<CreateO
     const member = Member.create({
       organizationId: organization.id,
       userId: command.userId,
-      role: "owner",
+      role: OrganizationRole.OWNER,
     });
     await this.membersRepository.save(member);
   }
