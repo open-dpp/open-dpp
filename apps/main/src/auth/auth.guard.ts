@@ -106,6 +106,9 @@ export class AuthGuard implements CanActivate {
     }
 
     if (!session) {
+      if (url.startsWith("/api/sse") || url.startsWith("/api/messages")) {
+        return true;
+      }
       return false;
     }
 
