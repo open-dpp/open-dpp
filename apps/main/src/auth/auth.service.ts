@@ -182,6 +182,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
     this.db = this.mongooseConnection.db;
     const mongoClient = this.mongooseConnection.getClient();
+    const logger = this.logger;
 
     const isCloudAuthEnabled = !!this.configService.get("OPEN_DPP_AUTH_CLOUD_ENABLED");
     let genericOAuthPlugin;
@@ -212,16 +213,25 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         },
       },
       async sendInvitationEmail(data) {
-        const inviteLink = `${configSvc.get("OPEN_DPP_URL")}/accept-invitation/${data.id}`;
-        await emailSvc.send(InviteUserToOrganizationMail.create({
-          to: data.email,
-          subject: "Invitation to join organization",
-          templateProperties: {
-            link: inviteLink,
-            firstName: "User",
-            organizationName: data.organization.name,
-          },
-        }));
+        try {
+          if (!data.organization) {
+            logger.error("Organization data is missing in sendInvitationEmail", data);
+            return;
+          }
+          const inviteLink = `${configSvc.get("OPEN_DPP_URL")}/accept-invitation/${data.id}`;
+          await emailSvc.send(InviteUserToOrganizationMail.create({
+            to: data.email,
+            subject: "Invitation to join organization",
+            templateProperties: {
+              link: inviteLink,
+              firstName: "User",
+              organizationName: data.organization.name,
+            },
+          }));
+        }
+        catch (error) {
+          logger.error("Failed to send invitation email", error);
+        }
       },
     });
 
@@ -238,7 +248,6 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       plugins.push(genericOAuthPlugin as any);
     }
 
-    const logger = this.logger;
     this.auth = betterAuth({
       baseURL: this.configService.get("OPEN_DPP_URL"),
       basePath: "/api/auth",
@@ -317,13 +326,21 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
         session: {
           create: {
             before: async (session) => {
-              const organization = await this.getActiveOrganization(session.userId);
-              return {
-                data: {
-                  ...session,
-                  activeOrganizationId: organization?._id,
-                },
-              };
+              try {
+                const organization = await this.getActiveOrganization(session.userId);
+                return {
+                  data: {
+                    ...session,
+                    activeOrganizationId: organization?._id,
+                  },
+                };
+              }
+              catch (error) {
+                this.logger.error("Failed to get active organization for session", error);
+                return {
+                  data: session,
+                };
+              }
             },
           },
         },
