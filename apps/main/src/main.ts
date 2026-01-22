@@ -14,6 +14,7 @@ import * as bodyParser from "body-parser";
 import { createProxyServer } from "http-proxy-3";
 import { AppModule } from "./app.module";
 import { applyBodySizeHandler } from "./body-handler";
+import { McpClientService } from "./ai/mcp-client/mcp-client.service";
 import { buildOpenApiDocumentation } from "./open-api-docs";
 
 async function bootstrap() {
@@ -87,5 +88,7 @@ async function bootstrap() {
   const port = envService.get("OPEN_DPP_PORT");
   logger.log(`Application is running on: ${port}`);
   await app.listen(port);
+  const mcpClientService = app.get(McpClientService);
+  await mcpClientService.connect();
 }
 bootstrap();

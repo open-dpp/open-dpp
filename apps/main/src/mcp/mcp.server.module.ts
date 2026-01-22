@@ -8,10 +8,10 @@ import { PassportTool } from "./passport.tool";
   imports: [
     EnvModule.forRoot(),
     McpModule.forRoot({
-      name: "my-mcp-server",
+      name: "mcp-server",
       version: "1.0.0",
     }),
   ],
   providers: [PassportTool, DppService],
 })
-export class AppModule {}
+export class McpServerModule { }
