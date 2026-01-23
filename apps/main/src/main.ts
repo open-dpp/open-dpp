@@ -88,7 +88,14 @@ async function bootstrap() {
   const port = envService.get("OPEN_DPP_PORT");
   logger.log(`Application is running on: ${port}`);
   await app.listen(port);
-  const mcpClientService = app.get(McpClientService);
-  await mcpClientService.connect();
+  try {
+    const mcpClientService = app.get(McpClientService);
+    await mcpClientService.connect();
+  }
+  catch (err) {
+    logger.error(`MCP connect failed: ${err instanceof Error ? err.message : String(err)}`);
+    await app.close();
+    process.exit(1);
+  }
 }
 bootstrap();
