@@ -1,7 +1,20 @@
+import { Organization as BetterAuthOrganization } from "better-auth/plugins/organization";
 import { Organization, OrganizationDbProps } from "../../domain/organization";
 import { OrganizationDocument, Organization as OrganizationSchema } from "../schemas/organization.schema";
 
 export class OrganizationMapper {
+  static toDomainFromBetterAuth(betterAuthOrganization: BetterAuthOrganization): Organization {
+    const props: OrganizationDbProps = {
+      id: betterAuthOrganization.id,
+      name: betterAuthOrganization.name,
+      slug: betterAuthOrganization.slug,
+      logo: betterAuthOrganization.logo,
+      metadata: betterAuthOrganization.metadata,
+      createdAt: betterAuthOrganization.createdAt,
+    };
+    return Organization.loadFromDb(props);
+  }
+
   static toDomain(document: OrganizationDocument): Organization {
     const props: OrganizationDbProps = {
       id: document.id,

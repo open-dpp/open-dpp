@@ -1,6 +1,7 @@
 import { Command } from "@nestjs/cqrs";
+import { Organization } from "../../domain/organization";
 
-export class CreateOrganizationCommand extends Command<void> {
+export class CreateOrganizationCommand extends Command<Organization> {
   constructor(
     public readonly userId: string,
     public readonly name: string,

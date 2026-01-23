@@ -31,7 +31,7 @@ export class OrganizationsController {
     if (!session) {
       throw new Error("Unauthorized");
     }
-    await this.commandBus.execute(new CreateOrganizationCommand(
+    return this.commandBus.execute(new CreateOrganizationCommand(
       session.user.id,
       body.name,
       body.slug,
