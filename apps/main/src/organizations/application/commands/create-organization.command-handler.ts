@@ -1,33 +1,27 @@
+import type { Auth } from "better-auth";
+import { Inject, Logger } from "@nestjs/common";
 import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
-import { Member } from "../../domain/member";
-import { Organization } from "../../domain/organization";
-import { OrganizationRole } from "../../domain/organization-role.enum";
-import { MembersRepositoryPort } from "../../domain/ports/members.repository.port";
-import { OrganizationsRepositoryPort } from "../../domain/ports/organizations.repository.port";
-
+import { AUTH } from "../../../auth/auth.provider";
 import { CreateOrganizationCommand } from "./create-organization.command";
 
 @CommandHandler(CreateOrganizationCommand)
 export class CreateOrganizationCommandHandler implements ICommandHandler<CreateOrganizationCommand> {
+  private readonly logger = new Logger(CreateOrganizationCommandHandler.name);
+
   constructor(
-    private readonly organizationsRepository: OrganizationsRepositoryPort,
-    private readonly membersRepository: MembersRepositoryPort,
+    @Inject(AUTH) private readonly auth: Auth,
   ) { }
 
   async execute(command: CreateOrganizationCommand): Promise<void> {
-    const organization = Organization.create({
-      name: command.name,
-      slug: command.slug,
-      logo: command.logo,
-      metadata: command.metadata,
+    this.logger.log(`Creating organization ${command.name}`);
+    await (this.auth.api as any).createOrganization({
+      headers: command.headers,
+      body: {
+        name: command.name,
+        slug: command.slug,
+        logo: command.logo,
+        metadata: JSON.stringify(command.metadata || {}),
+      },
     });
-    await this.organizationsRepository.save(organization);
-
-    const member = Member.create({
-      organizationId: organization.id,
-      userId: command.userId,
-      role: OrganizationRole.OWNER,
-    });
-    await this.membersRepository.save(member);
   }
 }

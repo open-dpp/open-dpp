@@ -61,7 +61,12 @@ export const AuthProvider: Provider = {
       schema: {
         organization: {
           additionalFields: {
-            image: {
+            logo: {
+              type: "string",
+              input: true,
+              required: false,
+            },
+            metadata: {
               type: "string",
               input: true,
               required: false,

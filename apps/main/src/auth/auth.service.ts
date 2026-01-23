@@ -157,7 +157,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
       return null;
     return {
       name: organization.name ?? "",
-      image: organization.image ?? "",
+      image: organization.logo ?? "",
     };
   }
 
@@ -172,7 +172,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     return organizations.map(org => ({
       id: org._id.toString(),
       name: org.name ?? "",
-      image: org.image ?? "",
+      image: org.logo ?? "",
       createdAt: org.createdAt ? dayjs(org.createdAt).format("DD.MM.YYYY") : null,
     }));
   }

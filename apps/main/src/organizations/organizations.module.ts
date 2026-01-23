@@ -12,8 +12,8 @@ import { GetMembersQueryHandler } from "./application/queries/get-members.query-
 import { GetOrganizationQueryHandler } from "./application/queries/get-organization.query-handler";
 import { MembersRepositoryPort } from "./domain/ports/members.repository.port";
 import { OrganizationsRepositoryPort } from "./domain/ports/organizations.repository.port";
+import { BetterAuthOrganizationsRepository } from "./infrastructure/adapters/better-auth-organizations.repository";
 import { MembersRepository } from "./infrastructure/adapters/members.repository";
-import { OrganizationsRepository } from "./infrastructure/adapters/organizations.repository";
 import { MemberMapper } from "./infrastructure/mappers/member.mapper";
 import { OrganizationMapper } from "./infrastructure/mappers/organization.mapper";
 import { Member, MemberSchema } from "./infrastructure/schemas/member.schema";
@@ -37,7 +37,7 @@ import { OrganizationsController } from "./presentation/organizations.controller
     MemberMapper,
     {
       provide: OrganizationsRepositoryPort,
-      useClass: OrganizationsRepository,
+      useClass: BetterAuthOrganizationsRepository,
     },
     {
       provide: MembersRepositoryPort,

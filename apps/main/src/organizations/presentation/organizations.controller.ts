@@ -35,6 +35,7 @@ export class OrganizationsController {
       session.user.id,
       body.name,
       body.slug,
+      headers,
       body.logo,
       body.metadata,
     ));
