@@ -2,13 +2,14 @@ import { jest } from "@jest/globals";
 import { Test, TestingModule } from "@nestjs/testing";
 import { MembersRepositoryPort } from "../../domain/ports/members.repository.port";
 import { OrganizationsRepositoryPort } from "../../domain/ports/organizations.repository.port";
+import { BetterAuthOrganizationsRepository } from "../../infrastructure/adapters/better-auth-organizations.repository";
+import { ORGANIZATIONS_REPO_BETTER_AUTH } from "../../organizations.constants";
 import { GetMemberOrganizationsHandler } from "./get-member-organizations.handler";
 import { GetMemberOrganizationsQuery } from "./get-member-organizations.query";
 
 describe("getMemberOrganizationsHandler", () => {
   let handler: GetMemberOrganizationsHandler;
-  let membersRepository: MembersRepositoryPort;
-  let organizationsRepository: OrganizationsRepositoryPort;
+  let betterAuthOrganizationsRepository: BetterAuthOrganizationsRepository;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -26,40 +27,30 @@ describe("getMemberOrganizationsHandler", () => {
             findManyByIds: jest.fn(),
           },
         },
+        {
+          provide: ORGANIZATIONS_REPO_BETTER_AUTH,
+          useValue: {
+            findManyByMember: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     handler = module.get<GetMemberOrganizationsHandler>(GetMemberOrganizationsHandler);
-    membersRepository = module.get<MembersRepositoryPort>(MembersRepositoryPort);
-    organizationsRepository = module.get<OrganizationsRepositoryPort>(OrganizationsRepositoryPort);
+    betterAuthOrganizationsRepository = module.get<BetterAuthOrganizationsRepository>(ORGANIZATIONS_REPO_BETTER_AUTH);
   });
 
-  it("should return organizations for a member", async () => {
+  it("should return organizations for a member via better-auth", async () => {
     const userId = "user1";
-    const members = [{ organizationId: "org1" }, { organizationId: "org2" }];
+    const headers = { cookie: "session=123" };
     const organizations = [{ id: "org1" }, { id: "org2" }];
 
-    (membersRepository.findByUserId as jest.Mock).mockResolvedValue(members);
-    (organizationsRepository.findManyByIds as jest.Mock).mockResolvedValue(organizations);
+    (betterAuthOrganizationsRepository.findManyByMember as jest.Mock).mockResolvedValue(organizations);
 
-    const query = new GetMemberOrganizationsQuery(userId);
+    const query = new GetMemberOrganizationsQuery(userId, headers);
     const result = await handler.execute(query);
 
     expect(result).toEqual(organizations);
-    expect(membersRepository.findByUserId).toHaveBeenCalledWith(userId);
-    expect(organizationsRepository.findManyByIds).toHaveBeenCalledWith(["org1", "org2"]);
-  });
-
-  it("should return empty array if no members found", async () => {
-    const userId = "user1";
-
-    (membersRepository.findByUserId as jest.Mock).mockResolvedValue([]);
-
-    const query = new GetMemberOrganizationsQuery(userId);
-    const result = await handler.execute(query);
-
-    expect(result).toEqual([]);
-    expect(membersRepository.findByUserId).toHaveBeenCalledWith(userId);
-    expect(organizationsRepository.findManyByIds).not.toHaveBeenCalled();
+    expect(betterAuthOrganizationsRepository.findManyByMember).toHaveBeenCalledWith(headers);
   });
 });
