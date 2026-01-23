@@ -1,5 +1,5 @@
+import type { Auth } from "better-auth";
 import { Inject, Injectable, Logger, NotImplementedException } from "@nestjs/common";
-import { Auth } from "better-auth";
 import { AUTH } from "../../../auth/auth.provider";
 import { Organization, OrganizationDbProps } from "../../domain/organization";
 import { OrganizationsRepositoryPort } from "../../domain/ports/organizations.repository.port";

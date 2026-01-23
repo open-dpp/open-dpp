@@ -29,6 +29,7 @@ import {
 import { ProductPassportModule } from "../product-passport.module";
 import { productPassportToDto } from "./dto/product-passport.dto";
 
+
 describe("productPassportController", () => {
   let app: INestApplication;
   let modelsService: ModelsService;
@@ -116,7 +117,7 @@ describe("productPassportController", () => {
       organizationName: org.name,
       organizationImage: "org-image-media-id",
     });
-    expect(response.body).toEqual(productPassportToDto(productPassport));
+    expect(response.body).toEqual(JSON.parse(JSON.stringify(productPassportToDto(productPassport))));
   });
 
   afterAll(async () => {
