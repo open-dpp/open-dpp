@@ -57,6 +57,7 @@ export class AuthGuard implements CanActivate {
     const apiKeyHeader = request.headers["x-api-key"] || request.headers["X-API-KEY"];
     const serviceTokenHeader = request.headers.service_token;
 
+
     let session: UserSession | null = null;
 
     const isAllowServiceAccess = this.reflector.getAllAndOverride<boolean>(ALLOW_SERVICE_ACCESS, [
@@ -71,7 +72,12 @@ export class AuthGuard implements CanActivate {
     if (apiKeyHeader) {
       const headers = new Headers();
       headers.set("x-api-key", apiKeyHeader);
-      session = await this.authService.getSession(headers);
+      try {
+        session = await this.authService.getSession(headers);
+      }
+      catch (error) {
+        // If session retrieval fails, treat as no session
+      }
     }
     else {
       const headers = new Headers();
@@ -81,11 +87,17 @@ export class AuthGuard implements CanActivate {
       if (request.headers.authorization) {
         headers.set("authorization", request.headers.authorization);
       }
-      session = await this.authService.getSession(headers);
+      try {
+        session = await this.authService.getSession(headers);
+      }
+      catch (error) {
+        // If session retrieval fails, treat as no session
+      }
     }
 
     request.session = session;
     request.user = session?.user ?? null;
+
 
     const isPublic = this.reflector.getAllAndOverride<boolean>("PUBLIC", [
       context.getHandler(),
@@ -106,8 +118,9 @@ export class AuthGuard implements CanActivate {
     }
 
     if (!session) {
-      const allowedPrefixes = ["/api/sse", "/api/messages"];
-      if (allowedPrefixes.includes(url)) {
+      const allowedPaths = ["/api/sse", "/api/messages"];
+      const path = url.split("?")[0];
+      if (allowedPaths.includes(path)) {
         return true;
       }
       return false;

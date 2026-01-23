@@ -62,9 +62,9 @@ describe("authGuard Allowlist Repro", () => {
     expect(await guard.canActivate(context)).toBe(false);
   });
 
-  it("should NOT allow /api/sse?query=123", async () => {
+  it("should allow /api/sse?query=123", async () => {
     const context = createMockContext("/api/sse?foo=bar");
-    expect(await guard.canActivate(context)).toBe(false);
+    expect(await guard.canActivate(context)).toBe(true);
   });
 
   it("should allow /api/messages exactly", async () => {
