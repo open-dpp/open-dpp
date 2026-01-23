@@ -12,9 +12,9 @@ import {
 } from "@open-dpp/exception";
 import * as bodyParser from "body-parser";
 import { createProxyServer } from "http-proxy-3";
+import { McpClientService } from "./ai/mcp-client/mcp-client.service";
 import { AppModule } from "./app.module";
 import { applyBodySizeHandler } from "./body-handler";
-import { McpClientService } from "./ai/mcp-client/mcp-client.service";
 import { buildOpenApiDocumentation } from "./open-api-docs";
 
 async function bootstrap() {
