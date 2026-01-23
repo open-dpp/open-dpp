@@ -57,7 +57,6 @@ export class AuthGuard implements CanActivate {
     const apiKeyHeader = request.headers["x-api-key"] || request.headers["X-API-KEY"];
     const serviceTokenHeader = request.headers.service_token;
 
-
     let session: UserSession | null = null;
 
     const isAllowServiceAccess = this.reflector.getAllAndOverride<boolean>(ALLOW_SERVICE_ACCESS, [
@@ -75,7 +74,7 @@ export class AuthGuard implements CanActivate {
       try {
         session = await this.authService.getSession(headers);
       }
-      catch (error) {
+      catch {
         // If session retrieval fails, treat as no session
       }
     }
@@ -90,14 +89,13 @@ export class AuthGuard implements CanActivate {
       try {
         session = await this.authService.getSession(headers);
       }
-      catch (error) {
+      catch {
         // If session retrieval fails, treat as no session
       }
     }
 
     request.session = session;
     request.user = session?.user ?? null;
-
 
     const isPublic = this.reflector.getAllAndOverride<boolean>("PUBLIC", [
       context.getHandler(),
