@@ -106,7 +106,8 @@ export class AuthGuard implements CanActivate {
     }
 
     if (!session) {
-      if (url.startsWith("/api/sse") || url.startsWith("/api/messages")) {
+      const allowedPrefixes = ["/api/sse", "/api/messages"];
+      if (allowedPrefixes.includes(url)) {
         return true;
       }
       return false;
