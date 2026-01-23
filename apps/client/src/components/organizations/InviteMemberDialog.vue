@@ -13,7 +13,7 @@ import Message from "primevue/message";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
-import { authClient } from "../../auth-client.ts";
+import apiClient from "../../lib/api-client.ts";
 import RingLoader from "../RingLoader.vue";
 
 const props = defineProps<{
@@ -45,14 +45,9 @@ async function inviteUser() {
 
   try {
     loading.value = true;
-    const { error } = await authClient.organization.inviteMember({
-      email: email.value,
-      role: "member",
-      organizationId: props.organizationId,
-      resend: true,
-    });
+    const response = await apiClient.dpp.organizations.inviteUser(email.value, props.organizationId);
     loading.value = false;
-    if (!error) {
+    if (response.status === 200) {
       success.value = true;
       emit("invitedUser");
       email.value = ""; // Reset form

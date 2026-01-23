@@ -6,7 +6,7 @@ export type OrganizationDocument = HydratedDocument<Organization>;
 @Schema({ collection: "organization" })
 export class Organization {
   @Prop({ type: String, required: true })
-  _id: string;
+  id: string;
 
   @Prop({ required: true })
   name: string;
@@ -22,9 +22,6 @@ export class Organization {
 
   @Prop({ required: true })
   createdAt: Date;
-
-  @Prop({ required: true })
-  updatedAt: Date;
 }
 
 export const OrganizationSchema = SchemaFactory.createForClass(Organization);

@@ -14,6 +14,10 @@ export class OrganizationsRepository implements OrganizationsRepositoryPort {
     private readonly organizationModel: Model<OrganizationSchema>,
   ) { }
 
+  findManyByMember(_: Record<string, string>): Promise<Organization[]> {
+    throw new Error("Method not implemented.");
+  }
+
   async save(organization: Organization): Promise<void> {
     const persistenceModel = OrganizationMapper.toPersistence(organization);
     // Use findByIdAndUpdate with upsert to handle both create and update

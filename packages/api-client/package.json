@@ -30,7 +30,8 @@
     "preminor": "npm run run-before-versions",
     "minor": "git fetch --tags && npm version minor && git push --follow-tags",
     "premajor": "npm run run-before-versions",
-    "major": "git fetch --tags && npm version major && git push --follow-tags"
+    "major": "git fetch --tags && npm version major && git push --follow-tags",
+    "dev": "tsc --watch"
   },
   "dependencies": {
     "@open-dpp/dto": "workspace:*",

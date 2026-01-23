@@ -3,7 +3,7 @@ import { getConnectionToken } from "@nestjs/mongoose";
 import { EnvService } from "@open-dpp/env";
 import { APIError, betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { admin, apiKey, genericOAuth, organization } from "better-auth/plugins";
+import { admin, apiKey, organization } from "better-auth/plugins";
 import { ObjectId } from "mongodb";
 import { Connection } from "mongoose";
 import { InviteUserToOrganizationMail } from "../email/domain/invite-user-to-organization-mail";
@@ -41,74 +41,6 @@ export const AuthProvider: Provider = {
       throw new Error("Database connection not established");
     }
     const mongoClient = mongooseConnection.getClient();
-
-    const isCloudAuthEnabled = !!configService.get("OPEN_DPP_AUTH_CLOUD_ENABLED");
-    let genericOAuthPlugin;
-    if (isCloudAuthEnabled) {
-      genericOAuthPlugin = genericOAuth({
-        config: [
-          {
-            providerId: configService.get("OPEN_DPP_AUTH_CLOUD_PROVIDER") as string,
-            clientId: configService.get("OPEN_DPP_AUTH_CLOUD_CLIENT_ID") as string,
-            clientSecret: configService.get("OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET") as string,
-            discoveryUrl: configService.get("OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL") as string,
-          },
-        ],
-      });
-    }
-
-    const organizationPlugin = organization({
-      schema: {
-        organization: {
-          additionalFields: {
-            logo: {
-              type: "string",
-              input: true,
-              required: false,
-            },
-            metadata: {
-              type: "string",
-              input: true,
-              required: false,
-            },
-          },
-        },
-      },
-      async sendInvitationEmail(data) {
-        try {
-          if (!data.organization) {
-            logger.error("Organization data is missing in sendInvitationEmail", data);
-            return;
-          }
-          const inviteLink = `${configService.get("OPEN_DPP_URL")}/accept-invitation/${data.id}`;
-          await emailService.send(InviteUserToOrganizationMail.create({
-            to: data.email,
-            subject: "Invitation to join organization",
-            templateProperties: {
-              link: inviteLink,
-              firstName: "User",
-              organizationName: data.organization.name,
-            },
-          }));
-        }
-        catch (error) {
-          logger.error("Failed to send invitation email", error);
-        }
-      },
-    });
-
-    const apiKeyPlugin = apiKey({
-      enableSessionForAPIKeys: true,
-      rateLimit: {
-        enabled: false,
-      },
-    });
-
-    const adminPlugin = admin({});
-    const plugins = [apiKeyPlugin, organizationPlugin, adminPlugin];
-    if (genericOAuthPlugin) {
-      plugins.push(genericOAuthPlugin as any);
-    }
 
     const auth = betterAuth({
       baseURL: configService.get("OPEN_DPP_URL"),
@@ -221,7 +153,50 @@ export const AuthProvider: Provider = {
         },
       },
       hooks: {},
-      plugins,
+      plugins: [apiKey({
+        enableSessionForAPIKeys: true,
+        rateLimit: {
+          enabled: false,
+        },
+      }), organization({
+        schema: {
+          organization: {
+            additionalFields: {
+              logo: {
+                type: "string",
+                input: true,
+                required: false,
+              },
+              metadata: {
+                type: "string",
+                input: true,
+                required: false,
+              },
+            },
+          },
+        },
+        async sendInvitationEmail(data) {
+          try {
+            if (!data.organization) {
+              logger.error("Organization data is missing in sendInvitationEmail", data);
+              return;
+            }
+            const inviteLink = `${configService.get("OPEN_DPP_URL")}/accept-invitation/${data.id}`;
+            await emailService.send(InviteUserToOrganizationMail.create({
+              to: data.email,
+              subject: "Invitation to join organization",
+              templateProperties: {
+                link: inviteLink,
+                firstName: "User",
+                organizationName: data.organization.name,
+              },
+            }));
+          }
+          catch (error) {
+            logger.error("Failed to send invitation email", error);
+          }
+        },
+      }), admin({})],
       database: mongodbAdapter(db, {
         client: configService.get("NODE_ENV") === "test" ? undefined : mongoClient,
       }),

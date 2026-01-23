@@ -11,7 +11,6 @@ export interface MemberCreateProps {
 export type MemberDbProps = MemberCreateProps & {
   id: string;
   createdAt: Date;
-  updatedAt: Date;
 };
 
 function generate24CharId(): string {
@@ -26,7 +25,6 @@ export class Member {
   public readonly userId: string;
   public readonly role: OrganizationRole;
   public readonly createdAt: Date;
-  public readonly updatedAt: Date;
 
   private constructor(
     id: string,
@@ -34,14 +32,12 @@ export class Member {
     userId: string,
     role: OrganizationRole,
     createdAt: Date,
-    updatedAt: Date,
   ) {
     this.id = id;
     this.organizationId = organizationId;
     this.userId = userId;
     this.role = role;
     this.createdAt = createdAt;
-    this.updatedAt = updatedAt;
   }
 
   public static create(data: MemberCreateProps) {
@@ -51,7 +47,6 @@ export class Member {
       data.organizationId,
       data.userId,
       data.role,
-      now,
       now,
     );
   }
@@ -63,7 +58,6 @@ export class Member {
       data.userId,
       data.role,
       data.createdAt,
-      data.updatedAt,
     );
   }
 }

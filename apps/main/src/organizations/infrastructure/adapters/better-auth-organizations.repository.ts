@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from "@nestjs/common";
+import { Inject, Injectable, Logger, NotImplementedException } from "@nestjs/common";
 import { Auth } from "better-auth";
 import { AUTH } from "../../../auth/auth.provider";
 import { Organization, OrganizationDbProps } from "../../domain/organization";
@@ -19,7 +19,6 @@ export class BetterAuthOrganizationsRepository implements OrganizationsRepositor
       logo: authEntity.logo,
       metadata: typeof authEntity.metadata === "string" ? JSON.parse(authEntity.metadata) : authEntity.metadata,
       createdAt: authEntity.createdAt,
-      updatedAt: authEntity.updatedAt,
     };
     return Organization.loadFromDb(props);
   }
@@ -96,17 +95,13 @@ export class BetterAuthOrganizationsRepository implements OrganizationsRepositor
     return this.toDomain(result);
   }
 
-  async findManyByIds(ids: string[]): Promise<Organization[]> {
-    const result = await this.auth.options.database?.findMany!({
-      model: "organization",
-      where: [
-        {
-          field: "id",
-          operator: "in",
-          value: ids,
-        },
-      ],
+  async findManyByIds(_: string[]): Promise<Organization[]> {
+    throw new NotImplementedException();
+  }
+
+  async findManyByMember(headers: Record<string, string>): Promise<Organization[]> {
+    return (this.auth.api as any).listOrganizations({
+      headers,
     });
-    return (result || []).map((r: any) => this.toDomain(r));
   }
 }

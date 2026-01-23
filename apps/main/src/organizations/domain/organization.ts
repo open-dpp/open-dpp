@@ -10,7 +10,6 @@ export interface OrganizationCreateProps {
 export type OrganizationDbProps = OrganizationCreateProps & {
   id: string;
   createdAt: Date;
-  updatedAt: Date;
 };
 
 function generate24CharId(): string {
@@ -26,7 +25,6 @@ export class Organization {
   public readonly logo: string | null;
   public readonly metadata: any;
   public readonly createdAt: Date;
-  public readonly updatedAt: Date;
 
   private constructor(
     id: string,
@@ -35,7 +33,6 @@ export class Organization {
     logo: string | null,
     metadata: any,
     createdAt: Date,
-    updatedAt: Date,
   ) {
     this.id = id;
     this.name = name;
@@ -43,7 +40,6 @@ export class Organization {
     this.logo = logo;
     this.metadata = metadata;
     this.createdAt = createdAt;
-    this.updatedAt = updatedAt;
   }
 
   public static create(data: OrganizationCreateProps) {
@@ -54,7 +50,6 @@ export class Organization {
       data.slug,
       data.logo ?? null,
       data.metadata ?? {},
-      now,
       now,
     );
   }
@@ -67,7 +62,6 @@ export class Organization {
       data.logo ?? null,
       data.metadata ?? {},
       data.createdAt,
-      data.updatedAt,
     );
   }
 }
