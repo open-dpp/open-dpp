@@ -8,6 +8,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import request from "supertest";
+
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import { AuthGuard } from "../../auth/auth.guard";
 import { AuthModule } from "../../auth/auth.module";
@@ -29,6 +30,7 @@ import {
 import { ProductPassportModule } from "../product-passport.module";
 import { productPassportToDto } from "./dto/product-passport.dto";
 
+jest.mock("@open-dpp/env");
 
 describe("productPassportController", () => {
   let app: INestApplication;

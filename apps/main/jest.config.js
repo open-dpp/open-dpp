@@ -25,6 +25,7 @@ module.exports = {
   ],
 
   moduleNameMapper: {
+    "^@open-dpp/env$": "<rootDir>/__mocks__/@open-dpp/env.ts",
     "^@open-dpp/(.*)$": "<rootDir>/../../packages/$1/src",
     "^(\\.{1,2}/.*)\\.js$": "$1",
   },
