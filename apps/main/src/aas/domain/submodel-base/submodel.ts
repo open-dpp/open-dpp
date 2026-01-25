@@ -10,6 +10,7 @@ import { Extension } from "../extension";
 import { JsonVisitor } from "../json-visitor";
 import { ModifierVisitor } from "../modifier-visitor";
 import { IPersistable } from "../persistable";
+import { ValueModifierVisitor } from "../value-modifier-visitor";
 import { JsonType, ValueVisitor } from "../value-visitor";
 import { IVisitor } from "../visitor";
 import {
@@ -92,6 +93,12 @@ export class Submodel implements ISubmodelBase, IPersistable {
   modifySubmodelElement(data: unknown, idShortPath: IdShortPath) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
     submodelElement.accept(new ModifierVisitor(), data);
+    return submodelElement;
+  }
+
+  modifyValueOfSubmodelElement(data: unknown, idShortPath: IdShortPath) {
+    const submodelElement = this.findSubmodelElementOrFail(idShortPath);
+    submodelElement.accept(new ValueModifierVisitor(), data);
     return submodelElement;
   }
 

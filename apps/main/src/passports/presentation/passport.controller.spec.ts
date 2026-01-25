@@ -66,6 +66,10 @@ describe("passportController", () => {
     await ctx.asserts.modifySubmodelElement(createPassport, savePassport);
   });
 
+  it(`/PATCH submodel element value`, async () => {
+    await ctx.asserts.modifySubmodelElementValue(createPassport, savePassport);
+  });
+
   it(`/POST submodel element at a specified path within submodel elements hierarchy`, async () => {
     await ctx.asserts.postSubmodelElementAtIdShortPath(createPassport);
   });

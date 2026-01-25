@@ -20,7 +20,7 @@ export class MultiLanguageProperty implements ISubmodelElement {
     public readonly supplementalSemanticIds: Array<Reference>,
     public readonly qualifiers: Qualifier[],
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly value: LanguageText[],
+    public value: LanguageText[],
     public readonly valueId: Reference | null = null,
   ) {
   }

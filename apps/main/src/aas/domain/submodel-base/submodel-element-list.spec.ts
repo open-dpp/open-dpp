@@ -2,10 +2,14 @@ import { expect } from "@jest/globals";
 import { AasSubmodelElements } from "@open-dpp/dto";
 import { propertyPlainFactory } from "@open-dpp/testing";
 import { Property } from "./property";
+import { registerSubmodelElementClasses } from "./register-submodel-element-classes";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
 
 describe("submodelElementList", () => {
+  beforeAll(() => {
+    registerSubmodelElementClasses();
+  });
   it("should add submodel element", () => {
     const submodelElementList = SubmodelElementList.create({
       typeValueListElement: AasSubmodelElements.Property,

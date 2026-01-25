@@ -5,6 +5,7 @@ import {
   SubmodelElementSchema,
   SubmodelModificationSchema,
   SubmodelRequestDtoSchema,
+  ValueSchema,
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { z } from "zod";
@@ -88,6 +89,12 @@ export function ApiGetSubmodelElementValue() {
   );
 }
 
+export function ApiPatchSubmodelElementValue() {
+  return applyDecorators(
+    Patch(ApiGetSubmodelElementValuePath),
+  );
+}
+
 const IdBaseSchema = z.string().transform((v) => {
   let parsed = z.uuid().safeParse(v);
   if (parsed.success) {
@@ -149,3 +156,4 @@ export const SubmodelModificationRequestBody = () => Body(new ZodValidationPipe(
 
 export const SubmodelElementRequestBody = () => Body(new ZodValidationPipe(SubmodelElementSchema));
 export const SubmodelElementModificationRequestBody = () => Body(new ZodValidationPipe(SubmodelElementModificationSchema));
+export const SubmodelElementValueModificationRequestBody = () => Body(new ZodValidationPipe(ValueSchema));

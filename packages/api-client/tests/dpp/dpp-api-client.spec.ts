@@ -159,6 +159,16 @@ describe('apiClient', () => {
       )
       expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd))
     })
+
+    it('should modify value of submodel element', async () => {
+      const response = await sdk.dpp[dppIdentfiable].aas.modifyValueOfSubmodelElement(
+        aasWrapperId,
+        btoa(submodelCarbonFootprintResponse.id),
+        submodelCarbonFootprintElement0.idShort,
+        { PCFCalculationMethod: 'GHG' },
+      )
+      expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd))
+    })
   })
 
   describe('model', () => {

@@ -4,7 +4,7 @@ import {
   SubmodelBaseJsonSchema,
   SubmodelElementSchema,
   SubmodelJsonSchema,
-  ValueResponseDtoSchema,
+  ValueSchema,
 } from '@open-dpp/dto'
 import {
   aasPlainFactory,
@@ -38,7 +38,7 @@ export const submodelDesignOfProductElement0 = SubmodelBaseJsonSchema.parse(
   submodelDesignOfProduct.submodelElements[0],
 )
 export const submodelValueResponse: { Design_V01: any }
-  = ValueResponseDtoSchema.parse(
+  = ValueSchema.parse(
     submodelDesignOfProductValuePlainFactory.build(),
   ) as { Design_V01: any }
 export const propertyToAdd = propertyPlainFactory.build(undefined, {
@@ -156,6 +156,11 @@ export function aasHandlers(basePath: string) {
       },
     ),
     http.patch(`${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements/${submodelCarbonFootprintElement0.idShort}`, async () => {
+      return HttpResponse.json(SubmodelElementSchema.parse(propertyToAdd), {
+        status: 200,
+      })
+    }),
+    http.patch(`${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements/${submodelCarbonFootprintElement0.idShort}/$value`, async () => {
       return HttpResponse.json(SubmodelElementSchema.parse(propertyToAdd), {
         status: 200,
       })

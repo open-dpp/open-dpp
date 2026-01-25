@@ -33,6 +33,20 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
 
 const errorHandlingStore = useErrorHandlingStore();
 
+const aasEditor = useAasEditor({
+  id: props.id,
+  aasNamespace:
+    props.editorMode === AasEditMode.Passport
+      ? apiClient.dpp.templates.aas // TODO: Replace templates here by passports
+      : apiClient.dpp.templates.aas,
+  initialSelectedKeys: route.query.edit ? String(route.query.edit) : undefined,
+  initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
+  changeQueryParams,
+  selectedLanguage: convertLocaleToLanguage(locale.value),
+  errorHandlingStore,
+  translate: t,
+});
+
 const {
   selectedKeys,
   submodels,
@@ -52,19 +66,7 @@ const {
   previousPage,
   resetCursor,
   nextPage,
-} = useAasEditor({
-  id: props.id,
-  aasNamespace:
-    props.editorMode === AasEditMode.Passport
-      ? apiClient.dpp.templates.aas // TODO: Replace templates here by passports
-      : apiClient.dpp.templates.aas,
-  initialSelectedKeys: route.query.edit ? String(route.query.edit) : undefined,
-  initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
-  changeQueryParams,
-  selectedLanguage: convertLocaleToLanguage(locale.value),
-  errorHandlingStore,
-  translate: t,
-});
+} = aasEditor;
 
 onMounted(async () => {
   await init();
@@ -167,6 +169,7 @@ function onSubmit() {
         v-if="editorVNode"
         ref="componentRef"
         v-bind="editorVNode.props"
+        :aas-editor="aasEditor"
       />
     </Drawer>
   </div>

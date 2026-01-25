@@ -9,6 +9,7 @@ import type {
   SubmodelPaginationResponseDto,
   SubmodelRequestDto,
   SubmodelResponseDto,
+  ValueRequestDto,
   ValueResponseDto,
 } from '@open-dpp/dto'
 import type { AxiosInstance, AxiosResponse } from 'axios'
@@ -69,5 +70,9 @@ export class AasNamespace {
 
   public async modifySubmodelElement(id: string, submodelId: string, idShortPath: string, data: SubmodelElementModificationDto) {
     return this.axiosInstance.patch<SubmodelElementResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}`, data)
+  }
+
+  public async modifyValueOfSubmodelElement(id: string, submodelId: string, idShortPath: string, data: ValueRequestDto) {
+    return this.axiosInstance.patch<SubmodelElementResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/$value`, data)
   }
 }

@@ -1,6 +1,6 @@
 import type { ValueResponseDto } from './value-response.dto'
 import { expect } from '@jest/globals'
-import { ValueResponseDtoSchema } from './value-response.dto'
+import { ValueSchema } from './value-response.dto'
 
 describe('valueResponseDto', () => {
   it('parses value', () => {
@@ -12,6 +12,6 @@ describe('valueResponseDto', () => {
         en: 'Quick Overview',
       },
     ] } } }
-    expect(ValueResponseDtoSchema.safeParse(value).success).toBeTruthy()
+    expect(ValueSchema.safeParse(value).success).toBeTruthy()
   })
 })

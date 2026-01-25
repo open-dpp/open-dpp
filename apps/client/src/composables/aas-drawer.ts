@@ -134,6 +134,8 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
     path,
     callback,
   }) => {
+    console.log(type, title, data, mode, path);
+
     activeEditor.value = type;
     activeData.value = structuredClone(data);
     activeMode.value = structuredClone(mode);

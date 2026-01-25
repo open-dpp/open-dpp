@@ -9,6 +9,7 @@ import {
   SubmodelPaginationResponseDto,
   SubmodelRequestDto,
   SubmodelResponseDto,
+  ValueRequestDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
@@ -65,4 +66,5 @@ export interface IAasModifyEndpoints {
     body: SubmodelElementModificationDto,
     req: express.Request,
   ) => Promise<SubmodelElementResponseDto>;
+  modifySubmodelElementValue: (id: string, submodelId: string, idShortPath: IdShortPath, body: ValueRequestDto, req: express.Request) => Promise<SubmodelElementResponseDto>;
 }

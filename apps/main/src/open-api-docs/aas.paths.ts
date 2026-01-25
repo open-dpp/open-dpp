@@ -9,7 +9,7 @@ import {
   SubmodelRequestDtoSchema,
   TemplateDtoSchema,
   TemplatePaginationDtoSchema,
-  ValueResponseDtoSchema,
+  ValueSchema,
 } from "@open-dpp/dto";
 import {
   ApiGetShellsPath,
@@ -123,7 +123,7 @@ export function createAasPaths(tag: string) {
         responses: {
           [HTTPCode.OK]: {
             content: {
-              [ContentType.JSON]: { schema: ValueResponseDtoSchema },
+              [ContentType.JSON]: { schema: ValueSchema },
             },
           },
         },
@@ -216,7 +216,7 @@ export function createAasPaths(tag: string) {
         responses: {
           [HTTPCode.OK]: {
             content: {
-              [ContentType.JSON]: { schema: ValueResponseDtoSchema },
+              [ContentType.JSON]: { schema: ValueSchema },
             },
           },
         },

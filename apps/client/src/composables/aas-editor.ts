@@ -59,6 +59,8 @@ export interface IAasEditor extends IAasDrawer, IPagination {
   buildAddSubmodelElementMenu: (node: TreeNode) => void;
   submodelElementsToAdd: Ref<MenuItem[]>;
   createSubmodel: () => Promise<void>;
+  createSubmodelElementCollection: (path: AasEditorPath, data: SubmodelElementCollectionRequestDto) => Promise<void>;
+  createProperty: (path: AasEditorPath, data: PropertyRequestDto) => Promise<void>;
   loading: Ref<boolean>;
   selectedKeys: Ref<TreeTableSelectionKeys | undefined>;
   selectTreeNode: (key: string) => void;
