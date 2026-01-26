@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Logger, Param, Patch, Post, UnauthorizedException, UseFilters } from "@nestjs/common";
+import { Body, Controller, ForbiddenException, Get, Headers, Logger, Param, Patch, Post, UnauthorizedException, UseFilters } from "@nestjs/common";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { AuthService } from "../../auth/auth.service";
 import { CreateOrganizationCommand } from "../application/commands/create-organization.command";
@@ -9,6 +9,7 @@ import { GetOrganizationQuery } from "../application/queries/get-organization.qu
 import { Member } from "../domain/member";
 import { Organization } from "../domain/organization";
 import { OrganizationExceptionFilter } from "./organization-exception.filter";
+import { OrganizationsService } from "../application/services/organizations.service";
 
 @Controller("organizations")
 @UseFilters(OrganizationExceptionFilter)
@@ -19,6 +20,7 @@ export class OrganizationsController {
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
     private readonly authService: AuthService,
+    private readonly organizationsService: OrganizationsService,
   ) { }
 
   @Post()
@@ -45,8 +47,18 @@ export class OrganizationsController {
   async updateOrganization(
     @Param("id") id: string,
     @Body() body: { name?: string; slug?: string; logo?: string; metadata?: any },
+    @Headers() headers: Record<string, string>,
   ) {
-    // TODO: Check permissions (is owner/admin of org)
+    const session = await this.authService.getSession(headers as any);
+    if (!session) {
+      throw new UnauthorizedException("Unauthorized");
+    }
+
+    const isOwnerOrAdmin = await this.organizationsService.isOwnerOrAdmin(id, session.user.id);
+    if (!isOwnerOrAdmin) {
+      throw new ForbiddenException("You are not authorized to update this organization");
+    }
+
     await this.commandBus.execute(new UpdateOrganizationCommand(
       id,
       body.name,

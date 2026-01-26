@@ -10,6 +10,7 @@ import { UpdateOrganizationCommandHandler } from "./application/commands/update-
 import { GetMemberOrganizationsHandler } from "./application/queries/get-member-organizations.handler";
 import { GetMembersQueryHandler } from "./application/queries/get-members.query-handler";
 import { GetOrganizationQueryHandler } from "./application/queries/get-organization.query-handler";
+import { OrganizationsService } from "./application/services/organizations.service";
 import { MembersRepositoryPort } from "./domain/ports/members.repository.port";
 import { OrganizationsRepositoryPort } from "./domain/ports/organizations.repository.port";
 import { BetterAuthOrganizationsRepository } from "./infrastructure/adapters/better-auth-organizations.repository";
@@ -60,12 +61,14 @@ import { OrganizationsController } from "./presentation/organizations.controller
     GetMemberOrganizationsHandler,
     GetMembersQueryHandler,
     InviteMemberCommandHandler,
+    OrganizationsService,
   ],
   exports: [
     OrganizationsRepositoryPort,
     MembersRepositoryPort,
     ORGANIZATIONS_REPO_BETTER_AUTH,
     ORGANIZATIONS_REPO_MONGO,
+    OrganizationsService,
   ],
 })
 export class OrganizationsModule { }
