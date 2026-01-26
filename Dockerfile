@@ -1,4 +1,4 @@
-FROM node:24-slim AS build
+FROM node:25-slim AS build
 
 ENV CYPRESS_INSTALL_BINARY=0
 ENV PNPM_HOME="/pnpm"
@@ -28,7 +28,7 @@ RUN pnpm build
 
 RUN pnpm deploy --filter=@open-dpp/main --prod ./prod/main
 
-FROM node:24-slim AS production
+FROM node:25-slim AS production
 
 ENV NODE_ENV=production
 ENV OPEN_DPP_BACKEND_MAIN=/app/dist/main.js
