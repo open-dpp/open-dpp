@@ -26,14 +26,6 @@ services:
     env_file:
       - .env
 
-  mcp-server:
-    container_name: mcp-server
-    image: ghcr.io/open-dpp/mcp-server:main
-    ports:
-      - "3002:3000"
-    environment:
-      - PORT=3000
-
   api-mongo-db:
     ports:
       - ${SERVICE_MONGODB_PORT}:27017

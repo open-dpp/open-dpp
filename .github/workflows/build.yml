@@ -63,7 +63,6 @@ jobs:
       # AI
       OPEN_DPP_MISTRAL_API_KEY: "your-mistral-key"
       OPEN_DPP_OLLAMA_URL: "https://ollama-url"
-      OPEN_DPP_MCP_URL: "http://localhost:3002/sse"
       # S3
       OPEN_DPP_S3_ENDPOINT: "minio"
       OPEN_DPP_S3_PORT: "9000"
@@ -75,8 +74,6 @@ jobs:
       # ClamAV
       OPEN_DPP_CLAMAV_URL: "http://clamav-rest"
       OPEN_DPP_CLAMAV_PORT: "9000"
-      # MCP
-      OPEN_DPP_MCP_PORT: "3001"
       # Mail
       OPEN_DPP_MAIL_HOST=: "localhost"
       OPEN_DPP_MAIL_PORT: "8026"
@@ -99,10 +96,6 @@ jobs:
       # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Start test stack
-        run: |
-          docker compose -f docker-compose-test.yml up -d
 
       # Step 2: Install pnpm
       - name: Install pnpm
@@ -144,18 +137,10 @@ jobs:
             runner: ubuntu-latest
             target: production
             image_suffix: ""
-          - platform: linux/amd64
-            runner: ubuntu-latest
-            target: mcpserver
-            image_suffix: /mcp
           - platform: linux/arm64
             runner: ubuntu-24.04-arm
             target: production
             image_suffix: ""
-          - platform: linux/arm64
-            runner: ubuntu-24.04-arm
-            target: mcpserver
-            image_suffix: /mcp
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
@@ -222,12 +207,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        target: [production, mcpserver]
+        target: [production]
         include:
           - target: production
             image_suffix: ""
-          - target: mcpserver
-            image_suffix: /mcp
     steps:
       - name: Download digests
         uses: actions/download-artifact@v4

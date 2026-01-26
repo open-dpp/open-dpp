@@ -45,6 +45,7 @@
     "@open-dpp/env": "workspace:*",
     "@open-dpp/exception": "workspace:*",
     "@open-dpp/permission": "workspace:*",
+    "@rekog/mcp-nest": "^1.9.2",
     "axios": "^1.13.2",
     "better-auth": "^1.4.8",
     "body-parser": "^2.2.1",

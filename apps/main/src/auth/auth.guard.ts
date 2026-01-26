@@ -71,7 +71,12 @@ export class AuthGuard implements CanActivate {
     if (apiKeyHeader) {
       const headers = new Headers();
       headers.set("x-api-key", apiKeyHeader);
-      session = await this.authService.getSession(headers);
+      try {
+        session = await this.authService.getSession(headers);
+      }
+      catch {
+        // If session retrieval fails, treat as no session
+      }
     }
     else {
       const headers = new Headers();
@@ -81,7 +86,12 @@ export class AuthGuard implements CanActivate {
       if (request.headers.authorization) {
         headers.set("authorization", request.headers.authorization);
       }
-      session = await this.authService.getSession(headers);
+      try {
+        session = await this.authService.getSession(headers);
+      }
+      catch {
+        // If session retrieval fails, treat as no session
+      }
     }
 
     request.session = session;
@@ -106,6 +116,11 @@ export class AuthGuard implements CanActivate {
     }
 
     if (!session) {
+      const allowedPaths = ["/api/sse", "/api/messages"];
+      const path = url.split("?")[0];
+      if (allowedPaths.includes(path)) {
+        return true;
+      }
       return false;
     }
 
