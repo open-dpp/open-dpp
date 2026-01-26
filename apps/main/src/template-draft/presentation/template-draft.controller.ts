@@ -159,13 +159,15 @@ export class TemplateDraftController {
 
     if (publishDto.visibility === publishDto_1.VisibilityLevel.PUBLIC) {
       let user: User;
-      if (session.user.emailVerified && session.user.createdAt && session.user.updatedAt) {
+      if (session.user.createdAt && session.user.updatedAt) {
         user = User.loadFromDb({
           id: session.user.id,
           email: session.user.email,
           emailVerified: session.user.emailVerified,
           createdAt: session.user.createdAt,
           updatedAt: session.user.updatedAt,
+          name: session.user.name || undefined,
+          image: session.user.image || undefined,
         });
       }
       else {

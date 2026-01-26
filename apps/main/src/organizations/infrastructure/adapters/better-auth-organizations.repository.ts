@@ -50,9 +50,15 @@ export class BetterAuthOrganizationsRepository implements OrganizationsRepositor
     // However, since we moved CREATE to use `auth.api.createOrganization` in the handler, `save` here is mostly for UPDATES.
 
     // If implementing full save (upsert) behavior:
+    // If implementing full save (upsert) behavior:
     const existing = await this.findOneById(organization.id);
+    const database = this.auth.options.database;
+
     if (existing) {
-      await this.auth.options.database?.update!({
+      if (!database) {
+        throw new Error(`Cannot update organization ${organization.id}: Better Auth database adapter is not configured.`);
+      }
+      await database.update({
         model: "organization",
         where: [
           {
@@ -66,7 +72,10 @@ export class BetterAuthOrganizationsRepository implements OrganizationsRepositor
     else {
       // NOTE: Creating via repository might bypass some Auth logic (plugins), but keeping for completeness if needed.
       // Ideally creation happens via API command.
-      await this.auth.options.database?.create!({
+      if (!database) {
+        throw new Error(`Cannot create organization ${organization.id}: Better Auth database adapter is not configured.`);
+      }
+      await database.create({
         model: "organization",
         data: {
           ...data,

@@ -1,5 +1,6 @@
-import { Body, Controller, ForbiddenException, Get, Headers, Logger, Param, Patch, Post, UnauthorizedException, UseFilters } from "@nestjs/common";
+import { Body, Controller, ForbiddenException, Get, Headers, Logger, Param, Patch, Post, Req, UnauthorizedException, UseFilters, UseGuards } from "@nestjs/common";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
+import { AuthGuard } from "../../auth/auth.guard";
 import { AuthService } from "../../auth/auth.service";
 import { CreateOrganizationCommand } from "../application/commands/create-organization.command";
 import { UpdateOrganizationCommand } from "../application/commands/update-organization.command";
@@ -87,7 +88,20 @@ export class OrganizationsController {
   }
 
   @Get(":id/members")
-  async getMembers(@Param("id") id: string): Promise<Member[]> {
+  @UseGuards(AuthGuard)
+  async getMembers(
+    @Param("id") id: string,
+    @Req() request: any,
+  ): Promise<Member[]> {
+    const session = request.session;
+    if (!session) {
+      throw new UnauthorizedException("Unauthorized");
+    }
+    const isMember = await this.authService.isMemberOfOrganization(session.user.id, id);
+    if (!isMember) {
+      throw new ForbiddenException("You are not authorized to view members of this organization");
+    }
+
     return this.queryBus.execute(new GetMembersQuery(id));
   }
 }
