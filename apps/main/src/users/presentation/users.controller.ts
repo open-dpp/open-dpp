@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UsePipes } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { z } from "zod";
 import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";

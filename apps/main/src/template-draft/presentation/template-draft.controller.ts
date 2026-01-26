@@ -167,7 +167,8 @@ export class TemplateDraftController {
           createdAt: session.user.createdAt,
           updatedAt: session.user.updatedAt,
         });
-      } else {
+      }
+      else {
         user = await this.usersService.findOneAndFail(session.user.id);
       }
       const organization = await this.authService.getActiveOrganization(session.user.id);

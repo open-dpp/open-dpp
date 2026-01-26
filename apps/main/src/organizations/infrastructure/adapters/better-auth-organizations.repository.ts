@@ -20,7 +20,8 @@ export class BetterAuthOrganizationsRepository implements OrganizationsRepositor
     if (typeof metadata === "string") {
       try {
         metadata = JSON.parse(metadata);
-      } catch (error) {
+      }
+      catch (error) {
         this.logger.warn(`Failed to parse metadata for organization ${authEntity.id}`, error);
         metadata = {};
       }

@@ -1,10 +1,10 @@
-import { Inject, UnauthorizedException, ForbiddenException, Logger } from "@nestjs/common";
+import { ForbiddenException, Inject, Logger, UnauthorizedException } from "@nestjs/common";
 import { IQueryHandler, QueryHandler } from "@nestjs/cqrs";
+import { AuthService } from "../../../auth/auth.service";
 import { Organization } from "../../domain/organization";
 import { OrganizationsRepositoryPort } from "../../domain/ports/organizations.repository.port";
 import { ORGANIZATIONS_REPO_MONGO } from "../../organizations.constants";
 import { GetOrganizationQuery } from "./get-organization.query";
-import { AuthService } from "../../../auth/auth.service";
 
 @QueryHandler(GetOrganizationQuery)
 export class GetOrganizationQueryHandler implements IQueryHandler<GetOrganizationQuery> {
