@@ -16,7 +16,7 @@ export class CreateOrganizationCommandHandler implements ICommandHandler<CreateO
 
   async execute(command: CreateOrganizationCommand): Promise<Organization> {
     this.logger.log(`Creating organization ${command.name}`);
-    const betterAuthOrganization = (this.auth.api as any).createOrganization({
+    const betterAuthOrganization = await (this.auth.api as any).createOrganization({
       headers: command.headers,
       body: {
         name: command.name,
