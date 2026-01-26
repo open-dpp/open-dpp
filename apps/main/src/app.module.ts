@@ -18,6 +18,8 @@ import { EmailModule } from "./email/email.module";
 import { IntegrationModule } from "./integrations/integration.module";
 import { ItemsModule } from "./items/items.module";
 import { MarketplaceModule } from "./marketplace/marketplace.module";
+import { McpServerModule } from "./mcp/mcp.server.module";
+
 import { MediaModule } from "./media/media.module";
 import { ModelsModule } from "./models/models.module";
 import { TemplateModule as OldTemplateModule } from "./old-templates/template.module";
@@ -65,6 +67,7 @@ import { UsersModule } from "./users/users.module";
     }),
     MediaModule,
     MarketplaceModule,
+    McpServerModule,
     AiConfigurationModule,
     AiModule,
     AnalyticsModule,
