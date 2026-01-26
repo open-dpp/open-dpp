@@ -1,8 +1,18 @@
-import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, UsePipes } from "@nestjs/common";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
+import { z } from "zod";
+import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
 import { CreateUserCommand } from "../application/commands/create-user.command";
 import { GetUserQuery } from "../application/queries/get-user.query";
 import { User } from "../domain/user";
+
+export const CreateUserDtoSchema = z.object({
+  email: z.string().email(),
+  name: z.string().optional(),
+  image: z.string().optional(),
+});
+
+export type CreateUserDto = z.infer<typeof CreateUserDtoSchema>;
 
 @Controller("users")
 export class UsersController {
@@ -12,7 +22,7 @@ export class UsersController {
   ) { }
 
   @Post()
-  async createUser(@Body() body: { email: string; name?: string; image?: string }) {
+  async createUser(@Body(new ZodValidationPipe(CreateUserDtoSchema)) body: CreateUserDto) {
     await this.commandBus.execute(new CreateUserCommand(body.email, body.name, body.image));
   }
 
