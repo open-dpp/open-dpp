@@ -9,13 +9,26 @@ export function generateMongoConfig(configService: EnvService) {
     uri = config_uri;
     if (process.env.NODE_ENV === "test") {
       const dbName = `test-${randomUUID()}`;
+      let base = uri;
+      let query = "";
+
       if (uri.includes("?")) {
-        const [base, query] = uri.split("?");
-        uri = base.endsWith("/") ? `${base}${dbName}?${query}` : `${base}/${dbName}?${query}`;
+        const [basePart, ...queryParts] = uri.split("?");
+        base = basePart;
+        query = queryParts.join("?");
       }
-      else {
-        uri = uri.endsWith("/") ? `${uri}${dbName}` : `${uri}/${dbName}`;
+
+      // Remove existing path from base
+      const schemeEnd = base.indexOf("://");
+      if (schemeEnd > -1) {
+        const afterScheme = base.substring(schemeEnd + 3);
+        const firstSlash = afterScheme.indexOf("/");
+        if (firstSlash > -1) {
+          base = base.substring(0, schemeEnd + 3 + firstSlash);
+        }
       }
+
+      uri = `${base}/${dbName}${query ? `?${query}` : ""}`;
     }
     return {
       uri,
