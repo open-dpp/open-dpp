@@ -6,10 +6,10 @@ import { UpdateOrganizationCommand } from "../application/commands/update-organi
 import { GetMemberOrganizationsQuery } from "../application/queries/get-member-organizations.query";
 import { GetMembersQuery } from "../application/queries/get-members.query";
 import { GetOrganizationQuery } from "../application/queries/get-organization.query";
+import { OrganizationsService } from "../application/services/organizations.service";
 import { Member } from "../domain/member";
 import { Organization } from "../domain/organization";
 import { OrganizationExceptionFilter } from "./organization-exception.filter";
-import { OrganizationsService } from "../application/services/organizations.service";
 
 @Controller("organizations")
 @UseFilters(OrganizationExceptionFilter)
@@ -75,7 +75,7 @@ export class OrganizationsController {
     if (!session) {
       throw new UnauthorizedException("Unauthorized");
     }
-    return this.queryBus.execute(new GetMemberOrganizationsQuery(session.user.id));
+    return this.queryBus.execute(new GetMemberOrganizationsQuery(session.user.id, headers));
   }
 
   @Get(":id")

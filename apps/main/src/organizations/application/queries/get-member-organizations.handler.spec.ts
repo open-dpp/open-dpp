@@ -47,10 +47,10 @@ describe("getMemberOrganizationsHandler", () => {
 
     (betterAuthOrganizationsRepository.findManyByMember as jest.Mock).mockResolvedValue(organizations as any);
 
-    const query = new GetMemberOrganizationsQuery("user-1");
+    const query = new GetMemberOrganizationsQuery(userId, headers);
     const result = await handler.execute(query);
 
     expect(result).toEqual(organizations);
-    expect(betterAuthOrganizationsRepository.findManyByMember).toHaveBeenCalledWith("user-1");
+    expect(betterAuthOrganizationsRepository.findManyByMember).toHaveBeenCalledWith(userId);
   });
 });

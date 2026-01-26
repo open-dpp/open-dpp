@@ -5,5 +5,5 @@ export abstract class OrganizationsRepositoryPort {
   abstract findOneById(id: string): Promise<Organization | null>;
   abstract findOneBySlug(slug: string): Promise<Organization | null>;
   abstract findManyByIds(ids: string[]): Promise<Organization[]>;
-  abstract findManyByMember(memberId: string): Promise<Organization[]>;
+  abstract findManyByMember(headers: Record<string, string>): Promise<Organization[]>;
 }

@@ -24,7 +24,7 @@ export class GetMemberOrganizationsHandler implements IQueryHandler<GetMemberOrg
   }
 
   async getMemberOrganizationsWithBetterAuth(query: GetMemberOrganizationsQuery): Promise<Organization[]> {
-    return this.betterAuthOrganizationsRepository.findManyByMember(query.userId);
+    return this.betterAuthOrganizationsRepository.findManyByMember(query.headers);
   }
 
   async getMemberOrganizations(query: GetMemberOrganizationsQuery): Promise<Organization[]> {

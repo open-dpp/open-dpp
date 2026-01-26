@@ -1,17 +1,14 @@
 import type { Auth } from "better-auth";
-import { Inject, Injectable, Logger, NotImplementedException, Scope } from "@nestjs/common";
-import { REQUEST } from "@nestjs/core";
-import type { Request } from "express";
+import { Inject, Injectable, Logger, NotImplementedException } from "@nestjs/common";
 import { AUTH } from "../../../auth/auth.provider";
 import { Organization, OrganizationDbProps } from "../../domain/organization";
 import { OrganizationsRepositoryPort } from "../../domain/ports/organizations.repository.port";
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class BetterAuthOrganizationsRepository implements OrganizationsRepositoryPort {
   private readonly logger = new Logger(BetterAuthOrganizationsRepository.name);
   constructor(
     @Inject(AUTH) private readonly auth: Auth,
-    @Inject(REQUEST) private readonly request: Request,
   ) { }
 
   private toDomain(authEntity: any): Organization {
@@ -114,8 +111,7 @@ export class BetterAuthOrganizationsRepository implements OrganizationsRepositor
     throw new NotImplementedException();
   }
 
-  async findManyByMember(memberId: string): Promise<Organization[]> {
-    const headers = this.request.headers;
+  async findManyByMember(headers: Record<string, string>): Promise<Organization[]> {
     const result = await (this.auth.api as any).listOrganizations({
       headers,
     });
