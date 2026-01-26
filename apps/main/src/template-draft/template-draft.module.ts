@@ -8,6 +8,7 @@ import {
 } from "../old-templates/infrastructure/template.schema";
 import { TemplateService } from "../old-templates/infrastructure/template.service";
 import { OrganizationsModule } from "../organizations/organizations.module";
+import { UsersModule } from "../users/users.module";
 import {
   TemplateDraftDoc,
   TemplateDraftSchema,
@@ -30,6 +31,7 @@ import { TemplateDraftController } from "./presentation/template-draft.controlle
     AuthModule,
     MarketplaceModule,
     OrganizationsModule,
+    UsersModule,
   ],
   controllers: [TemplateDraftController],
   providers: [TemplateService, TemplateDraftService],
