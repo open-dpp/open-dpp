@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Logger, Param, Patch, Post, UseFilters } from "@nestjs/common";
+import { Body, Controller, Get, Headers, Logger, Param, Patch, Post, UnauthorizedException, UseFilters } from "@nestjs/common";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { AuthService } from "../../auth/auth.service";
 import { CreateOrganizationCommand } from "../application/commands/create-organization.command";
@@ -29,7 +29,7 @@ export class OrganizationsController {
     // We need strict headers type for getSession usually, but let's try casting or passing as is if compatible
     const session = await this.authService.getSession(headers as any);
     if (!session) {
-      throw new Error("Unauthorized");
+      throw new UnauthorizedException("Unauthorized");
     }
     return this.commandBus.execute(new CreateOrganizationCommand(
       session.user.id,
@@ -61,7 +61,7 @@ export class OrganizationsController {
     this.logger.log("Member");
     const session = await this.authService.getSession(headers as any);
     if (!session) {
-      throw new Error("Unauthorized");
+      throw new UnauthorizedException("Unauthorized");
     }
     return this.queryBus.execute(new GetMemberOrganizationsQuery(session.user.id));
   }
