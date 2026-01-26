@@ -67,8 +67,11 @@ export class OrganizationsController {
   }
 
   @Get(":id")
-  async getOrganization(@Param("id") id: string): Promise<Organization | null> {
-    return this.queryBus.execute(new GetOrganizationQuery(id));
+  async getOrganization(
+    @Param("id") id: string,
+    @Headers() headers: Record<string, string>,
+  ): Promise<Organization | null> {
+    return this.queryBus.execute(new GetOrganizationQuery(id, headers));
   }
 
   @Get(":id/members")
