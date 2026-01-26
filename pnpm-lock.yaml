@@ -29,7 +29,7 @@ importers:
         version: link:../../packages/api-client
       '@open-dpp/dto':
         specifier: workspace:*
-        version: file:packages/dto
+        version: link:../../packages/dto
       '@primeuix/themes':
         specifier: ^2.0.3
         version: 2.0.3
@@ -207,7 +207,7 @@ importers:
     devDependencies:
       '@open-dpp/env':
         specifier: workspace:*
-        version: file:packages/env(@nestjs/microservices@11.1.12)(@nestjs/platform-express@11.1.12)(@nestjs/websockets@11.1.12)(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+        version: link:../packages/env
       '@playwright/test':
         specifier: ^1.57.0
         version: 1.57.0
@@ -282,10 +282,10 @@ importers:
         version: link:../../packages/api-client
       '@open-dpp/dto':
         specifier: workspace:*
-        version: file:packages/dto
+        version: link:../../packages/dto
       '@open-dpp/env':
         specifier: workspace:*
-        version: file:packages/env(@nestjs/microservices@11.1.12)(@nestjs/platform-express@11.1.12)(@nestjs/websockets@11.1.12)(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+        version: link:../../packages/env
       '@open-dpp/exception':
         specifier: workspace:*
         version: link:../../packages/exception
@@ -490,7 +490,7 @@ importers:
     dependencies:
       '@open-dpp/dto':
         specifier: workspace:*
-        version: file:packages/dto
+        version: link:../dto
       axios:
         specifier: ^1.13.2
         version: 1.13.2
@@ -771,10 +771,10 @@ importers:
         version: 11.0.4(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(mongoose@9.1.4)(rxjs@7.8.2)
       '@open-dpp/dto':
         specifier: workspace:*
-        version: file:packages/dto
+        version: link:../dto
       '@open-dpp/env':
         specifier: workspace:*
-        version: file:packages/env(@nestjs/microservices@11.1.12)(@nestjs/platform-express@11.1.12)(@nestjs/websockets@11.1.12)(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+        version: link:../env
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
@@ -2383,12 +2383,6 @@ packages:
 
   '@one-ini/wasm@0.1.1':
     resolution: {integrity: sha512-XuySG1E38YScSJoMlqovLru4KTUNSjgVTIjyh7qMX6aNN5HY5Ct5LhRJdxO79JtTzKfzV/bnWpz+zquYrISsvw==}
-
-  '@open-dpp/dto@file:packages/dto':
-    resolution: {directory: packages/dto, type: directory}
-
-  '@open-dpp/env@file:packages/env':
-    resolution: {directory: packages/env, type: directory}
 
   '@open-draft/deferred-promise@2.2.0':
     resolution: {integrity: sha512-CecwLWx3rhxVQF6V4bAgPS5t+So2sTbPgAzafKkVizyi7tlwpcFpdFqq+wqF2OwNBmqFuu6tOyouTuxgpMfzmA==}
@@ -11160,27 +11154,6 @@ snapshots:
       consola: 3.4.2
 
   '@one-ini/wasm@0.1.1': {}
-
-  '@open-dpp/dto@file:packages/dto':
-    dependencies:
-      uuid: 13.0.0
-      zod: 4.3.6
-
-  '@open-dpp/env@file:packages/env(@nestjs/microservices@11.1.12)(@nestjs/platform-express@11.1.12)(@nestjs/websockets@11.1.12)(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
-    dependencies:
-      '@nestjs/common': 11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/config': 4.0.2(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
-      '@nestjs/core': 11.1.12(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.12)(@nestjs/platform-express@11.1.12)(@nestjs/websockets@11.1.12)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      zod: 4.3.6
-    transitivePeerDependencies:
-      - '@nestjs/microservices'
-      - '@nestjs/platform-express'
-      - '@nestjs/websockets'
-      - class-transformer
-      - class-validator
-      - reflect-metadata
-      - rxjs
-      - supports-color
 
   '@open-draft/deferred-promise@2.2.0': {}
 
