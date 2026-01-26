@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { z } from "zod";
-import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
+import { ZodValidationPipe } from "../../../common/pipes/zod-validation.pipe";
 import { CreateUserCommand } from "../application/commands/create-user.command";
 import { GetUserQuery } from "../application/queries/get-user.query";
 import { User } from "../domain/user";

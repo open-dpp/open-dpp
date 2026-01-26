@@ -21,11 +21,12 @@ import { sectionToDto } from "../../data-modelling/presentation/dto/section-base
 import { generateMongoConfig } from "../../database/config";
 
 import { EmailService } from "../../email/email.service";
+import { UsersService } from "../../identity/users/infrastructure/users.service";
+
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,
 } from "../../marketplace/infrastructure/passport-template-publication.schema";
-
 import {
   PassportTemplatePublicationService,
 } from "../../marketplace/infrastructure/passport-template-publication.service";
@@ -35,7 +36,6 @@ import {
   TemplateSchema,
 } from "../../old-templates/infrastructure/template.schema";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";
-import { UsersService } from "../../users/infrastructure/users.service";
 import { DataFieldDraft } from "../domain/data-field-draft";
 import { SectionDraft } from "../domain/section-draft";
 import { MoveDirection, TemplateDraft } from "../domain/template-draft";

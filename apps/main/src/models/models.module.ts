@@ -2,6 +2,7 @@ import { forwardRef, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { EnvModule } from "@open-dpp/env";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
+import { UsersModule } from "../identity/users/users.module";
 import { MarketplaceModule } from "../marketplace/marketplace.module";
 import {
   OldTemplateDoc,
@@ -11,7 +12,6 @@ import { TemplateModule } from "../old-templates/template.module";
 import { PolicyModule } from "../policy/policy.module";
 import { TraceabilityEventsModule } from "../traceability-events/traceability-events.module";
 import { UniqueProductIdentifierModule } from "../unique-product-identifier/unique.product.identifier.module";
-import { UsersModule } from "../users/users.module";
 import { ModelDoc, ModelSchema } from "./infrastructure/model.schema";
 import { ModelsService } from "./infrastructure/models.service";
 import { ModelsController } from "./presentation/models.controller";

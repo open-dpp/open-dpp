@@ -16,6 +16,7 @@ import { LoggerMiddleware } from "./common/middleware/logger.middleware";
 import { generateMongoConfig } from "./database/config";
 import { EmailModule } from "./email/email.module";
 import { OrganizationsModule } from "./identity/organizations/organizations.module";
+import { UsersModule } from "./identity/users/users.module";
 import { IntegrationModule } from "./integrations/integration.module";
 import { ItemsModule } from "./items/items.module";
 
@@ -32,7 +33,6 @@ import { TemplateDraftModule } from "./template-draft/template-draft.module";
 import { TemplatesModule } from "./templates/templates.module";
 import { TraceabilityEventsModule } from "./traceability-events/traceability-events.module";
 import { UniqueProductIdentifierModule } from "./unique-product-identifier/unique.product.identifier.module";
-import { UsersModule } from "./users/users.module";
 
 @Module({
   imports: [

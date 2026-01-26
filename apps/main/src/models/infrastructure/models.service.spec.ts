@@ -10,11 +10,12 @@ import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import { ignoreIds } from "../../../test/utils.for.test";
-import { AuthGuard } from "../../auth/auth.guard";
-import { AuthModule } from "../../auth/auth.module";
-import { AuthService } from "../../auth/auth.service";
+import { AuthGuard } from "../../identity/auth/auth.guard";
+import { AuthModule } from "../../identity/auth/auth.module";
+import { AuthService } from "../../identity/auth/auth.service";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
+import { UsersService } from "../../identity/users/infrastructure/users.service";
 import { Template } from "../../old-templates/domain/template";
 import { laptopFactory } from "../../old-templates/fixtures/laptop.factory";
 import { DataValue } from "../../product-passport-data/domain/data-value";
@@ -23,7 +24,6 @@ import {
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
-import { UsersService } from "../../users/infrastructure/users.service";
 import { Model } from "../domain/model";
 import { ModelDoc, ModelDocSchemaVersion, ModelSchema } from "./model.schema";
 import { ModelsService } from "./models.service";

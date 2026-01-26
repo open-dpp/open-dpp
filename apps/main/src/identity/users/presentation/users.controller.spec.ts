@@ -2,7 +2,7 @@ import { expect, jest } from "@jest/globals";
 import { BadRequestException } from "@nestjs/common";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { Test, TestingModule } from "@nestjs/testing";
-import { ZodValidationPipe } from "../../common/pipes/zod-validation.pipe";
+import { ZodValidationPipe } from "../../../common/pipes/zod-validation.pipe";
 import { CreateUserCommand } from "../application/commands/create-user.command";
 import { CreateUserDtoSchema, UsersController } from "./users.controller";
 

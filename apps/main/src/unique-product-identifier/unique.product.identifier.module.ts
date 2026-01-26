@@ -12,7 +12,6 @@ import {
 } from "../old-templates/infrastructure/template.schema";
 import { TemplateService } from "../old-templates/infrastructure/template.service";
 import { TraceabilityEventsModule } from "../traceability-events/traceability-events.module";
-import { UsersModule } from "../users/users.module";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
