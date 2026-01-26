@@ -100,7 +100,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "fishery": "^2.4.0",
-    "globals": "^16.5.0",
+    "globals": "^17.1.0",
     "jest": "^30.2.0",
     "mongodb-memory-server": "^11.0.0",
     "source-map-support": "^0.5.21",
