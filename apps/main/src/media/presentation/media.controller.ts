@@ -1,5 +1,5 @@
 import type express from "express";
-import type { UserSession } from "../../auth/auth.guard";
+import type { UserSession } from "../../identity/auth/auth.guard";
 import type { Media } from "../domain/media";
 import {
   Controller,
@@ -15,8 +15,8 @@ import {
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { memoryStorage } from "multer";
-import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
-import { Session } from "../../auth/session.decorator";
+import { AllowAnonymous } from "../../identity/auth/allow-anonymous.decorator";
+import { Session } from "../../identity/auth/session.decorator";
 import { PolicyKey } from "../../policy/domain/policy";
 import { Policy } from "../../policy/presentation/policy.decorator";
 import { BucketDefaultPaths, MediaService } from "../infrastructure/media.service";

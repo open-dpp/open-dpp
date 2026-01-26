@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { Tool } from "@rekog/mcp-nest";
 import { z } from "zod";
-import { AuthService } from "../auth/auth.service";
+import { AuthService } from "../identity/auth/auth.service";
 import { ItemsService } from "../items/infrastructure/items.service";
 import { ModelsService } from "../models/infrastructure/models.service";
 import { TemplateService } from "../old-templates/infrastructure/template.service";

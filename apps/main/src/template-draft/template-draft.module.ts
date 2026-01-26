@@ -1,14 +1,14 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { AuthModule } from "../auth/auth.module";
+import { AuthModule } from "../identity/auth/auth.module";
+import { OrganizationsModule } from "../identity/organizations/organizations.module";
+import { UsersModule } from "../identity/users/users.module";
 import { MarketplaceModule } from "../marketplace/marketplace.module";
 import {
   OldTemplateDoc,
   TemplateSchema,
 } from "../old-templates/infrastructure/template.schema";
 import { TemplateService } from "../old-templates/infrastructure/template.service";
-import { OrganizationsModule } from "../organizations/organizations.module";
-import { UsersModule } from "../users/users.module";
 import {
   TemplateDraftDoc,
   TemplateDraftSchema,

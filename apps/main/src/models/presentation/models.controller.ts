@@ -1,4 +1,4 @@
-import type { UserSession } from "../../auth/auth.guard";
+import type { UserSession } from "../../identity/auth/auth.guard";
 import type { DataValueDto } from "../../product-passport-data/presentation/dto/data-value.dto";
 import type {
   MediaReferenceDto,
@@ -17,7 +17,7 @@ import {
 } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { Session } from "../../auth/session.decorator";
+import { Session } from "../../identity/auth/session.decorator";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";

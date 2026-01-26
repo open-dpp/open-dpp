@@ -1,4 +1,4 @@
-import type { UserSession } from "../../auth/auth.guard";
+import type { UserSession } from "../../identity/auth/auth.guard";
 
 import {
   BadRequestException,
@@ -13,12 +13,10 @@ import {
 } from "@nestjs/common";
 
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { AuthService } from "../../auth/auth.service";
-import { Session } from "../../auth/session.decorator";
+import { AuthService } from "../../identity/auth/auth.service";
+import { Session } from "../../identity/auth/session.decorator";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";
-import { User } from "../../users/domain/user";
-import { UsersService } from "../../users/infrastructure/users.service";
 import { DataFieldDraft } from "../domain/data-field-draft";
 import { SectionDraft } from "../domain/section-draft";
 import { TemplateDraft } from "../domain/template-draft";

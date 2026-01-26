@@ -1,6 +1,6 @@
 import { Controller, Get, NotFoundException, Param } from "@nestjs/common";
-import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
-import { AuthService } from "../../auth/auth.service";
+import { AllowAnonymous } from "../../identity/auth/allow-anonymous.decorator";
+import { AuthService } from "../../identity/auth/auth.service";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";

@@ -1,7 +1,7 @@
-import type { UserSession } from "../../../auth/auth.guard";
+import type { UserSession } from "../../../identity/auth/auth.guard";
 import { Body, Controller, Get, Param, Put } from "@nestjs/common";
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { Session } from "../../../auth/session.decorator";
+import { Session } from "../../../identity/auth/session.decorator";
 import { AiConfiguration } from "../domain/ai-configuration";
 import { AiConfigurationService } from "../infrastructure/ai-configuration.service";
 import * as aiConfigurationDto from "./dto/ai-configuration.dto";

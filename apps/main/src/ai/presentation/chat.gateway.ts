@@ -8,7 +8,7 @@ import {
 } from "@nestjs/websockets";
 import { SocketIoExceptionFilter } from "@open-dpp/exception";
 import { Server, Socket } from "socket.io";
-import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
+import { AllowAnonymous } from "../../identity/auth/allow-anonymous.decorator";
 import { ChatService } from "../chat.service";
 
 @WebSocketGateway({ cors: true, path: "/api/ai-socket" })

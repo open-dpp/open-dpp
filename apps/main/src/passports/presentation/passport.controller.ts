@@ -29,7 +29,7 @@ import {
   checkOwnerShipOfDppIdentifiable,
   EnvironmentService,
 } from "../../aas/presentation/environment.service";
-import { AuthService } from "../../auth/auth.service";
+import { AuthService } from "../../identity/auth/auth.service";
 import { Pagination } from "../../pagination/pagination";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";

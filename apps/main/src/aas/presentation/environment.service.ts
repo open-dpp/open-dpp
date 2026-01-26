@@ -3,7 +3,7 @@ import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/com
 
 import { AssetAdministrationShellPaginationResponseDto, AssetAdministrationShellPaginationResponseDtoSchema, AssetKindType, SubmodelElementPaginationResponseDto, SubmodelElementPaginationResponseDtoSchema, SubmodelElementRequestDto, SubmodelElementResponseDto, SubmodelElementSchema, SubmodelJsonSchema, SubmodelPaginationResponseDto, SubmodelPaginationResponseDtoSchema, SubmodelRequestDto, SubmodelResponseDto, ValueResponseDto, ValueResponseDtoSchema } from "@open-dpp/dto";
 import { fromNodeHeaders } from "better-auth/node";
-import { AuthService } from "../../auth/auth.service";
+import { AuthService } from "../../identity/auth/auth.service";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";

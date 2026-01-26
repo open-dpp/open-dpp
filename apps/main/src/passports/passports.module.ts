@@ -3,8 +3,9 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { AasModule } from "../aas/aas.module";
 
 import { EnvironmentService } from "../aas/presentation/environment.service";
-import { AuthModule } from "../auth/auth.module";
 import { OrganizationsModule } from "../organizations/organizations.module";
+import { AuthModule } from "../identity/auth/auth.module";
+import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { PassportRepository } from "./infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "./infrastructure/passport.schema";
 import { PassportController } from "./presentation/passport.controller";

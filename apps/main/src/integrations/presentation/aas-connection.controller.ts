@@ -1,4 +1,4 @@
-import type { UserSession } from "../../auth/auth.guard";
+import type { UserSession } from "../../identity/auth/auth.guard";
 import type {
   AssetAdministrationShellType_TYPE,
 } from "../domain/asset-administration-shell";
@@ -13,7 +13,7 @@ import {
   Post,
 } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
-import { Session } from "../../auth/session.decorator";
+import { Session } from "../../identity/auth/session.decorator";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { itemToDto } from "../../items/presentation/dto/item.dto";
 import { ItemsApplicationService } from "../../items/presentation/items-application.service";
