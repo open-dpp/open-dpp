@@ -20,7 +20,6 @@ async function create() {
   const responseData = await organizationStore.createOrganization({
     name: organizationName.value,
   });
-  console.log(responseData);
   if (responseData) {
     await new Promise(resolve => setTimeout(resolve, 250));
     organizationName.value = ""; // Reset form
