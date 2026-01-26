@@ -5,7 +5,7 @@ import { InjectConnection } from "@nestjs/mongoose";
 import { EnvService } from "@open-dpp/env";
 import dayjs from "dayjs";
 import { Db, MongoClient, ObjectId } from "mongodb";
-import { EmailService } from "../email/email.service";
+import { EmailService } from "../../email/email.service";
 import { AUTH } from "./auth.provider";
 
 @Injectable()

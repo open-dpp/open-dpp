@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { EnvModule } from "@open-dpp/env";
-import { EmailModule } from "../email/email.module";
+import { EmailModule } from "../../email/email.module";
 import { AuthController } from "./auth.controller";
 import { AUTH, AuthProvider } from "./auth.provider";
 import { AuthService } from "./auth.service";

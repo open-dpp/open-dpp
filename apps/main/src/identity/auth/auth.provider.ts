@@ -6,10 +6,10 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { admin, apiKey, organization } from "better-auth/plugins";
 import { ObjectId } from "mongodb";
 import { Connection } from "mongoose";
-import { InviteUserToOrganizationMail } from "../email/domain/invite-user-to-organization-mail";
-import { PasswordResetMail } from "../email/domain/password-reset-mail";
-import { VerifyEmailMail } from "../email/domain/verify-email-mail";
-import { EmailService } from "../email/email.service";
+import { InviteUserToOrganizationMail } from "../../email/domain/invite-user-to-organization-mail";
+import { PasswordResetMail } from "../../email/domain/password-reset-mail";
+import { VerifyEmailMail } from "../../email/domain/verify-email-mail";
+import { EmailService } from "../../email/email.service";
 
 export const AUTH = "auth";
 
