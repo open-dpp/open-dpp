@@ -602,8 +602,8 @@ importers:
         specifier: ^0.2.39
         version: 0.2.39(@swc/core@1.15.10)
       '@tsconfig/node-lts':
-        specifier: ^22.0.2
-        version: 22.0.4
+        specifier: ^24.0.0
+        version: 24.0.0
       '@tsconfig/node-ts':
         specifier: ^23.6.1
         version: 23.6.2
@@ -3023,9 +3023,6 @@ packages:
 
   '@tokenizer/token@0.3.0':
     resolution: {integrity: sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A==}
-
-  '@tsconfig/node-lts@22.0.4':
-    resolution: {integrity: sha512-5eAeCX6l/EYe6H2UAw5nBgjfAgdlsR+lSp8YNNGwz+ixoi7JfJ5bOQvsiEhxGm5bOZFVF+cJSIj4tanpCCRMIw==}
 
   '@tsconfig/node-lts@24.0.0':
     resolution: {integrity: sha512-8mSTqWwCd6aQpvxSrpQlMoA9RiUZSs7bYhL5qsLXIIaN9HQaINeoydrRu/Y7/fws4bvfuyhs0BRnW9/NI8tySg==}
@@ -11768,8 +11765,6 @@ snapshots:
       - supports-color
 
   '@tokenizer/token@0.3.0': {}
-
-  '@tsconfig/node-lts@22.0.4': {}
 
   '@tsconfig/node-lts@24.0.0': {}
 
