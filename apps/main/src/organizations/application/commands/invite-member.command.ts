@@ -6,6 +6,7 @@ export class InviteMemberCommand extends Command<void> {
     public readonly organizationId: string,
     public readonly email: string,
     public readonly role: OrganizationRole = OrganizationRole.MEMBER,
+    public readonly headers: Record<string, string> = {},
   ) {
     super();
   }

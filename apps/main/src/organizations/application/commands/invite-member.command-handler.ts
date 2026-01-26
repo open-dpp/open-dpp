@@ -2,6 +2,19 @@ import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
 import { AuthService } from "../../../auth/auth.service";
 import { InviteMemberCommand } from "./invite-member.command";
 
+interface CreateInvitationParams {
+  headers?: Record<string, string> | Headers;
+  body: {
+    email: string;
+    role: string;
+    organizationId: string;
+  };
+}
+
+interface OrganizationAuthApi {
+  createInvitation(params: CreateInvitationParams): Promise<any>;
+}
+
 @CommandHandler(InviteMemberCommand)
 export class InviteMemberCommandHandler implements ICommandHandler<InviteMemberCommand> {
   constructor(
@@ -9,23 +22,18 @@ export class InviteMemberCommandHandler implements ICommandHandler<InviteMemberC
   ) { }
 
   async execute(command: InviteMemberCommand): Promise<void> {
-    // We delegate invitation to better-auth plugin logic via AuthService or direct call if exposed.
-    // AuthService initializes better-auth with organization plugin.
-    // better-auth exposes API to invite users.
-    // We can use `this.authService.auth.api.inviteUser` if available/typed or call via HTTP internally?
-    // Or we use the `organization` plugin's function.
+    if (!this.authService.auth) {
+      throw new Error("Auth service is not initialized");
+    }
 
-    // Since we want to use the domain layer, maybe we should handle invitation logic here (create Invitation entity, send email).
-    // But better-auth handles token generation and email sending flow if configured.
-    // The user said "redundant copy ... but gives us more flexibility".
-    // Implementing our own invitation flow is cleaner for DDD.
-    // For now, to be safe and quick, I will try to use better-auth if possible, or implement a simple placeholder that sends the email using EmailService.
+    const api = this.authService.auth.api as unknown as OrganizationAuthApi;
 
-    // Let's implement a simple version that sends the email using EmailService, assuming we are doing custom flow.
-    // But `better-auth` handles the acceptance link logic.
-    // I'll stick to using `better-auth` API for invitations to ensure the link works.
+    if (typeof api.createInvitation !== "function") {
+      throw new Error("createInvitation method is not available on auth api. Check if organization plugin is enabled.");
+    }
 
-    await (this.authService.auth?.api as any).createInvitation({
+    await api.createInvitation({
+      headers: command.headers,
       body: {
         email: command.email,
         role: command.role,
