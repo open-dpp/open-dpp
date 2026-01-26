@@ -12,7 +12,7 @@ interface CreateInvitationParams {
 }
 
 interface OrganizationAuthApi {
-  createInvitation(params: CreateInvitationParams): Promise<any>;
+  createInvitation: (params: CreateInvitationParams) => Promise<any>;
 }
 
 @CommandHandler(InviteMemberCommand)
@@ -29,7 +29,7 @@ export class InviteMemberCommandHandler implements ICommandHandler<InviteMemberC
     const api = this.authService.auth.api as unknown as OrganizationAuthApi;
 
     if (typeof api.createInvitation !== "function") {
-      throw new Error("createInvitation method is not available on auth api. Check if organization plugin is enabled.");
+      throw new TypeError("createInvitation method is not available on auth api. Check if organization plugin is enabled.");
     }
 
     await api.createInvitation({
