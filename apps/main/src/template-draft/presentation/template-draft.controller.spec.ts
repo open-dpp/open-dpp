@@ -19,7 +19,9 @@ import { SectionType } from "../../data-modelling/domain/section-base";
 import { Sector } from "../../data-modelling/domain/sectors";
 import { sectionToDto } from "../../data-modelling/presentation/dto/section-base.dto";
 import { generateMongoConfig } from "../../database/config";
+
 import { EmailService } from "../../email/email.service";
+import { UsersService } from "../../users/infrastructure/users.service";
 
 import {
   PassportTemplatePublicationDbSchema,
@@ -93,7 +95,9 @@ describe("templateDraftController", () => {
         TemplateService,
         TemplateDraftService,
         MarketplaceApplicationService,
+
         PassportTemplatePublicationService,
+        UsersService,
         {
           provide: APP_GUARD,
           useClass: AuthGuard,

@@ -18,6 +18,7 @@ import { Session } from "../../auth/session.decorator";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import { User } from "../../users/domain/user";
+import { UsersService } from "../../users/infrastructure/users.service";
 import { DataFieldDraft } from "../domain/data-field-draft";
 import { SectionDraft } from "../domain/section-draft";
 import { TemplateDraft } from "../domain/template-draft";
@@ -45,6 +46,7 @@ export class TemplateDraftController {
     templateDraftService: TemplateDraftService,
     marketplaceService: MarketplaceApplicationService,
     authService: AuthService,
+    private readonly usersService: UsersService,
   ) {
     this.templateService = templateService;
     this.templateDraftService = templateDraftService;
@@ -156,13 +158,18 @@ export class TemplateDraftController {
     );
 
     if (publishDto.visibility === publishDto_1.VisibilityLevel.PUBLIC) {
-      const user = User.loadFromDb({
-        id: session.user.id,
-        email: session.user.email,
-        emailVerified: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      let user: User;
+      if (session.user.emailVerified && session.user.createdAt && session.user.updatedAt) {
+        user = User.loadFromDb({
+          id: session.user.id,
+          email: session.user.email,
+          emailVerified: session.user.emailVerified,
+          createdAt: session.user.createdAt,
+          updatedAt: session.user.updatedAt,
+        });
+      } else {
+        user = await this.usersService.findOneAndFail(session.user.id);
+      }
       const organization = await this.authService.getActiveOrganization(session.user.id);
       if (!organization) {
         throw new BadRequestException();
