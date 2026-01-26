@@ -63,7 +63,7 @@ export class OrganizationsController {
     if (!session) {
       throw new Error("Unauthorized");
     }
-    return this.queryBus.execute(new GetMemberOrganizationsQuery(session.user.id, headers));
+    return this.queryBus.execute(new GetMemberOrganizationsQuery(session.user.id));
   }
 
   @Get(":id")

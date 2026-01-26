@@ -45,12 +45,12 @@ describe("getMemberOrganizationsHandler", () => {
     const headers = { cookie: "session=123" };
     const organizations = [{ id: "org1" }, { id: "org2" }];
 
-    (betterAuthOrganizationsRepository.findManyByMember as jest.Mock).mockResolvedValue(organizations);
+    (betterAuthOrganizationsRepository.findManyByMember as jest.Mock).mockResolvedValue(organizations as any);
 
-    const query = new GetMemberOrganizationsQuery(userId, headers);
+    const query = new GetMemberOrganizationsQuery("user-1");
     const result = await handler.execute(query);
 
     expect(result).toEqual(organizations);
-    expect(betterAuthOrganizationsRepository.findManyByMember).toHaveBeenCalledWith(headers);
+    expect(betterAuthOrganizationsRepository.findManyByMember).toHaveBeenCalledWith("user-1");
   });
 });

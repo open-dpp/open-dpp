@@ -99,9 +99,39 @@ export class BetterAuthOrganizationsRepository implements OrganizationsRepositor
     throw new NotImplementedException();
   }
 
-  async findManyByMember(headers: Record<string, string>): Promise<Organization[]> {
-    return (this.auth.api as any).listOrganizations({
-      headers,
+  async findManyByMember(memberId: string): Promise<Organization[]> {
+    const memberships = await this.auth.options.database?.findMany!({
+      model: "member",
+      where: [
+        {
+          field: "userId",
+          value: memberId,
+        },
+      ],
     });
+
+    if (!memberships || memberships.length === 0) {
+      return [];
+    }
+
+    const organizationIds = memberships.map((m: any) => m.organizationId);
+
+    // better-auth doesn't expose a clean "findManyByIds" on the database adapter directly that takes an array seamlessly in one go typically?
+    // actually it does if the adapter supports 'in' operator or we might have to loop or use raw query if exposed.
+    // The mongo adapter likely supports `in` operator if we construct the query right, but strictly using `findMany` interface of better-auth:
+    // It supports operators in where clause.
+
+    const organizations = await this.auth.options.database?.findMany!({
+      model: "organization",
+      where: [
+        {
+          field: "id",
+          operator: "in",
+          value: organizationIds,
+        },
+      ],
+    });
+
+    return (organizations || []).map((org: any) => this.toDomain(org));
   }
 }

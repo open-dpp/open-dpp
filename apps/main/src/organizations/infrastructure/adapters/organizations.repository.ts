@@ -14,7 +14,7 @@ export class OrganizationsRepository implements OrganizationsRepositoryPort {
     private readonly organizationModel: Model<OrganizationSchema>,
   ) { }
 
-  findManyByMember(_: Record<string, string>): Promise<Organization[]> {
+  findManyByMember(_: string): Promise<Organization[]> {
     throw new Error("Method not implemented.");
   }
 
