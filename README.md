@@ -25,6 +25,11 @@ pnpm run build
 ```
 
 ## Run
+Before starting the containers create a mongo_keyfile
+```shell
+openssl rand -base64 756 > docker/mongo_keyfile
+chmod 0400 docker/mongo_keyfile
+```
 Download all necessary docker images
 ```shell
 docker compose -f docker-compose.dev.yml pull
