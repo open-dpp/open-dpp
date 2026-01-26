@@ -63,7 +63,6 @@ jobs:
       # AI
       OPEN_DPP_MISTRAL_API_KEY: "your-mistral-key"
       OPEN_DPP_OLLAMA_URL: "https://ollama-url"
-      OPEN_DPP_MCP_URL: "http://localhost:3002/sse"
       # S3
       OPEN_DPP_S3_ENDPOINT: "minio"
       OPEN_DPP_S3_PORT: "9000"
@@ -75,8 +74,6 @@ jobs:
       # ClamAV
       OPEN_DPP_CLAMAV_URL: "http://clamav-rest"
       OPEN_DPP_CLAMAV_PORT: "9000"
-      # MCP
-      OPEN_DPP_MCP_PORT: "3001"
       # Mail
       OPEN_DPP_MAIL_HOST=: "localhost"
       OPEN_DPP_MAIL_PORT: "8026"

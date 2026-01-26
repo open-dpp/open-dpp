@@ -18,6 +18,7 @@ export class McpClientService implements OnModuleDestroy {
   }
 
   async connect() {
+    const url = `http://localhost:${this.configService.get("OPEN_DPP_PORT")}/api/sse`;
     // Create a new client instance
     this.client = new MultiServerMCPClient({
       throwOnLoadError: true,
@@ -26,7 +27,7 @@ export class McpClientService implements OnModuleDestroy {
       mcpServers: {
         productPassport: {
           transport: "http",
-          url: this.configService.get("OPEN_DPP_MCP_URL"),
+          url,
           reconnect: {
             enabled: true,
             maxAttempts: 5,
@@ -36,7 +37,7 @@ export class McpClientService implements OnModuleDestroy {
       },
     });
     await this.client.initializeConnections();
-    this.logger.log(`Connected to MCP server: ${this.configService.get("OPEN_DPP_MCP_URL")}`);
+    this.logger.log(`Connected to MCP server: ${url}`);
 
     return this.client;
   }

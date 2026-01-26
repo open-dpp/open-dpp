@@ -1,7 +1,11 @@
 import { Module } from "@nestjs/common";
 import { EnvModule } from "@open-dpp/env";
 import { McpModule } from "@rekog/mcp-nest";
-import { DppService } from "./dpp.service";
+import { AuthModule } from "../auth/auth.module";
+import { ItemsModule } from "../items/items.module";
+import { ModelsModule } from "../models/models.module";
+import { TemplateModule } from "../old-templates/template.module";
+import { UniqueProductIdentifierModule } from "../unique-product-identifier/unique.product.identifier.module";
 import { PassportTool } from "./passport.tool";
 
 @Module({
@@ -11,7 +15,12 @@ import { PassportTool } from "./passport.tool";
       name: "mcp-server",
       version: "1.0.0",
     }),
+    ModelsModule,
+    UniqueProductIdentifierModule,
+    TemplateModule,
+    ItemsModule,
+    AuthModule,
   ],
-  providers: [PassportTool, DppService],
+  providers: [PassportTool],
 })
 export class McpServerModule { }
