@@ -3,7 +3,6 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { AasModule } from "../aas/aas.module";
 
 import { EnvironmentService } from "../aas/presentation/environment.service";
-import { OrganizationsModule } from "../organizations/organizations.module";
 import { AuthModule } from "../identity/auth/auth.module";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { PassportRepository } from "./infrastructure/passport.repository";

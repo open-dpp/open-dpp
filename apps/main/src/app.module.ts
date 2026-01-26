@@ -15,15 +15,15 @@ import { AuthModule } from "./identity/auth/auth.module";
 import { LoggerMiddleware } from "./common/middleware/logger.middleware";
 import { generateMongoConfig } from "./database/config";
 import { EmailModule } from "./email/email.module";
+import { OrganizationsModule } from "./identity/organizations/organizations.module";
 import { IntegrationModule } from "./integrations/integration.module";
 import { ItemsModule } from "./items/items.module";
+
 import { MarketplaceModule } from "./marketplace/marketplace.module";
 import { McpServerModule } from "./mcp/mcp.server.module";
-
 import { MediaModule } from "./media/media.module";
 import { ModelsModule } from "./models/models.module";
 import { TemplateModule as OldTemplateModule } from "./old-templates/template.module";
-import { OrganizationsModule } from "./organizations/organizations.module";
 import { PassportsModule } from "./passports/passports.module";
 import { PolicyModule } from "./policy/policy.module";
 import { PolicyGuard } from "./policy/presentation/policy.guard";

@@ -1,5 +1,7 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
+import { OrganizationsModule } from "../identity/organizations/organizations.module";
+import { UsersModule } from "../identity/users/users.module";
 import { ModelDoc, ModelSchema } from "../models/infrastructure/model.schema";
 import { ModelsModule } from "../models/models.module";
 import { TemplateModule } from "../old-templates/template.module";

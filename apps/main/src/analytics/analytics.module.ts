@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
+import { UsersModule } from "../identity/users/users.module";
 import { UniqueProductIdentifierModule } from "../unique-product-identifier/unique.product.identifier.module";
 import { UsersModule } from "../users/users.module";
 import { PassportMetricDoc, PassportMetricSchema } from "./infrastructure/passport-metric.schema";

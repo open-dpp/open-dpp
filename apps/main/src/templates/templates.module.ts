@@ -3,6 +3,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { AasModule } from "../aas/aas.module";
 
 import { SubmodelRegistryInitializer } from "../aas/presentation/submodel-registry-initializer";
+import { AuthModule } from "../identity/auth/auth.module";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { TemplateRepository } from "./infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "./infrastructure/template.schema";
