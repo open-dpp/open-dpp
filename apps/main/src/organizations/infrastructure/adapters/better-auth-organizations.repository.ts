@@ -1,23 +1,37 @@
 import type { Auth } from "better-auth";
-import { Inject, Injectable, Logger, NotImplementedException } from "@nestjs/common";
+import { Inject, Injectable, Logger, NotImplementedException, Scope } from "@nestjs/common";
+import { REQUEST } from "@nestjs/core";
+import type { Request } from "express";
 import { AUTH } from "../../../auth/auth.provider";
 import { Organization, OrganizationDbProps } from "../../domain/organization";
 import { OrganizationsRepositoryPort } from "../../domain/ports/organizations.repository.port";
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class BetterAuthOrganizationsRepository implements OrganizationsRepositoryPort {
   private readonly logger = new Logger(BetterAuthOrganizationsRepository.name);
   constructor(
     @Inject(AUTH) private readonly auth: Auth,
+    @Inject(REQUEST) private readonly request: Request,
   ) { }
 
   private toDomain(authEntity: any): Organization {
+    let metadata = authEntity.metadata;
+
+    if (typeof metadata === "string") {
+      try {
+        metadata = JSON.parse(metadata);
+      } catch (error) {
+        this.logger.warn(`Failed to parse metadata for organization ${authEntity.id}`, error);
+        metadata = {};
+      }
+    }
+
     const props: OrganizationDbProps = {
       id: authEntity.id,
       name: authEntity.name,
       slug: authEntity.slug,
       logo: authEntity.logo,
-      metadata: typeof authEntity.metadata === "string" ? JSON.parse(authEntity.metadata) : authEntity.metadata,
+      metadata: metadata || {},
       createdAt: authEntity.createdAt,
     };
     return Organization.loadFromDb(props);
@@ -100,38 +114,15 @@ export class BetterAuthOrganizationsRepository implements OrganizationsRepositor
   }
 
   async findManyByMember(memberId: string): Promise<Organization[]> {
-    const memberships = await this.auth.options.database?.findMany!({
-      model: "member",
-      where: [
-        {
-          field: "userId",
-          value: memberId,
-        },
-      ],
+    const headers = this.request.headers;
+    const result = await (this.auth.api as any).listOrganizations({
+      headers,
     });
 
-    if (!memberships || memberships.length === 0) {
+    if (!result || !Array.isArray(result)) {
       return [];
     }
 
-    const organizationIds = memberships.map((m: any) => m.organizationId);
-
-    // better-auth doesn't expose a clean "findManyByIds" on the database adapter directly that takes an array seamlessly in one go typically?
-    // actually it does if the adapter supports 'in' operator or we might have to loop or use raw query if exposed.
-    // The mongo adapter likely supports `in` operator if we construct the query right, but strictly using `findMany` interface of better-auth:
-    // It supports operators in where clause.
-
-    const organizations = await this.auth.options.database?.findMany!({
-      model: "organization",
-      where: [
-        {
-          field: "id",
-          operator: "in",
-          value: organizationIds,
-        },
-      ],
-    });
-
-    return (organizations || []).map((org: any) => this.toDomain(org));
+    return result.map((org: any) => this.toDomain(org));
   }
 }
