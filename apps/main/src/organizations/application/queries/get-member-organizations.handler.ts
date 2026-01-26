@@ -3,7 +3,7 @@ import { IQueryHandler, QueryHandler } from "@nestjs/cqrs";
 import { Organization } from "../../domain/organization";
 import { MembersRepositoryPort } from "../../domain/ports/members.repository.port";
 import { OrganizationsRepositoryPort } from "../../domain/ports/organizations.repository.port";
-import { BetterAuthOrganizationsRepository } from "../../infrastructure/adapters/better-auth-organizations.repository";
+
 import { ORGANIZATIONS_REPO_BETTER_AUTH } from "../../organizations.constants";
 import { GetMemberOrganizationsQuery } from "./get-member-organizations.query";
 
@@ -15,7 +15,7 @@ export class GetMemberOrganizationsHandler implements IQueryHandler<GetMemberOrg
     private readonly membersRepository: MembersRepositoryPort,
     private readonly organizationsRepository: OrganizationsRepositoryPort,
     @Inject(ORGANIZATIONS_REPO_BETTER_AUTH)
-    private readonly betterAuthOrganizationsRepository: BetterAuthOrganizationsRepository,
+    private readonly betterAuthOrganizationsRepository: OrganizationsRepositoryPort,
   ) { }
 
   async execute(query: GetMemberOrganizationsQuery): Promise<Organization[]> {
