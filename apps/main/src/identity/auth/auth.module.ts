@@ -3,7 +3,7 @@ import { EnvModule } from "@open-dpp/env";
 import { EmailModule } from "../../email/email.module";
 import { AuthService } from "./application/services/auth.service";
 import { AUTH, AuthProvider } from "./auth.provider";
-import { AuthService } from "./auth.service";
+import { AuthController } from "./presentation/auth.controller";
 
 @Module({
   imports: [
