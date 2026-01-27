@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { User as BetterAuthUser } from "better-auth";
-import { AuthService } from "../src/identity/auth/auth.service";
+import { AuthService } from "../src/identity/auth/application/services/auth.service";
 
 interface BetterAuthOrganization {
   id: string;

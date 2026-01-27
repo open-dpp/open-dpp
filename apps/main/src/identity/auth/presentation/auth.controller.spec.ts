@@ -1,8 +1,8 @@
 import { expect, jest } from "@jest/globals";
 import { ForbiddenException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
+import { AuthService } from "../application/services/auth.service";
 import { AuthController } from "./auth.controller";
-import { AuthService } from "./auth.service";
 
 describe("authController", () => {
   let controller: AuthController;

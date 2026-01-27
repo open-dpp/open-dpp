@@ -6,11 +6,11 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
-import { AuthGuard } from "../../identity/auth/auth.guard";
-import { AuthModule } from "../../identity/auth/auth.module";
-import { AuthService } from "../../identity/auth/auth.service";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
+import { AuthService } from "../../identity/auth/application/services/auth.service";
+import { AuthModule } from "../../identity/auth/auth.module";
+import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
 
 import { MediaDbSchema, MediaDoc } from "../infrastructure/media.schema";
 import { MediaService } from "../infrastructure/media.service";

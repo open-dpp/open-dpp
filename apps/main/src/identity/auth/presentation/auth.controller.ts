@@ -1,7 +1,6 @@
 import type express from "express";
 import { Controller, ForbiddenException, Get, Param, Post, Req, Res } from "@nestjs/common";
 import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
-import { AuthService } from "./auth.service";
 import { AuthService } from "../application/services/auth.service";
 import { OptionalAuth } from "./decorators/optional-auth.decorator";
 

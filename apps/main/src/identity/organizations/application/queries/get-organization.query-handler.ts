@@ -1,6 +1,6 @@
 import { ForbiddenException, Inject, Logger, UnauthorizedException } from "@nestjs/common";
 import { IQueryHandler, QueryHandler } from "@nestjs/cqrs";
-import { AuthService } from "../../../auth/auth.service";
+import { AuthService } from "../../../auth/application/services/auth.service";
 import { Organization } from "../../domain/organization";
 import { OrganizationsRepositoryPort } from "../../domain/ports/organizations.repository.port";
 import { ORGANIZATIONS_REPO_MONGO } from "../../organizations.constants";

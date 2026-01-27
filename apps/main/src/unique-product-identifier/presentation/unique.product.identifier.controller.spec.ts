@@ -9,9 +9,6 @@ import { EnvModule, EnvService } from "@open-dpp/env";
 
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
-import { AuthGuard } from "../../identity/auth/auth.guard";
-import { AuthModule } from "../../identity/auth/auth.module";
-import { AuthService } from "../../identity/auth/auth.service";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";

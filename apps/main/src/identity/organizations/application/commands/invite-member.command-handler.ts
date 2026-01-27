@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
-import { AuthService } from "../../../auth/auth.service";
+import { AuthService } from "../../../auth/application/services/auth.service";
 import { InviteMemberCommand } from "./invite-member.command";
 
 interface CreateInvitationParams {

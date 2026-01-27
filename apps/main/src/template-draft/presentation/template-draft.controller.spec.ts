@@ -21,6 +21,10 @@ import { sectionToDto } from "../../data-modelling/presentation/dto/section-base
 import { generateMongoConfig } from "../../database/config";
 
 import { EmailService } from "../../email/email.service";
+import { AuthService } from "../../identity/auth/application/services/auth.service";
+import { AuthModule } from "../../identity/auth/auth.module";
+
+import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
 import { UsersService } from "../../identity/users/infrastructure/users.service";
 
 import {

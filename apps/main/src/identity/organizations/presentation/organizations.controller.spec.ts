@@ -3,7 +3,7 @@ import { ForbiddenException, UnauthorizedException } from "@nestjs/common";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
-import { AuthService } from "../../auth/auth.service";
+import { AuthService } from "../../auth/application/services/auth.service";
 import { GetMembersQuery } from "../application/queries/get-members.query";
 import { OrganizationsService } from "../application/services/organizations.service";
 import { OrganizationsController } from "./organizations.controller";

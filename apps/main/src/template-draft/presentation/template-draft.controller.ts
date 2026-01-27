@@ -13,8 +13,8 @@ import {
 } from "@nestjs/common";
 
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { AuthService } from "../../identity/auth/auth.service";
-import { Session } from "../../identity/auth/session.decorator";
+import { AuthService } from "../../identity/auth/application/services/auth.service";
+import { Session } from "../../identity/auth/presentation/decorators/session.decorator";
 import { User } from "../../identity/users/domain/user";
 import { UsersService } from "../../identity/users/infrastructure/users.service";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
