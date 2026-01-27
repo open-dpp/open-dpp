@@ -1,8 +1,8 @@
 import { forwardRef, Module } from "@nestjs/common";
 import { CqrsModule } from "@nestjs/cqrs";
 import { MongooseModule } from "@nestjs/mongoose";
-import { AuthModule } from "../auth/auth.module";
 import { EmailModule } from "../../email/email.module";
+import { AuthModule } from "../auth/auth.module";
 import { UsersModule } from "../users/users.module";
 import { CreateOrganizationCommandHandler } from "./application/commands/create-organization.command-handler";
 import { InviteMemberCommandHandler } from "./application/commands/invite-member.command-handler";
