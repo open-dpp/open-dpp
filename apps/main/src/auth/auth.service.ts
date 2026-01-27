@@ -1,9 +1,11 @@
+import type express from "express";
 import type { Connection } from "mongoose";
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit, UnauthorizedException } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import { EnvService } from "@open-dpp/env";
 import { APIError, Auth, betterAuth, User } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
+import { fromNodeHeaders } from "better-auth/node";
 import { admin, apiKey, genericOAuth, organization } from "better-auth/plugins";
 import dayjs from "dayjs";
 import { Db, MongoClient, ObjectId } from "mongodb";
@@ -80,6 +82,18 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
     return await this.db!.collection("organization").findOne({
       _id: new ObjectId(member.organizationId),
     });
+  }
+
+  async getActiveOrganizationId(req: express.Request) {
+    const session = await this.getSession(fromNodeHeaders(req.headers || []));
+    if (!session?.user) {
+      throw new UnauthorizedException("User is not logged in");
+    }
+    const activeOrganization = await this.getActiveOrganization(session.user.id);
+    if (!activeOrganization) {
+      throw new UnauthorizedException("User is not part of any organization");
+    }
+    return activeOrganization._id.toString();
   }
 
   async getOrganizationNameIfUserInvited(organizationId: string, userEmail: string): Promise<string | null> {

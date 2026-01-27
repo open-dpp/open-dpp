@@ -1,7 +1,12 @@
 import { randomUUID } from "node:crypto";
-
+import { expect, jest } from "@jest/globals";
+import request from "supertest";
 import { Environment } from "../../aas/domain/environment";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
+import { DateTime } from "../../lib/date-time";
+import { Template } from "../../templates/domain/template";
+import { TemplateRepository } from "../../templates/infrastructure/template.repository";
+import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../infrastructure/passport.schema";
@@ -9,7 +14,8 @@ import { PassportsModule } from "../passports.module";
 import { PassportController } from "./passport.controller";
 
 describe("passportController", () => {
-  const ctx = createAasTestContext("/passports", { imports: [PassportsModule], providers: [PassportRepository], controllers: [PassportController] }, [{ name: PassportDoc.name, schema: PassportSchema }], PassportRepository);
+  const basePath = "/passports";
+  const ctx = createAasTestContext(basePath, { imports: [PassportsModule], providers: [PassportRepository, TemplateRepository], controllers: [PassportController] }, [{ name: PassportDoc.name, schema: PassportSchema }, { name: TemplateDoc.name, schema: TemplateSchema }], PassportRepository);
 
   async function createPassport(orgId: string): Promise<Passport> {
     const { aas, submodels } = ctx.getAasObjects();
@@ -23,6 +29,86 @@ describe("passportController", () => {
       }),
     }));
   }
+
+  it(`/POST Create blank passport`, async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const now = new Date(
+      "2022-01-01T00:00:00.000Z",
+    );
+    jest.spyOn(DateTime, "now").mockReturnValue(now);
+    const response = await request(app.getHttpServer())
+      .post(basePath)
+      .set("Cookie", userCookie)
+      .send();
+
+    expect(response.status).toEqual(201);
+    expect(response.body).toEqual({
+      id: expect.any(String),
+      organizationId: org.id,
+      templateId: null,
+      environment: {
+        assetAdministrationShells: [
+          expect.any(String),
+        ],
+        submodels: [],
+        conceptDescriptions: [],
+      },
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+    });
+  });
+
+  it(`/POST Create passport from template`, async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const now = new Date("2022-01-01T00:00:00.000Z");
+    const templateCreation = new Date("2020-01-01T00:00:00.000Z");
+
+    jest.spyOn(DateTime, "now").mockReturnValue(now);
+
+    const templateRepository = ctx.getModuleRef().get(TemplateRepository);
+    const templateId = randomUUID().toString();
+
+    const { aas, submodels } = ctx.getAasObjects();
+    const template = Template.create({
+      id: templateId,
+      organizationId: org.id,
+      environment: Environment.create({
+        assetAdministrationShells: [aas.id],
+        submodels: submodels.map(s => s.id),
+        conceptDescriptions: [],
+      }),
+      createdAt: templateCreation,
+      updatedAt: templateCreation,
+    });
+
+    await templateRepository.save(template);
+
+    const response = await request(app.getHttpServer())
+      .post(basePath)
+      .set("Cookie", userCookie)
+      .send({
+        templateId,
+      });
+
+    expect(response.status).toEqual(201);
+    expect(response.body).toEqual({
+      id: expect.any(String),
+      organizationId: org.id,
+      templateId,
+      environment: {
+        assetAdministrationShells: expect.any(Array),
+        submodels: expect.any(Array),
+        conceptDescriptions: [],
+      },
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+    });
+
+    expect(response.body.environment.assetAdministrationShells).toHaveLength(template.environment.assetAdministrationShells.length);
+    expect(response.body.environment.submodels).toHaveLength(template.environment.submodels.length);
+  });
 
   it(`/GET shells`, async () => {
     await ctx.asserts.getShells(createPassport);

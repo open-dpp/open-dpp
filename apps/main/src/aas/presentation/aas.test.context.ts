@@ -5,7 +5,7 @@ import { ModuleMetadata } from "@nestjs/common/interfaces/modules/module-metadat
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ModelDefinition } from "@nestjs/mongoose/dist/interfaces";
-import { Test } from "@nestjs/testing";
+import { Test, TestingModule } from "@nestjs/testing";
 import { AssetAdministrationShellPaginationResponseDtoSchema, SubmodelElementSchema, SubmodelJsonSchema, SubmodelPaginationResponseDtoSchema } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { aasPlainFactory, propertyPlainFactory, submodelBillOfMaterialPlainFactory, submodelCarbonFootprintPlainFactory, submodelDesignOfProductPlainFactory } from "@open-dpp/testing";
@@ -37,13 +37,14 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
   let dppIdentifiableRepository: T;
   let submodelRepository: SubmodelRepository;
   let aasRepository: AasRepository;
+  let moduleRef: TestingModule;
 
   const betterAuthHelper = new BetterAuthHelper();
   let aas: AssetAdministrationShell;
   let submodels: Submodel[];
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
+    moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
         MongooseModule.forRootAsync({
@@ -355,6 +356,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     }),
     getRepositories: () => ({ dppIdentifiableRepository, aasRepository }),
     getAasObjects: () => ({ aas, submodels }),
+    getModuleRef: () => moduleRef,
     asserts: {
       getShells: assertGetShells,
       getSubmodels: assertGetSubmodels,

@@ -203,4 +203,12 @@ describe("submodel", () => {
       },
     });
   });
+
+  it("should provide a copy", () => {
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+    const submodel = Submodel.fromPlain(submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } }));
+
+    const copy = submodel.copy();
+    expect(copy).toEqual(Submodel.fromPlain(submodelDesignOfProductPlainFactory.build({ id: copy.id }, { transient: { iriDomain } })));
+  });
 });

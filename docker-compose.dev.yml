@@ -26,10 +26,10 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=${OPEN_DPP_MONGODB_USER}
       - MONGO_INITDB_ROOT_PASSWORD=${OPEN_DPP_MONGODB_PASSWORD}
       - MONGO_INITDB_DATABASE=${OPEN_DPP_MONGODB_DATABASE}
-    image: mongo:6.0
+    image: mongo:7
 
   mongo-init:
-    image: mongo:6.0
+    image: mongo:7
     depends_on:
       - api-mongo-db
     command: >
