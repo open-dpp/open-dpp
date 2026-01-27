@@ -15,8 +15,8 @@ import {
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { memoryStorage } from "multer";
-import { AllowAnonymous } from "../../identity/auth/allow-anonymous.decorator";
-import { Session } from "../../identity/auth/session.decorator";
+import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
+import { Session } from "../../identity/auth/presentation/decorators/session.decorator";
 import { PolicyKey } from "../../policy/domain/policy";
 import { Policy } from "../../policy/presentation/policy.decorator";
 import { BucketDefaultPaths, MediaService } from "../infrastructure/media.service";

@@ -1,6 +1,6 @@
 import type { UserSession } from "../../identity/auth/auth.guard";
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
-import { Session } from "../../identity/auth/session.decorator";
+import { Session } from "../../identity/auth/presentation/decorators/session.decorator";
 import { TraceabilityEventsService } from "../infrastructure/traceability-events.service";
 
 @Controller("dpp-events")

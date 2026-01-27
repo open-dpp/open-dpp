@@ -13,7 +13,7 @@ import {
   Post,
 } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
-import { Session } from "../../identity/auth/session.decorator";
+import { Session } from "../../identity/auth/presentation/decorators/session.decorator";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { itemToDto } from "../../items/presentation/dto/item.dto";
 import { ItemsApplicationService } from "../../items/presentation/items-application.service";

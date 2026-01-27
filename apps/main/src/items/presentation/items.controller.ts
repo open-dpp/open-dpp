@@ -14,8 +14,8 @@ import {
 } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { Session } from "../../identity/auth/session.decorator";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { Session } from "../../identity/auth/presentation/decorators/session.decorator";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import {

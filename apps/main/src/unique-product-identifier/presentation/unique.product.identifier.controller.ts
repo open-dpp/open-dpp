@@ -1,5 +1,5 @@
 import { Controller, Get, Param } from "@nestjs/common";
-import { AllowServiceAccess } from "../../identity/auth/allow-service-access.decorator";
+import { AllowServiceAccess } from "../../identity/auth/presentation/decorators/allow-service-access.decorator";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
