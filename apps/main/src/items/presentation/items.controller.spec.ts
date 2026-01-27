@@ -14,6 +14,9 @@ import { SectionType } from "../../data-modelling/domain/section-base";
 import { Sector } from "../../data-modelling/domain/sectors";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
+import { AuthService } from "../../identity/auth/application/services/auth.service";
+import { AuthModule } from "../../identity/auth/auth.module";
+import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
 import { AasConnectionDoc, AasConnectionSchema } from "../../integrations/infrastructure/aas-connection.schema";
 import {
   PassportTemplatePublicationDbSchema,

@@ -4,10 +4,10 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { AuthGuard } from "../../identity/auth/auth.guard";
-import { AuthModule } from "../../identity/auth/auth.module";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
+import { AuthModule } from "../../identity/auth/auth.module";
+import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
 import {
   DppEventSchema,
   TraceabilityEventDocument,

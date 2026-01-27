@@ -10,16 +10,12 @@ import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import {
   getApp,
 } from "../../../test/utils.for.test";
-import { AuthGuard } from "../../identity/auth/auth.guard";
-import { AuthModule } from "../../identity/auth/auth.module";
-import { AuthService } from "../../identity/auth/auth.service";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
 import { Sector } from "../../data-modelling/domain/sectors";
 import { sectionToDto } from "../../data-modelling/presentation/dto/section-base.dto";
 import { generateMongoConfig } from "../../database/config";
-
 import { EmailService } from "../../email/email.service";
 import { AuthService } from "../../identity/auth/application/services/auth.service";
 import { AuthModule } from "../../identity/auth/auth.module";
@@ -128,6 +124,10 @@ describe("templateDraftController", () => {
     await betterAuthHelper.createOrganization(user1data?.user.id as string);
     const user2data = await betterAuthHelper.createUser();
     await betterAuthHelper.createOrganization(user2data?.user.id as string);
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 
   const userNotMemberTxt = `fails if user is not member of organization`;

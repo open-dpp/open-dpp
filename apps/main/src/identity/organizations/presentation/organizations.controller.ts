@@ -1,7 +1,7 @@
 import { Body, Controller, ForbiddenException, Get, Headers, Logger, Param, Patch, Post, Req, UnauthorizedException, UseFilters, UseGuards } from "@nestjs/common";
 import { CommandBus, QueryBus } from "@nestjs/cqrs";
-import { AuthGuard } from "../../auth/auth.guard";
-import { AuthService } from "../../auth/auth.service";
+import { AuthService } from "../../auth/application/services/auth.service";
+import { AuthGuard } from "../../auth/infrastructure/guards/auth.guard";
 import { CreateOrganizationCommand } from "../application/commands/create-organization.command";
 import { UpdateOrganizationCommand } from "../application/commands/update-organization.command";
 import { GetMemberOrganizationsQuery } from "../application/queries/get-member-organizations.query";

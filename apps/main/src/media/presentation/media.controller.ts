@@ -1,5 +1,5 @@
 import type express from "express";
-import type { UserSession } from "../../identity/auth/auth.guard";
+import type { UserSession } from "../../identity/auth/infrastructure/guards/auth.guard";
 import type { Media } from "../domain/media";
 import {
   Controller,

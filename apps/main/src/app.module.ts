@@ -10,11 +10,11 @@ import { AiConfigurationModule } from "./ai/ai-configuration/ai-configuration.mo
 import { AiModule } from "./ai/ai.module";
 import { ChatGateway } from "./ai/presentation/chat.gateway";
 import { AnalyticsModule } from "./analytics/analytics.module";
-import { AuthGuard } from "./identity/auth/auth.guard";
-import { AuthModule } from "./identity/auth/auth.module";
 import { LoggerMiddleware } from "./common/middleware/logger.middleware";
 import { generateMongoConfig } from "./database/config";
 import { EmailModule } from "./email/email.module";
+import { AuthModule } from "./identity/auth/auth.module";
+import { AuthGuard } from "./identity/auth/infrastructure/guards/auth.guard";
 import { OrganizationsModule } from "./identity/organizations/organizations.module";
 import { UsersModule } from "./identity/users/users.module";
 import { IntegrationModule } from "./integrations/integration.module";

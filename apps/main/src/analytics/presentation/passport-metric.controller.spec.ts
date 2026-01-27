@@ -10,9 +10,6 @@ import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import {
   getApp,
 } from "../../../test/utils.for.test";
-import { AuthGuard } from "../../identity/auth/auth.guard";
-import { AuthModule } from "../../identity/auth/auth.module";
-import { AuthService } from "../../identity/auth/auth.service";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
 import { AuthService } from "../../identity/auth/application/services/auth.service";

@@ -1,4 +1,4 @@
-import type { UserSession } from "../../identity/auth/auth.guard";
+import type { UserSession } from "../../identity/auth/infrastructure/guards/auth.guard";
 import type { DataValueDto } from "../../product-passport-data/presentation/dto/data-value.dto";
 import type {
   MediaReferenceDto,
