@@ -11,17 +11,17 @@ import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from 
 
 export class File implements ISubmodelElement {
   private constructor(
-    public readonly contentType: string,
+    public contentType: string,
     public readonly extensions: Array<Extension>,
     public readonly category: string | null,
     public readonly idShort: string,
-    public readonly displayName: Array<LanguageText>,
-    public readonly description: Array<LanguageText>,
+    public displayName: Array<LanguageText>,
+    public description: Array<LanguageText>,
     public readonly semanticId: Reference | null,
     public readonly supplementalSemanticIds: Array<Reference>,
     public readonly qualifiers: Qualifier[],
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly value: string | null = null,
+    public value: string | null = null,
   ) {
   }
 

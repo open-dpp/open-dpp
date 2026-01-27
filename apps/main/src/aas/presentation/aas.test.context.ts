@@ -19,10 +19,13 @@ import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
 import { AasModule } from "../aas.module";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
-import { IPersistable } from "../domain/persistable";
-import { Submodel } from "../domain/submodel-base/submodel";
 
+import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
+import { IPersistable } from "../domain/persistable";
+import { Property } from "../domain/submodel-base/property";
+import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
+import { SubmodelElementCollection } from "../domain/submodel-base/submodel-element-collection";
 import { AasRepository } from "../infrastructure/aas.repository";
 import {
   AssetAdministrationShellDoc,
@@ -103,7 +106,8 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     await betterAuthHelper.createOrganization(user2data?.user.id as string);
   });
 
-  type CreateEntity = (orgaId: string) => Promise<IPersistable>;
+  type CreateEntity = (orgaId: string) => Promise<IPersistable & IDigitalProductPassportIdentifiable>;
+  type SaveEntity = (entity: any) => Promise<IPersistable & IDigitalProductPassportIdentifiable>;
 
   async function assertGetShells(createEntity: CreateEntity) {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
@@ -344,6 +348,83 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     );
   }
 
+  async function assertModifySubmodel(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const entity = await createEntity(org.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+
+    const modificationBody = {
+      idShort: submodel.idShort,
+      displayName: [{ language: "en", text: "Bill of Materials" }],
+      description: [{ language: "en", text: "A list of all products in the factory" }],
+    };
+
+    const response = await request(app.getHttpServer())
+      .patch(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}`)
+      .set("Cookie", userCookie)
+      .send(modificationBody);
+    expect(response.status).toEqual(200);
+    expect({ idShort: response.body.idShort, displayName: response.body.displayName, description: response.body.description }).toEqual(modificationBody);
+  }
+
+  async function assertModifySubmodelElement(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const entity = await createEntity(org.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const property = Property.fromPlain(propertyPlainFactory.build({ idShort: "Property01" }));
+    submodel.addSubmodelElement(property);
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+
+    const modificationBody = {
+      idShort: property.idShort,
+      displayName: [{ language: "en", text: "Bill of Materials" }],
+      description: [{ language: "en", text: "A list of all products in the factory" }],
+    };
+
+    const response = await request(app.getHttpServer())
+      .patch(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/Property01`)
+      .set("Cookie", userCookie)
+      .send(modificationBody);
+    expect(response.status).toEqual(200);
+    expect({ idShort: response.body.idShort, displayName: response.body.displayName, description: response.body.description }).toEqual(modificationBody);
+  }
+
+  async function assertModifySubmodelElementValue(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const entity = await createEntity(org.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const property = Property.fromPlain(propertyPlainFactory.build({ idShort: "Property01", value: "old value" }));
+    const submodelElementCollection = SubmodelElementCollection.create({ idShort: "collection" });
+    submodelElementCollection.addSubmodelElement(property);
+
+    submodel.addSubmodelElement(submodelElementCollection);
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+
+    const modificationBody = {
+      Property01: "value new",
+    };
+
+    const response = await request(app.getHttpServer())
+      .patch(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/collection/$value`)
+      .set("Cookie", userCookie)
+      .send(modificationBody);
+    expect(response.status).toEqual(200);
+    expect({ idShort: response.body.value[0].idShort, value: response.body.value[0].value }).toEqual({ idShort: property.idShort, value: "value new" });
+  }
+
   afterAll(async () => {
     await app.close();
   });
@@ -360,6 +441,9 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       getSubmodels: assertGetSubmodels,
       getSubmodelById: assertGetSubmodelById,
       postSubmodel: assertPostSubmodel,
+      modifySubmodel: assertModifySubmodel,
+      modifySubmodelElement: assertModifySubmodelElement,
+      modifySubmodelElementValue: assertModifySubmodelElementValue,
       getSubmodelValue: assertGetSubmodelValue,
       getSubmodelElements: assertGetSubmodelElements,
       postSubmodelElement: assertPostSubmodelElement,

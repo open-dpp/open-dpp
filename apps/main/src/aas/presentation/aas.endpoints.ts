@@ -1,5 +1,17 @@
 import type express from "express";
-import { AssetAdministrationShellPaginationResponseDto, SubmodelElementPaginationResponseDto, SubmodelElementRequestDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelRequestDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/dto";
+import {
+  AssetAdministrationShellPaginationResponseDto,
+  SubmodelElementModificationDto,
+  SubmodelElementPaginationResponseDto,
+  SubmodelElementRequestDto,
+  SubmodelElementResponseDto,
+  SubmodelModificationDto,
+  SubmodelPaginationResponseDto,
+  SubmodelRequestDto,
+  SubmodelResponseDto,
+  ValueRequestDto,
+  ValueResponseDto,
+} from "@open-dpp/dto";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
 
 export interface IAasReadEndpoints {
@@ -43,4 +55,16 @@ export interface IAasCreateEndpoints {
     body: SubmodelElementRequestDto,
     req: express.Request,
   ) => Promise<SubmodelElementResponseDto>;
+}
+
+export interface IAasModifyEndpoints {
+  modifySubmodel: (id: string, submodelId: string, body: SubmodelModificationDto, req: express.Request) => Promise<SubmodelResponseDto>;
+  modifySubmodelElement: (
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    body: SubmodelElementModificationDto,
+    req: express.Request,
+  ) => Promise<SubmodelElementResponseDto>;
+  modifySubmodelElementValue: (id: string, submodelId: string, idShortPath: IdShortPath, body: ValueRequestDto, req: express.Request) => Promise<SubmodelElementResponseDto>;
 }

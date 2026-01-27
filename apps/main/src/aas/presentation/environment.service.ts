@@ -1,7 +1,26 @@
 import type express from "express";
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
 
-import { AssetAdministrationShellPaginationResponseDto, AssetAdministrationShellPaginationResponseDtoSchema, AssetKindType, SubmodelElementPaginationResponseDto, SubmodelElementPaginationResponseDtoSchema, SubmodelElementRequestDto, SubmodelElementResponseDto, SubmodelElementSchema, SubmodelJsonSchema, SubmodelPaginationResponseDto, SubmodelPaginationResponseDtoSchema, SubmodelRequestDto, SubmodelResponseDto, ValueResponseDto, ValueResponseDtoSchema } from "@open-dpp/dto";
+import {
+  AssetAdministrationShellPaginationResponseDto,
+  AssetAdministrationShellPaginationResponseDtoSchema,
+  AssetKindType,
+  SubmodelElementModificationDto,
+  SubmodelElementPaginationResponseDto,
+  SubmodelElementPaginationResponseDtoSchema,
+  SubmodelElementRequestDto,
+  SubmodelElementResponseDto,
+  SubmodelElementSchema,
+  SubmodelJsonSchema,
+  SubmodelModificationDto,
+  SubmodelPaginationResponseDto,
+  SubmodelPaginationResponseDtoSchema,
+  SubmodelRequestDto,
+  SubmodelResponseDto,
+  ValueRequestDto,
+  ValueResponseDto,
+  ValueSchema,
+} from "@open-dpp/dto";
 import { fromNodeHeaders } from "better-auth/node";
 import { AuthService } from "../../auth/auth.service";
 import { Pagination } from "../../pagination/pagination";
@@ -44,9 +63,17 @@ export class EnvironmentService {
     return SubmodelPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodels }).toPlain());
   }
 
+  async modifySubmodel(environment: Environment, submodelId: string, modification: SubmodelModificationDto): Promise<SubmodelResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    submodel.modify(modification);
+    await this.submodelRepository.save(submodel);
+    return SubmodelJsonSchema.parse(submodel.toPlain());
+  }
+
   async addSubmodelToEnvironment(environment: Environment, submodelPlain: SubmodelRequestDto, saveEnvironment: () => Promise<void>): Promise<SubmodelResponseDto> {
     const submodel = environment.addSubmodel(Submodel.fromPlain(submodelPlain));
     await this.submodelRepository.save(submodel);
+    // TODO: Add submodel to AAS as reference
     await saveEnvironment();
     return SubmodelJsonSchema.parse(submodel.toPlain());
   }
@@ -67,7 +94,7 @@ export class EnvironmentService {
   async getSubmodelValue(environment: Environment, submodelId: string): Promise<ValueResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const value = submodel.getValueRepresentation();
-    return ValueResponseDtoSchema.parse(value);
+    return ValueSchema.parse(value);
   }
 
   async getSubmodelElements(environment: Environment, submodelId: string, pagination: Pagination): Promise<SubmodelElementPaginationResponseDto> {
@@ -84,6 +111,20 @@ export class EnvironmentService {
     return SubmodelElementSchema.parse(submodelElement.toPlain());
   }
 
+  async modifySubmodelElement(environment: Environment, submodelId: string, modification: SubmodelElementModificationDto, idShortPath: IdShortPath): Promise<SubmodelElementResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const submodelElement = submodel.modifySubmodelElement(modification, idShortPath);
+    await this.submodelRepository.save(submodel);
+    return SubmodelElementSchema.parse(submodelElement.toPlain());
+  }
+
+  async modifyValueOfSubmodelElement(environment: Environment, submodelId: string, modification: ValueRequestDto, idShortPath: IdShortPath): Promise<SubmodelElementResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const submodelElement = submodel.modifyValueOfSubmodelElement(modification, idShortPath);
+    await this.submodelRepository.save(submodel);
+    return SubmodelElementSchema.parse(submodelElement.toPlain());
+  }
+
   async getSubmodelElementById(environment: Environment, submodelId: string, idShortPath: IdShortPath): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const submodelElement = submodel.findSubmodelElementOrFail(idShortPath);
@@ -92,7 +133,7 @@ export class EnvironmentService {
 
   async getSubmodelElementValue(environment: Environment, submodelId: string, idShortPath: IdShortPath): Promise<ValueResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    return ValueResponseDtoSchema.parse(submodel.getValueRepresentation(idShortPath));
+    return ValueSchema.parse(submodel.getValueRepresentation(idShortPath));
   }
 }
 

@@ -1,6 +1,9 @@
 import type {
+  SubmodelElementModificationDto,
   SubmodelElementRequestDto,
+  SubmodelModificationDto,
   SubmodelRequestDto,
+  ValueRequestDto,
 } from "@open-dpp/dto";
 import type express from "express";
 import { Controller, Get, Logger, Post, Req, UnauthorizedException } from "@nestjs/common";
@@ -28,6 +31,9 @@ import {
   ApiGetSubmodelElementValue,
   ApiGetSubmodels,
   ApiGetSubmodelValue,
+  ApiPatchSubmodel,
+  ApiPatchSubmodelElement,
+  ApiPatchSubmodelElementValue,
   ApiPostSubmodel,
   ApiPostSubmodelElement,
   ApiPostSubmodelElementAtIdShortPath,
@@ -36,11 +42,14 @@ import {
   IdShortPathParam,
   LimitQueryParam,
   RequestParam,
+  SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
+  SubmodelElementValueModificationRequestBody,
   SubmodelIdParam,
+  SubmodelModificationRequestBody,
   SubmodelRequestBody,
 } from "../../aas/presentation/aas.decorators";
-import { IAasCreateEndpoints, IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
+import { IAasCreateEndpoints, IAasModifyEndpoints, IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
 import {
   checkOwnerShipOfDppIdentifiable,
   EnvironmentService,
@@ -51,7 +60,7 @@ import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 
 @Controller("/templates")
-export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoints {
+export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoints, IAasModifyEndpoints {
   private readonly logger = new Logger(TemplateController.name);
 
   constructor(private readonly environmentService: EnvironmentService, private readonly authService: AuthService, private readonly templateRepository: TemplateRepository) {
@@ -83,6 +92,17 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
       body,
       this.saveEnvironmentCallback(template),
     );
+  }
+
+  @ApiPatchSubmodel()
+  async modifySubmodel(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @SubmodelModificationRequestBody() body: SubmodelModificationDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.modifySubmodel(template.getEnvironment(), submodelId, body);
   }
 
   @ApiGetSubmodelById()
@@ -117,6 +137,30 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
   ): Promise<SubmodelElementResponseDto> {
     const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
     return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body);
+  }
+
+  @ApiPatchSubmodelElement()
+  async modifySubmodelElement(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.modifySubmodelElement(template.getEnvironment(), submodelId, body, idShortPath);
+  }
+
+  @ApiPatchSubmodelElementValue()
+  async modifySubmodelElementValue(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @SubmodelElementValueModificationRequestBody() body: ValueRequestDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.modifyValueOfSubmodelElement(template.getEnvironment(), submodelId, body, idShortPath);
   }
 
   @ApiGetSubmodelElementById()

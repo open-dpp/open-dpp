@@ -6,6 +6,7 @@ import { useForm } from "vee-validate";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
+import { EditorMode } from "../../composables/aas-drawer.ts";
 import {
   submodelBaseFormDefaultValues,
   SubmodelBaseFormSchema,
@@ -50,6 +51,6 @@ defineExpose<{
 
 <template>
   <form class="flex flex-col gap-1 p-2">
-    <SubmodelBaseForm :show-errors="showErrors" :errors="errors" />
+    <SubmodelBaseForm :show-errors="showErrors" :errors="errors" :editor-mode="EditorMode.CREATE" />
   </form>
 </template>

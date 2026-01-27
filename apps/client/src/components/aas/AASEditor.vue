@@ -33,6 +33,20 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
 
 const errorHandlingStore = useErrorHandlingStore();
 
+const aasEditor = useAasEditor({
+  id: props.id,
+  aasNamespace:
+    props.editorMode === AasEditMode.Passport
+      ? apiClient.dpp.templates.aas // TODO: Replace templates here by passports
+      : apiClient.dpp.templates.aas,
+  initialSelectedKeys: route.query.edit ? String(route.query.edit) : undefined,
+  initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
+  changeQueryParams,
+  selectedLanguage: convertLocaleToLanguage(locale.value),
+  errorHandlingStore,
+  translate: t,
+});
+
 const {
   selectedKeys,
   submodels,
@@ -52,19 +66,7 @@ const {
   previousPage,
   resetCursor,
   nextPage,
-} = useAasEditor({
-  id: props.id,
-  aasNamespace:
-    props.editorMode === AasEditMode.Passport
-      ? apiClient.dpp.templates.aas // TODO: Replace templates here by passports
-      : apiClient.dpp.templates.aas,
-  initialSelectedKeys: route.query.edit ? String(route.query.edit) : undefined,
-  initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
-  changeQueryParams,
-  selectedLanguage: convertLocaleToLanguage(locale.value),
-  errorHandlingStore,
-  translate: label => t(label),
-});
+} = aasEditor;
 
 onMounted(async () => {
   await init();
@@ -122,6 +124,7 @@ function onSubmit() {
           <div class="flex w-full justify-end">
             <div class="flex items-center rounded-md gap-2">
               <Button
+                v-if="node.data.actions.addChildren"
                 icon="pi pi-plus"
                 severity="primary"
                 @click="addClicked($event, node)"
@@ -152,6 +155,7 @@ function onSubmit() {
       v-model:visible="drawerVisible"
       position="right"
       class="!w-full md:!w-80 lg:!w-1/2"
+      :auto-z-index="false"
       @hide="onHideDrawer"
     >
       <template #header>
@@ -165,7 +169,14 @@ function onSubmit() {
         v-if="editorVNode"
         ref="componentRef"
         v-bind="editorVNode.props"
+        :aas-editor="aasEditor"
       />
     </Drawer>
   </div>
 </template>
+
+<style>
+.p-drawer-mask {
+  z-index: 40;
+}
+</style>

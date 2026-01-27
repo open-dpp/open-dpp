@@ -1,4 +1,10 @@
-import type { SubmodelElementRequestDto, SubmodelRequestDto } from "@open-dpp/dto";
+import type {
+  SubmodelElementModificationDto,
+  SubmodelElementRequestDto,
+  SubmodelModificationDto,
+  SubmodelRequestDto,
+  ValueRequestDto,
+} from "@open-dpp/dto";
 import type express from "express";
 import { Controller } from "@nestjs/common";
 import { AssetAdministrationShellPaginationResponseDto, SubmodelElementPaginationResponseDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/dto";
@@ -12,6 +18,9 @@ import {
   ApiGetSubmodelElementValue,
   ApiGetSubmodels,
   ApiGetSubmodelValue,
+  ApiPatchSubmodel,
+  ApiPatchSubmodelElement,
+  ApiPatchSubmodelElementValue,
   ApiPostSubmodel,
   ApiPostSubmodelElement,
   ApiPostSubmodelElementAtIdShortPath,
@@ -20,11 +29,14 @@ import {
   IdShortPathParam,
   LimitQueryParam,
   RequestParam,
+  SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
+  SubmodelElementValueModificationRequestBody,
   SubmodelIdParam,
+  SubmodelModificationRequestBody,
   SubmodelRequestBody,
 } from "../../aas/presentation/aas.decorators";
-import { IAasCreateEndpoints, IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
+import { IAasCreateEndpoints, IAasModifyEndpoints, IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
 import {
   checkOwnerShipOfDppIdentifiable,
   EnvironmentService,
@@ -35,7 +47,7 @@ import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 
 @Controller("/passports")
-export class PassportController implements IAasReadEndpoints, IAasCreateEndpoints {
+export class PassportController implements IAasReadEndpoints, IAasCreateEndpoints, IAasModifyEndpoints {
   constructor(
     private readonly environmentService: EnvironmentService,
     private readonly authService: AuthService,
@@ -77,6 +89,17 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     return await this.environmentService.addSubmodelToEnvironment(passport.getEnvironment(), body, this.saveEnvironmentCallback(passport));
   }
 
+  @ApiPatchSubmodel()
+  async modifySubmodel(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @SubmodelModificationRequestBody() body: SubmodelModificationDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelResponseDto> {
+    const template = await this.loadPassportAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.modifySubmodel(template.getEnvironment(), submodelId, body);
+  }
+
   @ApiGetSubmodelById()
   async getSubmodelById(
     @IdParam() id: string,
@@ -106,6 +129,30 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
   ): Promise<SubmodelElementResponseDto> {
     const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
     return await this.environmentService.addSubmodelElement(passport.getEnvironment(), submodelId, body);
+  }
+
+  @ApiPatchSubmodelElement()
+  async modifySubmodelElement(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementResponseDto> {
+    const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.modifySubmodelElement(passport.getEnvironment(), submodelId, body, idShortPath);
+  }
+
+  @ApiPatchSubmodelElementValue()
+  async modifySubmodelElementValue(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @SubmodelElementValueModificationRequestBody() body: ValueRequestDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementResponseDto> {
+    const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.modifyValueOfSubmodelElement(passport.getEnvironment(), submodelId, body, idShortPath);
   }
 
   @ApiGetSubmodelElements()

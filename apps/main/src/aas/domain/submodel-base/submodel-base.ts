@@ -1,4 +1,8 @@
-import { AasSubmodelElementsType, KeyTypes, SubmodelBaseJsonSchema } from "@open-dpp/dto";
+import {
+  AasSubmodelElementsType,
+  KeyTypesEnum,
+  SubmodelBaseJsonSchema,
+} from "@open-dpp/dto";
 import { z } from "zod";
 import { IHasDataSpecification } from "../common/has-data-specification";
 import { IHasSemantics } from "../common/has-semantics";
@@ -73,7 +77,11 @@ export interface ISubmodelElement extends ISubmodelBase {
 }
 
 export function parseSubmodelBaseUnion(submodelBase: any): ISubmodelElement {
-  const schema = z.object({ modelType: z.enum(KeyTypes) });
+  const schema = z.object({ modelType: KeyTypesEnum });
   const AasClass = getSubmodelClass(schema.parse(submodelBase).modelType);
   return AasClass.fromPlain(submodelBase);
+}
+
+export function cloneSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
+  return parseSubmodelBaseUnion(submodelElement.toPlain());
 }

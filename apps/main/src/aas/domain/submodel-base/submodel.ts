@@ -8,7 +8,9 @@ import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import { JsonVisitor } from "../json-visitor";
+import { ModifierVisitor } from "../modifier-visitor";
 import { IPersistable } from "../persistable";
+import { ValueModifierVisitor } from "../value-modifier-visitor";
 import { JsonType, ValueVisitor } from "../value-visitor";
 import { IVisitor } from "../visitor";
 import {
@@ -26,8 +28,8 @@ export class Submodel implements ISubmodelBase, IPersistable {
     public readonly extensions: Array<Extension>,
     public readonly category: string | null,
     public readonly idShort: string,
-    public readonly displayName: Array<LanguageText>,
-    public readonly description: Array<LanguageText>,
+    public displayName: Array<LanguageText>,
+    public description: Array<LanguageText>,
     public readonly administration: AdministrativeInformation | null,
     public readonly kind: ModellingKindType | null,
     public readonly semanticId: Reference | null,
@@ -83,6 +85,22 @@ export class Submodel implements ISubmodelBase, IPersistable {
       parsed.submodelElements.map(parseSubmodelBaseUnion),
     );
   };
+
+  modify(data: unknown) {
+    this.accept(new ModifierVisitor(), data);
+  }
+
+  modifySubmodelElement(data: unknown, idShortPath: IdShortPath) {
+    const submodelElement = this.findSubmodelElementOrFail(idShortPath);
+    submodelElement.accept(new ModifierVisitor(), data);
+    return submodelElement;
+  }
+
+  modifyValueOfSubmodelElement(data: unknown, idShortPath: IdShortPath) {
+    const submodelElement = this.findSubmodelElementOrFail(idShortPath);
+    submodelElement.accept(new ValueModifierVisitor(), data);
+    return submodelElement;
+  }
 
   getValueRepresentation(idShortPath?: IdShortPath): JsonType {
     const element = idShortPath ? this.findSubmodelElementOrFail(idShortPath) : this;

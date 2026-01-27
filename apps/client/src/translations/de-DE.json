@@ -50,11 +50,21 @@
     }
   },
   "aasEditor": {
-    "addTextField": "Textfeld hinzufügen",
+    "formLabels": {
+      "value": "Wert",
+      "name": "Name"
+    },
     "addSubmodel": "Abschnitt hinzufügen",
+    "edit": "{formItem} bearbeiten",
     "submodel": "Abschnitt",
+    "submodelElementCollection": "Unterabschnitt",
+    "submodelElementList": "Liste",
+    "creation": "Erstellung des {formItem}",
     "textField": "Textfeld",
-    "type": "Typ"
+    "file": "Datei",
+    "numberField": "Zahlenfeld",
+    "type": "Typ",
+    "error": "{method} fehlgeschlagen"
   },
   "languages": {
     "english": "Englisch",

@@ -1,13 +1,15 @@
 import {
   AssetAdministrationShellPaginationResponseDtoSchema,
+  SubmodelElementModificationSchema,
   SubmodelElementPaginationResponseDtoSchema,
   SubmodelElementSchema,
   SubmodelJsonSchema,
+  SubmodelModificationSchema,
   SubmodelPaginationResponseDtoSchema,
   SubmodelRequestDtoSchema,
   TemplateDtoSchema,
   TemplatePaginationDtoSchema,
-  ValueResponseDtoSchema,
+  ValueSchema,
 } from "@open-dpp/dto";
 import {
   ApiGetShellsPath,
@@ -80,6 +82,24 @@ export function createAasPaths(tag: string) {
           },
         },
       },
+      patch: {
+        operationId: "patchSubmodel",
+        tags: [tag],
+        summary: `Modify submodel with id`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: SubmodelModificationSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.CREATED]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelJsonSchema },
+            },
+          },
+        },
+      },
     },
     [`${tag}${ApiGetSubmodelByIdPath}`]: {
       get: {
@@ -103,7 +123,7 @@ export function createAasPaths(tag: string) {
         responses: {
           [HTTPCode.OK]: {
             content: {
-              [ContentType.JSON]: { schema: ValueResponseDtoSchema },
+              [ContentType.JSON]: { schema: ValueSchema },
             },
           },
         },
@@ -129,6 +149,23 @@ export function createAasPaths(tag: string) {
         requestBody: {
           content: {
             [ContentType.JSON]: { schema: SubmodelElementSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelElementSchema },
+            },
+          },
+        },
+      },
+      patch: {
+        tags: [tag],
+        summary: `Modify Submodel Element`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: SubmodelElementModificationSchema },
           },
         },
         responses: {
@@ -179,7 +216,7 @@ export function createAasPaths(tag: string) {
         responses: {
           [HTTPCode.OK]: {
             content: {
-              [ContentType.JSON]: { schema: ValueResponseDtoSchema },
+              [ContentType.JSON]: { schema: ValueSchema },
             },
           },
         },
