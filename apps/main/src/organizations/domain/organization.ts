@@ -1,60 +1,56 @@
-import type { User } from "../../users/domain/user";
-import { randomUUID } from "node:crypto";
-import { OrganizationSubject } from "@open-dpp/permission";
-import { Expose } from "class-transformer";
+import { randomBytes } from "node:crypto";
 
 export interface OrganizationCreateProps {
   name: string;
-  createdByUserId: string;
-  ownedByUserId: string;
-  members: User[];
+  slug: string;
+  logo?: string | null;
+  metadata?: any;
 }
 
-export interface OrganizationDbProps {
+export type OrganizationDbProps = OrganizationCreateProps & {
   id: string;
-  name: string;
-  createdByUserId: string;
-  ownedByUserId: string;
-  members: User[];
+  createdAt: Date;
+};
+
+function generate24CharId(): string {
+  const timestamp = Math.floor(Date.now() / 1000).toString(16).padStart(8, "0");
+  const random = randomBytes(8).toString("hex");
+  return timestamp + random;
 }
 
 export class Organization {
-  @Expose()
-  readonly id: string = randomUUID();
-
-  @Expose()
-  readonly name: string = "";
-
-  @Expose()
-  readonly members: User[] = [];
-
-  @Expose()
-  readonly createdByUserId: string = "";
-
-  @Expose()
-  readonly ownedByUserId: string = "";
+  public readonly id: string;
+  public readonly name: string;
+  public readonly slug: string;
+  public readonly logo: string | null;
+  public readonly metadata: any;
+  public readonly createdAt: Date;
 
   private constructor(
     id: string,
     name: string,
-    createdByUserId: string,
-    ownedByUserId: string,
-    members: User[],
+    slug: string,
+    logo: string | null,
+    metadata: any,
+    createdAt: Date,
   ) {
     this.id = id;
     this.name = name;
-    this.createdByUserId = createdByUserId;
-    this.ownedByUserId = ownedByUserId;
-    this.members = members;
+    this.slug = slug;
+    this.logo = logo;
+    this.metadata = metadata;
+    this.createdAt = createdAt;
   }
 
   public static create(data: OrganizationCreateProps) {
+    const now = new Date();
     return new Organization(
-      randomUUID(),
+      generate24CharId(),
       data.name,
-      data.createdByUserId,
-      data.ownedByUserId,
-      data.members,
+      data.slug,
+      data.logo ?? null,
+      data.metadata ?? {},
+      now,
     );
   }
 
@@ -62,27 +58,10 @@ export class Organization {
     return new Organization(
       data.id,
       data.name,
-      data.createdByUserId,
-      data.ownedByUserId,
-      data.members,
-    );
-  }
-
-  join(user: User) {
-    if (!this.members.find(m => m.id === user.id)) {
-      this.members.push(user);
-    }
-  }
-
-  isMember(user: User) {
-    return this.members.some(m => m.id === user.id);
-  }
-
-  toPermissionSubject() {
-    return new OrganizationSubject(
-      this.id,
-      this.ownedByUserId,
-      this.members.map(member => member.id),
+      data.slug,
+      data.logo ?? null,
+      data.metadata ?? {},
+      data.createdAt,
     );
   }
 }

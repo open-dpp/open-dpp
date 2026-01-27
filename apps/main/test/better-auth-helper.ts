@@ -117,7 +117,7 @@ export class BetterAuthHelper {
         slug: randomUUID(),
         userId,
         keepCurrentActiveOrganization: false,
-        image: "org-image-media-id",
+        logo: "org-image-media-id",
       },
     }) as BetterAuthOrganization;
     this.organizationMap.set(dataOrg.id, dataOrg);

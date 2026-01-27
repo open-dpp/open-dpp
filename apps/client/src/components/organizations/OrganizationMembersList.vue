@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { OrganizationDto, UserDto } from "@open-dpp/api-client";
+import type { MemberDto, OrganizationDto } from "@open-dpp/api-client";
 import { UserCircleIcon } from "@heroicons/vue/24/solid";
 import { useI18n } from "vue-i18n";
 import { ModalType, useLayoutStore } from "../../stores/layout";
@@ -7,7 +7,7 @@ import InviteMemberDialog from "./InviteMemberDialog.vue";
 
 defineProps<{
   organization: OrganizationDto;
-  members: Array<UserDto>;
+  members: Array<MemberDto>;
 }>();
 const emit = defineEmits<{
   (e: "invitedUser"): void;
@@ -75,23 +75,23 @@ const layoutStore = useLayoutStore();
                     </div>
                     <div class="ml-4">
                       <div class="font-medium text-gray-900">
-                        {{ member.email }}
+                        {{ member.user?.email }}
                       </div>
                       <div class="mt-1 text-gray-500">
-                        {{ member.email }}
+                        {{ member.user?.email }}
                       </div>
                     </div>
                   </div>
                 </td>
                 <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
                   <div
-                    v-if="organization.ownedByUserId === member.id"
+                    v-if="member.role === 'owner'"
                     class="text-gray-900"
                   >
                     {{ t('organizations.memberAdmin') }}
                   </div>
                   <div
-                    v-if="organization.createdByUserId === member.id"
+                    v-if="member.role === 'admin'"
                     class="mt-1 text-gray-500"
                   >
                     {{ t('organizations.memberCreator') }}

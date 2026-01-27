@@ -1,6 +1,6 @@
+import type { User as BetterAuthUser } from "better-auth";
 import { Injectable } from "@nestjs/common";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { User as BetterAuthUser } from "better-auth";
 import { AuthService } from "../../auth/auth.service";
 import { User } from "../domain/user";
 
@@ -18,6 +18,11 @@ export class UsersService {
     return User.loadFromDb({
       id: userDoc.id,
       email: userDoc.email,
+      createdAt: userDoc.createdAt,
+      updatedAt: userDoc.updatedAt,
+      name: userDoc.name || undefined,
+      image: userDoc.image || undefined,
+      emailVerified: userDoc.emailVerified || false,
     });
   }
 

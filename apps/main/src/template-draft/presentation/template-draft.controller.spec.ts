@@ -19,12 +19,13 @@ import { SectionType } from "../../data-modelling/domain/section-base";
 import { Sector } from "../../data-modelling/domain/sectors";
 import { sectionToDto } from "../../data-modelling/presentation/dto/section-base.dto";
 import { generateMongoConfig } from "../../database/config";
-import { EmailService } from "../../email/email.service";
 
+import { EmailService } from "../../email/email.service";
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,
 } from "../../marketplace/infrastructure/passport-template-publication.schema";
+
 import {
   PassportTemplatePublicationService,
 } from "../../marketplace/infrastructure/passport-template-publication.service";
@@ -34,6 +35,7 @@ import {
   TemplateSchema,
 } from "../../old-templates/infrastructure/template.schema";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";
+import { UsersService } from "../../users/infrastructure/users.service";
 import { DataFieldDraft } from "../domain/data-field-draft";
 import { SectionDraft } from "../domain/section-draft";
 import { MoveDirection, TemplateDraft } from "../domain/template-draft";
@@ -93,7 +95,9 @@ describe("templateDraftController", () => {
         TemplateService,
         TemplateDraftService,
         MarketplaceApplicationService,
+
         PassportTemplatePublicationService,
+        UsersService,
         {
           provide: APP_GUARD,
           useClass: AuthGuard,
