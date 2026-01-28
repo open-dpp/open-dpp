@@ -1,8 +1,10 @@
-import type { SubmodelElementRequestDto, SubmodelRequestDto } from "@open-dpp/dto";
+import type { PassportDto, PassportRequestCreateDto, SubmodelElementRequestDto, SubmodelRequestDto } from "@open-dpp/dto";
 import type express from "express";
-import { Controller } from "@nestjs/common";
-import { AssetAdministrationShellPaginationResponseDto, SubmodelElementPaginationResponseDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/dto";
+import { Body, Controller, Post } from "@nestjs/common";
+import { AssetAdministrationShellPaginationResponseDto, AssetKind, PassportDtoSchema, PassportRequestCreateDtoSchema, SubmodelElementPaginationResponseDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/dto";
 
+import { ZodValidationPipe } from "@open-dpp/exception";
+import { Environment } from "../../aas/domain/environment";
 import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
 import {
   ApiGetShells,
@@ -31,6 +33,7 @@ import {
 } from "../../aas/presentation/environment.service";
 import { AuthService } from "../../auth/auth.service";
 import { Pagination } from "../../pagination/pagination";
+import { TemplateRepository } from "../../templates/infrastructure/template.repository";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 
@@ -40,7 +43,30 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     private readonly environmentService: EnvironmentService,
     private readonly authService: AuthService,
     private readonly passportRepository: PassportRepository,
+    private readonly templateRepository: TemplateRepository,
   ) {
+  }
+
+  @Post()
+  async createPassport(
+    @Body(new ZodValidationPipe(PassportRequestCreateDtoSchema)) body: PassportRequestCreateDto,
+    @RequestParam() req: express.Request,
+  ): Promise<PassportDto> {
+    let environment: Environment;
+    if (body && body.templateId) {
+      const template = await this.templateRepository.findOneOrFail(body.templateId);
+      environment = await this.environmentService.copyEnvironment(template.environment);
+    }
+    else {
+      environment = await this.environmentService.createEnvironmentWithEmptyAas(AssetKind.Instance);
+    }
+    const passport = Passport.create({
+      organizationId: await this.authService.getActiveOrganizationId(req),
+      templateId: body?.templateId ?? undefined,
+      environment,
+    });
+
+    return PassportDtoSchema.parse((await this.passportRepository.save(passport)).toPlain());
   }
 
   @ApiGetShells()
