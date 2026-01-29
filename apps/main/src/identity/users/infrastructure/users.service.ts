@@ -2,14 +2,27 @@ import type { User as BetterAuthUser } from "better-auth";
 import { Injectable } from "@nestjs/common";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { AuthService } from "../../auth/application/services/auth.service";
+import { UsersRepositoryPort } from "../domain/ports/users.repository.port";
 import { User } from "../domain/user";
 
 @Injectable()
 export class UsersService {
-  private readonly authService: AuthService;
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersRepository: UsersRepositoryPort,
+  ) { }
 
-  constructor(authService: AuthService) {
-    this.authService = authService;
+  async createUser(email: string, name: string, image?: string): Promise<void> {
+    const user = User.create({
+      email,
+      name,
+      image,
+    });
+    await this.usersRepository.save(user);
+  }
+
+  async getUser(userId: string): Promise<User | null> {
+    return this.usersRepository.findOneById(userId);
   }
 
   convertToDomain(
