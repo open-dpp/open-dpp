@@ -1,39 +1,33 @@
 import { expect, jest } from "@jest/globals";
 import { ForbiddenException, UnauthorizedException } from "@nestjs/common";
-import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
 import { AuthService } from "../../auth/application/services/auth.service";
-import { GetMembersQuery } from "../application/queries/get-members.query";
 import { OrganizationsService } from "../application/services/organizations.service";
 import { OrganizationsController } from "./organizations.controller";
 
 describe("organizationsController", () => {
   let controller: OrganizationsController;
   let authService: AuthService;
-  let queryBus: QueryBus;
+  let organizationsService: OrganizationsService;
 
-  const mockCommandBus = {
-    execute: jest.fn<any>(),
-  };
-  const mockQueryBus = {
-    execute: jest.fn<any>(),
-  };
   const mockAuthService = {
     getSession: jest.fn<any>(),
     isMemberOfOrganization: jest.fn<any>(),
   };
   const mockOrganizationsService = {
     isOwnerOrAdmin: jest.fn<any>(),
+    createOrganization: jest.fn<any>(),
+    updateOrganization: jest.fn<any>(),
+    getMemberOrganizations: jest.fn<any>(),
+    getOrganization: jest.fn<any>(),
+    getMembers: jest.fn<any>(),
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [OrganizationsController],
       providers: [
-        { provide: CommandBus, useValue: mockCommandBus },
-        { provide: QueryBus, useValue: mockQueryBus },
-        { provide: AuthService, useValue: mockAuthService },
         { provide: AuthService, useValue: mockAuthService },
         { provide: OrganizationsService, useValue: mockOrganizationsService },
         { provide: EnvService, useValue: { get: jest.fn() } },
@@ -42,7 +36,7 @@ describe("organizationsController", () => {
 
     controller = module.get<OrganizationsController>(OrganizationsController);
     authService = module.get<AuthService>(AuthService);
-    queryBus = module.get<QueryBus>(QueryBus);
+    organizationsService = module.get<OrganizationsService>(OrganizationsService);
   });
 
   afterEach(() => {
@@ -82,7 +76,7 @@ describe("organizationsController", () => {
       };
       mockAuthService.isMemberOfOrganization.mockResolvedValue(true);
       const expectedMembers = [{ userId: "user-1", organizationId: "org-1" }];
-      mockQueryBus.execute.mockResolvedValue(expectedMembers);
+      mockOrganizationsService.getMembers.mockResolvedValue(expectedMembers);
 
       const result = await controller.getMembers("org-1", request);
 
@@ -91,8 +85,8 @@ describe("organizationsController", () => {
         "user-1",
         "org-1",
       );
-      expect(queryBus.execute).toHaveBeenCalledWith(
-        new GetMembersQuery("org-1"),
+      expect(organizationsService.getMembers).toHaveBeenCalledWith(
+        "org-1",
       );
     });
   });

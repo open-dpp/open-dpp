@@ -1,15 +1,8 @@
 import { forwardRef, Module } from "@nestjs/common";
-import { CqrsModule } from "@nestjs/cqrs";
 import { MongooseModule } from "@nestjs/mongoose";
 import { EmailModule } from "../../email/email.module";
 import { AuthModule } from "../auth/auth.module";
 import { UsersModule } from "../users/users.module";
-import { CreateOrganizationCommandHandler } from "./application/commands/create-organization.command-handler";
-import { InviteMemberCommandHandler } from "./application/commands/invite-member.command-handler";
-import { UpdateOrganizationCommandHandler } from "./application/commands/update-organization.command-handler";
-import { GetMemberOrganizationsHandler } from "./application/queries/get-member-organizations.handler";
-import { GetMembersQueryHandler } from "./application/queries/get-members.query-handler";
-import { GetOrganizationQueryHandler } from "./application/queries/get-organization.query-handler";
 import { OrganizationsService } from "./application/services/organizations.service";
 import { MembersRepositoryPort } from "./domain/ports/members.repository.port";
 import { OrganizationsRepositoryPort } from "./domain/ports/organizations.repository.port";
@@ -33,7 +26,6 @@ import { OrganizationsController } from "./presentation/organizations.controller
     AuthModule,
     forwardRef(() => UsersModule),
     EmailModule,
-    CqrsModule,
   ],
   controllers: [OrganizationsController],
   providers: [
@@ -55,12 +47,6 @@ import { OrganizationsController } from "./presentation/organizations.controller
       provide: MembersRepositoryPort,
       useClass: MembersRepository,
     },
-    CreateOrganizationCommandHandler,
-    UpdateOrganizationCommandHandler,
-    GetOrganizationQueryHandler,
-    GetMemberOrganizationsHandler,
-    GetMembersQueryHandler,
-    InviteMemberCommandHandler,
     OrganizationsService,
   ],
   exports: [

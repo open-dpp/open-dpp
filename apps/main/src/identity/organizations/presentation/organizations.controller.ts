@@ -1,12 +1,6 @@
 import { Body, Controller, ForbiddenException, Get, Headers, Logger, Param, Patch, Post, Req, UnauthorizedException, UseFilters, UseGuards } from "@nestjs/common";
-import { CommandBus, QueryBus } from "@nestjs/cqrs";
 import { AuthService } from "../../auth/application/services/auth.service";
 import { AuthGuard } from "../../auth/infrastructure/guards/auth.guard";
-import { CreateOrganizationCommand } from "../application/commands/create-organization.command";
-import { UpdateOrganizationCommand } from "../application/commands/update-organization.command";
-import { GetMemberOrganizationsQuery } from "../application/queries/get-member-organizations.query";
-import { GetMembersQuery } from "../application/queries/get-members.query";
-import { GetOrganizationQuery } from "../application/queries/get-organization.query";
 import { OrganizationsService } from "../application/services/organizations.service";
 import { Member } from "../domain/member";
 import { Organization } from "../domain/organization";
@@ -18,8 +12,6 @@ export class OrganizationsController {
   private readonly logger = new Logger(OrganizationsController.name);
 
   constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
     private readonly authService: AuthService,
     private readonly organizationsService: OrganizationsService,
   ) { }
@@ -34,14 +26,14 @@ export class OrganizationsController {
     if (!session) {
       throw new UnauthorizedException("Unauthorized");
     }
-    return this.commandBus.execute(new CreateOrganizationCommand(
+    return this.organizationsService.createOrganization(
       session.user.id,
       body.name,
       body.slug,
       headers,
       body.logo,
       body.metadata,
-    ));
+    );
   }
 
   @Patch(":id")
@@ -60,13 +52,13 @@ export class OrganizationsController {
       throw new ForbiddenException("You are not authorized to update this organization");
     }
 
-    await this.commandBus.execute(new UpdateOrganizationCommand(
+    await this.organizationsService.updateOrganization(
       id,
       body.name,
       body.slug,
       body.logo,
       body.metadata,
-    ));
+    );
   }
 
   @Get("member")
@@ -76,7 +68,7 @@ export class OrganizationsController {
     if (!session) {
       throw new UnauthorizedException("Unauthorized");
     }
-    return this.queryBus.execute(new GetMemberOrganizationsQuery(session.user.id, headers));
+    return this.organizationsService.getMemberOrganizations(session.user.id, headers);
   }
 
   @Get(":id")
@@ -84,7 +76,7 @@ export class OrganizationsController {
     @Param("id") id: string,
     @Headers() headers: Record<string, string>,
   ): Promise<Organization | null> {
-    return this.queryBus.execute(new GetOrganizationQuery(id, headers));
+    return this.organizationsService.getOrganization(id, headers);
   }
 
   @Get(":id/members")
@@ -102,6 +94,6 @@ export class OrganizationsController {
       throw new ForbiddenException("You are not authorized to view members of this organization");
     }
 
-    return this.queryBus.execute(new GetMembersQuery(id));
+    return this.organizationsService.getMembers(id);
   }
 }
