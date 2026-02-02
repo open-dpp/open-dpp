@@ -20,7 +20,7 @@
     "clean": "rimraf dist",
     "build": "pnpm run clean && tsc && rollup -c",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "check-ts": "tsc --noEmit",
     "lint": "eslint",
     "lint:fix": "eslint --fix",

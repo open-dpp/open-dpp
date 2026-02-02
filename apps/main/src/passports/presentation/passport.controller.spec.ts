@@ -30,6 +30,70 @@ describe("passportController", () => {
     }));
   }
 
+  it(`/GET List all passports`, async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { aas, submodels } = ctx.getAasObjects();
+
+    const firstCreate = new Date(
+      "2022-01-01T00:00:00.000Z",
+    );
+
+    const firstId = randomUUID();
+
+    const secondCreate = new Date(
+      "2023-05-01T00:00:00.000Z",
+    );
+
+    const secondId = randomUUID();
+
+    const passportRepository = ctx.getModuleRef().get(PassportRepository);
+
+    const firstPassport = Passport.create({
+      id: firstId,
+      organizationId: org.id,
+      environment: Environment.create({
+        assetAdministrationShells: [aas.id],
+        submodels: submodels.map(s => s.id),
+        conceptDescriptions: [],
+      }),
+      createdAt: firstCreate,
+      updatedAt: firstCreate,
+    });
+
+    const secondPassport = Passport.create({
+      id: secondId,
+      organizationId: org.id,
+      environment: Environment.create({
+        assetAdministrationShells: [aas.id],
+        submodels: submodels.map(s => s.id),
+        conceptDescriptions: [],
+      }),
+      createdAt: secondCreate,
+      updatedAt: secondCreate,
+    });
+
+    passportRepository.save(firstPassport);
+    passportRepository.save(secondPassport);
+
+    const response = await request(app.getHttpServer())
+      .get(basePath)
+      .set("Cookie", userCookie)
+      .send();
+
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      paging_metadata: {
+        cursor: expect.any(String),
+      },
+      result: [secondPassport, firstPassport].map(p => ({
+        ...p.toPlain(),
+        createdAt: p.createdAt.toISOString(),
+        updatedAt: p.updatedAt.toISOString(),
+      })),
+    });
+  });
+
   it(`/POST Create blank passport`, async () => {
     const { betterAuthHelper, app } = ctx.globals();
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();

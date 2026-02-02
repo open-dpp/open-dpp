@@ -6,6 +6,7 @@ import { ItemsNamespace } from './items/items.namespace'
 import { ModelsNamespace } from './models/models.namespace'
 import { OldTemplatesNamespace } from './old-templates/oldTemplatesNamespace'
 import { OrganizationsNamespace } from './organizations/organizations.namespace'
+import { PassportNamespace } from './passport/passports.namespace'
 import { ProductPassportsNamespace } from './product-passport/product-passports.namespace'
 import { TemplateDraftsNamespace } from './template-drafts/template-drafts.namespace'
 import { TemplatesNamespace } from './templates/templates.namespace'
@@ -18,6 +19,7 @@ export class DppApiClient implements IApiClient {
   public templateDrafts!: TemplateDraftsNamespace
   public oldTemplates!: OldTemplatesNamespace
   public templates!: TemplatesNamespace
+  public passports!: PassportNamespace
 
   public uniqueProductIdentifiers!: UniqueProductIdentifiersNamespace
   public productPassports!: ProductPassportsNamespace
@@ -59,6 +61,7 @@ export class DppApiClient implements IApiClient {
       this.options.activeOrganizationId,
     )
     this.templates = new TemplatesNamespace(this.axiosInstance)
+    this.passports = new PassportNamespace(this.axiosInstance)
     this.templateDrafts = new TemplateDraftsNamespace(
       this.axiosInstance,
       this.options.activeOrganizationId,

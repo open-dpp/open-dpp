@@ -85,6 +85,22 @@ describe('apiClient', () => {
     })
   })
 
+  describe('passports', () => {
+    const sdk = new OpenDppClient({
+      dpp: { baseURL },
+    })
+    sdk.setActiveOrganizationId(activeOrganization.id)
+    it('should get all templates', async () => {
+      const response = await sdk.dpp.passports.getAll(paginationParams)
+      expect(response.data.result).toEqual([template1, template2])
+    })
+
+    it('should create template', async () => {
+      const response = await sdk.dpp.passports.create()
+      expect(response.data).toEqual(template1)
+    })
+  })
+
   describe.each(['templates'])('aas', () => {
     const sdk = new OpenDppClient({
       dpp: { baseURL },

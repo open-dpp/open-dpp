@@ -1,6 +1,7 @@
 import {
   AssetAdministrationShellPaginationResponseDtoSchema,
   PassportDtoSchema,
+  PassportPaginationDtoSchema,
   PassportRequestCreateDtoSchema,
   SubmodelElementPaginationResponseDtoSchema,
   SubmodelElementSchema,
@@ -227,6 +228,18 @@ function createPassportPaths() {
   return {
     ...createAasPaths(tag),
     [`${tag}`]: {
+      get: {
+        tags: [tag],
+        summary: `Get passports`,
+        parameters: [LimitQueryParamSchema, CursorQueryParamSchema],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: PassportPaginationDtoSchema },
+            },
+          },
+        },
+      },
       post: {
         tags: [tag],
         summary: `Creates blank passport`,

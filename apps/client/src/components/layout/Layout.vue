@@ -85,6 +85,12 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
           show: () => indexStore.selectedOrganization !== null,
         },
         {
+          name: `${t("passports.label", 2)} AAS @beta`,
+          to: `/organizations/${indexStore.selectedOrganization}/passports`,
+          icon: CubeIcon,
+          show: () => indexStore.selectedOrganization !== null,
+        },
+        {
           name: `${t("templates.label", 2)} AAS @beta`,
           to: `/organizations/${indexStore.selectedOrganization}/templates`,
           icon: Square3Stack3DIcon,
