@@ -1,4 +1,4 @@
-import { ForbiddenException, Inject, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
+import { ForbiddenException, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { AuthService } from "../../../auth/application/services/auth.service";
 import { UsersRepositoryPort } from "../../../users/domain/ports/users.repository.port";
 import { Organization, OrganizationDbProps } from "../../domain/organization";

@@ -2,12 +2,11 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { Member } from "../../domain/member";
-import { MembersRepositoryPort } from "../../domain/ports/members.repository.port";
 import { MemberMapper } from "../mappers/member.mapper";
 import { Member as MemberSchema } from "../schemas/member.schema";
 
 @Injectable()
-export class MembersRepository implements MembersRepositoryPort {
+export class MembersRepository {
   constructor(
     @InjectModel(MemberSchema.name)
     private readonly memberModel: Model<MemberSchema>,

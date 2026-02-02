@@ -44,8 +44,6 @@ import { OrganizationsController } from "./presentation/organizations.controller
       useExisting: ORGANIZATIONS_REPO_BETTER_AUTH,
     },
     {
-      provide: MembersRepositoryPort,
-      useClass: MembersRepository,
     },
     OrganizationsService,
   ],
