@@ -57,7 +57,9 @@
     "table": {
       "saveAndAddEntries": "Save and add list entries",
       "column": "column",
+      "entries": "Entries",
       "addColumn": "@:common.add @:aasEditor.table.column",
+      "addFieldAsColumn": "@:common.add {field} as @:aasEditor.table.column ",
       "errorAddColumn": "Fails to @.lower:common.add @:aasEditor.table.column"
     },
     "addSubmodel": "Add section",

@@ -101,13 +101,14 @@ export type OpenDrawerCallback<
   title: string;
   mode: M;
   path: AasEditorPath;
+  asColumn?: boolean;
   callback?: callbackType;
 }) => void;
 interface AasDrawerProps {
   onHideDrawer: () => void;
 }
 
-type EditorVNodeType = { component: Component | undefined; props: { path: AasEditorPath; data: any | null; callback: callbackType | null } } | null;
+type EditorVNodeType = { component: Component | undefined; props: { path: AasEditorPath; data: any | null; callback: callbackType | null; asColumn?: boolean } } | null;
 
 export interface IAasDrawer {
   openDrawer: OpenDrawerCallback<EditorType, "CREATE" | "EDIT">;
@@ -125,6 +126,7 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
   const activeData = ref<any | null>(null);
   const activePath = ref<AasEditorPath>({ idShortPath: "" });
   const activeCallback = ref<callbackType | null>(null);
+  const activeAsColumn = ref<boolean>(false);
 
   const openDrawer: OpenDrawerCallback<EditorType, EditorModeType> = ({
     type,
@@ -133,6 +135,7 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
     mode,
     path,
     callback,
+    asColumn = false,
   }) => {
     activeEditor.value = type;
     activeData.value = structuredClone(data);
@@ -141,6 +144,7 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
     activeCallback.value = callback ?? null;
     drawerHeader.value = title;
     drawerVisible.value = true;
+    activeAsColumn.value = asColumn;
   };
 
   const Editors: Record<
@@ -208,6 +212,7 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
         path: activePath.value,
         data: foundEditor.parse(activeData.value),
         callback: activeCallback.value,
+        asColumn: activeAsColumn.value,
       },
     };
   });

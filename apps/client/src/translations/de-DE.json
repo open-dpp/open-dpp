@@ -57,7 +57,9 @@
     "table": {
       "saveAndAddEntries": "Speichern und Listeneinträge hinzufügen",
       "column": "Spalte",
+      "entries": "Einträge",
       "addColumn": "@:aasEditor.table.column @.lower:common.add",
+      "addFieldAsColumn": "{field} als @:aasEditor.table.column @.lower:common.add ",
       "errorAddColumn": "@:common.add der @:aasEditor.table.column fehlgeschlagen"
     },
     "addSubmodel": "Abschnitt hinzufügen",

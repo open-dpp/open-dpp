@@ -111,6 +111,8 @@ describe("aasTableExtension composable", () => {
     expect(editorVNode.value!.props.path).toEqual(pathToList);
     expect(editorVNode.value!.component).toEqual(PropertyCreateEditor);
     expect(editorVNode.value!.props.data).toEqual({ valueType: DataTypeDef.String });
+    expect(editorVNode.value!.props.asColumn).toBeTruthy();
+
     const columnData = { idShort: "column 3", valueType: DataTypeDef.String };
 
     const submodelElementListModified = {

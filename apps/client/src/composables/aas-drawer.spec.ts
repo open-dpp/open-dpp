@@ -25,13 +25,13 @@ describe("aasDrawer composable", () => {
 
     expect(drawerHeader.value).toEqual(title);
     expect(editorVNode.value?.component).toEqual(SubmodelEditor);
-    expect(editorVNode.value?.props).toEqual({ data, path, callback });
+    expect(editorVNode.value?.props).toEqual({ data, path, callback, asColumn: false });
 
     openDrawer({ type: KeyTypes.Submodel, data, title, mode: EditorMode.EDIT, path: {}, callback });
 
     expect(drawerHeader.value).toEqual(title);
     expect(editorVNode.value?.component).toEqual(SubmodelEditor);
-    expect(editorVNode.value?.props).toEqual({ data, path: {}, callback });
+    expect(editorVNode.value?.props).toEqual({ data, path: {}, callback, asColumn: false });
   });
 
   it("should open drawer with PropertyEditor, PropertyCreateEditor", async () => {
@@ -46,14 +46,14 @@ describe("aasDrawer composable", () => {
 
     expect(drawerHeader.value).toEqual(title);
     expect(editorVNode.value?.component).toEqual(PropertyEditor);
-    expect(editorVNode.value?.props).toEqual({ data, path, callback });
+    expect(editorVNode.value?.props).toEqual({ data, path, callback, asColumn: false });
 
     const createData = { valueType: DataTypeDef.String };
     openDrawer({ type: KeyTypes.Property, data: createData, title, mode: EditorMode.CREATE, path, callback });
 
     expect(drawerHeader.value).toEqual(title);
     expect(editorVNode.value?.component).toEqual(PropertyCreateEditor);
-    expect(editorVNode.value?.props).toEqual({ data: createData, path, callback });
+    expect(editorVNode.value?.props).toEqual({ data: createData, path, callback, asColumn: false });
 
     hideDrawer();
     expect(drawerVisible.value).toBeFalsy();

@@ -16,9 +16,7 @@ import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import { EditorMode } from "../../composables/aas-drawer.ts";
 import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
-import {
-  SubmodelBaseFormSchema,
-} from "../../lib/submodel-base-form.ts";
+import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
@@ -48,7 +46,7 @@ const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
   },
 });
 
-const { locale } = useI18n();
+const { t, locale } = useI18n();
 
 const { columnsToAdd, columns } = useAasTableExtension({
   id: props.id,
@@ -61,10 +59,7 @@ const { columnsToAdd, columns } = useAasTableExtension({
   aasNamespace: props.aasNamespace,
 });
 
-const rows = [
-  { id: "id1", name: "name1" },
-
-];
+const rows = [{ id: "id1", name: "name1" }];
 
 const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
@@ -87,32 +82,37 @@ function addClicked(event: any) {
 
 <template>
   <form class="flex flex-col gap-1 p-2">
-    <SubmodelBaseForm :show-errors="showErrors" :errors="errors" :editor-mode="EditorMode.EDIT" />
+    <SubmodelBaseForm
+      :show-errors="showErrors"
+      :errors="errors"
+      :editor-mode="EditorMode.EDIT"
+    />
     <DataTable scrollable :value="rows" table-style="min-width: 50rem">
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="text-xl font-bold">Einträge</span>
-          <Button label="Spalte hinzufügen" @click="addClicked($event)" />
-        </div>
-      </template>
-      <Column v-for="(col) of columns" :key="col.idShort" :field="col.idShort">
-        <template #header>
-          <span>{{ col.label }}</span>
+          <span class="text-xl font-bold">{{ t('aasEditor.table.entries') }}</span>
           <Button
-            icon="pi pi-plus"
-            size="small"
+            :label="t('aasEditor.table.addColumn')"
             @click="addClicked($event)"
           />
+        </div>
+      </template>
+      <Column v-for="col of columns" :key="col.idShort" :field="col.idShort">
+        <template #header>
+          <span>{{ col.label }}</span>
+          <Button icon="pi pi-plus" size="small" @click="addClicked($event)" />
         </template>
       </Column>
-      <Column align-frozen="right" :frozen="true" header="Balance" style="max-width: 14px">
+      <Column
+        align-frozen="right"
+        :frozen="true"
+        header="Balance"
+        style="max-width: 14px"
+      >
         <template #body="">
           <div class="flex">
             <div class="flex items-center rounded-md gap-2">
-              <Button
-                icon="pi pi-plus"
-                severity="primary"
-              />
+              <Button icon="pi pi-plus" severity="primary" />
             </div>
           </div>
         </template>

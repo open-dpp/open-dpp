@@ -13,8 +13,10 @@ import type {
 import {
 
   AasSubmodelElements,
+
   DataTypeDef,
   KeyTypes,
+  Language,
   SubmodelElementCollectionJsonSchema,
   SubmodelElementListJsonSchema,
   SubmodelElementSchema,
@@ -53,15 +55,17 @@ export function useAasTableExtension({
   const translatePrefix = "aasEditor";
   const columnsToAdd = ref<MenuItem[]>([]);
 
-  function buildPropertyEntry(label: string, icon: string, valueType: DataTypeDefType) {
-    return { label, icon, command: (_event: MenuItemCommandEvent) => {
+  function buildPropertyEntry(fieldLabel: string, icon: string, valueType: DataTypeDefType) {
+    const addColumLabel = translate("aasEditor.table.addFieldAsColumn", { field: selectedLanguage === Language.de ? fieldLabel : fieldLabel.toLowerCase() });
+    return { label: fieldLabel, icon, command: (_event: MenuItemCommandEvent) => {
       openDrawer({
         type: KeyTypes.Property,
         data: { valueType },
         mode: EditorMode.CREATE,
-        title: label,
+        title: addColumLabel,
         path: pathToList,
         callback: async (data: PropertyRequestDto) => createPropertyColumn(data),
+        asColumn: true,
       });
     } };
   }
