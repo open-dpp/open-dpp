@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AasNamespace } from "@open-dpp/api-client";
-import type { PropertyResponseDto, SubmodelElementModificationDto } from "@open-dpp/dto";
+import type { SubmodelElementModificationDto } from "@open-dpp/dto";
 import type {
   AasEditorPath,
   EditorType,
@@ -8,17 +8,18 @@ import type {
   SubmodelElementListEditorProps,
 } from "../../composables/aas-drawer.ts";
 import type { IErrorHandlingStore } from "../../stores/error.handling.ts";
-import { PropertyJsonSchema, SubmodelElementCollectionJsonSchema } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { Button, Column, DataTable, Menu } from "primevue";
 import { useForm } from "vee-validate";
 import { computed, ref, toRaw } from "vue";
+import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import { EditorMode } from "../../composables/aas-drawer.ts";
 import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
 import {
   SubmodelBaseFormSchema,
 } from "../../lib/submodel-base-form.ts";
+import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
 const props = defineProps<{
@@ -47,14 +48,14 @@ const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
   },
 });
 
-const columns = ref<PropertyResponseDto[]>(props.data.value.length > 0
-  ? SubmodelElementCollectionJsonSchema.parse(props.data.value[0]).value.map(v => PropertyJsonSchema.parse(v))
-  : []);
+const { locale } = useI18n();
 
-const { columnsToAdd } = useAasTableExtension({
+const { columnsToAdd, columns } = useAasTableExtension({
   id: props.id,
   pathToList: toRaw(props.path),
   openDrawer: props.openDrawer,
+  listData: props.data,
+  selectedLanguage: convertLocaleToLanguage(locale.value),
   errorHandlingStore: props.errorHandlingStore,
   translate: props.translate,
   aasNamespace: props.aasNamespace,
@@ -96,7 +97,7 @@ function addClicked(event: any) {
       </template>
       <Column v-for="(col) of columns" :key="col.idShort" :field="col.idShort">
         <template #header>
-          <span>{{ col.idShort }}</span>
+          <span>{{ col.label }}</span>
           <Button
             icon="pi pi-plus"
             size="small"

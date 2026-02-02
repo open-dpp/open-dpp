@@ -1,8 +1,8 @@
 import type { AasNamespace } from "@open-dpp/api-client";
 
-import type { DataTypeDefType, PropertyRequestDto } from "@open-dpp/dto";
+import type { DataTypeDefType, LanguageType, PropertyRequestDto, SubmodelElementListResponseDto } from "@open-dpp/dto";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
-import type { Ref } from "vue";
+import type { ComputedRef, Ref } from "vue";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import type {
   AasEditorPath,
@@ -10,30 +10,45 @@ import type {
   OpenDrawerCallback,
   SubmodelElementListEditorProps,
 } from "./aas-drawer.ts";
-import { AasSubmodelElements, DataTypeDef, KeyTypes, SubmodelElementListJsonSchema, SubmodelElementSchema } from "@open-dpp/dto";
-import { ref } from "vue";
+import {
+
+  AasSubmodelElements,
+  DataTypeDef,
+  KeyTypes,
+  SubmodelElementCollectionJsonSchema,
+  SubmodelElementListJsonSchema,
+  SubmodelElementSchema,
+
+} from "@open-dpp/dto";
+import { computed, ref } from "vue";
 import { EditorMode } from "./aas-drawer.ts";
 
 interface AasTableExtensionProps {
   id: string;
+  listData: SubmodelElementListResponseDto;
   pathToList: AasEditorPath;
   aasNamespace: AasNamespace;
   errorHandlingStore: IErrorHandlingStore;
   openDrawer: OpenDrawerCallback<EditorType, "CREATE" | "EDIT">;
   translate: (label: string, ...args: unknown[]) => string;
+  selectedLanguage: LanguageType;
 }
 
+interface Column { idShort: string; label: string }
 export interface IAasTableExtension {
   columnsToAdd: Ref<MenuItem[]>;
+  columns: ComputedRef<Column[]>;
 }
 
 export function useAasTableExtension({
   id,
   pathToList,
+  listData,
   aasNamespace,
   errorHandlingStore,
   openDrawer,
   translate,
+  selectedLanguage,
 }: AasTableExtensionProps): IAasTableExtension {
   const translatePrefix = "aasEditor";
   const columnsToAdd = ref<MenuItem[]>([]);
@@ -54,6 +69,16 @@ export function useAasTableExtension({
   const init = () => {
     columnsToAdd.value = [buildPropertyEntry(translate(`${translatePrefix}.textField`), "pi pi-pencil", DataTypeDef.String)];
   };
+
+  const columns = computed<Column[]>((): Column[] => {
+    if (listData.value.length > 0) {
+      return SubmodelElementCollectionJsonSchema.parse(listData.value[0]).value.map(v => ({
+        idShort: v.idShort,
+        label: v.displayName.find(d => d.language === selectedLanguage)?.text ?? v.idShort,
+      }));
+    }
+    return [];
+  });
 
   async function createPropertyColumn(data: PropertyRequestDto) {
     const errorMessage = translate(`${translatePrefix}.table.errorAddColumn`);
@@ -88,6 +113,7 @@ export function useAasTableExtension({
   init();
 
   return {
+    columns,
     columnsToAdd,
   };
 }
