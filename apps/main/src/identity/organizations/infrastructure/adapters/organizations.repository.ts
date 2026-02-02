@@ -1,32 +1,44 @@
-import { Injectable } from "@nestjs/common";
+import type { Auth } from "better-auth";
+import { Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
+import { AUTH } from "../../../auth/auth.provider";
 import { Organization } from "../../domain/organization";
 import { DuplicateOrganizationSlugError } from "../../domain/organization.errors";
-import { OrganizationsRepositoryPort } from "../../domain/ports/organizations.repository.port";
 import { OrganizationMapper } from "../mappers/organization.mapper";
 import { Organization as OrganizationSchema } from "../schemas/organization.schema";
 
 @Injectable()
-export class OrganizationsRepository implements OrganizationsRepositoryPort {
+export class OrganizationsRepository {
   constructor(
     @InjectModel(OrganizationSchema.name)
     private readonly organizationModel: Model<OrganizationSchema>,
+    @Inject(AUTH) private readonly auth: Auth,
   ) { }
 
-  findManyByMember(_: Record<string, string>): Promise<Organization[]> {
-    throw new Error("Method not implemented.");
+  async findManyByMember(headers: Record<string, string>): Promise<Organization[]> {
+    const result = await (this.auth.api as any).listOrganizations({
+      headers,
+    });
+
+    if (!result || !Array.isArray(result)) {
+      return [];
+    }
+
+    return result.map((org: any) => OrganizationMapper.toDomain(org));
   }
 
-  async save(organization: Organization): Promise<void> {
-    const persistenceModel = OrganizationMapper.toPersistence(organization);
-    // Use findByIdAndUpdate with upsert to handle both create and update
+  async save(organization: Organization, headers: Record<string, string>): Promise<void> {
     try {
-      await this.organizationModel.findByIdAndUpdate(
-        organization.id,
-        persistenceModel,
-        { upsert: true },
-      );
+      await (this.auth.api as any).createOrganization({
+        headers,
+        body: {
+          name: organization.name,
+          slug: organization.slug,
+          logo: organization.logo,
+          metadata: JSON.stringify(organization.metadata || {}),
+        },
+      });
     }
     catch (error: any) {
       if (error.code === 11000 && error.keyPattern?.slug) {

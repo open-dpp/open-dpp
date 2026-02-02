@@ -53,6 +53,7 @@ export class OrganizationsController {
     }
 
     await this.organizationsService.updateOrganization(
+      headers,
       id,
       body.name,
       body.slug,

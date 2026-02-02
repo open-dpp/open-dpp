@@ -1,24 +1,21 @@
 import { ForbiddenException, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { AuthService } from "../../../auth/application/services/auth.service";
-import { UsersRepositoryPort } from "../../../users/domain/ports/users.repository.port";
+import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { Organization, OrganizationDbProps } from "../../domain/organization";
 import { OrganizationRole } from "../../domain/organization-role.enum";
-import { MembersRepositoryPort } from "../../domain/ports/members.repository.port";
-import { OrganizationsRepositoryPort } from "../../domain/ports/organizations.repository.port";
+import { MembersRepository } from "../../infrastructure/adapters/members.repository";
+import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
 import { OrganizationMapper } from "../../infrastructure/mappers/organization.mapper";
-import { ORGANIZATIONS_REPO_MONGO } from "../../organizations.constants";
 
 @Injectable()
 export class OrganizationsService {
   private readonly logger = new Logger(OrganizationsService.name);
 
   constructor(
-    private readonly membersRepository: MembersRepositoryPort,
-    private readonly organizationsRepository: OrganizationsRepositoryPort,
-    @Inject(ORGANIZATIONS_REPO_MONGO)
-    private readonly mongoOrganizationsRepository: OrganizationsRepositoryPort,
+    private readonly membersRepository: MembersRepository,
+    private readonly organizationsRepository: OrganizationsRepository,
     private readonly authService: AuthService,
-    private readonly usersRepository: UsersRepositoryPort,
+    private readonly usersRepository: UsersRepository,
   ) { }
 
   async isOwnerOrAdmin(organizationId: string, userId: string): Promise<boolean> {
@@ -51,6 +48,7 @@ export class OrganizationsService {
   }
 
   async updateOrganization(
+    headers: Record<string, string>,
     organizationId: string,
     name?: string,
     slug?: string,
@@ -72,7 +70,7 @@ export class OrganizationsService {
     };
     const updatedOrganization = Organization.loadFromDb(updatedProps);
 
-    await this.organizationsRepository.save(updatedOrganization);
+    await this.organizationsRepository.save(updatedOrganization, headers);
   }
 
   async getMemberOrganizations(userId: string, headers: Record<string, string>): Promise<Organization[]> {
@@ -97,7 +95,7 @@ export class OrganizationsService {
       throw new ForbiddenException();
     }
 
-    return this.mongoOrganizationsRepository.findOneById(organizationId);
+    return this.organizationsRepository.findOneById(organizationId);
   }
 
   async getMembers(organizationId: string): Promise<any[]> {
