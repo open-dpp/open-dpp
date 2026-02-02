@@ -72,12 +72,16 @@ export class MultiLanguageProperty implements ISubmodelElement {
     return this.accept(jsonVisitor);
   }
 
-  * getSubmodelElements(): IterableIterator<ISubmodelElement> {
-    yield* [];
+  getSubmodelElements(): ISubmodelElement[] {
+    return [];
   }
 
   addSubmodelElement(_submodelElement: ISubmodelElement): ISubmodelElement {
     throw new ValueError("MultiLanguageProperty cannot contain submodel elements");
+  }
+
+  deleteSubmodelElement(_idShort: string) {
+    throw new ValueError("MultiLanguageProperty does not support to delete submodel elements");
   }
 
   getSubmodelElementType(): AasSubmodelElementsType {

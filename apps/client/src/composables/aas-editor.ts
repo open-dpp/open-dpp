@@ -59,8 +59,6 @@ export interface IAasEditor extends IAasDrawer, IPagination {
   buildAddSubmodelElementMenu: (node: TreeNode) => void;
   submodelElementsToAdd: Ref<MenuItem[]>;
   createSubmodel: () => Promise<void>;
-  createSubmodelElementCollection: (path: AasEditorPath, data: SubmodelElementCollectionRequestDto) => Promise<void>;
-  createProperty: (path: AasEditorPath, data: PropertyRequestDto) => Promise<void>;
   loading: Ref<boolean>;
   selectedKeys: Ref<TreeTableSelectionKeys | undefined>;
   selectTreeNode: (key: string) => void;
@@ -159,7 +157,7 @@ export function useAasEditor({
     return undefined;
   }
 
-  const selectTreeNode = (key: string) => {
+  function selectTreeNode(key: string) {
     if (submodels.value) {
       const node = findTreeNodeByKey(key);
       if (!node) {
@@ -179,7 +177,7 @@ export function useAasEditor({
       });
       changeQueryParams({ edit: key });
     }
-  };
+  }
 
   function convertSubmodelElementsToTree(submodelIdShort: string, pathOfParent: AasEditorPath, submodelElements: SubmodelElementSharedResponseDto[]) {
     return submodelElements.map((submodelElement): TreeNode => {
@@ -265,7 +263,6 @@ export function useAasEditor({
 
   const buildAddSubmodelElementMenu = (node: TreeNode) => {
     const path = toRaw(node.data.path);
-
     function buildPropertyEntry(label: string, icon: string, valueType: DataTypeDefType) {
       return { label, icon, command: (_event: MenuItemCommandEvent) => {
         drawer.openDrawer({
@@ -274,11 +271,11 @@ export function useAasEditor({
           mode: EditorMode.CREATE,
           title: label,
           path,
-          callback: async (data: PropertyRequestDto) =>
-            createProperty(path, data),
+          callback: async (data: PropertyRequestDto) => createProperty(path, data),
         });
       } };
     }
+
     submodelElementsToAdd.value = [
       buildPropertyEntry(translate(`${translatePrefix}.textField`), "pi pi-pencil", DataTypeDef.String),
       buildPropertyEntry(translate(`${translatePrefix}.numberField`), "pi pi-pencil", DataTypeDef.Double),
@@ -346,7 +343,7 @@ export function useAasEditor({
   };
 
   async function createSubmodelElementList(path: AasEditorPath, data: SubmodelElementListRequestDto) {
-    await createSubmodelElement(path, { modelType: AasSubmodelElements.SubmodelElementList, ...data }, "submodelElementList");
+    await createSubmodelElement(path, { modelType: AasSubmodelElements.SubmodelElementList, ...data }, "submodelElementList", true);
   }
 
   async function createSubmodelElementCollection(path: AasEditorPath, data: SubmodelElementCollectionRequestDto) {
@@ -361,7 +358,7 @@ export function useAasEditor({
     await createSubmodelElement(path, { modelType: AasSubmodelElements.Property, ...data }, "textField");
   }
 
-  async function createSubmodelElement(path: AasEditorPath, data: SubmodelElementSharedRequestDto, translateKey: string) {
+  async function createSubmodelElement(path: AasEditorPath, data: SubmodelElementSharedRequestDto, translateKey: string, selectSubmodelElementAfterCreation: boolean = false) {
     const call = async () => {
       const requestBody = SubmodelElementSchema.parse({ ...data });
       const response = path.idShortPath
@@ -372,6 +369,12 @@ export function useAasEditor({
             requestBody,
           );
       await finalizeApiRequest(response);
+
+      if (selectSubmodelElementAfterCreation) {
+        const submodelIdShort = submodels.value.find(n => n.key === path.submodelId)?.data.label ?? "";
+        const key = path.idShortPath ? `${path.idShortPath}.${data.idShort}` : `${submodelIdShort}.${data.idShort}`;
+        selectTreeNode(key);
+      }
     };
     await errorHandlingStore.withErrorHandling(
       call(),

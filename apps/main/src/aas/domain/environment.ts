@@ -59,6 +59,10 @@ export class Environment {
     return submodel;
   }
 
+  deleteSubmodel(submodel: Submodel) {
+    this.submodels.splice(this.submodels.indexOf(submodel.id), 1);
+  }
+
   toPlain() {
     return {
       assetAdministrationShells: this.assetAdministrationShells,

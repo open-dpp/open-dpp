@@ -55,6 +55,21 @@ export interface IAasCreateEndpoints {
     body: SubmodelElementRequestDto,
     req: express.Request,
   ) => Promise<SubmodelElementResponseDto>;
+  addColumnToSubmodelElementList: (
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    body: SubmodelElementRequestDto,
+    position: number | undefined,
+    req: express.Request,
+  ) => Promise<SubmodelElementResponseDto>;
+  addRowToSubmodelElementList: (
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    position: number | undefined,
+    req: express.Request,
+  ) => Promise<SubmodelElementResponseDto>;
 }
 
 export interface IAasModifyEndpoints {
@@ -67,4 +82,31 @@ export interface IAasModifyEndpoints {
     req: express.Request,
   ) => Promise<SubmodelElementResponseDto>;
   modifySubmodelElementValue: (id: string, submodelId: string, idShortPath: IdShortPath, body: ValueRequestDto, req: express.Request) => Promise<SubmodelElementResponseDto>;
+  modifyColumnOfSubmodelElementList: (
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    idShortOfColumn: string,
+    body: SubmodelElementModificationDto,
+    req: express.Request,
+  ) => Promise<SubmodelElementResponseDto>;
+}
+
+export interface IAasDeleteEndpoints {
+  deleteSubmodel: (id: string, submodelId: string, req: express.Request) => Promise<void>;
+  deleteSubmodelElement: (id: string, submodelId: string, idShortPath: IdShortPath, req: express.Request) => Promise<void>;
+  deleteColumnFromSubmodelElementList: (
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    idShortOfColumn: string,
+    req: express.Request,
+  ) => Promise<void>;
+  deleteRowFromSubmodelElementList: (
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    idShortOfRow: string,
+    req: express.Request,
+  ) => Promise<void>;
 }

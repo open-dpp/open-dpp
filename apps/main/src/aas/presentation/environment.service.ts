@@ -28,9 +28,9 @@ import { PagingResult } from "../../pagination/paging-result";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
 import { Submodel } from "../domain/submodel-base/submodel";
-import { IdShortPath, parseSubmodelBaseUnion } from "../domain/submodel-base/submodel-base";
-import { AasRepository } from "../infrastructure/aas.repository";
+import { IdShortPath, ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
 
+import { AasRepository } from "../infrastructure/aas.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
@@ -73,9 +73,24 @@ export class EnvironmentService {
   async addSubmodelToEnvironment(environment: Environment, submodelPlain: SubmodelRequestDto, saveEnvironment: () => Promise<void>): Promise<SubmodelResponseDto> {
     const submodel = environment.addSubmodel(Submodel.fromPlain(submodelPlain));
     await this.submodelRepository.save(submodel);
-    // TODO: Add submodel to AAS as reference
     await saveEnvironment();
     return SubmodelJsonSchema.parse(submodel.toPlain());
+  }
+
+  async deleteSubmodelFromEnvironment(environment: Environment, submodelId: string, saveEnvironment: () => Promise<void>): Promise<void> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId.toString());
+    await this.submodelRepository.deleteById(submodel.id);
+    const aas = await this.aasRepository.findOneOrFail(environment.assetAdministrationShells[0]); // TODO: replace by function in branch of Henri
+    aas.deleteSubmodel(submodel);
+    await this.aasRepository.save(aas);
+    environment.deleteSubmodel(submodel);
+    await saveEnvironment();
+  }
+
+  async deleteSubmodelElement(environment: Environment, submodelId: string, idShortPath: IdShortPath): Promise<void> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId.toString());
+    submodel.deleteSubmodelElement(idShortPath);
+    await this.submodelRepository.save(submodel);
   }
 
   private async findSubmodelByIdOrFail(environment: Environment, submodelId: string): Promise<Submodel> {
@@ -106,7 +121,7 @@ export class EnvironmentService {
 
   async addSubmodelElement(environment: Environment, submodelId: string, submodelElementPlain: SubmodelElementRequestDto, idShortPath?: IdShortPath): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const submodelElement = submodel.addSubmodelElement(parseSubmodelBaseUnion(submodelElementPlain), idShortPath);
+    const submodelElement = submodel.addSubmodelElement(parseSubmodelElement(submodelElementPlain), { idShortPath });
     await this.submodelRepository.save(submodel);
     return SubmodelElementSchema.parse(submodelElement.toPlain());
   }
@@ -123,6 +138,39 @@ export class EnvironmentService {
     const submodelElement = submodel.modifyValueOfSubmodelElement(modification, idShortPath);
     await this.submodelRepository.save(submodel);
     return SubmodelElementSchema.parse(submodelElement.toPlain());
+  }
+
+  async addColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, column: ISubmodelElement, position?: number): Promise<SubmodelElementResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const modifiedSubmodelElementList = submodel.addColumn(idShortPath, column, position);
+    await this.submodelRepository.save(submodel);
+    return SubmodelElementSchema.parse(modifiedSubmodelElementList.toPlain());
+  }
+
+  async modifyColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfColumn: string, modifications: SubmodelModificationDto): Promise<SubmodelElementResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const modifiedSubmodelElement = submodel.modifyColumn(idShortPath, idShortOfColumn, modifications);
+    await this.submodelRepository.save(submodel);
+    return SubmodelElementSchema.parse(modifiedSubmodelElement.toPlain());
+  }
+
+  async deleteColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfColumn: string): Promise<void> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    submodel.deleteColumn(idShortPath, idShortOfColumn);
+    await this.submodelRepository.save(submodel);
+  }
+
+  async addRow(environment: Environment, submodelId: string, idShortPath: IdShortPath, position?: number): Promise<SubmodelElementResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const modifiedSubmodelElement = submodel.addRow(idShortPath, position);
+    await this.submodelRepository.save(submodel);
+    return SubmodelElementSchema.parse(modifiedSubmodelElement.toPlain());
+  }
+
+  async deleteRow(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfRow: string): Promise<void> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    submodel.deleteRow(idShortPath, idShortOfRow);
+    await this.submodelRepository.save(submodel);
   }
 
   async getSubmodelElementById(environment: Environment, submodelId: string, idShortPath: IdShortPath): Promise<SubmodelElementResponseDto> {

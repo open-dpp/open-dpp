@@ -23,6 +23,6 @@ describe("property", () => {
 
   it("should get submodel elements", () => {
     const property = Property.create({ idShort: "b1", valueType: DataTypeDef.String });
-    expect([...property.getSubmodelElements()]).toEqual([]);
+    expect(property.getSubmodelElements()).toEqual([]);
   });
 });

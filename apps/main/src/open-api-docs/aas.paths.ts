@@ -12,23 +12,31 @@ import {
   ValueSchema,
 } from "@open-dpp/dto";
 import {
+  ApiDeleteRowPath,
+  ApiGetColumnByIdShortPath,
   ApiGetShellsPath,
   ApiGetSubmodelByIdPath,
   ApiGetSubmodelElementByIdPath,
   ApiGetSubmodelElementValuePath,
   ApiGetSubmodelValuePath,
+  ApiPostColumnPath,
+  ApiPostRowPath,
   ApiSubmodelElementsPath,
   ApiSubmodelsPath,
+  ColumnParamSchema,
   CursorQueryParamSchema,
   IdParamSchema,
   IdShortPathParamSchema,
   LimitQueryParamSchema,
+  PositionQueryParamSchema,
+  RowParamSchema,
   SubmodelIdParamSchema,
 } from "../aas/presentation/aas.decorators";
 
 const HTTPCode = {
   OK: 200,
   CREATED: 201,
+  NO_CONTENT: 204,
 } as const;
 
 const ContentType = {
@@ -114,6 +122,14 @@ export function createAasPaths(tag: string) {
           },
         },
       },
+      delete: {
+        tags: [tag],
+        summary: `Deletes Submodel by id`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema],
+        responses: {
+          [HTTPCode.NO_CONTENT]: {},
+        },
+      },
     },
     [`${tag}${ApiGetSubmodelValuePath}`]: {
       get: {
@@ -159,10 +175,39 @@ export function createAasPaths(tag: string) {
           },
         },
       },
+    },
+    [`${tag}${ApiPostColumnPath}`]: {
+      post: {
+        tags: [tag],
+        summary: `Add column to Submodel Element List with specified idShortPath. Column is itself a Submodel Element.`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, PositionQueryParamSchema],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: SubmodelElementSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelElementSchema },
+            },
+          },
+        },
+      },
+    },
+    [`${tag}${ApiGetColumnByIdShortPath}`]: {
+      delete: {
+        tags: [tag],
+        summary: "Deletes column with specified idShort from Submodel Element List with specified idShortPath.",
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, ColumnParamSchema],
+        responses: {
+          [HTTPCode.NO_CONTENT]: {},
+        },
+      },
       patch: {
         tags: [tag],
-        summary: `Modify Submodel Element`,
-        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema],
+        summary: "Modifies column with specified idShort of Submodel Element List with specified idShortPath.",
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, ColumnParamSchema],
         requestBody: {
           content: {
             [ContentType.JSON]: { schema: SubmodelElementModificationSchema },
@@ -174,6 +219,35 @@ export function createAasPaths(tag: string) {
               [ContentType.JSON]: { schema: SubmodelElementSchema },
             },
           },
+        },
+      },
+    },
+    [`${tag}${ApiPostRowPath}`]: {
+      post: {
+        tags: [tag],
+        summary: `Add row to Submodel Element List with specified idShortPath.`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, PositionQueryParamSchema],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: SubmodelElementSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelElementSchema },
+            },
+          },
+        },
+      },
+    },
+    [`${tag}${ApiDeleteRowPath}`]: {
+      post: {
+        tags: [tag],
+        summary: `Deletes row with specified idShort from Submodel Element List with specified idShortPath.`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, RowParamSchema],
+        responses: {
+          [HTTPCode.NO_CONTENT]: {},
         },
       },
     },
@@ -205,6 +279,31 @@ export function createAasPaths(tag: string) {
               [ContentType.JSON]: { schema: SubmodelElementSchema },
             },
           },
+        },
+      },
+      patch: {
+        tags: [tag],
+        summary: `Modify Submodel Element`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: SubmodelElementModificationSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelElementSchema },
+            },
+          },
+        },
+      },
+      delete: {
+        tags: [tag],
+        summary: `Deletes a Submodel Element at a specified path within submodel elements hierarchy`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema],
+        responses: {
+          [HTTPCode.NO_CONTENT]: {},
         },
       },
     },

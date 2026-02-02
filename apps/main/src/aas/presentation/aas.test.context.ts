@@ -6,7 +6,15 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ModelDefinition } from "@nestjs/mongoose/dist/interfaces";
 import { Test } from "@nestjs/testing";
-import { AssetAdministrationShellPaginationResponseDtoSchema, SubmodelElementSchema, SubmodelJsonSchema, SubmodelPaginationResponseDtoSchema } from "@open-dpp/dto";
+import {
+  AasSubmodelElements,
+  AssetAdministrationShellPaginationResponseDtoSchema,
+  KeyTypes,
+  ReferenceTypes,
+  SubmodelElementSchema,
+  SubmodelJsonSchema,
+  SubmodelPaginationResponseDtoSchema,
+} from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { aasPlainFactory, propertyPlainFactory, submodelBillOfMaterialPlainFactory, submodelCarbonFootprintPlainFactory, submodelDesignOfProductPlainFactory } from "@open-dpp/testing";
 import request from "supertest";
@@ -20,12 +28,16 @@ import { EmailService } from "../../email/email.service";
 import { AasModule } from "../aas.module";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 
+import { Key } from "../domain/common/key";
+import { Reference } from "../domain/common/reference";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { IPersistable } from "../domain/persistable";
 import { Property } from "../domain/submodel-base/property";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
 import { SubmodelElementCollection } from "../domain/submodel-base/submodel-element-collection";
+import { SubmodelElementList } from "../domain/submodel-base/submodel-element-list";
+import { TableExtension } from "../domain/submodel-base/table-extension";
 import { AasRepository } from "../infrastructure/aas.repository";
 import {
   AssetAdministrationShellDoc,
@@ -425,6 +437,213 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     expect({ idShort: response.body.value[0].idShort, value: response.body.value[0].value }).toEqual({ idShort: property.idShort, value: "value new" });
   }
 
+  async function assertAddColumn(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const entity = await createEntity(org.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
+    const col1 = Property.fromPlain(propertyPlainFactory.build({ idShort: "column1" }));
+    row0.addSubmodelElement(col1);
+    submodelElementList.addSubmodelElement(row0);
+    submodel.addSubmodelElement(submodelElementList);
+
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+
+    const col0Body = propertyPlainFactory.build({ idShort: "column0" });
+
+    const response = await request(app.getHttpServer())
+      .post(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns?position=0`)
+      .set("Cookie", userCookie)
+      .send(col0Body);
+    expect(response.status).toEqual(201);
+    const bodyRow0 = response.body.value[0];
+    expect({ idShort: bodyRow0.idShort, value: bodyRow0.value }).toEqual({
+      idShort: row0.idShort,
+      value: [Property.fromPlain(col0Body).toPlain(), col1.toPlain()],
+    });
+  }
+
+  async function assertModifyColumn(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const entity = await createEntity(org.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
+    const col1 = Property.fromPlain(propertyPlainFactory.build({ idShort: "column1" }));
+    row0.addSubmodelElement(col1);
+    submodelElementList.addSubmodelElement(row0);
+    submodel.addSubmodelElement(submodelElementList);
+
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+
+    const newDisplayNames = [{
+      language: "de",
+      text: "CO2 Footprint New Text",
+    }];
+    const colBody = {
+      idShort: col1.idShort,
+      displayName: newDisplayNames,
+    };
+
+    const response = await request(app.getHttpServer())
+      .patch(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col1.idShort}`)
+      .set("Cookie", userCookie)
+      .send(colBody);
+    expect(response.status).toEqual(200);
+    const bodyRow0 = response.body.value[0];
+    expect({ idShort: bodyRow0.idShort, value: bodyRow0.value }).toEqual({
+      idShort: row0.idShort,
+      value: [{ ...col1.toPlain(), displayName: newDisplayNames }],
+    });
+  }
+
+  async function assertDeleteColumn(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const entity = await createEntity(org.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
+    const col1 = Property.fromPlain(propertyPlainFactory.build({ idShort: "column1" }));
+    row0.addSubmodelElement(col1);
+    submodelElementList.addSubmodelElement(row0);
+    submodel.addSubmodelElement(submodelElementList);
+
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+
+    const response = await request(app.getHttpServer())
+      .delete(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col1.idShort}`)
+      .set("Cookie", userCookie)
+      .send();
+    expect(response.status).toEqual(204);
+    const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
+    const foundList = foundSubmodel.findSubmodelElementOrFail(IdShortPath.create({ path: "tableList" }));
+    const tableExtension = new TableExtension(foundList as SubmodelElementList);
+    expect(tableExtension.columns).toEqual([]);
+  }
+
+  async function assertAddRow(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const entity = await createEntity(org.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    const row1 = SubmodelElementCollection.create({ idShort: "row_1" });
+    const col1 = Property.fromPlain(propertyPlainFactory.build({ idShort: "column1" }));
+    row1.addSubmodelElement(col1);
+    submodelElementList.addSubmodelElement(row1);
+    submodel.addSubmodelElement(submodelElementList);
+
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+
+    const response = await request(app.getHttpServer())
+      .post(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows?position=0`)
+      .set("Cookie", userCookie)
+      .send();
+    expect(response.status).toEqual(201);
+
+    const bodyRow0 = response.body.value[0];
+    expect({ value: bodyRow0.value }).toEqual({
+      value: row1.toPlain().value,
+    });
+    expect(bodyRow0.idShort).not.toEqual(row1.idShort);
+  }
+
+  async function assertDeleteRow(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const entity = await createEntity(org.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    const row1 = SubmodelElementCollection.create({ idShort: "row_1" });
+    const col1 = Property.fromPlain(propertyPlainFactory.build({ idShort: "column1" }));
+    row1.addSubmodelElement(col1);
+    submodelElementList.addSubmodelElement(row1);
+    submodel.addSubmodelElement(submodelElementList);
+
+    await submodelRepository.save(submodel);
+    entity.getEnvironment().submodels.push(submodel.id);
+    await saveEntity(entity);
+
+    const response = await request(app.getHttpServer())
+      .post(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows/${row1.idShort}`)
+      .set("Cookie", userCookie)
+      .send();
+    expect(response.status).toEqual(204);
+    const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
+    const foundList = foundSubmodel.findSubmodelElementOrFail(IdShortPath.create({ path: "tableList" }));
+    const tableExtension = new TableExtension(foundList as SubmodelElementList);
+    expect(tableExtension.rows).toEqual([]);
+  }
+
+  async function assertDeleteSubmodel(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const entity = await createEntity(org.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
+    await submodelRepository.save(submodel);
+    const submodelRef = Reference.create({
+      type: ReferenceTypes.ModelReference,
+      keys: [Key.create({ type: KeyTypes.Submodel, value: submodel.id })],
+    });
+
+    entity.getEnvironment().addSubmodel(submodel);
+    const aasId = entity.getEnvironment().assetAdministrationShells[0]!;
+    const assetAdministrationShell = await aasRepository.findOneOrFail(aasId);
+    assetAdministrationShell.addSubmodelReference(submodelRef);
+    await aasRepository.save(assetAdministrationShell);
+    await saveEntity(entity);
+    expect(assetAdministrationShell.submodels.some(s => s.keys.some(k => k.value === submodel.id))).toBeTruthy();
+
+    const response = await request(app.getHttpServer())
+      .delete(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}`)
+      .set("Cookie", userCookie)
+      .send();
+    expect(response.status).toEqual(204);
+    const foundAas = await aasRepository.findOneOrFail(aasId);
+    expect(foundAas.submodels.some(s => s.keys.some(k => k.value === submodel.id))).toBeFalsy();
+    expect(await submodelRepository.findOne(submodel.id)).toBeUndefined();
+  }
+
+  async function assertDeleteSubmodelElement(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const entity = await createEntity(org.id);
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodelElement = Property.fromPlain(propertyPlainFactory.build({ idShort: "Property01" }));
+    submodel.addSubmodelElement(submodelElement);
+    entity.getEnvironment().addSubmodel(submodel);
+    await saveEntity(entity);
+
+    const path = `BillOfMaterial.${submodelElement.idShort}`;
+    expect(submodel.findSubmodelElement(IdShortPath.create({ path }))).toBeUndefined();
+
+    await submodelRepository.save(submodel);
+    const response = await request(app.getHttpServer())
+      .delete(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/${path}`)
+      .set("Cookie", userCookie)
+      .send();
+    expect(response.status).toEqual(204);
+    const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
+    expect(foundSubmodel.findSubmodelElement(IdShortPath.create({ path }))).toBeUndefined();
+  }
+
   afterAll(async () => {
     await app.close();
   });
@@ -444,6 +663,13 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       modifySubmodel: assertModifySubmodel,
       modifySubmodelElement: assertModifySubmodelElement,
       modifySubmodelElementValue: assertModifySubmodelElementValue,
+      addColumn: assertAddColumn,
+      modifyColumn: assertModifyColumn,
+      deleteColumn: assertDeleteColumn,
+      addRow: assertAddRow,
+      deleteRow: assertDeleteRow,
+      deleteSubmodel: assertDeleteSubmodel,
+      deleteSubmodelElement: assertDeleteSubmodelElement,
       getSubmodelValue: assertGetSubmodelValue,
       getSubmodelElements: assertGetSubmodelElements,
       postSubmodelElement: assertPostSubmodelElement,

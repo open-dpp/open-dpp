@@ -54,6 +54,12 @@
       "value": "Wert",
       "name": "Name"
     },
+    "table": {
+      "saveAndAddEntries": "Speichern und Listeneinträge hinzufügen",
+      "column": "Spalte",
+      "addColumn": "@:aasEditor.table.column @.lower:common.add",
+      "errorAddColumn": "@:common.add der @:aasEditor.table.column fehlgeschlagen"
+    },
     "addSubmodel": "Abschnitt hinzufügen",
     "edit": "{formItem} bearbeiten",
     "submodel": "Abschnitt",

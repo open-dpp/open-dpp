@@ -10,6 +10,7 @@ import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
 import { JsonVisitor } from "./json-visitor";
 import { IPersistable } from "./persistable";
+import { Submodel } from "./submodel-base/submodel";
 import { IVisitable, IVisitor } from "./visitor";
 
 export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable {
@@ -81,6 +82,11 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
       parsed.derivedFrom ? Reference.fromPlain(parsed.derivedFrom) : null,
       parsed.submodels.map(Reference.fromPlain),
     );
+  }
+
+  deleteSubmodel(submodel: Submodel) {
+    const foundSubmodelIndex = this.submodels.findIndex(sm => sm.keys.some(k => k.value === submodel.id));
+    this.submodels.splice(foundSubmodelIndex, 1);
   }
 
   toPlain(): Record<string, any> {

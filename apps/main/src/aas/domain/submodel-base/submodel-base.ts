@@ -3,6 +3,7 @@ import {
   KeyTypesEnum,
   SubmodelBaseJsonSchema,
 } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 import { z } from "zod";
 import { IHasDataSpecification } from "../common/has-data-specification";
 import { IHasSemantics } from "../common/has-semantics";
@@ -55,6 +56,14 @@ export class IdShortPath {
     this._segments.push(segment);
   }
 
+  getParentPath(): IdShortPath {
+    return new IdShortPath(this._segments.slice(0, -1));
+  }
+
+  get last(): string {
+    return this._segments[this._segments.length - 1];
+  }
+
   get segments(): IterableIterator<string> {
     return this._segments[Symbol.iterator]();
   }
@@ -64,24 +73,38 @@ export class IdShortPath {
   }
 }
 
+export interface AddOptions {
+  idShortPath?: IdShortPath;
+  position?: number;
+}
+
 export interface ISubmodelBase
   extends SubmodelBaseObjects,
   IVisitable,
   IConvertableToPlain {
-  addSubmodelElement: (submodelElement: ISubmodelElement) => ISubmodelElement;
-  getSubmodelElements: () => IterableIterator<ISubmodelElement>;
+  addSubmodelElement: (submodelElement: ISubmodelElement, options?: AddOptions) => ISubmodelElement;
+  getSubmodelElements: () => ISubmodelElement[];
 }
 
 export interface ISubmodelElement extends ISubmodelBase {
   getSubmodelElementType: () => AasSubmodelElementsType;
+  deleteSubmodelElement: (idShort: string) => void;
 }
 
-export function parseSubmodelBaseUnion(submodelBase: any): ISubmodelElement {
+export function parseSubmodelElement(submodelBase: any): ISubmodelElement {
   const schema = z.object({ modelType: KeyTypesEnum });
   const AasClass = getSubmodelClass(schema.parse(submodelBase).modelType);
   return AasClass.fromPlain(submodelBase);
 }
 
+export function deleteSubmodelElementOrFail(submodelElements: ISubmodelElement[], idShort: string): void {
+  const foundIndex = submodelElements.findIndex(e => e.idShort === idShort);
+  if (foundIndex === -1) {
+    throw new ValueError(`Cannot delete submodel element with idShort ${idShort}, since it does not exist.`);
+  }
+  submodelElements.splice(foundIndex, 1);
+}
+
 export function cloneSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
-  return parseSubmodelBaseUnion(submodelElement.toPlain());
+  return parseSubmodelElement(submodelElement.toPlain());
 }

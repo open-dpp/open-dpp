@@ -41,6 +41,10 @@ describe("passportController", () => {
     await ctx.asserts.postSubmodel(createPassport);
   });
 
+  it("/DELETE submodel", async () => {
+    await ctx.asserts.deleteSubmodel(createPassport, savePassport);
+  });
+
   it(`/PATCH submodel`, async () => {
     await ctx.asserts.modifySubmodel(createPassport, savePassport);
   });
@@ -62,12 +66,36 @@ describe("passportController", () => {
     await ctx.asserts.postSubmodelElement(createPassport);
   });
 
+  it(`/DELETE submodel element`, async () => {
+    await ctx.asserts.deleteSubmodelElement(createPassport, savePassport);
+  });
+
   it(`/PATCH submodel element`, async () => {
     await ctx.asserts.modifySubmodelElement(createPassport, savePassport);
   });
 
   it(`/PATCH submodel element value`, async () => {
     await ctx.asserts.modifySubmodelElementValue(createPassport, savePassport);
+  });
+
+  it("/POST add column", async () => {
+    await ctx.asserts.addColumn(createPassport, savePassport);
+  });
+
+  it("/PATCH modify column", async () => {
+    await ctx.asserts.modifyColumn(createPassport, savePassport);
+  });
+
+  it("/DELETE column", async () => {
+    await ctx.asserts.deleteColumn(createPassport, savePassport);
+  });
+
+  it("/POST add row", async () => {
+    await ctx.asserts.addRow(createPassport, savePassport);
+  });
+
+  it("/DELETE row", async () => {
+    await ctx.asserts.deleteRow(createPassport, savePassport);
   });
 
   it(`/POST submodel element at a specified path within submodel elements hierarchy`, async () => {

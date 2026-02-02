@@ -1,18 +1,21 @@
 <script setup lang="ts">
+import type { AasNamespace } from "@open-dpp/api-client";
 import type { PropertyResponseDto, SubmodelElementModificationDto } from "@open-dpp/dto";
 import type {
   AasEditorPath,
+  EditorType,
+  OpenDrawerCallback,
   SubmodelElementListEditorProps,
 } from "../../composables/aas-drawer.ts";
-import type { IAasEditor } from "../../composables/aas-editor.ts";
-import { DataTypeDef, PropertyJsonSchema, SubmodelElementCollectionJsonSchema } from "@open-dpp/dto";
+import type { IErrorHandlingStore } from "../../stores/error.handling.ts";
+import { PropertyJsonSchema, SubmodelElementCollectionJsonSchema } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { Button, Column, DataTable, Menu } from "primevue";
 import { useForm } from "vee-validate";
-import { computed, ref } from "vue";
+import { computed, ref, toRaw } from "vue";
 import { z } from "zod";
 import { EditorMode } from "../../composables/aas-drawer.ts";
-import { useAasList } from "../../composables/aas-list.ts";
+import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
 import {
   SubmodelBaseFormSchema,
 } from "../../lib/submodel-base-form.ts";
@@ -22,12 +25,14 @@ const props = defineProps<{
   path: AasEditorPath;
   data: SubmodelElementListEditorProps;
   callback: (data: SubmodelElementModificationDto) => Promise<void>;
-  aasEditor: IAasEditor;
+  openDrawer: OpenDrawerCallback<EditorType, "CREATE" | "EDIT">;
+  aasNamespace: AasNamespace;
+  errorHandlingStore: IErrorHandlingStore;
+  id: string;
+  translate: (label: string, ...args: unknown[]) => string;
 }>();
 
 const popover = ref();
-
-console.log(props.aasEditor.submodels);
 
 const propertyFormSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
@@ -44,17 +49,21 @@ const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
 
 const columns = ref<PropertyResponseDto[]>(props.data.value.length > 0
   ? SubmodelElementCollectionJsonSchema.parse(props.data.value[0]).value.map(v => PropertyJsonSchema.parse(v))
-  : [
-      { idShort: "id", valueType: DataTypeDef.String },
-      { idShort: "name", valueType: DataTypeDef.String },
-    ].map(v => PropertyJsonSchema.parse(v)));
+  : []);
+
+const { columnsToAdd } = useAasTableExtension({
+  id: props.id,
+  pathToList: toRaw(props.path),
+  openDrawer: props.openDrawer,
+  errorHandlingStore: props.errorHandlingStore,
+  translate: props.translate,
+  aasNamespace: props.aasNamespace,
+});
 
 const rows = [
   { id: "id1", name: "name1" },
 
 ];
-
-const { columnsToAdd } = useAasList({ path: props.path, initialList: props.data, aasEditor: props.aasEditor });
 
 const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
@@ -73,10 +82,6 @@ defineExpose<{
 function addClicked(event: any) {
   popover.value.toggle(event);
 }
-
-function addColumn(index: number) {
-  columns.value.splice(index, 0, PropertyJsonSchema.parse({ idShort: "id2", valueType: DataTypeDef.String }));
-}
 </script>
 
 <template>
@@ -86,10 +91,10 @@ function addColumn(index: number) {
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="text-xl font-bold">Einträge</span>
-          <Button label="Spalte hinzufügen" />
+          <Button label="Spalte hinzufügen" @click="addClicked($event)" />
         </div>
       </template>
-      <Column v-for="(col, index) of columns" :key="col.idShort" :field="col.idShort">
+      <Column v-for="(col) of columns" :key="col.idShort" :field="col.idShort">
         <template #header>
           <span>{{ col.idShort }}</span>
           <Button

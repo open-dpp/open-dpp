@@ -12,6 +12,7 @@ import type {
   ValueRequestDto,
   ValueResponseDto,
 } from '@open-dpp/dto'
+import type { TableModificationParamsDto } from '@open-dpp/dto/dist/shared/table.dto'
 import type { AxiosInstance, AxiosResponse } from 'axios'
 
 export class AasNamespace {
@@ -36,6 +37,10 @@ export class AasNamespace {
     return this.axiosInstance.get<AssetAdministrationShellPaginationResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}`)
   }
 
+  public async deleteSubmodelById(id: string, submodelId: string) {
+    return this.axiosInstance.delete(`${this.aasEndpoint}/${id}/submodels/${submodelId}`)
+  }
+
   public async getSubmodelValue(id: string, submodelId: string): Promise<AxiosResponse<ValueResponseDto>> {
     return this.axiosInstance.get<ValueResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}/$value`)
   }
@@ -52,6 +57,10 @@ export class AasNamespace {
     return this.axiosInstance.get<SubmodelElementResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}`)
   }
 
+  public async deleteSubmodelElementById(id: string, submodelId: string, idShortPath: string) {
+    return this.axiosInstance.delete(`${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}`)
+  }
+
   public async createSubmodel(id: string, data: SubmodelRequestDto) {
     return this.axiosInstance.post<SubmodelResponseDto>(`${this.aasEndpoint}/${id}/submodels`, data)
   }
@@ -66,6 +75,41 @@ export class AasNamespace {
 
   public async createSubmodelElementAtIdShortPath(id: string, submodelId: string, idShortPath: string, data: SubmodelElementRequestDto) {
     return this.axiosInstance.post<SubmodelElementResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}`, data)
+  }
+
+  public async addColumnToSubmodelElementList(id: string, submodelId: string, idShortPath: string, data: SubmodelElementRequestDto, params: TableModificationParamsDto) {
+    return this.axiosInstance.post<SubmodelElementResponseDto>(
+      `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/columns`,
+      data,
+      { params },
+    )
+  }
+
+  public async modifyColumnOfSubmodelElementList(id: string, submodelId: string, idShortPath: string, idShortOfColumn: string, data: SubmodelElementModificationDto) {
+    return this.axiosInstance.patch<SubmodelElementResponseDto>(
+      `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/columns/${idShortOfColumn}`,
+      data,
+    )
+  }
+
+  public async deleteColumnFromSubmodelElementList(id: string, submodelId: string, idShortPath: string, idShortOfColumn: string) {
+    return this.axiosInstance.delete(
+      `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/columns/${idShortOfColumn}`,
+    )
+  }
+
+  public async addRowToSubmodelElementList(id: string, submodelId: string, idShortPath: string, params: TableModificationParamsDto) {
+    return this.axiosInstance.post<SubmodelElementResponseDto>(
+      `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/rows`,
+      undefined,
+      { params },
+    )
+  }
+
+  public async deleteRowFromSubmodelElementList(id: string, submodelId: string, idShortPath: string, idShortOfRow: string) {
+    return this.axiosInstance.delete(
+      `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/rows/${idShortOfRow}`,
+    )
   }
 
   public async modifySubmodelElement(id: string, submodelId: string, idShortPath: string, data: SubmodelElementModificationDto) {

@@ -39,7 +39,7 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
   private modifySubmodelBase(submodelBase: ISubmodelBase, data: unknown) {
     const { displayName, description } = SubmodelBaseModificationSchema.parse(data);
     submodelBase.displayName = displayName?.map(LanguageText.fromPlain) ?? submodelBase.displayName;
-    submodelBase.description = description?.map(LanguageText.fromPlain) ?? submodelBase.displayName;
+    submodelBase.description = description?.map(LanguageText.fromPlain) ?? submodelBase.description;
   }
 
   visitAdministrativeInformation(_element: AdministrativeInformation, _context: unknown): void {
@@ -193,7 +193,7 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
 
   visitSubmodelElements(element: ISubmodelElement, submodelElementModifications: SubmodelElementModificationDto[]): void {
     for (const submodelElement of submodelElementModifications) {
-      const foundElement = [...element.getSubmodelElements()].find(e => e.idShort === submodelElement.idShort);
+      const foundElement = element.getSubmodelElements().find(e => e.idShort === submodelElement.idShort);
       if (!foundElement) {
         throw new ValueError(`Could not find element with idShort ${submodelElement.idShort} within submodel element ${element.idShort}.`);
       }

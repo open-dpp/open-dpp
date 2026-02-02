@@ -55,6 +55,10 @@ describe("templateController", () => {
     await ctx.asserts.postSubmodel(createTemplate);
   });
 
+  it("/DELETE submodel", async () => {
+    await ctx.asserts.deleteSubmodel(createTemplate, saveTemplate);
+  });
+
   it(`/PATCH submodel`, async () => {
     await ctx.asserts.modifySubmodel(createTemplate, saveTemplate);
   });
@@ -75,12 +79,36 @@ describe("templateController", () => {
     await ctx.asserts.postSubmodelElement(createTemplate);
   });
 
+  it(`/DELETE submodel element`, async () => {
+    await ctx.asserts.deleteSubmodelElement(createTemplate, saveTemplate);
+  });
+
   it(`/PATCH submodel element`, async () => {
     await ctx.asserts.modifySubmodelElement(createTemplate, saveTemplate);
   });
 
   it(`/PATCH submodel element value`, async () => {
     await ctx.asserts.modifySubmodelElementValue(createTemplate, saveTemplate);
+  });
+
+  it("/POST add column", async () => {
+    await ctx.asserts.addColumn(createTemplate, saveTemplate);
+  });
+
+  it("/PATCH modify column", async () => {
+    await ctx.asserts.modifyColumn(createTemplate, saveTemplate);
+  });
+
+  it("/DELETE column", async () => {
+    await ctx.asserts.deleteColumn(createTemplate, saveTemplate);
+  });
+
+  it("/POST add row", async () => {
+    await ctx.asserts.addRow(createTemplate, saveTemplate);
+  });
+
+  it("/DELETE row", async () => {
+    await ctx.asserts.deleteRow(createTemplate, saveTemplate);
   });
 
   it(`/POST submodel element at a specified path within submodel elements hierarchy`, async () => {

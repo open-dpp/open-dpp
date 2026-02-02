@@ -11,6 +11,7 @@ import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import TablePagination from "../pagination/TablePagination.vue";
+import SubmodelElementListCreateEditor from "./SubmodelElementListCreateEditor.vue";
 
 const props = defineProps<{
   id: string;
@@ -32,13 +33,13 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
 }
 
 const errorHandlingStore = useErrorHandlingStore();
+const aasNamespace = props.editorMode === AasEditMode.Passport
+  ? apiClient.dpp.templates.aas // TODO: Replace templates here by passports
+  : apiClient.dpp.templates.aas;
 
 const aasEditor = useAasEditor({
   id: props.id,
-  aasNamespace:
-    props.editorMode === AasEditMode.Passport
-      ? apiClient.dpp.templates.aas // TODO: Replace templates here by passports
-      : apiClient.dpp.templates.aas,
+  aasNamespace,
   initialSelectedKeys: route.query.edit ? String(route.query.edit) : undefined,
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
   changeQueryParams,
@@ -161,15 +162,19 @@ function onSubmit() {
       <template #header>
         <div class="flex flex-row items-center justify-between w-full pr-2 gap-1">
           <span class="text-xl font-bold">{{ drawerHeader }}</span>
-          <Button :label="t('common.save')" @click="onSubmit" />
+          <Button :label="editorVNode?.component === SubmodelElementListCreateEditor ? t('aasEditor.table.saveAndAddEntries') : t('common.save')" @click="onSubmit" />
         </div>
       </template>
       <component
         :is="editorVNode.component"
         v-if="editorVNode"
-        ref="componentRef"
         v-bind="editorVNode.props"
-        :aas-editor="aasEditor"
+        :id="props.id"
+        ref="componentRef"
+        :aas-namespace="aasNamespace"
+        :open-drawer="aasEditor.openDrawer"
+        :error-handling-store="errorHandlingStore"
+        :translate="t"
       />
     </Drawer>
   </div>

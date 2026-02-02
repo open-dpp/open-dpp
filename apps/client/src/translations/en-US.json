@@ -54,6 +54,12 @@
       "value": "Value",
       "name": "Name"
     },
+    "table": {
+      "saveAndAddEntries": "Save and add list entries",
+      "column": "column",
+      "addColumn": "@:common.add @:aasEditor.table.column",
+      "errorAddColumn": "Fails to @.lower:common.add @:aasEditor.table.column"
+    },
     "addSubmodel": "Add section",
     "submodelElementCollection": "Sub section",
     "edit": "Edit {formItem}",

@@ -1,4 +1,4 @@
-import { applyDecorators, Body, Get, Param, Patch, Post, Query, Req } from "@nestjs/common";
+import { applyDecorators, Body, Delete, Get, HttpCode, Param, Patch, Post, Query, Req } from "@nestjs/common";
 
 import {
   SubmodelElementModificationSchema,
@@ -10,6 +10,8 @@ import {
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { z } from "zod";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
+
+const DeleteHttpCode = HttpCode(204);
 
 export const ApiGetShellsPath = "/:id/shells";
 export function ApiGetShells() {
@@ -34,6 +36,13 @@ export const ApiGetSubmodelByIdPath = "/:id/submodels/:submodelId";
 export function ApiGetSubmodelById() {
   return applyDecorators(
     Get(ApiGetSubmodelByIdPath),
+  );
+}
+
+export function ApiDeleteSubmodelById() {
+  return applyDecorators(
+    Delete(ApiGetSubmodelByIdPath),
+    HttpCode(204), // Explicitly state the HTTP status code
   );
 }
 
@@ -70,6 +79,13 @@ export function ApiGetSubmodelElementById() {
   );
 }
 
+export function ApiDeleteSubmodelElementById() {
+  return applyDecorators(
+    Delete(ApiGetSubmodelElementByIdPath),
+    DeleteHttpCode,
+  );
+}
+
 export function ApiPatchSubmodelElement() {
   return applyDecorators(
     Patch(ApiGetSubmodelElementByIdPath),
@@ -79,6 +95,44 @@ export function ApiPatchSubmodelElement() {
 export function ApiPostSubmodelElementAtIdShortPath() {
   return applyDecorators(
     Post(ApiGetSubmodelElementByIdPath),
+  );
+}
+export const ApiPostColumnPath = `${ApiGetSubmodelElementByIdPath}/columns`;
+
+export function ApiPostColumn() {
+  return applyDecorators(
+    Post(ApiPostColumnPath),
+  );
+}
+
+export const ApiGetColumnByIdShortPath = `${ApiPostColumnPath}/:idShortOfColumn`;
+
+export function ApiDeleteColumn() {
+  return applyDecorators(
+    Delete(ApiGetColumnByIdShortPath),
+    DeleteHttpCode,
+  );
+}
+
+export function ApiPatchColumn() {
+  return applyDecorators(
+    Patch(ApiGetColumnByIdShortPath),
+  );
+}
+
+export const ApiPostRowPath = `${ApiGetSubmodelElementByIdPath}/rows`;
+
+export function ApiPostRow() {
+  return applyDecorators(
+    Post(ApiPostRowPath),
+  );
+}
+
+export const ApiDeleteRowPath = `${ApiPostRowPath}/:idShortOfRow`;
+export function ApiDeleteRow() {
+  return applyDecorators(
+    Post(ApiDeleteRowPath),
+    DeleteHttpCode,
   );
 }
 
@@ -133,6 +187,22 @@ export const IdShortPathParamSchema = z.string().regex(
 });
 export const IdShortPathParam = () => Param("idShortPath", new ZodValidationPipe(IdShortPathParamSchema));
 
+export const ColumnParamSchema = z.string().meta({
+  description: "IdShort of the column.",
+  example: "Col1",
+  param: { in: "path", name: "idShortOfColumn" },
+});
+
+export const ColumnParam = () => Param("idShortOfColumn", new ZodValidationPipe(ColumnParamSchema));
+
+export const RowParamSchema = z.string().meta({
+  description: "IdShort of the row.",
+  example: "Row1",
+  param: { in: "path", name: "idShortOfRow" },
+});
+
+export const RowParam = () => Param("idShortOfRow", new ZodValidationPipe(RowParamSchema));
+
 export const RequestParam = () => Req();
 
 export const LimitQueryParamSchema = z.coerce.number().optional().meta({
@@ -148,6 +218,14 @@ export const CursorQueryParamSchema = z.string().optional().meta({
   example: "958b741c-c2ef-4366-a134-fafd30210ed4 ",
   param: { in: "query", name: "cursor" },
 });
+
+export const PositionQueryParamSchema = z.coerce.number().optional().meta({
+  description: "The position of the element in the result listing. The first element has position 0.",
+  example: 1,
+  param: { in: "query", name: "position" },
+});
+
+export const PositionQueryParam = () => Query("position", new ZodValidationPipe(PositionQueryParamSchema));
 
 export const CursorQueryParam = () => Query("cursor", new ZodValidationPipe(CursorQueryParamSchema));
 

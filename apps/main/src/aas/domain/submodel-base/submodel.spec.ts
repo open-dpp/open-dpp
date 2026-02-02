@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { beforeAll, expect } from "@jest/globals";
-import { DataTypeDef } from "@open-dpp/dto";
+import { AasSubmodelElements, DataTypeDef } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import {
+  propertyPlainFactory,
   submodelBillOfMaterialPlainFactory,
   submodelCarbonFootprintPlainFactory,
   submodelDesignOfProductPlainFactory,
@@ -13,6 +14,8 @@ import { Property } from "./property";
 import { registerSubmodelElementClasses } from "./register-submodel-element-classes";
 import { Submodel } from "./submodel";
 import { IdShortPath } from "./submodel-base";
+import { SubmodelElementList } from "./submodel-element-list";
+import { TableExtension } from "./table-extension";
 
 describe("submodel", () => {
   beforeAll(() => {
@@ -51,7 +54,81 @@ describe("submodel", () => {
     const submodelElement = Property.create({ idShort: "prop1", value: "10", valueType: DataTypeDef.Double });
     submodel.addSubmodelElement(submodelElement);
     expect(submodel.findSubmodelElementOrFail(IdShortPath.create({ path: submodelElement.idShort }))).toEqual(submodelElement);
+
+    const submodelElement0 = Property.fromPlain(propertyPlainFactory.build({ idShort: "submodelElement0" }));
+    submodel.addSubmodelElement(submodelElement0, { position: 0 });
+    expect(submodel.getSubmodelElements()[0]).toEqual(submodelElement0);
+
     expect(() => submodel.addSubmodelElement(submodelElement)).toThrow(new ValueError(`Submodel element with idShort prop1 already exists`));
+  });
+
+  it("should add column", () => {
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    submodel.addSubmodelElement(submodelElementList);
+    const col1 = Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double });
+    submodel.addColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1);
+    const row0 = submodelElementList.getSubmodelElements()[0];
+    expect(row0.getSubmodelElements()).toEqual([col1]);
+  });
+
+  it("should modify column", () => {
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    submodel.addSubmodelElement(submodelElementList);
+    const col1 = Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double });
+    submodel.addColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1);
+    const newDisplayNames = [{
+      language: "de",
+      text: "CO2 Footprint New Text",
+    }];
+    const list = submodel.modifyColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1.idShort, { displayName: newDisplayNames });
+    expect(list.value[0].getSubmodelElements()[0].displayName).toEqual(newDisplayNames.map(LanguageText.fromPlain));
+  });
+
+  it("should delete column", () => {
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    submodel.addSubmodelElement(submodelElementList);
+    const col1 = Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double });
+    submodel.addColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1);
+    let tableExtension = new TableExtension(submodelElementList);
+    expect(tableExtension.columns).toEqual([col1]);
+    submodel.deleteColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1.idShort);
+    tableExtension = new TableExtension(submodelElementList);
+    expect(tableExtension.columns).toEqual([]);
+  });
+
+  it("should add row", () => {
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    submodel.addSubmodelElement(submodelElementList);
+    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }));
+    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }));
+    expect(new TableExtension(submodelElementList).rows).toHaveLength(2);
+  });
+
+  it("should delete row", () => {
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    submodel.addSubmodelElement(submodelElementList);
+    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }));
+    submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }));
+    let tableExtension = new TableExtension(submodelElementList);
+    const [row0, row1] = tableExtension.rows;
+    submodel.deleteRow(IdShortPath.create({ path: submodelElementList.idShort }), row0.idShort);
+    tableExtension = new TableExtension(submodelElementList);
+    expect(tableExtension.rows).toEqual([row1]);
   });
 
   it("should add submodel element by idShortPath", () => {
@@ -59,9 +136,21 @@ describe("submodel", () => {
 
     const submodel = Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }));
     const submodelElement = Property.create({ idShort: "prop1", value: "10", valueType: DataTypeDef.Double });
-    submodel.addSubmodelElement(submodelElement, IdShortPath.create({ path: "ProductCarbonFootprint_A1A3" }));
+    submodel.addSubmodelElement(submodelElement, { idShortPath: IdShortPath.create({ path: "ProductCarbonFootprint_A1A3" }) });
     expect(submodel.findSubmodelElementOrFail(IdShortPath.create({ path: `ProductCarbonFootprint_A1A3.${submodelElement.idShort}` }))).toEqual(submodelElement);
-    expect(() => submodel.addSubmodelElement(submodelElement, IdShortPath.create({ path: "ProductCarbonFootprint_A1A3" }))).toThrow(new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`));
+    expect(() => submodel.addSubmodelElement(submodelElement, { idShortPath: IdShortPath.create({ path: "ProductCarbonFootprint_A1A3" }) })).toThrow(new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`));
+  });
+
+  it("should delete submodel element by idShortPath", () => {
+    const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
+    const submodel = Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodelElement = Property.create({ idShort: "prop1", value: "10", valueType: DataTypeDef.Double });
+    submodel.addSubmodelElement(submodelElement, { idShortPath: IdShortPath.create({ path: "ProductCarbonFootprint_A1A3" }) });
+    submodel.deleteSubmodelElement(IdShortPath.create({ path: `ProductCarbonFootprint_A1A3.${submodelElement.idShort}` }));
+    expect(submodel.findSubmodelElement(
+      IdShortPath.create({ path: `ProductCarbonFootprint_A1A3.${submodelElement.idShort}` }),
+    )).toBeUndefined();
   });
 
   it("should get value representation for design submodel", () => {

@@ -2,12 +2,13 @@ import type { SubmodelResponseDto } from "@open-dpp/dto";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { Component } from "vue";
 import type { IAasEditor } from "./aas-editor.ts";
-import { AasSubmodelElements, DataTypeDef, KeyTypes, Language, SubmodelElementCollectionJsonSchema } from "@open-dpp/dto";
+import { AasSubmodelElements, DataTypeDef, KeyTypes, Language, SubmodelElementCollectionJsonSchema, SubmodelElementSchema } from "@open-dpp/dto";
 import {
   submodelCarbonFootprintPlainFactory,
   submodelDesignOfProductPlainFactory,
   submodelPlainToResponse,
 } from "@open-dpp/testing";
+import { waitFor } from "@testing-library/vue";
 import { omit } from "lodash";
 import { v4 as uuid4 } from "uuid";
 import { expect, it, vi } from "vitest";
@@ -266,9 +267,9 @@ describe("aasEditor composable", () => {
     };
     beforeEach(() => {
       vi.resetAllMocks();
-      mocks.getSubmodels.mockResolvedValue({ data: paginationResponse, status: HTTPCode.OK });
     });
     it("should create submodel", async () => {
+      mocks.getSubmodels.mockResolvedValue({ data: paginationResponse, status: HTTPCode.OK });
       mocks.createSubmodel.mockResolvedValue({ status: HTTPCode.CREATED });
       const { createSubmodel, init, drawerVisible, editorVNode } = useAasEditor({
         id: aasId,
@@ -300,21 +301,30 @@ describe("aasEditor composable", () => {
 
     async function assertCreationOfSubmodelElement(aasEditor: IAasEditor, data: any, expectedRequestBody: any, label: string, expectedEditor: Component, expectedCreationData?: any) {
       await aasEditor.init();
-
+      // --- Test creation of submodel element directly at a submodel ---
+      // find the corresponding menu item and click on it
       aasEditor.buildAddSubmodelElementMenu(aasEditor.findTreeNodeByKey(submodel1.id)!);
-      let addPropertyMenuItem: MenuItem = aasEditor.submodelElementsToAdd.value.find(e => e.label === label)!;
+      const addPropertyMenuItem: MenuItem = aasEditor.submodelElementsToAdd.value.find(e => e.label === label)!;
       addPropertyMenuItem.command!({} as MenuItemCommandEvent);
+      // assert the correct creation editor appears in the drawer after clicking on the menu item
       expect(aasEditor.drawerVisible.value).toBeTruthy();
       expect(aasEditor.editorVNode.value!.props.path).toEqual({ submodelId: submodel1.id });
       expect(aasEditor.editorVNode.value!.props.data).toEqual(expectedCreationData ?? {});
       expect(aasEditor.editorVNode.value!.component).toEqual(expectedEditor);
+      // simulate and assert the api request which would be triggered if the submit button in creation editor has been clicked
       await aasEditor.editorVNode.value!.props.callback!(data);
       expect(mocks.createSubmodelElement).toHaveBeenCalledWith(aasId, submodel1.id, expectedRequestBody);
+    }
 
-      expect(mocks.createSubmodelElement).toHaveBeenCalledWith(aasId, submodel1.id, expectedRequestBody);
+    async function assertCreationOfSubmodelElementAtSubmodelElementLevel(aasEditor: IAasEditor, data: any, expectedRequestBody: any, label: string) {
+      await aasEditor.init();
+      // --- Test creation of submodel element within the submodel element Design_V01.Author
+
+      // find the corresponding menu item and click on it
       aasEditor.buildAddSubmodelElementMenu(aasEditor.findTreeNodeByKey("Design_V01.Author")!);
-      addPropertyMenuItem = aasEditor.submodelElementsToAdd.value.find(e => e.label === label)!;
+      const addPropertyMenuItem = aasEditor.submodelElementsToAdd.value.find(e => e.label === label)!;
       addPropertyMenuItem.command!({} as MenuItemCommandEvent);
+      // simulate and assert that createSubmodelElementAtIdShortPath is called instead of createSubmodelElement on submit button click
       await aasEditor.editorVNode.value!.props.callback!(data);
       expect(mocks.createSubmodelElementAtIdShortPath).toHaveBeenCalledWith(aasId, submodel1.id, "Design_V01.Author", expectedRequestBody);
     }
@@ -323,6 +333,8 @@ describe("aasEditor composable", () => {
       { label: "aasEditor.textField", valueType: DataTypeDef.String },
       { label: "aasEditor.numberField", valueType: DataTypeDef.Double },
     ])("should create property for %label", async ({ label, valueType }) => {
+      mocks.getSubmodels.mockResolvedValue({ data: paginationResponse, status: HTTPCode.OK });
+
       mocks.createSubmodelElement.mockResolvedValue({ status: HTTPCode.CREATED });
       mocks.createSubmodelElementAtIdShortPath.mockResolvedValue({ status: HTTPCode.CREATED });
 
@@ -343,9 +355,12 @@ describe("aasEditor composable", () => {
         ...sharedCreationProps,
       };
       await assertCreationOfSubmodelElement(aasEditor, data, expectedRequestBody, label, PropertyCreateEditor, { valueType });
+      await assertCreationOfSubmodelElementAtSubmodelElementLevel(aasEditor, data, expectedRequestBody, label);
     });
 
     it("should create submodel element collection", async () => {
+      mocks.getSubmodels.mockResolvedValue({ data: paginationResponse, status: HTTPCode.OK });
+
       mocks.createSubmodelElement.mockResolvedValue({ status: HTTPCode.CREATED });
       mocks.createSubmodelElementAtIdShortPath.mockResolvedValue({ status: HTTPCode.CREATED });
 
@@ -366,9 +381,13 @@ describe("aasEditor composable", () => {
         value: [],
       };
       await assertCreationOfSubmodelElement(aasEditor, data, expectedRequestBody, "aasEditor.submodelElementCollection", SubmodelElementCollectionCreateEditor);
+      await assertCreationOfSubmodelElementAtSubmodelElementLevel(aasEditor, data, expectedRequestBody, "aasEditor.submodelElementCollection");
     });
 
     it("should create submodel element list", async () => {
+      mocks.getSubmodels.mockResolvedValueOnce({ data: paginationResponse, status: HTTPCode.OK });
+
+      const data = { idShort: "newList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection, modelType: KeyTypes.SubmodelElementList };
       mocks.createSubmodelElement.mockResolvedValue({ status: HTTPCode.CREATED });
       mocks.createSubmodelElementAtIdShortPath.mockResolvedValue({ status: HTTPCode.CREATED });
 
@@ -381,17 +400,28 @@ describe("aasEditor composable", () => {
         translate,
       });
 
-      const data = { idShort: "newProperty", typeValueListElement: AasSubmodelElements.SubmodelElementCollection };
       const expectedRequestBody = {
         ...data,
         modelType: KeyTypes.SubmodelElementList,
         ...sharedCreationProps,
         value: [],
       };
+      const mockedResponse = {
+        paging_metadata: { cursor: null },
+        result: [{ ...submodel, submodelElements: [...submodel.submodelElements, SubmodelElementSchema.parse(data)] }],
+      };
+      mocks.getSubmodels.mockResolvedValueOnce({ data: mockedResponse, status: HTTPCode.OK });
       await assertCreationOfSubmodelElement(aasEditor, data, expectedRequestBody, "aasEditor.submodelElementList", SubmodelElementListCreateEditor);
+      // Assert that the list editor is opened after creation of the list element to allow the user to add list elements
+      await waitFor(() => expect(aasEditor.editorVNode.value!.component).toEqual(SubmodelElementListEditor));
+
+      mocks.getSubmodels.mockResolvedValue({ data: paginationResponse, status: HTTPCode.OK });
+      await assertCreationOfSubmodelElementAtSubmodelElementLevel(aasEditor, data, expectedRequestBody, "aasEditor.submodelElementList");
     });
 
     it("should create file", async () => {
+      mocks.getSubmodels.mockResolvedValue({ data: paginationResponse, status: HTTPCode.OK });
+
       mocks.createSubmodelElement.mockResolvedValue({ status: HTTPCode.CREATED });
       mocks.createSubmodelElementAtIdShortPath.mockResolvedValue({ status: HTTPCode.CREATED });
 
@@ -411,6 +441,7 @@ describe("aasEditor composable", () => {
         ...sharedCreationProps,
       };
       await assertCreationOfSubmodelElement(aasEditor, data, expectedRequestBody, "aasEditor.file", FileCreateEditor);
+      await assertCreationOfSubmodelElementAtSubmodelElementLevel(aasEditor, data, expectedRequestBody, "aasEditor.file");
     });
   });
 });

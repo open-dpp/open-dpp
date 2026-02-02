@@ -194,7 +194,7 @@ export class ValueModifierVisitor implements IVisitor<unknown, void> {
 
   visitSubmodelElements(element: ISubmodelElement, submodelElementModifications: SubmodelElementModificationDto[]): void {
     for (const submodelElement of submodelElementModifications) {
-      const foundElement = [...element.getSubmodelElements()].find(e => e.idShort === submodelElement.idShort);
+      const foundElement = element.getSubmodelElements().find(e => e.idShort === submodelElement.idShort);
       if (!foundElement) {
         throw new ValueError(`Could not find element with idShort ${submodelElement.idShort} within submodel element ${element.idShort}.`);
       }

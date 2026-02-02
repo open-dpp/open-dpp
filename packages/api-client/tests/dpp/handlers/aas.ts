@@ -18,6 +18,8 @@ import { checkQueryParameters } from '../../utils'
 import { baseURL } from './index'
 
 export const paginationParams = { limit: 10, cursor: randomUUID() }
+export const tableModificationParams = { position: 4 }
+
 export const aasWrapperId = randomUUID()
 export const iriDomain = `https://open-dpp.de/${randomUUID()}`
 export const aasResponse = AssetAdministrationShellJsonSchema.parse(
@@ -99,6 +101,14 @@ export function aasHandlers(basePath: string) {
         })
       },
     ),
+    http.delete(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}`,
+      async () => {
+        return HttpResponse.json(undefined, {
+          status: 204,
+        })
+      },
+    ),
     http.get(
       `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements`,
       async () => {
@@ -121,11 +131,76 @@ export function aasHandlers(basePath: string) {
         )
       },
     ),
+    http.delete(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements/${submodelCarbonFootprintElement0.idShort}`,
+      async () => {
+        return HttpResponse.json(
+          undefined,
+          {
+            status: 204,
+          },
+        )
+      },
+    ),
     http.get(
       `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/${submodelDesignOfProductElement0.idShort}/$value`,
       async () => {
         return HttpResponse.json(submodelValueResponse.Design_V01, {
           status: 200,
+        })
+      },
+    ),
+    http.post(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/Design_V01.Author.ListProp/columns`,
+      async ({ request }) => {
+        const errorResponse = checkQueryParameters(request, {
+          position: tableModificationParams.position.toFixed(),
+        })
+
+        return (
+          errorResponse
+          || HttpResponse.json(submodelDesignOfProductElement0, {
+            status: 200,
+          })
+        )
+      },
+    ),
+    http.patch(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/Design_V01.Author.ListProp/columns/column1`,
+      async () => {
+        return HttpResponse.json(submodelDesignOfProductElement0, {
+          status: 200,
+        })
+      },
+    ),
+    http.delete(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/Design_V01.Author.ListProp/columns/column1`,
+      async () => {
+        return HttpResponse.json(undefined, {
+          status: 204,
+        })
+      },
+    ),
+    http.post(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/Design_V01.Author.ListProp/rows`,
+      async ({ request }) => {
+        const errorResponse = checkQueryParameters(request, {
+          position: tableModificationParams.position.toFixed(),
+        })
+
+        return (
+          errorResponse
+          || HttpResponse.json(submodelDesignOfProductElement0, {
+            status: 200,
+          })
+        )
+      },
+    ),
+    http.delete(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/Design_V01.Author.ListProp/rows/row1`,
+      async () => {
+        return HttpResponse.json(undefined, {
+          status: 204,
         })
       },
     ),

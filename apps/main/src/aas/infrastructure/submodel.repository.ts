@@ -29,6 +29,10 @@ export class SubmodelRepository {
     return await findOneOrFail(id, this.submodelDoc, this.fromPlain);
   }
 
+  async deleteById(id: string): Promise<void> {
+    await this.submodelDoc.findByIdAndDelete(id);
+  }
+
   async findOne(id: string): Promise<Submodel | undefined> {
     return await findOne(id, this.submodelDoc, this.fromPlain);
   }

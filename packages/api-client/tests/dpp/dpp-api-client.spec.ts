@@ -106,6 +106,11 @@ describe('apiClient', () => {
       const response = await sdk.dpp[dppIdentfiable].aas.getSubmodelById(aasWrapperId, btoa(submodelCarbonFootprintResponse.id))
       expect(response.data).toEqual(submodelCarbonFootprintResponse)
     })
+
+    it('should delete submodel by id', async () => {
+      const response = await sdk.dpp[dppIdentfiable].aas.deleteSubmodelById(aasWrapperId, btoa(submodelCarbonFootprintResponse.id))
+      expect(response.status).toEqual(204)
+    })
     it('should return submodel as value', async () => {
       const response = await sdk.dpp[dppIdentfiable].aas.getSubmodelValue(aasWrapperId, btoa(submodelDesignOfProduct.id))
       expect(response.data).toEqual(submodelValueResponse)
@@ -118,6 +123,11 @@ describe('apiClient', () => {
     it('should return submodel element by id', async () => {
       const response = await sdk.dpp[dppIdentfiable].aas.getSubmodelElementById(aasWrapperId, btoa(submodelCarbonFootprintResponse.id), submodelCarbonFootprintElement0.idShort)
       expect(response.data).toEqual(submodelCarbonFootprintResponse.submodelElements[0])
+    })
+
+    it('should delete submodel element by id', async () => {
+      const response = await sdk.dpp[dppIdentfiable].aas.deleteSubmodelElementById(aasWrapperId, btoa(submodelCarbonFootprintResponse.id), submodelCarbonFootprintElement0.idShort)
+      expect(response.status).toEqual(204)
     })
 
     it('should return submodel element value', async () => {
@@ -148,6 +158,58 @@ describe('apiClient', () => {
         propertyToAdd,
       )
       expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd))
+    })
+
+    it('should add column to submodel element list', async () => {
+      const response = await sdk.dpp[dppIdentfiable].aas.addColumnToSubmodelElementList(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        'Design_V01.Author.ListProp',
+        propertyModificationPlainFactory.build(),
+        { position: 4 },
+      )
+      expect(response.data).toEqual(submodelDesignOfProductElement0)
+    })
+
+    it('should modify column of submodel element list', async () => {
+      const response = await sdk.dpp[dppIdentfiable].aas.modifyColumnOfSubmodelElementList(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        'Design_V01.Author.ListProp',
+        'column1',
+        propertyModificationPlainFactory.build({ idShort: 'column1' }),
+      )
+      expect(response.data).toEqual(submodelDesignOfProductElement0)
+    })
+
+    it('should delete column from submodel element list', async () => {
+      const response = await sdk.dpp[dppIdentfiable].aas.deleteColumnFromSubmodelElementList(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        'Design_V01.Author.ListProp',
+        'column1',
+      )
+      expect(response.status).toEqual(204)
+    })
+
+    it('should add row to submodel element list', async () => {
+      const response = await sdk.dpp[dppIdentfiable].aas.addRowToSubmodelElementList(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        'Design_V01.Author.ListProp',
+        { position: 4 },
+      )
+      expect(response.data).toEqual(submodelDesignOfProductElement0)
+    })
+
+    it('should delete row from submodel element list', async () => {
+      const response = await sdk.dpp[dppIdentfiable].aas.deleteRowFromSubmodelElementList(
+        aasWrapperId,
+        btoa(submodelDesignOfProduct.id),
+        'Design_V01.Author.ListProp',
+        'row1',
+      )
+      expect(response.status).toEqual(204)
     })
 
     it('should modify submodel element', async () => {
