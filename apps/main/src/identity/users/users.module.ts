@@ -2,7 +2,6 @@ import { forwardRef, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AuthModule } from "../auth/auth.module";
 import { OrganizationsModule } from "../organizations/organizations.module";
-import { UsersRepositoryPort } from "./domain/ports/users.repository.port";
 import { UsersRepository } from "./infrastructure/adapters/users.repository";
 import { UserMapper } from "./infrastructure/mappers/user.mapper";
 import { User, UserSchema } from "./infrastructure/schemas/user.schema";
@@ -19,11 +18,8 @@ import { UsersController } from "./presentation/users.controller";
   providers: [
     UsersService,
     UserMapper,
-    {
-      provide: UsersRepositoryPort,
-      useClass: UsersRepository,
-    },
+    UsersRepository,
   ],
-  exports: [UsersService, UsersRepositoryPort],
+  exports: [UsersService, UsersRepository],
 })
 export class UsersModule { }

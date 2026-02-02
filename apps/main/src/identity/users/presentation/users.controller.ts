@@ -6,8 +6,8 @@ import { UsersService } from "../infrastructure/users.service";
 
 export const CreateUserDtoSchema = z.object({
   email: z.string().email(),
-  name: z.string().optional(),
-  image: z.string().optional(),
+  firstName: z.string(),
+  lastName: z.string(),
 });
 
 export type CreateUserDto = z.infer<typeof CreateUserDtoSchema>;
@@ -20,7 +20,7 @@ export class UsersController {
 
   @Post()
   async createUser(@Body(new ZodValidationPipe(CreateUserDtoSchema)) body: CreateUserDto) {
-    await this.usersService.createUser(body.email, body.name as any, body.image);
+    await this.usersService.createUser(body.email, body.firstName, body.lastName);
   }
 
   @Get(":id")
