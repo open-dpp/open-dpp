@@ -15,6 +15,12 @@ export class User {
   emailVerified: boolean;
 
   @Prop()
+  firstName: string;
+
+  @Prop()
+  lastName: string;
+
+  @Prop()
   name: string;
 
   @Prop()

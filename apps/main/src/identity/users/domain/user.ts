@@ -1,8 +1,9 @@
 import { randomBytes } from "node:crypto";
-import { Expose } from "class-transformer";
 
 export interface UserCreateProps {
   email: string;
+  firstName?: string;
+  lastName?: string;
   name?: string;
   image?: string;
   emailVerified?: boolean;
@@ -34,6 +35,8 @@ export class User {
   private constructor(
     id: string,
     email: string,
+    firstName: string | null,
+    lastName: string | null,
     name: string | null,
     image: string | null,
     emailVerified: boolean,
@@ -42,6 +45,8 @@ export class User {
   ) {
     this.id = id;
     this.email = email;
+    this.firstName = firstName;
+    this.lastName = lastName;
     this.name = name;
     this.image = image;
     this.emailVerified = emailVerified;
@@ -54,6 +59,8 @@ export class User {
     return new User(
       generate24CharId(),
       data.email,
+      data.firstName ?? null,
+      data.lastName ?? null,
       data.name ?? null,
       data.image ?? null,
       data.emailVerified ?? false,
@@ -66,6 +73,8 @@ export class User {
     return new User(
       data.id,
       data.email,
+      data.firstName ?? null,
+      data.lastName ?? null,
       data.name ?? null,
       data.image ?? null,
       data.emailVerified ?? false,

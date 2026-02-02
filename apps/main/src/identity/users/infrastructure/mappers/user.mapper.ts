@@ -6,6 +6,8 @@ export class UserMapper {
     const props: UserDbProps = {
       id: document._id,
       email: document.email,
+      firstName: document.firstName,
+      lastName: document.lastName,
       name: document.name,
       image: document.image,
       emailVerified: document.emailVerified,
@@ -19,6 +21,8 @@ export class UserMapper {
     return {
       _id: entity.id,
       email: entity.email,
+      firstName: entity.firstName ?? undefined,
+      lastName: entity.lastName ?? undefined,
       name: entity.name ?? undefined,
       image: entity.image ?? undefined,
       emailVerified: entity.emailVerified,
