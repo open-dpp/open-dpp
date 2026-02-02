@@ -21,25 +21,14 @@ function generate24CharId(): string {
 }
 
 export class User {
-  @Expose()
   public readonly id: string;
-
-  @Expose()
   public readonly email: string;
-
-  @Expose()
+  public readonly firstName: string | null;
+  public readonly lastName: string | null;
   public readonly name: string | null;
-
-  @Expose()
   public readonly image: string | null;
-
-  @Expose()
   public readonly emailVerified: boolean;
-
-  @Expose()
   public readonly createdAt: Date;
-
-  @Expose()
   public readonly updatedAt: Date;
 
   private constructor(

@@ -1,7 +1,5 @@
 import { randomBytes } from "node:crypto";
 
-import { Expose } from "class-transformer";
-
 export interface AccountCreateProps {
   userId: string;
   accountId: string;
@@ -22,43 +20,18 @@ export type AccountDbProps = AccountCreateProps & {
 };
 
 export class Account {
-  @Expose()
   public readonly id: string;
-
-  @Expose()
   public readonly userId: string;
-
-  @Expose()
   public readonly accountId: string;
-
-  @Expose()
   public readonly providerId: string;
-
-  @Expose()
   public readonly accessToken?: string;
-
-  @Expose()
   public readonly refreshToken?: string;
-
-  @Expose()
   public readonly accessTokenExpiresAt?: Date;
-
-  @Expose()
   public readonly refreshTokenExpiresAt?: Date;
-
-  @Expose()
   public readonly scope?: string;
-
-  @Expose()
   public readonly idToken?: string;
-
-  @Expose()
   public readonly password?: string;
-
-  @Expose()
   public readonly createdAt: Date;
-
-  @Expose()
   public readonly updatedAt: Date;
 
   private constructor(
