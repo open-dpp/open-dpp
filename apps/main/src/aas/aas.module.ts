@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { UniqueProductIdentifierService } from "../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { AasRepository } from "./infrastructure/aas.repository";
 import {
   AssetAdministrationShellDoc,
