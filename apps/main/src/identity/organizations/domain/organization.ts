@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { Member } from "./member";
 
 export interface OrganizationCreateProps {
   name: string;
@@ -25,6 +26,7 @@ export class Organization {
   public readonly logo: string | null;
   public readonly metadata: any;
   public readonly createdAt: Date;
+  public readonly members: Member[];
 
   private constructor(
     id: string,
@@ -33,6 +35,7 @@ export class Organization {
     logo: string | null,
     metadata: any,
     createdAt: Date,
+    members: Member[],
   ) {
     this.id = id;
     this.name = name;
@@ -40,6 +43,7 @@ export class Organization {
     this.logo = logo;
     this.metadata = metadata;
     this.createdAt = createdAt;
+    this.members = members;
   }
 
   public static create(data: OrganizationCreateProps) {
@@ -51,6 +55,7 @@ export class Organization {
       data.logo ?? null,
       data.metadata ?? {},
       now,
+      [],
     );
   }
 
@@ -62,6 +67,18 @@ export class Organization {
       data.logo ?? null,
       data.metadata ?? {},
       data.createdAt,
+      [],
     );
+  }
+
+  isMember(member: Member) {
+    return this.members.some(m => m.id === member.id);
+  }
+
+  addMember(member: Member) {
+    if (this.isMember(member)) {
+      return;
+    }
+    this.members.push(member);
   }
 }

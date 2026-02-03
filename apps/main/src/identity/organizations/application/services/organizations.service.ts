@@ -1,8 +1,11 @@
-import { ForbiddenException, Injectable, Logger, UnauthorizedException } from "@nestjs/common";
-import { AuthService } from "../../../auth/application/services/auth.service";
+import { ForbiddenException, Injectable, Logger } from "@nestjs/common";
+import { Session } from "../../../auth/domain/session";
+import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
-import { Organization, OrganizationDbProps } from "../../domain/organization";
-import { OrganizationRole } from "../../domain/organization-role.enum";
+import { Member } from "../../domain/member";
+import { MemberRole } from "../../domain/member-role.enum";
+import { Organization, OrganizationCreateProps } from "../../domain/organization";
+import { InvitationsRepository } from "../../infrastructure/adapters/invitations.repository";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
 import { OrganizationMapper } from "../../infrastructure/mappers/organization.mapper";
@@ -14,8 +17,8 @@ export class OrganizationsService {
   constructor(
     private readonly membersRepository: MembersRepository,
     private readonly organizationsRepository: OrganizationsRepository,
-    private readonly authService: AuthService,
     private readonly usersRepository: UsersRepository,
+    private readonly invitationsRepository: InvitationsRepository,
   ) { }
 
   async isOwnerOrAdmin(organizationId: string, userId: string): Promise<boolean> {
@@ -23,54 +26,51 @@ export class OrganizationsService {
     if (!member) {
       return false;
     }
-    return member.role === OrganizationRole.OWNER || member.role === OrganizationRole.ADMIN;
+    if (member.role === MemberRole.OWNER) {
+      return true;
+    }
+    const user = await this.usersRepository.findOneById(userId);
+    return user !== null && user.role === UserRole.ADMIN;
   }
 
   async createOrganization(
-    userId: string,
-    name: string,
-    slug: string,
+    data: OrganizationCreateProps,
+    session: Session,
     headers: Record<string, string>,
-    logo?: string,
-    metadata?: any,
   ): Promise<Organization> {
-    this.logger.log(`Creating organization ${name}`);
-    const betterAuthOrganization = await (this.authService.auth.api as any).createOrganization({
-      headers,
-      body: {
-        name,
-        slug,
-        logo,
-        metadata: JSON.stringify(metadata || {}),
-      },
+    const existsWithSlug = await this.organizationsRepository.findOneBySlug(data.slug);
+    if (existsWithSlug) {
+      throw new Error(`Organization with slug ${data.slug} already exists`);
+    }
+    const organization = Organization.create(data);
+    const betterAuthOrganization = await this.organizationsRepository.create(organization, headers);
+    const createdOrganization = OrganizationMapper.toDomainFromBetterAuth(betterAuthOrganization);
+    const owner = Member.create({
+      userId: session.userId,
+      organizationId: createdOrganization.id,
+      role: MemberRole.OWNER,
     });
-    return OrganizationMapper.toDomainFromBetterAuth(betterAuthOrganization);
+    createdOrganization.addMember(owner);
+    return createdOrganization;
   }
 
   async updateOrganization(
-    headers: Record<string, string>,
     organizationId: string,
-    name?: string,
-    slug?: string,
-    logo?: string,
-    metadata?: any,
-  ): Promise<void> {
+    data: OrganizationCreateProps,
+    session: Session,
+    headers: Record<string, string>,
+  ): Promise<Organization | null> {
     const organization = await this.organizationsRepository.findOneById(organizationId);
     if (!organization) {
       throw new Error("Organization not found");
     }
 
-    const updatedProps: OrganizationDbProps = {
-      id: organization.id,
-      name: name ?? organization.name,
-      slug: slug ?? organization.slug,
-      logo: logo !== undefined ? logo : organization.logo,
-      metadata: metadata ?? organization.metadata,
-      createdAt: organization.createdAt,
-    };
-    const updatedOrganization = Organization.loadFromDb(updatedProps);
+    const isOwnerOrAdmin = await this.isOwnerOrAdmin(organizationId, session.userId);
+    if (!isOwnerOrAdmin) {
+      throw new ForbiddenException("You are not authorized to update this organization");
+    }
 
-    await this.organizationsRepository.save(updatedOrganization, headers);
+    return await this.organizationsRepository.update(organizationId, data, headers);
   }
 
   async getMemberOrganizations(userId: string, headers: Record<string, string>): Promise<Organization[]> {
@@ -79,19 +79,14 @@ export class OrganizationsService {
     return this.organizationsRepository.findManyByMember(headers);
   }
 
-  async getOrganization(organizationId: string, headers: Record<string, string>): Promise<Organization | null> {
-    const session = await this.authService.getSession(headers as any);
-    if (!session) {
-      throw new UnauthorizedException();
-    }
+  async getOrganization(
+    organizationId: string,
+    session: Session,
+  ): Promise<Organization | null> {
+    const member = await this.membersRepository.findOneByUserIdAndOrganizationId(session.userId, organizationId);
 
-    const isMember = await this.authService.isMemberOfOrganization(
-      session.user.id,
-      organizationId,
-    );
-
-    if (!isMember) {
-      this.logger.warn(`User ${session.user.id} is not a member of organization ${organizationId}`);
+    if (!member) {
+      this.logger.warn(`User ${session.userId} is not a member of organization ${organizationId}`);
       throw new ForbiddenException();
     }
 
@@ -127,23 +122,37 @@ export class OrganizationsService {
     organizationId: string,
     headers?: Record<string, string> | Headers,
   ): Promise<void> {
-    if (!this.authService.auth) {
-      throw new Error("Auth service is not initialized");
+    await this.organizationsRepository.inviteMember(email, role, organizationId, headers);
+  }
+
+  async getOrganizationNameIfUserInvited(organizationId: string, session: Session): Promise<string | null> {
+    const user = await this.usersRepository.findOneById(session.userId);
+    if (!user) {
+      return null;
     }
-
-    const api = this.authService.auth.api as any;
-
-    if (typeof api.createInvitation !== "function") {
-      throw new TypeError("createInvitation method is not available on auth api. Check if organization plugin is enabled.");
+    const invitation = await this.invitationsRepository.findOneUnexpiredByEmailAndOrganization(user.email, organizationId);
+    if (!invitation) {
+      return null;
     }
+    const organization = await this.organizationsRepository.findOneById(invitation.organizationId);
+    if (!organization) {
+      return null;
+    }
+    return organization.name;
+  }
 
-    await api.createInvitation({
-      headers,
-      body: {
-        email,
-        role,
-        organizationId,
-      },
-    });
+  async getAllOrganizations(session: Session) {
+    const user = await this.usersRepository.findOneById(session.userId);
+    if (!user || user.role !== UserRole.ADMIN) {
+      throw new ForbiddenException();
+    }
+    return this.organizationsRepository.getAllOrganizations();
+  }
+
+  // ! only used for organisation data in passports
+  async getOrganizationDataForPermalink(
+    organizationId: string,
+  ): Promise<Organization | null> {
+    return this.organizationsRepository.findOneById(organizationId);
   }
 }

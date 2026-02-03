@@ -1,9 +1,10 @@
 import type { Auth } from "better-auth";
 import { Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { Organization as BetterAuthOrganizationSchema } from "better-auth/plugins/organization";
 import { Model } from "mongoose";
 import { AUTH } from "../../../auth/auth.provider";
-import { Organization } from "../../domain/organization";
+import { Organization, OrganizationCreateProps } from "../../domain/organization";
 import { DuplicateOrganizationSlugError } from "../../domain/organization.errors";
 import { OrganizationMapper } from "../mappers/organization.mapper";
 import { Organization as OrganizationSchema } from "../schemas/organization.schema";
@@ -28,9 +29,9 @@ export class OrganizationsRepository {
     return result.map((org: any) => OrganizationMapper.toDomain(org));
   }
 
-  async save(organization: Organization, headers: Record<string, string>): Promise<void> {
+  async create(organization: Organization, headers: Record<string, string>): Promise<BetterAuthOrganizationSchema> {
     try {
-      await (this.auth.api as any).createOrganization({
+      return (this.auth.api as any).createOrganization({
         headers,
         body: {
           name: organization.name,
@@ -43,6 +44,28 @@ export class OrganizationsRepository {
     catch (error: any) {
       if (error.code === 11000 && error.keyPattern?.slug) {
         throw new DuplicateOrganizationSlugError(organization.slug);
+      }
+      throw error;
+    }
+  }
+
+  async update(organizationId: string, data: OrganizationCreateProps, headers: Record<string, string>): Promise<Organization | null> {
+    try {
+      await (this.auth.api as any).updateOrganization({
+        headers,
+        body: {
+          name: data.name,
+          slug: data.slug,
+          logo: data.logo,
+          metadata: JSON.stringify(data.metadata || {}),
+        },
+        organizationId,
+      });
+      return this.findOneById(organizationId);
+    }
+    catch (error: any) {
+      if (error.code === 11000 && error.keyPattern?.slug) {
+        throw new DuplicateOrganizationSlugError(data.slug);
       }
       throw error;
     }
@@ -65,5 +88,38 @@ export class OrganizationsRepository {
   async findManyByIds(ids: string[]): Promise<Organization[]> {
     const documents = await this.organizationModel.find({ _id: { $in: ids } });
     return documents.map(OrganizationMapper.toDomain);
+  }
+
+  async getOrganizationDataForPermalink(organizationId: string): Promise<{ name: string; image: string } | null> {
+    const organization = await this.organizationModel.findById(organizationId);
+    if (!organization)
+      return null;
+    return {
+      name: organization.name ?? "",
+      image: organization.logo ?? "",
+    };
+  }
+
+  async getAllOrganizations() {
+    const organizations = await this.organizationModel
+      .find()
+      .limit(100);
+    return organizations.map(org => OrganizationMapper.toDomain(org));
+  }
+
+  async inviteMember(
+    email: string,
+    role: string,
+    organizationId: string,
+    headers?: Record<string, string> | Headers,
+  ): Promise<void> {
+    await (this.auth.api as any).createInvitation({
+      headers,
+      body: {
+        email,
+        role,
+        organizationId,
+      },
+    });
   }
 }
