@@ -73,8 +73,8 @@ describe("passportController", () => {
       updatedAt: secondCreate,
     });
 
-    passportRepository.save(firstPassport);
-    passportRepository.save(secondPassport);
+    await passportRepository.save(firstPassport);
+    await passportRepository.save(secondPassport);
 
     const response = await request(app.getHttpServer())
       .get(basePath)

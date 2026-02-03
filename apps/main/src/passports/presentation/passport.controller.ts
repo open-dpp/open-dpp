@@ -48,7 +48,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
   }
 
   @Get()
-  async getTemplates(
+  async getPassports(
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
     @RequestParam() req: express.Request,
