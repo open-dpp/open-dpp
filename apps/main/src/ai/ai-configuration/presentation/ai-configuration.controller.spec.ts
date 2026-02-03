@@ -71,7 +71,7 @@ describe("aiConfigurationController", () => {
       .compile();
 
     aiConfigurationService = module.get(AiConfigurationService);
-    betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));
+    betterAuthHelper.init(module.get<UsersService>(UsersService), module.get<Auth>(AUTH));
 
     app = module.createNestApplication();
     app.useGlobalFilters(new NotFoundInDatabaseExceptionFilter());

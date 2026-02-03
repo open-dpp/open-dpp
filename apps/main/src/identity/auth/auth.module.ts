@@ -1,6 +1,7 @@
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import { EnvModule } from "@open-dpp/env";
 import { EmailModule } from "../../email/email.module";
+import { OrganizationsModule } from "../organizations/organizations.module";
 import { SessionsService } from "./application/services/sessions.service";
 import { AUTH, AuthProvider } from "./auth.provider";
 import { AuthController } from "./presentation/auth.controller";
@@ -9,6 +10,7 @@ import { AuthController } from "./presentation/auth.controller";
   imports: [
     EnvModule.forRoot(),
     EmailModule,
+    forwardRef(() => OrganizationsModule),
   ],
   controllers: [
     AuthController,
@@ -17,6 +19,6 @@ import { AuthController } from "./presentation/auth.controller";
     AuthProvider,
     SessionsService,
   ],
-  exports: [SessionsService, AUTH, EnvModule],
+  exports: [SessionsService, AUTH, EnvModule, OrganizationsModule],
 })
 export class AuthModule { }

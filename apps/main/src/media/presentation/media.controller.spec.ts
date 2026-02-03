@@ -12,6 +12,8 @@ import { EmailService } from "../../email/email.service";
 import { AuthModule } from "../../identity/auth/auth.module";
 import { AUTH } from "../../identity/auth/auth.provider";
 import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
+import { OrganizationsModule } from "../../identity/organizations/organizations.module";
+import { UsersModule } from "../../identity/users/users.module";
 import { UsersService } from "../../identity/users/application/services/users.service";
 import { MediaDbSchema, MediaDoc } from "../infrastructure/media.schema";
 import { MediaService } from "../infrastructure/media.service";
@@ -42,6 +44,8 @@ describe("mediaController", () => {
           },
         ]),
         AuthModule,
+        OrganizationsModule,
+        UsersModule,
       ],
       providers: [
         MediaService,

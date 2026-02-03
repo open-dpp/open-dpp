@@ -25,7 +25,7 @@ import { OrganizationsController } from "./presentation/organizations.controller
       { name: Member.name, schema: MemberSchema },
       { name: Invitation.name, schema: InvitationSchema },
     ]),
-    AuthModule,
+    forwardRef(() => AuthModule),
     forwardRef(() => UsersModule),
     EmailModule,
   ],

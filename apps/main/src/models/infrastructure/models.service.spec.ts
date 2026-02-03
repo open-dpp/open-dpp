@@ -16,6 +16,7 @@ import { EmailService } from "../../email/email.service";
 import { AuthModule } from "../../identity/auth/auth.module";
 import { AUTH } from "../../identity/auth/auth.provider";
 import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
+import { UsersModule } from "../../identity/users/users.module";
 import { UsersService } from "../../identity/users/application/services/users.service";
 import { Template } from "../../old-templates/domain/template";
 import { laptopFactory } from "../../old-templates/fixtures/laptop.factory";
@@ -59,11 +60,11 @@ describe("modelsService", () => {
           },
         ]),
         AuthModule,
+        UsersModule,
       ],
       providers: [
         ModelsService,
         UniqueProductIdentifierService,
-        UsersService,
         {
           provide: APP_GUARD,
           useClass: AuthGuard,
@@ -211,5 +212,11 @@ describe("modelsService", () => {
     expect(found.templateId).toEqual("templateId");
     const saved = await modelsService.save(found);
     expect(saved.templateId).toEqual("templateId");
+  });
+
+  afterAll(async () => {
+    if (app) {
+      await app.close();
+    }
   });
 });

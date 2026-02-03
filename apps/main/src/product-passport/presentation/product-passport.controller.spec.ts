@@ -111,6 +111,7 @@ describe("productPassportController", () => {
     ).set("Cookie", userCookie);
     expect(response.status).toEqual(200);
 
+
     const productPassport = ProductPassport.create({
       uniqueProductIdentifier: item.uniqueProductIdentifiers[0],
       template,

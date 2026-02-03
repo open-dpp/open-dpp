@@ -23,6 +23,8 @@ import { AuthModule } from "../../identity/auth/auth.module";
 import { AUTH } from "../../identity/auth/auth.provider";
 
 import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
+import { OrganizationsModule } from "../../identity/organizations/organizations.module";
+import { UsersModule } from "../../identity/users/users.module";
 import { UsersService } from "../../identity/users/application/services/users.service";
 import {
   PassportTemplatePublicationDbSchema,
@@ -90,6 +92,8 @@ describe("templateDraftController", () => {
           },
         ]),
         AuthModule,
+        OrganizationsModule,
+        UsersModule,
       ],
       providers: [
         TemplateService,
@@ -97,7 +101,6 @@ describe("templateDraftController", () => {
         MarketplaceApplicationService,
 
         PassportTemplatePublicationService,
-        UsersService,
         {
           provide: APP_GUARD,
           useClass: AuthGuard,
@@ -1080,7 +1083,11 @@ describe("templateDraftController", () => {
   });
 
   afterAll(async () => {
-    await module.close();
-    await app.close();
+    if (module) {
+      await module.close();
+    }
+    if (app) {
+      await app.close();
+    }
   });
 });

@@ -343,7 +343,9 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
   }
 
   afterAll(async () => {
-    await app.close();
+    if (app) {
+      await app.close();
+    }
   });
 
   return {

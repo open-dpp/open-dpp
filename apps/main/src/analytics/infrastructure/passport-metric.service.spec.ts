@@ -57,7 +57,7 @@ describe("passportMetricService", () => {
     passportMetricService = module.get<PassportMetricService>(
       PassportMetricService,
     );
-    betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));
+    betterAuthHelper.init(module.get<UsersService>(UsersService), module.get<Auth>(AUTH));
 
     app = module.createNestApplication();
     await app.init();

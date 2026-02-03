@@ -98,7 +98,7 @@ describe("passportMetricController", () => {
       PassportMetricService,
     );
     modelsService = module.get<ModelsService>(ModelsService);
-    betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));
+    betterAuthHelper.init(module.get<UsersService>(UsersService), module.get<Auth>(AUTH));
 
     app = module.createNestApplication();
     await app.init();

@@ -13,6 +13,7 @@ import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
 import { AuthModule } from "../../identity/auth/auth.module";
+import { OrganizationsModule } from "../../identity/organizations/organizations.module";
 import { AUTH } from "../../identity/auth/auth.provider";
 import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
 import { UsersService } from "../../identity/users/application/services/users.service";
@@ -48,6 +49,7 @@ describe("templateController", () => {
           },
         ]),
         AuthModule,
+        OrganizationsModule,
       ],
       providers: [
         TemplateService,

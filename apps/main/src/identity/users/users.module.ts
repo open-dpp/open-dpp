@@ -12,7 +12,7 @@ import { UsersController } from "./presentation/users.controller";
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     forwardRef(() => OrganizationsModule),
-    AuthModule,
+    forwardRef(() => AuthModule),
   ],
   controllers: [UsersController],
   providers: [
