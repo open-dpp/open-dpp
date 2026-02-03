@@ -107,7 +107,7 @@ export class EnvironmentService {
     const aasCopy = (await this.getFirstAssetAdministrationShell(environment)).copy(submodelsCopy);
 
     await this.aasRepository.save(aasCopy);
-    submodelsCopy.forEach(async model => await this.submodelRepository.save(model));
+    await Promise.all(submodelsCopy.map(model => this.submodelRepository.save(model)));
 
     return Environment.create({
       assetAdministrationShells: [aasCopy.id],
