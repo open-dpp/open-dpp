@@ -49,4 +49,3 @@ import { OrganizationsController } from "./presentation/organizations.controller
   ],
 })
 export class OrganizationsModule { }
-

@@ -50,4 +50,3 @@ import { ProductPassportController } from "./presentation/product-passport.contr
   ],
 })
 export class ProductPassportModule { }
-

@@ -3,7 +3,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model, Types } from "mongoose";
 import { Member } from "../../domain/member";
 import { MemberMapper } from "../mappers/member.mapper";
-import { Member as MemberSchema, MemberDocument } from "../schemas/member.schema";
+import { Member as MemberSchema } from "../schemas/member.schema";
 
 @Injectable()
 export class MembersRepository {
@@ -35,19 +35,19 @@ export class MembersRepository {
   async findByOrganizationId(organizationId: string): Promise<Member[]> {
     // Better Auth stores organizationId as ObjectId
     const filter = {
-      organizationId: this.toObjectIdIfValid(organizationId)
+      organizationId: this.toObjectIdIfValid(organizationId),
     };
     const documents = await this.memberModel.find(filter as any);
-    return documents.map((doc) => MemberMapper.toDomain(doc));
+    return documents.map(doc => MemberMapper.toDomain(doc));
   }
 
   async findByUserId(userId: string): Promise<Member[]> {
     // Better Auth stores userId as ObjectId
     const filter = {
-      userId: this.toObjectIdIfValid(userId)
+      userId: this.toObjectIdIfValid(userId),
     };
     const documents = await this.memberModel.find(filter as any);
-    return documents.map((doc) => MemberMapper.toDomain(doc));
+    return documents.map(doc => MemberMapper.toDomain(doc));
   }
 
   async findOneByUserIdAndOrganizationId(userId: string, organizationId: string): Promise<Member | null> {
