@@ -85,7 +85,7 @@ export class AuthService implements OnModuleInit, OnModuleDestroy {
   }
 
   async getActiveOrganizationId(req: express.Request) {
-    const session = await this.getSession(fromNodeHeaders(req.headers || []));
+    const session = await this.getSession(fromNodeHeaders(req.headers));
     if (!session?.user) {
       throw new UnauthorizedException("User is not logged in");
     }
