@@ -1,6 +1,7 @@
 import { forwardRef, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { EmailModule } from "../../email/email.module";
+import { SessionsService } from "../auth/application/services/sessions.service";
 import { AuthModule } from "../auth/auth.module";
 import { UsersModule } from "../users/users.module";
 import { OrganizationsService } from "./application/services/organizations.service";
@@ -8,9 +9,10 @@ import { MembersRepository } from "./infrastructure/adapters/members.repository"
 import { OrganizationsRepository } from "./infrastructure/adapters/organizations.repository";
 import { MemberMapper } from "./infrastructure/mappers/member.mapper";
 import { OrganizationMapper } from "./infrastructure/mappers/organization.mapper";
+import { Invitation, InvitationSchema } from "./infrastructure/schemas/invitation.schema";
+
 import { Member, MemberSchema } from "./infrastructure/schemas/member.schema";
 import { Organization, OrganizationSchema } from "./infrastructure/schemas/organization.schema";
-
 import { OrganizationsController } from "./presentation/organizations.controller";
 
 @Module({
@@ -18,6 +20,7 @@ import { OrganizationsController } from "./presentation/organizations.controller
     MongooseModule.forFeature([
       { name: Organization.name, schema: OrganizationSchema },
       { name: Member.name, schema: MemberSchema },
+      { name: Invitation.name, schema: InvitationSchema },
     ]),
     AuthModule,
     forwardRef(() => UsersModule),
@@ -30,6 +33,7 @@ import { OrganizationsController } from "./presentation/organizations.controller
     OrganizationsRepository,
     MembersRepository,
     OrganizationsService,
+    SessionsService,
   ],
   exports: [
     OrganizationsRepository,

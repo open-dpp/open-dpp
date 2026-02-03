@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { EnvModule } from "@open-dpp/env";
 import { EmailModule } from "../../email/email.module";
-import { AuthService } from "./application/services/auth.service";
+import { SessionsService } from "./application/services/sessions.service";
 import { AUTH, AuthProvider } from "./auth.provider";
 import { AuthController } from "./presentation/auth.controller";
 
@@ -15,8 +15,8 @@ import { AuthController } from "./presentation/auth.controller";
   ],
   providers: [
     AuthProvider,
-    AuthService,
+    SessionsService,
   ],
-  exports: [AuthService, AUTH, EnvModule],
+  exports: [SessionsService, AUTH, EnvModule],
 })
 export class AuthModule { }
