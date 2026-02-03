@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { HydratedDocument } from "mongoose";
+import { HydratedDocument, Schema as MongooseSchema, Types } from "mongoose";
 import { MemberRole } from "../../domain/member-role.enum";
 
 export type MemberDocument = HydratedDocument<Member>;
@@ -7,13 +7,15 @@ export type MemberDocument = HydratedDocument<Member>;
 @Schema({ collection: "member" })
 export class Member {
   @Prop({ type: String, required: true })
-  id: string;
+  _id: string;
 
-  @Prop({ required: true })
-  userId: string;
+  // Better Auth stores userId as ObjectId
+  @Prop({ type: MongooseSchema.Types.ObjectId, required: true })
+  userId: Types.ObjectId;
 
-  @Prop({ required: true })
-  organizationId: string;
+  // Better Auth stores organizationId as ObjectId
+  @Prop({ type: MongooseSchema.Types.ObjectId, required: true })
+  organizationId: Types.ObjectId;
 
   @Prop({ required: true, type: String })
   role: MemberRole;

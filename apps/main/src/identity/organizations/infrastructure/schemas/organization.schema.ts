@@ -6,7 +6,7 @@ export type OrganizationDocument = HydratedDocument<Organization>;
 @Schema({ collection: "organization" })
 export class Organization {
   @Prop({ type: String, required: true })
-  id: string;
+  _id: string;
 
   @Prop({ required: true })
   name: string;

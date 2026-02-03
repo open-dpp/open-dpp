@@ -4,7 +4,7 @@ import { InvitationDocument, Invitation as InvitationSchema } from "../schemas/i
 export class InvitationMapper {
   static toDomain(document: InvitationDocument): Invitation {
     const props: InvitationDbProps = {
-      id: document.id,
+      id: document._id,
       email: document.email,
       organizationId: document.organizationId,
       inviterId: document.inviterId,
@@ -17,7 +17,7 @@ export class InvitationMapper {
 
   static toPersistence(entity: Invitation): InvitationSchema {
     return {
-      id: entity.id,
+      _id: entity.id,
       email: entity.email,
       organizationId: entity.organizationId,
       inviterId: entity.inviterId,

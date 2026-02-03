@@ -7,7 +7,7 @@ export type InvitationDocument = HydratedDocument<Invitation>;
 @Schema({ collection: "invitation" })
 export class Invitation {
   @Prop({ type: String, required: true })
-  id: string;
+  _id: string;
 
   @Prop({ required: true })
   email: string;

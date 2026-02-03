@@ -17,7 +17,7 @@ export class OrganizationMapper {
 
   static toDomain(document: OrganizationDocument): Organization {
     const props: OrganizationDbProps = {
-      id: document.id,
+      id: document._id,
       name: document.name,
       slug: document.slug,
       logo: document.logo,
@@ -29,7 +29,7 @@ export class OrganizationMapper {
 
   static toPersistence(entity: Organization): OrganizationSchema {
     return {
-      id: entity.id,
+      _id: entity.id,
       name: entity.name,
       slug: entity.slug,
       logo: entity.logo ?? undefined,
