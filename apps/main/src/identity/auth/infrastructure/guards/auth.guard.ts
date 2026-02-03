@@ -1,27 +1,14 @@
 import type { CanActivate, ExecutionContext } from "@nestjs/common";
-import type { getSession } from "better-auth/api";
 import {
   Inject,
   Injectable,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { EnvService } from "@open-dpp/env";
-import { AuthService } from "../../application/services/auth.service";
+import { MembersService } from "../../../organizations/application/services/members.service";
+import { SessionsService } from "../../application/services/sessions.service";
+import { Session } from "../../domain/session";
 import { ALLOW_SERVICE_ACCESS } from "../../presentation/decorators/allow-service-access.decorator";
-
-/**
- * Type representing a valid user session after authentication
- * Excludes null and undefined values from the session return type
- */
-export type BaseUserSession = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getSession>>>
->;
-
-export type UserSession = BaseUserSession & {
-  user: BaseUserSession["user"] & {
-    role?: string | string[];
-  };
-};
 
 /**
  * NestJS guard that handles authentication for protected routes
@@ -30,18 +17,21 @@ export type UserSession = BaseUserSession & {
 @Injectable()
 export class AuthGuard implements CanActivate {
   private readonly reflector: Reflector;
-  private readonly authService: AuthService;
   private readonly configService: EnvService;
+  private readonly sessionsService: SessionsService;
+  private readonly membersService: MembersService;
 
   constructor(
     @Inject(Reflector)
     reflector: Reflector,
-    authService: AuthService,
     configService: EnvService,
+    sessionsService: SessionsService,
+    membersService: MembersService,
   ) {
     this.reflector = reflector;
-    this.authService = authService;
     this.configService = configService;
+    this.sessionsService = sessionsService;
+    this.membersService = membersService;
   }
 
   /**
@@ -57,7 +47,7 @@ export class AuthGuard implements CanActivate {
     const apiKeyHeader = request.headers["x-api-key"] || request.headers["X-API-KEY"];
     const serviceTokenHeader = request.headers.service_token;
 
-    let session: UserSession | null = null;
+    let session: Session | null = null;
 
     const isAllowServiceAccess = this.reflector.getAllAndOverride<boolean>(ALLOW_SERVICE_ACCESS, [
       context.getHandler(),
@@ -72,7 +62,7 @@ export class AuthGuard implements CanActivate {
       const headers = new Headers();
       headers.set("x-api-key", apiKeyHeader);
       try {
-        session = await this.authService.getSession(headers);
+        session = await this.sessionsService.getSession(headers);
       }
       catch {
         // If session retrieval fails, treat as no session
@@ -87,7 +77,7 @@ export class AuthGuard implements CanActivate {
         headers.set("authorization", request.headers.authorization);
       }
       try {
-        session = await this.authService.getSession(headers);
+        session = await this.sessionsService.getSession(headers);
       }
       catch {
         // If session retrieval fails, treat as no session
@@ -95,7 +85,6 @@ export class AuthGuard implements CanActivate {
     }
 
     request.session = session;
-    request.user = session?.user ?? null;
 
     const isPublic = this.reflector.getAllAndOverride<boolean>("PUBLIC", [
       context.getHandler(),
@@ -118,17 +107,14 @@ export class AuthGuard implements CanActivate {
     if (!session) {
       const allowedPaths = ["/api/sse", "/api/messages"];
       const path = url.split("?")[0];
-      if (allowedPaths.includes(path)) {
-        return true;
-      }
-      return false;
+      return allowedPaths.includes(path);
     }
 
     const isBetterAuthUrl = url.startsWith("/api/auth");
     if (!isBetterAuthUrl) {
       const organizationId = request.params.organizationId ?? request.params.orgaId ?? null;
       if (organizationId) {
-        const isMember = await this.authService.isMemberOfOrganization(session.user.id, organizationId);
+        const isMember = await this.membersService.isMemberOfOrganization(session.userId, organizationId);
         if (!isMember) {
           return false;
         }
