@@ -1,4 +1,3 @@
-import type { UserSession } from "../../identity/auth/infrastructure/guards/auth.guard";
 import type {
   AssetAdministrationShellType_TYPE,
 } from "../domain/asset-administration-shell";
@@ -12,8 +11,8 @@ import {
   Patch,
   Post,
 } from "@nestjs/common";
-import { EnvService } from "@open-dpp/env";
-import { Session } from "../../identity/auth/presentation/decorators/session.decorator";
+import { Session } from "../../identity/auth/domain/session";
+import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { itemToDto } from "../../items/presentation/dto/item.dto";
 import { ItemsApplicationService } from "../../items/presentation/items-application.service";
@@ -38,7 +37,6 @@ export class AasConnectionController {
   private readonly itemsApplicationService: ItemsApplicationService;
   private aasConnectionService: AasConnectionService;
   private templateService: TemplateService;
-  private configService: EnvService;
   private uniqueProductIdentifierService: UniqueProductIdentifierService;
 
   constructor(
@@ -47,7 +45,6 @@ export class AasConnectionController {
     itemsApplicationService: ItemsApplicationService,
     aasConnectionService: AasConnectionService,
     templateService: TemplateService,
-    configService: EnvService,
     uniqueProductIdentifierService: UniqueProductIdentifierService,
   ) {
     this.modelsService = modelsService;
@@ -55,7 +52,6 @@ export class AasConnectionController {
     this.itemsApplicationService = itemsApplicationService;
     this.aasConnectionService = aasConnectionService;
     this.templateService = templateService;
-    this.configService = configService;
     this.uniqueProductIdentifierService = uniqueProductIdentifierService;
   }
 
@@ -65,7 +61,7 @@ export class AasConnectionController {
     @Param("orgaId") organizationId: string,
     @Param("connectionId") connectionId: string,
     @Body() aasJson: any,
-    @Session() session: UserSession,
+    @AuthSession() session: Session,
   ) {
     const aasConnection
       = await this.aasConnectionService.findById(connectionId);
@@ -92,7 +88,7 @@ export class AasConnectionController {
       : await this.itemsApplicationService.createItem(
           organizationId,
           aasConnection.modelId,
-          session.user.id,
+          session.userId,
           assetAdministrationShell.globalAssetId,
         );
 
@@ -112,7 +108,7 @@ export class AasConnectionController {
   async createConnection(
     @Param("orgaId") organizationId: string,
     @Body() body: createAasConnectionDto.CreateAasConnectionDto,
-    @Session() session: UserSession,
+    @AuthSession() session: Session,
   ) {
     const createAasMapping
       = createAasConnectionDto.CreateAasConnectionSchema.parse(body);
@@ -128,7 +124,7 @@ export class AasConnectionController {
     const aasConnection = AasConnection.create({
       name: createAasMapping.name,
       organizationId,
-      userId: session.user.id,
+      userId: session.userId,
       dataModelId: productDataModel.id,
       aasType: createAasMapping.aasType,
       modelId: model.id,

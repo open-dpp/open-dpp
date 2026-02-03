@@ -1,7 +1,7 @@
-import type { UserSession } from "../../../identity/auth/infrastructure/guards/auth.guard";
 import { Body, Controller, Get, Param, Put } from "@nestjs/common";
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { Session } from "../../../identity/auth/presentation/decorators/session.decorator";
+import { Session } from "../../../identity/auth/domain/session";
+import { AuthSession } from "../../../identity/auth/presentation/decorators/auth-session.decorator";
 import { AiConfiguration } from "../domain/ai-configuration";
 import { AiConfigurationService } from "../infrastructure/ai-configuration.service";
 import * as aiConfigurationDto from "./dto/ai-configuration.dto";
@@ -20,7 +20,7 @@ export class AiConfigurationController {
   @Put()
   async upsertConfiguration(
     @Param("organizationId") organizationId: string,
-    @Session() session: UserSession,
+    @AuthSession() session: Session,
     @Body(new ZodValidationPipe(AiConfigurationUpsertDtoSchema))
     aiConfigurationUpsertDto: aiConfigurationDto.AiConfigurationUpsertDto,
   ) {
@@ -33,7 +33,7 @@ export class AiConfigurationController {
     else {
       aiConfiguration = AiConfiguration.create({
         ownedByOrganizationId: organizationId,
-        createdByUserId: session.user.id,
+        createdByUserId: session.userId,
         provider: aiConfigurationUpsertDto.provider,
         model: aiConfigurationUpsertDto.model,
         isEnabled: aiConfigurationUpsertDto.isEnabled,

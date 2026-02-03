@@ -1,4 +1,3 @@
-import type { UserSession } from "../../identity/auth/infrastructure/guards/auth.guard";
 import type { DataValueDto } from "../../product-passport-data/presentation/dto/data-value.dto";
 import type {
   MediaReferenceDto,
@@ -18,7 +17,8 @@ import {
 import { ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
-import { Session } from "../../identity/auth/presentation/decorators/session.decorator";
+import { Session } from "../../identity/auth/domain/session";
+import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import { mediaParamDocumentation, modelParamDocumentation } from "../../open-api-docs/item.doc";
@@ -80,7 +80,7 @@ export class ModelsController {
     @Param("orgaId") organizationId: string,
     @Body(new ZodValidationPipe(createModelDto_1.CreateModelDtoSchema))
     createModelDto: createModelDto_1.CreateModelDto,
-    @Session() session: UserSession,
+    @AuthSession() session: Session,
   ) {
     // Validate that only one of templateId or marketplaceResourceId is provided
     if (!createModelDto.templateId && !createModelDto.marketplaceResourceId) {
@@ -110,7 +110,7 @@ export class ModelsController {
     else {
       template = await this.marketplaceService.download(
         organizationId,
-        session.user.id,
+        session.userId,
         createModelDto.marketplaceResourceId,
       );
     }
@@ -120,7 +120,7 @@ export class ModelsController {
     const model = Model.create({
       name: createModelDto.name,
       description: createModelDto.description,
-      userId: session.user.id,
+      userId: session.userId,
       organizationId,
       template,
     });

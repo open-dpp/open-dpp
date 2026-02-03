@@ -1,5 +1,3 @@
-import type { UserSession } from "../../identity/auth/infrastructure/guards/auth.guard";
-
 import {
   BadRequestException,
   Body,
@@ -13,10 +11,10 @@ import {
 } from "@nestjs/common";
 
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { AuthService } from "../../identity/auth/application/services/auth.service";
-import { Session } from "../../identity/auth/presentation/decorators/session.decorator";
-import { User } from "../../identity/users/domain/user";
-import { UsersService } from "../../identity/users/infrastructure/users.service";
+import { Session } from "../../identity/auth/domain/session";
+import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
+import { OrganizationsService } from "../../identity/organizations/application/services/organizations.service";
+import { UsersService } from "../../identity/users/application/services/users.service";
 import { MarketplaceApplicationService } from "../../marketplace/presentation/marketplace.application.service";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import { DataFieldDraft } from "../domain/data-field-draft";
@@ -39,25 +37,27 @@ export class TemplateDraftController {
   private readonly templateService: TemplateService;
   private readonly templateDraftService: TemplateDraftService;
   private readonly marketplaceService: MarketplaceApplicationService;
-  private readonly authService: AuthService;
+  private readonly usersService: UsersService;
+  private readonly organizationsService: OrganizationsService;
 
   constructor(
     templateService: TemplateService,
     templateDraftService: TemplateDraftService,
     marketplaceService: MarketplaceApplicationService,
-    authService: AuthService,
-    private readonly usersService: UsersService,
+    usersService: UsersService,
+    organizationsService: OrganizationsService,
   ) {
     this.templateService = templateService;
     this.templateDraftService = templateDraftService;
     this.marketplaceService = marketplaceService;
-    this.authService = authService;
+    this.usersService = usersService;
+    this.organizationsService = organizationsService;
   }
 
   @Post()
   async create(
     @Param("orgaId") organizationId: string,
-    @Session() session: UserSession,
+    @AuthSession() session: Session,
     @Body(
       new ZodValidationPipe(
         createTemplateDraftDto_1.CreateTemplateDraftDtoSchema,
@@ -70,7 +70,7 @@ export class TemplateDraftController {
         TemplateDraft.create({
           ...createTemplateDraftDto,
           organizationId,
-          userId: session.user.id,
+          userId: session.userId,
         }),
       ),
     );
@@ -144,7 +144,7 @@ export class TemplateDraftController {
   async publish(
     @Param("orgaId") organizationId: string,
     @Param("draftId") draftId: string,
-    @Session() session: UserSession,
+    @AuthSession() session: Session,
     @Body(new ZodValidationPipe(publishDto_1.PublishDtoSchema))
     publishDto: publishDto_1.PublishDto,
   ) {
@@ -154,26 +154,16 @@ export class TemplateDraftController {
     this.hasPermissionsOrFail(organizationId, foundProductDataModelDraft);
 
     const publishedProductDataModel = foundProductDataModelDraft.publish(
-      session.user.id,
+      session.userId,
     );
 
     if (publishDto.visibility === publishDto_1.VisibilityLevel.PUBLIC) {
-      let user: User;
-      if (session.user.createdAt && session.user.updatedAt) {
-        user = User.loadFromDb({
-          id: session.user.id,
-          email: session.user.email,
-          emailVerified: session.user.emailVerified,
-          createdAt: session.user.createdAt,
-          updatedAt: session.user.updatedAt,
-          name: session.user.name || undefined,
-          image: session.user.image || undefined,
-        });
+      const user = await this.usersService.findOneAndFail(session.userId);
+      const activeOrganizationId = session.activeOrganizationId;
+      if (!activeOrganizationId) {
+        throw new BadRequestException();
       }
-      else {
-        user = await this.usersService.findOneAndFail(session.user.id);
-      }
-      const organization = await this.authService.getActiveOrganization(session.user.id);
+      const organization = await this.organizationsService.getOrganization(session.activeOrganizationId, session);
       if (!organization) {
         throw new BadRequestException();
       }
