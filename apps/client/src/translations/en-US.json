@@ -20,6 +20,7 @@
     "general": "General",
     "remove": "Remove",
     "copy": "Copy",
+    "failed": "failed",
     "errorOccured": "An error occurred",
     "unknownErrorOccured": "An unexpected error occurred. Please try again.",
     "toHome": "To home",
@@ -61,7 +62,8 @@
       "removeColumn": "Should the @:aasEditor.table.column really be removed?",
       "addColumn": "@:common.add @:aasEditor.table.column",
       "addFieldAsColumn": "@:common.add {field} as @:aasEditor.table.column ",
-      "errorAddColumn": "Fails to @.lower:common.add @:aasEditor.table.column"
+      "errorAddColumn": "@.capitalize:common.failed to @.lower:common.add @:aasEditor.table.column",
+      "errorRemoveColumn": "@.capitalize:common.failed to @.lower:common.remove @:aasEditor.table.column"
     },
     "addSubmodel": "Add section",
     "submodelElementCollection": "Sub section",
@@ -73,7 +75,7 @@
     "file": "File",
     "numberField": "Number field",
     "type": "Type",
-    "error": "{method} failed"
+    "error": "{method} @:common.failed"
   },
   "languages": {
     "english": "English",

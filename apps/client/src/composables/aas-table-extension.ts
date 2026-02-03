@@ -104,44 +104,54 @@ export function useAasTableExtension({
         : colMenuItems;
 
     if (options.enableRemove) {
-      const removeLabel = translate("common.remove");
-      const cancelLabel = translate("common.cancel");
       columnsToAdd.value.push(
         {
           label: translate("common.actions"),
           items: [
-            {
-              label: removeLabel,
-              icon: "pi pi-trash",
-              command: async () => {
-                openConfirm({
-                  message: translate(`${translateTablePrefix}.removeColumn`),
-                  header: removeLabel,
-                  icon: "pi pi-info-circle",
-                  rejectLabel: cancelLabel,
-                  rejectProps: {
-                    label: cancelLabel,
-                    severity: "secondary",
-                    outlined: true,
-                  },
-                  acceptProps: {
-                    label: removeLabel,
-                    severity: "danger",
-                  },
-                  accept: async () => {
-                    const response = await aasNamespace.deleteColumnFromSubmodelElementList(id, pathToList.submodelId!, pathToList.idShortPath!, columns.value[options.position ?? 0]!.idShort);
-                    if (response.status === 200) {
-                      updateListData(response.data);
-                    }
-                  },
-                });
-              },
-            },
+            removeColumnMenuItem(options),
           ],
         },
       );
     }
   };
+
+  function removeColumnMenuItem(options: BuildColumnsToAddOptions) {
+    const removeLabel = translate("common.remove");
+    const cancelLabel = translate("common.cancel");
+    const removeColumnApiCall = async () => {
+      const response = await aasNamespace.deleteColumnFromSubmodelElementList(id, pathToList.submodelId!, pathToList.idShortPath!, columns.value[options.position ?? 0]!.idShort);
+      if (response.status === 200) {
+        updateListData(response.data);
+      }
+    };
+    return {
+      label: removeLabel,
+      icon: "pi pi-trash",
+      command: async () => {
+        openConfirm({
+          message: translate(`${translateTablePrefix}.removeColumn`),
+          header: removeLabel,
+          icon: "pi pi-info-circle",
+          rejectLabel: cancelLabel,
+          rejectProps: {
+            label: cancelLabel,
+            severity: "secondary",
+            outlined: true,
+          },
+          acceptProps: {
+            label: removeLabel,
+            severity: "danger",
+          },
+          accept: async () => {
+            await errorHandlingStore.withErrorHandling(
+              removeColumnApiCall(),
+              { message: translate(`${translateTablePrefix}.errorRemoveColumn`) },
+            );
+          },
+        });
+      },
+    };
+  }
 
   async function createPropertyColumn(data: PropertyRequestDto, options: TableModificationParamsDto) {
     const errorMessage = translate(`${translatePrefix}.table.errorAddColumn`);

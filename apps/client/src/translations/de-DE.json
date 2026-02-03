@@ -28,6 +28,7 @@
     "call": "Aufrufen",
     "website": "Website",
     "contact": "Kontakt",
+    "failed": "fehlgeschlagen",
     "errorOccured": "Ein Fehler ist aufgetreten",
     "unknownErrorOccured": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
     "toHome": "Zur Startseite",
@@ -61,7 +62,8 @@
       "addColumn": "@:aasEditor.table.column @.lower:common.add",
       "removeColumn": "Soll die @:aasEditor.table.column wirklich entfernt werden?",
       "addFieldAsColumn": "{field} als @:aasEditor.table.column @.lower:common.add ",
-      "errorAddColumn": "@:common.add der @:aasEditor.table.column fehlgeschlagen"
+      "errorAddColumn": "@:common.add der @:aasEditor.table.column @:common.failed",
+      "errorRemoveColumn": "@:common.remove der @:aasEditor.table.column @:common.failed"
     },
     "addSubmodel": "Abschnitt hinzufügen",
     "edit": "{formItem} bearbeiten",
@@ -73,7 +75,7 @@
     "file": "Datei",
     "numberField": "Zahlenfeld",
     "type": "Typ",
-    "error": "{method} fehlgeschlagen"
+    "error": "{method} @:common.failed"
   },
   "languages": {
     "english": "Englisch",
