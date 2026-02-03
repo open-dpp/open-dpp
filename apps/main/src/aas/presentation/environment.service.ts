@@ -1,17 +1,16 @@
-import type express from "express";
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
 
 import { AssetAdministrationShellPaginationResponseDto, AssetAdministrationShellPaginationResponseDtoSchema, AssetKindType, SubmodelElementPaginationResponseDto, SubmodelElementPaginationResponseDtoSchema, SubmodelElementRequestDto, SubmodelElementResponseDto, SubmodelElementSchema, SubmodelJsonSchema, SubmodelPaginationResponseDto, SubmodelPaginationResponseDtoSchema, SubmodelRequestDto, SubmodelResponseDto, ValueResponseDto, ValueResponseDtoSchema } from "@open-dpp/dto";
-import { fromNodeHeaders } from "better-auth/node";
-import { AuthService } from "../../identity/auth/application/services/auth.service";
+import { Session } from "../../identity/auth/domain/session";
+import { MembersService } from "../../identity/organizations/application/services/members.service";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
+
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath, parseSubmodelBaseUnion } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
-
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
@@ -22,7 +21,18 @@ class SubmodelNotPartOfEnvironmentException extends BadRequestException {
 
 @Injectable()
 export class EnvironmentService {
-  constructor(private readonly aasRepository: AasRepository, private readonly submodelRepository: SubmodelRepository) {
+  private aasRepository: AasRepository;
+  private submodelRepository: SubmodelRepository;
+  private membersService: MembersService;
+
+  constructor(
+    aasRepository: AasRepository,
+    submodelRepository: SubmodelRepository,
+    membersService: MembersService,
+  ) {
+    this.aasRepository = aasRepository;
+    this.submodelRepository = submodelRepository;
+    this.membersService = membersService;
   }
 
   async createEnvironmentWithEmptyAas(assetKind: AssetKindType): Promise<Environment> {
@@ -94,14 +104,14 @@ export class EnvironmentService {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     return ValueResponseDtoSchema.parse(submodel.getValueRepresentation(idShortPath));
   }
-}
 
-export async function checkOwnerShipOfDppIdentifiable<T extends IDigitalProductPassportIdentifiable>(dppIdentifiable: T, authService: AuthService, req: express.Request): Promise<T> {
-  const session = await authService.getSession(fromNodeHeaders(req.headers || []));
-  if (session?.user.id && await authService.isMemberOfOrganization(session.user.id, dppIdentifiable.getOrganizationId())) {
-    return dppIdentifiable;
-  }
-  else {
-    throw new ForbiddenException();
+  async checkOwnerShipOfDppIdentifiable<T extends IDigitalProductPassportIdentifiable>(dppIdentifiable: T, session: Session): Promise<T> {
+    const isMember = await this.membersService.isMemberOfOrganization(session.userId, dppIdentifiable.getOrganizationId());
+    if (session.userId && isMember) {
+      return dppIdentifiable;
+    }
+    else {
+      throw new ForbiddenException();
+    }
   }
 }
