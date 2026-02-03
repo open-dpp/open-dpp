@@ -1,4 +1,4 @@
-import type { PagingParamsDto, PassportDto, TemplateDto } from "@open-dpp/dto";
+import type { PagingParamsDto, PassportDto } from "@open-dpp/dto";
 import { passportsPlainFactory, templatesPlainFactory } from "@open-dpp/testing";
 import { createPinia, setActivePinia } from "pinia";
 import { expect, it, vi } from "vitest";

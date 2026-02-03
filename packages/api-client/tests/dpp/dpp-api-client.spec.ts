@@ -27,6 +27,7 @@ import { aasPropertiesWithParent, connection, connectionList } from './handlers/
 import { item1, item2 } from './handlers/item'
 import { mediaReferences, mediaReferenceUpdate, model, responseDataValues, updateDataValues } from './handlers/model'
 import { oldTemplate } from './handlers/old-template'
+import { passport1, passport2 } from './handlers/passports'
 import { productPassport } from './handlers/product-passport'
 import { dataFieldDraft, draftsOfOrganization, sectionDraft, templateDraft } from './handlers/template-draft'
 import { template1, template2 } from './handlers/templates'
@@ -36,7 +37,6 @@ import {
   uniqueProductIdentifierReference,
 } from './handlers/unique-product-identifiers'
 import { server } from './msw.server'
-import { passport1, passport2 } from './handlers/passports'
 
 describe('apiClient', () => {
   beforeAll(() => server.listen())

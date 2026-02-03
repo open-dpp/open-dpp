@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { KeyTypes, ReferenceTypes } from "@open-dpp/dto";
-import { aasPlainFactory } from "@open-dpp/testing";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";
 import { Key } from "./common/key";
