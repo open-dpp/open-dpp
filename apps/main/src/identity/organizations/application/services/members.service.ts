@@ -53,11 +53,11 @@ export class MembersService {
       ...member,
       user: userMap.get(member.userId)
         ? {
-            id: userMap.get(member.userId)!.id,
-            email: userMap.get(member.userId)!.email,
-            name: userMap.get(member.userId)!.name,
-            image: userMap.get(member.userId)!.image,
-          }
+          id: userMap.get(member.userId)!.id,
+          email: userMap.get(member.userId)!.email,
+          name: userMap.get(member.userId)!.name,
+          image: userMap.get(member.userId)!.image,
+        }
         : null,
     }));
   }

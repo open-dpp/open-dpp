@@ -3,6 +3,8 @@ import { ExecutionContext } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
+import { MembersService } from "../../../organizations/application/services/members.service";
+import { SessionsService } from "../../application/services/sessions.service";
 import { AuthGuard } from "./auth.guard";
 
 describe("authGuard Allowlist Repro", () => {
@@ -22,6 +24,18 @@ describe("authGuard Allowlist Repro", () => {
           provide: EnvService,
           useValue: {
             get: jest.fn(),
+          },
+        },
+        {
+          provide: SessionsService,
+          useValue: {
+            getSession: jest.fn<() => Promise<null>>().mockResolvedValue(null),
+          },
+        },
+        {
+          provide: MembersService,
+          useValue: {
+            isMemberOfOrganization: jest.fn<() => Promise<boolean>>().mockResolvedValue(false),
           },
         },
       ],
