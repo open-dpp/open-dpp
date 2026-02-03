@@ -321,7 +321,7 @@
     "marketplace": "Marketplace"
   },
   "passports": {
-    "label": "Passport",
+    "label": "Passport | Passports",
     "create": "Create Passport",
     "blank": "Blank",
     "fromTemplate": "From Template",

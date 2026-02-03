@@ -57,7 +57,7 @@ describe("passportRepository", () => {
     expect(foundAas).toEqual(passport);
   });
 
-  it("should find all packages of organization", async () => {
+  it("should find all passports of organization", async () => {
     const organizationId = randomUUID();
     const otherOrganizationId = randomUUID();
 

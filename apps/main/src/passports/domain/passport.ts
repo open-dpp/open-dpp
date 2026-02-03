@@ -5,6 +5,7 @@ import { Environment } from "../../aas/domain/environment";
 import { IPersistable } from "../../aas/domain/persistable";
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
+import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
 
 export class Passport implements IPersistable, IDigitalProductPassportIdentifiable, HasCreatedAt {
   private constructor(
@@ -66,5 +67,11 @@ export class Passport implements IPersistable, IDigitalProductPassportIdentifiab
 
   getOrganizationId(): string {
     return this.organizationId;
+  }
+
+  createUniqueProductIdentifier(): UniqueProductIdentifier {
+    return UniqueProductIdentifier.create({
+      referenceId: this.id,
+    });
   }
 }

@@ -81,9 +81,8 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
       environment,
     });
 
-    await this.uniqueProductIdentifierService.save(UniqueProductIdentifier.create({
-      referenceId: passport.id,
-    }));
+    const upid = passport.createUniqueProductIdentifier();
+    await this.uniqueProductIdentifierService.save(upid);
 
     return PassportDtoSchema.parse((await this.passportRepository.save(passport)).toPlain());
   }

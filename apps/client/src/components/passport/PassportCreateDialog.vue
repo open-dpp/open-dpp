@@ -108,6 +108,7 @@ onMounted(async () => {
       </div>
       <Select
         v-model="template"
+        class="w-96"
         :options="templateList"
         option-value="id"
         option-label="id"

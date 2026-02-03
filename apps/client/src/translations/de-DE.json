@@ -342,8 +342,8 @@
     "preview": "Vorschau"
   },
   "passports": {
-    "label": "Produktpass",
-    "create": "Neuen Produktpass Erstellen",
+    "label": "Produktpass | Produktpässe",
+    "create": "Neuen Produktpass erstellen",
     "blank": "Leer",
     "fromTemplate": "Aus Produktpassvorlage",
     "selectTemplate": "Passvorlage auswählen"
