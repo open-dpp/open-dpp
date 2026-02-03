@@ -40,7 +40,7 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=${OPEN_DPP_MONGODB_USER}
       - MONGO_INITDB_ROOT_PASSWORD=${OPEN_DPP_MONGODB_PASSWORD}
       - MONGO_INITDB_DATABASE=${OPEN_DPP_MONGODB_DATABASE}
-    image: mongo:6.0
+    image: mongo:7
 
   mailpit:
     container_name: mailpit
