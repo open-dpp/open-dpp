@@ -7,6 +7,8 @@ import { AuthModule } from "../auth/auth.module";
 import { OrganizationsModule } from "../organizations/organizations.module";
 import { TemplateRepository } from "../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../templates/infrastructure/template.schema";
+import { UniqueProductIdentifierDoc, UniqueProductIdentifierSchema } from "../unique-product-identifier/infrastructure/unique-product-identifier.schema";
+import { UniqueProductIdentifierService } from "../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { PassportRepository } from "./infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "./infrastructure/passport.schema";
 import { PassportController } from "./presentation/passport.controller";
@@ -22,13 +24,17 @@ import { PassportController } from "./presentation/passport.controller";
         name: TemplateDoc.name,
         schema: TemplateSchema,
       },
+      {
+        name: UniqueProductIdentifierDoc.name,
+        schema: UniqueProductIdentifierSchema,
+      },
     ]),
     AasModule,
     AuthModule,
     OrganizationsModule,
   ],
   controllers: [PassportController],
-  providers: [EnvironmentService, TemplateRepository, PassportRepository],
+  providers: [EnvironmentService, TemplateRepository, UniqueProductIdentifierService, PassportRepository],
   exports: [PassportRepository],
 })
 export class PassportsModule {}

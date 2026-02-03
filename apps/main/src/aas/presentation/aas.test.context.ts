@@ -20,8 +20,8 @@ import { EmailService } from "../../email/email.service";
 import { AasModule } from "../aas.module";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { IPersistable } from "../domain/persistable";
-import { Submodel } from "../domain/submodel-base/submodel";
 
+import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
 import {

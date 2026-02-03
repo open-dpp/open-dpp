@@ -7,6 +7,8 @@ import { DateTime } from "../../lib/date-time";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
+import { UniqueProductIdentifierDoc, UniqueProductIdentifierSchema } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
+import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../infrastructure/passport.schema";
@@ -15,7 +17,7 @@ import { PassportController } from "./passport.controller";
 
 describe("passportController", () => {
   const basePath = "/passports";
-  const ctx = createAasTestContext(basePath, { imports: [PassportsModule], providers: [PassportRepository, TemplateRepository], controllers: [PassportController] }, [{ name: PassportDoc.name, schema: PassportSchema }, { name: TemplateDoc.name, schema: TemplateSchema }], PassportRepository);
+  const ctx = createAasTestContext(basePath, { imports: [PassportsModule], providers: [PassportRepository, TemplateRepository, UniqueProductIdentifierService], controllers: [PassportController] }, [{ name: PassportDoc.name, schema: PassportSchema }, { name: TemplateDoc.name, schema: TemplateSchema }, { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema }], PassportRepository);
 
   async function createPassport(orgId: string): Promise<Passport> {
     const { aas, submodels } = ctx.getAasObjects();
@@ -121,6 +123,11 @@ describe("passportController", () => {
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
     });
+
+    const upidService = ctx.getModuleRef().get(UniqueProductIdentifierService);
+
+    const upids = await upidService.findAllByReferencedId(response.body.id);
+    expect(upids).toHaveLength(1);
   });
 
   it(`/POST Create passport from template`, async () => {
@@ -172,6 +179,11 @@ describe("passportController", () => {
 
     expect(response.body.environment.assetAdministrationShells).toHaveLength(template.environment.assetAdministrationShells.length);
     expect(response.body.environment.submodels).toHaveLength(template.environment.submodels.length);
+
+    const upidService = ctx.getModuleRef().get(UniqueProductIdentifierService);
+
+    const upids = await upidService.findAllByReferencedId(response.body.id);
+    expect(upids).toHaveLength(1);
   });
 
   it(`/GET shells`, async () => {
