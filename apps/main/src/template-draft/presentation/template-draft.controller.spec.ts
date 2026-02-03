@@ -5,6 +5,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { Auth } from "better-auth";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import {
@@ -17,12 +18,12 @@ import { Sector } from "../../data-modelling/domain/sectors";
 import { sectionToDto } from "../../data-modelling/presentation/dto/section-base.dto";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
-import { AuthService } from "../../identity/auth/application/services/auth.service";
+
 import { AuthModule } from "../../identity/auth/auth.module";
+import { AUTH } from "../../identity/auth/auth.provider";
 
 import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
-import { UsersService } from "../../identity/users/infrastructure/users.service";
-
+import { UsersService } from "../../identity/users/application/services/users.service";
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,
@@ -60,7 +61,6 @@ describe("templateDraftController", () => {
   let templateDraftService: TemplateDraftService;
   let templateService: TemplateService;
   let module: TestingModule;
-  let authService: AuthService;
 
   const betterAuthHelper = new BetterAuthHelper();
 
@@ -113,10 +113,7 @@ describe("templateDraftController", () => {
     templateService = module.get<TemplateService>(TemplateService);
     templateDraftService
       = module.get<TemplateDraftService>(TemplateDraftService);
-    authService = module.get<AuthService>(
-      AuthService,
-    );
-    betterAuthHelper.setAuthService(authService);
+    betterAuthHelper.init(module.get<UsersService>(UsersService), module.get<Auth>(AUTH));
 
     await app.init();
 

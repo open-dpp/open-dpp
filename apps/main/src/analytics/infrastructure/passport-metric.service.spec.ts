@@ -6,12 +6,14 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { Auth } from "better-auth";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
-import { AuthService } from "../../identity/auth/application/services/auth.service";
 import { AuthModule } from "../../identity/auth/auth.module";
+import { AUTH } from "../../identity/auth/auth.provider";
 import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
+import { UsersService } from "../../identity/users/application/services/users.service";
 import { MeasurementType, PassportMetric } from "../domain/passport-metric";
 import { TimePeriod } from "../domain/time-period";
 import { dataFieldFactory, passportMetricFactory } from "../fixtures/passport-metric.factory";
@@ -22,7 +24,6 @@ describe("passportMetricService", () => {
   let app: INestApplication;
   let passportMetricService: PassportMetricService;
   let module: TestingModule;
-  let authService: AuthService;
 
   const betterAuthHelper = new BetterAuthHelper();
 
@@ -56,10 +57,7 @@ describe("passportMetricService", () => {
     passportMetricService = module.get<PassportMetricService>(
       PassportMetricService,
     );
-    authService = module.get<AuthService>(
-      AuthService,
-    );
-    betterAuthHelper.setAuthService(authService);
+    betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));
 
     app = module.createNestApplication();
     await app.init();

@@ -5,6 +5,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
+import { Auth } from "better-auth";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../../test/better-auth-helper";
 import {
@@ -12,9 +13,10 @@ import {
 } from "../../../../test/utils.for.test";
 import { generateMongoConfig } from "../../../database/config";
 import { EmailService } from "../../../email/email.service";
-import { AuthService } from "../../../identity/auth/application/services/auth.service";
 import { AuthModule } from "../../../identity/auth/auth.module";
+import { AUTH } from "../../../identity/auth/auth.provider";
 import { AuthGuard } from "../../../identity/auth/infrastructure/guards/auth.guard";
+import { UsersService } from "../../../identity/users/application/services/users.service";
 import { AiConfiguration, AiProvider } from "../domain/ai-configuration";
 import { aiConfigurationFactory } from "../fixtures/ai-configuration-props.factory";
 import {
@@ -29,7 +31,6 @@ describe("aiConfigurationController", () => {
   let app: INestApplication;
   let module: TestingModule;
   let aiConfigurationService: AiConfigurationService;
-  let authService: AuthService;
 
   const betterAuthHelper = new BetterAuthHelper();
 
@@ -70,10 +71,7 @@ describe("aiConfigurationController", () => {
       .compile();
 
     aiConfigurationService = module.get(AiConfigurationService);
-    authService = module.get<AuthService>(
-      AuthService,
-    );
-    betterAuthHelper.setAuthService(authService);
+    betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));
 
     app = module.createNestApplication();
     app.useGlobalFilters(new NotFoundInDatabaseExceptionFilter());

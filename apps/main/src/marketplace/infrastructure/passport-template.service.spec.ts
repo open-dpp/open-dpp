@@ -7,12 +7,14 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { Auth } from "better-auth";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
-import { AuthService } from "../../identity/auth/application/services/auth.service";
 import { AuthModule } from "../../identity/auth/auth.module";
+import { AUTH } from "../../identity/auth/auth.provider";
 import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
+import { UsersService } from "../../identity/users/application/services/users.service";
 import { PassportTemplatePublication } from "../domain/passport-template-publication";
 import { passportTemplatePublicationPropsFactory } from "../fixtures/passport.template.factory";
 import {
@@ -25,7 +27,6 @@ describe("passportTemplateService", () => {
   let app: INestApplication;
   let service: PassportTemplatePublicationService;
   let module: TestingModule;
-  let authService: AuthService;
 
   const betterAuthHelper = new BetterAuthHelper();
 
@@ -61,10 +62,7 @@ describe("passportTemplateService", () => {
     service = module.get<PassportTemplatePublicationService>(
       PassportTemplatePublicationService,
     );
-    authService = module.get<AuthService>(
-      AuthService,
-    );
-    betterAuthHelper.setAuthService(authService);
+    betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));
 
     app = module.createNestApplication();
     await app.init();

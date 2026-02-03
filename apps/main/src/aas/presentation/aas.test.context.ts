@@ -1,4 +1,5 @@
 import type { INestApplication } from "@nestjs/common";
+import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
 import { ModuleMetadata } from "@nestjs/common/interfaces/modules/module-metadata.interface";
@@ -13,15 +14,16 @@ import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
-import { AuthService } from "../../identity/auth/application/services/auth.service";
-import { AuthModule } from "../../identity/auth/auth.module";
 
+import { AuthModule } from "../../identity/auth/auth.module";
+import { AUTH } from "../../identity/auth/auth.provider";
 import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
+import { UsersService } from "../../identity/users/application/services/users.service";
 import { AasModule } from "../aas.module";
+
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { IPersistable } from "../domain/persistable";
 import { Submodel } from "../domain/submodel-base/submodel";
-
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
 import {
@@ -33,7 +35,6 @@ import { SubmodelRepository } from "../infrastructure/submodel.repository";
 
 export function createAasTestContext<T>(basePath: string, metadataTestingModule: ModuleMetadata, mongooseModels: ModelDefinition[], EntityRepositoryClass: new (...args: any[]) => T) {
   let app: INestApplication;
-  let authService: AuthService;
   let dppIdentifiableRepository: T;
   let submodelRepository: SubmodelRepository;
   let aasRepository: AasRepository;
@@ -76,10 +77,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       send: jest.fn(),
     }).compile();
 
-    authService = moduleRef.get<AuthService>(
-      AuthService,
-    );
-    betterAuthHelper.setAuthService(authService);
+    betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));
 
     app = moduleRef.createNestApplication();
     await app.init();

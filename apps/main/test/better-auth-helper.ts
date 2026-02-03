@@ -1,6 +1,7 @@
+import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
 import { User as BetterAuthUser } from "better-auth";
-import { AuthService } from "../src/identity/auth/application/services/auth.service";
+import { UsersService } from "../src/identity/users/application/services/users.service";
 
 interface BetterAuthOrganization {
   id: string;
@@ -14,15 +15,17 @@ interface BetterAuthOrganization {
 }
 
 export class BetterAuthHelper {
-  private authService: AuthService;
+  private usersService: UsersService;
+  private auth: Auth;
   private readonly defaultPassword = "password1234";
 
   public userMap = new Map<string, BetterAuthUser>();
   public organizationMap = new Map<string, BetterAuthOrganization>();
   private cookieCache = new Map<string, string>();
 
-  setAuthService(authService: AuthService) {
-    this.authService = authService;
+  init(usersService: UsersService, auth: Auth) {
+    this.usersService = usersService;
+    this.auth = auth;
   }
 
   async signAsUser(userId: string) {
@@ -34,11 +37,10 @@ export class BetterAuthHelper {
     if (!user) {
       throw new Error("No user found");
     }
-    const auth = this.authService.auth;
-    if (!auth) {
+    if (!this.auth) {
       throw new Error("No auth setup");
     }
-    const dataSignIn = await auth.api.signInEmail({
+    const dataSignIn = await this.auth.api.signInEmail({
       body: {
         email: user.email,
         password: this.defaultPassword,
@@ -69,8 +71,7 @@ export class BetterAuthHelper {
 
   async createUser() {
     const userEmail = `${randomUUID()}@test.test`;
-    const auth = this.authService.auth;
-    if (!auth) {
+    if (!this.auth) {
       throw new Error("No auth setup");
     }
     const body = {
@@ -80,10 +81,10 @@ export class BetterAuthHelper {
       email: userEmail,
       password: this.defaultPassword,
     } as any;
-    const data = await auth.api.signUpEmail({
+    const data = await this.auth.api.signUpEmail({
       body,
     });
-    await this.authService.setUserEmailVerified(data.user.email, true);
+    await this.usersService.setUserEmailVerified(data.user.email, true);
     const user = data.user;
     this.userMap.set(user.id, user);
     return {
@@ -93,11 +94,10 @@ export class BetterAuthHelper {
   }
 
   async createApiKey(userId: string) {
-    const auth = this.authService.auth;
-    if (!auth) {
+    if (!this.auth) {
       throw new Error("No auth setup");
     }
-    const data = await (auth.api as any).createApiKey({
+    const data = await (this.auth.api as any).createApiKey({
       body: {
         name: "project-api-key",
         userId,
@@ -107,11 +107,10 @@ export class BetterAuthHelper {
   }
 
   async createOrganization(userId: string): Promise<BetterAuthOrganization> {
-    const auth = this.authService.auth;
-    if (!auth) {
+    if (!this.auth) {
       throw new Error("No auth setup");
     }
-    const dataOrg = await (auth.api as any).createOrganization({
+    const dataOrg = await (this.auth.api as any).createOrganization({
       body: {
         name: "My Organization",
         slug: randomUUID(),

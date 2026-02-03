@@ -8,14 +8,15 @@ import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { Auth } from "better-auth";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import { ignoreIds } from "../../../test/utils.for.test";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
-import { AuthService } from "../../identity/auth/application/services/auth.service";
 import { AuthModule } from "../../identity/auth/auth.module";
+import { AUTH } from "../../identity/auth/auth.provider";
 import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
-import { UsersService } from "../../identity/users/infrastructure/users.service";
+import { UsersService } from "../../identity/users/application/services/users.service";
 import { Template } from "../../old-templates/domain/template";
 import { laptopFactory } from "../../old-templates/fixtures/laptop.factory";
 import { DataValue } from "../../product-passport-data/domain/data-value";
@@ -33,7 +34,6 @@ describe("modelsService", () => {
   let modelsService: ModelsService;
   let mongoConnection: Connection;
   let modelDoc: MongooseModel<ModelDoc>;
-  let authService: AuthService;
 
   const betterAuthHelper = new BetterAuthHelper();
 
@@ -76,10 +76,7 @@ describe("modelsService", () => {
     modelsService = module.get<ModelsService>(ModelsService);
     mongoConnection = module.get<Connection>(getConnectionToken());
     modelDoc = mongoConnection.model(ModelDoc.name, ModelSchema);
-    authService = module.get<AuthService>(
-      AuthService,
-    );
-    betterAuthHelper.setAuthService(authService);
+    betterAuthHelper.init(module.get<UsersService>(UsersService), module.get<Auth>(AUTH));
 
     app = module.createNestApplication();
     await app.init();

@@ -5,6 +5,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { Auth } from "better-auth";
 import { json } from "express";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
@@ -14,9 +15,10 @@ import {
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
-import { AuthService } from "../../identity/auth/application/services/auth.service";
 import { AuthModule } from "../../identity/auth/auth.module";
+import { AUTH } from "../../identity/auth/auth.provider";
 import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
+import { UsersService } from "../../identity/users/application/services/users.service";
 import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { ItemsApplicationService } from "../../items/presentation/items-application.service";
@@ -53,7 +55,6 @@ describe("aasConnectionController", () => {
   let modelsService: ModelsService;
   let itemsService: ItemsService;
   let uniqueProductIdentifierService: UniqueProductIdentifierService;
-  let authService: AuthService;
 
   const betterAuthHelper = new BetterAuthHelper();
 
@@ -132,10 +133,7 @@ describe("aasConnectionController", () => {
     uniqueProductIdentifierService = moduleRef.get(
       UniqueProductIdentifierService,
     );
-    authService = moduleRef.get<AuthService>(
-      AuthService,
-    );
-    betterAuthHelper.setAuthService(authService);
+    betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));
 
     await app.init();
 

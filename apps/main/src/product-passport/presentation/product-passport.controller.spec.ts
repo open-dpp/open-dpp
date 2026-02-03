@@ -7,14 +7,16 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import request from "supertest";
+import { Auth } from "better-auth";
 
+import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
-import { AuthService } from "../../identity/auth/application/services/auth.service";
 import { AuthModule } from "../../identity/auth/auth.module";
+import { AUTH } from "../../identity/auth/auth.provider";
 import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
+import { UsersService } from "../../identity/users/application/services/users.service";
 import { Item } from "../../items/domain/item";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { Model } from "../../models/domain/model";
@@ -37,7 +39,6 @@ describe("productPassportController", () => {
   let modelsService: ModelsService;
   let itemsService: ItemsService;
   let templateService: TemplateService;
-  let authService: AuthService;
 
   const betterAuthHelper = new BetterAuthHelper();
 
@@ -70,10 +71,7 @@ describe("productPassportController", () => {
     modelsService = module.get(ModelsService);
     itemsService = module.get(ItemsService);
     templateService = module.get<TemplateService>(TemplateService);
-    authService = module.get<AuthService>(
-      AuthService,
-    );
-    betterAuthHelper.setAuthService(authService);
+    betterAuthHelper.init(module.get<UsersService>(UsersService), module.get<Auth>(AUTH));
 
     app = module.createNestApplication();
 
