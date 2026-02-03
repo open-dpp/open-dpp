@@ -140,8 +140,8 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   copy(): Submodel {
     return Submodel.fromPlain({
-      id: randomUUID(),
       ...this.toPlain(),
+      id: randomUUID(),
     });
   }
 
