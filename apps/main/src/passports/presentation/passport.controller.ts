@@ -34,7 +34,6 @@ import {
 import { AuthService } from "../../auth/auth.service";
 import { Pagination } from "../../pagination/pagination";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
-import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
