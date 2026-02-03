@@ -16,7 +16,7 @@ export function passportsHandlers() {
   return [
     http.post(
       `${passportsEndpointUrl}`,
-      async ({ request }) => {
+      async () => {
         return HttpResponse.json(passport1, { status: 201 })
       },
     ),

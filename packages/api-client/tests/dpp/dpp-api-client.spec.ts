@@ -36,6 +36,7 @@ import {
   uniqueProductIdentifierReference,
 } from './handlers/unique-product-identifiers'
 import { server } from './msw.server'
+import { passport1, passport2 } from './handlers/passports'
 
 describe('apiClient', () => {
   beforeAll(() => server.listen())
@@ -90,14 +91,14 @@ describe('apiClient', () => {
       dpp: { baseURL },
     })
     sdk.setActiveOrganizationId(activeOrganization.id)
-    it('should get all templates', async () => {
+    it('should get all passports', async () => {
       const response = await sdk.dpp.passports.getAll(paginationParams)
-      expect(response.data.result).toEqual([template1, template2])
+      expect(response.data.result).toEqual([passport1, passport2])
     })
 
-    it('should create template', async () => {
-      const response = await sdk.dpp.passports.create()
-      expect(response.data).toEqual(template1)
+    it('should create passport', async () => {
+      const response = await sdk.dpp.passports.create({})
+      expect(response.data).toEqual(passport1)
     })
   })
 
