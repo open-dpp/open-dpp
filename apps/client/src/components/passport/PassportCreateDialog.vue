@@ -39,7 +39,10 @@ async function newPassport() {
     passportParams.templateId = template.value;
   }
 
-  await createPassport(passportParams);
+  const result = await createPassport(passportParams);
+  if (result) {
+    close();
+  }
 }
 
 async function loadMoreTemplates() {

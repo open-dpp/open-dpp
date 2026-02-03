@@ -35,6 +35,7 @@ export function usePassports({ changeQueryParams, initialCursor }: PassportProps
     if (response.status === HTTPCode.CREATED) {
       await router.push(`${route.path}/${response.data.id}`);
     }
+    return response.data;
   };
 
   return { createPassport, passports, loading, init, ...pagination };
