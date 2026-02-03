@@ -56,7 +56,9 @@ const {
   id: props.id,
   aasNamespace:
     props.editorMode === AasEditMode.Passport
-      ? apiClient.dpp.passports.aas // TODO: Replace templates here by passports
+     props.editorMode === AasEditMode.Passport
+       ? apiClient.dpp.passports.aas
+       : apiClient.dpp.templates.aas,
       : apiClient.dpp.templates.aas,
   initialSelectedKeys: route.query.edit ? String(route.query.edit) : undefined,
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
