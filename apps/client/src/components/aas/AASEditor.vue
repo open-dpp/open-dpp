@@ -55,11 +55,9 @@ const {
 } = useAasEditor({
   id: props.id,
   aasNamespace:
-    props.editorMode === AasEditMode.Passport
      props.editorMode === AasEditMode.Passport
        ? apiClient.dpp.passports.aas
        : apiClient.dpp.templates.aas,
-      : apiClient.dpp.templates.aas,
   initialSelectedKeys: route.query.edit ? String(route.query.edit) : undefined,
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
   changeQueryParams,

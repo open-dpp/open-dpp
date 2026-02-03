@@ -110,6 +110,7 @@ onMounted(async () => {
         v-model="template"
         :options="templateList"
         option-value="id"
+        option-label="id"
         :virtual-scroller-options="{
           itemSize: 40,
           lazy: true,
