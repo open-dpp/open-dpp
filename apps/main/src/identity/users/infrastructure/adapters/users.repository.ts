@@ -32,7 +32,11 @@ export class UsersRepository {
   }
 
   async findOneById(id: string): Promise<User | null> {
-    const document = await this.userModel.findById(id);
+    // Workaround: findById, findOne, and $eq queries all fail despite find() returning the document.
+    // This is likely due to how Mongoose handles the string _id type in queries.
+    // Using find() + filter approach as the reliable workaround.
+    const allUsers = await this.userModel.find().exec();
+    const document = allUsers.find(u => u._id === id);
     if (!document)
       return null;
     return UserMapper.toDomain(document);

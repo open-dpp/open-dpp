@@ -159,11 +159,7 @@ export class TemplateDraftController {
 
     if (publishDto.visibility === publishDto_1.VisibilityLevel.PUBLIC) {
       const user = await this.usersService.findOneAndFail(session.userId);
-      const activeOrganizationId = session.activeOrganizationId;
-      if (!activeOrganizationId) {
-        throw new BadRequestException();
-      }
-      const organization = await this.organizationsService.getOrganization(session.activeOrganizationId, session);
+      const organization = await this.organizationsService.getOrganization(organizationId, session);
       if (!organization) {
         throw new BadRequestException();
       }
