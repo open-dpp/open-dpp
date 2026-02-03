@@ -1,5 +1,5 @@
 import type { PagingParamsDto, PassportDto } from "@open-dpp/dto";
-import { passportsPlainFactory, templatesPlainFactory } from "@open-dpp/testing";
+import { passportsPlainFactory } from "@open-dpp/testing";
 import { createPinia, setActivePinia } from "pinia";
 import { expect, it, vi } from "vitest";
 import { HTTPCode } from "../stores/http-codes.ts";
@@ -40,20 +40,20 @@ describe("passports", () => {
 
   const changeQueryParams = vi.fn();
 
-  it("should create template", async () => {
+  it("should create passport", async () => {
     const { createPassport } = usePassports({ changeQueryParams });
-    const t1 = templatesPlainFactory.build();
+    const p1 = passportsPlainFactory.build();
 
-    mocks.createPassport.mockResolvedValueOnce({ data: t1, status: HTTPCode.CREATED });
-    const templates = { paging_metadata: { cursor: t1.id }, result: [t1] };
-    mocks.fetchPassports.mockResolvedValueOnce({ data: templates });
+    mocks.createPassport.mockResolvedValueOnce({ data: p1, status: HTTPCode.CREATED });
+    const passports = { paging_metadata: { cursor: p1.id }, result: [p1] };
+    mocks.fetchPassports.mockResolvedValueOnce({ data: passports });
 
     await createPassport({});
     expect(mocks.createPassport).toHaveBeenCalledWith({});
-    expect(mocks.routerPush).toHaveBeenCalledWith(`/passports/${t1.id}`);
+    expect(mocks.routerPush).toHaveBeenCalledWith(`/passports/${p1.id}`);
   });
 
-  it("should init templates", async () => {
+  it("should init passport", async () => {
     const { passports, init } = usePassports({ changeQueryParams });
     const p1 = passportsPlainFactory.build();
     const passportsResponse = { paging_metadata: { cursor: p1.id }, result: [p1] };
