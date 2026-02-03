@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { HydratedDocument } from "mongoose";
+import { HydratedDocument, InferSchemaType } from "mongoose";
 
 export type SessionDocument = HydratedDocument<Session>;
 
@@ -18,19 +18,26 @@ export class Session {
   expiresAt: Date;
 
   @Prop()
-  ipAddress?: string;
+  ipAddress?: string | null;
 
   @Prop()
-  userAgent?: string;
+  userAgent?: string | null;
 
   @Prop({ required: true })
   createdAt: Date;
 
   @Prop({ required: true })
   updatedAt: Date;
+
+  @Prop()
+  activeOrganizationId: string | null;
+
+  @Prop()
+  activeTeamId: string | null;
 }
 
 export const SessionSchema = SchemaFactory.createForClass(Session);
+export type SessionSchemaType = InferSchemaType<typeof SessionSchema>;
 
 // Indexes
 SessionSchema.index({ token: 1 });
