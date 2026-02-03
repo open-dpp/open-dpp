@@ -50,4 +50,8 @@ export class UsersRepository {
     const documents = await this.userModel.find({ _id: { $in: ids } });
     return documents.map(doc => UserMapper.toDomain(doc));
   }
+
+  async setUserEmailVerified(email: string, emailVerified: boolean): Promise<void> {
+    await this.userModel.findOneAndUpdate({ email }, { $set: { emailVerified } });
+  }
 }

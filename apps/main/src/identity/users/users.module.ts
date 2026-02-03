@@ -2,10 +2,10 @@ import { forwardRef, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AuthModule } from "../auth/auth.module";
 import { OrganizationsModule } from "../organizations/organizations.module";
+import { UsersService } from "./application/services/users.service";
 import { UsersRepository } from "./infrastructure/adapters/users.repository";
 import { UserMapper } from "./infrastructure/mappers/user.mapper";
 import { User, UserSchema } from "./infrastructure/schemas/user.schema";
-import { UsersService } from "./infrastructure/users.service";
 import { UsersController } from "./presentation/users.controller";
 
 @Module({

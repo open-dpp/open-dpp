@@ -13,6 +13,7 @@ export class UserMapper {
       emailVerified: document.emailVerified,
       createdAt: document.createdAt,
       updatedAt: document.updatedAt,
+      role: document.role,
     };
     return User.loadFromDb(props);
   }
@@ -28,6 +29,7 @@ export class UserMapper {
       emailVerified: entity.emailVerified,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
+      role: entity.role,
     } as UserSchema;
   }
 }

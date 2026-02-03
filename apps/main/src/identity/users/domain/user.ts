@@ -1,25 +1,25 @@
-import { randomBytes } from "node:crypto";
+import { randomUUID } from "node:crypto";
+import { UserRole } from "./user-role.enum";
 
 export interface UserCreateProps {
   email: string;
-  firstName?: string;
-  lastName?: string;
+  firstName: string;
+  lastName: string;
   name?: string;
   image?: string;
   emailVerified?: boolean;
+  role?: UserRole;
+  banned?: boolean;
+  banReason?: string | null;
+  banExpires?: Date | null;
 }
 
 export type UserDbProps = UserCreateProps & {
   id: string;
   createdAt: Date;
   updatedAt: Date;
+  role: UserRole;
 };
-
-function generate24CharId(): string {
-  const timestamp = Math.floor(Date.now() / 1000).toString(16).padStart(8, "0");
-  const random = randomBytes(8).toString("hex");
-  return timestamp + random;
-}
 
 export class User {
   public readonly id: string;
@@ -31,41 +31,55 @@ export class User {
   public readonly emailVerified: boolean;
   public readonly createdAt: Date;
   public readonly updatedAt: Date;
+  public readonly role: UserRole;
+  public readonly banned: boolean;
+  public readonly banReason: string | null;
+  public readonly banExpires: Date | null;
 
   private constructor(
     id: string,
     email: string,
     firstName: string | null,
     lastName: string | null,
-    name: string | null,
     image: string | null,
     emailVerified: boolean,
     createdAt: Date,
     updatedAt: Date,
+    role: UserRole,
+    banned: boolean,
+    banReason: string | null,
+    banExpires: Date | null,
   ) {
     this.id = id;
     this.email = email;
     this.firstName = firstName;
     this.lastName = lastName;
-    this.name = name;
+    this.name = `${firstName} ${lastName}`;
     this.image = image;
     this.emailVerified = emailVerified;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
+    this.role = role;
+    this.banned = banned;
+    this.banReason = banReason;
+    this.banExpires = banExpires;
   }
 
   public static create(data: UserCreateProps) {
     const now = new Date();
     return new User(
-      generate24CharId(),
+      randomUUID(),
       data.email,
       data.firstName ?? null,
       data.lastName ?? null,
-      data.name ?? null,
       data.image ?? null,
       data.emailVerified ?? false,
       now,
       now,
+      data.role ?? UserRole.USER,
+      !!data.banned,
+      data.banReason ?? null,
+      data.banExpires ?? null,
     );
   }
 
@@ -75,11 +89,14 @@ export class User {
       data.email,
       data.firstName ?? null,
       data.lastName ?? null,
-      data.name ?? null,
       data.image ?? null,
       data.emailVerified ?? false,
       data.createdAt,
       data.updatedAt,
+      data.role,
+      data.banned ?? false,
+      data.banReason ?? null,
+      data.banExpires ?? null,
     );
   }
 }

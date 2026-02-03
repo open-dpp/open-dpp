@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { z } from "zod";
 import { ZodValidationPipe } from "../../../common/pipes/zod-validation.pipe";
+import { UsersService } from "../application/services/users.service";
 import { User } from "../domain/user";
-import { UsersService } from "../infrastructure/users.service";
 
 export const CreateUserDtoSchema = z.object({
   email: z.string().email(),
@@ -25,6 +25,6 @@ export class UsersController {
 
   @Get(":id")
   async getUser(@Param("id") id: string): Promise<User | null> {
-    return this.usersService.getUser(id);
+    return this.usersService.findOne(id);
   }
 }
