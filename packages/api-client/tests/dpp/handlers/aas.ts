@@ -176,8 +176,8 @@ export function aasHandlers(basePath: string) {
     http.delete(
       `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/Design_V01.Author.ListProp/columns/column1`,
       async () => {
-        return HttpResponse.json(undefined, {
-          status: 204,
+        return HttpResponse.json(submodelDesignOfProductElement0, {
+          status: 200,
         })
       },
     ),
@@ -199,8 +199,8 @@ export function aasHandlers(basePath: string) {
     http.delete(
       `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelDesignOfProduct.id)}/submodel-elements/Design_V01.Author.ListProp/rows/row1`,
       async () => {
-        return HttpResponse.json(undefined, {
-          status: 204,
+        return HttpResponse.json(submodelDesignOfProductElement0, {
+          status: 200,
         })
       },
     ),

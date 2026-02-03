@@ -7,9 +7,12 @@ import type {
   OpenDrawerCallback,
   SubmodelElementListEditorProps,
 } from "../../composables/aas-drawer.ts";
+import type { BuildColumnsToAddOptions } from "../../composables/aas-table-extension.ts";
 import type { IErrorHandlingStore } from "../../stores/error.handling.ts";
 import { toTypedSchema } from "@vee-validate/zod";
 import { Button, Column, DataTable, Menu } from "primevue";
+import ConfirmDialog from "primevue/confirmdialog";
+import { useConfirm } from "primevue/useconfirm";
 import { useForm } from "vee-validate";
 import { computed, ref, toRaw } from "vue";
 import { useI18n } from "vue-i18n";
@@ -48,14 +51,17 @@ const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
 
 const { t, locale } = useI18n();
 
-const { columnsToAdd, columns } = useAasTableExtension({
+const confirm = useConfirm();
+
+const { columnsToAdd, columns, buildColumnsToAdd } = useAasTableExtension({
   id: props.id,
   pathToList: toRaw(props.path),
   openDrawer: props.openDrawer,
-  listData: props.data,
+  initialData: props.data,
   selectedLanguage: convertLocaleToLanguage(locale.value),
   errorHandlingStore: props.errorHandlingStore,
   translate: props.translate,
+  openConfirm: confirm.require,
   aasNamespace: props.aasNamespace,
 });
 
@@ -75,7 +81,8 @@ defineExpose<{
   submit,
 });
 
-function addClicked(event: any) {
+function addClicked(event: any, options: BuildColumnsToAddOptions) {
+  buildColumnsToAdd(options);
   popover.value.toggle(event);
 }
 </script>
@@ -87,20 +94,21 @@ function addClicked(event: any) {
       :errors="errors"
       :editor-mode="EditorMode.EDIT"
     />
+    <ConfirmDialog />
     <DataTable scrollable :value="rows" table-style="min-width: 50rem">
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="text-xl font-bold">{{ t('aasEditor.table.entries') }}</span>
           <Button
             :label="t('aasEditor.table.addColumn')"
-            @click="addClicked($event)"
+            @click="addClicked($event, { position: columns.length })"
           />
         </div>
       </template>
-      <Column v-for="col of columns" :key="col.idShort" :field="col.idShort">
+      <Column v-for="(col, index) of columns" :key="col.idShort" :field="col.idShort">
         <template #header>
+          <Button icon="pi pi-ellipsis-v" severity="secondary" size="small" @click="addClicked($event, { position: index, enableRemove: true })" />
           <span>{{ col.label }}</span>
-          <Button icon="pi pi-plus" size="small" @click="addClicked($event)" />
         </template>
       </Column>
       <Column

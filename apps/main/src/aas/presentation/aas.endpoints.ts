@@ -1,6 +1,8 @@
+import type { SubmodelElementListResponseDto } from "@open-dpp/dto";
 import type express from "express";
 import {
   AssetAdministrationShellPaginationResponseDto,
+
   SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
   SubmodelElementRequestDto,
@@ -101,12 +103,12 @@ export interface IAasDeleteEndpoints {
     idShortPath: IdShortPath,
     idShortOfColumn: string,
     req: express.Request,
-  ) => Promise<void>;
+  ) => Promise<SubmodelElementListResponseDto>;
   deleteRowFromSubmodelElementList: (
     id: string,
     submodelId: string,
     idShortPath: IdShortPath,
     idShortOfRow: string,
     req: express.Request,
-  ) => Promise<void>;
+  ) => Promise<SubmodelElementListResponseDto>;
 }

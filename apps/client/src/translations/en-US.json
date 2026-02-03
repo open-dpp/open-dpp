@@ -58,6 +58,7 @@
       "saveAndAddEntries": "Save and add list entries",
       "column": "column",
       "entries": "Entries",
+      "removeColumn": "Should the @:aasEditor.table.column really be removed?",
       "addColumn": "@:common.add @:aasEditor.table.column",
       "addFieldAsColumn": "@:common.add {field} as @:aasEditor.table.column ",
       "errorAddColumn": "Fails to @.lower:common.add @:aasEditor.table.column"

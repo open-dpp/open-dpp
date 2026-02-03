@@ -16,7 +16,7 @@
     "save": "Speichern",
     "create": "Erstellen",
     "close": "Schließen",
-    "cancel": "Cancel",
+    "cancel": "Abbrechen",
     "select": "Auswählen",
     "selected": "Ausgewählt",
     "submit": "Bestätigen",
@@ -59,6 +59,7 @@
       "column": "Spalte",
       "entries": "Einträge",
       "addColumn": "@:aasEditor.table.column @.lower:common.add",
+      "removeColumn": "Soll die @:aasEditor.table.column wirklich entfernt werden?",
       "addFieldAsColumn": "{field} als @:aasEditor.table.column @.lower:common.add ",
       "errorAddColumn": "@:common.add der @:aasEditor.table.column fehlgeschlagen"
     },

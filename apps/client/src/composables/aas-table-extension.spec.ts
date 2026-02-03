@@ -1,3 +1,4 @@
+import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItemCommandEvent } from "primevue/menuitem";
 import {
   AasSubmodelElements,
@@ -6,11 +7,13 @@ import {
   SubmodelElementListJsonSchema,
   SubmodelElementSchema,
 } from "@open-dpp/dto";
+import { waitFor } from "@testing-library/vue";
 import { HttpStatusCode } from "axios";
 import { expect, it, vi } from "vitest";
 import PropertyCreateEditor from "../components/aas/PropertyCreateEditor.vue";
 import SubmodelElementListEditor from "../components/aas/SubmodelElementListEditor.vue";
 import apiClient from "../lib/api-client.ts";
+import { HTTPCode } from "../stores/http-codes.ts";
 import { useAasDrawer } from "./aas-drawer.ts";
 import { useAasTableExtension } from "./aas-table-extension.ts";
 
@@ -18,6 +21,7 @@ const mocks = vi.hoisted(() => {
   return {
     createSubmodel: vi.fn(),
     addColumnToSubmodelElementList: vi.fn(),
+    deleteColumnFromSubmodelElementList: vi.fn(),
   };
 });
 
@@ -29,6 +33,7 @@ vi.mock("../lib/api-client", () => ({
         aas: {
           createSubmodel: mocks.createSubmodel,
           addColumnToSubmodelElementList: mocks.addColumnToSubmodelElementList,
+          deleteColumnFromSubmodelElementList: mocks.deleteColumnFromSubmodelElementList,
         },
       },
     },
@@ -70,14 +75,16 @@ describe("aasTableExtension composable", () => {
 
   it("should compute columns", async () => {
     const mockOnHideDrawer = vi.fn();
+    const mockOpenConfirmDialog = vi.fn();
 
     const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
     const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
     const { columns } = useAasTableExtension({
       id: aasId,
       pathToList,
-      listData: submodelElementList,
+      initialData: submodelElementList,
       aasNamespace: apiClient.dpp.templates.aas,
+      openConfirm: mockOpenConfirmDialog,
       errorHandlingStore,
       translate,
       selectedLanguage: Language.en,
@@ -92,19 +99,22 @@ describe("aasTableExtension composable", () => {
 
   it("should add column", async () => {
     const mockOnHideDrawer = vi.fn();
+    const mockOpenConfirmDialog = vi.fn();
 
     const { openDrawer, editorVNode, drawerVisible } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
     const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
-    const { columnsToAdd } = useAasTableExtension({
+    const { columnsToAdd, buildColumnsToAdd } = useAasTableExtension({
       id: aasId,
       pathToList,
-      listData: submodelElementList,
+      initialData: submodelElementList,
       aasNamespace: apiClient.dpp.templates.aas,
+      openConfirm: mockOpenConfirmDialog,
       errorHandlingStore,
       selectedLanguage: Language.en,
       translate,
       openDrawer,
     });
+    buildColumnsToAdd({ position: 1 });
     const textFieldColumn = columnsToAdd.value.find(e => e.label === "aasEditor.textField")!;
     textFieldColumn.command!({} as MenuItemCommandEvent);
     expect(drawerVisible.value).toBeTruthy();
@@ -129,7 +139,7 @@ describe("aasTableExtension composable", () => {
       pathToList.submodelId,
       pathToList.idShortPath,
       SubmodelElementSchema.parse({ ...columnData, modelType: AasSubmodelElements.Property }),
-      {},
+      { position: 1 },
     );
 
     // navigates back to list view after adding a column
@@ -137,5 +147,53 @@ describe("aasTableExtension composable", () => {
     expect(editorVNode.value!.props.path).toEqual(pathToList);
     expect(editorVNode.value!.component).toEqual(SubmodelElementListEditor);
     expect(editorVNode.value!.props.data).toEqual(SubmodelElementListJsonSchema.parse(submodelElementListModified));
+  });
+
+  it("should delete column", async () => {
+    const mockOnHideDrawer = vi.fn();
+    const openAutoConfirm = async (data: ConfirmationOptions) => {
+      data.accept!();
+    };
+
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
+    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const { columnsToAdd, buildColumnsToAdd, columns } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: submodelElementList,
+      aasNamespace: apiClient.dpp.templates.aas,
+      errorHandlingStore,
+      openConfirm: openAutoConfirm,
+      selectedLanguage: Language.en,
+      translate,
+      openDrawer,
+    });
+    buildColumnsToAdd({ position: 1, enableRemove: true });
+
+    const removeColumnButton = columnsToAdd.value.find(c => c.label === "common.actions")!.items!.find(e => e.label === "common.remove")!;
+
+    mocks.deleteColumnFromSubmodelElementList.mockResolvedValue({
+      status: HTTPCode.OK,
+      data: {
+        ...submodelElementList,
+        value: submodelElementList.value.map(
+          row => ({
+            ...row,
+            value: cols.filter(col => col.idShort !== "Column2"),
+          }),
+        ),
+      },
+    });
+    removeColumnButton.command!({} as MenuItemCommandEvent);
+
+    expect(mocks.deleteColumnFromSubmodelElementList).toHaveBeenCalledWith(
+      aasId,
+      pathToList.submodelId,
+      pathToList.idShortPath,
+      "Column2",
+    );
+    await waitFor(() => expect(columns.value).toEqual([
+      { idShort: "Column1", label: "Material" },
+    ]));
   });
 });

@@ -527,7 +527,9 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       .delete(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col1.idShort}`)
       .set("Cookie", userCookie)
       .send();
-    expect(response.status).toEqual(204);
+    expect(response.status).toEqual(200);
+    const bodyRow0 = response.body.value[0];
+    expect(bodyRow0.value).toEqual([]);
     const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
     const foundList = foundSubmodel.findSubmodelElementOrFail(IdShortPath.create({ path: "tableList" }));
     const tableExtension = new TableExtension(foundList as SubmodelElementList);
@@ -582,10 +584,11 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     await saveEntity(entity);
 
     const response = await request(app.getHttpServer())
-      .post(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows/${row1.idShort}`)
+      .delete(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows/${row1.idShort}`)
       .set("Cookie", userCookie)
       .send();
-    expect(response.status).toEqual(204);
+    expect(response.status).toEqual(200);
+    expect(response.body.value).toEqual([]);
     const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
     const foundList = foundSubmodel.findSubmodelElementOrFail(IdShortPath.create({ path: "tableList" }));
     const tableExtension = new TableExtension(foundList as SubmodelElementList);

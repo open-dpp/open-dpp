@@ -1,4 +1,5 @@
 import type {
+  SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementRequestDto,
   SubmodelModificationDto,
@@ -179,9 +180,9 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     @IdShortPathParam() idShortPath: IdShortPath,
     @ColumnParam() idShortOfColumn: string,
     @RequestParam() req: express.Request,
-  ): Promise<void> {
+  ): Promise<SubmodelElementListResponseDto> {
     const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
-    await this.environmentService.deleteColumn(passport.getEnvironment(), submodelId, idShortPath, idShortOfColumn);
+    return await this.environmentService.deleteColumn(passport.getEnvironment(), submodelId, idShortPath, idShortOfColumn);
   }
 
   @ApiPostRow()
@@ -203,9 +204,9 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     @IdShortPathParam() idShortPath: IdShortPath,
     @RowParam() idShortOfRow: string,
     @RequestParam() req: express.Request,
-  ): Promise<void> {
+  ): Promise<SubmodelElementListResponseDto> {
     const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
-    await this.environmentService.deleteRow(passport.getEnvironment(), submodelId, idShortPath, idShortOfRow);
+    return await this.environmentService.deleteRow(passport.getEnvironment(), submodelId, idShortPath, idShortOfRow);
   }
 
   @ApiPostSubmodelElement()

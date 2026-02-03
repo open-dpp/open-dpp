@@ -189,7 +189,8 @@ describe('apiClient', () => {
         'Design_V01.Author.ListProp',
         'column1',
       )
-      expect(response.status).toEqual(204)
+      expect(response.status).toEqual(200)
+      expect(response.data).toEqual(submodelDesignOfProductElement0)
     })
 
     it('should add row to submodel element list', async () => {
@@ -209,7 +210,8 @@ describe('apiClient', () => {
         'Design_V01.Author.ListProp',
         'row1',
       )
-      expect(response.status).toEqual(204)
+      expect(response.status).toEqual(200)
+      expect(response.data).toEqual(submodelDesignOfProductElement0)
     })
 
     it('should modify submodel element', async () => {

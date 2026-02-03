@@ -1,5 +1,6 @@
 import {
   AssetAdministrationShellPaginationResponseDtoSchema,
+  SubmodelElementListJsonSchema,
   SubmodelElementModificationSchema,
   SubmodelElementPaginationResponseDtoSchema,
   SubmodelElementSchema,
@@ -201,7 +202,11 @@ export function createAasPaths(tag: string) {
         summary: "Deletes column with specified idShort from Submodel Element List with specified idShortPath.",
         parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, ColumnParamSchema],
         responses: {
-          [HTTPCode.NO_CONTENT]: {},
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelElementListJsonSchema },
+            },
+          },
         },
       },
       patch: {
@@ -247,7 +252,11 @@ export function createAasPaths(tag: string) {
         summary: `Deletes row with specified idShort from Submodel Element List with specified idShortPath.`,
         parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, RowParamSchema],
         responses: {
-          [HTTPCode.NO_CONTENT]: {},
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelElementListJsonSchema },
+            },
+          },
         },
       },
     },

@@ -110,7 +110,6 @@ export const ApiGetColumnByIdShortPath = `${ApiPostColumnPath}/:idShortOfColumn`
 export function ApiDeleteColumn() {
   return applyDecorators(
     Delete(ApiGetColumnByIdShortPath),
-    DeleteHttpCode,
   );
 }
 
@@ -131,8 +130,7 @@ export function ApiPostRow() {
 export const ApiDeleteRowPath = `${ApiPostRowPath}/:idShortOfRow`;
 export function ApiDeleteRow() {
   return applyDecorators(
-    Post(ApiDeleteRowPath),
-    DeleteHttpCode,
+    Delete(ApiDeleteRowPath),
   );
 }
 

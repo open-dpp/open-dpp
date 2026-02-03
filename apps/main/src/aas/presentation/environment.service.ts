@@ -5,6 +5,8 @@ import {
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellPaginationResponseDtoSchema,
   AssetKindType,
+  SubmodelElementListJsonSchema,
+  SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
   SubmodelElementPaginationResponseDtoSchema,
@@ -154,10 +156,11 @@ export class EnvironmentService {
     return SubmodelElementSchema.parse(modifiedSubmodelElement.toPlain());
   }
 
-  async deleteColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfColumn: string): Promise<void> {
+  async deleteColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfColumn: string): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    submodel.deleteColumn(idShortPath, idShortOfColumn);
+    const modifiedSubmodelElementList = submodel.deleteColumn(idShortPath, idShortOfColumn);
     await this.submodelRepository.save(submodel);
+    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
   }
 
   async addRow(environment: Environment, submodelId: string, idShortPath: IdShortPath, position?: number): Promise<SubmodelElementResponseDto> {
@@ -167,10 +170,11 @@ export class EnvironmentService {
     return SubmodelElementSchema.parse(modifiedSubmodelElement.toPlain());
   }
 
-  async deleteRow(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfRow: string): Promise<void> {
+  async deleteRow(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfRow: string): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    submodel.deleteRow(idShortPath, idShortOfRow);
+    const modifiedSubmodelElementList = submodel.deleteRow(idShortPath, idShortOfRow);
     await this.submodelRepository.save(submodel);
+    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
   }
 
   async getSubmodelElementById(environment: Environment, submodelId: string, idShortPath: IdShortPath): Promise<SubmodelElementResponseDto> {

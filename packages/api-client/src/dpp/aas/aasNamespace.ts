@@ -1,6 +1,7 @@
 import type {
   AssetAdministrationShellPaginationResponseDto,
   PagingParamsDto,
+  SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
   SubmodelElementRequestDto,
@@ -9,10 +10,10 @@ import type {
   SubmodelPaginationResponseDto,
   SubmodelRequestDto,
   SubmodelResponseDto,
+  TableModificationParamsDto,
   ValueRequestDto,
   ValueResponseDto,
 } from '@open-dpp/dto'
-import type { TableModificationParamsDto } from '@open-dpp/dto/dist/shared/table.dto'
 import type { AxiosInstance, AxiosResponse } from 'axios'
 
 export class AasNamespace {
@@ -93,7 +94,7 @@ export class AasNamespace {
   }
 
   public async deleteColumnFromSubmodelElementList(id: string, submodelId: string, idShortPath: string, idShortOfColumn: string) {
-    return this.axiosInstance.delete(
+    return this.axiosInstance.delete<SubmodelElementListResponseDto>(
       `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/columns/${idShortOfColumn}`,
     )
   }
@@ -107,7 +108,7 @@ export class AasNamespace {
   }
 
   public async deleteRowFromSubmodelElementList(id: string, submodelId: string, idShortPath: string, idShortOfRow: string) {
-    return this.axiosInstance.delete(
+    return this.axiosInstance.delete<SubmodelElementListResponseDto>(
       `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/rows/${idShortOfRow}`,
     )
   }
