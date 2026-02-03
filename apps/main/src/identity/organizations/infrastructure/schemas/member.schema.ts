@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { HydratedDocument } from "mongoose";
-import { OrganizationRole } from "../../domain/organization-role.enum";
+import { MemberRole } from "../../domain/member-role.enum";
 
 export type MemberDocument = HydratedDocument<Member>;
 
@@ -16,7 +16,7 @@ export class Member {
   organizationId: string;
 
   @Prop({ required: true, type: String })
-  role: OrganizationRole;
+  role: MemberRole;
 
   @Prop({ required: true })
   createdAt: Date;

@@ -1,11 +1,10 @@
-import { randomBytes } from "node:crypto";
-
-import { OrganizationRole } from "./organization-role.enum";
+import { randomUUID } from "node:crypto";
+import { MemberRole } from "./member-role.enum";
 
 export interface MemberCreateProps {
   organizationId: string;
   userId: string;
-  role: OrganizationRole;
+  role: MemberRole;
 }
 
 export type MemberDbProps = MemberCreateProps & {
@@ -13,24 +12,18 @@ export type MemberDbProps = MemberCreateProps & {
   createdAt: Date;
 };
 
-function generate24CharId(): string {
-  const timestamp = Math.floor(Date.now() / 1000).toString(16).padStart(8, "0");
-  const random = randomBytes(8).toString("hex");
-  return timestamp + random;
-}
-
 export class Member {
   public readonly id: string;
   public readonly organizationId: string;
   public readonly userId: string;
-  public readonly role: OrganizationRole;
+  public readonly role: MemberRole;
   public readonly createdAt: Date;
 
   private constructor(
     id: string,
     organizationId: string,
     userId: string,
-    role: OrganizationRole,
+    role: MemberRole,
     createdAt: Date,
   ) {
     this.id = id;
@@ -43,7 +36,7 @@ export class Member {
   public static create(data: MemberCreateProps) {
     const now = new Date();
     return new Member(
-      generate24CharId(),
+      randomUUID(),
       data.organizationId,
       data.userId,
       data.role,
