@@ -11,7 +11,7 @@ import {
 import { waitFor } from "@testing-library/vue";
 import { omit } from "lodash";
 import { v4 as uuid4 } from "uuid";
-import { expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import FileCreateEditor from "../components/aas/FileCreateEditor.vue";
 import FileEditor from "../components/aas/FileEditor.vue";
 import PropertyCreateEditor from "../components/aas/PropertyCreateEditor.vue";

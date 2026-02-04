@@ -105,6 +105,7 @@ export function deleteSubmodelElementOrFail(submodelElements: ISubmodelElement[]
   submodelElements.splice(foundIndex, 1);
 }
 
-export function cloneSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
-  return parseSubmodelElement(submodelElement.toPlain());
+export function cloneSubmodelElement(submodelElement: ISubmodelElement, override?: any): ISubmodelElement {
+  const clone = override ? { ...submodelElement.toPlain(), ...override } : submodelElement.toPlain();
+  return parseSubmodelElement(clone);
 }

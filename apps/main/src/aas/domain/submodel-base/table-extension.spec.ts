@@ -21,7 +21,7 @@ describe("tableExtension", () => {
       idShort: "idShort",
     });
     const table = new TableExtension(submodelElementList);
-    const col1Plain = propertyPlainFactory.build({ idShort: "col1" });
+    const col1Plain = propertyPlainFactory.build({ idShort: "col1", value: "10" });
     const col1 = Property.fromPlain(col1Plain);
     // Add first column
     table.addColumn(col1);
@@ -32,14 +32,14 @@ describe("tableExtension", () => {
 
     // Add one row
     table.addRow();
-    const col1Row1 = Property.fromPlain(col1Plain);
+    const col1Row1WithEmptyValue = Property.fromPlain({ ...col1Plain, value: undefined });
     const secondRowId = table.rows[1].idShort;
-    const expRow1 = SubmodelElementCollection.create({ idShort: secondRowId, value: [col1Row1] });
+    const expRow1 = SubmodelElementCollection.create({ idShort: secondRowId, value: [col1Row1WithEmptyValue] });
     expect(table.rows).toEqual([expHeaderRow, expRow1]);
     expect(secondRowId).not.toEqual(firstRowId);
 
     // Add third column
-    const col3 = Property.fromPlain(propertyPlainFactory.build({ idShort: "col3", value: "col3Value" }));
+    const col3 = Property.fromPlain(propertyPlainFactory.build({ idShort: "col3" }));
     expHeaderRow.addSubmodelElement(col3);
     expRow1.addSubmodelElement(cloneSubmodelElement(col3));
     table.addColumn(col3);
@@ -56,9 +56,9 @@ describe("tableExtension", () => {
     table.addRow({ position: 1 });
     const rowAtPos1Id = table.rows[1].idShort;
     const expRowAtPos1 = SubmodelElementCollection.create({ idShort: rowAtPos1Id, value: [
-      cloneSubmodelElement(col1),
-      cloneSubmodelElement(col2),
-      cloneSubmodelElement(col3),
+      cloneSubmodelElement(col1, { value: undefined }),
+      cloneSubmodelElement(col2, { value: undefined }),
+      cloneSubmodelElement(col3, { value: undefined }),
     ] });
     expect(table.rows).toEqual([expHeaderRow, expRowAtPos1, expRow1]);
     expect(rowAtPos1Id).not.toEqual(secondRowId);

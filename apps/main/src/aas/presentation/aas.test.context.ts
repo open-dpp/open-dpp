@@ -569,7 +569,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
 
     const bodyRow0 = response.body.value[0];
     expect({ value: bodyRow0.value }).toEqual({
-      value: row1.toPlain().value,
+      value: row1.toPlain().value.map((col: any) => ({ ...col, value: null })),
     });
     expect(bodyRow0.idShort).not.toEqual(row1.idShort);
   }

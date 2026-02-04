@@ -74,7 +74,11 @@ export class TableExtension {
     }
     else {
       const newRow = SubmodelElementCollection.create({ idShort: this.generateRowIdShort() });
-      this.columns.forEach(column => newRow.addSubmodelElement(cloneSubmodelElement(column)));
+
+      this.columns.forEach((column) => {
+        const columnCopy = cloneSubmodelElement(column, { value: undefined });
+        newRow.addSubmodelElement(columnCopy);
+      });
       this.data.addSubmodelElement(newRow, options);
       return newRow;
     }

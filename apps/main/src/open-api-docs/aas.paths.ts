@@ -224,7 +224,7 @@ export function createAasPaths(tag: string) {
         responses: {
           [HTTPCode.OK]: {
             content: {
-              [ContentType.JSON]: { schema: SubmodelElementSchema },
+              [ContentType.JSON]: { schema: SubmodelElementListJsonSchema },
             },
           },
         },
@@ -235,15 +235,10 @@ export function createAasPaths(tag: string) {
         tags: [tag],
         summary: `Add row to Submodel Element List with specified idShortPath.`,
         parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, PositionQueryParamSchema],
-        requestBody: {
-          content: {
-            [ContentType.JSON]: { schema: SubmodelElementSchema },
-          },
-        },
         responses: {
           [HTTPCode.OK]: {
             content: {
-              [ContentType.JSON]: { schema: SubmodelElementSchema },
+              [ContentType.JSON]: { schema: SubmodelElementListJsonSchema },
             },
           },
         },

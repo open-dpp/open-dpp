@@ -58,13 +58,17 @@
     "table": {
       "saveAndAddEntries": "Speichern und Listeneinträge hinzufügen",
       "column": "Spalte",
+      "row": "Zeile",
       "entries": "Einträge",
+      "emptyCell": "Bitte ausfüllen",
+      "addRow": "@:aasEditor.table.row @.lower:common.add",
       "addColumn": "@:aasEditor.table.column @.lower:common.add",
       "editColumn": "@:aasEditor.table.column @.lower:common.edit",
       "removeColumn": "Soll die @:aasEditor.table.column wirklich entfernt werden?",
       "addFieldAsColumn": "{field} als @:aasEditor.table.column @.lower:common.add",
       "errorEditColumn": "@:common.edit der @:aasEditor.table.column @:common.failed",
       "errorAddColumn": "@:common.add der @:aasEditor.table.column @:common.failed",
+      "errorAddRow": "@:common.add der @:aasEditor.table.row @:common.failed",
       "errorRemoveColumn": "@:common.remove der @:aasEditor.table.column @:common.failed"
     },
     "addSubmodel": "Abschnitt hinzufügen",

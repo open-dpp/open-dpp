@@ -178,7 +178,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
     @PositionQueryParam() position: number | undefined,
     @RequestParam() req: express.Request,
-  ): Promise<SubmodelElementResponseDto> {
+  ): Promise<SubmodelElementListResponseDto> {
     const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
     const column = parseSubmodelElement(body);
     return await this.environmentService.addColumn(template.getEnvironment(), submodelId, idShortPath, column, position);
@@ -192,7 +192,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @ColumnParam() idShortOfColumn: string,
     @SubmodelModificationRequestBody() body: SubmodelElementModificationDto,
     @RequestParam() req: express.Request,
-  ): Promise<SubmodelElementResponseDto> {
+  ): Promise<SubmodelElementListResponseDto> {
     const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
     return await this.environmentService.modifyColumn(template.getEnvironment(), submodelId, idShortPath, idShortOfColumn, body);
   }
@@ -216,7 +216,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @IdShortPathParam() idShortPath: IdShortPath,
     @PositionQueryParam() position: number | undefined,
     @RequestParam() req: express.Request,
-  ): Promise<SubmodelElementResponseDto> {
+  ): Promise<SubmodelElementListResponseDto> {
     const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
     return await this.environmentService.addRow(template.getEnvironment(), submodelId, idShortPath, position);
   }

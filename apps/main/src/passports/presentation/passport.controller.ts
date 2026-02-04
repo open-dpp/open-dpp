@@ -210,7 +210,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
     @PositionQueryParam() position: number | undefined,
     @RequestParam() req: express.Request,
-  ): Promise<SubmodelElementResponseDto> {
+  ): Promise<SubmodelElementListResponseDto> {
     const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
     const column = parseSubmodelElement(body);
     return await this.environmentService.addColumn(passport.getEnvironment(), submodelId, idShortPath, column, position);
@@ -224,7 +224,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     @ColumnParam() idShortOfColumn: string,
     @SubmodelModificationRequestBody() body: SubmodelElementModificationDto,
     @RequestParam() req: express.Request,
-  ): Promise<SubmodelElementResponseDto> {
+  ): Promise<SubmodelElementListResponseDto> {
     const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
     return await this.environmentService.modifyColumn(passport.getEnvironment(), submodelId, idShortPath, idShortOfColumn, body);
   }
@@ -248,7 +248,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     @IdShortPathParam() idShortPath: IdShortPath,
     @PositionQueryParam() position: number | undefined,
     @RequestParam() req: express.Request,
-  ): Promise<SubmodelElementResponseDto> {
+  ): Promise<SubmodelElementListResponseDto> {
     const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
     return await this.environmentService.addRow(passport.getEnvironment(), submodelId, idShortPath, position);
   }

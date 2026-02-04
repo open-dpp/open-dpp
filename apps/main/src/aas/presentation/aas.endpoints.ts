@@ -64,14 +64,14 @@ export interface IAasCreateEndpoints {
     body: SubmodelElementRequestDto,
     position: number | undefined,
     req: express.Request,
-  ) => Promise<SubmodelElementResponseDto>;
+  ) => Promise<SubmodelElementListResponseDto>;
   addRowToSubmodelElementList: (
     id: string,
     submodelId: string,
     idShortPath: IdShortPath,
     position: number | undefined,
     req: express.Request,
-  ) => Promise<SubmodelElementResponseDto>;
+  ) => Promise<SubmodelElementListResponseDto>;
 }
 
 export interface IAasModifyEndpoints {
@@ -91,7 +91,7 @@ export interface IAasModifyEndpoints {
     idShortOfColumn: string,
     body: SubmodelElementModificationDto,
     req: express.Request,
-  ) => Promise<SubmodelElementResponseDto>;
+  ) => Promise<SubmodelElementListResponseDto>;
 }
 
 export interface IAasDeleteEndpoints {

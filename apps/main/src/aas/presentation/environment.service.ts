@@ -149,18 +149,18 @@ export class EnvironmentService {
     return SubmodelElementSchema.parse(submodelElement.toPlain());
   }
 
-  async addColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, column: ISubmodelElement, position?: number): Promise<SubmodelElementResponseDto> {
+  async addColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, column: ISubmodelElement, position?: number): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const modifiedSubmodelElementList = submodel.addColumn(idShortPath, column, position);
     await this.submodelRepository.save(submodel);
-    return SubmodelElementSchema.parse(modifiedSubmodelElementList.toPlain());
+    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
   }
 
-  async modifyColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfColumn: string, modifications: SubmodelModificationDto): Promise<SubmodelElementResponseDto> {
+  async modifyColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfColumn: string, modifications: SubmodelModificationDto): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const modifiedSubmodelElement = submodel.modifyColumn(idShortPath, idShortOfColumn, modifications);
     await this.submodelRepository.save(submodel);
-    return SubmodelElementSchema.parse(modifiedSubmodelElement.toPlain());
+    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain());
   }
 
   async deleteColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfColumn: string): Promise<SubmodelElementListResponseDto> {
@@ -170,11 +170,11 @@ export class EnvironmentService {
     return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
   }
 
-  async addRow(environment: Environment, submodelId: string, idShortPath: IdShortPath, position?: number): Promise<SubmodelElementResponseDto> {
+  async addRow(environment: Environment, submodelId: string, idShortPath: IdShortPath, position?: number): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const modifiedSubmodelElement = submodel.addRow(idShortPath, position);
     await this.submodelRepository.save(submodel);
-    return SubmodelElementSchema.parse(modifiedSubmodelElement.toPlain());
+    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain());
   }
 
   async deleteRow(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfRow: string): Promise<SubmodelElementListResponseDto> {

@@ -1,6 +1,7 @@
 import type { AasNamespace } from "@open-dpp/api-client";
 
 import type { DataTypeDefType, LanguageType, PropertyRequestDto, SubmodelElementListResponseDto, TableModificationParamsDto } from "@open-dpp/dto";
+import type { DataTableCellEditCompleteEvent } from "primevue";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { ComputedRef, Ref } from "vue";
@@ -39,12 +40,21 @@ interface AasTableExtensionProps {
   openConfirm: (option: ConfirmationOptions) => void;
 }
 
-export type BuildColumnsToAddOptions = TableModificationParamsDto & { addColumnActions?: boolean };
+export type ColumnMenuOptions = TableModificationParamsDto & { addColumnActions?: boolean };
+export type RowMenuOptions = TableModificationParamsDto;
+
 interface Column { idShort: string; label: string; plain: any }
+type Row = Record<string, any>;
 export interface IAasTableExtension {
-  columnsToAdd: Ref<MenuItem[]>;
   columns: ComputedRef<Column[]>;
-  buildColumnsToAdd: (options: BuildColumnsToAddOptions) => void;
+  rows: ComputedRef<Row[]>;
+  columnMenu: Ref<MenuItem[]>;
+  rowMenu: Ref<MenuItem[]>;
+  buildColumnMenu: (options: ColumnMenuOptions) => void;
+  buildRowMenu: (options: RowMenuOptions) => void;
+  onCellEditComplete: (
+    event: DataTableCellEditCompleteEvent<any>,
+  ) => Promise<void>;
 }
 
 export function useAasTableExtension({
@@ -60,7 +70,8 @@ export function useAasTableExtension({
 }: AasTableExtensionProps): IAasTableExtension {
   const translatePrefix = "aasEditor";
   const translateTablePrefix = `${translatePrefix}.table`;
-  const columnsToAdd = ref<MenuItem[]>([]);
+  const columnMenu = ref<MenuItem[]>([]);
+  const rowMenu = ref<MenuItem[]>([]);
   const data = ref<SubmodelElementListResponseDto>(initialData);
 
   function buildPropertyEntry(fieldLabel: string, icon: string, valueType: DataTypeDefType, options: TableModificationParamsDto) {
@@ -89,6 +100,30 @@ export function useAasTableExtension({
     return [];
   });
 
+  const rows = computed<Row[]>((): Row[] => {
+    return data.value.value.map(row =>
+      SubmodelElementCollectionJsonSchema.parse(row).value.reduce((acc, v) => ({ ...acc, [v.idShort]: v.value }), {}),
+    );
+  });
+
+  async function onCellEditComplete(
+    event: DataTableCellEditCompleteEvent<any>,
+  ) {
+    const { data: rowData, newValue, field } = event;
+    if (newValue != null && newValue.trim().length > 0 && rowData[field] !== newValue) {
+      rowData[field] = newValue;
+      await aasNamespace.modifyValueOfSubmodelElement(
+        id,
+        pathToList.submodelId!,
+        pathToList.idShortPath!,
+        rows.value,
+      );
+    }
+    else {
+      event.originalEvent.preventDefault();
+    }
+  }
+
   function updateListData(newListData: SubmodelElementListResponseDto) {
     data.value = newListData;
   }
@@ -101,11 +136,52 @@ export function useAasTableExtension({
     return column;
   }
 
-  const buildColumnsToAdd = (options: BuildColumnsToAddOptions) => {
-    const colMenuItems = [
-      buildPropertyEntry(translate(`${translatePrefix}.textField`), "pi pi-pencil", DataTypeDef.String, options),
+  const buildRowMenu = (options: RowMenuOptions) => {
+    rowMenu.value = [
+      {
+        label: translate(`${translateTablePrefix}.addRow`),
+        icon: "pi pi-arrow-up",
+        command: async () => {
+          await addRow(options);
+        },
+      },
+      {
+        label: translate(`${translateTablePrefix}.addRow`),
+        icon: "pi pi-arrow-down",
+        command: async () => {
+          await addRow({ position: options.position !== undefined ? options.position + 1 : 0 });
+        },
+      },
     ];
-    columnsToAdd.value
+  };
+
+  async function addRow({ position = 0 }: RowMenuOptions) {
+    const addRowApiCall = async () => {
+      const response = await aasNamespace.addRowToSubmodelElementList(
+        id,
+        pathToList.submodelId!,
+        pathToList.idShortPath!,
+        { position },
+      );
+      if (response.status === HTTPCode.CREATED) {
+        updateListData(response.data);
+      }
+    };
+    await errorHandlingStore.withErrorHandling(addRowApiCall(), {
+      message: translate(`${translateTablePrefix}.errorAddRow`),
+    });
+  }
+
+  const buildColumnMenu = (options: ColumnMenuOptions) => {
+    const colMenuItems = [
+      buildPropertyEntry(
+        translate(`${translatePrefix}.textField`),
+        `pi pi-arrow-${options.addColumnActions ? "left" : "right"}`,
+        DataTypeDef.String,
+        options,
+      ),
+    ];
+    columnMenu.value
       = options.addColumnActions
         ? [{
             label: translate(`${translateTablePrefix}.addColumn`),
@@ -115,7 +191,7 @@ export function useAasTableExtension({
 
     if (options.addColumnActions) {
       const column = getColumnAtIndexOrFail(options.position ?? 0);
-      columnsToAdd.value.push(
+      columnMenu.value.push(
         {
           label: translate("common.actions"),
           items: [
@@ -228,8 +304,12 @@ export function useAasTableExtension({
   }
 
   return {
+    rows,
     columns,
-    columnsToAdd,
-    buildColumnsToAdd,
+    columnMenu,
+    rowMenu,
+    buildColumnMenu,
+    buildRowMenu,
+    onCellEditComplete,
   };
 }

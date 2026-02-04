@@ -7,10 +7,13 @@ import type {
   OpenDrawerCallback,
   SubmodelElementListEditorProps,
 } from "../../composables/aas-drawer.ts";
-import type { BuildColumnsToAddOptions } from "../../composables/aas-table-extension.ts";
+import type {
+  ColumnMenuOptions,
+  RowMenuOptions,
+} from "../../composables/aas-table-extension.ts";
 import type { IErrorHandlingStore } from "../../stores/error.handling.ts";
 import { toTypedSchema } from "@vee-validate/zod";
-import { Button, Column, DataTable, Menu } from "primevue";
+import { Button, Column, DataTable, InputText, Menu } from "primevue";
 import ConfirmDialog from "primevue/confirmdialog";
 import { useConfirm } from "primevue/useconfirm";
 import { useForm } from "vee-validate";
@@ -34,7 +37,8 @@ const props = defineProps<{
   translate: (label: string, ...args: unknown[]) => string;
 }>();
 
-const popover = ref();
+const columnMenuPopover = ref();
+const rowMenuPopover = ref();
 
 const propertyFormSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
@@ -53,7 +57,15 @@ const { t, locale } = useI18n();
 
 const confirm = useConfirm();
 
-const { columnsToAdd, columns, buildColumnsToAdd } = useAasTableExtension({
+const {
+  columnMenu,
+  rowMenu,
+  rows,
+  columns,
+  onCellEditComplete,
+  buildColumnMenu,
+  buildRowMenu,
+} = useAasTableExtension({
   id: props.id,
   pathToList: toRaw(props.path),
   openDrawer: props.openDrawer,
@@ -64,8 +76,6 @@ const { columnsToAdd, columns, buildColumnsToAdd } = useAasTableExtension({
   openConfirm: confirm.require,
   aasNamespace: props.aasNamespace,
 });
-
-const rows = [{ id: "id1", name: "name1" }];
 
 const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
@@ -81,9 +91,14 @@ defineExpose<{
   submit,
 });
 
-function addClicked(event: any, options: BuildColumnsToAddOptions) {
-  buildColumnsToAdd(options);
-  popover.value.toggle(event);
+function toggleRowMenu(event: any, options: RowMenuOptions) {
+  buildRowMenu(options);
+  rowMenuPopover.value.toggle(event);
+}
+
+function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
+  buildColumnMenu(options);
+  columnMenuPopover.value.toggle(event);
 }
 </script>
 
@@ -95,41 +110,78 @@ function addClicked(event: any, options: BuildColumnsToAddOptions) {
       :editor-mode="EditorMode.EDIT"
     />
     <ConfirmDialog />
-    <DataTable scrollable :value="rows" table-style="min-width: 50rem">
+    <DataTable
+      scrollable
+      edit-mode="cell"
+      :value="rows"
+      @cell-edit-complete="onCellEditComplete"
+    >
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="text-xl font-bold">{{ t('aasEditor.table.entries') }}</span>
+          <span class="text-xl font-bold">{{
+            t("aasEditor.table.entries")
+          }}</span>
           <Button
             :label="t('aasEditor.table.addColumn')"
-            @click="addClicked($event, { position: columns.length })"
+            @click="toggleColumnMenu($event, { position: columns.length })"
           />
         </div>
       </template>
-      <Column v-for="(col, index) of columns" :key="col.idShort" :field="col.idShort">
-        <template #header>
-          <Button icon="pi pi-ellipsis-v" severity="secondary" size="small" @click="addClicked($event, { position: index, addColumnActions: true })" />
-          <span>{{ col.label }}</span>
+      <Column style="width: 10px" frozen class="font-bold">
+        <template #body="{ index }">
+          <div class="flex">
+            <div class="flex items-center rounded-md gap-2">
+              <Button
+                icon="pi pi-ellipsis-v"
+                severity="secondary"
+                size="small"
+                @click="toggleRowMenu($event, { position: index })"
+              />
+            </div>
+          </div>
         </template>
       </Column>
       <Column
-        align-frozen="right"
-        :frozen="true"
-        header="Balance"
-        style="max-width: 14px"
+        v-for="(col, index) of columns"
+        :key="col.idShort"
+        :field="col.idShort"
       >
-        <template #body="">
-          <div class="flex">
-            <div class="flex items-center rounded-md gap-2">
-              <Button icon="pi pi-plus" severity="primary" />
-            </div>
-          </div>
+        <template #header>
+          <Button
+            icon="pi pi-ellipsis-v"
+            severity="secondary"
+            size="small"
+            @click="
+              toggleColumnMenu($event, {
+                position: index,
+                addColumnActions: true,
+              })
+            "
+          />
+          <span>{{ col.label }}</span>
+        </template>
+        <template #body="{ data, field }">
+          <span v-if="typeof field === 'string' && data[field] != null">{{
+            data[field]
+          }}</span>
+          <InputText v-else autofocus fluid />
+        </template>
+        <template #editor="{ data, field }">
+          <InputText v-model="data[field]" autofocus fluid />
         </template>
       </Column>
     </DataTable>
     <Menu
       id="overlay_menu"
-      ref="popover"
-      :model="columnsToAdd"
+      ref="columnMenuPopover"
+      :model="columnMenu"
+      :popup="true"
+      position="right"
+    />
+    <Menu
+      id="overlay_menu"
+      ref="rowMenuPopover"
+      :model="rowMenu"
       :popup="true"
       position="right"
     />

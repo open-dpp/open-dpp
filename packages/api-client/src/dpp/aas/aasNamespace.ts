@@ -100,7 +100,7 @@ export class AasNamespace {
   }
 
   public async addRowToSubmodelElementList(id: string, submodelId: string, idShortPath: string, params: TableModificationParamsDto) {
-    return this.axiosInstance.post<SubmodelElementResponseDto>(
+    return this.axiosInstance.post<SubmodelElementListResponseDto>(
       `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/rows`,
       undefined,
       { params },
