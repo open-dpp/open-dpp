@@ -65,11 +65,13 @@
       "addColumn": "@:aasEditor.table.column @.lower:common.add",
       "editColumn": "@:aasEditor.table.column @.lower:common.edit",
       "removeColumn": "Soll die @:aasEditor.table.column wirklich entfernt werden?",
+      "removeRow": "Soll die @:aasEditor.table.row wirklich entfernt werden?",
       "addFieldAsColumn": "{field} als @:aasEditor.table.column @.lower:common.add",
       "errorEditColumn": "@:common.edit der @:aasEditor.table.column @:common.failed",
       "errorAddColumn": "@:common.add der @:aasEditor.table.column @:common.failed",
       "errorAddRow": "@:common.add der @:aasEditor.table.row @:common.failed",
-      "errorRemoveColumn": "@:common.remove der @:aasEditor.table.column @:common.failed"
+      "errorRemoveColumn": "@:common.remove der @:aasEditor.table.column @:common.failed",
+      "errorRemoveRow": "@:common.remove der @:aasEditor.table.row @:common.failed"
     },
     "addSubmodel": "Abschnitt hinzufügen",
     "edit": "{formItem} bearbeiten",

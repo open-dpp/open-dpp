@@ -62,6 +62,7 @@
       "entries": "Entries",
       "emptyCell": "Please fill out",
       "removeColumn": "Should the @:aasEditor.table.column really be removed?",
+      "removeRow": "Should the @:aasEditor.table.row really be removed?",
       "addColumn": "@:common.add @:aasEditor.table.column",
       "addRow": "@:common.add @:aasEditor.table.row",
       "editColumn": "@:common.edit @:aasEditor.table.column",
@@ -69,7 +70,8 @@
       "errorAddColumn": "@.capitalize:common.failed to @.lower:common.add @:aasEditor.table.column",
       "errorEditColumn": "@.capitalize:common.failed to @:common.edit @:aasEditor.table.column",
       "errorAddRow": "@.capitalize:common.failed to @.lower:common.add @:aasEditor.table.row",
-      "errorRemoveColumn": "@.capitalize:common.failed to @.lower:common.remove @:aasEditor.table.column"
+      "errorRemoveColumn": "@.capitalize:common.failed to @.lower:common.remove @:aasEditor.table.column",
+      "errorRemoveRow": "@.capitalize:common.failed to @.lower:common.remove @:aasEditor.table.row"
     },
     "addSubmodel": "Add section",
     "submodelElementCollection": "Sub section",

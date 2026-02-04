@@ -26,6 +26,7 @@ const mocks = vi.hoisted(() => {
     addColumnToSubmodelElementList: vi.fn(),
     addRowToSubmodelElementList: vi.fn(),
     deleteColumnFromSubmodelElementList: vi.fn(),
+    deleteRowFromSubmodelElementList: vi.fn(),
     modifyColumnOfSubmodelElementList: vi.fn(),
     modifyValueOfSubmodelElement: vi.fn(),
   };
@@ -41,6 +42,7 @@ vi.mock("../lib/api-client", () => ({
           addColumnToSubmodelElementList: mocks.addColumnToSubmodelElementList,
           addRowToSubmodelElementList: mocks.addRowToSubmodelElementList,
           deleteColumnFromSubmodelElementList: mocks.deleteColumnFromSubmodelElementList,
+          deleteRowFromSubmodelElementList: mocks.deleteRowFromSubmodelElementList,
           modifyColumnOfSubmodelElementList: mocks.modifyColumnOfSubmodelElementList,
           modifyValueOfSubmodelElement: mocks.modifyValueOfSubmodelElement,
         },
@@ -326,6 +328,55 @@ describe("aasTableExtension composable", () => {
     await waitFor(() => expect(columns.value).toEqual([
       { idShort: "Column1", label: "Material", plain: SubmodelElementSchema.parse(cols[0]) },
     ]));
+  });
+
+  it("should delete row", async () => {
+    const mockOnHideDrawer = vi.fn();
+    const openAutoConfirm = async (data: ConfirmationOptions) => {
+      data.accept!();
+    };
+
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
+    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const { rowMenu, buildRowMenu, rows } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: submodelElementList,
+      aasNamespace: apiClient.dpp.templates.aas,
+      errorHandlingStore,
+      openConfirm: openAutoConfirm,
+      selectedLanguage: Language.en,
+      translate,
+      openDrawer,
+    });
+    buildRowMenu({ position: 1 });
+
+    const removeRowButton = rowMenu.value
+      .find(e => e.label === "common.remove")!;
+
+    mocks.deleteRowFromSubmodelElementList.mockResolvedValue({
+      status: HTTPCode.OK,
+      data: {
+        ...submodelElementList,
+        value: [submodelElementList.value[0]],
+      },
+    });
+    removeRowButton.command!({} as MenuItemCommandEvent);
+
+    expect(mocks.deleteRowFromSubmodelElementList).toHaveBeenCalledWith(
+      aasId,
+      pathToList.submodelId,
+      pathToList.idShortPath,
+      "row1",
+    );
+    await waitFor(() =>
+      expect(rows.value).toEqual([
+        {
+          Column1: undefined,
+          Column2: undefined,
+        },
+      ]),
+    );
   });
 
   it("should add row", async () => {

@@ -136,6 +136,14 @@ export function useAasTableExtension({
     return column;
   }
 
+  function getRowIdShortAtIndexOrFail(index: number): string {
+    const row = data.value.value[index];
+    if (!row) {
+      throw new Error(`Row with index ${index} not found`);
+    }
+    return row.idShort;
+  }
+
   const buildRowMenu = (options: RowMenuOptions) => {
     rowMenu.value = [
       {
@@ -149,11 +157,56 @@ export function useAasTableExtension({
         label: translate(`${translateTablePrefix}.addRow`),
         icon: "pi pi-arrow-down",
         command: async () => {
-          await addRow({ position: options.position !== undefined ? options.position + 1 : 0 });
+          await addRow({
+            position: options.position !== undefined ? options.position + 1 : 0,
+          });
         },
       },
+      removeRowMenuItem(options.position ?? 0),
     ];
   };
+
+  function removeRowMenuItem(rowIndex: number) {
+    const removeLabel = translate("common.remove");
+    const cancelLabel = translate("common.cancel");
+    const removeRowApiCall = async () => {
+      const response = await aasNamespace.deleteRowFromSubmodelElementList(
+        id,
+        pathToList.submodelId!,
+        pathToList.idShortPath!,
+        getRowIdShortAtIndexOrFail(rowIndex),
+      );
+      if (response.status === HTTPCode.OK) {
+        updateListData(response.data);
+      }
+    };
+    return {
+      label: removeLabel,
+      icon: "pi pi-trash",
+      command: async () => {
+        openConfirm({
+          message: translate(`${translateTablePrefix}.removeRow`),
+          header: removeLabel,
+          icon: "pi pi-info-circle",
+          rejectLabel: cancelLabel,
+          rejectProps: {
+            label: cancelLabel,
+            severity: "secondary",
+            outlined: true,
+          },
+          acceptProps: {
+            label: removeLabel,
+            severity: "danger",
+          },
+          accept: async () => {
+            await errorHandlingStore.withErrorHandling(removeRowApiCall(), {
+              message: translate(`${translateTablePrefix}.errorRemoveRow`),
+            });
+          },
+        });
+      },
+    };
+  }
 
   async function addRow({ position = 0 }: RowMenuOptions) {
     const addRowApiCall = async () => {
