@@ -30,7 +30,7 @@ export class OrganizationsController {
 
   @Post()
   async createOrganization(
-    @Body() body: { name: string; slug: string; logo?: string; metadata?: any },
+    @Body() body: { name: string; slug: string },
     @Headers() headers: Record<string, string>,
     @AuthSession() session: Session,
   ) {
@@ -38,7 +38,6 @@ export class OrganizationsController {
       {
         name: body.name,
         slug: body.slug,
-        logo: body.logo,
         metadata: {},
       },
       session,
