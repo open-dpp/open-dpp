@@ -108,6 +108,45 @@ describe("aasTableExtension composable", () => {
     ]);
   });
 
+  it.each([
+    {
+      value: "mein wert",
+      column: {
+        idShort: "Column1",
+        label: "Material",
+        plain: SubmodelElementSchema.parse(cols[0]),
+      },
+      expected: "mein wert",
+    },
+    {
+      value: "9843928.8",
+      column: {
+        idShort: "Column2",
+        label: "Amount in percentage",
+        plain: SubmodelElementSchema.parse(cols[1]),
+      },
+      expected: "9,843,928.8",
+    },
+  ])("should formatCellValue $value", async ({ value, column, expected }) => {
+    const mockOnHideDrawer = vi.fn();
+    const mockOpenConfirmDialog = vi.fn();
+
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
+    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const { formatCellValue } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: submodelElementList,
+      aasNamespace: apiClient.dpp.templates.aas,
+      openConfirm: mockOpenConfirmDialog,
+      errorHandlingStore,
+      translate,
+      selectedLanguage: Language.en,
+      openDrawer,
+    });
+    expect(formatCellValue(value, column)).toBe(expected);
+  });
+
   it("should compute rows", async () => {
     const mockOnHideDrawer = vi.fn();
     const mockOpenConfirmDialog = vi.fn();
@@ -143,11 +182,24 @@ describe("aasTableExtension composable", () => {
     ]);
   });
 
-  it("should add column", async () => {
+  it.each([
+    {
+      label: "aasEditor.textField",
+      component: PropertyCreateEditor,
+      data: { valueType: DataTypeDef.String },
+    },
+    {
+      label: "aasEditor.numberField",
+      component: PropertyCreateEditor,
+      data: { valueType: DataTypeDef.Double },
+    },
+  ])("should add $label column", async ({ label, component, data }) => {
     const mockOnHideDrawer = vi.fn();
     const mockOpenConfirmDialog = vi.fn();
 
-    const { openDrawer, editorVNode, drawerVisible } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
+    const { openDrawer, editorVNode, drawerVisible } = useAasDrawer({
+      onHideDrawer: mockOnHideDrawer,
+    });
     const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
     const { columnMenu, buildColumnMenu } = useAasTableExtension({
       id: aasId,
@@ -161,22 +213,30 @@ describe("aasTableExtension composable", () => {
       openDrawer,
     });
     buildColumnMenu({ position: 1 });
-    const textFieldColumn = columnMenu.value.find(e => e.label === "aasEditor.textField")!;
+    const textFieldColumn = columnMenu.value.find(e => e.label === label)!;
     textFieldColumn.command!({} as MenuItemCommandEvent);
     expect(drawerVisible.value).toBeTruthy();
     expect(editorVNode.value!.props.path).toEqual(pathToList);
-    expect(editorVNode.value!.component).toEqual(PropertyCreateEditor);
-    expect(editorVNode.value!.props.data).toEqual({ valueType: DataTypeDef.String });
+    expect(editorVNode.value!.component).toEqual(component);
+    expect(editorVNode.value!.props.data).toEqual({
+      ...data,
+    });
     expect(editorVNode.value!.props.asColumn).toBeTruthy();
 
-    const columnData = { idShort: "column 3", valueType: DataTypeDef.String };
+    const columnData = { idShort: "column 3", ...data };
 
     const submodelElementListModified = {
       ...submodelElementList,
-      value: [...submodelElementList.value, { ...columnData, modelType: AasSubmodelElements.Property }],
+      value: [
+        ...submodelElementList.value,
+        { ...columnData, modelType: AasSubmodelElements.Property },
+      ],
     };
 
-    mocks.addColumnToSubmodelElementList.mockResolvedValue({ data: submodelElementListModified, status: HttpStatusCode.Created });
+    mocks.addColumnToSubmodelElementList.mockResolvedValue({
+      data: submodelElementListModified,
+      status: HttpStatusCode.Created,
+    });
 
     await editorVNode.value!.props.callback!(columnData);
 
@@ -184,7 +244,10 @@ describe("aasTableExtension composable", () => {
       aasId,
       pathToList.submodelId,
       pathToList.idShortPath,
-      SubmodelElementSchema.parse({ ...columnData, modelType: AasSubmodelElements.Property }),
+      SubmodelElementSchema.parse({
+        ...columnData,
+        modelType: AasSubmodelElements.Property,
+      }),
       { position: 1 },
     );
 
@@ -192,7 +255,9 @@ describe("aasTableExtension composable", () => {
     expect(drawerVisible.value).toBeTruthy();
     expect(editorVNode.value!.props.path).toEqual(pathToList);
     expect(editorVNode.value!.component).toEqual(SubmodelElementListEditor);
-    expect(editorVNode.value!.props.data).toEqual(SubmodelElementListJsonSchema.parse(submodelElementListModified));
+    expect(editorVNode.value!.props.data).toEqual(
+      SubmodelElementListJsonSchema.parse(submodelElementListModified),
+    );
   });
 
   it("should modify cell", async () => {

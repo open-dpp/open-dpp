@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { AasNamespace } from "@open-dpp/api-client";
-import type { SubmodelElementModificationDto } from "@open-dpp/dto";
+import type {
+  SubmodelElementModificationDto,
+} from "@open-dpp/dto";
 import type {
   AasEditorPath,
   EditorType,
@@ -24,6 +26,7 @@ import { EditorMode } from "../../composables/aas-drawer.ts";
 import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import PropertyValue from "./PropertyValue.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
 const props = defineProps<{
@@ -65,6 +68,7 @@ const {
   onCellEditComplete,
   buildColumnMenu,
   buildRowMenu,
+  formatCellValue,
 } = useAasTableExtension({
   id: props.id,
   pathToList: toRaw(props.path),
@@ -162,12 +166,16 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
         </template>
         <template #body="{ data, field }">
           <span v-if="typeof field === 'string' && data[field] != null">{{
-            data[field]
+            formatCellValue(data[field], col)
           }}</span>
           <InputText v-else autofocus fluid />
         </template>
-        <template #editor="{ data, field }">
-          <InputText v-model="data[field]" autofocus fluid />
+        <template #editor="{ data, field, index }">
+          <PropertyValue
+            :id="`${index}-${field}`"
+            v-model="data[field]"
+            :value-type="col.plain.valueType"
+          />
         </template>
       </Column>
     </DataTable>

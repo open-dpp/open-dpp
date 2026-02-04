@@ -55,6 +55,7 @@ export interface IAasTableExtension {
   onCellEditComplete: (
     event: DataTableCellEditCompleteEvent<any>,
   ) => Promise<void>;
+  formatCellValue: (value: string, column: Column) => string;
 }
 
 export function useAasTableExtension({
@@ -233,6 +234,12 @@ export function useAasTableExtension({
         DataTypeDef.String,
         options,
       ),
+      buildPropertyEntry(
+        translate(`${translatePrefix}.numberField`),
+        `pi pi-arrow-${options.addColumnActions ? "left" : "right"}`,
+        DataTypeDef.Double,
+        options,
+      ),
     ];
     columnMenu.value
       = options.addColumnActions
@@ -356,11 +363,23 @@ export function useAasTableExtension({
     });
   }
 
+  function formatCellValue(value: string, column: Column) {
+    switch (column.plain.valueType) {
+      case DataTypeDef.Double:
+        return new Intl.NumberFormat(selectedLanguage, {
+          style: "decimal",
+        }).format(Number(value));
+      default:
+        return value;
+    }
+  }
+
   return {
     rows,
     columns,
     columnMenu,
     rowMenu,
+    formatCellValue,
     buildColumnMenu,
     buildRowMenu,
     onCellEditComplete,
