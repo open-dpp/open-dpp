@@ -5,6 +5,7 @@ import { UsersRepository } from "../../../users/infrastructure/adapters/users.re
 import { Member } from "../../domain/member";
 import { MemberRole } from "../../domain/member-role.enum";
 import { Organization, OrganizationCreateProps } from "../../domain/organization";
+import { DuplicateOrganizationSlugError } from "../../domain/organization.errors";
 import { InvitationsRepository } from "../../infrastructure/adapters/invitations.repository";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
@@ -40,7 +41,7 @@ export class OrganizationsService {
   ): Promise<Organization> {
     const existsWithSlug = await this.organizationsRepository.findOneBySlug(data.slug);
     if (existsWithSlug) {
-      throw new Error(`Organization with slug ${data.slug} already exists`);
+      throw new DuplicateOrganizationSlugError(data.slug);
     }
     const organization = Organization.create(data);
     const betterAuthOrganization = await this.organizationsRepository.create(organization, headers);
