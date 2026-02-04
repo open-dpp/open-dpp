@@ -19,6 +19,6 @@ import { AuthController } from "./presentation/auth.controller";
     AuthProvider,
     SessionsService,
   ],
-  exports: [SessionsService, AUTH, EnvModule, OrganizationsModule],
+  exports: [SessionsService, AUTH, EnvModule],
 })
 export class AuthModule { }
