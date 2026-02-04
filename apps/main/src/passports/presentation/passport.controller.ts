@@ -1,4 +1,7 @@
 import type {
+  PassportDto,
+  PassportPaginationDto,
+  PassportRequestCreateDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementRequestDto,
@@ -6,14 +9,23 @@ import type {
   SubmodelRequestDto,
   ValueRequestDto,
 } from "@open-dpp/dto";
-import type { PassportDto, PassportPaginationDto, PassportRequestCreateDto, SubmodelElementRequestDto, SubmodelRequestDto } from "@open-dpp/dto";
 import type express from "express";
 import { Body, Controller, Get, Post } from "@nestjs/common";
-import { AssetAdministrationShellPaginationResponseDto, AssetKind, PassportDtoSchema, PassportPaginationDtoSchema, PassportRequestCreateDtoSchema, SubmodelElementPaginationResponseDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/dto";
+import {
+  AssetAdministrationShellPaginationResponseDto,
+  AssetKind,
+  PassportDtoSchema,
+  PassportPaginationDtoSchema,
+  PassportRequestCreateDtoSchema,
+  SubmodelElementPaginationResponseDto,
+  SubmodelElementResponseDto,
+  SubmodelPaginationResponseDto,
+  SubmodelResponseDto,
+  ValueResponseDto,
+} from "@open-dpp/dto";
 
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { Environment } from "../../aas/domain/environment";
-import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
 import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import {
   ApiDeleteColumn,
@@ -57,14 +69,13 @@ import {
   IAasModifyEndpoints,
   IAasReadEndpoints,
 } from "../../aas/presentation/aas.endpoints";
-import {
-  checkOwnerShipOfDppIdentifiable,
-  EnvironmentService,
-} from "../../aas/presentation/environment.service";
+import { checkOwnerShipOfDppIdentifiable, EnvironmentService } from "../../aas/presentation/environment.service";
 import { AuthService } from "../../auth/auth.service";
 import { Pagination } from "../../pagination/pagination";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
-import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import {
+  UniqueProductIdentifierService,
+} from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 

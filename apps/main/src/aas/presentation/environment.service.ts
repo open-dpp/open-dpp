@@ -31,8 +31,6 @@ import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
 import { Submodel } from "../domain/submodel-base/submodel";
-import { IdShortPath, parseSubmodelBaseUnion } from "../domain/submodel-base/submodel-base";
-
 import { IdShortPath, ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
 
 import { AasRepository } from "../infrastructure/aas.repository";

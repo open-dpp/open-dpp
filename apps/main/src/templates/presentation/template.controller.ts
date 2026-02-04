@@ -7,7 +7,7 @@ import type {
   ValueRequestDto,
 } from "@open-dpp/dto";
 import type express from "express";
-import { Controller, Get, Logger, Post, Req } from "@nestjs/common";
+import { Controller, Get, Post, Req } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
   AssetKind,
@@ -21,8 +21,6 @@ import {
   TemplatePaginationDtoSchema,
   ValueResponseDto,
 } from "@open-dpp/dto";
-import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
-import { fromNodeHeaders } from "better-auth/node";
 import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 
 import {
@@ -67,10 +65,7 @@ import {
   IAasModifyEndpoints,
   IAasReadEndpoints,
 } from "../../aas/presentation/aas.endpoints";
-import {
-  checkOwnerShipOfDppIdentifiable,
-  EnvironmentService,
-} from "../../aas/presentation/environment.service";
+import { checkOwnerShipOfDppIdentifiable, EnvironmentService } from "../../aas/presentation/environment.service";
 import { AuthService } from "../../auth/auth.service";
 import { Pagination } from "../../pagination/pagination";
 import { Template } from "../domain/template";
@@ -78,8 +73,6 @@ import { TemplateRepository } from "../infrastructure/template.repository";
 
 @Controller("/templates")
 export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoints, IAasModifyEndpoints, IAasDeleteEndpoints {
-  private readonly logger = new Logger(TemplateController.name);
-
   constructor(private readonly environmentService: EnvironmentService, private readonly authService: AuthService, private readonly templateRepository: TemplateRepository) {
   }
 

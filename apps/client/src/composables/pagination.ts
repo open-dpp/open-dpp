@@ -24,8 +24,6 @@ interface PaginationProps {
   changeQueryParams: (params: Record<string, string | undefined>) => void;
 }
 
-export function usePagination({ initialCursor, limit, fetchCallback, changeQueryParams }: PaginationProps) {
-
 export interface IPagination {
   resetCursor: () => Promise<void>;
   hasPrevious: ComputedRef<boolean>;

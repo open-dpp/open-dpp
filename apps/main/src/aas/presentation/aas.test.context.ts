@@ -5,6 +5,7 @@ import { ModuleMetadata } from "@nestjs/common/interfaces/modules/module-metadat
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ModelDefinition } from "@nestjs/mongoose/dist/interfaces";
+import { Test, TestingModule } from "@nestjs/testing";
 import {
   AasSubmodelElements,
   AssetAdministrationShellPaginationResponseDtoSchema,
@@ -14,10 +15,14 @@ import {
   SubmodelJsonSchema,
   SubmodelPaginationResponseDtoSchema,
 } from "@open-dpp/dto";
-import { Test, TestingModule } from "@nestjs/testing";
-import { AssetAdministrationShellPaginationResponseDtoSchema, SubmodelElementSchema, SubmodelJsonSchema, SubmodelPaginationResponseDtoSchema } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { aasPlainFactory, propertyPlainFactory, submodelBillOfMaterialPlainFactory, submodelCarbonFootprintPlainFactory, submodelDesignOfProductPlainFactory } from "@open-dpp/testing";
+import {
+  aasPlainFactory,
+  propertyPlainFactory,
+  submodelBillOfMaterialPlainFactory,
+  submodelCarbonFootprintPlainFactory,
+  submodelDesignOfProductPlainFactory,
+} from "@open-dpp/testing";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import { AuthGuard } from "../../auth/auth.guard";

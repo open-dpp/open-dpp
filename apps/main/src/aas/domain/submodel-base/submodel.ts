@@ -224,6 +224,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
   getSubmodelElements(): ISubmodelElement[] {
     return this.submodelElements;
   }
+
   copy(): Submodel {
     return Submodel.fromPlain({
       ...this.toPlain(),
