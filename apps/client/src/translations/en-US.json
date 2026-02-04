@@ -61,8 +61,10 @@
       "entries": "Entries",
       "removeColumn": "Should the @:aasEditor.table.column really be removed?",
       "addColumn": "@:common.add @:aasEditor.table.column",
+      "editColumn": "@:common.edit @:aasEditor.table.column",
       "addFieldAsColumn": "@:common.add {field} as @:aasEditor.table.column ",
       "errorAddColumn": "@.capitalize:common.failed to @.lower:common.add @:aasEditor.table.column",
+      "errorEditColumn": "@.capitalize:common.failed to @:common.edit @:aasEditor.table.column",
       "errorRemoveColumn": "@.capitalize:common.failed to @.lower:common.remove @:aasEditor.table.column"
     },
     "addSubmodel": "Add section",

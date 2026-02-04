@@ -107,7 +107,7 @@ function addClicked(event: any, options: BuildColumnsToAddOptions) {
       </template>
       <Column v-for="(col, index) of columns" :key="col.idShort" :field="col.idShort">
         <template #header>
-          <Button icon="pi pi-ellipsis-v" severity="secondary" size="small" @click="addClicked($event, { position: index, enableRemove: true })" />
+          <Button icon="pi pi-ellipsis-v" severity="secondary" size="small" @click="addClicked($event, { position: index, addColumnActions: true })" />
           <span>{{ col.label }}</span>
         </template>
       </Column>

@@ -24,6 +24,7 @@ import {
 
 } from "@open-dpp/dto";
 import { computed, ref } from "vue";
+import { HTTPCode } from "../stores/http-codes.ts";
 import { EditorMode } from "./aas-drawer.ts";
 
 interface AasTableExtensionProps {
@@ -38,8 +39,8 @@ interface AasTableExtensionProps {
   openConfirm: (option: ConfirmationOptions) => void;
 }
 
-export type BuildColumnsToAddOptions = TableModificationParamsDto & { enableRemove?: boolean };
-interface Column { idShort: string; label: string }
+export type BuildColumnsToAddOptions = TableModificationParamsDto & { addColumnActions?: boolean };
+interface Column { idShort: string; label: string; plain: any }
 export interface IAasTableExtension {
   columnsToAdd: Ref<MenuItem[]>;
   columns: ComputedRef<Column[]>;
@@ -82,6 +83,7 @@ export function useAasTableExtension({
       return SubmodelElementCollectionJsonSchema.parse(data.value.value[0]).value.map(v => ({
         idShort: v.idShort,
         label: v.displayName.find(d => d.language === selectedLanguage)?.text ?? v.idShort,
+        plain: v,
       }));
     }
     return [];
@@ -91,36 +93,64 @@ export function useAasTableExtension({
     data.value = newListData;
   }
 
+  function getColumnAtIndexOrFail(index: number): Column {
+    const column = columns.value[index];
+    if (!column) {
+      throw new Error(`Column with index ${index} not found`);
+    }
+    return column;
+  }
+
   const buildColumnsToAdd = (options: BuildColumnsToAddOptions) => {
     const colMenuItems = [
       buildPropertyEntry(translate(`${translatePrefix}.textField`), "pi pi-pencil", DataTypeDef.String, options),
     ];
     columnsToAdd.value
-      = options.enableRemove
+      = options.addColumnActions
         ? [{
             label: translate(`${translateTablePrefix}.addColumn`),
             items: colMenuItems,
           }]
         : colMenuItems;
 
-    if (options.enableRemove) {
+    if (options.addColumnActions) {
+      const column = getColumnAtIndexOrFail(options.position ?? 0);
       columnsToAdd.value.push(
         {
           label: translate("common.actions"),
           items: [
-            removeColumnMenuItem(options),
+            modifyColumnMenuItem(column),
+            removeColumnMenuItem(column),
           ],
         },
       );
     }
   };
 
-  function removeColumnMenuItem(options: BuildColumnsToAddOptions) {
+  function modifyColumnMenuItem(column: Column) {
+    return {
+      label: translate(`common.edit`),
+      icon: "pi pi-pencil",
+      command: (_event: MenuItemCommandEvent) => {
+        openDrawer({
+          type: KeyTypes.Property,
+          data: column.plain,
+          mode: EditorMode.EDIT,
+          title: translate(`${translatePrefix}.table.editColumn`),
+          path: pathToList,
+          callback: async (data: PropertyRequestDto) => modifyPropertyColumn(data, column),
+          asColumn: true,
+        });
+      },
+    };
+  }
+
+  function removeColumnMenuItem(column: Column) {
     const removeLabel = translate("common.remove");
     const cancelLabel = translate("common.cancel");
     const removeColumnApiCall = async () => {
-      const response = await aasNamespace.deleteColumnFromSubmodelElementList(id, pathToList.submodelId!, pathToList.idShortPath!, columns.value[options.position ?? 0]!.idShort);
-      if (response.status === 200) {
+      const response = await aasNamespace.deleteColumnFromSubmodelElementList(id, pathToList.submodelId!, pathToList.idShortPath!, column.idShort);
+      if (response.status === HTTPCode.OK) {
         updateListData(response.data);
       }
     };
@@ -153,12 +183,26 @@ export function useAasTableExtension({
     };
   }
 
+  async function modifyPropertyColumn(data: PropertyRequestDto, column: Column) {
+    const errorMessage = translate(`${translatePrefix}.table.errorEditColumn`);
+    const callback = async (data: PropertyRequestDto) => {
+      const response = await aasNamespace.modifyColumnOfSubmodelElementList(id, pathToList.submodelId!, pathToList.idShortPath!, column.idShort, data);
+      if (response.status === HTTPCode.OK) {
+        await navigateBackToListView(pathToList, SubmodelElementListJsonSchema.parse(response.data));
+      }
+    };
+    await errorHandlingStore.withErrorHandling(
+      callback(data),
+      { message: errorMessage },
+    );
+  }
+
   async function createPropertyColumn(data: PropertyRequestDto, options: TableModificationParamsDto) {
     const errorMessage = translate(`${translatePrefix}.table.errorAddColumn`);
     const callback = async (data: PropertyRequestDto) => {
       const requestBody = SubmodelElementSchema.parse({ modelType: AasSubmodelElements.Property, ...data });
       const response = await aasNamespace.addColumnToSubmodelElementList(id, pathToList.submodelId!, pathToList.idShortPath!, requestBody, options);
-      if (response.status === 201) {
+      if (response.status === HTTPCode.CREATED) {
         await navigateBackToListView(pathToList, SubmodelElementListJsonSchema.parse(response.data));
       }
     };
