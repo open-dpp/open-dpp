@@ -22,7 +22,24 @@ import { PassportController } from "./passport.controller";
 
 describe("passportController", () => {
   const basePath = "/passports";
-  const ctx = createAasTestContext(basePath, { imports: [PassportsModule], providers: [PassportRepository, TemplateRepository, UniqueProductIdentifierService], controllers: [PassportController] }, [{ name: PassportDoc.name, schema: PassportSchema }, { name: TemplateDoc.name, schema: TemplateSchema }, { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema }], PassportRepository);
+  const ctx = createAasTestContext(basePath, {
+    imports: [PassportsModule],
+    providers: [PassportRepository, TemplateRepository, UniqueProductIdentifierService],
+    controllers: [PassportController],
+  }, [
+    {
+      name: PassportDoc.name,
+      schema: PassportSchema,
+    },
+    {
+      name: TemplateDoc.name,
+      schema: TemplateSchema,
+    },
+    {
+      name: UniqueProductIdentifierDoc.name,
+      schema: UniqueProductIdentifierSchema,
+    },
+  ], PassportRepository);
 
   async function createPassport(orgId: string): Promise<Passport> {
     const { aas, submodels } = ctx.getAasObjects();
