@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { NotFoundException } from "@nestjs/common";
 import { ModellingKindType, SubmodelJsonSchema } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
@@ -222,5 +223,11 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   getSubmodelElements(): ISubmodelElement[] {
     return this.submodelElements;
+  }
+  copy(): Submodel {
+    return Submodel.fromPlain({
+      ...this.toPlain(),
+      id: randomUUID(),
+    });
   }
 }

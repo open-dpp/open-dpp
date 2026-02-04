@@ -31,6 +31,7 @@ import { aasPropertiesWithParent, connection, connectionList } from './handlers/
 import { item1, item2 } from './handlers/item'
 import { mediaReferences, mediaReferenceUpdate, model, responseDataValues, updateDataValues } from './handlers/model'
 import { oldTemplate } from './handlers/old-template'
+import { passport1, passport2 } from './handlers/passports'
 import { productPassport } from './handlers/product-passport'
 import { dataFieldDraft, draftsOfOrganization, sectionDraft, templateDraft } from './handlers/template-draft'
 import { template1, template2 } from './handlers/templates'
@@ -86,6 +87,22 @@ describe('apiClient', () => {
     it('should create template', async () => {
       const response = await sdk.dpp.templates.create()
       expect(response.data).toEqual(template1)
+    })
+  })
+
+  describe('passports', () => {
+    const sdk = new OpenDppClient({
+      dpp: { baseURL },
+    })
+    sdk.setActiveOrganizationId(activeOrganization.id)
+    it('should get all passports', async () => {
+      const response = await sdk.dpp.passports.getAll(paginationParams)
+      expect(response.data.result).toEqual([passport1, passport2])
+    })
+
+    it('should create passport', async () => {
+      const response = await sdk.dpp.passports.create({})
+      expect(response.data).toEqual(passport1)
     })
   })
 

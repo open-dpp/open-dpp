@@ -7,7 +7,7 @@ import type {
   ValueRequestDto,
 } from "@open-dpp/dto";
 import type express from "express";
-import { Controller, Get, Logger, Post, Req, UnauthorizedException } from "@nestjs/common";
+import { Controller, Get, Logger, Post, Req } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
   AssetKind,
@@ -21,6 +21,7 @@ import {
   TemplatePaginationDtoSchema,
   ValueResponseDto,
 } from "@open-dpp/dto";
+import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
 import { fromNodeHeaders } from "better-auth/node";
 import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 
@@ -302,7 +303,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @RequestParam() req: express.Request,
   ): Promise<TemplateDto> {
     const environment = await this.environmentService.createEnvironmentWithEmptyAas(AssetKind.Type);
-    const template = Template.create({ organizationId: await this.getActiveOrganizationId(req), environment });
+    const template = Template.create({ organizationId: await this.authService.getActiveOrganizationId(req), environment });
     return TemplateDtoSchema.parse((await this.templateRepository.save(template)).toPlain());
   }
 
@@ -314,20 +315,8 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
   ): Promise<TemplatePaginationDto> {
     const pagination = Pagination.create({ limit, cursor });
     return TemplatePaginationDtoSchema.parse(
-      (await this.templateRepository.findAllByOrganizationId(await this.getActiveOrganizationId(req), pagination)).toPlain(),
+      (await this.templateRepository.findAllByOrganizationId(await this.authService.getActiveOrganizationId(req), pagination)).toPlain(),
     );
-  }
-
-  private async getActiveOrganizationId(req: express.Request) {
-    const session = await this.authService.getSession(fromNodeHeaders(req.headers || []));
-    if (!session?.user) {
-      throw new UnauthorizedException("User is not logged in");
-    }
-    const activeOrganization = await this.authService.getActiveOrganization(session.user.id);
-    if (!activeOrganization) {
-      throw new UnauthorizedException("User is not part of any organization");
-    }
-    return activeOrganization._id.toString();
   }
 
   private saveEnvironmentCallback(template: Template) {

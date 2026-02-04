@@ -5,51 +5,6 @@ updates:
     schedule:
       interval: "daily"
 
-  - package-ecosystem: "npm"
-    directory: "/apps/client"
-    schedule:
-      interval: "daily"
-
-  - package-ecosystem: "npm"
-    directory: "/apps/main"
-    schedule:
-      interval: "daily"
-
-  - package-ecosystem: "npm"
-    directory: "/apps/mcp"
-    schedule:
-      interval: "daily"
-
-  - package-ecosystem: "npm"
-    directory: "/packages/exception"
-    schedule:
-      interval: "daily"
-
-  - package-ecosystem: "npm"
-    directory: "/packages/permission"
-    schedule:
-      interval: "daily"
-
-  - package-ecosystem: "npm"
-    directory: "/packages/env"
-    schedule:
-      interval: "daily"
-
-  - package-ecosystem: "npm"
-    directory: "/packages/config-eslint"
-    schedule:
-      interval: "daily"
-
-  - package-ecosystem: "npm"
-    directory: "/packages/testing"
-    schedule:
-      interval: "daily"
-
-  - package-ecosystem: "npm"
-    directory: "/packages/api-client"
-    schedule:
-      interval: "daily"
-
   - package-ecosystem: "docker"
     directory: "/"
     schedule:

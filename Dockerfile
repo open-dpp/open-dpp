@@ -1,9 +1,10 @@
-FROM node:24-slim AS build
+FROM node:25-slim AS build
 
 ENV CYPRESS_INSTALL_BINARY=0
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+
+RUN npm install --global pnpm@latest-10
 
 RUN pnpm install -g rimraf
 
@@ -11,7 +12,6 @@ WORKDIR /build
 
 COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY --chown=node:node apps/main/package.json apps/main/
-COPY --chown=node:node apps/mcp/package.json apps/mcp/
 COPY --chown=node:node apps/client/package.json apps/client/
 COPY --chown=node:node packages/dto/package.json packages/dto/
 COPY --chown=node:node packages/api-client/package.json packages/api-client/
@@ -28,9 +28,8 @@ COPY --chown=node:node . .
 RUN pnpm build
 
 RUN pnpm deploy --filter=@open-dpp/main --prod ./prod/main
-RUN pnpm deploy --filter=mcp-server --prod ./prod/mcp
 
-FROM node:24-slim AS production
+FROM node:25-slim AS production
 
 ENV NODE_ENV=production
 ENV OPEN_DPP_BACKEND_MAIN=/app/dist/main.js
@@ -47,15 +46,3 @@ EXPOSE 3000
 
 # Start the server using the production build
 CMD ["sh", "-c", "/startup.sh"]
-
-FROM node:24-slim AS mcpserver
-
-ENV NODE_ENV=production
-
-COPY --chown=node:node --from=build /build/apps/mcp/dist /app/dist
-COPY --chown=node:node --from=build /build/prod/mcp/node_modules /app/node_modules
-
-EXPOSE 3000
-
-# Start the server using the production build
-CMD ["node", "/app/dist/main.js"]

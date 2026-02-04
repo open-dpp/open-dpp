@@ -34,7 +34,7 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
 
 const errorHandlingStore = useErrorHandlingStore();
 const aasNamespace = props.editorMode === AasEditMode.Passport
-  ? apiClient.dpp.templates.aas // TODO: Replace templates here by passports
+  ? apiClient.dpp.passports.aas
   : apiClient.dpp.templates.aas;
 
 const aasEditor = useAasEditor({

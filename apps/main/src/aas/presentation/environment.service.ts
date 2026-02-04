@@ -27,9 +27,12 @@ import { fromNodeHeaders } from "better-auth/node";
 import { AuthService } from "../../auth/auth.service";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
+import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
 import { Submodel } from "../domain/submodel-base/submodel";
+import { IdShortPath, parseSubmodelBaseUnion } from "../domain/submodel-base/submodel-base";
+
 import { IdShortPath, ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
 
 import { AasRepository } from "../infrastructure/aas.repository";
@@ -76,13 +79,19 @@ export class EnvironmentService {
     const submodel = environment.addSubmodel(Submodel.fromPlain(submodelPlain));
     await this.submodelRepository.save(submodel);
     await saveEnvironment();
+
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+    aas.addSubmodel(submodel);
+
+    await this.aasRepository.save(aas);
+
     return SubmodelJsonSchema.parse(submodel.toPlain());
   }
 
   async deleteSubmodelFromEnvironment(environment: Environment, submodelId: string, saveEnvironment: () => Promise<void>): Promise<void> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId.toString());
     await this.submodelRepository.deleteById(submodel.id);
-    const aas = await this.aasRepository.findOneOrFail(environment.assetAdministrationShells[0]); // TODO: replace by function in branch of Henri
+    const aas = await this.getFirstAssetAdministrationShell(environment);
     aas.deleteSubmodel(submodel);
     await this.aasRepository.save(aas);
     environment.deleteSubmodel(submodel);
@@ -186,6 +195,27 @@ export class EnvironmentService {
   async getSubmodelElementValue(environment: Environment, submodelId: string, idShortPath: IdShortPath): Promise<ValueResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     return ValueSchema.parse(submodel.getValueRepresentation(idShortPath));
+  }
+
+  async copyEnvironment(environment: Environment): Promise<Environment> {
+    const submodelsCopy = await Promise.all(environment.submodels.map(async modelId => (await this.findSubmodelByIdOrFail(environment, modelId)).copy()));
+    const aasCopy = (await this.getFirstAssetAdministrationShell(environment)).copy(submodelsCopy);
+
+    await this.aasRepository.save(aasCopy);
+    await Promise.all(submodelsCopy.map(model => this.submodelRepository.save(model)));
+
+    return Environment.create({
+      assetAdministrationShells: [aasCopy.id],
+      submodels: submodelsCopy.map(model => model.id),
+      conceptDescriptions: environment.conceptDescriptions,
+    });
+  }
+
+  private async getFirstAssetAdministrationShell(environment: Environment): Promise<AssetAdministrationShell> {
+    if (environment.assetAdministrationShells.length === 0) {
+      throw new Error("No asset administration shell for environment. Can't add submodel");
+    }
+    return await this.aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
   }
 }
 

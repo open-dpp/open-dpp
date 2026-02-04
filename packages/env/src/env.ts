@@ -22,7 +22,6 @@ export const envSchema = z.object({
   // AI
   OPEN_DPP_MISTRAL_API_KEY: z.coerce.string(),
   OPEN_DPP_OLLAMA_URL: z.url(),
-  OPEN_DPP_MCP_URL: z.url(),
   // S3
   OPEN_DPP_S3_ENDPOINT: z.coerce.string(),
   OPEN_DPP_S3_PORT: z.coerce.number().max(65535).min(0),
@@ -34,8 +33,6 @@ export const envSchema = z.object({
   // ClamAV
   OPEN_DPP_CLAMAV_URL: z.coerce.string(),
   OPEN_DPP_CLAMAV_PORT: z.coerce.number().max(65535).min(0),
-  // MCP
-  OPEN_DPP_MCP_PORT: z.coerce.number().max(65535).min(0),
   // Misc
   OPEN_DPP_BUILD_API_DOC: asBoolean.optional().default(false),
   OPEN_DPP_JSON_LIMIT_DEFAULT: z.coerce

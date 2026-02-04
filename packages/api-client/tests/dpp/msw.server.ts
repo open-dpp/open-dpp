@@ -5,6 +5,7 @@ import { aasIntegrationHandlers } from './handlers/aas-integration'
 import { itemHandlers } from './handlers/item'
 import { modelHandlers } from './handlers/model'
 import { templateHandlers } from './handlers/old-template'
+import { passportsHandlers } from './handlers/passports'
 import { productPassportHandlers } from './handlers/product-passport'
 import { templateDraftsHandlers } from './handlers/template-draft'
 import { templatesHandlers } from './handlers/templates'
@@ -22,6 +23,7 @@ const handlers = [
   ...aasHandlers('templates'),
   ...aasHandlers('passports'),
   ...templatesHandlers(),
+  ...passportsHandlers(),
 ]
 
 export const server = setupServer(...handlers)

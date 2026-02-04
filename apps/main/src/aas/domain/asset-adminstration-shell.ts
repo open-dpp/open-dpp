@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { AssetAdministrationShellJsonSchema } from "@open-dpp/dto";
+import { AssetAdministrationShellJsonSchema, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
 import { AssetInformation } from "./asset-information";
 import { AdministrativeInformation } from "./common/administrative-information";
 import { IHasDataSpecification } from "./common/has-data-specification";
 import { IIdentifiable } from "./common/identifiable";
+import { Key } from "./common/key";
 import { LanguageText } from "./common/language-text";
 import { Reference } from "./common/reference";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
@@ -59,12 +60,45 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     );
   };
 
-  addSubmodelReference(submodel: Reference) {
-    this.submodels.push(submodel);
+  addSubmodelReference(reference: Reference) {
+    this.submodels.push(reference);
+  }
+
+  addSubmodel(submodel: Submodel): Reference {
+    const reference = Reference.create({
+      type: ReferenceTypes.ModelReference,
+      keys: [Key.create({
+        type: KeyTypes.Submodel,
+        value: submodel.id,
+      })],
+    });
+
+    this.addSubmodelReference(reference);
+
+    return reference;
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
     return visitor.visitAssetAdministrationShell(this, context);
+  }
+
+  /**
+   * Creates a copy of this AssetAdministrationShell with the specified submodels.
+   * This will NOT copy the existing submodel references but will create new references to the specified submodels.
+   *
+   * @param submodels - Array of Submodel instances to be added as references to the copy
+   * @returns A new AssetAdministrationShell instance with the same properties but different submodel references
+   */
+  copy(submodels: Submodel[]): AssetAdministrationShell {
+    const copy = AssetAdministrationShell.fromPlain({
+      ...this.toPlain(),
+      id: randomUUID(),
+      submodels: [],
+    });
+
+    submodels.forEach(model => copy.addSubmodel(model));
+
+    return copy;
   }
 
   static fromPlain(data: unknown): AssetAdministrationShell {

@@ -16,12 +16,15 @@ export interface PagingResult {
   paging_metadata: { cursor: Cursor };
   result: any[];
 }
+
 interface PaginationProps {
   initialCursor?: string;
   limit: number;
   fetchCallback: (pagingParams: PagingParamsDto) => Promise<PagingResult>;
   changeQueryParams: (params: Record<string, string | undefined>) => void;
 }
+
+export function usePagination({ initialCursor, limit, fetchCallback, changeQueryParams }: PaginationProps) {
 
 export interface IPagination {
   resetCursor: () => Promise<void>;
@@ -64,9 +67,11 @@ export function usePagination({ initialCursor, limit, fetchCallback, changeQuery
     const queryParams = { cursor: currentPage.value.cursor ?? undefined };
     changeQueryParams(queryParams);
   };
+
   const lastPage = (): Page => {
     return pages.value[pages.value.length - 1] ?? currentPage.value;
   };
+
   const findPageByCursor = (cursor: Cursor): Page | undefined => {
     return pages.value.find(page => page.cursor === cursor);
   };
@@ -85,6 +90,7 @@ export function usePagination({ initialCursor, limit, fetchCallback, changeQuery
       itemCount: 0,
     });
   };
+
   const nextPage = async (): Promise<Page> => {
     let nextPage = pages.value[currentPageIndex.value + 1];
     if (nextPage) {
@@ -106,6 +112,7 @@ export function usePagination({ initialCursor, limit, fetchCallback, changeQuery
 
     return nextPage;
   };
+
   const previousPage = async (): Promise<Page> => {
     let previousPage = pages.value[currentPageIndex.value - 1];
     if (previousPage) {

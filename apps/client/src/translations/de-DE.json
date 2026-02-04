@@ -364,6 +364,13 @@
     "media": "Medien",
     "preview": "Vorschau"
   },
+  "passports": {
+    "label": "Produktpass | Produktpässe",
+    "create": "Neuen Produktpass erstellen",
+    "blank": "Leer",
+    "fromTemplate": "Aus Produktpassvorlage",
+    "selectTemplate": "Passvorlage auswählen"
+  },
   "templates": {
     "label": "Passvorlagen",
     "createdAt": "Erstellt am",
