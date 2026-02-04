@@ -17,7 +17,7 @@ export class OrganizationMapper {
 
   static toDomain(document: OrganizationDocument): Organization {
     const props: OrganizationDbProps = {
-      id: document._id,
+      id: document.id,
       name: document.name,
       slug: document.slug,
       logo: document.logo,

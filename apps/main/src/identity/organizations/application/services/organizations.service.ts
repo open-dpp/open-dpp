@@ -94,29 +94,6 @@ export class OrganizationsService {
     return this.organizationsRepository.findOneById(organizationId);
   }
 
-  async getMembers(organizationId: string): Promise<any[]> {
-    const members = await this.membersRepository.findByOrganizationId(organizationId);
-    if (members.length === 0) {
-      return [];
-    }
-
-    const userIds = members.map(member => member.userId);
-    const users = await this.usersRepository.findAllByIds(userIds);
-    const userMap = new Map(users.map(user => [user.id, user]));
-
-    return members.map(member => ({
-      ...member,
-      user: userMap.get(member.userId)
-        ? {
-            id: userMap.get(member.userId)!.id,
-            email: userMap.get(member.userId)!.email,
-            name: userMap.get(member.userId)!.name,
-            image: userMap.get(member.userId)!.image,
-          }
-        : null,
-    }));
-  }
-
   async inviteMember(
     email: string,
     role: string,
