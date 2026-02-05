@@ -1,6 +1,7 @@
-import type { SubmodelElementRequestDto, SubmodelRequestDto } from "@open-dpp/dto";
-import { Controller } from "@nestjs/common";
-import { AssetAdministrationShellPaginationResponseDto, SubmodelElementPaginationResponseDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/dto";
+import type { PassportDto, PassportPaginationDto, PassportRequestCreateDto, SubmodelElementRequestDto, SubmodelRequestDto } from "@open-dpp/dto";
+import { Body, Controller, Get, Post } from "@nestjs/common";
+import { AssetAdministrationShellPaginationResponseDto, AssetKind, PassportDtoSchema, PassportPaginationDtoSchema, PassportRequestCreateDtoSchema,SubmodelElementPaginationResponseDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/dto";import { ZodValidationPipe } from "@open-dpp/exception";
+import { Environment } from "../../aas/domain/environment";
 import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
 import {
   ApiGetShells,
@@ -29,6 +30,8 @@ import {
 import { Session } from "../../identity/auth/domain/session";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { Pagination } from "../../pagination/pagination";
+import { TemplateRepository } from "../../templates/infrastructure/template.repository";
+import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 
@@ -37,7 +40,46 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
   constructor(
     private readonly environmentService: EnvironmentService,
     private readonly passportRepository: PassportRepository,
+    private readonly templateRepository: TemplateRepository,
+    private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
   ) {
+  }
+
+  @Get()
+  async getPassports(
+    @LimitQueryParam() limit: number | undefined,
+    @CursorQueryParam() cursor: string | undefined,
+    @RequestParam() req: express.Request,
+  ): Promise<PassportPaginationDto> {
+    const pagination = Pagination.create({ limit, cursor });
+    return PassportPaginationDtoSchema.parse(
+      (await this.passportRepository.findAllByOrganizationId(await this.authService.getActiveOrganizationId(req), pagination)).toPlain(),
+    );
+  }
+
+  @Post()
+  async createPassport(
+    @Body(new ZodValidationPipe(PassportRequestCreateDtoSchema)) body: PassportRequestCreateDto,
+    @RequestParam() req: express.Request,
+  ): Promise<PassportDto> {
+    let environment: Environment;
+    if (body && body.templateId) {
+      const template = await this.templateRepository.findOneOrFail(body.templateId);
+      environment = await this.environmentService.copyEnvironment(template.environment);
+    }
+    else {
+      environment = await this.environmentService.createEnvironmentWithEmptyAas(AssetKind.Instance);
+    }
+    const passport = Passport.create({
+      organizationId: await this.authService.getActiveOrganizationId(req),
+      templateId: body?.templateId ?? undefined,
+      environment,
+    });
+
+    const upid = passport.createUniqueProductIdentifier();
+    await this.uniqueProductIdentifierService.save(upid);
+
+    return PassportDtoSchema.parse((await this.passportRepository.save(passport)).toPlain());
   }
 
   @ApiGetShells()

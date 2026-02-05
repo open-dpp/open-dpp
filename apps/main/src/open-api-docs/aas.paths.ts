@@ -1,5 +1,8 @@
 import {
   AssetAdministrationShellPaginationResponseDtoSchema,
+  PassportDtoSchema,
+  PassportPaginationDtoSchema,
+  PassportRequestCreateDtoSchema,
   SubmodelElementPaginationResponseDtoSchema,
   SubmodelElementSchema,
   SubmodelJsonSchema,
@@ -220,7 +223,44 @@ function createTemplatePaths() {
   };
 }
 
+function createPassportPaths() {
+  const tag = "passports";
+  return {
+    ...createAasPaths(tag),
+    [`${tag}`]: {
+      get: {
+        tags: [tag],
+        summary: `Get passports`,
+        parameters: [LimitQueryParamSchema, CursorQueryParamSchema],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: PassportPaginationDtoSchema },
+            },
+          },
+        },
+      },
+      post: {
+        tags: [tag],
+        summary: `Creates blank passport`,
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: PassportRequestCreateDtoSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.CREATED]: {
+            content: {
+              [ContentType.JSON]: { schema: PassportDtoSchema },
+            },
+          },
+        },
+      },
+    },
+  };
+}
+
 export const aasPaths = {
-  ...createAasPaths("passports"),
+  ...createPassportPaths(),
   ...createTemplatePaths(),
 };

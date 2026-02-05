@@ -180,6 +180,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
       throw new BadRequestException();
     }
     const template = Template.create({ organizationId: activeOrganizationId, environment });
+    const template = Template.create({ organizationId: await this.authService.getActiveOrganizationId(req), environment });
     return TemplateDtoSchema.parse((await this.templateRepository.save(template)).toPlain());
   }
 
@@ -196,6 +197,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     }
     return TemplatePaginationDtoSchema.parse(
       (await this.templateRepository.findAllByOrganizationId(activeOrganizationId, pagination)).toPlain(),
+      (await this.templateRepository.findAllByOrganizationId(await this.authService.getActiveOrganizationId(req), pagination)).toPlain(),
     );
   }
 

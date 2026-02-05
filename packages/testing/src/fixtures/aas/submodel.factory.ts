@@ -8,7 +8,7 @@ interface SubmodelTransientParams {
 }
 type Input = z.input<typeof SubmodelJsonSchema>
 export const submodelDesignOfProductPlainFactory
-  = Factory.define<Partial<Input>, SubmodelTransientParams> (({ transientParams }) => {
+  = Factory.define<Partial<Input>, SubmodelTransientParams> (({ transientParams, params }) => {
     return {
       modelType: 'Submodel',
       kind: 'Instance',
@@ -21,7 +21,7 @@ export const submodelDesignOfProductPlainFactory
         ],
         type: 'ExternalReference',
       },
-      id: `${transientParams.iriDomain}/submodels/2CZc64Umg5`,
+      id: params.id ? params.id : `${transientParams.iriDomain}/submodels/2CZc64Umg5`,
       idShort: 'DesignOfProduct',
       submodelElements: [
         {

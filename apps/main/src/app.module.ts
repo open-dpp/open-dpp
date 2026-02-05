@@ -10,6 +10,9 @@ import { AiConfigurationModule } from "./ai/ai-configuration/ai-configuration.mo
 import { AiModule } from "./ai/ai.module";
 import { ChatGateway } from "./ai/presentation/chat.gateway";
 import { AnalyticsModule } from "./analytics/analytics.module";
+import { AuthGuard } from "./auth/auth.guard";
+import { AuthModule } from "./auth/auth.module";
+import { BrandingModule } from "./branding/branding.module";
 import { LoggerMiddleware } from "./common/middleware/logger.middleware";
 import { generateMongoConfig } from "./database/config";
 import { EmailModule } from "./email/email.module";
@@ -21,6 +24,7 @@ import { IntegrationModule } from "./integrations/integration.module";
 import { ItemsModule } from "./items/items.module";
 
 import { MarketplaceModule } from "./marketplace/marketplace.module";
+
 import { McpServerModule } from "./mcp/mcp.server.module";
 import { MediaModule } from "./media/media.module";
 import { ModelsModule } from "./models/models.module";
@@ -45,7 +49,9 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
       inject: [EnvService],
     }),
     AasModule,
+    UniqueProductIdentifierModule,
     TemplateDraftModule,
+    BrandingModule,
     OldTemplateModule,
     TemplatesModule,
     PassportsModule,
@@ -53,7 +59,6 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
     ModelsModule,
     OrganizationsModule,
     UsersModule,
-    UniqueProductIdentifierModule,
     HttpModule,
     TraceabilityEventsModule,
     IntegrationModule,
