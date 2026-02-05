@@ -1,6 +1,7 @@
 import type { PassportDto, PassportPaginationDto, PassportRequestCreateDto, SubmodelElementRequestDto, SubmodelRequestDto } from "@open-dpp/dto";
-import { Body, Controller, Get, Post } from "@nestjs/common";
-import { AssetAdministrationShellPaginationResponseDto, AssetKind, PassportDtoSchema, PassportPaginationDtoSchema, PassportRequestCreateDtoSchema,SubmodelElementPaginationResponseDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/dto";import { ZodValidationPipe } from "@open-dpp/exception";
+import { BadRequestException, Body, Controller, Get, Post } from "@nestjs/common";
+import { AssetAdministrationShellPaginationResponseDto, AssetKind, PassportDtoSchema, PassportPaginationDtoSchema, PassportRequestCreateDtoSchema, SubmodelElementPaginationResponseDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/dto";
+import { ZodValidationPipe } from "@open-dpp/exception";
 import { Environment } from "../../aas/domain/environment";
 import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
 import {
@@ -49,19 +50,27 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
   async getPassports(
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
-    @RequestParam() req: express.Request,
+    @AuthSession() session: Session,
   ): Promise<PassportPaginationDto> {
     const pagination = Pagination.create({ limit, cursor });
+    const activeOrganizationId = session.activeOrganizationId;
+    if (!activeOrganizationId) {
+      throw new BadRequestException();
+    }
     return PassportPaginationDtoSchema.parse(
-      (await this.passportRepository.findAllByOrganizationId(await this.authService.getActiveOrganizationId(req), pagination)).toPlain(),
+      (await this.passportRepository.findAllByOrganizationId(activeOrganizationId, pagination)).toPlain(),
     );
   }
 
   @Post()
   async createPassport(
     @Body(new ZodValidationPipe(PassportRequestCreateDtoSchema)) body: PassportRequestCreateDto,
-    @RequestParam() req: express.Request,
+    @AuthSession() session: Session,
   ): Promise<PassportDto> {
+    const activeOrganizationId = session.activeOrganizationId;
+    if (!activeOrganizationId) {
+      throw new BadRequestException();
+    }
     let environment: Environment;
     if (body && body.templateId) {
       const template = await this.templateRepository.findOneOrFail(body.templateId);
@@ -71,7 +80,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
       environment = await this.environmentService.createEnvironmentWithEmptyAas(AssetKind.Instance);
     }
     const passport = Passport.create({
-      organizationId: await this.authService.getActiveOrganizationId(req),
+      organizationId: activeOrganizationId,
       templateId: body?.templateId ?? undefined,
       environment,
     });
