@@ -133,7 +133,6 @@ export class EnvironmentService {
     }
     return await this.aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
   }
-}
 
   async checkOwnerShipOfDppIdentifiable<T extends IDigitalProductPassportIdentifiable>(dppIdentifiable: T, session: Session): Promise<T> {
     const isMember = await this.membersService.isMemberOfOrganization(session.userId, dppIdentifiable.getOrganizationId());
