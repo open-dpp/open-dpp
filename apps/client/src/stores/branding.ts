@@ -1,5 +1,5 @@
 import type { MediaFile } from "../lib/media.ts";
-import { defineStore } from "pinia";
+import { defineStore, storeToRefs } from "pinia";
 import { ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import apiClient from "../lib/api-client.ts";
@@ -14,7 +14,8 @@ export const useBrandingStore = defineStore("branding", () => {
   const mediaStore = useMediaStore();
   const errorHandlingStore = useErrorHandlingStore();
   const { t } = useI18n();
-  const { selectedOrganization } = useIndexStore();
+  const indexStore = useIndexStore();
+  const { selectedOrganization } = storeToRefs(indexStore); // keeps reactivity
 
   const cleanupMediaUrls = () => {
     if (logo.value) {
@@ -47,7 +48,7 @@ export const useBrandingStore = defineStore("branding", () => {
   };
 
   watch(
-    () => selectedOrganization,
+    () => selectedOrganization.value,
     async (newVal) => {
       if (newVal) {
         await applyBranding();

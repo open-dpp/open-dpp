@@ -17,7 +17,7 @@ export class Branding {
   static fromPlain(data: unknown) {
     const parsed = BrandingDtoSchema.parse(data);
     return new Branding(
-      parsed.logo,
+      parsed.logo ?? null,
     );
   }
 
