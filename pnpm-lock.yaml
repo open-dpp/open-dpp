@@ -261,7 +261,7 @@ importers:
         version: 11.1.12(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(@nestjs/websockets@11.1.12)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/mongoose':
         specifier: ^11.0.4
-        version: 11.0.4(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(mongoose@9.1.4)(rxjs@7.8.2)
+        version: 11.0.4(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(mongoose@9.1.6)(rxjs@7.8.2)
       '@nestjs/platform-express':
         specifier: ^11.1.10
         version: 11.1.12(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)
@@ -352,6 +352,9 @@ importers:
       mongodb:
         specifier: ^7.0.0
         version: 7.0.0
+      mongoose:
+        specifier: ^9.1.6
+        version: 9.1.6
       nodemailer:
         specifier: ^7.0.12
         version: 7.0.12
@@ -774,7 +777,7 @@ importers:
         version: 11.1.12(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.12)(@nestjs/platform-express@11.1.12)(@nestjs/websockets@11.1.12)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/mongoose':
         specifier: ^11.0.4
-        version: 11.0.4(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(mongoose@9.1.4)(rxjs@7.8.2)
+        version: 11.0.4(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(mongoose@9.1.6)(rxjs@7.8.2)
       '@open-dpp/dto':
         specifier: workspace:*
         version: link:../dto
@@ -7231,8 +7234,8 @@ packages:
       socks:
         optional: true
 
-  mongoose@9.1.4:
-    resolution: {integrity: sha512-V8JIyoWKWW+R2COlOsh6gaYw9TvczSiP/cN3Yuk1pv7ws5VNFAy5GPrK8jfz9tVYovmqdWOJRurMjL4ilYn9wA==}
+  mongoose@9.1.6:
+    resolution: {integrity: sha512-ZrtgRsJKtW3od36TVXtAnrNHOO3rqhsqfVut6IzyWyJeLLeLTqW66qej/0qB37GZd5jL06nHfAceTikkfnSqbA==}
     engines: {node: '>=20.19.0'}
 
   motion-dom@12.27.1:
@@ -11153,11 +11156,11 @@ snapshots:
     optionalDependencies:
       '@nestjs/websockets': 11.1.12(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(@nestjs/platform-socket.io@11.1.12)(reflect-metadata@0.2.2)(rxjs@7.8.2)
 
-  '@nestjs/mongoose@11.0.4(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(mongoose@9.1.4)(rxjs@7.8.2)':
+  '@nestjs/mongoose@11.0.4(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(mongoose@9.1.6)(rxjs@7.8.2)':
     dependencies:
       '@nestjs/common': 11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/core': 11.1.12(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.12)(@nestjs/platform-express@11.1.12)(@nestjs/websockets@11.1.12)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      mongoose: 9.1.4
+      mongoose: 9.1.6
       rxjs: 7.8.2
 
   '@nestjs/passport@11.0.5(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(passport@0.7.0)':
@@ -17074,7 +17077,7 @@ snapshots:
       bson: 7.1.1
       mongodb-connection-string-url: 7.0.0
 
-  mongoose@9.1.4:
+  mongoose@9.1.6:
     dependencies:
       kareem: 3.0.0
       mongodb: 7.0.0
