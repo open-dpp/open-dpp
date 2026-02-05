@@ -66,6 +66,7 @@
     "mjml-core": "^4.18.0",
     "mongodb": "^7.0.0",
     "mongoose": "^9.1.6",
+    "multer": "^2.0.2",
     "nodemailer": "^7.0.12",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
