@@ -1,3 +1,4 @@
+import type { BrandingDto } from '@open-dpp/dto'
 import type { AxiosInstance } from 'axios'
 
 export class BrandingNamespace {
@@ -9,7 +10,7 @@ export class BrandingNamespace {
   }
 
   public async get() {
-    return await this.axiosInstance.get<{ logo: string }>(
+    return await this.axiosInstance.get<BrandingDto>(
       this.brandingEndpoint,
     )
   }

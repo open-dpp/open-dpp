@@ -27,11 +27,11 @@ export * from './aas/enums/reference-types-enum'
 export * from './aas/environment-json-schema'
 export * from './aas/extension-json-schema'
 export * from './aas/resource-json-schema'
-
-export * from './aas/resource-json-schema'
 export * from './aas/resource-json-schema'
 
+export * from './aas/resource-json-schema'
 export * from './aas/specific-asset-id-json-schema'
+
 export * from './aas/submodel-base/annotated-relationship-element-json-schema'
 export * from './aas/submodel-base/blob-json-schema'
 export * from './aas/submodel-base/entity-type-json-schema'
@@ -43,10 +43,11 @@ export * from './aas/submodel-base/reference-element-json-schema'
 export * from './aas/submodel-base/relationship-element-json-schema'
 export * from './aas/submodel-base/submodel-base-json-schema'
 export * from './aas/submodel-base/submodel-element-collection-json-schema'
-
 export * from './aas/submodel-base/submodel-element-list-json-schema'
+
 export * from './aas/submodel-base/submodel-element-schema'
 export * from './aas/submodel-base/submodel-json-schema'
+export * from './branding/branding.dto'
 export * from './passports/passport.dto'
 export * from './shared/dpp.schemas'
 export * from './shared/pagination.dto'

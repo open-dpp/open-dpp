@@ -3,6 +3,7 @@ import { AasModule } from "../aas/aas.module";
 
 import { AuthModule } from "../auth/auth.module";
 import { OrganizationsModule } from "../organizations/organizations.module";
+import { BrandingRepository } from "./infrastructure/branding.repository";
 import { BrandingController } from "./presentation/branding.controller";
 
 @Module({
@@ -12,6 +13,6 @@ import { BrandingController } from "./presentation/branding.controller";
     OrganizationsModule,
   ],
   controllers: [BrandingController],
-  providers: [],
+  providers: [BrandingRepository],
 })
 export class BrandingModule {}

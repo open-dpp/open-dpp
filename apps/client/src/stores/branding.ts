@@ -5,6 +5,7 @@ import { useI18n } from "vue-i18n";
 import apiClient from "../lib/api-client.ts";
 import { createObjectUrl, revokeObjectUrl } from "../lib/media.ts";
 import { useErrorHandlingStore } from "./error.handling.ts";
+import { HTTPCode } from "./http-codes.ts";
 import { useIndexStore } from "./index.ts";
 import { useMediaStore } from "./media.ts";
 
@@ -26,15 +27,15 @@ export const useBrandingStore = defineStore("branding", () => {
     cleanupMediaUrls();
     try {
       const response = await apiClient.dpp.branding.get();
-      const mediaResult = await mediaStore.fetchMedia(
-        response.data.logo,
-      );
-      if (mediaResult && mediaResult.blob) {
-        logo.value = {
-          blob: mediaResult.blob,
-          mediaInfo: mediaResult.mediaInfo,
-          url: createObjectUrl(mediaResult.blob),
-        };
+      if (response.status === HTTPCode.OK && response.data.logo) {
+        const mediaResult = await mediaStore.fetchMedia(response.data.logo);
+        if (mediaResult && mediaResult.blob) {
+          logo.value = {
+            blob: mediaResult.blob,
+            mediaInfo: mediaResult.mediaInfo,
+            url: createObjectUrl(mediaResult.blob),
+          };
+        }
       }
     }
     catch (error) {
