@@ -16,6 +16,7 @@ import { EmailService } from "../../email/email.service";
 import { AuthModule } from "../../identity/auth/auth.module";
 import { AUTH } from "../../identity/auth/auth.provider";
 import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
+import { OrganizationsModule } from "../../identity/organizations/organizations.module";
 import { UsersService } from "../../identity/users/application/services/users.service";
 import { UsersModule } from "../../identity/users/users.module";
 import { Template } from "../../old-templates/domain/template";
@@ -60,6 +61,7 @@ describe("modelsService", () => {
           },
         ]),
         AuthModule,
+        OrganizationsModule,
         UsersModule,
       ],
       providers: [
