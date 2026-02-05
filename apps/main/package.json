@@ -27,7 +27,7 @@
     "@langchain/mcp-adapters": "^1.1.2",
     "@langchain/mistralai": "^0.2.3",
     "@langchain/ollama": "^1.2.1",
-    "@modelcontextprotocol/sdk": "^1.25.3",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^11.1.10",
     "@nestjs/config": "^4.0.2",
