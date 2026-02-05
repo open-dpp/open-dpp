@@ -42,7 +42,7 @@
     "@open-dpp/config-eslint": "workspace:*",
     "@open-dpp/testing": "workspace:*",
     "@rollup/plugin-typescript": "^12.3.0",
-    "@swc/core": "^1.15.7",
+    "@swc/core": "^1.15.11",
     "@swc/jest": "^0.2.39",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.0.10",
