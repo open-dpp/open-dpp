@@ -10,6 +10,7 @@ import { authClient } from "../../auth-client.ts";
 import MediaInput from "../../components/media/MediaInput.vue";
 import apiClient from "../../lib/api-client";
 import { useIndexStore } from "../../stores";
+import { useBrandingStore } from "../../stores/branding.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling";
 import { useMediaStore } from "../../stores/media";
 import { useNotificationStore } from "../../stores/notification";
@@ -27,6 +28,7 @@ const currentMedia = ref<MediaResult | null>(null);
 const submitted = ref(false);
 const selectedFile = ref<File | null>(null);
 const fileUploadKey = ref(0);
+const brandingStore = useBrandingStore();
 
 const mediaInputId = computed(() => `organization-image-${indexStore.selectedOrganization}`);
 
@@ -87,6 +89,7 @@ async function save() {
 
     await fetchOrganization();
     await organizationStore.fetchOrganizations();
+    await brandingStore.applyBranding();
     notificationStore.addSuccessNotification(t("organizations.form.updateSuccess"));
   }
   catch (e) {
