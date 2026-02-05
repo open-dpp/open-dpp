@@ -376,6 +376,9 @@ importers:
       socket.io-client:
         specifier: ^4.8.2
         version: 4.8.3
+      uuid:
+        specifier: ^13.0.0
+        version: 13.0.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -494,9 +497,6 @@ importers:
       typescript-eslint:
         specifier: ^8.54.0
         version: 8.54.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
-      uuid:
-        specifier: ^13.0.0
-        version: 13.0.0
 
   packages/api-client:
     dependencies:

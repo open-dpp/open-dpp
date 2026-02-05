@@ -73,6 +73,7 @@
     "sharp": "^0.34.5",
     "socket.io": "^4.8.2",
     "socket.io-client": "^4.8.2",
+    "uuid": "^13.0.0",
     "zod": "^4.3.6",
     "zod-openapi": "^5.4.5"
   },
@@ -113,7 +114,6 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.54.0",
-    "uuid": "^13.0.0"
+    "typescript-eslint": "^8.54.0"
   }
 }
