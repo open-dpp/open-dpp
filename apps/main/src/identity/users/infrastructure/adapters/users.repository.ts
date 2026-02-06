@@ -1,6 +1,6 @@
 import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
@@ -11,6 +11,8 @@ import { User as UserSchema } from "../schemas/user.schema";
 
 @Injectable()
 export class UsersRepository {
+  private readonly logger = new Logger(UsersRepository.name);
+
   constructor(
     @InjectModel(UserSchema.name)
     private readonly userModel: Model<UserSchema>,
@@ -22,19 +24,25 @@ export class UsersRepository {
     // This prevents empty password accounts while still allowing programmatic creation
     const finalPassword = password || randomUUID();
 
-    await (this.auth.api as any).createUser({
-      body: {
-        email: user.email, // required
-        password: finalPassword, // required
-        name: user.name ?? ([user.firstName, user.lastName].filter(n => n != null).join(" ") || ""), // required
-        role: "user",
-        data: {
-          firstName: user.firstName,
-          lastName: user.lastName,
+    try {
+      await (this.auth.api as any).createUser({
+        body: {
+          email: user.email, // required
+          password: finalPassword, // required
+          name: user.name ?? ([user.firstName, user.lastName].filter(n => n != null).join(" ") || ""), // required
+          role: "user",
+          data: {
+            firstName: user.firstName,
+            lastName: user.lastName,
+          },
         },
-      },
-    });
-    return this.findOneByEmail(user.email);
+      });
+      return this.findOneByEmail(user.email);
+    }
+    catch (error) {
+      this.logger.error(`Failed to create user ${user.email}`, error);
+      return null;
+    }
   }
 
   async findOneById(id: string): Promise<User | null> {
