@@ -1,4 +1,5 @@
 import { expect } from "@jest/globals";
+import { ObjectId } from "mongodb";
 import { User } from "../../domain/user";
 import { UserRole } from "../../domain/user-role.enum";
 import { UserDocument } from "../schemas/user.schema";
@@ -7,8 +8,9 @@ import { UserMapper } from "./user.mapper";
 describe("userMapper", () => {
   const now = new Date();
 
+  const userObjectId = new ObjectId();
   const validDomainUser = User.loadFromDb({
-    id: "user-123",
+    id: userObjectId.toString(),
     email: "test@example.com",
     firstName: "John",
     lastName: "Doe",
@@ -23,7 +25,7 @@ describe("userMapper", () => {
   });
 
   const validUserDocument = {
-    _id: "user-123",
+    _id: userObjectId,
     email: "test@example.com",
     firstName: "John",
     lastName: "Doe",
@@ -41,7 +43,7 @@ describe("userMapper", () => {
     const persistence = UserMapper.toPersistence(validDomainUser);
 
     expect(persistence).toEqual({
-      _id: validDomainUser.id,
+      _id: new ObjectId(validDomainUser.id),
       email: validDomainUser.email,
       firstName: validDomainUser.firstName,
       lastName: validDomainUser.lastName,
@@ -61,7 +63,7 @@ describe("userMapper", () => {
     const domain = UserMapper.toDomain(validUserDocument);
 
     expect(domain).toBeInstanceOf(User);
-    expect(domain.id).toBe(validUserDocument._id);
+    expect(domain.id).toBe(validUserDocument._id.toString());
     expect(domain.email).toBe(validUserDocument.email);
     expect(domain.firstName).toBe(validUserDocument.firstName);
     expect(domain.banned).toBe(validUserDocument.banned);

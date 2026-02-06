@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { getModelToken } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
+import { ObjectId } from "mongodb";
 import { AUTH } from "../../../auth/auth.provider";
 import { Organization } from "../../domain/organization";
 import { Organization as OrganizationSchema } from "../schemas/organization.schema";
@@ -52,7 +53,7 @@ describe("OrganizationsRepository", () => {
     });
 
     mockAuth.api.createOrganization.mockResolvedValue({
-      id: "test-id",
+      id: new ObjectId(),
       name: "Test Org",
       slug: "test-org",
       logo: null,
@@ -69,10 +70,11 @@ describe("OrganizationsRepository", () => {
   });
 
   it("should pass undefined for logo in update if data has no logo", async () => {
+    const organizationObjectId = new ObjectId();
     mockAuth.api.updateOrganization.mockResolvedValue({});
     mockOrganizationModel.find.mockReturnValue({
       exec: jest.fn().mockResolvedValue([{
-        _id: "org-id",
+        _id: organizationObjectId,
         name: "Test Org",
         slug: "test-org",
         logo: null,
@@ -80,7 +82,7 @@ describe("OrganizationsRepository", () => {
       }]),
     });
 
-    await repository.update("org-id", {
+    await repository.update(organizationObjectId.toString(), {
       name: "Test Org Updated",
       slug: "test-org",
       logo: null,

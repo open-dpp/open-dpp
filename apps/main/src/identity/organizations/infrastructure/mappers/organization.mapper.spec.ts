@@ -1,4 +1,5 @@
 import { expect } from "@jest/globals";
+import { ObjectId } from "mongodb";
 import { Organization } from "../../domain/organization";
 import { OrganizationDocument } from "../schemas/organization.schema";
 import { OrganizationMapper } from "./organization.mapper";
@@ -6,8 +7,9 @@ import { OrganizationMapper } from "./organization.mapper";
 describe("organizationMapper", () => {
   const now = new Date();
 
+  const organizationObjectId = new ObjectId();
   const validDomainOrganization = Organization.loadFromDb({
-    id: "org-123",
+    id: organizationObjectId.toString(),
     name: "Test Org",
     slug: "test-org",
     logo: "logo.png",
@@ -16,7 +18,7 @@ describe("organizationMapper", () => {
   });
 
   const validOrganizationDocument = {
-    id: "org-123",
+    id: organizationObjectId,
     name: "Test Org",
     slug: "test-org",
     logo: "logo.png",
@@ -25,7 +27,7 @@ describe("organizationMapper", () => {
   } as unknown as OrganizationDocument;
 
   const validBetterAuthOrganization = {
-    id: "org-123",
+    id: organizationObjectId.toString(),
     name: "Test Org",
     slug: "test-org",
     logo: "logo.png",
@@ -37,7 +39,7 @@ describe("organizationMapper", () => {
     const persistence = OrganizationMapper.toPersistence(validDomainOrganization);
 
     expect(persistence).toEqual({
-      _id: validDomainOrganization.id,
+      _id: new ObjectId(validDomainOrganization.id),
       name: validDomainOrganization.name,
       slug: validDomainOrganization.slug,
       logo: validDomainOrganization.logo,

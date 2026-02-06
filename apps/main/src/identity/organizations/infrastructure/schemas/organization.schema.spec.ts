@@ -1,4 +1,5 @@
 import { expect } from "@jest/globals";
+import { ObjectId } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { connect, Connection, Model } from "mongoose";
 import { Organization, OrganizationSchema } from "./organization.schema";
@@ -31,7 +32,7 @@ describe("organizationSchema", () => {
 
   it("should create an organization document", async () => {
     const orgData = {
-      _id: "org-123",
+      _id: new ObjectId(),
       name: "Test Org",
       slug: "test-org",
       createdAt: new Date(),
@@ -48,7 +49,7 @@ describe("organizationSchema", () => {
 
   it("should enforce unique slug", async () => {
     const orgData = {
-      _id: "org-1",
+      _id: new ObjectId(),
       name: "Test Org 1",
       slug: "unique-slug",
       createdAt: new Date(),
@@ -56,7 +57,7 @@ describe("organizationSchema", () => {
     await new OrganizationModel(orgData).save();
 
     const duplicateData = {
-      _id: "org-2",
+      _id: new ObjectId(),
       name: "Test Org 2",
       slug: "unique-slug",
       createdAt: new Date(),

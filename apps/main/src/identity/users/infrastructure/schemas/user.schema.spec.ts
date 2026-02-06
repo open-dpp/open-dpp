@@ -1,4 +1,5 @@
 import { expect } from "@jest/globals";
+import { ObjectId } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { connect, Connection, Model } from "mongoose";
 import { UserRole } from "../../domain/user-role.enum";
@@ -32,7 +33,7 @@ describe("userSchema", () => {
 
   it("should create a user document", async () => {
     const userData = {
-      _id: "user-123",
+      _id: new ObjectId(),
       email: "test@example.com",
       emailVerified: true,
       firstName: "John",
