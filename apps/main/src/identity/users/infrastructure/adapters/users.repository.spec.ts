@@ -154,7 +154,7 @@ describe("UsersRepository", () => {
     const result = await repository.findAllByIds([userObjectId.toString()]);
 
     expect(result).toHaveLength(1);
-    expect(mockUserModel.find).toHaveBeenCalledWith({ _id: { $in: [userObjectId.toString()] } });
+    expect(mockUserModel.find).toHaveBeenCalledWith({ _id: { $in: [new ObjectId(userObjectId)] } });
   });
 
   it("should set email verified", async () => {

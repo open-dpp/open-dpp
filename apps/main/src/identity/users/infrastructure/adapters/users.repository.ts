@@ -53,7 +53,8 @@ export class UsersRepository {
 
   async findAllByIds(ids: string[]): Promise<User[]> {
     // Use find with $in operator
-    const documents = await this.userModel.find({ _id: { $in: ids } });
+    const objectIds = ids.map(id => new ObjectId(id));
+    const documents = await this.userModel.find({ _id: { $in: objectIds } });
     return documents.map(doc => UserMapper.toDomain(doc));
   }
 
