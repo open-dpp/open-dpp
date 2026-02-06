@@ -19,7 +19,9 @@ describe("invitation", () => {
     expect(invitation.organizationId).toBe(props.organizationId);
     expect(invitation.role).toBe(props.role);
     expect(invitation.createdAt).toBeInstanceOf(Date);
-    expect(invitation.expiresAt).toBeInstanceOf(Date);
+    expect(invitation.expiresAt.getTime()).toBeGreaterThan(
+      invitation.createdAt.getTime(),
+    );
   });
 
   it("should load invitation from database properties", () => {
@@ -32,6 +34,7 @@ describe("invitation", () => {
       role: MemberRole.MEMBER,
       createdAt: now,
       expiresAt: now,
+      status: "pending",
     };
 
     const invitation = Invitation.loadFromDb(dbProps);

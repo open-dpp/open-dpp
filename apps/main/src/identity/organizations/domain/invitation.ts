@@ -46,8 +46,11 @@ export class Invitation {
     this.expiresAt = expiresAt;
   }
 
+  private static readonly DEFAULT_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+
   public static create(data: InvitationCreateProps) {
     const now = new Date();
+    const expiresAt = new Date(now.getTime() + Invitation.DEFAULT_TTL);
     return new Invitation(
       randomUUID(),
       data.email,
@@ -56,7 +59,7 @@ export class Invitation {
       data.role,
       data.status || "pending",
       now,
-      now,
+      expiresAt,
     );
   }
 
