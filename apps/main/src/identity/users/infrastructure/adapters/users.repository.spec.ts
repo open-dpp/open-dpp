@@ -115,9 +115,7 @@ describe("UsersRepository", () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    mockUserModel.findOne.mockReturnValue({
-      exec: jest.fn().mockResolvedValue(doc),
-    });
+    mockUserModel.findOne.mockResolvedValue(doc);
 
     const result = await repository.findOneById(userObjectId.toString());
 
