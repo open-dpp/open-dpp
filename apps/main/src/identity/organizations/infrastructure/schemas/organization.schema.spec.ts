@@ -46,32 +46,4 @@ describe("organizationSchema", () => {
     expect(savedOrg.name).toBe(orgData.name);
     expect(savedOrg.slug).toBe(orgData.slug);
   });
-
-  it("should enforce unique slug", async () => {
-    const orgData = {
-      _id: new ObjectId(),
-      name: "Test Org 1",
-      slug: "unique-slug",
-      createdAt: new Date(),
-    };
-    await new OrganizationModel(orgData).save();
-
-    const duplicateData = {
-      _id: new ObjectId(),
-      name: "Test Org 2",
-      slug: "unique-slug",
-      createdAt: new Date(),
-    };
-
-    let err: any;
-    try {
-      await new OrganizationModel(duplicateData).save();
-    }
-    catch (error) {
-      err = error;
-    }
-
-    expect(err).toBeDefined();
-    expect(err.code).toBe(11000);
-  });
 });

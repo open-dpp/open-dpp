@@ -42,6 +42,28 @@ describe("invitation", () => {
     );
   });
 
+  it("should use default TTL when negative TTL is provided", () => {
+    const props = {
+      email: "test@example.com",
+      inviterId: "user-123",
+      organizationId: "org-123",
+      role: MemberRole.ADMIN,
+      ttl: -1000,
+    };
+
+    const invitation = Invitation.create(props);
+
+    expect(invitation.expiresAt.getTime()).toBeGreaterThan(
+      invitation.createdAt.getTime(),
+    );
+    // It should be roughly default TTL (7 days)
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    expect(invitation.expiresAt.getTime()).toBeCloseTo(
+      invitation.createdAt.getTime() + sevenDays,
+      -4, // within 10 seconds (giving plenty of buffer)
+    );
+  });
+
   it("should load invitation from database properties", () => {
     const now = new Date();
     const dbProps = {
