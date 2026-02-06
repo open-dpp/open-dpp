@@ -17,8 +17,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "clean": "rimraf dist",
-    "build": "pnpm run clean && tsc && rollup -c",
+    "build": "tsc && rollup -c",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "test": "jest",
     "check-ts": "tsc --noEmit",
@@ -57,7 +56,6 @@
     "jest": "^30.2.0",
     "msw": "^2.12.4",
     "prettier": "^3.7.4",
-    "rimraf": "^6.1.2",
     "rollup": "^4.54.0",
     "rollup-plugin-dts": "^6.3.0",
     "ts-jest": "^29.4.6",
