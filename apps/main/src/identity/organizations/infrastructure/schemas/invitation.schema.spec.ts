@@ -67,4 +67,29 @@ describe("invitationSchema", () => {
     expect(err.errors.inviterId).toBeDefined();
     expect(err.errors.organizationId).toBeDefined();
   });
+
+  it("should fail if role is invalid", async () => {
+    const invitationData = {
+      _id: "invitation-invalid-role",
+      email: "test@example.com",
+      inviterId: "user-123",
+      organizationId: "org-123",
+      role: "INVALID_ROLE",
+      status: InvitationStatus.PENDING,
+      createdAt: new Date(),
+      expiresAt: new Date(),
+    };
+
+    const invitation = new InvitationModel(invitationData);
+    let err: any;
+    try {
+      await invitation.save();
+    }
+    catch (error) {
+      err = error;
+    }
+
+    expect(err).toBeDefined();
+    expect(err.errors.role).toBeDefined();
+  });
 });

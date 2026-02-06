@@ -19,7 +19,7 @@ export class Invitation {
   @Prop({ required: true })
   organizationId: string;
 
-  @Prop({ required: true, type: String })
+  @Prop({ required: true, enum: MemberRole, type: String })
   role: MemberRole;
 
   @Prop({ required: true, enum: InvitationStatus, type: String })
