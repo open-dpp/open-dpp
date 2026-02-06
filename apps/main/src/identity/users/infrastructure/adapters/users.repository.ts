@@ -38,10 +38,20 @@ export class UsersRepository {
   }
 
   async findOneById(id: string): Promise<User | null> {
-    const document = await this.userModel.findOne({ _id: new ObjectId(id) });
-    if (!document)
+    if (!ObjectId.isValid(id)) {
       return null;
-    return UserMapper.toDomain(document);
+    }
+    // Double check with try/catch in case isValid allows something that new ObjectId throws on,
+    // though isValid handles most cases.
+    try {
+      const document = await this.userModel.findOne({ _id: new ObjectId(id) });
+      if (!document)
+        return null;
+      return UserMapper.toDomain(document);
+    }
+    catch {
+      return null;
+    }
   }
 
   async findOneByEmail(email: string): Promise<User | null> {
@@ -52,8 +62,14 @@ export class UsersRepository {
   }
 
   async findAllByIds(ids: string[]): Promise<User[]> {
-    // Use find with $in operator
-    const objectIds = ids.map(id => new ObjectId(id));
+    // Filter valid IDs first to avoid throwing
+    const validIds = ids.filter(id => ObjectId.isValid(id));
+
+    if (validIds.length === 0) {
+      return [];
+    }
+
+    const objectIds = validIds.map(id => new ObjectId(id));
     const documents = await this.userModel.find({ _id: { $in: objectIds } });
     return documents.map(doc => UserMapper.toDomain(doc));
   }

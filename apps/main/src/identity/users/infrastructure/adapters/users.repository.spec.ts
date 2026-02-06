@@ -206,6 +206,12 @@ describe("UsersRepository", () => {
     expect(result?.email).toBe("test@example.com");
   });
 
+  it("should return null for invalid id in findOneById", async () => {
+    const result = await repository.findOneById("invalid-id");
+    expect(result).toBeNull();
+    expect(mockUserModel.findOne).not.toHaveBeenCalled();
+  });
+
   it("should find all by ids", async () => {
     const userObjectId = new ObjectId();
     const doc = {
@@ -221,6 +227,29 @@ describe("UsersRepository", () => {
 
     expect(result).toHaveLength(1);
     expect(mockUserModel.find).toHaveBeenCalledWith({ _id: { $in: [new ObjectId(userObjectId)] } });
+  });
+
+  it("should filter invalid ids in findAllByIds", async () => {
+    const userObjectId = new ObjectId();
+    const doc = {
+      _id: userObjectId,
+      email: "test@example.com",
+      role: "user",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    mockUserModel.find.mockResolvedValue([doc]);
+
+    const result = await repository.findAllByIds([userObjectId.toString(), "invalid-id"]);
+
+    expect(result).toHaveLength(1);
+    expect(mockUserModel.find).toHaveBeenCalledWith({ _id: { $in: [new ObjectId(userObjectId)] } });
+  });
+
+  it("should return empty array if all ids are invalid in findAllByIds", async () => {
+    const result = await repository.findAllByIds(["invalid-id-1", "invalid-id-2"]);
+    expect(result).toEqual([]);
+    expect(mockUserModel.find).not.toHaveBeenCalled();
   });
 
   it("should set email verified", async () => {
