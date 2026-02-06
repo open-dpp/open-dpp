@@ -54,7 +54,8 @@ export class User {
     this.email = email;
     this.firstName = firstName;
     this.lastName = lastName;
-    this.name = `${firstName} ${lastName}`;
+    const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
+    this.name = fullName || null;
     this.image = image;
     this.emailVerified = emailVerified;
     this.createdAt = createdAt;

@@ -48,4 +48,26 @@ describe("user", () => {
     expect(user.role).toBe(dbProps.role);
     expect(user.createdAt).toEqual(dbProps.createdAt);
   });
+
+  it("should format name correctly when first or last name is null", () => {
+    const dbProps = {
+      id: "user-123",
+      email: "test@example.com",
+      firstName: null,
+      lastName: null,
+      image: null,
+      emailVerified: true,
+      role: UserRole.USER,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      banned: false,
+      banReason: null,
+      banExpires: null,
+    };
+
+    // Cast to any to simulate database returning nulls which might be possible at runtime
+    // despite strict types, or legacy data.
+    const user = User.loadFromDb(dbProps as any);
+    expect(user.name).toBeNull();
+  });
 });
