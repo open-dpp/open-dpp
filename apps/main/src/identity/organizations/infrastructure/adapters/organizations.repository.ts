@@ -76,7 +76,12 @@ export class OrganizationsRepository {
   }
 
   async findOneBySlug(slug: string): Promise<Organization | null> {
-    const document = await this.organizationModel.findOne({ slug });
+    // Ensure slug is a safe primitive value before using it in a query
+    if (typeof slug !== "string" || slug.trim().length === 0) {
+      return null;
+    }
+
+    const document = await this.organizationModel.findOne({ slug: { $eq: slug } });
     if (!document)
       return null;
     return OrganizationMapper.toDomain(document);
