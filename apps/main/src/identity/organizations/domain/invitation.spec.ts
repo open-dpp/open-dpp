@@ -81,7 +81,11 @@ describe("invitation", () => {
 
     expect(invitation.id).toBe(dbProps.id);
     expect(invitation.email).toBe(dbProps.email);
+    expect(invitation.inviterId).toBe(dbProps.inviterId);
+    expect(invitation.organizationId).toBe(dbProps.organizationId);
     expect(invitation.role).toBe(dbProps.role);
     expect(invitation.createdAt).toEqual(dbProps.createdAt);
+    expect(invitation.expiresAt).toEqual(dbProps.expiresAt);
+    expect(invitation.status).toBe(dbProps.status);
   });
 });
