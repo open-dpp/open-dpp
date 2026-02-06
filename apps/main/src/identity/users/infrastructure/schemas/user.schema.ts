@@ -33,6 +33,15 @@ export class User {
   @Prop({ required: true })
   updatedAt: Date;
 
+  @Prop({ default: false })
+  banned: boolean;
+
+  @Prop()
+  banReason: string;
+
+  @Prop()
+  banExpires: Date;
+
   @Prop({ required: true, type: String })
   role: UserRole;
 }

@@ -17,9 +17,9 @@ describe("userMapper", () => {
     role: UserRole.USER,
     createdAt: now,
     updatedAt: now,
-    banned: false,
-    banReason: null,
-    banExpires: null,
+    banned: true,
+    banReason: "Violation of terms",
+    banExpires: now,
   });
 
   const validUserDocument = {
@@ -32,6 +32,9 @@ describe("userMapper", () => {
     role: UserRole.USER,
     createdAt: now,
     updatedAt: now,
+    banned: true,
+    banReason: "Violation of terms",
+    banExpires: now,
   } as unknown as UserDocument;
 
   it("should map from domain to persistence", () => {
@@ -48,6 +51,9 @@ describe("userMapper", () => {
       role: validDomainUser.role,
       createdAt: validDomainUser.createdAt,
       updatedAt: validDomainUser.updatedAt,
+      banned: validDomainUser.banned,
+      banReason: validDomainUser.banReason,
+      banExpires: validDomainUser.banExpires,
     });
   });
 
@@ -58,5 +64,8 @@ describe("userMapper", () => {
     expect(domain.id).toBe(validUserDocument._id);
     expect(domain.email).toBe(validUserDocument.email);
     expect(domain.firstName).toBe(validUserDocument.firstName);
+    expect(domain.banned).toBe(validUserDocument.banned);
+    expect(domain.banReason).toBe(validUserDocument.banReason);
+    expect(domain.banExpires).toBe(validUserDocument.banExpires);
   });
 });
