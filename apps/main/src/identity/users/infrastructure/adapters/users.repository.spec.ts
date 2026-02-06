@@ -61,8 +61,46 @@ describe("UsersRepository", () => {
 
     const result = await repository.save(user);
 
-    expect(mockAuth.api.createUser).toHaveBeenCalled();
+    // Check that createUser was called with correct arguments
+    expect(mockAuth.api.createUser).toHaveBeenCalledWith(expect.objectContaining({
+      body: expect.objectContaining({
+        email: "test@example.com",
+        name: "John Doe",
+        data: expect.objectContaining({
+          firstName: "John",
+          lastName: "Doe",
+        }),
+      }),
+    }));
+
+    // Verify password was generated (should be a non-empty string)
+    const callArgs = (mockAuth.api.createUser as jest.Mock).mock.calls[0][0] as any;
+    expect(callArgs.body.password).toBeTruthy();
+    expect(callArgs.body.password.length).toBeGreaterThan(0);
+
     expect(result).toBeInstanceOf(User);
+  });
+
+  it("should save user with provided password", async () => {
+    const user = User.create({
+      email: "test@example.com",
+      firstName: "Jane",
+      lastName: "Doe",
+      role: UserRole.USER,
+    });
+
+    mockUserModel.findOne.mockResolvedValue({
+      _id: "user-2",
+      email: "test@example.com",
+    });
+
+    await repository.save(user, "secure-password-123");
+
+    expect(mockAuth.api.createUser).toHaveBeenCalledWith(expect.objectContaining({
+      body: expect.objectContaining({
+        password: "secure-password-123",
+      }),
+    }));
   });
 
   it("should find one by id using workaround", async () => {
