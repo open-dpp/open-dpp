@@ -34,8 +34,8 @@ export class UserMapper {
       updatedAt: entity.updatedAt,
       role: entity.role,
       banned: entity.banned,
-      banReason: entity.banReason ?? undefined,
-      banExpires: entity.banExpires ?? undefined,
+      banReason: entity.banReason ?? null,
+      banExpires: entity.banExpires ?? null,
     } as UserSchema;
   }
 }

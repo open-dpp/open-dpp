@@ -7,7 +7,7 @@ export type UserDocument = HydratedDocument<User>;
 @Schema({ collection: "user" })
 export class User {
   @Prop({ type: String, required: true })
-  _id: string; // better-auth uses string IDs, likely we map _id to it or it sets _id as string. Let's assume _id IS the string ID.
+  _id: string;
 
   @Prop({ required: true, unique: true })
   email: string;
@@ -36,11 +36,11 @@ export class User {
   @Prop({ default: false })
   banned: boolean;
 
-  @Prop()
-  banReason: string;
+  @Prop({ default: null, type: String })
+  banReason: string | null;
 
-  @Prop()
-  banExpires: Date;
+  @Prop({ default: null, type: Date })
+  banExpires: Date | null;
 
   @Prop({ required: true, type: String })
   role: UserRole;
