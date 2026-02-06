@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { AuthModule } from "../auth/auth.module";
+import { AuthModule } from "../identity/auth/auth.module";
+import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { ItemDoc, ItemSchema } from "../items/infrastructure/item.schema";
 import { ItemsService } from "../items/infrastructure/items.service";
 import { ModelDoc, ModelSchema } from "../models/infrastructure/model.schema";
@@ -38,6 +39,7 @@ import { ProductPassportController } from "./presentation/product-passport.contr
       },
     ]),
     AuthModule,
+    OrganizationsModule,
   ],
   controllers: [ProductPassportController],
   providers: [
@@ -47,4 +49,4 @@ import { ProductPassportController } from "./presentation/product-passport.contr
     ItemsService,
   ],
 })
-export class ProductPassportModule {}
+export class ProductPassportModule { }

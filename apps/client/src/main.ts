@@ -58,9 +58,14 @@ async function startApp() {
   if (isSignedIn) {
     const organizationStore = useOrganizationsStore();
     await organizationStore.fetchOrganizations();
+    const indexStore = useIndexStore();
     if (organizationStore.organizations.length === 0) {
-      const indexStore = useIndexStore();
       indexStore.selectOrganization(null);
+    }
+    else {
+      if (session.session.activeOrganizationId) {
+        indexStore.selectOrganization(session.session.activeOrganizationId);
+      }
     }
   }
 

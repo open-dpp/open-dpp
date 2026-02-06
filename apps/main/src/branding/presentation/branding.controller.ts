@@ -1,8 +1,8 @@
-import type express from "express";
 import { Controller, Get } from "@nestjs/common";
 
 import { BrandingDto, BrandingDtoSchema } from "@open-dpp/dto";
-import { RequestParam } from "../../aas/presentation/aas.decorators";
+import { Session } from "../../identity/auth/domain/session";
+import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { BrandingRepository } from "../infrastructure/branding.repository";
 
 @Controller("/branding")
@@ -14,8 +14,8 @@ export class BrandingController {
 
   @Get()
   async getBranding(
-    @RequestParam() req: express.Request,
+    @AuthSession() session: Session,
   ): Promise<BrandingDto> {
-    return BrandingDtoSchema.parse((await this.brandingRepository.findOneByActiveOrganization(req)).toPlain());
+    return BrandingDtoSchema.parse((await this.brandingRepository.findOneByActiveOrganizationId(session)).toPlain());
   }
 }

@@ -1,5 +1,4 @@
 import type express from "express";
-import type { UserSession } from "../../auth/auth.guard";
 import type { Media } from "../domain/media";
 import {
   Controller,
@@ -15,8 +14,9 @@ import {
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { memoryStorage } from "multer";
-import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
-import { Session } from "../../auth/session.decorator";
+import { Session } from "../../identity/auth/domain/session";
+import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
+import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { PolicyKey } from "../../policy/domain/policy";
 import { Policy } from "../../policy/presentation/policy.decorator";
 import { BucketDefaultPaths, MediaService } from "../infrastructure/media.service";
@@ -52,11 +52,11 @@ export class MediaController {
       }),
     )
     file: Express.Multer.File,
-    @Session() session: UserSession,
+    @AuthSession() session: Session,
   ): Promise<void> {
     await this.filesService.uploadProfilePicture(
       file.buffer,
-      session.user.id,
+      session.userId,
     );
   }
 
@@ -85,7 +85,7 @@ export class MediaController {
     @Param("orgId") orgId: string,
     @Param("upi") upi: string,
     @Param("dataFieldId") dataFieldId: string,
-    @Session() session: UserSession,
+    @AuthSession() session: Session,
   ): Promise<{
     mediaId: string;
   }> {
@@ -94,7 +94,7 @@ export class MediaController {
       file.buffer,
       dataFieldId,
       upi,
-      session.user.id,
+      session.userId,
       orgId,
     );
     return {
@@ -203,14 +203,14 @@ export class MediaController {
     )
     file: Express.Multer.File,
     @Param("orgId") orgId: string,
-    @Session() session: UserSession,
+    @AuthSession() session: Session,
   ): Promise<{
     mediaId: string;
   }> {
     const media = await this.filesService.uploadMedia(
       file.originalname,
       file.buffer,
-      session.user.id,
+      session.userId,
       orgId,
     );
     return {
@@ -241,14 +241,14 @@ export class MediaController {
     )
     file: Express.Multer.File,
     @Param("orgId") orgId: string,
-    @Session() session: UserSession,
+    @AuthSession() session: Session,
   ): Promise<{
     mediaId: string;
   }> {
     const media = await this.filesService.uploadMedia(
       file.originalname,
       file.buffer,
-      session.user.id,
+      session.userId,
       orgId,
       [BucketDefaultPaths.ORGANIZATION_PROFILE_PICTURES],
     );

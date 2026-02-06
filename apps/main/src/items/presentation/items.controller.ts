@@ -1,4 +1,3 @@
-import type { UserSession } from "../../auth/auth.guard";
 import type {
   DataValueDto,
 } from "../../product-passport-data/presentation/dto/data-value.dto";
@@ -14,8 +13,9 @@ import {
 } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { Session } from "../../auth/session.decorator";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
+import { Session } from "../../identity/auth/domain/session";
+import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";
 import {
@@ -68,12 +68,12 @@ export class ItemsController {
   async create(
     @Param("orgaId") organizationId: string,
     @Param("modelId") modelId: string,
-    @Session() session: UserSession,
+    @AuthSession() session: Session,
   ) {
     const item = await this.itemsApplicationService.createItem(
       organizationId,
       modelId,
-      session.user.id,
+      session.userId,
     );
     return itemToDto(await this.itemsService.save(item));
   }

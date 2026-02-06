@@ -1,7 +1,8 @@
 import { Module } from "@nestjs/common";
 import { EnvModule } from "@open-dpp/env";
 import { McpModule } from "@rekog/mcp-nest";
-import { AuthModule } from "../auth/auth.module";
+import { AuthModule } from "../identity/auth/auth.module";
+import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { ItemsModule } from "../items/items.module";
 import { ModelsModule } from "../models/models.module";
 import { TemplateModule } from "../old-templates/template.module";
@@ -20,6 +21,7 @@ import { PassportTool } from "./passport.tool";
     TemplateModule,
     ItemsModule,
     AuthModule,
+    OrganizationsModule,
   ],
   providers: [PassportTool],
 })

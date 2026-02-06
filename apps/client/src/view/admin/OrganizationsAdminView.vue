@@ -13,7 +13,7 @@ const errorHandlingStore = useErrorHandlingStore();
 
 async function fetchOrganizations() {
   try {
-    const res = await axiosIns.get("/auth/organizations");
+    const res = await axiosIns.get("/organizations");
     if (res.data) {
       organizations.value = res.data;
     }

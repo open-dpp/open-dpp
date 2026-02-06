@@ -1,11 +1,11 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
+import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import {
   OldTemplateDoc,
   TemplateSchema,
 } from "../old-templates/infrastructure/template.schema";
 import { TemplateService } from "../old-templates/infrastructure/template.service";
-import { OrganizationsModule } from "../organizations/organizations.module";
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,

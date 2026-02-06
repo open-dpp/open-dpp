@@ -5,16 +5,20 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseExceptionFilter } from "@open-dpp/exception";
+import { Auth } from "better-auth";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../../test/better-auth-helper";
 import {
   getApp,
 } from "../../../../test/utils.for.test";
-import { AuthGuard } from "../../../auth/auth.guard";
-import { AuthModule } from "../../../auth/auth.module";
-import { AuthService } from "../../../auth/auth.service";
 import { generateMongoConfig } from "../../../database/config";
 import { EmailService } from "../../../email/email.service";
+import { AuthModule } from "../../../identity/auth/auth.module";
+import { AUTH } from "../../../identity/auth/auth.provider";
+import { AuthGuard } from "../../../identity/auth/infrastructure/guards/auth.guard";
+import { OrganizationsModule } from "../../../identity/organizations/organizations.module";
+import { UsersService } from "../../../identity/users/application/services/users.service";
+import { UsersModule } from "../../../identity/users/users.module";
 import { AiConfiguration, AiProvider } from "../domain/ai-configuration";
 import { aiConfigurationFactory } from "../fixtures/ai-configuration-props.factory";
 import {
@@ -29,7 +33,6 @@ describe("aiConfigurationController", () => {
   let app: INestApplication;
   let module: TestingModule;
   let aiConfigurationService: AiConfigurationService;
-  let authService: AuthService;
 
   const betterAuthHelper = new BetterAuthHelper();
 
@@ -53,6 +56,8 @@ describe("aiConfigurationController", () => {
           },
         ]),
         AuthModule,
+        OrganizationsModule,
+        UsersModule,
       ],
       providers: [
         AiConfigurationService,
@@ -70,10 +75,7 @@ describe("aiConfigurationController", () => {
       .compile();
 
     aiConfigurationService = module.get(AiConfigurationService);
-    authService = module.get<AuthService>(
-      AuthService,
-    );
-    betterAuthHelper.setAuthService(authService);
+    betterAuthHelper.init(module.get<UsersService>(UsersService), module.get<Auth>(AUTH));
 
     app = module.createNestApplication();
     app.useGlobalFilters(new NotFoundInDatabaseExceptionFilter());

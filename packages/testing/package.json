@@ -16,8 +16,7 @@
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "clean": "rimraf dist",
-    "build": "pnpm run clean && tsc --project tsconfig.build.json",
+    "build": "tsc --project tsconfig.build.json",
     "check-ts": "tsc --noEmit",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
@@ -45,7 +44,6 @@
     "eslint": "^9.39.2",
     "globals": "^17.1.0",
     "jest": "^30.2.0",
-    "rimraf": "^6.1.2",
     "typescript": "^5.9.3"
   },
   "jest": {

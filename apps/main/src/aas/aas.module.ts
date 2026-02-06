@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
+import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { AasRepository } from "./infrastructure/aas.repository";
 import {
   AssetAdministrationShellDoc,
@@ -16,8 +17,9 @@ import { SubmodelRegistryInitializer } from "./presentation/submodel-registry-in
       { name: AssetAdministrationShellDoc.name, schema: AssetAdministrationShellSchema },
       { name: SubmodelDoc.name, schema: SubmodelSchema },
     ]),
+    OrganizationsModule,
   ],
   providers: [SubmodelRegistryInitializer, AasRepository, SubmodelRepository, EnvironmentService],
   exports: [AasRepository, SubmodelRepository, EnvironmentService],
 })
-export class AasModule {}
+export class AasModule { }

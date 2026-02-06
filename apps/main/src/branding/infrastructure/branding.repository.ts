@@ -1,26 +1,25 @@
-import { ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
-import { fromNodeHeaders } from "better-auth/node";
-import express from "express";
-import { AuthService } from "../../auth/auth.service";
+import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
+import { Session } from "../../identity/auth/domain/session";
+import { OrganizationsService } from "../../identity/organizations/application/services/organizations.service";
 import { Branding } from "../domain/branding";
 
 @Injectable()
 export class BrandingRepository {
   constructor(
-    private readonly authService: AuthService,
+    private readonly organizationsService: OrganizationsService,
   ) {
   }
 
-  async findOneByActiveOrganization(req: express.Request) {
-    const session = await this.authService.getSession(fromNodeHeaders(req.headers || []));
-    if (!session?.user) {
-      throw new UnauthorizedException("User is not logged in");
+  async findOneByActiveOrganizationId(session: Session): Promise<Branding> {
+    const activeOrganizationId = session.activeOrganizationId;
+    if (!activeOrganizationId) {
+      throw new BadRequestException();
     }
-    const activeOrganization = await this.authService.getActiveOrganization(session.user.id);
+    const activeOrganization = await this.organizationsService.getOrganization(activeOrganizationId, session);
     if (!activeOrganization) {
       throw new ForbiddenException("User is not part of any organization");
     }
 
-    return Branding.fromPlain({ logo: activeOrganization.image ?? null });
+    return Branding.fromPlain({ logo: activeOrganization.logo ?? null });
   }
 }

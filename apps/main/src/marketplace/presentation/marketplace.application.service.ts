@@ -1,6 +1,6 @@
 import type { Model } from "mongoose";
+import type { User } from "../../identity/users/domain/user";
 import type { Template } from "../../old-templates/domain/template";
-import type { User } from "../../users/domain/user";
 import { randomUUID } from "node:crypto";
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";

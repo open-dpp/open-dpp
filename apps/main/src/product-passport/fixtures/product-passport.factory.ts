@@ -9,6 +9,7 @@ import { GranularityLevel } from "../../data-modelling/domain/granularity-level"
 import { SectionType } from "../../data-modelling/domain/section-base";
 import { sectionDbPropsFactory } from "../../old-templates/fixtures/section.factory";
 import { DataValue } from "../../product-passport-data/domain/data-value";
+import { UniqueProductIdentifier } from "../../unique-product-identifier/domain/unique.product.identifier";
 
 export class PhoneFactory extends Factory<TemplateDbProps> {
   static ids = {
@@ -401,10 +402,10 @@ export const phoneItemFactory = PhoneItemFactory.define(({ params }) => {
     userId: randomUUID(),
     modelId: randomUUID(),
     uniqueProductIdentifiers: [
-      {
+      UniqueProductIdentifier.loadFromDb({
         uuid: randomUUID(),
         referenceId: id,
-      },
+      }),
     ],
     dataValues: [],
   };

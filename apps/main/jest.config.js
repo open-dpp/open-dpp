@@ -7,7 +7,7 @@ module.exports = {
 
   // Use SWC to transform both TS and JS (ESM from node_modules too)
   transform: {
-    "^.+\\.(t|j)sx?$": [
+    "^.+\\.([tj]sx?|mjs)$": [
       "@swc/jest",
       {
         jsc: {
@@ -21,10 +21,11 @@ module.exports = {
   },
 
   transformIgnorePatterns: [
-    "node_modules/(?!(better-auth|@better-auth|better-call|better-fetch|jose)/)",
+    "node_modules/(?!.*(better-auth|@better-auth|better-call|better-fetch|jose|@noble|rou3|uuid))",
   ],
 
   moduleNameMapper: {
+    "^@open-dpp/env$": "<rootDir>/__mocks__/@open-dpp/env.ts",
     "^@open-dpp/(.*)$": "<rootDir>/../../packages/$1/src",
     "^(\\.{1,2}/.*)\\.js$": "$1",
   },
