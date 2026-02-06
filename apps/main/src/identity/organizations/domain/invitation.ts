@@ -6,12 +6,14 @@ export interface InvitationCreateProps {
   inviterId: string;
   organizationId: string;
   role: MemberRole;
+  status?: string;
 }
 
 export type InvitationDbProps = InvitationCreateProps & {
   id: string;
   createdAt: Date;
   expiresAt: Date;
+  status: string;
 };
 
 export class Invitation {
@@ -20,6 +22,7 @@ export class Invitation {
   public readonly inviterId: string;
   public readonly organizationId: string;
   public readonly role: MemberRole;
+  public readonly status: string;
   public readonly createdAt: Date;
   public readonly expiresAt: Date;
 
@@ -29,6 +32,7 @@ export class Invitation {
     inviterId: string,
     organizationId: string,
     role: MemberRole,
+    status: string,
     createdAt: Date,
     expiresAt: Date,
   ) {
@@ -37,6 +41,7 @@ export class Invitation {
     this.inviterId = inviterId;
     this.organizationId = organizationId;
     this.role = role;
+    this.status = status;
     this.createdAt = createdAt;
     this.expiresAt = expiresAt;
   }
@@ -49,6 +54,7 @@ export class Invitation {
       data.inviterId,
       data.organizationId,
       data.role,
+      data.status || "pending",
       now,
       now,
     );
@@ -61,6 +67,7 @@ export class Invitation {
       data.inviterId,
       data.organizationId,
       data.role,
+      data.status,
       data.createdAt,
       data.expiresAt,
     );

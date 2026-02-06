@@ -9,6 +9,7 @@ export class InvitationMapper {
       organizationId: document.organizationId,
       inviterId: document.inviterId,
       role: document.role,
+      status: document.status,
       createdAt: document.createdAt,
       expiresAt: document.expiresAt,
     };
@@ -22,6 +23,7 @@ export class InvitationMapper {
       organizationId: entity.organizationId,
       inviterId: entity.inviterId,
       role: entity.role,
+      status: entity.status,
       createdAt: entity.createdAt,
       expiresAt: entity.expiresAt,
     } as InvitationSchema;
