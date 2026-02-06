@@ -14,7 +14,9 @@ export interface UserCreateProps {
   banExpires?: Date | null;
 }
 
-export type UserDbProps = UserCreateProps & {
+export type UserDbProps = Omit<UserCreateProps, "firstName" | "lastName"> & {
+  firstName: string | null;
+  lastName: string | null;
   id: string;
   createdAt: Date;
   updatedAt: Date;
