@@ -1,5 +1,6 @@
 import { expect } from "@jest/globals";
 import { Invitation } from "./invitation";
+import { InvitationStatus } from "./invitation-status.enum";
 import { MemberRole } from "./member-role.enum";
 
 describe("invitation", () => {
@@ -51,7 +52,7 @@ describe("invitation", () => {
       role: MemberRole.MEMBER,
       createdAt: now,
       expiresAt: now,
-      status: "pending",
+      status: InvitationStatus.PENDING,
     };
 
     const invitation = Invitation.loadFromDb(dbProps);

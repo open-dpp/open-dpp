@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { HydratedDocument } from "mongoose";
+import { InvitationStatus } from "../../domain/invitation-status.enum";
 import { MemberRole } from "../../domain/member-role.enum";
 
 export type InvitationDocument = HydratedDocument<Invitation>;
@@ -21,8 +22,8 @@ export class Invitation {
   @Prop({ required: true, type: String })
   role: MemberRole;
 
-  @Prop({ required: true })
-  status: string;
+  @Prop({ required: true, enum: InvitationStatus, type: String })
+  status: InvitationStatus;
 
   @Prop({ required: true })
   createdAt: Date;

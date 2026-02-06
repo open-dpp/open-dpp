@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { InvitationStatus } from "./invitation-status.enum";
 import { MemberRole } from "./member-role.enum";
 
 export interface InvitationCreateProps {
@@ -6,7 +7,7 @@ export interface InvitationCreateProps {
   inviterId: string;
   organizationId: string;
   role: MemberRole;
-  status?: string;
+  status?: InvitationStatus;
   ttl?: number;
 }
 
@@ -14,7 +15,7 @@ export type InvitationDbProps = InvitationCreateProps & {
   id: string;
   createdAt: Date;
   expiresAt: Date;
-  status: string;
+  status: InvitationStatus;
 };
 
 export class Invitation {
@@ -23,7 +24,7 @@ export class Invitation {
   public readonly inviterId: string;
   public readonly organizationId: string;
   public readonly role: MemberRole;
-  public readonly status: string;
+  public readonly status: InvitationStatus;
   public readonly createdAt: Date;
   public readonly expiresAt: Date;
 
@@ -33,7 +34,7 @@ export class Invitation {
     inviterId: string,
     organizationId: string,
     role: MemberRole,
-    status: string,
+    status: InvitationStatus,
     createdAt: Date,
     expiresAt: Date,
   ) {
@@ -60,7 +61,7 @@ export class Invitation {
       data.inviterId,
       data.organizationId,
       data.role,
-      data.status || "pending",
+      data.status || InvitationStatus.PENDING,
       now,
       expiresAt,
     );

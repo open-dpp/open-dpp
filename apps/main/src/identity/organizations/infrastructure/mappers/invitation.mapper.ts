@@ -1,4 +1,5 @@
 import { Invitation, InvitationDbProps } from "../../domain/invitation";
+import { InvitationStatus } from "../../domain/invitation-status.enum";
 import { InvitationDocument, Invitation as InvitationSchema } from "../schemas/invitation.schema";
 
 export class InvitationMapper {
@@ -9,7 +10,7 @@ export class InvitationMapper {
       organizationId: document.organizationId,
       inviterId: document.inviterId,
       role: document.role,
-      status: document.status,
+      status: document.status as InvitationStatus,
       createdAt: document.createdAt,
       expiresAt: document.expiresAt,
     };

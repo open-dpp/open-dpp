@@ -1,6 +1,7 @@
 import { expect } from "@jest/globals";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { connect, Connection, Model } from "mongoose";
+import { InvitationStatus } from "../../domain/invitation-status.enum";
 import { MemberRole } from "../../domain/member-role.enum";
 import { Invitation, InvitationSchema } from "./invitation.schema";
 
@@ -37,7 +38,7 @@ describe("invitationSchema", () => {
       inviterId: "user-123",
       organizationId: "org-123",
       role: MemberRole.ADMIN,
-      status: "pending",
+      status: InvitationStatus.PENDING,
       createdAt: new Date(),
       expiresAt: new Date(),
     };

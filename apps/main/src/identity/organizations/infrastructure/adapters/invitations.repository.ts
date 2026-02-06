@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { Invitation } from "../../domain/invitation";
+import { InvitationStatus } from "../../domain/invitation-status.enum";
 import { InvitationMapper } from "../mappers/invitation.mapper";
 import { Invitation as InvitationSchema } from "../schemas/invitation.schema";
 
@@ -21,7 +22,7 @@ export class InvitationsRepository {
 
   async findOneUnexpiredByEmailAndOrganization(email: string, organizationId: string): Promise<Invitation | null> {
     const document = await this.invitationModel
-      .findOne({ email, organizationId, expiresAt: { $gte: new Date() }, status: "pending" });
+      .findOne({ email, organizationId, expiresAt: { $gte: new Date() }, status: InvitationStatus.PENDING });
     if (!document)
       return null;
     return InvitationMapper.toDomain(document);
