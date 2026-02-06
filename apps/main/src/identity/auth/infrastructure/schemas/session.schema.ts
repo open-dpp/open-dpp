@@ -17,10 +17,10 @@ export class Session {
   @Prop({ required: true })
   expiresAt: Date;
 
-  @Prop()
+  @Prop({ type: String })
   ipAddress?: string | null;
 
-  @Prop()
+  @Prop({ type: String })
   userAgent?: string | null;
 
   @Prop({ required: true })
@@ -29,10 +29,10 @@ export class Session {
   @Prop({ required: true })
   updatedAt: Date;
 
-  @Prop()
+  @Prop({ type: String })
   activeOrganizationId: string | null;
 
-  @Prop()
+  @Prop({ type: String })
   activeTeamId: string | null;
 }
 
@@ -40,5 +40,5 @@ export const SessionSchema = SchemaFactory.createForClass(Session);
 export type SessionSchemaType = InferSchemaType<typeof SessionSchema>;
 
 // Indexes
-SessionSchema.index({ token: 1 });
+// Token index is already defined via @Prop({ unique: true })
 SessionSchema.index({ userId: 1 });
