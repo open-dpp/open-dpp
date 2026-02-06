@@ -66,6 +66,7 @@ describe("invitationSchema", () => {
     expect(err.errors.email).toBeDefined();
     expect(err.errors.inviterId).toBeDefined();
     expect(err.errors.organizationId).toBeDefined();
+    expect(err.errors.role).toBeDefined();
   });
 
   it("should fail if role is invalid", async () => {
