@@ -7,6 +7,7 @@ export interface SessionCreateProps {
   userAgent?: string | null;
   activeOrganizationId?: string | null;
   activeTeamId?: string | null;
+  expiresAt?: Date;
 }
 
 export type SessionDbProps = SessionCreateProps & {
@@ -62,11 +63,14 @@ export class Session {
 
   public static create(data: SessionCreateProps) {
     const now = new Date();
+    // Default to 7 days if not provided
+    const defaultExpiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
     return new Session(
       generate24CharId(),
       data.userId,
       data.token,
-      now,
+      data.expiresAt ?? defaultExpiresAt,
       now,
       now,
       data.activeOrganizationId,

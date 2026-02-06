@@ -23,7 +23,38 @@ describe("session", () => {
     expect(session.activeTeamId).toBe(props.activeTeamId);
     expect(session.createdAt).toBeInstanceOf(Date);
     expect(session.updatedAt).toBeInstanceOf(Date);
+    expect(session.createdAt).toBeInstanceOf(Date);
+    expect(session.updatedAt).toBeInstanceOf(Date);
     expect(session.expiresAt).toBeInstanceOf(Date);
+    expect(session.expiresAt.getTime()).toBeGreaterThan(session.createdAt.getTime());
+  });
+
+  it("should create a session with default expiration of 7 days", () => {
+    const props = {
+      userId: "user-123",
+      token: "valid-token",
+    };
+
+    const session = Session.create(props);
+    const now = new Date();
+    const expectedExpiry = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    // Allow for small time difference
+    const diff = Math.abs(session.expiresAt.getTime() - expectedExpiry.getTime());
+    expect(diff).toBeLessThan(1000);
+  });
+
+  it("should create a session with provided expiration", () => {
+    const futureDate = new Date(Date.now() + 100000);
+    const props = {
+      userId: "user-123",
+      token: "valid-token",
+      expiresAt: futureDate,
+    };
+
+    const session = Session.create(props);
+
+    expect(session.expiresAt).toEqual(futureDate);
   });
 
   it("should create a session without optional properties", () => {
