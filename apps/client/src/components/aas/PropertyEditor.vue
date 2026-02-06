@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { PropertyModificationDto } from "@open-dpp/dto";
 import type { AasEditorPath, PropertyEditorProps } from "../../composables/aas-drawer.ts";
+import { PropertyModificationSchema } from "@open-dpp/dto";
 
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
@@ -14,7 +15,6 @@ const props = defineProps<{
   path: AasEditorPath;
   data: PropertyEditorProps;
   callback: (data: PropertyModificationDto) => Promise<void>;
-  asColumn: boolean;
 }>();
 
 const formSchema = z.object({
@@ -34,7 +34,7 @@ const showErrors = computed(() => {
 });
 
 const submit = handleSubmit(async (data) => {
-  await props.callback({ ...data });
+  await props.callback(PropertyModificationSchema.parse({ ...data }));
 });
 
 defineExpose<{
@@ -47,11 +47,10 @@ defineExpose<{
 <template>
   <form class="flex flex-col gap-4 p-2">
     <PropertyForm
-      :as-column="props.asColumn"
       :data="props.data"
       :show-errors="showErrors"
       :errors="errors"
-      :editor-mode="EditorMode.CREATE"
+      :editor-mode="EditorMode.EDIT"
     />
   </form>
 </template>

@@ -17,7 +17,6 @@ const props = defineProps<{
   path: AasEditorPath;
   data: PropertyCreateEditorProps;
   callback: (data: PropertyRequestDto) => Promise<void>;
-  asColumn: boolean;
 }>();
 
 const propertyFormSchema = z.object({
@@ -51,7 +50,6 @@ defineExpose<{
 <template>
   <form class="flex flex-col gap-4 p-2">
     <PropertyForm
-      :as-column="props.asColumn"
       :data="props.data"
       :show-errors="showErrors"
       :errors="errors"

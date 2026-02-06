@@ -5,18 +5,18 @@ import {
   AasSubmodelElements,
   DataTypeDef,
   Language,
-  PropertyJsonSchema,
   SubmodelElementListJsonSchema,
   SubmodelElementSchema,
 } from "@open-dpp/dto";
 import { waitFor } from "@testing-library/vue";
 import { HttpStatusCode } from "axios";
 import { expect, it, vi } from "vitest";
-import PropertyCreateEditor from "../components/aas/PropertyCreateEditor.vue";
-import PropertyEditor from "../components/aas/PropertyEditor.vue";
+import ColumnCreateEditor from "../components/aas/ColumnCreateEditor.vue";
+import ColumnEditor from "../components/aas/ColumnEditor.vue";
 import SubmodelElementListEditor from "../components/aas/SubmodelElementListEditor.vue";
 import apiClient from "../lib/api-client.ts";
 import { HTTPCode } from "../stores/http-codes.ts";
+import { generatedErrorHandlingStoreMock } from "../testing-utils/error-handling-store-mock.ts";
 import { useAasDrawer } from "./aas-drawer.ts";
 import { useAasTableExtension } from "./aas-table-extension.ts";
 
@@ -57,10 +57,7 @@ describe("aasTableExtension composable", () => {
   });
 
   const translate = (key: string) => key;
-  const errorHandlingStore = {
-    logErrorWithNotification: vi.fn(),
-    withErrorHandling: vi.fn(),
-  };
+  const errorHandlingStore = generatedErrorHandlingStoreMock();
 
   const aasId = "1";
   const cols = [
@@ -185,12 +182,12 @@ describe("aasTableExtension composable", () => {
   it.each([
     {
       label: "aasEditor.textField",
-      component: PropertyCreateEditor,
+      component: ColumnCreateEditor,
       data: { valueType: DataTypeDef.String },
     },
     {
       label: "aasEditor.numberField",
-      component: PropertyCreateEditor,
+      component: ColumnCreateEditor,
       data: { valueType: DataTypeDef.Double },
     },
   ])("should add $label column", async ({ label, component, data }) => {
@@ -219,9 +216,9 @@ describe("aasTableExtension composable", () => {
     expect(editorVNode.value!.props.path).toEqual(pathToList);
     expect(editorVNode.value!.component).toEqual(component);
     expect(editorVNode.value!.props.data).toEqual({
+      modelType: AasSubmodelElements.Property,
       ...data,
     });
-    expect(editorVNode.value!.props.asColumn).toBeTruthy();
 
     const columnData = { idShort: "column 3", ...data };
 
@@ -314,9 +311,8 @@ describe("aasTableExtension composable", () => {
     editMenuItem.command!({} as MenuItemCommandEvent);
     expect(drawerVisible.value).toBeTruthy();
     expect(editorVNode.value!.props.path).toEqual(pathToList);
-    expect(editorVNode.value!.component).toEqual(PropertyEditor);
-    expect(editorVNode.value!.props.data).toEqual(PropertyJsonSchema.parse(cols[1]));
-    expect(editorVNode.value!.props.asColumn).toBeTruthy();
+    expect(editorVNode.value!.component).toEqual(ColumnEditor);
+    expect(editorVNode.value!.props.data).toEqual(SubmodelElementSchema.parse(cols[1]));
 
     const columnData = { ...cols[1], displayName: [{ language: "en", text: "Modified Amount in percentage" }] };
 

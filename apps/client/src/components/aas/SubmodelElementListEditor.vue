@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import type { AasNamespace } from "@open-dpp/api-client";
-import type {
-  SubmodelElementModificationDto,
-} from "@open-dpp/dto";
+import type { SubmodelElementModificationDto } from "@open-dpp/dto";
 import type {
   AasEditorPath,
   EditorType,
@@ -164,16 +162,16 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
           />
           <span>{{ col.label }}</span>
         </template>
-        <template #body="{ data, field }">
-          <span v-if="typeof field === 'string' && data[field] != null">{{
-            formatCellValue(data[field], col)
+        <template #body="{ data: cellData, field }">
+          <span v-if="typeof field === 'string' && cellData[field] != null">{{
+            formatCellValue(cellData[field], col)
           }}</span>
           <InputText v-else autofocus fluid />
         </template>
-        <template #editor="{ data, field, index }">
+        <template #editor="{ data: editorData, field, index: rowIndex }">
           <PropertyValue
-            :id="`${index}-${field}`"
-            v-model="data[field]"
+            :id="`${rowIndex}-${field}`"
+            v-model="editorData[field]"
             :value-type="col.plain.valueType"
           />
         </template>

@@ -79,7 +79,7 @@ export class AasNamespace {
   }
 
   public async addColumnToSubmodelElementList(id: string, submodelId: string, idShortPath: string, data: SubmodelElementRequestDto, params: TableModificationParamsDto) {
-    return this.axiosInstance.post<SubmodelElementResponseDto>(
+    return this.axiosInstance.post<SubmodelElementListResponseDto>(
       `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/columns`,
       data,
       { params },
@@ -87,7 +87,7 @@ export class AasNamespace {
   }
 
   public async modifyColumnOfSubmodelElementList(id: string, submodelId: string, idShortPath: string, idShortOfColumn: string, data: SubmodelElementModificationDto) {
-    return this.axiosInstance.patch<SubmodelElementResponseDto>(
+    return this.axiosInstance.patch<SubmodelElementListResponseDto>(
       `${this.aasEndpoint}/${id}/submodels/${submodelId}/submodel-elements/${idShortPath}/columns/${idShortOfColumn}`,
       data,
     )

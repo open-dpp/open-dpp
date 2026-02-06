@@ -191,7 +191,7 @@ export function createAasPaths(tag: string) {
           },
         },
         responses: {
-          [HTTPCode.OK]: {
+          [HTTPCode.CREATED]: {
             content: {
               [ContentType.JSON]: { schema: SubmodelElementSchema },
             },
@@ -236,7 +236,7 @@ export function createAasPaths(tag: string) {
         summary: `Add row to Submodel Element List with specified idShortPath.`,
         parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, PositionQueryParamSchema],
         responses: {
-          [HTTPCode.OK]: {
+          [HTTPCode.CREATED]: {
             content: {
               [ContentType.JSON]: { schema: SubmodelElementListJsonSchema },
             },
@@ -245,7 +245,7 @@ export function createAasPaths(tag: string) {
       },
     },
     [`${tag}${ApiDeleteRowPath}`]: {
-      post: {
+      delete: {
         tags: [tag],
         summary: `Deletes row with specified idShort from Submodel Element List with specified idShortPath.`,
         parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, RowParamSchema],

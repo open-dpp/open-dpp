@@ -93,10 +93,10 @@ export function useAasEditor({
   ): Promise<PagingResult> => {
     loading.value = true;
     const response = await aasNamespace.getSubmodels(id, pagingParams);
-    if (response.status === 200) {
+    if (response.status === HTTPCode.OK) {
       submodels.value = convertSubmodelsToTree(SubmodelJsonSchema.array().parse(response.data.result));
-      loading.value = false;
     }
+    loading.value = false;
     return response.data;
   };
 
@@ -131,30 +131,44 @@ export function useAasEditor({
   }
 
   async function modifySubmodel(path: AasEditorPath, data: SubmodelModificationDto) {
-    const response = await aasNamespace.modifySubmodel(id, path.submodelId!, data);
-    await finalizeApiRequest(response);
+    if (path.submodelId) {
+      const response = await aasNamespace.modifySubmodel(
+        id,
+        path.submodelId,
+        data,
+      );
+      await finalizeApiRequest(response);
+    }
   }
 
   async function modifySubmodelElement(path: AasEditorPath, data: SubmodelModificationDto) {
-    const response = await aasNamespace.modifySubmodelElement(id, path.submodelId!, path.idShortPath!, data);
-    await finalizeApiRequest(response);
+    if (path.submodelId && path.idShortPath) {
+      const response = await aasNamespace.modifySubmodelElement(
+        id,
+        path.submodelId,
+        path.idShortPath,
+        data,
+      );
+      await finalizeApiRequest(response);
+    }
   }
 
   function getEditCallback(node: TreeNode, title: string) {
     const errorMessage = translate(`${translatePrefix}.error`, { method: title });
     if (node.data.modelType === KeyTypes.Submodel) {
-      return (data: any) => errorHandlingStore.withErrorHandling(
-        modifySubmodel(toRaw(node.data.path), data),
+      return (data: any) => errorHandlingStore.withErrorHandlingAsync(
+        async () => modifySubmodel(toRaw(node.data.path), data),
         { message: errorMessage },
       );
     }
     else if (AasSubmodelElementsEnum.safeParse(node.data.modelType).success) {
-      return (data: any) => errorHandlingStore.withErrorHandling(
-        modifySubmodelElement(toRaw(node.data.path), data),
-        { message: errorMessage },
-      );
+      return (data: any) =>
+        errorHandlingStore.withErrorHandlingAsync(
+          async () => modifySubmodelElement(toRaw(node.data.path), data),
+          { message: errorMessage },
+        );
     }
-    return undefined;
+    return async (_data: any) => {};
   }
 
   function selectTreeNode(key: string) {
@@ -376,8 +390,8 @@ export function useAasEditor({
         selectTreeNode(key);
       }
     };
-    await errorHandlingStore.withErrorHandling(
-      call(),
+    await errorHandlingStore.withErrorHandlingAsync(
+      call,
       { message: translate(`${translatePrefix}.error`, {
         method: translate(`${translatePrefix}.creation`, { formItem: translate(`${translatePrefix}.${translateKey}`) }),
       }) },

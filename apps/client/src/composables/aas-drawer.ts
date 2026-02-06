@@ -1,18 +1,23 @@
-import type { FileResponseDto, KeyTypes, PropertyResponseDto, SubmodelElementCollectionResponseDto, SubmodelElementListResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
+import type { FileResponseDto, KeyTypes, PropertyResponseDto, SubmodelElementCollectionResponseDto, SubmodelElementListResponseDto, SubmodelElementResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
 import type { Component, ComputedRef, Ref } from "vue";
 import {
 
   KeyTypes as AasKeyTypes,
+  AasSubmodelElementsEnum,
+
   FileJsonSchema,
   PropertyJsonSchema,
   SubmodelElementCollectionJsonSchema,
   SubmodelElementListJsonSchema,
+  SubmodelElementSchema,
   SubmodelJsonSchema,
   ValueTypeSchema,
 
 } from "@open-dpp/dto";
 import { computed, ref } from "vue";
 import { z } from "zod";
+import ColumnCreateEditor from "../components/aas/ColumnCreateEditor.vue";
+import ColumnEditor from "../components/aas/ColumnEditor.vue";
 import FileCreateEditor from "../components/aas/FileCreateEditor.vue";
 import FileEditor from "../components/aas/FileEditor.vue";
 import PropertyCreateEditor from "../components/aas/PropertyCreateEditor.vue";
@@ -41,6 +46,7 @@ export type SubmodelElementListCreateEditorProps = z.infer<
 export type FileCreateEditorProps = z.infer<
   typeof SubmodelBaseCreatePropsSchema
 >;
+export type FileEditorProps = FileResponseDto;
 
 const PropertyCreateEditorPropsSchema = z.object({
   valueType: ValueTypeSchema,
@@ -49,10 +55,17 @@ export type PropertyEditorProps = PropertyResponseDto;
 export type PropertyCreateEditorProps = z.infer<
   typeof PropertyCreateEditorPropsSchema
 >;
-export type FileEditorProps = FileResponseDto;
+
 export type SubmodelElementCollectionEditorProps
   = SubmodelElementCollectionResponseDto;
 export type SubmodelElementListEditorProps = SubmodelElementListResponseDto;
+
+export const ColumnCreateEditorPropsSchema = z.object({
+  modelType: AasSubmodelElementsEnum,
+  valueType: ValueTypeSchema.optional(),
+});
+export type ColumnCreateEditorProps = z.infer<typeof ColumnCreateEditorPropsSchema>;
+export type ColumnEditorProps = SubmodelElementResponseDto;
 
 export const EditorMode = {
   CREATE: "CREATE",
@@ -60,6 +73,7 @@ export const EditorMode = {
 } as const;
 export const EditorModeEnum = z.enum(EditorMode);
 export type EditorModeType = z.infer<typeof EditorModeEnum>;
+export const ColumnEditorKey = "Column";
 
 interface EditorDataMap {
   [EditorMode.CREATE]: {
@@ -68,6 +82,7 @@ interface EditorDataMap {
     [AasKeyTypes.SubmodelElementCollection]: SubmodelElementCollectionCreateEditorProps;
     [AasKeyTypes.SubmodelElementList]: SubmodelElementListCreateEditorProps;
     [AasKeyTypes.File]: FileCreateEditorProps;
+    [ColumnEditorKey]: ColumnCreateEditorProps;
   };
   [EditorMode.EDIT]: {
     [AasKeyTypes.Submodel]: SubmodelEditorProps;
@@ -75,6 +90,7 @@ interface EditorDataMap {
     [AasKeyTypes.SubmodelElementCollection]: SubmodelElementCollectionEditorProps;
     [AasKeyTypes.SubmodelElementList]: SubmodelElementListEditorProps;
     [AasKeyTypes.File]: FileEditorProps;
+    [ColumnEditorKey]: ColumnEditorProps;
   };
 }
 
@@ -83,7 +99,8 @@ export type EditorType
     | typeof AasKeyTypes.Property
     | typeof AasKeyTypes.File
     | typeof AasKeyTypes.SubmodelElementCollection
-    | typeof AasKeyTypes.SubmodelElementList;
+    | typeof AasKeyTypes.SubmodelElementList
+    | "Column";
 
 export interface AasEditorPath {
   submodelId?: string;
@@ -101,14 +118,13 @@ export type OpenDrawerCallback<
   title: string;
   mode: M;
   path: AasEditorPath;
-  asColumn?: boolean;
   callback?: callbackType;
 }) => void;
 interface AasDrawerProps {
   onHideDrawer: () => void;
 }
 
-type EditorVNodeType = { component: Component | undefined; props: { path: AasEditorPath; data: any | null; callback: callbackType | null; asColumn?: boolean } } | null;
+type EditorVNodeType = { component: Component | undefined; props: { path: AasEditorPath; data: any | null; callback: callbackType | null } } | null;
 
 export interface IAasDrawer {
   openDrawer: OpenDrawerCallback<EditorType, "CREATE" | "EDIT">;
@@ -126,7 +142,6 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
   const activeData = ref<any | null>(null);
   const activePath = ref<AasEditorPath>({ idShortPath: "" });
   const activeCallback = ref<callbackType | null>(null);
-  const activeAsColumn = ref<boolean>(false);
 
   const openDrawer: OpenDrawerCallback<EditorType, EditorModeType> = ({
     type,
@@ -135,7 +150,6 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
     mode,
     path,
     callback,
-    asColumn = false,
   }) => {
     activeEditor.value = type;
     activeData.value = structuredClone(data);
@@ -144,7 +158,6 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
     activeCallback.value = callback ?? null;
     drawerHeader.value = title;
     drawerVisible.value = true;
-    activeAsColumn.value = asColumn;
   };
 
   const Editors: Record<
@@ -172,6 +185,10 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
         component: FileCreateEditor,
         parse: data => SubmodelBaseCreatePropsSchema.parse(data),
       },
+      [ColumnEditorKey]: {
+        component: ColumnCreateEditor,
+        parse: data => ColumnCreateEditorPropsSchema.parse(data),
+      },
     },
     [EditorMode.EDIT]: {
       [AasKeyTypes.Submodel]: {
@@ -194,6 +211,10 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
         component: FileEditor,
         parse: data => FileJsonSchema.parse(data),
       },
+      [ColumnEditorKey]: {
+        component: ColumnEditor,
+        parse: data => SubmodelElementSchema.parse(data),
+      },
     },
   };
 
@@ -212,7 +233,6 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
         path: activePath.value,
         data: foundEditor.parse(activeData.value),
         callback: activeCallback.value,
-        asColumn: activeAsColumn.value,
       },
     };
   });

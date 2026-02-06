@@ -24,6 +24,7 @@ import SubmodelElementListCreateEditor from "../components/aas/SubmodelElementLi
 import SubmodelElementListEditor from "../components/aas/SubmodelElementListEditor.vue";
 import apiClient from "../lib/api-client.ts";
 import { HTTPCode } from "../stores/http-codes.ts";
+import { generatedErrorHandlingStoreMock } from "../testing-utils/error-handling-store-mock.ts";
 import { useAasEditor } from "./aas-editor.ts";
 
 const mocks = vi.hoisted(() => {
@@ -61,10 +62,7 @@ describe("aasEditor composable", () => {
   });
   const translate = (key: string) => key;
   const changeQueryParams = vi.fn();
-  const errorHandlingStore = {
-    logErrorWithNotification: vi.fn(),
-    withErrorHandling: vi.fn(),
-  };
+  const errorHandlingStore = generatedErrorHandlingStoreMock();
 
   const aasId = "1";
   const iriDomain = `https://open-dpp.de/${uuid4()}`;

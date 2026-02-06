@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import type { FormErrors } from "vee-validate";
-import type {
-  EditorModeType,
-} from "../../composables/aas-drawer.ts";
+import type { EditorModeType } from "../../composables/aas-drawer.ts";
 
 import { Message } from "primevue";
 import { useField } from "vee-validate";
@@ -22,7 +20,9 @@ const { t } = useI18n();
 
 const { value, errorMessage } = useField<string | undefined | null>("value");
 
-const { value: contentType } = useField<string | undefined | null>("contentType");
+const { value: contentType } = useField<string | undefined | null>(
+  "contentType",
+);
 
 function changeContentType(newContentType: string | undefined | null) {
   contentType.value = newContentType;
@@ -39,7 +39,10 @@ function changeContentType(newContentType: string | undefined | null) {
     <div class="grid lg:grid-cols-3 grid-cols-1 gap-2">
       <div class="flex flex-col gap-2">
         <FileField
-          id="file" v-model="value" :label="t('aasEditor.file')" @change-content-type="changeContentType"
+          id="file"
+          v-model="value"
+          :label="t('aasEditor.file')"
+          @change-content-type="changeContentType"
         />
         <Message size="small" severity="error" variant="simple">
           {{ errorMessage }}
