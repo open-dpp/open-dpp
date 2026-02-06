@@ -30,7 +30,7 @@ export class OrganizationsRepository {
 
   async create(organization: Organization, headers: Record<string, string>): Promise<BetterAuthOrganizationSchema | null> {
     try {
-      return (this.auth.api as any).createOrganization({
+      const result = await (this.auth.api as any).createOrganization({
         headers,
         body: {
           name: organization.name,
@@ -39,6 +39,7 @@ export class OrganizationsRepository {
           metadata: JSON.stringify(organization.metadata || {}),
         },
       });
+      return result;
     }
     catch {
       return null;
