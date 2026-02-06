@@ -48,6 +48,25 @@ describe("memberSchema", () => {
     expect(savedMember.role).toBe(memberData.role);
   });
 
+  it("should create a member document with string userId", async () => {
+    const memberData = {
+      _id: "member-456",
+      userId: "string-user-id", // String ID
+      organizationId: new Types.ObjectId(),
+      role: MemberRole.MEMBER,
+      createdAt: new Date(),
+    };
+
+    const member = new MemberModel(memberData);
+    const savedMember = await member.save();
+
+    expect(savedMember._id).toBe(memberData._id);
+    expect(savedMember.userId).toBe(memberData.userId);
+    expect(typeof savedMember.userId).toBe("string");
+    expect(savedMember.organizationId).toEqual(memberData.organizationId);
+    expect(savedMember.role).toBe(memberData.role);
+  });
+
   it("should validate required fields", async () => {
     const member = new MemberModel({});
 

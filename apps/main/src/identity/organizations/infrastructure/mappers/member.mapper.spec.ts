@@ -36,6 +36,22 @@ describe("memberMapper", () => {
     expect(persistence.createdAt).toBe(validDomainMember.createdAt);
   });
 
+  it("should map string userId as string", () => {
+    const stringUserId = "string-user-id";
+    const domainMember = Member.loadFromDb({
+      id: "member-123",
+      organizationId: orgId.toString(),
+      userId: stringUserId, // String ID
+      role: MemberRole.ADMIN,
+      createdAt: now,
+    });
+
+    const persistence = MemberMapper.toPersistence(domainMember);
+
+    expect(persistence.userId).toBe(stringUserId);
+    expect(typeof persistence.userId).toBe("string");
+  });
+
   it("should map from persistence to domain", () => {
     const domain = MemberMapper.toDomain(validMemberDocument);
 

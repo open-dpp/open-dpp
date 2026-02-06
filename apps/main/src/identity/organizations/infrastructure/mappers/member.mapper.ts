@@ -16,13 +16,17 @@ export class MemberMapper {
   }
 
   static toPersistence(entity: Member): MemberSchema {
+    const userId = Types.ObjectId.isValid(entity.userId)
+      ? new Types.ObjectId(entity.userId)
+      : entity.userId;
+
     return {
       _id: entity.id,
       // Convert string IDs to ObjectId for storage
       organizationId: new Types.ObjectId(entity.organizationId),
-      userId: new Types.ObjectId(entity.userId),
+      userId,
       role: entity.role,
       createdAt: entity.createdAt,
-    } as unknown as MemberSchema;
+    };
   }
 }

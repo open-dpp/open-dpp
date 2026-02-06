@@ -10,8 +10,8 @@ export class Member {
   _id: string;
 
   // Better Auth stores userId as ObjectId
-  @Prop({ type: MongooseSchema.Types.ObjectId, required: true })
-  userId: Types.ObjectId;
+  @Prop({ type: MongooseSchema.Types.Mixed, required: true })
+  userId: Types.ObjectId | string;
 
   // Better Auth stores organizationId as ObjectId
   @Prop({ type: MongooseSchema.Types.ObjectId, required: true })
