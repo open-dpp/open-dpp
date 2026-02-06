@@ -29,9 +29,10 @@ import {
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
-import logo from "../../assets/logo-with-text.svg";
+import openDppLogo from "../../assets/logo-with-text.svg";
 import { authClient } from "../../auth-client.ts";
 import { useIndexStore } from "../../stores";
+import { useBrandingStore } from "../../stores/branding.ts";
 import { useLayoutStore } from "../../stores/layout";
 import Breadcrumbs from "../Breadcrumbs.vue";
 import NotificationHandler from "../notifications/NotificationHandler.vue";
@@ -43,6 +44,8 @@ const router = useRouter();
 
 const indexStore = useIndexStore();
 const layoutStore = useLayoutStore();
+const brandingStore = useBrandingStore();
+const logo = computed(() => brandingStore.logo ? brandingStore.logo.url : openDppLogo);
 
 const { t } = useI18n();
 
@@ -113,7 +116,6 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
     {
       name: "Organization",
       items: [
-
         {
           name: t("members.members"),
           to: `/organizations/${indexStore.selectedOrganization}/members`,
@@ -158,25 +160,23 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
     },
   ];
   if (role.value === "admin") {
-    navigationGroups.push(
-      {
-        name: t("organizations.admin.title"),
-        items: [
-          {
-            name: t("organizations.admin.organizations"),
-            to: "/admin/organizations",
-            icon: BuildingOfficeIcon,
-            show: () => role.value === "admin",
-          },
-          {
-            name: t("organizations.admin.users"),
-            to: "/admin/users",
-            icon: UserGroupIcon,
-            show: () => role.value === "admin",
-          },
-        ],
-      },
-    );
+    navigationGroups.push({
+      name: t("organizations.admin.title"),
+      items: [
+        {
+          name: t("organizations.admin.organizations"),
+          to: "/admin/organizations",
+          icon: BuildingOfficeIcon,
+          show: () => role.value === "admin",
+        },
+        {
+          name: t("organizations.admin.users"),
+          to: "/admin/users",
+          icon: UserGroupIcon,
+          show: () => role.value === "admin",
+        },
+      ],
+    });
   }
   return navigationGroups
     .map((group) => {
@@ -272,8 +272,8 @@ const sidebarOpen = ref(false);
                 class="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4"
                 data-cy="sidebar"
               >
-                <div class="flex h-16 shrink-0 items-center">
-                  <img :src="logo" alt="open-dpp GmbH" class="h-8 w-auto">
+                <div class="flex p-2 shrink-0 items-center">
+                  <img :src="logo" alt="open-dpp GmbH" class="h-20">
                 </div>
                 <nav class="flex flex-1 flex-col">
                   <ul class="flex flex-1 flex-col gap-y-7" role="list">
@@ -286,7 +286,8 @@ const sidebarOpen = ref(false);
                       <ul class="-mx-2 space-y-1" role="list">
                         <li v-for="item in group.items" :key="item.name">
                           <router-link
-                            class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6" :class="[
+                            class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6"
+                            :class="[
                               item.to === route.path
                                 ? 'bg-gray-50 text-gray-700'
                                 : 'text-gray-700 hover:bg-gray-50 hover:text-black',
@@ -295,7 +296,8 @@ const sidebarOpen = ref(false);
                           >
                             <component
                               :is="item.icon"
-                              class="h-6 w-6 shrink-0" :class="[
+                              class="h-6 w-6 shrink-0"
+                              :class="[
                                 item.to === route.path
                                   ? 'text-black'
                                   : 'text-gray-400 group-hover:text-black',
@@ -319,7 +321,8 @@ const sidebarOpen = ref(false);
                           :key="item.name"
                         >
                           <router-link
-                            class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6" :class="[
+                            class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6"
+                            :class="[
                               item.path === route.path
                                 ? 'bg-gray-50 text-black'
                                 : 'text-gray-700 hover:bg-gray-50 hover:text-black',
@@ -327,14 +330,13 @@ const sidebarOpen = ref(false);
                             :to="item.path"
                           >
                             <span
-                              class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border bg-white text-[0.625rem] font-medium" :class="[
+                              class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border bg-white text-[0.625rem] font-medium"
+                              :class="[
                                 item.path === route.path
                                   ? 'border-black text-black'
                                   : 'border-gray-200 text-gray-400 group-hover:border-black group-hover:text-black',
                               ]"
-                            >{{
-                              item.name
-                            }}</span>
+                            >{{ item.name }}</span>
                             <span class="truncate">{{ item.name }}</span>
                           </router-link>
                         </li>
@@ -357,26 +359,25 @@ const sidebarOpen = ref(false);
       <div
         class="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6 pb-4"
       >
-        <div class="flex h-16 shrink-0 items-center">
+        <div class="flex p-2 shrink-0 items-start">
           <img
             :src="logo"
             alt="open-dpp GmbH"
-            class="h-8 w-auto hover:cursor-pointer"
+            class="h-20 w-auto hover:cursor-pointer"
             @click="router.push('/')"
           >
         </div>
         <nav class="flex flex-1 flex-col">
           <ul class="flex flex-1 flex-col gap-y-7" role="list">
             <li v-for="group in navigation" :key="group.name">
-              <div
-                class="text-xs font-semibold leading-6 text-gray-400"
-              >
+              <div class="text-xs font-semibold leading-6 text-gray-400">
                 {{ group.name }}
               </div>
               <ul class="-mx-2 space-y-1" role="list">
                 <li v-for="item in group.items" :key="item.name">
                   <router-link
-                    class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6" :class="[
+                    class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6"
+                    :class="[
                       item.to === route.path
                         ? 'bg-gray-50 text-black'
                         : 'text-gray-700 hover:bg-gray-50 hover:text-black',
@@ -385,7 +386,8 @@ const sidebarOpen = ref(false);
                   >
                     <component
                       :is="item.icon"
-                      class="h-6 w-6 shrink-0" :class="[
+                      class="h-6 w-6 shrink-0"
+                      :class="[
                         item.to === route.path
                           ? 'text-black'
                           : 'text-gray-400 group-hover:text-black',
@@ -407,7 +409,8 @@ const sidebarOpen = ref(false);
                   :key="item.name"
                 >
                   <router-link
-                    class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6" :class="[
+                    class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6"
+                    :class="[
                       item.path === route.path
                         ? 'bg-gray-50 text-black'
                         : 'text-gray-700 hover:bg-gray-50 hover:text-black',
@@ -415,7 +418,8 @@ const sidebarOpen = ref(false);
                     :to="item.path"
                   >
                     <span
-                      class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border bg-white text-[0.625rem] font-medium" :class="[
+                      class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border bg-white text-[0.625rem] font-medium"
+                      :class="[
                         item.path === route.path
                           ? 'border-black text-black'
                           : 'border-gray-200 text-gray-400 group-hover:border-black group-hover:text-black',
@@ -484,9 +488,8 @@ const sidebarOpen = ref(false);
                     v-slot="{ active }"
                   >
                     <router-link
-                      class="block px-3 py-1 text-sm leading-6 text-gray-900" :class="[
-                        active ? 'bg-gray-50' : '',
-                      ]"
+                      class="block px-3 py-1 text-sm leading-6 text-gray-900"
+                      :class="[active ? 'bg-gray-50' : '']"
                       :to="item.to"
                     >
                       {{ item.name }}

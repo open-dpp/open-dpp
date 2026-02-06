@@ -45,7 +45,7 @@
     "@open-dpp/env": "workspace:*",
     "@open-dpp/exception": "workspace:*",
     "@open-dpp/permission": "workspace:*",
-    "@rekog/mcp-nest": "^1.9.2",
+    "@rekog/mcp-nest": "^1.9.3",
     "axios": "^1.13.2",
     "better-auth": "^1.4.8",
     "body-parser": "^2.2.1",
@@ -65,12 +65,16 @@
     "mjml": "^4.18.0",
     "mjml-core": "^4.18.0",
     "mongodb": "^7.0.0",
+    "mongoose": "^9.1.6",
+    "multer": "^2.0.2",
     "nodemailer": "^7.0.12",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+    "semver": "^7.7.3",
     "sharp": "^0.34.5",
     "socket.io": "^4.8.2",
     "socket.io-client": "^4.8.2",
+    "uuid": "^13.0.0",
     "zod": "^4.3.6",
     "zod-openapi": "^5.4.5"
   },
@@ -111,7 +115,6 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.54.0",
-    "uuid": "^13.0.0"
+    "typescript-eslint": "^8.54.0"
   }
 }

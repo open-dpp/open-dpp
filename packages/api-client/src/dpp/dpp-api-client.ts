@@ -1,6 +1,7 @@
 import type { AxiosInstance } from 'axios'
 import type { ApiClientOptions, IApiClient } from '../api-client'
 import { createAxiosClient } from '../api-client'
+import { BrandingNamespace } from './branding/branding.namespace'
 import { AasIntegrationNamespace } from './integrations/aas-integration.namespace'
 import { ItemsNamespace } from './items/items.namespace'
 import { ModelsNamespace } from './models/models.namespace'
@@ -20,6 +21,7 @@ export class DppApiClient implements IApiClient {
   public oldTemplates!: OldTemplatesNamespace
   public templates!: TemplatesNamespace
   public passports!: PassportNamespace
+  public branding!: BrandingNamespace
 
   public uniqueProductIdentifiers!: UniqueProductIdentifiersNamespace
   public productPassports!: ProductPassportsNamespace
@@ -66,6 +68,7 @@ export class DppApiClient implements IApiClient {
       this.axiosInstance,
       this.options.activeOrganizationId,
     )
+    this.branding = new BrandingNamespace(this.axiosInstance)
     this.aasIntegration = new AasIntegrationNamespace(
       this.axiosInstance,
       this.options.activeOrganizationId,
