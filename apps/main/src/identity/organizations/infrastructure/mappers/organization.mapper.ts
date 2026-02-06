@@ -8,8 +8,8 @@ export class OrganizationMapper {
       id: betterAuthOrganization.id,
       name: betterAuthOrganization.name,
       slug: betterAuthOrganization.slug,
-      logo: betterAuthOrganization.logo,
-      metadata: betterAuthOrganization.metadata,
+      logo: betterAuthOrganization.logo ?? null,
+      metadata: betterAuthOrganization.metadata ?? {},
       createdAt: betterAuthOrganization.createdAt,
     };
     return Organization.loadFromDb(props);
