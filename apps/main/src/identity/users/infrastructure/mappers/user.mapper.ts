@@ -1,10 +1,11 @@
+import { ObjectId } from "mongodb";
 import { User, UserDbProps } from "../../domain/user";
 import { UserDocument, User as UserSchema } from "../schemas/user.schema";
 
 export class UserMapper {
   static toDomain(document: UserDocument): User {
     const props: UserDbProps = {
-      id: document._id,
+      id: document._id.toString(),
       email: document.email,
       firstName: document.firstName,
       lastName: document.lastName,
@@ -23,7 +24,7 @@ export class UserMapper {
 
   static toPersistence(entity: User): UserSchema {
     return {
-      _id: entity.id,
+      _id: new ObjectId(entity.id),
       email: entity.email,
       firstName: entity.firstName ?? undefined,
       lastName: entity.lastName ?? undefined,

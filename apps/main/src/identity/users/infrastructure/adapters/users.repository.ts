@@ -2,6 +2,7 @@ import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
 import { Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
@@ -37,11 +38,7 @@ export class UsersRepository {
   }
 
   async findOneById(id: string): Promise<User | null> {
-    // Workaround: findById, findOne, and $eq queries all fail despite find() returning the document.
-    // This is likely due to how Mongoose handles the string _id type in queries.
-    // Using find() + filter approach as the reliable workaround.
-    const allUsers = await this.userModel.find().exec();
-    const document = allUsers.find(u => u._id === id);
+    const document = await this.userModel.findOne({ _id: new ObjectId(id) });
     if (!document)
       return null;
     return UserMapper.toDomain(document);

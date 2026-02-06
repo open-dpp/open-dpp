@@ -2,6 +2,7 @@ import type { Auth } from "better-auth";
 import { Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Organization as BetterAuthOrganizationSchema } from "better-auth/plugins/organization";
+import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { AUTH } from "../../../auth/auth.provider";
 import { Organization, OrganizationCreateProps } from "../../domain/organization";
@@ -66,11 +67,7 @@ export class OrganizationsRepository {
   }
 
   async findOneById(id: string): Promise<Organization | null> {
-    // Workaround: findById, findOne, and $eq queries all fail despite find() returning the document.
-    // This is likely due to how Mongoose handles the string _id type in queries.
-    // Using find() + filter approach as the reliable workaround.
-    const allOrgs = await this.organizationModel.find().exec();
-    const document = allOrgs.find(o => o._id === id);
+    const document = await this.organizationModel.findOne({ _id: new ObjectId(id) });
     if (!document)
       return null;
     return OrganizationMapper.toDomain(document);

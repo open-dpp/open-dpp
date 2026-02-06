@@ -1,4 +1,5 @@
 import { Organization as BetterAuthOrganization } from "better-auth/plugins/organization";
+import { ObjectId } from "mongodb";
 import { Organization, OrganizationDbProps } from "../../domain/organization";
 import { OrganizationDocument, Organization as OrganizationSchema } from "../schemas/organization.schema";
 
@@ -29,7 +30,7 @@ export class OrganizationMapper {
 
   static toPersistence(entity: Organization): OrganizationSchema {
     return {
-      _id: entity.id,
+      _id: new ObjectId(entity.id),
       name: entity.name,
       slug: entity.slug,
       logo: entity.logo ?? undefined,
