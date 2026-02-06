@@ -26,7 +26,7 @@ export class UsersRepository {
       body: {
         email: user.email, // required
         password: finalPassword, // required
-        name: user.name ?? `${user.firstName} ${user.lastName}`, // required
+        name: user.name ?? ([user.firstName, user.lastName].filter(n => n != null).join(" ") || ""), // required
         role: "user",
         data: {
           firstName: user.firstName,

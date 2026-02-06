@@ -83,6 +83,72 @@ describe("UsersRepository", () => {
     expect(result).toBeInstanceOf(User);
   });
 
+  it("should handle null firstName in name fallback", async () => {
+    const user = User.create({
+      email: "test@example.com",
+      firstName: null as any,
+      lastName: "Doe",
+      role: UserRole.USER,
+    });
+
+    mockUserModel.findOne.mockResolvedValue({
+      _id: new ObjectId(),
+      email: "test@example.com",
+    });
+
+    await repository.save(user);
+
+    expect(mockAuth.api.createUser).toHaveBeenCalledWith(expect.objectContaining({
+      body: expect.objectContaining({
+        name: "Doe",
+      }),
+    }));
+  });
+
+  it("should handle null lastName in name fallback", async () => {
+    const user = User.create({
+      email: "test@example.com",
+      firstName: "John",
+      lastName: null as any,
+      role: UserRole.USER,
+    });
+
+    mockUserModel.findOne.mockResolvedValue({
+      _id: new ObjectId(),
+      email: "test@example.com",
+    });
+
+    await repository.save(user);
+
+    expect(mockAuth.api.createUser).toHaveBeenCalledWith(expect.objectContaining({
+      body: expect.objectContaining({
+        name: "John",
+      }),
+    }));
+  });
+
+  it("should handle null firstName and lastName in name fallback", async () => {
+    const user = User.create({
+      email: "test@example.com",
+      firstName: null as any,
+      lastName: null as any,
+      role: UserRole.USER,
+    });
+
+    mockUserModel.findOne.mockResolvedValue({
+      _id: new ObjectId(),
+      email: "test@example.com",
+    });
+
+    await repository.save(user);
+
+    expect(mockAuth.api.createUser).toHaveBeenCalledWith(expect.objectContaining({
+      body: expect.objectContaining({
+        name: "", // Should be empty string, not "null null"
+      }),
+    }));
+  });
+
   it("should save user with provided password", async () => {
     const user = User.create({
       email: "test@example.com",
