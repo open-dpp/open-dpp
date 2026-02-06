@@ -11,10 +11,9 @@ import { OrganizationsService } from "./organizations.service";
 
 describe("OrganizationsService", () => {
   let service: OrganizationsService;
-  let organizationsRepository: OrganizationsRepository;
 
   const mockOrganizationsRepository = {
-    findOneBySlug: jest.fn(),
+    findOneBySlug: jest.fn<(slug: string) => Promise<Organization | null>>(),
     create: jest.fn(),
     findOneById: jest.fn(),
     update: jest.fn(),
@@ -54,7 +53,6 @@ describe("OrganizationsService", () => {
     }).compile();
 
     service = module.get<OrganizationsService>(OrganizationsService);
-    organizationsRepository = module.get<OrganizationsRepository>(OrganizationsRepository);
   });
 
   it("should throw DuplicateOrganizationSlugError when creating organization with existing slug", async () => {
