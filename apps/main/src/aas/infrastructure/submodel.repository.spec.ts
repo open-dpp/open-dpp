@@ -98,6 +98,27 @@ describe("submodelRepository", () => {
     expect(foundSubmodel).toEqual(submodel);
   });
 
+  it("should delete a submodel", async () => {
+    const submodel = Submodel.create({
+      id: randomUUID(),
+      idShort: "carbon footprint",
+      administration: AdministrativeInformation.create({ version: "1.0.0", revision: "1" }),
+      submodelElements: [
+        Property.create({
+          idShort: "carbon footprint",
+          valueType: DataTypeDef.Double,
+          value: "1000",
+        }),
+      ],
+    });
+    await submodelRepository.save(submodel);
+    let foundSubmodel = await submodelRepository.findOne(submodel.id);
+    expect(foundSubmodel).toEqual(submodel);
+    await submodelRepository.deleteById(submodel.id);
+    foundSubmodel = await submodelRepository.findOne(submodel.id);
+    expect(foundSubmodel).toBeUndefined();
+  });
+
   afterAll(async () => {
     await module.close();
   });

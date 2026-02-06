@@ -14,6 +14,6 @@ describe("multiLanguageProperty", () => {
 
   it("should get submodel elements", () => {
     const multiLanguageProperty = MultiLanguageProperty.create({ idShort: "b1" });
-    expect([...multiLanguageProperty.getSubmodelElements()]).toEqual([]);
+    expect(multiLanguageProperty.getSubmodelElements()).toEqual([]);
   });
 });

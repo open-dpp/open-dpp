@@ -58,12 +58,12 @@ async function inviteUser() {
       loading.value = false;
     }
     else {
-      errors.value.push(t("common.errorOccured"));
+      errors.value.push(t("common.errorOccurred"));
     }
   }
   catch (error) {
     console.error(error);
-    errors.value.push(t("common.errorOccured"));
+    errors.value.push(t("common.errorOccurred"));
     loading.value = false;
   }
 }

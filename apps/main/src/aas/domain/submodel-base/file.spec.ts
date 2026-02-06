@@ -14,6 +14,6 @@ describe("file", () => {
 
   it("should get submodel elements", () => {
     const file = File.create({ idShort: "b1", contentType: "image/jpg" });
-    expect([...file.getSubmodelElements()]).toEqual([]);
+    expect(file.getSubmodelElements()).toEqual([]);
   });
 });

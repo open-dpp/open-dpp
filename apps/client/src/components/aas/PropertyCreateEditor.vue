@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import type { PropertyRequestDto } from "@open-dpp/dto";
 import type { AasEditorPath, PropertyCreateEditorProps } from "../../composables/aas-drawer.ts";
-import { DataTypeDef, PropertyJsonSchema } from "@open-dpp/dto";
+import { PropertyJsonSchema } from "@open-dpp/dto";
 
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
+import { EditorMode } from "../../composables/aas-drawer.ts";
 import { submodelBaseFormDefaultValues, SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
-import FormField from "../basics/form/FormField.vue";
-import SubmodelBaseForm from "./SubmodelBaseForm.vue";
+import PropertyForm from "./PropertyForm.vue";
 
 const props = defineProps<{
   path: AasEditorPath;
@@ -21,17 +21,15 @@ const props = defineProps<{
 
 const propertyFormSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
-  value: props.data.valueType === DataTypeDef.Double ? z.number() : z.string().min(1, "Value is required"),
+  value: z.nullish(z.string()),
 });
 const { locale } = useI18n();
 export type FormValues = z.infer<typeof propertyFormSchema>;
 
-const { defineField, handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
+const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(propertyFormSchema),
-  initialValues: { value: "", ...submodelBaseFormDefaultValues(convertLocaleToLanguage(locale.value)) },
+  initialValues: { ...submodelBaseFormDefaultValues(convertLocaleToLanguage(locale.value)) },
 });
-
-const [value] = defineField("value");
 
 const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
@@ -50,16 +48,12 @@ defineExpose<{
 </script>
 
 <template>
-  <form class="flex flex-col gap-1 p-2">
-    <SubmodelBaseForm :show-errors="showErrors" :errors="errors" />
-    <div class="grid lg:grid-cols-3 grid-cols-1 gap-2">
-      <FormField
-        id="value"
-        v-model="value"
-        label="Wert"
-        :show-error="showErrors"
-        :error="errors.value"
-      />
-    </div>
+  <form class="flex flex-col gap-4 p-2">
+    <PropertyForm
+      :data="props.data"
+      :show-errors="showErrors"
+      :errors="errors"
+      :editor-mode="EditorMode.CREATE"
+    />
   </form>
 </template>

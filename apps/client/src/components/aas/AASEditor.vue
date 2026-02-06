@@ -11,6 +11,7 @@ import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import TablePagination from "../pagination/TablePagination.vue";
+import SubmodelElementListCreateEditor from "./SubmodelElementListCreateEditor.vue";
 
 const props = defineProps<{
   id: string;
@@ -32,6 +33,20 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
 }
 
 const errorHandlingStore = useErrorHandlingStore();
+const aasNamespace = props.editorMode === AasEditMode.Passport
+  ? apiClient.dpp.passports.aas
+  : apiClient.dpp.templates.aas;
+
+const aasEditor = useAasEditor({
+  id: props.id,
+  aasNamespace,
+  initialSelectedKeys: route.query.edit ? String(route.query.edit) : undefined,
+  initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
+  changeQueryParams,
+  selectedLanguage: convertLocaleToLanguage(locale.value),
+  errorHandlingStore,
+  translate: t,
+});
 
 const {
   selectedKeys,
@@ -52,19 +67,7 @@ const {
   previousPage,
   resetCursor,
   nextPage,
-} = useAasEditor({
-  id: props.id,
-  aasNamespace:
-     props.editorMode === AasEditMode.Passport
-       ? apiClient.dpp.passports.aas
-       : apiClient.dpp.templates.aas,
-  initialSelectedKeys: route.query.edit ? String(route.query.edit) : undefined,
-  initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
-  changeQueryParams,
-  selectedLanguage: convertLocaleToLanguage(locale.value),
-  errorHandlingStore,
-  translate: label => t(label),
-});
+} = aasEditor;
 
 onMounted(async () => {
   await init();
@@ -122,6 +125,7 @@ function onSubmit() {
           <div class="flex w-full justify-end">
             <div class="flex items-center rounded-md gap-2">
               <Button
+                v-if="node.data.actions.addChildren"
                 icon="pi pi-plus"
                 severity="primary"
                 @click="addClicked($event, node)"
@@ -152,20 +156,32 @@ function onSubmit() {
       v-model:visible="drawerVisible"
       position="right"
       class="!w-full md:!w-80 lg:!w-1/2"
+      :auto-z-index="false"
       @hide="onHideDrawer"
     >
       <template #header>
         <div class="flex flex-row items-center justify-between w-full pr-2 gap-1">
           <span class="text-xl font-bold">{{ drawerHeader }}</span>
-          <Button :label="t('common.save')" @click="onSubmit" />
+          <Button :label="editorVNode?.component === SubmodelElementListCreateEditor ? t('aasEditor.table.saveAndAddEntries') : t('common.save')" @click="onSubmit" />
         </div>
       </template>
       <component
         :is="editorVNode.component"
         v-if="editorVNode"
-        ref="componentRef"
         v-bind="editorVNode.props"
+        :id="props.id"
+        ref="componentRef"
+        :aas-namespace="aasNamespace"
+        :open-drawer="aasEditor.openDrawer"
+        :error-handling-store="errorHandlingStore"
+        :translate="t"
       />
     </Drawer>
   </div>
 </template>
+
+<style>
+.p-drawer-mask {
+  z-index: 40;
+}
+</style>

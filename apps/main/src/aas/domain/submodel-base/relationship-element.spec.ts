@@ -24,6 +24,6 @@ describe("relationshipElement", () => {
       first: Reference.create({ type: ReferenceTypes.ExternalReference, keys: [] }),
       second: Reference.create({ type: ReferenceTypes.ExternalReference, keys: [] }),
     });
-    expect([...relationshipElement.getSubmodelElements()]).toEqual([]);
+    expect(relationshipElement.getSubmodelElements()).toEqual([]);
   });
 });

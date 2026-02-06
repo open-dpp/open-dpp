@@ -14,6 +14,6 @@ describe("blob", () => {
 
   it("should get submodel elements", () => {
     const blob = Blob.create({ idShort: "b1", contentType: "image/jpg" });
-    expect([...blob.getSubmodelElements()]).toEqual([]);
+    expect(blob.getSubmodelElements()).toEqual([]);
   });
 });

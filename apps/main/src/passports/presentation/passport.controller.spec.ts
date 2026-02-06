@@ -7,8 +7,13 @@ import { DateTime } from "../../lib/date-time";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../../templates/infrastructure/template.schema";
-import { UniqueProductIdentifierDoc, UniqueProductIdentifierSchema } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
-import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import {
+  UniqueProductIdentifierDoc,
+  UniqueProductIdentifierSchema,
+} from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
+import {
+  UniqueProductIdentifierService,
+} from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../infrastructure/passport.schema";
@@ -30,6 +35,10 @@ describe("passportController", () => {
         conceptDescriptions: [],
       }),
     }));
+  }
+
+  async function savePassport(passport: Passport): Promise<Template> {
+    return ctx.getRepositories().dppIdentifiableRepository.save(passport);
   }
 
   it(`/GET List all passports`, async () => {
@@ -197,6 +206,15 @@ describe("passportController", () => {
   it(`/POST submodel`, async () => {
     await ctx.asserts.postSubmodel(createPassport);
   });
+
+  it("/DELETE submodel", async () => {
+    await ctx.asserts.deleteSubmodel(createPassport, savePassport);
+  });
+
+  it(`/PATCH submodel`, async () => {
+    await ctx.asserts.modifySubmodel(createPassport, savePassport);
+  });
+
   //
   it(`/GET submodel by id`, async () => {
     await ctx.asserts.getSubmodelById(createPassport);
@@ -212,6 +230,38 @@ describe("passportController", () => {
 
   it(`/POST submodel element`, async () => {
     await ctx.asserts.postSubmodelElement(createPassport);
+  });
+
+  it(`/DELETE submodel element`, async () => {
+    await ctx.asserts.deleteSubmodelElement(createPassport, savePassport);
+  });
+
+  it(`/PATCH submodel element`, async () => {
+    await ctx.asserts.modifySubmodelElement(createPassport, savePassport);
+  });
+
+  it(`/PATCH submodel element value`, async () => {
+    await ctx.asserts.modifySubmodelElementValue(createPassport, savePassport);
+  });
+
+  it("/POST add column", async () => {
+    await ctx.asserts.addColumn(createPassport, savePassport);
+  });
+
+  it("/PATCH modify column", async () => {
+    await ctx.asserts.modifyColumn(createPassport, savePassport);
+  });
+
+  it("/DELETE column", async () => {
+    await ctx.asserts.deleteColumn(createPassport, savePassport);
+  });
+
+  it("/POST add row", async () => {
+    await ctx.asserts.addRow(createPassport, savePassport);
+  });
+
+  it("/DELETE row", async () => {
+    await ctx.asserts.deleteRow(createPassport, savePassport);
   });
 
   it(`/POST submodel element at a specified path within submodel elements hierarchy`, async () => {

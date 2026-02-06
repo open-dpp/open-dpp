@@ -1,7 +1,28 @@
 import type express from "express";
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
 
-import { AssetAdministrationShellPaginationResponseDto, AssetAdministrationShellPaginationResponseDtoSchema, AssetKindType, SubmodelElementPaginationResponseDto, SubmodelElementPaginationResponseDtoSchema, SubmodelElementRequestDto, SubmodelElementResponseDto, SubmodelElementSchema, SubmodelJsonSchema, SubmodelPaginationResponseDto, SubmodelPaginationResponseDtoSchema, SubmodelRequestDto, SubmodelResponseDto, ValueResponseDto, ValueResponseDtoSchema } from "@open-dpp/dto";
+import {
+  AssetAdministrationShellPaginationResponseDto,
+  AssetAdministrationShellPaginationResponseDtoSchema,
+  AssetKindType,
+  SubmodelElementListJsonSchema,
+  SubmodelElementListResponseDto,
+  SubmodelElementModificationDto,
+  SubmodelElementPaginationResponseDto,
+  SubmodelElementPaginationResponseDtoSchema,
+  SubmodelElementRequestDto,
+  SubmodelElementResponseDto,
+  SubmodelElementSchema,
+  SubmodelJsonSchema,
+  SubmodelModificationDto,
+  SubmodelPaginationResponseDto,
+  SubmodelPaginationResponseDtoSchema,
+  SubmodelRequestDto,
+  SubmodelResponseDto,
+  ValueRequestDto,
+  ValueResponseDto,
+  ValueSchema,
+} from "@open-dpp/dto";
 import { fromNodeHeaders } from "better-auth/node";
 import { AuthService } from "../../auth/auth.service";
 import { Pagination } from "../../pagination/pagination";
@@ -10,7 +31,7 @@ import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
 import { Submodel } from "../domain/submodel-base/submodel";
-import { IdShortPath, parseSubmodelBaseUnion } from "../domain/submodel-base/submodel-base";
+import { IdShortPath, ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
 
 import { AasRepository } from "../infrastructure/aas.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
@@ -45,6 +66,13 @@ export class EnvironmentService {
     return SubmodelPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodels }).toPlain());
   }
 
+  async modifySubmodel(environment: Environment, submodelId: string, modification: SubmodelModificationDto): Promise<SubmodelResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    submodel.modify(modification);
+    await this.submodelRepository.save(submodel);
+    return SubmodelJsonSchema.parse(submodel.toPlain());
+  }
+
   async addSubmodelToEnvironment(environment: Environment, submodelPlain: SubmodelRequestDto, saveEnvironment: () => Promise<void>): Promise<SubmodelResponseDto> {
     const submodel = environment.addSubmodel(Submodel.fromPlain(submodelPlain));
     await this.submodelRepository.save(submodel);
@@ -56,6 +84,22 @@ export class EnvironmentService {
     await this.aasRepository.save(aas);
 
     return SubmodelJsonSchema.parse(submodel.toPlain());
+  }
+
+  async deleteSubmodelFromEnvironment(environment: Environment, submodelId: string, saveEnvironment: () => Promise<void>): Promise<void> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId.toString());
+    await this.submodelRepository.deleteById(submodel.id);
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+    aas.deleteSubmodel(submodel);
+    await this.aasRepository.save(aas);
+    environment.deleteSubmodel(submodel);
+    await saveEnvironment();
+  }
+
+  async deleteSubmodelElement(environment: Environment, submodelId: string, idShortPath: IdShortPath): Promise<void> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId.toString());
+    submodel.deleteSubmodelElement(idShortPath);
+    await this.submodelRepository.save(submodel);
   }
 
   private async findSubmodelByIdOrFail(environment: Environment, submodelId: string): Promise<Submodel> {
@@ -74,7 +118,7 @@ export class EnvironmentService {
   async getSubmodelValue(environment: Environment, submodelId: string): Promise<ValueResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const value = submodel.getValueRepresentation();
-    return ValueResponseDtoSchema.parse(value);
+    return ValueSchema.parse(value);
   }
 
   async getSubmodelElements(environment: Environment, submodelId: string, pagination: Pagination): Promise<SubmodelElementPaginationResponseDto> {
@@ -86,9 +130,58 @@ export class EnvironmentService {
 
   async addSubmodelElement(environment: Environment, submodelId: string, submodelElementPlain: SubmodelElementRequestDto, idShortPath?: IdShortPath): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const submodelElement = submodel.addSubmodelElement(parseSubmodelBaseUnion(submodelElementPlain), idShortPath);
+    const submodelElement = submodel.addSubmodelElement(parseSubmodelElement(submodelElementPlain), { idShortPath });
     await this.submodelRepository.save(submodel);
     return SubmodelElementSchema.parse(submodelElement.toPlain());
+  }
+
+  async modifySubmodelElement(environment: Environment, submodelId: string, modification: SubmodelElementModificationDto, idShortPath: IdShortPath): Promise<SubmodelElementResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const submodelElement = submodel.modifySubmodelElement(modification, idShortPath);
+    await this.submodelRepository.save(submodel);
+    return SubmodelElementSchema.parse(submodelElement.toPlain());
+  }
+
+  async modifyValueOfSubmodelElement(environment: Environment, submodelId: string, modification: ValueRequestDto, idShortPath: IdShortPath): Promise<SubmodelElementResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const submodelElement = submodel.modifyValueOfSubmodelElement(modification, idShortPath);
+    await this.submodelRepository.save(submodel);
+    return SubmodelElementSchema.parse(submodelElement.toPlain());
+  }
+
+  async addColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, column: ISubmodelElement, position?: number): Promise<SubmodelElementListResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const modifiedSubmodelElementList = submodel.addColumn(idShortPath, column, position);
+    await this.submodelRepository.save(submodel);
+    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
+  }
+
+  async modifyColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfColumn: string, modifications: SubmodelModificationDto): Promise<SubmodelElementListResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const modifiedSubmodelElement = submodel.modifyColumn(idShortPath, idShortOfColumn, modifications);
+    await this.submodelRepository.save(submodel);
+    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain());
+  }
+
+  async deleteColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfColumn: string): Promise<SubmodelElementListResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const modifiedSubmodelElementList = submodel.deleteColumn(idShortPath, idShortOfColumn);
+    await this.submodelRepository.save(submodel);
+    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
+  }
+
+  async addRow(environment: Environment, submodelId: string, idShortPath: IdShortPath, position?: number): Promise<SubmodelElementListResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const modifiedSubmodelElement = submodel.addRow(idShortPath, position);
+    await this.submodelRepository.save(submodel);
+    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain());
+  }
+
+  async deleteRow(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfRow: string): Promise<SubmodelElementListResponseDto> {
+    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+    const modifiedSubmodelElementList = submodel.deleteRow(idShortPath, idShortOfRow);
+    await this.submodelRepository.save(submodel);
+    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
   }
 
   async getSubmodelElementById(environment: Environment, submodelId: string, idShortPath: IdShortPath): Promise<SubmodelElementResponseDto> {
@@ -99,7 +192,7 @@ export class EnvironmentService {
 
   async getSubmodelElementValue(environment: Environment, submodelId: string, idShortPath: IdShortPath): Promise<ValueResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    return ValueResponseDtoSchema.parse(submodel.getValueRepresentation(idShortPath));
+    return ValueSchema.parse(submodel.getValueRepresentation(idShortPath));
   }
 
   async copyEnvironment(environment: Environment): Promise<Environment> {

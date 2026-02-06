@@ -7,8 +7,10 @@ import { Extension } from "../extension";
 import { JsonVisitor } from "../json-visitor";
 import { IVisitor } from "../visitor";
 import {
+  AddOptions,
+  deleteSubmodelElementOrFail,
   ISubmodelElement,
-  parseSubmodelBaseUnion,
+  parseSubmodelElement,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
@@ -75,7 +77,7 @@ export class SubmodelElementList implements ISubmodelElement {
       parsed.orderRelevant,
       parsed.semanticIdListElement ? Reference.fromPlain(parsed.semanticIdListElement) : null,
       parsed.valueTypeListElement,
-      parsed.value.map(parseSubmodelBaseUnion),
+      parsed.value.map(parseSubmodelElement),
     );
   }
 
@@ -88,11 +90,11 @@ export class SubmodelElementList implements ISubmodelElement {
     return this.accept(jsonVisitor);
   }
 
-  * getSubmodelElements(): IterableIterator<ISubmodelElement> {
-    yield* this.value;
+  getSubmodelElements(): ISubmodelElement[] {
+    return this.value;
   }
 
-  addSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
+  addSubmodelElement(submodelElement: ISubmodelElement, options?: AddOptions): ISubmodelElement {
     if (this.value.some(s => s.idShort === submodelElement.idShort)) {
       throw new Error(`Submodel element with idShort ${submodelElement.idShort} already exists`);
     }
@@ -100,8 +102,17 @@ export class SubmodelElementList implements ISubmodelElement {
       throw new Error(`Submodel element type ${submodelElement.getSubmodelElementType()} does not match list type ${this.typeValueListElement}`);
     }
 
-    this.value.push(submodelElement);
+    if (options?.position !== undefined) {
+      this.value.splice(options.position, 0, submodelElement);
+    }
+    else {
+      this.value.push(submodelElement);
+    }
     return submodelElement;
+  }
+
+  deleteSubmodelElement(idShort: string) {
+    deleteSubmodelElementOrFail(this.value, idShort);
   }
 
   getSubmodelElementType(): AasSubmodelElementsType {

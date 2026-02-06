@@ -70,12 +70,16 @@ export class ReferenceElement implements ISubmodelElement {
     return this.accept(jsonVisitor);
   }
 
-  * getSubmodelElements(): IterableIterator<ISubmodelElement> {
-    yield* [];
+  getSubmodelElements(): ISubmodelElement[] {
+    return [];
   }
 
   addSubmodelElement(_submodelElement: ISubmodelElement): ISubmodelElement {
     throw new ValueError("ReferenceElement cannot contain submodel elements");
+  }
+
+  deleteSubmodelElement(_idShort: string) {
+    throw new ValueError("ReferenceElement does not support to delete submodel elements");
   }
 
   getSubmodelElementType(): AasSubmodelElementsType {

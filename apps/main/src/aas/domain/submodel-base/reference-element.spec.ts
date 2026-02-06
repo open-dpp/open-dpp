@@ -14,6 +14,6 @@ describe("referenceElement", () => {
 
   it("should get submodel elements", () => {
     const referenceElement = ReferenceElement.create({ idShort: "b1" });
-    expect([...referenceElement.getSubmodelElements()]).toEqual([]);
+    expect(referenceElement.getSubmodelElements()).toEqual([]);
   });
 });

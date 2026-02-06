@@ -20,7 +20,8 @@
     "general": "General",
     "remove": "Remove",
     "copy": "Copy",
-    "errorOccured": "An error occurred",
+    "failed": "failed",
+    "errorOccurred": "An error occurred",
     "unknownErrorOccured": "An unexpected error occurred. Please try again.",
     "toHome": "To home",
     "home": "Home",
@@ -50,11 +51,39 @@
     "contact": "Contact"
   },
   "aasEditor": {
-    "addTextField": "Add text field",
+    "formLabels": {
+      "value": "Value",
+      "name": "Name"
+    },
+    "table": {
+      "saveAndAddEntries": "Save and add list entries",
+      "column": "column",
+      "row": "row",
+      "entries": "Entries",
+      "emptyCell": "Please fill out",
+      "removeColumn": "Should the @:aasEditor.table.column really be removed?",
+      "removeRow": "Should the @:aasEditor.table.row really be removed?",
+      "addColumn": "@:common.add @:aasEditor.table.column",
+      "addRow": "@:common.add @:aasEditor.table.row",
+      "editColumn": "@:common.edit @:aasEditor.table.column",
+      "addFieldAsColumn": "@:common.add {field} as @:aasEditor.table.column ",
+      "errorAddColumn": "@.capitalize:common.failed to @.lower:common.add @:aasEditor.table.column",
+      "errorEditColumn": "@.capitalize:common.failed to @:common.edit @:aasEditor.table.column",
+      "errorAddRow": "@.capitalize:common.failed to @.lower:common.add @:aasEditor.table.row",
+      "errorRemoveColumn": "@.capitalize:common.failed to @.lower:common.remove @:aasEditor.table.column",
+      "errorRemoveRow": "@.capitalize:common.failed to @.lower:common.remove @:aasEditor.table.row"
+    },
     "addSubmodel": "Add section",
+    "submodelElementCollection": "Sub section",
+    "edit": "Edit {formItem}",
+    "creation": "Creation of the {formItem}",
     "submodel": "Section",
+    "submodelElementList": "List",
     "textField": "Text field",
-    "type": "Type"
+    "file": "File",
+    "numberField": "Number field",
+    "type": "Type",
+    "error": "{method} @:common.failed"
   },
   "languages": {
     "english": "English",

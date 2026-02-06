@@ -1,9 +1,17 @@
-import { applyDecorators, Body, Get, Param, Post, Query, Req } from "@nestjs/common";
+import { applyDecorators, Body, Delete, Get, HttpCode, Param, Patch, Post, Query, Req } from "@nestjs/common";
 
-import { SubmodelElementSchema, SubmodelRequestDtoSchema } from "@open-dpp/dto";
+import {
+  SubmodelElementModificationSchema,
+  SubmodelElementSchema,
+  SubmodelModificationSchema,
+  SubmodelRequestDtoSchema,
+  ValueSchema,
+} from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { z } from "zod";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
+
+const DeleteHttpCode = HttpCode(204);
 
 export const ApiGetShellsPath = "/:id/shells";
 export function ApiGetShells() {
@@ -28,6 +36,19 @@ export const ApiGetSubmodelByIdPath = "/:id/submodels/:submodelId";
 export function ApiGetSubmodelById() {
   return applyDecorators(
     Get(ApiGetSubmodelByIdPath),
+  );
+}
+
+export function ApiDeleteSubmodelById() {
+  return applyDecorators(
+    Delete(ApiGetSubmodelByIdPath),
+    HttpCode(204), // Explicitly state the HTTP status code
+  );
+}
+
+export function ApiPatchSubmodel() {
+  return applyDecorators(
+    Patch(ApiGetSubmodelByIdPath),
   );
 }
 
@@ -58,9 +79,58 @@ export function ApiGetSubmodelElementById() {
   );
 }
 
+export function ApiDeleteSubmodelElementById() {
+  return applyDecorators(
+    Delete(ApiGetSubmodelElementByIdPath),
+    DeleteHttpCode,
+  );
+}
+
+export function ApiPatchSubmodelElement() {
+  return applyDecorators(
+    Patch(ApiGetSubmodelElementByIdPath),
+  );
+}
+
 export function ApiPostSubmodelElementAtIdShortPath() {
   return applyDecorators(
     Post(ApiGetSubmodelElementByIdPath),
+  );
+}
+export const ApiPostColumnPath = `${ApiGetSubmodelElementByIdPath}/columns`;
+
+export function ApiPostColumn() {
+  return applyDecorators(
+    Post(ApiPostColumnPath),
+  );
+}
+
+export const ApiGetColumnByIdShortPath = `${ApiPostColumnPath}/:idShortOfColumn`;
+
+export function ApiDeleteColumn() {
+  return applyDecorators(
+    Delete(ApiGetColumnByIdShortPath),
+  );
+}
+
+export function ApiPatchColumn() {
+  return applyDecorators(
+    Patch(ApiGetColumnByIdShortPath),
+  );
+}
+
+export const ApiPostRowPath = `${ApiGetSubmodelElementByIdPath}/rows`;
+
+export function ApiPostRow() {
+  return applyDecorators(
+    Post(ApiPostRowPath),
+  );
+}
+
+export const ApiDeleteRowPath = `${ApiPostRowPath}/:idShortOfRow`;
+export function ApiDeleteRow() {
+  return applyDecorators(
+    Delete(ApiDeleteRowPath),
   );
 }
 
@@ -68,6 +138,12 @@ export const ApiGetSubmodelElementValuePath = "/:id/submodels/:submodelId/submod
 export function ApiGetSubmodelElementValue() {
   return applyDecorators(
     Get(ApiGetSubmodelElementValuePath),
+  );
+}
+
+export function ApiPatchSubmodelElementValue() {
+  return applyDecorators(
+    Patch(ApiGetSubmodelElementValuePath),
   );
 }
 
@@ -109,6 +185,22 @@ export const IdShortPathParamSchema = z.string().regex(
 });
 export const IdShortPathParam = () => Param("idShortPath", new ZodValidationPipe(IdShortPathParamSchema));
 
+export const ColumnParamSchema = z.string().meta({
+  description: "IdShort of the column.",
+  example: "Col1",
+  param: { in: "path", name: "idShortOfColumn" },
+});
+
+export const ColumnParam = () => Param("idShortOfColumn", new ZodValidationPipe(ColumnParamSchema));
+
+export const RowParamSchema = z.string().meta({
+  description: "IdShort of the row.",
+  example: "Row1",
+  param: { in: "path", name: "idShortOfRow" },
+});
+
+export const RowParam = () => Param("idShortOfRow", new ZodValidationPipe(RowParamSchema));
+
 export const RequestParam = () => Req();
 
 export const LimitQueryParamSchema = z.coerce.number().optional().meta({
@@ -125,7 +217,19 @@ export const CursorQueryParamSchema = z.string().optional().meta({
   param: { in: "query", name: "cursor" },
 });
 
+export const PositionQueryParamSchema = z.coerce.number().optional().meta({
+  description: "The position of the element in the result listing. The first element has position 0.",
+  example: 1,
+  param: { in: "query", name: "position" },
+});
+
+export const PositionQueryParam = () => Query("position", new ZodValidationPipe(PositionQueryParamSchema));
+
 export const CursorQueryParam = () => Query("cursor", new ZodValidationPipe(CursorQueryParamSchema));
 
 export const SubmodelRequestBody = () => Body(new ZodValidationPipe(SubmodelRequestDtoSchema));
+export const SubmodelModificationRequestBody = () => Body(new ZodValidationPipe(SubmodelModificationSchema));
+
 export const SubmodelElementRequestBody = () => Body(new ZodValidationPipe(SubmodelElementSchema));
+export const SubmodelElementModificationRequestBody = () => Body(new ZodValidationPipe(SubmodelElementModificationSchema));
+export const SubmodelElementValueModificationRequestBody = () => Body(new ZodValidationPipe(ValueSchema));

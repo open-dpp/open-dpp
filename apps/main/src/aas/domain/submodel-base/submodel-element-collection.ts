@@ -8,8 +8,10 @@ import { Extension } from "../extension";
 import { JsonVisitor } from "../json-visitor";
 import { IVisitor } from "../visitor";
 import {
+  AddOptions,
+  deleteSubmodelElementOrFail,
   ISubmodelElement,
-  parseSubmodelBaseUnion,
+  parseSubmodelElement,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
@@ -47,11 +49,16 @@ export class SubmodelElementCollection implements ISubmodelElement {
     );
   };
 
-  addSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
+  addSubmodelElement(submodelElement: ISubmodelElement, options?: AddOptions): ISubmodelElement {
     if (this.value.some(s => s.idShort === submodelElement.idShort)) {
       throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
     }
-    this.value.push(submodelElement);
+    if (options?.position !== undefined) {
+      this.value.splice(options.position, 0, submodelElement);
+    }
+    else {
+      this.value.push(submodelElement);
+    }
     return submodelElement;
   }
 
@@ -68,7 +75,7 @@ export class SubmodelElementCollection implements ISubmodelElement {
       baseObjects.supplementalSemanticIds,
       baseObjects.qualifiers,
       baseObjects.embeddedDataSpecifications,
-      parsed.value.map(parseSubmodelBaseUnion),
+      parsed.value.map(parseSubmodelElement),
     );
   }
 
@@ -81,11 +88,15 @@ export class SubmodelElementCollection implements ISubmodelElement {
     return this.accept(jsonVisitor);
   }
 
-  * getSubmodelElements(): IterableIterator<ISubmodelElement> {
-    yield* this.value;
+  getSubmodelElements(): ISubmodelElement[] {
+    return this.value;
   }
 
   getSubmodelElementType(): AasSubmodelElementsType {
     return AasSubmodelElements.SubmodelElementCollection;
+  }
+
+  deleteSubmodelElement(idShort: string) {
+    deleteSubmodelElementOrFail(this.value, idShort);
   }
 }
