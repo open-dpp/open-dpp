@@ -5,7 +5,6 @@ import { Organization as BetterAuthOrganizationSchema } from "better-auth/plugin
 import { Model } from "mongoose";
 import { AUTH } from "../../../auth/auth.provider";
 import { Organization, OrganizationCreateProps } from "../../domain/organization";
-import { DuplicateOrganizationSlugError } from "../../domain/organization.errors";
 import { OrganizationMapper } from "../mappers/organization.mapper";
 import { Organization as OrganizationSchema } from "../schemas/organization.schema";
 
@@ -29,7 +28,7 @@ export class OrganizationsRepository {
     return result.map((org: any) => OrganizationMapper.toDomain(org));
   }
 
-  async create(organization: Organization, headers: Record<string, string>): Promise<BetterAuthOrganizationSchema> {
+  async create(organization: Organization, headers: Record<string, string>): Promise<BetterAuthOrganizationSchema | null> {
     try {
       return (this.auth.api as any).createOrganization({
         headers,
@@ -41,11 +40,8 @@ export class OrganizationsRepository {
         },
       });
     }
-    catch (error: any) {
-      if (error.code === 11000 && error.keyPattern?.slug) {
-        throw new DuplicateOrganizationSlugError(organization.slug);
-      }
-      throw error;
+    catch {
+      return null;
     }
   }
 
@@ -63,11 +59,8 @@ export class OrganizationsRepository {
       });
       return this.findOneById(organizationId);
     }
-    catch (error: any) {
-      if (error.code === 11000 && error.keyPattern?.slug) {
-        throw new DuplicateOrganizationSlugError(data.slug);
-      }
-      throw error;
+    catch {
+      return null;
     }
   }
 

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   ForbiddenException,
@@ -8,7 +9,6 @@ import {
   Param,
   Patch,
   Post,
-  UseFilters,
 } from "@nestjs/common";
 import { Session } from "../../auth/domain/session";
 import { AuthSession } from "../../auth/presentation/decorators/auth-session.decorator";
@@ -18,10 +18,8 @@ import { MembersService } from "../application/services/members.service";
 import { OrganizationsService } from "../application/services/organizations.service";
 import { Member } from "../domain/member";
 import { Organization } from "../domain/organization";
-import { OrganizationExceptionFilter } from "./organization-exception.filter";
 
 @Controller("organizations")
-@UseFilters(OrganizationExceptionFilter)
 export class OrganizationsController {
   private readonly logger = new Logger(OrganizationsController.name);
 
@@ -69,7 +67,7 @@ export class OrganizationsController {
       throw new ForbiddenException("You are not authorized to update this organization");
     }
 
-    await this.organizationsService.updateOrganization(
+    const updatedOrganization = await this.organizationsService.updateOrganization(
       id,
       {
         name: body.name,
@@ -80,6 +78,10 @@ export class OrganizationsController {
       session,
       headers,
     );
+    if (!updatedOrganization) {
+      throw new BadRequestException();
+    }
+    return updatedOrganization;
   }
 
   @Get("member")

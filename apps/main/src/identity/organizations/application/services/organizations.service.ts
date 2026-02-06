@@ -1,11 +1,10 @@
-import { ForbiddenException, Injectable, Logger } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { Session } from "../../../auth/domain/session";
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { Member } from "../../domain/member";
 import { MemberRole } from "../../domain/member-role.enum";
 import { Organization, OrganizationCreateProps } from "../../domain/organization";
-import { DuplicateOrganizationSlugError } from "../../domain/organization.errors";
 import { InvitationsRepository } from "../../infrastructure/adapters/invitations.repository";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
@@ -41,10 +40,13 @@ export class OrganizationsService {
   ): Promise<Organization> {
     const existsWithSlug = await this.organizationsRepository.findOneBySlug(data.slug);
     if (existsWithSlug) {
-      throw new DuplicateOrganizationSlugError(data.slug);
+      throw new BadRequestException();
     }
     const organization = Organization.create(data);
     const betterAuthOrganization = await this.organizationsRepository.create(organization, headers);
+    if (!betterAuthOrganization) {
+      throw new BadRequestException();
+    }
     const createdOrganization = OrganizationMapper.toDomainFromBetterAuth(betterAuthOrganization);
     const owner = Member.create({
       userId: session.userId,

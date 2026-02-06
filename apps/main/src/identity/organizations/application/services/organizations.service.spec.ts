@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { BadRequestException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Session } from "../../../auth/domain/session";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { Organization } from "../../domain/organization";
-import { DuplicateOrganizationSlugError } from "../../domain/organization.errors";
 import { InvitationsRepository } from "../../infrastructure/adapters/invitations.repository";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
@@ -68,6 +68,6 @@ describe("OrganizationsService", () => {
         session,
         headers,
       ),
-    ).rejects.toThrow(DuplicateOrganizationSlugError);
+    ).rejects.toThrow(BadRequestException);
   });
 });
