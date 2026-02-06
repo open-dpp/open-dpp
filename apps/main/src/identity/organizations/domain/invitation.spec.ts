@@ -24,6 +24,23 @@ describe("invitation", () => {
     );
   });
 
+  it("should create an invitation with custom TTL", () => {
+    const props = {
+      email: "test@example.com",
+      inviterId: "user-123",
+      organizationId: "org-123",
+      role: MemberRole.ADMIN,
+      ttl: 24 * 60 * 60 * 1000, // 1 day
+    };
+
+    const invitation = Invitation.create(props);
+
+    expect(invitation.expiresAt.getTime()).toBeCloseTo(
+      invitation.createdAt.getTime() + props.ttl,
+      -3, // within 1 second
+    );
+  });
+
   it("should load invitation from database properties", () => {
     const now = new Date();
     const dbProps = {

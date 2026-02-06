@@ -7,6 +7,7 @@ export interface InvitationCreateProps {
   organizationId: string;
   role: MemberRole;
   status?: string;
+  ttl?: number;
 }
 
 export type InvitationDbProps = InvitationCreateProps & {
@@ -50,7 +51,9 @@ export class Invitation {
 
   public static create(data: InvitationCreateProps) {
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + Invitation.DEFAULT_TTL);
+    const expiresAt = new Date(
+      now.getTime() + (data.ttl ?? Invitation.DEFAULT_TTL),
+    );
     return new Invitation(
       randomUUID(),
       data.email,
