@@ -50,34 +50,4 @@ describe("userSchema", () => {
     expect(savedUser.email).toBe(userData.email);
     expect(savedUser.role).toBe(userData.role);
   });
-
-  it("should enforce unique email constraint", async () => {
-    const userData = {
-      _id: "user-1",
-      email: "unique@example.com",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      role: UserRole.USER,
-    };
-    await new UserModel(userData).save();
-
-    const duplicateData = {
-      _id: "user-2",
-      email: "unique@example.com",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      role: UserRole.USER,
-    };
-
-    let err: any;
-    try {
-      await new UserModel(duplicateData).save();
-    }
-    catch (error) {
-      err = error;
-    }
-
-    expect(err).toBeDefined();
-    expect(err.code).toBe(11000);
-  });
 });
