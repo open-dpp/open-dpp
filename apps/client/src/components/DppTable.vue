@@ -48,11 +48,12 @@ function forwardToPresentationChat(id: string) {
 const fileInput = ref<HTMLInputElement | null>(null);
 
 async function exportPassport(id: string) {
+  let url: string | undefined;
   try {
     const response = await axiosIns.get(`/passports/${id}/export`);
     const data = JSON.stringify(response.data, null, 2);
     const blob = new Blob([data], { type: "application/json" });
-    const url = window.URL.createObjectURL(blob);
+    url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
     link.setAttribute("download", `passport-${id}.json`);
@@ -62,6 +63,11 @@ async function exportPassport(id: string) {
   }
   catch (error) {
     console.error("Failed to export passport", error);
+  }
+  finally {
+    if (url) {
+      window.URL.revokeObjectURL(url);
+    }
   }
 }
 
