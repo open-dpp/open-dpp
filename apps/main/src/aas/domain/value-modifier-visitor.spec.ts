@@ -1,5 +1,6 @@
 import { AasSubmodelElements, DataTypeDef } from "@open-dpp/dto";
 import { LanguageText } from "./common/language-text";
+import { File } from "./submodel-base/file";
 import { MultiLanguageProperty } from "./submodel-base/multi-language-property";
 import { Property } from "./submodel-base/property";
 import { registerSubmodelElementClasses } from "./submodel-base/register-submodel-element-classes";
@@ -27,6 +28,25 @@ describe("value modifier visitor", () => {
     const modifications = "value new";
     submodel.modifyValueOfSubmodelElement(modifications, IdShortPath.create({ path: "prop1" }));
     expect(property.value).toEqual("value new");
+  });
+
+  it("should modify value of file", () => {
+    const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames });
+    const file = File.create({
+      idShort: "file",
+      displayName: existingDisplayNames,
+      contentType: "image/png",
+      value: "idToFile",
+    });
+    submodel.addSubmodelElement(file);
+    let modifications: any = { value: "value new", contentType: "image/jpeg" };
+    submodel.modifyValueOfSubmodelElement(modifications, IdShortPath.create({ path: "file" }));
+    expect(file.value).toEqual("value new");
+    expect(file.contentType).toEqual("image/jpeg");
+    modifications = { value: null, contentType: undefined };
+    submodel.modifyValueOfSubmodelElement(modifications, IdShortPath.create({ path: "file" }));
+    expect(file.value).toBeNull();
+    expect(file.contentType).toEqual("image/jpeg");
   });
 
   it("should modify value of submodel element list", () => {

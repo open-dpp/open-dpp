@@ -12,7 +12,7 @@ import MediaPreview from "../../media/MediaPreview.vue";
 
 const props = defineProps<{
   id: string;
-  label: string;
+  label?: string;
   modelValue?: string | null;
 }>();
 
@@ -20,6 +20,7 @@ const emits = defineEmits<{
   (e: "clicked"): void;
   (e: "update:modelValue", value: string | undefined | null): void;
   (e: "changeContentType", value: string | undefined | null): void;
+  (e: "blur", ev: FocusEvent): void;
 }>();
 const { t } = useI18n();
 const passportFormStore = usePassportFormStore();
@@ -51,6 +52,10 @@ watch(
 watch(uploadedMediaId, (newVal) => {
   emits("update:modelValue", newVal);
 });
+
+function onBlur(ev: FocusEvent) {
+  emits("blur", ev);
+}
 
 const isImage = computed(() => {
   if (!selectedLocalFile.value) {
@@ -209,6 +214,7 @@ onUnmounted(() => {
     <div class="group grow min-w-0 text-base mb-4" style="position: relative">
       <div class="mb-1.5 flex flex-col items-start justify-start last:mb-0">
         <label
+          v-if="props.label"
           class="block text-neutral-900 text-sm mb-1 dark:text-neutral-100"
           :for="id"
         >{{ props.label }}</label>
@@ -223,6 +229,7 @@ onUnmounted(() => {
             readonly
             type="file"
             @change="selectFile"
+            @blur="onBlur"
             @mousedown.prevent="emits('clicked')"
           >
           <div v-if="selectedLocalFile" class="flex flex-row gap-4">

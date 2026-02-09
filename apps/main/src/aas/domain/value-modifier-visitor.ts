@@ -1,7 +1,5 @@
 import {
-  FileModificationSchema,
   LanguageEnum,
-  SubmodelBaseModificationSchema,
   SubmodelElementModificationDto,
 } from "@open-dpp/dto";
 import { NotSupportedError, ValueError } from "@open-dpp/exception";
@@ -28,19 +26,13 @@ import { Range } from "./submodel-base/range";
 import { ReferenceElement } from "./submodel-base/reference-element";
 import { RelationshipElement } from "./submodel-base/relationship-element";
 import { Submodel } from "./submodel-base/submodel";
-import { ISubmodelBase, ISubmodelElement } from "./submodel-base/submodel-base";
+import { ISubmodelElement } from "./submodel-base/submodel-base";
 
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
 
 export class ValueModifierVisitor implements IVisitor<unknown, void> {
-  private modifySubmodelBase(submodelBase: ISubmodelBase, data: unknown) {
-    const { displayName, description } = SubmodelBaseModificationSchema.parse(data);
-    submodelBase.displayName = displayName?.map(LanguageText.fromPlain) ?? submodelBase.displayName;
-    submodelBase.description = description?.map(LanguageText.fromPlain) ?? submodelBase.displayName;
-  }
-
   visitAdministrativeInformation(_element: AdministrativeInformation, _context: unknown): void {
     throw new NotSupportedError(
       "AdministrativeInformation is not supported.",
@@ -96,10 +88,12 @@ export class ValueModifierVisitor implements IVisitor<unknown, void> {
   }
 
   visitFile(element: File, context: unknown): void {
-    const parsed = FileModificationSchema.parse(context);
-    this.modifySubmodelBase(element, parsed);
-    element.value = parsed.value ?? element.value;
-    element.contentType = parsed.contentType ?? element.contentType;
+    const parsed = z.object({
+      value: z.string().nullish(),
+      contentType: z.string().optional(),
+    }).parse(context);
+    element.value = parsed.value !== undefined ? parsed.value : element.value;
+    element.contentType = parsed.contentType !== undefined ? parsed.contentType : element.contentType;
   }
 
   visitKey(_element: Key, _context: unknown): void {
@@ -169,8 +163,10 @@ export class ValueModifierVisitor implements IVisitor<unknown, void> {
     );
   }
 
-  visitSubmodel(element: Submodel, context: unknown): void {
-    this.modifySubmodelBase(element, context);
+  visitSubmodel(_element: Submodel, _context: unknown): void {
+    throw new NotSupportedError(
+      "Submodel is not supported.",
+    );
   }
 
   visitSubmodelElementCollection(element: SubmodelElementCollection, context: unknown): void {

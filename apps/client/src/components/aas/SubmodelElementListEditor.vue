@@ -12,6 +12,7 @@ import type {
   RowMenuOptions,
 } from "../../composables/aas-table-extension.ts";
 import type { IErrorHandlingStore } from "../../stores/error.handling.ts";
+import { AasSubmodelElements } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { Button, Column, DataTable, InputText, Menu } from "primevue";
 import ConfirmDialog from "primevue/confirmdialog";
@@ -24,6 +25,8 @@ import { EditorMode } from "../../composables/aas-drawer.ts";
 import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import MediaFieldView from "../media/MediaFieldView.vue";
+import FileField from "./form/FileField.vue";
 import PropertyValue from "./PropertyValue.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
@@ -163,13 +166,44 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
           <span>{{ col.label }}</span>
         </template>
         <template #body="{ data: cellData, field }">
-          <span v-if="typeof field === 'string' && cellData[field] != null">{{
-            formatCellValue(cellData[field], col)
-          }}</span>
+          <div
+            v-if="
+              typeof field === 'string'
+                && cellData[field] != null
+                && cellData[field]
+                && formatCellValue(cellData[field], col)
+            "
+          >
+            <MediaFieldView
+              v-if="col.plain.modelType === AasSubmodelElements.File"
+              :media-id="formatCellValue(cellData[field], col) as string"
+            />
+            <span v-else>
+              {{ formatCellValue(cellData[field], col) }}
+            </span>
+          </div>
           <InputText v-else autofocus fluid />
         </template>
-        <template #editor="{ data: editorData, field, index: rowIndex }">
+        <template
+          #editor="{
+            data: editorData,
+            field,
+            index: rowIndex,
+            editorSaveCallback,
+          }"
+        >
+          <FileField
+            v-if="col.plain.modelType === AasSubmodelElements.File"
+            :id="`${rowIndex}-${field}`"
+            v-model="editorData[field].value"
+            @blur="
+              (event) => {
+                editorSaveCallback(event);
+              }
+            "
+          />
           <PropertyValue
+            v-else
             :id="`${rowIndex}-${field}`"
             v-model="editorData[field]"
             :value-type="col.plain.valueType"
@@ -178,14 +212,14 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
       </Column>
     </DataTable>
     <Menu
-      id="overlay_menu"
+      id="overlay_column_menu"
       ref="columnMenuPopover"
       :model="columnMenu"
       :popup="true"
       position="right"
     />
     <Menu
-      id="overlay_menu"
+      id="overlay_row_menu"
       ref="rowMenuPopover"
       :model="rowMenu"
       :popup="true"

@@ -27,6 +27,7 @@ import {
   SubmodelElementSchema,
 
 } from "@open-dpp/dto";
+import { match, P } from "ts-pattern";
 import { computed, ref } from "vue";
 import { z } from "zod";
 import { HTTPCode } from "../stores/http-codes.ts";
@@ -51,9 +52,11 @@ interface AasTableExtensionProps {
 
 export type ColumnMenuOptions = TableModificationParamsDto & { addColumnActions?: boolean };
 export type RowMenuOptions = TableModificationParamsDto;
+type Value = string | null;
+type CellContent = { value: Value; contentType: string } | Value;
 
 interface Column { idShort: string; label: string; plain: any }
-type Row = Record<string, any>;
+type Row = Record<string, CellContent>;
 export interface IAasTableExtension {
   columns: ComputedRef<Column[]>;
   rows: ComputedRef<Row[]>;
@@ -64,7 +67,7 @@ export interface IAasTableExtension {
   onCellEditComplete: (
     event: DataTableCellEditCompleteEvent<any>,
   ) => Promise<void>;
-  formatCellValue: (value: string, column: Column) => string;
+  formatCellValue: (content: CellContent, column: Column) => Value;
 }
 
 export function useAasTableExtension({
@@ -136,16 +139,18 @@ export function useAasTableExtension({
 
   const rows = computed<Row[]>((): Row[] => {
     return data.value.value.map(row =>
-      SubmodelElementCollectionJsonSchema.parse(row).value.reduce((acc, v) => ({ ...acc, [v.idShort]: v.value }), {}),
+      SubmodelElementCollectionJsonSchema.parse(row).value.reduce((acc, v) => ({ ...acc, [v.idShort]: v.contentType ? { value: v.value, contentType: v.contentType } : v.value }), {}),
     );
   });
 
   async function onCellEditComplete(
     event: DataTableCellEditCompleteEvent<any>,
   ) {
-    console.log("CELL EDIT COMPLETE");
     const { data: rowData, newValue, field } = event;
-    const parsedNewValue = z.string().min(1).safeParse(newValue);
+    const ValueSchema = z.string().min(1);
+    const ValueParser = newValue.contentType ? z.object({ contentType: z.string(), value: ValueSchema }) : ValueSchema;
+
+    const parsedNewValue = ValueParser.safeParse(newValue);
     if (parsedNewValue.success && rowData[field] !== parsedNewValue.data) {
       rowData[field] = parsedNewValue.data;
       await aasNamespace.modifyValueOfSubmodelElement(
@@ -430,15 +435,30 @@ export function useAasTableExtension({
     });
   }
 
-  function formatCellValue(value: string, column: Column) {
-    switch (column.plain.valueType) {
-      case DataTypeDef.Double:
-        return new Intl.NumberFormat(selectedLanguage, {
-          style: "decimal",
-        }).format(Number(value));
-      default:
-        return value;
-    }
+  function formatCellValue(content: CellContent, column: Column) {
+    const ValuePattern = P.union(P.string, P.nullish);
+    return (
+      match(content)
+        // Case 1: Object with `value` and `contentType`
+        .with(
+          { value: ValuePattern, contentType: P.string },
+          ({ value }) => {
+            return value;
+          },
+        )
+        // Case 2: Plain string
+        .with(ValuePattern, (value) => {
+          switch (column.plain.valueType) {
+            case DataTypeDef.Double:
+              return new Intl.NumberFormat(selectedLanguage, {
+                style: "decimal",
+              }).format(Number(value));
+            default:
+              return value;
+          }
+        })
+        .exhaustive()
+    );
   }
 
   return {
