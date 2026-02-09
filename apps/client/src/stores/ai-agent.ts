@@ -36,7 +36,7 @@ export const useAiAgentStore = defineStore("socket", () => {
       socket.value = io(AGENT_WEBSOCKET_URL, {
         autoConnect: true,
         path: "/api/ai-socket",
-        port: 5002,
+        port: 3000,
       });
     }
     else if (!socket.value.connected) {

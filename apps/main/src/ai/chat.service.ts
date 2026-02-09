@@ -2,6 +2,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { Injectable, Logger } from "@nestjs/common";
+import { PassportRepository } from "../passports/infrastructure/passport.repository";
 import { PolicyKey } from "../policy/domain/policy";
 import { PolicyService } from "../policy/infrastructure/policy.service";
 import {
@@ -20,6 +21,7 @@ export class ChatService {
   private uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService;
   private aiConfigurationService: AiConfigurationService;
   private policyService: PolicyService;
+  private passportRepository: PassportRepository;
 
   constructor(
     mcpClientService: McpClientService,
@@ -27,19 +29,22 @@ export class ChatService {
     uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
     aiConfigurationService: AiConfigurationService,
     policyService: PolicyService,
+    passportRepository: PassportRepository,
   ) {
     this.mcpClientService = mcpClientService;
     this.aiService = aiService;
     this.uniqueProductIdentifierApplicationService = uniqueProductIdentifierApplicationService;
     this.aiConfigurationService = aiConfigurationService;
     this.policyService = policyService;
+    this.passportRepository = passportRepository;
   }
 
   async askAgent(query: string, passportUuid: string) {
     this.logger.log(`Find passport with UUID: ${passportUuid}`);
-    const passport = await this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifier(
-      passportUuid,
-    );
+    const passport = await this.passportRepository.findOne(passportUuid);
+    if (!passport) {
+      throw new Error(`Product passport with id ${passportUuid} not found`);
+    }
     if (!passport) {
       throw new Error("Passport not found");
     }

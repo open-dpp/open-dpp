@@ -35,6 +35,14 @@ async function editItem(id: string) {
   await router.push(`${route.path}/${id}`);
 }
 
+function forwardToPresentation(id: string) {
+  router.push(`/presentation/${id}`);
+}
+
+function forwardToPresentationChat(id: string) {
+  router.push(`/presentation/${id}/chat`);
+}
+
 const { t } = useI18n();
 </script>
 
@@ -66,12 +74,26 @@ const { t } = useI18n();
     </Column>
     <Column>
       <template #body="{ data }">
-        <div class="flex w-full justify-end">
+        <div class="flex w-full justify-end gap-2">
           <div class="flex items-center rounded-md gap-2">
             <Button
               icon="pi pi-pencil"
               severity="primary"
               @click="editItem(data.id)"
+            />
+          </div>
+          <div v-if="data.templateId" class="flex items-center rounded-md gap-2">
+            <Button
+              icon="pi pi-qrcode"
+              severity="primary"
+              @click="forwardToPresentation(data.id)"
+            />
+          </div>
+          <div v-if="data.templateId" class="flex items-center rounded-md gap-2">
+            <Button
+              icon="pi pi-comments"
+              severity="primary"
+              @click="forwardToPresentationChat(data.id)"
             />
           </div>
         </div>

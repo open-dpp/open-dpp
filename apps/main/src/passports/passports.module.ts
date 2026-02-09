@@ -9,6 +9,7 @@ import { TemplateRepository } from "../templates/infrastructure/template.reposit
 import { TemplateDoc, TemplateSchema } from "../templates/infrastructure/template.schema";
 import { UniqueProductIdentifierDoc, UniqueProductIdentifierSchema } from "../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { PassportService } from "./application/services/passport.service";
 import { PassportRepository } from "./infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "./infrastructure/passport.schema";
 import { PassportController } from "./presentation/passport.controller";
@@ -34,7 +35,7 @@ import { PassportController } from "./presentation/passport.controller";
     OrganizationsModule,
   ],
   controllers: [PassportController],
-  providers: [EnvironmentService, TemplateRepository, UniqueProductIdentifierService, PassportRepository],
-  exports: [PassportRepository],
+  providers: [EnvironmentService, TemplateRepository, UniqueProductIdentifierService, PassportRepository, PassportService],
+  exports: [PassportRepository, PassportService],
 })
-export class PassportsModule {}
+export class PassportsModule { }
