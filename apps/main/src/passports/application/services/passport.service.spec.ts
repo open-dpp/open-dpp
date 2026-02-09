@@ -16,9 +16,6 @@ import { PassportService } from "./passport.service";
 
 describe("passportService", () => {
   let service: PassportService;
-  let passportRepository: PassportRepository;
-  let aasRepository: AasRepository;
-  let submodelRepository: SubmodelRepository;
 
   const mockPassportRepository = {
     findOne: jest.fn(),
@@ -56,10 +53,6 @@ describe("passportService", () => {
     }).compile();
 
     service = module.get<PassportService>(PassportService);
-    passportRepository = module.get<PassportRepository>(PassportRepository);
-    aasRepository = module.get<AasRepository>(AasRepository);
-    submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);
-
     jest.clearAllMocks();
   });
 

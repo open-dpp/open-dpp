@@ -13,9 +13,6 @@ import { PassportController } from "./passport.controller";
 
 describe("passportController", () => {
   let controller: PassportController;
-  let passportService: PassportService;
-  let passportRepository: PassportRepository;
-  let authService: AuthService;
 
   const mockPassportService = {
     exportPassport: jest.fn(),
@@ -54,9 +51,6 @@ describe("passportController", () => {
     }).compile();
 
     controller = module.get<PassportController>(PassportController);
-    passportService = module.get<PassportService>(PassportService);
-    passportRepository = module.get<PassportRepository>(PassportRepository);
-    authService = module.get<AuthService>(AuthService);
   });
 
   it("should be defined", () => {
