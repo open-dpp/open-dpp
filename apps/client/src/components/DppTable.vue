@@ -7,6 +7,7 @@ import utc from "dayjs/plugin/utc";
 import { Button, Column, DataTable } from "primevue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
+import axiosIns from "../lib/axios.ts";
 import TablePagination from "./pagination/TablePagination.vue";
 
 const props = defineProps<{
@@ -43,6 +44,17 @@ function forwardToPresentationChat(id: string) {
   router.push(`/presentation/${id}/chat`);
 }
 
+async function exportPassport(id: string) {
+  const response = await axiosIns.get(`/passports/${id}/export`);
+  console.log(response);
+}
+
+async function importPassport(id: string) {
+  const dataFromFile = "";
+  const response = await axiosIns.get(`/passports/${id}/import`, dataFromFile);
+  console.log(response);
+}
+
 const { t } = useI18n();
 </script>
 
@@ -54,7 +66,10 @@ const { t } = useI18n();
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
         <span class="text-xl font-bold">{{ props.title }}</span>
-        <Button :label="t('common.add')" @click="emits('create')" />
+        <div class="flex items-center gap-2">
+          <Button :label="t('common.add')" @click="emits('create')" />
+          <Button label="Import" @click="() => importPassport" />
+        </div>
       </div>
     </template>
     <Column field="id" header="Id" />
@@ -94,6 +109,13 @@ const { t } = useI18n();
               icon="pi pi-comments"
               severity="primary"
               @click="forwardToPresentationChat(data.id)"
+            />
+          </div>
+          <div class="flex items-center rounded-md gap-2">
+            <Button
+              icon="pi pi-download"
+              severity="secondary"
+              @click="exportPassport(data.id)"
             />
           </div>
         </div>

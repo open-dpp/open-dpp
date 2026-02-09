@@ -35,7 +35,9 @@ import { AuthService } from "../../auth/auth.service";
 import { Pagination } from "../../pagination/pagination";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { PassportService } from "../application/services/passport.service";
 import { Passport } from "../domain/passport";
+
 import { PassportRepository } from "../infrastructure/passport.repository";
 
 @Controller("/passports")
@@ -46,6 +48,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     private readonly passportRepository: PassportRepository,
     private readonly templateRepository: TemplateRepository,
     private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
+    private readonly passportService: PassportService,
   ) {
   }
 
@@ -196,6 +199,33 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
   ): Promise<ValueResponseDto> {
     const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
     return await this.environmentService.getSubmodelElementValue(passport.getEnvironment(), submodelId, idShortPath);
+  }
+
+  @Get("/:id/export")
+  async exportPassport(
+    @IdParam() id: string,
+    @RequestParam() req: express.Request,
+  ): Promise<any> {
+    const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
+    return await this.passportService.exportPassport(passport.id);
+  }
+
+  @Post("/import")
+  async importPassport(
+    @Body() body: any, // TODO: Define strict DTO for ExpandedPassport
+    @RequestParam() req: express.Request,
+  ): Promise<PassportDto> {
+    // Access check: only authenticated users can import?
+    await this.authService.getActiveOrganizationId(req); // Just to ensure auth
+
+    // We might want to override organizationId in the imported passport to the current user's org
+    // But importPassport service takes data as is.
+    // Let's override it here
+    const orgId = await this.authService.getActiveOrganizationId(req);
+    body.organizationId = orgId;
+
+    const passport = await this.passportService.importPassport(body);
+    return PassportDtoSchema.parse(passport.toPlain());
   }
 
   private async loadPassportAndCheckOwnership(authService: AuthService, id: string, req: express.Request): Promise<Passport> {
