@@ -5,7 +5,7 @@ import { useLayoutStore } from "../../../stores/layout";
 export const PRESENTATION_VIEW: RouteRecordRaw = {
   path: ":permalink",
   name: "PRESENTATION_VIEW",
-  component: () => import("../../../view/presentation/View.vue"),
+  component: () => import("../../../view/presentation-old/View.vue"),
   beforeEnter: async (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = await presentationBreadcrumbs(to);
@@ -29,7 +29,7 @@ function presentationBreadcrumbs(to: RouteLocationNormalizedGeneric) {
 export const PRESENTATION_404: RouteRecordRaw = {
   path: "404",
   name: "PRESENTATION_404",
-  component: () => import("../../../view/presentation/404.vue"),
+  component: () => import("../../../view/presentation-old/404.vue"),
   beforeEnter: async (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = await presentationBreadcrumbs(to);
@@ -43,7 +43,7 @@ export const PRESENTATION_404: RouteRecordRaw = {
 export const PRESENTATION_VIEW_CHAT: RouteRecordRaw = {
   path: ":permalink/chat",
   name: "PRESENTATION_VIEW_CHAT",
-  component: () => import("../../../view/presentation/Chat.vue"),
+  component: () => import("../../../view/presentation-old/Chat.vue"),
   beforeEnter: async (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = await presentationBreadcrumbs(to);

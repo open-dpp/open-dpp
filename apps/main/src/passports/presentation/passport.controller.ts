@@ -9,7 +9,8 @@ import type {
   SubmodelRequestDto,
   ValueRequestDto,
 } from "@open-dpp/dto";
-import { BadRequestException, Body, Controller, Get, Post } from "@nestjs/common";
+import type express from "express";
+import { BadRequestException, Body, Controller, Get, Param, Post } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
   AssetKind,
@@ -52,6 +53,7 @@ import {
   IdShortPathParam,
   LimitQueryParam,
   PositionQueryParam,
+  RequestParam,
   RowParam,
   SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
@@ -102,6 +104,14 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     return PassportPaginationDtoSchema.parse(
       (await this.passportRepository.findAllByOrganizationId(activeOrganizationId, pagination)).toPlain(),
     );
+  }
+
+  @Get(":passportId")
+  async getPassport(
+    @RequestParam() req: express.Request,
+    @Param("passportId") id: string,
+  ): Promise<PassportDto> {
+    return PassportDtoSchema.parse((await this.passportRepository.findOneOrFail(id)).toPlain());
   }
 
   @Post()

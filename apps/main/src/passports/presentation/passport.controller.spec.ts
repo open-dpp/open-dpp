@@ -122,6 +122,46 @@ describe("passportController", () => {
     });
   });
 
+  it(`/GET Get passport by id`, async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { aas, submodels } = ctx.getAasObjects();
+
+    const createDate = new Date(
+      "2022-01-01T00:00:00.000Z",
+    );
+
+    const id = randomUUID();
+
+    const passportRepository = ctx.getModuleRef().get(PassportRepository);
+
+    const passport = Passport.create({
+      id,
+      organizationId: org.id,
+      environment: Environment.create({
+        assetAdministrationShells: [aas.id],
+        submodels: submodels.map(s => s.id),
+        conceptDescriptions: [],
+      }),
+      createdAt: createDate,
+      updatedAt: createDate,
+    });
+
+    await passportRepository.save(passport);
+
+    const response = await request(app.getHttpServer())
+      .get(`${basePath}/${passport.id}`)
+      .set("Cookie", userCookie)
+      .send();
+
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      ...passport.toPlain(),
+      createdAt: passport.createdAt.toISOString(),
+      updatedAt: passport.updatedAt.toISOString(),
+    });
+  });
+
   it(`/POST Create blank passport`, async () => {
     const { betterAuthHelper, app } = ctx.globals();
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();

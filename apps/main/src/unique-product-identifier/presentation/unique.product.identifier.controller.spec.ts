@@ -30,7 +30,7 @@ import { UniqueProductIdentifierApplicationService } from "./unique.product.iden
 import { UniqueProductIdentifierController } from "./unique.product.identifier.controller";
 
 describe("uniqueProductIdentifierController", () => {
-  const basePath = "/unique-product-identifier";
+  const basePath = "/unique-product-identifiers";
   const ctx = createAasTestContext(basePath, {
     imports: [UniqueProductIdentifierModule],
     providers: [
@@ -66,7 +66,7 @@ describe("uniqueProductIdentifierController", () => {
     },
   ], UniqueProductIdentifierService);
 
-  async function createPassportWithUniqueProductIdentifier(orgId: string): Promise<Passport> {
+  async function createPassportWithUniqueProductIdentifier(orgId: string): Promise<{ id: string; toPlain: () => object; passport: Passport }> {
     const { aas, submodels } = ctx.getAasObjects();
 
     const passport = Passport.create({
@@ -81,10 +81,51 @@ describe("uniqueProductIdentifierController", () => {
 
     const upid = passport.createUniqueProductIdentifier();
 
-    ctx.getRepositories().dppIdentifiableRepository.save(upid);
+    await ctx.getRepositories().dppIdentifiableRepository.save(upid);
+    await ctx.getModuleRef().get(PassportRepository).save(passport);
 
-    return ctx.getModuleRef().get(PassportRepository).save(passport);
+    const persistable = { id: upid.uuid, toPlain: () => ({ id: upid.uuid }), passport };
+
+    return persistable;
   }
+
+  it(`/GET passport from unique product identifier`, async () => {
+    const { org, userCookie } = await ctx.globals().betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+
+    const upid = await createPassportWithUniqueProductIdentifier(org.id);
+
+    const response = await request(ctx.globals().app.getHttpServer())
+      .get(
+        `/organizations/${org.id}/unique-product-identifiers/${upid.id}/passport`,
+      )
+      .set("Cookie", userCookie);
+
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      ...upid.passport.toPlain(),
+      createdAt: upid.passport.createdAt.toISOString(),
+      updatedAt: upid.passport.updatedAt.toISOString(),
+    });
+  });
+
+  it(`/GET unique product identifier by passport`, async () => {
+    const { org, userCookie } = await ctx.globals().betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+
+    const upid = await createPassportWithUniqueProductIdentifier(org.id);
+
+    const response = await request(ctx.globals().app.getHttpServer())
+      .get(
+        `/organizations/${org.id}/unique-product-identifiers/${upid.id}/`,
+      )
+      .set("Cookie", userCookie);
+
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      ...upid.passport.toPlain(),
+      createdAt: upid.passport.createdAt.toISOString(),
+      updatedAt: upid.passport.updatedAt.toISOString(),
+    });
+  });
 
   it(`/GET reference of unique product identifier`, async () => {
     const { org, user, userCookie } = await ctx.globals().betterAuthHelper.getRandomOrganizationAndUserWithCookie();

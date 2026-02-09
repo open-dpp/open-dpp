@@ -1,8 +1,8 @@
 import { Controller, Get, Param } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
+  PassportDtoSchema,
   SubmodelElementPaginationResponseDto,
-  SubmodelElementRequestDto,
   SubmodelElementResponseDto,
   SubmodelPaginationResponseDto,
   SubmodelResponseDto,
@@ -17,16 +17,15 @@ import {
   ApiGetSubmodelElementValue,
   ApiGetSubmodels,
   ApiGetSubmodelValue,
-  ApiPostSubmodelElementAtIdShortPath,
   CursorQueryParam,
   IdParam,
   IdShortPathParam,
   LimitQueryParam,
-  SubmodelElementRequestBody,
   SubmodelIdParam,
 } from "../../aas/presentation/aas.decorators";
 import { IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
+import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
 import { AllowServiceAccess } from "../../identity/auth/presentation/decorators/allow-service-access.decorator";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { ModelsService } from "../../models/infrastructure/models.service";
@@ -53,11 +52,15 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     uniqueProductIdentifierService: UniqueProductIdentifierService,
     itemService: ItemsService,
     uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
+    passportRepository: PassportRepository,
+    environmentService: EnvironmentService,
   ) {
     this.modelsService = modelsService;
     this.uniqueProductIdentifierService = uniqueProductIdentifierService;
     this.itemService = itemService;
     this.uniqueProductIdentifierApplicationService = uniqueProductIdentifierApplicationService;
+    this.passportRepository = passportRepository;
+    this.environmentService = environmentService;
   }
 
   @Get("organizations/:orgaId/unique-product-identifiers/:id/reference")
@@ -91,6 +94,14 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     }
   }
 
+  @Get("organizations/:orgaId/unique-product-identifiers/:id/passport")
+  async getReferencedPassport(
+    @Param("orgaId") organizationId: string,
+    @Param("id") id: string,
+  ) {
+    return PassportDtoSchema.parse((await this.loadPassport(id)));
+  }
+
   @AllowServiceAccess()
   @Get("unique-product-identifiers/:id/metadata")
   async get(@Param("id") id: string) {
@@ -99,18 +110,21 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     );
   }
 
-  @ApiGetShells()
+  @AllowAnonymous()
+  @ApiGetShells("unique-product-identifiers")
   async getShells(
     @IdParam() id: string,
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
   ): Promise<AssetAdministrationShellPaginationResponseDto> {
     const passport = await this.loadPassport(id);
+
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getAasShells(passport.getEnvironment(), pagination);
   }
 
-  @ApiGetSubmodels()
+  @AllowAnonymous()
+  @ApiGetSubmodels("unique-product-identifiers")
   async getSubmodels(
     @IdParam() id: string,
     @LimitQueryParam() limit: number | undefined,
@@ -121,7 +135,8 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     return await this.environmentService.getSubmodels(passport.getEnvironment(), pagination);
   }
 
-  @ApiGetSubmodelById()
+  @AllowAnonymous()
+  @ApiGetSubmodelById("unique-product-identifiers")
   async getSubmodelById(
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
@@ -130,7 +145,8 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     return await this.environmentService.getSubmodelById(passport.getEnvironment(), submodelId);
   }
 
-  @ApiGetSubmodelValue()
+  @AllowAnonymous()
+  @ApiGetSubmodelValue("unique-product-identifiers")
   async getSubmodelValue(
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
@@ -139,7 +155,8 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     return await this.environmentService.getSubmodelValue(passport.getEnvironment(), submodelId);
   }
 
-  @ApiGetSubmodelElements()
+  @AllowAnonymous()
+  @ApiGetSubmodelElements("unique-product-identifiers")
   async getSubmodelElements(
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
@@ -151,7 +168,8 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     return await this.environmentService.getSubmodelElements(passport.getEnvironment(), submodelId, pagination);
   }
 
-  @ApiGetSubmodelElementById()
+  @AllowAnonymous()
+  @ApiGetSubmodelElementById("unique-product-identifiers")
   async getSubmodelElementById(
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
@@ -161,18 +179,8 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     return await this.environmentService.getSubmodelElementById(passport.getEnvironment(), submodelId, idShortPath);
   }
 
-  @ApiPostSubmodelElementAtIdShortPath()
-  async createSubmodelElementAtIdShortPath(
-    @IdParam() id: string,
-    @SubmodelIdParam() submodelId: string,
-    @IdShortPathParam() idShortPath: IdShortPath,
-    @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
-  ): Promise<SubmodelElementResponseDto> {
-    const passport = await this.loadPassport(id);
-    return await this.environmentService.addSubmodelElement(passport.getEnvironment(), submodelId, body, idShortPath);
-  }
-
-  @ApiGetSubmodelElementValue()
+  @AllowAnonymous()
+  @ApiGetSubmodelElementValue("unique-product-identifiers")
   async getSubmodelElementValue(
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
@@ -183,7 +191,7 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
   }
 
   private async loadPassport(id: string): Promise<Passport> {
-    const passport = await this.passportRepository.findOneOrFail(id);
-    return passport;
+    const puid = await this.uniqueProductIdentifierService.findOneOrFail(id);
+    return await this.passportRepository.findOneOrFail(puid.referenceId);
   }
 }

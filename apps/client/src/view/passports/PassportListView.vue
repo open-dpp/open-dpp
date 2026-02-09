@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { Button } from "primevue";
 import { onMounted, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
@@ -40,6 +41,10 @@ function newPassport() {
   createDialog.value?.open();
 }
 
+async function routeToQrCode(id: string) {
+  await router.push(`${route.path}/${id}/qr-code`);
+}
+
 onMounted(async () => {
   await init();
 });
@@ -58,6 +63,19 @@ onMounted(async () => {
     @create="newPassport"
     @next-page="nextPage"
     @previous-page="previousPage"
-  />
+  >
+    <template #actions="{ passport, editItem }">
+      <Button
+        icon="pi pi-qrcode"
+        severity="info"
+        @click="routeToQrCode(passport.id)"
+      />
+      <Button
+        icon="pi pi-pencil"
+        severity="primary"
+        @click="editItem(passport.id)"
+      />
+    </template>
+  </DppTable>
   <PassportCreateDialog ref="createDialog" />
 </template>

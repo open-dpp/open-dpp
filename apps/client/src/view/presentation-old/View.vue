@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { onBeforeUnmount, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import ViewInformation from "../../components/presentation-components/ViewInformation.vue";
-import apiClient from "../../lib/api-client";
+import ViewInformation from "../../components/presentation-components-old/ViewInformation.vue";
+import apiClient from "../../lib/api-client.ts";
 import { useAnalyticsStore } from "../../stores/analytics.ts";
-import { useProductPassportStore } from "../../stores/product-passport";
+import { useProductPassportStore } from "../../stores/product-passport.ts";
 
 const route = useRoute();
 const router = useRouter();
