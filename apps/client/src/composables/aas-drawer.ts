@@ -63,6 +63,7 @@ export type SubmodelElementListEditorProps = SubmodelElementListResponseDto;
 export const ColumnCreateEditorPropsSchema = z.object({
   modelType: AasSubmodelElementsEnum,
   valueType: ValueTypeSchema.optional(),
+  contentType: z.string().optional(),
 });
 export type ColumnCreateEditorProps = z.infer<typeof ColumnCreateEditorPropsSchema>;
 export type ColumnEditorProps = SubmodelElementResponseDto;

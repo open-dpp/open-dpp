@@ -44,7 +44,12 @@ const showErrors = computed(() => {
 
 const submit = handleSubmit(async (data) => {
   await props.callback(
-    SubmodelElementSchema.parse({ ...data, modelType: props.data.modelType, valueType: props.data.valueType }),
+    SubmodelElementSchema.parse({
+      ...data,
+      modelType: props.data.modelType,
+      valueType: props.data.valueType,
+      contentType: props.data.contentType,
+    }),
   );
 });
 

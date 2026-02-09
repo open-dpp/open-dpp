@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import type { MediaInfo } from "./MediaInfo.interface";
+import { DataView } from "primevue";
 import { computed, onMounted } from "vue";
 import { useMediaStore } from "../../stores/media";
-import Pagination from "../lists/Pagination.vue";
 import MediaListItem from "./MediaListItem.vue";
 
 const props = defineProps<{
@@ -15,7 +15,7 @@ const emits = defineEmits<{
 }>();
 const mediaStore = useMediaStore();
 
-const page = computed(() => {
+const mediaFiles = computed(() => {
   return mediaStore.organizationMedia;
 });
 
@@ -42,26 +42,23 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
-    <div class="overflow-y-auto p-3">
-      <ul class="flex flex-wrap gap-x-4 gap-y-8 h-[50vh]" role="list">
-        <li v-for="media in page" :key="media.id" class="relative">
+  <DataView :value="mediaFiles" layout="grid" paginator :rows="6">
+    <template #grid="slotProps">
+      <div class="grid grid-cols-12 gap-4">
+        <div
+          v-for="(item, index) in slotProps.items"
+          :key="index"
+          class="col-span-12 lg:col-span-6 xl:col-span-4 2xl:col-span-3 p-2"
+        >
           <MediaListItem
-            :data-cy="`select-media-${media.id}`"
-            :is-selected="selected.some((f) => f.id === media.id)"
-            :media="media"
+            :data-cy="`select-media-${item.id}`"
+            :is-selected="selected.some((f) => f.id === item.id)"
+            :media="item"
             :selectable="selectable"
             @on-select="onSelect"
           />
-        </li>
-      </ul>
-    </div>
-    <div>
-      <Pagination
-        :current-page="0"
-        :items-per-page="page.length"
-        :total-items="page.length"
-      />
-    </div>
-  </div>
+        </div>
+      </div>
+    </template>
+  </DataView>
 </template>

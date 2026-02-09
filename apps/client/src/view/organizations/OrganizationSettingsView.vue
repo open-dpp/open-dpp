@@ -134,7 +134,6 @@ onMounted(() => {
                 />
                 <span v-if="selectedFile" class="text-sm text-gray-600">{{ selectedFile.name }}</span>
               </div>
-              <small class="text-gray-500">{{ t('organizations.form.image.help') }}</small>
             </div>
 
             <div class="mt-4">

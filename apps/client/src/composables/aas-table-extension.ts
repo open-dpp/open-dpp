@@ -113,7 +113,7 @@ export function useAasTableExtension({
           type: ColumnEditorKey,
           data: valueType
             ? { valueType, modelType: type }
-            : { modelType: type },
+            : { modelType: type, contentType: "application/octet-stream" },
           mode: EditorMode.CREATE,
           title: addColumLabel,
           path: pathToList,
@@ -143,6 +143,7 @@ export function useAasTableExtension({
   async function onCellEditComplete(
     event: DataTableCellEditCompleteEvent<any>,
   ) {
+    console.log("CELL EDIT COMPLETE");
     const { data: rowData, newValue, field } = event;
     const parsedNewValue = z.string().min(1).safeParse(newValue);
     if (parsedNewValue.success && rowData[field] !== parsedNewValue.data) {
