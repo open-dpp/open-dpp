@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
 import { Button, Column, DataTable } from "primevue";
+import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import axiosIns from "../lib/axios.ts";
@@ -44,15 +45,53 @@ function forwardToPresentationChat(id: string) {
   router.push(`/presentation/${id}/chat`);
 }
 
+const fileInput = ref<HTMLInputElement | null>(null);
+
 async function exportPassport(id: string) {
-  const response = await axiosIns.get(`/passports/${id}/export`);
-  console.log(response);
+  try {
+    const response = await axiosIns.get(`/passports/${id}/export`);
+    const data = JSON.stringify(response.data, null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `passport-${id}.json`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+  catch (error) {
+    console.error("Failed to export passport", error);
+  }
 }
 
-async function importPassport(id: string) {
-  const dataFromFile = "";
-  const response = await axiosIns.get(`/passports/${id}/import`, dataFromFile);
-  console.log(response);
+function triggerImport() {
+  fileInput.value?.click();
+}
+
+async function handleFileUpload(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file)
+    return;
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const json = JSON.parse(e.target?.result as string);
+      await axiosIns.post("/passports/import", json);
+      emits("resetCursor"); // Refresh list
+    }
+    catch (error) {
+      console.error("Failed to import passport", error);
+    }
+    finally {
+      // Reset input value to allow selecting same file again
+      if (fileInput.value)
+        fileInput.value.value = "";
+    }
+  };
+  reader.readAsText(file);
 }
 
 const { t } = useI18n();
@@ -68,7 +107,14 @@ const { t } = useI18n();
         <span class="text-xl font-bold">{{ props.title }}</span>
         <div class="flex items-center gap-2">
           <Button :label="t('common.add')" @click="emits('create')" />
-          <Button label="Import" @click="() => importPassport" />
+          <Button label="Import" @click="triggerImport" />
+          <input
+            ref="fileInput"
+            type="file"
+            accept=".json"
+            class="hidden"
+            @change="handleFileUpload"
+          >
         </div>
       </div>
     </template>

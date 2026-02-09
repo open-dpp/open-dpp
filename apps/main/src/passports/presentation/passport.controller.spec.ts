@@ -1,18 +1,17 @@
-
-import { jest } from '@jest/globals';
+import { randomUUID } from "node:crypto";
+import { jest } from "@jest/globals";
+import { Test, TestingModule } from "@nestjs/testing";
+import { Environment } from "../../aas/domain/environment";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { AuthService } from "../../auth/auth.service";
-import { PassportRepository } from "../infrastructure/passport.repository";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { PassportService } from "../application/services/passport.service";
-import { PassportController } from "./passport.controller";
-import { Test, TestingModule } from "@nestjs/testing";
 import { Passport } from "../domain/passport";
-import { Environment } from "../../aas/domain/environment";
-import { randomUUID } from "crypto";
+import { PassportRepository } from "../infrastructure/passport.repository";
+import { PassportController } from "./passport.controller";
 
-describe("PassportController", () => {
+describe("passportController", () => {
   let controller: PassportController;
   let passportService: PassportService;
   let passportRepository: PassportRepository;
@@ -64,7 +63,7 @@ describe("PassportController", () => {
     expect(controller).toBeDefined();
   });
 
-  // We need to handle the standalone function `checkOwnerShipOfDppIdentifiable`. 
+  // We need to handle the standalone function `checkOwnerShipOfDppIdentifiable`.
   // For now, let's assume it works or mock the repository to return something that passes it if it uses simple logic.
   // Actually, `checkOwnerShipOfDppIdentifiable` probably takes passport and authService and checks org ID.
   // Let's rely on integration/e2e tests or just simple unit tests where we mock the passport return.
@@ -75,7 +74,7 @@ describe("PassportController", () => {
       const passport = Passport.create({
         id: passportId,
         organizationId: "org-1",
-        environment: Environment.create({})
+        environment: Environment.create({}),
       });
 
       mockPassportRepository.findOneOrFail.mockResolvedValue(passport);
@@ -95,7 +94,7 @@ describe("PassportController", () => {
       const body = { some: "data" };
       const passport = Passport.create({
         organizationId: "org-1",
-        environment: Environment.create({})
+        environment: Environment.create({}),
       });
 
       mockAuthService.getActiveOrganizationId.mockResolvedValue("org-1");
