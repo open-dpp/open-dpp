@@ -113,7 +113,7 @@ const { t } = useI18n();
         <span class="text-xl font-bold">{{ props.title }}</span>
         <div class="flex items-center gap-2">
           <Button :label="t('common.add')" @click="emits('create')" />
-          <Button label="Import" @click="triggerImport" />
+          <Button :label="t('common.import')" @click="triggerImport" />
           <input
             ref="fileInput"
             type="file"
