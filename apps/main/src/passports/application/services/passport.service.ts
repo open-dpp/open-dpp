@@ -8,6 +8,20 @@ import { SubmodelRepository } from "../../../aas/infrastructure/submodel.reposit
 import { Passport } from "../../domain/passport";
 import { PassportRepository } from "../../infrastructure/passport.repository";
 
+export type ExpandedPassport = Omit<ReturnType<Passport["toPlain"]>, "environment"> & {
+  environment: {
+    assetAdministrationShells: Record<string, any>[];
+    submodels: Record<string, any>[];
+  };
+};
+
+const ExpandedPassportSchema = z.object({
+  environment: z.object({
+    assetAdministrationShells: z.array(z.record(z.string(), z.any())),
+    submodels: z.array(z.record(z.string(), z.any())),
+  }),
+}).passthrough();
+
 @Injectable()
 export class PassportService {
   private readonly logger = new Logger(PassportService.name);
@@ -162,17 +176,3 @@ export class PassportService {
     return newPassport;
   }
 }
-
-export type ExpandedPassport = Omit<ReturnType<Passport["toPlain"]>, "environment"> & {
-  environment: {
-    assetAdministrationShells: Record<string, any>[];
-    submodels: Record<string, any>[];
-  };
-};
-
-const ExpandedPassportSchema = z.object({
-  environment: z.object({
-    assetAdministrationShells: z.array(z.record(z.string(), z.any())),
-    submodels: z.array(z.record(z.string(), z.any())),
-  }),
-}).passthrough();
