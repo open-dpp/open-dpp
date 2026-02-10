@@ -72,25 +72,28 @@ describe("OrganizationsRepository", () => {
   it("should pass undefined for logo in update if data has no logo", async () => {
     const organizationObjectId = new ObjectId();
     mockAuth.api.updateOrganization.mockResolvedValue({});
-    mockOrganizationModel.find.mockReturnValue({
+    mockOrganizationModel.findOne.mockReturnValue({
       exec: jest.fn().mockResolvedValue([{
         _id: organizationObjectId,
         name: "Test Org",
         slug: "test-org",
         logo: null,
-        metadata: {},
+        metadata: JSON.stringify({}),
       }]),
     });
 
     await repository.update(organizationObjectId.toString(), {
       name: "Test Org Updated",
-      slug: "test-org",
       logo: null,
     }, {});
 
     expect(mockAuth.api.updateOrganization).toHaveBeenCalledWith(expect.objectContaining({
       body: expect.objectContaining({
-        logo: undefined,
+        data: expect.objectContaining({
+          name: "Test Org Updated",
+          logo: undefined,
+        }),
+        organizationId: organizationObjectId.toString(),
       }),
     }));
   });

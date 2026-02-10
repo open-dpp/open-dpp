@@ -22,7 +22,7 @@ describe("organizationMapper", () => {
     name: "Test Org",
     slug: "test-org",
     logo: "logo.png",
-    metadata: { key: "value" },
+    metadata: JSON.stringify({ key: "value" }),
     createdAt: now,
   } as unknown as OrganizationDocument;
 
