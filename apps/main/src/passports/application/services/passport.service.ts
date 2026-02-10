@@ -119,14 +119,26 @@ export class PassportService {
       // Find which new submodels correspond to the old shell's references
       const relatedNewSubmodels: Submodel[] = [];
       for (const ref of oldShell.submodels) {
-        // ref.keys[0].value is the submodel ID (usually)
-        // Accessing keys might be complex depending on Reference structure, assuming standard ModelReference -> Submodel
-        const key = ref.keys.find(k => k.type === "Submodel" || k.type === "GlobalReference"); // Check KeyTypes enum
-        if (key) {
-          const newSub = oldIdToNewSubmodelMap.get(key.value);
-          if (newSub) {
-            relatedNewSubmodels.push(newSub);
+        const key = ref.keys.find((k) => k.type === "Submodel" || k.type === "GlobalReference");
+
+        if (!key) {
+          if (ref.keys.length > 0) {
+            this.logger.warn(
+              `Reference key in shell ${oldShell.id} has unexpected type. Keys: ${JSON.stringify(ref.keys)}`
+            );
           }
+          continue;
+        }
+
+        const newSub = oldIdToNewSubmodelMap.get(key.value);
+        if (newSub) {
+          relatedNewSubmodels.push(newSub);
+        } else {
+          this.logger.warn(
+            `Submodel reference key ${key.value} not found in import map for shell ${oldShell.id}. Ref: ${JSON.stringify(
+              ref
+            )}`
+          );
         }
       }
 
