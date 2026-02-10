@@ -1,4 +1,3 @@
-import type { DataTableCellEditCompleteEvent } from "primevue";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItemCommandEvent } from "primevue/menuitem";
 import {
@@ -9,7 +8,6 @@ import {
   SubmodelElementSchema,
 } from "@open-dpp/dto";
 import { waitFor } from "@testing-library/vue";
-import { HttpStatusCode } from "axios";
 import { expect, it, vi } from "vitest";
 import ColumnCreateEditor from "../components/aas/ColumnCreateEditor.vue";
 import ColumnEditor from "../components/aas/ColumnEditor.vue";
@@ -232,7 +230,7 @@ describe("aasTableExtension composable", () => {
 
     mocks.addColumnToSubmodelElementList.mockResolvedValue({
       data: submodelElementListModified,
-      status: HttpStatusCode.Created,
+      status: HTTPCode.CREATED,
     });
 
     await editorVNode.value!.props.callback!(columnData);
@@ -275,17 +273,36 @@ describe("aasTableExtension composable", () => {
       openDrawer,
     });
 
+    const submodelElementListModified = {
+      ...submodelElementList,
+      value: [
+        submodelElementList.value[0],
+        {
+          ...submodelElementList.value[1],
+          value: [cols[0], { ...cols[1], value: "My material" }],
+        },
+      ],
+    };
+
+    mocks.modifyValueOfSubmodelElement.mockResolvedValue(
+      {
+        data: submodelElementListModified,
+        status: HTTPCode.OK,
+      },
+    );
+
     await onCellEditComplete({
-      data: rows.value[1],
+      data: { ...rows.value[1]! },
       newValue: "My material",
       field: "Column1",
-    } as DataTableCellEditCompleteEvent);
+      index: 1,
+    });
 
     expect(mocks.modifyValueOfSubmodelElement).toHaveBeenCalledWith(
       aasId,
       pathToList.submodelId,
       pathToList.idShortPath,
-      [rows.value[0], { ...rows.value[1], Column1: "My material" }],
+      [rows.value[0], { Column2: undefined, Column1: "My material" }],
     );
   });
 

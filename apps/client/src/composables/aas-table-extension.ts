@@ -10,7 +10,6 @@ import type {
   SubmodelElementSharedRequestDto,
   TableModificationParamsDto,
 } from "@open-dpp/dto";
-import type { DataTableCellEditCompleteEvent } from "primevue";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { ComputedRef, Ref } from "vue";
@@ -27,7 +26,6 @@ import {
   SubmodelElementSchema,
 
 } from "@open-dpp/dto";
-import { match, P } from "ts-pattern";
 import { computed, ref } from "vue";
 import { z } from "zod";
 import { HTTPCode } from "../stores/http-codes.ts";
@@ -54,9 +52,16 @@ export type ColumnMenuOptions = TableModificationParamsDto & { addColumnActions?
 export type RowMenuOptions = TableModificationParamsDto;
 type Value = string | null;
 type CellContent = { value: Value; contentType: string } | Value;
+type Row = Record<string, CellContent>;
+
+export interface CellEditProps {
+  data: Row;
+  newValue: any;
+  field: string;
+  index: number;
+}
 
 interface Column { idShort: string; label: string; plain: any }
-type Row = Record<string, CellContent>;
 export interface IAasTableExtension {
   columns: ComputedRef<Column[]>;
   rows: ComputedRef<Row[]>;
@@ -64,10 +69,8 @@ export interface IAasTableExtension {
   rowMenu: Ref<MenuItem[]>;
   buildColumnMenu: (options: ColumnMenuOptions) => void;
   buildRowMenu: (options: RowMenuOptions) => void;
-  onCellEditComplete: (
-    event: DataTableCellEditCompleteEvent<any>,
-  ) => Promise<void>;
-  formatCellValue: (content: CellContent, column: Column) => Value;
+  onCellEditComplete: (event: CellEditProps) => Promise<void>;
+  formatCellValue: (value: string, column: Column) => Value;
 }
 
 export function useAasTableExtension({
@@ -144,24 +147,27 @@ export function useAasTableExtension({
   });
 
   async function onCellEditComplete(
-    event: DataTableCellEditCompleteEvent<any>,
+    event: CellEditProps,
   ) {
-    const { data: rowData, newValue, field } = event;
+    const { data: rowData, newValue, field, index: editedRowIndex } = event;
     const ValueSchema = z.string().min(1);
     const ValueParser = newValue.contentType ? z.object({ contentType: z.string(), value: ValueSchema }) : ValueSchema;
 
     const parsedNewValue = ValueParser.safeParse(newValue);
     if (parsedNewValue.success && rowData[field] !== parsedNewValue.data) {
-      rowData[field] = parsedNewValue.data;
-      await aasNamespace.modifyValueOfSubmodelElement(
+      const modifications = rows.value.map((row, index) =>
+        index === editedRowIndex
+          ? { ...row, [field]: parsedNewValue.data }
+          : row,
+      );
+      const response = await aasNamespace.modifyValueOfSubmodelElement(
         id,
         pathToList.submodelId!,
         pathToList.idShortPath!,
-        rows.value,
+        modifications,
       );
-    }
-    else {
-      event.originalEvent.preventDefault();
+
+      data.value = SubmodelElementListJsonSchema.parse(response.data);
     }
   }
 
@@ -435,30 +441,15 @@ export function useAasTableExtension({
     });
   }
 
-  function formatCellValue(content: CellContent, column: Column) {
-    const ValuePattern = P.union(P.string, P.nullish);
-    return (
-      match(content)
-        // Case 1: Object with `value` and `contentType`
-        .with(
-          { value: ValuePattern, contentType: P.string },
-          ({ value }) => {
-            return value;
-          },
-        )
-        // Case 2: Plain string
-        .with(ValuePattern, (value) => {
-          switch (column.plain.valueType) {
-            case DataTypeDef.Double:
-              return new Intl.NumberFormat(selectedLanguage, {
-                style: "decimal",
-              }).format(Number(value));
-            default:
-              return value;
-          }
-        })
-        .exhaustive()
-    );
+  function formatCellValue(value: string, column: Column) {
+    switch (column.plain.valueType) {
+      case DataTypeDef.Double:
+        return new Intl.NumberFormat(selectedLanguage, {
+          style: "decimal",
+        }).format(Number(value));
+      default:
+        return value;
+    }
   }
 
   return {

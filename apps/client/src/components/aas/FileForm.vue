@@ -5,28 +5,20 @@ import type { EditorModeType } from "../../composables/aas-drawer.ts";
 import { Message } from "primevue";
 import { useField } from "vee-validate";
 
-import { useI18n } from "vue-i18n";
 import FileField from "./form/FileField.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
 const props = defineProps<{
-  data: any;
   showErrors: boolean;
   errors: FormErrors<any>;
   editorMode: EditorModeType;
 }>();
 
-const { t } = useI18n();
+const { value, errorMessage } = useField<string | undefined>("value");
 
-const { value, errorMessage } = useField<string | undefined | null>("value");
-
-const { value: contentType } = useField<string | undefined | null>(
+const { value: contentType } = useField<string | undefined>(
   "contentType",
 );
-
-function changeContentType(newContentType: string | undefined | null) {
-  contentType.value = newContentType;
-}
 </script>
 
 <template>
@@ -39,10 +31,8 @@ function changeContentType(newContentType: string | undefined | null) {
     <div class="grid lg:grid-cols-3 grid-cols-1 gap-2">
       <div class="flex flex-col gap-2">
         <FileField
-          id="file"
           v-model="value"
-          :label="t('aasEditor.file')"
-          @change-content-type="changeContentType"
+          v-model:change-content-type="contentType"
         />
         <Message size="small" severity="error" variant="simple">
           {{ errorMessage }}

@@ -25,7 +25,6 @@ import { EditorMode } from "../../composables/aas-drawer.ts";
 import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
-import MediaFieldView from "../media/MediaFieldView.vue";
 import FileField from "./form/FileField.vue";
 import PropertyValue from "./PropertyValue.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
@@ -165,18 +164,24 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
           />
           <span>{{ col.label }}</span>
         </template>
-        <template #body="{ data: cellData, field }">
+        <template #body="{ data: cellData, field, index: rowIndex }">
           <div
             v-if="
               typeof field === 'string'
                 && cellData[field] != null
                 && cellData[field]
-                && formatCellValue(cellData[field], col)
             "
           >
-            <MediaFieldView
+            <FileField
               v-if="col.plain.modelType === AasSubmodelElements.File"
-              :media-id="formatCellValue(cellData[field], col) as string"
+              :id="`${rowIndex}-${field}`"
+              v-model="cellData[field].value"
+              v-model:content-type="cellData[field].contentType"
+              @update:model-value="(value) => onCellEditComplete({
+                data: cellData,
+                newValue: { value, contentType: cellData[field].contentType },
+                field,
+                index: rowIndex })"
             />
             <span v-else>
               {{ formatCellValue(cellData[field], col) }}
@@ -185,25 +190,10 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
           <InputText v-else autofocus fluid />
         </template>
         <template
-          #editor="{
-            data: editorData,
-            field,
-            index: rowIndex,
-            editorSaveCallback,
-          }"
+          v-if="col.plain.modelType !== AasSubmodelElements.File"
+          #editor="{ data: editorData, field, index: rowIndex }"
         >
-          <FileField
-            v-if="col.plain.modelType === AasSubmodelElements.File"
-            :id="`${rowIndex}-${field}`"
-            v-model="editorData[field].value"
-            @blur="
-              (event) => {
-                editorSaveCallback(event);
-              }
-            "
-          />
           <PropertyValue
-            v-else
             :id="`${rowIndex}-${field}`"
             v-model="editorData[field]"
             :value-type="col.plain.valueType"

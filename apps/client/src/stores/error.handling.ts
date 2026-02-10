@@ -1,10 +1,10 @@
 import { defineStore } from "pinia";
 import { useNotificationStore } from "./notification";
 
-export interface ErrorHandlingOptionsAsync { message: string; errorCallback?: (e: unknown) => Promise<void> }
+export interface ErrorHandlingOptionsAsync { message: string; finallyCallback?: () => Promise<void> }
 export interface ErrorHandlingOptionsSync {
   message: string;
-  errorCallback?: (e: unknown) => void;
+  finallyCallback?: () => void;
 }
 
 export interface IErrorHandlingStore {
@@ -29,30 +29,34 @@ export const useErrorHandlingStore = defineStore("error-handling-store", (): IEr
 
   const withErrorHandlingAsync = async <T>(
     callback: () => Promise<T>,
-    { message, errorCallback }: ErrorHandlingOptionsAsync,
+    { message, finallyCallback }: ErrorHandlingOptionsAsync,
   ) => {
     try {
       await callback();
     }
     catch (e: unknown) {
       logErrorWithNotification(message, e);
-      if (errorCallback) {
-        await errorCallback(e);
+    }
+    finally {
+      if (finallyCallback) {
+        await finallyCallback();
       }
     }
   };
 
   const withErrorHandlingSync = async <T>(
     callback: () => T,
-    { message, errorCallback }: ErrorHandlingOptionsSync,
+    { message, finallyCallback }: ErrorHandlingOptionsSync,
   ) => {
     try {
       callback();
     }
     catch (e: unknown) {
       logErrorWithNotification(message, e);
-      if (errorCallback) {
-        errorCallback(e);
+    }
+    finally {
+      if (finallyCallback) {
+        finallyCallback();
       }
     }
   };
