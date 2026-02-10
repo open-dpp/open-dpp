@@ -4,7 +4,7 @@ import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { Member } from "../../domain/member";
 import { MemberRole } from "../../domain/member-role.enum";
-import { Organization, OrganizationCreateProps } from "../../domain/organization";
+import { Organization, OrganizationCreateProps, OrganizationUpdateProps } from "../../domain/organization";
 import { InvitationsRepository } from "../../infrastructure/adapters/invitations.repository";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
@@ -59,7 +59,7 @@ export class OrganizationsService {
 
   async updateOrganization(
     organizationId: string,
-    data: OrganizationCreateProps,
+    data: OrganizationUpdateProps,
     session: Session,
     headers: Record<string, string>,
   ): Promise<Organization | null> {

@@ -33,4 +33,8 @@ export class OrganizationsNamespace {
       `/organizations/${organizationId}/members`,
     )
   }
+
+  public async update(id: string, data: { name: string, logo?: string }) {
+    return this.axiosInstance.patch(`/organizations/${id}`, data)
+  }
 }

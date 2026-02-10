@@ -6,7 +6,6 @@ import { computed, onMounted, ref } from "vue";
 
 import { useI18n } from "vue-i18n";
 
-import { authClient } from "../../auth-client.ts";
 import MediaInput from "../../components/media/MediaInput.vue";
 import apiClient from "../../lib/api-client";
 import { useIndexStore } from "../../stores";
@@ -36,7 +35,7 @@ async function fetchOrganization() {
   const data = await organizationStore.fetchCurrentOrganization();
   if (data) {
     name.value = data.name;
-    const imageId = (data as any).image;
+    const imageId = (data as any).logo;
     if (imageId) {
       await fetchMedia(imageId);
     }
@@ -62,29 +61,26 @@ async function save() {
   if (!indexStore.selectedOrganization)
     return;
 
-  let image;
+  let logo;
 
   if (currentMedia.value && currentMedia.value.mediaInfo.id) {
-    image = currentMedia.value.mediaInfo.id;
+    logo = currentMedia.value.mediaInfo.id;
   }
 
   if (selectedFile.value) {
     try {
-      image = await apiClient.media.media.uploadOrganizationProfileMedia(indexStore.selectedOrganization, selectedFile.value);
+      logo = await apiClient.media.media.uploadOrganizationProfileMedia(indexStore.selectedOrganization, selectedFile.value);
     }
     catch (e) {
-      console.error("Failed to upload image", e);
+      console.error("Failed to upload logo", e);
       // Handle error
     }
   }
 
   try {
-    await authClient.organization.update({
-      organizationId: indexStore.selectedOrganization,
-      data: {
-        name: name.value,
-        ...(image ? { image } : {}),
-      },
+    await apiClient.dpp.organizations.update(indexStore.selectedOrganization, {
+      name: name.value,
+      ...(logo ? { logo } : {}),
     });
 
     await fetchOrganization();

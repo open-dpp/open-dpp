@@ -58,7 +58,7 @@ export class OrganizationsController {
   @Patch(":id")
   async updateOrganization(
     @Param("id") id: string,
-    @Body() body: { name: string; slug: string; logo: string; metadata: any },
+    @Body() body: { name: string; logo: string },
     @Headers() headers: Record<string, string>,
     @AuthSession() session: Session,
   ) {
@@ -71,9 +71,7 @@ export class OrganizationsController {
       id,
       {
         name: body.name,
-        slug: body.slug,
         logo: body.logo,
-        metadata: body.metadata,
       },
       session,
       headers,

@@ -159,22 +159,6 @@ export const AuthProvider: Provider = {
           enabled: false,
         },
       }), organization({
-        schema: {
-          organization: {
-            additionalFields: {
-              logo: {
-                type: "string",
-                input: true,
-                required: false,
-              },
-              metadata: {
-                type: "string",
-                input: true,
-                required: false,
-              },
-            },
-          },
-        },
         async sendInvitationEmail(data) {
           try {
             if (!data.organization) {

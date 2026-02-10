@@ -1,11 +1,11 @@
 import type { Auth } from "better-auth";
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Organization as BetterAuthOrganizationSchema } from "better-auth/plugins/organization";
 import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { AUTH } from "../../../auth/auth.provider";
-import { Organization, OrganizationCreateProps } from "../../domain/organization";
+import { Organization, OrganizationUpdateProps } from "../../domain/organization";
 import { OrganizationMapper } from "../mappers/organization.mapper";
 import { Organization as OrganizationSchema } from "../schemas/organization.schema";
 
@@ -47,21 +47,29 @@ export class OrganizationsRepository {
     }
   }
 
-  async update(organizationId: string, data: OrganizationCreateProps, headers: Record<string, string>): Promise<Organization | null> {
+  async update(organizationId: string, data: OrganizationUpdateProps, headers: Record<string, string>): Promise<Organization | null> {
+    const organization = await this.findOneById(organizationId);
+    if (!organization) {
+      throw new NotFoundException();
+    }
+    console.log(data, organization);
     try {
       await (this.auth.api as any).updateOrganization({
         headers,
         body: {
-          name: data.name,
-          slug: data.slug,
-          logo: data.logo ?? undefined,
-          metadata: JSON.stringify(data.metadata || {}),
+          data: {
+            name: data.name,
+            slug: organization.slug,
+            logo: data.logo ?? undefined,
+            metadata: organization.metadata,
+          },
+          organizationId,
         },
-        organizationId,
       });
       return this.findOneById(organizationId);
     }
-    catch {
+    catch (error) {
+      console.log(error);
       return null;
     }
   }
@@ -88,16 +96,6 @@ export class OrganizationsRepository {
   async findManyByIds(ids: string[]): Promise<Organization[]> {
     const documents = await this.organizationModel.find({ _id: { $in: ids } });
     return documents.map(OrganizationMapper.toDomain);
-  }
-
-  async getOrganizationDataForPermalink(organizationId: string): Promise<{ name: string; image: string } | null> {
-    const organization = await this.organizationModel.findById(organizationId);
-    if (!organization)
-      return null;
-    return {
-      name: organization.name ?? "",
-      image: organization.logo ?? "",
-    };
   }
 
   async getAllOrganizations() {

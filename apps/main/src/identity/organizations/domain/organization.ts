@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { Member } from "./member";
 
 export interface OrganizationCreateProps {
@@ -13,10 +13,9 @@ export type OrganizationDbProps = OrganizationCreateProps & {
   createdAt: Date;
 };
 
-function generate24CharId(): string {
-  const timestamp = Math.floor(Date.now() / 1000).toString(16).padStart(8, "0");
-  const random = randomBytes(8).toString("hex");
-  return timestamp + random;
+export interface OrganizationUpdateProps {
+  name: string;
+  logo?: string | null;
 }
 
 export class Organization {
@@ -49,7 +48,7 @@ export class Organization {
   public static create(data: OrganizationCreateProps) {
     const now = new Date();
     return new Organization(
-      generate24CharId(),
+      randomUUID(),
       data.name,
       data.slug,
       data.logo ?? null,
