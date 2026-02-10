@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { z } from "zod";
 import { AssetAdministrationShell } from "../../../aas/domain/asset-adminstration-shell";
 import { Environment } from "../../../aas/domain/environment";
 import { Submodel } from "../../../aas/domain/submodel-base/submodel";
@@ -87,11 +88,21 @@ export class PassportService {
   }
 
   async importPassport(data: ExpandedPassport): Promise<Passport> {
+    const validationResult = ExpandedPassportSchema.safeParse(data);
+
+    if (!validationResult.success) {
+      throw new BadRequestException(`Invalid passport data: ${validationResult.error.message}`);
+    }
+
     // Re-doing the map logic with ID tracking
     const oldIdToNewSubmodelMap = new Map<string, Submodel>();
     data.environment.submodels.forEach((submodelData) => {
       // assume submodelData has the old ID
-      const oldId = (submodelData as any).id;
+      const oldId = submodelData["id"];
+      if (!oldId || typeof oldId !== "string") {
+        return;
+      }
+
       const newSubmodel = Submodel.fromPlain(submodelData).copy();
       oldIdToNewSubmodelMap.set(oldId, newSubmodel);
     });
@@ -145,3 +156,10 @@ export type ExpandedPassport = Omit<ReturnType<Passport["toPlain"]>, "environmen
     submodels: Record<string, any>[];
   };
 };
+
+const ExpandedPassportSchema = z.object({
+  environment: z.object({
+    assetAdministrationShells: z.array(z.record(z.string(), z.any())),
+    submodels: z.array(z.record(z.string(), z.any())),
+  }),
+}).passthrough();

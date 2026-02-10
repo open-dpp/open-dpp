@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { jest } from "@jest/globals";
+import { BadRequestException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { AssetKindType, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
 import { AssetAdministrationShell } from "../../../aas/domain/asset-adminstration-shell";
@@ -148,6 +149,15 @@ describe("passportService", () => {
       expect(mockSubmodelRepository.save).toHaveBeenCalledTimes(1);
       expect(mockAasRepository.save).toHaveBeenCalledTimes(1);
       expect(mockPassportRepository.save).toHaveBeenCalledTimes(1);
+    });
+
+    it("should throw BadRequestException if environment data is missing", async () => {
+      const invalidData = {
+        organizationId: "org-1",
+        // Missing environment
+      };
+
+      await expect(service.importPassport(invalidData as any)).rejects.toThrow(BadRequestException);
     });
   });
 });
