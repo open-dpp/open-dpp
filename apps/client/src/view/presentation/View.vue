@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { ProductPassportDto } from "@open-dpp/api-client";
 import { onBeforeUnmount, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import ViewInformation from "../../components/presentation-components/ViewInformation.vue";
@@ -31,8 +32,20 @@ watch(
         });
         return;
       }
-      productPassportStore.productPassport = (response.data as any).passport;
-      await productPassportStore.loadMedia();
+      const data = response.data as { passport?: ProductPassportDto };
+      if (data.passport) {
+        productPassportStore.productPassport = data.passport;
+        await productPassportStore.loadMedia();
+      }
+      else {
+        console.error("Passport not found in response");
+        await router.push({
+          path: "404",
+          query: {
+            permalink,
+          },
+        });
+      }
     }
     catch (e) {
       console.error(e);
