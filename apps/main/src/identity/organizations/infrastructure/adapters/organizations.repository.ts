@@ -52,7 +52,6 @@ export class OrganizationsRepository {
     if (!organization) {
       throw new NotFoundException();
     }
-    console.log(data, organization);
     try {
       await (this.auth.api as any).updateOrganization({
         headers,
@@ -68,8 +67,7 @@ export class OrganizationsRepository {
       });
       return this.findOneById(organizationId);
     }
-    catch (error) {
-      console.log(error);
+    catch {
       return null;
     }
   }
