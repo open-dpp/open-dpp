@@ -52,8 +52,6 @@ describe("passportController", () => {
     expect(controller).toBeDefined();
   });
 
-
-
   describe("exportPassport", () => {
     it("should call service.exportPassport", async () => {
       const passportId = randomUUID();
@@ -66,7 +64,6 @@ describe("passportController", () => {
       mockPassportRepository.findOneOrFail.mockResolvedValue(passport);
       mockAuthService.getSession.mockResolvedValue({ user: { id: "user-1" } });
       mockAuthService.isMemberOfOrganization.mockResolvedValue(true);
-
 
       await controller.exportPassport(passportId, {} as any);
       expect(mockPassportService.exportPassport).toHaveBeenCalledWith(passportId);

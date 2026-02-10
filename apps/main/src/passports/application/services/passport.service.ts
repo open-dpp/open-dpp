@@ -98,7 +98,7 @@ export class PassportService {
     const oldIdToNewSubmodelMap = new Map<string, Submodel>();
     data.environment.submodels.forEach((submodelData) => {
       // assume submodelData has the old ID
-      const oldId = submodelData["id"];
+      const oldId = submodelData.id;
       if (!oldId || typeof oldId !== "string") {
         return;
       }
@@ -119,12 +119,12 @@ export class PassportService {
       // Find which new submodels correspond to the old shell's references
       const relatedNewSubmodels: Submodel[] = [];
       for (const ref of oldShell.submodels) {
-        const key = ref.keys.find((k) => k.type === "Submodel" || k.type === "GlobalReference");
+        const key = ref.keys.find(k => k.type === "Submodel" || k.type === "GlobalReference");
 
         if (!key) {
           if (ref.keys.length > 0) {
             this.logger.warn(
-              `Reference key in shell ${oldShell.id} has unexpected type. Keys: ${JSON.stringify(ref.keys)}`
+              `Reference key in shell ${oldShell.id} has unexpected type. Keys: ${JSON.stringify(ref.keys)}`,
             );
           }
           continue;
@@ -133,11 +133,12 @@ export class PassportService {
         const newSub = oldIdToNewSubmodelMap.get(key.value);
         if (newSub) {
           relatedNewSubmodels.push(newSub);
-        } else {
+        }
+        else {
           this.logger.warn(
             `Submodel reference key ${key.value} not found in import map for shell ${oldShell.id}. Ref: ${JSON.stringify(
-              ref
-            )}`
+              ref,
+            )}`,
           );
         }
       }
