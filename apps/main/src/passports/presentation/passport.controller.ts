@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { PassportDto, PassportPaginationDto, PassportRequestCreateDto, SubmodelElementRequestDto, SubmodelRequestDto } from "@open-dpp/dto";
 import type express from "express";
 import { Body, Controller, Get, Post } from "@nestjs/common";
@@ -39,6 +40,16 @@ import { PassportService } from "../application/services/passport.service";
 import { Passport } from "../domain/passport";
 
 import { PassportRepository } from "../infrastructure/passport.repository";
+
+const ExpandedPassportDtoSchema = PassportDtoSchema.extend({
+  environment: z.object({
+    assetAdministrationShells: z.array(z.record(z.string(), z.any())),
+    submodels: z.array(z.record(z.string(), z.any())),
+    conceptDescriptions: z.array(z.string()).default([]),
+  }),
+});
+
+type ExpandedPassportDto = z.infer<typeof ExpandedPassportDtoSchema>;
 
 @Controller("/passports")
 export class PassportController implements IAasReadEndpoints, IAasCreateEndpoints {
@@ -212,19 +223,18 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
 
   @Post("/import")
   async importPassport(
-    @Body() body: any, // TODO: Define strict DTO for ExpandedPassport
+    @Body(new ZodValidationPipe(ExpandedPassportDtoSchema)) body: ExpandedPassportDto,
     @RequestParam() req: express.Request,
   ): Promise<PassportDto> {
-    // Access check: only authenticated users can import?
-    await this.authService.getActiveOrganizationId(req); // Just to ensure auth
-
-    // We might want to override organizationId in the imported passport to the current user's org
-    // But importPassport service takes data as is.
-    // Let's override it here
     const orgId = await this.authService.getActiveOrganizationId(req);
-    body.organizationId = orgId;
+    const payload = {
+      ...body,
+      organizationId: orgId,
+      createdAt: new Date(body.createdAt),
+      updatedAt: new Date(body.updatedAt),
+    };
 
-    const passport = await this.passportService.importPassport(body);
+    const passport = await this.passportService.importPassport(payload);
     return PassportDtoSchema.parse(passport.toPlain());
   }
 

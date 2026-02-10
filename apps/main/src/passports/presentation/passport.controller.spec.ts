@@ -75,7 +75,19 @@ describe("passportController", () => {
 
   describe("importPassport", () => {
     it("should call service.importPassport", async () => {
-      const body = { some: "data" };
+      const now = new Date();
+      const body = {
+        id: "passport-1",
+        organizationId: "org-1", // This will be overwritten by the controller
+        environment: {
+          assetAdministrationShells: [],
+          submodels: [],
+          conceptDescriptions: [],
+        },
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+        templateId: null,
+      };
       const passport = Passport.create({
         organizationId: "org-1",
         environment: Environment.create({}),
@@ -84,9 +96,14 @@ describe("passportController", () => {
       mockAuthService.getActiveOrganizationId.mockResolvedValue("org-1");
       mockPassportService.importPassport.mockResolvedValue(passport);
 
-      await controller.importPassport(body, {} as any);
+      await controller.importPassport(body as any, {} as any);
 
-      expect(mockPassportService.importPassport).toHaveBeenCalledWith(expect.objectContaining({ ...body, organizationId: "org-1" }));
+      expect(mockPassportService.importPassport).toHaveBeenCalledWith(expect.objectContaining({
+        ...body,
+        organizationId: "org-1",
+        createdAt: now,
+        updatedAt: now,
+      }));
     });
   });
 });
