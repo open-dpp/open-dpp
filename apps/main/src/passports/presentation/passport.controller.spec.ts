@@ -30,12 +30,7 @@ describe("passportController", () => {
     isMemberOfOrganization: jest.fn(),
   };
 
-  // checkOwnerShipOfDppIdentifiable is imported as value, so we might need to mock the module or just the helper if it was a service method.
-  // It is imported from environment.service but defined there? No, it's imported from `../../aas/presentation/environment.service`.
-  // Wait, `checkOwnerShipOfDppIdentifiable` is a standalone function exported from `environment.service.ts`?
-  // Let's check imports in controller.
-  // `import { checkOwnerShipOfDppIdentifiable, EnvironmentService } from "../../aas/presentation/environment.service";`
-  // Mocking standalone functions in Jest requires `jest.mock`.
+  // Mocks for environment helpers
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -57,10 +52,7 @@ describe("passportController", () => {
     expect(controller).toBeDefined();
   });
 
-  // We need to handle the standalone function `checkOwnerShipOfDppIdentifiable`.
-  // For now, let's assume it works or mock the repository to return something that passes it if it uses simple logic.
-  // Actually, `checkOwnerShipOfDppIdentifiable` probably takes passport and authService and checks org ID.
-  // Let's rely on integration/e2e tests or just simple unit tests where we mock the passport return.
+
 
   describe("exportPassport", () => {
     it("should call service.exportPassport", async () => {
@@ -74,9 +66,7 @@ describe("passportController", () => {
       mockPassportRepository.findOneOrFail.mockResolvedValue(passport);
       mockAuthService.getSession.mockResolvedValue({ user: { id: "user-1" } });
       mockAuthService.isMemberOfOrganization.mockResolvedValue(true);
-      // We might need to mock `checkOwnerShipOfDppIdentifiable` behavior if it throws.
-      // If it's a pure function, we can't easily mock it without `jest.mock`.
-      // However, if we pass a valid passport and correct mocks to authService, it might pass.
+
 
       await controller.exportPassport(passportId, {} as any);
       expect(mockPassportService.exportPassport).toHaveBeenCalledWith(passportId);
