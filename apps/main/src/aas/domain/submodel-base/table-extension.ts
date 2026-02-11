@@ -17,6 +17,10 @@ export class TableExtension {
     if (this.data.typeValueListElement !== AasSubmodelElements.SubmodelElementCollection) {
       throw new Error(`List type ${this.data.typeValueListElement} is not supported by table extension`);
     }
+    this.setHeaderRow();
+  }
+
+  private setHeaderRow() {
     this.headerRow = this.data.value.length > 0 && this.data.value[0].getSubmodelElementType() === AasSubmodelElements.SubmodelElementCollection
       ? this.data.value[0]
       : undefined;
@@ -80,12 +84,18 @@ export class TableExtension {
         newRow.addSubmodelElement(columnCopy);
       });
       this.data.addSubmodelElement(newRow, options);
+      if (options?.position === 0) {
+        this.setHeaderRow();
+      }
       return newRow;
     }
   }
 
   deleteRow(idShort: string) {
     this.data.deleteSubmodelElement(idShort);
+    if (this.headerRow && this.headerRow.idShort === idShort) {
+      this.setHeaderRow();
+    }
   }
 
   prettify(): string {

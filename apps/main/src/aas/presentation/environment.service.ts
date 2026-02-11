@@ -156,7 +156,7 @@ export class EnvironmentService {
     return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
   }
 
-  async modifyColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfColumn: string, modifications: SubmodelModificationDto): Promise<SubmodelElementListResponseDto> {
+  async modifyColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfColumn: string, modifications: SubmodelElementModificationDto): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const modifiedSubmodelElement = submodel.modifyColumn(idShortPath, idShortOfColumn, modifications);
     await this.submodelRepository.save(submodel);

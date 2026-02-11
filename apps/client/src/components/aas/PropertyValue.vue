@@ -20,7 +20,27 @@ const emit = defineEmits<{
 
 const { locale } = useI18n();
 
-const isNumeric = computed(() => props.valueType === DataTypeDef.Double);
+const NUMERIC_TYPES = new Set<DataTypeDefType>([
+  DataTypeDef.Double,
+  DataTypeDef.Int,
+  DataTypeDef.Long,
+  DataTypeDef.Float,
+  DataTypeDef.Decimal,
+  DataTypeDef.Integer,
+  DataTypeDef.NegativeInteger,
+  DataTypeDef.NonNegativeInteger,
+  DataTypeDef.NonPositiveInteger,
+  DataTypeDef.PositiveInteger,
+  DataTypeDef.Short,
+  DataTypeDef.UnsignedByte,
+  DataTypeDef.UnsignedInt,
+  DataTypeDef.UnsignedLong,
+  DataTypeDef.UnsignedShort,
+]);
+
+const isNumeric = computed(() =>
+  props.valueType ? NUMERIC_TYPES.has(props.valueType) : false,
+);
 
 const numericValue = computed({
   get: () => z.coerce.number().nullish().parse(props.modelValue),
