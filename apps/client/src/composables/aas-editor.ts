@@ -385,7 +385,7 @@ export function useAasEditor({
       await finalizeApiRequest(response);
 
       if (selectSubmodelElementAfterCreation) {
-        const submodelIdShort = submodels.value.find(n => n.key === path.submodelId)?.data.label ?? "";
+        const submodelIdShort = submodels.value.find(n => n.key === path.submodelId)?.data.plain.idShort ?? "";
         const key = path.idShortPath ? `${path.idShortPath}.${data.idShort}` : `${submodelIdShort}.${data.idShort}`;
         selectTreeNode(key);
       }

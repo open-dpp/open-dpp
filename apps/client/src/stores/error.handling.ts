@@ -44,7 +44,7 @@ export const useErrorHandlingStore = defineStore("error-handling-store", (): IEr
     }
   };
 
-  const withErrorHandlingSync = async <T>(
+  const withErrorHandlingSync = <T>(
     callback: () => T,
     { message, finallyCallback }: ErrorHandlingOptionsSync,
   ) => {

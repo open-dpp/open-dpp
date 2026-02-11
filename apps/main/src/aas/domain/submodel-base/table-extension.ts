@@ -42,9 +42,9 @@ export class TableExtension {
   }
 
   modifyColumn(idShort: string, data: any) {
-    if (data.value) {
+    if (Object.prototype.hasOwnProperty.call(data, "value")) {
       // Otherwise the value of the column would be propagated to all rows
-      throw new ValueError("Column has no value to modify.");
+      throw new ValueError("Column value modification is not supported.");
     }
     for (const row of this.rows) {
       const column = row.getSubmodelElements().find(el => el.idShort === idShort);

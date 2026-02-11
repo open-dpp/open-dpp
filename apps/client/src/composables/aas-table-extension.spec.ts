@@ -222,10 +222,13 @@ describe("aasTableExtension composable", () => {
 
     const submodelElementListModified = {
       ...submodelElementList,
-      value: [
-        ...submodelElementList.value,
-        { ...columnData, modelType: AasSubmodelElements.Property },
-      ],
+      value: submodelElementList.value.map((row: any) => ({
+        ...row,
+        value: [
+          ...row.value,
+          { ...columnData, modelType: AasSubmodelElements.Property },
+        ],
+      })),
     };
 
     mocks.addColumnToSubmodelElementList.mockResolvedValue({

@@ -222,7 +222,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
     @ColumnParam() idShortOfColumn: string,
-    @SubmodelModificationRequestBody() body: SubmodelElementModificationDto,
+    @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
     @RequestParam() req: express.Request,
   ): Promise<SubmodelElementListResponseDto> {
     const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);

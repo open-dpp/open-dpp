@@ -204,11 +204,13 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   public deleteSubmodelElement(idShortPath: IdShortPath) {
     const parent = this.findSubmodelElementParent(idShortPath);
-    if (!parent) {
-      deleteSubmodelElementOrFail(this.submodelElements, idShortPath.last);
-    }
-    else {
-      parent.deleteSubmodelElement(idShortPath.last);
+    if (idShortPath.last) {
+      if (!parent) {
+        deleteSubmodelElementOrFail(this.submodelElements, idShortPath.last);
+      }
+      else {
+        parent.deleteSubmodelElement(idShortPath.last);
+      }
     }
   }
 

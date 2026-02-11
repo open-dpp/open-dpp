@@ -324,7 +324,6 @@ describe("submodel", () => {
       LanguageText.fromPlain(
         newGermanDisplayName,
       ),
-      submodel.displayName.find(languageText => languageText.language === "en")!,
     ]);
     expect(submodel.description).toEqual(newDescriptions.map(description => LanguageText.fromPlain(description)));
   });

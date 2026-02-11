@@ -124,7 +124,6 @@ function onMoveImageDown(image: MediaInfo) {
     <MediaModal
       class="z-1200"
       :open="openMediaModal"
-      @cancel="openMediaModal = false"
       @confirm="onMediaModalConfirm"
     />
   </div>

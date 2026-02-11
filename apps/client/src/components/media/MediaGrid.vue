@@ -46,8 +46,8 @@ onMounted(async () => {
     <template #grid="slotProps">
       <div class="grid grid-cols-12 gap-4">
         <div
-          v-for="(item, index) in slotProps.items"
-          :key="index"
+          v-for="(item) in slotProps.items"
+          :key="item.id"
           class="col-span-12 lg:col-span-6 xl:col-span-4 2xl:col-span-3 p-2"
         >
           <MediaListItem

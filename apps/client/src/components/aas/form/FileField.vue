@@ -76,7 +76,6 @@ async function updateFileFromModal(items: Array<MediaInfo>) {
       </div>
       <MediaModal
         v-model="openFileModal"
-        @cancel="openFileModal = false"
         @confirm="(items) => updateFileFromModal(items)"
       />
     </div>

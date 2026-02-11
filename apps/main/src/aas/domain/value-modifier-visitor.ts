@@ -184,7 +184,11 @@ export class ValueModifierVisitor implements IVisitor<unknown, void> {
   visitSubmodelElementList(element: SubmodelElementList, context: unknown): void {
     const parsed = z.record(z.string(), z.any()).array().parse(context);
     for (const [index, row] of parsed.entries()) {
-      element.value[index].accept(this, row);
+      const target = element.value[index];
+      if (!target) {
+        throw new ValueError(`List index ${index} is out of bounds for submodel element list ${element.idShort}.`);
+      }
+      target.accept(this, row);
     }
   }
 

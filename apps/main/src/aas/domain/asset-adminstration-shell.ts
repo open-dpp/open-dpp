@@ -120,7 +120,9 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
 
   deleteSubmodel(submodel: Submodel) {
     const foundSubmodelIndex = this.submodels.findIndex(sm => sm.keys.some(k => k.value === submodel.id));
-    this.submodels.splice(foundSubmodelIndex, 1);
+    if (foundSubmodelIndex > -1) {
+      this.submodels.splice(foundSubmodelIndex, 1);
+    }
   }
 
   toPlain(): Record<string, any> {

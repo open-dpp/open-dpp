@@ -330,7 +330,7 @@ describe("aasEditor composable", () => {
     it.each([
       { label: "aasEditor.textField", valueType: DataTypeDef.String },
       { label: "aasEditor.numberField", valueType: DataTypeDef.Double },
-    ])("should create property for %label", async ({ label, valueType }) => {
+    ])("should create property for $label", async ({ label, valueType }) => {
       mocks.getSubmodels.mockResolvedValue({ data: paginationResponse, status: HTTPCode.OK });
 
       mocks.createSubmodelElement.mockResolvedValue({ status: HTTPCode.CREATED });

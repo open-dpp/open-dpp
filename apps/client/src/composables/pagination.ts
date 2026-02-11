@@ -34,34 +34,38 @@ export interface IPagination {
   reloadCurrentPage: () => Promise<void>;
 }
 
-export interface Page {
-  from: number;
-  to: number;
-  itemCount: number;
-  cursor: Cursor;
-}
-
-export interface PagingResult {
-  paging_metadata: { cursor: Cursor };
-  result: any[];
-}
-
-export function usePagination({ initialCursor, limit, fetchCallback, changeQueryParams }: PaginationProps): IPagination {
+export function usePagination({
+  initialCursor,
+  limit,
+  fetchCallback,
+  changeQueryParams,
+}: PaginationProps): IPagination {
   const startCursor = ref<string | null>(initialCursor ?? null);
-  const pages = ref<Page[]>([{ cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 }]);
+  const pages = ref<Page[]>([
+    { cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 },
+  ]);
   const currentPageIndex = ref<number>(0);
-  const currentPage = ref<Page>({ cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 });
+  const currentPage = ref<Page>({
+    cursor: startCursor.value,
+    from: 0,
+    to: limit - 1,
+    itemCount: 0,
+  });
 
   const hasPrevious = computed(() => {
     return currentPage.value.cursor !== startCursor.value;
   });
 
   const hasNext = computed(() => {
-    return currentPage.value.itemCount === currentPage.value.to - currentPage.value.from + 1;
+    return (
+      currentPage.value.itemCount
+      === currentPage.value.to - currentPage.value.from + 1
+    );
   });
 
   const updateCurrentPage = async () => {
-    currentPage.value = pages.value[currentPageIndex.value] ?? currentPage.value;
+    currentPage.value
+      = pages.value[currentPageIndex.value] ?? currentPage.value;
     const queryParams = { cursor: currentPage.value.cursor ?? undefined };
     changeQueryParams(queryParams);
   };
@@ -138,7 +142,9 @@ export function usePagination({ initialCursor, limit, fetchCallback, changeQuery
 
   const resetCursor = async () => {
     startCursor.value = null;
-    pages.value = [{ cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 }];
+    pages.value = [
+      { cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 },
+    ];
     currentPageIndex.value = 0;
     await updateCurrentPage();
     await nextPage();
@@ -149,5 +155,13 @@ export function usePagination({ initialCursor, limit, fetchCallback, changeQuery
     await reloadPage(currentPage.value);
   };
 
-  return { resetCursor, hasPrevious, hasNext, nextPage, previousPage, currentPage, reloadCurrentPage };
+  return {
+    resetCursor,
+    hasPrevious,
+    hasNext,
+    nextPage,
+    previousPage,
+    currentPage,
+    reloadCurrentPage,
+  };
 }

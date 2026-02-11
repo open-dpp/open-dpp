@@ -10,15 +10,15 @@ import { SubmodelElementCollection } from "./submodel-base/submodel-element-coll
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 
 describe("modifier visitor", () => {
-  beforeAll(() => {
-    registerSubmodelElementClasses();
-  });
-
-  const existingDisplayNames = [LanguageText.create({ language: "en", text: "Submodel Carbon Footprint" })];
-  const existingDescriptions = [LanguageText.create({
+  const existingDisplayNames = () => [LanguageText.create({ language: "en", text: "Submodel Carbon Footprint" })];
+  const existingDescriptions = () => [LanguageText.create({
     language: "en",
     text: "The Submodel Carbon Footprint OLD",
   })];
+
+  beforeAll(() => {
+    registerSubmodelElementClasses();
+  });
 
   const newDisplayNames = [{
     language: "de",
@@ -35,23 +35,23 @@ describe("modifier visitor", () => {
     newDisplayNames, description: newDescriptions };
 
   it("should modify submodel", () => {
-    const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames, description: existingDescriptions });
+    const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames(), description: existingDescriptions() });
     submodel.modify({ idShort: "s1", ...sharedModifications });
     expect(submodel.displayName).toEqual(newDisplayNames.map(LanguageText.fromPlain));
     expect(submodel.description).toEqual(newDescriptions.map(LanguageText.fromPlain));
   });
 
   it.each([{
-    item: Property.create({ idShort: "prop1", displayName: existingDisplayNames, description: existingDescriptions, valueType: DataTypeDef.String }),
+    item: Property.create({ idShort: "prop1", displayName: existingDisplayNames(), description: existingDescriptions(), valueType: DataTypeDef.String }),
     modifications: { ...sharedModifications, value: "prop New" },
   }, {
-    item: File.create({ idShort: "prop1", displayName: existingDisplayNames, description: existingDescriptions, contentType: "image/png" }),
+    item: File.create({ idShort: "prop1", displayName: existingDisplayNames(), description: existingDescriptions(), contentType: "image/png" }),
     modifications: { ...sharedModifications, value: "path New", contentType: "image/jpeg" },
   }, {
-    item: SubmodelElementCollection.create({ idShort: "prop2", displayName: existingDisplayNames, description: existingDescriptions }),
+    item: SubmodelElementCollection.create({ idShort: "prop2", displayName: existingDisplayNames(), description: existingDescriptions() }),
     modifications: { ...sharedModifications, value: [] },
   }])("should modify submodel element with type", ({ item, modifications }) => {
-    const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames, description: existingDescriptions });
+    const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames(), description: existingDescriptions() });
     submodel.addSubmodelElement(item);
     submodel.modifySubmodelElement({ idShort: item.idShort, ...modifications }, IdShortPath.create({ path: item.idShort }));
     expect(item.toPlain()).toMatchObject(
@@ -62,10 +62,10 @@ describe("modifier visitor", () => {
   });
 
   it("should modify submodel element list", () => {
-    const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames, description: existingDescriptions });
-    const listItem = SubmodelElementList.create({ idShort: "list", displayName: existingDisplayNames, description: existingDescriptions, typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
-    const collection = SubmodelElementCollection.create({ idShort: "collection", displayName: existingDisplayNames, description: existingDescriptions });
-    const property = Property.create({ idShort: "prop1", displayName: existingDisplayNames, description: existingDescriptions, valueType: DataTypeDef.String });
+    const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames(), description: existingDescriptions() });
+    const listItem = SubmodelElementList.create({ idShort: "list", displayName: existingDisplayNames(), description: existingDescriptions(), typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    const collection = SubmodelElementCollection.create({ idShort: "collection", displayName: existingDisplayNames(), description: existingDescriptions() });
+    const property = Property.create({ idShort: "prop1", displayName: existingDisplayNames(), description: existingDescriptions(), valueType: DataTypeDef.String });
     collection.addSubmodelElement(property);
     listItem.addSubmodelElement(collection);
     submodel.addSubmodelElement(listItem);

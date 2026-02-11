@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { ReferenceJsonSchema } from '../common/reference-json-schema'
 import { ExtensionJsonSchema } from '../extension-json-schema'
 import { SubmodelBaseJsonSchema } from './submodel-base-json-schema'
+import { SubmodelElementSchema } from './submodel-element-schema'
 
 export const AnnotatedRelationshipElementJsonSchema = z.lazy(() =>
   AnnotatedRelationshipElementJsonSchemaImpl(),
@@ -13,6 +14,6 @@ export function AnnotatedRelationshipElementJsonSchemaImpl() {
     first: ReferenceJsonSchema,
     second: ReferenceJsonSchema,
     extensions: ExtensionJsonSchema.array().default([]),
-    annotations: SubmodelBaseJsonSchema.array().default([]),
+    annotations: SubmodelElementSchema.array().default([]),
   })
 };

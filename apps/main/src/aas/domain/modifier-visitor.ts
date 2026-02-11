@@ -99,8 +99,12 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
   visitFile(element: File, context: unknown): void {
     const parsed = FileModificationSchema.parse(context);
     this.modifySubmodelBase(element, parsed);
-    element.value = parsed.value ?? element.value;
-    element.contentType = parsed.contentType ?? element.contentType;
+    if (parsed.value !== undefined) {
+      element.value = parsed.value;
+    }
+    if (parsed.contentType != null) {
+      element.contentType = parsed.contentType;
+    }
   }
 
   visitKey(_element: Key, _context: unknown): void {

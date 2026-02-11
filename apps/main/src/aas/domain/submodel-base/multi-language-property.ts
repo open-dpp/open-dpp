@@ -80,7 +80,7 @@ export class MultiLanguageProperty implements ISubmodelElement {
     throw new ValueError("MultiLanguageProperty cannot contain submodel elements");
   }
 
-  deleteSubmodelElement(_idShort: string) {
+  deleteSubmodelElement(_idShort: string): void {
     throw new ValueError("MultiLanguageProperty does not support to delete submodel elements");
   }
 

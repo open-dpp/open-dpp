@@ -16,9 +16,7 @@ const props = defineProps<{
 
 const { value, errorMessage } = useField<string | undefined>("value");
 
-const { value: contentType } = useField<string | undefined>(
-  "contentType",
-);
+const { value: contentType } = useField<string | undefined>("contentType");
 </script>
 
 <template>
@@ -30,11 +28,13 @@ const { value: contentType } = useField<string | undefined>(
     />
     <div class="grid lg:grid-cols-3 grid-cols-1 gap-2">
       <div class="flex flex-col gap-2">
-        <FileField
-          v-model="value"
-          v-model:change-content-type="contentType"
-        />
-        <Message size="small" severity="error" variant="simple">
+        <FileField v-model="value" v-model:change-content-type="contentType" />
+        <Message
+          v-if="errorMessage"
+          size="small"
+          severity="error"
+          variant="simple"
+        >
           {{ errorMessage }}
         </Message>
       </div>

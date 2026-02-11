@@ -13,7 +13,6 @@ import MediaGrid from "./MediaGrid.vue";
 
 const emits = defineEmits<{
   (e: "confirm", files: Array<MediaInfo>): void;
-  (e: "cancel"): void;
 }>();
 const open = defineModel<boolean>();
 const { t } = useI18n();
@@ -105,7 +104,7 @@ watch(
         :label="t('common.abort')"
         variant="outlined"
         severity="secondary"
-        @click="emits('cancel')"
+        @click="open = false"
       />
       <Button
         :disabled="selected.length === 0"

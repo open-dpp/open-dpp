@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import type { FileRequestDto } from "@open-dpp/dto";
+import type { FileModificationDto } from "@open-dpp/dto";
 import type {
   AasEditorPath,
   FileEditorProps,
 } from "../../composables/aas-drawer.ts";
-import { FileJsonSchema } from "@open-dpp/dto";
-import { toTypedSchema } from "@vee-validate/zod";
+import {
 
+  FileModificationSchema,
+} from "@open-dpp/dto";
+import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
+
 import { computed } from "vue";
 import { z } from "zod";
 import { EditorMode } from "../../composables/aas-drawer.ts";
@@ -17,7 +20,7 @@ import FileForm from "./FileForm.vue";
 const props = defineProps<{
   path: AasEditorPath;
   data: FileEditorProps;
-  callback: (data: FileRequestDto) => Promise<void>;
+  callback: (data: FileModificationDto) => Promise<void>;
 }>();
 
 const formSchema = z.object({
@@ -38,7 +41,7 @@ const showErrors = computed(() => {
 });
 
 const submit = handleSubmit(async (data) => {
-  await props.callback(FileJsonSchema.parse({ ...data }));
+  await props.callback(FileModificationSchema.parse({ ...data }));
 });
 
 defineExpose<{

@@ -190,7 +190,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
     @ColumnParam() idShortOfColumn: string,
-    @SubmodelModificationRequestBody() body: SubmodelElementModificationDto,
+    @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
     @RequestParam() req: express.Request,
   ): Promise<SubmodelElementListResponseDto> {
     const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);

@@ -39,6 +39,7 @@ export const submodelDesignOfProduct = SubmodelJsonSchema.parse(
 export const submodelDesignOfProductElement0 = SubmodelBaseJsonSchema.parse(
   submodelDesignOfProduct.submodelElements[0],
 )
+
 export const submodelValueResponse: { Design_V01: any }
   = ValueSchema.parse(
     submodelDesignOfProductValuePlainFactory.build(),
@@ -104,7 +105,7 @@ export function aasHandlers(basePath: string) {
     http.delete(
       `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}`,
       async () => {
-        return HttpResponse.json(undefined, {
+        return HttpResponse.json(null, {
           status: 204,
         })
       },

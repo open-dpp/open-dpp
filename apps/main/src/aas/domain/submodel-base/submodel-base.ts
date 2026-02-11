@@ -60,7 +60,10 @@ export class IdShortPath {
     return new IdShortPath(this._segments.slice(0, -1));
   }
 
-  get last(): string {
+  get last(): string | undefined {
+    if (this._segments.length === 0) {
+      return undefined;
+    }
     return this._segments[this._segments.length - 1];
   }
 
