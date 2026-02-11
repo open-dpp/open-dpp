@@ -112,7 +112,7 @@ describe("tableExtension", () => {
       expect(column?.displayName).toEqual(newDisplayNames.map(LanguageText.fromPlain));
       expect(column?.description).toEqual(newDescriptions.map(LanguageText.fromPlain));
     }
-    expect(() => table.modifyColumn(col1.idShort, { displayName: newDisplayNames, value: "2" })).toThrow(new ValueError("Column has no value to modify."));
+    expect(() => table.modifyColumn(col1.idShort, { displayName: newDisplayNames, value: "2" })).toThrow(new ValueError("Column value modification is not supported."));
   });
 
   it("should delete row", () => {
