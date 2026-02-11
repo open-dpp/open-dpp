@@ -78,6 +78,8 @@
     "edit": "Edit {formItem}",
     "creation": "Creation of the {formItem}",
     "submodel": "Section",
+    "removeSubmodel": "Should the @.lower:aasEditor.submodel really be removed?",
+    "errorRemoveSubmodel": "@.capitalize:common.failed to @.lower:common.remove @.lower:aasEditor.submodel",
     "submodelElementList": "List",
     "textField": "Text field",
     "file": "File",

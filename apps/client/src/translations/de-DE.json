@@ -76,6 +76,8 @@
     "addSubmodel": "Abschnitt hinzufügen",
     "edit": "{formItem} bearbeiten",
     "submodel": "Abschnitt",
+    "removeSubmodel": "Soll der @:aasEditor.submodel wirklich entfernt werden?",
+    "errorRemoveSubmodel": "@:common.remove des Abschnitts @common.failed",
     "submodelElementCollection": "Unterabschnitt",
     "submodelElementList": "Liste",
     "creation": "Erstellung des {formItem}",

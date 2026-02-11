@@ -1,7 +1,10 @@
 <script lang="ts" setup>
 import type { TreeNode } from "primevue/treenode";
 import type { AasEditModeType } from "../../lib/aas-editor.ts";
+import { KeyTypes } from "@open-dpp/dto";
 import { Button, Column, Drawer, Menu, TreeTable } from "primevue";
+import ConfirmDialog from "primevue/confirmdialog";
+import { useConfirm } from "primevue/useconfirm";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
@@ -19,7 +22,9 @@ const props = defineProps<{
 }>();
 const route = useRoute();
 const router = useRouter();
-const componentRef = ref<{ submit: () => Promise<Promise<void> | undefined> } | null>(null);
+const componentRef = ref<{
+  submit: () => Promise<Promise<void> | undefined>;
+} | null>(null);
 
 const { locale, t } = useI18n();
 
@@ -33,9 +38,12 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
 }
 
 const errorHandlingStore = useErrorHandlingStore();
-const aasNamespace = props.editorMode === AasEditMode.Passport
-  ? apiClient.dpp.passports.aas
-  : apiClient.dpp.templates.aas;
+const aasNamespace
+  = props.editorMode === AasEditMode.Passport
+    ? apiClient.dpp.passports.aas
+    : apiClient.dpp.templates.aas;
+
+const confirm = useConfirm();
 
 const aasEditor = useAasEditor({
   id: props.id,
@@ -46,6 +54,7 @@ const aasEditor = useAasEditor({
   selectedLanguage: convertLocaleToLanguage(locale.value),
   errorHandlingStore,
   translate: t,
+  openConfirm: confirm.require,
 });
 
 const {
@@ -55,6 +64,7 @@ const {
   buildAddSubmodelElementMenu,
   init,
   createSubmodel,
+  deleteSubmodel,
   submodelElementsToAdd,
   loading,
   drawerVisible,
@@ -93,6 +103,12 @@ function addClicked(event: any, node: TreeNode) {
   buildAddSubmodelElementMenu(node);
   popover.value.toggle(event);
 }
+
+async function deleteClicked(node: TreeNode) {
+  if (node.data.modelType === KeyTypes.Submodel) {
+    await deleteSubmodel(node.key);
+  }
+}
 function onSubmit() {
   if (componentRef.value) {
     componentRef.value.submit();
@@ -110,7 +126,9 @@ function onSubmit() {
       :meta-key-selection="false"
       paginator
       :loading="loading"
-      :rows="10" :rows-per-page-options="[10]" @node-select="onNodeSelect"
+      :rows="10"
+      :rows-per-page-options="[10]"
+      @node-select="onNodeSelect"
     >
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
@@ -130,6 +148,12 @@ function onSubmit() {
                 severity="primary"
                 @click="addClicked($event, node)"
               />
+              <Button
+                v-if="node.data.modelType === KeyTypes.Submodel"
+                icon="pi pi-trash"
+                severity="danger"
+                @click="deleteClicked(node)"
+              />
             </div>
           </div>
         </template>
@@ -145,6 +169,7 @@ function onSubmit() {
         />
       </template>
     </TreeTable>
+    <ConfirmDialog />
     <Menu
       id="overlay_menu"
       ref="popover"
@@ -160,9 +185,18 @@ function onSubmit() {
       @hide="onHideDrawer"
     >
       <template #header>
-        <div class="flex flex-row items-center justify-between w-full pr-2 gap-1">
+        <div
+          class="flex flex-row items-center justify-between w-full pr-2 gap-1"
+        >
           <span class="text-xl font-bold">{{ drawerHeader }}</span>
-          <Button :label="editorVNode?.component === SubmodelElementListCreateEditor ? t('aasEditor.table.saveAndAddEntries') : t('common.save')" @click="onSubmit" />
+          <Button
+            :label="
+              editorVNode?.component === SubmodelElementListCreateEditor
+                ? t('aasEditor.table.saveAndAddEntries')
+                : t('common.save')
+            "
+            @click="onSubmit"
+          />
         </div>
       </template>
       <component
