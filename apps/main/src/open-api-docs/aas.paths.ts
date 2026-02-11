@@ -94,6 +94,20 @@ export function createAasPaths(tag: string) {
           },
         },
       },
+    },
+    [`${tag}${ApiGetSubmodelByIdPath}`]: {
+      get: {
+        tags: [tag],
+        summary: `Returns Submodel by id`,
+        parameters: [IdParamSchema, SubmodelIdParamSchema],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: SubmodelJsonSchema },
+            },
+          },
+        },
+      },
       patch: {
         operationId: "patchSubmodel",
         tags: [tag],
@@ -104,20 +118,6 @@ export function createAasPaths(tag: string) {
             [ContentType.JSON]: { schema: SubmodelModificationSchema },
           },
         },
-        responses: {
-          [HTTPCode.CREATED]: {
-            content: {
-              [ContentType.JSON]: { schema: SubmodelJsonSchema },
-            },
-          },
-        },
-      },
-    },
-    [`${tag}${ApiGetSubmodelByIdPath}`]: {
-      get: {
-        tags: [tag],
-        summary: `Returns Submodel by id`,
-        parameters: [IdParamSchema, SubmodelIdParamSchema],
         responses: {
           [HTTPCode.OK]: {
             content: {

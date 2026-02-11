@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type {
-  SubmodelModificationDto,
+  SubmodelElementModificationDto,
 } from "@open-dpp/dto";
 import type {
   AasEditorPath,
@@ -19,7 +19,7 @@ import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 const props = defineProps<{
   path: AasEditorPath;
   data: ColumnEditorProps;
-  callback: (data: SubmodelModificationDto) => Promise<void>;
+  callback: (data: SubmodelElementModificationDto) => Promise<void>;
 }>();
 
 const columnFormSchema = z.object({

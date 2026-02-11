@@ -642,8 +642,9 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     entity.getEnvironment().addSubmodel(submodel);
     await saveEntity(entity);
 
-    const path = `BillOfMaterial.${submodelElement.idShort}`;
-    expect(submodel.findSubmodelElement(IdShortPath.create({ path }))).toBeUndefined();
+    const path = submodelElement.idShort;
+
+    expect(submodel.findSubmodelElement(IdShortPath.create({ path }))).toBeDefined();
 
     await submodelRepository.save(submodel);
     const response = await request(app.getHttpServer())

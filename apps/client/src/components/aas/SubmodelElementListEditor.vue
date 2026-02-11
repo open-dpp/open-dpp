@@ -166,11 +166,7 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
         </template>
         <template #body="{ data: cellData, field, index: rowIndex }">
           <div
-            v-if="
-              typeof field === 'string'
-                && cellData[field] != null
-                && cellData[field]
-            "
+            v-if="typeof field === 'string' && cellData[field] != null"
           >
             <FileField
               v-if="col.plain.modelType === AasSubmodelElements.File"

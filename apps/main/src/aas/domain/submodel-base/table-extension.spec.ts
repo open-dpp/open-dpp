@@ -83,6 +83,21 @@ describe("tableExtension", () => {
     expect(table.rows.some(r => r.getSubmodelElements().some(c => c.idShort === col1.idShort))).toBeFalsy();
   });
 
+  it("should add row at position 0", () => {
+    const submodelElementList = SubmodelElementList.create({
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      idShort: "idShort",
+    });
+    const table = new TableExtension(submodelElementList);
+
+    const col1 = Property.fromPlain(propertyPlainFactory.build({ idShort: "col1", value: "10" }));
+    table.addColumn(col1);
+    expect(table.columns).toEqual([col1]);
+    // The header row is updated to the new row at position 0.
+    table.addRow({ position: 0 });
+    expect(table.columns).toEqual([cloneSubmodelElement(col1, { value: null })]);
+  });
+
   it("should modify column", () => {
     const submodelElementList = SubmodelElementList.create({
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
@@ -130,5 +145,11 @@ describe("tableExtension", () => {
     expect(table.rows.some(r => r.idShort === rowToDelete.idShort)).toBeTruthy();
     table.deleteRow(rowToDelete.idShort);
     expect(table.rows.some(r => r.idShort === rowToDelete.idShort)).toBeFalsy();
+    // If the header row is deleted, the first row should be used as header row.
+    table.deleteRow(table.rows[0].idShort);
+    expect(table.columns).toEqual([cloneSubmodelElement(col1, { value: null }), cloneSubmodelElement(col2, { value: null })]);
+    // If the last row is deleted, columns are empty. This a limitation of the AAS specification.
+    table.deleteRow(table.rows[0].idShort);
+    expect(table.columns).toEqual([]);
   });
 });
