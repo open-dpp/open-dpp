@@ -152,6 +152,7 @@ function onSubmit() {
                 @click="addClicked($event, node)"
               />
               <Button
+                v-if="node.data.actions.delete"
                 icon="pi pi-trash"
                 severity="danger"
                 @click="deleteClicked(node)"
@@ -182,7 +183,7 @@ function onSubmit() {
     <Drawer
       v-model:visible="drawerVisible"
       position="right"
-      class="!w-full md:!w-80 lg:!w-1/2"
+      class="w-full! md:w-80! lg:w-1/2!"
       :auto-z-index="false"
       @hide="onHideDrawer"
     >

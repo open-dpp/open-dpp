@@ -233,6 +233,7 @@ export function useAasEditor({
           plain: submodelElement,
           actions: {
             addChildren: canHaveChildren,
+            delete: true,
           },
           path,
         },
