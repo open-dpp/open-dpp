@@ -9,14 +9,6 @@ export interface ErrorHandlingOptionsSync {
 
 export interface IErrorHandlingStore {
   logErrorWithNotification: (message: string, error?: unknown) => void;
-  withErrorHandlingAsync: <T>(
-    callback: () => Promise<T>,
-    options: ErrorHandlingOptionsAsync,
-  ) => Promise<void>;
-  withErrorHandlingSync: <T>(
-    callback: () => T,
-    options: ErrorHandlingOptionsSync,
-  ) => void;
 }
 
 export const useErrorHandlingStore = defineStore("error-handling-store", (): IErrorHandlingStore => {
@@ -27,39 +19,5 @@ export const useErrorHandlingStore = defineStore("error-handling-store", (): IEr
     console.error(message, error);
   };
 
-  const withErrorHandlingAsync = async <T>(
-    callback: () => Promise<T>,
-    { message, finallyCallback }: ErrorHandlingOptionsAsync,
-  ) => {
-    try {
-      await callback();
-    }
-    catch (e: unknown) {
-      logErrorWithNotification(message, e);
-    }
-    finally {
-      if (finallyCallback) {
-        await finallyCallback();
-      }
-    }
-  };
-
-  const withErrorHandlingSync = <T>(
-    callback: () => T,
-    { message, finallyCallback }: ErrorHandlingOptionsSync,
-  ) => {
-    try {
-      callback();
-    }
-    catch (e: unknown) {
-      logErrorWithNotification(message, e);
-    }
-    finally {
-      if (finallyCallback) {
-        finallyCallback();
-      }
-    }
-  };
-
-  return { logErrorWithNotification, withErrorHandlingAsync, withErrorHandlingSync };
+  return { logErrorWithNotification };
 });
