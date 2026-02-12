@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto";
 import { AasSubmodelElements } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { ModifierVisitor } from "../modifier-visitor";
-import { ValueVisitor } from "../value-visitor";
 import { cloneSubmodelElement, ISubmodelElement } from "./submodel-base";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
@@ -42,7 +41,9 @@ export class TableExtension {
     if (!this.headerRow) {
       this.addHeaderRow();
     }
-    this.rows.forEach(row => row.addSubmodelElement(cloneSubmodelElement(column), options));
+    this.rows.forEach((row) => {
+      row.addSubmodelElement(cloneSubmodelElement(column), options);
+    });
   }
 
   modifyColumn(idShort: string, data: any) {
@@ -59,7 +60,9 @@ export class TableExtension {
   }
 
   deleteColumn(idShort: string) {
-    this.rows.forEach(row => row.deleteSubmodelElement(idShort));
+    this.rows.forEach((row) => {
+      row.deleteSubmodelElement(idShort);
+    });
   }
 
   private generateRowIdShort() {
@@ -96,18 +99,5 @@ export class TableExtension {
     if (this.headerRow && this.headerRow.idShort === idShort) {
       this.setHeaderRow();
     }
-  }
-
-  prettify(): string {
-    const colPrint = this.columns.map(column => column.idShort).join(" | ");
-    const rowsPrint = [];
-    for (const row of this.rows) {
-      const rowPrint = row.getSubmodelElements().map(
-        submodelElement => submodelElement.accept(new ValueVisitor()),
-      ).join(" | ");
-      rowsPrint.push(rowPrint);
-    }
-    const print = rowsPrint.join("\n");
-    return `${colPrint}\n${print}`;
   }
 }

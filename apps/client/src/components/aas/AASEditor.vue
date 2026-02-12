@@ -19,7 +19,9 @@ const props = defineProps<{
 }>();
 const route = useRoute();
 const router = useRouter();
-const componentRef = ref<{ submit: () => Promise<Promise<void> | undefined> } | null>(null);
+const componentRef = ref<{
+  submit: () => Promise<Promise<void> | undefined>;
+} | null>(null);
 
 const { locale, t } = useI18n();
 
@@ -33,9 +35,10 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
 }
 
 const errorHandlingStore = useErrorHandlingStore();
-const aasNamespace = props.editorMode === AasEditMode.Passport
-  ? apiClient.dpp.passports.aas
-  : apiClient.dpp.templates.aas;
+const aasNamespace
+  = props.editorMode === AasEditMode.Passport
+    ? apiClient.dpp.passports.aas
+    : apiClient.dpp.templates.aas;
 
 const aasEditor = useAasEditor({
   id: props.id,
@@ -110,7 +113,9 @@ function onSubmit() {
       :meta-key-selection="false"
       paginator
       :loading="loading"
-      :rows="10" :rows-per-page-options="[10]" @node-select="onNodeSelect"
+      :rows="10"
+      :rows-per-page-options="[10]"
+      @node-select="onNodeSelect"
     >
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
@@ -160,9 +165,18 @@ function onSubmit() {
       @hide="onHideDrawer"
     >
       <template #header>
-        <div class="flex flex-row items-center justify-between w-full pr-2 gap-1">
+        <div
+          class="flex flex-row items-center justify-between w-full pr-2 gap-1"
+        >
           <span class="text-xl font-bold">{{ drawerHeader }}</span>
-          <Button :label="editorVNode?.component === SubmodelElementListCreateEditor ? t('aasEditor.table.saveAndAddEntries') : t('common.save')" @click="onSubmit" />
+          <Button
+            :label="
+              editorVNode?.component === SubmodelElementListCreateEditor
+                ? t('aasEditor.table.saveAndAddEntries')
+                : t('common.save')
+            "
+            @click="onSubmit"
+          />
         </div>
       </template>
       <component

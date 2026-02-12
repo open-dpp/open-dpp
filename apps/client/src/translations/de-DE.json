@@ -73,6 +73,7 @@
       "errorRemoveColumn": "@:common.remove der @:aasEditor.table.column @:common.failed",
       "errorRemoveRow": "@:common.remove der @:aasEditor.table.row @:common.failed"
     },
+    "errorLoadingSubmodels": "Laden der Abschnitte @.lower:common.failed",
     "addSubmodel": "Abschnitt hinzufügen",
     "edit": "{formItem} bearbeiten",
     "submodel": "Abschnitt",

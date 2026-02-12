@@ -71,6 +71,7 @@ import {
 } from "../../aas/presentation/aas.endpoints";
 import { checkOwnerShipOfDppIdentifiable, EnvironmentService } from "../../aas/presentation/environment.service";
 import { AuthService } from "../../auth/auth.service";
+import { DbSessionOptions } from "../../database/query-options";
 import { Pagination } from "../../pagination/pagination";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
 import {
@@ -364,8 +365,8 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
   }
 
   private saveEnvironmentCallback(passport: Passport) {
-    return async () => {
-      await this.passportRepository.save(passport);
+    return async (options: DbSessionOptions) => {
+      await this.passportRepository.save(passport, options);
     };
   }
 }
