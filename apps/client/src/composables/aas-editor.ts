@@ -65,6 +65,7 @@ export interface IAasEditor extends IAasDrawer, IPagination {
   submodelElementsToAdd: Ref<MenuItem[]>;
   createSubmodel: () => Promise<void>;
   deleteSubmodel: (submodelId: string) => Promise<void>;
+  deleteSubmodelElement: (path: AasEditorPath) => Promise<void>;
   loading: Ref<boolean>;
   selectedKeys: Ref<TreeTableSelectionKeys | undefined>;
   selectTreeNode: (key: string) => void;
@@ -363,6 +364,44 @@ export function useAasEditor({
     });
   };
 
+  async function deleteSubmodelElement(path: AasEditorPath) {
+    const removeLabel = translate("common.remove");
+    const cancelLabel = translate("common.cancel");
+    openConfirm({
+      message: translate(`${translatePrefix}.removeSubmodelElement`),
+      header: removeLabel,
+      icon: "pi pi-info-circle",
+      rejectLabel: cancelLabel,
+      rejectProps: {
+        label: cancelLabel,
+        severity: "secondary",
+        outlined: true,
+      },
+      acceptProps: {
+        label: removeLabel,
+        severity: "danger",
+      },
+      accept: async () => {
+        try {
+          if (path.submodelId && path.idShortPath) {
+            const response = await aasNamespace.deleteSubmodelElementById(
+              id,
+              path.submodelId,
+              path.idShortPath,
+            );
+            await finalizeApiRequest({ status: response.status });
+          }
+        }
+        catch (error: unknown) {
+          errorHandlingStore.logErrorWithNotification(
+            translate(`${translatePrefix}.errorRemoveSubmodelElement`),
+            error,
+          );
+        }
+      },
+    });
+  }
+
   async function deleteSubmodel(submodelId: string) {
     const removeLabel = translate("common.remove");
     const cancelLabel = translate("common.cancel");
@@ -454,6 +493,7 @@ export function useAasEditor({
     buildAddSubmodelElementMenu,
     createSubmodel,
     deleteSubmodel,
+    deleteSubmodelElement,
     findTreeNodeByKey,
     loading,
     selectedKeys,

@@ -65,6 +65,7 @@ const {
   init,
   createSubmodel,
   deleteSubmodel,
+  deleteSubmodelElement,
   submodelElementsToAdd,
   loading,
   drawerVisible,
@@ -108,6 +109,9 @@ async function deleteClicked(node: TreeNode) {
   if (node.data.modelType === KeyTypes.Submodel) {
     await deleteSubmodel(node.key);
   }
+  else {
+    await deleteSubmodelElement(node.data.path);
+  }
 }
 function onSubmit() {
   if (componentRef.value) {
@@ -149,7 +153,6 @@ function onSubmit() {
                 @click="addClicked($event, node)"
               />
               <Button
-                v-if="node.data.modelType === KeyTypes.Submodel"
                 icon="pi pi-trash"
                 severity="danger"
                 @click="deleteClicked(node)"

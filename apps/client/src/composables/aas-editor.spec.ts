@@ -38,6 +38,7 @@ const mocks = vi.hoisted(() => {
     modifySubmodel: vi.fn(),
     modifySubmodelElement: vi.fn(),
     logErrorNotification: vi.fn(),
+    deleteSubmodelElementById: vi.fn(),
   };
 });
 
@@ -54,6 +55,7 @@ vi.mock("../lib/api-client", () => ({
           createSubmodelElement: mocks.createSubmodelElement,
           createSubmodelElementAtIdShortPath: mocks.createSubmodelElementAtIdShortPath,
           modifySubmodelElement: mocks.modifySubmodelElement,
+          deleteSubmodelElementById: mocks.deleteSubmodelElementById,
         },
       },
     },
@@ -494,6 +496,48 @@ describe("aasEditor composable", () => {
       });
       await deleteSubmodel(submodel.id!);
       expect(mocks.logErrorNotification).toHaveBeenCalledWith("aasEditor.errorRemoveSubmodel", { status: HTTPCode.INTERNAL_SERVER_ERROR });
+    });
+
+    it("should delete submodel element", async () => {
+      mocks.getSubmodels.mockResolvedValue({
+        data: paginationResponse,
+        status: HTTPCode.OK,
+      });
+      const openAutoConfirm = async (data: ConfirmationOptions) => {
+        data.accept!();
+      };
+      const { deleteSubmodelElement, init, drawerVisible } = useAasEditor({
+        id: aasId,
+        aasNamespace: apiClient.dpp.templates.aas,
+        changeQueryParams,
+        errorHandlingStore,
+        selectedLanguage,
+        openConfirm: openAutoConfirm,
+        translate,
+      });
+      await init();
+      mocks.deleteSubmodelElementById.mockResolvedValueOnce({
+        status: HTTPCode.NO_CONTENT,
+      });
+      const pathToDelete = {
+        submodelId: submodel.id!,
+        idShortPath: submodel.submodelElements[0]!.idShort!,
+      };
+      await deleteSubmodelElement(pathToDelete);
+      expect(drawerVisible.value).toBeFalsy();
+      expect(mocks.deleteSubmodelElementById).toHaveBeenCalledWith(
+        aasId,
+        submodel.id!,
+        submodel.submodelElements[0]!.idShort!,
+      );
+      mocks.deleteSubmodelElementById.mockRejectedValueOnce({
+        status: HTTPCode.INTERNAL_SERVER_ERROR,
+      });
+      await deleteSubmodelElement(pathToDelete);
+      expect(mocks.logErrorNotification).toHaveBeenCalledWith(
+        "aasEditor.errorRemoveSubmodelElement",
+        { status: HTTPCode.INTERNAL_SERVER_ERROR },
+      );
     });
   });
 });
