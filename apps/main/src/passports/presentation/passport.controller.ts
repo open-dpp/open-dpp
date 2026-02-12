@@ -179,8 +179,8 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelModificationRequestBody() body: SubmodelModificationDto,
     @RequestParam() req: express.Request,
   ): Promise<SubmodelResponseDto> {
-    const template = await this.loadPassportAndCheckOwnership(this.authService, id, req);
-    return await this.environmentService.modifySubmodel(template.getEnvironment(), submodelId, body);
+    const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.modifySubmodel(passport.getEnvironment(), submodelId, body);
   }
 
   @ApiGetSubmodelById()

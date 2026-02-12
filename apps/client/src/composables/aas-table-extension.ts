@@ -216,17 +216,6 @@ export function useAasTableExtension({
   function removeRowMenuItem(rowIndex: number) {
     const removeLabel = translate("common.remove");
     const cancelLabel = translate("common.cancel");
-    const removeRowApiCall = async () => {
-      const response = await aasNamespace.deleteRowFromSubmodelElementList(
-        id,
-        pathToList.submodelId!,
-        pathToList.idShortPath!,
-        getRowIdShortAtIndexOrFail(rowIndex),
-      );
-      if (response.status === HTTPCode.OK) {
-        updateListData(response.data);
-      }
-    };
     return {
       label: removeLabel,
       icon: "pi pi-trash",
@@ -246,9 +235,20 @@ export function useAasTableExtension({
             severity: "danger",
           },
           accept: async () => {
-            await errorHandlingStore.withErrorHandlingAsync(removeRowApiCall, {
-              message: translate(`${translateTablePrefix}.errorRemoveRow`),
-            });
+            try {
+              const response = await aasNamespace.deleteRowFromSubmodelElementList(
+                id,
+                pathToList.submodelId!,
+                pathToList.idShortPath!,
+                getRowIdShortAtIndexOrFail(rowIndex),
+              );
+              if (response.status === HTTPCode.OK) {
+                updateListData(response.data);
+              }
+            }
+            catch (e) {
+              errorHandlingStore.logErrorWithNotification(translate(`${translateTablePrefix}.errorRemoveRow`), e);
+            }
           },
         });
       },
@@ -256,7 +256,8 @@ export function useAasTableExtension({
   }
 
   async function addRow({ position = 0 }: RowMenuOptions) {
-    const addRowApiCall = async () => {
+    const errorMessage = translate(`${translateTablePrefix}.errorAddRow`);
+    try {
       const response = await aasNamespace.addRowToSubmodelElementList(
         id,
         pathToList.submodelId!,
@@ -266,10 +267,13 @@ export function useAasTableExtension({
       if (response.status === HTTPCode.CREATED) {
         updateListData(response.data);
       }
-    };
-    await errorHandlingStore.withErrorHandlingAsync(addRowApiCall, {
-      message: translate(`${translateTablePrefix}.errorAddRow`),
-    });
+      else {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+      }
+    }
+    catch (e) {
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
+    }
   }
 
   const buildColumnMenu = (options: ColumnMenuOptions) => {
@@ -305,16 +309,19 @@ export function useAasTableExtension({
         : colMenuItems;
 
     if (options.addColumnActions) {
-      errorHandlingStore.withErrorHandlingSync(
-        () => {
-          const column = getColumnAtIndexOrFail(options.position ?? 0);
-          columnMenu.value.push({
-            label: translate("common.actions"),
-            items: [modifyColumnMenuItem(column), removeColumnMenuItem(column)],
-          });
-        },
-        { message: translate(`common.errorOccurred`) },
-      );
+      try {
+        const column = getColumnAtIndexOrFail(options.position ?? 0);
+        columnMenu.value.push({
+          label: translate("common.actions"),
+          items: [modifyColumnMenuItem(column), removeColumnMenuItem(column)],
+        });
+      }
+      catch (e) {
+        errorHandlingStore.logErrorWithNotification(
+          translate(`common.errorOccurred`),
+          e,
+        );
+      }
     }
   };
 
@@ -339,12 +346,7 @@ export function useAasTableExtension({
   function removeColumnMenuItem(column: Column) {
     const removeLabel = translate("common.remove");
     const cancelLabel = translate("common.cancel");
-    const removeColumnApiCall = async () => {
-      const response = await aasNamespace.deleteColumnFromSubmodelElementList(id, pathToList.submodelId!, pathToList.idShortPath!, column.idShort);
-      if (response.status === HTTPCode.OK) {
-        updateListData(response.data);
-      }
-    };
+
     return {
       label: removeLabel,
       icon: "pi pi-trash",
@@ -364,10 +366,15 @@ export function useAasTableExtension({
             severity: "danger",
           },
           accept: async () => {
-            await errorHandlingStore.withErrorHandlingAsync(
-              removeColumnApiCall,
-              { message: translate(`${translateTablePrefix}.errorRemoveColumn`) },
-            );
+            try {
+              const response = await aasNamespace.deleteColumnFromSubmodelElementList(id, pathToList.submodelId!, pathToList.idShortPath!, column.idShort);
+              if (response.status === HTTPCode.OK) {
+                updateListData(response.data);
+              }
+            }
+            catch (e) {
+              errorHandlingStore.logErrorWithNotification(translate(`${translateTablePrefix}.errorRemoveColumn`), e);
+            }
           },
         });
       },
@@ -376,24 +383,27 @@ export function useAasTableExtension({
 
   async function modifyPropertyColumn(data: SubmodelElementModificationDto, column: Column) {
     const errorMessage = translate(`${translatePrefix}.table.errorEditColumn`);
-    await errorHandlingStore.withErrorHandlingAsync(
-      async () => {
-        const response = await aasNamespace.modifyColumnOfSubmodelElementList(
-          id,
-          pathToList.submodelId!,
-          pathToList.idShortPath!,
-          column.idShort,
-          data,
+    try {
+      const response = await aasNamespace.modifyColumnOfSubmodelElementList(
+        id,
+        pathToList.submodelId!,
+        pathToList.idShortPath!,
+        column.idShort,
+        data,
+      );
+      if (response.status === HTTPCode.OK) {
+        await navigateBackToListView(
+          pathToList,
+          SubmodelElementListJsonSchema.parse(response.data),
         );
-        if (response.status === HTTPCode.OK) {
-          await navigateBackToListView(
-            pathToList,
-            SubmodelElementListJsonSchema.parse(response.data),
-          );
-        }
-      },
-      { message: errorMessage },
-    );
+      }
+      else {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+      }
+    }
+    catch (e) {
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
+    }
   }
 
   async function createColumn(
@@ -401,29 +411,30 @@ export function useAasTableExtension({
     options: TableModificationParamsDto,
   ) {
     const errorMessage = translate(`${translatePrefix}.table.errorAddColumn`);
-    await errorHandlingStore.withErrorHandlingAsync(
-      async () => {
-        const requestBody = SubmodelElementSchema.parse({
-          ...data,
-        });
-        const response = await aasNamespace.addColumnToSubmodelElementList(
-          id,
-          pathToList.submodelId!,
-          pathToList.idShortPath!,
-          requestBody,
-          options,
+    try {
+      const requestBody = SubmodelElementSchema.parse({
+        ...data,
+      });
+      const response = await aasNamespace.addColumnToSubmodelElementList(
+        id,
+        pathToList.submodelId!,
+        pathToList.idShortPath!,
+        requestBody,
+        options,
+      );
+      if (response.status === HTTPCode.CREATED) {
+        await navigateBackToListView(
+          pathToList,
+          SubmodelElementListJsonSchema.parse(response.data),
         );
-        if (response.status === HTTPCode.CREATED) {
-          await navigateBackToListView(
-            pathToList,
-            SubmodelElementListJsonSchema.parse(response.data),
-          );
-        }
-      },
-      {
-        message: errorMessage,
-      },
-    );
+      }
+      else {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+      }
+    }
+    catch (e) {
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
+    }
   }
 
   async function navigateBackToListView(path: AasEditorPath, newListData: SubmodelElementListEditorProps) {

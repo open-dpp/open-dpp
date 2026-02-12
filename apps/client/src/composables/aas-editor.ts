@@ -172,17 +172,24 @@ export function useAasEditor({
   function getEditCallback(node: TreeNode, title: string) {
     const errorMessage = translate(`${translatePrefix}.error`, { method: title });
     if (node.data.modelType === KeyTypes.Submodel) {
-      return (data: any) => errorHandlingStore.withErrorHandlingAsync(
-        async () => modifySubmodel(toRaw(node.data.path), data),
-        { message: errorMessage },
-      );
+      return async (data: any) => {
+        try {
+          await modifySubmodel(toRaw(node.data.path), data);
+        }
+        catch (e) {
+          errorHandlingStore.logErrorWithNotification(errorMessage, e);
+        }
+      };
     }
     else if (AasSubmodelElementsEnum.safeParse(node.data.modelType).success) {
-      return (data: any) =>
-        errorHandlingStore.withErrorHandlingAsync(
-          async () => modifySubmodelElement(toRaw(node.data.path), data),
-          { message: errorMessage },
-        );
+      return async (data: any) => {
+        try {
+          await modifySubmodelElement(toRaw(node.data.path), data);
+        }
+        catch (e) {
+          errorHandlingStore.logErrorWithNotification(errorMessage, e);
+        }
+      };
     }
     return async (_data: any) => {};
   }
@@ -301,7 +308,7 @@ export function useAasEditor({
           mode: EditorMode.CREATE,
           title: label,
           path,
-          callback: async (data: PropertyRequestDto) => createProperty(path, data),
+          callback: async (data: PropertyRequestDto) => createProperty(path, data, label),
         });
       } };
     }
@@ -384,34 +391,49 @@ export function useAasEditor({
     await createSubmodelElement(path, { modelType: AasSubmodelElements.File, ...data }, "file");
   }
 
-  async function createProperty(path: AasEditorPath, data: PropertyRequestDto) {
-    await createSubmodelElement(path, { modelType: AasSubmodelElements.Property, ...data }, "textField");
+  async function createProperty(path: AasEditorPath, data: PropertyRequestDto, label: string) {
+    await createSubmodelElement(path, { modelType: AasSubmodelElements.Property, ...data }, label);
   }
 
-  async function createSubmodelElement(path: AasEditorPath, data: SubmodelElementSharedRequestDto, translateKey: string, selectSubmodelElementAfterCreation: boolean = false) {
-    const call = async () => {
-      const requestBody = SubmodelElementSchema.parse({ ...data });
-      const response = path.idShortPath
-        ? await aasNamespace.createSubmodelElementAtIdShortPath(id, path.submodelId!, path.idShortPath, requestBody)
-        : await aasNamespace.createSubmodelElement(
-            id,
-            path.submodelId!,
-            requestBody,
-          );
-      await finalizeApiRequest(response);
+  async function createSubmodelElement(path: AasEditorPath, data: SubmodelElementSharedRequestDto, label: string, selectSubmodelElementAfterCreation: boolean = false) {
+    const errorMessage = translate(`${translatePrefix}.error`, {
+      method: translate(`${translatePrefix}.creation`, {
+        formItem: label,
+      }),
+    });
+    try {
+      if (path.submodelId) {
+        const requestBody = SubmodelElementSchema.parse({ ...data });
+        const response = path.idShortPath
+          ? await aasNamespace.createSubmodelElementAtIdShortPath(
+              id,
+              path.submodelId!,
+              path.idShortPath,
+              requestBody,
+            )
+          : await aasNamespace.createSubmodelElement(
+              id,
+              path.submodelId!,
+              requestBody,
+            );
+        await finalizeApiRequest(response);
 
-      if (selectSubmodelElementAfterCreation) {
-        const submodelIdShort = submodels.value.find(n => n.key === path.submodelId)?.data.plain.idShort ?? "";
-        const key = path.idShortPath ? `${path.idShortPath}.${data.idShort}` : `${submodelIdShort}.${data.idShort}`;
-        selectTreeNode(key);
+        if (selectSubmodelElementAfterCreation) {
+          const submodelIdShort
+            = submodels.value.find(n => n.key === path.submodelId)?.data.plain.idShort ?? "";
+          const key = path.idShortPath
+            ? `${path.idShortPath}.${data.idShort}`
+            : `${submodelIdShort}.${data.idShort}`;
+          selectTreeNode(key);
+        }
       }
-    };
-    await errorHandlingStore.withErrorHandlingAsync(
-      call,
-      { message: translate(`${translatePrefix}.error`, {
-        method: translate(`${translatePrefix}.creation`, { formItem: translate(`${translatePrefix}.${translateKey}`) }),
-      }) },
-    );
+      else {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+      }
+    }
+    catch (e) {
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
+    }
   }
 
   async function init() {
