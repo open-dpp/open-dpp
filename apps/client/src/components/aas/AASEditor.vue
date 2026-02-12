@@ -2,8 +2,7 @@
 import type { TreeNode } from "primevue/treenode";
 import type { AasEditModeType } from "../../lib/aas-editor.ts";
 import { KeyTypes } from "@open-dpp/dto";
-import { Button, Column, Drawer, Menu, TreeTable } from "primevue";
-import ConfirmDialog from "primevue/confirmdialog";
+import { Button, Column, ConfirmDialog, Drawer, Menu, TreeTable } from "primevue";
 import { useConfirm } from "primevue/useconfirm";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
@@ -152,6 +151,11 @@ function onSubmit() {
                 severity="primary"
                 @click="addClicked($event, node)"
               />
+              <Button
+                icon="pi pi-trash"
+                severity="danger"
+                @click="deleteClicked(node)"
+              />
             </div>
           </div>
         </template>
@@ -167,6 +171,7 @@ function onSubmit() {
         />
       </template>
     </TreeTable>
+    <ConfirmDialog />
     <Menu
       id="overlay_menu"
       ref="popover"
