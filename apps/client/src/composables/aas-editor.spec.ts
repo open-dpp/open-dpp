@@ -102,8 +102,8 @@ describe("aasEditor composable", () => {
       limit: 10,
     });
     expect(changeQueryParams).toHaveBeenCalledWith({ cursor: undefined });
-    const actionsOfParent = { addChildren: true };
-    const actionsOfLeaveNode = { addChildren: false };
+    const actionsOfParent = { addChildren: true, delete: true };
+    const actionsOfLeaveNode = { addChildren: false, delete: true };
 
     const withoutChildren = (value: any) => omit(value, "children");
     const expectedSubmodel1 = {
@@ -126,9 +126,7 @@ describe("aasEditor composable", () => {
         plain: omit(submodel2, "submodelElements"),
         path: { submodelId: submodel2.id },
         type: "aasEditor.submodel",
-        actions: {
-          addChildren: true,
-        },
+        actions: actionsOfParent,
       },
     };
     expect(submodels.value!.map(withoutChildren)).toEqual([expectedSubmodel1, expectedSubmodel2]);
