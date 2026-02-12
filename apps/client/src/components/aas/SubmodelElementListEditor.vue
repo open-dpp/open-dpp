@@ -69,6 +69,7 @@ const {
   buildColumnMenu,
   buildRowMenu,
   formatCellValue,
+  save,
 } = useAasTableExtension({
   id: props.id,
   pathToList: toRaw(props.path),
@@ -86,6 +87,7 @@ const showErrors = computed(() => {
 });
 
 const submit = handleSubmit(async (data) => {
+  await save();
   await props.callback({ ...data });
 });
 
