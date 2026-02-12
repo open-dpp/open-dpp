@@ -300,6 +300,7 @@ export function useAasEditor({
         plain: omit(submodel, "submodelElements"),
         actions: {
           addChildren: true,
+          delete: true,
         },
         path: { submodelId: submodel.id },
       },

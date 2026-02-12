@@ -73,7 +73,7 @@
       "errorRemoveColumn": "@.capitalize:common.failed to @.lower:common.remove @:aasEditor.table.column",
       "errorRemoveRow": "@.capitalize:common.failed to @.lower:common.remove @:aasEditor.table.row"
     },
-    "errorLoadingSubmodels": "@:common.failed to load the submodels",
+    "errorLoadingSubmodels": "@.capitalize:common.failed to load the submodels",
     "addSubmodel": "Add section",
     "submodelElementCollection": "Sub section",
     "edit": "Edit {formItem}",
