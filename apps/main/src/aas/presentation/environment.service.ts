@@ -1,6 +1,8 @@
 import type express from "express";
-import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
+import type { Connection } from "mongoose";
 
+import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
+import { InjectConnection } from "@nestjs/mongoose";
 import {
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellPaginationResponseDtoSchema,
@@ -25,14 +27,15 @@ import {
 } from "@open-dpp/dto";
 import { fromNodeHeaders } from "better-auth/node";
 import { AuthService } from "../../auth/auth.service";
+import { DbSessionOptions } from "../../database/query-options";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
+
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath, ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
-
 import { AasRepository } from "../infrastructure/aas.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 
@@ -44,7 +47,11 @@ class SubmodelNotPartOfEnvironmentException extends BadRequestException {
 
 @Injectable()
 export class EnvironmentService {
-  constructor(private readonly aasRepository: AasRepository, private readonly submodelRepository: SubmodelRepository) {
+  constructor(
+    private readonly aasRepository: AasRepository,
+    private readonly submodelRepository: SubmodelRepository,
+    @InjectConnection() private connection: Connection,
+  ) {
   }
 
   async createEnvironmentWithEmptyAas(assetKind: AssetKindType): Promise<Environment> {
@@ -73,27 +80,53 @@ export class EnvironmentService {
     return SubmodelJsonSchema.parse(submodel.toPlain());
   }
 
-  async addSubmodelToEnvironment(environment: Environment, submodelPlain: SubmodelRequestDto, saveEnvironment: () => Promise<void>): Promise<SubmodelResponseDto> {
-    const submodel = environment.addSubmodel(Submodel.fromPlain(submodelPlain));
-    await this.submodelRepository.save(submodel);
-    await saveEnvironment();
+  async addSubmodelToEnvironment(environment: Environment, submodelPlain: SubmodelRequestDto, saveEnvironment: (options: DbSessionOptions) => Promise<void>): Promise<SubmodelResponseDto> {
+    const session = await this.connection.startSession();
+    const options = { session };
+    try {
+      session.startTransaction();
+      const submodel = environment.addSubmodel(Submodel.fromPlain(submodelPlain));
+      await saveEnvironment(options);
+      await this.submodelRepository.save(submodel, options);
 
-    const aas = await this.getFirstAssetAdministrationShell(environment);
-    aas.addSubmodel(submodel);
+      const aas = await this.getFirstAssetAdministrationShell(environment);
+      aas.addSubmodel(submodel);
+      await this.aasRepository.save(aas, options);
 
-    await this.aasRepository.save(aas);
-
-    return SubmodelJsonSchema.parse(submodel.toPlain());
+      const result = SubmodelJsonSchema.parse(submodel.toPlain());
+      await session.commitTransaction();
+      return result;
+    }
+    catch (e) {
+      await session.abortTransaction();
+      throw e;
+    }
+    finally {
+      await session.endSession();
+    }
   }
 
-  async deleteSubmodelFromEnvironment(environment: Environment, submodelId: string, saveEnvironment: () => Promise<void>): Promise<void> {
-    const submodel = await this.findSubmodelByIdOrFail(environment, submodelId.toString());
-    await this.submodelRepository.deleteById(submodel.id);
-    const aas = await this.getFirstAssetAdministrationShell(environment);
-    aas.deleteSubmodel(submodel);
-    await this.aasRepository.save(aas);
-    environment.deleteSubmodel(submodel);
-    await saveEnvironment();
+  async deleteSubmodelFromEnvironment(environment: Environment, submodelId: string, saveEnvironment: (options: DbSessionOptions) => Promise<void>): Promise<void> {
+    const session = await this.connection.startSession();
+    const options = { session };
+    try {
+      session.startTransaction();
+      const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+      await this.submodelRepository.deleteById(submodel.id, options);
+      const aas = await this.getFirstAssetAdministrationShell(environment);
+      aas.deleteSubmodel(submodel);
+      await this.aasRepository.save(aas, options);
+      environment.deleteSubmodel(submodel);
+      await saveEnvironment(options);
+      await session.commitTransaction();
+    }
+    catch (e) {
+      await session.abortTransaction();
+      throw e;
+    }
+    finally {
+      await session.endSession();
+    }
   }
 
   async deleteSubmodelElement(environment: Environment, submodelId: string, idShortPath: IdShortPath): Promise<void> {

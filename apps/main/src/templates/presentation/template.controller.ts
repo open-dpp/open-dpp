@@ -67,6 +67,7 @@ import {
 } from "../../aas/presentation/aas.endpoints";
 import { checkOwnerShipOfDppIdentifiable, EnvironmentService } from "../../aas/presentation/environment.service";
 import { AuthService } from "../../auth/auth.service";
+import { DbSessionOptions } from "../../database/query-options";
 import { Pagination } from "../../pagination/pagination";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
@@ -313,8 +314,8 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
   }
 
   private saveEnvironmentCallback(template: Template) {
-    return async () => {
-      await this.templateRepository.save(template);
+    return async (options: DbSessionOptions) => {
+      await this.templateRepository.save(template, options);
     };
   }
 

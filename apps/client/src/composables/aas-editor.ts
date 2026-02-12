@@ -8,6 +8,7 @@ import type {
   PropertyRequestDto,
   SubmodelElementCollectionRequestDto,
   SubmodelElementListRequestDto,
+  SubmodelElementModificationDto,
   SubmodelElementSharedRequestDto,
   SubmodelElementSharedResponseDto,
   SubmodelModificationDto,
@@ -100,12 +101,24 @@ export function useAasEditor({
     pagingParams: PagingParamsDto,
   ): Promise<PagingResult> => {
     loading.value = true;
-    const response = await aasNamespace.getSubmodels(id, pagingParams);
-    if (response.status === HTTPCode.OK) {
-      submodels.value = convertSubmodelsToTree(SubmodelJsonSchema.array().parse(response.data.result));
+    const errorMessage = translate(`${translatePrefix}.errorLoadingSubmodels`);
+    try {
+      const response = await aasNamespace.getSubmodels(id, pagingParams);
+      if (response.status === HTTPCode.OK) {
+        submodels.value = convertSubmodelsToTree(SubmodelJsonSchema.array().parse(response.data.result));
+        return response.data;
+      }
+      else {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+      }
     }
-    loading.value = false;
-    return response.data;
+    catch (e) {
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
+    }
+    finally {
+      loading.value = false;
+    }
+    return { paging_metadata: { cursor: null }, result: [] };
   };
 
   const pagination
@@ -149,7 +162,10 @@ export function useAasEditor({
     }
   }
 
-  async function modifySubmodelElement(path: AasEditorPath, data: SubmodelModificationDto) {
+  async function modifySubmodelElement(
+    path: AasEditorPath,
+    data: SubmodelElementModificationDto,
+  ) {
     if (path.submodelId && path.idShortPath) {
       const response = await aasNamespace.modifySubmodelElement(
         id,

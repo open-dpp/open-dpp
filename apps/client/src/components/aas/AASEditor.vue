@@ -152,11 +152,6 @@ function onSubmit() {
                 severity="primary"
                 @click="addClicked($event, node)"
               />
-              <Button
-                icon="pi pi-trash"
-                severity="danger"
-                @click="deleteClicked(node)"
-              />
             </div>
           </div>
         </template>
@@ -172,7 +167,6 @@ function onSubmit() {
         />
       </template>
     </TreeTable>
-    <ConfirmDialog />
     <Menu
       id="overlay_menu"
       ref="popover"
