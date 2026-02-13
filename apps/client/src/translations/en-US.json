@@ -70,8 +70,9 @@
       "errorAddColumn": "@.capitalize:common.failed to @.lower:common.add @:aasEditor.table.column",
       "errorEditColumn": "@.capitalize:common.failed to @.lower:common.edit @:aasEditor.table.column",
       "errorAddRow": "@.capitalize:common.failed to @.lower:common.add @:aasEditor.table.row",
-      "errorRemoveColumn": "@.capitalize:common.failed to @.lower:common.remove @:aasEditor.table.column",
-      "errorRemoveRow": "@.capitalize:common.failed to @.lower:common.remove @:aasEditor.table.row"
+      "errorRemoveColumn": "@.capitalize:common.failed to @.lower:common.remove the @:aasEditor.table.column",
+      "errorRemoveRow": "@.capitalize:common.failed to @.lower:common.remove the @:aasEditor.table.row",
+      "errorEditEntries": "@.capitalize:common.failed to @.lower:common.edit the @.lower:aasEditor.table.entries"
     },
     "errorLoadingSubmodels": "@.capitalize:common.failed to load the submodels",
     "addSubmodel": "Add section",

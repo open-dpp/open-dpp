@@ -69,10 +69,12 @@ const {
   buildColumnMenu,
   buildRowMenu,
   formatCellValue,
+  save,
 } = useAasTableExtension({
   id: props.id,
   pathToList: toRaw(props.path),
   openDrawer: props.openDrawer,
+  callbackOfSubmodelElementListEditor: props.callback,
   initialData: props.data,
   selectedLanguage: convertLocaleToLanguage(locale.value),
   errorHandlingStore: props.errorHandlingStore,
@@ -86,6 +88,7 @@ const showErrors = computed(() => {
 });
 
 const submit = handleSubmit(async (data) => {
+  await save();
   await props.callback({ ...data });
 });
 

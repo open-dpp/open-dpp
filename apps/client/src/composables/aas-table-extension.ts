@@ -9,6 +9,7 @@ import type {
   SubmodelElementModificationDto,
   SubmodelElementSharedRequestDto,
   TableModificationParamsDto,
+  ValueRequestDto,
 } from "@open-dpp/dto";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
@@ -43,6 +44,7 @@ interface AasTableExtensionProps {
   aasNamespace: AasNamespace;
   errorHandlingStore: IErrorHandlingStore;
   openDrawer: OpenDrawerCallback<EditorType, "CREATE" | "EDIT">;
+  callbackOfSubmodelElementListEditor: (data: SubmodelElementModificationDto) => Promise<void>;
   translate: (label: string, ...args: unknown[]) => string;
   selectedLanguage: LanguageType;
   openConfirm: (option: ConfirmationOptions) => void;
@@ -64,13 +66,14 @@ export interface CellEditProps {
 interface Column { idShort: string; label: string; plain: any }
 export interface IAasTableExtension {
   columns: ComputedRef<Column[]>;
-  rows: ComputedRef<Row[]>;
+  rows: Ref<Row[]>;
   columnMenu: Ref<MenuItem[]>;
   rowMenu: Ref<MenuItem[]>;
   buildColumnMenu: (options: ColumnMenuOptions) => void;
   buildRowMenu: (options: RowMenuOptions) => void;
   onCellEditComplete: (event: CellEditProps) => Promise<void>;
   formatCellValue: (value: string, column: Column) => Value;
+  save: () => Promise<void>;
 }
 
 export function useAasTableExtension({
@@ -80,6 +83,7 @@ export function useAasTableExtension({
   aasNamespace,
   errorHandlingStore,
   openDrawer,
+  callbackOfSubmodelElementListEditor,
   translate,
   selectedLanguage,
   openConfirm,
@@ -89,6 +93,10 @@ export function useAasTableExtension({
   const columnMenu = ref<MenuItem[]>([]);
   const rowMenu = ref<MenuItem[]>([]);
   const data = ref<SubmodelElementListResponseDto>(initialData);
+
+  const rows = ref<Row[]>(
+    convertDataToRows(data.value),
+  );
 
   function buildColumnMenuItem(
     fieldLabel: string,
@@ -140,11 +148,29 @@ export function useAasTableExtension({
     return [];
   });
 
-  const rows = computed<Row[]>((): Row[] => {
-    return data.value.value.map(row =>
-      SubmodelElementCollectionJsonSchema.parse(row).value.reduce((acc, v) => ({ ...acc, [v.idShort]: v.contentType ? { value: v.value, contentType: v.contentType } : v.value }), {}),
-    );
-  });
+  async function saveRows(rowsToSave: ValueRequestDto) {
+    const errorMessage = translate(`${translateTablePrefix}.errorEditEntries`);
+    try {
+      const response = await aasNamespace.modifyValueOfSubmodelElement(
+        id,
+        pathToList.submodelId!,
+        pathToList.idShortPath!,
+        rowsToSave,
+      );
+      if (response.status !== HTTPCode.OK) {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+      }
+      return true;
+    }
+    catch (e) {
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
+      return false;
+    }
+  }
+
+  async function save() {
+    await saveRows(rows.value);
+  }
 
   async function onCellEditComplete(
     event: CellEditProps,
@@ -160,19 +186,21 @@ export function useAasTableExtension({
           ? { ...row, [field]: parsedNewValue.data }
           : row,
       );
-      const response = await aasNamespace.modifyValueOfSubmodelElement(
-        id,
-        pathToList.submodelId!,
-        pathToList.idShortPath!,
-        modifications,
-      );
-
-      data.value = SubmodelElementListJsonSchema.parse(response.data);
+      if (await saveRows(modifications)) {
+        rowData[field] = parsedNewValue.data;
+      }
     }
+  }
+
+  function convertDataToRows(newData: SubmodelElementListResponseDto): Row[] {
+    return newData.value.map(row =>
+      SubmodelElementCollectionJsonSchema.parse(row).value.reduce((acc, v) => ({ ...acc, [v.idShort]: v.contentType ? { value: v.value, contentType: v.contentType } : v.value }), {}),
+    );
   }
 
   function updateListData(newListData: SubmodelElementListResponseDto) {
     data.value = newListData;
+    rows.value = convertDataToRows(data.value);
   }
 
   function getColumnAtIndexOrFail(index: number): Column {
@@ -439,16 +467,13 @@ export function useAasTableExtension({
 
   async function navigateBackToListView(path: AasEditorPath, newListData: SubmodelElementListEditorProps) {
     const formItemLabel = translate(`${translatePrefix}.submodelElementList`);
-    const callback = async (data: any) => {
-      await aasNamespace.modifySubmodelElement(id, path.submodelId!, path.idShortPath!, data);
-    };
     openDrawer({
       type: KeyTypes.SubmodelElementList,
       data: newListData,
       mode: EditorMode.EDIT,
       title: translate(`${translatePrefix}.edit`, { formItem: formItemLabel }),
       path,
-      callback,
+      callback: callbackOfSubmodelElementListEditor,
     });
   }
 
@@ -469,6 +494,7 @@ export function useAasTableExtension({
     columnMenu,
     rowMenu,
     formatCellValue,
+    save,
     buildColumnMenu,
     buildRowMenu,
     onCellEditComplete,

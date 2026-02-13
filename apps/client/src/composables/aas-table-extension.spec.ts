@@ -56,6 +56,7 @@ describe("aasTableExtension composable", () => {
 
   const translate = (key: string) => key;
   const errorHandlingStore = generatedErrorHandlingStoreMock();
+  const callbackOfSubmodelElementListEditor = vi.fn();
 
   const aasId = "1";
   const cols = [
@@ -95,6 +96,7 @@ describe("aasTableExtension composable", () => {
       translate,
       selectedLanguage: Language.en,
       openDrawer,
+      callbackOfSubmodelElementListEditor,
     });
 
     expect(columns.value).toEqual([
@@ -138,6 +140,7 @@ describe("aasTableExtension composable", () => {
       translate,
       selectedLanguage: Language.en,
       openDrawer,
+      callbackOfSubmodelElementListEditor,
     });
     expect(formatCellValue(value, column)).toBe(expected);
   });
@@ -168,6 +171,7 @@ describe("aasTableExtension composable", () => {
       translate,
       selectedLanguage: Language.en,
       openDrawer,
+      callbackOfSubmodelElementListEditor,
     });
 
     expect(rows.value).toEqual([
@@ -206,6 +210,7 @@ describe("aasTableExtension composable", () => {
       selectedLanguage: Language.en,
       translate,
       openDrawer,
+      callbackOfSubmodelElementListEditor,
     });
     buildColumnMenu({ position: 1 });
     const textFieldColumn = columnMenu.value.find(e => e.label === label)!;
@@ -256,6 +261,7 @@ describe("aasTableExtension composable", () => {
     expect(editorVNode.value!.props.data).toEqual(
       SubmodelElementListJsonSchema.parse(submodelElementListModified),
     );
+    expect(editorVNode.value!.props.callback).toEqual(callbackOfSubmodelElementListEditor);
   });
 
   it("should modify cell", async () => {
@@ -274,6 +280,7 @@ describe("aasTableExtension composable", () => {
       selectedLanguage: Language.en,
       translate,
       openDrawer,
+      callbackOfSubmodelElementListEditor,
     });
 
     const submodelElementListModified = {
@@ -325,6 +332,7 @@ describe("aasTableExtension composable", () => {
       selectedLanguage: Language.en,
       translate,
       openDrawer,
+      callbackOfSubmodelElementListEditor,
     });
     buildColumnMenu({ position: 1, addColumnActions: true });
     const editMenuItem = columnMenu.value.find(c => c.label === "common.actions")!.items!.find(e => e.label === "common.edit")!;
@@ -381,6 +389,7 @@ describe("aasTableExtension composable", () => {
       selectedLanguage: Language.en,
       translate,
       openDrawer,
+      callbackOfSubmodelElementListEditor,
     });
     buildColumnMenu({ position: 1, addColumnActions: true });
 
@@ -429,6 +438,7 @@ describe("aasTableExtension composable", () => {
       selectedLanguage: Language.en,
       translate,
       openDrawer,
+      callbackOfSubmodelElementListEditor,
     });
     buildRowMenu({ position: 1 });
 
@@ -475,6 +485,7 @@ describe("aasTableExtension composable", () => {
       selectedLanguage: Language.en,
       translate,
       openDrawer,
+      callbackOfSubmodelElementListEditor,
     });
     buildRowMenu({ position: 1 });
 

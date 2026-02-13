@@ -71,7 +71,8 @@
       "errorAddColumn": "@:common.add der @:aasEditor.table.column @:common.failed",
       "errorAddRow": "@:common.add der @:aasEditor.table.row @:common.failed",
       "errorRemoveColumn": "@:common.remove der @:aasEditor.table.column @:common.failed",
-      "errorRemoveRow": "@:common.remove der @:aasEditor.table.row @:common.failed"
+      "errorRemoveRow": "@:common.remove der @:aasEditor.table.row @:common.failed",
+      "errorEditEntries": "@:common.edit der @:aasEditor.table.entries @:common.failed"
     },
     "errorLoadingSubmodels": "Laden der Abschnitte @.lower:common.failed",
     "addSubmodel": "Abschnitt hinzufügen",

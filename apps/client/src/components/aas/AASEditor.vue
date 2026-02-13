@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import type { TreeNode } from "primevue/treenode";
 import type { AasEditModeType } from "../../lib/aas-editor.ts";
+import { Button, Column, Drawer, Menu, TreeTable } from "primevue";
+import { computed, onMounted, ref } from "vue";
 import { KeyTypes } from "@open-dpp/dto";
 import { Button, Column, ConfirmDialog, Drawer, Menu, TreeTable } from "primevue";
 import { useConfirm } from "primevue/useconfirm";
@@ -25,6 +27,9 @@ const componentRef = ref<{
   submit: () => Promise<Promise<void> | undefined>;
 } | null>(null);
 
+const defaultPosition = "right";
+const fullPosition = "full";
+const position = ref(defaultPosition);
 const { locale, t } = useI18n();
 
 function changeQueryParams(newQuery: Record<string, string | undefined>) {
@@ -117,6 +122,8 @@ function onSubmit() {
     componentRef.value.submit();
   }
 }
+
+const isFullPosition = computed(() => position.value === fullPosition);
 </script>
 
 <template>
@@ -182,8 +189,14 @@ function onSubmit() {
     />
     <Drawer
       v-model:visible="drawerVisible"
-      position="right"
-      class="w-full! md:w-80! lg:w-1/2!"
+      :position="position"
+      :class="{
+        'w-full! md:w-80! lg:w-1/2!': !isFullPosition,
+        'w-full!': isFullPosition,
+      }"
+      :pt="{
+        mask: { class: 'aas-editor-drawer-mask' },
+      }"
       :auto-z-index="false"
       @hide="onHideDrawer"
     >
@@ -192,14 +205,30 @@ function onSubmit() {
           class="flex flex-row items-center justify-between w-full pr-2 gap-1"
         >
           <span class="text-xl font-bold">{{ drawerHeader }}</span>
-          <Button
-            :label="
-              editorVNode?.component === SubmodelElementListCreateEditor
-                ? t('aasEditor.table.saveAndAddEntries')
-                : t('common.save')
-            "
-            @click="onSubmit"
-          />
+          <div class="flex gap-3">
+            <Button
+              v-if="position === defaultPosition"
+              severity="secondary"
+              variant="text"
+              icon="pi pi-window-maximize"
+              @click="position = fullPosition"
+            />
+            <Button
+              v-else
+              severity="secondary"
+              variant="text"
+              icon="pi pi-window-minimize"
+              @click="position = defaultPosition"
+            />
+            <Button
+              :label="
+                editorVNode?.component === SubmodelElementListCreateEditor
+                  ? t('aasEditor.table.saveAndAddEntries')
+                  : t('common.save')
+              "
+              @click="onSubmit"
+            />
+          </div>
         </div>
       </template>
       <component
@@ -218,7 +247,7 @@ function onSubmit() {
 </template>
 
 <style>
-.p-drawer-mask {
-  z-index: 40;
+.aas-editor-drawer-mask {
+  z-index: 51;
 }
 </style>
