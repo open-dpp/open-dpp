@@ -15,7 +15,6 @@ import type { IErrorHandlingStore } from "../../stores/error.handling.ts";
 import { AasSubmodelElements } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { Button, Column, DataTable, InputText, Menu } from "primevue";
-import ConfirmDialog from "primevue/confirmdialog";
 import { useConfirm } from "primevue/useconfirm";
 import { useForm } from "vee-validate";
 import { computed, ref, toRaw } from "vue";
@@ -116,7 +115,6 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
       :errors="errors"
       :editor-mode="EditorMode.EDIT"
     />
-    <ConfirmDialog />
     <DataTable
       scrollable
       edit-mode="cell"
