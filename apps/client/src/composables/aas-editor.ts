@@ -314,30 +314,37 @@ export function useAasEditor({
     }
 
     submodelElementsToAdd.value = [
-      buildPropertyEntry(translate(`${translatePrefix}.textField`), "pi pi-pencil", DataTypeDef.String),
-      buildPropertyEntry(translate(`${translatePrefix}.numberField`), "pi pi-pencil", DataTypeDef.Double),
+      buildPropertyEntry(
+        translate(`${translatePrefix}.textField`),
+        "pi pi-align-left",
+        DataTypeDef.String,
+      ),
+      buildPropertyEntry(
+        translate(`${translatePrefix}.numberField`),
+        "pi pi-calculator",
+        DataTypeDef.Double,
+      ),
       {
         label: translate(`${translatePrefix}.file`),
-        icon: "pi pi-pencil",
+        icon: "pi pi-file-plus",
         command: (_event: MenuItemCommandEvent) => {
           drawer.openDrawer({
             type: KeyTypes.File,
-            data: { },
+            data: {},
             mode: EditorMode.CREATE,
             title: translate(`${translatePrefix}.file`),
             path,
-            callback: async (data: FileRequestDto) =>
-              createFile(path, data),
+            callback: async (data: FileRequestDto) => createFile(path, data),
           });
         },
       },
       {
         label: translate(`${translatePrefix}.submodelElementCollection`),
-        icon: "pi pi-pencil",
+        icon: "pi pi-folder-plus",
         command: (_event: MenuItemCommandEvent) => {
           drawer.openDrawer({
             type: KeyTypes.SubmodelElementCollection,
-            data: { },
+            data: {},
             mode: EditorMode.CREATE,
             title: translate(`${translatePrefix}.submodelElementCollection`),
             path,
@@ -348,11 +355,11 @@ export function useAasEditor({
       },
       {
         label: translate(`${translatePrefix}.submodelElementList`),
-        icon: "pi pi-pencil",
+        icon: "pi pi-list",
         command: (_event: MenuItemCommandEvent) => {
           drawer.openDrawer({
             type: KeyTypes.SubmodelElementList,
-            data: { },
+            data: {},
             mode: EditorMode.CREATE,
             title: translate(`${translatePrefix}.submodelElementList`),
             path,
