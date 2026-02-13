@@ -1,12 +1,17 @@
 <script lang="ts" setup>
 import type { TreeNode } from "primevue/treenode";
 import type { AasEditModeType } from "../../lib/aas-editor.ts";
-import { Button, Column, Drawer, Menu, TreeTable } from "primevue";
-import { computed, onMounted, ref } from "vue";
 import { KeyTypes } from "@open-dpp/dto";
-import { Button, Column, ConfirmDialog, Drawer, Menu, TreeTable } from "primevue";
+import {
+  Button,
+  Column,
+  ConfirmDialog,
+  Drawer,
+  Menu,
+  TreeTable,
+} from "primevue";
 import { useConfirm } from "primevue/useconfirm";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useAasEditor } from "../../composables/aas-editor.ts";
