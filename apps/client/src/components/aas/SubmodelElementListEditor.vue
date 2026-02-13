@@ -74,6 +74,7 @@ const {
   id: props.id,
   pathToList: toRaw(props.path),
   openDrawer: props.openDrawer,
+  callbackOfSubmodelElementListEditor: props.callback,
   initialData: props.data,
   selectedLanguage: convertLocaleToLanguage(locale.value),
   errorHandlingStore: props.errorHandlingStore,
