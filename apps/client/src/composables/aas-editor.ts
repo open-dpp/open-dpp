@@ -303,17 +303,17 @@ export function useAasEditor({
     submodelElementsToAdd.value = [
       buildPropertyEntry(
         translate(`${translatePrefix}.textField`),
-        "pi pi-pencil",
+        "pi pi-align-left",
         DataTypeDef.String,
       ),
       buildPropertyEntry(
         translate(`${translatePrefix}.numberField`),
-        "pi pi-pencil",
+        "pi pi-calculator",
         DataTypeDef.Double,
       ),
       {
         label: translate(`${translatePrefix}.file`),
-        icon: "pi pi-pencil",
+        icon: "pi pi-file-plus",
         command: (_event: MenuItemCommandEvent) => {
           drawer.openDrawer({
             type: KeyTypes.File,
@@ -351,7 +351,7 @@ export function useAasEditor({
       },
       {
         label: translate(`${translatePrefix}.submodelElementCollection`),
-        icon: "pi pi-pencil",
+        icon: "pi pi-folder-plus",
         command: (_event: MenuItemCommandEvent) => {
           drawer.openDrawer({
             type: KeyTypes.SubmodelElementCollection,
@@ -366,7 +366,7 @@ export function useAasEditor({
       },
       {
         label: translate(`${translatePrefix}.submodelElementList`),
-        icon: "pi pi-pencil",
+        icon: "pi pi-list",
         command: (_event: MenuItemCommandEvent) => {
           drawer.openDrawer({
             type: KeyTypes.SubmodelElementList,
