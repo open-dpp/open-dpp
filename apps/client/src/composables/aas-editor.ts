@@ -1,20 +1,5 @@
 import type { AasNamespace } from "@open-dpp/api-client";
-import type {
-  DataTypeDefType,
-  FileRequestDto,
-  LanguageTextDto,
-  LanguageType,
-  PagingParamsDto,
-  PropertyRequestDto,
-  SubmodelElementCollectionRequestDto,
-  SubmodelElementListRequestDto,
-  SubmodelElementModificationDto,
-  SubmodelElementSharedRequestDto,
-  SubmodelElementSharedResponseDto,
-  SubmodelModificationDto,
-  SubmodelRequestDto,
-  SubmodelResponseDto,
-} from "@open-dpp/dto";
+import type { DataTypeDefType, FileRequestDto, LanguageTextDto, LanguageType, PagingParamsDto, PropertyRequestDto, SubmodelElementCollectionRequestDto, SubmodelElementListRequestDto, SubmodelElementModificationDto, SubmodelElementSharedRequestDto, SubmodelElementSharedResponseDto, SubmodelModificationDto, SubmodelRequestDto, SubmodelResponseDto } from "@open-dpp/dto";
 import type { TreeTableSelectionKeys } from "primevue";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
@@ -27,9 +12,11 @@ import {
   AasSubmodelElements,
 
   AasSubmodelElementsEnum,
+
   DataTypeDef,
   KeyTypes,
   PropertyJsonSchema,
+  ReferenceTypes,
   SubmodelElementSchema,
   SubmodelElementSharedSchema,
   SubmodelJsonSchema,
@@ -314,20 +301,51 @@ export function useAasEditor({
     }
 
     submodelElementsToAdd.value = [
-      buildPropertyEntry(translate(`${translatePrefix}.textField`), "pi pi-pencil", DataTypeDef.String),
-      buildPropertyEntry(translate(`${translatePrefix}.numberField`), "pi pi-pencil", DataTypeDef.Double),
+      buildPropertyEntry(
+        translate(`${translatePrefix}.textField`),
+        "pi pi-pencil",
+        DataTypeDef.String,
+      ),
+      buildPropertyEntry(
+        translate(`${translatePrefix}.numberField`),
+        "pi pi-pencil",
+        DataTypeDef.Double,
+      ),
       {
         label: translate(`${translatePrefix}.file`),
         icon: "pi pi-pencil",
         command: (_event: MenuItemCommandEvent) => {
           drawer.openDrawer({
             type: KeyTypes.File,
-            data: { },
+            data: {},
             mode: EditorMode.CREATE,
             title: translate(`${translatePrefix}.file`),
             path,
-            callback: async (data: FileRequestDto) =>
-              createFile(path, data),
+            callback: async (data: FileRequestDto) => createFile(path, data),
+          });
+        },
+      },
+      {
+        label: translate(`${translatePrefix}.relationshipElement`),
+        icon: "pi pi-link",
+        command: (_event: MenuItemCommandEvent) => {
+          drawer.openDrawer({
+            type: KeyTypes.RelationshipElement,
+            data: {
+              first: {
+                type: ReferenceTypes.ModelReference,
+                keys: [
+                  {
+                    type: KeyTypes.AnnotatedRelationshipElement,
+                    value: id,
+                  },
+                ],
+              },
+            },
+            mode: EditorMode.CREATE,
+            title: translate(`${translatePrefix}.relationshipElement`),
+            path,
+            callback: async (data: any) => {},
           });
         },
       },
@@ -337,7 +355,7 @@ export function useAasEditor({
         command: (_event: MenuItemCommandEvent) => {
           drawer.openDrawer({
             type: KeyTypes.SubmodelElementCollection,
-            data: { },
+            data: {},
             mode: EditorMode.CREATE,
             title: translate(`${translatePrefix}.submodelElementCollection`),
             path,
@@ -352,7 +370,7 @@ export function useAasEditor({
         command: (_event: MenuItemCommandEvent) => {
           drawer.openDrawer({
             type: KeyTypes.SubmodelElementList,
-            data: { },
+            data: {},
             mode: EditorMode.CREATE,
             title: translate(`${translatePrefix}.submodelElementList`),
             path,

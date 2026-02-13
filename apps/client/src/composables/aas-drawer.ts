@@ -3,10 +3,12 @@ import type { Component, ComputedRef, Ref } from "vue";
 import {
 
   KeyTypes as AasKeyTypes,
-  AasSubmodelElementsEnum,
 
+  AasSubmodelElementsEnum,
   FileJsonSchema,
+
   PropertyJsonSchema,
+  ReferenceJsonSchema,
   SubmodelElementCollectionJsonSchema,
   SubmodelElementListJsonSchema,
   SubmodelElementSchema,
@@ -22,6 +24,7 @@ import FileCreateEditor from "../components/aas/FileCreateEditor.vue";
 import FileEditor from "../components/aas/FileEditor.vue";
 import PropertyCreateEditor from "../components/aas/PropertyCreateEditor.vue";
 import PropertyEditor from "../components/aas/PropertyEditor.vue";
+import RelationshipElementCreateEditor from "../components/aas/RelationshipElementCreateEditor.vue";
 import SubmodelCreateEditor from "../components/aas/SubmodelCreateEditor.vue";
 import SubmodelEditor from "../components/aas/SubmodelEditor.vue";
 import SubmodelElementCollectionCreateEditor from "../components/aas/SubmodelElementCollectionCreateEditor.vue";
@@ -56,6 +59,13 @@ export type PropertyCreateEditorProps = z.infer<
   typeof PropertyCreateEditorPropsSchema
 >;
 
+const RelationshipCreateEditorPropsSchema = z.object({
+  first: ReferenceJsonSchema,
+});
+export type RelationshipCreateEditorProps = z.infer<
+  typeof RelationshipCreateEditorPropsSchema
+>;
+
 export type SubmodelElementCollectionEditorProps
   = SubmodelElementCollectionResponseDto;
 export type SubmodelElementListEditorProps = SubmodelElementListResponseDto;
@@ -83,6 +93,7 @@ interface EditorDataMap {
     [AasKeyTypes.SubmodelElementCollection]: SubmodelElementCollectionCreateEditorProps;
     [AasKeyTypes.SubmodelElementList]: SubmodelElementListCreateEditorProps;
     [AasKeyTypes.File]: FileCreateEditorProps;
+    [AasKeyTypes.RelationshipElement]: RelationshipCreateEditorProps;
     [ColumnEditorKey]: ColumnCreateEditorProps;
   };
   [EditorMode.EDIT]: {
@@ -91,6 +102,7 @@ interface EditorDataMap {
     [AasKeyTypes.SubmodelElementCollection]: SubmodelElementCollectionEditorProps;
     [AasKeyTypes.SubmodelElementList]: SubmodelElementListEditorProps;
     [AasKeyTypes.File]: FileEditorProps;
+    [AasKeyTypes.RelationshipElement]: RelationshipCreateEditorProps; // TODO: Replace with RelationshipEditorProps
     [ColumnEditorKey]: ColumnEditorProps;
   };
 }
@@ -101,6 +113,7 @@ export type EditorType
     | typeof AasKeyTypes.File
     | typeof AasKeyTypes.SubmodelElementCollection
     | typeof AasKeyTypes.SubmodelElementList
+    | typeof AasKeyTypes.RelationshipElement
     | "Column";
 
 export interface AasEditorPath {
@@ -186,6 +199,10 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
         component: FileCreateEditor,
         parse: data => SubmodelBaseCreatePropsSchema.parse(data),
       },
+      [AasKeyTypes.RelationshipElement]: {
+        component: RelationshipElementCreateEditor,
+        parse: data => RelationshipCreateEditorPropsSchema.parse(data),
+      },
       [ColumnEditorKey]: {
         component: ColumnCreateEditor,
         parse: data => ColumnCreateEditorPropsSchema.parse(data),
@@ -211,6 +228,10 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
       [AasKeyTypes.File]: {
         component: FileEditor,
         parse: data => FileJsonSchema.parse(data),
+      },
+      [AasKeyTypes.RelationshipElement]: { // TODO: Replace with RelationshipEditor
+        component: RelationshipElementCreateEditor,
+        parse: data => RelationshipCreateEditorPropsSchema.parse(data),
       },
       [ColumnEditorKey]: {
         component: ColumnEditor,

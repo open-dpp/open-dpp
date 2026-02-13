@@ -74,6 +74,7 @@
       "errorRemoveRow": "@.capitalize:common.failed to @.lower:common.remove the @:aasEditor.table.row",
       "errorEditEntries": "@.capitalize:common.failed to @.lower:common.edit the @.lower:aasEditor.table.entries"
     },
+    "relationshipElement": "Passport link",
     "errorLoadingSubmodels": "@:common.failed to load the submodels",
     "addSubmodel": "Add section",
     "submodelElementCollection": "Sub section",
