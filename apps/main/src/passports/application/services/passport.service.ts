@@ -31,21 +31,48 @@ export class PassportService {
       throw new NotFoundException(`Organization data for passport ${passportId} not found`);
     } */
 
+    if (!passport.environment) {
+      this.logger.warn(`Passport ${passportId} has no environment; returning empty shells and submodels`);
+      return {
+        ...passport,
+        environment: {
+          assetAdministrationShells: [],
+          submodels: [],
+        },
+      };
+    }
+
+    const shellIds = passport.environment.assetAdministrationShells ?? [];
+    const submodelIds = passport.environment.submodels ?? [];
+
+    const [shellResults, submodelResults] = await Promise.all([
+      Promise.all(
+        shellIds.map(shellId => this.aasRepository.findOne(shellId)),
+      ),
+      Promise.all(
+        submodelIds.map(submodelId => this.submodelRepository.findOne(submodelId)),
+      ),
+    ]);
+
     const shells: Array<AssetAdministrationShell> = [];
-    for (const shellId of passport.environment.assetAdministrationShells) {
-      const aas = await this.aasRepository.findOne(shellId);
+    shellResults.forEach((aas, index) => {
       if (aas) {
         shells.push(aas);
       }
-    }
+      else {
+        this.logger.warn(`Asset administration shell not found for id: ${shellIds[index]} (passport ${passportId})`);
+      }
+    });
 
     const submodels: Array<Submodel> = [];
-    for (const submodelId of passport.environment.submodels) {
-      const submodel = await this.submodelRepository.findOne(submodelId);
+    submodelResults.forEach((submodel, index) => {
       if (submodel) {
         submodels.push(submodel);
       }
-    }
+      else {
+        this.logger.warn(`Submodel not found for id: ${submodelIds[index]} (passport ${passportId})`);
+      }
+    });
 
     return {
       // organization: organizationData,
