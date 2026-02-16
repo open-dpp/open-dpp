@@ -51,7 +51,7 @@ describe("itemList.vue", () => {
       expect((cells[0] as HTMLElement).textContent).toEqual(
         ((items[index] as ItemDto).uniqueProductIdentifiers[0] as UniqueProductIdentifierDto).uuid,
       );
-      expect((cells[1] as HTMLElement).textContent).toEqual("EditierenQR-Code");
+      expect((cells[1] as HTMLElement).textContent).toEqual("EditQR code");
     });
   });
   it("should create item", async () => {
