@@ -45,9 +45,6 @@ export class ChatService {
     if (!passport) {
       throw new Error(`Product passport with id ${passportUuid} not found`);
     }
-    if (!passport) {
-      throw new Error("Passport not found");
-    }
 
     // Check quota BEFORE processing
     const quotaCheck = await this.policyService.enforce(
