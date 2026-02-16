@@ -21,7 +21,6 @@ watch(
     const permalink = String(route.params.permalink);
     try {
       const response = await apiClient.dpp.productPassports.getById(permalink);
-      // await analyticsStore.addPageView();
       if (response.status === 404) {
         await router.push({
           path: "404",
