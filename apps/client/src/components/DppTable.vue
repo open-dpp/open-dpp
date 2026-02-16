@@ -25,6 +25,7 @@ const emits = defineEmits<{
   (e: "nextPage"): Promise<void>;
   (e: "previousPage"): Promise<void>;
   (e: "resetCursor"): Promise<void>;
+  (e: "importError", error: unknown): void;
 }>();
 
 dayjs.extend(utc);
@@ -86,16 +87,23 @@ async function handleFileUpload(event: Event) {
     try {
       const json = JSON.parse(e.target?.result as string);
       await axiosIns.post("/passports/import", json);
-      emits("resetCursor"); // Refresh list
+      emits("resetCursor");
     }
     catch (error) {
       console.error("Failed to import passport", error);
+      emits("importError", error);
     }
     finally {
-      // Reset input value to allow selecting same file again
       if (fileInput.value)
         fileInput.value.value = "";
     }
+  };
+  reader.onerror = () => {
+    const error = reader.error;
+    console.error("Failed to read import file", error);
+    emits("importError", error);
+    if (fileInput.value)
+      fileInput.value.value = "";
   };
   reader.readAsText(file);
 }
