@@ -31,7 +31,7 @@ watch(
         });
         return;
       }
-      productPassportStore.productPassport = (response.data as any).passport;
+      productPassportStore.productPassport = response.data;
       await productPassportStore.loadMedia();
     }
     catch (e) {
