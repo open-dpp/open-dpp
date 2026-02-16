@@ -1,5 +1,21 @@
 import type { AasNamespace } from "@open-dpp/api-client";
-import type { DataTypeDefType, FileRequestDto, LanguageTextDto, LanguageType, PagingParamsDto, PropertyRequestDto, SubmodelElementCollectionRequestDto, SubmodelElementListRequestDto, SubmodelElementModificationDto, SubmodelElementSharedRequestDto, SubmodelElementSharedResponseDto, SubmodelModificationDto, SubmodelRequestDto, SubmodelResponseDto } from "@open-dpp/dto";
+import type {
+  DataTypeDefType,
+  FileRequestDto,
+  LanguageTextDto,
+  LanguageType,
+  PagingParamsDto,
+  PropertyRequestDto,
+  ReferenceElementRequestDto,
+  SubmodelElementCollectionRequestDto,
+  SubmodelElementListRequestDto,
+  SubmodelElementModificationDto,
+  SubmodelElementSharedRequestDto,
+  SubmodelElementSharedResponseDto,
+  SubmodelModificationDto,
+  SubmodelRequestDto,
+  SubmodelResponseDto,
+} from "@open-dpp/dto";
 import type { TreeTableSelectionKeys } from "primevue";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
@@ -16,7 +32,6 @@ import {
   DataTypeDef,
   KeyTypes,
   PropertyJsonSchema,
-  ReferenceTypes,
   SubmodelElementSchema,
   SubmodelElementSharedSchema,
   SubmodelJsonSchema,
@@ -26,7 +41,12 @@ import { omit } from "lodash";
 import { ref, toRaw } from "vue";
 import { z } from "zod/v4";
 import { HTTPCode } from "../stores/http-codes.ts";
-import { EditorMode, useAasDrawer } from "./aas-drawer.ts";
+import {
+
+  EditorMode,
+  LinkEditorKey,
+  useAasDrawer,
+} from "./aas-drawer.ts";
 import { usePagination } from "./pagination.ts";
 
 interface AasEditorProps {
@@ -247,6 +267,9 @@ export function useAasEditor({
     if (submodelBase.modelType === AasSubmodelElements.SubmodelElementList) {
       return translate(`${translatePrefix}.submodelElementList`);
     }
+    if (submodelBase.modelType === AasSubmodelElements.ReferenceElement) {
+      return translate(`${translatePrefix}.link`);
+    }
     if (submodelBase.modelType === AasSubmodelElements.File) {
       return translate(`${translatePrefix}.file`);
     }
@@ -326,26 +349,16 @@ export function useAasEditor({
         },
       },
       {
-        label: translate(`${translatePrefix}.relationshipElement`),
+        label: translate(`${translatePrefix}.link`),
         icon: "pi pi-link",
         command: (_event: MenuItemCommandEvent) => {
           drawer.openDrawer({
-            type: KeyTypes.RelationshipElement,
-            data: {
-              first: {
-                type: ReferenceTypes.ModelReference,
-                keys: [
-                  {
-                    type: KeyTypes.AnnotatedRelationshipElement,
-                    value: id,
-                  },
-                ],
-              },
-            },
+            type: LinkEditorKey,
+            data: {},
             mode: EditorMode.CREATE,
-            title: translate(`${translatePrefix}.relationshipElement`),
+            title: translate(`${translatePrefix}.link`),
             path,
-            callback: async (data: any) => {},
+            callback: async (data: any) => createLink(path, data),
           });
         },
       },
@@ -403,6 +416,10 @@ export function useAasEditor({
 
   async function createSubmodelElementCollection(path: AasEditorPath, data: SubmodelElementCollectionRequestDto) {
     await createSubmodelElement(path, { modelType: AasSubmodelElements.SubmodelElementCollection, ...data }, "submodelElementCollection");
+  }
+
+  async function createLink(path: AasEditorPath, data: ReferenceElementRequestDto) {
+    await createSubmodelElement(path, { ...data, modelType: AasSubmodelElements.ReferenceElement }, "link");
   }
 
   async function createFile(path: AasEditorPath, data: FileRequestDto) {

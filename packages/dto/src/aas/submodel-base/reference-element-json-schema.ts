@@ -8,3 +8,6 @@ export const ReferenceElementJsonSchema = z.object({
   extensions: ExtensionJsonSchema.array().default([]),
   value: z.nullish(ReferenceJsonSchema),
 })
+
+export type ReferenceElementResponseDto = z.infer<typeof ReferenceElementJsonSchema>
+export type ReferenceElementRequestDto = z.input<typeof ReferenceElementJsonSchema>
