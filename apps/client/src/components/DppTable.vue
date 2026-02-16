@@ -86,7 +86,7 @@ const { t } = useI18n();
             <Button
               icon="pi pi-qrcode"
               severity="primary"
-              aria-label="Forward to presentation"
+              :aria-label="t('dpp.forwardToPresentation')"
               @click="forwardToPresentation(data.id)"
             />
           </div>
@@ -94,7 +94,7 @@ const { t } = useI18n();
             <Button
               icon="pi pi-comments"
               severity="primary"
-              aria-label="Open presentation chat"
+              :aria-label="t('dpp.openPresentationChat')"
               @click="forwardToPresentationChat(data.id)"
             />
           </div>

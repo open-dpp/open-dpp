@@ -498,6 +498,10 @@
       }
     }
   },
+  "dpp": {
+    "forwardToPresentation": "Forward to presentation",
+    "openPresentationChat": "Open AI chat"
+  },
   "presentation": {
     "productDetails": "Product details",
     "productDetailsDesc": "General information about the product.",

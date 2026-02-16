@@ -498,6 +498,10 @@
       }
     }
   },
+  "dpp": {
+    "forwardToPresentation": "Zur Präsentation weiterleiten",
+    "openPresentationChat": "KI-Chat öffnen"
+  },
   "presentation": {
     "productDetails": "Produktdetails",
     "productDetailsDesc": "Allgemeine Informationen zum Produkt.",
