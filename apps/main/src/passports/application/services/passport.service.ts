@@ -40,8 +40,8 @@ export class PassportService {
     }
 
     const submodels: Array<Submodel> = [];
-    for (const shellId of passport.environment.submodels) {
-      const submodel = await this.submodelRepository.findOne(shellId);
+    for (const submodelId of passport.environment.submodels) {
+      const submodel = await this.submodelRepository.findOne(submodelId);
       if (submodel) {
         submodels.push(submodel);
       }
