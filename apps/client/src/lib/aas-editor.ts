@@ -24,14 +24,3 @@ export interface SharedEditorProps<Data, RequestDto> {
   id: string;
   translate: (label: string, ...args: unknown[]) => string;
 }
-
-export interface SharedEditorProps<Data, RequestDto> {
-  path: AasEditorPath;
-  data: Data;
-  callback: (data: RequestDto) => Promise<void>;
-  openDrawer: OpenDrawerCallback<EditorType, "CREATE" | "EDIT">;
-  aasNamespace: AasNamespace;
-  errorHandlingStore: IErrorHandlingStore;
-  id: string;
-  translate: (label: string, ...args: unknown[]) => string;
-}
