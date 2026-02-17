@@ -2489,6 +2489,15 @@ packages:
   '@one-ini/wasm@0.1.1':
     resolution: {integrity: sha512-XuySG1E38YScSJoMlqovLru4KTUNSjgVTIjyh7qMX6aNN5HY5Ct5LhRJdxO79JtTzKfzV/bnWpz+zquYrISsvw==}
 
+  '@open-dpp/dto@file:packages/dto':
+    resolution: {directory: packages/dto, type: directory}
+
+  '@open-dpp/env@file:packages/env':
+    resolution: {directory: packages/env, type: directory}
+
+  '@open-dpp/testing@file:packages/testing':
+    resolution: {directory: packages/testing, type: directory}
+
   '@open-draft/deferred-promise@2.2.0':
     resolution: {integrity: sha512-CecwLWx3rhxVQF6V4bAgPS5t+So2sTbPgAzafKkVizyi7tlwpcFpdFqq+wqF2OwNBmqFuu6tOyouTuxgpMfzmA==}
 
