@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import type { FileRequestDto } from "@open-dpp/dto";
-import type {
-  AasEditorPath,
-  FileCreateEditorProps,
-} from "../../composables/aas-drawer.ts";
+import type { FileCreateEditorProps } from "../../composables/aas-drawer.ts";
+import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { FileJsonSchema } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
@@ -19,11 +17,8 @@ import {
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import FileForm from "./FileForm.vue";
 
-const props = defineProps<{
-  path: AasEditorPath;
-  data: FileCreateEditorProps;
-  callback: (data: FileRequestDto) => Promise<void>;
-}>();
+const props
+  = defineProps<SharedEditorProps<FileCreateEditorProps, FileRequestDto>>();
 
 const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,

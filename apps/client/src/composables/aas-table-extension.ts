@@ -176,8 +176,10 @@ export function useAasTableExtension({
     event: CellEditProps,
   ) {
     const { data: rowData, newValue, field, index: editedRowIndex } = event;
-    const ValueSchema = z.string().min(1);
-    const ValueParser = newValue.contentType ? z.object({ contentType: z.string(), value: ValueSchema }) : ValueSchema;
+    const ValueSchema = z.string().nullable();
+    const ValueParser = newValue?.contentType
+      ? z.object({ contentType: z.string(), value: ValueSchema })
+      : ValueSchema;
 
     const parsedNewValue = ValueParser.safeParse(newValue);
     if (parsedNewValue.success && rowData[field] !== parsedNewValue.data) {

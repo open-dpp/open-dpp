@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import type { SubmodelElementListRequestDto } from "@open-dpp/dto";
-import type {
-  SubmodelElementCollectionCreateEditorProps,
-} from "../../composables/aas-drawer.ts";
+import type { SubmodelElementListCreateEditorProps } from "../../composables/aas-drawer.ts";
+import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { AasSubmodelElements } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
@@ -17,10 +16,13 @@ import {
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
-const props = defineProps<{
-  data: SubmodelElementCollectionCreateEditorProps;
-  callback: (data: SubmodelElementListRequestDto) => Promise<void>;
-}>();
+const props
+  = defineProps<
+    SharedEditorProps<
+      SubmodelElementListCreateEditorProps,
+      SubmodelElementListRequestDto
+    >
+  >();
 
 const propertyFormSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
@@ -42,7 +44,11 @@ const showErrors = computed(() => {
 });
 
 const submit = handleSubmit(async (data) => {
-  await props.callback({ ...data, typeValueListElement: AasSubmodelElements.SubmodelElementCollection, orderRelevant: true });
+  await props.callback({
+    ...data,
+    typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+    orderRelevant: true,
+  });
 });
 
 defineExpose<{
@@ -54,6 +60,10 @@ defineExpose<{
 
 <template>
   <form class="flex flex-col gap-1 p-2">
-    <SubmodelBaseForm :show-errors="showErrors" :errors="errors" :editor-mode="EditorMode.CREATE" />
+    <SubmodelBaseForm
+      :show-errors="showErrors"
+      :errors="errors"
+      :editor-mode="EditorMode.CREATE"
+    />
   </form>
 </template>
