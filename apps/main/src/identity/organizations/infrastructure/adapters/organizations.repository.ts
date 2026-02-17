@@ -30,45 +30,35 @@ export class OrganizationsRepository {
   }
 
   async create(organization: Organization, headers: BetterAuthHeaders): Promise<Organization | null> {
-    try {
-      const result = await (this.auth.api as any).createOrganization({
-        headers,
-        body: {
-          name: organization.name,
-          slug: organization.slug,
-          logo: organization.logo ?? undefined,
-          metadata: JSON.stringify(organization.metadata || {}),
-        },
-      });
-      if (!result) {
-        return null;
-      }
-      return OrganizationMapper.toDomainFromBetterAuth(result);
-    }
-    catch {
+    const result = await (this.auth.api as any).createOrganization({
+      headers,
+      body: {
+        name: organization.name,
+        slug: organization.slug,
+        logo: organization.logo ?? undefined,
+        metadata: JSON.stringify(organization.metadata || {}),
+      },
+    });
+    if (!result) {
       return null;
     }
+    return OrganizationMapper.toDomainFromBetterAuth(result);
   }
 
   async update(organization: Organization, headers: BetterAuthHeaders): Promise<Organization | null> {
-    try {
-      await (this.auth.api as any).updateOrganization({
-        headers,
-        body: {
-          data: {
-            name: organization.name,
-            slug: organization.slug,
-            logo: organization.logo ?? undefined,
-            metadata: organization.metadata,
-          },
-          organizationId: organization.id,
+    await (this.auth.api as any).updateOrganization({
+      headers,
+      body: {
+        data: {
+          name: organization.name,
+          slug: organization.slug,
+          logo: organization.logo ?? undefined,
+          metadata: organization.metadata,
         },
-      });
-      return this.findOneById(organization.id);
-    }
-    catch {
-      return null;
-    }
+        organizationId: organization.id,
+      },
+    });
+    return this.findOneById(organization.id);
   }
 
   async findOneById(id: string): Promise<Organization | null> {

@@ -22,7 +22,7 @@ export class OrganizationMapper {
       name: document.name,
       slug: document.slug,
       logo: document.logo,
-      metadata: document.metadata === undefined ? undefined : JSON.parse(document.metadata),
+      metadata: document.metadata === undefined ? {} : JSON.parse(document.metadata),
       createdAt: document.createdAt,
     };
     return Organization.loadFromDb(props);

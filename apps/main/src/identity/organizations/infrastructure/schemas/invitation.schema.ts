@@ -10,13 +10,13 @@ export class Invitation {
   @Prop({ type: String, required: true })
   _id: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, index: true })
   email: string;
 
   @Prop({ required: true })
   inviterId: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, index: true })
   organizationId: string;
 
   @Prop({ required: true, enum: MemberRole, type: String })
