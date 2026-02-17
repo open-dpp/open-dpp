@@ -11,7 +11,7 @@ const storedLocale = localStorage.getItem(LAST_SELECTED_LANGUAGE);
 
 export const i18n = createI18n<[MessageSchema], "en-US" | "de-DE">({
   legacy: false,
-  locale: storedLocale ?? "de-DE",
+  locale: storedLocale ?? undefined,
   fallbackLocale: "en-US",
   messages: {
     "en-US": enUS,
