@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   ForbiddenException,
@@ -63,12 +62,7 @@ export class OrganizationsController {
     @Headers() headers: Record<string, string>,
     @AuthSession() session: Session,
   ) {
-    const isOwnerOrAdmin = await this.membersService.isOwnerOrAdmin(id, session.userId);
-    if (!isOwnerOrAdmin) {
-      throw new ForbiddenException("You are not authorized to update this organization");
-    }
-
-    const updatedOrganization = await this.organizationsService.updateOrganization(
+    return this.organizationsService.updateOrganization(
       id,
       {
         name: body.name,
@@ -77,10 +71,6 @@ export class OrganizationsController {
       session,
       extractBetterAuthHeaders(headers),
     );
-    if (!updatedOrganization) {
-      throw new BadRequestException();
-    }
-    return updatedOrganization;
   }
 
   @Get("member")
@@ -106,11 +96,6 @@ export class OrganizationsController {
     @Headers() headers: Record<string, string>,
     @AuthSession() session: Session,
   ) {
-    const isOwnerOrAdmin = await this.membersService.isOwnerOrAdmin(id, session.userId);
-    if (!isOwnerOrAdmin) {
-      throw new ForbiddenException("You are not authorized to invite members to this organization");
-    }
-
     await this.organizationsService.inviteMember(
       body.email,
       body.role,
@@ -136,7 +121,7 @@ export class OrganizationsController {
 
     return members.map((member) => {
       return {
-        ...member,
+        ...member.toPlain(),
         user: users.find(user => user.id === member.userId),
       };
     });

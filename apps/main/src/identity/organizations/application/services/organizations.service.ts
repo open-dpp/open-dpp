@@ -51,14 +51,26 @@ export class OrganizationsService {
     data: OrganizationUpdateProps,
     session: Session,
     headers: BetterAuthHeaders,
-  ): Promise<Organization | null> {
+  ): Promise<Organization> {
+    const member = await this.membersRepository.findOneByUserIdAndOrganizationId(session.userId, organizationId);
+    if (!member?.isOwner()) {
+      const user = await this.usersRepository.findOneById(session.userId);
+      if (user?.role !== UserRole.ADMIN) {
+        throw new ForbiddenException("You are not authorized to update this organization");
+      }
+    }
+
     const organization = await this.organizationsRepository.findOneById(organizationId);
     if (!organization) {
       throw new NotFoundException("Organization not found");
     }
 
     const updatedOrganization = organization.update(data);
-    return await this.organizationsRepository.update(updatedOrganization, headers);
+    const result = await this.organizationsRepository.update(updatedOrganization, headers);
+    if (!result) {
+      throw new BadRequestException();
+    }
+    return result;
   }
 
   async getMemberOrganizations(userId: string, headers: BetterAuthHeaders): Promise<Organization[]> {
@@ -88,6 +100,14 @@ export class OrganizationsService {
     session: Session,
     headers?: BetterAuthHeaders,
   ): Promise<void> {
+    const member = await this.membersRepository.findOneByUserIdAndOrganizationId(session.userId, organizationId);
+    if (!member?.isOwner()) {
+      const user = await this.usersRepository.findOneById(session.userId);
+      if (user?.role !== UserRole.ADMIN) {
+        throw new ForbiddenException("You are not authorized to invite members to this organization");
+      }
+    }
+
     const organization = await this.organizationsRepository.findOneById(organizationId);
     if (!organization) {
       throw new NotFoundException("Organization not found");
@@ -114,7 +134,7 @@ export class OrganizationsService {
 
   async getAllOrganizations(session: Session) {
     const user = await this.usersRepository.findOneById(session.userId);
-    if (!user || user.role !== UserRole.ADMIN) {
+    if (user?.role !== UserRole.ADMIN) {
       throw new ForbiddenException();
     }
     return this.organizationsRepository.getAllOrganizations();

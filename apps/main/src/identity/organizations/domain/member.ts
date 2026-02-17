@@ -73,4 +73,20 @@ export class Member {
   public isOwner(): boolean {
     return this.role === MemberRole.OWNER;
   }
+
+  public toPlain(): {
+    id: string;
+    organizationId: string;
+    userId: string;
+    role: MemberRole;
+    createdAt: Date;
+  } {
+    return {
+      id: this.id,
+      organizationId: this.organizationId,
+      userId: this.userId,
+      role: this.role,
+      createdAt: this.createdAt,
+    };
+  }
 }
