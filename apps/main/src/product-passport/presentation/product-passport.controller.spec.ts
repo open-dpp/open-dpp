@@ -117,7 +117,6 @@ describe("productPassportController", () => {
       model,
       item,
       organizationName: org.name,
-      organizationImage: "org-image-media-id",
     });
     expect(response.body).toEqual(JSON.parse(JSON.stringify(productPassportToDto(productPassport))));
   });

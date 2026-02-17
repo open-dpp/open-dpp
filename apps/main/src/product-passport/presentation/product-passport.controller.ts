@@ -54,7 +54,6 @@ export class ProductPassportController {
       model,
       item,
       organizationName: organizationData.name,
-      organizationImage: organizationData.logo ?? undefined,
     });
 
     return productPassportToDto(productPassport);
