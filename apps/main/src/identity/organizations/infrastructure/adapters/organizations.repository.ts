@@ -36,7 +36,7 @@ export class OrganizationsRepository {
         name: organization.name,
         slug: organization.slug,
         logo: organization.logo ?? undefined,
-        metadata: JSON.stringify(organization.metadata || {}),
+        metadata: organization.metadata || {},
       },
     });
     if (!result) {

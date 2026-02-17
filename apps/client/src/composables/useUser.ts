@@ -1,4 +1,4 @@
-import type { UserDto } from "@open-dpp/api-client";
+import type { UserDto } from "@open-dpp/dto";
 import { ref } from "vue";
 import apiClient from "../lib/api-client";
 import { useErrorHandlingStore } from "../stores/error.handling";

@@ -12,11 +12,9 @@ import {
 import { extractBetterAuthHeaders } from "../../auth/domain/better-auth-headers";
 import { Session } from "../../auth/domain/session";
 import { AuthSession } from "../../auth/presentation/decorators/auth-session.decorator";
-import { UsersService } from "../../users/application/services/users.service";
-import { User } from "../../users/domain/user";
 import { MembersService } from "../application/services/members.service";
 import { OrganizationsService } from "../application/services/organizations.service";
-import { Member } from "../domain/member";
+import { MemberWithUser } from "../domain/member";
 import { Organization } from "../domain/organization";
 
 @Controller("organizations")
@@ -26,7 +24,6 @@ export class OrganizationsController {
   constructor(
     private readonly organizationsService: OrganizationsService,
     private readonly membersService: MembersService,
-    private readonly usersService: UsersService,
   ) { }
 
   @Post()
@@ -109,22 +106,13 @@ export class OrganizationsController {
   async getMembers(
     @Param("id") id: string,
     @AuthSession() session: Session,
-  ): Promise<Array<{ member: Member & { user: User } }>> {
+  ): Promise<MemberWithUser[]> {
     const isMember = await this.membersService.isMemberOfOrganization(session.userId, id);
     if (!isMember) {
       throw new ForbiddenException("You are not authorized to view members of this organization");
     }
 
-    const members = await this.membersService.getMembers(id);
-    const userIds = members.map(member => member.userId);
-    const users = await this.usersService.findAllByIds(userIds);
-
-    return members.map((member) => {
-      return {
-        ...member.toPlain(),
-        user: users.find(user => user.id === member.userId),
-      };
-    });
+    return this.membersService.getMembers(id);
   }
 
   @Get(":id/name")
