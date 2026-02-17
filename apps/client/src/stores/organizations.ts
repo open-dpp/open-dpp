@@ -3,28 +3,29 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { authClient } from "../auth-client.ts";
 import apiClient from "../lib/api-client";
-import { useNotificationStore } from "./notification.ts";
+import { i18n } from "../translations/i18n.ts";
+import { useErrorHandlingStore } from "./error.handling.ts";
 
 export const useOrganizationsStore = defineStore("organizations", () => {
   const organizations = ref<OrganizationDto[]>([]);
+  const errorHandlingStore = useErrorHandlingStore();
+  const { t } = i18n.global;
 
   const addOrganization = (org: OrganizationDto) => {
     organizations.value.push(org);
   };
 
   const fetchOrganizations = async () => {
-    const notificationsStore = useNotificationStore();
     try {
       const { data } = await apiClient.dpp.organizations.getMemberOrganizations();
       organizations.value = data || [];
     }
-    catch (error: any) {
-      notificationsStore.addErrorNotification(error.message ?? "Error fetching organizations");
+    catch (error: unknown) {
+      errorHandlingStore.logErrorWithNotification(t("organizations.fetchError"), error);
     }
   };
 
   const createOrganization = async (orgData: { name: string }) => {
-    const notificationsStore = useNotificationStore();
     try {
       const { data } = await apiClient.dpp.organizations.post({
         name: orgData.name,
@@ -35,15 +36,14 @@ export const useOrganizationsStore = defineStore("organizations", () => {
         return data;
       }
     }
-    catch (error: any) {
-      notificationsStore.addErrorNotification(error.message ?? "Error creating organization");
+    catch (error: unknown) {
+      errorHandlingStore.logErrorWithNotification(t("organizations.createError"), error);
       return null;
     }
     return null;
   };
 
   async function fetchCurrentOrganization() {
-    const notificationsStore = useNotificationStore();
     try {
       const { data: session } = await authClient.getSession();
       if (session?.session.activeOrganizationId) {
@@ -52,8 +52,8 @@ export const useOrganizationsStore = defineStore("organizations", () => {
       }
       return null;
     }
-    catch (error: any) {
-      notificationsStore.addErrorNotification(error.message ?? "Error fetching current organization");
+    catch (error: unknown) {
+      errorHandlingStore.logErrorWithNotification(t("organizations.fetchCurrentError"), error);
       return null;
     }
   }
