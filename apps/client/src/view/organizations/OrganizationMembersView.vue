@@ -1,33 +1,23 @@
 <script lang="ts" setup>
-import type { MemberDto, OrganizationDto } from "@open-dpp/api-client";
+import type { MemberDto } from "@open-dpp/api-client";
 import { onMounted, ref } from "vue";
-import { authClient } from "../../auth-client.ts";
 import OrganizationInvitationsList from "../../components/organizations/OrganizationInvitationsList.vue";
 import OrganizationMembersList from "../../components/organizations/OrganizationMembersList.vue";
 import apiClient from "../../lib/api-client";
+import { useIndexStore } from "../../stores/index";
 
 const members = ref<Array<MemberDto>>([]);
-const organization = ref<OrganizationDto | null>(null);
+const indexStore = useIndexStore();
 
 async function fetchMembers() {
-  if (!organization.value)
+  if (!indexStore.selectedOrganization)
     return;
-  const { data } = await apiClient.dpp.organizations.getMembers(organization.value.id);
+  const { data } = await apiClient.dpp.organizations.getMembers(indexStore.selectedOrganization);
   members.value = data;
 }
 
 onMounted(async () => {
-  const { data } = await authClient.organization.getFullOrganization();
-  if (data) {
-    organization.value = {
-      id: data.id,
-      name: data.name,
-      slug: data.slug || data.name, // Fallback if better-auth response differs
-      createdAt: data.createdAt || new Date(),
-      updatedAt: new Date(),
-    } as OrganizationDto;
-    await fetchMembers();
-  }
+  await fetchMembers();
 });
 </script>
 
@@ -37,9 +27,9 @@ onMounted(async () => {
   </section>
   <section>
     <OrganizationMembersList
-      v-if="organization"
+      v-if="indexStore.selectedOrganization"
       :members="members"
-      :organization="organization"
+      :organization-id="indexStore.selectedOrganization"
       @invited-user="fetchMembers"
     />
   </section>

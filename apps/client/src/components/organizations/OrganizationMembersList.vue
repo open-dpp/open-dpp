@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import type { MemberDto, OrganizationDto } from "@open-dpp/api-client";
+import type { MemberDto } from "@open-dpp/api-client";
 import { UserCircleIcon } from "@heroicons/vue/24/solid";
 import { useI18n } from "vue-i18n";
 import { ModalType, useLayoutStore } from "../../stores/layout";
 import InviteMemberDialog from "./InviteMemberDialog.vue";
 
 defineProps<{
-  organization: OrganizationDto;
+  organizationId: string;
   members: Array<MemberDto>;
 }>();
 const emit = defineEmits<{
@@ -30,7 +30,7 @@ const layoutStore = useLayoutStore();
       <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
         <InviteMemberDialog
           v-if="layoutStore.modalOpen === ModalType.INVITE_MEMBER_MODAL"
-          :organization-id="organization.id"
+          :organization-id="organizationId"
           @close="layoutStore.closeModal()"
           @invited-user="emit('invitedUser')"
         />
