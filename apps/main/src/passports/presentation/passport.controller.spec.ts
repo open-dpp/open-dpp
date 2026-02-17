@@ -33,6 +33,8 @@ describe("passportController", () => {
   // Mocks for environment helpers
 
   beforeEach(async () => {
+    jest.resetAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PassportController],
       providers: [
@@ -75,7 +77,7 @@ describe("passportController", () => {
       const now = new Date();
       const body = {
         id: "passport-1",
-        organizationId: "org-1", // This will be overwritten by the controller
+        organizationId: "original-org", // Must differ from active org to verify override
         environment: {
           assetAdministrationShells: [],
           submodels: [],

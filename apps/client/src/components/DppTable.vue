@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
 import { Button, Column, DataTable } from "primevue";
+import { useToast } from "primevue/usetoast";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
@@ -25,7 +26,6 @@ const emits = defineEmits<{
   (e: "nextPage"): Promise<void>;
   (e: "previousPage"): Promise<void>;
   (e: "resetCursor"): Promise<void>;
-  (e: "importError", error: unknown): void;
 }>();
 
 dayjs.extend(utc);
@@ -33,6 +33,8 @@ dayjs.extend(localizedFormat);
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
+const toast = useToast();
 
 async function editItem(id: string) {
   await router.push(`${route.path}/${id}`);
@@ -64,6 +66,7 @@ async function exportPassport(id: string) {
   }
   catch (error) {
     console.error("Failed to export passport", error);
+    toast.add({ severity: "error", summary: t("notifications.error"), detail: t("common.exportFailed"), life: 5000 });
   }
   finally {
     if (url) {
@@ -88,10 +91,11 @@ async function handleFileUpload(event: Event) {
       const json = JSON.parse(e.target?.result as string);
       await axiosIns.post("/passports/import", json);
       emits("resetCursor");
+      toast.add({ severity: "success", summary: t("notifications.success"), detail: t("common.importSuccess"), life: 5000 });
     }
     catch (error) {
       console.error("Failed to import passport", error);
-      emits("importError", error);
+      toast.add({ severity: "error", summary: t("notifications.error"), detail: t("common.importFailed"), life: 5000 });
     }
     finally {
       if (fileInput.value)
@@ -101,14 +105,12 @@ async function handleFileUpload(event: Event) {
   reader.onerror = () => {
     const error = reader.error;
     console.error("Failed to read import file", error);
-    emits("importError", error);
+    toast.add({ severity: "error", summary: t("notifications.error"), detail: t("common.importFailed"), life: 5000 });
     if (fileInput.value)
       fileInput.value.value = "";
   };
   reader.readAsText(file);
 }
-
-const { t } = useI18n();
 </script>
 
 <template>

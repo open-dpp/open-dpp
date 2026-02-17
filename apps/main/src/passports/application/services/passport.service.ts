@@ -1,4 +1,6 @@
+import type { Connection } from "mongoose";
 import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { InjectConnection } from "@nestjs/mongoose";
 import { z } from "zod";
 import { AssetAdministrationShell } from "../../../aas/domain/asset-adminstration-shell";
 import { Environment } from "../../../aas/domain/environment";
@@ -16,6 +18,7 @@ export type ExpandedPassport = Omit<ReturnType<Passport["toPlain"]>, "environmen
 };
 
 const ExpandedPassportSchema = z.object({
+  organizationId: z.string().min(1, "organizationId is required"),
   environment: z.object({
     assetAdministrationShells: z.array(z.record(z.string(), z.any())),
     submodels: z.array(z.record(z.string(), z.any())),
@@ -31,6 +34,7 @@ export class PassportService {
     // private readonly organizationsService: OrganizationsService,
     private readonly aasRepository: AasRepository,
     private readonly submodelRepository: SubmodelRepository,
+    @InjectConnection() private readonly connection: Connection,
   ) { }
 
   // TODO: Add organization data after DDD rebuild branch merged
@@ -48,25 +52,11 @@ export class PassportService {
       throw new NotFoundException(`Organization data for passport ${passportId} not found`);
     } */
 
-    const shells: Array<AssetAdministrationShell> = [];
-    for (const shellId of passport.environment.assetAdministrationShells) {
-      const aas = await this.aasRepository.findOne(shellId);
-      if (aas) {
-        shells.push(aas);
-      }
-    }
-
-    const submodels: Array<Submodel> = [];
-    for (const shellId of passport.environment.submodels) {
-      const submodel = await this.submodelRepository.findOne(shellId);
-      if (submodel) {
-        submodels.push(submodel);
-      }
-    }
+    const { shells, submodels } = await this.loadEnvironment(passport);
 
     return {
       // organization: organizationData,
-      ...passport,
+      ...passport.toPlain(),
       environment: {
         assetAdministrationShells: shells,
         submodels,
@@ -76,21 +66,7 @@ export class PassportService {
 
   async exportPassport(passportId: string): Promise<ExpandedPassport> {
     const passport = await this.passportRepository.findOneOrFail(passportId);
-    const shells: Array<AssetAdministrationShell> = [];
-    for (const shellId of passport.environment.assetAdministrationShells) {
-      const aas = await this.aasRepository.findOne(shellId);
-      if (aas) {
-        shells.push(aas);
-      }
-    }
-
-    const submodels: Array<Submodel> = [];
-    for (const submodelId of passport.environment.submodels) {
-      const submodel = await this.submodelRepository.findOne(submodelId);
-      if (submodel) {
-        submodels.push(submodel);
-      }
-    }
+    const { shells, submodels } = await this.loadEnvironment(passport);
 
     return {
       ...passport.toPlain(),
@@ -124,16 +100,11 @@ export class PassportService {
       oldIdToNewSubmodelMap.set(oldId, newSubmodel);
     });
 
-    // Save submodels
-    for (const submodel of oldIdToNewSubmodelMap.values()) {
-      await this.submodelRepository.save(submodel);
-    }
-
+    // Build shells and remap submodel references (no DB operations yet)
     const newShells: AssetAdministrationShell[] = [];
     for (const shellData of data.environment.assetAdministrationShells) {
       const oldShell = AssetAdministrationShell.fromPlain(shellData);
 
-      // Find which new submodels correspond to the old shell's references
       const relatedNewSubmodels: Submodel[] = [];
       for (const ref of oldShell.submodels) {
         const key = ref.keys.find(k => k.type === "Submodel" || k.type === "GlobalReference");
@@ -160,9 +131,7 @@ export class PassportService {
         }
       }
 
-      const newShell = oldShell.copy(relatedNewSubmodels);
-      newShells.push(newShell);
-      await this.aasRepository.save(newShell);
+      newShells.push(oldShell.copy(relatedNewSubmodels));
     }
 
     const newPassport = Passport.create({
@@ -174,8 +143,57 @@ export class PassportService {
       }),
     });
 
-    await this.passportRepository.save(newPassport);
+    // Persist all entities in a single transaction to avoid partial commits
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        for (const submodel of Array.from(oldIdToNewSubmodelMap.values())) {
+          await this.submodelRepository.save(submodel, session);
+        }
+        for (const shell of newShells) {
+          await this.aasRepository.save(shell, session);
+        }
+        await this.passportRepository.save(newPassport, session);
+      });
+    }
+    finally {
+      await session.endSession();
+    }
 
     return newPassport;
+  }
+
+  private async loadEnvironment(passport: Passport): Promise<{ shells: AssetAdministrationShell[]; submodels: Submodel[] }> {
+    const shellIds = passport.environment.assetAdministrationShells;
+    const submodelIds = passport.environment.submodels;
+
+    const [shellMap, submodelMap] = await Promise.all([
+      this.aasRepository.findByIds(shellIds),
+      this.submodelRepository.findByIds(submodelIds),
+    ]);
+
+    const shells: AssetAdministrationShell[] = [];
+    for (const id of shellIds) {
+      const shell = shellMap.get(id);
+      if (shell) {
+        shells.push(shell);
+      }
+      else {
+        this.logger.warn(`AssetAdministrationShell with id ${id} not found for passport ${passport.id}`);
+      }
+    }
+
+    const submodels: Submodel[] = [];
+    for (const id of submodelIds) {
+      const submodel = submodelMap.get(id);
+      if (submodel) {
+        submodels.push(submodel);
+      }
+      else {
+        this.logger.warn(`Submodel with id ${id} not found for passport ${passport.id}`);
+      }
+    }
+
+    return { shells, submodels };
   }
 }

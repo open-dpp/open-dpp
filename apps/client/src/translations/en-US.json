@@ -51,7 +51,10 @@
     "contact": "Contact",
     "openPresentation": "Open presentation",
     "openChat": "Open chat",
-    "exportPassport": "Export passport"
+    "exportPassport": "Export passport",
+    "exportFailed": "Failed to export passport.",
+    "importFailed": "Failed to import passport.",
+    "importSuccess": "Passport imported successfully."
   },
   "aasEditor": {
     "addTextField": "Add text field",

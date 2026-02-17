@@ -1,4 +1,4 @@
-import type { Model as MongooseModel } from "mongoose";
+import type { ClientSession, Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { findAllByOrganizationId, findOne, findOneOrFail, save } from "../../lib/repositories";
@@ -17,8 +17,8 @@ export class PassportRepository {
     this.passportDoc = passportDoc;
   }
 
-  async save(passport: Passport) {
-    return await save(passport, this.passportDoc, PassportDocVersion.v1_0_0, Passport.fromPlain);
+  async save(passport: Passport, session?: ClientSession) {
+    return await save(passport, this.passportDoc, PassportDocVersion.v1_0_0, Passport.fromPlain, undefined, session);
   }
 
   async findOneOrFail(id: string) {
