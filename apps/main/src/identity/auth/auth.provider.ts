@@ -4,8 +4,7 @@ import { EnvService } from "@open-dpp/env";
 import { APIError, betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { admin, apiKey, organization } from "better-auth/plugins";
-import { ObjectId } from "mongodb";
-import { Connection } from "mongoose";
+import { Connection, Types } from "mongoose";
 import { InviteUserToOrganizationMail } from "../../email/domain/invite-user-to-organization-mail";
 import { PasswordResetMail } from "../../email/domain/password-reset-mail";
 import { VerifyEmailMail } from "../../email/domain/verify-email-mail";
@@ -126,9 +125,13 @@ export const AuthProvider: Provider = {
                 // Since we don't have AuthService here, we need to replicate the query
                 // or find a way to reuse the logic.
                 // For now, replicating the simple query.
-                const member = await db.collection("member").findOne({
-                  userId: new ObjectId(session.userId),
-                });
+                const userIdQuery = Types.ObjectId.isValid(session.userId)
+                  ? new Types.ObjectId(session.userId)
+                  : session.userId;
+                const member = await db.collection("member").findOne(
+                  { userId: userIdQuery },
+                  { sort: { createdAt: 1 } },
+                );
 
                 let organizationId;
                 if (member) {

@@ -88,13 +88,13 @@ const layoutStore = useLayoutStore();
                     v-if="member.role === 'owner'"
                     class="text-gray-900"
                   >
-                    {{ t('organizations.memberAdmin') }}
+                    {{ t('organizations.memberCreator') }}
                   </div>
                   <div
                     v-if="member.role === 'admin'"
                     class="mt-1 text-gray-500"
                   >
-                    {{ t('organizations.memberCreator') }}
+                    {{ t('organizations.memberAdmin') }}
                   </div>
                 </td>
               </tr>

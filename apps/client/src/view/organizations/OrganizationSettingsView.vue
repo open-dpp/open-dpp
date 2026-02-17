@@ -35,7 +35,7 @@ async function fetchOrganization() {
   const data = await organizationStore.fetchCurrentOrganization();
   if (data) {
     name.value = data.name;
-    const imageId = (data as any).logo;
+    const imageId = data.logo;
     if (imageId) {
       await fetchMedia(imageId);
     }
@@ -72,8 +72,11 @@ async function save() {
       logo = await apiClient.media.media.uploadOrganizationProfileMedia(indexStore.selectedOrganization, selectedFile.value);
     }
     catch (e) {
-      console.error("Failed to upload logo", e);
-      // Handle error
+      errorHandlingStore.logErrorWithNotification(t("organizations.form.updateError"), e);
+      selectedFile.value = null;
+      fileUploadKey.value++;
+      submitted.value = false;
+      return;
     }
   }
 

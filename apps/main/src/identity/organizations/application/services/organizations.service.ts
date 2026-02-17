@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, Logger } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { Session } from "../../../auth/domain/session";
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
@@ -54,6 +54,7 @@ export class OrganizationsService {
       role: MemberRole.OWNER,
     });
     createdOrganization.addMember(owner);
+    await this.membersRepository.save(owner);
     return createdOrganization;
   }
 
@@ -65,7 +66,7 @@ export class OrganizationsService {
   ): Promise<Organization | null> {
     const organization = await this.organizationsRepository.findOneById(organizationId);
     if (!organization) {
-      throw new Error("Organization not found");
+      throw new NotFoundException("Organization not found");
     }
 
     const isOwnerOrAdmin = await this.isOwnerOrAdmin(organizationId, session.userId);
@@ -100,6 +101,7 @@ export class OrganizationsService {
     email: string,
     role: string,
     organizationId: string,
+    session: Session,
     headers?: Record<string, string> | Headers,
   ): Promise<void> {
     await this.organizationsRepository.inviteMember(email, role, organizationId, headers);

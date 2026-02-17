@@ -26,7 +26,7 @@ export class OrganizationsRepository {
       return [];
     }
 
-    return result.map((org: any) => OrganizationMapper.toDomain(org));
+    return result.map((org: any) => OrganizationMapper.toDomainFromBetterAuth(org));
   }
 
   async create(organization: Organization, headers: Record<string, string>): Promise<BetterAuthOrganizationSchema | null> {

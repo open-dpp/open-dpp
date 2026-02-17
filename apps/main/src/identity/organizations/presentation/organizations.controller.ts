@@ -98,6 +98,27 @@ export class OrganizationsController {
     return this.organizationsService.getOrganization(id, session);
   }
 
+  @Post(":id/invite")
+  async inviteMember(
+    @Param("id") id: string,
+    @Body() body: { email: string; role: string },
+    @Headers() headers: Record<string, string>,
+    @AuthSession() session: Session,
+  ) {
+    const isOwnerOrAdmin = await this.organizationsService.isOwnerOrAdmin(id, session.userId);
+    if (!isOwnerOrAdmin) {
+      throw new ForbiddenException("You are not authorized to invite members to this organization");
+    }
+
+    await this.organizationsService.inviteMember(
+      body.email,
+      body.role,
+      id,
+      session,
+      headers,
+    );
+  }
+
   @Get(":id/members")
   async getMembers(
     @Param("id") id: string,

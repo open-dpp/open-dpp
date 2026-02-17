@@ -22,6 +22,7 @@ describe("OrganizationsController", () => {
       getMemberOrganizations: jest.fn(),
       getOrganization: jest.fn(),
       getOrganizationNameIfUserInvited: jest.fn(),
+      inviteMember: jest.fn(),
     };
     mockMembersService = {
       isMemberOfOrganization: jest.fn(),
@@ -78,6 +79,38 @@ describe("OrganizationsController", () => {
     mockOrgsService.isOwnerOrAdmin.mockResolvedValue(false);
 
     await expect(controller.updateOrganization("org-1", body, headers, session))
+      .rejects
+      .toThrow(ForbiddenException);
+  });
+
+  it("should invite member if authorized", async () => {
+    const session = { userId: "user-1" } as Session;
+    const body = { email: "invite@example.com", role: "member" };
+    const headers = {};
+
+    mockOrgsService.isOwnerOrAdmin.mockResolvedValue(true);
+    mockOrgsService.inviteMember.mockResolvedValue(undefined);
+
+    await controller.inviteMember("org-1", body, headers, session);
+
+    expect(mockOrgsService.isOwnerOrAdmin).toHaveBeenCalledWith("org-1", "user-1");
+    expect(mockOrgsService.inviteMember).toHaveBeenCalledWith(
+      "invite@example.com",
+      "member",
+      "org-1",
+      session,
+      headers,
+    );
+  });
+
+  it("should throw ForbiddenException when inviting without rights", async () => {
+    const session = { userId: "user-1" } as Session;
+    const body = { email: "invite@example.com", role: "member" };
+    const headers = {};
+
+    mockOrgsService.isOwnerOrAdmin.mockResolvedValue(false);
+
+    await expect(controller.inviteMember("org-1", body, headers, session))
       .rejects
       .toThrow(ForbiddenException);
   });
