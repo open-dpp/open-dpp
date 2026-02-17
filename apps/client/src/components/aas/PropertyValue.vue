@@ -24,9 +24,16 @@ const INTEGER_TYPES = new Set<DataTypeDefType>([
   DataTypeDef.Int,
   DataTypeDef.Long,
   DataTypeDef.Integer,
+  DataTypeDef.Short,
+  DataTypeDef.Byte,
+  DataTypeDef.NonPositiveInteger,
+  DataTypeDef.PositiveInteger,
   DataTypeDef.NegativeInteger,
   DataTypeDef.NonNegativeInteger,
   DataTypeDef.UnsignedShort,
+  DataTypeDef.UnsignedInt,
+  DataTypeDef.UnsignedLong,
+  DataTypeDef.UnsignedByte,
 ]);
 
 const NUMERIC_TYPES = new Set<DataTypeDefType>([
@@ -34,8 +41,6 @@ const NUMERIC_TYPES = new Set<DataTypeDefType>([
   DataTypeDef.Double,
   DataTypeDef.Float,
   DataTypeDef.Decimal,
-  DataTypeDef.Byte,
-  DataTypeDef.UnsignedByte,
 ]);
 
 const isNumeric = computed(() =>

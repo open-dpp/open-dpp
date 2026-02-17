@@ -46,7 +46,6 @@ defineExpose<{
 <template>
   <div class="flex flex-col gap-4 p-2">
     <FileForm
-      :data="props.data"
       :show-errors="showErrors"
       :errors="errors"
       :editor-mode="EditorMode.EDIT"

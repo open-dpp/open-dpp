@@ -254,7 +254,7 @@ export function useAasTableExtension({
         icon: "pi pi-arrow-down",
         command: async () => {
           await addRow({
-            position: options.position !== undefined ? options.position + 1 : 0,
+            position: options.position !== undefined ? options.position + 1 : rows.value.length,
           });
         },
       },
@@ -518,7 +518,10 @@ export function useAasTableExtension({
     });
   }
 
-  function formatCellValue(value: string, column: Column) {
+  function formatCellValue(value: Value, column: Column) {
+    if (value === null) {
+      return "N/A";
+    }
     switch (column.plain.valueType) {
       case DataTypeDef.Double:
         return new Intl.NumberFormat(selectedLanguage, {
