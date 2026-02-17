@@ -70,17 +70,12 @@ describe("memberSchema", () => {
   it("should validate required fields", async () => {
     const member = new MemberModel({});
 
-    let err: any;
-    try {
-      await member.save();
-    }
-    catch (error) {
-      err = error;
-    }
-
-    expect(err).toBeDefined();
-    expect(err.errors.userId).toBeDefined();
-    expect(err.errors.organizationId).toBeDefined();
-    expect(err.errors.role).toBeDefined();
+    await expect(member.save()).rejects.toMatchObject({
+      errors: expect.objectContaining({
+        userId: expect.anything(),
+        organizationId: expect.anything(),
+        role: expect.anything(),
+      }),
+    });
   });
 });
