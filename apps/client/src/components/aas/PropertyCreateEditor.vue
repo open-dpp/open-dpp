@@ -2,7 +2,6 @@
 import type { PropertyRequestDto } from "@open-dpp/dto";
 import type { PropertyCreateEditorProps } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
-
 import { PropertyJsonSchema } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
@@ -10,11 +9,16 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import { EditorMode } from "../../composables/aas-drawer.ts";
-import { submodelBaseFormDefaultValues, SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
+import {
+  submodelBaseFormDefaultValues,
+  SubmodelBaseFormSchema,
+} from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+
 import PropertyForm from "./PropertyForm.vue";
 
-const props = defineProps<SharedEditorProps<PropertyCreateEditorProps, PropertyRequestDto>>();
+const props
+  = defineProps<SharedEditorProps<PropertyCreateEditorProps, PropertyRequestDto>>();
 
 const propertyFormSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
@@ -25,17 +29,20 @@ export type FormValues = z.infer<typeof propertyFormSchema>;
 
 const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(propertyFormSchema),
-  initialValues: { ...submodelBaseFormDefaultValues(convertLocaleToLanguage(locale.value)) },
+  initialValues: {
+    ...submodelBaseFormDefaultValues(convertLocaleToLanguage(locale.value)),
+  },
 });
 
 const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
 });
 
-const submit
-  = handleSubmit(async (data) => {
-    await props.callback(PropertyJsonSchema.parse({ ...data, valueType: props.data.valueType }));
-  });
+const submit = handleSubmit(async (data) => {
+  await props.callback(
+    PropertyJsonSchema.parse({ ...data, valueType: props.data.valueType }),
+  );
+});
 
 defineExpose<{
   submit: () => Promise<Promise<void> | undefined>;

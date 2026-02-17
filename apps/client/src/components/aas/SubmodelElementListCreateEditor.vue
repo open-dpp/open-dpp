@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import type { SubmodelElementListRequestDto } from "@open-dpp/dto";
-import type {
-  SubmodelElementListCreateEditorProps,
-} from "../../composables/aas-drawer.ts";
+import type { SubmodelElementListCreateEditorProps } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { AasSubmodelElements } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";

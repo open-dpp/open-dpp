@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import type { FileModificationDto } from "@open-dpp/dto";
 import type {
-  FileEditorProps,
+  FileEditorProps
 } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
-import {
-
-  FileModificationSchema,
-} from "@open-dpp/dto";
+import type { SharedEditorProps } from "../../lib/aas-editor.ts";
+import { FileModificationSchema } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 
 import { useForm } from "vee-validate";
@@ -17,7 +15,8 @@ import { EditorMode } from "../../composables/aas-drawer.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FileForm from "./FileForm.vue";
 
-const props = defineProps<SharedEditorProps<FileEditorProps, FileModificationDto>>();
+const props
+  = defineProps<SharedEditorProps<FileEditorProps, FileModificationDto>>();
 
 const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,

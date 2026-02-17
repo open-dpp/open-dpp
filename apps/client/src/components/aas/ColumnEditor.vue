@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import type {
-  SubmodelElementModificationDto,
+import type { SubmodelElementModificationDto
 } from "@open-dpp/dto";
 import type {
-  ColumnEditorProps,
+  ColumnEditorProps
 } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { SubmodelElementModificationSchema } from "@open-dpp/dto";
@@ -14,9 +13,11 @@ import { computed } from "vue";
 import { z } from "zod";
 import { EditorMode } from "../../composables/aas-drawer.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
+
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
-const props = defineProps<SharedEditorProps<ColumnEditorProps, SubmodelElementModificationDto>>();
+const props
+  = defineProps<SharedEditorProps<ColumnEditorProps, SubmodelElementModificationDto>>();
 
 const columnFormSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
