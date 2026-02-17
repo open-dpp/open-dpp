@@ -26,12 +26,23 @@ describe("passportService", () => {
 
   const mockAasRepository = {
     findOne: jest.fn(),
+    findByIds: jest.fn(),
     save: jest.fn(),
   };
 
   const mockSubmodelRepository = {
     findOne: jest.fn(),
+    findByIds: jest.fn(),
     save: jest.fn(),
+  };
+
+  const mockSession = {
+    withTransaction: jest.fn((fn: () => Promise<void>) => fn()),
+    endSession: jest.fn(),
+  };
+
+  const mockConnection = {
+    startSession: jest.fn().mockResolvedValue(mockSession),
   };
 
   beforeEach(async () => {
@@ -49,6 +60,10 @@ describe("passportService", () => {
         {
           provide: SubmodelRepository,
           useValue: mockSubmodelRepository,
+        },
+        {
+          provide: "DatabaseConnection",
+          useValue: mockConnection,
         },
       ],
     }).compile();
@@ -85,8 +100,8 @@ describe("passportService", () => {
       });
 
       mockPassportRepository.findOneOrFail.mockResolvedValue(passport);
-      mockAasRepository.findOne.mockResolvedValue(aas);
-      mockSubmodelRepository.findOne.mockResolvedValue(submodel);
+      mockAasRepository.findByIds.mockResolvedValue(new Map([[aasId, aas]]));
+      mockSubmodelRepository.findByIds.mockResolvedValue(new Map([[submodelId, submodel]]));
 
       const result = await service.exportPassport(passportId);
 
