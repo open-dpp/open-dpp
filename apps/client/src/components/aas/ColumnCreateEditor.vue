@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import type { SubmodelElementRequestDto } from "@open-dpp/dto";
-import type {
-  ColumnCreateEditorProps
-} from "../../composables/aas-drawer.ts";
+import type { ColumnCreateEditorProps } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { SubmodelElementSchema } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
@@ -20,7 +18,9 @@ import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
 const props
-  = defineProps<SharedEditorProps<ColumnCreateEditorProps, SubmodelElementRequestDto>>();
+  = defineProps<
+    SharedEditorProps<ColumnCreateEditorProps, SubmodelElementRequestDto>
+  >();
 
 const columnFormSchema = z.object({
   ...SubmodelBaseFormSchema.shape,

@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import type { FileModificationDto } from "@open-dpp/dto";
-import type {
-  FileEditorProps
-} from "../../composables/aas-drawer.ts";
-import type { SharedEditorProps } from "../../lib/aas-editor.ts";
+import type { FileEditorProps } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { FileModificationSchema } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
-
 import { useForm } from "vee-validate";
+
 import { computed } from "vue";
 import { z } from "zod";
 import { EditorMode } from "../../composables/aas-drawer.ts";
