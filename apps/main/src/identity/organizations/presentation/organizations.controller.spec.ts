@@ -1,117 +1,154 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { ForbiddenException } from "@nestjs/common";
+import type { Auth } from "better-auth";
+import type { INestApplication } from "@nestjs/common";
+import { randomUUID } from "node:crypto";
+import { describe, expect, it, jest } from "@jest/globals";
+import { APP_GUARD } from "@nestjs/core";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { Session } from "../../auth/domain/session";
+import { EnvModule, EnvService } from "@open-dpp/env";
+import request from "supertest";
+import { BetterAuthHelper } from "../../../../test/better-auth-helper";
+import { generateMongoConfig } from "../../../database/config";
+import { EmailService } from "../../../email/email.service";
+import { AuthModule } from "../../auth/auth.module";
+import { AUTH } from "../../auth/auth.provider";
+import { AuthGuard } from "../../auth/infrastructure/guards/auth.guard";
 import { UsersService } from "../../users/application/services/users.service";
-import { MembersService } from "../application/services/members.service";
-import { OrganizationsService } from "../application/services/organizations.service";
-import { OrganizationsController } from "./organizations.controller";
+import { UsersModule } from "../../users/users.module";
+import { InvitationsRepository } from "../infrastructure/adapters/invitations.repository";
+import { MembersRepository } from "../infrastructure/adapters/members.repository";
+import { OrganizationsRepository } from "../infrastructure/adapters/organizations.repository";
+import { OrganizationsModule } from "../organizations.module";
 
 describe("OrganizationsController", () => {
-  let controller: OrganizationsController;
-  let mockOrgsService: any;
-  let mockMembersService: any;
-  let mockUsersService: any;
+  let app: INestApplication;
+  let moduleRef: TestingModule;
+  const betterAuthHelper = new BetterAuthHelper();
 
-  beforeEach(async () => {
-    mockOrgsService = {
-      createOrganization: jest.fn(),
-      getAllOrganizations: jest.fn(),
-      updateOrganization: jest.fn(),
-      getMemberOrganizations: jest.fn(),
-      getOrganization: jest.fn(),
-      getOrganizationNameIfUserInvited: jest.fn(),
-      inviteMember: jest.fn(),
-    };
-    mockMembersService = {
-      isMemberOfOrganization: jest.fn(),
-      isOwnerOrAdmin: jest.fn(),
-      getMembers: jest.fn(),
-    };
-    mockUsersService = {
-      findAllByIds: jest.fn(),
-    };
-
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [OrganizationsController],
-      providers: [
-        { provide: OrganizationsService, useValue: mockOrgsService },
-        { provide: MembersService, useValue: mockMembersService },
-        { provide: UsersService, useValue: mockUsersService },
+  beforeAll(async () => {
+    moduleRef = await Test.createTestingModule({
+      imports: [
+        EnvModule.forRoot(),
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
+        AuthModule,
+        OrganizationsModule,
+        UsersModule,
       ],
+      providers: [
+        {
+          provide: APP_GUARD,
+          useClass: AuthGuard,
+        },
+      ],
+    }).overrideProvider(EmailService).useValue({
+      send: jest.fn(),
     }).compile();
 
-    controller = module.get<OrganizationsController>(OrganizationsController);
+    betterAuthHelper.init(
+      moduleRef.get<UsersService>(UsersService),
+      moduleRef.get<Auth>(AUTH),
+    );
+
+    app = moduleRef.createNestApplication();
+    await app.init();
+  });
+
+  afterAll(async () => {
+    if (app) {
+      await app.close();
+    }
   });
 
   it("should create organization", async () => {
-    const session = { userId: "user-1" } as Session;
-    const body = { name: "Test", slug: "test" };
-    const headers = {};
+    const { userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const slug = `test-create-${randomUUID()}`;
 
-    await controller.createOrganization(body, headers, session);
+    const response = await request(app.getHttpServer())
+      .post("/organizations")
+      .set("Cookie", userCookie)
+      .send({ name: "Test Organization", slug });
 
-    expect(mockOrgsService.createOrganization).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "Test", slug: "test" }),
-      session,
-      headers,
+    expect(response.status).toEqual(201);
+    expect(response.body).toEqual(
+      expect.objectContaining({
+        name: "Test Organization",
+        slug,
+      }),
     );
+
+    const organizationsRepository = moduleRef.get<OrganizationsRepository>(OrganizationsRepository);
+    const membersRepository = moduleRef.get<MembersRepository>(MembersRepository);
+    const org = await organizationsRepository.findOneById(response.body.id);
+    expect(org).not.toBeNull();
+    expect(org!.name).toEqual("Test Organization");
+    const members = await membersRepository.findByOrganizationId(response.body.id);
+    expect(members.length).toBeGreaterThanOrEqual(1);
   });
 
   it("should update organization if authorized", async () => {
-    const session = { userId: "user-1" } as Session;
-    const body = { name: "Updated", slug: "updated", logo: "logo", metadata: {} };
-    const headers = {};
+    const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
 
-    mockMembersService.isOwnerOrAdmin.mockResolvedValue(true);
-    mockOrgsService.updateOrganization.mockResolvedValue({});
+    const response = await request(app.getHttpServer())
+      .patch(`/organizations/${org.id}`)
+      .set("Cookie", userCookie)
+      .send({ name: "Updated Organization", logo: "new-logo" });
 
-    await controller.updateOrganization("org-1", body, headers, session);
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual(
+      expect.objectContaining({
+        name: "Updated Organization",
+      }),
+    );
 
-    expect(mockOrgsService.updateOrganization).toHaveBeenCalled();
+    const organizationsRepository = moduleRef.get<OrganizationsRepository>(OrganizationsRepository);
+    const updatedOrg = await organizationsRepository.findOneById(org.id);
+    expect(updatedOrg!.name).toEqual("Updated Organization");
   });
 
-  it("should throw ForbiddenException when updating without rights", async () => {
-    const session = { userId: "user-1" } as Session;
-    const body = { name: "Updated", slug: "updated", logo: "logo", metadata: {} };
-    const headers = {};
+  it("should return 403 when updating organization without rights", async () => {
+    const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { userCookie: otherUserCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
 
-    mockMembersService.isOwnerOrAdmin.mockResolvedValue(false);
+    const response = await request(app.getHttpServer())
+      .patch(`/organizations/${org.id}`)
+      .set("Cookie", otherUserCookie)
+      .send({ name: "Updated", logo: "logo" });
 
-    await expect(controller.updateOrganization("org-1", body, headers, session))
-      .rejects
-      .toThrow(ForbiddenException);
+    expect(response.status).toEqual(403);
   });
 
   it("should invite member if authorized", async () => {
-    const session = { userId: "user-1" } as Session;
-    const body = { email: "invite@example.com", role: "member" };
-    const headers = {};
+    const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const inviteEmail = `invite-${randomUUID()}@example.com`;
 
-    mockMembersService.isOwnerOrAdmin.mockResolvedValue(true);
-    mockOrgsService.inviteMember.mockResolvedValue(undefined);
+    const response = await request(app.getHttpServer())
+      .post(`/organizations/${org.id}/invite`)
+      .set("Cookie", userCookie)
+      .send({ email: inviteEmail, role: "member" });
 
-    await controller.inviteMember("org-1", body, headers, session);
+    expect(response.status).toEqual(201);
 
-    expect(mockMembersService.isOwnerOrAdmin).toHaveBeenCalledWith("org-1", "user-1");
-    expect(mockOrgsService.inviteMember).toHaveBeenCalledWith(
-      "invite@example.com",
-      "member",
-      "org-1",
-      session,
-      headers,
-    );
+    const invitationsRepository = moduleRef.get<InvitationsRepository>(InvitationsRepository);
+    const invitation = await invitationsRepository.findOneUnexpiredByEmailAndOrganization(inviteEmail, org.id);
+    expect(invitation).not.toBeNull();
+    expect(invitation!.email).toEqual(inviteEmail);
   });
 
-  it("should throw ForbiddenException when inviting without rights", async () => {
-    const session = { userId: "user-1" } as Session;
-    const body = { email: "invite@example.com", role: "member" };
-    const headers = {};
+  it("should return 403 when inviting without rights", async () => {
+    const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const { userCookie: otherUserCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
 
-    mockMembersService.isOwnerOrAdmin.mockResolvedValue(false);
+    const response = await request(app.getHttpServer())
+      .post(`/organizations/${org.id}/invite`)
+      .set("Cookie", otherUserCookie)
+      .send({ email: "invite@example.com", role: "member" });
 
-    await expect(controller.inviteMember("org-1", body, headers, session))
-      .rejects
-      .toThrow(ForbiddenException);
+    expect(response.status).toEqual(403);
   });
 });
