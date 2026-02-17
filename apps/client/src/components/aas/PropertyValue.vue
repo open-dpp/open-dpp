@@ -26,12 +26,6 @@ const INTEGER_TYPES = new Set<DataTypeDefType>([
   DataTypeDef.Integer,
   DataTypeDef.NegativeInteger,
   DataTypeDef.NonNegativeInteger,
-  DataTypeDef.NonPositiveInteger,
-  DataTypeDef.PositiveInteger,
-  DataTypeDef.Short,
-  DataTypeDef.UnsignedByte,
-  DataTypeDef.UnsignedInt,
-  DataTypeDef.UnsignedLong,
   DataTypeDef.UnsignedShort,
 ]);
 
