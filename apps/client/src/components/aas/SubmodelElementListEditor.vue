@@ -145,48 +145,44 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
         :field="col.idShort"
       >
         <template #header>
-          <div class="flex items-center gap-2">
-            <Button
-              icon="pi pi-ellipsis-v"
-              severity="secondary"
-              size="small"
-              @click="
-                toggleColumnMenu($event, {
-                  position: index,
-                  addColumnActions: true,
-                })
-              "
-            />
-            <span>{{ col.label }}</span>
-          </div>
+          <Button
+            icon="pi pi-ellipsis-v"
+            severity="secondary"
+            size="small"
+            @click="
+              toggleColumnMenu($event, {
+                position: index,
+                addColumnActions: true,
+              })
+            "
+          />
+          <span>{{ col.label }}</span>
         </template>
         <template #body="{ data: cellData, field, index: rowIndex }">
-          <div class="m-2">
-            <div v-if="typeof field === 'string' && cellData[field] != null && cellData[field] !== ''">
-              <FileField
-                v-if="col.plain.modelType === AasSubmodelElements.File"
-                :id="`${rowIndex}-${field}`"
-                v-model="cellData[field].value"
-                v-model:content-type="cellData[field].contentType"
-                @update:model-value="
-                  (value) =>
-                    onCellEditComplete({
-                      data: cellData,
-                      newValue: {
-                        value,
-                        contentType: cellData[field].contentType,
-                      },
-                      field,
-                      index: rowIndex,
-                    })
-                "
-              />
-              <span v-else>
-                {{ formatCellValue(cellData[field], col) }}
-              </span>
-            </div>
-            <InputText v-else autofocus fluid readonly />
+          <div v-if="typeof field === 'string' && cellData[field] != null && cellData[field] !== ''">
+            <FileField
+              v-if="col.plain.modelType === AasSubmodelElements.File"
+              :id="`${rowIndex}-${field}`"
+              v-model="cellData[field].value"
+              v-model:content-type="cellData[field].contentType"
+              @update:model-value="
+                (value) =>
+                  onCellEditComplete({
+                    data: cellData,
+                    newValue: {
+                      value,
+                      contentType: cellData[field].contentType,
+                    },
+                    field,
+                    index: rowIndex,
+                  })
+              "
+            />
+            <span v-else>
+              {{ formatCellValue(cellData[field], col) }}
+            </span>
           </div>
+          <InputText v-else autofocus fluid readonly />
         </template>
         <template
           v-if="col.plain.modelType !== AasSubmodelElements.File"
