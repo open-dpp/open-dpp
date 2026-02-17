@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Test, TestingModule } from "@nestjs/testing";
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
+import { Member } from "../../domain/member";
 import { MemberRole } from "../../domain/member-role.enum";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
@@ -49,16 +50,18 @@ describe("MembersService", () => {
 
   it("should check if user is owner or admin", async () => {
     // Owner logic
-    mockMembersRepo.findOneByUserIdAndOrganizationId.mockResolvedValue({ role: MemberRole.OWNER });
+    const ownerMember = Member.create({ organizationId: "org-1", userId: "user-1", role: MemberRole.OWNER });
+    mockMembersRepo.findOneByUserIdAndOrganizationId.mockResolvedValue(ownerMember);
     expect(await service.isOwnerOrAdmin("org-1", "user-1")).toBe(true);
 
     // Admin user logic
-    mockMembersRepo.findOneByUserIdAndOrganizationId.mockResolvedValue({ role: MemberRole.MEMBER });
+    const regularMember = Member.create({ organizationId: "org-1", userId: "user-1", role: MemberRole.MEMBER });
+    mockMembersRepo.findOneByUserIdAndOrganizationId.mockResolvedValue(regularMember);
     mockUsersRepo.findOneById.mockResolvedValue({ role: UserRole.ADMIN });
     expect(await service.isOwnerOrAdmin("org-1", "user-1")).toBe(true);
 
     // Not owner not admin
-    mockMembersRepo.findOneByUserIdAndOrganizationId.mockResolvedValue({ role: MemberRole.MEMBER });
+    mockMembersRepo.findOneByUserIdAndOrganizationId.mockResolvedValue(regularMember);
     mockUsersRepo.findOneById.mockResolvedValue({ role: UserRole.USER });
     expect(await service.isOwnerOrAdmin("org-1", "user-1")).toBe(false);
 

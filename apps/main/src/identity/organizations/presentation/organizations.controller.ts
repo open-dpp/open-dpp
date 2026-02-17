@@ -62,7 +62,7 @@ export class OrganizationsController {
     @Headers() headers: Record<string, string>,
     @AuthSession() session: Session,
   ) {
-    const isOwnerOrAdmin = await this.organizationsService.isOwnerOrAdmin(id, session.userId);
+    const isOwnerOrAdmin = await this.membersService.isOwnerOrAdmin(id, session.userId);
     if (!isOwnerOrAdmin) {
       throw new ForbiddenException("You are not authorized to update this organization");
     }
@@ -105,7 +105,7 @@ export class OrganizationsController {
     @Headers() headers: Record<string, string>,
     @AuthSession() session: Session,
   ) {
-    const isOwnerOrAdmin = await this.organizationsService.isOwnerOrAdmin(id, session.userId);
+    const isOwnerOrAdmin = await this.membersService.isOwnerOrAdmin(id, session.userId);
     if (!isOwnerOrAdmin) {
       throw new ForbiddenException("You are not authorized to invite members to this organization");
     }

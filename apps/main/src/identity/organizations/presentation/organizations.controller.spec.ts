@@ -17,7 +17,6 @@ describe("OrganizationsController", () => {
     mockOrgsService = {
       createOrganization: jest.fn(),
       getAllOrganizations: jest.fn(),
-      isOwnerOrAdmin: jest.fn(),
       updateOrganization: jest.fn(),
       getMemberOrganizations: jest.fn(),
       getOrganization: jest.fn(),
@@ -26,6 +25,7 @@ describe("OrganizationsController", () => {
     };
     mockMembersService = {
       isMemberOfOrganization: jest.fn(),
+      isOwnerOrAdmin: jest.fn(),
       getMembers: jest.fn(),
     };
     mockUsersService = {
@@ -63,7 +63,7 @@ describe("OrganizationsController", () => {
     const body = { name: "Updated", slug: "updated", logo: "logo", metadata: {} };
     const headers = {};
 
-    mockOrgsService.isOwnerOrAdmin.mockResolvedValue(true);
+    mockMembersService.isOwnerOrAdmin.mockResolvedValue(true);
     mockOrgsService.updateOrganization.mockResolvedValue({});
 
     await controller.updateOrganization("org-1", body, headers, session);
@@ -76,7 +76,7 @@ describe("OrganizationsController", () => {
     const body = { name: "Updated", slug: "updated", logo: "logo", metadata: {} };
     const headers = {};
 
-    mockOrgsService.isOwnerOrAdmin.mockResolvedValue(false);
+    mockMembersService.isOwnerOrAdmin.mockResolvedValue(false);
 
     await expect(controller.updateOrganization("org-1", body, headers, session))
       .rejects
@@ -88,12 +88,12 @@ describe("OrganizationsController", () => {
     const body = { email: "invite@example.com", role: "member" };
     const headers = {};
 
-    mockOrgsService.isOwnerOrAdmin.mockResolvedValue(true);
+    mockMembersService.isOwnerOrAdmin.mockResolvedValue(true);
     mockOrgsService.inviteMember.mockResolvedValue(undefined);
 
     await controller.inviteMember("org-1", body, headers, session);
 
-    expect(mockOrgsService.isOwnerOrAdmin).toHaveBeenCalledWith("org-1", "user-1");
+    expect(mockMembersService.isOwnerOrAdmin).toHaveBeenCalledWith("org-1", "user-1");
     expect(mockOrgsService.inviteMember).toHaveBeenCalledWith(
       "invite@example.com",
       "member",
@@ -108,7 +108,7 @@ describe("OrganizationsController", () => {
     const body = { email: "invite@example.com", role: "member" };
     const headers = {};
 
-    mockOrgsService.isOwnerOrAdmin.mockResolvedValue(false);
+    mockMembersService.isOwnerOrAdmin.mockResolvedValue(false);
 
     await expect(controller.inviteMember("org-1", body, headers, session))
       .rejects

@@ -16,13 +16,14 @@ export class MembersRepository {
     return Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
   }
 
-  async save(member: Member): Promise<void> {
+  async save(member: Member): Promise<Member> {
     const persistenceModel = MemberMapper.toPersistence(member);
-    await this.memberModel.findByIdAndUpdate(
+    const document = await this.memberModel.findByIdAndUpdate(
       member.id,
       persistenceModel,
-      { upsert: true },
+      { upsert: true, new: true },
     );
+    return MemberMapper.toDomain(document);
   }
 
   async findOneById(id: string): Promise<Member | null> {

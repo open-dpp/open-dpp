@@ -12,6 +12,22 @@ export type MemberDbProps = MemberCreateProps & {
   createdAt: Date;
 };
 
+export interface MemberUser {
+  id: string;
+  email: string;
+  name: string | null;
+  image: string | null;
+}
+
+export interface MemberWithUser {
+  id: string;
+  organizationId: string;
+  userId: string;
+  role: MemberRole;
+  createdAt: Date;
+  user: MemberUser | null;
+}
+
 export class Member {
   public readonly id: string;
   public readonly organizationId: string;
@@ -52,5 +68,9 @@ export class Member {
       data.role,
       data.createdAt,
     );
+  }
+
+  public isOwner(): boolean {
+    return this.role === MemberRole.OWNER;
   }
 }

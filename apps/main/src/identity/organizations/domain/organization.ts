@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
+import { Invitation } from "./invitation";
 import { Member } from "./member";
+import { MemberRole } from "./member-role.enum";
 
 export interface OrganizationCreateProps {
   name: string;
@@ -70,6 +72,18 @@ export class Organization {
     );
   }
 
+  public update(data: OrganizationUpdateProps): Organization {
+    return new Organization(
+      this.id,
+      data.name,
+      this.slug,
+      data.logo ?? null,
+      this.metadata,
+      this.createdAt,
+      this.members,
+    );
+  }
+
   isMember(member: Member) {
     return this.members.some(m => m.id === member.id);
   }
@@ -79,5 +93,14 @@ export class Organization {
       return;
     }
     this.members.push(member);
+  }
+
+  inviteMember(email: string, inviterId: string, role: MemberRole): Invitation {
+    return Invitation.create({
+      email,
+      inviterId,
+      organizationId: this.id,
+      role,
+    });
   }
 }

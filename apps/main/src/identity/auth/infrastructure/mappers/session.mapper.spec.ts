@@ -46,7 +46,9 @@ describe("sessionMapper", () => {
   } as unknown as BetterAuthSessionSchema;
 
   it("should map from domain to persistence", () => {
+    const before = new Date();
     const persistence = SessionMapper.toPersistence(validDomainSession);
+    const after = new Date();
 
     expect(persistence).toEqual({
       _id: validDomainSession.id,
@@ -54,12 +56,14 @@ describe("sessionMapper", () => {
       token: validDomainSession.token,
       createdAt: validDomainSession.createdAt,
       expiresAt: validDomainSession.expiresAt,
-      updatedAt: validDomainSession.updatedAt,
+      updatedAt: expect.any(Date),
       activeOrganizationId: validDomainSession.activeOrganizationId,
       activeTeamId: validDomainSession.activeTeamId,
       ipAddress: validDomainSession.ipAddress,
       userAgent: validDomainSession.userAgent,
     });
+    expect(persistence.updatedAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
+    expect(persistence.updatedAt.getTime()).toBeLessThanOrEqual(after.getTime());
   });
 
   it("should map from persistence to domain", () => {

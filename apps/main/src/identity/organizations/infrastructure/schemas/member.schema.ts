@@ -25,3 +25,4 @@ export class Member {
 }
 
 export const MemberSchema = SchemaFactory.createForClass(Member);
+MemberSchema.index({ organizationId: 1 });

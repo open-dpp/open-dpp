@@ -26,7 +26,7 @@ export class SessionMapper {
       token: entity.token,
       createdAt: entity.createdAt,
       expiresAt: entity.expiresAt,
-      updatedAt: entity.updatedAt,
+      updatedAt: new Date(),
       ipAddress: entity.ipAddress,
       userAgent: entity.userAgent,
       activeOrganizationId: entity.activeOrganizationId,

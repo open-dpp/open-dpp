@@ -18,7 +18,6 @@ describe("OrganizationsRepository", () => {
         createOrganization: jest.fn(),
         updateOrganization: jest.fn(),
         listOrganizations: jest.fn(),
-        createInvitation: jest.fn(),
       },
     };
 
@@ -53,11 +52,12 @@ describe("OrganizationsRepository", () => {
     });
 
     mockAuth.api.createOrganization.mockResolvedValue({
-      id: new ObjectId(),
+      id: new ObjectId().toString(),
       name: "Test Org",
       slug: "test-org",
       logo: null,
       metadata: "{}",
+      createdAt: new Date(),
     });
 
     await repository.create(organization, {});
@@ -69,23 +69,28 @@ describe("OrganizationsRepository", () => {
     }));
   });
 
-  it("should pass undefined for logo in update if data has no logo", async () => {
+  it("should pass undefined for logo in update if organization has no logo", async () => {
     const organizationObjectId = new ObjectId();
-    mockAuth.api.updateOrganization.mockResolvedValue({});
-    mockOrganizationModel.findOne.mockReturnValue({
-      exec: jest.fn().mockResolvedValue([{
-        _id: organizationObjectId,
-        name: "Test Org",
-        slug: "test-org",
-        logo: null,
-        metadata: JSON.stringify({}),
-      }]),
+    const organization = Organization.loadFromDb({
+      id: organizationObjectId.toString(),
+      name: "Test Org Updated",
+      slug: "test-org",
+      logo: null,
+      metadata: {},
+      createdAt: new Date(),
     });
 
-    await repository.update(organizationObjectId.toString(), {
+    mockAuth.api.updateOrganization.mockResolvedValue({});
+    mockOrganizationModel.findOne.mockResolvedValue({
+      _id: organizationObjectId,
       name: "Test Org Updated",
+      slug: "test-org",
       logo: null,
-    }, {});
+      metadata: JSON.stringify({}),
+      createdAt: new Date(),
+    });
+
+    await repository.update(organization, {});
 
     expect(mockAuth.api.updateOrganization).toHaveBeenCalledWith(expect.objectContaining({
       body: expect.objectContaining({

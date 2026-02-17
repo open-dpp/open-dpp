@@ -1,11 +1,10 @@
 import type { Auth } from "better-auth";
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Organization as BetterAuthOrganizationSchema } from "better-auth/plugins/organization";
 import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { AUTH } from "../../../auth/auth.provider";
-import { Organization, OrganizationUpdateProps } from "../../domain/organization";
+import { Organization } from "../../domain/organization";
 import { OrganizationMapper } from "../mappers/organization.mapper";
 import { Organization as OrganizationSchema } from "../schemas/organization.schema";
 
@@ -29,7 +28,7 @@ export class OrganizationsRepository {
     return result.map((org: any) => OrganizationMapper.toDomainFromBetterAuth(org));
   }
 
-  async create(organization: Organization, headers: Record<string, string>): Promise<BetterAuthOrganizationSchema | null> {
+  async create(organization: Organization, headers: Record<string, string>): Promise<Organization | null> {
     try {
       const result = await (this.auth.api as any).createOrganization({
         headers,
@@ -40,32 +39,31 @@ export class OrganizationsRepository {
           metadata: JSON.stringify(organization.metadata || {}),
         },
       });
-      return result;
+      if (!result) {
+        return null;
+      }
+      return OrganizationMapper.toDomainFromBetterAuth(result);
     }
     catch {
       return null;
     }
   }
 
-  async update(organizationId: string, data: OrganizationUpdateProps, headers: Record<string, string>): Promise<Organization | null> {
-    const organization = await this.findOneById(organizationId);
-    if (!organization) {
-      throw new NotFoundException();
-    }
+  async update(organization: Organization, headers: Record<string, string>): Promise<Organization | null> {
     try {
       await (this.auth.api as any).updateOrganization({
         headers,
         body: {
           data: {
-            name: data.name,
+            name: organization.name,
             slug: organization.slug,
-            logo: data.logo ?? undefined,
+            logo: organization.logo ?? undefined,
             metadata: organization.metadata,
           },
-          organizationId,
+          organizationId: organization.id,
         },
       });
-      return this.findOneById(organizationId);
+      return this.findOneById(organization.id);
     }
     catch {
       return null;
@@ -101,21 +99,5 @@ export class OrganizationsRepository {
       .find()
       .limit(100);
     return organizations.map(org => OrganizationMapper.toDomain(org));
-  }
-
-  async inviteMember(
-    email: string,
-    role: string,
-    organizationId: string,
-    headers?: Record<string, string> | Headers,
-  ): Promise<void> {
-    await (this.auth.api as any).createInvitation({
-      headers,
-      body: {
-        email,
-        role,
-        organizationId,
-      },
-    });
   }
 }

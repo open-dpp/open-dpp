@@ -25,7 +25,10 @@ describe("sessionSchema", () => {
   });
 
   afterAll(async () => {
-    await mongoConnection.dropDatabase();
+    const collections = mongoConnection.collections;
+    for (const key in collections) {
+      await collections[key].drop();
+    }
     await mongoConnection.close();
     await mongod.stop();
   });
@@ -56,18 +59,13 @@ describe("sessionSchema", () => {
   it("should validate required fields", async () => {
     const session = new SessionModel({});
 
-    let err: any;
-    try {
-      await session.save();
-    }
-    catch (error) {
-      err = error;
-    }
-
-    expect(err).toBeDefined();
-    expect(err.errors.userId).toBeDefined();
-    expect(err.errors.token).toBeDefined();
-    expect(err.errors.expiresAt).toBeDefined();
+    await expect(session.save()).rejects.toMatchObject({
+      errors: {
+        userId: expect.anything(),
+        token: expect.anything(),
+        expiresAt: expect.anything(),
+      },
+    });
   });
 
   it("should enforce unique token constraint", async () => {
@@ -91,16 +89,10 @@ describe("sessionSchema", () => {
       updatedAt: new Date(),
     };
 
-    let err: any;
-    try {
-      await new SessionModel(duplicateSessionData).save();
-    }
-    catch (error) {
-      err = error;
-    }
-
-    expect(err).toBeDefined();
-    // E11000 duplicate key error collection
-    expect(err.code).toBe(11000);
+    await expect(
+      new SessionModel(duplicateSessionData).save(),
+    ).rejects.toMatchObject({
+      code: 11000,
+    });
   });
 });

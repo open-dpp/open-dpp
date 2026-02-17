@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
-import { MemberRole } from "../../domain/member-role.enum";
+import { MemberWithUser } from "../../domain/member";
 import { Organization } from "../../domain/organization";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
@@ -26,7 +26,7 @@ export class MembersService {
     if (!member) {
       return false;
     }
-    if (member.role === MemberRole.OWNER) {
+    if (member.isOwner()) {
       return true;
     }
     const user = await this.usersRepository.findOneById(userId);
@@ -39,7 +39,7 @@ export class MembersService {
     return this.organizationsRepository.findManyByMember(headers);
   }
 
-  async getMembers(organizationId: string): Promise<any[]> {
+  async getMembers(organizationId: string): Promise<MemberWithUser[]> {
     const members = await this.membersRepository.findByOrganizationId(organizationId);
     if (members.length === 0) {
       return [];

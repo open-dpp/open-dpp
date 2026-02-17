@@ -8,7 +8,7 @@ import { Organization, OrganizationCreateProps, OrganizationUpdateProps } from "
 import { InvitationsRepository } from "../../infrastructure/adapters/invitations.repository";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
-import { OrganizationMapper } from "../../infrastructure/mappers/organization.mapper";
+
 
 @Injectable()
 export class OrganizationsService {
@@ -21,18 +21,6 @@ export class OrganizationsService {
     private readonly invitationsRepository: InvitationsRepository,
   ) { }
 
-  async isOwnerOrAdmin(organizationId: string, userId: string): Promise<boolean> {
-    const member = await this.membersRepository.findOneByUserIdAndOrganizationId(userId, organizationId);
-    if (!member) {
-      return false;
-    }
-    if (member.role === MemberRole.OWNER) {
-      return true;
-    }
-    const user = await this.usersRepository.findOneById(userId);
-    return user !== null && user.role === UserRole.ADMIN;
-  }
-
   async createOrganization(
     data: OrganizationCreateProps,
     session: Session,
@@ -43,11 +31,10 @@ export class OrganizationsService {
       throw new BadRequestException();
     }
     const organization = Organization.create(data);
-    const betterAuthOrganization = await this.organizationsRepository.create(organization, headers);
-    if (!betterAuthOrganization) {
+    const createdOrganization = await this.organizationsRepository.create(organization, headers);
+    if (!createdOrganization) {
       throw new BadRequestException();
     }
-    const createdOrganization = OrganizationMapper.toDomainFromBetterAuth(betterAuthOrganization);
     const owner = Member.create({
       userId: session.userId,
       organizationId: createdOrganization.id,
@@ -69,12 +56,8 @@ export class OrganizationsService {
       throw new NotFoundException("Organization not found");
     }
 
-    const isOwnerOrAdmin = await this.isOwnerOrAdmin(organizationId, session.userId);
-    if (!isOwnerOrAdmin) {
-      throw new ForbiddenException("You are not authorized to update this organization");
-    }
-
-    return await this.organizationsRepository.update(organizationId, data, headers);
+    const updatedOrganization = organization.update(data);
+    return await this.organizationsRepository.update(updatedOrganization, headers);
   }
 
   async getMemberOrganizations(userId: string, headers: Record<string, string>): Promise<Organization[]> {
@@ -104,7 +87,12 @@ export class OrganizationsService {
     session: Session,
     headers?: Record<string, string> | Headers,
   ): Promise<void> {
-    await this.organizationsRepository.inviteMember(email, role, organizationId, headers);
+    const organization = await this.organizationsRepository.findOneById(organizationId);
+    if (!organization) {
+      throw new NotFoundException("Organization not found");
+    }
+    const invitation = organization.inviteMember(email, session.userId, role as MemberRole);
+    await this.invitationsRepository.save(invitation, headers);
   }
 
   async getOrganizationNameIfUserInvited(organizationId: string, session: Session): Promise<string | null> {
