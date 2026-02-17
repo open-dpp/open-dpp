@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { z } from "zod";
-import { ZodValidationPipe } from "../../../common/pipes/zod-validation.pipe";
+import { ZodValidationPipe } from "@open-dpp/exception";
 import { UsersService } from "../application/services/users.service";
 import { User } from "../domain/user";
 

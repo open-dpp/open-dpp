@@ -7,6 +7,9 @@ export function generateMongoConfig(configService: EnvService) {
   const config_uri = configService.get("OPEN_DPP_MONGODB_URI");
   if (config_uri) {
     uri = config_uri;
+    // In test mode, replace the database name with a random one (test-<uuid>)
+    // to ensure each test run uses an isolated database and tests don't
+    // interfere with each other.
     if (process.env.NODE_ENV === "test") {
       const dbName = `test-${randomUUID()}`;
       let base = uri;

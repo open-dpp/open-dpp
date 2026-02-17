@@ -44,8 +44,8 @@ export class Session {
     expiresAt: Date,
     createdAt: Date,
     updatedAt: Date,
-    activeOrganizationId?: string | null,
-    activeTeamId?: string | null,
+    activeOrganizationId: string | null,
+    activeTeamId: string | null,
     ipAddress?: string | null,
     userAgent?: string | null,
   ) {
@@ -57,8 +57,8 @@ export class Session {
     this.userAgent = userAgent;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
-    this.activeOrganizationId = activeOrganizationId ?? null;
-    this.activeTeamId = activeTeamId ?? null;
+    this.activeOrganizationId = activeOrganizationId;
+    this.activeTeamId = activeTeamId;
   }
 
   public static create(data: SessionCreateProps) {
@@ -73,8 +73,8 @@ export class Session {
       data.expiresAt ?? defaultExpiresAt,
       now,
       now,
-      data.activeOrganizationId,
-      data.activeTeamId,
+      data.activeOrganizationId ?? null,
+      data.activeTeamId ?? null,
       data.ipAddress,
       data.userAgent,
     );
