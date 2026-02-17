@@ -61,22 +61,4 @@ describe("passports", () => {
     expect(mocks.fetchPassports).toHaveBeenCalledWith({ limit: 10, cursor: undefined });
     expect(passports.value).toEqual(passportsResponse);
   });
-
-  /* it("should fetch next or previous passports", async () => {
-    const { passports, init, nextPage, previousPage } = usePassports({ changeQueryParams });
-    const passportsResponse: PassportDto[] = [...Array.from({ length: 20 }).keys()].map(
-      key => passportsPlainFactory.build({ id: key.toFixed() }),
-    );
-    const firstBlock = { paging_metadata: { cursor: passportsResponse[9]?.id }, result: passportsResponse.slice(0, 10) };
-    const secondBlock = { paging_metadata: { cursor: passportsResponse[19]?.id }, result: passportsResponse.slice(10, 20) };
-
-    mocks.fetchPassports.mockImplementation(({ cursor }: PagingParamsDto) => cursor === undefined ? { data: firstBlock } : { data: secondBlock });
-    await init();
-    await nextPage();
-    expect(mocks.fetchPassports).toHaveBeenCalledWith({ limit: 10, cursor: passportsResponse[9]?.id });
-    expect(passports.value).toEqual(secondBlock);
-    await previousPage();
-    expect(mocks.fetchPassports).toHaveBeenCalledWith({ limit: 10, cursor: undefined });
-    expect(passports.value).toEqual(firstBlock);
-  }); */
 });
