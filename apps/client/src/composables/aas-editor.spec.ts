@@ -2,7 +2,7 @@ import type { SubmodelResponseDto } from "@open-dpp/dto";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { Component } from "vue";
 import type { IAasEditor } from "./aas-editor.ts";
-import { AasSubmodelElements, DataTypeDef, KeyTypes, Language, SubmodelElementCollectionJsonSchema, SubmodelElementSchema } from "@open-dpp/dto";
+import { AasSubmodelElements, DataTypeDef, KeyTypes, Language, ReferenceTypes, SubmodelElementCollectionJsonSchema, SubmodelElementSchema } from "@open-dpp/dto";
 import {
   submodelCarbonFootprintPlainFactory,
   submodelDesignOfProductPlainFactory,
@@ -16,6 +16,8 @@ import FileCreateEditor from "../components/aas/FileCreateEditor.vue";
 import FileEditor from "../components/aas/FileEditor.vue";
 import PropertyCreateEditor from "../components/aas/PropertyCreateEditor.vue";
 import PropertyEditor from "../components/aas/PropertyEditor.vue";
+import ReferenceElementCreateEditor from "../components/aas/ReferenceElementCreateEditor.vue";
+import ReferenceElementEditor from "../components/aas/ReferenceElementEditor.vue";
 import SubmodelCreateEditor from "../components/aas/SubmodelCreateEditor.vue";
 import SubmodelEditor from "../components/aas/SubmodelEditor.vue";
 import SubmodelElementCollectionCreateEditor from "../components/aas/SubmodelElementCollectionCreateEditor.vue";
@@ -197,7 +199,10 @@ describe("aasEditor composable", () => {
     {
       keyToSelect: `${submodel2.idShort}.ProductCarbonFootprint_A4`,
       expected: {
-        path: { submodelId: submodel2.id, idShortPath: `ProductCarbonFootprint_A4` },
+        path: {
+          submodelId: submodel2.id,
+          idShortPath: `ProductCarbonFootprint_A4`,
+        },
         component: SubmodelElementCollectionEditor,
         haveBeenCalled: mocks.modifySubmodelElement,
       },
@@ -205,7 +210,10 @@ describe("aasEditor composable", () => {
     {
       keyToSelect: `Design_V01.Author.AuthorName`,
       expected: {
-        path: { submodelId: submodel1.id, idShortPath: `Design_V01.Author.AuthorName` },
+        path: {
+          submodelId: submodel1.id,
+          idShortPath: `Design_V01.Author.AuthorName`,
+        },
         component: PropertyEditor,
         haveBeenCalled: mocks.modifySubmodelElement,
       },
@@ -213,7 +221,10 @@ describe("aasEditor composable", () => {
     {
       keyToSelect: `Design_V01.AdditionalInformation.FileProp`,
       expected: {
-        path: { submodelId: submodel1.id, idShortPath: `Design_V01.AdditionalInformation.FileProp` },
+        path: {
+          submodelId: submodel1.id,
+          idShortPath: `Design_V01.AdditionalInformation.FileProp`,
+        },
         component: FileEditor,
         haveBeenCalled: mocks.modifySubmodelElement,
       },
@@ -221,13 +232,30 @@ describe("aasEditor composable", () => {
     {
       keyToSelect: `Design_V01.Author.ListProp`,
       expected: {
-        path: { submodelId: submodel1.id, idShortPath: `Design_V01.Author.ListProp` },
+        path: {
+          submodelId: submodel1.id,
+          idShortPath: `Design_V01.Author.ListProp`,
+        },
         component: SubmodelElementListEditor,
         haveBeenCalled: mocks.modifySubmodelElement,
       },
     },
+    {
+      keyToSelect: `Design_V01.AdditionalInformation.MotivationalVideo`,
+      expected: {
+        path: {
+          submodelId: submodel1.id,
+          idShortPath: `Design_V01.AdditionalInformation.MotivationalVideo`,
+        },
+        component: ReferenceElementEditor,
+        haveBeenCalled: mocks.modifySubmodelElement,
+      },
+    },
   ])("should select node $keyToSelect", async ({ keyToSelect, expected }) => {
-    const response = { paging_metadata: { cursor: null }, result: [submodel1, submodel2] };
+    const response = {
+      paging_metadata: { cursor: null },
+      result: [submodel1, submodel2],
+    };
     mocks.getSubmodels.mockResolvedValue({
       data: response,
       status: HTTPCode.OK,
@@ -243,7 +271,10 @@ describe("aasEditor composable", () => {
     });
     await init();
     selectTreeNode(keyToSelect);
-    expect(changeQueryParams).toHaveBeenCalledWith({ edit: keyToSelect, cursor: undefined });
+    expect(changeQueryParams).toHaveBeenCalledWith({
+      edit: keyToSelect,
+      cursor: undefined,
+    });
     expect(selectedKeys.value).toEqual({ [keyToSelect]: true });
     expect(editorVNode.value!.props.path).toEqual(expected.path);
     expect(editorVNode.value!.component).toEqual(expected.component);
@@ -311,6 +342,7 @@ describe("aasEditor composable", () => {
       expect(aasEditor.editorVNode.value!.component).toEqual(expectedEditor);
       // simulate and assert the api request which would be triggered if the submit button in creation editor has been clicked
       await aasEditor.editorVNode.value!.props.callback!(data);
+      expect(mocks.createSubmodelElement).toHaveBeenCalled();
       expect(mocks.createSubmodelElement).toHaveBeenCalledWith(aasId, submodel1.id, expectedRequestBody);
     }
 
@@ -440,6 +472,58 @@ describe("aasEditor composable", () => {
       };
       await assertCreationOfSubmodelElement(aasEditor, data, expectedRequestBody, "aasEditor.file", FileCreateEditor);
       await assertCreationOfSubmodelElementAtSubmodelElementLevel(aasEditor, data, expectedRequestBody, "aasEditor.file");
+    });
+
+    it("should create link", async () => {
+      mocks.getSubmodels.mockResolvedValue({
+        data: paginationResponse,
+        status: HTTPCode.OK,
+      });
+
+      mocks.createSubmodelElement.mockResolvedValue({
+        status: HTTPCode.CREATED,
+      });
+      mocks.createSubmodelElementAtIdShortPath.mockResolvedValue({
+        status: HTTPCode.CREATED,
+      });
+
+      const aasEditor = useAasEditor({
+        id: aasId,
+        aasNamespace: apiClient.dpp.templates.aas,
+        changeQueryParams,
+        errorHandlingStore,
+        selectedLanguage,
+        translate,
+      });
+
+      const data = {
+        idShort: "newProperty",
+        value: {
+          type: ReferenceTypes.ExternalReference,
+          keys: [{
+            type: KeyTypes.GlobalReference,
+            value: "https://example.com",
+          }],
+        },
+      };
+      const expectedRequestBody = {
+        ...data,
+        modelType: KeyTypes.ReferenceElement,
+        ...sharedCreationProps,
+      };
+      await assertCreationOfSubmodelElement(
+        aasEditor,
+        data,
+        expectedRequestBody,
+        "aasEditor.link",
+        ReferenceElementCreateEditor,
+      );
+      await assertCreationOfSubmodelElementAtSubmodelElementLevel(
+        aasEditor,
+        data,
+        expectedRequestBody,
+        "aasEditor.link",
+      );
     });
   });
 });

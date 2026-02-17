@@ -1,13 +1,15 @@
-import type { FileResponseDto, KeyTypes, PropertyResponseDto, SubmodelElementCollectionResponseDto, SubmodelElementListResponseDto, SubmodelElementResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
+import type { FileResponseDto, KeyTypes, PropertyResponseDto, ReferenceElementResponseDto, SubmodelElementCollectionResponseDto, SubmodelElementListResponseDto, SubmodelElementResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
 import type { Component, ComputedRef, Ref } from "vue";
 import {
 
   KeyTypes as AasKeyTypes,
 
   AasSubmodelElementsEnum,
-  FileJsonSchema,
 
+  FileJsonSchema,
   PropertyJsonSchema,
+
+  ReferenceElementJsonSchema,
   SubmodelElementCollectionJsonSchema,
   SubmodelElementListJsonSchema,
   SubmodelElementSchema,
@@ -21,9 +23,10 @@ import ColumnCreateEditor from "../components/aas/ColumnCreateEditor.vue";
 import ColumnEditor from "../components/aas/ColumnEditor.vue";
 import FileCreateEditor from "../components/aas/FileCreateEditor.vue";
 import FileEditor from "../components/aas/FileEditor.vue";
-import LinkCreateEditor from "../components/aas/LinkCreateEditor.vue";
 import PropertyCreateEditor from "../components/aas/PropertyCreateEditor.vue";
 import PropertyEditor from "../components/aas/PropertyEditor.vue";
+import ReferenceElementCreateEditor from "../components/aas/ReferenceElementCreateEditor.vue";
+import ReferenceElementEditor from "../components/aas/ReferenceElementEditor.vue";
 import SubmodelCreateEditor from "../components/aas/SubmodelCreateEditor.vue";
 import SubmodelEditor from "../components/aas/SubmodelEditor.vue";
 import SubmodelElementCollectionCreateEditor from "../components/aas/SubmodelElementCollectionCreateEditor.vue";
@@ -58,7 +61,8 @@ export type PropertyCreateEditorProps = z.infer<
   typeof PropertyCreateEditorPropsSchema
 >;
 
-export type LinkCreateEditorProps = z.infer<typeof SubmodelBaseCreatePropsSchema>;
+export type ReferenceElementCreateEditorProps = z.infer<typeof SubmodelBaseCreatePropsSchema>;
+export type ReferenceElementEditorProps = ReferenceElementResponseDto;
 
 export type SubmodelElementCollectionEditorProps
   = SubmodelElementCollectionResponseDto;
@@ -79,7 +83,6 @@ export const EditorMode = {
 export const EditorModeEnum = z.enum(EditorMode);
 export type EditorModeType = z.infer<typeof EditorModeEnum>;
 export const ColumnEditorKey = "Column";
-export const LinkEditorKey = "Link";
 
 interface EditorDataMap {
   [EditorMode.CREATE]: {
@@ -88,7 +91,7 @@ interface EditorDataMap {
     [AasKeyTypes.SubmodelElementCollection]: SubmodelElementCollectionCreateEditorProps;
     [AasKeyTypes.SubmodelElementList]: SubmodelElementListCreateEditorProps;
     [AasKeyTypes.File]: FileCreateEditorProps;
-    [LinkEditorKey]: LinkCreateEditorProps;
+    [AasKeyTypes.ReferenceElement]: ReferenceElementCreateEditorProps;
     [ColumnEditorKey]: ColumnCreateEditorProps;
   };
   [EditorMode.EDIT]: {
@@ -97,7 +100,7 @@ interface EditorDataMap {
     [AasKeyTypes.SubmodelElementCollection]: SubmodelElementCollectionEditorProps;
     [AasKeyTypes.SubmodelElementList]: SubmodelElementListEditorProps;
     [AasKeyTypes.File]: FileEditorProps;
-    [LinkEditorKey]: LinkCreateEditorProps; // TODO: Replace with RelationshipEditorProps
+    [AasKeyTypes.ReferenceElement]: ReferenceElementEditorProps;
     [ColumnEditorKey]: ColumnEditorProps;
   };
 }
@@ -108,7 +111,7 @@ export type EditorType
     | typeof AasKeyTypes.File
     | typeof AasKeyTypes.SubmodelElementCollection
     | typeof AasKeyTypes.SubmodelElementList
-    | "Link"
+    | typeof AasKeyTypes.ReferenceElement
     | "Column";
 
 export interface AasEditorPath {
@@ -194,8 +197,8 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
         component: FileCreateEditor,
         parse: data => SubmodelBaseCreatePropsSchema.parse(data),
       },
-      [LinkEditorKey]: {
-        component: LinkCreateEditor,
+      [AasKeyTypes.ReferenceElement]: {
+        component: ReferenceElementCreateEditor,
         parse: data => SubmodelBaseCreatePropsSchema.parse(data),
       },
       [ColumnEditorKey]: {
@@ -224,10 +227,9 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
         component: FileEditor,
         parse: data => FileJsonSchema.parse(data),
       },
-      [LinkEditorKey]: {
-        // TODO: Replace with RelationshipEditor
-        component: LinkCreateEditor,
-        parse: data => SubmodelBaseCreatePropsSchema.parse(data),
+      [AasKeyTypes.ReferenceElement]: {
+        component: ReferenceElementEditor,
+        parse: data => ReferenceElementJsonSchema.parse(data),
       },
       [ColumnEditorKey]: {
         component: ColumnEditor,

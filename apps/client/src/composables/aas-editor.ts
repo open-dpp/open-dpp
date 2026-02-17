@@ -42,9 +42,7 @@ import { ref, toRaw } from "vue";
 import { z } from "zod/v4";
 import { HTTPCode } from "../stores/http-codes.ts";
 import {
-
   EditorMode,
-  LinkEditorKey,
   useAasDrawer,
 } from "./aas-drawer.ts";
 import { usePagination } from "./pagination.ts";
@@ -353,7 +351,7 @@ export function useAasEditor({
         icon: "pi pi-link",
         command: (_event: MenuItemCommandEvent) => {
           drawer.openDrawer({
-            type: LinkEditorKey,
+            type: AasSubmodelElements.ReferenceElement,
             data: {},
             mode: EditorMode.CREATE,
             title: translate(`${translatePrefix}.link`),

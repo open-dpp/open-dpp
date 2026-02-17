@@ -1,6 +1,8 @@
 import {
   FileModificationSchema,
   PropertyModificationSchema,
+  ReferenceElementModificationSchema,
+  ReferenceModificationSchema,
   SubmodelBaseModificationSchema,
   SubmodelElementCollectionModificationSchema,
   SubmodelElementListModificationSchema,
@@ -145,16 +147,42 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
     );
   }
 
-  visitReference(_element: Reference, _context: unknown): void {
-    throw new NotSupportedError(
-      "Reference is not supported.",
-    );
+  visitReference(element: Reference, context: unknown): void {
+    const parsed = ReferenceModificationSchema.parse(context);
+
+    if (parsed.type !== undefined) {
+      element.type = parsed.type;
+    }
+    if (parsed.referredSemanticId === null) {
+      element.referredSemanticId = parsed.referredSemanticId;
+    }
+    if (parsed.referredSemanticId !== undefined) {
+      if (element.referredSemanticId !== null) {
+        element.referredSemanticId.accept(this, parsed.referredSemanticId);
+      }
+      else {
+        element.referredSemanticId = Reference.fromPlain(parsed.referredSemanticId);
+      }
+    }
+    if (parsed.keys !== undefined) {
+      element.keys = parsed.keys.map(Key.fromPlain);
+    }
   }
 
-  visitReferenceElement(_element: ReferenceElement, _context: unknown): void {
-    throw new NotSupportedError(
-      "ReferenceElement is not supported.",
-    );
+  visitReferenceElement(element: ReferenceElement, context: unknown): void {
+    const parsed = ReferenceElementModificationSchema.parse(context);
+    this.modifySubmodelBase(element, parsed);
+    if (parsed.value === null) {
+      element.value = parsed.value;
+    }
+    if (parsed.value !== undefined) {
+      if (element.value !== null) {
+        element.value.accept(this, parsed.value);
+      }
+      else {
+        element.value = Reference.fromPlain(parsed.value);
+      }
+    }
   }
 
   visitRelationshipElement(_element: RelationshipElement, _context: unknown): void {
