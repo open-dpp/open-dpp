@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
 } from "@nestjs/common";
+import { extractBetterAuthHeaders } from "../../auth/domain/better-auth-headers";
 import { Session } from "../../auth/domain/session";
 import { AuthSession } from "../../auth/presentation/decorators/auth-session.decorator";
 import { UsersService } from "../../users/application/services/users.service";
@@ -42,7 +43,7 @@ export class OrganizationsController {
         metadata: {},
       },
       session,
-      headers,
+      extractBetterAuthHeaders(headers),
     );
   }
 
@@ -74,7 +75,7 @@ export class OrganizationsController {
         logo: body.logo,
       },
       session,
-      headers,
+      extractBetterAuthHeaders(headers),
     );
     if (!updatedOrganization) {
       throw new BadRequestException();
@@ -87,7 +88,7 @@ export class OrganizationsController {
     @Headers() headers: Record<string, string>,
     @AuthSession() session: Session,
   ): Promise<Organization[]> {
-    return this.organizationsService.getMemberOrganizations(session.userId, headers);
+    return this.organizationsService.getMemberOrganizations(session.userId, extractBetterAuthHeaders(headers));
   }
 
   @Get(":id")
@@ -115,7 +116,7 @@ export class OrganizationsController {
       body.role,
       id,
       session,
-      headers,
+      extractBetterAuthHeaders(headers),
     );
   }
 

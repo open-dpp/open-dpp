@@ -1,4 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
 import { Session } from "../../../auth/domain/session";
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
@@ -24,7 +25,7 @@ export class OrganizationsService {
   async createOrganization(
     data: OrganizationCreateProps,
     session: Session,
-    headers: Record<string, string>,
+    headers: BetterAuthHeaders,
   ): Promise<Organization> {
     const existsWithSlug = await this.organizationsRepository.findOneBySlug(data.slug);
     if (existsWithSlug) {
@@ -49,7 +50,7 @@ export class OrganizationsService {
     organizationId: string,
     data: OrganizationUpdateProps,
     session: Session,
-    headers: Record<string, string>,
+    headers: BetterAuthHeaders,
   ): Promise<Organization | null> {
     const organization = await this.organizationsRepository.findOneById(organizationId);
     if (!organization) {
@@ -60,7 +61,7 @@ export class OrganizationsService {
     return await this.organizationsRepository.update(updatedOrganization, headers);
   }
 
-  async getMemberOrganizations(userId: string, headers: Record<string, string>): Promise<Organization[]> {
+  async getMemberOrganizations(userId: string, headers: BetterAuthHeaders): Promise<Organization[]> {
     this.logger.debug(`Getting organizations for user: ${userId}`);
     // Using default repo (BetterAuth) as per original handler
     return this.organizationsRepository.findManyByMember(headers);
@@ -85,7 +86,7 @@ export class OrganizationsService {
     role: string,
     organizationId: string,
     session: Session,
-    headers?: Record<string, string> | Headers,
+    headers?: BetterAuthHeaders,
   ): Promise<void> {
     const organization = await this.organizationsRepository.findOneById(organizationId);
     if (!organization) {

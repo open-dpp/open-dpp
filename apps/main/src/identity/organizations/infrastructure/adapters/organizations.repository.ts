@@ -4,6 +4,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { AUTH } from "../../../auth/auth.provider";
+import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
 import { Organization } from "../../domain/organization";
 import { OrganizationMapper } from "../mappers/organization.mapper";
 import { Organization as OrganizationSchema } from "../schemas/organization.schema";
@@ -16,7 +17,7 @@ export class OrganizationsRepository {
     @Inject(AUTH) private readonly auth: Auth,
   ) { }
 
-  async findManyByMember(headers: Record<string, string>): Promise<Organization[]> {
+  async findManyByMember(headers: BetterAuthHeaders): Promise<Organization[]> {
     const result = await (this.auth.api as any).listOrganizations({
       headers,
     });
@@ -28,7 +29,7 @@ export class OrganizationsRepository {
     return result.map((org: any) => OrganizationMapper.toDomainFromBetterAuth(org));
   }
 
-  async create(organization: Organization, headers: Record<string, string>): Promise<Organization | null> {
+  async create(organization: Organization, headers: BetterAuthHeaders): Promise<Organization | null> {
     try {
       const result = await (this.auth.api as any).createOrganization({
         headers,
@@ -49,7 +50,7 @@ export class OrganizationsRepository {
     }
   }
 
-  async update(organization: Organization, headers: Record<string, string>): Promise<Organization | null> {
+  async update(organization: Organization, headers: BetterAuthHeaders): Promise<Organization | null> {
     try {
       await (this.auth.api as any).updateOrganization({
         headers,

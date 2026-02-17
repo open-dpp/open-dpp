@@ -1,4 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
+import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { MemberWithUser } from "../../domain/member";
@@ -33,7 +34,7 @@ export class MembersService {
     return user !== null && user.role === UserRole.ADMIN;
   }
 
-  async getMemberOrganizations(userId: string, headers: Record<string, string>): Promise<Organization[]> {
+  async getMemberOrganizations(userId: string, headers: BetterAuthHeaders): Promise<Organization[]> {
     this.logger.debug(`Getting organizations for user: ${userId}`);
     // Using default repo (BetterAuth) as per original handler
     return this.organizationsRepository.findManyByMember(headers);
