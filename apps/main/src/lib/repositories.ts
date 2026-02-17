@@ -55,7 +55,8 @@ export async function findOne<T extends Document<string>, V>(id: string, docMode
 
 export async function findByIds<T extends Document<string>, V>(ids: string[], docModel: MongooseModel<T>, fromPlain: (plain: unknown) => V): Promise<Map<string, V>> {
   const result = new Map<string, V>();
-  if (ids.length === 0) return result;
+  if (ids.length === 0)
+    return result;
   const mongoDocs = await docModel.find({ _id: { $in: ids } });
   for (const doc of mongoDocs) {
     const domain = await convertToDomain(doc, fromPlain);

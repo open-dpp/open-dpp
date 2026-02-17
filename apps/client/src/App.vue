@@ -1,7 +1,7 @@
 <script lang="ts" setup>
+import { Toast } from "primevue";
 import { computed, defineAsyncComponent } from "vue";
 import { useRoute } from "vue-router";
-import { Toast } from "primevue";
 import ModalDialog from "./components/ModalDialog.vue";
 import SafelistTailwindCss from "./SafelistTailwindCss.vue";
 
