@@ -88,7 +88,6 @@ export type {
   UniqueProductIdentifierReferenceDto,
 } from './dpp/unique-product-identifiers/unique-product-identifiers.dtos'
 export { UniqueProductIdentifiersNamespace } from './dpp/unique-product-identifiers/unique-product-identifiers.namespace'
-export type { UserDto } from './dpp/users/user.dtos'
 export { UsersNamespace } from './dpp/users/users.namespace'
 export { MarketplaceApiClient } from './marketplace/marketplace-api-client'
 
