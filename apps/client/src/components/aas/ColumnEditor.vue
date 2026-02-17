@@ -1,11 +1,7 @@
 <script setup lang="ts">
-import type {
-  SubmodelElementModificationDto,
-} from "@open-dpp/dto";
-import type {
-  AasEditorPath,
-  ColumnEditorProps,
-} from "../../composables/aas-drawer.ts";
+import type { SubmodelElementModificationDto } from "@open-dpp/dto";
+import type { ColumnEditorProps } from "../../composables/aas-drawer.ts";
+import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { SubmodelElementModificationSchema } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 
@@ -14,13 +10,13 @@ import { computed } from "vue";
 import { z } from "zod";
 import { EditorMode } from "../../composables/aas-drawer.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
+
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
-const props = defineProps<{
-  path: AasEditorPath;
-  data: ColumnEditorProps;
-  callback: (data: SubmodelElementModificationDto) => Promise<void>;
-}>();
+const props
+  = defineProps<
+    SharedEditorProps<ColumnEditorProps, SubmodelElementModificationDto>
+  >();
 
 const columnFormSchema = z.object({
   ...SubmodelBaseFormSchema.shape,

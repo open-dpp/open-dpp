@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { SubmodelModificationDto, SubmodelResponseDto } from "@open-dpp/dto";
-import type { AasEditorPath } from "../../composables/aas-drawer.ts";
+import type { SubmodelModificationDto } from "@open-dpp/dto";
+import type { SubmodelEditorProps } from "../../composables/aas-drawer.ts";
+import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { computed } from "vue";
@@ -9,11 +10,10 @@ import { EditorMode } from "../../composables/aas-drawer.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
-const props = defineProps<{
-  path: AasEditorPath;
-  data: SubmodelResponseDto;
-  callback: (data: SubmodelModificationDto) => Promise<void>;
-}>();
+const props
+  = defineProps<
+    SharedEditorProps<SubmodelEditorProps, SubmodelModificationDto>
+  >();
 
 const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
@@ -43,6 +43,10 @@ defineExpose<{
 
 <template>
   <form class="flex flex-col gap-1 p-2">
-    <SubmodelBaseForm :show-errors="showErrors" :errors="errors" :editor-mode="EditorMode.EDIT" />
+    <SubmodelBaseForm
+      :show-errors="showErrors"
+      :errors="errors"
+      :editor-mode="EditorMode.EDIT"
+    />
   </form>
 </template>

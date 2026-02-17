@@ -176,11 +176,16 @@ export function useAasTableExtension({
     event: CellEditProps,
   ) {
     const { data: rowData, newValue, field, index: editedRowIndex } = event;
-    const ValueSchema = z.string().min(1);
-    const ValueParser = newValue.contentType ? z.object({ contentType: z.string(), value: ValueSchema }) : ValueSchema;
+    const ValueSchema = z.string().nullable();
+    const ValueParser = newValue?.contentType
+      ? z.object({ contentType: z.string(), value: ValueSchema })
+      : ValueSchema;
 
     const parsedNewValue = ValueParser.safeParse(newValue);
-    if (parsedNewValue.success && rowData[field] !== parsedNewValue.data) {
+    if (
+      parsedNewValue.success
+      && JSON.stringify(rowData[field]) !== JSON.stringify(parsedNewValue.data) // In the case of a file, the value is an object. Therefore, we need to compare by JSON.stringify.
+    ) {
       const modifications = rows.value.map((row, index) =>
         index === editedRowIndex
           ? { ...row, [field]: parsedNewValue.data }
@@ -233,7 +238,7 @@ export function useAasTableExtension({
         icon: "pi pi-arrow-down",
         command: async () => {
           await addRow({
-            position: options.position !== undefined ? options.position + 1 : 0,
+            position: options.position !== undefined ? options.position + 1 : rows.value.length,
           });
         },
       },
@@ -477,7 +482,10 @@ export function useAasTableExtension({
     });
   }
 
-  function formatCellValue(value: string, column: Column) {
+  function formatCellValue(value: Value, column: Column) {
+    if (value === null) {
+      return "N/A";
+    }
     switch (column.plain.valueType) {
       case DataTypeDef.Double:
         return new Intl.NumberFormat(selectedLanguage, {
