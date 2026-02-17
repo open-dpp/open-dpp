@@ -181,7 +181,7 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
 
   visitSubmodelElementCollection(element: SubmodelElementCollection, context: unknown): void {
     const parsed = SubmodelElementCollectionModificationSchema.parse(context);
-    this.modifySubmodelBase(element, context);
+    this.modifySubmodelBase(element, parsed);
     if (parsed.value !== undefined) {
       this.visitSubmodelElements(element, parsed.value);
     }

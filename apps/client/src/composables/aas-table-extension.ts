@@ -159,6 +159,7 @@ export function useAasTableExtension({
       );
       if (response.status !== HTTPCode.OK) {
         errorHandlingStore.logErrorWithNotification(errorMessage);
+        return false;
       }
       return true;
     }
