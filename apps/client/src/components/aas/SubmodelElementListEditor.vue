@@ -1,17 +1,11 @@
 <script setup lang="ts">
-import type { AasNamespace } from "@open-dpp/api-client";
-import type { SubmodelElementModificationDto } from "@open-dpp/dto";
-import type {
-  AasEditorPath,
-  EditorType,
-  OpenDrawerCallback,
-  SubmodelElementListEditorProps,
-} from "../../composables/aas-drawer.ts";
+import type { SubmodelElementListModificationDto } from "@open-dpp/dto";
+import type { SubmodelElementListEditorProps } from "../../composables/aas-drawer.ts";
 import type {
   ColumnMenuOptions,
   RowMenuOptions,
 } from "../../composables/aas-table-extension.ts";
-import type { IErrorHandlingStore } from "../../stores/error.handling.ts";
+import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { AasSubmodelElements } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { Button, Column, DataTable, InputText, Menu } from "primevue";
@@ -29,16 +23,13 @@ import FileField from "./form/FileField.vue";
 import PropertyValue from "./PropertyValue.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
-const props = defineProps<{
-  path: AasEditorPath;
-  data: SubmodelElementListEditorProps;
-  callback: (data: SubmodelElementModificationDto) => Promise<void>;
-  openDrawer: OpenDrawerCallback<EditorType, "CREATE" | "EDIT">;
-  aasNamespace: AasNamespace;
-  errorHandlingStore: IErrorHandlingStore;
-  id: string;
-  translate: (label: string, ...args: unknown[]) => string;
-}>();
+const props
+  = defineProps<
+    SharedEditorProps<
+      SubmodelElementListEditorProps,
+      SubmodelElementListModificationDto
+    >
+  >();
 
 const columnMenuPopover = ref();
 const rowMenuPopover = ref();
@@ -154,39 +145,48 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
         :field="col.idShort"
       >
         <template #header>
-          <Button
-            icon="pi pi-ellipsis-v"
-            severity="secondary"
-            size="small"
-            @click="
-              toggleColumnMenu($event, {
-                position: index,
-                addColumnActions: true,
-              })
-            "
-          />
-          <span>{{ col.label }}</span>
+          <div class="flex items-center gap-2">
+            <Button
+              icon="pi pi-ellipsis-v"
+              severity="secondary"
+              size="small"
+              @click="
+                toggleColumnMenu($event, {
+                  position: index,
+                  addColumnActions: true,
+                })
+              "
+            />
+            <span>{{ col.label }}</span>
+          </div>
         </template>
         <template #body="{ data: cellData, field, index: rowIndex }">
-          <div
-            v-if="typeof field === 'string' && cellData[field] != null"
-          >
-            <FileField
-              v-if="col.plain.modelType === AasSubmodelElements.File"
-              :id="`${rowIndex}-${field}`"
-              v-model="cellData[field].value"
-              v-model:content-type="cellData[field].contentType"
-              @update:model-value="(value) => onCellEditComplete({
-                data: cellData,
-                newValue: { value, contentType: cellData[field].contentType },
-                field,
-                index: rowIndex })"
-            />
-            <span v-else>
-              {{ formatCellValue(cellData[field], col) }}
-            </span>
+          <div class="m-2">
+            <div v-if="typeof field === 'string' && cellData[field] != null && cellData[field] !== ''">
+              <FileField
+                v-if="col.plain.modelType === AasSubmodelElements.File"
+                :id="`${rowIndex}-${field}`"
+                v-model="cellData[field].value"
+                v-model:content-type="cellData[field].contentType"
+                @update:model-value="
+                  (value) =>
+                    onCellEditComplete({
+                      data: cellData,
+                      newValue: {
+                        value,
+                        contentType: cellData[field].contentType,
+                      },
+                      field,
+                      index: rowIndex,
+                    })
+                "
+              />
+              <span v-else>
+                {{ formatCellValue(cellData[field], col) }}
+              </span>
+            </div>
+            <InputText v-else autofocus fluid readonly />
           </div>
-          <InputText v-else autofocus fluid />
         </template>
         <template
           v-if="col.plain.modelType !== AasSubmodelElements.File"

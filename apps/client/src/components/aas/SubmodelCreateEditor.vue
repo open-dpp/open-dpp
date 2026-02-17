@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { SubmodelRequestDto } from "@open-dpp/dto";
 import type { SubmodelCreateEditorProps } from "../../composables/aas-drawer.ts";
+import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { computed } from "vue";
@@ -14,10 +15,7 @@ import {
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
-const props = defineProps<{
-  data: SubmodelCreateEditorProps;
-  callback: (data: SubmodelRequestDto) => Promise<void>;
-}>();
+const props = defineProps<SharedEditorProps<SubmodelCreateEditorProps, SubmodelRequestDto>>();
 
 const propertyFormSchema = z.object({
   ...SubmodelBaseFormSchema.shape,

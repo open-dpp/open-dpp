@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import type { ReferenceElementModificationDto } from "@open-dpp/dto";
 import type {
-  AasEditorPath,
   ReferenceElementEditorProps,
 } from "../../composables/aas-drawer.ts";
+import type { SharedEditorProps } from "../../lib/aas-editor.ts";
+
 import {
 
   ReferenceElementModificationSchema,
 } from "@open-dpp/dto";
-
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { computed } from "vue";
@@ -17,12 +17,7 @@ import { EditorMode } from "../../composables/aas-drawer.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import ReferenceElementForm from "./ReferenceElementForm.vue";
 
-const props = defineProps<{
-  path: AasEditorPath;
-  data: ReferenceElementEditorProps;
-  callback: (data: ReferenceElementModificationDto) => Promise<void>;
-}>();
-
+const props = defineProps<SharedEditorProps<ReferenceElementEditorProps, ReferenceElementModificationDto>>();
 const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
   value: z.url(),

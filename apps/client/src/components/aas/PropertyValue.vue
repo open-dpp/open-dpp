@@ -49,7 +49,16 @@ const numericValue = computed({
 
 const textValue = computed({
   get: () => z.coerce.string().nullish().parse(props.modelValue),
-  set: v => emit("update:modelValue", z.coerce.string().nullish().parse(v)),
+  set: (v) => {
+    const newValue = z.coerce
+      .string()
+      .nullish()
+      .parse(v);
+    emit(
+      "update:modelValue",
+      newValue === "" ? null : newValue,
+    );
+  },
 });
 </script>
 
