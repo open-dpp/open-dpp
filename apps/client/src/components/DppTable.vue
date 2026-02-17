@@ -16,6 +16,7 @@ const props = defineProps<{
   currentPage: Page;
   hasPrevious: boolean;
   hasNext: boolean;
+  usesTemplates?: boolean;
 }>();
 
 const emits = defineEmits<{
@@ -82,7 +83,7 @@ const { t } = useI18n();
               @click="editItem(data.id)"
             />
           </div>
-          <div v-if="data.templateId" class="flex items-center rounded-md gap-2">
+          <div v-if="!usesTemplates" class="flex items-center rounded-md gap-2">
             <Button
               icon="pi pi-qrcode"
               severity="primary"
@@ -90,7 +91,7 @@ const { t } = useI18n();
               @click="forwardToPresentation(data.id)"
             />
           </div>
-          <div v-if="data.templateId" class="flex items-center rounded-md gap-2">
+          <div v-if="!usesTemplates" class="flex items-center rounded-md gap-2">
             <Button
               icon="pi pi-comments"
               severity="primary"

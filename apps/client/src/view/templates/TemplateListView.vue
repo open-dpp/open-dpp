@@ -37,6 +37,7 @@ onMounted(async () => {
     :items="templates ? templates.result : []"
     :loading="loading"
     :title="t('templates.label')"
+    :uses-templates="true"
     @reset-cursor="resetCursor"
     @create="createTemplate"
     @next-page="nextPage"
