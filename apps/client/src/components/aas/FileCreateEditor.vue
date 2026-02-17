@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import type { FileRequestDto } from "@open-dpp/dto";
-import type {
-  FileCreateEditorProps,
-} from "../../composables/aas-drawer.ts";
+import type { FileCreateEditorProps } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { FileJsonSchema } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
@@ -19,7 +17,8 @@ import {
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import FileForm from "./FileForm.vue";
 
-const props = defineProps<SharedEditorProps<FileCreateEditorProps, FileRequestDto>>();
+const props
+  = defineProps<SharedEditorProps<FileCreateEditorProps, FileRequestDto>>();
 
 const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
@@ -41,7 +40,12 @@ const showErrors = computed(() => {
 });
 
 const submit = handleSubmit(async (data) => {
-  await props.callback(FileJsonSchema.parse({ ...data }));
+  await props.callback(
+    FileJsonSchema.parse({
+      ...data,
+      contentType: data.contentType ?? "application/octet-stream",
+    }),
+  );
 });
 
 defineExpose<{
