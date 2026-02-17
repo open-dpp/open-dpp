@@ -40,7 +40,12 @@ const showErrors = computed(() => {
 });
 
 const submit = handleSubmit(async (data) => {
-  await props.callback(FileJsonSchema.parse({ ...data }));
+  await props.callback(
+    FileJsonSchema.parse({
+      ...data,
+      contentType: data.contentType ?? "application/octet-stream",
+    }),
+  );
 });
 
 defineExpose<{

@@ -182,7 +182,10 @@ export function useAasTableExtension({
       : ValueSchema;
 
     const parsedNewValue = ValueParser.safeParse(newValue);
-    if (parsedNewValue.success && rowData[field] !== parsedNewValue.data) {
+    if (
+      parsedNewValue.success
+      && JSON.stringify(rowData[field]) !== JSON.stringify(parsedNewValue.data) // In the case of a file, the value is an object. Therefore, we need to compare by JSON.stringify.
+    ) {
       const modifications = rows.value.map((row, index) =>
         index === editedRowIndex
           ? { ...row, [field]: parsedNewValue.data }

@@ -28,7 +28,7 @@ const { value: contentType } = useField<string | undefined>("contentType");
     />
     <div class="grid lg:grid-cols-3 grid-cols-1 gap-2">
       <div class="flex flex-col gap-2">
-        <FileField v-model="value" v-model:change-content-type="contentType" />
+        <FileField v-model="value" v-model:content-type="contentType" />
         <Message
           v-if="errorMessage"
           size="small"

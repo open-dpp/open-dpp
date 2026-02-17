@@ -20,26 +20,30 @@ const emit = defineEmits<{
 
 const { locale } = useI18n();
 
-const NUMERIC_TYPES = new Set<DataTypeDefType>([
-  DataTypeDef.Double,
+const INTEGER_TYPES = new Set<DataTypeDefType>([
   DataTypeDef.Int,
   DataTypeDef.Long,
-  DataTypeDef.Float,
-  DataTypeDef.Decimal,
   DataTypeDef.Integer,
   DataTypeDef.NegativeInteger,
   DataTypeDef.NonNegativeInteger,
-  DataTypeDef.NonPositiveInteger,
-  DataTypeDef.PositiveInteger,
-  DataTypeDef.Short,
-  DataTypeDef.UnsignedByte,
-  DataTypeDef.UnsignedInt,
-  DataTypeDef.UnsignedLong,
   DataTypeDef.UnsignedShort,
+]);
+
+const NUMERIC_TYPES = new Set<DataTypeDefType>([
+  ...INTEGER_TYPES,
+  DataTypeDef.Double,
+  DataTypeDef.Float,
+  DataTypeDef.Decimal,
+  DataTypeDef.Byte,
+  DataTypeDef.UnsignedByte,
 ]);
 
 const isNumeric = computed(() =>
   props.valueType ? NUMERIC_TYPES.has(props.valueType) : false,
+);
+
+const maxFractionDigits = computed(() =>
+  props.valueType && INTEGER_TYPES.has(props.valueType) ? 0 : 5,
 );
 
 const numericValue = computed({
@@ -64,7 +68,7 @@ const textValue = computed({
     :disabled="props.disabled"
     :invalid="props.invalid"
     :locale="locale"
-    :max-fraction-digits="5"
+    :max-fraction-digits="maxFractionDigits"
     show-buttons
   />
   <InputText
