@@ -1,5 +1,5 @@
-import { Injectable, Logger } from "@nestjs/common";
 import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
+import { Injectable, Logger } from "@nestjs/common";
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { MemberWithUser } from "../../domain/member";

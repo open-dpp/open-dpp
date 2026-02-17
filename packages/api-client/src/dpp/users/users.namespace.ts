@@ -1,5 +1,5 @@
+import type { UserDto } from '@open-dpp/dto'
 import type { AxiosInstance } from 'axios'
-import {UserDto} from "@open-dpp/dto";
 
 export class UsersNamespace {
   constructor(private readonly axiosInstance: AxiosInstance) { }

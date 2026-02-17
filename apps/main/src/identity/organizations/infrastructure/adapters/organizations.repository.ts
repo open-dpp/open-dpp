@@ -1,10 +1,10 @@
 import type { Auth } from "better-auth";
+import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
 import { Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { AUTH } from "../../../auth/auth.provider";
-import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
 import { Organization } from "../../domain/organization";
 import { OrganizationMapper } from "../mappers/organization.mapper";
 import { Organization as OrganizationSchema } from "../schemas/organization.schema";

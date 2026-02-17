@@ -1,5 +1,5 @@
-import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { Session } from "../../../auth/domain/session";
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
@@ -9,7 +9,6 @@ import { Organization, OrganizationCreateProps, OrganizationUpdateProps } from "
 import { InvitationsRepository } from "../../infrastructure/adapters/invitations.repository";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
-
 
 @Injectable()
 export class OrganizationsService {

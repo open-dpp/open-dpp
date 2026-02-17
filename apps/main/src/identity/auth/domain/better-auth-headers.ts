@@ -8,8 +8,8 @@
  * - `x-api-key`: API key for programmatic access
  */
 export interface BetterAuthHeaders {
-  cookie?: string;
-  authorization?: string;
+  "cookie"?: string;
+  "authorization"?: string;
   "x-api-key"?: string;
 }
 

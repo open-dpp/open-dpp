@@ -1,9 +1,9 @@
 import type { Auth } from "better-auth";
+import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
 import { Inject, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { AUTH } from "../../../auth/auth.provider";
-import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
 import { Invitation } from "../../domain/invitation";
 import { InvitationStatus } from "../../domain/invitation-status.enum";
 import { InvitationMapper } from "../mappers/invitation.mapper";

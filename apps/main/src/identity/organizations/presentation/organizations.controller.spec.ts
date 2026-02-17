@@ -1,5 +1,5 @@
-import type { Auth } from "better-auth";
 import type { INestApplication } from "@nestjs/common";
+import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
 import { describe, expect, it, jest } from "@jest/globals";
 import { APP_GUARD } from "@nestjs/core";
