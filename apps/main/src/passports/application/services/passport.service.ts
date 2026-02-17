@@ -110,10 +110,13 @@ export class PassportService {
 
     // Re-doing the map logic with ID tracking
     const oldIdToNewSubmodelMap = new Map<string, Submodel>();
-    data.environment.submodels.forEach((submodelData) => {
-      // assume submodelData has the old ID
+    data.environment.submodels.forEach((submodelData, index) => {
       const oldId = submodelData.id;
       if (!oldId || typeof oldId !== "string") {
+        this.logger.warn(
+          `Skipping submodel at index ${index} during import: missing or invalid id (got ${JSON.stringify(oldId)}). `
+          + `Available fields: idShort=${JSON.stringify(submodelData.idShort)}, modelType=${JSON.stringify(submodelData.modelType)}`,
+        );
         return;
       }
 
