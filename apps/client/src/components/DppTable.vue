@@ -154,6 +154,8 @@ const { t } = useI18n();
             <Button
               icon="pi pi-pencil"
               severity="primary"
+              :aria-label="t('common.edit')"
+              :title="t('common.edit')"
               @click="editItem(data.id)"
             />
           </div>
@@ -161,6 +163,8 @@ const { t } = useI18n();
             <Button
               icon="pi pi-qrcode"
               severity="primary"
+              :aria-label="t('common.openPresentation')"
+              :title="t('common.openPresentation')"
               @click="forwardToPresentation(data.id)"
             />
           </div>
@@ -168,6 +172,8 @@ const { t } = useI18n();
             <Button
               icon="pi pi-comments"
               severity="primary"
+              :aria-label="t('common.openChat')"
+              :title="t('common.openChat')"
               @click="forwardToPresentationChat(data.id)"
             />
           </div>
@@ -175,6 +181,8 @@ const { t } = useI18n();
             <Button
               icon="pi pi-download"
               severity="secondary"
+              :aria-label="t('common.exportPassport')"
+              :title="t('common.exportPassport')"
               @click="exportPassport(data.id)"
             />
           </div>

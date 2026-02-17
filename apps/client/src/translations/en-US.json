@@ -48,7 +48,10 @@
     "back": "Back",
     "call": "Call",
     "website": "Website",
-    "contact": "Contact"
+    "contact": "Contact",
+    "openPresentation": "Open presentation",
+    "openChat": "Open chat",
+    "exportPassport": "Export passport"
   },
   "aasEditor": {
     "addTextField": "Add text field",
