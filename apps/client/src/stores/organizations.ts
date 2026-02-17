@@ -13,8 +13,14 @@ export const useOrganizationsStore = defineStore("organizations", () => {
   };
 
   const fetchOrganizations = async () => {
-    const { data } = await apiClient.dpp.organizations.getMemberOrganizations();
-    organizations.value = data || [];
+    const notificationsStore = useNotificationStore();
+    try {
+      const { data } = await apiClient.dpp.organizations.getMemberOrganizations();
+      organizations.value = data || [];
+    }
+    catch (error: any) {
+      notificationsStore.addErrorNotification(error.message ?? "Error fetching organizations");
+    }
   };
 
   const createOrganization = async (orgData: { name: string }) => {
@@ -37,18 +43,19 @@ export const useOrganizationsStore = defineStore("organizations", () => {
   };
 
   async function fetchCurrentOrganization() {
-    // getFullOrganization likely fetched by ID or current active one.
-    // If better-auth had a context, we need to know WHICH org.
-    // Assuming this function used fetching by ID from session or something?
-    // authClient.organization.getFullOrganization() gets the organization in the active session.
-    // We can't easily replace this unless we know the active org ID.
-    // If the session has activeOrganizationId, we use getById.
-    const { data: session } = await authClient.getSession();
-    if (session?.session.activeOrganizationId) {
-      const { data } = await apiClient.dpp.organizations.getById(session.session.activeOrganizationId);
-      return data;
+    const notificationsStore = useNotificationStore();
+    try {
+      const { data: session } = await authClient.getSession();
+      if (session?.session.activeOrganizationId) {
+        const { data } = await apiClient.dpp.organizations.getById(session.session.activeOrganizationId);
+        return data;
+      }
+      return null;
     }
-    return null;
+    catch (error: any) {
+      notificationsStore.addErrorNotification(error.message ?? "Error fetching current organization");
+      return null;
+    }
   }
 
   return { organizations, fetchOrganizations, createOrganization, fetchCurrentOrganization };
