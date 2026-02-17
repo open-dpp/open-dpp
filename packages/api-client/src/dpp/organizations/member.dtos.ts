@@ -1,11 +1,1 @@
-import type { UserDto } from '../users/user.dtos'
-
-export interface MemberDto {
-  id: string
-  organizationId: string
-  userId: string
-  role: string
-  createdAt: Date
-  updatedAt: Date
-  user?: UserDto
-}
+export type { MemberDto } from '@open-dpp/dto'
