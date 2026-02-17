@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import {randomUUID} from "node:crypto";
 
 export interface AccountCreateProps {
   userId: string;
@@ -66,18 +66,9 @@ export class Account {
 
   public static create(data: AccountCreateProps) {
     const now = new Date();
-    // ID generation would typically happen here or in the repo.
-    // Assuming for now the ID is generated externally or we need a generator similar to User.
-    // However, the User entity had a generate24CharId function. I should probably duplicate that or import it if possible,
-    // but utils.ts was in the root which might not be accessible or I should just copy it.
-    // Looking at User.ts again, it had generate24CharId locally defined. I will do the same.
-
-    // BUT wait, better-auth might handle IDs differently? The prompt says "id string Unique identifier".
-    // I will use a simple implementation for now, or just assume the ID is passed in props if it was consistent with others.
-    // Re-reading User.ts: generate24CharId IS usage. I will copy it.
 
     return new Account(
-      generate24CharId(),
+      randomUUID(),
       data.userId,
       data.accountId,
       data.providerId,
@@ -110,10 +101,4 @@ export class Account {
       data.password,
     );
   }
-}
-
-function generate24CharId(): string {
-  const timestamp = Math.floor(Date.now() / 1000).toString(16).padStart(8, "0");
-  const random = randomBytes(8).toString("hex");
-  return timestamp + random;
 }
