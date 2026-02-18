@@ -107,6 +107,10 @@ export class OrganizationsService {
       }
     }
 
+    if (!Object.values(MemberRole).includes(role as MemberRole)) {
+      throw new BadRequestException(`Invalid role: ${role}`);
+    }
+
     const organization = await this.organizationsRepository.findOneById(organizationId);
     if (!organization) {
       throw new NotFoundException("Organization not found");

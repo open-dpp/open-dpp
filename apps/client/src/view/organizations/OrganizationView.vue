@@ -32,8 +32,12 @@ async function fetchOrganization() {
     props.organizationId,
   );
   organization.value = response.data;
-  const membersResponse = await apiClient.dpp.organizations.getMembers(props.organizationId);
-  members.value = membersResponse.data;
+  try {
+    const membersResponse = await apiClient.dpp.organizations.getMembers(props.organizationId);
+    members.value = membersResponse.data ?? [];
+  } catch (e) {
+    console.error("Failed to fetch organization members", e);
+  }
 }
 
 onMounted(async () => {
@@ -108,11 +112,11 @@ onMounted(async () => {
                     <span
                       v-if="member.role === 'owner'"
                       class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
-                    >{{ t('organizations.memberAdmin') }}</span>
+                    >{{ t('organizations.memberCreator') }}</span>
                     <span
                       v-if="member.role === 'admin'"
                       class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
-                    >{{ t('organizations.memberCreator') }}</span>
+                    >{{ t('organizations.memberAdmin') }}</span>
                   </div>
                 </div>
                 <div class="ml-4 shrink-0">

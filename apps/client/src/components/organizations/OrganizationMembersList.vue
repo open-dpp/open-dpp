@@ -75,7 +75,7 @@ const layoutStore = useLayoutStore();
                     </div>
                     <div class="ml-4">
                       <div class="font-medium text-gray-900">
-                        {{ member.user?.email }}
+                        {{ member.user?.name || member.user?.email }}
                       </div>
                       <div class="mt-1 text-gray-500">
                         {{ member.user?.email }}
@@ -91,10 +91,16 @@ const layoutStore = useLayoutStore();
                     {{ t('organizations.memberCreator') }}
                   </div>
                   <div
-                    v-if="member.role === 'admin'"
-                    class="mt-1 text-gray-500"
+                    v-else-if="member.role === 'admin'"
+                    class="text-gray-500"
                   >
                     {{ t('organizations.memberAdmin') }}
+                  </div>
+                  <div
+                    v-else
+                    class="text-gray-500"
+                  >
+                    {{ t('organizations.member') }}
                   </div>
                 </td>
               </tr>
