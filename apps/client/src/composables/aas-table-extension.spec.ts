@@ -490,7 +490,7 @@ describe("aasTableExtension composable", () => {
     buildRowMenu({ position: 1 });
 
     const addRowButton = rowMenu.value
-      .find(e => e.label === "aasEditor.table.addRow")!;
+      .find(e => e.label === "aasEditor.table.addRowAbove")!;
 
     mocks.addRowToSubmodelElementList.mockResolvedValue({
       status: HTTPCode.CREATED,
