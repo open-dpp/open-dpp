@@ -36,24 +36,26 @@ const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
 });
 
-const submit = handleSubmit(async (data) => {
-  const body = ReferenceElementModificationSchema.parse({
-    ...data,
-    value: {
-      type: props.data.value.type,
-      keys: [
-        {
-          type: props.data.value.keys[0].type,
-          value: data.value,
-        },
-      ],
-    },
-  });
-  await props.callback(body);
-});
+async function submit() {
+  await handleSubmit(async (data) => {
+    const body = ReferenceElementModificationSchema.parse({
+      ...data,
+      value: {
+        type: props.data.value.type,
+        keys: [
+          {
+            type: props.data.value.keys[0].type,
+            value: data.value,
+          },
+        ],
+      },
+    });
+    await props.callback(body);
+  })();
+}
 
 defineExpose<{
-  submit: () => Promise<Promise<void> | undefined>;
+  submit: () => Promise<void>;
 }>({
   submit,
 });

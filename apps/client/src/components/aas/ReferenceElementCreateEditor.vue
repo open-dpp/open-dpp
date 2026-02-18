@@ -40,23 +40,25 @@ const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
 });
 
-const submit = handleSubmit(async (data) => {
-  await props.callback(
-    ReferenceElementJsonSchema.parse({
-      ...data,
-      value: {
-        type: ReferenceTypes.ExternalReference,
-        keys: [{
-          type: KeyTypes.GlobalReference,
-          value: data.value,
-        }],
-      },
-    }),
-  );
-});
+async function submit() {
+  await handleSubmit(async (data) => {
+    await props.callback(
+      ReferenceElementJsonSchema.parse({
+        ...data,
+        value: {
+          type: ReferenceTypes.ExternalReference,
+          keys: [{
+            type: KeyTypes.GlobalReference,
+            value: data.value,
+          }],
+        },
+      }),
+    );
+  })();
+}
 
 defineExpose<{
-  submit: () => Promise<Promise<void> | undefined>;
+  submit: () => Promise<void>;
 }>({
   submit,
 });

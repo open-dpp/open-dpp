@@ -13,7 +13,9 @@ import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import PropertyForm from "./PropertyForm.vue";
 
 const props
-  = defineProps<SharedEditorProps<PropertyEditorProps, PropertyModificationDto>>();
+  = defineProps<
+    SharedEditorProps<PropertyEditorProps, PropertyModificationDto>
+  >();
 
 const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
@@ -31,12 +33,14 @@ const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
 });
 
-const submit = handleSubmit(async (data) => {
-  await props.callback(PropertyModificationSchema.parse({ ...data }));
-});
+async function submit() {
+  await handleSubmit(async (data) => {
+    await props.callback(PropertyModificationSchema.parse({ ...data }));
+  })();
+}
 
 defineExpose<{
-  submit: () => Promise<Promise<void> | undefined>;
+  submit: () => Promise<void>;
 }>({
   submit,
 });

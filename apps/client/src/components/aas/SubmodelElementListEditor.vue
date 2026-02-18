@@ -77,13 +77,15 @@ const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
 });
 
-const submit = handleSubmit(async (data) => {
-  await save();
-  await props.callback({ ...data });
-});
+async function submit() {
+  await handleSubmit(async (data) => {
+    await save();
+    await props.callback({ ...data });
+  })();
+}
 
 defineExpose<{
-  submit: () => Promise<Promise<void> | undefined>;
+  submit: () => Promise<void>;
 }>({
   submit,
 });

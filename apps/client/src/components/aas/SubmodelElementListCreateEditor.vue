@@ -43,16 +43,18 @@ const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
 });
 
-const submit = handleSubmit(async (data) => {
-  await props.callback({
-    ...data,
-    typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
-    orderRelevant: true,
-  });
-});
+async function submit() {
+  await handleSubmit(async (data) => {
+    await props.callback({
+      ...data,
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      orderRelevant: true,
+    });
+  })();
+}
 
 defineExpose<{
-  submit: () => Promise<Promise<void> | undefined>;
+  submit: () => Promise<void>;
 }>({
   submit,
 });
