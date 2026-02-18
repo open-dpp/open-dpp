@@ -40,9 +40,9 @@ export class OrganizationsService {
       organizationId: createdOrganization.id,
       role: MemberRole.OWNER,
     });
-    createdOrganization.addMember(owner);
+    const organizationWithOwner = createdOrganization.addMember(owner);
     await this.membersRepository.save(owner);
-    return createdOrganization;
+    return organizationWithOwner;
   }
 
   async updateOrganization(

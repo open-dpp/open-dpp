@@ -88,11 +88,19 @@ export class Organization {
     return this.members.some(m => m.id === member.id);
   }
 
-  addMember(member: Member) {
+  addMember(member: Member): Organization {
     if (this.isMember(member)) {
-      return;
+      return this;
     }
-    this.members.push(member);
+    return new Organization(
+      this.id,
+      this.name,
+      this.slug,
+      this.logo,
+      this.metadata,
+      this.createdAt,
+      [...this.members, member],
+    );
   }
 
   inviteMember(email: string, inviterId: string, role: MemberRole): Invitation {

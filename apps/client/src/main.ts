@@ -62,10 +62,11 @@ async function startApp() {
     if (organizationStore.organizations.length === 0) {
       indexStore.selectOrganization(null);
     }
+    else if (session.session.activeOrganizationId) {
+      indexStore.selectOrganization(session.session.activeOrganizationId);
+    }
     else {
-      if (session.session.activeOrganizationId) {
-        indexStore.selectOrganization(session.session.activeOrganizationId);
-      }
+      indexStore.selectOrganization(organizationStore.organizations[0]!.id);
     }
   }
 

@@ -64,6 +64,8 @@ describe("sessionSchema", () => {
         userId: expect.anything(),
         token: expect.anything(),
         expiresAt: expect.anything(),
+        createdAt: expect.anything(),
+        updatedAt: expect.anything(),
       },
     });
   });

@@ -19,13 +19,22 @@ export const AuthProvider: Provider = {
     const logger = new Logger("AuthProvider");
 
     if (mongooseConnection.readyState !== 1) {
+      const connectionTimeoutMs = 30_000;
       await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(() => {
+          mongooseConnection.off("open", onOpen);
+          mongooseConnection.off("error", onError);
+          reject(new Error(`MongoDB connection timed out after ${connectionTimeoutMs}ms (readyState: ${mongooseConnection.readyState})`));
+        }, connectionTimeoutMs);
+
         function onOpen() {
+          clearTimeout(timer);
           mongooseConnection.off("error", onError);
           resolve();
         }
 
         function onError(error: any) {
+          clearTimeout(timer);
           mongooseConnection.off("open", onOpen);
           reject(error);
         }

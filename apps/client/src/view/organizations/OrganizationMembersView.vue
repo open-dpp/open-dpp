@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { MemberDto } from "@open-dpp/api-client";
-import { onMounted, ref } from "vue";
+import { ref, watch } from "vue";
 import OrganizationInvitationsList from "../../components/organizations/OrganizationInvitationsList.vue";
 import OrganizationMembersList from "../../components/organizations/OrganizationMembersList.vue";
 import apiClient from "../../lib/api-client";
@@ -22,9 +22,7 @@ async function fetchMembers() {
   }
 }
 
-onMounted(async () => {
-  await fetchMembers();
-});
+watch(() => indexStore.selectedOrganization, fetchMembers, { immediate: true });
 </script>
 
 <template>
