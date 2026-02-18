@@ -19,8 +19,8 @@ export class UsersController {
   ) { }
 
   @Post()
-  async createUser(@Body(new ZodValidationPipe(CreateUserDtoSchema)) body: CreateUserDto) {
-    await this.usersService.createUser(body.email, body.firstName, body.lastName);
+  async createUser(@Body(new ZodValidationPipe(CreateUserDtoSchema)) body: CreateUserDto): Promise<User> {
+    return this.usersService.createUser(body.email, body.firstName, body.lastName);
   }
 
   @Get(":id")

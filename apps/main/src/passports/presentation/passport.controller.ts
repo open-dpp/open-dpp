@@ -55,7 +55,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     const pagination = Pagination.create({ limit, cursor });
     const activeOrganizationId = session.activeOrganizationId;
     if (!activeOrganizationId) {
-      throw new BadRequestException();
+      throw new BadRequestException("activeOrganizationId is required in session");
     }
     return PassportPaginationDtoSchema.parse(
       (await this.passportRepository.findAllByOrganizationId(activeOrganizationId, pagination)).toPlain(),
@@ -69,7 +69,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
   ): Promise<PassportDto> {
     const activeOrganizationId = session.activeOrganizationId;
     if (!activeOrganizationId) {
-      throw new BadRequestException();
+      throw new BadRequestException("activeOrganizationId is required in session");
     }
     let environment: Environment;
     if (body && body.templateId) {
@@ -161,7 +161,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @LimitQueryParam() limit: number | undefined,
-    @CursorQueryParam() cursor: string | undefined, @RequestParam()
+    @CursorQueryParam() cursor: string | undefined,
     @AuthSession() session: Session,
   ): Promise<SubmodelElementPaginationResponseDto> {
     const passport = await this.loadPassportAndCheckOwnership(id, session);

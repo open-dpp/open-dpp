@@ -126,10 +126,6 @@ describe("templateDraftController", () => {
     await betterAuthHelper.createOrganization(user2data?.user.id as string);
   });
 
-  afterAll(async () => {
-    await app.close();
-  });
-
   const userNotMemberTxt = `fails if user is not member of organization`;
   const draftDoesNotBelongToOrga = `fails if draft does not belong to organization`;
 

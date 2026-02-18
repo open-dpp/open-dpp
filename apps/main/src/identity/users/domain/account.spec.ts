@@ -18,6 +18,7 @@ describe("account", () => {
     expect(account.providerId).toBe(props.providerId);
     expect(account.accessToken).toBe(props.accessToken);
     expect(account.createdAt).toBeInstanceOf(Date);
+    expect(account.updatedAt).toBeInstanceOf(Date);
   });
 
   it("should load account from database properties", () => {
@@ -36,6 +37,10 @@ describe("account", () => {
 
     expect(account.id).toBe(dbProps.id);
     expect(account.userId).toBe(dbProps.userId);
+    expect(account.accountId).toBe(dbProps.accountId);
+    expect(account.providerId).toBe(dbProps.providerId);
     expect(account.createdAt).toEqual(dbProps.createdAt);
+    expect(account.updatedAt).toEqual(dbProps.updatedAt);
+    expect(account.accessToken).toBe(dbProps.accessToken);
   });
 });

@@ -12,8 +12,14 @@ const indexStore = useIndexStore();
 async function fetchMembers() {
   if (!indexStore.selectedOrganization)
     return;
-  const { data } = await apiClient.dpp.organizations.getMembers(indexStore.selectedOrganization);
-  members.value = data;
+  try {
+    const { data } = await apiClient.dpp.organizations.getMembers(indexStore.selectedOrganization);
+    members.value = data;
+  }
+  catch (error) {
+    console.error("Failed to fetch members", error);
+    members.value = [];
+  }
 }
 
 onMounted(async () => {

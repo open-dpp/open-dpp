@@ -37,6 +37,7 @@ async function fetchOrganization() {
     members.value = membersResponse.data ?? [];
   } catch (e) {
     console.error("Failed to fetch organization members", e);
+    members.value = [];
   }
 }
 

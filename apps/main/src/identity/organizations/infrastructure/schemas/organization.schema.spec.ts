@@ -42,7 +42,7 @@ describe("organizationSchema", () => {
     const org = new OrganizationModel(orgData);
     const savedOrg = await org.save();
 
-    expect(savedOrg._id).toBe(orgData._id);
+    expect(savedOrg._id.toString()).toBe(orgData._id.toString());
     expect(savedOrg.name).toBe(orgData.name);
     expect(savedOrg.slug).toBe(orgData.slug);
   });

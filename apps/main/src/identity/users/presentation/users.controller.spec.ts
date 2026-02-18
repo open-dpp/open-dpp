@@ -25,8 +25,11 @@ describe("UsersController", () => {
 
   it("should create user", async () => {
     const dto = { email: "test@example.com", firstName: "John", lastName: "Doe" };
-    await controller.createUser(dto);
+    const createdUser = { id: "1", ...dto };
+    mockService.createUser.mockResolvedValue(createdUser);
+    const result = await controller.createUser(dto);
     expect(mockService.createUser).toHaveBeenCalledWith(dto.email, dto.firstName, dto.lastName);
+    expect(result).toEqual(createdUser);
   });
 
   it("should get user by id", async () => {

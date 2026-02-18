@@ -23,8 +23,6 @@ describe("session", () => {
     expect(session.activeTeamId).toBe(props.activeTeamId);
     expect(session.createdAt).toBeInstanceOf(Date);
     expect(session.updatedAt).toBeInstanceOf(Date);
-    expect(session.createdAt).toBeInstanceOf(Date);
-    expect(session.updatedAt).toBeInstanceOf(Date);
     expect(session.expiresAt).toBeInstanceOf(Date);
     expect(session.expiresAt.getTime()).toBeGreaterThan(session.createdAt.getTime());
   });

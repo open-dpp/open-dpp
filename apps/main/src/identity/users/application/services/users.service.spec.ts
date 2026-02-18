@@ -29,8 +29,17 @@ describe("UsersService", () => {
   });
 
   it("should create user", async () => {
-    await service.createUser("test@example.com", "John", "Doe");
+    const savedUser = User.create({ email: "test@example.com", firstName: "John", lastName: "Doe" });
+    mockRepo.save.mockResolvedValue(savedUser);
+    const result = await service.createUser("test@example.com", "John", "Doe");
     expect(mockRepo.save).toHaveBeenCalledWith(expect.any(User));
+    expect(result).toBe(savedUser);
+  });
+
+  it("should throw if save returns null", async () => {
+    mockRepo.save.mockResolvedValue(null);
+    await expect(service.createUser("test@example.com", "John", "Doe"))
+      .rejects.toThrow("Failed to save user with email test@example.com");
   });
 
   it("should find one by id", async () => {

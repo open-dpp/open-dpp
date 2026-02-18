@@ -10,14 +10,18 @@ export class UsersService {
     private readonly usersRepository: UsersRepository,
   ) { }
 
-  async createUser(email: string, firstName: string, lastName: string): Promise<void> {
+  async createUser(email: string, firstName: string, lastName: string): Promise<User> {
     const user = User.create({
       email,
       firstName,
       lastName,
       role: UserRole.USER,
     });
-    await this.usersRepository.save(user);
+    const saved = await this.usersRepository.save(user);
+    if (!saved) {
+      throw new Error(`Failed to save user with email ${email}`);
+    }
+    return saved;
   }
 
   async findOne(id: string) {

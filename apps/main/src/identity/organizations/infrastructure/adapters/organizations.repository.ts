@@ -81,7 +81,7 @@ export class OrganizationsRepository {
   }
 
   async findManyByIds(ids: string[]): Promise<Organization[]> {
-    const documents = await this.organizationModel.find({ _id: { $in: ids } });
+    const documents = await this.organizationModel.find({ _id: { $in: ids.map(id => new ObjectId(id)) } });
     return documents.map(OrganizationMapper.toDomain);
   }
 
