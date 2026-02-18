@@ -1,16 +1,23 @@
 import { randomUUID } from "node:crypto";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
-import { IdParamSchema, IdShortPathParamSchema } from "./aas.decorators";
+import { IdParamSchema, IdShortPathParamSchema, PositionQueryParamSchema } from "./aas.decorators";
 
-describe("idParamSchema", () => {
-  it("should parse uuid", () => {
-    const uuid = randomUUID();
-    expect(IdParamSchema.parse(uuid)).toEqual(uuid);
+describe("query params", () => {
+  it("should parse position", () => {
+    const position = "1";
+    expect(PositionQueryParamSchema.parse(position)).toEqual(1);
   });
 
-  it("should parse base64 encoded IRI", () => {
-    const url = "https://smartfactory.de/submodels/ObSfHebEIR";
-    expect(IdParamSchema.parse(btoa(url))).toEqual(url);
+  describe("idParamSchema", () => {
+    it("should parse uuid", () => {
+      const uuid = randomUUID();
+      expect(IdParamSchema.parse(uuid)).toEqual(uuid);
+    });
+
+    it("should parse base64 encoded IRI", () => {
+      const url = "https://smartfactory.de/submodels/ObSfHebEIR";
+      expect(IdParamSchema.parse(btoa(url))).toEqual(url);
+    });
   });
 });
 

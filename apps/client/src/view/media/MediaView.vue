@@ -1,6 +1,7 @@
 <script lang="ts" setup>
+import type { FileUploadSelectEvent } from "primevue";
 import type { MediaInfo } from "../../components/media/MediaInfo.interface";
-import { CloudArrowUpIcon } from "@heroicons/vue/24/outline";
+import { FileUpload } from "primevue";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import MediaDetailsSidebar from "../../components/media/MediaDetailsSidebar.vue";
@@ -17,7 +18,6 @@ const indexStore = useIndexStore();
 
 const selected = ref<Array<MediaInfo>>([]);
 const sidebarOpen = ref<boolean>(false);
-const fileInput = ref<HTMLInputElement>();
 const selectedLocalFile = ref<File | null>(null);
 const selectedFile = ref<MediaInfo | null>(null);
 const uploadProgress = ref<number>(0);
@@ -43,13 +43,13 @@ async function uploadFile() {
   catch (error: unknown) {
     const err = handleApiError(error);
     if (err instanceof LimitError) {
-      notificationStore.addErrorNotification(t(`api.error.limit.${err.key}`, { limit: err.limit }));
+      notificationStore.addErrorNotification(
+        t(`api.error.limit.${err.key}`, { limit: err.limit }),
+      );
     }
     else {
       console.error("Fehler beim Hochladen der Datei:", error);
-      notificationStore.addErrorNotification(
-        t("file.uploadError"),
-      );
+      notificationStore.addErrorNotification(t("file.uploadError"));
     }
     selectedFile.value = null;
   }
@@ -58,16 +58,9 @@ async function uploadFile() {
   }
 }
 
-function openFileInput() {
-  if (fileInput.value) {
-    fileInput.value.click();
-  }
-}
-
-async function selectFile(event: Event) {
-  const target = event.target as HTMLInputElement;
-  if (target.files && target.files.length > 0) {
-    selectedLocalFile.value = target.files[0] as File;
+async function onFileSelect(event: FileUploadSelectEvent) {
+  if (event.files && event.files.length > 0) {
+    selectedLocalFile.value = event.files[0] as File;
     await uploadFile();
   }
   else {
@@ -78,26 +71,15 @@ async function selectFile(event: Event) {
 
 <template>
   <div class="flex flex-row gap-3 h-full w-full">
-    <form>
-      <input
-        v-show="false"
-        ref="fileInput"
-        class="cursor-pointer select-none py-1.5 text-gray-900 placeholder:text-gray-400 sm:text-sm sm:leading-6"
-        readonly
-        type="file"
-        @change="selectFile"
-      >
-    </form>
     <div class="mt-8 flex flex-col gap-10 grow">
-      <div class="flex justify-end">
-        <button
-          class="flex flex-row gap-2 p-3 bg-[#6BAD87]/20 rounded-full hover:cursor-pointer"
-          @click="openFileInput"
-        >
-          <CloudArrowUpIcon class="w-5 h-5 my-auto text-black" />
-          <span>{{ t('file.upload') }}</span>
-        </button>
-      </div>
+      <FileUpload
+        mode="basic"
+        :auto="true"
+        accept="image/jpeg, image/png, application/pdf"
+        :choose-label="t('file.upload')"
+        custom-upload
+        @select="onFileSelect"
+      />
       <div>
         <MediaGrid
           :multiple="false"
@@ -111,7 +93,11 @@ async function selectFile(event: Event) {
       v-if="sidebarOpen"
       class="flex flex-col gap-4 w-sm shadow-sm p-4 h-full shrink"
     >
-      <MediaDetailsSidebar v-if="selected.length > 0 && selected[0]" :media="selected[0]" @close="updateSelected([])" />
+      <MediaDetailsSidebar
+        v-if="selected.length > 0 && selected[0]"
+        :media="selected[0]"
+        @close="updateSelected([])"
+      />
     </div>
   </div>
 </template>

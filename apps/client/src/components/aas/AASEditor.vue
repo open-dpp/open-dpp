@@ -2,7 +2,7 @@
 import type { TreeNode } from "primevue/treenode";
 import type { AasEditModeType } from "../../lib/aas-editor.ts";
 import { Button, Column, Drawer, Menu, TreeTable } from "primevue";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useAasEditor } from "../../composables/aas-editor.ts";
@@ -11,6 +11,7 @@ import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import TablePagination from "../pagination/TablePagination.vue";
+import SubmodelElementListCreateEditor from "./SubmodelElementListCreateEditor.vue";
 
 const props = defineProps<{
   id: string;
@@ -18,8 +19,13 @@ const props = defineProps<{
 }>();
 const route = useRoute();
 const router = useRouter();
-const componentRef = ref<{ submit: () => Promise<Promise<void> | undefined> } | null>(null);
+const componentRef = ref<{
+  submit: () => Promise<Promise<void> | undefined>;
+} | null>(null);
 
+const defaultPosition = "right";
+const fullPosition = "full";
+const position = ref(defaultPosition);
 const { locale, t } = useI18n();
 
 function changeQueryParams(newQuery: Record<string, string | undefined>) {
@@ -32,6 +38,21 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
 }
 
 const errorHandlingStore = useErrorHandlingStore();
+const aasNamespace
+  = props.editorMode === AasEditMode.Passport
+    ? apiClient.dpp.passports.aas
+    : apiClient.dpp.templates.aas;
+
+const aasEditor = useAasEditor({
+  id: props.id,
+  aasNamespace,
+  initialSelectedKeys: route.query.edit ? String(route.query.edit) : undefined,
+  initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
+  changeQueryParams,
+  selectedLanguage: convertLocaleToLanguage(locale.value),
+  errorHandlingStore,
+  translate: t,
+});
 
 const {
   selectedKeys,
@@ -52,19 +73,7 @@ const {
   previousPage,
   resetCursor,
   nextPage,
-} = useAasEditor({
-  id: props.id,
-  aasNamespace:
-     props.editorMode === AasEditMode.Passport
-       ? apiClient.dpp.passports.aas
-       : apiClient.dpp.templates.aas,
-  initialSelectedKeys: route.query.edit ? String(route.query.edit) : undefined,
-  initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
-  changeQueryParams,
-  selectedLanguage: convertLocaleToLanguage(locale.value),
-  errorHandlingStore,
-  translate: label => t(label),
-});
+} = aasEditor;
 
 onMounted(async () => {
   await init();
@@ -95,6 +104,8 @@ function onSubmit() {
     componentRef.value.submit();
   }
 }
+
+const isFullPosition = computed(() => position.value === fullPosition);
 </script>
 
 <template>
@@ -107,7 +118,9 @@ function onSubmit() {
       :meta-key-selection="false"
       paginator
       :loading="loading"
-      :rows="10" :rows-per-page-options="[10]" @node-select="onNodeSelect"
+      :rows="10"
+      :rows-per-page-options="[10]"
+      @node-select="onNodeSelect"
     >
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
@@ -122,6 +135,7 @@ function onSubmit() {
           <div class="flex w-full justify-end">
             <div class="flex items-center rounded-md gap-2">
               <Button
+                v-if="node.data.actions.addChildren"
                 icon="pi pi-plus"
                 severity="primary"
                 @click="addClicked($event, node)"
@@ -150,22 +164,65 @@ function onSubmit() {
     />
     <Drawer
       v-model:visible="drawerVisible"
-      position="right"
-      class="!w-full md:!w-80 lg:!w-1/2"
+      :position="position"
+      :class="{
+        'w-full! md:w-80! lg:w-1/2!': !isFullPosition,
+        'w-full!': isFullPosition,
+      }"
+      :pt="{
+        mask: { class: 'aas-editor-drawer-mask' },
+      }"
+      :auto-z-index="false"
       @hide="onHideDrawer"
     >
       <template #header>
-        <div class="flex flex-row items-center justify-between w-full pr-2 gap-1">
+        <div
+          class="flex flex-row items-center justify-between w-full pr-2 gap-1"
+        >
           <span class="text-xl font-bold">{{ drawerHeader }}</span>
-          <Button :label="t('common.save')" @click="onSubmit" />
+          <div class="flex gap-3">
+            <Button
+              v-if="position === defaultPosition"
+              severity="secondary"
+              variant="text"
+              icon="pi pi-window-maximize"
+              @click="position = fullPosition"
+            />
+            <Button
+              v-else
+              severity="secondary"
+              variant="text"
+              icon="pi pi-window-minimize"
+              @click="position = defaultPosition"
+            />
+            <Button
+              :label="
+                editorVNode?.component === SubmodelElementListCreateEditor
+                  ? t('aasEditor.table.saveAndAddEntries')
+                  : t('common.save')
+              "
+              @click="onSubmit"
+            />
+          </div>
         </div>
       </template>
       <component
         :is="editorVNode.component"
         v-if="editorVNode"
-        ref="componentRef"
         v-bind="editorVNode.props"
+        :id="props.id"
+        ref="componentRef"
+        :aas-namespace="aasNamespace"
+        :open-drawer="aasEditor.openDrawer"
+        :error-handling-store="errorHandlingStore"
+        :translate="t"
       />
     </Drawer>
   </div>
 </template>
+
+<style>
+.aas-editor-drawer-mask {
+  z-index: 51;
+}
+</style>

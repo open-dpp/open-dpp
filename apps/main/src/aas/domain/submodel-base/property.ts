@@ -1,5 +1,12 @@
-import { AasSubmodelElements, AasSubmodelElementsType, DataTypeDefType, PropertyJsonSchema } from "@open-dpp/dto";
+import {
+  AasSubmodelElements,
+  AasSubmodelElementsType,
+  DataTypeDef,
+  DataTypeDefType,
+  PropertyJsonSchema,
+} from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
+import { z } from "zod";
 import { LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -10,6 +17,8 @@ import { IVisitor } from "../visitor";
 import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
 export class Property implements ISubmodelElement {
+  private _value: string | null = null;
+
   private constructor(
     public readonly valueType: DataTypeDefType,
     public readonly extensions: Extension[],
@@ -21,9 +30,10 @@ export class Property implements ISubmodelElement {
     public readonly supplementalSemanticIds: Array<Reference>,
     public readonly qualifiers: Qualifier[],
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly value: string | null = null,
+    value: string | null = null,
     public readonly valueId: Reference | null = null,
   ) {
+    this.value = value;
   }
 
   static create(data: SubmodelBaseProps & {
@@ -46,6 +56,32 @@ export class Property implements ISubmodelElement {
       data.value ?? null,
       data.valueId ?? null,
     );
+  }
+
+  private validateValue(value: string | null, valueType: DataTypeDefType): void {
+    function parse(schema: z.ZodSchema): void {
+      const result = schema.safeParse(value);
+      if (!result.success) {
+        throw new ValueError(`Invalid value for valueType ${valueType}: ${z.flattenError(result.error).formErrors[0]}`);
+      }
+    }
+    if (value !== null) {
+      if ([DataTypeDef.Double, DataTypeDef.Float].find(n => n === valueType)) {
+        parse(z.coerce.number());
+      }
+      else {
+        parse(z.string());
+      }
+    }
+  }
+
+  set value(value: string | null) {
+    this.validateValue(value, this.valueType);
+    this._value = value;
+  }
+
+  get value(): string | null {
+    return this._value;
   }
 
   static fromPlain(data: unknown): ISubmodelElement {
@@ -76,12 +112,16 @@ export class Property implements ISubmodelElement {
     return this.accept(jsonVisitor);
   }
 
-  * getSubmodelElements(): IterableIterator<ISubmodelElement> {
-    yield* [];
+  getSubmodelElements(): ISubmodelElement[] {
+    return [];
   }
 
   addSubmodelElement(_submodelElement: ISubmodelElement): ISubmodelElement {
     throw new ValueError("Property cannot contain submodel elements");
+  }
+
+  deleteSubmodelElement(_idShort: string) {
+    throw new ValueError("Property does not support to delete submodel elements");
   }
 
   getSubmodelElementType(): AasSubmodelElementsType {

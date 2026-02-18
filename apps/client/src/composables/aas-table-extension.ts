@@ -1,0 +1,511 @@
+import type { AasNamespace } from "@open-dpp/api-client";
+
+import type {
+  DataTypeDefType,
+  FileRequestDto,
+  LanguageType,
+  PropertyRequestDto,
+  SubmodelElementListResponseDto,
+  SubmodelElementModificationDto,
+  SubmodelElementSharedRequestDto,
+  TableModificationParamsDto,
+  ValueRequestDto,
+} from "@open-dpp/dto";
+import type { ConfirmationOptions } from "primevue/confirmationoptions";
+import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
+import type { ComputedRef, Ref } from "vue";
+import type { IErrorHandlingStore } from "../stores/error.handling.ts";
+import type { AasEditorPath, EditorType, OpenDrawerCallback, SubmodelElementListEditorProps } from "./aas-drawer.ts";
+import {
+  AasSubmodelElements,
+
+  DataTypeDef,
+  KeyTypes,
+  Language,
+  SubmodelElementCollectionJsonSchema,
+  SubmodelElementListJsonSchema,
+  SubmodelElementSchema,
+
+} from "@open-dpp/dto";
+import { computed, ref } from "vue";
+import { z } from "zod";
+import { HTTPCode } from "../stores/http-codes.ts";
+import {
+
+  ColumnEditorKey,
+  EditorMode,
+
+} from "./aas-drawer.ts";
+
+interface AasTableExtensionProps {
+  id: string;
+  initialData: SubmodelElementListResponseDto;
+  pathToList: AasEditorPath;
+  aasNamespace: AasNamespace;
+  errorHandlingStore: IErrorHandlingStore;
+  openDrawer: OpenDrawerCallback<EditorType, "CREATE" | "EDIT">;
+  callbackOfSubmodelElementListEditor: (data: SubmodelElementModificationDto) => Promise<void>;
+  translate: (label: string, ...args: unknown[]) => string;
+  selectedLanguage: LanguageType;
+  openConfirm: (option: ConfirmationOptions) => void;
+}
+
+export type ColumnMenuOptions = TableModificationParamsDto & { addColumnActions?: boolean };
+export type RowMenuOptions = TableModificationParamsDto;
+type Value = string | null;
+type CellContent = { value: Value; contentType: string } | Value;
+type Row = Record<string, CellContent>;
+
+export interface CellEditProps {
+  data: Row;
+  newValue: any;
+  field: string;
+  index: number;
+}
+
+interface Column { idShort: string; label: string; plain: any }
+export interface IAasTableExtension {
+  columns: ComputedRef<Column[]>;
+  rows: Ref<Row[]>;
+  columnMenu: Ref<MenuItem[]>;
+  rowMenu: Ref<MenuItem[]>;
+  buildColumnMenu: (options: ColumnMenuOptions) => void;
+  buildRowMenu: (options: RowMenuOptions) => void;
+  onCellEditComplete: (event: CellEditProps) => Promise<void>;
+  formatCellValue: (value: string, column: Column) => Value;
+  save: () => Promise<void>;
+}
+
+export function useAasTableExtension({
+  id,
+  pathToList,
+  initialData,
+  aasNamespace,
+  errorHandlingStore,
+  openDrawer,
+  callbackOfSubmodelElementListEditor,
+  translate,
+  selectedLanguage,
+  openConfirm,
+}: AasTableExtensionProps): IAasTableExtension {
+  const translatePrefix = "aasEditor";
+  const translateTablePrefix = `${translatePrefix}.table`;
+  const columnMenu = ref<MenuItem[]>([]);
+  const rowMenu = ref<MenuItem[]>([]);
+  const data = ref<SubmodelElementListResponseDto>(initialData);
+
+  const rows = ref<Row[]>(
+    convertDataToRows(data.value),
+  );
+
+  function buildColumnMenuItem(
+    fieldLabel: string,
+    icon: string,
+    options: TableModificationParamsDto,
+    type: typeof AasSubmodelElements.File | typeof AasSubmodelElements.Property,
+    valueType?: DataTypeDefType,
+  ) {
+    const addColumLabel = translate(
+      `${translateTablePrefix}.addFieldAsColumn`,
+      {
+        field:
+          selectedLanguage === Language.de
+            ? fieldLabel
+            : fieldLabel.toLowerCase(),
+      },
+    );
+    const callback = type === AasSubmodelElements.Property
+      ? async (data: PropertyRequestDto) =>
+        createColumn({ modelType: type, ...data }, options)
+      : async (data: FileRequestDto) => createColumn({ modelType: type, ...data }, options);
+
+    return {
+      label: fieldLabel,
+      icon,
+      command: (_event: MenuItemCommandEvent) => {
+        openDrawer({
+          type: ColumnEditorKey,
+          data: valueType
+            ? { valueType, modelType: type }
+            : { modelType: type, contentType: "application/octet-stream" },
+          mode: EditorMode.CREATE,
+          title: addColumLabel,
+          path: pathToList,
+          callback,
+        });
+      },
+    };
+  }
+
+  const columns = computed<Column[]>((): Column[] => {
+    if (data.value.value.length > 0) {
+      return SubmodelElementCollectionJsonSchema.parse(data.value.value[0]).value.map(v => ({
+        idShort: v.idShort,
+        label: v.displayName.find(d => d.language === selectedLanguage)?.text ?? v.idShort,
+        plain: v,
+      }));
+    }
+    return [];
+  });
+
+  async function saveRows(rowsToSave: ValueRequestDto) {
+    const errorMessage = translate(`${translateTablePrefix}.errorEditEntries`);
+    try {
+      const response = await aasNamespace.modifyValueOfSubmodelElement(
+        id,
+        pathToList.submodelId!,
+        pathToList.idShortPath!,
+        rowsToSave,
+      );
+      if (response.status !== HTTPCode.OK) {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+        return false;
+      }
+      return true;
+    }
+    catch (e) {
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
+      return false;
+    }
+  }
+
+  async function save() {
+    await saveRows(rows.value);
+  }
+
+  async function onCellEditComplete(
+    event: CellEditProps,
+  ) {
+    const { data: rowData, newValue, field, index: editedRowIndex } = event;
+    const ValueSchema = z.string().nullable();
+    const ValueParser = newValue?.contentType
+      ? z.object({ contentType: z.string(), value: ValueSchema })
+      : ValueSchema;
+
+    const parsedNewValue = ValueParser.safeParse(newValue);
+    if (
+      parsedNewValue.success
+      && JSON.stringify(rowData[field]) !== JSON.stringify(parsedNewValue.data) // In the case of a file, the value is an object. Therefore, we need to compare by JSON.stringify.
+    ) {
+      const modifications = rows.value.map((row, index) =>
+        index === editedRowIndex
+          ? { ...row, [field]: parsedNewValue.data }
+          : row,
+      );
+      if (await saveRows(modifications)) {
+        rowData[field] = parsedNewValue.data;
+      }
+    }
+  }
+
+  function convertDataToRows(newData: SubmodelElementListResponseDto): Row[] {
+    return newData.value.map(row =>
+      SubmodelElementCollectionJsonSchema.parse(row).value.reduce((acc, v) => ({ ...acc, [v.idShort]: v.contentType ? { value: v.value, contentType: v.contentType } : v.value }), {}),
+    );
+  }
+
+  function updateListData(newListData: SubmodelElementListResponseDto) {
+    data.value = newListData;
+    rows.value = convertDataToRows(data.value);
+  }
+
+  function getColumnAtIndexOrFail(index: number): Column {
+    const column = columns.value[index];
+    if (!column) {
+      throw new Error(`Column with index ${index} not found`);
+    }
+    return column;
+  }
+
+  function getRowIdShortAtIndexOrFail(index: number): string {
+    const row = data.value.value[index];
+    if (!row) {
+      throw new Error(`Row with index ${index} not found`);
+    }
+    return row.idShort;
+  }
+
+  const buildRowMenu = (options: RowMenuOptions) => {
+    rowMenu.value = [
+      {
+        label: translate(`${translateTablePrefix}.addRowAbove`),
+        icon: "pi pi-arrow-up",
+        command: async () => {
+          await addRow(options);
+        },
+      },
+      {
+        label: translate(`${translateTablePrefix}.addRowBelow`),
+        icon: "pi pi-arrow-down",
+        command: async () => {
+          await addRow({
+            position: options.position !== undefined ? options.position + 1 : rows.value.length,
+          });
+        },
+      },
+      removeRowMenuItem(options.position ?? 0),
+    ];
+  };
+
+  function removeRowMenuItem(rowIndex: number) {
+    const removeLabel = translate("common.remove");
+    const cancelLabel = translate("common.cancel");
+    return {
+      label: removeLabel,
+      icon: "pi pi-trash",
+      command: async () => {
+        openConfirm({
+          message: translate(`${translateTablePrefix}.removeRow`),
+          header: removeLabel,
+          icon: "pi pi-info-circle",
+          rejectLabel: cancelLabel,
+          rejectProps: {
+            label: cancelLabel,
+            severity: "secondary",
+            outlined: true,
+          },
+          acceptProps: {
+            label: removeLabel,
+            severity: "danger",
+          },
+          accept: async () => {
+            try {
+              const response = await aasNamespace.deleteRowFromSubmodelElementList(
+                id,
+                pathToList.submodelId!,
+                pathToList.idShortPath!,
+                getRowIdShortAtIndexOrFail(rowIndex),
+              );
+              if (response.status === HTTPCode.OK) {
+                updateListData(response.data);
+              }
+            }
+            catch (e) {
+              errorHandlingStore.logErrorWithNotification(translate(`${translateTablePrefix}.errorRemoveRow`), e);
+            }
+          },
+        });
+      },
+    };
+  }
+
+  async function addRow({ position = 0 }: RowMenuOptions) {
+    const errorMessage = translate(`${translateTablePrefix}.errorAddRow`);
+    try {
+      const response = await aasNamespace.addRowToSubmodelElementList(
+        id,
+        pathToList.submodelId!,
+        pathToList.idShortPath!,
+        { position },
+      );
+      if (response.status === HTTPCode.CREATED) {
+        updateListData(response.data);
+      }
+      else {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+      }
+    }
+    catch (e) {
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
+    }
+  }
+
+  const buildColumnMenu = (options: ColumnMenuOptions) => {
+    const icon = `pi pi-arrow-${options.addColumnActions ? "left" : "right"}`;
+    const colMenuItems = [
+      buildColumnMenuItem(
+        translate(`${translatePrefix}.textField`),
+        icon,
+        options,
+        AasSubmodelElements.Property,
+        DataTypeDef.String,
+      ),
+      buildColumnMenuItem(
+        translate(`${translatePrefix}.numberField`),
+        icon,
+        options,
+        AasSubmodelElements.Property,
+        DataTypeDef.Double,
+      ),
+      buildColumnMenuItem(
+        translate(`${translatePrefix}.file`),
+        icon,
+        options,
+        AasSubmodelElements.File,
+      ),
+    ];
+    columnMenu.value
+      = options.addColumnActions
+        ? [{
+            label: translate(`${translateTablePrefix}.addColumnLeft`),
+            items: colMenuItems,
+          }]
+        : colMenuItems;
+
+    if (options.addColumnActions) {
+      try {
+        const column = getColumnAtIndexOrFail(options.position ?? 0);
+        columnMenu.value.push({
+          label: translate("common.actions"),
+          items: [modifyColumnMenuItem(column), removeColumnMenuItem(column)],
+        });
+      }
+      catch (e) {
+        errorHandlingStore.logErrorWithNotification(
+          translate(`common.errorOccurred`),
+          e,
+        );
+      }
+    }
+  };
+
+  function modifyColumnMenuItem(column: Column) {
+    return {
+      label: translate(`common.edit`),
+      icon: "pi pi-pencil",
+      command: (_event: MenuItemCommandEvent) => {
+        openDrawer({
+          type: ColumnEditorKey,
+          data: column.plain,
+          mode: EditorMode.EDIT,
+          title: translate(`${translatePrefix}.table.editColumn`),
+          path: pathToList,
+          callback: async (data: SubmodelElementModificationDto) =>
+            modifyPropertyColumn(data, column),
+        });
+      },
+    };
+  }
+
+  function removeColumnMenuItem(column: Column) {
+    const removeLabel = translate("common.remove");
+    const cancelLabel = translate("common.cancel");
+
+    return {
+      label: removeLabel,
+      icon: "pi pi-trash",
+      command: async () => {
+        openConfirm({
+          message: translate(`${translateTablePrefix}.removeColumn`),
+          header: removeLabel,
+          icon: "pi pi-info-circle",
+          rejectLabel: cancelLabel,
+          rejectProps: {
+            label: cancelLabel,
+            severity: "secondary",
+            outlined: true,
+          },
+          acceptProps: {
+            label: removeLabel,
+            severity: "danger",
+          },
+          accept: async () => {
+            try {
+              const response = await aasNamespace.deleteColumnFromSubmodelElementList(id, pathToList.submodelId!, pathToList.idShortPath!, column.idShort);
+              if (response.status === HTTPCode.OK) {
+                updateListData(response.data);
+              }
+            }
+            catch (e) {
+              errorHandlingStore.logErrorWithNotification(translate(`${translateTablePrefix}.errorRemoveColumn`), e);
+            }
+          },
+        });
+      },
+    };
+  }
+
+  async function modifyPropertyColumn(data: SubmodelElementModificationDto, column: Column) {
+    const errorMessage = translate(`${translatePrefix}.table.errorEditColumn`);
+    try {
+      const response = await aasNamespace.modifyColumnOfSubmodelElementList(
+        id,
+        pathToList.submodelId!,
+        pathToList.idShortPath!,
+        column.idShort,
+        data,
+      );
+      if (response.status === HTTPCode.OK) {
+        await navigateBackToListView(
+          pathToList,
+          SubmodelElementListJsonSchema.parse(response.data),
+        );
+      }
+      else {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+      }
+    }
+    catch (e) {
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
+    }
+  }
+
+  async function createColumn(
+    data: SubmodelElementSharedRequestDto,
+    options: TableModificationParamsDto,
+  ) {
+    const errorMessage = translate(`${translatePrefix}.table.errorAddColumn`);
+    try {
+      const requestBody = SubmodelElementSchema.parse({
+        ...data,
+      });
+      const response = await aasNamespace.addColumnToSubmodelElementList(
+        id,
+        pathToList.submodelId!,
+        pathToList.idShortPath!,
+        requestBody,
+        options,
+      );
+      if (response.status === HTTPCode.CREATED) {
+        await navigateBackToListView(
+          pathToList,
+          SubmodelElementListJsonSchema.parse(response.data),
+        );
+      }
+      else {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+      }
+    }
+    catch (e) {
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
+    }
+  }
+
+  async function navigateBackToListView(path: AasEditorPath, newListData: SubmodelElementListEditorProps) {
+    const formItemLabel = translate(`${translatePrefix}.submodelElementList`);
+    openDrawer({
+      type: KeyTypes.SubmodelElementList,
+      data: newListData,
+      mode: EditorMode.EDIT,
+      title: translate(`${translatePrefix}.edit`, { formItem: formItemLabel }),
+      path,
+      callback: callbackOfSubmodelElementListEditor,
+    });
+  }
+
+  function formatCellValue(value: Value, column: Column) {
+    if (value === null) {
+      return "N/A";
+    }
+    switch (column.plain.valueType) {
+      case DataTypeDef.Double:
+        return new Intl.NumberFormat(selectedLanguage, {
+          style: "decimal",
+        }).format(Number(value));
+      default:
+        return value;
+    }
+  }
+
+  return {
+    rows,
+    columns,
+    columnMenu,
+    rowMenu,
+    formatCellValue,
+    save,
+    buildColumnMenu,
+    buildRowMenu,
+    onCellEditComplete,
+  };
+}

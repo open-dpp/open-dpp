@@ -9,8 +9,9 @@ import { JsonVisitor } from "../json-visitor";
 import { IVisitor } from "../visitor";
 import { IRelationshipElement } from "./relationship-element";
 import {
+  deleteSubmodelElementOrFail,
   ISubmodelElement,
-  parseSubmodelBaseUnion,
+  parseSubmodelElement,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
@@ -69,7 +70,7 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
       baseObjects.supplementalSemanticIds,
       baseObjects.qualifiers,
       baseObjects.embeddedDataSpecifications,
-      parsed.annotations.map(parseSubmodelBaseUnion),
+      parsed.annotations.map(parseSubmodelElement),
     );
   }
 
@@ -82,8 +83,8 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
     return this.accept(jsonVisitor);
   }
 
-  * getSubmodelElements(): IterableIterator<ISubmodelElement> {
-    yield* this.annotations;
+  getSubmodelElements(): ISubmodelElement[] {
+    return this.annotations;
   }
 
   addSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
@@ -92,6 +93,10 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
     }
     this.annotations.push(submodelElement);
     return submodelElement;
+  }
+
+  deleteSubmodelElement(idShort: string) {
+    deleteSubmodelElementOrFail(this.annotations, idShort);
   }
 
   getSubmodelElementType(): AasSubmodelElementsType {

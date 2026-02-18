@@ -4,6 +4,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import {
   IDigitalProductPassportIdentifiableRepository,
 } from "../../aas/infrastructure/digital-product-passport-identifiable.repository";
+import { DbSessionOptions } from "../../database/query-options";
 import { findAllByOrganizationId, findOne, findOneOrFail, save } from "../../lib/repositories";
 import { Pagination } from "../../pagination/pagination";
 import { Template } from "../domain/template";
@@ -20,8 +21,8 @@ export class TemplateRepository implements IDigitalProductPassportIdentifiableRe
     this.templateDoc = templateDoc;
   }
 
-  async save(template: Template) {
-    return await save(template, this.templateDoc, TemplateDocVersion.v1_0_0, Template.fromPlain);
+  async save(template: Template, options?: DbSessionOptions) {
+    return await save(template, this.templateDoc, TemplateDocVersion.v1_0_0, Template.fromPlain, undefined, options);
   }
 
   async findOneOrFail(id: string) {

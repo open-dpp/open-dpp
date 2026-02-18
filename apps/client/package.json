@@ -38,6 +38,7 @@
     "primevue": "^4.5.4",
     "qrcode": "^1.5.4",
     "socket.io-client": "^4.8.2",
+    "ts-pattern": "^5.9.0",
     "vee-validate": "^4.15.1",
     "vue": "^3.5.26",
     "vue-chartjs": "^5.3.3",

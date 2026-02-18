@@ -1,6 +1,7 @@
 import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { DbSessionOptions } from "../../database/query-options";
 import { findOne, findOneOrFail, save } from "../../lib/repositories";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { SubmodelDbSchema } from "./schemas/submodel-base/submodel-db-schema";
@@ -21,12 +22,16 @@ export class SubmodelRepository {
     return Submodel.fromPlain(SubmodelDbSchema.encode(plain));
   }
 
-  async save(submodel: Submodel) {
-    return await save(submodel, this.submodelDoc, SubmodelDocSchemaVersion.v1_0_0, this.fromPlain, SubmodelDbSchema);
+  async save(submodel: Submodel, options?: DbSessionOptions) {
+    return await save(submodel, this.submodelDoc, SubmodelDocSchemaVersion.v1_0_0, this.fromPlain, SubmodelDbSchema, options);
   }
 
   async findOneOrFail(id: string): Promise<Submodel> {
     return await findOneOrFail(id, this.submodelDoc, this.fromPlain);
+  }
+
+  async deleteById(id: string, options?: DbSessionOptions): Promise<void> {
+    await this.submodelDoc.findByIdAndDelete(id, options);
   }
 
   async findOne(id: string): Promise<Submodel | undefined> {

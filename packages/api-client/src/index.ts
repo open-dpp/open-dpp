@@ -54,11 +54,12 @@ export type {
   DataValueDto,
   ProductPassportDataDto,
 } from './dpp/passport-data/data-value.dto'
+export { PassportsNamespace } from './dpp/passports/passports.namespace'
+
 export type {
   DataSectionDto,
   ProductPassportDto,
 } from './dpp/product-passport/product-passport.dtos'
-
 export { ProductPassportsNamespace } from './dpp/product-passport/product-passports.namespace'
 export {
   MoveDirection,

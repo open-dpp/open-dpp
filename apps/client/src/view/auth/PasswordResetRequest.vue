@@ -54,7 +54,7 @@ async function requestPasswordReset() {
       <template #content>
         <div class="flex flex-col gap-5">
           <Message v-if="showError" class="mb-4" closable severity="error" @close="showError = false">
-            {{ t('common.unknownErrorOccured') }}
+            {{ t('common.unknownErrorOccurred') }}
           </Message>
           <Message v-if="showSuccess" class="mb-4" closable severity="success" @close="showSuccess = false">
             {{ t('auth.passwordResetRequest.success') }}
