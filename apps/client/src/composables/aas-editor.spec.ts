@@ -1,4 +1,5 @@
 import type { SubmodelResponseDto } from "@open-dpp/dto";
+import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { Component } from "vue";
 import type { IAasEditor } from "./aas-editor.ts";
@@ -30,11 +31,14 @@ import { useAasEditor } from "./aas-editor.ts";
 const mocks = vi.hoisted(() => {
   return {
     createSubmodel: vi.fn(),
+    deleteSubmodelById: vi.fn(),
     createSubmodelElement: vi.fn(),
     createSubmodelElementAtIdShortPath: vi.fn(),
     getSubmodels: vi.fn(),
     modifySubmodel: vi.fn(),
     modifySubmodelElement: vi.fn(),
+    logErrorNotification: vi.fn(),
+    deleteSubmodelElementById: vi.fn(),
   };
 });
 
@@ -45,11 +49,13 @@ vi.mock("../lib/api-client", () => ({
       templates: {
         aas: {
           createSubmodel: mocks.createSubmodel,
+          deleteSubmodelById: mocks.deleteSubmodelById,
           modifySubmodel: mocks.modifySubmodel,
           getSubmodels: mocks.getSubmodels,
           createSubmodelElement: mocks.createSubmodelElement,
           createSubmodelElementAtIdShortPath: mocks.createSubmodelElementAtIdShortPath,
           modifySubmodelElement: mocks.modifySubmodelElement,
+          deleteSubmodelElementById: mocks.deleteSubmodelElementById,
         },
       },
     },
@@ -62,7 +68,7 @@ describe("aasEditor composable", () => {
   });
   const translate = (key: string) => key;
   const changeQueryParams = vi.fn();
-  const errorHandlingStore = generatedErrorHandlingStoreMock();
+  const errorHandlingStore = generatedErrorHandlingStoreMock(mocks.logErrorNotification);
 
   const aasId = "1";
   const iriDomain = `https://open-dpp.de/${uuid4()}`;
@@ -73,6 +79,7 @@ describe("aasEditor composable", () => {
     submodelCarbonFootprintPlainFactory.transient({ iriDomain }).build(),
   );
   const selectedLanguage = Language.en;
+  const mockOpenConfirm = vi.fn();
   it("should initialize submodels", async () => {
     const response = { paging_metadata: { cursor: null }, result: [submodel1, submodel2] };
     mocks.getSubmodels.mockResolvedValue({
@@ -86,6 +93,7 @@ describe("aasEditor composable", () => {
       changeQueryParams,
       errorHandlingStore,
       selectedLanguage,
+      openConfirm: mockOpenConfirm,
       translate,
     });
     await init();
@@ -94,8 +102,8 @@ describe("aasEditor composable", () => {
       limit: 10,
     });
     expect(changeQueryParams).toHaveBeenCalledWith({ cursor: undefined });
-    const actionsOfParent = { addChildren: true };
-    const actionsOfLeaveNode = { addChildren: false };
+    const actionsOfParent = { addChildren: true, delete: true };
+    const actionsOfLeaveNode = { addChildren: false, delete: true };
 
     const withoutChildren = (value: any) => omit(value, "children");
     const expectedSubmodel1 = {
@@ -118,9 +126,7 @@ describe("aasEditor composable", () => {
         plain: omit(submodel2, "submodelElements"),
         path: { submodelId: submodel2.id },
         type: "aasEditor.submodel",
-        actions: {
-          addChildren: true,
-        },
+        actions: actionsOfParent,
       },
     };
     expect(submodels.value!.map(withoutChildren)).toEqual([expectedSubmodel1, expectedSubmodel2]);
@@ -239,6 +245,7 @@ describe("aasEditor composable", () => {
       changeQueryParams,
       errorHandlingStore,
       selectedLanguage,
+      openConfirm: mockOpenConfirm,
       translate,
     });
     await init();
@@ -269,14 +276,17 @@ describe("aasEditor composable", () => {
     it("should create submodel", async () => {
       mocks.getSubmodels.mockResolvedValue({ data: paginationResponse, status: HTTPCode.OK });
       mocks.createSubmodel.mockResolvedValue({ status: HTTPCode.CREATED });
-      const { createSubmodel, init, drawerVisible, editorVNode } = useAasEditor({
-        id: aasId,
-        aasNamespace: apiClient.dpp.templates.aas,
-        changeQueryParams,
-        errorHandlingStore,
-        selectedLanguage,
-        translate,
-      });
+      const { createSubmodel, init, drawerVisible, editorVNode } = useAasEditor(
+        {
+          id: aasId,
+          aasNamespace: apiClient.dpp.templates.aas,
+          changeQueryParams,
+          errorHandlingStore,
+          selectedLanguage,
+          openConfirm: mockOpenConfirm,
+          translate,
+        },
+      );
       await init();
       await createSubmodel();
       expect(drawerVisible.value).toBeTruthy();
@@ -342,6 +352,7 @@ describe("aasEditor composable", () => {
         changeQueryParams,
         errorHandlingStore,
         selectedLanguage,
+        openConfirm: mockOpenConfirm,
         translate,
       });
 
@@ -368,6 +379,7 @@ describe("aasEditor composable", () => {
         changeQueryParams,
         errorHandlingStore,
         selectedLanguage,
+        openConfirm: mockOpenConfirm,
         translate,
       });
 
@@ -395,6 +407,7 @@ describe("aasEditor composable", () => {
         changeQueryParams,
         errorHandlingStore,
         selectedLanguage,
+        openConfirm: mockOpenConfirm,
         translate,
       });
 
@@ -429,6 +442,7 @@ describe("aasEditor composable", () => {
         changeQueryParams,
         errorHandlingStore,
         selectedLanguage,
+        openConfirm: mockOpenConfirm,
         translate,
       });
 
@@ -440,6 +454,88 @@ describe("aasEditor composable", () => {
       };
       await assertCreationOfSubmodelElement(aasEditor, data, expectedRequestBody, "aasEditor.file", FileCreateEditor);
       await assertCreationOfSubmodelElementAtSubmodelElementLevel(aasEditor, data, expectedRequestBody, "aasEditor.file");
+    });
+  });
+
+  describe("should delete", () => {
+    const submodel: SubmodelResponseDto = submodelPlainToResponse(
+      submodelDesignOfProductPlainFactory.transient({ iriDomain }).build(),
+    );
+    const paginationResponse = {
+      paging_metadata: { cursor: null },
+      result: [submodel],
+    };
+    beforeEach(() => {
+      vi.resetAllMocks();
+    });
+    it("should delete submodel", async () => {
+      mocks.getSubmodels.mockResolvedValue({ data: paginationResponse, status: HTTPCode.OK });
+      const openAutoConfirm = async (data: ConfirmationOptions) => {
+        data.accept!();
+      };
+      const { deleteSubmodel, init, drawerVisible } = useAasEditor({
+        id: aasId,
+        aasNamespace: apiClient.dpp.templates.aas,
+        changeQueryParams,
+        errorHandlingStore,
+        selectedLanguage,
+        openConfirm: openAutoConfirm,
+        translate,
+      });
+      await init();
+      mocks.deleteSubmodelById.mockResolvedValueOnce({
+        status: HTTPCode.NO_CONTENT,
+      });
+      await deleteSubmodel(submodel.id!);
+      expect(drawerVisible.value).toBeFalsy();
+      expect(mocks.deleteSubmodelById).toHaveBeenCalledWith(aasId, submodel.id!);
+      mocks.deleteSubmodelById.mockRejectedValueOnce({
+        status: HTTPCode.INTERNAL_SERVER_ERROR,
+      });
+      await deleteSubmodel(submodel.id!);
+      expect(mocks.logErrorNotification).toHaveBeenCalledWith("aasEditor.errorRemoveSubmodel", { status: HTTPCode.INTERNAL_SERVER_ERROR });
+    });
+
+    it("should delete submodel element", async () => {
+      mocks.getSubmodels.mockResolvedValue({
+        data: paginationResponse,
+        status: HTTPCode.OK,
+      });
+      const openAutoConfirm = async (data: ConfirmationOptions) => {
+        data.accept!();
+      };
+      const { deleteSubmodelElement, init, drawerVisible } = useAasEditor({
+        id: aasId,
+        aasNamespace: apiClient.dpp.templates.aas,
+        changeQueryParams,
+        errorHandlingStore,
+        selectedLanguage,
+        openConfirm: openAutoConfirm,
+        translate,
+      });
+      await init();
+      mocks.deleteSubmodelElementById.mockResolvedValueOnce({
+        status: HTTPCode.NO_CONTENT,
+      });
+      const pathToDelete = {
+        submodelId: submodel.id!,
+        idShortPath: submodel.submodelElements[0]!.idShort!,
+      };
+      await deleteSubmodelElement(pathToDelete);
+      expect(drawerVisible.value).toBeFalsy();
+      expect(mocks.deleteSubmodelElementById).toHaveBeenCalledWith(
+        aasId,
+        submodel.id!,
+        submodel.submodelElements[0]!.idShort!,
+      );
+      mocks.deleteSubmodelElementById.mockRejectedValueOnce({
+        status: HTTPCode.INTERNAL_SERVER_ERROR,
+      });
+      await deleteSubmodelElement(pathToDelete);
+      expect(mocks.logErrorNotification).toHaveBeenCalledWith(
+        "aasEditor.errorRemoveSubmodelElement",
+        { status: HTTPCode.INTERNAL_SERVER_ERROR },
+      );
     });
   });
 });

@@ -16,6 +16,7 @@ import type {
   SubmodelResponseDto,
 } from "@open-dpp/dto";
 import type { TreeTableSelectionKeys } from "primevue";
+import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { TreeNode } from "primevue/treenode";
 import type { Ref } from "vue";
@@ -51,15 +52,21 @@ interface AasEditorProps {
   errorHandlingStore: IErrorHandlingStore;
   selectedLanguage: LanguageType;
   translate: (label: string, ...args: unknown[]) => string;
+  openConfirm: (option: ConfirmationOptions) => void;
 }
 
 export interface IAasEditor extends IAasDrawer, IPagination {
   init: () => Promise<void>;
-  findTreeNodeByKey: (key: string, children?: TreeNode[]) => (TreeNode | undefined);
+  findTreeNodeByKey: (
+    key: string,
+    children?: TreeNode[],
+  ) => TreeNode | undefined;
   submodels: Ref<TreeNode[]>;
   buildAddSubmodelElementMenu: (node: TreeNode) => void;
   submodelElementsToAdd: Ref<MenuItem[]>;
   createSubmodel: () => Promise<void>;
+  deleteSubmodel: (submodelId: string) => Promise<void>;
+  deleteSubmodelElement: (path: AasEditorPath) => Promise<void>;
   loading: Ref<boolean>;
   selectedKeys: Ref<TreeTableSelectionKeys | undefined>;
   selectTreeNode: (key: string) => void;
@@ -74,6 +81,7 @@ export function useAasEditor({
   errorHandlingStore,
   selectedLanguage,
   translate,
+  openConfirm,
 }: AasEditorProps): IAasEditor {
   const submodels = ref<TreeNode[]>([]);
   const selectedKeys = ref<TreeTableSelectionKeys | undefined>(undefined);
@@ -137,7 +145,7 @@ export function useAasEditor({
   };
 
   async function finalizeApiRequest(response: { status: number }) {
-    if (response.status === HTTPCode.OK || response.status === HTTPCode.CREATED) {
+    if (response.status === HTTPCode.OK || response.status === HTTPCode.CREATED || response.status === HTTPCode.NO_CONTENT) {
       await pagination.reloadCurrentPage();
       drawer.hideDrawer();
     }
@@ -232,6 +240,7 @@ export function useAasEditor({
           plain: submodelElement,
           actions: {
             addChildren: canHaveChildren,
+            delete: true,
           },
           path,
         },
@@ -291,6 +300,7 @@ export function useAasEditor({
         plain: omit(submodel, "submodelElements"),
         actions: {
           addChildren: true,
+          delete: true,
         },
         path: { submodelId: submodel.id },
       },
@@ -386,6 +396,79 @@ export function useAasEditor({
     });
   };
 
+  async function deleteSubmodelElement(path: AasEditorPath) {
+    const removeLabel = translate("common.remove");
+    const cancelLabel = translate("common.cancel");
+    openConfirm({
+      message: translate(`${translatePrefix}.removeSubmodelElement`),
+      header: removeLabel,
+      icon: "pi pi-info-circle",
+      rejectLabel: cancelLabel,
+      rejectProps: {
+        label: cancelLabel,
+        severity: "secondary",
+        outlined: true,
+      },
+      acceptProps: {
+        label: removeLabel,
+        severity: "danger",
+      },
+      accept: async () => {
+        try {
+          if (path.submodelId && path.idShortPath) {
+            const response = await aasNamespace.deleteSubmodelElementById(
+              id,
+              path.submodelId,
+              path.idShortPath,
+            );
+            await finalizeApiRequest({ status: response.status });
+          }
+        }
+        catch (error: unknown) {
+          errorHandlingStore.logErrorWithNotification(
+            translate(`${translatePrefix}.errorRemoveSubmodelElement`),
+            error,
+          );
+        }
+      },
+    });
+  }
+
+  async function deleteSubmodel(submodelId: string) {
+    const removeLabel = translate("common.remove");
+    const cancelLabel = translate("common.cancel");
+    openConfirm({
+      message: translate(`${translatePrefix}.removeSubmodel`),
+      header: removeLabel,
+      icon: "pi pi-info-circle",
+      rejectLabel: cancelLabel,
+      rejectProps: {
+        label: cancelLabel,
+        severity: "secondary",
+        outlined: true,
+      },
+      acceptProps: {
+        label: removeLabel,
+        severity: "danger",
+      },
+      accept: async () => {
+        try {
+          const response = await aasNamespace.deleteSubmodelById(
+            id,
+            submodelId,
+          );
+          await finalizeApiRequest({ status: response.status });
+        }
+        catch (error: unknown) {
+          errorHandlingStore.logErrorWithNotification(
+            translate(`${translatePrefix}.errorRemoveSubmodel`),
+            error,
+          );
+        }
+      },
+    });
+  }
+
   async function createSubmodelElementList(path: AasEditorPath, data: SubmodelElementListRequestDto) {
     await createSubmodelElement(path, { modelType: AasSubmodelElements.SubmodelElementList, ...data }, "submodelElementList", true);
   }
@@ -456,6 +539,8 @@ export function useAasEditor({
     submodelElementsToAdd,
     buildAddSubmodelElementMenu,
     createSubmodel,
+    deleteSubmodel,
+    deleteSubmodelElement,
     findTreeNodeByKey,
     loading,
     selectedKeys,
