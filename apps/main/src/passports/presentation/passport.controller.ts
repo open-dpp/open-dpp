@@ -19,7 +19,6 @@ import {
   IdParam,
   IdShortPathParam,
   LimitQueryParam,
-  RequestParam,
   SubmodelElementRequestBody,
   SubmodelIdParam,
   SubmodelRequestBody,

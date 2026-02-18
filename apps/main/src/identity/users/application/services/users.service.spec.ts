@@ -39,7 +39,8 @@ describe("UsersService", () => {
   it("should throw if save returns null", async () => {
     mockRepo.save.mockResolvedValue(null);
     await expect(service.createUser("test@example.com", "John", "Doe"))
-      .rejects.toThrow("Failed to save user with email test@example.com");
+      .rejects
+      .toThrow("Failed to save user with email test@example.com");
   });
 
   it("should find one by id", async () => {

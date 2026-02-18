@@ -35,7 +35,8 @@ async function fetchOrganization() {
   try {
     const membersResponse = await apiClient.dpp.organizations.getMembers(props.organizationId);
     members.value = membersResponse.data ?? [];
-  } catch (e) {
+  }
+  catch (e) {
     console.error("Failed to fetch organization members", e);
     members.value = [];
   }
