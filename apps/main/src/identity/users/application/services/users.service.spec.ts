@@ -14,6 +14,7 @@ describe("UsersService", () => {
       save: jest.fn(),
       findOneById: jest.fn(),
       findOneByEmail: jest.fn(),
+      findAllByIds: jest.fn(),
       setUserEmailVerified: jest.fn(),
     };
 
@@ -43,15 +44,13 @@ describe("UsersService", () => {
     await expect(service.findOneAndFail("1")).rejects.toThrow(NotFoundInDatabaseException);
   });
 
-  it("should find all by ids via manual loop", async () => {
-    mockRepo.findOneById.mockImplementation((id: string) =>
-      Promise.resolve(id === "1" ? { id: "1" } : null),
-    );
+  it("should find all by ids via batched repository call", async () => {
+    mockRepo.findAllByIds.mockResolvedValue([{ id: "1" }]);
 
     const result = await service.findAllByIds(["1", "2"]);
 
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe("1");
-    expect(mockRepo.findOneById).toHaveBeenCalledTimes(2);
+    expect(mockRepo.findAllByIds).toHaveBeenCalledWith(["1", "2"]);
   });
 });

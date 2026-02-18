@@ -36,15 +36,8 @@ export class UsersService {
     return this.usersRepository.findOneByEmail(email);
   }
 
-  async findAllByIds(ids: Array<string>) {
-    const users: User[] = [];
-    for (const id of ids) {
-      const user = await this.usersRepository.findOneById(id);
-      if (user) {
-        users.push(user);
-      }
-    }
-    return users;
+  async findAllByIds(ids: Array<string>): Promise<User[]> {
+    return this.usersRepository.findAllByIds(ids);
   }
 
   async setUserEmailVerified(email: string, emailVerified: boolean): Promise<void> {
