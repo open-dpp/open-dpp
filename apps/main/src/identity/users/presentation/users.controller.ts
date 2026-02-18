@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, NotFoundException, Param, Post } from "@nestjs/common";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { z } from "zod";
 import { UsersService } from "../application/services/users.service";
@@ -24,7 +24,11 @@ export class UsersController {
   }
 
   @Get(":id")
-  async getUser(@Param("id") id: string): Promise<User | null> {
-    return this.usersService.findOne(id);
+  async getUser(@Param("id") id: string): Promise<User> {
+    const user = await this.usersService.findOne(id);
+    if (!user) {
+      throw new NotFoundException(`User ${id} not found`);
+    }
+    return user;
   }
 }

@@ -84,7 +84,7 @@ describe("InvitationsRepository", () => {
   });
 
   it("should return null if not found by id", async () => {
-    const result = await repository.findOneById("non-existent-id");
+    const result = await repository.findOneById(new Types.ObjectId().toHexString());
 
     expect(result).toBeNull();
   });

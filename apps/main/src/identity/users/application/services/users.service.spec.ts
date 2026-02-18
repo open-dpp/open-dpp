@@ -45,8 +45,9 @@ describe("UsersService", () => {
 
   it("should find one by id", async () => {
     mockRepo.findOneById.mockResolvedValue({ id: "1" });
-    await service.findOne("1");
+    const result = await service.findOne("1");
     expect(mockRepo.findOneById).toHaveBeenCalledWith("1");
+    expect(result).toEqual({ id: "1" });
   });
 
   it("should throw if not found in findOneAndFail", async () => {

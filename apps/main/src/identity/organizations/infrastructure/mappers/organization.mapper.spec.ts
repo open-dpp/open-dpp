@@ -18,7 +18,7 @@ describe("organizationMapper", () => {
   });
 
   const validOrganizationDocument = {
-    id: organizationObjectId,
+    id: organizationObjectId.toString(),
     name: "Test Org",
     slug: "test-org",
     logo: "logo.png",

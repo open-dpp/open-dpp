@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import type { CanActivate, ExecutionContext } from "@nestjs/common";
 import {
   Inject,
@@ -55,7 +56,18 @@ export class AuthGuard implements CanActivate {
     ]);
 
     if (isAllowServiceAccess && serviceTokenHeader) {
-      return serviceTokenHeader === this.configService.get("OPEN_DPP_SERVICE_TOKEN");
+      const expected = this.configService.get("OPEN_DPP_SERVICE_TOKEN");
+      if (!expected) {
+        return false;
+      }
+      try {
+        const a = Buffer.from(String(serviceTokenHeader), "utf8");
+        const b = Buffer.from(String(expected), "utf8");
+        return a.byteLength === b.byteLength && timingSafeEqual(a, b);
+      }
+      catch {
+        return false;
+      }
     }
 
     if (apiKeyHeader) {
