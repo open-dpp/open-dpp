@@ -1,7 +1,16 @@
 <script lang="ts" setup>
 import type { TreeNode } from "primevue/treenode";
 import type { AasEditModeType } from "../../lib/aas-editor.ts";
-import { Button, Column, Drawer, Menu, TreeTable } from "primevue";
+import { KeyTypes } from "@open-dpp/dto";
+import {
+  Button,
+  Column,
+  ConfirmDialog,
+  Drawer,
+  Menu,
+  TreeTable,
+} from "primevue";
+import { useConfirm } from "primevue/useconfirm";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
@@ -43,6 +52,8 @@ const aasNamespace
     ? apiClient.dpp.passports.aas
     : apiClient.dpp.templates.aas;
 
+const confirm = useConfirm();
+
 const aasEditor = useAasEditor({
   id: props.id,
   aasNamespace,
@@ -52,6 +63,7 @@ const aasEditor = useAasEditor({
   selectedLanguage: convertLocaleToLanguage(locale.value),
   errorHandlingStore,
   translate: t,
+  openConfirm: confirm.require,
 });
 
 const {
@@ -61,6 +73,8 @@ const {
   buildAddSubmodelElementMenu,
   init,
   createSubmodel,
+  deleteSubmodel,
+  deleteSubmodelElement,
   submodelElementsToAdd,
   loading,
   drawerVisible,
@@ -98,6 +112,15 @@ function onHideDrawer() {
 function addClicked(event: any, node: TreeNode) {
   buildAddSubmodelElementMenu(node);
   popover.value.toggle(event);
+}
+
+async function deleteClicked(node: TreeNode) {
+  if (node.data.modelType === KeyTypes.Submodel) {
+    await deleteSubmodel(node.key);
+  }
+  else {
+    await deleteSubmodelElement(node.data.path);
+  }
 }
 function onSubmit() {
   if (componentRef.value) {
@@ -140,6 +163,12 @@ const isFullPosition = computed(() => position.value === fullPosition);
                 severity="primary"
                 @click="addClicked($event, node)"
               />
+              <Button
+                v-if="node.data.actions.delete"
+                icon="pi pi-trash"
+                severity="danger"
+                @click="deleteClicked(node)"
+              />
             </div>
           </div>
         </template>
@@ -155,6 +184,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
         />
       </template>
     </TreeTable>
+    <ConfirmDialog />
     <Menu
       id="overlay_menu"
       ref="popover"

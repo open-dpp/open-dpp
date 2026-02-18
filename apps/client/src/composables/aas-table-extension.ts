@@ -169,6 +169,7 @@ export function useAasTableExtension({
       );
       if (response.status !== HTTPCode.OK) {
         errorHandlingStore.logErrorWithNotification(errorMessage);
+        return false;
       }
       return true;
     }
@@ -243,14 +244,14 @@ export function useAasTableExtension({
   const buildRowMenu = (options: RowMenuOptions) => {
     rowMenu.value = [
       {
-        label: translate(`${translateTablePrefix}.addRow`),
+        label: translate(`${translateTablePrefix}.addRowAbove`),
         icon: "pi pi-arrow-up",
         command: async () => {
           await addRow(options);
         },
       },
       {
-        label: translate(`${translateTablePrefix}.addRow`),
+        label: translate(`${translateTablePrefix}.addRowBelow`),
         icon: "pi pi-arrow-down",
         command: async () => {
           await addRow({
@@ -356,7 +357,7 @@ export function useAasTableExtension({
     columnMenu.value = options.addColumnActions
       ? [
           {
-            label: translate(`${translateTablePrefix}.addColumn`),
+            label: translate(`${translateTablePrefix}.addColumnLeft`),
             items: colMenuItems,
           },
         ]
