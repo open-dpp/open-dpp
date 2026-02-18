@@ -38,7 +38,7 @@ import {
 } from "@open-dpp/dto";
 import { omit } from "lodash";
 import { ref, toRaw } from "vue";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { EditorMode, useAasDrawer } from "./aas-drawer.ts";
 import { usePagination } from "./pagination.ts";

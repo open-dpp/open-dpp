@@ -118,7 +118,7 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
             t("aasEditor.table.entries")
           }}</span>
           <Button
-            :label="t('aasEditor.table.addColumn')"
+            :label="t('aasEditor.table.addColumnEnd')"
             @click="toggleColumnMenu($event, { position: columns.length })"
           />
         </div>
