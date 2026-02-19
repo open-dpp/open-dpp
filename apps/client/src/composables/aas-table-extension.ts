@@ -3,7 +3,7 @@ import type { AasNamespace } from "@open-dpp/api-client";
 import type { DataTypeDefType, FileRequestDto, LanguageType, PropertyRequestDto, ReferenceElementResponseDto, SubmodelElementListResponseDto, SubmodelElementModificationDto, SubmodelElementSharedRequestDto, TableModificationParamsDto, ValueRequestDto } from "@open-dpp/dto";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
-import type { ComputedRef, Ref } from "vue";
+import type { Ref } from "vue";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import type {
   AasEditorPath,
@@ -24,7 +24,7 @@ import {
   ValueSchema,
 } from "@open-dpp/dto";
 import { match, P } from "ts-pattern";
-import { computed, ref } from "vue";
+import { ref, toRaw } from "vue";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { ColumnEditorKey, EditorMode } from "./aas-drawer.ts";
 
@@ -66,7 +66,7 @@ interface Column {
 type RowContext = Record<string, any>;
 
 export interface IAasTableExtension {
-  columns: ComputedRef<Column[]>;
+  columns: Ref<Column[]>;
   rows: Ref<Row[]>;
   rowsContext: Ref<RowContext[]>;
   columnMenu: Ref<MenuItem[]>;
@@ -151,20 +151,7 @@ export function useAasTableExtension({
     };
   }
 
-  const columns = computed<Column[]>((): Column[] => {
-    if (data.value.value.length > 0) {
-      return SubmodelElementCollectionJsonSchema.parse(
-        data.value.value[0],
-      ).value.map(v => ({
-        idShort: v.idShort,
-        label:
-          v.displayName.find(d => d.language === selectedLanguage)?.text
-          ?? v.idShort,
-        plain: v,
-      }));
-    }
-    return [];
-  });
+  const columns = ref<Column[]>([]);
 
   async function saveRows(rowsToSave: ValueRequestDto) {
     const errorMessage = translate(`${translateTablePrefix}.errorEditEntries`);
@@ -237,6 +224,30 @@ export function useAasTableExtension({
         rowData[field] = newValue;
       }
     }
+  }
+
+  function convertDataToColumns(newData: SubmodelElementListResponseDto) {
+    if (newData.value.length > 0) {
+      const headerRow = SubmodelElementCollectionJsonSchema.parse(
+        newData.value[0],
+      );
+      for (const [index, col] of headerRow.value.entries()) {
+        const foundColumn = columns.value.find(c => c.idShort === col.idShort);
+        const column = {
+          idShort: col.idShort,
+          label: col.displayName.find(d => d.language === selectedLanguage)?.text ?? col.idShort,
+          plain: col,
+        };
+        if (!foundColumn) {
+          columns.value.splice(index, 0, column);
+        }
+        else if (foundColumn.label !== column.label) {
+          foundColumn.label = column.label;
+          foundColumn.plain = column.plain;
+        }
+      }
+    }
+    return [];
   }
 
   function convertDataToRows(newData: SubmodelElementListResponseDto) {
@@ -312,6 +323,7 @@ export function useAasTableExtension({
 
   function updateListData(newListData: SubmodelElementListResponseDto) {
     data.value = newListData;
+    convertDataToColumns(data.value);
     convertDataToRows(data.value);
   }
 
@@ -484,7 +496,7 @@ export function useAasTableExtension({
       command: (_event: MenuItemCommandEvent) => {
         openDrawer({
           type: ColumnEditorKey,
-          data: column.plain,
+          data: toRaw(column.plain),
           mode: EditorMode.EDIT,
           title: translate(`${translatePrefix}.table.editColumn`),
           path: pathToList,
@@ -527,6 +539,7 @@ export function useAasTableExtension({
                   column.idShort,
                 );
               if (response.status === HTTPCode.OK) {
+                columns.value.splice(columns.value.findIndex(c => c.idShort === column.idShort), 1);
                 updateListData(response.data);
               }
             }
@@ -632,6 +645,7 @@ export function useAasTableExtension({
 
   function init() {
     convertDataToRows(initialData);
+    convertDataToColumns(initialData);
   }
   init();
 
