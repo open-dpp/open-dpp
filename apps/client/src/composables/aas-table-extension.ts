@@ -1,16 +1,6 @@
 import type { AasNamespace } from "@open-dpp/api-client";
 
-import type {
-  DataTypeDefType,
-  FileRequestDto,
-  LanguageType,
-  PropertyRequestDto,
-  SubmodelElementListResponseDto,
-  SubmodelElementModificationDto,
-  SubmodelElementSharedRequestDto,
-  TableModificationParamsDto,
-  ValueRequestDto,
-} from "@open-dpp/dto";
+import type { DataTypeDefType, FileRequestDto, LanguageType, PropertyRequestDto, ReferenceElementResponseDto, SubmodelElementListResponseDto, SubmodelElementModificationDto, SubmodelElementSharedRequestDto, TableModificationParamsDto, ValueRequestDto } from "@open-dpp/dto";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { ComputedRef, Ref } from "vue";
@@ -22,16 +12,19 @@ import type {
   SubmodelElementListEditorProps,
 } from "./aas-drawer.ts";
 import {
+
   AasSubmodelElements,
   DataTypeDef,
   KeyTypes,
   Language,
+  ReferenceTypes,
   SubmodelElementCollectionJsonSchema,
   SubmodelElementListJsonSchema,
   SubmodelElementSchema,
+  ValueSchema,
 } from "@open-dpp/dto";
+import { match, P } from "ts-pattern";
 import { computed, ref } from "vue";
-import { z } from "zod";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { ColumnEditorKey, EditorMode } from "./aas-drawer.ts";
 
@@ -55,12 +48,11 @@ export type ColumnMenuOptions = TableModificationParamsDto & {
 };
 export type RowMenuOptions = TableModificationParamsDto;
 type Value = string | null;
-type CellContent = { value: Value; contentType: string } | Value;
-type Row = Record<string, CellContent>;
+type Row = Record<string, Value>;
 
 export interface CellEditProps {
   data: Row;
-  newValue: any;
+  newValue: Value;
   field: string;
   index: number;
 }
@@ -70,9 +62,13 @@ interface Column {
   label: string;
   plain: any;
 }
+
+type RowContext = Record<string, any>;
+
 export interface IAasTableExtension {
   columns: ComputedRef<Column[]>;
   rows: Ref<Row[]>;
+  rowsContext: Ref<RowContext[]>;
   columnMenu: Ref<MenuItem[]>;
   rowMenu: Ref<MenuItem[]>;
   buildColumnMenu: (options: ColumnMenuOptions) => void;
@@ -99,14 +95,16 @@ export function useAasTableExtension({
   const columnMenu = ref<MenuItem[]>([]);
   const rowMenu = ref<MenuItem[]>([]);
   const data = ref<SubmodelElementListResponseDto>(initialData);
+  const ValueMatcher = P.optional(P.union(P.string, null));
 
-  const rows = ref<Row[]>(convertDataToRows(data.value));
+  const rows = ref<Row[]>([]);
+  const rowsContext = ref<RowContext[]>([]);
 
   function buildColumnMenuItem(
     fieldLabel: string,
     icon: string,
     options: TableModificationParamsDto,
-    type: typeof AasSubmodelElements.File | typeof AasSubmodelElements.Property,
+    type: typeof AasSubmodelElements.File | typeof AasSubmodelElements.Property | typeof AasSubmodelElements.ReferenceElement,
     valueType?: DataTypeDefType,
   ) {
     const addColumLabel = translate(
@@ -118,12 +116,24 @@ export function useAasTableExtension({
             : fieldLabel.toLowerCase(),
       },
     );
-    const callback
-      = type === AasSubmodelElements.Property
-        ? async (data: PropertyRequestDto) =>
-          createColumn({ modelType: type, ...data }, options)
-        : async (data: FileRequestDto) =>
-          createColumn({ modelType: type, ...data }, options);
+    const Callbacks = {
+      [AasSubmodelElements.Property]: {
+        callback: async (data: PropertyRequestDto) =>
+          createColumn({ modelType: type, ...data }, options),
+        data: { valueType, modelType: type },
+      },
+      [AasSubmodelElements.File]: {
+        callback: async (data: FileRequestDto) =>
+          createColumn({ modelType: type, ...data }, options),
+        data: { modelType: type, contentType: "application/octet-stream" },
+      },
+      [AasSubmodelElements.ReferenceElement]: {
+        callback: async (data: ReferenceElementResponseDto) =>
+          createColumn({ modelType: type, ...data }, options),
+        data: { modelType: type },
+      },
+    };
+    const { callback, data } = Callbacks[type];
 
     return {
       label: fieldLabel,
@@ -131,9 +141,7 @@ export function useAasTableExtension({
       command: (_event: MenuItemCommandEvent) => {
         openDrawer({
           type: ColumnEditorKey,
-          data: valueType
-            ? { valueType, modelType: type }
-            : { modelType: type, contentType: "application/octet-stream" },
+          data,
           mode: EditorMode.CREATE,
           title: addColumLabel,
           path: pathToList,
@@ -180,49 +188,131 @@ export function useAasTableExtension({
   }
 
   async function save() {
-    await saveRows(rows.value);
+    await saveRows(rows.value.map(convertRowToRequestDto));
   }
 
-  async function onCellEditComplete(event: CellEditProps) {
-    const { data: rowData, newValue, field, index: editedRowIndex } = event;
-    const ValueSchema = z.string().nullable();
-    const ValueParser = newValue?.contentType
-      ? z.object({ contentType: z.string(), value: ValueSchema })
-      : ValueSchema;
-
-    const parsedNewValue = ValueParser.safeParse(newValue);
-    if (
-      parsedNewValue.success
-      && JSON.stringify(rowData[field]) !== JSON.stringify(parsedNewValue.data) // In the case of a file, the value is an object. Therefore, we need to compare by JSON.stringify.
-    ) {
-      const modifications = rows.value.map((row, index) =>
-        index === editedRowIndex
-          ? { ...row, [field]: parsedNewValue.data }
-          : row,
-      );
-      if (await saveRows(modifications)) {
-        rowData[field] = parsedNewValue.data;
-      }
+  function convertRowToRequestDto(row: Row): ValueRequestDto {
+    const rowContext = rowsContext.value.find(r => r.idShort === row.idShort)!;
+    function convertCell(value: Value, context: RowContext) {
+      return match({ value, ...context })
+        .with(
+          {
+            value: ValueMatcher,
+            modelType: AasSubmodelElements.File,
+            contentType: P.string,
+          },
+          ({ value, contentType }) => ({ value, contentType }),
+        )
+        .with(
+          {
+            value: ValueMatcher,
+            modelType: AasSubmodelElements.Property,
+          },
+          ({ value }) => value,
+        )
+        .otherwise(() => null);
     }
-  }
-
-  function convertDataToRows(newData: SubmodelElementListResponseDto): Row[] {
-    return newData.value.map(row =>
-      SubmodelElementCollectionJsonSchema.parse(row).value.reduce(
-        (acc, v) => ({
+    return ValueSchema.parse(
+      Object.entries(row).filter(([field]) => field !== "idShort").reduce(
+        (acc, [field, value]) => ({
           ...acc,
-          [v.idShort]: v.contentType
-            ? { value: v.value, contentType: v.contentType }
-            : v.value,
+          [field]: convertCell(value, rowContext[field]),
         }),
         {},
       ),
     );
   }
 
+  async function onCellEditComplete(
+    event: CellEditProps,
+  ) {
+    const { data: rowData, newValue, field, index: editedRowIndex } = event;
+    if (rowData[field] !== newValue) {
+      const modifications = rows.value.map((row, index) =>
+        index === editedRowIndex
+          ? convertRowToRequestDto({ ...row, [field]: newValue })
+          : convertRowToRequestDto(row),
+      );
+      if (await saveRows(modifications)) {
+        rowData[field] = newValue;
+      }
+    }
+  }
+
+  function convertDataToRows(newData: SubmodelElementListResponseDto) {
+    function convertColumn(v: any): { value: Value; context: any } {
+      return match(v)
+        .returnType<{ value: Value; context: any }>()
+        .with(
+          {
+            contentType: P.string,
+            modelType: AasSubmodelElements.File,
+            value: ValueMatcher,
+          },
+          ({ value, contentType, modelType }) => ({
+            value: value ?? null,
+            context: { contentType, modelType },
+          }),
+        )
+        .with(
+          {
+            modelType: AasSubmodelElements.Property,
+            value: ValueMatcher,
+          },
+          ({ value, modelType }) => ({ value: value ?? null, context: { modelType } }),
+        )
+        .with(
+          {
+            modelType: AasSubmodelElements.ReferenceElement,
+            value: P.optional(
+              P.union(
+                {
+                  type: ReferenceTypes.ExternalReference,
+                  keys: P.array({
+                    type: KeyTypes.GlobalReference,
+                    value: P.string,
+                  }),
+                },
+                null,
+              ),
+            ),
+          },
+          ({ value }) => ({
+            value: value?.keys[0]?.value ?? null,
+            context: { modelType: AasSubmodelElements.ReferenceElement },
+          }),
+        )
+        .otherwise(() => {
+          throw new Error(`Unsupported model type: ${v.modelType}`);
+        });
+    }
+    for (const [index, row] of newData.value.entries()) {
+      const parsedRow = SubmodelElementCollectionJsonSchema.parse(row);
+      const foundRow = rows.value.find(r => r.idShort === row.idShort);
+      const foundRowContext = rowsContext.value.find(r => r.idShort === row.idShort);
+      const rowToModify = foundRow || { idShort: row.idShort };
+      const rowContextToModify = foundRowContext || { idShort: row.idShort };
+      for (const col of parsedRow.value) {
+        const { value, context } = convertColumn(col);
+        if (rowToModify[col.idShort] !== value) {
+          rowToModify[col.idShort] = value;
+        }
+        if (rowContextToModify[col.idShort] !== context) {
+          rowContextToModify[col.idShort] = context;
+        }
+      }
+      if (!foundRow) {
+        rows.value.splice(index, 0, rowToModify);
+      }
+      if (!foundRowContext) {
+        rowsContext.value.splice(index, 0, rowContextToModify);
+      }
+    }
+  }
+
   function updateListData(newListData: SubmodelElementListResponseDto) {
     data.value = newListData;
-    rows.value = convertDataToRows(data.value);
+    convertDataToRows(data.value);
   }
 
   function getColumnAtIndexOrFail(index: number): Column {
@@ -294,7 +384,8 @@ export function useAasTableExtension({
                   getRowIdShortAtIndexOrFail(rowIndex),
                 );
               if (response.status === HTTPCode.OK) {
-                updateListData(response.data);
+                rows.value.splice(rowIndex, 1);
+                rowsContext.value.splice(rowIndex, 1);
               }
             }
             catch (e) {
@@ -352,6 +443,12 @@ export function useAasTableExtension({
         icon,
         options,
         AasSubmodelElements.File,
+      ),
+      buildColumnMenuItem(
+        translate(`${translatePrefix}.link`),
+        icon,
+        options,
+        AasSubmodelElements.ReferenceElement,
       ),
     ];
     columnMenu.value = options.addColumnActions
@@ -533,8 +630,14 @@ export function useAasTableExtension({
     }
   }
 
+  function init() {
+    convertDataToRows(initialData);
+  }
+  init();
+
   return {
     rows,
+    rowsContext,
     columns,
     columnMenu,
     rowMenu,

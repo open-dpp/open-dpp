@@ -156,7 +156,7 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
     if (parsed.referredSemanticId === null) {
       element.referredSemanticId = parsed.referredSemanticId;
     }
-    if (parsed.referredSemanticId !== undefined) {
+    else if (parsed.referredSemanticId !== undefined) {
       if (element.referredSemanticId !== null) {
         element.referredSemanticId.accept(this, parsed.referredSemanticId);
       }

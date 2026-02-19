@@ -508,6 +508,7 @@ describe("aasEditor composable", () => {
         errorHandlingStore,
         selectedLanguage,
         translate,
+        openConfirm: mockOpenConfirm,
       });
 
       const data = {

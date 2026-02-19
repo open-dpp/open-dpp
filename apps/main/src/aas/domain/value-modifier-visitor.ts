@@ -1,6 +1,5 @@
 import {
   LanguageEnum,
-  SubmodelElementModificationDto,
 } from "@open-dpp/dto";
 import { NotSupportedError, ValueError } from "@open-dpp/exception";
 import { z } from "zod";
@@ -26,7 +25,6 @@ import { Range } from "./submodel-base/range";
 import { ReferenceElement } from "./submodel-base/reference-element";
 import { RelationshipElement } from "./submodel-base/relationship-element";
 import { Submodel } from "./submodel-base/submodel";
-import { ISubmodelElement } from "./submodel-base/submodel-base";
 
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
@@ -189,16 +187,6 @@ export class ValueModifierVisitor implements IVisitor<unknown, void> {
         throw new ValueError(`List index ${index} is out of bounds for submodel element list ${element.idShort}.`);
       }
       target.accept(this, row);
-    }
-  }
-
-  visitSubmodelElements(element: ISubmodelElement, submodelElementModifications: SubmodelElementModificationDto[]): void {
-    for (const submodelElement of submodelElementModifications) {
-      const foundElement = element.getSubmodelElements().find(e => e.idShort === submodelElement.idShort);
-      if (!foundElement) {
-        throw new ValueError(`Could not find element with idShort ${submodelElement.idShort} within submodel element ${element.idShort}.`);
-      }
-      foundElement.accept(this, submodelElement);
     }
   }
 }

@@ -54,6 +54,7 @@ const {
   columnMenu,
   rowMenu,
   rows,
+  rowsContext,
   columns,
   onCellEditComplete,
   buildColumnMenu,
@@ -99,6 +100,20 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
   buildColumnMenu(options);
   columnMenuPopover.value.toggle(event);
 }
+
+function onFileChange(
+  value: string | undefined,
+  cellData: any,
+  rowIndex: number,
+  field: string,
+) {
+  onCellEditComplete({
+    data: cellData,
+    newValue: value ?? null,
+    field,
+    index: rowIndex,
+  });
+}
 </script>
 
 <template>
@@ -111,8 +126,17 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
     <DataTable
       scrollable
       edit-mode="cell"
+      data-key="idShort"
       :value="rows"
-      @cell-edit-complete="onCellEditComplete"
+      @cell-edit-complete="
+        (event) =>
+          onCellEditComplete({
+            data: event.data,
+            field: event.field,
+            index: event.index,
+            newValue: event.newValue,
+          })
+      "
     >
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
@@ -159,39 +183,48 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
           <span>{{ col.label }}</span>
         </template>
         <template #body="{ data: cellData, field, index: rowIndex }">
-          <div v-if="typeof field === 'string' && cellData[field] != null && cellData[field] !== ''">
+          <span v-if="typeof field !== 'string'">N/A</span>
+          <div v-else>
             <FileField
-              v-if="col.plain.modelType === AasSubmodelElements.File"
+              v-if="
+                col.plain.modelType === AasSubmodelElements.File
+                  && rowsContext[rowIndex] != null
+                  && rowsContext[rowIndex][field] != null
+              "
               :id="`${rowIndex}-${field}`"
-              v-model="cellData[field].value"
-              v-model:content-type="cellData[field].contentType"
+              v-model:content-type="rowsContext[rowIndex][field].contentType"
+              :model-value="cellData[field]"
               @update:model-value="
-                (value) =>
-                  onCellEditComplete({
-                    data: cellData,
-                    newValue: {
-                      value,
-                      contentType: cellData[field].contentType,
-                    },
-                    field,
-                    index: rowIndex,
-                  })
+                (value) => onFileChange(value, cellData, rowIndex, field)
               "
             />
-            <span v-else>
+            <span
+              v-else-if="
+                col.plain.modelType === AasSubmodelElements.Property
+                  && cellData[field] != null
+              "
+            >
               {{ formatCellValue(cellData[field], col) }}
             </span>
+            <InputText v-else autofocus fluid readonly />
           </div>
-          <InputText v-else autofocus fluid readonly />
         </template>
         <template
           v-if="col.plain.modelType !== AasSubmodelElements.File"
           #editor="{ data: editorData, field, index: rowIndex }"
         >
           <PropertyValue
+            v-if="col.plain.modelType !== AasSubmodelElements.File"
             :id="`${rowIndex}-${field}`"
             v-model="editorData[field]"
             :value-type="col.plain.valueType"
+          />
+          <InputText
+            v-else-if="
+              col.plain.modelType === AasSubmodelElements.ReferenceElement
+            "
+            :id="`${rowIndex}-${field}`"
+            v-model="editorData[field]"
           />
         </template>
       </Column>
