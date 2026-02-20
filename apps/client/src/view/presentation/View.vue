@@ -10,6 +10,10 @@ const router = useRouter();
 
 const productPassportStore = useProductPassportStore();
 
+// TODO: Uncomment when the analytics feature is adapted to the aas view again (import useAnalyticsStore from "../../stores/analytics").
+// const analyticsStore = useAnalyticsStore();
+// await analyticsStore.addPageView();
+
 // Cleanup object URLs when component unmounts to prevent memory leaks
 onBeforeUnmount(() => {
   productPassportStore.cleanupMediaUrls();
