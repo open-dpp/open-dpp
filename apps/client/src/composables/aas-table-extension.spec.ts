@@ -301,7 +301,7 @@ describe("aasTableExtension composable", () => {
     {
       label: "aasEditor.link",
       component: ColumnCreateEditor,
-      data: { value: { type: ReferenceTypes.ExternalReference, keys: [] } },
+      data: { },
       modelType: AasSubmodelElements.ReferenceElement,
     },
   ])(
@@ -431,7 +431,7 @@ describe("aasTableExtension composable", () => {
           Column1: null,
           Column2: null,
           Column3: { contentType: "application/octet-stream", value: null },
-          Column4: { type: ReferenceTypes.ExternalReference, keys: [] },
+          Column4: null,
         },
         {
           Column1: "My material",

@@ -173,7 +173,7 @@ export function useAasTableExtension({
           openDrawer({
             ...sharedDrawerProps,
             type: ColumnEditorKey,
-            data: { modelType: type, value: { type: ReferenceTypes.ExternalReference, keys: [] } },
+            data: { modelType: type },
             callback: async (data: ReferenceElementRequestDto) =>
               createColumn({ modelType: type, ...data }, options),
           });
@@ -212,7 +212,10 @@ export function useAasTableExtension({
   function convertRowToRequestDto(row: Row): ValueRequestDto {
     const rowContext = rowsContext.value.find(
       r => r.idShort === row.idShort,
-    )!;
+    );
+    if (!rowContext) {
+      throw new Error(`Row context not found for idShort: ${row.idShort}`);
+    }
     function convertCell(value: Value, context: RowContext) {
       return match({ value, ...context })
         .with(
@@ -238,12 +241,12 @@ export function useAasTableExtension({
             keyType: P.optional(P.string),
           },
           ({ value, type, keyType }) => {
-            return {
-              type: type ?? ReferenceTypes.ExternalReference,
-              keys: value
-                ? [{ type: keyType ?? KeyTypes.GlobalReference, value }]
-                : [],
-            };
+            return value
+              ? {
+                  type: type ?? ReferenceTypes.ExternalReference,
+                  keys: [{ type: keyType ?? KeyTypes.GlobalReference, value }],
+                }
+              : null;
           },
         )
         .otherwise(() => null);
@@ -305,57 +308,60 @@ export function useAasTableExtension({
 
   function convertDataToRows(newData: SubmodelElementListResponseDto) {
     function convertColumn(v: any): { value: Value; context: any } {
-      return match(v)
-        .returnType<{ value: Value; context: any }>()
-        .with(
-          {
-            contentType: P.string,
-            modelType: AasSubmodelElements.File,
-            value: ValueMatcher,
-          },
-          ({ value, contentType, modelType }) => ({
-            value: value ?? null,
-            context: { contentType, modelType },
-          }),
-        )
-        .with(
-          {
-            modelType: AasSubmodelElements.Property,
-            value: ValueMatcher,
-          },
-          ({ value, modelType }) => ({
-            value: value ?? null,
-            context: { modelType },
-          }),
-        )
-        .with(
-          {
-            modelType: AasSubmodelElements.ReferenceElement,
-            value: P.optional(
-              P.union(
-                {
-                  type: ReferenceTypes.ExternalReference,
-                  keys: P.array({
-                    type: KeyTypes.GlobalReference,
-                    value: P.string,
-                  }),
-                },
-                null,
-              ),
-            ),
-          },
-          ({ value }) => ({
-            value: value?.keys[0]?.value ?? null,
-            context: {
-              modelType: AasSubmodelElements.ReferenceElement,
-              type: value?.type,
-              keyType: value?.keys[0]?.type,
+      return (
+        match(v)
+          .returnType<{ value: Value; context: any }>()
+          .with(
+            {
+              contentType: P.string,
+              modelType: AasSubmodelElements.File,
+              value: ValueMatcher,
             },
-          }),
-        )
-        .otherwise(() => {
-          throw new Error(`Unsupported model type: ${v.modelType}`);
-        });
+            ({ value, contentType, modelType }) => ({
+              value: value ?? null,
+              context: { contentType, modelType },
+            }),
+          )
+          .with(
+            {
+              modelType: AasSubmodelElements.Property,
+              value: ValueMatcher,
+            },
+            ({ value, modelType }) => ({
+              value: value ?? null,
+              context: { modelType },
+            }),
+          )
+          // Currently, only ReferenceElement values which are global references are supported
+          .with(
+            {
+              modelType: AasSubmodelElements.ReferenceElement,
+              value: P.optional(
+                P.union(
+                  {
+                    type: ReferenceTypes.ExternalReference,
+                    keys: P.array({
+                      type: KeyTypes.GlobalReference,
+                      value: P.string,
+                    }),
+                  },
+                  null,
+                ),
+              ),
+            },
+            ({ value }) => ({
+              value: value?.keys[0]?.value ?? null,
+              context: {
+                modelType: AasSubmodelElements.ReferenceElement,
+                type: value?.type,
+                keyType: value?.keys[0]?.type,
+              },
+            }),
+          )
+          .otherwise(() => {
+            throw new Error(`Unsupported model type: ${v.modelType}`);
+          })
+      );
     }
     for (const [index, row] of newData.value.entries()) {
       const parsedRow = SubmodelElementCollectionJsonSchema.parse(row);

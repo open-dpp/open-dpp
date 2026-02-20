@@ -27,11 +27,11 @@ const model = defineModel<string | null | undefined>();
         v-model="model"
         :invalid="props.showErrors && !!props.error"
       />
-      <label for="value">{{ props.label }}</label>
+      <label :for="props.id">{{ props.label }}</label>
     </FloatLabel>
     <InputText
       v-else-if="props.label === undefined"
-      id="value"
+      :id="props.id"
       v-model="model"
       :invalid="props.showErrors && !!props.error"
     />

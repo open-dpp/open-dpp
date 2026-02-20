@@ -11,7 +11,7 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { Button, Column, DataTable, InputText, Menu } from "primevue";
 import { useConfirm } from "primevue/useconfirm";
 import { useForm } from "vee-validate";
-import { computed, ref, toRaw } from "vue";
+import { computed, onErrorCaptured, ref, toRaw } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import { EditorMode } from "../../composables/aas-drawer.ts";
@@ -115,6 +115,10 @@ function onFileChange(
     index: rowIndex,
   });
 }
+onErrorCaptured((err) => {
+  props.errorHandlingStore.logErrorWithNotification(t("common.errorOccurred"), err);
+  return false; // stops error from bubbling further
+});
 </script>
 
 <template>

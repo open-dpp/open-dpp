@@ -19,10 +19,18 @@ const url = z.preprocess(
   z.url().nullish(),
 );
 
-const { value, errorMessage } = useField<string | null>(
+const { value, errorMessage, setValue } = useField<string | null>(
   `link-${props.id}`,
   toTypedSchema(url),
   { initialValue: props.modelValue, controlled: false },
+  // without controlled:false this validation does not work when used within SubmodelElementListEditor, since SubmodelElementListEditor itself uses a useForm
+);
+
+watch(
+  () => props.modelValue,
+  (v) => {
+    setValue(v ?? null);
+  },
 );
 
 watch(value, (v) => {

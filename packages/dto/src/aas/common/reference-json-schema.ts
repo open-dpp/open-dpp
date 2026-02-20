@@ -21,7 +21,7 @@ export interface ReferenceModification {
 export const ReferenceModificationSchema: z.ZodType<ReferenceModification> = z.lazy(() =>
   z.object({
     type: ReferenceTypesEnum.optional(),
-    referredSemanticId: ReferenceJsonSchema.nullish(),
+    referredSemanticId: ReferenceModificationSchema.nullish(),
     keys: z.array(KeyModificationSchema).optional(),
   }),
 )
