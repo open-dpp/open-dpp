@@ -3,7 +3,6 @@ import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundEx
 import { Session } from "../../../auth/domain/session";
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
-import { Member } from "../../domain/member";
 import { MemberRole } from "../../domain/member-role.enum";
 import { Organization, OrganizationCreateProps, OrganizationUpdateProps } from "../../domain/organization";
 import { InvitationsRepository } from "../../infrastructure/adapters/invitations.repository";
@@ -35,14 +34,8 @@ export class OrganizationsService {
     if (!createdOrganization) {
       throw new BadRequestException();
     }
-    const owner = Member.create({
-      userId: session.userId,
-      organizationId: createdOrganization.id,
-      role: MemberRole.OWNER,
-    });
-    const organizationWithOwner = createdOrganization.addMember(owner);
-    await this.membersRepository.save(owner);
-    return organizationWithOwner;
+    // BetterAuth's createOrganization already adds the authenticated user as owner; do not add again.
+    return createdOrganization;
   }
 
   async updateOrganization(
