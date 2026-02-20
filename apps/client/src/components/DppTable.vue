@@ -8,6 +8,7 @@ import { Button, Column, DataTable } from "primevue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import apiClient from "../lib/api-client.ts";
+import { useErrorHandlingStore } from "../stores/error.handling.ts";
 import TablePagination from "./pagination/TablePagination.vue";
 
 const props = defineProps<{
@@ -33,19 +34,30 @@ dayjs.extend(localizedFormat);
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
+const errorHandlingStore = useErrorHandlingStore();
 
 async function editItem(item: SharedDppDto) {
   await router.push(`${route.path}/${item.id}`);
 }
 
 async function forwardToPresentation(item: SharedDppDto) {
-  const { data } = await apiClient.dpp.passports.getUniqueProductIdentifierOfPassport(item.id);
-  router.push(`/presentation/${data.uuid}`);
+  try {
+    const { data } = await apiClient.dpp.passports.getUniqueProductIdentifierOfPassport(item.id);
+    await router.push(`/presentation/${data.uuid}`);
+  }
+  catch (e) {
+    errorHandlingStore.logErrorWithNotification(t("dpp.forwardToPresentationError"), e);
+  }
 }
 
 async function forwardToPresentationChat(item: SharedDppDto) {
-  const { data } = await apiClient.dpp.passports.getUniqueProductIdentifierOfPassport(item.id);
-  router.push(`/presentation/${data.uuid}/chat`);
+  try {
+    const { data } = await apiClient.dpp.passports.getUniqueProductIdentifierOfPassport(item.id);
+    await router.push(`/presentation/${data.uuid}/chat`);
+  }
+  catch (e) {
+    errorHandlingStore.logErrorWithNotification(t("dpp.forwardToPresentationError"), e);
+  }
 }
 </script>
 

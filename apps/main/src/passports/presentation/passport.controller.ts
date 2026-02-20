@@ -110,14 +110,13 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     @AuthSession() session: Session,
   ): Promise<{ uuid: string }> {
     await this.loadPassportAndCheckOwnership(id, session);
-    const upis = await this.uniqueProductIdentifierService.findAllByReferencedId(id);
-    const uuid = upis[0]?.uuid;
-    if (!uuid) {
+    const upi = await this.uniqueProductIdentifierService.findOneByReferencedId(id);
+    if (!upi) {
       throw new NotFoundException(
         `No UniqueProductIdentifier found for passport ${id}`,
       );
     }
-    return { uuid };
+    return { uuid: upi.uuid };
   }
 
   @Post()

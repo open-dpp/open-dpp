@@ -540,6 +540,7 @@
   },
   "dpp": {
     "forwardToPresentation": "Forward to presentation",
+    "forwardToPresentationError": "Failed to open presentation.",
     "openPresentationChat": "Open AI chat"
   },
   "presentation": {

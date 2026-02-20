@@ -58,6 +58,15 @@ export class UniqueProductIdentifierService {
     return uniqueProductIdentifier;
   }
 
+  async findOneByReferencedId(referenceId: string) {
+    const uniqueProductIdentifierDoc
+      = await this.uniqueProductIdentifierDoc.findOne({ referenceId });
+    if (!uniqueProductIdentifierDoc) {
+      return undefined;
+    }
+    return this.convertToDomain(uniqueProductIdentifierDoc);
+  }
+
   async findAllByReferencedId(referenceId: string) {
     const uniqueProductIdentifiers = await this.uniqueProductIdentifierDoc.find(
       { referenceId },

@@ -540,6 +540,7 @@
   },
   "dpp": {
     "forwardToPresentation": "Zur Präsentation weiterleiten",
+    "forwardToPresentationError": "Präsentation konnte nicht geöffnet werden.",
     "openPresentationChat": "KI-Chat öffnen"
   },
   "presentation": {
