@@ -2,62 +2,60 @@ import type { OrganizationDto } from "@open-dpp/api-client";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { authClient } from "../auth-client.ts";
-import { useNotificationStore } from "./notification.ts";
+import apiClient from "../lib/api-client";
+import { i18n } from "../translations/i18n.ts";
+import { useErrorHandlingStore } from "./error.handling.ts";
 
 export const useOrganizationsStore = defineStore("organizations", () => {
   const organizations = ref<OrganizationDto[]>([]);
+  const errorHandlingStore = useErrorHandlingStore();
+  const { t } = i18n.global;
 
-  const addOrganization = (org: {
-    id: string;
-    name: string;
-    slug: string;
-    createdAt: Date;
-    logo?: string | null | undefined;
-    metadata?: any;
-  }) => {
-    organizations.value.push({
-      id: org.id,
-      name: org.name,
-      members: [],
-      createdByUserId: "",
-      ownedByUserId: "",
-    });
+  const addOrganization = (org: OrganizationDto) => {
+    organizations.value.push(org);
   };
 
   const fetchOrganizations = async () => {
-    const { data } = await authClient.organization.list();
-    organizations.value = data
-      ? data.map((org) => {
-          return {
-            id: org.id,
-            name: org.name,
-            members: [],
-            createdByUserId: "",
-            ownedByUserId: "",
-          };
-        })
-      : [];
+    try {
+      const { data } = await apiClient.dpp.organizations.getMemberOrganizations();
+      organizations.value = data || [];
+    }
+    catch (error: unknown) {
+      errorHandlingStore.logErrorWithNotification(t("organizations.fetchError"), error);
+    }
   };
 
   const createOrganization = async (orgData: { name: string }) => {
-    const notificationsStore = useNotificationStore();
-    const { data, error } = await authClient.organization.create({
-      name: orgData.name,
-      slug: orgData.name,
-    });
-    if (error) {
-      notificationsStore.addErrorNotification(error.message ?? "Error creating organization");
+    try {
+      const { data } = await apiClient.dpp.organizations.post({
+        name: orgData.name,
+        slug: orgData.name, // Slug generation logic might be needed
+      });
+      if (data) {
+        addOrganization(data);
+        return data;
+      }
+    }
+    catch (error: unknown) {
+      errorHandlingStore.logErrorWithNotification(t("organizations.createError"), error);
       return null;
     }
-    if (data) {
-      addOrganization(data);
-    }
-    return data;
+    return null;
   };
 
   async function fetchCurrentOrganization() {
-    const { data } = await authClient.organization.getFullOrganization();
-    return data;
+    try {
+      const { data: session } = await authClient.getSession();
+      if (session?.session.activeOrganizationId) {
+        const { data } = await apiClient.dpp.organizations.getById(session.session.activeOrganizationId);
+        return data;
+      }
+      return null;
+    }
+    catch (error: unknown) {
+      errorHandlingStore.logErrorWithNotification(t("organizations.fetchCurrentError"), error);
+      return null;
+    }
   }
 
   return { organizations, fetchOrganizations, createOrganization, fetchCurrentOrganization };

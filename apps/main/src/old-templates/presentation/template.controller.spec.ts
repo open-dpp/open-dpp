@@ -7,13 +7,17 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 
+import { Auth } from "better-auth";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
-import { AuthGuard } from "../../auth/auth.guard";
-import { AuthModule } from "../../auth/auth.module";
-import { AuthService } from "../../auth/auth.service";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
+import { AuthModule } from "../../identity/auth/auth.module";
+import { AUTH } from "../../identity/auth/auth.provider";
+import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
+import { OrganizationsModule } from "../../identity/organizations/organizations.module";
+import { UsersService } from "../../identity/users/application/services/users.service";
+import { UsersModule } from "../../identity/users/users.module";
 import { Template } from "../domain/template";
 import { laptopFactory } from "../fixtures/laptop.factory";
 import { templateCreatePropsFactory } from "../fixtures/template.factory";
@@ -25,7 +29,6 @@ import { TemplateController } from "./template.controller";
 describe("templateController", () => {
   let app: INestApplication;
   let service: TemplateService;
-  let authService: AuthService;
 
   const betterAuthHelper = new BetterAuthHelper();
 
@@ -47,6 +50,8 @@ describe("templateController", () => {
           },
         ]),
         AuthModule,
+        OrganizationsModule,
+        UsersModule,
       ],
       providers: [
         TemplateService,
@@ -61,10 +66,7 @@ describe("templateController", () => {
     }).compile();
 
     service = moduleRef.get<TemplateService>(TemplateService);
-    authService = moduleRef.get<AuthService>(
-      AuthService,
-    );
-    betterAuthHelper.setAuthService(authService);
+    betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));
 
     app = moduleRef.createNestApplication();
     await app.init();

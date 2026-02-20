@@ -1,38 +1,28 @@
 <script lang="ts" setup>
-import type { OrganizationDto, UserDto } from "@open-dpp/api-client";
-import { onMounted, ref } from "vue";
-import { authClient } from "../../auth-client.ts";
+import type { MemberDto } from "@open-dpp/api-client";
+import { ref, watch } from "vue";
 import OrganizationInvitationsList from "../../components/organizations/OrganizationInvitationsList.vue";
 import OrganizationMembersList from "../../components/organizations/OrganizationMembersList.vue";
+import apiClient from "../../lib/api-client";
+import { useIndexStore } from "../../stores/index";
 
-const members = ref<Array<UserDto>>([]);
-const organization = ref<OrganizationDto | null>(null);
+const members = ref<Array<MemberDto>>([]);
+const indexStore = useIndexStore();
 
 async function fetchMembers() {
-  const { data } = await authClient.organization.listMembers();
-  members.value = data
-    ? data.members.map((member) => {
-        return {
-          id: member.user.id,
-          email: member.user.email,
-        };
-      })
-    : [];
+  if (!indexStore.selectedOrganization)
+    return;
+  try {
+    const { data } = await apiClient.dpp.organizations.getMembers(indexStore.selectedOrganization);
+    members.value = data;
+  }
+  catch (error) {
+    console.error("Failed to fetch members", error);
+    members.value = [];
+  }
 }
 
-onMounted(async () => {
-  const { data } = await authClient.organization.getFullOrganization();
-  if (data) {
-    organization.value = {
-      id: data.id,
-      name: data.name,
-      members: [],
-      createdByUserId: "",
-      ownedByUserId: "",
-    };
-    await fetchMembers();
-  }
-});
+watch(() => indexStore.selectedOrganization, fetchMembers, { immediate: true });
 </script>
 
 <template>
@@ -41,9 +31,9 @@ onMounted(async () => {
   </section>
   <section>
     <OrganizationMembersList
-      v-if="organization"
+      v-if="indexStore.selectedOrganization"
       :members="members"
-      :organization="organization"
+      :organization-id="indexStore.selectedOrganization"
       @invited-user="fetchMembers"
     />
   </section>

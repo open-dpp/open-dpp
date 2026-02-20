@@ -15,4 +15,7 @@ clean-pnpm:
 clean-turbo:
 	find . -name ".turbo" -type d -prune -exec rm -rf '{}' +
 
-.PHONY: dev test full clean-pnpm clean-turbo
+clean-dist:
+	find . -name "dist" -type d -prune -exec rm -rf '{}' +
+
+.PHONY: dev test full clean-pnpm clean-turbo clean-dist

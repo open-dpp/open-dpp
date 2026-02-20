@@ -45,6 +45,7 @@ export type {
   TemplateDto,
   TemplateGetAllDto,
 } from './dpp/old-templates/template.dtos'
+export type { MemberDto } from './dpp/organizations/member.dtos'
 export type {
   OrganizationCreateDto,
   OrganizationDto,
@@ -88,7 +89,7 @@ export type {
   UniqueProductIdentifierReferenceDto,
 } from './dpp/unique-product-identifiers/unique-product-identifiers.dtos'
 export { UniqueProductIdentifiersNamespace } from './dpp/unique-product-identifiers/unique-product-identifiers.namespace'
-export type { UserDto } from './dpp/users/user.dtos'
+export { UsersNamespace } from './dpp/users/users.namespace'
 export { MarketplaceApiClient } from './marketplace/marketplace-api-client'
 
 export { Sector } from './marketplace/passport-templates/passport-templates.dtos'

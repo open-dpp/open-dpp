@@ -11,5 +11,4 @@ export interface ProductPassportDto {
   mediaReferences: string[]
   dataSections: DataSectionDto[]
   organizationName: string
-  organizationImage?: string
 }

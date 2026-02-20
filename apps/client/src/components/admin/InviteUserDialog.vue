@@ -12,7 +12,8 @@ import InputText from "primevue/inputtext";
 import Message from "primevue/message";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { authClient } from "../../auth-client.ts";
+import { z } from "zod";
+import apiClient from "../../lib/api-client.ts";
 import RingLoader from "../RingLoader.vue";
 
 const emit = defineEmits<{
@@ -24,38 +25,32 @@ const loading = ref<boolean>(false);
 const errors = ref<Array<string>>([]);
 const success = ref<boolean>(false);
 const email = ref("");
-const password = ref("");
-const firstName = ref("");
-const lastName = ref("");
+const emailError = ref("");
 
 async function inviteUser() {
   success.value = false;
   errors.value = [];
+  emailError.value = "";
+
+  const emailSchema = z.email();
+  const result = emailSchema.safeParse(email.value);
+
+  if (!result.success) {
+    emailError.value = t("common.form.email.invalid");
+    return;
+  }
 
   try {
     loading.value = true;
-    const fullName = `${firstName.value} ${lastName.value}`;
-    const { error } = await authClient.admin.createUser({
+    const response = await apiClient.dpp.users.create({
       email: email.value,
-      password: password.value,
-      name: fullName,
-      role: "admin",
-      data: {
-        firstName: firstName.value,
-        lastName: lastName.value,
-        emailVerified: true,
-      },
     });
     loading.value = false;
-    if (!error) {
+    if (response.status === 201) {
       success.value = true;
       emit("success");
       email.value = "";
-      password.value = "";
-      firstName.value = "";
-      lastName.value = "";
       errors.value = [];
-      loading.value = false;
     }
     else {
       errors.value.push(t("common.errorOccurred"));
@@ -154,44 +149,14 @@ async function inviteUser() {
                           id="email"
                           v-model="email"
                           type="text"
+                          :invalid="!!emailError"
                           class="w-full"
+                          :aria-describedby="emailError ? 'email-error' : 'email-help'"
                         />
-                      </div>
-
-                      <div class="flex flex-col gap-2">
-                        <label for="password" class="block text-sm font-medium text-gray-700">
-                          {{ t('common.form.password.label') }}
-                        </label>
-                        <InputText
-                          id="password"
-                          v-model="password"
-                          type="password"
-                          class="w-full"
-                        />
-                      </div>
-
-                      <div class="flex flex-col gap-2">
-                        <label for="firstName" class="block text-sm font-medium text-gray-700">
-                          {{ t('user.firstName') }}
-                        </label>
-                        <InputText
-                          id="firstName"
-                          v-model="firstName"
-                          type="text"
-                          class="w-full"
-                        />
-                      </div>
-
-                      <div class="flex flex-col gap-2">
-                        <label for="lastName" class="block text-sm font-medium text-gray-700">
-                          {{ t('user.lastName') }}
-                        </label>
-                        <InputText
-                          id="lastName"
-                          v-model="lastName"
-                          type="text"
-                          class="w-full"
-                        />
+                        <small v-if="emailError" id="email-error" class="text-red-600">{{ emailError }}</small>
+                        <small v-else id="email-help" class="text-gray-500">
+                          {{ t('common.form.email.help') }}
+                        </small>
                       </div>
 
                       <Button
