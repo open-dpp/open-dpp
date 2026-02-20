@@ -1,5 +1,6 @@
-import { timingSafeEqual } from "node:crypto";
 import type { CanActivate, ExecutionContext } from "@nestjs/common";
+import { Buffer } from "node:buffer";
+import { timingSafeEqual } from "node:crypto";
 import {
   Inject,
   Injectable,
