@@ -108,7 +108,7 @@ export const useAiAgentStore = defineStore("socket", () => {
     if (socket.value && !isLastMessagePendingFromBot.value) {
       socket.value.emit("userMessage", {
         msg,
-        passportUUID: route.params.permalink,
+        uniqueProductIdentifierUuid: route.params.permalink,
       });
       messages.value.push({
         id: Date.now(),

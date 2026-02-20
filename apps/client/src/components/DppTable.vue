@@ -32,16 +32,25 @@ dayjs.extend(localizedFormat);
 const route = useRoute();
 const router = useRouter();
 
-async function editItem(id: string) {
-  await router.push(`${route.path}/${id}`);
+async function editItem(item: SharedDppDto & { uniqueProductIdentifierUuid?: string }) {
+  await router.push(`${route.path}/${item.id}`);
 }
 
-function forwardToPresentation(id: string) {
-  router.push(`/presentation/${id}`);
+/** UPI uuid required for presentation/chat; buttons only shown when present */
+function hasPresentationId(item: SharedDppDto & { uniqueProductIdentifierUuid?: string }) {
+  return Boolean(item.uniqueProductIdentifierUuid);
 }
 
-function forwardToPresentationChat(id: string) {
-  router.push(`/presentation/${id}/chat`);
+function forwardToPresentation(item: SharedDppDto & { uniqueProductIdentifierUuid?: string }) {
+  if (item.uniqueProductIdentifierUuid) {
+    router.push(`/presentation/${item.uniqueProductIdentifierUuid}`);
+  }
+}
+
+function forwardToPresentationChat(item: SharedDppDto & { uniqueProductIdentifierUuid?: string }) {
+  if (item.uniqueProductIdentifierUuid) {
+    router.push(`/presentation/${item.uniqueProductIdentifierUuid}/chat`);
+  }
 }
 
 const { t } = useI18n();
@@ -80,23 +89,23 @@ const { t } = useI18n();
             <Button
               icon="pi pi-pencil"
               severity="primary"
-              @click="editItem(data.id)"
+              @click="editItem(data)"
             />
           </div>
-          <div v-if="!usesTemplates" class="flex items-center rounded-md gap-2">
+          <div v-if="!usesTemplates && hasPresentationId(data)" class="flex items-center rounded-md gap-2">
             <Button
               icon="pi pi-qrcode"
               severity="primary"
               :aria-label="t('dpp.forwardToPresentation')"
-              @click="forwardToPresentation(data.id)"
+              @click="forwardToPresentation(data)"
             />
           </div>
-          <div v-if="!usesTemplates" class="flex items-center rounded-md gap-2">
+          <div v-if="!usesTemplates && hasPresentationId(data)" class="flex items-center rounded-md gap-2">
             <Button
               icon="pi pi-comments"
               severity="primary"
               :aria-label="t('dpp.openPresentationChat')"
-              @click="forwardToPresentationChat(data.id)"
+              @click="forwardToPresentationChat(data)"
             />
           </div>
         </div>
