@@ -2,9 +2,9 @@
 import type { FormErrors } from "vee-validate";
 import type { EditorModeType } from "../../composables/aas-drawer.ts";
 
-import { FloatLabel, InputGroup, InputGroupAddon, InputText, Message } from "primevue";
 import { useField } from "vee-validate";
 import { useI18n } from "vue-i18n";
+import TextFieldWithValidation from "../basics/TextFieldWithValidation.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
 const props = defineProps<{
@@ -28,27 +28,17 @@ const { t } = useI18n();
       <span class="text-xl font-bold">{{
         t("aasEditor.formLabels.value")
       }}</span>
-      <InputGroup>
-        <InputGroupAddon>
-          <i class="pi pi-link" />
-        </InputGroupAddon>
-        <FloatLabel variant="on">
-          <InputText
-            id="value"
-            v-model="value"
-            :invalid="props.showErrors && !!props.errors.value"
-          />
-          <label for="value">{{ t("aasEditor.formLabels.value") }}</label>
-        </FloatLabel>
-      </InputGroup>
-      <Message
-        v-if="props.showErrors && props.errors.value"
-        size="small"
-        severity="error"
-        variant="simple"
+      <TextFieldWithValidation
+        id="value"
+        v-model="value"
+        :label="t('aasEditor.formLabels.value')"
+        :show-errors="props.showErrors"
+        :error="props.errors.value"
       >
-        {{ props.errors.value }}
-      </Message>
+        <template #addonLeft>
+          <i class="pi pi-link" />
+        </template>
+      </TextFieldWithValidation>
     </div>
   </div>
 </template>

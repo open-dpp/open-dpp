@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { DataTypeDefType } from "@open-dpp/dto";
 import { FloatLabel, InputGroup, Message } from "primevue";
+import { useI18n } from "vue-i18n";
 import PropertyValue from "../PropertyValue.vue";
 
 const props = defineProps<{
@@ -16,10 +17,13 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "update:modelValue", value: string | undefined | null): void;
 }>();
+
+const { t } = useI18n();
 </script>
 
 <template>
   <div class="flex flex-col gap-2">
+    <span class="text-xl font-bold">{{ t("aasEditor.formLabels.value") }}</span>
     <InputGroup>
       <FloatLabel variant="on">
         <PropertyValue

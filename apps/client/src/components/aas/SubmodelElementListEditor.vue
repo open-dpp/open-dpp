@@ -19,6 +19,7 @@ import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import FileField from "./form/FileField.vue";
+import LinkCellField from "./LinkCellField.vue";
 import PropertyValue from "./PropertyValue.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
@@ -117,12 +118,14 @@ function onFileChange(
 </script>
 
 <template>
-  <form class="flex flex-col gap-1 p-2">
-    <SubmodelBaseForm
-      :show-errors="showErrors"
-      :errors="errors"
-      :editor-mode="EditorMode.EDIT"
-    />
+  <div class="flex flex-col gap-1 p-2">
+    <form>
+      <SubmodelBaseForm
+        :show-errors="showErrors"
+        :errors="errors"
+        :editor-mode="EditorMode.EDIT"
+      />
+    </form>
     <DataTable
       scrollable
       edit-mode="cell"
@@ -201,7 +204,8 @@ function onFileChange(
             <span
               v-else-if="
                 (col.plain.modelType === AasSubmodelElements.Property
-                  || col.plain.modelType === AasSubmodelElements.ReferenceElement)
+                  || col.plain.modelType
+                    === AasSubmodelElements.ReferenceElement)
                   && cellData[field] != null
               "
             >
@@ -215,12 +219,12 @@ function onFileChange(
           #editor="{ data: editorData, field, index: rowIndex }"
         >
           <PropertyValue
-            v-if="col.plain.modelType !== AasSubmodelElements.File"
+            v-if="col.plain.modelType === AasSubmodelElements.Property"
             :id="`${rowIndex}-${field}`"
             v-model="editorData[field]"
             :value-type="col.plain.valueType"
           />
-          <InputText
+          <LinkCellField
             v-else-if="
               col.plain.modelType === AasSubmodelElements.ReferenceElement
             "
@@ -244,5 +248,5 @@ function onFileChange(
       :popup="true"
       position="right"
     />
-  </form>
+  </div>
 </template>
