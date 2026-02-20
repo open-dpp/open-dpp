@@ -1,4 +1,3 @@
-import type express from "express";
 import type { Connection } from "mongoose";
 
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
@@ -25,15 +24,16 @@ import {
   ValueResponseDto,
   ValueSchema,
 } from "@open-dpp/dto";
-import { fromNodeHeaders } from "better-auth/node";
-import { AuthService } from "../../auth/auth.service";
 import { DbSessionOptions } from "../../database/query-options";
+import { Session } from "../../identity/auth/domain/session";
+import { MembersService } from "../../identity/organizations/application/services/members.service";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
+
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath, ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
@@ -47,11 +47,19 @@ class SubmodelNotPartOfEnvironmentException extends BadRequestException {
 
 @Injectable()
 export class EnvironmentService {
+  private aasRepository: AasRepository;
+  private submodelRepository: SubmodelRepository;
+  private membersService: MembersService;
+
   constructor(
-    private readonly aasRepository: AasRepository,
-    private readonly submodelRepository: SubmodelRepository,
+    aasRepository: AasRepository,
+    submodelRepository: SubmodelRepository,
+    membersService: MembersService,
     @InjectConnection() private connection: Connection,
   ) {
+    this.aasRepository = aasRepository;
+    this.submodelRepository = submodelRepository;
+    this.membersService = membersService;
   }
 
   async createEnvironmentWithEmptyAas(assetKind: AssetKindType): Promise<Environment> {
@@ -248,14 +256,14 @@ export class EnvironmentService {
     }
     return await this.aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
   }
-}
 
-export async function checkOwnerShipOfDppIdentifiable<T extends IDigitalProductPassportIdentifiable>(dppIdentifiable: T, authService: AuthService, req: express.Request): Promise<T> {
-  const session = await authService.getSession(fromNodeHeaders(req.headers || []));
-  if (session?.user.id && await authService.isMemberOfOrganization(session.user.id, dppIdentifiable.getOrganizationId())) {
-    return dppIdentifiable;
-  }
-  else {
-    throw new ForbiddenException();
+  async checkOwnerShipOfDppIdentifiable<T extends IDigitalProductPassportIdentifiable>(dppIdentifiable: T, session: Session): Promise<T> {
+    const isMember = await this.membersService.isMemberOfOrganization(session.userId, dppIdentifiable.getOrganizationId());
+    if (session.userId && isMember) {
+      return dppIdentifiable;
+    }
+    else {
+      throw new ForbiddenException();
+    }
   }
 }

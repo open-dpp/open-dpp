@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import type { OrganizationDto, UserDto } from "@open-dpp/api-client";
+import type { MemberDto } from "@open-dpp/api-client";
 import { UserCircleIcon } from "@heroicons/vue/24/solid";
 import { useI18n } from "vue-i18n";
 import { ModalType, useLayoutStore } from "../../stores/layout";
 import InviteMemberDialog from "./InviteMemberDialog.vue";
 
 defineProps<{
-  organization: OrganizationDto;
-  members: Array<UserDto>;
+  organizationId: string;
+  members: Array<MemberDto>;
 }>();
 const emit = defineEmits<{
   (e: "invitedUser"): void;
@@ -30,7 +30,7 @@ const layoutStore = useLayoutStore();
       <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
         <InviteMemberDialog
           v-if="layoutStore.modalOpen === ModalType.INVITE_MEMBER_MODAL"
-          :organization-id="organization.id"
+          :organization-id="organizationId"
           @close="layoutStore.closeModal()"
           @invited-user="emit('invitedUser')"
         />
@@ -75,26 +75,32 @@ const layoutStore = useLayoutStore();
                     </div>
                     <div class="ml-4">
                       <div class="font-medium text-gray-900">
-                        {{ member.email }}
+                        {{ member.user?.name || member.user?.email }}
                       </div>
                       <div class="mt-1 text-gray-500">
-                        {{ member.email }}
+                        {{ member.user?.email }}
                       </div>
                     </div>
                   </div>
                 </td>
                 <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
                   <div
-                    v-if="organization.ownedByUserId === member.id"
+                    v-if="member.role === 'owner'"
                     class="text-gray-900"
+                  >
+                    {{ t('organizations.memberCreator') }}
+                  </div>
+                  <div
+                    v-else-if="member.role === 'admin'"
+                    class="text-gray-500"
                   >
                     {{ t('organizations.memberAdmin') }}
                   </div>
                   <div
-                    v-if="organization.createdByUserId === member.id"
-                    class="mt-1 text-gray-500"
+                    v-else
+                    class="text-gray-500"
                   >
-                    {{ t('organizations.memberCreator') }}
+                    {{ t('organizations.member') }}
                   </div>
                 </td>
               </tr>

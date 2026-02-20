@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import { OrganizationsModule } from "../organizations/organizations.module";
+import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { OldTemplateDoc, TemplateSchema } from "./infrastructure/template.schema";
 import { TemplateService } from "./infrastructure/template.service";
 import { TemplateController } from "./presentation/template.controller";

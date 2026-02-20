@@ -1,4 +1,5 @@
 import type { INestApplication } from "@nestjs/common";
+import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
 import { ModuleMetadata } from "@nestjs/common/interfaces/modules/module-metadata.interface";
@@ -25,13 +26,17 @@ import {
 } from "@open-dpp/testing";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
-import { AuthGuard } from "../../auth/auth.guard";
-import { AuthModule } from "../../auth/auth.module";
-import { AuthService } from "../../auth/auth.service";
 import { generateMongoConfig } from "../../database/config";
-
 import { EmailService } from "../../email/email.service";
+
+import { AuthModule } from "../../identity/auth/auth.module";
+import { AUTH } from "../../identity/auth/auth.provider";
+import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
+import { OrganizationsModule } from "../../identity/organizations/organizations.module";
+import { UsersService } from "../../identity/users/application/services/users.service";
+import { UsersModule } from "../../identity/users/users.module";
 import { AasModule } from "../aas.module";
+
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 
 import { Key } from "../domain/common/key";
@@ -55,7 +60,6 @@ import { SubmodelRepository } from "../infrastructure/submodel.repository";
 
 export function createAasTestContext<T>(basePath: string, metadataTestingModule: ModuleMetadata, mongooseModels: ModelDefinition[], EntityRepositoryClass: new (...args: any[]) => T) {
   let app: INestApplication;
-  let authService: AuthService;
   let dppIdentifiableRepository: T;
   let submodelRepository: SubmodelRepository;
   let aasRepository: AasRepository;
@@ -83,6 +87,8 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
         ]),
         AasModule,
         AuthModule,
+        OrganizationsModule,
+        UsersModule,
         ...(metadataTestingModule.imports || []),
       ],
       providers: [
@@ -99,10 +105,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       send: jest.fn(),
     }).compile();
 
-    authService = moduleRef.get<AuthService>(
-      AuthService,
-    );
-    betterAuthHelper.setAuthService(authService);
+    betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));
 
     app = moduleRef.createNestApplication();
     await app.init();
@@ -657,7 +660,9 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
   }
 
   afterAll(async () => {
-    await app.close();
+    if (app) {
+      await app.close();
+    }
   });
 
   return {

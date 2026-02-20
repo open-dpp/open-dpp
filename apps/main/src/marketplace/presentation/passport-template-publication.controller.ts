@@ -1,5 +1,5 @@
 import { Controller, Get } from "@nestjs/common";
-import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
+import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
 import { PassportTemplatePublicationService } from "../infrastructure/passport-template-publication.service";
 import * as passportTemplateDto_1 from "./dto/passport-template-publication.dto";
 

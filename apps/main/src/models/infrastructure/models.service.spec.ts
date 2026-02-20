@@ -8,13 +8,17 @@ import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { Auth } from "better-auth";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import { ignoreIds } from "../../../test/utils.for.test";
-import { AuthGuard } from "../../auth/auth.guard";
-import { AuthModule } from "../../auth/auth.module";
-import { AuthService } from "../../auth/auth.service";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
+import { AuthModule } from "../../identity/auth/auth.module";
+import { AUTH } from "../../identity/auth/auth.provider";
+import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
+import { OrganizationsModule } from "../../identity/organizations/organizations.module";
+import { UsersService } from "../../identity/users/application/services/users.service";
+import { UsersModule } from "../../identity/users/users.module";
 import { Template } from "../../old-templates/domain/template";
 import { laptopFactory } from "../../old-templates/fixtures/laptop.factory";
 import { DataValue } from "../../product-passport-data/domain/data-value";
@@ -23,7 +27,6 @@ import {
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
-import { UsersService } from "../../users/infrastructure/users.service";
 import { Model } from "../domain/model";
 import { ModelDoc, ModelDocSchemaVersion, ModelSchema } from "./model.schema";
 import { ModelsService } from "./models.service";
@@ -33,7 +36,6 @@ describe("modelsService", () => {
   let modelsService: ModelsService;
   let mongoConnection: Connection;
   let modelDoc: MongooseModel<ModelDoc>;
-  let authService: AuthService;
 
   const betterAuthHelper = new BetterAuthHelper();
 
@@ -59,11 +61,12 @@ describe("modelsService", () => {
           },
         ]),
         AuthModule,
+        OrganizationsModule,
+        UsersModule,
       ],
       providers: [
         ModelsService,
         UniqueProductIdentifierService,
-        UsersService,
         {
           provide: APP_GUARD,
           useClass: AuthGuard,
@@ -76,10 +79,7 @@ describe("modelsService", () => {
     modelsService = module.get<ModelsService>(ModelsService);
     mongoConnection = module.get<Connection>(getConnectionToken());
     modelDoc = mongoConnection.model(ModelDoc.name, ModelSchema);
-    authService = module.get<AuthService>(
-      AuthService,
-    );
-    betterAuthHelper.setAuthService(authService);
+    betterAuthHelper.init(module.get<UsersService>(UsersService), module.get<Auth>(AUTH));
 
     app = module.createNestApplication();
     await app.init();
@@ -214,5 +214,11 @@ describe("modelsService", () => {
     expect(found.templateId).toEqual("templateId");
     const saved = await modelsService.save(found);
     expect(saved.templateId).toEqual("templateId");
+  });
+
+  afterAll(async () => {
+    if (app) {
+      await app.close();
+    }
   });
 });
