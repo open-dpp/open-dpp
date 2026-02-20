@@ -285,7 +285,6 @@ onUnmounted(() => {
         </div>
         <MediaModal
           :open="openFileModal"
-          @cancel="openFileModal = false"
           @confirm="(items) => updateFileFromModal(items)"
         />
       </div>

@@ -59,6 +59,14 @@ export class Environment {
     return submodel;
   }
 
+  deleteSubmodel(submodel: Submodel) {
+    const index = this.submodels.indexOf(submodel.id);
+    if (index === -1) {
+      throw new ValueError(`Submodel with id ${submodel.id} does not exist`);
+    }
+    this.submodels.splice(index, 1);
+  }
+
   toPlain() {
     return {
       assetAdministrationShells: this.assetAdministrationShells,

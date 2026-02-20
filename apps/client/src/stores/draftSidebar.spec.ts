@@ -18,8 +18,8 @@ describe("draftSidebarStore", () => {
     draftSidebarStore.open(SidebarContentType.SECTION_SELECTION, {
       parentId: "p1",
     });
-    expect(draftSidebarStore.title).toEqual("Abschnitt hinzufügen");
-    expect(draftSidebarStore.subTitle).toEqual("Auswahl");
+    expect(draftSidebarStore.title).toEqual("Add Section");
+    expect(draftSidebarStore.subTitle).toEqual("Selection");
     expect(draftSidebarStore.isOpen).toBeTruthy();
     expect(draftSidebarStore.content).toEqual(SectionSelection);
     expect(draftSidebarStore.contentProps).toEqual({ parentId: "p1" });
@@ -33,8 +33,8 @@ describe("draftSidebarStore", () => {
       type: SectionType.REPEATABLE,
       parentId: "id",
     });
-    expect(draftSidebarStore.title).toEqual("Abschnitt");
-    expect(draftSidebarStore.subTitle).toEqual("Konfiguration");
+    expect(draftSidebarStore.title).toEqual("Section");
+    expect(draftSidebarStore.subTitle).toEqual("Configuration");
     expect(draftSidebarStore.content).toEqual(SectionForm);
     expect(draftSidebarStore.contentProps).toEqual({
       type: SectionType.REPEATABLE,
@@ -48,8 +48,8 @@ describe("draftSidebarStore", () => {
       type: DataFieldType.TEXT_FIELD,
       parentId: "id",
     });
-    expect(draftSidebarStore.title).toEqual("Datenfeld");
-    expect(draftSidebarStore.subTitle).toEqual("Konfiguration");
+    expect(draftSidebarStore.title).toEqual("Data field");
+    expect(draftSidebarStore.subTitle).toEqual("Configuration");
     expect(draftSidebarStore.content).toEqual(DataFieldForm);
     expect(draftSidebarStore.contentProps).toEqual({
       type: DataFieldType.TEXT_FIELD,

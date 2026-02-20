@@ -267,8 +267,7 @@ watch(selectedLocalFile, (newFile) => {
           </div>
         </div>
         <MediaModal
-          :open="openFileModal"
-          @cancel="openFileModal = false"
+          v-model="openFileModal"
           @confirm="items => updateFileFromModal(items)"
         />
       </div>

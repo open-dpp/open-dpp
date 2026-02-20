@@ -1,10 +1,35 @@
-import type { PassportDto, PassportPaginationDto, PassportRequestCreateDto, SubmodelElementRequestDto, SubmodelRequestDto } from "@open-dpp/dto";
+import type {
+  PassportDto,
+  PassportPaginationDto,
+  PassportRequestCreateDto,
+  SubmodelElementListResponseDto,
+  SubmodelElementModificationDto,
+  SubmodelElementRequestDto,
+  SubmodelModificationDto,
+  SubmodelRequestDto,
+  ValueRequestDto,
+} from "@open-dpp/dto";
 import { BadRequestException, Body, Controller, Get, Post } from "@nestjs/common";
-import { AssetAdministrationShellPaginationResponseDto, AssetKind, PassportDtoSchema, PassportPaginationDtoSchema, PassportRequestCreateDtoSchema, SubmodelElementPaginationResponseDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/dto";
+import {
+  AssetAdministrationShellPaginationResponseDto,
+  AssetKind,
+  PassportDtoSchema,
+  PassportPaginationDtoSchema,
+  PassportRequestCreateDtoSchema,
+  SubmodelElementPaginationResponseDto,
+  SubmodelElementResponseDto,
+  SubmodelPaginationResponseDto,
+  SubmodelResponseDto,
+  ValueResponseDto,
+} from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { Environment } from "../../aas/domain/environment";
-import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
+import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import {
+  ApiDeleteColumn,
+  ApiDeleteRow,
+  ApiDeleteSubmodelById,
+  ApiDeleteSubmodelElementById,
   ApiGetShells,
   ApiGetSubmodelById,
   ApiGetSubmodelElementById,
@@ -12,31 +37,53 @@ import {
   ApiGetSubmodelElementValue,
   ApiGetSubmodels,
   ApiGetSubmodelValue,
+  ApiPatchColumn,
+  ApiPatchSubmodel,
+  ApiPatchSubmodelElement,
+  ApiPatchSubmodelElementValue,
+  ApiPostColumn,
+  ApiPostRow,
   ApiPostSubmodel,
   ApiPostSubmodelElement,
   ApiPostSubmodelElementAtIdShortPath,
+  ColumnParam,
   CursorQueryParam,
   IdParam,
   IdShortPathParam,
   LimitQueryParam,
+  PositionQueryParam,
+  RequestParam,
+  RowParam,
+  SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
+  SubmodelElementValueModificationRequestBody,
   SubmodelIdParam,
+  SubmodelModificationRequestBody,
   SubmodelRequestBody,
 } from "../../aas/presentation/aas.decorators";
-import { IAasCreateEndpoints, IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
 import {
+  IAasCreateEndpoints,
+  IAasDeleteEndpoints,
+  IAasModifyEndpoints,
+  IAasReadEndpoints,
+} from "../../aas/presentation/aas.endpoints";
+import { checkOwnerShipOfDppIdentifiable, EnvironmentService } from "../../aas/presentation/environment.service";
+import { AuthService } from "../../auth/auth.service";
+import { DbSessionOptions } from "../../database/query-options";
   EnvironmentService,
 } from "../../aas/presentation/environment.service";
 import { Session } from "../../identity/auth/domain/session";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { Pagination } from "../../pagination/pagination";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
-import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import {
+  UniqueProductIdentifierService,
+} from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 
 @Controller("/passports")
-export class PassportController implements IAasReadEndpoints, IAasCreateEndpoints {
+export class PassportController implements IAasReadEndpoints, IAasCreateEndpoints, IAasModifyEndpoints, IAasDeleteEndpoints {
   constructor(
     private readonly environmentService: EnvironmentService,
     private readonly passportRepository: PassportRepository,
@@ -124,6 +171,27 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     return await this.environmentService.addSubmodelToEnvironment(passport.getEnvironment(), body, this.saveEnvironmentCallback(passport));
   }
 
+  @ApiDeleteSubmodelById()
+  async deleteSubmodel(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @RequestParam() req: express.Request,
+  ): Promise<void> {
+    const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
+    await this.environmentService.deleteSubmodelFromEnvironment(passport.getEnvironment(), submodelId, this.saveEnvironmentCallback(passport));
+  }
+
+  @ApiPatchSubmodel()
+  async modifySubmodel(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @SubmodelModificationRequestBody() body: SubmodelModificationDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelResponseDto> {
+    const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.modifySubmodel(passport.getEnvironment(), submodelId, body);
+  }
+
   @ApiGetSubmodelById()
   async getSubmodelById(
     @IdParam() id: string,
@@ -144,6 +212,69 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     return await this.environmentService.getSubmodelValue(passport.getEnvironment(), submodelId);
   }
 
+  @ApiPostColumn()
+  async addColumnToSubmodelElementList(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
+    @PositionQueryParam() position: number | undefined,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementListResponseDto> {
+    const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
+    const column = parseSubmodelElement(body);
+    return await this.environmentService.addColumn(passport.getEnvironment(), submodelId, idShortPath, column, position);
+  }
+
+  @ApiPatchColumn()
+  async modifyColumnOfSubmodelElementList(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @ColumnParam() idShortOfColumn: string,
+    @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementListResponseDto> {
+    const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.modifyColumn(passport.getEnvironment(), submodelId, idShortPath, idShortOfColumn, body);
+  }
+
+  @ApiDeleteColumn()
+  async deleteColumnFromSubmodelElementList(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @ColumnParam() idShortOfColumn: string,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementListResponseDto> {
+    const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.deleteColumn(passport.getEnvironment(), submodelId, idShortPath, idShortOfColumn);
+  }
+
+  @ApiPostRow()
+  async addRowToSubmodelElementList(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @PositionQueryParam() position: number | undefined,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementListResponseDto> {
+    const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.addRow(passport.getEnvironment(), submodelId, idShortPath, position);
+  }
+
+  @ApiDeleteRow()
+  async deleteRowFromSubmodelElementList(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @RowParam() idShortOfRow: string,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementListResponseDto> {
+    const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.deleteRow(passport.getEnvironment(), submodelId, idShortPath, idShortOfRow);
+  }
+
   @ApiPostSubmodelElement()
   async createSubmodelElement(
     @IdParam() id: string,
@@ -153,6 +284,41 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
   ): Promise<SubmodelElementResponseDto> {
     const passport = await this.loadPassportAndCheckOwnership(id, session);
     return await this.environmentService.addSubmodelElement(passport.getEnvironment(), submodelId, body);
+  }
+
+  @ApiDeleteSubmodelElementById()
+  async deleteSubmodelElement(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @RequestParam() req: express.Request,
+  ): Promise<void> {
+    const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
+    await this.environmentService.deleteSubmodelElement(passport.getEnvironment(), submodelId, idShortPath);
+  }
+
+  @ApiPatchSubmodelElement()
+  async modifySubmodelElement(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementResponseDto> {
+    const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.modifySubmodelElement(passport.getEnvironment(), submodelId, body, idShortPath);
+  }
+
+  @ApiPatchSubmodelElementValue()
+  async modifySubmodelElementValue(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @SubmodelElementValueModificationRequestBody() body: ValueRequestDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementResponseDto> {
+    const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.modifyValueOfSubmodelElement(passport.getEnvironment(), submodelId, body, idShortPath);
   }
 
   @ApiGetSubmodelElements()
@@ -208,8 +374,8 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
   }
 
   private saveEnvironmentCallback(passport: Passport) {
-    return async () => {
-      await this.passportRepository.save(passport);
+    return async (options: DbSessionOptions) => {
+      await this.passportRepository.save(passport, options);
     };
   }
 }

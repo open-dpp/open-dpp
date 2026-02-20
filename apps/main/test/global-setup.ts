@@ -1,8 +1,13 @@
 import process from "node:process";
-import { MongoMemoryServer } from "mongodb-memory-server";
+import { MongoMemoryReplSet } from "mongodb-memory-server";
 
 export default async () => {
-  const mongod = await MongoMemoryServer.create();
+  const mongod = await MongoMemoryReplSet.create({
+    replSet: {
+      count: 1, // single node replica set is fine for transactions
+      storageEngine: "wiredTiger", // required for transactions
+    },
+  });
   process.env.OPEN_DPP_MONGODB_URI = mongod.getUri();
 
   process.env.NODE_ENV = "test";

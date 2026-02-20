@@ -1,8 +1,12 @@
 import type {
+  SubmodelElementListResponseDto,
+  SubmodelElementModificationDto,
   SubmodelElementRequestDto,
+  SubmodelModificationDto,
   SubmodelRequestDto,
+  ValueRequestDto,
 } from "@open-dpp/dto";
-import { BadRequestException, Controller, Get, Logger, Post } from "@nestjs/common";
+import { BadRequestException, Controller, Get, Post } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
   AssetKind,
@@ -16,9 +20,13 @@ import {
   TemplatePaginationDtoSchema,
   ValueResponseDto,
 } from "@open-dpp/dto";
-import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
+import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 
 import {
+  ApiDeleteColumn,
+  ApiDeleteRow,
+  ApiDeleteSubmodelById,
+  ApiDeleteSubmodelElementById,
   ApiGetShells,
   ApiGetSubmodelById,
   ApiGetSubmodelElementById,
@@ -26,19 +34,39 @@ import {
   ApiGetSubmodelElementValue,
   ApiGetSubmodels,
   ApiGetSubmodelValue,
+  ApiPatchColumn,
+  ApiPatchSubmodel,
+  ApiPatchSubmodelElement,
+  ApiPatchSubmodelElementValue,
+  ApiPostColumn,
+  ApiPostRow,
   ApiPostSubmodel,
   ApiPostSubmodelElement,
   ApiPostSubmodelElementAtIdShortPath,
+  ColumnParam,
   CursorQueryParam,
   IdParam,
   IdShortPathParam,
   LimitQueryParam,
+  PositionQueryParam,
+  RequestParam,
+  RowParam,
+  SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
+  SubmodelElementValueModificationRequestBody,
   SubmodelIdParam,
+  SubmodelModificationRequestBody,
   SubmodelRequestBody,
 } from "../../aas/presentation/aas.decorators";
-import { IAasCreateEndpoints, IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
 import {
+  IAasCreateEndpoints,
+  IAasDeleteEndpoints,
+  IAasModifyEndpoints,
+  IAasReadEndpoints,
+} from "../../aas/presentation/aas.endpoints";
+import { checkOwnerShipOfDppIdentifiable, EnvironmentService } from "../../aas/presentation/environment.service";
+import { AuthService } from "../../auth/auth.service";
+import { DbSessionOptions } from "../../database/query-options";
   EnvironmentService,
 } from "../../aas/presentation/environment.service";
 import { Session } from "../../identity/auth/domain/session";
@@ -48,9 +76,7 @@ import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 
 @Controller("/templates")
-export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoints {
-  private readonly logger = new Logger(TemplateController.name);
-
+export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoints, IAasModifyEndpoints, IAasDeleteEndpoints {
   constructor(private readonly environmentService: EnvironmentService, private readonly templateRepository: TemplateRepository) {
   }
 
@@ -90,6 +116,27 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
       body,
       this.saveEnvironmentCallback(template),
     );
+  }
+
+  @ApiDeleteSubmodelById()
+  async deleteSubmodel(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @RequestParam() req: express.Request,
+  ): Promise<void> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    await this.environmentService.deleteSubmodelFromEnvironment(template.getEnvironment(), submodelId, this.saveEnvironmentCallback(template));
+  }
+
+  @ApiPatchSubmodel()
+  async modifySubmodel(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @SubmodelModificationRequestBody() body: SubmodelModificationDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.modifySubmodel(template.getEnvironment(), submodelId, body);
   }
 
   @ApiGetSubmodelById()
@@ -134,6 +181,104 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
   ): Promise<SubmodelElementResponseDto> {
     const template = await this.loadTemplateAndCheckOwnership(id, session);
     return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body);
+  }
+
+  @ApiDeleteSubmodelElementById()
+  async deleteSubmodelElement(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @RequestParam() req: express.Request,
+  ): Promise<void> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    await this.environmentService.deleteSubmodelElement(template.getEnvironment(), submodelId, idShortPath);
+  }
+
+  @ApiPostColumn()
+  async addColumnToSubmodelElementList(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
+    @PositionQueryParam() position: number | undefined,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementListResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    const column = parseSubmodelElement(body);
+    return await this.environmentService.addColumn(template.getEnvironment(), submodelId, idShortPath, column, position);
+  }
+
+  @ApiPatchColumn()
+  async modifyColumnOfSubmodelElementList(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @ColumnParam() idShortOfColumn: string,
+    @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementListResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.modifyColumn(template.getEnvironment(), submodelId, idShortPath, idShortOfColumn, body);
+  }
+
+  @ApiDeleteColumn()
+  async deleteColumnFromSubmodelElementList(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @ColumnParam() idShortOfColumn: string,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementListResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.deleteColumn(template.getEnvironment(), submodelId, idShortPath, idShortOfColumn);
+  }
+
+  @ApiPostRow()
+  async addRowToSubmodelElementList(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @PositionQueryParam() position: number | undefined,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementListResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.addRow(template.getEnvironment(), submodelId, idShortPath, position);
+  }
+
+  @ApiDeleteRow()
+  async deleteRowFromSubmodelElementList(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @RowParam() idShortOfRow: string,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementListResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.deleteRow(template.getEnvironment(), submodelId, idShortPath, idShortOfRow);
+  }
+
+  @ApiPatchSubmodelElement()
+  async modifySubmodelElement(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.modifySubmodelElement(template.getEnvironment(), submodelId, body, idShortPath);
+  }
+
+  @ApiPatchSubmodelElementValue()
+  async modifySubmodelElementValue(
+    @IdParam() id: string,
+    @SubmodelIdParam() submodelId: string,
+    @IdShortPathParam() idShortPath: IdShortPath,
+    @SubmodelElementValueModificationRequestBody() body: ValueRequestDto,
+    @RequestParam() req: express.Request,
+  ): Promise<SubmodelElementResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(this.authService, id, req);
+    return await this.environmentService.modifyValueOfSubmodelElement(template.getEnvironment(), submodelId, body, idShortPath);
   }
 
   @ApiGetSubmodelElementById()
@@ -200,8 +345,8 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
   }
 
   private saveEnvironmentCallback(template: Template) {
-    return async () => {
-      await this.templateRepository.save(template);
+    return async (options: DbSessionOptions) => {
+      await this.templateRepository.save(template, options);
     };
   }
 
