@@ -1,10 +1,11 @@
+import process from "node:process";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { HydratedDocument, Schema as MongooseSchema, Types } from "mongoose";
 import { MemberRole } from "../../domain/member-role.enum";
 
 export type MemberDocument = HydratedDocument<Member>;
 
-@Schema({ collection: "member" })
+@Schema({ collection: "member", autoCreate: process.env.NODE_ENV === "test" })
 export class Member {
   @Prop({ type: String, required: true })
   _id: string;

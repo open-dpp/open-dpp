@@ -1,9 +1,10 @@
+import process from "node:process";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { HydratedDocument, SchemaTypes, Types } from "mongoose";
 
 export type OrganizationDocument = HydratedDocument<Organization>;
 
-@Schema({ collection: "organization" })
+@Schema({ collection: "organization", autoCreate: process.env.NODE_ENV === "test" })
 export class Organization {
   @Prop({ type: SchemaTypes.ObjectId })
   _id: Types.ObjectId;
