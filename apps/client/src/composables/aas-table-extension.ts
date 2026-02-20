@@ -1,6 +1,17 @@
 import type { AasNamespace } from "@open-dpp/api-client";
 
-import type { DataTypeDefType, FileRequestDto, LanguageType, PropertyRequestDto, ReferenceElementResponseDto, SubmodelElementListResponseDto, SubmodelElementModificationDto, SubmodelElementSharedRequestDto, TableModificationParamsDto, ValueRequestDto } from "@open-dpp/dto";
+import type {
+  DataTypeDefType,
+  FileRequestDto,
+  LanguageType,
+  PropertyRequestDto,
+  ReferenceElementRequestDto,
+  SubmodelElementListResponseDto,
+  SubmodelElementModificationDto,
+  SubmodelElementSharedRequestDto,
+  TableModificationParamsDto,
+  ValueRequestDto,
+} from "@open-dpp/dto";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { Ref } from "vue";
@@ -12,7 +23,6 @@ import type {
   SubmodelElementListEditorProps,
 } from "./aas-drawer.ts";
 import {
-
   AasSubmodelElements,
   DataTypeDef,
   KeyTypes,
@@ -104,7 +114,10 @@ export function useAasTableExtension({
     fieldLabel: string,
     icon: string,
     options: TableModificationParamsDto,
-    type: typeof AasSubmodelElements.File | typeof AasSubmodelElements.Property | typeof AasSubmodelElements.ReferenceElement,
+    type:
+      | typeof AasSubmodelElements.File
+      | typeof AasSubmodelElements.Property
+      | typeof AasSubmodelElements.ReferenceElement,
     valueType?: DataTypeDefType,
   ) {
     const addColumLabel = translate(
@@ -116,39 +129,57 @@ export function useAasTableExtension({
             : fieldLabel.toLowerCase(),
       },
     );
-    const Callbacks = {
-      [AasSubmodelElements.Property]: {
-        callback: async (data: PropertyRequestDto) =>
-          createColumn({ modelType: type, ...data }, options),
-        data: { valueType, modelType: type },
-      },
-      [AasSubmodelElements.File]: {
-        callback: async (data: FileRequestDto) =>
-          createColumn({ modelType: type, ...data }, options),
-        data: { modelType: type, contentType: "application/octet-stream" },
-      },
-      [AasSubmodelElements.ReferenceElement]: {
-        callback: async (data: ReferenceElementResponseDto) =>
-          createColumn({ modelType: type, ...data }, options),
-        data: { modelType: type },
-      },
-    };
-    const { callback, data } = Callbacks[type];
-
-    return {
+    const labelAndIcon = {
       label: fieldLabel,
       icon,
-      command: (_event: MenuItemCommandEvent) => {
-        openDrawer({
-          type: ColumnEditorKey,
-          data,
-          mode: EditorMode.CREATE,
-          title: addColumLabel,
-          path: pathToList,
-          callback,
-        });
-      },
     };
+    const sharedDrawerProps = {
+      mode: EditorMode.CREATE,
+      title: addColumLabel,
+      path: pathToList,
+    };
+
+    return match({ type, valueType })
+      .with({ type: AasSubmodelElements.File }, ({ type }) => ({
+        ...labelAndIcon,
+        command: (_event: MenuItemCommandEvent) => {
+          openDrawer({
+            ...sharedDrawerProps,
+            type: ColumnEditorKey,
+            data: { modelType: type, contentType: "application/octet-stream" },
+            callback: async (data: FileRequestDto) =>
+              createColumn({ modelType: type, ...data }, options),
+          });
+        },
+      }))
+      .with(
+        { type: AasSubmodelElements.Property, valueType: P.string },
+        ({ type, valueType }) => ({
+          ...labelAndIcon,
+          command: (_event: MenuItemCommandEvent) => {
+            openDrawer({
+              ...sharedDrawerProps,
+              type: ColumnEditorKey,
+              data: { modelType: type, valueType },
+              callback: async (data: PropertyRequestDto) =>
+                createColumn({ modelType: type, ...data }, options),
+            });
+          },
+        }),
+      )
+      .with({ type: AasSubmodelElements.ReferenceElement }, ({ type }) => ({
+        ...labelAndIcon,
+        command: (_event: MenuItemCommandEvent) => {
+          openDrawer({
+            ...sharedDrawerProps,
+            type: ColumnEditorKey,
+            data: { modelType: type, value: { type: ReferenceTypes.ExternalReference, keys: [] } },
+            callback: async (data: ReferenceElementRequestDto) =>
+              createColumn({ modelType: type, ...data }, options),
+          });
+        },
+      }))
+      .run();
   }
 
   const columns = ref<Column[]>([]);
@@ -179,7 +210,9 @@ export function useAasTableExtension({
   }
 
   function convertRowToRequestDto(row: Row): ValueRequestDto {
-    const rowContext = rowsContext.value.find(r => r.idShort === row.idShort)!;
+    const rowContext = rowsContext.value.find(
+      r => r.idShort === row.idShort,
+    )!;
     function convertCell(value: Value, context: RowContext) {
       return match({ value, ...context })
         .with(
@@ -197,22 +230,38 @@ export function useAasTableExtension({
           },
           ({ value }) => value,
         )
+        .with(
+          {
+            modelType: AasSubmodelElements.ReferenceElement,
+            value: ValueMatcher,
+            type: P.optional(P.string),
+            keyType: P.optional(P.string),
+          },
+          ({ value, type, keyType }) => {
+            return {
+              type: type ?? ReferenceTypes.ExternalReference,
+              keys: value
+                ? [{ type: keyType ?? KeyTypes.GlobalReference, value }]
+                : [],
+            };
+          },
+        )
         .otherwise(() => null);
     }
-    return ValueSchema.parse(
-      Object.entries(row).filter(([field]) => field !== "idShort").reduce(
+    const requestDto = Object.entries(row)
+      .filter(([field]) => field !== "idShort")
+      .reduce(
         (acc, [field, value]) => ({
           ...acc,
           [field]: convertCell(value, rowContext[field]),
         }),
         {},
-      ),
-    );
+      );
+
+    return ValueSchema.parse(requestDto);
   }
 
-  async function onCellEditComplete(
-    event: CellEditProps,
-  ) {
+  async function onCellEditComplete(event: CellEditProps) {
     const { data: rowData, newValue, field, index: editedRowIndex } = event;
     if (rowData[field] !== newValue) {
       const modifications = rows.value.map((row, index) =>
@@ -232,10 +281,14 @@ export function useAasTableExtension({
         newData.value[0],
       );
       for (const [index, col] of headerRow.value.entries()) {
-        const foundColumn = columns.value.find(c => c.idShort === col.idShort);
+        const foundColumn = columns.value.find(
+          c => c.idShort === col.idShort,
+        );
         const column = {
           idShort: col.idShort,
-          label: col.displayName.find(d => d.language === selectedLanguage)?.text ?? col.idShort,
+          label:
+            col.displayName.find(d => d.language === selectedLanguage)
+              ?.text ?? col.idShort,
           plain: col,
         };
         if (!foundColumn) {
@@ -270,7 +323,10 @@ export function useAasTableExtension({
             modelType: AasSubmodelElements.Property,
             value: ValueMatcher,
           },
-          ({ value, modelType }) => ({ value: value ?? null, context: { modelType } }),
+          ({ value, modelType }) => ({
+            value: value ?? null,
+            context: { modelType },
+          }),
         )
         .with(
           {
@@ -290,7 +346,11 @@ export function useAasTableExtension({
           },
           ({ value }) => ({
             value: value?.keys[0]?.value ?? null,
-            context: { modelType: AasSubmodelElements.ReferenceElement },
+            context: {
+              modelType: AasSubmodelElements.ReferenceElement,
+              type: value?.type,
+              keyType: value?.keys[0]?.type,
+            },
           }),
         )
         .otherwise(() => {
@@ -300,7 +360,9 @@ export function useAasTableExtension({
     for (const [index, row] of newData.value.entries()) {
       const parsedRow = SubmodelElementCollectionJsonSchema.parse(row);
       const foundRow = rows.value.find(r => r.idShort === row.idShort);
-      const foundRowContext = rowsContext.value.find(r => r.idShort === row.idShort);
+      const foundRowContext = rowsContext.value.find(
+        r => r.idShort === row.idShort,
+      );
       const rowToModify = foundRow || { idShort: row.idShort };
       const rowContextToModify = foundRowContext || { idShort: row.idShort };
       for (const col of parsedRow.value) {
@@ -357,7 +419,10 @@ export function useAasTableExtension({
         icon: "pi pi-arrow-down",
         command: async () => {
           await addRow({
-            position: options.position !== undefined ? options.position + 1 : rows.value.length,
+            position:
+              options.position !== undefined
+                ? options.position + 1
+                : rows.value.length,
           });
         },
       },
@@ -539,7 +604,10 @@ export function useAasTableExtension({
                   column.idShort,
                 );
               if (response.status === HTTPCode.OK) {
-                columns.value.splice(columns.value.findIndex(c => c.idShort === column.idShort), 1);
+                columns.value.splice(
+                  columns.value.findIndex(c => c.idShort === column.idShort),
+                  1,
+                );
                 updateListData(response.data);
               }
             }

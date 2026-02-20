@@ -3,7 +3,9 @@ import type { MenuItemCommandEvent } from "primevue/menuitem";
 import {
   AasSubmodelElements,
   DataTypeDef,
+  KeyTypes,
   Language,
+  ReferenceTypes,
   SubmodelElementListJsonSchema,
   SubmodelElementSchema,
 } from "@open-dpp/dto";
@@ -81,6 +83,11 @@ describe("aasTableExtension composable", () => {
       contentType: "application/octet-stream",
       displayName: [{ language: "en", text: "File" }],
     },
+    {
+      idShort: "Column4",
+      modelType: AasSubmodelElements.ReferenceElement,
+      displayName: [{ language: "en", text: "Link" }],
+    },
   ];
   const colsWithValue = [
     {
@@ -95,6 +102,18 @@ describe("aasTableExtension composable", () => {
       ...cols[2],
       value: "pathToFile",
       contentType: "text/plain",
+    },
+    {
+      ...cols[3],
+      value: {
+        type: ReferenceTypes.ExternalReference,
+        keys: [
+          {
+            type: KeyTypes.GlobalReference,
+            value: "https://example.com/my-link",
+          },
+        ],
+      },
     },
   ];
   const submodelElementList = SubmodelElementListJsonSchema.parse({
@@ -133,8 +152,20 @@ describe("aasTableExtension composable", () => {
       callbackOfSubmodelElementListEditor,
     });
     expect(rows.value).toEqual([
-      { idShort: "row0", Column1: null, Column2: null, Column3: null },
-      { idShort: "row1", Column1: "Wood", Column2: "50", Column3: "pathToFile" },
+      {
+        idShort: "row0",
+        Column1: null,
+        Column2: null,
+        Column3: null,
+        Column4: null,
+      },
+      {
+        idShort: "row1",
+        Column1: "Wood",
+        Column2: "50",
+        Column3: "pathToFile",
+        Column4: "https://example.com/my-link",
+      },
     ]);
 
     expect(rowsContext.value).toEqual([
@@ -142,13 +173,25 @@ describe("aasTableExtension composable", () => {
         idShort: "row0",
         Column1: { modelType: AasSubmodelElements.Property },
         Column2: { modelType: AasSubmodelElements.Property },
-        Column3: { modelType: AasSubmodelElements.File, contentType: "application/octet-stream" },
+        Column3: {
+          modelType: AasSubmodelElements.File,
+          contentType: "application/octet-stream",
+        },
+        Column4: { modelType: AasSubmodelElements.ReferenceElement },
       },
       {
         idShort: "row1",
         Column1: { modelType: AasSubmodelElements.Property },
         Column2: { modelType: AasSubmodelElements.Property },
-        Column3: { modelType: AasSubmodelElements.File, contentType: "text/plain" },
+        Column3: {
+          modelType: AasSubmodelElements.File,
+          contentType: "text/plain",
+        },
+        Column4: {
+          modelType: AasSubmodelElements.ReferenceElement,
+          type: ReferenceTypes.ExternalReference,
+          keyType: KeyTypes.GlobalReference,
+        },
       },
     ]);
   });
@@ -187,6 +230,11 @@ describe("aasTableExtension composable", () => {
         idShort: "Column3",
         label: "File",
         plain: SubmodelElementSchema.parse(cols[2]),
+      },
+      {
+        idShort: "Column4",
+        label: "Link",
+        plain: SubmodelElementSchema.parse(cols[3]),
       },
     ]);
   });
@@ -253,7 +301,7 @@ describe("aasTableExtension composable", () => {
     {
       label: "aasEditor.link",
       component: ColumnCreateEditor,
-      data: {},
+      data: { value: { type: ReferenceTypes.ExternalReference, keys: [] } },
       modelType: AasSubmodelElements.ReferenceElement,
     },
   ])(
@@ -284,10 +332,12 @@ describe("aasTableExtension composable", () => {
       expect(drawerVisible.value).toBeTruthy();
       expect(editorVNode.value!.props.path).toEqual(pathToList);
       expect(editorVNode.value!.component).toEqual(component);
-      expect(editorVNode.value!.props.data).toEqual({
-        modelType,
-        ...data,
-      });
+      await waitFor(() =>
+        expect(editorVNode.value!.props.data).toEqual({
+          modelType,
+          ...data,
+        }),
+      );
 
       const columnData = { idShort: "column 3", ...data };
 
@@ -381,11 +431,21 @@ describe("aasTableExtension composable", () => {
           Column1: null,
           Column2: null,
           Column3: { contentType: "application/octet-stream", value: null },
+          Column4: { type: ReferenceTypes.ExternalReference, keys: [] },
         },
         {
           Column1: "My material",
           Column2: "50",
           Column3: { contentType: "text/plain", value: "pathToFile" },
+          Column4: {
+            type: ReferenceTypes.ExternalReference,
+            keys: [
+              {
+                type: KeyTypes.GlobalReference,
+                value: "https://example.com/my-link",
+              },
+            ],
+          },
         },
       ],
     );
@@ -520,6 +580,11 @@ describe("aasTableExtension composable", () => {
           label: "File",
           plain: SubmodelElementSchema.parse(cols[2]),
         },
+        {
+          idShort: "Column4",
+          label: "Link",
+          plain: SubmodelElementSchema.parse(cols[3]),
+        },
       ]),
     );
   });
@@ -572,6 +637,7 @@ describe("aasTableExtension composable", () => {
           Column1: null,
           Column2: null,
           Column3: null,
+          Column4: null,
         },
       ]),
     );
@@ -581,7 +647,11 @@ describe("aasTableExtension composable", () => {
           idShort: "row0",
           Column1: { modelType: AasSubmodelElements.Property },
           Column2: { modelType: AasSubmodelElements.Property },
-          Column3: { modelType: AasSubmodelElements.File, contentType: "application/octet-stream" },
+          Column3: {
+            modelType: AasSubmodelElements.File,
+            contentType: "application/octet-stream",
+          },
+          Column4: { modelType: AasSubmodelElements.ReferenceElement },
         },
       ]),
     );
@@ -639,18 +709,21 @@ describe("aasTableExtension composable", () => {
           Column1: null,
           Column2: null,
           Column3: null,
+          Column4: null,
         },
         {
           idShort: "row1",
           Column1: "Wood",
           Column2: "50",
           Column3: "pathToFile",
+          Column4: "https://example.com/my-link",
         },
         {
           idShort: "newRow",
           Column1: null,
           Column2: null,
           Column3: null,
+          Column4: null,
         },
       ]),
     );
@@ -661,19 +734,35 @@ describe("aasTableExtension composable", () => {
           idShort: "row0",
           Column1: { modelType: AasSubmodelElements.Property },
           Column2: { modelType: AasSubmodelElements.Property },
-          Column3: { modelType: AasSubmodelElements.File, contentType: "application/octet-stream" },
+          Column3: {
+            modelType: AasSubmodelElements.File,
+            contentType: "application/octet-stream",
+          },
+          Column4: { modelType: AasSubmodelElements.ReferenceElement },
         },
         {
           idShort: "row1",
           Column1: { modelType: AasSubmodelElements.Property },
           Column2: { modelType: AasSubmodelElements.Property },
-          Column3: { modelType: AasSubmodelElements.File, contentType: "text/plain" },
+          Column3: {
+            modelType: AasSubmodelElements.File,
+            contentType: "text/plain",
+          },
+          Column4: {
+            modelType: AasSubmodelElements.ReferenceElement,
+            type: ReferenceTypes.ExternalReference,
+            keyType: KeyTypes.GlobalReference,
+          },
         },
         {
           idShort: "newRow",
           Column1: { modelType: AasSubmodelElements.Property },
           Column2: { modelType: AasSubmodelElements.Property },
-          Column3: { modelType: AasSubmodelElements.File, contentType: "application/octet-stream" },
+          Column3: {
+            modelType: AasSubmodelElements.File,
+            contentType: "application/octet-stream",
+          },
+          Column4: { modelType: AasSubmodelElements.ReferenceElement },
         },
       ]),
     );

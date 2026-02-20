@@ -200,7 +200,8 @@ function onFileChange(
             />
             <span
               v-else-if="
-                col.plain.modelType === AasSubmodelElements.Property
+                (col.plain.modelType === AasSubmodelElements.Property
+                  || col.plain.modelType === AasSubmodelElements.ReferenceElement)
                   && cellData[field] != null
               "
             >

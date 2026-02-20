@@ -3,13 +3,14 @@ import type { Component, ComputedRef, Ref } from "vue";
 import {
 
   KeyTypes as AasKeyTypes,
-
-  AasSubmodelElementsEnum,
+  AasSubmodelElements,
 
   FileJsonSchema,
+
   PropertyJsonSchema,
 
   ReferenceElementJsonSchema,
+  ReferenceJsonSchema,
   SubmodelElementCollectionJsonSchema,
   SubmodelElementListJsonSchema,
   SubmodelElementSchema,
@@ -68,11 +69,11 @@ export type SubmodelElementCollectionEditorProps
   = SubmodelElementCollectionResponseDto;
 export type SubmodelElementListEditorProps = SubmodelElementListResponseDto;
 
-export const ColumnCreateEditorPropsSchema = z.object({
-  modelType: AasSubmodelElementsEnum,
-  valueType: ValueTypeSchema.optional(),
-  contentType: z.string().optional(),
-});
+export const ColumnCreateEditorPropsSchema = z.discriminatedUnion("modelType", [
+  z.object({ modelType: z.literal(AasSubmodelElements.Property), valueType: ValueTypeSchema }),
+  z.object({ modelType: z.literal(AasSubmodelElements.File), contentType: z.string() }),
+  z.object({ modelType: z.literal(AasSubmodelElements.ReferenceElement), value: ReferenceJsonSchema }),
+]);
 export type ColumnCreateEditorProps = z.infer<typeof ColumnCreateEditorPropsSchema>;
 export type ColumnEditorProps = SubmodelElementResponseDto;
 

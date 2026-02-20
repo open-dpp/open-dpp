@@ -45,9 +45,6 @@ async function submit() {
       SubmodelElementSchema.parse({
         ...data,
         ...props.data,
-        modelType: props.data.modelType,
-        valueType: props.data.valueType,
-        contentType: props.data.contentType,
       }),
     );
   })();
