@@ -44,7 +44,7 @@ export const useModelDialogStore = defineStore("model-dialog-store", () => {
       }
       catch {
         const notificationStore = useNotificationStore();
-        notificationStore.addErrorNotification(t("common.unknownErrorOccured"));
+        notificationStore.addErrorNotification(t("common.unknownErrorOccurred"));
       }
     }
     close();

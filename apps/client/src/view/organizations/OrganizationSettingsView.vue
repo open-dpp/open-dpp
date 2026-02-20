@@ -6,7 +6,6 @@ import { computed, onMounted, ref } from "vue";
 
 import { useI18n } from "vue-i18n";
 
-import { authClient } from "../../auth-client.ts";
 import MediaInput from "../../components/media/MediaInput.vue";
 import apiClient from "../../lib/api-client";
 import { useIndexStore } from "../../stores";
@@ -36,7 +35,7 @@ async function fetchOrganization() {
   const data = await organizationStore.fetchCurrentOrganization();
   if (data) {
     name.value = data.name;
-    const imageId = (data as any).image;
+    const imageId = data.logo;
     if (imageId) {
       await fetchMedia(imageId);
     }
@@ -62,29 +61,29 @@ async function save() {
   if (!indexStore.selectedOrganization)
     return;
 
-  let image;
+  let logo;
 
   if (currentMedia.value && currentMedia.value.mediaInfo.id) {
-    image = currentMedia.value.mediaInfo.id;
+    logo = currentMedia.value.mediaInfo.id;
   }
 
   if (selectedFile.value) {
     try {
-      image = await apiClient.media.media.uploadOrganizationProfileMedia(indexStore.selectedOrganization, selectedFile.value);
+      logo = await apiClient.media.media.uploadOrganizationProfileMedia(indexStore.selectedOrganization, selectedFile.value);
     }
     catch (e) {
-      console.error("Failed to upload image", e);
-      // Handle error
+      errorHandlingStore.logErrorWithNotification(t("organizations.form.updateError"), e);
+      selectedFile.value = null;
+      fileUploadKey.value++;
+      submitted.value = false;
+      return;
     }
   }
 
   try {
-    await authClient.organization.update({
-      organizationId: indexStore.selectedOrganization,
-      data: {
-        name: name.value,
-        ...(image ? { image } : {}),
-      },
+    await apiClient.dpp.organizations.update(indexStore.selectedOrganization, {
+      name: name.value,
+      ...(logo ? { logo } : {}),
     });
 
     await fetchOrganization();
@@ -134,7 +133,6 @@ onMounted(() => {
                 />
                 <span v-if="selectedFile" class="text-sm text-gray-600">{{ selectedFile.name }}</span>
               </div>
-              <small class="text-gray-500">{{ t('organizations.form.image.help') }}</small>
             </div>
 
             <div class="mt-4">

@@ -13,7 +13,7 @@ export class PassportMetricService {
   constructor(
     @InjectModel(PassportMetricDoc.name)
     private passportMetricDoc: MongooseModel<PassportMetricDoc>,
-  ) {}
+  ) { }
 
   convertToDomain(passportMetricDoc: PassportMetricDoc) {
     return PassportMetric.loadFromDb({
@@ -43,7 +43,7 @@ export class PassportMetricService {
       })),
     };
 
-    const dataModelDoc = await this.passportMetricDoc.insertOne(data);
+    const dataModelDoc = await this.passportMetricDoc.create(data);
 
     return this.convertToDomain(dataModelDoc);
   }

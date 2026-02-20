@@ -1,6 +1,7 @@
 import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { DbSessionOptions } from "../../database/query-options";
 import { findOne, findOneOrFail, save } from "../../lib/repositories";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetAdministrationShellDbSchema } from "./schemas/asset-administration-shell-db-schema";
@@ -24,8 +25,8 @@ export class AasRepository {
     return AssetAdministrationShell.fromPlain(AssetAdministrationShellDbSchema.encode(plain));
   }
 
-  async save(assetAdministrationShell: AssetAdministrationShell) {
-    return await save(assetAdministrationShell, this.aasDoc, AssetAdministrationShellDocSchemaVersion.v1_0_0, this.fromPlain, AssetAdministrationShellDbSchema);
+  async save(assetAdministrationShell: AssetAdministrationShell, options?: DbSessionOptions) {
+    return await save(assetAdministrationShell, this.aasDoc, AssetAdministrationShellDocSchemaVersion.v1_0_0, this.fromPlain, AssetAdministrationShellDbSchema, options);
   }
 
   async findOneOrFail(id: string): Promise<AssetAdministrationShell> {

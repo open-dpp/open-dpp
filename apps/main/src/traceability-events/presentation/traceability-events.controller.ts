@@ -1,6 +1,6 @@
-import type { UserSession } from "../../auth/auth.guard";
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
-import { Session } from "../../auth/session.decorator";
+import { Session } from "../../identity/auth/domain/session";
+import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { TraceabilityEventsService } from "../infrastructure/traceability-events.service";
 
 @Controller("dpp-events")
@@ -12,10 +12,10 @@ export class TraceabilityEventsController {
   }
 
   @Post()
-  async create(@Body() body: any, @Session() session: UserSession) {
+  async create(@Body() body: any, @AuthSession() session: Session) {
     return await this.dppEventsService.create({
       ...body,
-      userId: session.user.id,
+      userId: session.userId,
     });
   }
 

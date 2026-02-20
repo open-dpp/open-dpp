@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { SubmodelRequestDto } from "@open-dpp/dto";
 import type { SubmodelCreateEditorProps } from "../../composables/aas-drawer.ts";
+import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
+import { EditorMode } from "../../composables/aas-drawer.ts";
 import {
   submodelBaseFormDefaultValues,
   SubmodelBaseFormSchema,
@@ -13,10 +15,10 @@ import {
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
-const props = defineProps<{
-  data: SubmodelCreateEditorProps;
-  callback: (data: SubmodelRequestDto) => Promise<void>;
-}>();
+const props
+  = defineProps<
+    SharedEditorProps<SubmodelCreateEditorProps, SubmodelRequestDto>
+  >();
 
 const propertyFormSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
@@ -50,6 +52,10 @@ defineExpose<{
 
 <template>
   <form class="flex flex-col gap-1 p-2">
-    <SubmodelBaseForm :show-errors="showErrors" :errors="errors" />
+    <SubmodelBaseForm
+      :show-errors="showErrors"
+      :errors="errors"
+      :editor-mode="EditorMode.CREATE"
+    />
   </form>
 </template>

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { PagingMetadataDtoSchema } from '../shared/pagination.dto'
 import { AdministrativeInformationJsonSchema } from './administrative-information-json-schema'
 import { AssetInformationJsonSchema } from './asset-information-json-schema'
 import { LanguageTextJsonSchema } from './common/language-text-json-schema'
@@ -20,3 +21,12 @@ export const AssetAdministrationShellJsonSchema = z.object({
   derivedFrom: z.nullish(ResourceJsonSchema),
   submodels: ReferenceJsonSchema.array().default([]),
 })
+export const AssetAdministrationShellPaginationResponseDtoSchema = z
+  .object({
+    ...PagingMetadataDtoSchema.shape,
+    result: AssetAdministrationShellJsonSchema.array(),
+  })
+  .meta({ id: 'AssetAdministrationShells' })
+export type AssetAdministrationShellPaginationResponseDto = z.infer<
+  typeof AssetAdministrationShellPaginationResponseDtoSchema
+>

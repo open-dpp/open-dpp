@@ -113,7 +113,6 @@ describe("passportFormStore", () => {
         },
       ],
       organizationName: "Org A",
-      organizationImage: "orga-a-image",
     };
 
     let result = passportFormStore.getFormData("s1", { field1: 8 });
@@ -209,7 +208,6 @@ describe("passportFormStore", () => {
     mediaReferences: [],
     dataSections: [section1, section11, section111],
     organizationName: "Org A",
-    organizationImage: "orga-a-image",
   };
 
   const model = {
