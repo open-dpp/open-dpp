@@ -1,8 +1,6 @@
 import type { SubmodelElementListResponseDto } from "@open-dpp/dto";
-import type express from "express";
 import {
   AssetAdministrationShellPaginationResponseDto,
-
   SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
   SubmodelElementRequestDto,
@@ -14,7 +12,6 @@ import {
   ValueRequestDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
-import { AssetAdministrationShellPaginationResponseDto, SubmodelElementPaginationResponseDto, SubmodelElementRequestDto, SubmodelElementResponseDto, SubmodelPaginationResponseDto, SubmodelRequestDto, SubmodelResponseDto, ValueResponseDto } from "@open-dpp/dto";
 import { Session } from "../../identity/auth/domain/session";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
 
@@ -65,52 +62,52 @@ export interface IAasCreateEndpoints {
     idShortPath: IdShortPath,
     body: SubmodelElementRequestDto,
     position: number | undefined,
-    req: express.Request,
+    session: Session,
   ) => Promise<SubmodelElementListResponseDto>;
   addRowToSubmodelElementList: (
     id: string,
     submodelId: string,
     idShortPath: IdShortPath,
     position: number | undefined,
-    req: express.Request,
+    session: Session,
   ) => Promise<SubmodelElementListResponseDto>;
 }
 
 export interface IAasModifyEndpoints {
-  modifySubmodel: (id: string, submodelId: string, body: SubmodelModificationDto, req: express.Request) => Promise<SubmodelResponseDto>;
+  modifySubmodel: (id: string, submodelId: string, body: SubmodelModificationDto, session: Session) => Promise<SubmodelResponseDto>;
   modifySubmodelElement: (
     id: string,
     submodelId: string,
     idShortPath: IdShortPath,
     body: SubmodelElementModificationDto,
-    req: express.Request,
+    session: Session,
   ) => Promise<SubmodelElementResponseDto>;
-  modifySubmodelElementValue: (id: string, submodelId: string, idShortPath: IdShortPath, body: ValueRequestDto, req: express.Request) => Promise<SubmodelElementResponseDto>;
+  modifySubmodelElementValue: (id: string, submodelId: string, idShortPath: IdShortPath, body: ValueRequestDto, session: Session) => Promise<SubmodelElementResponseDto>;
   modifyColumnOfSubmodelElementList: (
     id: string,
     submodelId: string,
     idShortPath: IdShortPath,
     idShortOfColumn: string,
     body: SubmodelElementModificationDto,
-    req: express.Request,
+    session: Session,
   ) => Promise<SubmodelElementListResponseDto>;
 }
 
 export interface IAasDeleteEndpoints {
-  deleteSubmodel: (id: string, submodelId: string, req: express.Request) => Promise<void>;
-  deleteSubmodelElement: (id: string, submodelId: string, idShortPath: IdShortPath, req: express.Request) => Promise<void>;
+  deleteSubmodel: (id: string, submodelId: string, session: Session) => Promise<void>;
+  deleteSubmodelElement: (id: string, submodelId: string, idShortPath: IdShortPath, session: Session) => Promise<void>;
   deleteColumnFromSubmodelElementList: (
     id: string,
     submodelId: string,
     idShortPath: IdShortPath,
     idShortOfColumn: string,
-    req: express.Request,
+    session: Session,
   ) => Promise<SubmodelElementListResponseDto>;
   deleteRowFromSubmodelElementList: (
     id: string,
     submodelId: string,
     idShortPath: IdShortPath,
     idShortOfRow: string,
-    req: express.Request,
+    session: Session,
   ) => Promise<SubmodelElementListResponseDto>;
 }

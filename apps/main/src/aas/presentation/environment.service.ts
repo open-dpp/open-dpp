@@ -1,4 +1,3 @@
-import type express from "express";
 import type { Connection } from "mongoose";
 
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
@@ -25,9 +24,9 @@ import {
   ValueResponseDto,
   ValueSchema,
 } from "@open-dpp/dto";
+import { DbSessionOptions } from "../../database/query-options";
 import { Session } from "../../identity/auth/domain/session";
 import { MembersService } from "../../identity/organizations/application/services/members.service";
-import { DbSessionOptions } from "../../database/query-options";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
@@ -56,15 +55,11 @@ export class EnvironmentService {
     aasRepository: AasRepository,
     submodelRepository: SubmodelRepository,
     membersService: MembersService,
+    @InjectConnection() private connection: Connection,
   ) {
     this.aasRepository = aasRepository;
     this.submodelRepository = submodelRepository;
     this.membersService = membersService;
-  constructor(
-    private readonly aasRepository: AasRepository,
-    private readonly submodelRepository: SubmodelRepository,
-    @InjectConnection() private connection: Connection,
-  ) {
   }
 
   async createEnvironmentWithEmptyAas(assetKind: AssetKindType): Promise<Environment> {
