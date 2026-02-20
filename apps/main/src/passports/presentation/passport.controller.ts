@@ -102,22 +102,6 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     return PassportPaginationDtoSchema.parse(
       (await this.passportRepository.findAllByOrganizationId(activeOrganizationId, pagination)).toPlain(),
     );
-    const plain = pagingResult.toPlain();
-    const enrichedResult = await Promise.all(
-      plain.result.map(async (p: Record<string, unknown>) => {
-        const upis = await this.uniqueProductIdentifierService.findAllByReferencedId(
-          p.id as string,
-        );
-        return {
-          ...p,
-          uniqueProductIdentifierUuid: upis[0]?.uuid,
-        };
-      }),
-    );
-    return PassportPaginationDtoSchema.parse({
-      ...plain,
-      result: enrichedResult,
-    });
   }
 
   @Post()
