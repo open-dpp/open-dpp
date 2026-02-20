@@ -1,20 +1,11 @@
-import {
-  Body,
-  Controller,
-  ForbiddenException,
-  Get,
-  Headers,
-  Logger,
-  Param,
-  Patch,
-  Post,
-} from "@nestjs/common";
+import { Body, Controller, ForbiddenException, Get, Headers, Logger, Param, Patch, Post } from "@nestjs/common";
 import { extractBetterAuthHeaders } from "../../auth/domain/better-auth-headers";
 import { Session } from "../../auth/domain/session";
 import { AuthSession } from "../../auth/presentation/decorators/auth-session.decorator";
 import { MembersService } from "../application/services/members.service";
 import { OrganizationsService } from "../application/services/organizations.service";
 import { MemberWithUser } from "../domain/member";
+import { MemberRole } from "../domain/member-role.enum";
 import { Organization } from "../domain/organization";
 
 @Controller("organizations")
@@ -89,13 +80,13 @@ export class OrganizationsController {
   @Post(":id/invite")
   async inviteMember(
     @Param("id") id: string,
-    @Body() body: { email: string; role: string },
+    @Body() body: { email: string },
     @Headers() headers: Record<string, string>,
     @AuthSession() session: Session,
   ) {
     await this.organizationsService.inviteMember(
       body.email,
-      body.role,
+      MemberRole.MEMBER,
       id,
       session,
       extractBetterAuthHeaders(headers),

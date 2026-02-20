@@ -47,7 +47,7 @@ async function inviteUser() {
     loading.value = true;
     const response = await apiClient.dpp.organizations.inviteUser(email.value, props.organizationId);
     loading.value = false;
-    if (response.status === 200) {
+    if (response.status === 201) {
       success.value = true;
       emit("invitedUser");
       email.value = ""; // Reset form

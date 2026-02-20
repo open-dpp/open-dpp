@@ -87,7 +87,7 @@ export class OrganizationsService {
 
   async inviteMember(
     email: string,
-    role: string,
+    role: MemberRole,
     organizationId: string,
     session: Session,
     headers?: BetterAuthHeaders,
@@ -98,10 +98,6 @@ export class OrganizationsService {
       if (user?.role !== UserRole.ADMIN) {
         throw new ForbiddenException("You are not authorized to invite members to this organization");
       }
-    }
-
-    if (!Object.values(MemberRole).includes(role as MemberRole)) {
-      throw new BadRequestException(`Invalid role: ${role}`);
     }
 
     const organization = await this.organizationsRepository.findOneById(organizationId);
