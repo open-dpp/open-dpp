@@ -7,6 +7,7 @@ import utc from "dayjs/plugin/utc";
 import { Button, Column, DataTable } from "primevue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
+import apiClient from "../lib/api-client.ts";
 import TablePagination from "./pagination/TablePagination.vue";
 
 const props = defineProps<{
@@ -31,29 +32,21 @@ dayjs.extend(localizedFormat);
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
-async function editItem(item: SharedDppDto & { uniqueProductIdentifierUuid?: string }) {
+async function editItem(item: SharedDppDto) {
   await router.push(`${route.path}/${item.id}`);
 }
 
-/** UPI uuid required for presentation/chat; buttons only shown when present */
-function hasPresentationId(item: SharedDppDto & { uniqueProductIdentifierUuid?: string }) {
-  return Boolean(item.uniqueProductIdentifierUuid);
+async function forwardToPresentation(item: SharedDppDto) {
+  const { data } = await apiClient.dpp.passports.getUniqueProductIdentifierOfPassport(item.id);
+  router.push(`/presentation/${data.uuid}`);
 }
 
-function forwardToPresentation(item: SharedDppDto & { uniqueProductIdentifierUuid?: string }) {
-  if (item.uniqueProductIdentifierUuid) {
-    router.push(`/presentation/${item.uniqueProductIdentifierUuid}`);
-  }
+async function forwardToPresentationChat(item: SharedDppDto) {
+  const { data } = await apiClient.dpp.passports.getUniqueProductIdentifierOfPassport(item.id);
+  router.push(`/presentation/${data.uuid}/chat`);
 }
-
-function forwardToPresentationChat(item: SharedDppDto & { uniqueProductIdentifierUuid?: string }) {
-  if (item.uniqueProductIdentifierUuid) {
-    router.push(`/presentation/${item.uniqueProductIdentifierUuid}/chat`);
-  }
-}
-
-const { t } = useI18n();
 </script>
 
 <template>
@@ -92,7 +85,7 @@ const { t } = useI18n();
               @click="editItem(data)"
             />
           </div>
-          <div v-if="!usesTemplates && hasPresentationId(data)" class="flex items-center rounded-md gap-2">
+          <div v-if="!usesTemplates" class="flex items-center rounded-md gap-2">
             <Button
               icon="pi pi-qrcode"
               severity="primary"
@@ -100,7 +93,7 @@ const { t } = useI18n();
               @click="forwardToPresentation(data)"
             />
           </div>
-          <div v-if="!usesTemplates && hasPresentationId(data)" class="flex items-center rounded-md gap-2">
+          <div v-if="!usesTemplates" class="flex items-center rounded-md gap-2">
             <Button
               icon="pi pi-comments"
               severity="primary"
