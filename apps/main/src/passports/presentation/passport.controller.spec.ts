@@ -22,7 +22,24 @@ import { PassportController } from "./passport.controller";
 
 describe("passportController", () => {
   const basePath = "/passports";
-  const ctx = createAasTestContext(basePath, { imports: [PassportsModule], providers: [PassportRepository, TemplateRepository, UniqueProductIdentifierService], controllers: [PassportController] }, [{ name: PassportDoc.name, schema: PassportSchema }, { name: TemplateDoc.name, schema: TemplateSchema }, { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema }], PassportRepository);
+  const ctx = createAasTestContext(basePath, {
+    imports: [PassportsModule],
+    providers: [PassportRepository, TemplateRepository, UniqueProductIdentifierService],
+    controllers: [PassportController],
+  }, [
+    {
+      name: PassportDoc.name,
+      schema: PassportSchema,
+    },
+    {
+      name: TemplateDoc.name,
+      schema: TemplateSchema,
+    },
+    {
+      name: UniqueProductIdentifierDoc.name,
+      schema: UniqueProductIdentifierSchema,
+    },
+  ], PassportRepository);
 
   async function createPassport(orgId: string): Promise<Passport> {
     const { aas, submodels } = ctx.getAasObjects();
@@ -102,6 +119,46 @@ describe("passportController", () => {
         createdAt: p.createdAt.toISOString(),
         updatedAt: p.updatedAt.toISOString(),
       })),
+    });
+  });
+
+  it(`/GET Get passport by id`, async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { aas, submodels } = ctx.getAasObjects();
+
+    const createDate = new Date(
+      "2022-01-01T00:00:00.000Z",
+    );
+
+    const id = randomUUID();
+
+    const passportRepository = ctx.getModuleRef().get(PassportRepository);
+
+    const passport = Passport.create({
+      id,
+      organizationId: org.id,
+      environment: Environment.create({
+        assetAdministrationShells: [aas.id],
+        submodels: submodels.map(s => s.id),
+        conceptDescriptions: [],
+      }),
+      createdAt: createDate,
+      updatedAt: createDate,
+    });
+
+    await passportRepository.save(passport);
+
+    const response = await request(app.getHttpServer())
+      .get(`${basePath}/${passport.id}`)
+      .set("Cookie", userCookie)
+      .send();
+
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      ...passport.toPlain(),
+      createdAt: passport.createdAt.toISOString(),
+      updatedAt: passport.updatedAt.toISOString(),
     });
   });
 

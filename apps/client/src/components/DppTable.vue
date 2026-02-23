@@ -40,8 +40,12 @@ const { t } = useI18n();
 
 <template>
   <DataTable
-    :value="props.items" :loading="props.loading" table-style="min-width: 50rem"
-    paginator :rows="10" :rows-per-page-options="[10]"
+    :value="props.items"
+    :loading="props.loading"
+    table-style="min-width: 50rem"
+    paginator
+    :rows="10"
+    :rows-per-page-options="[10]"
   >
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
@@ -53,27 +57,27 @@ const { t } = useI18n();
     <Column :header="t('templates.createdAt')">
       <template #body="slotProps">
         <p>
-          {{ dayjs(slotProps.data.createdAt).format('LLL') }}
+          {{ dayjs(slotProps.data.createdAt).format("LLL") }}
         </p>
       </template>
     </Column>
     <Column :header="t('templates.updatedAt')">
       <template #body="slotProps">
         <p>
-          {{ dayjs(slotProps.data.updatedAt).format('LLL') }}
+          {{ dayjs(slotProps.data.updatedAt).format("LLL") }}
         </p>
       </template>
     </Column>
     <Column>
       <template #body="{ data }">
-        <div class="flex w-full justify-end">
-          <div class="flex items-center rounded-md gap-2">
+        <div class="flex w-full justify-end gap-2">
+          <slot name="actions" :passport="data" :edit-item="editItem">
             <Button
               icon="pi pi-pencil"
               severity="primary"
               @click="editItem(data.id)"
             />
-          </div>
+          </slot>
         </div>
       </template>
     </Column>
