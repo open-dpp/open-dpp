@@ -13,7 +13,7 @@ const props = defineProps<{
   errors: FormErrors<any>;
   editorMode: EditorModeType;
 }>();
-const { value } = useField<string>("value");
+const { value } = useField<string | null>("value");
 const { t } = useI18n();
 </script>
 

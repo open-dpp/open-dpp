@@ -477,6 +477,7 @@ export function useAasTableExtension({
                   getRowIdShortAtIndexOrFail(rowIndex),
                 );
               if (response.status === HTTPCode.OK) {
+                data.value = response.data;
                 rows.value.splice(rowIndex, 1);
                 rowsContext.value.splice(rowIndex, 1);
               }
