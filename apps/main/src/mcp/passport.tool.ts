@@ -26,7 +26,7 @@ export class PassportTool {
         )
         .transform((val) => {
           // Extract the content between < and >
-          const match = val.match(/<([^>]+)>/);
+          const match = /<([^>]+)>/.exec(val);
           return match ? match[1] : val;
         })
         .describe(

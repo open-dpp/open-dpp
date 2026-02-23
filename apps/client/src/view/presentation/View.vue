@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { ProductPassportDto } from "@open-dpp/api-client";
 import { onBeforeUnmount, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import ViewInformation from "../../components/presentation-components/ViewInformation.vue";
@@ -10,7 +11,20 @@ const router = useRouter();
 
 const productPassportStore = useProductPassportStore();
 
-// TODO: Uncomment when the analytics feature is adapted to the aas view again (import useAnalyticsStore from "../../stores/analytics").
+function isProductPassportDto(value: unknown): value is ProductPassportDto {
+  return (
+    !!value
+    && typeof value === "object"
+    && "id" in value
+    && "name" in value
+    && "description" in value
+    && "mediaReferences" in value
+    && "dataSections" in value
+    && "organizationName" in value
+  );
+}
+
+// Analytics tracking is intentionally disabled until the AAS view integration is restored.
 // const analyticsStore = useAnalyticsStore();
 // await analyticsStore.addPageView();
 
@@ -34,7 +48,19 @@ watch(
         });
         return;
       }
-      productPassportStore.productPassport = response.data;
+      const data = response.data as ProductPassportDto | { passport?: ProductPassportDto } | null | undefined;
+      const passport = isProductPassportDto(data) ? data : data?.passport;
+      if (!passport) {
+        console.error("Passport not found in response");
+        await router.push({
+          path: "404",
+          query: {
+            permalink,
+          },
+        });
+        return;
+      }
+      productPassportStore.productPassport = passport;
       await productPassportStore.loadMedia();
     }
     catch (e) {

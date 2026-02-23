@@ -4,6 +4,7 @@ import Aura from "@primeuix/themes/aura";
 import { createPinia } from "pinia";
 import PrimeVue from "primevue/config";
 import ConfirmationService from "primevue/confirmationservice";
+import ToastService from "primevue/toastservice";
 import Tooltip from "primevue/tooltip";
 import { createApp, watch } from "vue";
 import App from "./App.vue";
@@ -42,6 +43,7 @@ async function startApp() {
   app.directive("tooltip", Tooltip);
 
   app.use(ConfirmationService);
+  app.use(ToastService);
 
   const { onI18nLocaleChange } = useLanguageStore();
   watch(

@@ -23,6 +23,8 @@ import {
   ValueResponseDto,
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
+
+import { z } from "zod";
 import { Environment } from "../../aas/domain/environment";
 import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import {
@@ -75,8 +77,20 @@ import { TemplateRepository } from "../../templates/infrastructure/template.repo
 import {
   UniqueProductIdentifierService,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { PassportService } from "../application/services/passport.service";
 import { Passport } from "../domain/passport";
+
 import { PassportRepository } from "../infrastructure/passport.repository";
+
+const ExpandedPassportDtoSchema = PassportDtoSchema.extend({
+  environment: z.object({
+    assetAdministrationShells: z.array(z.record(z.string(), z.any())),
+    submodels: z.array(z.record(z.string(), z.any())),
+    conceptDescriptions: z.array(z.string()).default([]),
+  }),
+});
+
+type ExpandedPassportDto = z.infer<typeof ExpandedPassportDtoSchema>;
 
 @Controller("/passports")
 export class PassportController implements IAasReadEndpoints, IAasCreateEndpoints, IAasModifyEndpoints, IAasDeleteEndpoints {
@@ -85,6 +99,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     private readonly passportRepository: PassportRepository,
     private readonly templateRepository: TemplateRepository,
     private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
+    private readonly passportService: PassportService,
   ) {
   }
 
@@ -377,6 +392,35 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
   ): Promise<ValueResponseDto> {
     const passport = await this.loadPassportAndCheckOwnership(id, session);
     return await this.environmentService.getSubmodelElementValue(passport.getEnvironment(), submodelId, idShortPath);
+  }
+
+  @Get("/:id/export")
+  async exportPassport(
+    @IdParam() id: string,
+    @AuthSession() session: Session,
+  ): Promise<any> {
+    const passport = await this.loadPassportAndCheckOwnership(id, session);
+    return await this.passportService.exportPassport(passport.id);
+  }
+
+  @Post("/import")
+  async importPassport(
+    @Body(new ZodValidationPipe(ExpandedPassportDtoSchema)) body: ExpandedPassportDto,
+    @AuthSession() session: Session,
+  ): Promise<PassportDto> {
+    const activeOrganizationId = session.activeOrganizationId;
+    if (!activeOrganizationId) {
+      throw new BadRequestException("activeOrganizationId is required in session");
+    }
+    const payload = {
+      ...body,
+      organizationId: activeOrganizationId,
+      createdAt: new Date(body.createdAt),
+      updatedAt: new Date(body.updatedAt),
+    };
+
+    const passport = await this.passportService.importPassport(payload);
+    return PassportDtoSchema.parse(passport.toPlain());
   }
 
   private async loadPassportAndCheckOwnership(id: string, session: Session): Promise<Passport> {

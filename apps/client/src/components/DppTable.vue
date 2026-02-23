@@ -6,9 +6,11 @@ import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
 import { Button, Column, DataTable } from "primevue";
+import { useToast } from "primevue/usetoast";
+import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
-import apiClient from "../lib/api-client.ts";
+import axiosIns from "../lib/axios.ts";
 import { useErrorHandlingStore } from "../stores/error.handling.ts";
 import TablePagination from "./pagination/TablePagination.vue";
 
@@ -35,6 +37,7 @@ dayjs.extend(localizedFormat);
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
+const toast = useToast();
 const errorHandlingStore = useErrorHandlingStore();
 
 async function editItem(item: SharedDppDto) {
@@ -54,7 +57,7 @@ function forwardToPresentationErrorMessage(e: unknown): string {
 }
 
 async function resolvePassportUuid(item: SharedDppDto): Promise<string> {
-  const { data } = await apiClient.dpp.passports.getUniqueProductIdentifierOfPassport(item.id);
+  const { data } = await axiosIns.get<{ uuid: string }>(`/passports/${item.id}/unique-product-identifier`);
   return data.uuid;
 }
 
@@ -77,6 +80,59 @@ async function forwardToPresentationChat(item: SharedDppDto) {
     errorHandlingStore.logErrorWithNotification(forwardToPresentationErrorMessage(e), e);
   }
 }
+
+const fileInput = ref<HTMLInputElement | null>(null);
+
+async function exportPassport(id: string) {
+  let url: string | undefined;
+  try {
+    const response = await axiosIns.get(`/passports/${id}/export`);
+    const data = JSON.stringify(response.data, null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    url = globalThis.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `passport-${id}.json`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+  catch (error) {
+    console.error("Failed to export passport", error);
+    toast.add({ severity: "error", summary: t("notifications.error"), detail: t("common.exportFailed"), life: 5000 });
+  }
+  finally {
+    if (url) {
+      globalThis.URL.revokeObjectURL(url);
+    }
+  }
+}
+
+function triggerImport() {
+  fileInput.value?.click();
+}
+
+async function handleFileUpload(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file)
+    return;
+
+  try {
+    const json = JSON.parse(await file.text());
+    await axiosIns.post("/passports/import", json);
+    emits("resetCursor");
+    toast.add({ severity: "success", summary: t("notifications.success"), detail: t("common.importSuccess"), life: 5000 });
+  }
+  catch (error) {
+    console.error("Failed to import passport", error);
+    toast.add({ severity: "error", summary: t("notifications.error"), detail: t("common.importFailed"), life: 5000 });
+  }
+  finally {
+    if (fileInput.value)
+      fileInput.value.value = "";
+  }
+}
 </script>
 
 <template>
@@ -87,7 +143,18 @@ async function forwardToPresentationChat(item: SharedDppDto) {
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
         <span class="text-xl font-bold">{{ props.title }}</span>
-        <Button :label="t('common.add')" @click="emits('create')" />
+        <div class="flex items-center gap-2">
+          <Button :label="t('common.add')" @click="emits('create')" />
+          <Button v-if="!props.usesTemplates" :label="t('common.import')" @click="triggerImport" />
+          <input
+            v-if="!props.usesTemplates"
+            ref="fileInput"
+            type="file"
+            accept=".json"
+            class="hidden"
+            @change="handleFileUpload"
+          >
+        </div>
       </div>
     </template>
     <Column field="id" header="Id" />
@@ -112,6 +179,8 @@ async function forwardToPresentationChat(item: SharedDppDto) {
             <Button
               icon="pi pi-pencil"
               severity="primary"
+              :aria-label="t('common.edit')"
+              :title="t('common.edit')"
               @click="editItem(data)"
             />
           </div>
@@ -120,6 +189,7 @@ async function forwardToPresentationChat(item: SharedDppDto) {
               icon="pi pi-qrcode"
               severity="primary"
               :aria-label="t('dpp.forwardToPresentation')"
+              :title="t('dpp.forwardToPresentation')"
               @click="forwardToPresentation(data)"
             />
           </div>
@@ -128,7 +198,17 @@ async function forwardToPresentationChat(item: SharedDppDto) {
               icon="pi pi-comments"
               severity="primary"
               :aria-label="t('dpp.openPresentationChat')"
+              :title="t('dpp.openPresentationChat')"
               @click="forwardToPresentationChat(data)"
+            />
+          </div>
+          <div v-if="!props.usesTemplates" class="flex items-center rounded-md gap-2">
+            <Button
+              icon="pi pi-download"
+              severity="secondary"
+              :aria-label="t('common.exportPassport')"
+              :title="t('common.exportPassport')"
+              @click="exportPassport(data.id)"
             />
           </div>
         </div>

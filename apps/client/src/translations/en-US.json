@@ -8,6 +8,7 @@
     "edit": "Edit",
     "qrCode": "QR code",
     "add": "Add",
+    "import": "Import",
     "save": "Save",
     "create": "Create",
     "change": "Change",
@@ -48,7 +49,13 @@
     "back": "Back",
     "call": "Call",
     "website": "Website",
-    "contact": "Contact"
+    "contact": "Contact",
+    "openPresentation": "Open presentation",
+    "openChat": "Open chat",
+    "exportPassport": "Export passport",
+    "exportFailed": "Failed to export passport.",
+    "importFailed": "Failed to import passport.",
+    "importSuccess": "Passport imported successfully."
   },
   "aasEditor": {
     "formLabels": {

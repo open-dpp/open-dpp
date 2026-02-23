@@ -6,9 +6,6 @@ import { PassportRepository } from "../passports/infrastructure/passport.reposit
 import { PolicyKey } from "../policy/domain/policy";
 import { PolicyService } from "../policy/infrastructure/policy.service";
 import { UniqueProductIdentifierService } from "../unique-product-identifier/infrastructure/unique-product-identifier.service";
-import {
-  UniqueProductIdentifierApplicationService,
-} from "../unique-product-identifier/presentation/unique.product.identifier.application.service";
 import { AiConfigurationService } from "./ai-configuration/infrastructure/ai-configuration.service";
 import { AiService } from "./infrastructure/ai.service";
 import { McpClientService } from "./mcp-client/mcp-client.service";
@@ -17,18 +14,16 @@ import { McpClientService } from "./mcp-client/mcp-client.service";
 export class ChatService {
   private readonly logger: Logger = new Logger(ChatService.name);
 
-  private mcpClientService: McpClientService;
-  private aiService: AiService;
-  private uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService;
-  private uniqueProductIdentifierService: UniqueProductIdentifierService;
-  private aiConfigurationService: AiConfigurationService;
-  private policyService: PolicyService;
-  private passportRepository: PassportRepository;
+  private readonly mcpClientService: McpClientService;
+  private readonly aiService: AiService;
+  private readonly uniqueProductIdentifierService: UniqueProductIdentifierService;
+  private readonly aiConfigurationService: AiConfigurationService;
+  private readonly policyService: PolicyService;
+  private readonly passportRepository: PassportRepository;
 
   constructor(
     mcpClientService: McpClientService,
     aiService: AiService,
-    uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
     uniqueProductIdentifierService: UniqueProductIdentifierService,
     aiConfigurationService: AiConfigurationService,
     policyService: PolicyService,
@@ -36,7 +31,6 @@ export class ChatService {
   ) {
     this.mcpClientService = mcpClientService;
     this.aiService = aiService;
-    this.uniqueProductIdentifierApplicationService = uniqueProductIdentifierApplicationService;
     this.uniqueProductIdentifierService = uniqueProductIdentifierService;
     this.aiConfigurationService = aiConfigurationService;
     this.policyService = policyService;
@@ -105,7 +99,7 @@ export class ChatService {
       agent,
       (agentResponse: { messages: any[] }) => {
         const messages = agentResponse.messages || [];
-        const lastMessage = messages[messages.length - 1];
+        const lastMessage = messages.at(-1);
 
         return lastMessage?.content || "";
       },
