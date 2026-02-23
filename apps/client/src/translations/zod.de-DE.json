@@ -38,9 +38,9 @@
       "notInclusive": "The date must be after {minimum}"
     },
     "string": {
-      "exact": "Enter exactly {minimum} character(s)",
-      "inclusive": "Minimum length {minimum} character(s)",
-      "notInclusive": "Enter more than {minimum} character(s)"
+      "exact": "Geben Sie exakt {minimum} Zeichen ein",
+      "inclusive": "Mindestlänge {minimum} Zeichen",
+      "notInclusive": "Geben Sie mehr als {minimum} Zeichen ein"
     },
     "array": {
       "exact": "Enter exactly {minimum} item(s)",

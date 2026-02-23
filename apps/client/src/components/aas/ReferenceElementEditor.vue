@@ -2,7 +2,7 @@
 import type { ReferenceElementModificationDto } from "@open-dpp/dto";
 import type { ReferenceElementEditorProps } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
-import { KeyTypes, ReferenceElementModificationSchema } from "@open-dpp/dto";
+import { KeyTypes, ReferenceElementModificationSchema, ReferenceTypes } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 
 import { useForm } from "vee-validate";
@@ -21,7 +21,7 @@ const props
   >();
 const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
-  value: z.url(),
+  value: z.url().nullable(),
 });
 export type FormValues = z.infer<typeof formSchema>;
 
@@ -29,7 +29,7 @@ const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(formSchema),
   initialValues: {
     ...props.data,
-    value: props.data.value.keys.length ? props.data.value.keys[0].value : "",
+    value: props.data.value && props.data.value.keys.length > 0 ? props.data.value.keys[0].value : null,
   },
 });
 
@@ -41,15 +41,17 @@ async function submit() {
   await handleSubmit(async (data) => {
     const body = ReferenceElementModificationSchema.parse({
       ...data,
-      value: {
-        type: props.data.value.type,
-        keys: [
-          {
-            type: props.data.value.keys[0]?.type ?? KeyTypes.GlobalReference,
-            value: data.value,
-          },
-        ],
-      },
+      value: data.value
+        ? {
+            type: props.data.value?.type ?? ReferenceTypes.ExternalReference,
+            keys: [
+              {
+                type: props.data.value?.keys[0]?.type ?? KeyTypes.GlobalReference,
+                value: data.value,
+              },
+            ],
+          }
+        : null,
     });
     await props.callback(body);
   })();

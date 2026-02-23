@@ -13,12 +13,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "update:modelValue", value: string | null): void;
 }>();
-
-const url = z.preprocess(
-  v => (typeof v === "string" && v.trim() === "" ? null : v),
-  z.url().nullish(),
-);
-
+const url = z.url().nullable();
 const { value, errorMessage, setValue } = useField<string | null>(
   `link-${props.id}`,
   toTypedSchema(url),
@@ -34,9 +29,9 @@ watch(
 );
 
 watch(value, (v) => {
-  const normalized = url.safeParse(v);
-  if (normalized.success) {
-    emit("update:modelValue", normalized.data ?? null);
+  const parsed = url.safeParse(v);
+  if (parsed.success) {
+    emit("update:modelValue", parsed.data);
   }
 });
 </script>
@@ -48,6 +43,7 @@ watch(value, (v) => {
       v-model="value"
       :show-errors="true"
       :error="errorMessage"
+      :treat-empty-string-as-null="true"
     />
   </div>
 </template>

@@ -34,6 +34,7 @@ const { t } = useI18n();
         :label="t('aasEditor.formLabels.value')"
         :show-errors="props.showErrors"
         :error="props.errors.value"
+        :treat-empty-string-as-null="true"
       >
         <template #addonLeft>
           <i class="pi pi-link" />

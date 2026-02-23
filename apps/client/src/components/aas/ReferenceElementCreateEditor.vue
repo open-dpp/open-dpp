@@ -23,16 +23,16 @@ const props = defineProps<SharedEditorProps<ReferenceElementCreateEditorProps, R
 
 const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
-  value: z.url(),
+  value: z.url().nullable(),
 });
 const { locale } = useI18n();
-export type FormValues = z.infer<typeof formSchema>;
+export type FormValues = z.infer<typeof formSchema>;// Override to allow null as initial value
 
 const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(formSchema),
   initialValues: {
     ...submodelBaseFormDefaultValues(convertLocaleToLanguage(locale.value)),
-    value: "",
+    value: null,
   },
 });
 
@@ -45,13 +45,15 @@ async function submit() {
     await props.callback(
       ReferenceElementJsonSchema.parse({
         ...data,
-        value: {
-          type: ReferenceTypes.ExternalReference,
-          keys: [{
-            type: KeyTypes.GlobalReference,
-            value: data.value,
-          }],
-        },
+        value: data.value
+          ? {
+              type: ReferenceTypes.ExternalReference,
+              keys: [{
+                type: KeyTypes.GlobalReference,
+                value: data.value,
+              }],
+            }
+          : null,
       }),
     );
   })();

@@ -175,7 +175,7 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
     if (parsed.value === null) {
       element.value = parsed.value;
     }
-    if (parsed.value !== undefined) {
+    else if (parsed.value !== undefined) {
       if (element.value !== null) {
         element.value.accept(this, parsed.value);
       }

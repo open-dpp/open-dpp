@@ -106,7 +106,8 @@ describe("modifier visitor", () => {
         keys: [{ type: KeyTypes.AssetAdministrationShell, value: "https://example.com/aas/1234567890" }],
       },
     };
-    submodel.modifySubmodelElement(modifications, IdShortPath.create({ path: "ref" }));
+    const path = IdShortPath.create({ path: "ref" });
+    submodel.modifySubmodelElement(modifications, path);
     expect(referenceElement.displayName).toEqual(newDisplayNames.map(LanguageText.fromPlain));
     expect(referenceElement.description).toEqual(newDescriptions.map(LanguageText.fromPlain));
     expect(referenceElement.value?.type).toEqual(ReferenceTypes.ModelReference);
@@ -114,9 +115,14 @@ describe("modifier visitor", () => {
     expect(referenceElement.value?.keys[0].value).toEqual("https://example.com/aas/1234567890");
     submodel.modifySubmodelElement({
       idShort: "ref",
-    }, IdShortPath.create({ path: "ref" }));
+    }, path);
     expect(referenceElement.value?.type).toEqual(ReferenceTypes.ModelReference);
     expect(referenceElement.value?.keys[0].type).toEqual(KeyTypes.AssetAdministrationShell);
     expect(referenceElement.value?.keys[0].value).toEqual("https://example.com/aas/1234567890");
+    submodel.modifySubmodelElement({
+      idShort: "ref",
+      value: null,
+    }, path);
+    expect(referenceElement.value).toBeNull();
   });
 });
