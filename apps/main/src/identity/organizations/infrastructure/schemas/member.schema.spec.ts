@@ -1,17 +1,14 @@
 import { expect } from "@jest/globals";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import { connect, Connection, Model, Types } from "mongoose";
 import { MemberRole } from "../../domain/member-role.enum";
 import { Member, MemberSchema } from "./member.schema";
 
 describe("memberSchema", () => {
-  let mongod: MongoMemoryServer;
   let mongoConnection: Connection;
   let MemberModel: Model<Member>;
 
   beforeAll(async () => {
-    mongod = await MongoMemoryServer.create();
-    const uri = mongod.getUri();
+    const uri = process.env.OPEN_DPP_MONGODB_URI!;
     mongoConnection = (await connect(uri)).connection;
     MemberModel = mongoConnection.model(Member.name, MemberSchema);
   });
@@ -25,9 +22,7 @@ describe("memberSchema", () => {
   });
 
   afterAll(async () => {
-    await mongoConnection.dropDatabase();
     await mongoConnection.close();
-    await mongod.stop();
   });
 
   it("should create a member document", async () => {
