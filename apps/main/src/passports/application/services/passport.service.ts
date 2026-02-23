@@ -8,12 +8,14 @@ import { Submodel } from "../../../aas/domain/submodel-base/submodel";
 import { AasRepository } from "../../../aas/infrastructure/aas.repository";
 import { SubmodelRepository } from "../../../aas/infrastructure/submodel.repository";
 import { Passport } from "../../domain/passport";
+import { EnvironmentService } from "../../../aas/presentation/environment.service";
 import { PassportRepository } from "../../infrastructure/passport.repository";
 
 export type ExpandedPassport = Omit<ReturnType<Passport["toPlain"]>, "environment"> & {
   environment: {
     assetAdministrationShells: Record<string, any>[];
     submodels: Record<string, any>[];
+    conceptDescriptions: string[];
   };
 };
 
@@ -22,6 +24,7 @@ const ExpandedPassportSchema = z.object({
   environment: z.object({
     assetAdministrationShells: z.array(z.record(z.string(), z.any())),
     submodels: z.array(z.record(z.string(), z.any())),
+    conceptDescriptions: z.array(z.string()).optional(),
   }),
 }).passthrough();
 
@@ -31,13 +34,12 @@ export class PassportService {
 
   constructor(
     private readonly passportRepository: PassportRepository,
-    // private readonly organizationsService: OrganizationsService,
+    private readonly environmentService: EnvironmentService,
     private readonly aasRepository: AasRepository,
     private readonly submodelRepository: SubmodelRepository,
     @InjectConnection() private readonly connection: Connection,
   ) { }
 
-  // TODO: Add organization data after DDD rebuild branch merged
   async getProductPassport(passportId: string) {
     this.logger.log(`getProductPassport called with id: ${passportId}`);
 
@@ -46,21 +48,23 @@ export class PassportService {
       throw new NotFoundException(`Product passport with id ${passportId} not found`);
     }
 
-    /* const organizationData = await this.organizationsService.getOrganizationDataForPermalink(passport.organizationId);
+    if (!passport.environment) {
+      this.logger.warn(`Passport ${passportId} has no environment; returning empty shells and submodels`);
+      return {
+        ...passport.toPlain(),
+        environment: {
+          assetAdministrationShells: [],
+          submodels: [],
+          conceptDescriptions: [],
+        },
+      };
+    }
 
-    if (!organizationData) {
-      throw new NotFoundException(`Organization data for passport ${passportId} not found`);
-    } */
-
-    const { shells, submodels } = await this.loadEnvironment(passport);
+    const environmentPlain = await this.environmentService.getFullEnvironmentAsPlain(passport.environment);
 
     return {
-      // organization: organizationData,
       ...passport.toPlain(),
-      environment: {
-        assetAdministrationShells: shells,
-        submodels,
-      },
+      environment: environmentPlain,
     };
   }
 
@@ -73,6 +77,7 @@ export class PassportService {
       environment: {
         assetAdministrationShells: shells.map(shell => shell.toPlain()),
         submodels: submodels.map(submodel => submodel.toPlain()),
+        conceptDescriptions: passport.environment.conceptDescriptions ?? [],
       },
     } as ExpandedPassport;
   }
@@ -140,6 +145,7 @@ export class PassportService {
       environment: Environment.create({
         assetAdministrationShells: newShells.map(s => s.id),
         submodels: Array.from(oldIdToNewSubmodelMap.values()).map(s => s.id),
+        conceptDescriptions: data.environment.conceptDescriptions ?? [],
       }),
     });
 

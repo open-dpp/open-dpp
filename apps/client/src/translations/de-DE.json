@@ -545,6 +545,14 @@
       }
     }
   },
+  "dpp": {
+    "forwardToPresentation": "Zur Präsentation weiterleiten",
+    "forwardToPresentationError": "Präsentation konnte nicht geöffnet werden.",
+    "forwardToPresentationError404": "Präsentation oder Produktpass wurde nicht gefunden.",
+    "forwardToPresentationError403": "Sie haben keine Berechtigung, diese Präsentation zu öffnen.",
+    "forwardToPresentationErrorNetwork": "Netzwerkfehler. Bitte prüfen Sie Ihre Verbindung.",
+    "openPresentationChat": "KI-Chat öffnen"
+  },
   "presentation": {
     "productDetails": "Produktdetails",
     "productDetailsDesc": "Allgemeine Informationen zum Produkt.",

@@ -11,6 +11,10 @@ const router = useRouter();
 
 const productPassportStore = useProductPassportStore();
 
+// Analytics tracking is intentionally disabled until the AAS view integration is restored.
+// const analyticsStore = useAnalyticsStore();
+// await analyticsStore.addPageView();
+
 // Cleanup object URLs when component unmounts to prevent memory leaks
 onBeforeUnmount(() => {
   productPassportStore.cleanupMediaUrls();
@@ -22,7 +26,6 @@ watch(
     const permalink = String(route.params.permalink);
     try {
       const response = await apiClient.dpp.productPassports.getById(permalink);
-      // await analyticsStore.addPageView();
       if (response.status === 404) {
         await router.push({
           path: "404",
@@ -32,12 +35,9 @@ watch(
         });
         return;
       }
-      const data = response.data as { passport?: ProductPassportDto };
-      if (data.passport) {
-        productPassportStore.productPassport = data.passport;
-        await productPassportStore.loadMedia();
-      }
-      else {
+      const data = response.data as ProductPassportDto | { passport?: ProductPassportDto };
+      const passport = "passport" in data ? data.passport : data;
+      if (!passport) {
         console.error("Passport not found in response");
         await router.push({
           path: "404",
@@ -45,7 +45,10 @@ watch(
             permalink,
           },
         });
+        return;
       }
+      productPassportStore.productPassport = passport;
+      await productPassportStore.loadMedia();
     }
     catch (e) {
       console.error(e);

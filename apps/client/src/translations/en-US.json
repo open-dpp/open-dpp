@@ -545,6 +545,14 @@
       }
     }
   },
+  "dpp": {
+    "forwardToPresentation": "Forward to presentation",
+    "forwardToPresentationError": "Failed to open presentation.",
+    "forwardToPresentationError404": "Presentation or passport not found.",
+    "forwardToPresentationError403": "You don't have permission to open this presentation.",
+    "forwardToPresentationErrorNetwork": "Network error. Please check your connection.",
+    "openPresentationChat": "Open AI chat"
+  },
   "presentation": {
     "productDetails": "Product details",
     "productDetailsDesc": "General information about the product.",

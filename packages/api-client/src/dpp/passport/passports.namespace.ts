@@ -25,4 +25,10 @@ export class PassportNamespace {
   public async create(params: PassportRequestCreateDto): Promise<AxiosResponse<PassportDto>> {
     return await this.axiosInstance.post<PassportDto>(this.passportEndpoint, params)
   }
+
+  public async getUniqueProductIdentifierOfPassport(passportId: string) {
+    return await this.axiosInstance.get<{ uuid: string }>(
+      `${this.passportEndpoint}/${passportId}/unique-product-identifier`,
+    )
+  }
 }

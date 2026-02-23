@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { SharedDppDto } from "@open-dpp/dto";
 import type { Page } from "../composables/pagination.ts";
+import { AxiosError } from "axios";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
@@ -10,6 +11,7 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import axiosIns from "../lib/axios.ts";
+import { useErrorHandlingStore } from "../stores/error.handling.ts";
 import TablePagination from "./pagination/TablePagination.vue";
 
 const props = defineProps<{
@@ -19,6 +21,7 @@ const props = defineProps<{
   currentPage: Page;
   hasPrevious: boolean;
   hasNext: boolean;
+  usesTemplates?: boolean;
 }>();
 
 const emits = defineEmits<{
@@ -35,17 +38,47 @@ const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 const toast = useToast();
+const errorHandlingStore = useErrorHandlingStore();
 
-async function editItem(id: string) {
-  await router.push(`${route.path}/${id}`);
+async function editItem(item: SharedDppDto) {
+  await router.push(`${route.path}/${item.id}`);
 }
 
-function forwardToPresentation(id: string) {
-  router.push(`/presentation/${id}`);
+function forwardToPresentationErrorMessage(e: unknown): string {
+  if (e instanceof AxiosError) {
+    if (!e.response)
+      return t("dpp.forwardToPresentationErrorNetwork");
+    if (e.response.status === 404)
+      return t("dpp.forwardToPresentationError404");
+    if (e.response.status === 403)
+      return t("dpp.forwardToPresentationError403");
+  }
+  return t("dpp.forwardToPresentationError");
 }
 
-function forwardToPresentationChat(id: string) {
-  router.push(`/presentation/${id}/chat`);
+async function resolvePassportUuid(item: SharedDppDto): Promise<string> {
+  const { data } = await axiosIns.get<{ uuid: string }>(`/passports/${item.id}/unique-product-identifier`);
+  return data.uuid;
+}
+
+async function forwardToPresentation(item: SharedDppDto) {
+  try {
+    const uuid = await resolvePassportUuid(item);
+    await router.push(`/presentation/${uuid}`);
+  }
+  catch (e) {
+    errorHandlingStore.logErrorWithNotification(forwardToPresentationErrorMessage(e), e);
+  }
+}
+
+async function forwardToPresentationChat(item: SharedDppDto) {
+  try {
+    const uuid = await resolvePassportUuid(item);
+    await router.push(`/presentation/${uuid}/chat`);
+  }
+  catch (e) {
+    errorHandlingStore.logErrorWithNotification(forwardToPresentationErrorMessage(e), e);
+  }
 }
 
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -56,13 +89,13 @@ async function exportPassport(id: string) {
     const response = await axiosIns.get(`/passports/${id}/export`);
     const data = JSON.stringify(response.data, null, 2);
     const blob = new Blob([data], { type: "application/json" });
-    url = window.URL.createObjectURL(blob);
+    url = globalThis.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
     link.setAttribute("download", `passport-${id}.json`);
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    link.remove();
   }
   catch (error) {
     console.error("Failed to export passport", error);
@@ -70,7 +103,7 @@ async function exportPassport(id: string) {
   }
   finally {
     if (url) {
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
     }
   }
 }
@@ -85,31 +118,20 @@ async function handleFileUpload(event: Event) {
   if (!file)
     return;
 
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    try {
-      const json = JSON.parse(e.target?.result as string);
-      await axiosIns.post("/passports/import", json);
-      emits("resetCursor");
-      toast.add({ severity: "success", summary: t("notifications.success"), detail: t("common.importSuccess"), life: 5000 });
-    }
-    catch (error) {
-      console.error("Failed to import passport", error);
-      toast.add({ severity: "error", summary: t("notifications.error"), detail: t("common.importFailed"), life: 5000 });
-    }
-    finally {
-      if (fileInput.value)
-        fileInput.value.value = "";
-    }
-  };
-  reader.onerror = () => {
-    const error = reader.error;
-    console.error("Failed to read import file", error);
+  try {
+    const json = JSON.parse(await file.text());
+    await axiosIns.post("/passports/import", json);
+    emits("resetCursor");
+    toast.add({ severity: "success", summary: t("notifications.success"), detail: t("common.importSuccess"), life: 5000 });
+  }
+  catch (error) {
+    console.error("Failed to import passport", error);
     toast.add({ severity: "error", summary: t("notifications.error"), detail: t("common.importFailed"), life: 5000 });
+  }
+  finally {
     if (fileInput.value)
       fileInput.value.value = "";
-  };
-  reader.readAsText(file);
+  }
 }
 </script>
 
@@ -123,8 +145,9 @@ async function handleFileUpload(event: Event) {
         <span class="text-xl font-bold">{{ props.title }}</span>
         <div class="flex items-center gap-2">
           <Button :label="t('common.add')" @click="emits('create')" />
-          <Button :label="t('common.import')" @click="triggerImport" />
+          <Button v-if="!props.usesTemplates" :label="t('common.import')" @click="triggerImport" />
           <input
+            v-if="!props.usesTemplates"
             ref="fileInput"
             type="file"
             accept=".json"
@@ -158,28 +181,28 @@ async function handleFileUpload(event: Event) {
               severity="primary"
               :aria-label="t('common.edit')"
               :title="t('common.edit')"
-              @click="editItem(data.id)"
+              @click="editItem(data)"
             />
           </div>
-          <div v-if="data.templateId" class="flex items-center rounded-md gap-2">
+          <div v-if="!props.usesTemplates" class="flex items-center rounded-md gap-2">
             <Button
               icon="pi pi-qrcode"
               severity="primary"
-              :aria-label="t('common.openPresentation')"
-              :title="t('common.openPresentation')"
-              @click="forwardToPresentation(data.id)"
+              :aria-label="t('dpp.forwardToPresentation')"
+              :title="t('dpp.forwardToPresentation')"
+              @click="forwardToPresentation(data)"
             />
           </div>
-          <div v-if="data.templateId" class="flex items-center rounded-md gap-2">
+          <div v-if="!props.usesTemplates" class="flex items-center rounded-md gap-2">
             <Button
               icon="pi pi-comments"
               severity="primary"
-              :aria-label="t('common.openChat')"
-              :title="t('common.openChat')"
-              @click="forwardToPresentationChat(data.id)"
+              :aria-label="t('dpp.openPresentationChat')"
+              :title="t('dpp.openPresentationChat')"
+              @click="forwardToPresentationChat(data)"
             />
           </div>
-          <div class="flex items-center rounded-md gap-2">
+          <div v-if="!props.usesTemplates" class="flex items-center rounded-md gap-2">
             <Button
               icon="pi pi-download"
               severity="secondary"

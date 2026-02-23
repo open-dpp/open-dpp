@@ -236,6 +236,34 @@ export class EnvironmentService {
     return ValueSchema.parse(submodel.getValueRepresentation(idShortPath));
   }
 
+  /**
+   * Resolves all shell and submodel IDs of an environment to full plain objects.
+   * Can be used to populate the environment of a passport or template.
+   * Missing IDs are skipped (no throw).
+   */
+  async getFullEnvironmentAsPlain(environment: Environment): Promise<{
+    assetAdministrationShells: Array<Record<string, unknown>>;
+    submodels: Array<Record<string, unknown>>;
+    conceptDescriptions: Array<string>;
+  }> {
+    const shellIds = environment.assetAdministrationShells;
+    const submodelIds = environment.submodels;
+
+    const [shellResults, submodelResults] = await Promise.all([
+      Promise.all(shellIds.map(id => this.aasRepository.findOne(id))),
+      Promise.all(submodelIds.map(id => this.submodelRepository.findOne(id))),
+    ]);
+
+    const shells = shellResults.filter((aas): aas is AssetAdministrationShell => aas != null);
+    const submodels = submodelResults.filter((s): s is Submodel => s != null);
+
+    return {
+      assetAdministrationShells: shells.map(s => s.toPlain()),
+      submodels: submodels.map(s => s.toPlain()),
+      conceptDescriptions: environment.conceptDescriptions,
+    };
+  }
+
   async copyEnvironment(environment: Environment): Promise<Environment> {
     const submodelsCopy = await Promise.all(environment.submodels.map(async modelId => (await this.findSubmodelByIdOrFail(environment, modelId)).copy()));
     const aasCopy = (await this.getFirstAssetAdministrationShell(environment)).copy(submodelsCopy);

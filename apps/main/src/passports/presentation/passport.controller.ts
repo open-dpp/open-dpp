@@ -9,7 +9,7 @@ import type {
   SubmodelRequestDto,
   ValueRequestDto,
 } from "@open-dpp/dto";
-import { BadRequestException, Body, Controller, Get, Post } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, NotFoundException, Post } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
   AssetKind,
@@ -117,6 +117,21 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     return PassportPaginationDtoSchema.parse(
       (await this.passportRepository.findAllByOrganizationId(activeOrganizationId, pagination)).toPlain(),
     );
+  }
+
+  @Get(":id/unique-product-identifier")
+  async getUniqueProductIdentifierOfPassport(
+    @IdParam() id: string,
+    @AuthSession() session: Session,
+  ): Promise<{ uuid: string }> {
+    await this.loadPassportAndCheckOwnership(id, session);
+    const upi = await this.uniqueProductIdentifierService.findOneByReferencedId(id);
+    if (!upi) {
+      throw new NotFoundException(
+        `No UniqueProductIdentifier found for passport ${id}`,
+      );
+    }
+    return { uuid: upi.uuid };
   }
 
   @Post()

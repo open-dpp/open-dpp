@@ -22,8 +22,8 @@ import { PassportTool } from "./passport.tool";
     TemplateModule,
     ItemsModule,
     AuthModule,
-    PassportsModule,
     OrganizationsModule,
+    PassportsModule,
   ],
   providers: [PassportTool],
 })
