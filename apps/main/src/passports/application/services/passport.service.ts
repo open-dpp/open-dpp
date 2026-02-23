@@ -147,6 +147,8 @@ export class PassportService {
         submodels: Array.from(oldIdToNewSubmodelMap.values()).map(s => s.id),
         conceptDescriptions: data.environment.conceptDescriptions ?? [],
       }),
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
     });
 
     // Persist all entities in a single transaction to avoid partial commits
