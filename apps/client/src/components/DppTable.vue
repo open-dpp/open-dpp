@@ -1,12 +1,15 @@
 <script lang="ts" setup>
 import type { SharedDppDto } from "@open-dpp/dto";
 import type { Page } from "../composables/pagination.ts";
+import { AxiosError } from "axios";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
 import { Button, Column, DataTable } from "primevue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
+import apiClient from "../lib/api-client.ts";
+import { useErrorHandlingStore } from "../stores/error.handling.ts";
 import TablePagination from "./pagination/TablePagination.vue";
 
 const props = defineProps<{
@@ -16,6 +19,7 @@ const props = defineProps<{
   currentPage: Page;
   hasPrevious: boolean;
   hasNext: boolean;
+  usesTemplates?: boolean;
 }>();
 
 const emits = defineEmits<{
@@ -30,12 +34,49 @@ dayjs.extend(localizedFormat);
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
+const errorHandlingStore = useErrorHandlingStore();
 
-async function editItem(id: string) {
-  await router.push(`${route.path}/${id}`);
+async function editItem(item: SharedDppDto) {
+  await router.push(`${route.path}/${item.id}`);
 }
 
-const { t } = useI18n();
+function forwardToPresentationErrorMessage(e: unknown): string {
+  if (e instanceof AxiosError) {
+    if (!e.response)
+      return t("dpp.forwardToPresentationErrorNetwork");
+    if (e.response.status === 404)
+      return t("dpp.forwardToPresentationError404");
+    if (e.response.status === 403)
+      return t("dpp.forwardToPresentationError403");
+  }
+  return t("dpp.forwardToPresentationError");
+}
+
+async function resolvePassportUuid(item: SharedDppDto): Promise<string> {
+  const { data } = await apiClient.dpp.passports.getUniqueProductIdentifierOfPassport(item.id);
+  return data.uuid;
+}
+
+async function forwardToPresentation(item: SharedDppDto) {
+  try {
+    const uuid = await resolvePassportUuid(item);
+    await router.push(`/presentation/${uuid}`);
+  }
+  catch (e) {
+    errorHandlingStore.logErrorWithNotification(forwardToPresentationErrorMessage(e), e);
+  }
+}
+
+async function forwardToPresentationChat(item: SharedDppDto) {
+  try {
+    const uuid = await resolvePassportUuid(item);
+    await router.push(`/presentation/${uuid}/chat`);
+  }
+  catch (e) {
+    errorHandlingStore.logErrorWithNotification(forwardToPresentationErrorMessage(e), e);
+  }
+}
 </script>
 
 <template>
@@ -66,12 +107,28 @@ const { t } = useI18n();
     </Column>
     <Column>
       <template #body="{ data }">
-        <div class="flex w-full justify-end">
+        <div class="flex w-full justify-end gap-2">
           <div class="flex items-center rounded-md gap-2">
             <Button
               icon="pi pi-pencil"
               severity="primary"
-              @click="editItem(data.id)"
+              @click="editItem(data)"
+            />
+          </div>
+          <div v-if="!props.usesTemplates" class="flex items-center rounded-md gap-2">
+            <Button
+              icon="pi pi-qrcode"
+              severity="primary"
+              :aria-label="t('dpp.forwardToPresentation')"
+              @click="forwardToPresentation(data)"
+            />
+          </div>
+          <div v-if="!props.usesTemplates" class="flex items-center rounded-md gap-2">
+            <Button
+              icon="pi pi-comments"
+              severity="primary"
+              :aria-label="t('dpp.openPresentationChat')"
+              @click="forwardToPresentationChat(data)"
             />
           </div>
         </div>

@@ -2,15 +2,17 @@
 import { onBeforeUnmount, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import ViewInformation from "../../components/presentation-components/ViewInformation.vue";
-import apiClient from "../../lib/api-client";
-import { useAnalyticsStore } from "../../stores/analytics.ts";
+import apiClient from "../../lib/api-client.ts";
 import { useProductPassportStore } from "../../stores/product-passport";
 
 const route = useRoute();
 const router = useRouter();
 
 const productPassportStore = useProductPassportStore();
-const analyticsStore = useAnalyticsStore();
+
+// TODO: Uncomment when the analytics feature is adapted to the aas view again (import useAnalyticsStore from "../../stores/analytics").
+// const analyticsStore = useAnalyticsStore();
+// await analyticsStore.addPageView();
 
 // Cleanup object URLs when component unmounts to prevent memory leaks
 onBeforeUnmount(() => {
@@ -23,7 +25,6 @@ watch(
     const permalink = String(route.params.permalink);
     try {
       const response = await apiClient.dpp.productPassports.getById(permalink);
-      await analyticsStore.addPageView();
       if (response.status === 404) {
         await router.push({
           path: "404",

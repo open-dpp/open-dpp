@@ -2,8 +2,10 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { Injectable, Logger } from "@nestjs/common";
+import { PassportRepository } from "../passports/infrastructure/passport.repository";
 import { PolicyKey } from "../policy/domain/policy";
 import { PolicyService } from "../policy/infrastructure/policy.service";
+import { UniqueProductIdentifierService } from "../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import {
   UniqueProductIdentifierApplicationService,
 } from "../unique-product-identifier/presentation/unique.product.identifier.application.service";
@@ -18,30 +20,40 @@ export class ChatService {
   private mcpClientService: McpClientService;
   private aiService: AiService;
   private uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService;
+  private uniqueProductIdentifierService: UniqueProductIdentifierService;
   private aiConfigurationService: AiConfigurationService;
   private policyService: PolicyService;
+  private passportRepository: PassportRepository;
 
   constructor(
     mcpClientService: McpClientService,
     aiService: AiService,
     uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
+    uniqueProductIdentifierService: UniqueProductIdentifierService,
     aiConfigurationService: AiConfigurationService,
     policyService: PolicyService,
+    passportRepository: PassportRepository,
   ) {
     this.mcpClientService = mcpClientService;
     this.aiService = aiService;
     this.uniqueProductIdentifierApplicationService = uniqueProductIdentifierApplicationService;
+    this.uniqueProductIdentifierService = uniqueProductIdentifierService;
     this.aiConfigurationService = aiConfigurationService;
     this.policyService = policyService;
+    this.passportRepository = passportRepository;
   }
 
-  async askAgent(query: string, passportUuid: string) {
-    this.logger.log(`Find passport with UUID: ${passportUuid}`);
-    const passport = await this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifier(
-      passportUuid,
+  async askAgent(query: string, uniqueProductIdentifierUuid: string) {
+    this.logger.log(`Resolve passport from UniqueProductIdentifier: ${uniqueProductIdentifierUuid}`);
+    const uniqueProductIdentifier
+      = await this.uniqueProductIdentifierService.findOneOrFail(uniqueProductIdentifierUuid);
+    const passport = await this.passportRepository.findOne(
+      uniqueProductIdentifier.referenceId,
     );
     if (!passport) {
-      throw new Error("Passport not found");
+      throw new Error(
+        `Product passport for UniqueProductIdentifier ${uniqueProductIdentifierUuid} not found`,
+      );
     }
 
     // Check quota BEFORE processing
@@ -78,7 +90,7 @@ export class ChatService {
       llm,
       tools,
     });
-    const systemPrompt = `You are a helpful assistant. The current product passport has the passportId: <${passportUuid}>`;
+    const systemPrompt = `You are a helpful assistant. The current product passport has the passportId: <${passport.id}>`;
     this.logger.log(systemPrompt);
     const prompt = ChatPromptTemplate.fromMessages([
       [
