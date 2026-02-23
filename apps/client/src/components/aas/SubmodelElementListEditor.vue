@@ -19,6 +19,7 @@ import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import FileField from "./form/FileField.vue";
+import FormContainer from "./form/FormContainer.vue";
 import LinkCellField from "./LinkCellField.vue";
 import PropertyValue from "./PropertyValue.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
@@ -81,7 +82,15 @@ const showErrors = computed(() => {
 
 async function submit() {
   await handleSubmit(async (data) => {
-    await save();
+    try {
+      await save();
+    }
+    catch (e) {
+      props.errorHandlingStore.logErrorWithNotification(
+        t("aasEditor.table.errorEditEntries"),
+        e,
+      );
+    }
     await props.callback({ ...data });
   })();
 }
@@ -116,20 +125,23 @@ function onFileChange(
   });
 }
 onErrorCaptured((err) => {
-  props.errorHandlingStore.logErrorWithNotification(t("common.errorOccurred"), err);
+  props.errorHandlingStore.logErrorWithNotification(
+    t("common.errorOccurred"),
+    err,
+  );
   return false; // stops error from bubbling further
 });
 </script>
 
 <template>
   <div class="flex flex-col gap-1 p-2">
-    <form>
+    <FormContainer>
       <SubmodelBaseForm
         :show-errors="showErrors"
         :errors="errors"
         :editor-mode="EditorMode.EDIT"
       />
-    </form>
+    </FormContainer>
     <DataTable
       scrollable
       edit-mode="cell"

@@ -371,6 +371,16 @@ export function useAasTableExtension({
       );
       const rowToModify = foundRow || { idShort: row.idShort };
       const rowContextToModify = foundRowContext || { idShort: row.idShort };
+
+      // Remove fields that are no longer present in the server data
+      const newColIds = new Set(parsedRow.value.map(col => col.idShort));
+      for (const key of Object.keys(rowToModify)) {
+        if (key !== "idShort" && !newColIds.has(key)) {
+          delete rowToModify[key];
+          delete rowContextToModify[key];
+        }
+      }
+
       for (const col of parsedRow.value) {
         const { value, context } = convertColumn(col);
         if (rowToModify[col.idShort] !== value) {

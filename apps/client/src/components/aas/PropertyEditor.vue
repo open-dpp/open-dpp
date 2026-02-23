@@ -10,6 +10,7 @@ import { z } from "zod";
 import { EditorMode } from "../../composables/aas-drawer.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 
+import FormContainer from "./form/FormContainer.vue";
 import PropertyForm from "./PropertyForm.vue";
 
 const props
@@ -47,12 +48,12 @@ defineExpose<{
 </script>
 
 <template>
-  <form class="flex flex-col gap-4 p-2">
+  <FormContainer>
     <PropertyForm
       :data="props.data"
       :show-errors="showErrors"
       :errors="errors"
       :editor-mode="EditorMode.EDIT"
     />
-  </form>
+  </FormContainer>
 </template>

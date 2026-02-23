@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { ReferenceElementRequestDto } from "@open-dpp/dto";
-import type {
-  ReferenceElementCreateEditorProps,
-} from "../../composables/aas-drawer.ts";
+import type { ReferenceElementCreateEditorProps } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 
-import { KeyTypes, ReferenceElementJsonSchema, ReferenceTypes } from "@open-dpp/dto";
+import {
+  KeyTypes,
+  ReferenceElementJsonSchema,
+  ReferenceTypes,
+} from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { computed } from "vue";
@@ -17,16 +19,23 @@ import {
   SubmodelBaseFormSchema,
 } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import FormContainer from "./form/FormContainer.vue";
 import ReferenceElementForm from "./ReferenceElementForm.vue";
 
-const props = defineProps<SharedEditorProps<ReferenceElementCreateEditorProps, ReferenceElementRequestDto>>();
+const props
+  = defineProps<
+    SharedEditorProps<
+      ReferenceElementCreateEditorProps,
+      ReferenceElementRequestDto
+    >
+  >();
 
 const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
   value: z.url().nullable(),
 });
 const { locale } = useI18n();
-export type FormValues = z.infer<typeof formSchema>;// Override to allow null as initial value
+export type FormValues = z.infer<typeof formSchema>; // Override to allow null as initial value
 
 const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(formSchema),
@@ -48,10 +57,12 @@ async function submit() {
         value: data.value
           ? {
               type: ReferenceTypes.ExternalReference,
-              keys: [{
-                type: KeyTypes.GlobalReference,
-                value: data.value,
-              }],
+              keys: [
+                {
+                  type: KeyTypes.GlobalReference,
+                  value: data.value,
+                },
+              ],
             }
           : null,
       }),
@@ -67,12 +78,12 @@ defineExpose<{
 </script>
 
 <template>
-  <form class="flex flex-col gap-4 p-2">
+  <FormContainer>
     <ReferenceElementForm
       :data="props.data"
       :show-errors="showErrors"
       :errors="errors"
       :editor-mode="EditorMode.CREATE"
     />
-  </form>
+  </FormContainer>
 </template>

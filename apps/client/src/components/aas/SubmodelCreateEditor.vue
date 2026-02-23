@@ -13,6 +13,7 @@ import {
   SubmodelBaseFormSchema,
 } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import FormContainer from "./form/FormContainer.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
 const props
@@ -53,11 +54,11 @@ defineExpose<{
 </script>
 
 <template>
-  <form class="flex flex-col gap-1 p-2">
+  <FormContainer>
     <SubmodelBaseForm
       :show-errors="showErrors"
       :errors="errors"
       :editor-mode="EditorMode.CREATE"
     />
-  </form>
+  </FormContainer>
 </template>

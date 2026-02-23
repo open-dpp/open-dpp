@@ -531,7 +531,7 @@ describe("aasTableExtension composable", () => {
 
     const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
     const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
-    const { columnMenu, buildColumnMenu, columns } = useAasTableExtension({
+    const { columnMenu, rows, rowsContext, buildColumnMenu, columns } = useAasTableExtension({
       id: aasId,
       pathToList,
       initialData: submodelElementList,
@@ -550,23 +550,33 @@ describe("aasTableExtension composable", () => {
       .items!
       .find(e => e.label === "common.remove")!;
 
+    const columnToDelete = "Column2";
+
     mocks.deleteColumnFromSubmodelElementList.mockResolvedValue({
       status: HTTPCode.OK,
       data: {
         ...submodelElementList,
         value: submodelElementList.value.map(row => ({
           ...row,
-          value: cols.filter(col => col.idShort !== "Column2"),
+          value: cols.filter(col => col.idShort !== columnToDelete),
         })),
       },
     });
+
+    expect(
+      rows.value.every(r => Object.hasOwn(r, columnToDelete)),
+    ).toBeTruthy();
+    expect(
+      rowsContext.value.every(r => Object.hasOwn(r, columnToDelete)),
+    ).toBeTruthy();
+
     removeColumnButton.command!({} as MenuItemCommandEvent);
 
     expect(mocks.deleteColumnFromSubmodelElementList).toHaveBeenCalledWith(
       aasId,
       pathToList.submodelId,
       pathToList.idShortPath,
-      "Column2",
+      columnToDelete,
     );
     await waitFor(() =>
       expect(columns.value).toEqual([
@@ -587,6 +597,12 @@ describe("aasTableExtension composable", () => {
         },
       ]),
     );
+    expect(
+      rows.value.every(r => !Object.hasOwn(r, columnToDelete)),
+    ).toBeTruthy();
+    expect(
+      rowsContext.value.every(r => !Object.hasOwn(r, columnToDelete)),
+    ).toBeTruthy();
   });
 
   it("should delete row", async () => {

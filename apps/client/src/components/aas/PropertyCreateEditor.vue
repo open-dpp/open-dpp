@@ -15,10 +15,13 @@ import {
 } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 
+import FormContainer from "./form/FormContainer.vue";
 import PropertyForm from "./PropertyForm.vue";
 
 const props
-  = defineProps<SharedEditorProps<PropertyCreateEditorProps, PropertyRequestDto>>();
+  = defineProps<
+    SharedEditorProps<PropertyCreateEditorProps, PropertyRequestDto>
+  >();
 
 const propertyFormSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
@@ -54,12 +57,12 @@ defineExpose<{
 </script>
 
 <template>
-  <form class="flex flex-col gap-4 p-2">
+  <FormContainer>
     <PropertyForm
       :data="props.data"
       :show-errors="showErrors"
       :errors="errors"
       :editor-mode="EditorMode.CREATE"
     />
-  </form>
+  </FormContainer>
 </template>

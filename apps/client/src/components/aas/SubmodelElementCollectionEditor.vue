@@ -49,11 +49,11 @@ defineExpose<{
 </script>
 
 <template>
-  <form class="flex flex-col gap-1 p-2">
+  <FormContainer>
     <SubmodelBaseForm
       :show-errors="showErrors"
       :errors="errors"
       :editor-mode="EditorMode.EDIT"
     />
-  </form>
+  </FormContainer>
 </template>
