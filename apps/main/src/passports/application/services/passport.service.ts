@@ -70,6 +70,18 @@ export class PassportService {
 
   async exportPassport(passportId: string): Promise<ExpandedPassport> {
     const passport = await this.passportRepository.findOneOrFail(passportId);
+
+    if (!passport.environment) {
+      return {
+        ...passport.toPlain(),
+        environment: {
+          assetAdministrationShells: [],
+          submodels: [],
+          conceptDescriptions: [],
+        },
+      } as ExpandedPassport;
+    }
+
     const { shells, submodels } = await this.loadEnvironment(passport);
 
     return {
@@ -77,7 +89,7 @@ export class PassportService {
       environment: {
         assetAdministrationShells: shells.map(shell => shell.toPlain()),
         submodels: submodels.map(submodel => submodel.toPlain()),
-        conceptDescriptions: passport.environment?.conceptDescriptions ?? [],
+        conceptDescriptions: passport.environment.conceptDescriptions ?? [],
       },
     } as ExpandedPassport;
   }
