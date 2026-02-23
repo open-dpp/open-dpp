@@ -76,4 +76,17 @@ describe("uniqueProductIdentifierService", () => {
     expect(found).toContainEqual(uniqueProductIdentifier1);
     expect(found).toContainEqual(uniqueProductIdentifier2);
   });
+
+  it("findOneByReferencedId returns newest UPI when multiple share referenceId", async () => {
+    const referenceId = uuid4();
+    const upi1 = UniqueProductIdentifier.create({ referenceId });
+    await service.save(upi1);
+    const upi2 = UniqueProductIdentifier.create({ referenceId });
+    await service.save(upi2);
+    const found = await service.findOneByReferencedId(referenceId);
+    expect(found).toBeDefined();
+    expect(found!.uuid).toBe(upi2.uuid);
+    const foundAgain = await service.findOneByReferencedId(referenceId);
+    expect(foundAgain!.uuid).toBe(found!.uuid);
+  });
 });

@@ -59,8 +59,9 @@ export class UniqueProductIdentifierService {
   }
 
   async findOneByReferencedId(referenceId: string) {
-    const uniqueProductIdentifierDoc
-      = await this.uniqueProductIdentifierDoc.findOne({ referenceId });
+    const uniqueProductIdentifierDoc = await this.uniqueProductIdentifierDoc
+      .findOne({ referenceId })
+      .sort({ createdAt: -1 });
     if (!uniqueProductIdentifierDoc) {
       return undefined;
     }
