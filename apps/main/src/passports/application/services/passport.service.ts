@@ -1,8 +1,5 @@
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
-import { AssetAdministrationShell } from "../../../aas/domain/asset-adminstration-shell";
-import { Submodel } from "../../../aas/domain/submodel-base/submodel";
-import { AasRepository } from "../../../aas/infrastructure/aas.repository";
-import { SubmodelRepository } from "../../../aas/infrastructure/submodel.repository";
+import { EnvironmentService } from "../../../aas/presentation/environment.service";
 import { PassportRepository } from "../../infrastructure/passport.repository";
 
 @Injectable()
@@ -12,8 +9,7 @@ export class PassportService {
   constructor(
     private readonly passportRepository: PassportRepository,
     // private readonly organizationsService: OrganizationsService,
-    private readonly aasRepository: AasRepository,
-    private readonly submodelRepository: SubmodelRepository,
+    private readonly environmentService: EnvironmentService,
   ) { }
 
   // TODO: Add organization data after DDD rebuild branch merged
@@ -34,53 +30,21 @@ export class PassportService {
     if (!passport.environment) {
       this.logger.warn(`Passport ${passportId} has no environment; returning empty shells and submodels`);
       return {
-        ...passport,
+        ...passport.toPlain(),
         environment: {
           assetAdministrationShells: [],
           submodels: [],
+          conceptDescriptions: [],
         },
       };
     }
 
-    const shellIds = passport.environment.assetAdministrationShells ?? [];
-    const submodelIds = passport.environment.submodels ?? [];
-
-    const [shellResults, submodelResults] = await Promise.all([
-      Promise.all(
-        shellIds.map(shellId => this.aasRepository.findOne(shellId)),
-      ),
-      Promise.all(
-        submodelIds.map(submodelId => this.submodelRepository.findOne(submodelId)),
-      ),
-    ]);
-
-    const shells: Array<AssetAdministrationShell> = [];
-    shellResults.forEach((aas, index) => {
-      if (aas) {
-        shells.push(aas);
-      }
-      else {
-        this.logger.warn(`Asset administration shell not found for id: ${shellIds[index]} (passport ${passportId})`);
-      }
-    });
-
-    const submodels: Array<Submodel> = [];
-    submodelResults.forEach((submodel, index) => {
-      if (submodel) {
-        submodels.push(submodel);
-      }
-      else {
-        this.logger.warn(`Submodel not found for id: ${submodelIds[index]} (passport ${passportId})`);
-      }
-    });
+    const environmentPlain = await this.environmentService.getFullEnvironmentAsPlain(passport.environment);
 
     return {
       // organization: organizationData,
-      ...passport,
-      environment: {
-        assetAdministrationShells: shells,
-        submodels,
-      },
+      ...passport.toPlain(),
+      environment: environmentPlain,
     };
   }
 }
