@@ -1,18 +1,15 @@
 import { expect } from "@jest/globals";
 import { ObjectId } from "mongodb";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import { connect, Connection, Model } from "mongoose";
 import { UserRole } from "../../domain/user-role.enum";
 import { User, UserSchema } from "./user.schema";
 
 describe("userSchema", () => {
-  let mongod: MongoMemoryServer;
   let mongoConnection: Connection;
   let UserModel: Model<User>;
 
   beforeAll(async () => {
-    mongod = await MongoMemoryServer.create();
-    const uri = mongod.getUri();
+    const uri = process.env.OPEN_DPP_MONGODB_URI!;
     mongoConnection = (await connect(uri)).connection;
     UserModel = mongoConnection.model(User.name, UserSchema);
   });
@@ -26,9 +23,7 @@ describe("userSchema", () => {
   });
 
   afterAll(async () => {
-    await mongoConnection.dropDatabase();
     await mongoConnection.close();
-    await mongod.stop();
   });
 
   it("should create a user document", async () => {
