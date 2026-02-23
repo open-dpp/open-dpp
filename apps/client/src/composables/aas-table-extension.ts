@@ -266,14 +266,23 @@ export function useAasTableExtension({
 
   async function onCellEditComplete(event: CellEditProps) {
     const { data: rowData, newValue, field, index: editedRowIndex } = event;
+    const errorMessage = translate(`${translateTablePrefix}.errorEditEntries`);
     if (rowData[field] !== newValue) {
-      const modifications = rows.value.map((row, index) =>
-        index === editedRowIndex
-          ? convertRowToRequestDto({ ...row, [field]: newValue })
-          : convertRowToRequestDto(row),
-      );
-      if (await saveRows(modifications)) {
-        rowData[field] = newValue;
+      try {
+        const modifications = rows.value.map((row, index) =>
+          index === editedRowIndex
+            ? convertRowToRequestDto({ ...row, [field]: newValue })
+            : convertRowToRequestDto(row),
+        );
+        if (await saveRows(modifications)) {
+          rowData[field] = newValue;
+        }
+        else {
+          errorHandlingStore.logErrorWithNotification(errorMessage);
+        }
+      }
+      catch (e) {
+        errorHandlingStore.logErrorWithNotification(errorMessage, e);
       }
     }
   }
