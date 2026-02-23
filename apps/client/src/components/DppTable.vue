@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { SharedDppDto } from "@open-dpp/dto";
 import type { Page } from "../composables/pagination.ts";
+import { AxiosError } from "axios";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
@@ -40,13 +41,22 @@ async function editItem(item: SharedDppDto) {
   await router.push(`${route.path}/${item.id}`);
 }
 
+function forwardToPresentationErrorMessage(e: unknown): string {
+  if (e instanceof AxiosError) {
+    if (!e.response) return t("dpp.forwardToPresentationErrorNetwork");
+    if (e.response.status === 404) return t("dpp.forwardToPresentationError404");
+    if (e.response.status === 403) return t("dpp.forwardToPresentationError403");
+  }
+  return t("dpp.forwardToPresentationError");
+}
+
 async function forwardToPresentation(item: SharedDppDto) {
   try {
     const { data } = await apiClient.dpp.passports.getUniqueProductIdentifierOfPassport(item.id);
     await router.push(`/presentation/${data.uuid}`);
   }
   catch (e) {
-    errorHandlingStore.logErrorWithNotification(t("dpp.forwardToPresentationError"), e);
+    errorHandlingStore.logErrorWithNotification(forwardToPresentationErrorMessage(e), e);
   }
 }
 
@@ -56,7 +66,7 @@ async function forwardToPresentationChat(item: SharedDppDto) {
     await router.push(`/presentation/${data.uuid}/chat`);
   }
   catch (e) {
-    errorHandlingStore.logErrorWithNotification(t("dpp.forwardToPresentationError"), e);
+    errorHandlingStore.logErrorWithNotification(forwardToPresentationErrorMessage(e), e);
   }
 }
 </script>
