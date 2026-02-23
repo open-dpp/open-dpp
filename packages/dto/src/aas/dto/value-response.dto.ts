@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
-export const ValueResponseDtoSchema = z.json()
+export const ValueSchema = z.json()
 
-export type ValueResponseDto = z.infer<typeof ValueResponseDtoSchema>
+export type ValueRequestDto = z.input<typeof ValueSchema>
+
+export type ValueResponseDto = z.infer<typeof ValueSchema>

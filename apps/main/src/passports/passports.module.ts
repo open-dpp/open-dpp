@@ -3,8 +3,8 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { AasModule } from "../aas/aas.module";
 
 import { EnvironmentService } from "../aas/presentation/environment.service";
-import { AuthModule } from "../auth/auth.module";
-import { OrganizationsModule } from "../organizations/organizations.module";
+import { AuthModule } from "../identity/auth/auth.module";
+import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { TemplateRepository } from "../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../templates/infrastructure/template.schema";
 import { UniqueProductIdentifierDoc, UniqueProductIdentifierSchema } from "../unique-product-identifier/infrastructure/unique-product-identifier.schema";

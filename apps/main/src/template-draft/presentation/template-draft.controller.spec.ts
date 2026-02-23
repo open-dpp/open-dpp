@@ -5,14 +5,12 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { Auth } from "better-auth";
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import {
   getApp,
 } from "../../../test/utils.for.test";
-import { AuthGuard } from "../../auth/auth.guard";
-import { AuthModule } from "../../auth/auth.module";
-import { AuthService } from "../../auth/auth.service";
 import { DataFieldType } from "../../data-modelling/domain/data-field-base";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { SectionType } from "../../data-modelling/domain/section-base";
@@ -21,6 +19,13 @@ import { sectionToDto } from "../../data-modelling/presentation/dto/section-base
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
 
+import { AuthModule } from "../../identity/auth/auth.module";
+import { AUTH } from "../../identity/auth/auth.provider";
+
+import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
+import { OrganizationsModule } from "../../identity/organizations/organizations.module";
+import { UsersService } from "../../identity/users/application/services/users.service";
+import { UsersModule } from "../../identity/users/users.module";
 import {
   PassportTemplatePublicationDbSchema,
   PassportTemplatePublicationDoc,
@@ -58,7 +63,6 @@ describe("templateDraftController", () => {
   let templateDraftService: TemplateDraftService;
   let templateService: TemplateService;
   let module: TestingModule;
-  let authService: AuthService;
 
   const betterAuthHelper = new BetterAuthHelper();
 
@@ -88,11 +92,14 @@ describe("templateDraftController", () => {
           },
         ]),
         AuthModule,
+        OrganizationsModule,
+        UsersModule,
       ],
       providers: [
         TemplateService,
         TemplateDraftService,
         MarketplaceApplicationService,
+
         PassportTemplatePublicationService,
         {
           provide: APP_GUARD,
@@ -109,10 +116,7 @@ describe("templateDraftController", () => {
     templateService = module.get<TemplateService>(TemplateService);
     templateDraftService
       = module.get<TemplateDraftService>(TemplateDraftService);
-    authService = module.get<AuthService>(
-      AuthService,
-    );
-    betterAuthHelper.setAuthService(authService);
+    betterAuthHelper.init(module.get<UsersService>(UsersService), module.get<Auth>(AUTH));
 
     await app.init();
 
@@ -1075,7 +1079,11 @@ describe("templateDraftController", () => {
   });
 
   afterAll(async () => {
-    await module.close();
-    await app.close();
+    if (module) {
+      await module.close();
+    }
+    if (app) {
+      await app.close();
+    }
   });
 });

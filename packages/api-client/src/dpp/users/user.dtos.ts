@@ -1,4 +1,1 @@
-export interface UserDto {
-  id: string
-  email: string
-}
+export type { UserDto } from '@open-dpp/dto'

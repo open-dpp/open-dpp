@@ -3,6 +3,7 @@ import { ClientSession, Document, Model as MongooseModel } from "mongoose";
 import { ZodObject } from "zod";
 import { IConvertableToPlain } from "../aas/domain/convertable-to-plain";
 import { IPersistable } from "../aas/domain/persistable";
+import { DbSessionOptions } from "../database/query-options";
 import { decodeCursor, encodeCursor, Pagination } from "../pagination/pagination";
 import { PagingResult } from "../pagination/paging-result";
 import { HasCreatedAt } from "./has-created-at";
@@ -15,7 +16,7 @@ export async function convertToDomain<T>(
   return fromPlain({ ...plain, id: plain._id });
 }
 
-export async function save<T extends Document<string>, V>(domainObject: IPersistable, docModel: MongooseModel<T>, schemaVersion: string, fromPlain: (plain: unknown) => V, ValidationSchema?: ZodObject<any>, session?: ClientSession): Promise<V> {
+export async function save<T extends Document<string>, V>(domainObject: IPersistable, docModel: MongooseModel<T>, schemaVersion: string, fromPlain: (plain: unknown) => V, ValidationSchema?: ZodObject<any>, options?: DbSessionOptions): Promise<V> {
   // 1. Try to find an existing document
   let doc = await docModel.findById(domainObject.id).session(session ?? null);
   // 2. If none exists, create a new discriminator document
@@ -31,7 +32,7 @@ export async function save<T extends Document<string>, V>(domainObject: IPersist
     _schemaVersion: schemaVersion,
     ...plain,
   });
-  return convertToDomain(await doc.save({ validateBeforeSave: true, session }), fromPlain);
+  return convertToDomain(await doc.save({ ...options, validateBeforeSave: true, session }), fromPlain);
 }
 
 export async function findOneOrFail<T extends Document<string>, V>(id: string, docModel: MongooseModel<T>, fromPlain: (plain: unknown) => V): Promise<V> {

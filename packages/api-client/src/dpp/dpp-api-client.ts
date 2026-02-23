@@ -12,6 +12,7 @@ import { ProductPassportsNamespace } from './product-passport/product-passports.
 import { TemplateDraftsNamespace } from './template-drafts/template-drafts.namespace'
 import { TemplatesNamespace } from './templates/templates.namespace'
 import { UniqueProductIdentifiersNamespace } from './unique-product-identifiers/unique-product-identifiers.namespace'
+import { UsersNamespace } from './users/users.namespace'
 
 export class DppApiClient implements IApiClient {
   public organizations!: OrganizationsNamespace
@@ -26,6 +27,7 @@ export class DppApiClient implements IApiClient {
   public uniqueProductIdentifiers!: UniqueProductIdentifiersNamespace
   public productPassports!: ProductPassportsNamespace
   public aasIntegration!: AasIntegrationNamespace
+  public users!: UsersNamespace
   private axiosInstance!: AxiosInstance
   private options: ApiClientOptions
 
@@ -79,5 +81,6 @@ export class DppApiClient implements IApiClient {
       this.axiosInstance,
       this.options.activeOrganizationId,
     )
+    this.users = new UsersNamespace(this.axiosInstance)
   }
 }

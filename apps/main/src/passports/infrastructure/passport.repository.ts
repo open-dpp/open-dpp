@@ -1,6 +1,7 @@
 import type { ClientSession, Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { DbSessionOptions } from "../../database/query-options";
 import { findAllByOrganizationId, findOne, findOneOrFail, save } from "../../lib/repositories";
 import { Pagination } from "../../pagination/pagination";
 import { Passport } from "../domain/passport";
@@ -17,8 +18,8 @@ export class PassportRepository {
     this.passportDoc = passportDoc;
   }
 
-  async save(passport: Passport, session?: ClientSession) {
-    return await save(passport, this.passportDoc, PassportDocVersion.v1_0_0, Passport.fromPlain, undefined, session);
+  async save(passport: Passport, options?: DbSessionOptions) {
+    return await save(passport, this.passportDoc, PassportDocVersion.v1_0_0, Passport.fromPlain, undefined, options);
   }
 
   async findOneOrFail(id: string) {

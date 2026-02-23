@@ -69,7 +69,7 @@ onMounted(() => {
       <template #content>
         <div class="flex flex-col gap-5">
           <Message v-if="showError" class="mb-4" closable severity="error" @close="showError = false">
-            {{ t('common.unknownErrorOccured') }}
+            {{ t('common.unknownErrorOccurred') }}
           </Message>
 
           <form class="space-y-6" @submit.prevent="requestPasswordReset">

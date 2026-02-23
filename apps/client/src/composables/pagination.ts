@@ -1,5 +1,6 @@
 import type { PagingParamsDto } from "@open-dpp/dto";
 
+import type { ComputedRef, Ref } from "vue";
 import { computed, ref } from "vue";
 
 export type Cursor = string | null;
@@ -23,22 +24,48 @@ interface PaginationProps {
   changeQueryParams: (params: Record<string, string | undefined>) => void;
 }
 
-export function usePagination({ initialCursor, limit, fetchCallback, changeQueryParams }: PaginationProps) {
+export interface IPagination {
+  resetCursor: () => Promise<void>;
+  hasPrevious: ComputedRef<boolean>;
+  hasNext: ComputedRef<boolean>;
+  nextPage: () => Promise<Page>;
+  previousPage: () => Promise<Page>;
+  currentPage: Ref<Page>;
+  reloadCurrentPage: () => Promise<void>;
+}
+
+export function usePagination({
+  initialCursor,
+  limit,
+  fetchCallback,
+  changeQueryParams,
+}: PaginationProps): IPagination {
   const startCursor = ref<string | null>(initialCursor ?? null);
-  const pages = ref<Page[]>([{ cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 }]);
+  const pages = ref<Page[]>([
+    { cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 },
+  ]);
   const currentPageIndex = ref<number>(0);
-  const currentPage = ref<Page>({ cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 });
+  const currentPage = ref<Page>({
+    cursor: startCursor.value,
+    from: 0,
+    to: limit - 1,
+    itemCount: 0,
+  });
 
   const hasPrevious = computed(() => {
     return currentPage.value.cursor !== startCursor.value;
   });
 
   const hasNext = computed(() => {
-    return currentPage.value.itemCount === currentPage.value.to - currentPage.value.from + 1;
+    return (
+      currentPage.value.itemCount
+      === currentPage.value.to - currentPage.value.from + 1
+    );
   });
 
   const updateCurrentPage = async () => {
-    currentPage.value = pages.value[currentPageIndex.value] ?? currentPage.value;
+    currentPage.value
+      = pages.value[currentPageIndex.value] ?? currentPage.value;
     const queryParams = { cursor: currentPage.value.cursor ?? undefined };
     changeQueryParams(queryParams);
   };
@@ -115,7 +142,9 @@ export function usePagination({ initialCursor, limit, fetchCallback, changeQuery
 
   const resetCursor = async () => {
     startCursor.value = null;
-    pages.value = [{ cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 }];
+    pages.value = [
+      { cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 },
+    ];
     currentPageIndex.value = 0;
     await updateCurrentPage();
     await nextPage();
@@ -126,5 +155,13 @@ export function usePagination({ initialCursor, limit, fetchCallback, changeQuery
     await reloadPage(currentPage.value);
   };
 
-  return { resetCursor, hasPrevious, hasNext, nextPage, previousPage, currentPage, reloadCurrentPage };
+  return {
+    resetCursor,
+    hasPrevious,
+    hasNext,
+    nextPage,
+    previousPage,
+    currentPage,
+    reloadCurrentPage,
+  };
 }

@@ -1,6 +1,6 @@
 import { Controller, Get, NotFoundException, Param } from "@nestjs/common";
-import { AllowAnonymous } from "../../auth/allow-anonymous.decorator";
-import { AuthService } from "../../auth/auth.service";
+import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
+import { OrganizationsService } from "../../identity/organizations/application/services/organizations.service";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";
@@ -14,20 +14,20 @@ export class ProductPassportController {
   private readonly uniqueProductIdentifierService: UniqueProductIdentifierService;
   private readonly templateService: TemplateService;
   private readonly itemService: ItemsService;
-  private readonly authService: AuthService;
+  private readonly organisationsService: OrganizationsService;
 
   constructor(
     modelsService: ModelsService,
     uniqueProductIdentifierService: UniqueProductIdentifierService,
     templateService: TemplateService,
     itemService: ItemsService,
-    authService: AuthService,
+    organisationsService: OrganizationsService,
   ) {
     this.modelsService = modelsService;
     this.uniqueProductIdentifierService = uniqueProductIdentifierService;
     this.templateService = templateService;
     this.itemService = itemService;
-    this.authService = authService;
+    this.organisationsService = organisationsService;
   }
 
   @AllowAnonymous()
@@ -43,7 +43,7 @@ export class ProductPassportController {
 
     const template = await this.templateService.findOneOrFail(model.templateId);
 
-    const organizationData = await this.authService.getOrganizationDataForPermalink(model.ownedByOrganizationId);
+    const organizationData = await this.organisationsService.getOrganizationDataForPermalink(model.ownedByOrganizationId);
     if (!organizationData) {
       throw new NotFoundException("No organization data found.");
     }
@@ -54,7 +54,6 @@ export class ProductPassportController {
       model,
       item,
       organizationName: organizationData.name,
-      organizationImage: organizationData.image,
     });
 
     return productPassportToDto(productPassport);

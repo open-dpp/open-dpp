@@ -15,6 +15,6 @@ describe("range", () => {
 
   it("should get submodel elements", () => {
     const range = Range.create({ idShort: "b1", valueType: DataTypeDef.String });
-    expect([...range.getSubmodelElements()]).toEqual([]);
+    expect(range.getSubmodelElements()).toEqual([]);
   });
 });
