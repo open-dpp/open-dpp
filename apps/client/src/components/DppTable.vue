@@ -43,9 +43,12 @@ async function editItem(item: SharedDppDto) {
 
 function forwardToPresentationErrorMessage(e: unknown): string {
   if (e instanceof AxiosError) {
-    if (!e.response) return t("dpp.forwardToPresentationErrorNetwork");
-    if (e.response.status === 404) return t("dpp.forwardToPresentationError404");
-    if (e.response.status === 403) return t("dpp.forwardToPresentationError403");
+    if (!e.response)
+      return t("dpp.forwardToPresentationErrorNetwork");
+    if (e.response.status === 404)
+      return t("dpp.forwardToPresentationError404");
+    if (e.response.status === 403)
+      return t("dpp.forwardToPresentationError403");
   }
   return t("dpp.forwardToPresentationError");
 }
