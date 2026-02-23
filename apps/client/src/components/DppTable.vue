@@ -53,10 +53,15 @@ function forwardToPresentationErrorMessage(e: unknown): string {
   return t("dpp.forwardToPresentationError");
 }
 
+async function resolvePassportUuid(item: SharedDppDto): Promise<string> {
+  const { data } = await apiClient.dpp.passports.getUniqueProductIdentifierOfPassport(item.id);
+  return data.uuid;
+}
+
 async function forwardToPresentation(item: SharedDppDto) {
   try {
-    const { data } = await apiClient.dpp.passports.getUniqueProductIdentifierOfPassport(item.id);
-    await router.push(`/presentation/${data.uuid}`);
+    const uuid = await resolvePassportUuid(item);
+    await router.push(`/presentation/${uuid}`);
   }
   catch (e) {
     errorHandlingStore.logErrorWithNotification(forwardToPresentationErrorMessage(e), e);
@@ -65,8 +70,8 @@ async function forwardToPresentation(item: SharedDppDto) {
 
 async function forwardToPresentationChat(item: SharedDppDto) {
   try {
-    const { data } = await apiClient.dpp.passports.getUniqueProductIdentifierOfPassport(item.id);
-    await router.push(`/presentation/${data.uuid}/chat`);
+    const uuid = await resolvePassportUuid(item);
+    await router.push(`/presentation/${uuid}/chat`);
   }
   catch (e) {
     errorHandlingStore.logErrorWithNotification(forwardToPresentationErrorMessage(e), e);
