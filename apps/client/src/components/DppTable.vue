@@ -110,7 +110,7 @@ async function forwardToPresentationChat(item: SharedDppDto) {
               @click="editItem(data)"
             />
           </div>
-          <div v-if="!usesTemplates" class="flex items-center rounded-md gap-2">
+          <div v-if="!props.usesTemplates" class="flex items-center rounded-md gap-2">
             <Button
               icon="pi pi-qrcode"
               severity="primary"
@@ -118,7 +118,7 @@ async function forwardToPresentationChat(item: SharedDppDto) {
               @click="forwardToPresentation(data)"
             />
           </div>
-          <div v-if="!usesTemplates" class="flex items-center rounded-md gap-2">
+          <div v-if="!props.usesTemplates" class="flex items-center rounded-md gap-2">
             <Button
               icon="pi pi-comments"
               severity="primary"
