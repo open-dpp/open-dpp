@@ -20,6 +20,7 @@ function isProductPassportDto(value: unknown): value is ProductPassportDto {
     && "description" in value
     && "mediaReferences" in value
     && "dataSections" in value
+    && "organizationName" in value
   );
 }
 
