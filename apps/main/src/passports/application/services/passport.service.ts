@@ -153,7 +153,7 @@ export class PassportService {
 
     const newPassport = Passport.create({
       organizationId: data.organizationId,
-      templateId: data.templateId || undefined,
+      templateId: data.templateId ?? undefined,
       environment: Environment.create({
         assetAdministrationShells: newShells.map(s => s.id),
         submodels: Array.from(oldIdToNewSubmodelMap.values()).map(s => s.id),
