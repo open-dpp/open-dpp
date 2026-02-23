@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Toast } from "primevue";
+import Toast from "primevue/toast";
 import { computed, defineAsyncComponent } from "vue";
 import { useRoute } from "vue-router";
 import ModalDialog from "./components/ModalDialog.vue";
