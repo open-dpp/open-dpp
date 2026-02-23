@@ -11,6 +11,7 @@ import { Environment } from "../../../aas/domain/environment";
 import { Submodel } from "../../../aas/domain/submodel-base/submodel";
 import { AasRepository } from "../../../aas/infrastructure/aas.repository";
 import { SubmodelRepository } from "../../../aas/infrastructure/submodel.repository";
+import { EnvironmentService } from "../../../aas/presentation/environment.service";
 import { Passport } from "../../domain/passport";
 import { PassportRepository } from "../../infrastructure/passport.repository";
 import { PassportService } from "./passport.service";
@@ -41,6 +42,10 @@ describe("passportService", () => {
     endSession: jest.fn(),
   };
 
+  const mockEnvironmentService = {
+    getFullEnvironmentAsPlain: jest.fn(),
+  };
+
   const mockConnection = {
     startSession: jest.fn().mockResolvedValue(mockSession),
   };
@@ -52,6 +57,10 @@ describe("passportService", () => {
         {
           provide: PassportRepository,
           useValue: mockPassportRepository,
+        },
+        {
+          provide: EnvironmentService,
+          useValue: mockEnvironmentService,
         },
         {
           provide: AasRepository,
@@ -110,6 +119,27 @@ describe("passportService", () => {
       expect(result.environment.assetAdministrationShells[0].id).toBe(aasId);
       expect(result.environment.submodels).toHaveLength(1);
       expect(result.environment.submodels[0].id).toBe(submodelId);
+    });
+
+    it("should fallback to empty conceptDescriptions when passport environment is undefined", async () => {
+      const passportId = randomUUID();
+      const passportWithoutEnvironment = {
+        id: passportId,
+        environment: undefined,
+        toPlain: () => ({
+          id: passportId,
+          organizationId: "org-1",
+        }),
+      } as unknown as Passport;
+
+      mockPassportRepository.findOneOrFail.mockResolvedValue(passportWithoutEnvironment);
+      jest.spyOn(service as any, "loadEnvironment").mockResolvedValue({ shells: [], submodels: [] });
+
+      const result = await service.exportPassport(passportId);
+
+      expect(result.environment.conceptDescriptions).toEqual([]);
+      expect(result.environment.assetAdministrationShells).toEqual([]);
+      expect(result.environment.submodels).toEqual([]);
     });
   });
 

@@ -7,8 +7,8 @@ import { Environment } from "../../../aas/domain/environment";
 import { Submodel } from "../../../aas/domain/submodel-base/submodel";
 import { AasRepository } from "../../../aas/infrastructure/aas.repository";
 import { SubmodelRepository } from "../../../aas/infrastructure/submodel.repository";
-import { Passport } from "../../domain/passport";
 import { EnvironmentService } from "../../../aas/presentation/environment.service";
+import { Passport } from "../../domain/passport";
 import { PassportRepository } from "../../infrastructure/passport.repository";
 
 export type ExpandedPassport = Omit<ReturnType<Passport["toPlain"]>, "environment"> & {
@@ -77,7 +77,7 @@ export class PassportService {
       environment: {
         assetAdministrationShells: shells.map(shell => shell.toPlain()),
         submodels: submodels.map(submodel => submodel.toPlain()),
-        conceptDescriptions: passport.environment.conceptDescriptions ?? [],
+        conceptDescriptions: passport.environment?.conceptDescriptions ?? [],
       },
     } as ExpandedPassport;
   }

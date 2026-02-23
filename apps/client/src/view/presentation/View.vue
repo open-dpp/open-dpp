@@ -11,6 +11,18 @@ const router = useRouter();
 
 const productPassportStore = useProductPassportStore();
 
+function isProductPassportDto(value: unknown): value is ProductPassportDto {
+  return (
+    !!value
+    && typeof value === "object"
+    && "id" in value
+    && "name" in value
+    && "description" in value
+    && "mediaReferences" in value
+    && "dataSections" in value
+  );
+}
+
 // Analytics tracking is intentionally disabled until the AAS view integration is restored.
 // const analyticsStore = useAnalyticsStore();
 // await analyticsStore.addPageView();
@@ -36,7 +48,7 @@ watch(
         return;
       }
       const data = response.data as ProductPassportDto | { passport?: ProductPassportDto };
-      const passport = "passport" in data ? data.passport : data;
+      const passport = isProductPassportDto(data) ? data : data.passport;
       if (!passport) {
         console.error("Passport not found in response");
         await router.push({
