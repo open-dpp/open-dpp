@@ -246,8 +246,8 @@ export class EnvironmentService {
     submodels: Array<Record<string, unknown>>;
     conceptDescriptions: Array<string>;
   }> {
-    const shellIds = environment.assetAdministrationShells ?? [];
-    const submodelIds = environment.submodels ?? [];
+    const shellIds = environment.assetAdministrationShells;
+    const submodelIds = environment.submodels;
 
     const [shellResults, submodelResults] = await Promise.all([
       Promise.all(shellIds.map(id => this.aasRepository.findOne(id))),
@@ -260,7 +260,7 @@ export class EnvironmentService {
     return {
       assetAdministrationShells: shells.map(s => s.toPlain()),
       submodels: submodels.map(s => s.toPlain()),
-      conceptDescriptions: environment.conceptDescriptions ?? [],
+      conceptDescriptions: environment.conceptDescriptions,
     };
   }
 
