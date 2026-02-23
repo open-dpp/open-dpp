@@ -52,7 +52,14 @@ const maxFractionDigits = computed(() =>
 );
 
 const numericValue = computed({
-  get: () => z.coerce.number().nullish().parse(props.modelValue),
+  get: () => {
+    try {
+      return z.coerce.number().nullish().parse(props.modelValue);
+    }
+    catch {
+      return null;
+    }
+  },
   set: v => emit("update:modelValue", z.coerce.string().nullish().parse(v)),
 });
 

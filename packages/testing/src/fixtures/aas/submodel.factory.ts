@@ -1,6 +1,6 @@
 import type { SubmodelResponseDto } from '@open-dpp/dto'
 import type { z } from 'zod'
-import { SubmodelJsonSchema } from '@open-dpp/dto'
+import { KeyTypes, ReferenceTypes, SubmodelJsonSchema } from '@open-dpp/dto'
 import { Factory } from 'fishery'
 
 interface SubmodelTransientParams {
@@ -183,19 +183,17 @@ export const submodelDesignOfProductPlainFactory
                   idShort: 'MultilanguageProp',
                 },
                 {
-                  modelType: 'Property',
-                  semanticId: {
+                  modelType: 'ReferenceElement',
+                  idShort: 'MotivationalVideo',
+                  value: {
                     keys: [
                       {
                         type: 'GlobalReference',
-                        value: 'ApplicationName',
+                        value: 'https://www.youtube.com/watch?v=G1IbRujko-A',
                       },
                     ],
                     type: 'ExternalReference',
                   },
-                  value: 'https://www.youtube.com/watch?v=G1IbRujko-A',
-                  valueType: 'xs:string',
-                  idShort: 'MotivationalVideo',
                 },
               ],
             },
@@ -295,7 +293,10 @@ export const submodelDesignOfProductValuePlainFactory
   = Factory.define<any> (() => (
     { Design_V01: {
       AdditionalInformation: {
-        MotivationalVideo: 'https://www.youtube.com/watch?v=G1IbRujko-A',
+        MotivationalVideo: { type: ReferenceTypes.ExternalReference, keys: [{
+          type: KeyTypes.GlobalReference,
+          value: 'https://www.youtube.com/watch?v=G1IbRujko-A',
+        }] },
         CreatorIsland: 'Probably _PHUCKET',
         Aufsteiger: '1. Fußball-Club Kaiserslautern e. V.',
         FileProp: {

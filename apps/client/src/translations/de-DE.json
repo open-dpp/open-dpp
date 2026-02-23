@@ -76,6 +76,7 @@
       "errorRemoveRow": "@:common.remove der @:aasEditor.table.row @:common.failed",
       "errorEditEntries": "@:common.edit der @:aasEditor.table.entries @:common.failed"
     },
+    "link": "Link",
     "errorLoadingSubmodels": "Laden der Abschnitte @.lower:common.failed",
     "addSubmodel": "Abschnitt hinzufügen",
     "submodelElementCollection": "Unterabschnitt",
