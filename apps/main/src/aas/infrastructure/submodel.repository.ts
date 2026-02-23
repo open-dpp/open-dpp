@@ -1,4 +1,4 @@
-import type { ClientSession, Model as MongooseModel } from "mongoose";
+import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { DbSessionOptions } from "../../database/query-options";

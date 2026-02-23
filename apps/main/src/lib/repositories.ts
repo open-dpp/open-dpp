@@ -1,5 +1,5 @@
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { ClientSession, Document, Model as MongooseModel } from "mongoose";
+import { Document, Model as MongooseModel } from "mongoose";
 import { ZodObject } from "zod";
 import { IConvertableToPlain } from "../aas/domain/convertable-to-plain";
 import { IPersistable } from "../aas/domain/persistable";
