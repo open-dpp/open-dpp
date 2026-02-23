@@ -48,8 +48,8 @@ watch(
         });
         return;
       }
-      const data = response.data as ProductPassportDto | { passport?: ProductPassportDto };
-      const passport = isProductPassportDto(data) ? data : data.passport;
+      const data = response.data as ProductPassportDto | { passport?: ProductPassportDto } | null | undefined;
+      const passport = isProductPassportDto(data) ? data : data?.passport;
       if (!passport) {
         console.error("Passport not found in response");
         await router.push({
