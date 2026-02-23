@@ -18,7 +18,7 @@ export async function convertToDomain<T>(
 
 export async function save<T extends Document<string>, V>(domainObject: IPersistable, docModel: MongooseModel<T>, schemaVersion: string, fromPlain: (plain: unknown) => V, ValidationSchema?: ZodObject<any>, options?: DbSessionOptions): Promise<V> {
   // 1. Try to find an existing document
-  let doc = await docModel.findById(domainObject.id).session(session ?? null);
+  let doc = await docModel.findById(domainObject.id).session(options?.session ?? null);
   // 2. If none exists, create a new discriminator document
   if (!doc) {
     // eslint-disable-next-line new-cap
@@ -32,7 +32,7 @@ export async function save<T extends Document<string>, V>(domainObject: IPersist
     _schemaVersion: schemaVersion,
     ...plain,
   });
-  return convertToDomain(await doc.save({ ...options, validateBeforeSave: true, session }), fromPlain);
+  return convertToDomain(await doc.save({ ...options, validateBeforeSave: true, session: options?.session }), fromPlain);
 }
 
 export async function findOneOrFail<T extends Document<string>, V>(id: string, docModel: MongooseModel<T>, fromPlain: (plain: unknown) => V): Promise<V> {

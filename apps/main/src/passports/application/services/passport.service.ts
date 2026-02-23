@@ -148,12 +148,12 @@ export class PassportService {
     try {
       await session.withTransaction(async () => {
         for (const submodel of Array.from(oldIdToNewSubmodelMap.values())) {
-          await this.submodelRepository.save(submodel, session);
+          await this.submodelRepository.save(submodel, { session });
         }
         for (const shell of newShells) {
-          await this.aasRepository.save(shell, session);
+          await this.aasRepository.save(shell, { session });
         }
-        await this.passportRepository.save(newPassport, session);
+        await this.passportRepository.save(newPassport, { session });
       });
     }
     finally {

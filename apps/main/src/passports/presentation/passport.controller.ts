@@ -382,21 +382,24 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
   @Get("/:id/export")
   async exportPassport(
     @IdParam() id: string,
-    @RequestParam() req: express.Request,
+    @AuthSession() session: Session,
   ): Promise<any> {
-    const passport = await this.loadPassportAndCheckOwnership(this.authService, id, req);
+    const passport = await this.loadPassportAndCheckOwnership(id, session);
     return await this.passportService.exportPassport(passport.id);
   }
 
   @Post("/import")
   async importPassport(
     @Body(new ZodValidationPipe(ExpandedPassportDtoSchema)) body: ExpandedPassportDto,
-    @RequestParam() req: express.Request,
+    @AuthSession() session: Session,
   ): Promise<PassportDto> {
-    const orgId = await this.authService.getActiveOrganizationId(req);
+    const activeOrganizationId = session.activeOrganizationId;
+    if (!activeOrganizationId) {
+      throw new BadRequestException("activeOrganizationId is required in session");
+    }
     const payload = {
       ...body,
-      organizationId: orgId,
+      organizationId: activeOrganizationId,
       createdAt: new Date(body.createdAt),
       updatedAt: new Date(body.updatedAt),
     };
