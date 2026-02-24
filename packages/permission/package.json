@@ -25,7 +25,8 @@
     "check-ts": "tsc --noEmit",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests",
+    "test:cov": "jest --passWithNoTests --coverage"
   },
   "dependencies": {
     "@casl/ability": "^6.7.5"

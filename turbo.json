@@ -40,6 +40,10 @@
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "cache": false,
       "persistent": true
+    },
+    "test:cov": {
+      "inputs": ["$TURBO_DEFAULT$", ".env"],
+      "cache": false
     }
   }
 }

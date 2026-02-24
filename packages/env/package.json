@@ -24,7 +24,8 @@
     "check-ts": "tsc --noEmit",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests",
+    "test:cov": "jest --passWithNoTests --coverage"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.11",

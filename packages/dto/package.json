@@ -24,7 +24,8 @@
     "check-ts": "tsc --noEmit",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "test": "jest"
+    "test": "jest",
+    "test:cov": "jest --coverage"
   },
   "dependencies": {
     "uuid": "^13.0.0",

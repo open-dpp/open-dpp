@@ -20,6 +20,7 @@
     "build": "tsc && rollup -c",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "test": "jest",
+    "test:cov": "jest --coverage",
     "check-ts": "tsc --noEmit",
     "lint": "eslint",
     "lint:fix": "eslint --fix",

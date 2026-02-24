@@ -31,4 +31,16 @@ module.exports = {
 
   globalSetup: "<rootDir>/test/global-setup.ts",
   globalTeardown: "<rootDir>/test/global-teardown.ts",
+
+  collectCoverageFrom: [
+    "src/**/*.ts",
+    "!src/main.ts",
+    "!src/**/*.module.ts",
+    "!src/**/*.dto.ts",
+    "!src/**/*.schema.ts",
+    "!src/**/*.spec.ts",
+    "!src/**/index.ts",
+  ],
+  coverageDirectory: "coverage",
+  coverageReporters: ["text", "text-summary", "lcov", "clover"],
 };

@@ -16,7 +16,7 @@
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:clear-cache": "jest --clearCache",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
+    "test:cov": "NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config apps/main/test/jest-e2e.json",
     "check-ts": "tsc --noEmit"
