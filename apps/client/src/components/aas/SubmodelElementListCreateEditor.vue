@@ -14,6 +14,7 @@ import {
   SubmodelBaseFormSchema,
 } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import FormContainer from "./form/FormContainer.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
 const props
@@ -43,27 +44,29 @@ const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
 });
 
-const submit = handleSubmit(async (data) => {
-  await props.callback({
-    ...data,
-    typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
-    orderRelevant: true,
-  });
-});
+async function submit() {
+  await handleSubmit(async (data) => {
+    await props.callback({
+      ...data,
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+      orderRelevant: true,
+    });
+  })();
+}
 
 defineExpose<{
-  submit: () => Promise<Promise<void> | undefined>;
+  submit: () => Promise<void>;
 }>({
   submit,
 });
 </script>
 
 <template>
-  <form class="flex flex-col gap-1 p-2">
+  <FormContainer>
     <SubmodelBaseForm
       :show-errors="showErrors"
       :errors="errors"
       :editor-mode="EditorMode.CREATE"
     />
-  </form>
+  </FormContainer>
 </template>

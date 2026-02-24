@@ -5,8 +5,8 @@ import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { FileJsonSchema } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
-import { computed } from "vue";
 
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import { EditorMode } from "../../composables/aas-drawer.ts";
@@ -39,17 +39,19 @@ const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
 });
 
-const submit = handleSubmit(async (data) => {
-  await props.callback(
-    FileJsonSchema.parse({
-      ...data,
-      contentType: data.contentType ?? "application/octet-stream",
-    }),
-  );
-});
+async function submit() {
+  await handleSubmit(async (data) => {
+    await props.callback(
+      FileJsonSchema.parse({
+        ...data,
+        contentType: data.contentType ?? "application/octet-stream",
+      }),
+    );
+  })();
+}
 
 defineExpose<{
-  submit: () => Promise<Promise<void> | undefined>;
+  submit: () => Promise<void>;
 }>({
   submit,
 });

@@ -11,7 +11,7 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { Button, Column, DataTable, InputText, Menu } from "primevue";
 import { useConfirm } from "primevue/useconfirm";
 import { useForm } from "vee-validate";
-import { computed, ref, toRaw } from "vue";
+import { computed, onErrorCaptured, ref, toRaw } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import { EditorMode } from "../../composables/aas-drawer.ts";
@@ -19,6 +19,8 @@ import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import FileField from "./form/FileField.vue";
+import FormContainer from "./form/FormContainer.vue";
+import LinkCellField from "./LinkCellField.vue";
 import PropertyValue from "./PropertyValue.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
@@ -54,6 +56,7 @@ const {
   columnMenu,
   rowMenu,
   rows,
+  rowsContext,
   columns,
   onCellEditComplete,
   buildColumnMenu,
@@ -77,13 +80,23 @@ const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
 });
 
-const submit = handleSubmit(async (data) => {
-  await save();
-  await props.callback({ ...data });
-});
+async function submit() {
+  await handleSubmit(async (data) => {
+    try {
+      await save();
+    }
+    catch (e) {
+      props.errorHandlingStore.logErrorWithNotification(
+        t("aasEditor.table.errorEditEntries"),
+        e,
+      );
+    }
+    await props.callback({ ...data });
+  })();
+}
 
 defineExpose<{
-  submit: () => Promise<Promise<void> | undefined>;
+  submit: () => Promise<void>;
 }>({
   submit,
 });
@@ -97,20 +110,52 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
   buildColumnMenu(options);
   columnMenuPopover.value.toggle(event);
 }
+
+function onFileChange(
+  value: string | undefined,
+  cellData: any,
+  rowIndex: number,
+  field: string,
+) {
+  onCellEditComplete({
+    data: cellData,
+    newValue: value ?? null,
+    field,
+    index: rowIndex,
+  });
+}
+onErrorCaptured((err) => {
+  props.errorHandlingStore.logErrorWithNotification(
+    t("common.errorOccurred"),
+    err,
+  );
+  return false; // stops error from bubbling further
+});
 </script>
 
 <template>
-  <form class="flex flex-col gap-1 p-2">
-    <SubmodelBaseForm
-      :show-errors="showErrors"
-      :errors="errors"
-      :editor-mode="EditorMode.EDIT"
-    />
+  <div class="flex flex-col gap-1 p-2">
+    <FormContainer>
+      <SubmodelBaseForm
+        :show-errors="showErrors"
+        :errors="errors"
+        :editor-mode="EditorMode.EDIT"
+      />
+    </FormContainer>
     <DataTable
       scrollable
       edit-mode="cell"
+      data-key="idShort"
       :value="rows"
-      @cell-edit-complete="onCellEditComplete"
+      @cell-edit-complete="
+        (event) =>
+          onCellEditComplete({
+            data: event.data,
+            field: event.field,
+            index: event.index,
+            newValue: event.newValue,
+          })
+      "
     >
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
@@ -157,39 +202,50 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
           <span>{{ col.label }}</span>
         </template>
         <template #body="{ data: cellData, field, index: rowIndex }">
-          <div v-if="typeof field === 'string' && cellData[field] != null">
+          <span v-if="typeof field !== 'string'">N/A</span>
+          <div v-else>
             <FileField
-              v-if="col.plain.modelType === AasSubmodelElements.File"
+              v-if="
+                col.plain.modelType === AasSubmodelElements.File
+                  && rowsContext[rowIndex] != null
+                  && rowsContext[rowIndex][field] != null
+              "
               :id="`${rowIndex}-${field}`"
-              v-model="cellData[field].value"
-              v-model:content-type="cellData[field].contentType"
+              v-model:content-type="rowsContext[rowIndex][field].contentType"
+              :model-value="cellData[field]"
               @update:model-value="
-                (value) =>
-                  onCellEditComplete({
-                    data: cellData,
-                    newValue: {
-                      value,
-                      contentType: cellData[field].contentType,
-                    },
-                    field,
-                    index: rowIndex,
-                  })
+                (value) => onFileChange(value, cellData, rowIndex, field)
               "
             />
-            <span v-else>
+            <span
+              v-else-if="
+                (col.plain.modelType === AasSubmodelElements.Property
+                  || col.plain.modelType
+                    === AasSubmodelElements.ReferenceElement)
+                  && cellData[field] != null
+              "
+            >
               {{ formatCellValue(cellData[field], col) }}
             </span>
+            <InputText v-else autofocus fluid readonly />
           </div>
-          <InputText v-else autofocus fluid />
         </template>
         <template
           v-if="col.plain.modelType !== AasSubmodelElements.File"
           #editor="{ data: editorData, field, index: rowIndex }"
         >
           <PropertyValue
+            v-if="col.plain.modelType === AasSubmodelElements.Property"
             :id="`${rowIndex}-${field}`"
             v-model="editorData[field]"
             :value-type="col.plain.valueType"
+          />
+          <LinkCellField
+            v-else-if="
+              col.plain.modelType === AasSubmodelElements.ReferenceElement
+            "
+            :id="`${rowIndex}-${field}`"
+            v-model="editorData[field]"
           />
         </template>
       </Column>
@@ -208,5 +264,5 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
       :popup="true"
       position="right"
     />
-  </form>
+  </div>
 </template>

@@ -1,17 +1,14 @@
 import { expect } from "@jest/globals";
 import { ObjectId } from "mongodb";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import { connect, Connection, Model } from "mongoose";
 import { Organization, OrganizationSchema } from "./organization.schema";
 
 describe("organizationSchema", () => {
-  let mongod: MongoMemoryServer;
   let mongoConnection: Connection;
   let OrganizationModel: Model<Organization>;
 
   beforeAll(async () => {
-    mongod = await MongoMemoryServer.create();
-    const uri = mongod.getUri();
+    const uri = process.env.OPEN_DPP_MONGODB_URI!;
     mongoConnection = (await connect(uri)).connection;
     OrganizationModel = mongoConnection.model(Organization.name, OrganizationSchema);
   });
@@ -25,9 +22,7 @@ describe("organizationSchema", () => {
   });
 
   afterAll(async () => {
-    await mongoConnection.dropDatabase();
     await mongoConnection.close();
-    await mongod.stop();
   });
 
   it("should create an organization document", async () => {

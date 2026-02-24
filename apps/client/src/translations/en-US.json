@@ -8,6 +8,7 @@
     "edit": "Edit",
     "qrCode": "QR code",
     "add": "Add",
+    "import": "Import",
     "save": "Save",
     "create": "Create",
     "change": "Change",
@@ -48,7 +49,13 @@
     "back": "Back",
     "call": "Call",
     "website": "Website",
-    "contact": "Contact"
+    "contact": "Contact",
+    "openPresentation": "Open presentation",
+    "openChat": "Open chat",
+    "exportPassport": "Export passport",
+    "exportFailed": "Failed to export passport.",
+    "importFailed": "Failed to import passport.",
+    "importSuccess": "Passport imported successfully."
   },
   "aasEditor": {
     "formLabels": {
@@ -76,6 +83,7 @@
       "errorRemoveRow": "@.capitalize:common.failed to @.lower:common.remove the @:aasEditor.table.row",
       "errorEditEntries": "@.capitalize:common.failed to @.lower:common.edit the @.lower:aasEditor.table.entries"
     },
+    "link": "Link",
     "errorLoadingSubmodels": "@.capitalize:common.failed to load the submodels",
     "addSubmodel": "Add section",
     "submodelElementCollection": "Sub section",
@@ -537,6 +545,14 @@
         "AI_TOKEN_QUOTA": "Monthly token limit of {limit} has been reached."
       }
     }
+  },
+  "dpp": {
+    "forwardToPresentation": "Forward to presentation",
+    "forwardToPresentationError": "Failed to open presentation.",
+    "forwardToPresentationError404": "Presentation or passport not found.",
+    "forwardToPresentationError403": "You don't have permission to open this presentation.",
+    "forwardToPresentationErrorNetwork": "Network error. Please check your connection.",
+    "openPresentationChat": "Open AI chat"
   },
   "presentation": {
     "productDetails": "Product details",

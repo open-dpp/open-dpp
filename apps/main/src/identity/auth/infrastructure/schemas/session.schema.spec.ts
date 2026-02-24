@@ -1,16 +1,13 @@
 import { expect } from "@jest/globals";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import { connect, Connection, Model } from "mongoose";
 import { Session, SessionSchema } from "./session.schema";
 
 describe("sessionSchema", () => {
-  let mongod: MongoMemoryServer;
   let mongoConnection: Connection;
   let SessionModel: Model<Session>;
 
   beforeAll(async () => {
-    mongod = await MongoMemoryServer.create();
-    const uri = mongod.getUri();
+    const uri = process.env.OPEN_DPP_MONGODB_URI!;
     mongoConnection = (await connect(uri)).connection;
     SessionModel = mongoConnection.model(Session.name, SessionSchema);
     await SessionModel.createIndexes();
@@ -30,7 +27,6 @@ describe("sessionSchema", () => {
       await collections[key].drop();
     }
     await mongoConnection.close();
-    await mongod.stop();
   });
 
   it("should create a session document", async () => {

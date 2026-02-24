@@ -1,0 +1,133 @@
+{
+  "invalidType": "Erwartet {expected}, erhalten {received}",
+  "invalidTypeReceivedUndefined": "erforderlich",
+  "invalidTypeReceivedNull": "erforderlich",
+  "invalidValue": "Invalid value, expected {expected} | Invalid value, expected one of {expected}",
+  "unrecognizedKeys": "Unrecognized keys: {keys}",
+  "invalidKey": "Invalid key in {origin}",
+  "invalidUnion": "Invalid value",
+  "invalidElement": "Invalid value in {origin}",
+  "custom": "Invalid value",
+  "notMultipleOf": "The number must be a multiple of {multipleOf}",
+  "invalidFormat": {
+    "starts_with": "Must start with {prefix}",
+    "ends_with": "Must end with {suffix}",
+    "includes": "Must include {includes}",
+    "regex": "Must match the pattern {pattern}",
+    "default": "Ungültiges Format, erwartet {format}"
+  },
+  "tooSmall": {
+    "number": {
+      "exact": "Enter exactly {minimum}",
+      "inclusive": "Enter a value greater than or equal to {minimum}",
+      "notInclusive": "Enter a value greater than {minimum}"
+    },
+    "int": {
+      "exact": "Enter exactly {minimum}",
+      "inclusive": "Enter a value greater than or equal to {minimum}",
+      "notInclusive": "Enter a value greater than {minimum}"
+    },
+    "bigint": {
+      "exact": "Enter exactly {minimum}",
+      "inclusive": "Enter a value greater than or equal to {minimum}",
+      "notInclusive": "Enter a value greater than {minimum}"
+    },
+    "date": {
+      "exact": "The date must be exactly {minimum}",
+      "inclusive": "The date must be on or after {minimum}",
+      "notInclusive": "The date must be after {minimum}"
+    },
+    "string": {
+      "exact": "Geben Sie exakt {minimum} Zeichen ein",
+      "inclusive": "Mindestlänge {minimum} Zeichen",
+      "notInclusive": "Geben Sie mehr als {minimum} Zeichen ein"
+    },
+    "array": {
+      "exact": "Enter exactly {minimum} item(s)",
+      "inclusive": "Enter at least {minimum} item(s)",
+      "notInclusive": "Enter more than {minimum} item(s)"
+    },
+    "set": {
+      "exact": "Enter exactly {minimum} item(s)",
+      "inclusive": "Enter at least {minimum} item(s)",
+      "notInclusive": "Enter more than {minimum} item(s)"
+    },
+    "file": {
+      "exact": "Upload a file of exactly {minimum} bytes",
+      "inclusive": "Upload a file of at least {minimum} bytes",
+      "notInclusive": "Upload a file of more than {minimum} bytes"
+    }
+  },
+  "tooBig": {
+    "number": {
+      "exact": "Enter exactly {maximum}",
+      "inclusive": "Enter a value less than or equal to {maximum}",
+      "notInclusive": "Enter a value less than {maximum}"
+    },
+    "int": {
+      "exact": "Enter exactly {maximum}",
+      "inclusive": "Enter a value less than or equal to {maximum}",
+      "notInclusive": "Enter a value less than {maximum}"
+    },
+    "bigint": {
+      "exact": "Enter exactly {maximum}",
+      "inclusive": "Enter a value less than or equal to {maximum}",
+      "notInclusive": "Enter a value less than {maximum}"
+    },
+    "date": {
+      "exact": "The date must be exactly {maximum}",
+      "inclusive": "The date must be on or before {maximum}",
+      "notInclusive": "The date must be before {maximum}"
+    },
+    "string": {
+      "exact": "Enter exactly {maximum} character(s)",
+      "inclusive": "Maximum length {maximum} character(s)",
+      "notInclusive": "Enter less than {maximum} character(s)"
+    },
+    "array": {
+      "exact": "Enter exactly {maximum} item(s)",
+      "inclusive": "Enter at most {maximum} item(s)",
+      "notInclusive": "Enter less than {maximum} item(s)"
+    },
+    "set": {
+      "exact": "Enter exactly {maximum} item(s)",
+      "inclusive": "Enter at most {maximum} item(s)",
+      "notInclusive": "Enter less than {maximum} item(s)"
+    },
+    "file": {
+      "exact": "Upload a file of exactly {maximum} bytes",
+      "inclusive": "Upload a file of at most {maximum} bytes",
+      "notInclusive": "Upload a file of less than {maximum} bytes"
+    }
+  },
+  "types": {
+    "regex": "input",
+    "email": "email address",
+    "url": "URL",
+    "emoji": "emoji",
+    "uuid": "UUID",
+    "uuidv4": "UUIDv4",
+    "uuidv6": "UUIDv6",
+    "nanoid": "nanoid",
+    "guid": "GUID",
+    "cuid": "cuid",
+    "cuid2": "cuid2",
+    "ulid": "ULID",
+    "xid": "XID",
+    "ksuid": "KSUID",
+    "datetime": "ISO date and time",
+    "date": "ISO date",
+    "time": "ISO time",
+    "duration": "ISO duration",
+    "ipv4": "IPv4 address",
+    "ipv6": "IPv6 address",
+    "cidrv4": "IPv4 range",
+    "cidrv6": "IPv6 range",
+    "base64": "base64 encoded string",
+    "base64url": "base64 encoded URL",
+    "json_string": "JSON string",
+    "e164": "E.164 number",
+    "jwt": "JWT",
+    "template_literal": "input"
+  }
+}

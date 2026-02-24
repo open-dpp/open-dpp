@@ -15,6 +15,7 @@ import {
 } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 
+import FormContainer from "./form/FormContainer.vue";
 import PropertyForm from "./PropertyForm.vue";
 
 const props
@@ -40,26 +41,28 @@ const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
 });
 
-const submit = handleSubmit(async (data) => {
-  await props.callback(
-    PropertyJsonSchema.parse({ ...data, valueType: props.data.valueType }),
-  );
-});
+async function submit() {
+  await handleSubmit(async (data) => {
+    await props.callback(
+      PropertyJsonSchema.parse({ ...data, valueType: props.data.valueType }),
+    );
+  })();
+}
 
 defineExpose<{
-  submit: () => Promise<Promise<void> | undefined>;
+  submit: () => Promise<void>;
 }>({
   submit,
 });
 </script>
 
 <template>
-  <form class="flex flex-col gap-4 p-2">
+  <FormContainer>
     <PropertyForm
       :data="props.data"
       :show-errors="showErrors"
       :errors="errors"
       :editor-mode="EditorMode.CREATE"
     />
-  </form>
+  </FormContainer>
 </template>

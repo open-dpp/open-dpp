@@ -1,8 +1,11 @@
 import { beforeAll, expect } from "@jest/globals";
-import { AasSubmodelElements, DataTypeDef } from "@open-dpp/dto";
+import { AasSubmodelElements, DataTypeDef, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
+import { Key } from "./common/key";
 import { LanguageText } from "./common/language-text";
+import { Reference } from "./common/reference";
 import { File } from "./submodel-base/file";
 import { Property } from "./submodel-base/property";
+import { ReferenceElement } from "./submodel-base/reference-element";
 import { registerSubmodelElementClasses } from "./submodel-base/register-submodel-element-classes";
 import { Submodel } from "./submodel-base/submodel";
 import { IdShortPath } from "./submodel-base/submodel-base";
@@ -80,5 +83,46 @@ describe("modifier visitor", () => {
     expect(listItem.description).toEqual(newDescriptions.map(LanguageText.fromPlain));
     expect(collection.displayName).toEqual(newDisplayNames.map(LanguageText.fromPlain));
     expect(property.value).toEqual("prop New");
+  });
+
+  it("should modify reference element", () => {
+    const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames(), description: existingDescriptions() });
+    const referenceElement = ReferenceElement.create({
+      idShort: "ref",
+      displayName: existingDisplayNames(),
+      description: existingDescriptions(),
+      value: Reference.create({
+        type: ReferenceTypes.ExternalReference,
+        keys: [Key.create({ type: KeyTypes.GlobalReference, value: "https://example.com/ref/1234567890" })],
+      }),
+    });
+    submodel.addSubmodelElement(referenceElement);
+    const modifications = {
+      idShort: "ref",
+      displayName: newDisplayNames,
+      description: newDescriptions,
+      value: {
+        type: ReferenceTypes.ModelReference,
+        keys: [{ type: KeyTypes.AssetAdministrationShell, value: "https://example.com/aas/1234567890" }],
+      },
+    };
+    const path = IdShortPath.create({ path: "ref" });
+    submodel.modifySubmodelElement(modifications, path);
+    expect(referenceElement.displayName).toEqual(newDisplayNames.map(LanguageText.fromPlain));
+    expect(referenceElement.description).toEqual(newDescriptions.map(LanguageText.fromPlain));
+    expect(referenceElement.value?.type).toEqual(ReferenceTypes.ModelReference);
+    expect(referenceElement.value?.keys[0].type).toEqual(KeyTypes.AssetAdministrationShell);
+    expect(referenceElement.value?.keys[0].value).toEqual("https://example.com/aas/1234567890");
+    submodel.modifySubmodelElement({
+      idShort: "ref",
+    }, path);
+    expect(referenceElement.value?.type).toEqual(ReferenceTypes.ModelReference);
+    expect(referenceElement.value?.keys[0].type).toEqual(KeyTypes.AssetAdministrationShell);
+    expect(referenceElement.value?.keys[0].value).toEqual("https://example.com/aas/1234567890");
+    submodel.modifySubmodelElement({
+      idShort: "ref",
+      value: null,
+    }, path);
+    expect(referenceElement.value).toBeNull();
   });
 });

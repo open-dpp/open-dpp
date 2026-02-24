@@ -2,11 +2,10 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { Injectable, Logger } from "@nestjs/common";
+import { PassportRepository } from "../passports/infrastructure/passport.repository";
 import { PolicyKey } from "../policy/domain/policy";
 import { PolicyService } from "../policy/infrastructure/policy.service";
-import {
-  UniqueProductIdentifierApplicationService,
-} from "../unique-product-identifier/presentation/unique.product.identifier.application.service";
+import { UniqueProductIdentifierService } from "../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { AiConfigurationService } from "./ai-configuration/infrastructure/ai-configuration.service";
 import { AiService } from "./infrastructure/ai.service";
 import { McpClientService } from "./mcp-client/mcp-client.service";
@@ -15,33 +14,40 @@ import { McpClientService } from "./mcp-client/mcp-client.service";
 export class ChatService {
   private readonly logger: Logger = new Logger(ChatService.name);
 
-  private mcpClientService: McpClientService;
-  private aiService: AiService;
-  private uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService;
-  private aiConfigurationService: AiConfigurationService;
-  private policyService: PolicyService;
+  private readonly mcpClientService: McpClientService;
+  private readonly aiService: AiService;
+  private readonly uniqueProductIdentifierService: UniqueProductIdentifierService;
+  private readonly aiConfigurationService: AiConfigurationService;
+  private readonly policyService: PolicyService;
+  private readonly passportRepository: PassportRepository;
 
   constructor(
     mcpClientService: McpClientService,
     aiService: AiService,
-    uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
+    uniqueProductIdentifierService: UniqueProductIdentifierService,
     aiConfigurationService: AiConfigurationService,
     policyService: PolicyService,
+    passportRepository: PassportRepository,
   ) {
     this.mcpClientService = mcpClientService;
     this.aiService = aiService;
-    this.uniqueProductIdentifierApplicationService = uniqueProductIdentifierApplicationService;
+    this.uniqueProductIdentifierService = uniqueProductIdentifierService;
     this.aiConfigurationService = aiConfigurationService;
     this.policyService = policyService;
+    this.passportRepository = passportRepository;
   }
 
-  async askAgent(query: string, passportUuid: string) {
-    this.logger.log(`Find passport with UUID: ${passportUuid}`);
-    const passport = await this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifier(
-      passportUuid,
+  async askAgent(query: string, uniqueProductIdentifierUuid: string) {
+    this.logger.log(`Resolve passport from UniqueProductIdentifier: ${uniqueProductIdentifierUuid}`);
+    const uniqueProductIdentifier
+      = await this.uniqueProductIdentifierService.findOneOrFail(uniqueProductIdentifierUuid);
+    const passport = await this.passportRepository.findOne(
+      uniqueProductIdentifier.referenceId,
     );
     if (!passport) {
-      throw new Error("Passport not found");
+      throw new Error(
+        `Product passport for UniqueProductIdentifier ${uniqueProductIdentifierUuid} not found`,
+      );
     }
 
     // Check quota BEFORE processing
@@ -78,7 +84,7 @@ export class ChatService {
       llm,
       tools,
     });
-    const systemPrompt = `You are a helpful assistant. The current product passport has the passportId: <${passportUuid}>`;
+    const systemPrompt = `You are a helpful assistant. The current product passport has the passportId: <${passport.id}>`;
     this.logger.log(systemPrompt);
     const prompt = ChatPromptTemplate.fromMessages([
       [
@@ -93,7 +99,7 @@ export class ChatService {
       agent,
       (agentResponse: { messages: any[] }) => {
         const messages = agentResponse.messages || [];
-        const lastMessage = messages[messages.length - 1];
+        const lastMessage = messages.at(-1);
 
         return lastMessage?.content || "";
       },

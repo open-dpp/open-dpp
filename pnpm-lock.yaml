@@ -105,6 +105,9 @@ importers:
       zod:
         specifier: ^4.3.6
         version: 4.3.6
+      zod-vue-i18n:
+        specifier: ^0.0.8
+        version: 0.0.8(vue-i18n@11.2.8(vue@3.5.27(typescript@5.9.3)))(zod@4.3.6)
     devDependencies:
       '@cypress/vue':
         specifier: ^6.0.2
@@ -388,6 +391,9 @@ importers:
       socket.io-client:
         specifier: ^4.8.2
         version: 4.8.3
+      ts-pattern:
+        specifier: ^5.9.0
+        version: 5.9.0
       uuid:
         specifier: ^13.0.0
         version: 13.0.0
@@ -8942,6 +8948,13 @@ packages:
     resolution: {integrity: sha512-pM/SU9d3YAggzi6MtR4h7ruuQlqKtad8e9S0fmxcMi+ueAK5Korys/aWcV9LIIHTVbj01NdzxcnXSN+O74ZIVA==}
     peerDependencies:
       zod: ^3.25 || ^4
+
+  zod-vue-i18n@0.0.8:
+    resolution: {integrity: sha512-KyfNAvLNaRIf1T4oM6KbO1vedAssCoqEn6NKI86ObaKeUbk1t6/i9oQOxWleMbINNMOwd4/dmlVou6UcDkxQew==}
+    engines: {node: '>= 16.x'}
+    peerDependencies:
+      vue-i18n: ^11.2.0
+      zod: ^3.25.0 || ^4.0.0
 
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
@@ -18092,6 +18105,11 @@ snapshots:
 
   zod-to-json-schema@3.25.1(zod@4.3.6):
     dependencies:
+      zod: 4.3.6
+
+  zod-vue-i18n@0.0.8(vue-i18n@11.2.8(vue@3.5.27(typescript@5.9.3)))(zod@4.3.6):
+    dependencies:
+      vue-i18n: 11.2.8(vue@3.5.27(typescript@5.9.3))
       zod: 4.3.6
 
   zod@3.25.76: {}

@@ -1,8 +1,9 @@
 import {
   LanguageEnum,
-  SubmodelElementModificationDto,
+  ReferenceModificationSchema,
 } from "@open-dpp/dto";
 import { NotSupportedError, ValueError } from "@open-dpp/exception";
+import { match, P } from "ts-pattern";
 import { z } from "zod";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";
@@ -14,6 +15,7 @@ import { Reference } from "./common/reference";
 import { ConceptDescription } from "./concept-description";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
+import { ModifierVisitor } from "./modifier-visitor";
 import { Resource } from "./resource";
 import { SpecificAssetId } from "./specific-asset-id";
 import { AnnotatedRelationshipElement } from "./submodel-base/annotated-relationship-element";
@@ -24,10 +26,9 @@ import { MultiLanguageProperty } from "./submodel-base/multi-language-property";
 import { Property } from "./submodel-base/property";
 import { Range } from "./submodel-base/range";
 import { ReferenceElement } from "./submodel-base/reference-element";
+
 import { RelationshipElement } from "./submodel-base/relationship-element";
 import { Submodel } from "./submodel-base/submodel";
-import { ISubmodelElement } from "./submodel-base/submodel-base";
-
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
@@ -133,16 +134,23 @@ export class ValueModifierVisitor implements IVisitor<unknown, void> {
     );
   }
 
-  visitReference(_element: Reference, _context: unknown): void {
-    throw new NotSupportedError(
-      "Reference is not supported.",
-    );
+  visitReference(element: Reference, context: unknown): void {
+    element.accept(new ModifierVisitor(), context);
   }
 
-  visitReferenceElement(_element: ReferenceElement, _context: unknown): void {
-    throw new NotSupportedError(
-      "ReferenceElement is not supported.",
-    );
+  visitReferenceElement(element: ReferenceElement, context: unknown): void {
+    const parsedValue = ReferenceModificationSchema.nullish().parse(context);
+    const input = { value: element.value, newValue: parsedValue };
+    match(input).with({
+      value: P.any,
+      newValue: null,
+    }, ({ newValue }) => {
+      element.value = newValue;
+    }).with({ value: null, newValue: P.nonNullable }, ({ newValue }) => {
+      element.value = Reference.fromPlain(newValue);
+    }).with({ value: P.nonNullable, newValue: P.nonNullable }, ({ newValue }) => {
+      element.value?.accept(this, newValue);
+    }).otherwise(() => {});
   }
 
   visitRelationshipElement(_element: RelationshipElement, _context: unknown): void {
@@ -189,16 +197,6 @@ export class ValueModifierVisitor implements IVisitor<unknown, void> {
         throw new ValueError(`List index ${index} is out of bounds for submodel element list ${element.idShort}.`);
       }
       target.accept(this, row);
-    }
-  }
-
-  visitSubmodelElements(element: ISubmodelElement, submodelElementModifications: SubmodelElementModificationDto[]): void {
-    for (const submodelElement of submodelElementModifications) {
-      const foundElement = element.getSubmodelElements().find(e => e.idShort === submodelElement.idShort);
-      if (!foundElement) {
-        throw new ValueError(`Could not find element with idShort ${submodelElement.idShort} within submodel element ${element.idShort}.`);
-      }
-      foundElement.accept(this, submodelElement);
     }
   }
 }

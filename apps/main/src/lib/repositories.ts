@@ -18,7 +18,7 @@ export async function convertToDomain<T>(
 
 export async function save<T extends Document<string>, V>(domainObject: IPersistable, docModel: MongooseModel<T>, schemaVersion: string, fromPlain: (plain: unknown) => V, ValidationSchema?: ZodObject<any>, options?: DbSessionOptions): Promise<V> {
   // 1. Try to find an existing document
-  let doc = await docModel.findById(domainObject.id);
+  let doc = await docModel.findById(domainObject.id).session(options?.session ?? null);
   // 2. If none exists, create a new discriminator document
   if (!doc) {
     // eslint-disable-next-line new-cap
@@ -32,7 +32,7 @@ export async function save<T extends Document<string>, V>(domainObject: IPersist
     _schemaVersion: schemaVersion,
     ...plain,
   });
-  return convertToDomain(await doc.save({ ...options, validateBeforeSave: true }), fromPlain);
+  return convertToDomain(await doc.save({ ...options, validateBeforeSave: true, session: options?.session }), fromPlain);
 }
 
 export async function findOneOrFail<T extends Document<string>, V>(id: string, docModel: MongooseModel<T>, fromPlain: (plain: unknown) => V): Promise<V> {
@@ -52,6 +52,18 @@ export async function findOne<T extends Document<string>, V>(id: string, docMode
     mongoDoc,
     fromPlain,
   );
+}
+
+export async function findByIds<T extends Document<string>, V>(ids: string[], docModel: MongooseModel<T>, fromPlain: (plain: unknown) => V): Promise<Map<string, V>> {
+  const result = new Map<string, V>();
+  if (ids.length === 0)
+    return result;
+  const mongoDocs = await docModel.find({ _id: { $in: ids } });
+  for (const doc of mongoDocs) {
+    const domain = await convertToDomain(doc, fromPlain);
+    result.set(doc._id as string, domain);
+  }
+  return result;
 }
 
 export async function findAllByOrganizationId<T extends Document<string>, V extends IPersistable & HasCreatedAt & IConvertableToPlain>(docModel: MongooseModel<T>, fromPlain: (plain: unknown) => V, organizationId: string, pagination?: Pagination) {

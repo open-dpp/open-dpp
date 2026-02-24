@@ -2,7 +2,7 @@ import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { DbSessionOptions } from "../../database/query-options";
-import { findOne, findOneOrFail, save } from "../../lib/repositories";
+import { findByIds, findOne, findOneOrFail, save } from "../../lib/repositories";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetAdministrationShellDbSchema } from "./schemas/asset-administration-shell-db-schema";
 import {
@@ -35,5 +35,9 @@ export class AasRepository {
 
   async findOne(id: string): Promise<AssetAdministrationShell | undefined> {
     return await findOne(id, this.aasDoc, this.fromPlain);
+  }
+
+  async findByIds(ids: string[]): Promise<Map<string, AssetAdministrationShell>> {
+    return await findByIds(ids, this.aasDoc, this.fromPlain);
   }
 }
