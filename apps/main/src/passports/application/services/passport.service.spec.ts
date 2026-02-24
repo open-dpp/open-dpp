@@ -21,19 +21,19 @@ describe("passportService", () => {
 
   const mockPassportRepository = {
     findOne: jest.fn(),
-    findOneOrFail: jest.fn(),
+    findOneOrFail: jest.fn<() => Promise<Passport>>(),
     save: jest.fn(),
   };
 
   const mockAasRepository = {
     findOne: jest.fn(),
-    findByIds: jest.fn(),
+    findByIds: jest.fn<() => Promise<Map<string, AssetAdministrationShell>>>(),
     save: jest.fn(),
   };
 
   const mockSubmodelRepository = {
     findOne: jest.fn(),
-    findByIds: jest.fn(),
+    findByIds: jest.fn<() => Promise<Map<string, Submodel>>>(),
     save: jest.fn(),
   };
 
@@ -47,7 +47,7 @@ describe("passportService", () => {
   };
 
   const mockConnection = {
-    startSession: jest.fn().mockResolvedValue(mockSession),
+    startSession: jest.fn<() => Promise<typeof mockSession>>().mockResolvedValue(mockSession),
   };
 
   beforeEach(async () => {

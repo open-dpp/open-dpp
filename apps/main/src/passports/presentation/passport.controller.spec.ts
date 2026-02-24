@@ -296,15 +296,15 @@ describe("passportController export/ import", () => {
 
   const mockPassportService = {
     exportPassport: jest.fn(),
-    importPassport: jest.fn(),
+    importPassport: jest.fn<() => Promise<Passport>>(),
   };
 
   const mockPassportRepository = {
-    findOneOrFail: jest.fn(),
+    findOneOrFail: jest.fn<() => Promise<Passport>>(),
   };
 
   const mockEnvironmentService = {
-    checkOwnerShipOfDppIdentifiable: jest.fn(),
+    checkOwnerShipOfDppIdentifiable: jest.fn<() => Promise<Passport>>(),
   };
 
   beforeEach(async () => {
