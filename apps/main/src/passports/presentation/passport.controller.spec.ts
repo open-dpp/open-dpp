@@ -209,6 +209,10 @@ describe("passportController", () => {
     await ctx.asserts.getShells(createPassport);
   });
 
+  it(`/PATCH shell`, async () => {
+    await ctx.asserts.modifyShell(createPassport, savePassport);
+  });
+
   it(`/GET submodels`, async () => {
     await ctx.asserts.getSubmodels(createPassport);
   });

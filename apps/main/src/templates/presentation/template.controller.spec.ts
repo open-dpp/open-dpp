@@ -47,6 +47,10 @@ describe("templateController", () => {
     await ctx.asserts.getShells(createTemplate);
   });
 
+  it(`/PATCH shell`, async () => {
+    await ctx.asserts.modifyShell(createTemplate, saveTemplate);
+  });
+
   it(`/GET submodels`, async () => {
     await ctx.asserts.getSubmodels(createTemplate);
   });

@@ -1,4 +1,6 @@
 import type {
+  AssetAdministrationShellModificationDto,
+  AssetAdministrationShellResponseDto,
   PassportDto,
   PassportPaginationDto,
   PassportRequestCreateDto,
@@ -40,6 +42,7 @@ import {
   ApiGetSubmodels,
   ApiGetSubmodelValue,
   ApiPatchColumn,
+  ApiPatchShell,
   ApiPatchSubmodel,
   ApiPatchSubmodelElement,
   ApiPatchSubmodelElementValue,
@@ -48,6 +51,8 @@ import {
   ApiPostSubmodel,
   ApiPostSubmodelElement,
   ApiPostSubmodelElementAtIdShortPath,
+  AssetAdministrationShellIdParam,
+  AssetAdministrationShellModificationRequestBody,
   ColumnParam,
   CursorQueryParam,
   IdParam,
@@ -173,6 +178,17 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     const passport = await this.loadPassportAndCheckOwnership(id, session);
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getAasShells(passport.getEnvironment(), pagination);
+  }
+
+  @ApiPatchShell()
+  async modifyShell(
+    @IdParam() id: string,
+    @AssetAdministrationShellIdParam() aasId: string,
+    @AssetAdministrationShellModificationRequestBody() body: AssetAdministrationShellModificationDto,
+    @AuthSession() session: Session,
+  ): Promise<AssetAdministrationShellResponseDto> {
+    const passport = await this.loadPassportAndCheckOwnership(id, session);
+    return await this.environmentService.modifyAasShell(passport.getEnvironment(), aasId, body);
   }
 
   @ApiGetSubmodels()

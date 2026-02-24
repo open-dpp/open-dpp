@@ -1,4 +1,6 @@
 import type {
+  AssetAdministrationShellModificationDto,
+  AssetAdministrationShellResponseDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementRequestDto,
@@ -35,6 +37,7 @@ import {
   ApiGetSubmodels,
   ApiGetSubmodelValue,
   ApiPatchColumn,
+  ApiPatchShell,
   ApiPatchSubmodel,
   ApiPatchSubmodelElement,
   ApiPatchSubmodelElementValue,
@@ -43,6 +46,8 @@ import {
   ApiPostSubmodel,
   ApiPostSubmodelElement,
   ApiPostSubmodelElementAtIdShortPath,
+  AssetAdministrationShellIdParam,
+  AssetAdministrationShellModificationRequestBody,
   ColumnParam,
   CursorQueryParam,
   IdParam,
@@ -86,6 +91,17 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     const template = await this.loadTemplateAndCheckOwnership(id, session);
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getAasShells(template.getEnvironment(), pagination);
+  }
+
+  @ApiPatchShell()
+  async modifyShell(
+    @IdParam() id: string,
+    @AssetAdministrationShellIdParam() aasId: string,
+    @AssetAdministrationShellModificationRequestBody() body: AssetAdministrationShellModificationDto,
+    @AuthSession() session: Session,
+  ): Promise<AssetAdministrationShellResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    return await this.environmentService.modifyAasShell(template.getEnvironment(), aasId, body);
   }
 
   @ApiGetSubmodels()

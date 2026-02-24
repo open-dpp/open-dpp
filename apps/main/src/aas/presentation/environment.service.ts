@@ -3,8 +3,11 @@ import type { Connection } from "mongoose";
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import {
+  AssetAdministrationShellJsonSchema,
+  AssetAdministrationShellModificationDto,
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellPaginationResponseDtoSchema,
+  AssetAdministrationShellResponseDto,
   AssetKindType,
   SubmodelElementListJsonSchema,
   SubmodelElementListResponseDto,
@@ -73,6 +76,13 @@ export class EnvironmentService {
     const pages = pagination.nextPages(environment.assetAdministrationShells);
     const shells = await Promise.all(pages.map(p => this.aasRepository.findOneOrFail(p)));
     return AssetAdministrationShellPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: shells }).toPlain());
+  }
+
+  async modifyAasShell(environment: Environment, aasId: string, modification: AssetAdministrationShellModificationDto): Promise<AssetAdministrationShellResponseDto> {
+    const aas = await this.findAssetAdministrationShellByIdOrFail(environment, aasId);
+    aas.modify(modification);
+    await this.aasRepository.save(aas);
+    return AssetAdministrationShellJsonSchema.parse(aas.toPlain());
   }
 
   async getSubmodels(environment: Environment, pagination: Pagination): Promise<SubmodelPaginationResponseDto> {
@@ -149,6 +159,15 @@ export class EnvironmentService {
     }
     else {
       throw new SubmodelNotPartOfEnvironmentException(submodelId);
+    }
+  }
+
+  private async findAssetAdministrationShellByIdOrFail(environment: Environment, aasId: string): Promise<AssetAdministrationShell> {
+    if (environment.assetAdministrationShells.includes(aasId)) {
+      return await this.aasRepository.findOneOrFail(aasId);
+    }
+    else {
+      throw new BadRequestException(`Environment has no asset administration shell with id ${aasId}`);
     }
   }
 

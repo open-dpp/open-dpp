@@ -1,7 +1,9 @@
+import { randomUUID } from "node:crypto";
 import { AssetKind, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";
 import { Key } from "./common/key";
+import { LanguageText } from "./common/language-text";
 import { Reference } from "./common/reference";
 import { Submodel } from "./submodel-base/submodel";
 
@@ -26,5 +28,66 @@ describe("assetAdministrationShell", () => {
     });
     aas.deleteSubmodel(submodelToDelete);
     expect(aas.submodels).toEqual([submodelRef2]);
+  });
+
+  it("should be modified", () => {
+    const aas = AssetAdministrationShell.create({
+      assetInformation: AssetInformation.create({ assetKind: "Instance" }),
+    });
+    const displayName = [{ language: "en", text: "MyAAS" }];
+    const description = [{ language: "en", text: "My description" }];
+    aas.modify({ displayName, description });
+    expect(aas.displayName).toEqual(displayName.map(LanguageText.fromPlain));
+    expect(aas.description).toEqual(description.map(LanguageText.fromPlain));
+  });
+
+  it("should be able to be copied", () => {
+    const aas = AssetAdministrationShell.create({
+      assetInformation: AssetInformation.create({ assetKind: "Instance" }),
+    });
+
+    const submodel = Submodel.create({
+      id: randomUUID(),
+      idShort: "MySubmodel",
+    });
+
+    aas.addSubmodel(submodel);
+
+    const submodelCopy = submodel.copy();
+
+    const copy = aas.copy([submodelCopy]);
+
+    expect(copy.id).not.toEqual(aas.id);
+    expect(copy.assetInformation).toEqual(aas.assetInformation);
+    expect(copy.submodels).toEqual([
+      Reference.create({
+        type: ReferenceTypes.ModelReference,
+        keys: [Key.create({
+          type: KeyTypes.Submodel,
+          value: submodelCopy.id,
+        })],
+      }),
+    ]);
+  });
+
+  it("should add a submodel", () => {
+    const aas = AssetAdministrationShell.create({
+      assetInformation: AssetInformation.create({ assetKind: "Instance" }),
+    });
+
+    const submodel = Submodel.create({
+      id: randomUUID(),
+      idShort: "MySubmodel",
+    });
+
+    aas.addSubmodel(submodel);
+
+    expect(aas.submodels).toEqual([Reference.create({
+      type: ReferenceTypes.ModelReference,
+      keys: [Key.create({
+        type: KeyTypes.Submodel,
+        value: submodel.id,
+      })],
+    })]);
   });
 });

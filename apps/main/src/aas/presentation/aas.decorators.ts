@@ -1,6 +1,7 @@
 import { applyDecorators, Body, Delete, Get, HttpCode, Param, Patch, Post, Query, Req } from "@nestjs/common";
 
 import {
+  AssetAdministrationShellModificationSchema,
   SubmodelElementModificationSchema,
   SubmodelElementSchema,
   SubmodelModificationSchema,
@@ -19,6 +20,14 @@ export function ApiGetShells() {
     Get(ApiGetShellsPath),
   );
 }
+
+export const ApiPatchShellPath = "/:id/shells/:aasId";
+export function ApiPatchShell() {
+  return applyDecorators(
+    Patch(ApiPatchShellPath),
+  );
+}
+
 export const ApiSubmodelsPath = "/:id/submodels";
 export function ApiGetSubmodels() {
   return applyDecorators(
@@ -172,8 +181,15 @@ export const SubmodelIdParamSchema = IdBaseSchema.meta({
   example: "032a7e62-29e2-4530-8f4b-765e32514a56",
   param: { in: "path", name: "submodelId" },
 });
-
 export const SubmodelIdParam = () => Param("submodelId", new ZodValidationPipe(SubmodelIdParamSchema));
+
+export const AssetAdministrationShellIdParamSchema = IdBaseSchema.meta({
+  description: "The asset administration shell id",
+  example: "032a7e62-29e2-4530-8f4b-765e32514a56",
+  param: { in: "path", name: "aasId" },
+});
+
+export const AssetAdministrationShellIdParam = () => Param("aasId", new ZodValidationPipe(AssetAdministrationShellIdParamSchema));
 
 export const IdShortPathParamSchema = z.string().regex(
   /^[^./]+(?:\.[^./]+)*$/,
@@ -226,6 +242,8 @@ export const PositionQueryParamSchema = z.coerce.number().optional().meta({
 export const PositionQueryParam = () => Query("position", new ZodValidationPipe(PositionQueryParamSchema));
 
 export const CursorQueryParam = () => Query("cursor", new ZodValidationPipe(CursorQueryParamSchema));
+
+export const AssetAdministrationShellModificationRequestBody = () => Body(new ZodValidationPipe(AssetAdministrationShellModificationSchema));
 
 export const SubmodelRequestBody = () => Body(new ZodValidationPipe(SubmodelRequestDtoSchema));
 export const SubmodelModificationRequestBody = () => Body(new ZodValidationPipe(SubmodelModificationSchema));
