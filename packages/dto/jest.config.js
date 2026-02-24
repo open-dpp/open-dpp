@@ -21,4 +21,12 @@ export default {
     ],
   },
   testEnvironment: 'node',
+
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.spec.ts',
+    '!src/**/index.ts',
+  ],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'text-summary', 'lcov', 'clover'],
 }

@@ -27,4 +27,12 @@ export default {
     '^@open-dpp/(.*)$': '<rootDir>/../../packages/$1/src',
   },
   testEnvironment: 'node',
+
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.spec.ts',
+    '!src/**/index.ts',
+  ],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'text-summary', 'lcov', 'clover'],
 }
