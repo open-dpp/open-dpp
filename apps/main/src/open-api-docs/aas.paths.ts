@@ -1,4 +1,6 @@
 import {
+  AssetAdministrationShellJsonSchema,
+  AssetAdministrationShellModificationSchema,
   AssetAdministrationShellPaginationResponseDtoSchema,
   PassportDtoSchema,
   PassportPaginationDtoSchema,
@@ -23,10 +25,12 @@ import {
   ApiGetSubmodelElementByIdPath,
   ApiGetSubmodelElementValuePath,
   ApiGetSubmodelValuePath,
+  ApiPatchShellPath,
   ApiPostColumnPath,
   ApiPostRowPath,
   ApiSubmodelElementsPath,
   ApiSubmodelsPath,
+  AssetAdministrationShellIdParamSchema,
   ColumnParamSchema,
   CursorQueryParamSchema,
   IdParamSchema,
@@ -58,6 +62,25 @@ export function createAasPaths(tag: string) {
           [HTTPCode.OK]: {
             content: {
               [ContentType.JSON]: { schema: AssetAdministrationShellPaginationResponseDtoSchema },
+            },
+          },
+        },
+      },
+    },
+    [`${tag}${ApiPatchShellPath}`]: {
+      get: {
+        tags: [tag],
+        summary: "Modifies a Asset Administration Shell with specified id",
+        parameters: [IdParamSchema, AssetAdministrationShellIdParamSchema],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: AssetAdministrationShellModificationSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: AssetAdministrationShellJsonSchema },
             },
           },
         },

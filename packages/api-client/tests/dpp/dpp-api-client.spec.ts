@@ -17,6 +17,7 @@ import {
 } from '../../src'
 import { activeOrganization, organizations } from '../organization'
 import {
+  aasModification,
   aasResponse,
   aasWrapperId,
   paginationParams,
@@ -115,6 +116,15 @@ describe('apiClient', () => {
       expect(response.data.paging_metadata.cursor).toEqual(aasResponse.id)
       expect(response.data.result).toEqual([aasResponse])
     })
+
+    it('should modify', async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.modifyShell(aasWrapperId, btoa(aasResponse.id), aasModification)
+      expect(response.data).toEqual({
+        ...aasResponse,
+        displayName: aasModification.displayName,
+      })
+    })
+
     it('should return submodels', async () => {
       const response = await sdk.dpp[appIdentifiable].aas.getSubmodels(aasWrapperId, paginationParams)
       expect(response.data).toEqual([submodelCarbonFootprintResponse])
