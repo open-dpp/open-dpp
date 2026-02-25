@@ -26,6 +26,7 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
       });
 
       const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      await new Promise(resolve => setTimeout(resolve, 0));
 
       expect(global.fetch).toHaveBeenCalledWith("/config.json");
       expect(DEFAULT_LANGUAGE).toBe("de-DE");
@@ -42,6 +43,7 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
       });
 
       const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      await new Promise(resolve => setTimeout(resolve, 0));
       expect(DEFAULT_LANGUAGE).toBe("de-DE");
     });
 
@@ -200,6 +202,7 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
       });
 
       const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      await new Promise(resolve => setTimeout(resolve, 0));
 
       expect(["en-US", "de-DE"]).toContain(DEFAULT_LANGUAGE);
     });
@@ -223,6 +226,7 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
       });
 
       const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      await new Promise(resolve => setTimeout(resolve, 0));
 
       // Deployment layer (config.json) > Application default
       expect(DEFAULT_LANGUAGE).toBe("de-DE");
@@ -267,6 +271,7 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
       });
 
       const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      await new Promise(resolve => setTimeout(resolve, 0));
 
       expect(DEFAULT_LANGUAGE).toBe("de-DE");
     });
@@ -305,6 +310,7 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
       });
 
       const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      await new Promise(resolve => setTimeout(resolve, 0));
 
       expect(DEFAULT_LANGUAGE).toBe("de-DE");
     });
@@ -320,6 +326,7 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
       });
 
       const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      await new Promise(resolve => setTimeout(resolve, 0));
 
       // Will be set as-is (no validation that it's a real locale)
       expect(DEFAULT_LANGUAGE).toBe("en-US@special");
@@ -338,6 +345,7 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
       });
 
       const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      await new Promise(resolve => setTimeout(resolve, 0));
 
       expect(DEFAULT_LANGUAGE).toBe("de-DE");
     });
@@ -353,6 +361,7 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
       });
 
       const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      await new Promise(resolve => setTimeout(resolve, 0));
 
       expect(DEFAULT_LANGUAGE).toBe("en-US");
     });
