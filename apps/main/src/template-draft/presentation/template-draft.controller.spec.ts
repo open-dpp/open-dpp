@@ -1,8 +1,9 @@
+import type { Connection } from "mongoose";
 import { randomUUID } from "node:crypto";
-import { beforeAll, expect, jest } from "@jest/globals";
+import { afterAll, beforeAll, expect, jest } from "@jest/globals";
 import { INestApplication } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
-import { MongooseModule } from "@nestjs/mongoose";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { Auth } from "better-auth";
@@ -17,11 +18,11 @@ import { SectionType } from "../../data-modelling/domain/section-base";
 import { Sector } from "../../data-modelling/domain/sectors";
 import { sectionToDto } from "../../data-modelling/presentation/dto/section-base.dto";
 import { generateMongoConfig } from "../../database/config";
+
 import { EmailService } from "../../email/email.service";
-
 import { AuthModule } from "../../identity/auth/auth.module";
-import { AUTH } from "../../identity/auth/auth.provider";
 
+import { AUTH } from "../../identity/auth/auth.provider";
 import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
 import { OrganizationsModule } from "../../identity/organizations/organizations.module";
 import { UsersService } from "../../identity/users/application/services/users.service";
@@ -124,6 +125,23 @@ describe("templateDraftController", () => {
     await betterAuthHelper.createOrganization(user1data?.user.id as string);
     const user2data = await betterAuthHelper.createUser();
     await betterAuthHelper.createOrganization(user2data?.user.id as string);
+  });
+
+  afterAll(async () => {
+    try {
+      await app?.close();
+    }
+    catch {
+      // ignore
+    }
+
+    try {
+      const conn = module.get<Connection>(getConnectionToken(), { strict: false });
+      await conn?.close();
+    }
+    catch {
+      // ignore
+    }
   });
 
   const userNotMemberTxt = `fails if user is not member of organization`;

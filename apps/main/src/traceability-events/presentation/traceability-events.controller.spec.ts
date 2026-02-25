@@ -1,5 +1,5 @@
 import type { TestingModule } from "@nestjs/testing";
-import { expect, jest } from "@jest/globals";
+import { afterAll, beforeAll, expect, jest } from "@jest/globals";
 import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
@@ -18,9 +18,10 @@ import { TraceabilityEventsController } from "./traceability-events.controller";
 
 describe("dppEventsController", () => {
   let controller: TraceabilityEventsController;
+  let module: TestingModule;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+  beforeAll(async () => {
+    module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
         MongooseModule.forRootAsync({
@@ -58,5 +59,9 @@ describe("dppEventsController", () => {
 
   it("should be defined", () => {
     expect(controller).toBeDefined();
+  });
+
+  afterAll(async () => {
+    await module.close();
   });
 });

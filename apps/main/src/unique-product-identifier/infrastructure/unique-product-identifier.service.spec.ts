@@ -1,7 +1,7 @@
 import type { TestingModule } from "@nestjs/testing";
 import type { Model } from "mongoose";
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { afterAll, expect } from "@jest/globals";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
@@ -19,9 +19,10 @@ import { UniqueProductIdentifierService } from "./unique-product-identifier.serv
 describe("uniqueProductIdentifierService", () => {
   let service: UniqueProductIdentifierService;
   let uniqueProductIdentifierDoc: Model<UniqueProductIdentifierDoc>;
+  let module: TestingModule;
 
   beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
         TraceabilityEventsModule,
@@ -97,5 +98,9 @@ describe("uniqueProductIdentifierService", () => {
     expect(found!.uuid).toBe(upi2.uuid);
     const foundAgain = await service.findOneByReferencedId(referenceId);
     expect(foundAgain!.uuid).toBe(found!.uuid);
+  });
+
+  afterAll(async () => {
+    await module.close();
   });
 });

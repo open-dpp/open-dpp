@@ -1,10 +1,11 @@
 import type { INestApplication } from "@nestjs/common";
 import type { Auth } from "better-auth";
+import type { Connection } from "mongoose";
 import { randomUUID } from "node:crypto";
-import { expect, jest } from "@jest/globals";
+import { afterAll, expect, jest } from "@jest/globals";
 import { ModuleMetadata } from "@nestjs/common/interfaces/modules/module-metadata.interface";
 import { APP_GUARD } from "@nestjs/core";
-import { MongooseModule } from "@nestjs/mongoose";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { ModelDefinition } from "@nestjs/mongoose/dist/interfaces";
 import { Test, TestingModule } from "@nestjs/testing";
 import {
@@ -127,6 +128,23 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     await betterAuthHelper.createOrganization(user1data?.user.id as string);
     const user2data = await betterAuthHelper.createUser();
     await betterAuthHelper.createOrganization(user2data?.user.id as string);
+  });
+
+  afterAll(async () => {
+    try {
+      await app?.close();
+    }
+    catch {
+      // ignore
+    }
+
+    try {
+      const conn = moduleRef.get<Connection>(getConnectionToken(), { strict: false });
+      await conn?.close();
+    }
+    catch {
+      // ignore
+    }
   });
 
   type CreateEntity = (orgaId: string) => Promise<IPersistable & IDigitalProductPassportIdentifiable>;

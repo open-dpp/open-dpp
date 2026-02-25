@@ -1,7 +1,7 @@
 import type { TestingModule } from "@nestjs/testing";
 import type { Model } from "mongoose";
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { afterAll, expect } from "@jest/globals";
 import {
   getModelToken,
   MongooseModule,
@@ -22,9 +22,10 @@ import { TraceabilityEventsService } from "./traceability-events.service";
 describe("traceabilityEventsService", () => {
   let service: TraceabilityEventsService;
   let dppEventModel: Model<TraceabilityEventDocument>;
+  let module: TestingModule;
 
   beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
         MongooseModule.forRootAsync({
@@ -57,6 +58,10 @@ describe("traceabilityEventsService", () => {
 
   it("should be defined", () => {
     expect(service).toBeDefined();
+  });
+
+  afterAll(async () => {
+    await module.close();
   });
 
   describe("traceabilityEventWrapper.loadFromDb", () => {

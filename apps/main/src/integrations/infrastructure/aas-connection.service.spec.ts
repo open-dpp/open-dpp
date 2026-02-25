@@ -1,6 +1,6 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
-import { expect } from "@jest/globals";
+import { afterAll, expect } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
@@ -13,11 +13,12 @@ import { AasConnectionService } from "./aas-connection.service";
 
 describe("aasMappingService", () => {
   let aasConnectionService: AasConnectionService;
+  let module: TestingModule;
   const userId = randomUUID();
   const organizationId = randomUUID();
 
   beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
         MongooseModule.forRootAsync({
@@ -126,5 +127,9 @@ describe("aasMappingService", () => {
     const aasConnections
       = await aasConnectionService.findAllByOrganization(otherOrganizationId);
     expect(aasConnections).toEqual([aasConnection1, aasConnection2]);
+  });
+
+  afterAll(async () => {
+    await module.close();
   });
 });

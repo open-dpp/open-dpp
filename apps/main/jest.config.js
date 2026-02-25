@@ -3,6 +3,10 @@ module.exports = {
 
   testEnvironment: "node",
 
+  testTimeout: 60000,
+  maxWorkers: "50%",
+  detectOpenHandles: true,
+
   extensionsToTreatAsEsm: [".ts", ".tsx"],
 
   // Use SWC to transform both TS and JS (ESM from node_modules too)

@@ -1,9 +1,10 @@
+import type { Connection } from "mongoose";
 import { randomUUID } from "node:crypto";
-import { expect, jest } from "@jest/globals";
+import { afterAll, expect, jest } from "@jest/globals";
 import { INestApplication } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
-import { MongooseModule } from "@nestjs/mongoose";
-import { Test } from "@nestjs/testing";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { Auth } from "better-auth";
 import request from "supertest";
@@ -167,6 +168,7 @@ async function createTemplate(userId: string, organizationId: string, templateSe
 
 describe("itemsController", () => {
   let app: INestApplication;
+  let moduleRef: TestingModule;
   let itemsService: ItemsService;
   let modelsService: ModelsService;
   let templateService: TemplateService;
@@ -175,7 +177,7 @@ describe("itemsController", () => {
   const betterAuthHelper = new BetterAuthHelper();
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
+    moduleRef = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
         MongooseModule.forRootAsync({
@@ -253,6 +255,23 @@ describe("itemsController", () => {
     await betterAuthHelper.createOrganization(user1data?.user.id as string);
     const user2data = await betterAuthHelper.createUser();
     await betterAuthHelper.createOrganization(user2data?.user.id as string);
+  });
+
+  afterAll(async () => {
+    try {
+      await app?.close();
+    }
+    catch {
+      // ignore
+    }
+
+    try {
+      const conn = moduleRef.get<Connection>(getConnectionToken(), { strict: false });
+      await conn?.close();
+    }
+    catch {
+      // ignore
+    }
   });
 
   it(`/CREATE item`, async () => {
