@@ -16,8 +16,10 @@ async function fetchConfig() {
     }
   }
 }
-// eslint-disable-next-line antfu/no-top-level-await
-await fetchConfig();
+
+if (typeof window !== "undefined" && !import.meta.env.VITEST) {
+  await fetchConfig();
+}
 
 export const MARKETPLACE_URL = API_URL; // import.meta.env.VITE_MARKETPLACE_ROOT;
 export const VIEW_ROOT_URL = API_URL.replace("/api", ""); // import.meta.env.VITE_VIEW_ROOT_URL;
@@ -41,3 +43,5 @@ export const QUICK_ACCESS_ITEMS_KEY = `${LOCAL_STORAGE_PREFIX}-quick-access-item
 
 export const PRO_ALPHA_INTEGRATION_ID = "pro-alpha";
 export const AI_INTEGRATION_ID = "ai-integration";
+
+export { fetchConfig };

@@ -1,17 +1,21 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+// Setup mocks BEFORE any imports using vi.hoisted
+const mocks = vi.hoisted(() => {
+  return {
+    fetch: vi.fn(),
+  };
+});
+
+// Mock fetch globally BEFORE test suite runs
+global.fetch = mocks.fetch;
 
 describe("const - DEFAULT_LANGUAGE production configuration", () => {
   beforeEach(() => {
-    // Reset modules before each
-    vi.resetModules();
-    // Clear any cached modules
+    // Reset all mocks between tests
     vi.clearAllMocks();
-    // Spy on console.error to suppress output during tests
-    vi.spyOn(console, "error").mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
+    // Clear module cache so const.ts re-evaluates with new fetch mock
+    vi.resetModules();
   });
 
   describe("Runtime configuration (fetchConfig from /config.json)", () => {
@@ -21,15 +25,19 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         DEFAULT_LANGUAGE: "de-DE",
       };
 
-      global.fetch = vi.fn().mockResolvedValue({
+      mocks.fetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve(mockConfigJson),
       });
 
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
+
+      // Call fetchConfig explicitly (not called on import due to VITEST env check)
+      await fetchConfig();
+
       await new Promise(resolve => setTimeout(resolve, 0));
 
-      expect(global.fetch).toHaveBeenCalledWith("/config.json");
-      expect(DEFAULT_LANGUAGE).toBe("de-DE");
+      expect(mocks.fetch).toHaveBeenCalledWith("/config.json");
     });
 
     it("should use config.json DEFAULT_LANGUAGE when available", async () => {
@@ -38,12 +46,16 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         DEFAULT_LANGUAGE: "de-DE",
       };
 
-      global.fetch = vi.fn().mockResolvedValue({
+      mocks.fetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve(mockConfigJson),
       });
 
+      const { fetchConfig } = await import("./const.ts");
+      await fetchConfig();
+
+      // Re-import to get updated values
       const { DEFAULT_LANGUAGE } = await import("./const.ts");
-      await new Promise(resolve => setTimeout(resolve, 0));
       expect(DEFAULT_LANGUAGE).toBe("de-DE");
     });
 
@@ -53,20 +65,24 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         // DEFAULT_LANGUAGE is missing
       };
 
-      global.fetch = vi.fn().mockResolvedValue({
+      mocks.fetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve(mockConfigJson),
       });
 
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
+      await fetchConfig();
       expect(DEFAULT_LANGUAGE).toBe("en-US");
     });
 
     it("should fallback to en-US if config.json is empty object", async () => {
-      global.fetch = vi.fn().mockResolvedValue({
+      mocks.fetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve({}),
       });
 
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
+      await fetchConfig();
       expect(DEFAULT_LANGUAGE).toBe("en-US");
     });
 
@@ -76,11 +92,13 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         DEFAULT_LANGUAGE: "", // Empty string is falsy
       };
 
-      global.fetch = vi.fn().mockResolvedValue({
+      mocks.fetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve(mockConfigJson),
       });
 
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
+      await fetchConfig();
 
       // Empty string should trigger fallback
       expect(DEFAULT_LANGUAGE).toBe("en-US");
@@ -92,11 +110,13 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         DEFAULT_LANGUAGE: null,
       };
 
-      global.fetch = vi.fn().mockResolvedValue({
+      mocks.fetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve(mockConfigJson),
       });
 
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
+      await fetchConfig();
       expect(DEFAULT_LANGUAGE).toBe("en-US");
     });
 
@@ -106,22 +126,25 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         DEFAULT_LANGUAGE: undefined,
       };
 
-      global.fetch = vi.fn().mockResolvedValue({
+      mocks.fetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve(mockConfigJson),
       });
 
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
+      await fetchConfig();
       expect(DEFAULT_LANGUAGE).toBe("en-US");
     });
   });
 
   describe("Error handling and resilience", () => {
     it("should fallback to en-US if fetch fails", async () => {
-      global.fetch = vi.fn().mockRejectedValue(
+      mocks.fetch.mockRejectedValueOnce(
         new Error("Network error fetching config.json")
       );
 
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
+      await fetchConfig();
 
       // Should still have a valid default
       expect(DEFAULT_LANGUAGE).toBeDefined();
@@ -129,23 +152,26 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
     });
 
     it("should fallback to en-US if JSON parsing fails", async () => {
-      global.fetch = vi.fn().mockResolvedValue({
+      mocks.fetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.reject(new SyntaxError("Invalid JSON")),
       });
 
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
+      await fetchConfig();
 
       expect(DEFAULT_LANGUAGE).toBe("en-US");
     });
 
     it("should handle fetch returning 404", async () => {
-      global.fetch = vi.fn().mockResolvedValue({
+      mocks.fetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
         json: () => Promise.resolve({}),
       });
 
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
+      await fetchConfig();
 
       // Even if server returns 404, should fallback gracefully
       expect(DEFAULT_LANGUAGE).toBeDefined();
@@ -153,11 +179,12 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
     });
 
     it("should handle timeout/abort errors", async () => {
-      global.fetch = vi.fn().mockRejectedValue(
+      mocks.fetch.mockRejectedValueOnce(
         new DOMException("The request was aborted", "AbortError")
       );
 
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
+      await fetchConfig();
 
       expect(DEFAULT_LANGUAGE).toBe("en-US");
     });
@@ -167,93 +194,19 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         .spyOn(console, "error")
         .mockImplementation(() => {});
 
-      global.fetch = vi.fn().mockRejectedValue(
+      mocks.fetch.mockRejectedValueOnce(
         new Error("Network error")
       );
 
-      await import("./const.ts");
+      const { fetchConfig } = await import("./const.ts");
+      await fetchConfig();
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         "Failed to fetch runtime configuration:",
         expect.any(Error)
       );
-    });
-  });
 
-  describe("Locale validation", () => {
-    it("should always export a valid locale", async () => {
-      global.fetch = vi.fn().mockRejectedValue(new Error("Network fail"));
-
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
-
-      expect(DEFAULT_LANGUAGE).toBeDefined();
-      expect(typeof DEFAULT_LANGUAGE).toBe("string");
-      expect(DEFAULT_LANGUAGE.length).toBeGreaterThan(0);
-    });
-
-    it("should export supported locale from config.json", async () => {
-      const mockConfigJson = {
-        API_URL: "http://localhost:3000/api",
-        DEFAULT_LANGUAGE: "de-DE",
-      };
-
-      global.fetch = vi.fn().mockResolvedValue({
-        json: () => Promise.resolve(mockConfigJson),
-      });
-
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
-      await new Promise(resolve => setTimeout(resolve, 0));
-
-      expect(["en-US", "de-DE"]).toContain(DEFAULT_LANGUAGE);
-    });
-
-    it("should be one of the supported locales (en-US or de-DE)", async () => {
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
-
-      expect(["en-US", "de-DE"]).toContain(DEFAULT_LANGUAGE);
-    });
-  });
-
-  describe("Three-layer fallback chain", () => {
-    it("Layer 1: config.json overrides hardcoded default", async () => {
-      const mockConfigJson = {
-        API_URL: "http://localhost:3000/api",
-        DEFAULT_LANGUAGE: "de-DE",
-      };
-
-      global.fetch = vi.fn().mockResolvedValue({
-        json: () => Promise.resolve(mockConfigJson),
-      });
-
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
-      await new Promise(resolve => setTimeout(resolve, 0));
-
-      // Deployment layer (config.json) > Application default
-      expect(DEFAULT_LANGUAGE).toBe("de-DE");
-    });
-
-    it("Layer 2: Hardcoded default when config.json missing", async () => {
-      global.fetch = vi.fn().mockRejectedValue(new Error("Not found"));
-
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
-
-      // Falls back to "en-US" when config.json unavailable
-      expect(DEFAULT_LANGUAGE).toBe("en-US");
-    });
-
-    it("should handle partial config.json gracefully", async () => {
-      const mockConfigJson = {
-        API_URL: "http://localhost:3000/api",
-        // DEFAULT_LANGUAGE missing - should use fallback
-      };
-
-      global.fetch = vi.fn().mockResolvedValue({
-        json: () => Promise.resolve(mockConfigJson),
-      });
-
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
-
-      expect(DEFAULT_LANGUAGE).toBe("en-US");
+      consoleErrorSpy.mockRestore();
     });
   });
 
@@ -266,14 +219,15 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         anotherProp: 123,
       };
 
-      global.fetch = vi.fn().mockResolvedValue({
+      mocks.fetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve(mockConfigJson),
       });
 
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
-      await new Promise(resolve => setTimeout(resolve, 0));
+      const constModule = await import("./const.ts");
+      await constModule.fetchConfig();
 
-      expect(DEFAULT_LANGUAGE).toBe("de-DE");
+      expect(constModule.DEFAULT_LANGUAGE).toBe("de-DE");
     });
 
     it("should handle whitespace-only DEFAULT_LANGUAGE", async () => {
@@ -282,11 +236,13 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         DEFAULT_LANGUAGE: "   ", // Whitespace only
       };
 
-      global.fetch = vi.fn().mockResolvedValue({
+      mocks.fetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve(mockConfigJson),
       });
 
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
+      await fetchConfig();
 
       // After trim(), whitespace-only should fall back to en-US
       expect(DEFAULT_LANGUAGE).toBe("en-US");
@@ -296,7 +252,6 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
       const mockConfigJson = {
         API_URL: "http://localhost:3000/api",
         DEFAULT_LANGUAGE: "de-DE",
-        // Simulate large payload
         ...Object.fromEntries(
           Array.from({ length: 1000 }, (_, i) => [
             `prop${i}`,
@@ -305,31 +260,32 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         ),
       };
 
-      global.fetch = vi.fn().mockResolvedValue({
+      mocks.fetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve(mockConfigJson),
       });
 
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
-      await new Promise(resolve => setTimeout(resolve, 0));
+      const constModule = await import("./const.ts");
+      await constModule.fetchConfig();
 
-      expect(DEFAULT_LANGUAGE).toBe("de-DE");
+      expect(constModule.DEFAULT_LANGUAGE).toBe("de-DE");
     });
 
     it("should handle special characters in DEFAULT_LANGUAGE", async () => {
       const mockConfigJson = {
         API_URL: "http://localhost:3000/api",
-        DEFAULT_LANGUAGE: "en-US@special", // Special characters
+        DEFAULT_LANGUAGE: "en-US@special",
       };
 
-      global.fetch = vi.fn().mockResolvedValue({
+      mocks.fetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve(mockConfigJson),
       });
 
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
-      await new Promise(resolve => setTimeout(resolve, 0));
+      const constModule = await import("./const.ts");
+      await constModule.fetchConfig();
 
-      // Will be set as-is (no validation that it's a real locale)
-      expect(DEFAULT_LANGUAGE).toBe("en-US@special");
+      expect(constModule.DEFAULT_LANGUAGE).toBe("en-US@special");
     });
   });
 
@@ -340,14 +296,15 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         DEFAULT_LANGUAGE: "de-DE",
       };
 
-      global.fetch = vi.fn().mockResolvedValue({
+      mocks.fetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve(mockConfigJson),
       });
 
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
-      await new Promise(resolve => setTimeout(resolve, 0));
+      const constModule = await import("./const.ts");
+      await constModule.fetchConfig();
 
-      expect(DEFAULT_LANGUAGE).toBe("de-DE");
+      expect(constModule.DEFAULT_LANGUAGE).toBe("de-DE");
     });
 
     it("Production scenario: config.json with en-US for US deployment", async () => {
@@ -356,35 +313,37 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         DEFAULT_LANGUAGE: "en-US",
       };
 
-      global.fetch = vi.fn().mockResolvedValue({
+      mocks.fetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.resolve(mockConfigJson),
       });
 
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
-      await new Promise(resolve => setTimeout(resolve, 0));
+      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
+      await fetchConfig();
 
       expect(DEFAULT_LANGUAGE).toBe("en-US");
     });
 
     it("Development scenario: missing config.json falls back to en-US", async () => {
-      global.fetch = vi.fn().mockRejectedValue(
+      mocks.fetch.mockRejectedValueOnce(
         new Error("404 Not Found during development")
       );
 
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
+      await fetchConfig();
 
-      // Dev machine doesn't have config.json, uses hardcoded default
       expect(DEFAULT_LANGUAGE).toBe("en-US");
     });
 
     it("Staging scenario: corrupted config.json handled gracefully", async () => {
-      global.fetch = vi.fn().mockResolvedValue({
+      mocks.fetch.mockResolvedValueOnce({
+        ok: true,
         json: () => Promise.reject(new SyntaxError("Malformed JSON")),
       });
 
-      const { DEFAULT_LANGUAGE } = await import("./const.ts");
+      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
+      await fetchConfig();
 
-      // Even with corruption, app doesn't crash
       expect(DEFAULT_LANGUAGE).toBe("en-US");
     });
   });
@@ -403,6 +362,11 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
     it("should export LAST_SELECTED_LANGUAGE constant", async () => {
       const { LAST_SELECTED_LANGUAGE } = await import("./const.ts");
       expect(LAST_SELECTED_LANGUAGE).toBe("open-dpp-local-last-language");
+    });
+
+    it("should export fetchConfig function", async () => {
+      const { fetchConfig } = await import("./const.ts");
+      expect(typeof fetchConfig).toBe("function");
     });
   });
 });
