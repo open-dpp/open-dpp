@@ -14,8 +14,10 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
   beforeEach(() => {
     // Reset all mocks between tests
     vi.clearAllMocks();
-    // Clear module cache so const.ts re-evaluates with new fetch mock
+    // Clear module cache so const.ts re-evaluates with fresh state
     vi.resetModules();
+    // Re-establish mock connection after reset
+    global.fetch = mocks.fetch;
   });
 
   describe("Runtime configuration (fetchConfig from /config.json)", () => {
@@ -70,9 +72,9 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         json: () => Promise.resolve(mockConfigJson),
       });
 
-      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
-      await fetchConfig();
-      expect(DEFAULT_LANGUAGE).toBe("en-US");
+      const constModule = await import("./const.ts");
+      await constModule.fetchConfig();
+      expect(constModule.DEFAULT_LANGUAGE).toBe("en-US");
     });
 
     it("should fallback to en-US if config.json is empty object", async () => {
@@ -241,11 +243,11 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         json: () => Promise.resolve(mockConfigJson),
       });
 
-      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
-      await fetchConfig();
+      const constModule = await import("./const.ts");
+      await constModule.fetchConfig();
 
       // After trim(), whitespace-only should fall back to en-US
-      expect(DEFAULT_LANGUAGE).toBe("en-US");
+      expect(constModule.DEFAULT_LANGUAGE).toBe("en-US");
     });
 
     it("should handle very large config.json", async () => {
@@ -318,10 +320,10 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         json: () => Promise.resolve(mockConfigJson),
       });
 
-      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
-      await fetchConfig();
+      const constModule = await import("./const.ts");
+      await constModule.fetchConfig();
 
-      expect(DEFAULT_LANGUAGE).toBe("en-US");
+      expect(constModule.DEFAULT_LANGUAGE).toBe("en-US");
     });
 
     it("Development scenario: missing config.json falls back to en-US", async () => {
@@ -329,10 +331,10 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         new Error("404 Not Found during development")
       );
 
-      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
-      await fetchConfig();
+      const constModule = await import("./const.ts");
+      await constModule.fetchConfig();
 
-      expect(DEFAULT_LANGUAGE).toBe("en-US");
+      expect(constModule.DEFAULT_LANGUAGE).toBe("en-US");
     });
 
     it("Staging scenario: corrupted config.json handled gracefully", async () => {
@@ -341,10 +343,10 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         json: () => Promise.reject(new SyntaxError("Malformed JSON")),
       });
 
-      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
-      await fetchConfig();
+      const constModule = await import("./const.ts");
+      await constModule.fetchConfig();
 
-      expect(DEFAULT_LANGUAGE).toBe("en-US");
+      expect(constModule.DEFAULT_LANGUAGE).toBe("en-US");
     });
   });
 
