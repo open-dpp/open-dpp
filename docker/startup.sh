@@ -25,12 +25,10 @@ DEFAULT_LANGUAGE="${OPEN_DPP_DEFAULT_LANGUAGE:-en-US}"
 FILE_LOCATION="${OPEN_DPP_FRONTEND_ROOT}/config.json"
 
 # Generate the runtime configuration file
-cat > "${FILE_LOCATION}" <<EOF
-{
-  "API_URL": "${API_URL}",
-  "DEFAULT_LANGUAGE": "${DEFAULT_LANGUAGE}"
-}
-EOF
+jq -n \
+  --arg api_url "$API_URL" \
+  --arg default_lang "$DEFAULT_LANGUAGE" \
+  '{API_URL: $api_url, DEFAULT_LANGUAGE: $default_lang}' > "${FILE_LOCATION}"
 
 echo "Runtime configuration generated:"
 echo "API_URL: ${API_URL}"
