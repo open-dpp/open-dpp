@@ -142,6 +142,13 @@ describe("templateDraftController", () => {
     catch {
       // ignore
     }
+
+    try {
+      await module?.close();
+    }
+    catch {
+      // ignore
+    }
   });
 
   const userNotMemberTxt = `fails if user is not member of organization`;
@@ -1094,14 +1101,5 @@ describe("templateDraftController", () => {
       )
       .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
-  });
-
-  afterAll(async () => {
-    if (module) {
-      await module.close();
-    }
-    if (app) {
-      await app.close();
-    }
   });
 });
