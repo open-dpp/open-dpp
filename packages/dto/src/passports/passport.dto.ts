@@ -18,7 +18,7 @@ export const PassportPaginationDtoSchema = z.object({
 
 export type PassportPaginationDto = z.infer<typeof PassportPaginationDtoSchema>
 
-export const PassportRequestCreateDtoSchema = z.union([
+export const PassportRequestCreateDtoSchema = z.xor([
   z.object({
     templateId: z.string(),
   }),

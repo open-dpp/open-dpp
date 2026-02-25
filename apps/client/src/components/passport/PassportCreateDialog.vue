@@ -39,7 +39,7 @@ async function newPassport() {
 
   const result = await createPassport(passportParams);
   if (result) {
-    close();
+    await close();
   }
 }
 

@@ -99,9 +99,15 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
    * @returns A new AssetAdministrationShell instance with the same properties but different submodel references
    */
   copy(submodels: Submodel[]): AssetAdministrationShell {
+    const copyId = randomUUID();
+    const plain = this.toPlain();
     const copy = AssetAdministrationShell.fromPlain({
-      ...this.toPlain(),
-      id: randomUUID(),
+      ...plain,
+      id: copyId,
+      assetInformation: {
+        ...plain.assetInformation,
+        globalAssetId: plain.id === plain.assetInformation.globalAssetId ? copyId : plain.assetInformation.globalAssetId,
+      },
       submodels: [],
     });
 

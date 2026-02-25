@@ -23,7 +23,6 @@ describe("environment", () => {
       administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
       assetInformation: AssetInformation.create({
         assetKind: AssetKind.Type,
-        globalAssetId: aas.id,
       }),
       displayName,
       description,

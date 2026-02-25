@@ -72,16 +72,18 @@ export class EnvironmentService {
   async createEnvironment(environmentData: { assetAdministrationShells: AssetAdministrationShellCreateDto[] }, isTemplate: boolean): Promise<Environment> {
     const environment = Environment.create({});
     const assetKind = isTemplate ? AssetKind.Type : AssetKind.Instance;
-    const id = randomUUID();
-    const assetInformation = AssetInformation.create({ assetKind, globalAssetId: id });
+    const createIdAndAssetInformation = () => {
+      const id = randomUUID();
+      const assetInformation = AssetInformation.create({ assetKind, globalAssetId: id });
+      return { id, assetInformation };
+    };
     const assetAdministrationShells = environmentData.assetAdministrationShells.length > 0
       ? environmentData.assetAdministrationShells.map(aas => AssetAdministrationShell.create({
-          id,
+          ...createIdAndAssetInformation(),
           displayName: aas.displayName?.map(LanguageText.fromPlain),
           description: aas.description?.map(LanguageText.fromPlain),
-          assetInformation,
         }))
-      : [AssetAdministrationShell.create({ id, assetInformation })];
+      : [AssetAdministrationShell.create(createIdAndAssetInformation())];
     for (const aas of assetAdministrationShells) {
       await this.aasRepository.save(aas);
       environment.addAssetAdministrationShell(aas);

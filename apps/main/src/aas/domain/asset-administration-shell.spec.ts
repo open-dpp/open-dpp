@@ -14,7 +14,6 @@ describe("assetAdministrationShell", () => {
       assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
     });
     expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);
-    expect(aas.assetInformation.globalAssetId).toEqual(aas.id);
     expect(aas.administration).toEqual(AdministrativeInformation.create({ version: "1", revision: "0" }));
   });
 
@@ -52,8 +51,10 @@ describe("assetAdministrationShell", () => {
   });
 
   it("should be able to be copied", () => {
+    const id = "aasId";
     const aas = AssetAdministrationShell.create({
-      assetInformation: AssetInformation.create({ assetKind: "Instance" }),
+      id,
+      assetInformation: AssetInformation.create({ assetKind: "Instance", globalAssetId: id }),
     });
 
     const submodel = Submodel.create({
@@ -68,7 +69,7 @@ describe("assetAdministrationShell", () => {
     const copy = aas.copy([submodelCopy]);
 
     expect(copy.id).not.toEqual(aas.id);
-    expect(copy.assetInformation).toEqual(aas.assetInformation);
+    expect(copy.assetInformation).toEqual({ ...aas.assetInformation, globalAssetId: copy.id });
     expect(copy.submodels).toEqual([
       Reference.create({
         type: ReferenceTypes.ModelReference,
