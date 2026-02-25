@@ -1,5 +1,6 @@
-import { setActivePinia, createPinia } from "pinia";
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { createPinia, setActivePinia } from "pinia";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { useLanguageStore } from "./language";
 
 vi.mock("primevue", () => ({
   usePrimeVue: vi.fn().mockReturnValue({
@@ -35,8 +36,6 @@ vi.mock("../const.ts", () => ({
   LAST_SELECTED_LANGUAGE: "open-dpp-local-last-language",
   DEFAULT_LANGUAGE: "en-US",
 }));
-
-import { useLanguageStore } from "./language";
 
 describe("languageStore - DEFAULT_LANGUAGE persistence", () => {
   beforeEach(() => {

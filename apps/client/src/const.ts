@@ -1,8 +1,10 @@
 // eslint-disable-next-line import/no-mutable-exports
 export let API_URL = import.meta.env.VITE_API_ROOT as string || "http://localhost:3000/api";
+// eslint-disable-next-line import/no-mutable-exports
 export let DEFAULT_LANGUAGE = import.meta.env.VITE_DEFAULT_LANGUAGE as string || "en-US";
 export const APPEND_TO = import.meta.env.VITE_APPEND_TO as string ?? "body"; // This is set to self for cypress component tests to fix rendering issues for primevue components using teleport like SplitButton
 async function fetchConfig() {
+  // Always fetch runtime configuration from /config.json
   try {
     const response = await fetch("/config.json");
     const config = await response.json();
@@ -15,6 +17,7 @@ async function fetchConfig() {
 }
 
 if (typeof window !== "undefined" && !import.meta.env.VITEST) {
+  // eslint-disable-next-line antfu/no-top-level-await
   await fetchConfig();
 }
 

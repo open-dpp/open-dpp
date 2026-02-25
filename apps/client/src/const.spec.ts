@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Setup mocks BEFORE any imports using vi.hoisted
 const mocks = vi.hoisted(() => {
@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => {
 });
 
 // Mock fetch globally BEFORE test suite runs
-global.fetch = mocks.fetch;
+globalThis.fetch = mocks.fetch;
 
 describe("const - DEFAULT_LANGUAGE production configuration", () => {
   beforeEach(() => {
@@ -17,10 +17,10 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
     // Clear module cache so const.ts re-evaluates with fresh state
     vi.resetModules();
     // Re-establish mock connection after reset
-    global.fetch = mocks.fetch;
+    globalThis.fetch = mocks.fetch;
   });
 
-  describe("Runtime configuration (fetchConfig from /config.json)", () => {
+  describe("runtime configuration (fetchConfig from /config.json)", () => {
     it("should fetch DEFAULT_LANGUAGE from config.json", async () => {
       const mockConfigJson = {
         API_URL: "http://localhost:3000/api",
@@ -32,7 +32,7 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         json: () => Promise.resolve(mockConfigJson),
       });
 
-      const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
+      const { fetchConfig } = await import("./const.ts");
 
       // Call fetchConfig explicitly (not called on import due to VITEST env check)
       await fetchConfig();
@@ -139,10 +139,10 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
     });
   });
 
-  describe("Error handling and resilience", () => {
+  describe("error handling and resilience", () => {
     it("should fallback to en-US if fetch fails", async () => {
       mocks.fetch.mockRejectedValueOnce(
-        new Error("Network error fetching config.json")
+        new Error("Network error fetching config.json"),
       );
 
       const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
@@ -182,7 +182,7 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
 
     it("should handle timeout/abort errors", async () => {
       mocks.fetch.mockRejectedValueOnce(
-        new DOMException("The request was aborted", "AbortError")
+        new DOMException("The request was aborted", "AbortError"),
       );
 
       const { DEFAULT_LANGUAGE, fetchConfig } = await import("./const.ts");
@@ -197,7 +197,7 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
         .mockImplementation(() => {});
 
       mocks.fetch.mockRejectedValueOnce(
-        new Error("Network error")
+        new Error("Network error"),
       );
 
       const { fetchConfig } = await import("./const.ts");
@@ -205,14 +205,14 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         "Failed to fetch runtime configuration:",
-        expect.any(Error)
+        expect.any(Error),
       );
 
       consoleErrorSpy.mockRestore();
     });
   });
 
-  describe("Edge cases and malformed data", () => {
+  describe("edge cases and malformed data", () => {
     it("should ignore unexpected properties in config.json", async () => {
       const mockConfigJson = {
         API_URL: "http://localhost:3000/api",
@@ -258,7 +258,7 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
           Array.from({ length: 1000 }, (_, i) => [
             `prop${i}`,
             `value${i}`,
-          ])
+          ]),
         ),
       };
 
@@ -291,8 +291,8 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
     });
   });
 
-  describe("Integration scenarios", () => {
-    it("Production scenario: config.json with de-DE for German deployment", async () => {
+  describe("integration scenarios", () => {
+    it("production scenario: config.json with de-DE for German deployment", async () => {
       const mockConfigJson = {
         API_URL: "https://api.example.de/api",
         DEFAULT_LANGUAGE: "de-DE",
@@ -309,7 +309,7 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
       expect(constModule.DEFAULT_LANGUAGE).toBe("de-DE");
     });
 
-    it("Production scenario: config.json with en-US for US deployment", async () => {
+    it("production scenario: config.json with en-US for US deployment", async () => {
       const mockConfigJson = {
         API_URL: "https://api.example.com/api",
         DEFAULT_LANGUAGE: "en-US",
@@ -326,9 +326,9 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
       expect(constModule.DEFAULT_LANGUAGE).toBe("en-US");
     });
 
-    it("Development scenario: missing config.json falls back to en-US", async () => {
+    it("development scenario: missing config.json falls back to en-US", async () => {
       mocks.fetch.mockRejectedValueOnce(
-        new Error("404 Not Found during development")
+        new Error("404 Not Found during development"),
       );
 
       const constModule = await import("./const.ts");
@@ -337,7 +337,7 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
       expect(constModule.DEFAULT_LANGUAGE).toBe("en-US");
     });
 
-    it("Staging scenario: corrupted config.json handled gracefully", async () => {
+    it("staging scenario: corrupted config.json handled gracefully", async () => {
       mocks.fetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.reject(new SyntaxError("Malformed JSON")),
@@ -350,7 +350,7 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
     });
   });
 
-  describe("Basic module exports", () => {
+  describe("basic module exports", () => {
     it("should export DEFAULT_LANGUAGE", async () => {
       const { DEFAULT_LANGUAGE } = await import("./const.ts");
       expect(DEFAULT_LANGUAGE).toBeDefined();
