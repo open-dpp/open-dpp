@@ -22,7 +22,11 @@ export const PassportRequestCreateDtoSchema = z.union([
   z.object({
     templateId: z.string(),
   }),
-  AssetAdministrationShellCreateDtoSchema,
+  z.object({
+    environment: z.object({
+      assetAdministrationShells: AssetAdministrationShellCreateDtoSchema.array().max(1).default([]),
+    }),
+  }),
 ])
 
 export type PassportRequestCreateDto = z.infer<typeof PassportRequestCreateDtoSchema>

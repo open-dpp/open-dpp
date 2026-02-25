@@ -162,7 +162,9 @@ describe("templateController", () => {
     const displayName = [{ language: "en", text: "Test" }];
 
     const body = {
-      displayName,
+      environment: {
+        assetAdministrationShells: [{ displayName }],
+      },
     };
     const response = await request(app.getHttpServer())
       .post(basePath)

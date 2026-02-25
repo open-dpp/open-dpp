@@ -31,7 +31,13 @@ export function useTemplates({ changeQueryParams, initialCursor }: TemplateProps
   }
 
   const createTemplate = async () => {
-    const response = await apiClient.dpp.templates.create();
+    const response = await apiClient.dpp.templates.create({
+      environment: {
+        assetAdministrationShells: [
+          { displayName: [] },
+        ],
+      },
+    });
     if (response.status === HTTPCode.CREATED) {
       await router.push(`${route.path}/${response.data.id}`);
     }

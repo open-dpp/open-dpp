@@ -9,6 +9,7 @@ import {
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellPaginationResponseDtoSchema,
   AssetAdministrationShellResponseDto,
+  AssetKind,
   SubmodelElementListJsonSchema,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
@@ -36,6 +37,7 @@ import { AssetAdministrationShellMapper } from "../domain/asset-administration-s
 
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 
+import { AssetInformation } from "../domain/asset-information";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
 import { Submodel } from "../domain/submodel-base/submodel";
@@ -66,13 +68,17 @@ export class EnvironmentService {
     this.membersService = membersService;
   }
 
-  async createEnvironment(assetAdministrationShell: AssetAdministrationShellCreateDto): Promise<Environment> {
+  async createEnvironment(environmentData: { assetAdministrationShells: AssetAdministrationShellCreateDto[] }): Promise<Environment> {
     const environment = Environment.create({});
-    const aas = AssetAdministrationShell.create(
-      AssetAdministrationShellMapper.plainToAssetAdministrationShellProps(assetAdministrationShell),
-    );
-    environment.addAssetAdministrationShell(aas);
+
+    const aas = environmentData.assetAdministrationShells.length > 0
+      ? AssetAdministrationShell.create(
+          AssetAdministrationShellMapper.plainToAssetAdministrationShellProps(environmentData.assetAdministrationShells[0]),
+        )
+      : AssetAdministrationShell.create({ assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }) });
     await this.aasRepository.save(aas);
+    environment.addAssetAdministrationShell(aas);
+
     return environment;
   }
 

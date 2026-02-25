@@ -2,7 +2,7 @@ import type { TestingModule } from "@nestjs/testing";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 
-import { AssetAdministrationShellCreateDtoSchema, AssetKind } from "@open-dpp/dto";
+import { AssetKind, LanguageTextDto } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";
 import { AuthModule } from "../../identity/auth/auth.module";
@@ -55,16 +55,25 @@ describe("environmentService", () => {
   });
 
   it("should create environment", async () => {
-    const displayName = [{ language: "en", text: "Test AAS" }];
-    const description = [{ language: "en", text: "Test AAS description" }];
-    const environment = await environmentService.createEnvironment(
-      AssetAdministrationShellCreateDtoSchema.parse({ assetInformation: { assetKind: AssetKind.Instance }, displayName, description }),
-    );
+    const displayName: LanguageTextDto[] = [{ language: "en", text: "Test AAS" }];
+    const description: LanguageTextDto[] = [{ language: "en", text: "Test AAS description" }];
+    const environment = await environmentService.createEnvironment({
+      assetAdministrationShells: [{ assetInformation: { assetKind: AssetKind.Instance }, displayName, description }],
+    });
     expect(environment.assetAdministrationShells).toHaveLength(1);
     const aas = await aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
     expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);
     expect(aas.displayName).toEqual(displayName.map(LanguageText.fromPlain));
     expect(aas.description).toEqual(description.map(LanguageText.fromPlain));
+  });
+
+  it("should create environment with empty aas", async () => {
+    const environment = await environmentService.createEnvironment({
+      assetAdministrationShells: [],
+    });
+    expect(environment.assetAdministrationShells).toHaveLength(1);
+    const aas = await aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
+    expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);
   });
 
   afterAll(async () => {

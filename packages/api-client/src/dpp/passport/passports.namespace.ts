@@ -22,8 +22,8 @@ export class PassportNamespace {
     return await this.axiosInstance.get<PassportPaginationDto>(this.passportEndpoint, { params })
   }
 
-  public async create(params: PassportRequestCreateDto): Promise<AxiosResponse<PassportDto>> {
-    return await this.axiosInstance.post<PassportDto>(this.passportEndpoint, params)
+  public async create(data: PassportRequestCreateDto): Promise<AxiosResponse<PassportDto>> {
+    return await this.axiosInstance.post<PassportDto>(this.passportEndpoint, data)
   }
 
   public async getUniqueProductIdentifierOfPassport(passportId: string) {

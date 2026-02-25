@@ -47,8 +47,8 @@ describe("passports", () => {
     const passports = { paging_metadata: { cursor: p1.id }, result: [p1] };
     mocks.fetchPassports.mockResolvedValueOnce({ data: passports });
 
-    await createPassport({});
-    expect(mocks.createPassport).toHaveBeenCalledWith({});
+    await createPassport({ templateId: "t1" });
+    expect(mocks.createPassport).toHaveBeenCalledWith({ templateId: "t1" });
     expect(mocks.routerPush).toHaveBeenCalledWith(`/passports/${p1.id}`);
   });
 

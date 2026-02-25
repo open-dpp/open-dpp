@@ -124,16 +124,17 @@ describe("passportController", () => {
       "2022-01-01T00:00:00.000Z",
     );
     jest.spyOn(DateTime, "now").mockReturnValue(now);
-
+    const displayName = [{ language: "en", text: "Test passport" }];
     const body = {
-      displayName: [{ language: "en", text: "Test passport" }],
+      environment: {
+        assetAdministrationShells: [{ displayName }],
+      },
     };
 
     const response = await request(app.getHttpServer())
       .post(basePath)
       .set("Cookie", userCookie)
       .send(body);
-
     expect(response.status).toEqual(201);
     expect(response.body).toEqual({
       id: expect.any(String),
@@ -152,7 +153,7 @@ describe("passportController", () => {
 
     const aasRepository = ctx.getModuleRef().get(AasRepository);
     const aas = await aasRepository.findOneOrFail(response.body.environment.assetAdministrationShells[0]);
-    expect(aas.displayName).toEqual(body.displayName.map(LanguageText.fromPlain));
+    expect(aas.displayName).toEqual(displayName.map(LanguageText.fromPlain));
 
     const upidService = ctx.getModuleRef().get(UniqueProductIdentifierService);
 

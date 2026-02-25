@@ -33,11 +33,11 @@ function open() {
 }
 
 async function newPassport() {
-  const passportParams: PassportRequestCreateDto = {};
-
-  if (mode.value === "template" && template.value) {
-    passportParams.templateId = template.value;
-  }
+  const passportParams: PassportRequestCreateDto = mode.value === "template" && template.value
+    ? { templateId: template.value }
+    : {
+        environment: { assetAdministrationShells: [{ displayName: [] }] },
+      };
 
   const result = await createPassport(passportParams);
   if (result) {

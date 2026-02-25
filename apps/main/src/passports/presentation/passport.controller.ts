@@ -149,15 +149,25 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     if (!activeOrganizationId) {
       throw new BadRequestException("activeOrganizationId is required in session");
     }
-    const { environment, templateId } = await match(body).returnType<Promise<{ environment: Environment; templateId?: string }>>().with(
+    const { environment, templateId } = await match(body).returnType<Promise<{
+      environment: Environment;
+      templateId?: string;
+    }>>().with(
       { templateId: P.string },
       async ({ templateId }) => {
         const template = await this.templateRepository.findOneOrFail(templateId);
         return { environment: await this.environmentService.copyEnvironment(template.environment), templateId };
       },
-    ).with(({ assetInformation: P.optional(P.select()) }), async (assetInformation) => {
+    ).with({
+      environment: { assetAdministrationShells: P.array({ assetInformation: P.optional(P.any) }) },
+    }, async ({ environment: localEnvironment }) => {
       return { environment: await this.environmentService.createEnvironment(
-        { ...body, assetInformation: assetInformation ?? { assetKind: AssetKind.Instance } },
+        {
+          ...localEnvironment,
+          assetAdministrationShells: localEnvironment.assetAdministrationShells.map(
+            aas => ({ ...aas, assetInformation: aas.assetInformation ?? { assetKind: AssetKind.Instance } }),
+          ),
+        },
       ) };
     }).otherwise(() => {
       throw new BadRequestException("Either templateId or assetInformation must be provided");

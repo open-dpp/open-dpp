@@ -86,7 +86,13 @@ describe('apiClient', () => {
     })
 
     it('should create template', async () => {
-      const response = await sdk.dpp.templates.create()
+      const response = await sdk.dpp.templates.create({
+        environment: {
+          assetAdministrationShells: [
+            { displayName: [{ language: 'en', text: 'test' }] },
+          ],
+        },
+      })
       expect(response.data).toEqual(template1)
     })
   })
@@ -102,7 +108,15 @@ describe('apiClient', () => {
     })
 
     it('should create passport', async () => {
-      const response = await sdk.dpp.passports.create({})
+      let response = await sdk.dpp.passports.create({ templateId: 'temp' })
+      expect(response.data).toEqual(passport1)
+
+      response = await sdk.dpp.passports.create({
+        environment: {
+          assetAdministrationShells: [{ displayName: [{ language: 'en', text: 'test' }] }],
+        },
+      })
+
       expect(response.data).toEqual(passport1)
     })
   })

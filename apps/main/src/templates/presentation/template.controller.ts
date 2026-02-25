@@ -336,7 +336,12 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @AuthSession() session: Session,
   ): Promise<TemplateDto> {
     const environment = await this.environmentService.createEnvironment(
-      { ...body, assetInformation: body.assetInformation ?? { assetKind: AssetKind.Type } },
+      {
+        ...body,
+        assetAdministrationShells: body.environment.assetAdministrationShells.map(
+          aas => ({ ...aas, assetInformation: aas.assetInformation ?? { assetKind: AssetKind.Type } }),
+        ),
+      },
     );
     const activeOrganizationId = session.activeOrganizationId;
     if (!activeOrganizationId) {
