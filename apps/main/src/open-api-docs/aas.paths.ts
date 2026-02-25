@@ -68,7 +68,7 @@ export function createAasPaths(tag: string) {
       },
     },
     [`${tag}${ApiPatchShellPath}`]: {
-      get: {
+      patch: {
         tags: [tag],
         summary: "Modifies a Asset Administration Shell with specified id",
         parameters: [IdParamSchema, AssetAdministrationShellIdParamSchema],

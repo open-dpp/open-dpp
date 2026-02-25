@@ -26,6 +26,7 @@ import {
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 
+import { match, P } from "ts-pattern";
 import { z } from "zod";
 import { Environment } from "../../aas/domain/environment";
 import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
@@ -83,8 +84,8 @@ import {
   UniqueProductIdentifierService,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { PassportService } from "../application/services/passport.service";
-import { Passport } from "../domain/passport";
 
+import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 
 const ExpandedPassportDtoSchema = PassportDtoSchema.extend({
@@ -148,17 +149,23 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     if (!activeOrganizationId) {
       throw new BadRequestException("activeOrganizationId is required in session");
     }
-    let environment: Environment;
-    if (body && body.templateId) {
-      const template = await this.templateRepository.findOneOrFail(body.templateId);
-      environment = await this.environmentService.copyEnvironment(template.environment);
-    }
-    else {
-      environment = await this.environmentService.createEnvironmentWithEmptyAas(AssetKind.Instance);
-    }
+    const { environment, templateId } = await match(body).returnType<Promise<{ environment: Environment; templateId?: string }>>().with(
+      { templateId: P.string },
+      async ({ templateId }) => {
+        const template = await this.templateRepository.findOneOrFail(templateId);
+        return { environment: await this.environmentService.copyEnvironment(template.environment), templateId };
+      },
+    ).with(({ assetInformation: P.optional(P.select()) }), async (assetInformation) => {
+      return { environment: await this.environmentService.createEnvironment(
+        { ...body, assetInformation: assetInformation ?? { assetKind: AssetKind.Instance } },
+      ) };
+    }).otherwise(() => {
+      throw new BadRequestException("Either templateId or assetInformation must be provided");
+    });
+
     const passport = Passport.create({
       organizationId: activeOrganizationId,
-      templateId: body?.templateId ?? undefined,
+      templateId,
       environment,
     });
 

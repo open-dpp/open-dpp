@@ -1,9 +1,6 @@
-import { randomUUID } from "node:crypto";
-import { AssetKindType, EnvironmentJsonSchema } from "@open-dpp/dto";
+import { EnvironmentJsonSchema } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
-import { AssetInformation } from "./asset-information";
-import { AdministrativeInformation } from "./common/administrative-information";
 import { Submodel } from "./submodel-base/submodel";
 
 export class Environment {
@@ -36,19 +33,9 @@ export class Environment {
     );
   }
 
-  addAssetAdministrationShell(assetAdministrationShell: AssetAdministrationShell | { assetKind: AssetKindType }): AssetAdministrationShell {
-    if (assetAdministrationShell instanceof AssetAdministrationShell) {
-      this.assetAdministrationShells.push(assetAdministrationShell.id);
-      return assetAdministrationShell;
-    }
-    const id = randomUUID();
-    const newAas = AssetAdministrationShell.create({
-      id,
-      assetInformation: AssetInformation.create({ assetKind: assetAdministrationShell.assetKind, globalAssetId: id }),
-      administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
-    });
-    this.assetAdministrationShells.push(newAas.id);
-    return newAas;
+  addAssetAdministrationShell(assetAdministrationShell: AssetAdministrationShell): AssetAdministrationShell {
+    this.assetAdministrationShells.push(assetAdministrationShell.id);
+    return assetAdministrationShell;
   }
 
   addSubmodel(submodel: Submodel) {

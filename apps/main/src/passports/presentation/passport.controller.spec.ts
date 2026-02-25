@@ -2,7 +2,9 @@ import { randomUUID } from "node:crypto";
 import { afterAll, jest } from "@jest/globals";
 import { Test, TestingModule } from "@nestjs/testing";
 import request from "supertest";
+import { LanguageText } from "../../aas/domain/common/language-text";
 import { Environment } from "../../aas/domain/environment";
+import { AasRepository } from "../../aas/infrastructure/aas.repository";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { DateTime } from "../../lib/date-time";
@@ -122,10 +124,15 @@ describe("passportController", () => {
       "2022-01-01T00:00:00.000Z",
     );
     jest.spyOn(DateTime, "now").mockReturnValue(now);
+
+    const body = {
+      displayName: [{ language: "en", text: "Test passport" }],
+    };
+
     const response = await request(app.getHttpServer())
       .post(basePath)
       .set("Cookie", userCookie)
-      .send();
+      .send(body);
 
     expect(response.status).toEqual(201);
     expect(response.body).toEqual({
@@ -142,6 +149,10 @@ describe("passportController", () => {
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
     });
+
+    const aasRepository = ctx.getModuleRef().get(AasRepository);
+    const aas = await aasRepository.findOneOrFail(response.body.environment.assetAdministrationShells[0]);
+    expect(aas.displayName).toEqual(body.displayName.map(LanguageText.fromPlain));
 
     const upidService = ctx.getModuleRef().get(UniqueProductIdentifierService);
 

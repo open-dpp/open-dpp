@@ -6,7 +6,7 @@ import { IVisitable, IVisitor } from "./visitor";
 export class AssetInformation implements IVisitable {
   private constructor(
     public readonly assetKind: AssetKindType,
-    public readonly globalAssetId: string | null = null,
+    public globalAssetId: string | null = null,
     public readonly specificAssetIds: Array<SpecificAssetId>,
     public readonly assetType: string | null = null,
     public defaultThumbnail: Resource | null = null,

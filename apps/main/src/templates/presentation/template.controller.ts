@@ -6,9 +6,10 @@ import type {
   SubmodelElementRequestDto,
   SubmodelModificationDto,
   SubmodelRequestDto,
+  TemplateCreateDto,
   ValueRequestDto,
 } from "@open-dpp/dto";
-import { BadRequestException, Controller, Get, Post } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, Post } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
   AssetKind,
@@ -16,14 +17,16 @@ import {
   SubmodelElementResponseDto,
   SubmodelPaginationResponseDto,
   SubmodelResponseDto,
+  TemplateCreateDtoSchema,
   TemplateDto,
   TemplateDtoSchema,
   TemplatePaginationDto,
   TemplatePaginationDtoSchema,
   ValueResponseDto,
 } from "@open-dpp/dto";
-import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
+import { ZodValidationPipe } from "@open-dpp/exception";
 
+import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import {
   ApiDeleteColumn,
   ApiDeleteRow,
@@ -329,9 +332,12 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
 
   @Post()
   async createTemplate(
+    @Body(new ZodValidationPipe(TemplateCreateDtoSchema)) body: TemplateCreateDto,
     @AuthSession() session: Session,
   ): Promise<TemplateDto> {
-    const environment = await this.environmentService.createEnvironmentWithEmptyAas(AssetKind.Type);
+    const environment = await this.environmentService.createEnvironment(
+      { ...body, assetInformation: body.assetInformation ?? { assetKind: AssetKind.Type } },
+    );
     const activeOrganizationId = session.activeOrganizationId;
     if (!activeOrganizationId) {
       throw new BadRequestException();

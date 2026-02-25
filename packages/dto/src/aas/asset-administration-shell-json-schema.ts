@@ -31,8 +31,11 @@ export const AssetAdministrationShellPaginationResponseDtoSchema = z
 export type AssetAdministrationShellPaginationResponseDto = z.infer<
   typeof AssetAdministrationShellPaginationResponseDtoSchema
 >
-
+export const AssetAdministrationShellCreateDtoSchema = AssetAdministrationShellJsonSchema.partial()
+export type AssetAdministrationShellCreateDto = z.input<typeof AssetAdministrationShellCreateDtoSchema>
 export type AssetAdministrationShellResponseDto = z.infer<typeof AssetAdministrationShellJsonSchema>
+
+export type AssetAdministrationShellRequestDto = z.input<typeof AssetAdministrationShellJsonSchema>
 
 export const AssetAdministrationShellModificationSchema = NameAndDescriptionModificationSchema
 

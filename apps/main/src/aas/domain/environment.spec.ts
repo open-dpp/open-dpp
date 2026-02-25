@@ -4,13 +4,19 @@ import { ValueError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";
 import { AdministrativeInformation } from "./common/administrative-information";
+import { LanguageText } from "./common/language-text";
 import { Environment } from "./environment";
 import { Submodel } from "./submodel-base/submodel";
 
 describe("environment", () => {
-  it("should add empty aas", () => {
+  it("should add aas", () => {
     const environment = Environment.create({ });
-    const aas = environment.addAssetAdministrationShell({ assetKind: AssetKind.Type });
+    const displayName = [LanguageText.create({ language: "en", text: "Test AAS" })];
+    const description = [LanguageText.create({ language: "en", text: "Test AAS description" })];
+
+    const aas = environment.addAssetAdministrationShell(
+      AssetAdministrationShell.create({ assetInformation: AssetInformation.create({ assetKind: AssetKind.Type }), displayName, description }),
+    );
     expect(environment.assetAdministrationShells).toEqual([aas.id]);
     expect(aas).toEqual(AssetAdministrationShell.create({
       id: aas.id,
@@ -19,6 +25,8 @@ describe("environment", () => {
         assetKind: AssetKind.Type,
         globalAssetId: aas.id,
       }),
+      displayName,
+      description,
     }));
   });
 

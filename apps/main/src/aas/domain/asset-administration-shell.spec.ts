@@ -2,12 +2,22 @@ import { randomUUID } from "node:crypto";
 import { AssetKind, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";
+import { AdministrativeInformation } from "./common/administrative-information";
 import { Key } from "./common/key";
 import { LanguageText } from "./common/language-text";
 import { Reference } from "./common/reference";
 import { Submodel } from "./submodel-base/submodel";
 
 describe("assetAdministrationShell", () => {
+  it("should create a new asset administration shell", () => {
+    const aas = AssetAdministrationShell.create({
+      assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
+    });
+    expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);
+    expect(aas.assetInformation.globalAssetId).toEqual(aas.id);
+    expect(aas.administration).toEqual(AdministrativeInformation.create({ version: "1", revision: "0" }));
+  });
+
   it("should delete submodel", () => {
     const submodelId1 = "submodelId1";
     const submodelToDelete = Submodel.create({ id: submodelId1, idShort: "subD" });

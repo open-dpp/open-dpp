@@ -4,6 +4,7 @@ import { expect, jest } from "@jest/globals";
 
 import { AssetKind } from "@open-dpp/dto";
 import request from "supertest";
+import { LanguageText } from "../../aas/domain/common/language-text";
 import { Environment } from "../../aas/domain/environment";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { DateTime } from "../../lib/date-time";
@@ -158,10 +159,15 @@ describe("templateController", () => {
       "2022-01-01T00:00:00.000Z",
     );
     jest.spyOn(DateTime, "now").mockReturnValue(now);
+    const displayName = [{ language: "en", text: "Test" }];
+
+    const body = {
+      displayName,
+    };
     const response = await request(app.getHttpServer())
       .post(basePath)
       .set("Cookie", userCookie)
-      .send();
+      .send(body);
     expect(response.status).toEqual(201);
     expect(response.body).toEqual({
       id: expect.any(String),
@@ -178,5 +184,6 @@ describe("templateController", () => {
     });
     const foundAas = await ctx.getRepositories().aasRepository.findOneOrFail(response.body.environment.assetAdministrationShells[0]);
     expect(foundAas.assetInformation.assetKind).toEqual(AssetKind.Type);
+    expect(foundAas.displayName).toEqual(displayName.map(LanguageText.fromPlain));
   });
 });

@@ -15,6 +15,20 @@ import { IPersistable } from "./persistable";
 import { Submodel } from "./submodel-base/submodel";
 import { IVisitable, IVisitor } from "./visitor";
 
+export interface AssetAdministrationShellCreateProps {
+  id?: string;
+  assetInformation: AssetInformation;
+  extensions?: Extension[];
+  category?: string | null;
+  idShort?: string | null;
+  displayName?: LanguageText[];
+  description?: LanguageText[];
+  administration?: AdministrativeInformation;
+  embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
+  derivedFrom?: Reference | null;
+  submodels?: Array<Reference>;
+}
+
 export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable {
   private constructor(
     public readonly id: string,
@@ -32,29 +46,21 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
   }
 
   static create(
-    data: {
-      id?: string;
-      assetInformation: AssetInformation;
-      extensions?: Extension[];
-      category?: string | null;
-      idShort?: string | null;
-      displayName?: LanguageText[];
-      description?: LanguageText[];
-      administration?: AdministrativeInformation;
-      embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
-      derivedFrom?: Reference | null;
-      submodels?: Array<Reference>;
-    },
+    data: AssetAdministrationShellCreateProps,
   ) {
+    const id = data.id ?? randomUUID();
+    if (data.assetInformation.globalAssetId == null) {
+      data.assetInformation.globalAssetId = id;
+    }
     return new AssetAdministrationShell(
-      data.id ?? randomUUID(),
+      id,
       data.assetInformation,
       data.extensions ?? [],
       data.category ?? null,
       data.idShort ?? null,
       data.displayName ?? [],
       data.description ?? [],
-      data.administration ?? null,
+      data.administration ?? AdministrativeInformation.create({ version: "1", revision: "0" }),
       data.embeddedDataSpecifications ?? [],
       data.derivedFrom ?? null,
       data.submodels ?? [],

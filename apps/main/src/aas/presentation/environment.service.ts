@@ -3,12 +3,12 @@ import type { Connection } from "mongoose";
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import {
+  AssetAdministrationShellCreateDto,
   AssetAdministrationShellJsonSchema,
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellPaginationResponseDtoSchema,
   AssetAdministrationShellResponseDto,
-  AssetKindType,
   SubmodelElementListJsonSchema,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
@@ -32,11 +32,12 @@ import { Session } from "../../identity/auth/domain/session";
 import { MembersService } from "../../identity/organizations/application/services/members.service";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
+import { AssetAdministrationShellMapper } from "../domain/asset-administration-shell-mapper";
+
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
-
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath, ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
@@ -65,9 +66,12 @@ export class EnvironmentService {
     this.membersService = membersService;
   }
 
-  async createEnvironmentWithEmptyAas(assetKind: AssetKindType): Promise<Environment> {
+  async createEnvironment(assetAdministrationShell: AssetAdministrationShellCreateDto): Promise<Environment> {
     const environment = Environment.create({});
-    const aas = environment.addAssetAdministrationShell({ assetKind });
+    const aas = AssetAdministrationShell.create(
+      AssetAdministrationShellMapper.plainToAssetAdministrationShellProps(assetAdministrationShell),
+    );
+    environment.addAssetAdministrationShell(aas);
     await this.aasRepository.save(aas);
     return environment;
   }

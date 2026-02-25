@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { AssetAdministrationShellCreateDtoSchema } from '../aas/asset-administration-shell-json-schema'
 import { SharedDppDtoSchema } from '../shared/dpp.schemas'
 import { PagingMetadataDtoSchema } from '../shared/pagination.dto'
 
@@ -12,3 +13,6 @@ export const TemplatePaginationDtoSchema = z.object({
 }).meta({ id: 'Templates' })
 
 export type TemplatePaginationDto = z.infer<typeof TemplatePaginationDtoSchema>
+
+export const TemplateCreateDtoSchema = AssetAdministrationShellCreateDtoSchema
+export type TemplateCreateDto = z.infer<typeof TemplateCreateDtoSchema>
