@@ -283,9 +283,8 @@ describe("const - DEFAULT_LANGUAGE production configuration", () => {
 
       const { DEFAULT_LANGUAGE } = await import("./const.ts");
 
-      // Whitespace is truthy in JS, so it will be used
-      // This might be a bug - ideally should validate non-empty AND known locale
-      expect(DEFAULT_LANGUAGE).toBeDefined();
+      // After trim(), whitespace-only should fall back to en-US
+      expect(DEFAULT_LANGUAGE).toBe("en-US");
     });
 
     it("should handle very large config.json", async () => {
