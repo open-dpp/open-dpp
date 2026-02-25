@@ -14,7 +14,6 @@ import type {
 import { BadRequestException, Body, Controller, Get, NotFoundException, Post } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
-  AssetKind,
   PassportDtoSchema,
   PassportPaginationDtoSchema,
   PassportRequestCreateDtoSchema,
@@ -156,18 +155,15 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
       { templateId: P.string },
       async ({ templateId }) => {
         const template = await this.templateRepository.findOneOrFail(templateId);
+        await this.environmentService.checkOwnerShipOfDppIdentifiable(template, session);
         return { environment: await this.environmentService.copyEnvironment(template.environment), templateId };
       },
     ).with({
-      environment: { assetAdministrationShells: P.array({ assetInformation: P.optional(P.any) }) },
+      environment: { assetAdministrationShells: P.array() },
     }, async ({ environment: localEnvironment }) => {
       return { environment: await this.environmentService.createEnvironment(
-        {
-          ...localEnvironment,
-          assetAdministrationShells: localEnvironment.assetAdministrationShells.map(
-            aas => ({ ...aas, assetInformation: aas.assetInformation ?? { assetKind: AssetKind.Instance } }),
-          ),
-        },
+        localEnvironment,
+        false,
       ) };
     }).otherwise(() => {
       throw new BadRequestException("Either templateId or assetInformation must be provided");

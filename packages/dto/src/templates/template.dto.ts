@@ -16,7 +16,7 @@ export type TemplatePaginationDto = z.infer<typeof TemplatePaginationDtoSchema>
 
 export const TemplateCreateDtoSchema = z.object({
   environment: z.object({
-    assetAdministrationShells: AssetAdministrationShellCreateDtoSchema.array().max(1).default([]),
+    assetAdministrationShells: AssetAdministrationShellCreateDtoSchema.array().max(1),
   }),
 })
-export type TemplateCreateDto = z.infer<typeof TemplateCreateDtoSchema>
+export type TemplateCreateDto = z.input<typeof TemplateCreateDtoSchema>

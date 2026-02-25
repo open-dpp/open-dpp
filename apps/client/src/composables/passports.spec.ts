@@ -1,3 +1,4 @@
+import { Language } from "@open-dpp/dto";
 import { passportsPlainFactory } from "@open-dpp/testing";
 import { createPinia, setActivePinia } from "pinia";
 import { expect, it, vi } from "vitest";
@@ -43,12 +44,27 @@ describe("passports", () => {
     const { createPassport } = usePassports({ changeQueryParams });
     const p1 = passportsPlainFactory.build();
 
-    mocks.createPassport.mockResolvedValueOnce({ data: p1, status: HTTPCode.CREATED });
     const passports = { paging_metadata: { cursor: p1.id }, result: [p1] };
+    // From template
+    mocks.createPassport.mockResolvedValueOnce({
+      data: p1,
+      status: HTTPCode.CREATED,
+    });
     mocks.fetchPassports.mockResolvedValueOnce({ data: passports });
-
     await createPassport({ templateId: "t1" });
     expect(mocks.createPassport).toHaveBeenCalledWith({ templateId: "t1" });
+    expect(mocks.routerPush).toHaveBeenCalledWith(`/passports/${p1.id}`);
+    // From blank
+    mocks.createPassport.mockResolvedValueOnce({
+      data: p1,
+      status: HTTPCode.CREATED,
+    });
+    mocks.fetchPassports.mockResolvedValueOnce({ data: passports });
+    const displayName = [{ language: Language.en, text: "test" }];
+    await createPassport({ displayName });
+    expect(mocks.createPassport).toHaveBeenCalledWith({
+      environment: { assetAdministrationShells: [{ displayName }] },
+    });
     expect(mocks.routerPush).toHaveBeenCalledWith(`/passports/${p1.id}`);
   });
 

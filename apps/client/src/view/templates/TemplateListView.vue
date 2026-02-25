@@ -39,7 +39,7 @@ onMounted(async () => {
     :title="t('templates.label')"
     :uses-templates="true"
     @reset-cursor="resetCursor"
-    @create="createTemplate"
+    @create="createTemplate({ displayName: [] })"
     @next-page="nextPage"
     @previous-page="previousPage"
   />

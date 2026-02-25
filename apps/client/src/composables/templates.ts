@@ -1,4 +1,8 @@
-import type { PagingParamsDto, TemplatePaginationDto } from "@open-dpp/dto";
+import type {
+  LanguageTextDto,
+  PagingParamsDto,
+  TemplatePaginationDto,
+} from "@open-dpp/dto";
 import type { PagingResult } from "./pagination.ts";
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -30,11 +34,11 @@ export function useTemplates({ changeQueryParams, initialCursor }: TemplateProps
     await pagination.nextPage();
   }
 
-  const createTemplate = async () => {
+  const createTemplate = async (data: { displayName: LanguageTextDto[] }) => {
     const response = await apiClient.dpp.templates.create({
       environment: {
         assetAdministrationShells: [
-          { displayName: [] },
+          { displayName: data.displayName },
         ],
       },
     });

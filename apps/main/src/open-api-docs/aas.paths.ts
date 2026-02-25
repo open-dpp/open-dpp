@@ -13,6 +13,7 @@ import {
   SubmodelModificationSchema,
   SubmodelPaginationResponseDtoSchema,
   SubmodelRequestDtoSchema,
+  TemplateCreateDtoSchema,
   TemplateDtoSchema,
   TemplatePaginationDtoSchema,
   ValueSchema,
@@ -374,6 +375,11 @@ function createTemplatePaths() {
       post: {
         tags: [tag],
         summary: `Creates template`,
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: TemplateCreateDtoSchema },
+          },
+        },
         responses: {
           [HTTPCode.CREATED]: {
             content: {

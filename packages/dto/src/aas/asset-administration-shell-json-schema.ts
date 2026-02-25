@@ -31,7 +31,10 @@ export const AssetAdministrationShellPaginationResponseDtoSchema = z
 export type AssetAdministrationShellPaginationResponseDto = z.infer<
   typeof AssetAdministrationShellPaginationResponseDtoSchema
 >
-export const AssetAdministrationShellCreateDtoSchema = AssetAdministrationShellJsonSchema.partial()
+export const AssetAdministrationShellCreateDtoSchema = AssetAdministrationShellJsonSchema.pick({
+  displayName: true,
+  description: true,
+})
 export type AssetAdministrationShellCreateDto = z.input<typeof AssetAdministrationShellCreateDtoSchema>
 export type AssetAdministrationShellResponseDto = z.infer<typeof AssetAdministrationShellJsonSchema>
 

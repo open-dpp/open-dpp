@@ -1,4 +1,8 @@
-import type { PagingParamsDto, TemplateDto } from "@open-dpp/dto";
+import type {
+  LanguageTextDto,
+  PagingParamsDto,
+  TemplateDto,
+} from "@open-dpp/dto";
 import { templatesPlainFactory } from "@open-dpp/testing";
 import { createPinia, setActivePinia } from "pinia";
 import { expect, it, vi } from "vitest";
@@ -47,9 +51,17 @@ describe("templates", () => {
     mocks.createTemplate.mockResolvedValueOnce({ data: t1, status: HTTPCode.CREATED });
     const templates = { paging_metadata: { cursor: t1.id }, result: [t1] };
     mocks.fetchTemplates.mockResolvedValueOnce({ data: templates });
-
-    await templatesStore.createTemplate();
-    expect(mocks.createTemplate).toHaveBeenCalledWith();
+    const displayName: LanguageTextDto[] = [{ language: "en", text: "test" }];
+    await templatesStore.createTemplate({ displayName });
+    expect(mocks.createTemplate).toHaveBeenCalledWith({
+      environment: {
+        assetAdministrationShells: [
+          {
+            displayName,
+          },
+        ],
+      },
+    });
     expect(mocks.routerPush).toHaveBeenCalledWith(`/templates/${t1.id}`);
   });
 

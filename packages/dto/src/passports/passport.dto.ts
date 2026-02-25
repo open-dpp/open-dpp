@@ -24,9 +24,9 @@ export const PassportRequestCreateDtoSchema = z.union([
   }),
   z.object({
     environment: z.object({
-      assetAdministrationShells: AssetAdministrationShellCreateDtoSchema.array().max(1).default([]),
+      assetAdministrationShells: AssetAdministrationShellCreateDtoSchema.array().max(1),
     }),
   }),
 ])
 
-export type PassportRequestCreateDto = z.infer<typeof PassportRequestCreateDtoSchema>
+export type PassportRequestCreateDto = z.input<typeof PassportRequestCreateDtoSchema>

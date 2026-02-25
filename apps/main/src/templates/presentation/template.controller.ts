@@ -12,7 +12,6 @@ import type {
 import { BadRequestException, Body, Controller, Get, Post } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
-  AssetKind,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
   SubmodelPaginationResponseDto,
@@ -336,12 +335,8 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @AuthSession() session: Session,
   ): Promise<TemplateDto> {
     const environment = await this.environmentService.createEnvironment(
-      {
-        ...body,
-        assetAdministrationShells: body.environment.assetAdministrationShells.map(
-          aas => ({ ...aas, assetInformation: aas.assetInformation ?? { assetKind: AssetKind.Type } }),
-        ),
-      },
+      body.environment,
+      true,
     );
     const activeOrganizationId = session.activeOrganizationId;
     if (!activeOrganizationId) {

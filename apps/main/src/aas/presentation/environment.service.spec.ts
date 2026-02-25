@@ -10,13 +10,9 @@ import { OrganizationsModule } from "../../identity/organizations/organizations.
 import { UsersModule } from "../../identity/users/users.module";
 import { AasModule } from "../aas.module";
 import { LanguageText } from "../domain/common/language-text";
+
 import { AasRepository } from "../infrastructure/aas.repository";
-import {
-  AssetAdministrationShellDoc,
-  AssetAdministrationShellSchema,
-} from "../infrastructure/schemas/asset-administration-shell.schema";
-import { SubmodelDoc, SubmodelSchema } from "../infrastructure/schemas/submodel.schema";
-import { SubmodelRepository } from "../infrastructure/submodel.repository";
+
 import { EnvironmentService } from "./environment.service";
 
 describe("environmentService", () => {
@@ -34,19 +30,10 @@ describe("environmentService", () => {
           }),
           inject: [EnvService],
         }),
-        MongooseModule.forFeature([
-          { name: AssetAdministrationShellDoc.name, schema: AssetAdministrationShellSchema },
-          { name: SubmodelDoc.name, schema: SubmodelSchema },
-        ]),
         AasModule,
         AuthModule,
         OrganizationsModule,
         UsersModule,
-      ],
-      providers: [
-        EnvironmentService,
-        AasRepository,
-        SubmodelRepository,
       ],
     }).compile();
     await module.init();
@@ -58,11 +45,11 @@ describe("environmentService", () => {
     const displayName: LanguageTextDto[] = [{ language: "en", text: "Test AAS" }];
     const description: LanguageTextDto[] = [{ language: "en", text: "Test AAS description" }];
     const environment = await environmentService.createEnvironment({
-      assetAdministrationShells: [{ assetInformation: { assetKind: AssetKind.Instance }, displayName, description }],
-    });
+      assetAdministrationShells: [{ displayName, description }],
+    }, true);
     expect(environment.assetAdministrationShells).toHaveLength(1);
     const aas = await aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
-    expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);
+    expect(aas.assetInformation.assetKind).toEqual(AssetKind.Type);
     expect(aas.displayName).toEqual(displayName.map(LanguageText.fromPlain));
     expect(aas.description).toEqual(description.map(LanguageText.fromPlain));
   });
@@ -70,7 +57,7 @@ describe("environmentService", () => {
   it("should create environment with empty aas", async () => {
     const environment = await environmentService.createEnvironment({
       assetAdministrationShells: [],
-    });
+    }, false);
     expect(environment.assetAdministrationShells).toHaveLength(1);
     const aas = await aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
     expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);

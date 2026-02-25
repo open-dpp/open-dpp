@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { PassportRequestCreateDto, TemplateDto } from "@open-dpp/dto";
+import type { TemplateDto } from "@open-dpp/dto";
 import { Button, Dialog, RadioButton, Select } from "primevue";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
@@ -33,11 +33,9 @@ function open() {
 }
 
 async function newPassport() {
-  const passportParams: PassportRequestCreateDto = mode.value === "template" && template.value
+  const passportParams = mode.value === "template" && template.value
     ? { templateId: template.value }
-    : {
-        environment: { assetAdministrationShells: [{ displayName: [] }] },
-      };
+    : { displayName: [] };
 
   const result = await createPassport(passportParams);
   if (result) {

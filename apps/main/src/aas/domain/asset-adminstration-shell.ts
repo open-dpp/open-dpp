@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { AssetAdministrationShellJsonSchema, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
+import { AssetAdministrationShellJsonSchema, AssetKind, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
 import { AssetInformation } from "./asset-information";
 import { AdministrativeInformation } from "./common/administrative-information";
 import { IHasDataSpecification } from "./common/has-data-specification";
@@ -49,12 +49,10 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     data: AssetAdministrationShellCreateProps,
   ) {
     const id = data.id ?? randomUUID();
-    if (data.assetInformation.globalAssetId == null) {
-      data.assetInformation.globalAssetId = id;
-    }
+
     return new AssetAdministrationShell(
       id,
-      data.assetInformation,
+      data.assetInformation ?? AssetInformation.create({ assetKind: AssetKind.Instance, globalAssetId: id }),
       data.extensions ?? [],
       data.category ?? null,
       data.idShort ?? null,

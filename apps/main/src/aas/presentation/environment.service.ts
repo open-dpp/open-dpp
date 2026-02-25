@@ -1,5 +1,6 @@
 import type { Connection } from "mongoose";
 
+import { randomUUID } from "node:crypto";
 import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import {
@@ -31,13 +32,13 @@ import {
 import { DbSessionOptions } from "../../database/query-options";
 import { Session } from "../../identity/auth/domain/session";
 import { MembersService } from "../../identity/organizations/application/services/members.service";
+
 import { Pagination } from "../../pagination/pagination";
+
 import { PagingResult } from "../../pagination/paging-result";
-import { AssetAdministrationShellMapper } from "../domain/asset-administration-shell-mapper";
-
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
-
 import { AssetInformation } from "../domain/asset-information";
+import { LanguageText } from "../domain/common/language-text";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
 import { Submodel } from "../domain/submodel-base/submodel";
@@ -68,16 +69,23 @@ export class EnvironmentService {
     this.membersService = membersService;
   }
 
-  async createEnvironment(environmentData: { assetAdministrationShells: AssetAdministrationShellCreateDto[] }): Promise<Environment> {
+  async createEnvironment(environmentData: { assetAdministrationShells: AssetAdministrationShellCreateDto[] }, isTemplate: boolean): Promise<Environment> {
     const environment = Environment.create({});
-
-    const aas = environmentData.assetAdministrationShells.length > 0
-      ? AssetAdministrationShell.create(
-          AssetAdministrationShellMapper.plainToAssetAdministrationShellProps(environmentData.assetAdministrationShells[0]),
-        )
-      : AssetAdministrationShell.create({ assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }) });
-    await this.aasRepository.save(aas);
-    environment.addAssetAdministrationShell(aas);
+    const assetKind = isTemplate ? AssetKind.Type : AssetKind.Instance;
+    const id = randomUUID();
+    const assetInformation = AssetInformation.create({ assetKind, globalAssetId: id });
+    const assetAdministrationShells = environmentData.assetAdministrationShells.length > 0
+      ? environmentData.assetAdministrationShells.map(aas => AssetAdministrationShell.create({
+          id,
+          displayName: aas.displayName?.map(LanguageText.fromPlain),
+          description: aas.description?.map(LanguageText.fromPlain),
+          assetInformation,
+        }))
+      : [AssetAdministrationShell.create({ id, assetInformation })];
+    for (const aas of assetAdministrationShells) {
+      await this.aasRepository.save(aas);
+      environment.addAssetAdministrationShell(aas);
+    }
 
     return environment;
   }

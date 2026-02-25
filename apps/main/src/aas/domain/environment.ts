@@ -34,6 +34,9 @@ export class Environment {
   }
 
   addAssetAdministrationShell(assetAdministrationShell: AssetAdministrationShell): AssetAdministrationShell {
+    if (this.assetAdministrationShells.includes(assetAdministrationShell.id)) {
+      throw new ValueError(`AssetAdministrationShell with id ${assetAdministrationShell.id} already exists`);
+    }
     this.assetAdministrationShells.push(assetAdministrationShell.id);
     return assetAdministrationShell;
   }
