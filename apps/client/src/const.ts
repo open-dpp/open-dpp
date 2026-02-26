@@ -9,7 +9,7 @@ async function fetchConfig() {
     const response = await fetch("/config.json");
     const config = await response.json();
     API_URL = config.API_URL || API_URL;
-    DEFAULT_LANGUAGE = (config.DEFAULT_LANGUAGE?.trim() || "en-US");
+    DEFAULT_LANGUAGE = (config.DEFAULT_LANGUAGE?.trim() || DEFAULT_LANGUAGE);
   }
   catch (error) {
     console.error("Failed to fetch runtime configuration:", error);
