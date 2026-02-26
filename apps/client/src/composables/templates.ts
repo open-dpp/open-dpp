@@ -3,7 +3,8 @@ import type {
   PagingParamsDto,
   TemplatePaginationDto,
 } from "@open-dpp/dto";
-import type { PagingResult } from "./pagination.ts";
+import type { Ref } from "vue";
+import type { IPagination, PagingResult } from "./pagination.ts";
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import apiClient from "../lib/api-client.ts";
@@ -15,7 +16,16 @@ interface TemplateProps {
   changeQueryParams: (params: Record<string, string | undefined>) => void;
 }
 
-export function useTemplates({ changeQueryParams, initialCursor }: TemplateProps) {
+export type CreateTemplateCallback = (data: { displayName: LanguageTextDto[] }) => Promise<void>;
+
+export interface ITemplateComposables extends IPagination {
+  createTemplate: CreateTemplateCallback;
+  templates: Ref<TemplatePaginationDto | undefined>;
+  loading: Ref<boolean>;
+  init: () => Promise<void>;
+}
+
+export function useTemplates({ changeQueryParams, initialCursor }: TemplateProps): ITemplateComposables {
   const templates = ref<TemplatePaginationDto>();
   const loading = ref(false);
   const route = useRoute();

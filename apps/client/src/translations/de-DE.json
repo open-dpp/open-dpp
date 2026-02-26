@@ -398,6 +398,7 @@
   },
   "templates": {
     "label": "Passvorlagen",
+    "create": "Neue Passvorlage erstellen",
     "createdAt": "Erstellt am",
     "updatedAt": "Aktualisiert am"
   },

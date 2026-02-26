@@ -12,9 +12,15 @@ export const SubmodelBaseFormSchema = z.object({
   displayName: LanguageTextFormSchema.array(),
 });
 
+export function displayNameFormDefaultValues(language: LanguageType) {
+  return {
+    displayName: [{ language, text: "" }],
+  };
+}
+
 export function submodelBaseFormDefaultValues(language: LanguageType) {
   return {
     idShort: "",
-    displayName: [{ language, text: "" }],
+    ...displayNameFormDefaultValues(language),
   };
 }

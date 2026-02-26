@@ -71,6 +71,9 @@ export class EnvironmentService {
 
   async createEnvironment(environmentData: { assetAdministrationShells: AssetAdministrationShellCreateDto[] }, isTemplate: boolean): Promise<Environment> {
     const environment = Environment.create({});
+    if (environmentData.assetAdministrationShells.length > 1) {
+      throw new BadRequestException("Multiple asset administration shells are not supported yet.");
+    }
     const assetKind = isTemplate ? AssetKind.Type : AssetKind.Instance;
     const createIdAndAssetInformation = () => {
       const id = randomUUID();
@@ -84,10 +87,9 @@ export class EnvironmentService {
           description: aas.description?.map(LanguageText.fromPlain),
         }))
       : [AssetAdministrationShell.create(createIdAndAssetInformation())];
-    for (const aas of assetAdministrationShells) {
-      await this.aasRepository.save(aas);
-      environment.addAssetAdministrationShell(aas);
-    }
+    const firstAas = assetAdministrationShells[0];
+    await this.aasRepository.save(firstAas);
+    environment.addAssetAdministrationShell(firstAas);
 
     return environment;
   }

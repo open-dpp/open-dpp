@@ -370,13 +370,14 @@
   },
   "passports": {
     "label": "Passport | Passports",
-    "create": "Create Passport",
+    "create": "Create passport",
     "blank": "Blank",
-    "fromTemplate": "From Template",
-    "selectTemplate": "Select Template"
+    "fromTemplate": "From template",
+    "selectTemplate": "Select template"
   },
   "templates": {
     "label": "Passport templates",
+    "create": "Create passport Template",
     "createdAt": "Created at",
     "updatedAt": "Updated at"
   },
