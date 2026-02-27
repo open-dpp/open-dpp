@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import type { SharedDppDto } from "@open-dpp/dto";
-import type { LanguageText } from "../../../main/src/aas/domain/common/language-text.ts";
+import type { LanguageTextDto, SharedDppDto } from "@open-dpp/dto";
 import type { Page } from "../composables/pagination.ts";
 import { AxiosError } from "axios";
 import dayjs from "dayjs";
@@ -194,7 +193,12 @@ async function handleFileUpload(event: Event) {
     <Column field="environment" header="Name">
       <template #body="slotProps">
         <p>
-          {{ slotProps.data.environment.assetAdministrationShells[0].displayName.find((d: LanguageText) => d.language === convertLocaleToLanguage(locale))?.text }}
+          {{
+            slotProps.data.environment.assetAdministrationShells[0].displayName.find(
+              (d: LanguageTextDto) =>
+                d.language === convertLocaleToLanguage(locale),
+            )?.text
+          }}
         </p>
       </template>
     </Column>
