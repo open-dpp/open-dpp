@@ -1,26 +1,25 @@
-import type {
-  AssetAdministrationShellModificationDto,
-  AssetAdministrationShellResponseDto,
-  SubmodelElementListResponseDto,
-  SubmodelElementModificationDto,
-  SubmodelElementRequestDto,
-  SubmodelModificationDto,
-  SubmodelRequestDto,
-  TemplateCreateDto,
-  ValueRequestDto,
-} from "@open-dpp/dto";
 import { BadRequestException, Body, Controller, Get, Post } from "@nestjs/common";
 import {
+  AssetAdministrationShellModificationDto,
   AssetAdministrationShellPaginationResponseDto,
+  AssetAdministrationShellResponseDto,
+  Populates,
+  SubmodelElementListResponseDto,
+  SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
+  SubmodelElementRequestDto,
   SubmodelElementResponseDto,
+  SubmodelModificationDto,
   SubmodelPaginationResponseDto,
+  SubmodelRequestDto,
   SubmodelResponseDto,
+  TemplateCreateDto,
   TemplateCreateDtoSchema,
   TemplateDto,
   TemplateDtoSchema,
   TemplatePaginationDto,
   TemplatePaginationDtoSchema,
+  ValueRequestDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
@@ -56,7 +55,6 @@ import {
   IdShortPathParam,
   LimitQueryParam,
   PopulateQueryParam,
-  POPULATES,
   PositionQueryParam,
   RowParam,
   SubmodelElementModificationRequestBody,
@@ -362,7 +360,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
       throw new BadRequestException();
     }
     let pagingResult: PagingResult<any> = await this.templateRepository.findAllByOrganizationId(activeOrganizationId, pagination);
-    if (populate.includes(POPULATES.assetAdministrationShells)) {
+    if (populate.includes(Populates.assetAdministrationShells)) {
       pagingResult = await this.environmentService.populateEnvironmentForPagingResult(
         pagingResult,
         { assetAdministrationShells: true, submodels: false, ignoreMissing: false },

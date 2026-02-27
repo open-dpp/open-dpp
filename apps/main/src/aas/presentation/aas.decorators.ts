@@ -2,6 +2,7 @@ import { applyDecorators, Body, Delete, Get, HttpCode, Param, Patch, Post, Query
 
 import {
   AssetAdministrationShellModificationSchema,
+  PopulateSchema,
   SubmodelElementModificationSchema,
   SubmodelElementSchema,
   SubmodelModificationSchema,
@@ -238,23 +239,6 @@ export const PositionQueryParamSchema = z.coerce.number().optional().meta({
   example: 1,
   param: { in: "query", name: "position" },
 });
-
-export const POPULATES = {
-  assetAdministrationShells: "environment.assetAdministrationShells",
-} as const;
-
-export const ALLOWED_POPULATES = [
-  POPULATES.assetAdministrationShells,
-] as const;
-
-export const PopulateSchema = z
-  .union([z.string(), z.array(z.string())])
-  .optional()
-  .transform(val => (val ? (Array.isArray(val) ? val : [val]) : []))
-  .refine(
-    paths => paths.every(p => ALLOWED_POPULATES.includes(p as any)),
-    { message: `Invalid populate path. Allowed paths: ${ALLOWED_POPULATES.join(", ")}.` },
-  );
 
 export const PopulateQueryParamSchema = PopulateSchema.meta({
   description: "Populates specified environment property",

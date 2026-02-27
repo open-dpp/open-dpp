@@ -1,10 +1,11 @@
-import type {
-  LanguageTextDto,
-  PagingParamsDto,
-  TemplatePaginationDto,
-} from "@open-dpp/dto";
+import type { LanguageTextDto, PagingParamsDto, TemplatePaginationDto } from "@open-dpp/dto";
 import type { Ref } from "vue";
 import type { IPagination, PagingResult } from "./pagination.ts";
+import {
+
+  Populates,
+
+} from "@open-dpp/dto";
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import apiClient from "../lib/api-client.ts";
@@ -33,7 +34,9 @@ export function useTemplates({ changeQueryParams, initialCursor }: TemplateProps
 
   const fetchTemplates = async (pagingParams: PagingParamsDto): Promise<PagingResult> => {
     loading.value = true;
-    const response = await apiClient.dpp.templates.getAll(pagingParams);
+    const response = await apiClient.dpp.templates.getAll(
+      { ...pagingParams, populate: [Populates.assetAdministrationShells] },
+    );
     templates.value = response.data;
     loading.value = false;
     return response.data;

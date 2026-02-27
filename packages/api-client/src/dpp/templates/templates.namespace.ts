@@ -5,7 +5,6 @@ import type {
   TemplatePaginationDto,
 } from '@open-dpp/dto'
 import type { AxiosInstance, AxiosResponse } from 'axios'
-
 import { AasNamespace } from '../aas/aasNamespace'
 
 export class TemplatesNamespace {
@@ -19,7 +18,15 @@ export class TemplatesNamespace {
   }
 
   public async getAll(params: PagingParamsDto) {
-    return await this.axiosInstance.get<TemplatePaginationDto>(this.templatesEndpoint, { params })
+    return await this.axiosInstance.get<TemplatePaginationDto>(
+      this.templatesEndpoint,
+      {
+        params,
+        paramsSerializer: {
+          indexes: null, // no brackets at all
+        },
+      },
+    )
   }
 
   public async create(data: TemplateCreateDto): Promise<AxiosResponse<TemplateDto>> {

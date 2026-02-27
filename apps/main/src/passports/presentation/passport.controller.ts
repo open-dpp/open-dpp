@@ -1,26 +1,25 @@
-import type {
-  AssetAdministrationShellModificationDto,
-  AssetAdministrationShellResponseDto,
-  PassportDto,
-  PassportPaginationDto,
-  PassportRequestCreateDto,
-  SubmodelElementListResponseDto,
-  SubmodelElementModificationDto,
-  SubmodelElementRequestDto,
-  SubmodelModificationDto,
-  SubmodelRequestDto,
-  ValueRequestDto,
-} from "@open-dpp/dto";
 import { BadRequestException, Body, Controller, Get, NotFoundException, Post } from "@nestjs/common";
 import {
+  AssetAdministrationShellModificationDto,
   AssetAdministrationShellPaginationResponseDto,
+  AssetAdministrationShellResponseDto,
+  PassportDto,
   PassportDtoSchema,
+  PassportPaginationDto,
   PassportPaginationDtoSchema,
+  PassportRequestCreateDto,
   PassportRequestCreateDtoSchema,
+  Populates,
+  SubmodelElementListResponseDto,
+  SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
+  SubmodelElementRequestDto,
   SubmodelElementResponseDto,
+  SubmodelModificationDto,
   SubmodelPaginationResponseDto,
+  SubmodelRequestDto,
   SubmodelResponseDto,
+  ValueRequestDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
@@ -59,7 +58,6 @@ import {
   IdShortPathParam,
   LimitQueryParam,
   PopulateQueryParam,
-  POPULATES,
   PositionQueryParam,
   RowParam,
   SubmodelElementModificationRequestBody,
@@ -124,7 +122,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
       throw new BadRequestException("activeOrganizationId is required in session");
     }
     let pagingResult: PagingResult<any> = await this.passportRepository.findAllByOrganizationId(activeOrganizationId, pagination);
-    if (populate.includes(POPULATES.assetAdministrationShells)) {
+    if (populate.includes(Populates.assetAdministrationShells)) {
       pagingResult = await this.environmentService.populateEnvironmentForPagingResult(
         pagingResult,
         { assetAdministrationShells: true, submodels: false, ignoreMissing: false },
