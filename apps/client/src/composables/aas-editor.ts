@@ -149,7 +149,7 @@ export function useAasEditor({
 
   const fetchAssetAdministrationShell = async (
   ): Promise<void> => {
-    const errorMessage = translate(`${translatePrefix}.errorLoadingSubmodels`);
+    const errorMessage = translate(`${translatePrefix}.errorLoading`);
     try {
       const response = await aasNamespace.getShells(id, { limit: 1 });
       if (response.status === HTTPCode.OK && response.data.result.length > 0) {

@@ -58,6 +58,8 @@ import {
   IdParam,
   IdShortPathParam,
   LimitQueryParam,
+  PopulateQueryParam,
+  POPULATES,
   PositionQueryParam,
   RowParam,
   SubmodelElementModificationRequestBody,
@@ -78,12 +80,13 @@ import { DbSessionOptions } from "../../database/query-options";
 import { Session } from "../../identity/auth/domain/session";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { Pagination } from "../../pagination/pagination";
+import { PagingResult } from "../../pagination/paging-result";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
+
 import {
   UniqueProductIdentifierService,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { PassportService } from "../application/services/passport.service";
-
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 
@@ -112,6 +115,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
   async getPassports(
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
+    @PopulateQueryParam() populate: string[],
     @AuthSession() session: Session,
   ): Promise<PassportPaginationDto> {
     const pagination = Pagination.create({ limit, cursor });
@@ -119,9 +123,15 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     if (!activeOrganizationId) {
       throw new BadRequestException("activeOrganizationId is required in session");
     }
-    return PassportPaginationDtoSchema.parse(
-      (await this.passportRepository.findAllByOrganizationId(activeOrganizationId, pagination)).toPlain(),
-    );
+    let pagingResult: PagingResult<any> = await this.passportRepository.findAllByOrganizationId(activeOrganizationId, pagination);
+    if (populate.includes(POPULATES.assetAdministrationShells)) {
+      pagingResult = await this.environmentService.populateEnvironmentForPagingResult(
+        pagingResult,
+        { assetAdministrationShells: true, submodels: false, ignoreMissing: false },
+      );
+    }
+
+    return PassportPaginationDtoSchema.parse(pagingResult.toPlain());
   }
 
   @Get(":id/unique-product-identifier")

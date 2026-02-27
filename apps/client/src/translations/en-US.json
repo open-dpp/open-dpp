@@ -85,7 +85,8 @@
       "errorEditEntries": "@.capitalize:common.failed to @.lower:common.edit the @.lower:aasEditor.table.entries"
     },
     "link": "Link",
-    "errorLoadingSubmodels": "@.capitalize:common.failed to load the submodels",
+    "errorLoading": "Loading @:common.failed",
+    "errorLoadingSubmodels": "@.capitalize:common.failed to @:aasEditor.load the submodels",
     "addSubmodel": "Add section",
     "submodelElementCollection": "Sub section",
     "edit": "Edit {formItem}",
@@ -95,7 +96,6 @@
     "errorRemoveSubmodelElement": "@.capitalize:common.failed to @.lower:common.remove the element.",
     "removeSubmodel": "Should the @.lower:aasEditor.submodel really be removed?",
     "errorRemoveSubmodel": "@.capitalize:common.failed to @.lower:common.remove @.lower:aasEditor.submodel.",
-    "assetAdministrationShell": "Asset Administration Shell",
     "submodelElementList": "List",
     "textField": "Text field",
     "file": "File",
@@ -379,7 +379,7 @@
   },
   "templates": {
     "label": "Passport templates",
-    "create": "Create passport Template",
+    "create": "Create passport template",
     "createdAt": "Created at",
     "updatedAt": "Updated at"
   },

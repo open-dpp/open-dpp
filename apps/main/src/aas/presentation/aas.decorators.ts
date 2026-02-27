@@ -239,6 +239,31 @@ export const PositionQueryParamSchema = z.coerce.number().optional().meta({
   param: { in: "query", name: "position" },
 });
 
+export const POPULATES = {
+  assetAdministrationShells: "environment.assetAdministrationShells",
+} as const;
+
+export const ALLOWED_POPULATES = [
+  POPULATES.assetAdministrationShells,
+] as const;
+
+export const PopulateSchema = z
+  .union([z.string(), z.array(z.string())])
+  .optional()
+  .transform(val => (val ? (Array.isArray(val) ? val : [val]) : []))
+  .refine(
+    paths => paths.every(p => ALLOWED_POPULATES.includes(p as any)),
+    { message: `Invalid populate path. Allowed paths: ${ALLOWED_POPULATES.join(", ")}.` },
+  );
+
+export const PopulateQueryParamSchema = PopulateSchema.meta({
+  description: "Populates specified environment property",
+  example: "environment.assetAdministrationShells",
+  param: { in: "query", name: "cursor" },
+});
+
+export const PopulateQueryParam = () => Query("populate", new ZodValidationPipe(PopulateQueryParamSchema));
+
 export const PositionQueryParam = () => Query("position", new ZodValidationPipe(PositionQueryParamSchema));
 
 export const CursorQueryParam = () => Query("cursor", new ZodValidationPipe(CursorQueryParamSchema));

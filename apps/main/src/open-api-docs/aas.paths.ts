@@ -37,6 +37,7 @@ import {
   IdParamSchema,
   IdShortPathParamSchema,
   LimitQueryParamSchema,
+  PopulateQueryParamSchema,
   PositionQueryParamSchema,
   RowParamSchema,
   SubmodelIdParamSchema,
@@ -363,7 +364,7 @@ function createTemplatePaths() {
       get: {
         tags: [tag],
         summary: `Get templates`,
-        parameters: [LimitQueryParamSchema, CursorQueryParamSchema],
+        parameters: [LimitQueryParamSchema, CursorQueryParamSchema, PopulateQueryParamSchema],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -400,7 +401,7 @@ function createPassportPaths() {
       get: {
         tags: [tag],
         summary: `Get passports`,
-        parameters: [LimitQueryParamSchema, CursorQueryParamSchema],
+        parameters: [LimitQueryParamSchema, CursorQueryParamSchema, PopulateQueryParamSchema],
         responses: {
           [HTTPCode.OK]: {
             content: {

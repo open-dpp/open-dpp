@@ -55,6 +55,8 @@ import {
   IdParam,
   IdShortPathParam,
   LimitQueryParam,
+  PopulateQueryParam,
+  POPULATES,
   PositionQueryParam,
   RowParam,
   SubmodelElementModificationRequestBody,
@@ -75,6 +77,7 @@ import { DbSessionOptions } from "../../database/query-options";
 import { Session } from "../../identity/auth/domain/session";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { Pagination } from "../../pagination/pagination";
+import { PagingResult } from "../../pagination/paging-result";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 
@@ -350,6 +353,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
   async getTemplates(
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
+    @PopulateQueryParam() populate: string[],
     @AuthSession() session: Session,
   ): Promise<TemplatePaginationDto> {
     const pagination = Pagination.create({ limit, cursor });
@@ -357,9 +361,14 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     if (!activeOrganizationId) {
       throw new BadRequestException();
     }
-    return TemplatePaginationDtoSchema.parse(
-      (await this.templateRepository.findAllByOrganizationId(activeOrganizationId, pagination)).toPlain(),
-    );
+    let pagingResult: PagingResult<any> = await this.templateRepository.findAllByOrganizationId(activeOrganizationId, pagination);
+    if (populate.includes(POPULATES.assetAdministrationShells)) {
+      pagingResult = await this.environmentService.populateEnvironmentForPagingResult(
+        pagingResult,
+        { assetAdministrationShells: true, submodels: false, ignoreMissing: false },
+      );
+    }
+    return TemplatePaginationDtoSchema.parse(pagingResult.toPlain());
   }
 
   private saveEnvironmentCallback(template: Template) {

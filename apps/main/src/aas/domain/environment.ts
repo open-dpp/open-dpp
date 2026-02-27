@@ -1,9 +1,10 @@
 import { EnvironmentJsonSchema } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
+import { IConvertableToPlain } from "./convertable-to-plain";
 import { Submodel } from "./submodel-base/submodel";
 
-export class Environment {
+export class Environment implements IConvertableToPlain {
   private constructor(
     public readonly assetAdministrationShells: Array<string>,
     public readonly submodels: Array<string>,
@@ -57,7 +58,7 @@ export class Environment {
     this.submodels.splice(index, 1);
   }
 
-  toPlain() {
+  toPlain(): Record<string, any> {
     return {
       assetAdministrationShells: this.assetAdministrationShells,
       submodels: this.submodels,

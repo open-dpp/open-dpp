@@ -134,19 +134,33 @@ describe("templateController", () => {
     const date1 = new Date("2022-01-01T00:00:00.000Z");
     const date2 = new Date("2022-01-02T00:00:00.000Z");
     const date3 = new Date("2022-01-03T00:00:00.000Z");
+    const { aas } = ctx.getAasObjects();
 
     const t1 = await createTemplate(org.id, date1, date1);
     const t2 = await createTemplate(org.id, date2, date2);
     const t3 = await createTemplate(org.id, date3, date3);
 
-    const response = await request(app.getHttpServer())
-      .get(`${basePath}?limit=2&cursor=${encodeCursor(t3.createdAt.toISOString(), t3.id)}`)
+    let response = await request(app.getHttpServer())
+      .get(`${basePath}?limit=2&cursor=${encodeCursor(t3.createdAt.toISOString(), t3.id)}&populate=environment.assetAdministrationShells`)
       .set("Cookie", userCookie);
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toEqual(encodeCursor(t1.createdAt.toISOString(), t1.id));
-    const expected = [t2.toPlain(), t1.toPlain()];
-    expect(response.body.result).toEqual(expected.map(t => ({
-      ...t,
+    expect(response.body.result).toEqual([t2, t1].map(t => ({
+      ...t.toPlain(),
+      environment: {
+        ...t.environment.toPlain(),
+        assetAdministrationShells: [{ id: aas.id, displayName: aas.displayName.map(d => ({ language: d.language, text: d.text })) }],
+      },
+      createdAt: t.createdAt.toISOString(),
+      updatedAt: t.updatedAt.toISOString(),
+    })));
+
+    response = await request(app.getHttpServer())
+      .get(`${basePath}?limit=2&cursor=${encodeCursor(t3.createdAt.toISOString(), t3.id)}`)
+      .set("Cookie", userCookie);
+    expect(response.status).toEqual(200);
+    expect(response.body.result).toEqual([t2, t1].map(t => ({
+      ...t.toPlain(),
       createdAt: t.createdAt.toISOString(),
       updatedAt: t.updatedAt.toISOString(),
     })));

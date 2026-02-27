@@ -36,6 +36,8 @@ import { MembersService } from "../../identity/organizations/application/service
 import { Pagination } from "../../pagination/pagination";
 
 import { PagingResult } from "../../pagination/paging-result";
+import { Passport } from "../../passports/domain/passport";
+import { Template } from "../../templates/domain/template";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
 import { LanguageText } from "../domain/common/language-text";
@@ -45,6 +47,10 @@ import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath, ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
+import {
+  DigitalProductPassportIdentifiableEnvironmentPopulateDecorator,
+} from "./digital-product-passport-identifiable-environment-populate-decorator";
+import { PopulateOptions } from "./environment-populate-decorator";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
@@ -184,7 +190,7 @@ export class EnvironmentService {
     }
   }
 
-  private async findAssetAdministrationShellByIdOrFail(environment: Environment, aasId: string): Promise<AssetAdministrationShell> {
+  public async findAssetAdministrationShellByIdOrFail(environment: Environment, aasId: string): Promise<AssetAdministrationShell> {
     if (environment.assetAdministrationShells.includes(aasId)) {
       return await this.aasRepository.findOneOrFail(aasId);
     }
@@ -277,32 +283,15 @@ export class EnvironmentService {
     return ValueSchema.parse(submodel.getValueRepresentation(idShortPath));
   }
 
-  /**
-   * Resolves all shell and submodel IDs of an environment to full plain objects.
-   * Can be used to populate the environment of a passport or template.
-   * Missing IDs are skipped (no throw).
-   */
-  async getFullEnvironmentAsPlain(environment: Environment): Promise<{
-    assetAdministrationShells: Array<Record<string, unknown>>;
-    submodels: Array<Record<string, unknown>>;
-    conceptDescriptions: Array<string>;
-  }> {
-    const shellIds = environment.assetAdministrationShells;
-    const submodelIds = environment.submodels;
-
-    const [shellResults, submodelResults] = await Promise.all([
-      Promise.all(shellIds.map(id => this.aasRepository.findOne(id))),
-      Promise.all(submodelIds.map(id => this.submodelRepository.findOne(id))),
-    ]);
-
-    const shells = shellResults.filter((aas): aas is AssetAdministrationShell => aas != null);
-    const submodels = submodelResults.filter((s): s is Submodel => s != null);
-
-    return {
-      assetAdministrationShells: shells.map(s => s.toPlain()),
-      submodels: submodels.map(s => s.toPlain()),
-      conceptDescriptions: environment.conceptDescriptions,
-    };
+  async populateEnvironmentForPagingResult(pagingResult: PagingResult<Passport | Template>, populateOptions: PopulateOptions) {
+    const populatedItems = await Promise.all(pagingResult.items.map(
+      async i => await new DigitalProductPassportIdentifiableEnvironmentPopulateDecorator(
+        i,
+        this.aasRepository,
+        this.submodelRepository,
+      ).populate(populateOptions),
+    ));
+    return PagingResult.create({ pagination: pagingResult.pagination, items: populatedItems });
   }
 
   async copyEnvironment(environment: Environment): Promise<Environment> {

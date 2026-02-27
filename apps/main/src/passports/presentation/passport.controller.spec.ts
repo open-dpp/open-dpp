@@ -99,11 +99,31 @@ describe("passportController", () => {
     await passportRepository.save(firstPassport);
     await passportRepository.save(secondPassport);
 
-    const response = await request(app.getHttpServer())
-      .get(basePath)
+    let response = await request(app.getHttpServer())
+      .get(`${basePath}?populate=environment.assetAdministrationShells`)
       .set("Cookie", userCookie)
       .send();
 
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      paging_metadata: {
+        cursor: expect.any(String),
+      },
+      result: [secondPassport, firstPassport].map(p => ({
+        ...p.toPlain(),
+        environment: {
+          ...p.environment.toPlain(),
+          assetAdministrationShells: [{ id: aas.id, displayName: aas.displayName.map(d => ({ language: d.language, text: d.text })) }],
+        },
+        createdAt: p.createdAt.toISOString(),
+        updatedAt: p.updatedAt.toISOString(),
+      })),
+    });
+
+    response = await request(app.getHttpServer())
+      .get(`${basePath}`)
+      .set("Cookie", userCookie)
+      .send();
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
       paging_metadata: {

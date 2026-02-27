@@ -85,6 +85,7 @@
       "errorEditEntries": "@:common.edit der @:aasEditor.table.entries @:common.failed"
     },
     "link": "Link",
+    "errorLoading": "Laden @:common.failed",
     "errorLoadingSubmodels": "Laden der Abschnitte @.lower:common.failed",
     "addSubmodel": "Abschnitt hinzufügen",
     "submodelElementCollection": "Unterabschnitt",
