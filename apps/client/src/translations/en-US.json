@@ -3,6 +3,7 @@
     "required": "Required"
   },
   "common": {
+    "untitled": "Untitled",
     "actions": "Actions",
     "clipboardSuccess": "Copied to clipboard.",
     "edit": "Edit",
@@ -89,11 +90,12 @@
     "submodelElementCollection": "Sub section",
     "edit": "Edit {formItem}",
     "creation": "Creation of the {formItem}",
-    "submodel": "Section",
+    "submodel": "Section | Sections",
     "removeSubmodelElement": "Should the element really be removed?",
     "errorRemoveSubmodelElement": "@.capitalize:common.failed to @.lower:common.remove the element.",
     "removeSubmodel": "Should the @.lower:aasEditor.submodel really be removed?",
     "errorRemoveSubmodel": "@.capitalize:common.failed to @.lower:common.remove @.lower:aasEditor.submodel.",
+    "assetAdministrationShell": "Asset Administration Shell",
     "submodelElementList": "List",
     "textField": "Text field",
     "file": "File",

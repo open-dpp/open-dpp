@@ -6,6 +6,7 @@ import {
   Button,
   Column,
   ConfirmDialog,
+  Divider,
   Drawer,
   Menu,
   TreeTable,
@@ -73,6 +74,7 @@ const {
   buildAddSubmodelElementMenu,
   init,
   createSubmodel,
+  openAssetAdministrationShellEditor,
   deleteSubmodel,
   deleteSubmodelElement,
   submodelElementsToAdd,
@@ -87,6 +89,7 @@ const {
   previousPage,
   resetCursor,
   nextPage,
+  displayName,
 } = aasEditor;
 
 onMounted(async () => {
@@ -132,122 +135,142 @@ const isFullPosition = computed(() => position.value === fullPosition);
 </script>
 
 <template>
-  <div v-if="submodels">
-    <TreeTable
-      v-model:selection-keys="selectedKeys"
-      selection-mode="single"
-      :value="submodels"
-      table-style="min-width: 50rem"
-      :meta-key-selection="false"
-      paginator
-      :loading="loading"
-      :rows="10"
-      :rows-per-page-options="[10]"
-      @node-select="onNodeSelect"
-    >
-      <template #header>
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="text-xl font-bold">Editor</span>
-          <Button :label="t('aasEditor.addSubmodel')" @click="createSubmodel" />
-        </div>
-      </template>
-      <Column field="label" header="Name" expander style="width: 34%" />
-      <Column field="type" :header="t('aasEditor.type')" style="width: 33%" />
-      <Column>
-        <template #body="{ node }">
-          <div class="flex w-full justify-end">
-            <div class="flex items-center rounded-md gap-2">
+  <div class="flex flex-col gap-1 p-4">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <span class="text-xl font-bold">
+        {{ displayName === "" ? t("common.untitled") : displayName }}
+      </span>
+      <Button
+        icon="pi pi-pencil"
+        severity="primary"
+        :aria-label="t('aasEditor.edit')"
+        :label="t('aasEditor.edit')"
+        @click="openAssetAdministrationShellEditor"
+      />
+    </div>
+    <Divider />
+    <div v-if="submodels">
+      <TreeTable
+        v-model:selection-keys="selectedKeys"
+        selection-mode="single"
+        :value="submodels"
+        table-style="min-width: 50rem"
+        :meta-key-selection="false"
+        paginator
+        :loading="loading"
+        :rows="10"
+        :rows-per-page-options="[10]"
+        @node-select="onNodeSelect"
+      >
+        <template #header>
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xl font-bold">{{
+              t("aasEditor.submodel", 2)
+            }}</span>
+            <Button
+              :label="t('aasEditor.addSubmodel')"
+              @click="createSubmodel"
+            />
+          </div>
+        </template>
+        <Column field="label" header="Name" expander style="width: 34%" />
+        <Column field="type" :header="t('aasEditor.type')" style="width: 33%" />
+        <Column>
+          <template #body="{ node }">
+            <div class="flex w-full justify-end">
+              <div class="flex items-center rounded-md gap-2">
+                <Button
+                  v-if="node.data.actions.addChildren"
+                  icon="pi pi-plus"
+                  severity="primary"
+                  @click="addClicked($event, node)"
+                />
+                <Button
+                  v-if="node.data.actions.delete"
+                  icon="pi pi-trash"
+                  severity="danger"
+                  @click="deleteClicked(node)"
+                />
+              </div>
+            </div>
+          </template>
+        </Column>
+        <template #paginatorcontainer>
+          <TablePagination
+            :current-page="currentPage"
+            :has-previous="hasPrevious"
+            :has-next="hasNext"
+            @reset-cursor="resetCursor"
+            @previous-page="previousPage"
+            @next-page="nextPage"
+          />
+        </template>
+      </TreeTable>
+      <ConfirmDialog />
+      <Menu
+        id="overlay_menu"
+        ref="popover"
+        :model="submodelElementsToAdd"
+        :popup="true"
+        position="right"
+      />
+      <Drawer
+        v-model:visible="drawerVisible"
+        :position="position"
+        :class="{
+          'w-full! md:w-80! lg:w-1/2!': !isFullPosition,
+          'w-full!': isFullPosition,
+        }"
+        :pt="{
+          mask: { class: 'aas-editor-drawer-mask' },
+        }"
+        :auto-z-index="false"
+        @hide="onHideDrawer"
+      >
+        <template #header>
+          <div
+            class="flex flex-row items-center justify-between w-full pr-2 gap-1"
+          >
+            <span class="text-xl font-bold">{{ drawerHeader }}</span>
+            <div class="flex gap-3">
               <Button
-                v-if="node.data.actions.addChildren"
-                icon="pi pi-plus"
-                severity="primary"
-                @click="addClicked($event, node)"
+                v-if="position === defaultPosition"
+                severity="secondary"
+                variant="text"
+                icon="pi pi-window-maximize"
+                @click="position = fullPosition"
               />
               <Button
-                v-if="node.data.actions.delete"
-                icon="pi pi-trash"
-                severity="danger"
-                @click="deleteClicked(node)"
+                v-else
+                severity="secondary"
+                variant="text"
+                icon="pi pi-window-minimize"
+                @click="position = defaultPosition"
+              />
+              <Button
+                :label="
+                  editorVNode?.component === SubmodelElementListCreateEditor
+                    ? t('aasEditor.table.saveAndAddEntries')
+                    : t('common.save')
+                "
+                @click="onSubmit"
               />
             </div>
           </div>
         </template>
-      </Column>
-      <template #paginatorcontainer>
-        <TablePagination
-          :current-page="currentPage"
-          :has-previous="hasPrevious"
-          :has-next="hasNext"
-          @reset-cursor="resetCursor"
-          @previous-page="previousPage"
-          @next-page="nextPage"
+        <component
+          :is="editorVNode.component"
+          v-if="editorVNode"
+          v-bind="editorVNode.props"
+          :id="props.id"
+          ref="componentRef"
+          :aas-namespace="aasNamespace"
+          :open-drawer="aasEditor.openDrawer"
+          :error-handling-store="errorHandlingStore"
+          :translate="t"
         />
-      </template>
-    </TreeTable>
-    <ConfirmDialog />
-    <Menu
-      id="overlay_menu"
-      ref="popover"
-      :model="submodelElementsToAdd"
-      :popup="true"
-      position="right"
-    />
-    <Drawer
-      v-model:visible="drawerVisible"
-      :position="position"
-      :class="{
-        'w-full! md:w-80! lg:w-1/2!': !isFullPosition,
-        'w-full!': isFullPosition,
-      }"
-      :pt="{
-        mask: { class: 'aas-editor-drawer-mask' },
-      }"
-      :auto-z-index="false"
-      @hide="onHideDrawer"
-    >
-      <template #header>
-        <div
-          class="flex flex-row items-center justify-between w-full pr-2 gap-1"
-        >
-          <span class="text-xl font-bold">{{ drawerHeader }}</span>
-          <div class="flex gap-3">
-            <Button
-              v-if="position === defaultPosition"
-              severity="secondary"
-              variant="text"
-              icon="pi pi-window-maximize"
-              @click="position = fullPosition"
-            />
-            <Button
-              v-else
-              severity="secondary"
-              variant="text"
-              icon="pi pi-window-minimize"
-              @click="position = defaultPosition"
-            />
-            <Button
-              :label="
-                editorVNode?.component === SubmodelElementListCreateEditor
-                  ? t('aasEditor.table.saveAndAddEntries')
-                  : t('common.save')
-              "
-              @click="onSubmit"
-            />
-          </div>
-        </div>
-      </template>
-      <component
-        :is="editorVNode.component"
-        v-if="editorVNode"
-        v-bind="editorVNode.props"
-        :id="props.id"
-        ref="componentRef"
-        :aas-namespace="aasNamespace"
-        :open-drawer="aasEditor.openDrawer"
-        :error-handling-store="errorHandlingStore"
-        :translate="t"
-      />
-    </Drawer>
+      </Drawer>
+    </div>
   </div>
 </template>
 

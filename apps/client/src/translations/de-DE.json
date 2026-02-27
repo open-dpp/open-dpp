@@ -3,6 +3,7 @@
     "required": "Erforderlich"
   },
   "common": {
+    "untitled": "Unbenannt",
     "id": "ID",
     "identification": "Identifikation",
     "name": "Name",
@@ -88,7 +89,7 @@
     "addSubmodel": "Abschnitt hinzufügen",
     "submodelElementCollection": "Unterabschnitt",
     "edit": "{formItem} bearbeiten",
-    "submodel": "Abschnitt",
+    "submodel": "Abschnitt | Abschnitte",
     "removeSubmodel": "Soll der @:aasEditor.submodel wirklich entfernt werden?",
     "errorRemoveSubmodel": "@:common.remove des Abschnitts @:common.failed",
     "removeSubmodelElement": "Soll das Element wirklich entfernt werden?",

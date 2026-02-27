@@ -1,21 +1,5 @@
 import type { AasNamespace } from "@open-dpp/api-client";
-import type {
-  DataTypeDefType,
-  FileRequestDto,
-  LanguageTextDto,
-  LanguageType,
-  PagingParamsDto,
-  PropertyRequestDto,
-  ReferenceElementRequestDto,
-  SubmodelElementCollectionRequestDto,
-  SubmodelElementListRequestDto,
-  SubmodelElementModificationDto,
-  SubmodelElementSharedRequestDto,
-  SubmodelElementSharedResponseDto,
-  SubmodelModificationDto,
-  SubmodelRequestDto,
-  SubmodelResponseDto,
-} from "@open-dpp/dto";
+import type { AssetAdministrationShellResponseDto, DataTypeDefType, FileRequestDto, LanguageTextDto, LanguageType, PagingParamsDto, PropertyRequestDto, ReferenceElementRequestDto, SubmodelElementCollectionRequestDto, SubmodelElementListRequestDto, SubmodelElementModificationDto, SubmodelElementSharedRequestDto, SubmodelElementSharedResponseDto, SubmodelModificationDto, SubmodelRequestDto, SubmodelResponseDto } from "@open-dpp/dto";
 import type { TreeTableSelectionKeys } from "primevue";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
@@ -25,11 +9,8 @@ import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import type { AasEditorPath, IAasDrawer } from "./aas-drawer.ts";
 import type { IPagination, PagingResult } from "./pagination.ts";
 import {
-
   AasSubmodelElements,
-
   AasSubmodelElementsEnum,
-
   DataTypeDef,
   KeyTypes,
   PropertyJsonSchema,
@@ -66,6 +47,7 @@ export interface IAasEditor extends IAasDrawer, IPagination {
     key: string,
     children?: TreeNode[],
   ) => TreeNode | undefined;
+  displayName: Ref<string>;
   submodels: Ref<TreeNode[]>;
   buildAddSubmodelElementMenu: (node: TreeNode) => void;
   submodelElementsToAdd: Ref<MenuItem[]>;
@@ -75,6 +57,7 @@ export interface IAasEditor extends IAasDrawer, IPagination {
   loading: Ref<boolean>;
   selectedKeys: Ref<TreeTableSelectionKeys | undefined>;
   selectTreeNode: (key: string) => void;
+  openAssetAdministrationShellEditor: () => void;
 }
 
 export function useAasEditor({
@@ -88,6 +71,8 @@ export function useAasEditor({
   translate,
   openConfirm,
 }: AasEditorProps): IAasEditor {
+  const assetAdministrationShell = ref<AssetAdministrationShellResponseDto | undefined>(undefined);
+  const displayName = ref<string>("");
   const submodels = ref<TreeNode[]>([]);
   const selectedKeys = ref<TreeTableSelectionKeys | undefined>(undefined);
   const translatePrefix = "aasEditor";
@@ -125,6 +110,64 @@ export function useAasEditor({
     }
     return { paging_metadata: { cursor: null }, result: [] };
   };
+
+  function openAssetAdministrationShellEditor() {
+    if (assetAdministrationShell.value) {
+      drawer.openDrawer({
+        type: KeyTypes.AssetAdministrationShell,
+        data: toRaw(assetAdministrationShell.value),
+        mode: EditorMode.EDIT,
+        title: translate(`common.edit`),
+        path: {},
+        callback: modifyAasEditor,
+      });
+    }
+  }
+
+  async function modifyAasEditor(data: { displayName: LanguageTextDto[] }) {
+    const errorMessage = translate(`${translatePrefix}.error`, { method: translate("common.edit") });
+    if (assetAdministrationShell.value) {
+      try {
+        const response = await aasNamespace.modifyShell(
+          id,
+          assetAdministrationShell.value.id,
+          { displayName: data.displayName },
+        );
+        if (response.status === HTTPCode.OK) {
+          updateAssetAdministrationShell(response.data);
+          drawer.hideDrawer();
+        }
+        else {
+          errorHandlingStore.logErrorWithNotification(errorMessage);
+        }
+      }
+      catch (e) {
+        errorHandlingStore.logErrorWithNotification(errorMessage, e);
+      }
+    }
+  }
+
+  const fetchAssetAdministrationShell = async (
+  ): Promise<void> => {
+    const errorMessage = translate(`${translatePrefix}.errorLoadingSubmodels`);
+    try {
+      const response = await aasNamespace.getShells(id, { limit: 1 });
+      if (response.status === HTTPCode.OK && response.data.result.length > 0) {
+        updateAssetAdministrationShell(response.data.result[0]);
+      }
+      else {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+      }
+    }
+    catch (e) {
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
+    }
+  };
+
+  function updateAssetAdministrationShell(data: AssetAdministrationShellResponseDto | undefined) {
+    assetAdministrationShell.value = data;
+    displayName.value = data?.displayName.find(d => d.language === selectedLanguage)?.text ?? "";
+  }
 
   const pagination
     = usePagination({ initialCursor, limit: 10, fetchCallback: fetchSubmodels, changeQueryParams });
@@ -553,6 +596,7 @@ export function useAasEditor({
   }
 
   async function init() {
+    await fetchAssetAdministrationShell();
     await pagination.nextPage();
     if (initialSelectedKeys) {
       selectTreeNode(initialSelectedKeys);
@@ -560,9 +604,11 @@ export function useAasEditor({
   }
 
   return {
+    displayName,
     init,
     submodels,
     submodelElementsToAdd,
+    openAssetAdministrationShellEditor,
     buildAddSubmodelElementMenu,
     createSubmodel,
     deleteSubmodel,

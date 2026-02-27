@@ -1,9 +1,10 @@
-import type { FileResponseDto, KeyTypes, PropertyResponseDto, ReferenceElementResponseDto, SubmodelElementCollectionResponseDto, SubmodelElementListResponseDto, SubmodelElementResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
+import type { AssetAdministrationShellResponseDto, FileResponseDto, KeyTypes, PropertyResponseDto, ReferenceElementResponseDto, SubmodelElementCollectionResponseDto, SubmodelElementListResponseDto, SubmodelElementResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
 import type { Component, ComputedRef, Ref } from "vue";
 import {
-
   KeyTypes as AasKeyTypes,
+
   AasSubmodelElements,
+  AssetAdministrationShellJsonSchema,
 
   FileJsonSchema,
 
@@ -19,6 +20,7 @@ import {
 } from "@open-dpp/dto";
 import { computed, ref } from "vue";
 import { z } from "zod";
+import AssetAdministrationShellEditor from "../components/aas/AssetAdministrationShellEditor.vue";
 import ColumnCreateEditor from "../components/aas/ColumnCreateEditor.vue";
 import ColumnEditor from "../components/aas/ColumnEditor.vue";
 import FileCreateEditor from "../components/aas/FileCreateEditor.vue";
@@ -33,6 +35,8 @@ import SubmodelElementCollectionCreateEditor from "../components/aas/SubmodelEle
 import SubmodelElementCollectionEditor from "../components/aas/SubmodelElementCollectionEditor.vue";
 import SubmodelElementListCreateEditor from "../components/aas/SubmodelElementListCreateEditor.vue";
 import SubmodelElementListEditor from "../components/aas/SubmodelElementListEditor.vue";
+
+export type AssetAdministrationShellEditorProps = AssetAdministrationShellResponseDto;
 
 export type SubmodelEditorProps = SubmodelResponseDto;
 const SubmodelBaseCreatePropsSchema = z.object({});
@@ -93,6 +97,7 @@ interface EditorDataMap {
     [AasKeyTypes.File]: FileCreateEditorProps;
     [AasKeyTypes.ReferenceElement]: ReferenceElementCreateEditorProps;
     [ColumnEditorKey]: ColumnCreateEditorProps;
+    [AasKeyTypes.AssetAdministrationShell]: null;
   };
   [EditorMode.EDIT]: {
     [AasKeyTypes.Submodel]: SubmodelEditorProps;
@@ -102,6 +107,7 @@ interface EditorDataMap {
     [AasKeyTypes.File]: FileEditorProps;
     [AasKeyTypes.ReferenceElement]: ReferenceElementEditorProps;
     [ColumnEditorKey]: ColumnEditorProps;
+    [AasKeyTypes.AssetAdministrationShell]: AssetAdministrationShellEditorProps;
   };
 }
 
@@ -112,6 +118,7 @@ export type EditorType
     | typeof AasKeyTypes.SubmodelElementCollection
     | typeof AasKeyTypes.SubmodelElementList
     | typeof AasKeyTypes.ReferenceElement
+    | typeof AasKeyTypes.AssetAdministrationShell
     | "Column";
 
 export interface AasEditorPath {
@@ -174,7 +181,7 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
 
   const Editors: Record<
     EditorModeType,
-    Record<EditorType, { parse: (data: any) => void; component: any }>
+    Record<EditorType, { parse: (data: any) => void; component: any } | null>
   > = {
     [EditorMode.CREATE]: {
       [AasKeyTypes.Submodel]: {
@@ -205,6 +212,7 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
         component: ColumnCreateEditor,
         parse: data => ColumnCreateEditorPropsSchema.parse(data),
       },
+      [AasKeyTypes.AssetAdministrationShell]: null,
     },
     [EditorMode.EDIT]: {
       [AasKeyTypes.Submodel]: {
@@ -235,6 +243,10 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
         component: ColumnEditor,
         parse: data => SubmodelElementSchema.parse(data),
       },
+      [AasKeyTypes.AssetAdministrationShell]: {
+        component: AssetAdministrationShellEditor,
+        parse: data => AssetAdministrationShellJsonSchema.parse(data),
+      },
     },
   };
 
@@ -242,7 +254,7 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
     if (!activeEditor.value || !activeData.value)
       return null;
 
-    const foundEditor = Editors[activeMode.value][activeEditor.value];
+    const foundEditor = Editors[activeMode.value]?.[activeEditor.value];
     if (!foundEditor) {
       throw new Error(`Not supported editor type ${activeEditor.value}`);
     }
