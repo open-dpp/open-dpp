@@ -253,10 +253,9 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
   const editorVNode = computed<EditorVNodeType>(() => {
     if (!activeEditor.value || !activeData.value)
       return null;
-
     const foundEditor = Editors[activeMode.value]?.[activeEditor.value];
     if (!foundEditor) {
-      throw new Error(`Not supported editor type ${activeEditor.value}`);
+      throw new Error(`Editor not supported for type "${activeEditor.value}" in mode "${activeMode.value}"`);
     }
 
     return {

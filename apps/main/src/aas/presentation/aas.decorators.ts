@@ -243,7 +243,7 @@ export const PositionQueryParamSchema = z.coerce.number().optional().meta({
 export const PopulateQueryParamSchema = PopulateSchema.meta({
   description: "Populates specified environment property",
   example: "environment.assetAdministrationShells",
-  param: { in: "query", name: "cursor" },
+  param: { in: "query", name: "populate" },
 });
 
 export const PopulateQueryParam = () => Query("populate", new ZodValidationPipe(PopulateQueryParamSchema));

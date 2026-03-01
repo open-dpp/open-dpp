@@ -23,8 +23,6 @@ export * from './aas/enums/reference-types-enum'
 export * from './aas/environment-json-schema'
 export * from './aas/extension-json-schema'
 export * from './aas/resource-json-schema'
-export * from './aas/resource-json-schema'
-export * from './aas/resource-json-schema'
 
 export * from './aas/specific-asset-id-json-schema'
 export * from './aas/submodel-base/annotated-relationship-element-json-schema'

@@ -21,7 +21,7 @@ export class EnvironmentPopulateDecorator implements IConvertableToPlain {
       await this.populateAssetAdministrationShells(options.ignoreMissing);
     }
     if (options.submodels) {
-      await this.populateSubmodels();
+      await this.populateSubmodels(options.ignoreMissing);
     }
     return this;
   }

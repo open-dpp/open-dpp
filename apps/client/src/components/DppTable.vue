@@ -7,7 +7,7 @@ import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
 import { Button, Column, DataTable } from "primevue";
 import { useToast } from "primevue/usetoast";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useAasUtils } from "../composables/aas-utils.ts";
@@ -39,7 +39,12 @@ dayjs.extend(localizedFormat);
 const route = useRoute();
 const router = useRouter();
 const { t, locale } = useI18n();
-const { parseDisplayNameFromEnvironment } = useAasUtils({ translate: t, selectedLanguage: convertLocaleToLanguage(locale.value) });
+const selectedLanguage = computed(() => convertLocaleToLanguage(locale.value));
+const { parseDisplayNameFromEnvironment } = useAasUtils({
+  translate: t,
+  selectedLanguage: selectedLanguage.value,
+});
+
 const toast = useToast();
 const errorHandlingStore = useErrorHandlingStore();
 
