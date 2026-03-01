@@ -10,6 +10,7 @@ import { useToast } from "primevue/usetoast";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
+import apiClient from "../lib/api-client.ts";
 import axiosIns from "../lib/axios.ts";
 import { useErrorHandlingStore } from "../stores/error.handling.ts";
 import TablePagination from "./pagination/TablePagination.vue";
@@ -82,6 +83,8 @@ async function forwardToPresentationChat(item: SharedDppDto) {
 }
 
 const fileInput = ref<HTMLInputElement | null>(null);
+const templateFileInput = ref<HTMLInputElement | null>(null);
+const importingTemplate = ref<boolean>(false);
 
 async function exportPassport(id: string) {
   let url: string | undefined;
@@ -133,6 +136,58 @@ async function handleFileUpload(event: Event) {
       fileInput.value.value = "";
   }
 }
+
+async function exportTemplate(id: string) {
+  let url: string | undefined;
+  try {
+    const response = await apiClient.dpp.templates.export(id);
+    const dataStr = JSON.stringify(response.data, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    url = globalThis.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `template-${id}.json`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+  catch (error) {
+    console.error("Failed to export template", error);
+    toast.add({ severity: "error", summary: t("notifications.error"), detail: t("common.templateExportFailed"), life: 5000 });
+  }
+  finally {
+    if (url) {
+      globalThis.URL.revokeObjectURL(url);
+    }
+  }
+}
+
+function triggerTemplateImport() {
+  templateFileInput.value?.click();
+}
+
+async function handleTemplateFileUpload(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file)
+    return;
+
+  importingTemplate.value = true;
+  try {
+    const json = JSON.parse(await file.text());
+    const response = await apiClient.dpp.templates.import(json);
+    await router.push(`/templates/${response.data.id}`);
+  }
+  catch (error) {
+    console.error("Failed to import template", error);
+    toast.add({ severity: "error", summary: t("notifications.error"), detail: t("common.templateImportFailed"), life: 5000 });
+  }
+  finally {
+    if (templateFileInput.value)
+      templateFileInput.value.value = "";
+    importingTemplate.value = false;
+  }
+}
 </script>
 
 <template>
@@ -146,6 +201,7 @@ async function handleFileUpload(event: Event) {
         <div class="flex items-center gap-2">
           <Button :label="t('common.add')" @click="emits('create')" />
           <Button v-if="!props.usesTemplates" :label="t('common.import')" @click="triggerImport" />
+          <Button v-if="props.usesTemplates" :label="t('common.import')" :disabled="importingTemplate" @click="triggerTemplateImport" />
           <input
             v-if="!props.usesTemplates"
             ref="fileInput"
@@ -153,6 +209,14 @@ async function handleFileUpload(event: Event) {
             accept=".json"
             class="hidden"
             @change="handleFileUpload"
+          >
+          <input
+            v-if="props.usesTemplates"
+            ref="templateFileInput"
+            type="file"
+            accept=".json"
+            class="hidden"
+            @change="handleTemplateFileUpload"
           >
         </div>
       </div>
@@ -209,6 +273,15 @@ async function handleFileUpload(event: Event) {
               :aria-label="t('common.exportPassport')"
               :title="t('common.exportPassport')"
               @click="exportPassport(data.id)"
+            />
+          </div>
+          <div v-if="props.usesTemplates" class="flex items-center rounded-md gap-2">
+            <Button
+              icon="pi pi-download"
+              severity="secondary"
+              :aria-label="t('common.exportTemplate')"
+              :title="t('common.exportTemplate')"
+              @click="exportTemplate(data.id)"
             />
           </div>
         </div>

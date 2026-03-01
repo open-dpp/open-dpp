@@ -53,9 +53,12 @@
     "openPresentation": "Open presentation",
     "openChat": "Open chat",
     "exportPassport": "Export passport",
+    "exportTemplate": "Export template",
     "exportFailed": "Failed to export passport.",
     "importFailed": "Failed to import passport.",
-    "importSuccess": "Passport imported successfully."
+    "importSuccess": "Passport imported successfully.",
+    "templateExportFailed": "Failed to export template.",
+    "templateImportFailed": "Failed to import template."
   },
   "aasEditor": {
     "formLabels": {

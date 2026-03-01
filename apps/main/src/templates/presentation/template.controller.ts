@@ -6,7 +6,7 @@ import type {
   SubmodelRequestDto,
   ValueRequestDto,
 } from "@open-dpp/dto";
-import { BadRequestException, Controller, Get, Post } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Post } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
   AssetKind,
@@ -20,6 +20,8 @@ import {
   TemplatePaginationDtoSchema,
   ValueResponseDto,
 } from "@open-dpp/dto";
+import { ZodValidationPipe } from "@open-dpp/exception";
+import { z } from "zod";
 import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 
 import {
@@ -68,13 +70,27 @@ import { DbSessionOptions } from "../../database/query-options";
 import { Session } from "../../identity/auth/domain/session";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { Pagination } from "../../pagination/pagination";
+import { TemplateService } from "../application/services/template.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 
+const ExpandedTemplateDtoSchema = TemplateDtoSchema.extend({
+  environment: z.object({
+    assetAdministrationShells: z.array(z.record(z.string(), z.any())),
+    submodels: z.array(z.record(z.string(), z.any())),
+    conceptDescriptions: z.array(z.string()).default([]),
+  }),
+});
+
+type ExpandedTemplateDto = z.infer<typeof ExpandedTemplateDtoSchema>;
+
 @Controller("/templates")
 export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoints, IAasModifyEndpoints, IAasDeleteEndpoints {
-  constructor(private readonly environmentService: EnvironmentService, private readonly templateRepository: TemplateRepository) {
-  }
+  constructor(
+    private readonly environmentService: EnvironmentService,
+    private readonly templateRepository: TemplateRepository,
+    private readonly templateService: TemplateService,
+  ) {}
 
   @ApiGetShells()
   async getShells(
@@ -322,6 +338,51 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     }
     const template = Template.create({ organizationId: activeOrganizationId, environment });
     return TemplateDtoSchema.parse((await this.templateRepository.save(template)).toPlain());
+  }
+
+  @Get("/:id/export")
+  async exportTemplate(
+    @IdParam() id: string,
+    @AuthSession() session: Session,
+  ) {
+    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    return await this.templateService.exportTemplate(template.id);
+  }
+
+  @Post("/import")
+  @HttpCode(HttpStatus.CREATED)
+  async importTemplate(
+    @Body(new ZodValidationPipe(ExpandedTemplateDtoSchema)) body: ExpandedTemplateDto,
+    @AuthSession() session: Session,
+  ) {
+    const activeOrganizationId = session.activeOrganizationId;
+    if (!activeOrganizationId) {
+      throw new BadRequestException("activeOrganizationId is required in session");
+    }
+    const toValidDate = (value: unknown): Date => {
+      if (value == null) {
+        return new Date();
+      }
+      let ms: number;
+      if (typeof value === "number") {
+        ms = value;
+      }
+      else if (typeof value === "string") {
+        ms = Date.parse(value);
+      }
+      else {
+        ms = Number.NaN;
+      }
+      return Number.isFinite(ms) ? new Date(ms) : new Date();
+    };
+    const payload = {
+      ...body,
+      organizationId: activeOrganizationId,
+      createdAt: toValidDate(body.createdAt),
+      updatedAt: toValidDate(body.updatedAt),
+    };
+    const template = await this.templateService.importTemplate(payload);
+    return TemplateDtoSchema.parse(template.toPlain());
   }
 
   @Get()
