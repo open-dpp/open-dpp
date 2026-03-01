@@ -234,8 +234,6 @@ export class EnvironmentService {
   async getSubmodelElementValue(environment: Environment, submodelId: string, idShortPath: IdShortPath): Promise<ValueResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     return ValueSchema.parse(submodel.getValueRepresentation(idShortPath));
-<<<<<<< HEAD
-=======
   }
 
   /**
@@ -264,7 +262,6 @@ export class EnvironmentService {
       submodels: submodels.map(s => s.toPlain()),
       conceptDescriptions: environment.conceptDescriptions,
     };
->>>>>>> main
   }
 
   async copyEnvironment(environment: Environment): Promise<Environment> {

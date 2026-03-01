@@ -187,7 +187,7 @@ onMounted(async () => {
       <Button
         icon="pi pi-pencil"
         severity="primary"
-        @click="editItem(passport.id)"
+        @click="editItem(passport)"
       />
       <Button
         icon="pi pi-comments"

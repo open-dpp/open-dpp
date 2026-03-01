@@ -1,5 +1,10 @@
 import type { Connection } from "mongoose";
-import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import { z } from "zod";
 import { AssetAdministrationShell } from "../../../aas/domain/asset-adminstration-shell";
@@ -10,8 +15,12 @@ import { SubmodelRepository } from "../../../aas/infrastructure/submodel.reposit
 import { EnvironmentService } from "../../../aas/presentation/environment.service";
 import { Passport } from "../../domain/passport";
 import { PassportRepository } from "../../infrastructure/passport.repository";
+import { UniqueProductIdentifierService } from "../../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 
-export type ExpandedPassport = Omit<ReturnType<Passport["toPlain"]>, "environment"> & {
+export type ExpandedPassport = Omit<
+  ReturnType<Passport["toPlain"]>,
+  "environment"
+> & {
   environment: {
     assetAdministrationShells: Record<string, any>[];
     submodels: Record<string, any>[];
@@ -19,14 +28,16 @@ export type ExpandedPassport = Omit<ReturnType<Passport["toPlain"]>, "environmen
   };
 };
 
-const ExpandedPassportSchema = z.object({
-  organizationId: z.string().min(1, "organizationId is required"),
-  environment: z.object({
-    assetAdministrationShells: z.array(z.record(z.string(), z.any())),
-    submodels: z.array(z.record(z.string(), z.any())),
-    conceptDescriptions: z.array(z.string()).optional(),
-  }),
-}).passthrough();
+const ExpandedPassportSchema = z
+  .object({
+    organizationId: z.string().min(1, "organizationId is required"),
+    environment: z.object({
+      assetAdministrationShells: z.array(z.record(z.string(), z.any())),
+      submodels: z.array(z.record(z.string(), z.any())),
+      conceptDescriptions: z.array(z.string()).optional(),
+    }),
+  })
+  .passthrough();
 
 @Injectable()
 export class PassportService {
@@ -37,19 +48,24 @@ export class PassportService {
     private readonly environmentService: EnvironmentService,
     private readonly aasRepository: AasRepository,
     private readonly submodelRepository: SubmodelRepository,
+    private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
     @InjectConnection() private readonly connection: Connection,
-  ) { }
+  ) {}
 
   async getProductPassport(passportId: string) {
     this.logger.log(`getProductPassport called with id: ${passportId}`);
 
     const passport = await this.passportRepository.findOne(passportId);
     if (!passport) {
-      throw new NotFoundException(`Product passport with id ${passportId} not found`);
+      throw new NotFoundException(
+        `Product passport with id ${passportId} not found`,
+      );
     }
 
     if (!passport.environment) {
-      this.logger.warn(`Passport ${passportId} has no environment; returning empty shells and submodels`);
+      this.logger.warn(
+        `Passport ${passportId} has no environment; returning empty shells and submodels`,
+      );
       return {
         ...passport.toPlain(),
         environment: {
@@ -60,7 +76,10 @@ export class PassportService {
       };
     }
 
-    const environmentPlain = await this.environmentService.getFullEnvironmentAsPlain(passport.environment);
+    const environmentPlain =
+      await this.environmentService.getFullEnvironmentAsPlain(
+        passport.environment,
+      );
 
     return {
       ...passport.toPlain(),
@@ -87,8 +106,8 @@ export class PassportService {
     return {
       ...passport.toPlain(),
       environment: {
-        assetAdministrationShells: shells.map(shell => shell.toPlain()),
-        submodels: submodels.map(submodel => submodel.toPlain()),
+        assetAdministrationShells: shells.map((shell) => shell.toPlain()),
+        submodels: submodels.map((submodel) => submodel.toPlain()),
         conceptDescriptions: passport.environment.conceptDescriptions ?? [],
       },
     } as ExpandedPassport;
@@ -98,7 +117,9 @@ export class PassportService {
     const validationResult = ExpandedPassportSchema.safeParse(data);
 
     if (!validationResult.success) {
-      throw new BadRequestException(`Invalid passport data: ${validationResult.error.message}`);
+      throw new BadRequestException(
+        `Invalid passport data: ${validationResult.error.message}`,
+      );
     }
 
     // Re-doing the map logic with ID tracking
@@ -107,8 +128,8 @@ export class PassportService {
       const oldId = submodelData.id;
       if (!oldId || typeof oldId !== "string") {
         this.logger.warn(
-          `Skipping submodel at index ${index} during import: missing or invalid id (got ${JSON.stringify(oldId)}). `
-          + `Available fields: idShort=${JSON.stringify(submodelData.idShort)}, modelType=${JSON.stringify(submodelData.modelType)}`,
+          `Skipping submodel at index ${index} during import: missing or invalid id (got ${JSON.stringify(oldId)}). ` +
+            `Available fields: idShort=${JSON.stringify(submodelData.idShort)}, modelType=${JSON.stringify(submodelData.modelType)}`,
         );
         return;
       }
@@ -124,7 +145,9 @@ export class PassportService {
 
       const relatedNewSubmodels: Submodel[] = [];
       for (const ref of oldShell.submodels) {
-        const key = ref.keys.find(k => k.type === "Submodel" || k.type === "GlobalReference");
+        const key = ref.keys.find(
+          (k) => k.type === "Submodel" || k.type === "GlobalReference",
+        );
 
         if (!key) {
           if (ref.keys.length > 0) {
@@ -138,8 +161,7 @@ export class PassportService {
         const newSub = oldIdToNewSubmodelMap.get(key.value);
         if (newSub) {
           relatedNewSubmodels.push(newSub);
-        }
-        else {
+        } else {
           this.logger.warn(
             `Submodel reference key ${key.value} not found in import map for shell ${oldShell.id}. Ref: ${JSON.stringify(
               ref,
@@ -155,13 +177,15 @@ export class PassportService {
       organizationId: data.organizationId,
       templateId: data.templateId ?? undefined,
       environment: Environment.create({
-        assetAdministrationShells: newShells.map(s => s.id),
-        submodels: Array.from(oldIdToNewSubmodelMap.values()).map(s => s.id),
+        assetAdministrationShells: newShells.map((s) => s.id),
+        submodels: Array.from(oldIdToNewSubmodelMap.values()).map((s) => s.id),
         conceptDescriptions: data.environment.conceptDescriptions ?? [],
       }),
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
     });
+
+    const upid = newPassport.createUniqueProductIdentifier();
 
     // Persist all entities in a single transaction to avoid partial commits
     const session = await this.connection.startSession();
@@ -174,16 +198,18 @@ export class PassportService {
           await this.aasRepository.save(shell, { session });
         }
         await this.passportRepository.save(newPassport, { session });
+        await this.uniqueProductIdentifierService.save(upid);
       });
-    }
-    finally {
+    } finally {
       await session.endSession();
     }
 
     return newPassport;
   }
 
-  private async loadEnvironment(passport: Passport): Promise<{ shells: AssetAdministrationShell[]; submodels: Submodel[] }> {
+  private async loadEnvironment(
+    passport: Passport,
+  ): Promise<{ shells: AssetAdministrationShell[]; submodels: Submodel[] }> {
     const shellIds = passport.environment.assetAdministrationShells;
     const submodelIds = passport.environment.submodels;
 
@@ -197,9 +223,10 @@ export class PassportService {
       const shell = shellMap.get(id);
       if (shell) {
         shells.push(shell);
-      }
-      else {
-        this.logger.warn(`AssetAdministrationShell with id ${id} not found for passport ${passport.id}`);
+      } else {
+        this.logger.warn(
+          `AssetAdministrationShell with id ${id} not found for passport ${passport.id}`,
+        );
       }
     }
 
@@ -208,9 +235,10 @@ export class PassportService {
       const submodel = submodelMap.get(id);
       if (submodel) {
         submodels.push(submodel);
-      }
-      else {
-        this.logger.warn(`Submodel with id ${id} not found for passport ${passport.id}`);
+      } else {
+        this.logger.warn(
+          `Submodel with id ${id} not found for passport ${passport.id}`,
+        );
       }
     }
 
