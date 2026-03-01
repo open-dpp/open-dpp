@@ -14,7 +14,7 @@ export type ExpandedTemplate = Omit<ReturnType<Template["toPlain"]>, "environmen
   environment: {
     assetAdministrationShells: Record<string, any>[];
     submodels: Record<string, any>[];
-    conceptDescriptions: string[];
+    conceptDescriptions?: string[];
   };
 };
 
