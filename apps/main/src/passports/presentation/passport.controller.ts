@@ -1,25 +1,27 @@
-import { BadRequestException, Body, Controller, Get, NotFoundException, Post } from "@nestjs/common";
-import {
+import type {
   AssetAdministrationShellModificationDto,
-  AssetAdministrationShellPaginationResponseDto,
-  AssetAdministrationShellResponseDto,
   PassportDto,
-  PassportDtoSchema,
   PassportPaginationDto,
-  PassportPaginationDtoSchema,
   PassportRequestCreateDto,
-  PassportRequestCreateDtoSchema,
-  Populates,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
-  SubmodelElementPaginationResponseDto,
   SubmodelElementRequestDto,
-  SubmodelElementResponseDto,
   SubmodelModificationDto,
-  SubmodelPaginationResponseDto,
   SubmodelRequestDto,
-  SubmodelResponseDto,
   ValueRequestDto,
+} from "@open-dpp/dto";
+import { BadRequestException, Body, Controller, Get, NotFoundException, Post } from "@nestjs/common";
+import {
+  AssetAdministrationShellPaginationResponseDto,
+  AssetAdministrationShellResponseDto,
+  PassportDtoSchema,
+  PassportPaginationDtoSchema,
+  PassportRequestCreateDtoSchema,
+  Populates,
+  SubmodelElementPaginationResponseDto,
+  SubmodelElementResponseDto,
+  SubmodelPaginationResponseDto,
+  SubmodelResponseDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";

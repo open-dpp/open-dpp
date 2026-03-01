@@ -1,25 +1,27 @@
+import type {
+  AssetAdministrationShellModificationDto,
+  SubmodelElementListResponseDto,
+  SubmodelElementModificationDto,
+  SubmodelElementRequestDto,
+  SubmodelModificationDto,
+  SubmodelRequestDto,
+  TemplateCreateDto,
+  ValueRequestDto,
+} from "@open-dpp/dto";
 import { BadRequestException, Body, Controller, Get, Post } from "@nestjs/common";
 import {
-  AssetAdministrationShellModificationDto,
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellResponseDto,
   Populates,
-  SubmodelElementListResponseDto,
-  SubmodelElementModificationDto,
   SubmodelElementPaginationResponseDto,
-  SubmodelElementRequestDto,
   SubmodelElementResponseDto,
-  SubmodelModificationDto,
   SubmodelPaginationResponseDto,
-  SubmodelRequestDto,
   SubmodelResponseDto,
-  TemplateCreateDto,
   TemplateCreateDtoSchema,
   TemplateDto,
   TemplateDtoSchema,
   TemplatePaginationDto,
   TemplatePaginationDtoSchema,
-  ValueRequestDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
