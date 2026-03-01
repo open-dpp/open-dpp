@@ -12,10 +12,10 @@ export const aasPlainFactory
     assetInformation: {
       assetKind: 'Instance',
       assetType: 'product',
-      defaultThumbnail: {
+      defaultThumbnails: [{
         contentType: 'image/png',
         path: 'https://raw.githubusercontent.com/SmartFactory-KL/thumbnails/refs/heads/main/truck/Truck.png',
-      },
+      }],
       globalAssetId: `${transientParams.iriDomain}/assets/zm6As5rG-h`,
     },
     submodels: [

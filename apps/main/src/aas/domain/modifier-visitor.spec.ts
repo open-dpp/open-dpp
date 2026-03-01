@@ -85,6 +85,8 @@ describe("modifier visitor", () => {
     expect(property.value).toEqual("prop New");
   });
 
+  it("should modify asset");
+
   it("should modify reference element", () => {
     const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames(), description: existingDescriptions() });
     const referenceElement = ReferenceElement.create({

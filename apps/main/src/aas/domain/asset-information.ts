@@ -9,7 +9,7 @@ export class AssetInformation implements IVisitable {
     public globalAssetId: string | null = null,
     public readonly specificAssetIds: Array<SpecificAssetId>,
     public readonly assetType: string | null = null,
-    public defaultThumbnail: Resource | null = null,
+    public defaultThumbnails: Resource[],
   ) {
   }
 
@@ -18,14 +18,14 @@ export class AssetInformation implements IVisitable {
     globalAssetId?: string | null;
     specificAssetIds?: Array<SpecificAssetId>;
     assetType?: string | null;
-    defaultThumbnail?: Resource | null;
+    defaultThumbnails?: Resource[];
   }) {
     return new AssetInformation(
       data.assetKind,
       data.globalAssetId ?? null,
       data.specificAssetIds ?? [],
       data.assetType ?? null,
-      data.defaultThumbnail ?? null,
+      data.defaultThumbnails ?? [],
     );
   }
 
@@ -36,7 +36,7 @@ export class AssetInformation implements IVisitable {
       parsed.globalAssetId,
       parsed.specificAssetIds.map(SpecificAssetId.fromPlain),
       parsed.assetType,
-      parsed.defaultThumbnail ? Resource.fromPlain(parsed.defaultThumbnail) : null,
+      parsed.defaultThumbnails.map(Resource.fromPlain),
     );
   }
 

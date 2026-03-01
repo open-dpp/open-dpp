@@ -8,5 +8,5 @@ export const AssetInformationDbSchema = z.object({
   globalAssetId: z.nullish(z.string()),
   specificAssetIds: SpecificAssetIdDbSchema.array().default([]),
   assetType: z.nullish(z.string()),
-  defaultThumbnail: z.nullish(ResourceDbSchema),
+  defaultThumbnails: ResourceDbSchema.array().default([]),
 });

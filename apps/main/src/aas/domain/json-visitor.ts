@@ -258,7 +258,7 @@ export class JsonVisitor implements IVisitor<undefined, any> {
       globalAssetId: element.globalAssetId,
       specificAssetIds: element.specificAssetIds.map(s => s.accept(this)),
       assetType: element.assetType,
-      defaultThumbnail: element.defaultThumbnail?.accept(this),
+      defaultThumbnails: element.defaultThumbnails.map(d => d.accept(this)),
     };
   }
 

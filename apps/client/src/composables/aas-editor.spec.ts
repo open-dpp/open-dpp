@@ -103,7 +103,7 @@ describe("aasEditor composable", () => {
     displayName: [{ language: "de", text: "Mein AAS" }, { language: "en", text: "My AAS" }],
     description: [],
     embeddedDataSpecifications: [],
-    assetInformation: { assetKind: AssetKind.Instance, specificAssetIds: [] },
+    assetInformation: { assetKind: AssetKind.Instance, specificAssetIds: [], defaultThumbnails: [] },
     extensions: [],
     submodels: [
       {

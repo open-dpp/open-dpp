@@ -8,5 +8,5 @@ export const AssetInformationJsonSchema = z.object({
   globalAssetId: z.nullish(z.string()),
   specificAssetIds: SpecificAssetIdJsonSchema.array().default([]),
   assetType: z.nullish(z.string()),
-  defaultThumbnail: z.nullish(ResourceJsonSchema),
+  defaultThumbnails: ResourceJsonSchema.array().default([]),
 })
