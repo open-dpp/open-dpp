@@ -90,7 +90,7 @@ describe("<View />", () => {
   it("renders sections at root level and navigates to row 1 entry", async () => {
     cy.intercept("GET", apiPath, {
       statusCode: 200,
-      body: productPassport,
+      body: { passport: productPassport },
     }).as("getProductPassport");
     cy.wrap(router.push(`/presentation/${uuid}`));
     cy.mountWithPinia(View, { router });
@@ -124,7 +124,7 @@ describe("<View />", () => {
   it("renders sub sections and navigates to one of them", async () => {
     cy.intercept("GET", apiPath, {
       statusCode: 200,
-      body: productPassport,
+      body: { passport: productPassport },
     }).as("getProductPassport");
     cy.wrap(router.push(`/presentation/${uuid}`));
     cy.mountWithPinia(View, { router });
@@ -144,7 +144,7 @@ describe("<View />", () => {
   it("renders sub sections in table and navigates to one of them", async () => {
     cy.intercept("GET", apiPath, {
       statusCode: 200,
-      body: productPassport,
+      body: { passport: productPassport },
     }).as("getProductPassport");
     cy.viewport(1920, 1080);
 
@@ -165,7 +165,7 @@ describe("<View />", () => {
   it("renders specific row of repeatable section", async () => {
     cy.intercept("GET", apiPath, {
       statusCode: 200,
-      body: productPassport,
+      body: { passport: productPassport },
     }).as("getProductPassport");
     cy.wrap(router.push(`/presentation/${uuid}?sectionId=${dataSection2.id}&row=1`));
     cy.mountWithPinia(View, { router });
@@ -184,11 +184,11 @@ describe("<View />", () => {
   it("renders repeatable section for large displays and navigates to other passport", async () => {
     cy.intercept("GET", apiPath, {
       statusCode: 200,
-      body: productPassport,
+      body: { passport: productPassport },
     }).as("getProductPassport");
     cy.intercept("GET", `${API_URL}/product-passports/${otherProductPassport.id}`, {
       statusCode: 200,
-      body: otherProductPassport,
+      body: { passport: otherProductPassport },
     }).as("getOtherProductPassport");
     cy.viewport(1920, 1080);
     cy.wrap(router.push(`/presentation/${uuid}`));
@@ -218,7 +218,7 @@ describe("<View />", () => {
   it("renders sidebar for root level and navigate to section and back", async () => {
     cy.intercept("GET", apiPath, {
       statusCode: 200,
-      body: productPassport,
+      body: { passport: productPassport },
     }).as("getProductPassport");
     cy.wrap(router.push(`/presentation/${uuid}`));
     cy.mountWithPinia(View, { router });

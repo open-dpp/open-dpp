@@ -36,7 +36,6 @@ export const useAiAgentStore = defineStore("socket", () => {
       socket.value = io(AGENT_WEBSOCKET_URL, {
         autoConnect: true,
         path: "/api/ai-socket",
-        port: 5002,
       });
     }
     else if (!socket.value.connected) {
@@ -109,7 +108,7 @@ export const useAiAgentStore = defineStore("socket", () => {
     if (socket.value && !isLastMessagePendingFromBot.value) {
       socket.value.emit("userMessage", {
         msg,
-        passportUUID: route.params.permalink,
+        uniqueProductIdentifierUuid: route.params.permalink,
       });
       messages.value.push({
         id: Date.now(),

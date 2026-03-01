@@ -28,7 +28,7 @@ export class ChatGateway {
   @AllowAnonymous()
   @SubscribeMessage("userMessage")
   async handleMessage(
-    @MessageBody() message: { msg: string; passportUUID: string },
+    @MessageBody() message: { msg: string; uniqueProductIdentifierUuid: string },
     @ConnectedSocket() client: Socket,
   ) {
     const startTime = Date.now();
@@ -37,7 +37,7 @@ export class ChatGateway {
     try {
       const reply = await this.chatService.askAgent(
         message.msg,
-        message.passportUUID,
+        message.uniqueProductIdentifierUuid,
       );
       client.emit("botMessage", reply);
       const endTime = Date.now();

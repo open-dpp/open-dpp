@@ -6,6 +6,7 @@ import type {
   LanguageType,
   PagingParamsDto,
   PropertyRequestDto,
+  ReferenceElementRequestDto,
   SubmodelElementCollectionRequestDto,
   SubmodelElementListRequestDto,
   SubmodelElementModificationDto,
@@ -28,6 +29,7 @@ import {
   AasSubmodelElements,
 
   AasSubmodelElementsEnum,
+
   DataTypeDef,
   KeyTypes,
   PropertyJsonSchema,
@@ -40,7 +42,10 @@ import { omit } from "lodash";
 import { ref, toRaw } from "vue";
 import { z } from "zod";
 import { HTTPCode } from "../stores/http-codes.ts";
-import { EditorMode, useAasDrawer } from "./aas-drawer.ts";
+import {
+  EditorMode,
+  useAasDrawer,
+} from "./aas-drawer.ts";
 import { usePagination } from "./pagination.ts";
 
 interface AasEditorProps {
@@ -269,6 +274,9 @@ export function useAasEditor({
     if (submodelBase.modelType === AasSubmodelElements.SubmodelElementList) {
       return translate(`${translatePrefix}.submodelElementList`);
     }
+    if (submodelBase.modelType === AasSubmodelElements.ReferenceElement) {
+      return translate(`${translatePrefix}.link`);
+    }
     if (submodelBase.modelType === AasSubmodelElements.File) {
       return translate(`${translatePrefix}.file`);
     }
@@ -345,6 +353,20 @@ export function useAasEditor({
             title: translate(`${translatePrefix}.file`),
             path,
             callback: async (data: FileRequestDto) => createFile(path, data),
+          });
+        },
+      },
+      {
+        label: translate(`${translatePrefix}.link`),
+        icon: "pi pi-link",
+        command: (_event: MenuItemCommandEvent) => {
+          drawer.openDrawer({
+            type: AasSubmodelElements.ReferenceElement,
+            data: {},
+            mode: EditorMode.CREATE,
+            title: translate(`${translatePrefix}.link`),
+            path,
+            callback: async (data: any) => createLink(path, data),
           });
         },
       },
@@ -475,6 +497,10 @@ export function useAasEditor({
 
   async function createSubmodelElementCollection(path: AasEditorPath, data: SubmodelElementCollectionRequestDto) {
     await createSubmodelElement(path, { modelType: AasSubmodelElements.SubmodelElementCollection, ...data }, "submodelElementCollection");
+  }
+
+  async function createLink(path: AasEditorPath, data: ReferenceElementRequestDto) {
+    await createSubmodelElement(path, { ...data, modelType: AasSubmodelElements.ReferenceElement }, "link");
   }
 
   async function createFile(path: AasEditorPath, data: FileRequestDto) {

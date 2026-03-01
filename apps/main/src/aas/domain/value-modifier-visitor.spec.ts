@@ -1,8 +1,11 @@
-import { AasSubmodelElements, DataTypeDef } from "@open-dpp/dto";
+import { AasSubmodelElements, DataTypeDef, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
+import { Key } from "./common/key";
 import { LanguageText } from "./common/language-text";
+import { Reference } from "./common/reference";
 import { File } from "./submodel-base/file";
 import { MultiLanguageProperty } from "./submodel-base/multi-language-property";
 import { Property } from "./submodel-base/property";
+import { ReferenceElement } from "./submodel-base/reference-element";
 import { registerSubmodelElementClasses } from "./submodel-base/register-submodel-element-classes";
 import { Submodel } from "./submodel-base/submodel";
 import { IdShortPath } from "./submodel-base/submodel-base";
@@ -47,6 +50,39 @@ describe("value modifier visitor", () => {
     submodel.modifyValueOfSubmodelElement(modifications, IdShortPath.create({ path: "file" }));
     expect(file.value).toBeNull();
     expect(file.contentType).toEqual("image/jpeg");
+  });
+
+  it("should modify value of reference element", () => {
+    const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames });
+    const referenceElement = ReferenceElement.create({
+      idShort: "ref",
+      displayName: existingDisplayNames,
+      value: Reference.create({
+        type: ReferenceTypes.ExternalReference,
+        keys: [
+          Key.create({
+            type: KeyTypes.GlobalReference,
+            value: "https://example.com/ref/1234567890",
+          }),
+        ],
+      }),
+    });
+    const path = IdShortPath.create({ path: "ref" });
+    submodel.addSubmodelElement(referenceElement);
+    let modifications: any = { keys: [{ type: KeyTypes.GlobalReference, value: "https://example.com/ref/other" }] };
+    submodel.modifyValueOfSubmodelElement(modifications, path);
+
+    modifications = { type: ReferenceTypes.ModelReference, keys: [{ type: KeyTypes.AssetAdministrationShell, value: "https://example.com/ref/other" }] };
+    submodel.modifyValueOfSubmodelElement(modifications, path);
+    // Undefined value should not change reference element value
+    submodel.modifyValueOfSubmodelElement(undefined, path);
+    expect(referenceElement.value?.type).toEqual(ReferenceTypes.ModelReference);
+    expect(referenceElement.value?.keys[0].type).toEqual(KeyTypes.AssetAdministrationShell);
+    expect(referenceElement.value?.keys[0].value).toEqual("https://example.com/ref/other");
+
+    modifications = null;
+    submodel.modifyValueOfSubmodelElement(modifications, path);
+    expect(referenceElement.value).toBeNull();
   });
 
   it("should modify value of submodel element list", () => {

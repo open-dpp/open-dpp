@@ -11,6 +11,9 @@ export default defineConfig({
     setupFiles: "./setupTest.ts",
     environment: "jsdom",
   },
+  ssr: {
+    noExternal: ["zod-vue-i18n"],
+  },
   resolve: {
     alias: [
       {

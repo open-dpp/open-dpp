@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import Toast from "primevue/toast";
 import { computed, defineAsyncComponent } from "vue";
 import { useRoute } from "vue-router";
 import ModalDialog from "./components/ModalDialog.vue";
@@ -29,4 +30,5 @@ const layout = computed(() => {
   <SafelistTailwindCss key="safelist" />
   <component :is="layout" key="layout" />
   <ModalDialog key="model-dialog" />
+  <Toast />
 </template>

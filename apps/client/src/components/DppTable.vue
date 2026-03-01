@@ -30,12 +30,11 @@ dayjs.extend(localizedFormat);
 
 const route = useRoute();
 const router = useRouter();
-
-async function editItem(id: string) {
-  await router.push(`${route.path}/${id}`);
-}
-
 const { t } = useI18n();
+
+async function editItem(item: SharedDppDto) {
+  await router.push(`${route.path}/${item.id}`);
+}
 </script>
 
 <template>
@@ -50,7 +49,11 @@ const { t } = useI18n();
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
         <span class="text-xl font-bold">{{ props.title }}</span>
-        <Button :label="t('common.add')" @click="emits('create')" />
+        <div class="flex items-center gap-2">
+          <slot name="headerActions">
+            <Button :label="t('common.add')" @click="emits('create')" />
+          </slot>
+        </div>
       </div>
     </template>
     <Column field="id" header="Id" />
@@ -75,7 +78,9 @@ const { t } = useI18n();
             <Button
               icon="pi pi-pencil"
               severity="primary"
-              @click="editItem(data.id)"
+              :aria-label="t('common.edit')"
+              :title="t('common.edit')"
+              @click="editItem(data)"
             />
           </slot>
         </div>

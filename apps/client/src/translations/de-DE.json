@@ -12,6 +12,7 @@
     "edit": "Editieren",
     "qrCode": "QR-Code",
     "add": "Hinzufügen",
+    "import": "Importieren",
     "change": "Ändern",
     "save": "Speichern",
     "create": "Erstellen",
@@ -28,9 +29,15 @@
     "call": "Aufrufen",
     "website": "Website",
     "contact": "Kontakt",
-    "failed": "fehlgeschlagen",
+    "openPresentation": "Präsentation öffnen",
+    "openChat": "Chat öffnen",
+    "exportPassport": "Produktpass exportieren",
+    "exportFailed": "Produktpass konnte nicht exportiert werden.",
+    "importFailed": "Produktpass konnte nicht importiert werden.",
+    "importSuccess": "Produktpass erfolgreich importiert.",
     "errorOccurred": "Ein Fehler ist aufgetreten",
     "unknownErrorOccurred": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+    "failed": "fehlgeschlagen",
     "toHome": "Zur Startseite",
     "home": "Startseite",
     "backTo": "Zurück zu { link }",
@@ -76,6 +83,7 @@
       "errorRemoveRow": "@:common.remove der @:aasEditor.table.row @:common.failed",
       "errorEditEntries": "@:common.edit der @:aasEditor.table.entries @:common.failed"
     },
+    "link": "Link",
     "errorLoadingSubmodels": "Laden der Abschnitte @.lower:common.failed",
     "addSubmodel": "Abschnitt hinzufügen",
     "submodelElementCollection": "Unterabschnitt",
@@ -537,6 +545,14 @@
         "AI_TOKEN_QUOTA": "Limit von {limit} Tokens pro Monat ist erreicht."
       }
     }
+  },
+  "dpp": {
+    "forwardToPresentation": "Zur Präsentation weiterleiten",
+    "forwardToPresentationError": "Präsentation konnte nicht geöffnet werden.",
+    "forwardToPresentationError404": "Präsentation oder Produktpass wurde nicht gefunden.",
+    "forwardToPresentationError403": "Sie haben keine Berechtigung, diese Präsentation zu öffnen.",
+    "forwardToPresentationErrorNetwork": "Netzwerkfehler. Bitte prüfen Sie Ihre Verbindung.",
+    "openPresentationChat": "KI-Chat öffnen"
   },
   "presentation": {
     "productDetails": "Produktdetails",

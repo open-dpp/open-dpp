@@ -23,10 +23,14 @@ export const MEDIA_SERVICE_URL = API_URL; // import.meta.env.VITE_MEDIA_SERVICE_
 export const AGENT_SERVER_URL = API_URL;
 export const ANALYTICS_URL = API_URL;
 
-export const AGENT_WEBSOCKET_URL = API_URL.substring(
-  0,
-  API_URL.lastIndexOf("/"),
-);
+export const AGENT_WEBSOCKET_URL = (() => {
+  try {
+    return new URL(API_URL, typeof window !== "undefined" ? window.location.origin : undefined).origin;
+  }
+  catch {
+    return API_URL;
+  }
+})();
 // local storage keys
 const LOCAL_STORAGE_PREFIX = "open-dpp-local";
 export const LAST_SELECTED_ORGANIZATION_ID_KEY = `${LOCAL_STORAGE_PREFIX}-last-selected-organization-id`;

@@ -20,7 +20,7 @@ export class ReferenceElement implements ISubmodelElement {
     public readonly supplementalSemanticIds: Array<Reference>,
     public readonly qualifiers: Qualifier[],
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
-    public readonly value: Reference | null = null,
+    public value: Reference | null = null,
   ) {
   }
 

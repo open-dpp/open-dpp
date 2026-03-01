@@ -7,8 +7,8 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { EditorMode } from "../../composables/aas-drawer.ts";
 import LanguageSelect from "../basics/LanguageSelect.vue";
+import TextFieldWithValidation from "../basics/TextFieldWithValidation.vue";
 import IdField from "./form/IdField.vue";
-import PropertyValueField from "./form/PropertyValueField.vue";
 
 const props = defineProps<{ showErrors: boolean; errors: FormErrors<any>; editorMode: EditorModeType }>();
 
@@ -57,11 +57,11 @@ const {
           <LanguageSelect
             v-model="field.value.language"
           />
-          <PropertyValueField
-            :id="`displayName.${index}.text`"
+          <TextFieldWithValidation
+            :id="`displayName-${index}`"
             v-model="field.value.text"
             label="Name"
-            :show-error="props.showErrors"
+            :show-errors="props.showErrors"
             :error="props.errors[`displayName[${index}].text`]"
           />
           <Button

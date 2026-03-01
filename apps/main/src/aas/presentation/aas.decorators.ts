@@ -34,9 +34,9 @@ export function ApiGetSubmodels(prefix?: string) {
   );
 }
 
-export function ApiPostSubmodel() {
+export function ApiPostSubmodel(prefix?: string) {
   return applyDecorators(
-    Post(ApiSubmodelsPath),
+    Post(withPrefix(ApiSubmodelsPath, prefix)),
   );
 }
 
@@ -47,16 +47,16 @@ export function ApiGetSubmodelById(prefix?: string) {
   );
 }
 
-export function ApiDeleteSubmodelById() {
+export function ApiDeleteSubmodelById(prefix?: string) {
   return applyDecorators(
-    Delete(ApiGetSubmodelByIdPath),
+    Delete(withPrefix(ApiGetSubmodelByIdPath, prefix)),
     HttpCode(204), // Explicitly state the HTTP status code
   );
 }
 
-export function ApiPatchSubmodel() {
+export function ApiPatchSubmodel(prefix?: string) {
   return applyDecorators(
-    Patch(ApiGetSubmodelByIdPath),
+    Patch(withPrefix(ApiGetSubmodelByIdPath, prefix)),
   );
 }
 
@@ -74,9 +74,9 @@ export function ApiGetSubmodelElements(prefix?: string) {
   );
 }
 
-export function ApiPostSubmodelElement() {
+export function ApiPostSubmodelElement(prefix?: string) {
   return applyDecorators(
-    Post(ApiSubmodelElementsPath),
+    Post(withPrefix(ApiSubmodelElementsPath, prefix)),
   );
 }
 
@@ -87,58 +87,58 @@ export function ApiGetSubmodelElementById(prefix?: string) {
   );
 }
 
-export function ApiDeleteSubmodelElementById() {
+export function ApiDeleteSubmodelElementById(prefix?: string) {
   return applyDecorators(
-    Delete(ApiGetSubmodelElementByIdPath),
+    Delete(withPrefix(ApiGetSubmodelElementByIdPath, prefix)),
     DeleteHttpCode,
   );
 }
 
-export function ApiPatchSubmodelElement() {
+export function ApiPatchSubmodelElement(prefix?: string) {
   return applyDecorators(
-    Patch(ApiGetSubmodelElementByIdPath),
+    Patch(withPrefix(ApiGetSubmodelElementByIdPath, prefix)),
   );
 }
 
-export function ApiPostSubmodelElementAtIdShortPath() {
+export function ApiPostSubmodelElementAtIdShortPath(prefix?: string) {
   return applyDecorators(
-    Post(ApiGetSubmodelElementByIdPath),
+    Post(withPrefix(ApiGetSubmodelElementByIdPath, prefix)),
   );
 }
 export const ApiPostColumnPath = `${ApiGetSubmodelElementByIdPath}/columns`;
 
-export function ApiPostColumn() {
+export function ApiPostColumn(prefix?: string) {
   return applyDecorators(
-    Post(ApiPostColumnPath),
+    Post(withPrefix(ApiPostColumnPath, prefix)),
   );
 }
 
 export const ApiGetColumnByIdShortPath = `${ApiPostColumnPath}/:idShortOfColumn`;
 
-export function ApiDeleteColumn() {
+export function ApiDeleteColumn(prefix?: string) {
   return applyDecorators(
-    Delete(ApiGetColumnByIdShortPath),
+    Delete(withPrefix(ApiGetColumnByIdShortPath, prefix)),
   );
 }
 
-export function ApiPatchColumn() {
+export function ApiPatchColumn(prefix?: string) {
   return applyDecorators(
-    Patch(ApiGetColumnByIdShortPath),
+    Patch(withPrefix(ApiGetColumnByIdShortPath, prefix)),
   );
 }
 
 export const ApiPostRowPath = `${ApiGetSubmodelElementByIdPath}/rows`;
 
-export function ApiPostRow() {
+export function ApiPostRow(prefix?: string) {
   return applyDecorators(
-    Post(ApiPostRowPath),
+    Post(withPrefix(ApiPostRowPath, prefix)),
   );
 }
 
 export const ApiDeleteRowPath = `${ApiPostRowPath}/:idShortOfRow`;
-export function ApiDeleteRow() {
+export function ApiDeleteRow(prefix?: string) {
   return applyDecorators(
-    Delete(ApiDeleteRowPath),
+    Delete(withPrefix(ApiDeleteRowPath, prefix)),
   );
 }
 
@@ -149,9 +149,9 @@ export function ApiGetSubmodelElementValue(prefix?: string) {
   );
 }
 
-export function ApiPatchSubmodelElementValue() {
+export function ApiPatchSubmodelElementValue(prefix?: string) {
   return applyDecorators(
-    Patch(ApiGetSubmodelElementValuePath),
+    Patch(withPrefix(ApiGetSubmodelElementValuePath, prefix)),
   );
 }
 

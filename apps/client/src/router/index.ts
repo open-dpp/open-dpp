@@ -23,8 +23,7 @@ export const routes: RouteRecordRaw[] = [
 
       if (org) {
         return `/organizations/${indexStore.selectedOrganization}/models`;
-      }
-      else {
+      } else {
         return "/organizations"; // fallback
       }
     },
@@ -82,7 +81,8 @@ export const routes: RouteRecordRaw[] = [
     path: "/accept-invitation/:id",
     name: "AcceptInvitationToOrganization",
     props: true,
-    component: () => import("../view/organizations/AcceptInviteToOrganizationView.vue"),
+    component: () =>
+      import("../view/organizations/AcceptInviteToOrganizationView.vue"),
     meta: {
       layout: "default",
       public: false,
@@ -101,13 +101,13 @@ export const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
-    if (savedPosition) return savedPosition
+    if (savedPosition) return savedPosition;
     if (to.hash) {
-      return { el: to.hash, behavior: "smooth", top: 150}
+      return { el: to.hash, behavior: "smooth", top: 150 };
     }
 
-    return { top: 0 }
-  }
+    return { top: 0 };
+  },
 });
 
 router.beforeEach(async (to, from, next) => {
@@ -126,7 +126,9 @@ router.beforeEach(async (to, from, next) => {
     return;
   }
   if (!isSignedIn && !to.meta?.public) {
-    const fullRedirectUrl = encodeURIComponent(window.location.origin + to.fullPath);
+    const fullRedirectUrl = encodeURIComponent(
+      window.location.origin + to.fullPath,
+    );
     next({
       name: "Signin",
       query: {
@@ -140,7 +142,9 @@ router.beforeEach(async (to, from, next) => {
   const indexStore = useIndexStore();
   const paramOrganizationId = to.params.organizationId;
   if (paramOrganizationId) {
-    const organization = organizationStore.organizations.find(o => o.id === paramOrganizationId);
+    const organization = organizationStore.organizations.find(
+      (o) => o.id === paramOrganizationId,
+    );
     if (!organization) {
       next("/organizations");
       indexStore.selectOrganization(null);

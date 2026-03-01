@@ -6,3 +6,5 @@ export const KeyJsonSchema = z.object({
   type: KeyTypesEnum,
   value: z.string(),
 })
+
+export const KeyModificationSchema = KeyJsonSchema

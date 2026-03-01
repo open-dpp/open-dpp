@@ -5,6 +5,7 @@ import type { EditorModeType } from "../../composables/aas-drawer.ts";
 import { Message } from "primevue";
 import { useField } from "vee-validate";
 
+import { useI18n } from "vue-i18n";
 import FileField from "./form/FileField.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
@@ -15,6 +16,7 @@ const props = defineProps<{
 }>();
 
 const { value, errorMessage } = useField<string | undefined>("value");
+const { t } = useI18n();
 
 const { value: contentType } = useField<string | undefined>("contentType");
 </script>
@@ -28,6 +30,9 @@ const { value: contentType } = useField<string | undefined>("contentType");
     />
     <div class="grid lg:grid-cols-3 grid-cols-1 gap-2">
       <div class="flex flex-col gap-2">
+        <span class="text-xl font-bold">{{
+          t("aasEditor.formLabels.value")
+        }}</span>
         <FileField v-model="value" v-model:content-type="contentType" />
         <Message
           v-if="errorMessage"

@@ -10,7 +10,7 @@ import type {
   ValueRequestDto,
 } from "@open-dpp/dto";
 import type express from "express";
-import { BadRequestException, Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Post } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
   AssetKind,
@@ -78,7 +78,20 @@ import {
   UniqueProductIdentifierService,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { Passport } from "../domain/passport";
+
 import { PassportRepository } from "../infrastructure/passport.repository";
+import z from "zod";
+import { PassportService } from "../application/services/passport.service";
+
+const ExpandedPassportDtoSchema = PassportDtoSchema.extend({
+  environment: z.object({
+    assetAdministrationShells: z.array(z.record(z.string(), z.any())),
+    submodels: z.array(z.record(z.string(), z.any())),
+    conceptDescriptions: z.array(z.string()).default([]),
+  }),
+});
+
+type ExpandedPassportDto = z.infer<typeof ExpandedPassportDtoSchema>;
 
 @Controller("/passports")
 export class PassportController implements IAasReadEndpoints, IAasCreateEndpoints, IAasModifyEndpoints, IAasDeleteEndpoints {
@@ -87,6 +100,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     private readonly passportRepository: PassportRepository,
     private readonly templateRepository: TemplateRepository,
     private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
+    private readonly passportService: PassportService,
   ) {
   }
 
@@ -112,6 +126,21 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     @Param("passportId") id: string,
   ): Promise<PassportDto> {
     return PassportDtoSchema.parse((await this.passportRepository.findOneOrFail(id)).toPlain());
+  }
+
+  @Get(":id/unique-product-identifier")
+  async getUniqueProductIdentifierOfPassport(
+    @IdParam() id: string,
+    @AuthSession() session: Session,
+  ): Promise<{ uuid: string }> {
+    await this.loadPassportAndCheckOwnership(id, session);
+    const upi = await this.uniqueProductIdentifierService.findOneByReferencedId(id);
+    if (!upi) {
+      throw new NotFoundException(
+        `No UniqueProductIdentifier found for passport ${id}`,
+      );
+    }
+    return { uuid: upi.uuid };
   }
 
   @Post()
@@ -372,6 +401,35 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
   ): Promise<ValueResponseDto> {
     const passport = await this.loadPassportAndCheckOwnership(id, session);
     return await this.environmentService.getSubmodelElementValue(passport.getEnvironment(), submodelId, idShortPath);
+  }
+
+  @Get("/:id/export")
+  async exportPassport(
+    @IdParam() id: string,
+    @AuthSession() session: Session,
+  ): Promise<any> {
+    const passport = await this.loadPassportAndCheckOwnership(id, session);
+    return await this.passportService.exportPassport(passport.id);
+  }
+
+  @Post("/import")
+  async importPassport(
+    @Body(new ZodValidationPipe(ExpandedPassportDtoSchema)) body: ExpandedPassportDto,
+    @AuthSession() session: Session,
+  ): Promise<PassportDto> {
+    const activeOrganizationId = session.activeOrganizationId;
+    if (!activeOrganizationId) {
+      throw new BadRequestException("activeOrganizationId is required in session");
+    }
+    const payload = {
+      ...body,
+      organizationId: activeOrganizationId,
+      createdAt: new Date(body.createdAt),
+      updatedAt: new Date(body.updatedAt),
+    };
+
+    const passport = await this.passportService.importPassport(payload);
+    return PassportDtoSchema.parse(passport.toPlain());
   }
 
   private async loadPassportAndCheckOwnership(id: string, session: Session): Promise<Passport> {
