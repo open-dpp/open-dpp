@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { LanguageTextDto, SharedDppDto } from "@open-dpp/dto";
+import type { SharedDppDto } from "@open-dpp/dto";
 import type { Page } from "../composables/pagination.ts";
 import { AxiosError } from "axios";
 import dayjs from "dayjs";
@@ -10,6 +10,7 @@ import { useToast } from "primevue/usetoast";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
+import { useAasUtils } from "../composables/aas-utils.ts";
 import axiosIns from "../lib/axios.ts";
 import { useErrorHandlingStore } from "../stores/error.handling.ts";
 import { convertLocaleToLanguage } from "../translations/i18n.ts";
@@ -38,6 +39,7 @@ dayjs.extend(localizedFormat);
 const route = useRoute();
 const router = useRouter();
 const { t, locale } = useI18n();
+const { parseDisplayNameFromEnvironment } = useAasUtils({ translate: t, selectedLanguage: convertLocaleToLanguage(locale.value) });
 const toast = useToast();
 const errorHandlingStore = useErrorHandlingStore();
 
@@ -193,12 +195,7 @@ async function handleFileUpload(event: Event) {
     <Column field="environment" header="Name">
       <template #body="slotProps">
         <p>
-          {{
-            slotProps.data.environment.assetAdministrationShells[0].displayName.find(
-              (d: LanguageTextDto) =>
-                d.language === convertLocaleToLanguage(locale),
-            )?.text
-          }}
+          {{ parseDisplayNameFromEnvironment(slotProps.data.environment) }}
         </p>
       </template>
     </Column>

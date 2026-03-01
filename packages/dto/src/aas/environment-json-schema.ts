@@ -12,3 +12,5 @@ export const ExtendedEnvironmentJsonSchema = z.object({
   submodels: z.string().array(),
   conceptDescriptions: z.string().array(),
 })
+
+export type ExtendedEnvironmentResponseDto = z.infer<typeof ExtendedEnvironmentJsonSchema>
