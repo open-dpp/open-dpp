@@ -23,7 +23,7 @@ export class TemplatesNamespace {
       {
         params,
         paramsSerializer: {
-          indexes: null, // no brackets at all
+          indexes: null, // {populate: ['assetAdministrationShell', 'submodels']} is converted to query params ?populate=assetAdministrationShell&populate=submodels
         },
       },
     )

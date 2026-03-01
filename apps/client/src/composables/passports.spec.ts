@@ -1,4 +1,4 @@
-import { Language } from "@open-dpp/dto";
+import { Language, Populates } from "@open-dpp/dto";
 import { passportsPlainFactory } from "@open-dpp/testing";
 import { createPinia, setActivePinia } from "pinia";
 import { expect, it, vi } from "vitest";
@@ -74,7 +74,11 @@ describe("passports", () => {
     const passportsResponse = { paging_metadata: { cursor: p1.id }, result: [p1] };
     mocks.fetchPassports.mockResolvedValueOnce({ data: passportsResponse });
     await init();
-    expect(mocks.fetchPassports).toHaveBeenCalledWith({ limit: 10, cursor: undefined });
+    expect(mocks.fetchPassports).toHaveBeenCalledWith({
+      limit: 10,
+      cursor: undefined,
+      populate: [Populates.assetAdministrationShells],
+    });
     expect(passports.value).toEqual(passportsResponse);
   });
 });

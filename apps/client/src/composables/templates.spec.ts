@@ -1,7 +1,8 @@
-import type {
-  LanguageTextDto,
-  PagingParamsDto,
-  TemplateDto,
+import type { LanguageTextDto, PagingParamsDto, TemplateDto } from "@open-dpp/dto";
+import {
+
+  Populates,
+
 } from "@open-dpp/dto";
 import { templatesPlainFactory } from "@open-dpp/testing";
 import { createPinia, setActivePinia } from "pinia";
@@ -71,7 +72,9 @@ describe("templates", () => {
     const templatesResponse = { paging_metadata: { cursor: t1.id }, result: [t1] };
     mocks.fetchTemplates.mockResolvedValueOnce({ data: templatesResponse });
     await init();
-    expect(mocks.fetchTemplates).toHaveBeenCalledWith({ limit: 10, cursor: undefined });
+    expect(mocks.fetchTemplates).toHaveBeenCalledWith({ limit: 10, cursor: undefined, populate: [
+      Populates.assetAdministrationShells,
+    ] });
     expect(templates.value).toEqual(templatesResponse);
   });
 
@@ -86,10 +89,16 @@ describe("templates", () => {
     mocks.fetchTemplates.mockImplementation(({ cursor }: PagingParamsDto) => cursor === undefined ? { data: firstBlock } : { data: secondBlock });
     await init();
     await nextPage();
-    expect(mocks.fetchTemplates).toHaveBeenCalledWith({ limit: 10, cursor: templatesResponse[9]?.id });
+    expect(mocks.fetchTemplates).toHaveBeenCalledWith({ limit: 10, cursor: templatesResponse[9]?.id, populate: [
+      Populates.assetAdministrationShells,
+    ] });
     expect(templates.value).toEqual(secondBlock);
     await previousPage();
-    expect(mocks.fetchTemplates).toHaveBeenCalledWith({ limit: 10, cursor: undefined });
+    expect(mocks.fetchTemplates).toHaveBeenCalledWith({
+      limit: 10,
+      cursor: undefined,
+      populate: [Populates.assetAdministrationShells],
+    });
     expect(templates.value).toEqual(firstBlock);
   });
 });

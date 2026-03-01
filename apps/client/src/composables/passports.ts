@@ -1,10 +1,9 @@
-import type {
-  LanguageTextDto,
-  PagingParamsDto,
-  PassportPaginationDto,
-  PassportRequestCreateDto,
-} from "@open-dpp/dto";
+import type { LanguageTextDto, PagingParamsDto, PassportPaginationDto, PassportRequestCreateDto } from "@open-dpp/dto";
 import type { PagingResult } from "./pagination.ts";
+import {
+
+  Populates,
+} from "@open-dpp/dto";
 import { match, P } from "ts-pattern";
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -25,7 +24,10 @@ export function usePassports({ changeQueryParams, initialCursor }: PassportProps
 
   const fetchPassports = async (pagingParams: PagingParamsDto): Promise<PagingResult> => {
     loading.value = true;
-    const response = await apiClient.dpp.passports.getAll(pagingParams);
+    const response = await apiClient.dpp.passports.getAll({
+      ...pagingParams,
+      populate: [Populates.assetAdministrationShells],
+    });
     passports.value = response.data;
     loading.value = false;
     return response.data;

@@ -19,7 +19,15 @@ export class PassportNamespace {
   }
 
   public async getAll(params: PagingParamsDto) {
-    return await this.axiosInstance.get<PassportPaginationDto>(this.passportEndpoint, { params })
+    return await this.axiosInstance.get<PassportPaginationDto>(
+      this.passportEndpoint,
+      {
+        params,
+        paramsSerializer: {
+          indexes: null, // {populate: ['assetAdministrationShell', 'submodels']} is converted to query params ?populate=assetAdministrationShell&populate=submodels
+        },
+      },
+    )
   }
 
   public async create(data: PassportRequestCreateDto): Promise<AxiosResponse<PassportDto>> {

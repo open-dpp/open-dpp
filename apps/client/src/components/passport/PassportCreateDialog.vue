@@ -4,8 +4,10 @@ import { Button, Dialog, RadioButton, Select } from "primevue";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
+import { useAasUtils } from "../../composables/aas-utils.ts";
 import { usePassports } from "../../composables/passports";
 import { useTemplates } from "../../composables/templates";
+import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 
 const route = useRoute();
 
@@ -21,8 +23,9 @@ const { createPassport } = usePassports({
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
 });
 
-const { t } = useI18n();
-const templateList = ref<TemplateDto[]>([]);
+const { t, locale } = useI18n();
+type TemplateOption = TemplateDto & { label: string };
+const templateList = ref<TemplateOption[]>([]);
 
 const visible = ref(false);
 const mode = ref<"blank" | "template">("blank");
@@ -33,9 +36,10 @@ function open() {
 }
 
 async function newPassport() {
-  const passportParams = mode.value === "template" && template.value
-    ? { templateId: template.value }
-    : { displayName: [] };
+  const passportParams
+    = mode.value === "template" && template.value
+      ? { templateId: template.value }
+      : { displayName: [] };
 
   const result = await createPassport(passportParams);
   if (result) {
@@ -47,7 +51,7 @@ async function loadMoreTemplates() {
   if (hasNext.value) {
     await nextPage();
     if (templates.value) {
-      templateList.value.push(...templates.value.result);
+      templateList.value.push(...templates.value.result.map(template => ({ ...template, label: getOptionLabel(template) })));
     }
   }
 }
@@ -69,9 +73,18 @@ defineExpose({
 onMounted(async () => {
   await init();
   if (templates.value) {
-    templateList.value.push(...templates.value.result);
+    templateList.value.push(...templates.value.result.map(template => ({ ...template, label: getOptionLabel(template) })));
   }
 });
+
+const { parseDisplayNameFromEnvironment } = useAasUtils({
+  translate: t,
+  selectedLanguage: convertLocaleToLanguage(locale.value),
+});
+function getOptionLabel(option: TemplateDto): string {
+  const displayName = parseDisplayNameFromEnvironment(option.environment);
+  return displayName !== t("common.untitled") ? displayName : option.id;
+}
 </script>
 
 <template>
@@ -109,7 +122,7 @@ onMounted(async () => {
         class="w-96"
         :options="templateList"
         option-value="id"
-        option-label="id"
+        option-label="label"
         :virtual-scroller-options="{
           itemSize: 40,
           lazy: true,
@@ -117,12 +130,7 @@ onMounted(async () => {
         }"
         :placeholder="t('passports.selectTemplate')"
         :disabled="loading || mode === 'blank'"
-      >
-        <!-- Render label safely without assuming a specific property -->
-        <template #option="{ option }">
-          {{ option.name ?? option.title ?? option.id }}
-        </template>
-      </Select>
+      />
     </div>
     <div class="flex justify-end gap-2">
       <Button type="button" severity="secondary" @click="close">
