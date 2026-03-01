@@ -69,7 +69,7 @@ export class TemplateService {
     await this.environmentService.persistImportedEnvironment(
       shells,
       submodels,
-      async options => { await this.templateRepository.save(newTemplate, options); },
+      async (options) => { await this.templateRepository.save(newTemplate, options); },
     );
 
     return newTemplate;

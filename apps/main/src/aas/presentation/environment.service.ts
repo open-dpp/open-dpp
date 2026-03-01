@@ -246,13 +246,15 @@ export class EnvironmentService {
     const shells: AssetAdministrationShell[] = [];
     for (const id of environment.assetAdministrationShells) {
       const shell = shellMap.get(id);
-      if (shell) shells.push(shell);
+      if (shell)
+        shells.push(shell);
     }
 
     const submodels: Submodel[] = [];
     for (const id of environment.submodels) {
       const submodel = submodelMap.get(id);
-      if (submodel) submodels.push(submodel);
+      if (submodel)
+        submodels.push(submodel);
     }
 
     return ExpandedEnvironment.fromLoaded(shells, submodels, environment.conceptDescriptions);

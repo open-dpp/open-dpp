@@ -95,7 +95,7 @@ export class PassportService {
     await this.environmentService.persistImportedEnvironment(
       shells,
       submodels,
-      async options => { await this.passportRepository.save(newPassport, options); },
+      async (options) => { await this.passportRepository.save(newPassport, options); },
     );
 
     return newPassport;

@@ -23,7 +23,7 @@ function createShell(id?: string, submodels: Submodel[] = []): AssetAdministrati
   return shell;
 }
 
-describe("ExpandedEnvironment", () => {
+describe("expandedEnvironment", () => {
   describe("empty", () => {
     it("should create an empty expanded environment", () => {
       const env = ExpandedEnvironment.empty();

@@ -1,5 +1,5 @@
-import { z, ZodError } from "zod";
 import { ValueError } from "@open-dpp/exception";
+import { z, ZodError } from "zod";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { Environment } from "./environment";
 import { Submodel } from "./submodel-base/submodel";
@@ -10,17 +10,17 @@ const ExpandedEnvironmentSchema = z.object({
   conceptDescriptions: z.array(z.string()).optional(),
 });
 
-export type ExpandedEnvironmentPlain = {
+export interface ExpandedEnvironmentPlain {
   assetAdministrationShells: Record<string, any>[];
   submodels: Record<string, any>[];
   conceptDescriptions: string[];
-};
+}
 
-export type CopiedEnvironment = {
+export interface CopiedEnvironment {
   environment: Environment;
   shells: AssetAdministrationShell[];
   submodels: Submodel[];
-};
+}
 
 export class ExpandedEnvironment {
   private constructor(
