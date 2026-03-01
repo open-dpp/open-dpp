@@ -176,7 +176,7 @@ async function handleTemplateFileUpload(event: Event) {
   try {
     const json = JSON.parse(await file.text());
     const response = await apiClient.dpp.templates.import(json);
-    await router.push(`/templates/${response.data.id}`);
+    await router.push(`${route.path}/${response.data.id}`);
   }
   catch (error) {
     console.error("Failed to import template", error);

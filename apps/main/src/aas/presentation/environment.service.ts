@@ -33,6 +33,7 @@ import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
+import { ExpandedEnvironment, ExpandedEnvironmentPlain } from "../domain/expanded-environment";
 
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath, ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
@@ -236,32 +237,52 @@ export class EnvironmentService {
     return ValueSchema.parse(submodel.getValueRepresentation(idShortPath));
   }
 
-  /**
-   * Resolves all shell and submodel IDs of an environment to full plain objects.
-   * Can be used to populate the environment of a passport or template.
-   * Missing IDs are skipped (no throw).
-   */
-  async getFullEnvironmentAsPlain(environment: Environment): Promise<{
-    assetAdministrationShells: Array<Record<string, unknown>>;
-    submodels: Array<Record<string, unknown>>;
-    conceptDescriptions: Array<string>;
-  }> {
-    const shellIds = environment.assetAdministrationShells;
-    const submodelIds = environment.submodels;
-
-    const [shellResults, submodelResults] = await Promise.all([
-      Promise.all(shellIds.map(id => this.aasRepository.findOne(id))),
-      Promise.all(submodelIds.map(id => this.submodelRepository.findOne(id))),
+  async loadExpandedEnvironment(environment: Environment): Promise<ExpandedEnvironment> {
+    const [shellMap, submodelMap] = await Promise.all([
+      this.aasRepository.findByIds(environment.assetAdministrationShells),
+      this.submodelRepository.findByIds(environment.submodels),
     ]);
 
-    const shells = shellResults.filter((aas): aas is AssetAdministrationShell => aas != null);
-    const submodels = submodelResults.filter((s): s is Submodel => s != null);
+    const shells: AssetAdministrationShell[] = [];
+    for (const id of environment.assetAdministrationShells) {
+      const shell = shellMap.get(id);
+      if (shell) shells.push(shell);
+    }
 
-    return {
-      assetAdministrationShells: shells.map(s => s.toPlain()),
-      submodels: submodels.map(s => s.toPlain()),
-      conceptDescriptions: environment.conceptDescriptions,
-    };
+    const submodels: Submodel[] = [];
+    for (const id of environment.submodels) {
+      const submodel = submodelMap.get(id);
+      if (submodel) submodels.push(submodel);
+    }
+
+    return ExpandedEnvironment.fromLoaded(shells, submodels, environment.conceptDescriptions);
+  }
+
+  async getFullEnvironmentAsPlain(environment: Environment): Promise<ExpandedEnvironmentPlain> {
+    const expanded = await this.loadExpandedEnvironment(environment);
+    return expanded.toPlain();
+  }
+
+  async persistImportedEnvironment(
+    shells: AssetAdministrationShell[],
+    submodels: Submodel[],
+    saveEntity: (options: DbSessionOptions) => Promise<void>,
+  ): Promise<void> {
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        for (const submodel of submodels) {
+          await this.submodelRepository.save(submodel, { session });
+        }
+        for (const shell of shells) {
+          await this.aasRepository.save(shell, { session });
+        }
+        await saveEntity({ session });
+      });
+    }
+    finally {
+      await session.endSession();
+    }
   }
 
   async copyEnvironment(environment: Environment): Promise<Environment> {

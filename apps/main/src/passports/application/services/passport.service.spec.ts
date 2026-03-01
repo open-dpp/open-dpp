@@ -8,9 +8,8 @@ import { AssetInformation } from "../../../aas/domain/asset-information";
 import { Key } from "../../../aas/domain/common/key";
 import { Reference } from "../../../aas/domain/common/reference";
 import { Environment } from "../../../aas/domain/environment";
+import { ExpandedEnvironment } from "../../../aas/domain/expanded-environment";
 import { Submodel } from "../../../aas/domain/submodel-base/submodel";
-import { AasRepository } from "../../../aas/infrastructure/aas.repository";
-import { SubmodelRepository } from "../../../aas/infrastructure/submodel.repository";
 import { EnvironmentService } from "../../../aas/presentation/environment.service";
 import { Passport } from "../../domain/passport";
 import { PassportRepository } from "../../infrastructure/passport.repository";
@@ -25,29 +24,16 @@ describe("passportService", () => {
     save: jest.fn(),
   };
 
-  const mockAasRepository = {
-    findOne: jest.fn(),
-    findByIds: jest.fn<() => Promise<Map<string, AssetAdministrationShell>>>(),
-    save: jest.fn(),
-  };
-
-  const mockSubmodelRepository = {
-    findOne: jest.fn(),
-    findByIds: jest.fn<() => Promise<Map<string, Submodel>>>(),
-    save: jest.fn(),
-  };
-
-  const mockSession = {
-    withTransaction: jest.fn((fn: () => Promise<void>) => fn()),
-    endSession: jest.fn(),
-  };
-
   const mockEnvironmentService = {
     getFullEnvironmentAsPlain: jest.fn(),
-  };
-
-  const mockConnection = {
-    startSession: jest.fn<() => Promise<typeof mockSession>>().mockResolvedValue(mockSession),
+    loadExpandedEnvironment: jest.fn<() => Promise<ExpandedEnvironment>>(),
+    persistImportedEnvironment: jest.fn<(
+      shells: AssetAdministrationShell[],
+      submodels: Submodel[],
+      saveEntity: (options: any) => Promise<void>,
+    ) => Promise<void>>().mockImplementation(async (_shells, _submodels, saveEntity) => {
+      await saveEntity({});
+    }),
   };
 
   beforeEach(async () => {
@@ -62,23 +48,15 @@ describe("passportService", () => {
           provide: EnvironmentService,
           useValue: mockEnvironmentService,
         },
-        {
-          provide: AasRepository,
-          useValue: mockAasRepository,
-        },
-        {
-          provide: SubmodelRepository,
-          useValue: mockSubmodelRepository,
-        },
-        {
-          provide: "DatabaseConnection",
-          useValue: mockConnection,
-        },
       ],
     }).compile();
 
     service = module.get<PassportService>(PassportService);
     jest.clearAllMocks();
+
+    mockEnvironmentService.persistImportedEnvironment.mockImplementation(
+      async (_shells, _submodels, saveEntity) => { await saveEntity({}); },
+    );
   });
 
   describe("exportPassport", () => {
@@ -109,8 +87,9 @@ describe("passportService", () => {
       });
 
       mockPassportRepository.findOneOrFail.mockResolvedValue(passport);
-      mockAasRepository.findByIds.mockResolvedValue(new Map([[aasId, aas]]));
-      mockSubmodelRepository.findByIds.mockResolvedValue(new Map([[submodelId, submodel]]));
+      mockEnvironmentService.loadExpandedEnvironment.mockResolvedValue(
+        ExpandedEnvironment.fromLoaded([aas], [submodel], []),
+      );
 
       const result = await service.exportPassport(passportId);
 
@@ -121,7 +100,7 @@ describe("passportService", () => {
       expect(result.environment.submodels[0].id).toBe(submodelId);
     });
 
-    it("should fallback to empty conceptDescriptions when passport environment is undefined", async () => {
+    it("should fallback to empty environment when passport environment is undefined", async () => {
       const passportId = randomUUID();
       const passportWithoutEnvironment = {
         id: passportId,
@@ -133,19 +112,18 @@ describe("passportService", () => {
       } as unknown as Passport;
 
       mockPassportRepository.findOneOrFail.mockResolvedValue(passportWithoutEnvironment);
-      jest.spyOn(service as any, "loadEnvironment").mockResolvedValue({ shells: [], submodels: [] });
 
       const result = await service.exportPassport(passportId);
 
       expect(result.environment.conceptDescriptions).toEqual([]);
       expect(result.environment.assetAdministrationShells).toEqual([]);
       expect(result.environment.submodels).toEqual([]);
+      expect(mockEnvironmentService.loadExpandedEnvironment).not.toHaveBeenCalled();
     });
   });
 
   describe("importPassport", () => {
     it("should import a passport and create new entities", async () => {
-      const passportId = randomUUID();
       const aasId = randomUUID();
       const submodelId = randomUUID();
 
@@ -166,7 +144,6 @@ describe("passportService", () => {
       }).toPlain();
 
       const exportData = {
-        id: passportId,
         organizationId: "org-1",
         templateId: null,
         environment: {
@@ -178,28 +155,25 @@ describe("passportService", () => {
         updatedAt: new Date(),
       };
 
-      const result = await service.importPassport(exportData as any);
+      const result = await service.importPassport(exportData);
 
       expect(result.organizationId).toBe("org-1");
       expect(result.environment.assetAdministrationShells).toHaveLength(1);
       expect(result.environment.submodels).toHaveLength(1);
 
-      // Verify IDs are different (regenerated)
       const newAasId = result.environment.assetAdministrationShells[0];
       const newSubmodelId = result.environment.submodels[0];
 
       expect(newAasId).not.toBe(aasId);
       expect(newSubmodelId).not.toBe(submodelId);
 
-      expect(mockSubmodelRepository.save).toHaveBeenCalledTimes(1);
-      expect(mockAasRepository.save).toHaveBeenCalledTimes(1);
+      expect(mockEnvironmentService.persistImportedEnvironment).toHaveBeenCalledTimes(1);
       expect(mockPassportRepository.save).toHaveBeenCalledTimes(1);
     });
 
     it("should throw BadRequestException if environment data is missing", async () => {
       const invalidData = {
         organizationId: "org-1",
-        // Missing environment
       };
 
       await expect(service.importPassport(invalidData as any)).rejects.toThrow(BadRequestException);
