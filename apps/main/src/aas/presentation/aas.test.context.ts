@@ -10,6 +10,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import {
   AasSubmodelElements,
   AssetAdministrationShellPaginationResponseDtoSchema,
+  AssetKind,
   KeyTypes,
   ReferenceTypes,
   SubmodelElementSchema,
@@ -39,11 +40,13 @@ import { AasModule } from "../aas.module";
 
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 
+import { AssetInformation } from "../domain/asset-information";
 import { Key } from "../domain/common/key";
+import { LanguageText } from "../domain/common/language-text";
 import { Reference } from "../domain/common/reference";
+
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { IPersistable } from "../domain/persistable";
-
 import { Property } from "../domain/submodel-base/property";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
@@ -142,6 +145,28 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toEqual(aas.id);
     expect(response.body.result).toEqual(AssetAdministrationShellPaginationResponseDtoSchema.shape.result.parse([aas.toPlain()]));
+  }
+
+  async function assertModifyShell(createEntity: CreateEntity, saveEntity: SaveEntity) {
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const entity = await createEntity(org.id);
+    const newAas = AssetAdministrationShell.create({
+      assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
+    });
+    await aasRepository.save(newAas);
+    entity.getEnvironment().addAssetAdministrationShell(newAas);
+    await saveEntity(entity);
+
+    const newDisplayName = [{ language: "en", text: "MyAAS" }];
+    const body = { displayName: newDisplayName };
+    const response = await request(app.getHttpServer())
+      .patch(`${basePath}/${entity.id}/shells/${btoa(newAas.id)}`)
+      .set("Cookie", userCookie)
+      .send(body);
+    expect(response.status).toEqual(200);
+    expect(response.body.displayName).toEqual(newDisplayName);
+    const found = await aasRepository.findOneOrFail(newAas.id);
+    expect(found.displayName).toEqual(newDisplayName.map(LanguageText.fromPlain));
   }
 
   async function assertGetSubmodels(createEntity: CreateEntity) {
@@ -675,6 +700,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     getModuleRef: () => moduleRef,
     asserts: {
       getShells: assertGetShells,
+      modifyShell: assertModifyShell,
       getSubmodels: assertGetSubmodels,
       getSubmodelById: assertGetSubmodelById,
       postSubmodel: assertPostSubmodel,

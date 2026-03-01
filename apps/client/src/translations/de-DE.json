@@ -3,6 +3,7 @@
     "required": "Erforderlich"
   },
   "common": {
+    "untitled": "Unbenannt",
     "id": "ID",
     "identification": "Identifikation",
     "name": "Name",
@@ -84,11 +85,12 @@
       "errorEditEntries": "@:common.edit der @:aasEditor.table.entries @:common.failed"
     },
     "link": "Link",
+    "errorLoading": "Laden @:common.failed",
     "errorLoadingSubmodels": "Laden der Abschnitte @.lower:common.failed",
     "addSubmodel": "Abschnitt hinzufügen",
     "submodelElementCollection": "Unterabschnitt",
     "edit": "{formItem} bearbeiten",
-    "submodel": "Abschnitt",
+    "submodel": "Abschnitt | Abschnitte",
     "removeSubmodel": "Soll der @:aasEditor.submodel wirklich entfernt werden?",
     "errorRemoveSubmodel": "@:common.remove des Abschnitts @:common.failed",
     "removeSubmodelElement": "Soll das Element wirklich entfernt werden?",
@@ -398,6 +400,7 @@
   },
   "templates": {
     "label": "Passvorlagen",
+    "create": "Neue Passvorlage erstellen",
     "createdAt": "Erstellt am",
     "updatedAt": "Aktualisiert am"
   },

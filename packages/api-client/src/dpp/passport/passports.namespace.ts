@@ -19,11 +19,19 @@ export class PassportNamespace {
   }
 
   public async getAll(params: PagingParamsDto) {
-    return await this.axiosInstance.get<PassportPaginationDto>(this.passportEndpoint, { params })
+    return await this.axiosInstance.get<PassportPaginationDto>(
+      this.passportEndpoint,
+      {
+        params,
+        paramsSerializer: {
+          indexes: null, // {populate: ['assetAdministrationShell', 'submodels']} is converted to query params ?populate=assetAdministrationShell&populate=submodels
+        },
+      },
+    )
   }
 
-  public async create(params: PassportRequestCreateDto): Promise<AxiosResponse<PassportDto>> {
-    return await this.axiosInstance.post<PassportDto>(this.passportEndpoint, params)
+  public async create(data: PassportRequestCreateDto): Promise<AxiosResponse<PassportDto>> {
+    return await this.axiosInstance.post<PassportDto>(this.passportEndpoint, data)
   }
 
   public async getUniqueProductIdentifierOfPassport(passportId: string) {

@@ -1,12 +1,10 @@
-import { randomUUID } from "node:crypto";
-import { AssetKindType, EnvironmentJsonSchema } from "@open-dpp/dto";
+import { EnvironmentJsonSchema } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
-import { AssetInformation } from "./asset-information";
-import { AdministrativeInformation } from "./common/administrative-information";
+import { IConvertableToPlain } from "./convertable-to-plain";
 import { Submodel } from "./submodel-base/submodel";
 
-export class Environment {
+export class Environment implements IConvertableToPlain {
   private constructor(
     public readonly assetAdministrationShells: Array<string>,
     public readonly submodels: Array<string>,
@@ -36,19 +34,12 @@ export class Environment {
     );
   }
 
-  addAssetAdministrationShell(assetAdministrationShell: AssetAdministrationShell | { assetKind: AssetKindType }): AssetAdministrationShell {
-    if (assetAdministrationShell instanceof AssetAdministrationShell) {
-      this.assetAdministrationShells.push(assetAdministrationShell.id);
-      return assetAdministrationShell;
+  addAssetAdministrationShell(assetAdministrationShell: AssetAdministrationShell): AssetAdministrationShell {
+    if (this.assetAdministrationShells.includes(assetAdministrationShell.id)) {
+      throw new ValueError(`AssetAdministrationShell with id ${assetAdministrationShell.id} already exists`);
     }
-    const id = randomUUID();
-    const newAas = AssetAdministrationShell.create({
-      id,
-      assetInformation: AssetInformation.create({ assetKind: assetAdministrationShell.assetKind, globalAssetId: id }),
-      administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
-    });
-    this.assetAdministrationShells.push(newAas.id);
-    return newAas;
+    this.assetAdministrationShells.push(assetAdministrationShell.id);
+    return assetAdministrationShell;
   }
 
   addSubmodel(submodel: Submodel) {
@@ -67,7 +58,7 @@ export class Environment {
     this.submodels.splice(index, 1);
   }
 
-  toPlain() {
+  toPlain(): Record<string, any> {
     return {
       assetAdministrationShells: this.assetAdministrationShells,
       submodels: this.submodels,

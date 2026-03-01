@@ -4,6 +4,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { DbSessionOptions } from "../../database/query-options";
 import { findAllByOrganizationId, findOne, findOneOrFail, save } from "../../lib/repositories";
 import { Pagination } from "../../pagination/pagination";
+import { PagingResult } from "../../pagination/paging-result";
 import { Passport } from "../domain/passport";
 import { PassportDoc, PassportDocVersion } from "./passport.schema";
 
@@ -30,7 +31,7 @@ export class PassportRepository {
     return await findOne(id, this.passportDoc, Passport.fromPlain);
   }
 
-  async findAllByOrganizationId(organizationId: string, pagination?: Pagination) {
+  async findAllByOrganizationId(organizationId: string, pagination?: Pagination): Promise<PagingResult<Passport>> {
     return await findAllByOrganizationId(this.passportDoc, Passport.fromPlain, organizationId, pagination);
   }
 }

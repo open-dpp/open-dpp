@@ -1,4 +1,8 @@
-import type { SubmodelElementListResponseDto } from "@open-dpp/dto";
+import type {
+  AssetAdministrationShellModificationDto,
+  AssetAdministrationShellResponseDto,
+  SubmodelElementListResponseDto,
+} from "@open-dpp/dto";
 import {
   AssetAdministrationShellPaginationResponseDto,
   SubmodelElementModificationDto,
@@ -74,6 +78,7 @@ export interface IAasCreateEndpoints {
 }
 
 export interface IAasModifyEndpoints {
+  modifyShell: (id: string, aasId: string, body: AssetAdministrationShellModificationDto, session: Session) => Promise<AssetAdministrationShellResponseDto>;
   modifySubmodel: (id: string, submodelId: string, body: SubmodelModificationDto, session: Session) => Promise<SubmodelResponseDto>;
   modifySubmodelElement: (
     id: string,

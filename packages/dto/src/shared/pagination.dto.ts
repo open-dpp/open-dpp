@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { PopulateSchema } from './populate.dto'
 
 export const PagingMetadataDtoSchema = z.object({
   paging_metadata: z.object({
@@ -9,6 +10,7 @@ export const PagingMetadataDtoSchema = z.object({
 export const PagingParamsDtoSchema = z.object({
   limit: z.number().optional(),
   cursor: z.string().optional(),
+  populate: PopulateSchema.optional(),
 })
 
 export type PagingParamsDto = z.infer<typeof PagingParamsDtoSchema>

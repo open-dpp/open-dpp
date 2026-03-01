@@ -4,6 +4,7 @@ import { expect, jest } from "@jest/globals";
 
 import { AssetKind } from "@open-dpp/dto";
 import request from "supertest";
+import { LanguageText } from "../../aas/domain/common/language-text";
 import { Environment } from "../../aas/domain/environment";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { DateTime } from "../../lib/date-time";
@@ -45,6 +46,10 @@ describe("templateController", () => {
 
   it(`/GET shells`, async () => {
     await ctx.asserts.getShells(createTemplate);
+  });
+
+  it(`/PATCH shell`, async () => {
+    await ctx.asserts.modifyShell(createTemplate, saveTemplate);
   });
 
   it(`/GET submodels`, async () => {
@@ -129,19 +134,33 @@ describe("templateController", () => {
     const date1 = new Date("2022-01-01T00:00:00.000Z");
     const date2 = new Date("2022-01-02T00:00:00.000Z");
     const date3 = new Date("2022-01-03T00:00:00.000Z");
+    const { aas } = ctx.getAasObjects();
 
     const t1 = await createTemplate(org.id, date1, date1);
     const t2 = await createTemplate(org.id, date2, date2);
     const t3 = await createTemplate(org.id, date3, date3);
 
-    const response = await request(app.getHttpServer())
-      .get(`${basePath}?limit=2&cursor=${encodeCursor(t3.createdAt.toISOString(), t3.id)}`)
+    let response = await request(app.getHttpServer())
+      .get(`${basePath}?limit=2&cursor=${encodeCursor(t3.createdAt.toISOString(), t3.id)}&populate=environment.assetAdministrationShells`)
       .set("Cookie", userCookie);
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toEqual(encodeCursor(t1.createdAt.toISOString(), t1.id));
-    const expected = [t2.toPlain(), t1.toPlain()];
-    expect(response.body.result).toEqual(expected.map(t => ({
-      ...t,
+    expect(response.body.result).toEqual([t2, t1].map(t => ({
+      ...t.toPlain(),
+      environment: {
+        ...t.environment.toPlain(),
+        assetAdministrationShells: [{ id: aas.id, displayName: aas.displayName.map(d => ({ language: d.language, text: d.text })) }],
+      },
+      createdAt: t.createdAt.toISOString(),
+      updatedAt: t.updatedAt.toISOString(),
+    })));
+
+    response = await request(app.getHttpServer())
+      .get(`${basePath}?limit=2&cursor=${encodeCursor(t3.createdAt.toISOString(), t3.id)}`)
+      .set("Cookie", userCookie);
+    expect(response.status).toEqual(200);
+    expect(response.body.result).toEqual([t2, t1].map(t => ({
+      ...t.toPlain(),
       createdAt: t.createdAt.toISOString(),
       updatedAt: t.updatedAt.toISOString(),
     })));
@@ -154,10 +173,17 @@ describe("templateController", () => {
       "2022-01-01T00:00:00.000Z",
     );
     jest.spyOn(DateTime, "now").mockReturnValue(now);
+    const displayName = [{ language: "en", text: "Test" }];
+
+    const body = {
+      environment: {
+        assetAdministrationShells: [{ displayName }],
+      },
+    };
     const response = await request(app.getHttpServer())
       .post(basePath)
       .set("Cookie", userCookie)
-      .send();
+      .send(body);
     expect(response.status).toEqual(201);
     expect(response.body).toEqual({
       id: expect.any(String),
@@ -174,5 +200,6 @@ describe("templateController", () => {
     });
     const foundAas = await ctx.getRepositories().aasRepository.findOneOrFail(response.body.environment.assetAdministrationShells[0]);
     expect(foundAas.assetInformation.assetKind).toEqual(AssetKind.Type);
+    expect(foundAas.displayName).toEqual(displayName.map(LanguageText.fromPlain));
   });
 });

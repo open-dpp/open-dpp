@@ -2,7 +2,9 @@ import { randomUUID } from "node:crypto";
 import { afterAll, jest } from "@jest/globals";
 import { Test, TestingModule } from "@nestjs/testing";
 import request from "supertest";
+import { LanguageText } from "../../aas/domain/common/language-text";
 import { Environment } from "../../aas/domain/environment";
+import { AasRepository } from "../../aas/infrastructure/aas.repository";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { DateTime } from "../../lib/date-time";
@@ -97,11 +99,31 @@ describe("passportController", () => {
     await passportRepository.save(firstPassport);
     await passportRepository.save(secondPassport);
 
-    const response = await request(app.getHttpServer())
-      .get(basePath)
+    let response = await request(app.getHttpServer())
+      .get(`${basePath}?populate=environment.assetAdministrationShells`)
       .set("Cookie", userCookie)
       .send();
 
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      paging_metadata: {
+        cursor: expect.any(String),
+      },
+      result: [secondPassport, firstPassport].map(p => ({
+        ...p.toPlain(),
+        environment: {
+          ...p.environment.toPlain(),
+          assetAdministrationShells: [{ id: aas.id, displayName: aas.displayName.map(d => ({ language: d.language, text: d.text })) }],
+        },
+        createdAt: p.createdAt.toISOString(),
+        updatedAt: p.updatedAt.toISOString(),
+      })),
+    });
+
+    response = await request(app.getHttpServer())
+      .get(`${basePath}`)
+      .set("Cookie", userCookie)
+      .send();
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
       paging_metadata: {
@@ -122,11 +144,17 @@ describe("passportController", () => {
       "2022-01-01T00:00:00.000Z",
     );
     jest.spyOn(DateTime, "now").mockReturnValue(now);
+    const displayName = [{ language: "en", text: "Test passport" }];
+    const body = {
+      environment: {
+        assetAdministrationShells: [{ displayName }],
+      },
+    };
+
     const response = await request(app.getHttpServer())
       .post(basePath)
       .set("Cookie", userCookie)
-      .send();
-
+      .send(body);
     expect(response.status).toEqual(201);
     expect(response.body).toEqual({
       id: expect.any(String),
@@ -142,6 +170,10 @@ describe("passportController", () => {
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
     });
+
+    const aasRepository = ctx.getModuleRef().get(AasRepository);
+    const aas = await aasRepository.findOneOrFail(response.body.environment.assetAdministrationShells[0]);
+    expect(aas.displayName).toEqual(displayName.map(LanguageText.fromPlain));
 
     const upidService = ctx.getModuleRef().get(UniqueProductIdentifierService);
 
@@ -207,6 +239,10 @@ describe("passportController", () => {
 
   it(`/GET shells`, async () => {
     await ctx.asserts.getShells(createPassport);
+  });
+
+  it(`/PATCH shell`, async () => {
+    await ctx.asserts.modifyShell(createPassport, savePassport);
   });
 
   it(`/GET submodels`, async () => {

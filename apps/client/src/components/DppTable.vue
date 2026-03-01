@@ -7,11 +7,13 @@ import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
 import { Button, Column, DataTable } from "primevue";
 import { useToast } from "primevue/usetoast";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
+import { useAasUtils } from "../composables/aas-utils.ts";
 import axiosIns from "../lib/axios.ts";
 import { useErrorHandlingStore } from "../stores/error.handling.ts";
+import { convertLocaleToLanguage } from "../translations/i18n.ts";
 import TablePagination from "./pagination/TablePagination.vue";
 
 const props = defineProps<{
@@ -36,7 +38,13 @@ dayjs.extend(localizedFormat);
 
 const route = useRoute();
 const router = useRouter();
-const { t } = useI18n();
+const { t, locale } = useI18n();
+const selectedLanguage = computed(() => convertLocaleToLanguage(locale.value));
+const { parseDisplayNameFromEnvironment } = useAasUtils({
+  translate: t,
+  selectedLanguage: selectedLanguage.value,
+});
+
 const toast = useToast();
 const errorHandlingStore = useErrorHandlingStore();
 
@@ -57,7 +65,9 @@ function forwardToPresentationErrorMessage(e: unknown): string {
 }
 
 async function resolvePassportUuid(item: SharedDppDto): Promise<string> {
-  const { data } = await axiosIns.get<{ uuid: string }>(`/passports/${item.id}/unique-product-identifier`);
+  const { data } = await axiosIns.get<{ uuid: string }>(
+    `/passports/${item.id}/unique-product-identifier`,
+  );
   return data.uuid;
 }
 
@@ -67,7 +77,10 @@ async function forwardToPresentation(item: SharedDppDto) {
     await router.push(`/presentation/${uuid}`);
   }
   catch (e) {
-    errorHandlingStore.logErrorWithNotification(forwardToPresentationErrorMessage(e), e);
+    errorHandlingStore.logErrorWithNotification(
+      forwardToPresentationErrorMessage(e),
+      e,
+    );
   }
 }
 
@@ -77,7 +90,10 @@ async function forwardToPresentationChat(item: SharedDppDto) {
     await router.push(`/presentation/${uuid}/chat`);
   }
   catch (e) {
-    errorHandlingStore.logErrorWithNotification(forwardToPresentationErrorMessage(e), e);
+    errorHandlingStore.logErrorWithNotification(
+      forwardToPresentationErrorMessage(e),
+      e,
+    );
   }
 }
 
@@ -99,7 +115,12 @@ async function exportPassport(id: string) {
   }
   catch (error) {
     console.error("Failed to export passport", error);
-    toast.add({ severity: "error", summary: t("notifications.error"), detail: t("common.exportFailed"), life: 5000 });
+    toast.add({
+      severity: "error",
+      summary: t("notifications.error"),
+      detail: t("common.exportFailed"),
+      life: 5000,
+    });
   }
   finally {
     if (url) {
@@ -122,11 +143,21 @@ async function handleFileUpload(event: Event) {
     const json = JSON.parse(await file.text());
     await axiosIns.post("/passports/import", json);
     emits("resetCursor");
-    toast.add({ severity: "success", summary: t("notifications.success"), detail: t("common.importSuccess"), life: 5000 });
+    toast.add({
+      severity: "success",
+      summary: t("notifications.success"),
+      detail: t("common.importSuccess"),
+      life: 5000,
+    });
   }
   catch (error) {
     console.error("Failed to import passport", error);
-    toast.add({ severity: "error", summary: t("notifications.error"), detail: t("common.importFailed"), life: 5000 });
+    toast.add({
+      severity: "error",
+      summary: t("notifications.error"),
+      detail: t("common.importFailed"),
+      life: 5000,
+    });
   }
   finally {
     if (fileInput.value)
@@ -137,15 +168,23 @@ async function handleFileUpload(event: Event) {
 
 <template>
   <DataTable
-    :value="props.items" :loading="props.loading" table-style="min-width: 50rem"
-    paginator :rows="10" :rows-per-page-options="[10]"
+    :value="props.items"
+    :loading="props.loading"
+    table-style="min-width: 50rem"
+    paginator
+    :rows="10"
+    :rows-per-page-options="[10]"
   >
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
         <span class="text-xl font-bold">{{ props.title }}</span>
         <div class="flex items-center gap-2">
           <Button :label="t('common.add')" @click="emits('create')" />
-          <Button v-if="!props.usesTemplates" :label="t('common.import')" @click="triggerImport" />
+          <Button
+            v-if="!props.usesTemplates"
+            :label="t('common.import')"
+            @click="triggerImport"
+          />
           <input
             v-if="!props.usesTemplates"
             ref="fileInput"
@@ -158,17 +197,24 @@ async function handleFileUpload(event: Event) {
       </div>
     </template>
     <Column field="id" header="Id" />
+    <Column field="environment" header="Name">
+      <template #body="slotProps">
+        <p>
+          {{ parseDisplayNameFromEnvironment(slotProps.data.environment) }}
+        </p>
+      </template>
+    </Column>
     <Column :header="t('templates.createdAt')">
       <template #body="slotProps">
         <p>
-          {{ dayjs(slotProps.data.createdAt).format('LLL') }}
+          {{ dayjs(slotProps.data.createdAt).format("LLL") }}
         </p>
       </template>
     </Column>
     <Column :header="t('templates.updatedAt')">
       <template #body="slotProps">
         <p>
-          {{ dayjs(slotProps.data.updatedAt).format('LLL') }}
+          {{ dayjs(slotProps.data.updatedAt).format("LLL") }}
         </p>
       </template>
     </Column>
@@ -184,7 +230,10 @@ async function handleFileUpload(event: Event) {
               @click="editItem(data)"
             />
           </div>
-          <div v-if="!props.usesTemplates" class="flex items-center rounded-md gap-2">
+          <div
+            v-if="!props.usesTemplates"
+            class="flex items-center rounded-md gap-2"
+          >
             <Button
               icon="pi pi-qrcode"
               severity="primary"
@@ -193,7 +242,10 @@ async function handleFileUpload(event: Event) {
               @click="forwardToPresentation(data)"
             />
           </div>
-          <div v-if="!props.usesTemplates" class="flex items-center rounded-md gap-2">
+          <div
+            v-if="!props.usesTemplates"
+            class="flex items-center rounded-md gap-2"
+          >
             <Button
               icon="pi pi-comments"
               severity="primary"
@@ -202,7 +254,10 @@ async function handleFileUpload(event: Event) {
               @click="forwardToPresentationChat(data)"
             />
           </div>
-          <div v-if="!props.usesTemplates" class="flex items-center rounded-md gap-2">
+          <div
+            v-if="!props.usesTemplates"
+            class="flex items-center rounded-md gap-2"
+          >
             <Button
               icon="pi pi-download"
               severity="secondary"

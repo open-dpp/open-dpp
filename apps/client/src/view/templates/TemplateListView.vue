@@ -1,8 +1,9 @@
 <script lang="ts" setup>
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import DppTable from "../../components/DppTable.vue";
+import TemplateCreateDialog from "../../components/template/TemplateCreateDialog.vue";
 import { useTemplates } from "../../composables/templates.ts";
 
 const route = useRoute();
@@ -17,11 +18,24 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
   });
 }
 
-const { createTemplate, resetCursor, hasPrevious, hasNext, previousPage, nextPage, currentPage, templates, loading, init } = useTemplates({
+const {
+  createTemplate,
+  resetCursor,
+  hasPrevious,
+  hasNext,
+  previousPage,
+  nextPage,
+  currentPage,
+  templates,
+  loading,
+  init,
+} = useTemplates({
   changeQueryParams,
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
 });
 const { t } = useI18n();
+
+const createDialogVisible = ref(false);
 
 onMounted(async () => {
   await init();
@@ -39,8 +53,9 @@ onMounted(async () => {
     :title="t('templates.label')"
     :uses-templates="true"
     @reset-cursor="resetCursor"
-    @create="createTemplate"
+    @create="createDialogVisible = true"
     @next-page="nextPage"
     @previous-page="previousPage"
   />
+  <TemplateCreateDialog v-if="createDialogVisible" v-model="createDialogVisible" :create-template="createTemplate" />
 </template>

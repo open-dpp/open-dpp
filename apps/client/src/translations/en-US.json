@@ -3,6 +3,7 @@
     "required": "Required"
   },
   "common": {
+    "untitled": "Untitled",
     "actions": "Actions",
     "clipboardSuccess": "Copied to clipboard.",
     "edit": "Edit",
@@ -84,12 +85,13 @@
       "errorEditEntries": "@.capitalize:common.failed to @.lower:common.edit the @.lower:aasEditor.table.entries"
     },
     "link": "Link",
-    "errorLoadingSubmodels": "@.capitalize:common.failed to load the submodels",
+    "errorLoading": "Loading @:common.failed",
+    "errorLoadingSubmodels": "@.capitalize:common.failed to @:aasEditor.load the submodels",
     "addSubmodel": "Add section",
     "submodelElementCollection": "Sub section",
     "edit": "Edit {formItem}",
     "creation": "Creation of the {formItem}",
-    "submodel": "Section",
+    "submodel": "Section | Sections",
     "removeSubmodelElement": "Should the element really be removed?",
     "errorRemoveSubmodelElement": "@.capitalize:common.failed to @.lower:common.remove the element.",
     "removeSubmodel": "Should the @.lower:aasEditor.submodel really be removed?",
@@ -370,13 +372,14 @@
   },
   "passports": {
     "label": "Passport | Passports",
-    "create": "Create Passport",
+    "create": "Create passport",
     "blank": "Blank",
-    "fromTemplate": "From Template",
-    "selectTemplate": "Select Template"
+    "fromTemplate": "From template",
+    "selectTemplate": "Select template"
   },
   "templates": {
     "label": "Passport templates",
+    "create": "Create passport template",
     "createdAt": "Created at",
     "updatedAt": "Updated at"
   },

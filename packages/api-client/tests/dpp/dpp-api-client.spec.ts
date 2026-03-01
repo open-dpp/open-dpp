@@ -17,6 +17,7 @@ import {
 } from '../../src'
 import { activeOrganization, organizations } from '../organization'
 import {
+  aasModification,
   aasResponse,
   aasWrapperId,
   paginationParams,
@@ -85,7 +86,13 @@ describe('apiClient', () => {
     })
 
     it('should create template', async () => {
-      const response = await sdk.dpp.templates.create()
+      const response = await sdk.dpp.templates.create({
+        environment: {
+          assetAdministrationShells: [
+            { displayName: [{ language: 'en', text: 'test' }] },
+          ],
+        },
+      })
       expect(response.data).toEqual(template1)
     })
   })
@@ -101,7 +108,15 @@ describe('apiClient', () => {
     })
 
     it('should create passport', async () => {
-      const response = await sdk.dpp.passports.create({})
+      let response = await sdk.dpp.passports.create({ templateId: 'temp' })
+      expect(response.data).toEqual(passport1)
+
+      response = await sdk.dpp.passports.create({
+        environment: {
+          assetAdministrationShells: [{ displayName: [{ language: 'en', text: 'test' }] }],
+        },
+      })
+
       expect(response.data).toEqual(passport1)
     })
   })
@@ -115,6 +130,15 @@ describe('apiClient', () => {
       expect(response.data.paging_metadata.cursor).toEqual(aasResponse.id)
       expect(response.data.result).toEqual([aasResponse])
     })
+
+    it('should modify', async () => {
+      const response = await sdk.dpp[appIdentifiable].aas.modifyShell(aasWrapperId, btoa(aasResponse.id), aasModification)
+      expect(response.data).toEqual({
+        ...aasResponse,
+        displayName: aasModification.displayName,
+      })
+    })
+
     it('should return submodels', async () => {
       const response = await sdk.dpp[appIdentifiable].aas.getSubmodels(aasWrapperId, paginationParams)
       expect(response.data).toEqual([submodelCarbonFootprintResponse])

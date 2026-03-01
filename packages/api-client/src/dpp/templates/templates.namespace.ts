@@ -1,10 +1,10 @@
 import type {
   PagingParamsDto,
+  TemplateCreateDto,
   TemplateDto,
   TemplatePaginationDto,
 } from '@open-dpp/dto'
 import type { AxiosInstance, AxiosResponse } from 'axios'
-
 import { AasNamespace } from '../aas/aasNamespace'
 
 export class TemplatesNamespace {
@@ -18,10 +18,18 @@ export class TemplatesNamespace {
   }
 
   public async getAll(params: PagingParamsDto) {
-    return await this.axiosInstance.get<TemplatePaginationDto>(this.templatesEndpoint, { params })
+    return await this.axiosInstance.get<TemplatePaginationDto>(
+      this.templatesEndpoint,
+      {
+        params,
+        paramsSerializer: {
+          indexes: null, // {populate: ['assetAdministrationShell', 'submodels']} is converted to query params ?populate=assetAdministrationShell&populate=submodels
+        },
+      },
+    )
   }
 
-  public async create(): Promise<AxiosResponse<TemplateDto>> {
-    return await this.axiosInstance.post<TemplateDto>(this.templatesEndpoint)
+  public async create(data: TemplateCreateDto): Promise<AxiosResponse<TemplateDto>> {
+    return await this.axiosInstance.post<TemplateDto>(this.templatesEndpoint, data)
   }
 }

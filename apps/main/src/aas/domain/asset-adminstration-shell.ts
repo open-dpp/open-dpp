@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { AssetAdministrationShellJsonSchema, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
+import { AssetAdministrationShellJsonSchema, AssetKind, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
 import { AssetInformation } from "./asset-information";
 import { AdministrativeInformation } from "./common/administrative-information";
 import { IHasDataSpecification } from "./common/has-data-specification";
@@ -10,9 +10,24 @@ import { Reference } from "./common/reference";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
 import { JsonVisitor } from "./json-visitor";
+import { ModifierVisitor } from "./modifier-visitor";
 import { IPersistable } from "./persistable";
 import { Submodel } from "./submodel-base/submodel";
 import { IVisitable, IVisitor } from "./visitor";
+
+export interface AssetAdministrationShellCreateProps {
+  id?: string;
+  assetInformation: AssetInformation;
+  extensions?: Extension[];
+  category?: string | null;
+  idShort?: string | null;
+  displayName?: LanguageText[];
+  description?: LanguageText[];
+  administration?: AdministrativeInformation;
+  embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
+  derivedFrom?: Reference | null;
+  submodels?: Array<Reference>;
+}
 
 export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable {
   private constructor(
@@ -31,34 +46,28 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
   }
 
   static create(
-    data: {
-      id?: string;
-      assetInformation: AssetInformation;
-      extensions?: Extension[];
-      category?: string | null;
-      idShort?: string | null;
-      displayName?: LanguageText[];
-      description?: LanguageText[];
-      administration?: AdministrativeInformation;
-      embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
-      derivedFrom?: Reference | null;
-      submodels?: Array<Reference>;
-    },
+    data: AssetAdministrationShellCreateProps,
   ) {
+    const id = data.id ?? randomUUID();
+
     return new AssetAdministrationShell(
-      data.id ?? randomUUID(),
-      data.assetInformation,
+      id,
+      data.assetInformation ?? AssetInformation.create({ assetKind: AssetKind.Instance, globalAssetId: id }),
       data.extensions ?? [],
       data.category ?? null,
       data.idShort ?? null,
       data.displayName ?? [],
       data.description ?? [],
-      data.administration ?? null,
+      data.administration ?? AdministrativeInformation.create({ version: "1", revision: "0" }),
       data.embeddedDataSpecifications ?? [],
       data.derivedFrom ?? null,
       data.submodels ?? [],
     );
   };
+
+  modify(data: unknown) {
+    this.accept(new ModifierVisitor(), data);
+  }
 
   addSubmodelReference(reference: Reference) {
     this.submodels.push(reference);
@@ -90,9 +99,15 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
    * @returns A new AssetAdministrationShell instance with the same properties but different submodel references
    */
   copy(submodels: Submodel[]): AssetAdministrationShell {
+    const copyId = randomUUID();
+    const plain = this.toPlain();
     const copy = AssetAdministrationShell.fromPlain({
-      ...this.toPlain(),
-      id: randomUUID(),
+      ...plain,
+      id: copyId,
+      assetInformation: {
+        ...plain.assetInformation,
+        globalAssetId: plain.id === plain.assetInformation.globalAssetId ? copyId : plain.assetInformation.globalAssetId,
+      },
       submodels: [],
     });
 
