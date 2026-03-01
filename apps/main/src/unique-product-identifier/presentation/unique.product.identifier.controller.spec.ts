@@ -1,20 +1,11 @@
-import type { INestApplication } from "@nestjs/common";
 import type { TemplateDbProps } from "../../old-templates/domain/template";
 import { randomUUID } from "node:crypto";
-import { expect, jest } from "@jest/globals";
-import { APP_GUARD } from "@nestjs/core";
-import { MongooseModule } from "@nestjs/mongoose";
-import { Test } from "@nestjs/testing";
-import { EnvModule, EnvService } from "@open-dpp/env";
-
+import { expect } from "@jest/globals";
+import { EnvService } from "@open-dpp/env";
 import request from "supertest";
-import { BetterAuthHelper } from "../../../test/better-auth-helper";
-import { AuthGuard } from "../../auth/auth.guard";
-import { AuthModule } from "../../auth/auth.module";
-import { AuthService } from "../../auth/auth.service";
+import { Environment } from "../../aas/domain/environment";
+import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
-import { generateMongoConfig } from "../../database/config";
-import { EmailService } from "../../email/email.service";
 import { Item } from "../../items/domain/item";
 import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
 import { ItemsService } from "../../items/infrastructure/items.service";
@@ -24,93 +15,127 @@ import { ModelsService } from "../../models/infrastructure/models.service";
 import { Template } from "../../old-templates/domain/template";
 import { OldTemplateDoc, TemplateSchema } from "../../old-templates/infrastructure/template.schema";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";
+import { Passport } from "../../passports/domain/passport";
+import { PassportRepository } from "../../passports/infrastructure/passport.repository";
+import { PassportSchema } from "../../passports/infrastructure/passport.schema";
+import { PassportDoc } from "../../product-passport-data/infrastructure/product-passport-data.schema";
 import { phoneFactory } from "../../product-passport/fixtures/product-passport.factory";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from "../infrastructure/unique-product-identifier.schema";
 import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
+import { UniqueProductIdentifierModule } from "../unique.product.identifier.module";
 import { UniqueProductIdentifierApplicationService } from "./unique.product.identifier.application.service";
 import { UniqueProductIdentifierController } from "./unique.product.identifier.controller";
 
 describe("uniqueProductIdentifierController", () => {
-  let app: INestApplication;
-  let modelsService: ModelsService;
-  let itemsService: ItemsService;
-  let templateService: TemplateService;
-  let configService: EnvService;
-  let authService: AuthService;
+  const basePath = "/unique-product-identifiers";
+  const ctx = createAasTestContext(basePath, {
+    imports: [UniqueProductIdentifierModule],
+    providers: [
+      UniqueProductIdentifierService,
+      PassportRepository,
+      ModelsService,
+      UniqueProductIdentifierService,
+      UniqueProductIdentifierApplicationService,
+      ItemsService,
+      TemplateService,
+    ],
+    controllers: [UniqueProductIdentifierController],
+  }, [
+    {
+      name: PassportDoc.name,
+      schema: PassportSchema,
+    },
+    {
+      name: UniqueProductIdentifierDoc.name,
+      schema: UniqueProductIdentifierSchema,
+    },
+    {
+      name: ModelDoc.name,
+      schema: ModelSchema,
+    },
+    {
+      name: ItemDoc.name,
+      schema: ItemSchema,
+    },
+    {
+      name: OldTemplateDoc.name,
+      schema: TemplateSchema,
+    },
+  ], UniqueProductIdentifierService);
 
-  const betterAuthHelper = new BetterAuthHelper();
+  async function createPassportWithUniqueProductIdentifier(orgId: string) {
+    const { aas, submodels } = ctx.getAasObjects();
 
-  beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
-      imports: [
-        EnvModule.forRoot(),
-        MongooseModule.forRootAsync({
-          imports: [EnvModule],
-          useFactory: (configService: EnvService) => ({
-            ...generateMongoConfig(configService),
-          }),
-          inject: [EnvService],
-        }),
-        MongooseModule.forFeature([
-          {
-            name: ModelDoc.name,
-            schema: ModelSchema,
-          },
-          {
-            name: UniqueProductIdentifierDoc.name,
-            schema: UniqueProductIdentifierSchema,
-          },
-          {
-            name: ItemDoc.name,
-            schema: ItemSchema,
-          },
-          {
-            name: OldTemplateDoc.name,
-            schema: TemplateSchema,
-          },
-        ]),
-        AuthModule,
-      ],
-      providers: [
-        ModelsService,
-        UniqueProductIdentifierService,
-        UniqueProductIdentifierApplicationService,
-        ItemsService,
-        TemplateService,
-        {
-          provide: APP_GUARD,
-          useClass: AuthGuard,
-        },
-      ],
-      controllers: [UniqueProductIdentifierController],
-    }).overrideProvider(EmailService).useValue({
-      send: jest.fn(),
-    }).compile();
+    const environment = Environment.create({
+      assetAdministrationShells: [aas.id],
+      submodels: submodels.map(s => s.id),
+      conceptDescriptions: [],
+    });
 
-    modelsService = moduleRef.get(ModelsService);
-    itemsService = moduleRef.get(ItemsService);
-    templateService = moduleRef.get<TemplateService>(TemplateService);
-    configService = moduleRef.get<EnvService>(EnvService);
-    authService = moduleRef.get<AuthService>(
-      AuthService,
-    );
-    betterAuthHelper.setAuthService(authService);
+    const passport = Passport.create({
+      id: randomUUID(),
+      organizationId: orgId,
+      environment,
+    });
 
-    app = moduleRef.createNestApplication();
+    const upid = passport.createUniqueProductIdentifier();
 
-    await app.init();
+    await ctx.getRepositories().dppIdentifiableRepository.save(upid);
+    await ctx.getModuleRef().get(PassportRepository).save(passport);
 
-    const user1data = await betterAuthHelper.createUser();
-    await betterAuthHelper.createOrganization(user1data?.user.id as string);
-    const user2data = await betterAuthHelper.createUser();
-    await betterAuthHelper.createOrganization(user2data?.user.id as string);
+    const persistable = {
+      id: upid.uuid,
+      upid,
+      getOrganizationId: () => orgId,
+      getEnvironment: () => environment,
+      toPlain: () => ({ id: upid.uuid }),
+      passport,
+    };
+
+    return persistable;
+  }
+
+  it(`/GET passport from unique product identifier`, async () => {
+    const { org, userCookie } = await ctx.globals().betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+
+    const upid = await createPassportWithUniqueProductIdentifier(org.id);
+
+    const response = await request(ctx.globals().app.getHttpServer())
+      .get(
+        `/organizations/${org.id}/unique-product-identifiers/${upid.id}/passport`,
+      )
+      .set("Cookie", userCookie);
+
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual({
+      ...upid.passport.toPlain(),
+      createdAt: upid.passport.createdAt.toISOString(),
+      updatedAt: upid.passport.updatedAt.toISOString(),
+    });
+  });
+
+  it(`/GET unique product identifier from reference`, async () => {
+    const { org, userCookie } = await ctx.globals().betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+
+    const upid = await createPassportWithUniqueProductIdentifier(org.id);
+
+    const response = await request(ctx.globals().app.getHttpServer())
+      .get(
+        `/organizations/${org.id}/unique-product-identifiers?reference=${upid.passport.id}`,
+      )
+      .set("Cookie", userCookie);
+
+    expect(response.status).toEqual(200);
+    expect(response.body).toEqual([
+      upid.upid.toPlain(),
+    ]);
   });
 
   it(`/GET reference of unique product identifier`, async () => {
-    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org, user, userCookie } = await ctx.globals().betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const phoneTemplate: TemplateDbProps = phoneFactory
       .addSections()
       .build({
@@ -118,7 +143,7 @@ describe("uniqueProductIdentifierController", () => {
         organizationId: org.id,
       });
     const template = Template.loadFromDb({ ...phoneTemplate });
-    await templateService.save(template);
+    await ctx.getModuleRef().get(TemplateService).save(template);
     const model = Model.create({
       name: "model",
       userId: randomUUID(),
@@ -132,9 +157,9 @@ describe("uniqueProductIdentifierController", () => {
       model,
     });
     const { uuid } = item.createUniqueProductIdentifier("externalId");
-    await itemsService.save(item);
+    await ctx.getModuleRef().get(ItemsService).save(item);
 
-    const response = await request(app.getHttpServer())
+    const response = await request(ctx.globals().app.getHttpServer())
       .get(
         `/organizations/${org.id}/unique-product-identifiers/${uuid}/reference`,
       )
@@ -150,7 +175,7 @@ describe("uniqueProductIdentifierController", () => {
   });
 
   it(`/GET organizationId of unique product identifier`, async () => {
-    const { org, user } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org, user } = await ctx.globals().betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const phoneTemplate: TemplateDbProps = phoneFactory
       .addSections()
       .build({
@@ -159,6 +184,7 @@ describe("uniqueProductIdentifierController", () => {
       });
 
     const template = Template.loadFromDb({ ...phoneTemplate });
+    const templateService = ctx.getModuleRef().get(TemplateService);
     await templateService.save(template);
     const model = Model.create({
       name: "model",
@@ -166,6 +192,7 @@ describe("uniqueProductIdentifierController", () => {
       organizationId: org.id,
       template,
     });
+    const modelsService = ctx.getModuleRef().get(ModelsService);
     await modelsService.save(model);
     const item = Item.create({
       organizationId: org.id,
@@ -174,9 +201,11 @@ describe("uniqueProductIdentifierController", () => {
       model,
     });
     const { uuid } = item.createUniqueProductIdentifier("externalId");
+    const itemsService = ctx.getModuleRef().get(ItemsService);
+    const configService = ctx.getModuleRef().get(EnvService);
     await itemsService.save(item);
 
-    const response = await request(app.getHttpServer())
+    const response = await request(ctx.globals().app.getHttpServer())
       .get(`/unique-product-identifiers/${uuid}/metadata`)
       .set("service_token", configService.get("OPEN_DPP_SERVICE_TOKEN"));
 
@@ -190,14 +219,14 @@ describe("uniqueProductIdentifierController", () => {
   });
 
   it(`/GET fails to return organizationId of unique product identifier if service token invalid`, async () => {
-    const response = await request(app.getHttpServer())
+    const response = await request(ctx.globals().app.getHttpServer())
       .get(`/unique-product-identifiers/${randomUUID()}/metadata`)
       .set("service_token", "invalid_token");
     expect(response.status).toEqual(403);
   });
 
   it(`/GET model reference of unique product identifier`, async () => {
-    const { org, user, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org, user, userCookie } = await ctx.globals().betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const phoneTemplate: TemplateDbProps = phoneFactory
       .addSections()
       .build({
@@ -205,6 +234,7 @@ describe("uniqueProductIdentifierController", () => {
         organizationId: org.id,
       });
     const template = Template.loadFromDb({ ...phoneTemplate });
+    const templateService = ctx.getModuleRef().get(TemplateService);
     await templateService.save(template);
     const model = Model.create({
       name: "model",
@@ -213,8 +243,9 @@ describe("uniqueProductIdentifierController", () => {
       template,
     });
     const { uuid } = model.createUniqueProductIdentifier();
+    const modelsService = ctx.getModuleRef().get(ModelsService);
     await modelsService.save(model);
-    const response = await request(app.getHttpServer())
+    const response = await request(ctx.globals().app.getHttpServer())
       .get(
         `/organizations/${org.id}/unique-product-identifiers/${uuid}/reference`,
       )
@@ -227,7 +258,31 @@ describe("uniqueProductIdentifierController", () => {
     });
   });
 
-  afterAll(async () => {
-    await app.close();
+  it(`/GET shells`, async () => {
+    await ctx.asserts.getShells(createPassportWithUniqueProductIdentifier);
+  });
+
+  it(`/GET submodels`, async () => {
+    await ctx.asserts.getSubmodels(createPassportWithUniqueProductIdentifier);
+  });
+
+  it(`/GET submodel by id`, async () => {
+    await ctx.asserts.getSubmodelById(createPassportWithUniqueProductIdentifier);
+  });
+
+  it("/GET submodel value", async () => {
+    await ctx.asserts.getSubmodelValue(createPassportWithUniqueProductIdentifier);
+  });
+
+  it(`/GET submodel elements`, async () => {
+    await ctx.asserts.getSubmodelElements(createPassportWithUniqueProductIdentifier);
+  });
+
+  it(`/GET submodel element by id`, async () => {
+    await ctx.asserts.getSubmodelElementById(createPassportWithUniqueProductIdentifier);
+  });
+
+  it(`/GET submodel element value`, async () => {
+    await ctx.asserts.getSubmodelElementValue(createPassportWithUniqueProductIdentifier);
   });
 });

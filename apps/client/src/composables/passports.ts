@@ -4,14 +4,8 @@ import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import apiClient from "../lib/api-client.ts";
 import { HTTPCode } from "../stores/http-codes.ts";
-import { usePagination } from "./pagination.ts";
 
-interface PassportProps {
-  initialCursor?: string;
-  changeQueryParams: (params: Record<string, string | undefined>) => void;
-}
-
-export function usePassports({ changeQueryParams, initialCursor }: PassportProps) {
+export function usePassports() {
   const passports = ref<PassportPaginationDto>();
   const loading = ref(false);
   const route = useRoute();
@@ -24,11 +18,6 @@ export function usePassports({ changeQueryParams, initialCursor }: PassportProps
     loading.value = false;
     return response.data;
   };
-  const pagination = usePagination({ initialCursor, limit: 10, fetchCallback: fetchPassports, changeQueryParams });
-
-  async function init() {
-    await pagination.nextPage();
-  }
 
   const createPassport = async (params: PassportRequestCreateDto) => {
     const response = await apiClient.dpp.passports.create(params);
@@ -38,5 +27,5 @@ export function usePassports({ changeQueryParams, initialCursor }: PassportProps
     return response.data;
   };
 
-  return { createPassport, passports, loading, init, ...pagination };
+  return { createPassport, fetchPassports, passports, loading };
 }

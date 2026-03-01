@@ -7,6 +7,7 @@ export const UniqueProductIdentifierDtoSchema = z.object({
   referenceId: z.uuid(),
 });
 
+export const UniqueProductIdentifierListDtoSchema = z.array(UniqueProductIdentifierDtoSchema);
 export const UniqueProductIdentifierReferenceDtoSchema = z.object({
   id: z.uuid(),
   organizationId: z.string(),

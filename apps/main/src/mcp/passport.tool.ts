@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { Tool } from "@rekog/mcp-nest";
 import { z } from "zod";
-import { AuthService } from "../auth/auth.service";
+import { OrganizationsService } from "../identity/organizations/application/services/organizations.service";
 import { ItemsService } from "../items/infrastructure/items.service";
 import { ModelsService } from "../models/infrastructure/models.service";
 import { TemplateService } from "../old-templates/infrastructure/template.service";
@@ -18,20 +18,20 @@ export class PassportTool {
   private readonly uniqueProductIdentifierService: UniqueProductIdentifierService;
   private readonly templateService: TemplateService;
   private readonly itemService: ItemsService;
-  private readonly authService: AuthService;
+  private readonly organisationsService: OrganizationsService;
 
   constructor(
     modelsService: ModelsService,
     uniqueProductIdentifierService: UniqueProductIdentifierService,
     templateService: TemplateService,
     itemService: ItemsService,
-    authService: AuthService,
+    organisationsService: OrganizationsService,
   ) {
     this.modelsService = modelsService;
     this.uniqueProductIdentifierService = uniqueProductIdentifierService;
     this.templateService = templateService;
     this.itemService = itemService;
-    this.authService = authService;
+    this.organisationsService = organisationsService;
   }
 
   @Tool({
@@ -67,7 +67,7 @@ export class PassportTool {
 
     const template = await this.templateService.findOneOrFail(model.templateId);
 
-    const organizationData = await this.authService.getOrganizationDataForPermalink(model.ownedByOrganizationId);
+    const organizationData = await this.organisationsService.getOrganizationDataForPermalink(model.ownedByOrganizationId);
     if (!organizationData) {
       throw new NotFoundException("No organization data found.");
     }
@@ -78,7 +78,6 @@ export class PassportTool {
       model,
       item,
       organizationName: organizationData.name,
-      organizationImage: organizationData.image,
     });
 
     return productPassportToDto(productPassport);

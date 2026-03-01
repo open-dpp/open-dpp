@@ -7,13 +7,17 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { Auth } from "better-auth";
+
 import request from "supertest";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
-import { AuthGuard } from "../../auth/auth.guard";
-import { AuthModule } from "../../auth/auth.module";
-import { AuthService } from "../../auth/auth.service";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
+import { AuthModule } from "../../identity/auth/auth.module";
+import { AUTH } from "../../identity/auth/auth.provider";
+import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
+import { OrganizationsModule } from "../../identity/organizations/organizations.module";
+import { UsersService } from "../../identity/users/application/services/users.service";
 import { Item } from "../../items/domain/item";
 import { ItemsService } from "../../items/infrastructure/items.service";
 import { Model } from "../../models/domain/model";
@@ -29,12 +33,13 @@ import {
 import { ProductPassportModule } from "../product-passport.module";
 import { productPassportToDto } from "./dto/product-passport.dto";
 
+jest.mock("@open-dpp/env");
+
 describe("productPassportController", () => {
   let app: INestApplication;
   let modelsService: ModelsService;
   let itemsService: ItemsService;
   let templateService: TemplateService;
-  let authService: AuthService;
 
   const betterAuthHelper = new BetterAuthHelper();
 
@@ -52,6 +57,7 @@ describe("productPassportController", () => {
           inject: [EnvService],
         }),
         AuthModule,
+        OrganizationsModule,
         ProductPassportModule,
       ],
       providers: [
@@ -67,10 +73,7 @@ describe("productPassportController", () => {
     modelsService = module.get(ModelsService);
     itemsService = module.get(ItemsService);
     templateService = module.get<TemplateService>(TemplateService);
-    authService = module.get<AuthService>(
-      AuthService,
-    );
-    betterAuthHelper.setAuthService(authService);
+    betterAuthHelper.init(module.get<UsersService>(UsersService), module.get<Auth>(AUTH));
 
     app = module.createNestApplication();
 
@@ -114,9 +117,8 @@ describe("productPassportController", () => {
       model,
       item,
       organizationName: org.name,
-      organizationImage: "org-image-media-id",
     });
-    expect(response.body).toEqual(productPassportToDto(productPassport));
+    expect(response.body).toEqual(JSON.parse(JSON.stringify(productPassportToDto(productPassport))));
   });
 
   afterAll(async () => {

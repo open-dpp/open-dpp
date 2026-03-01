@@ -1,6 +1,12 @@
 import { defineStore } from "pinia";
 import { useNotificationStore } from "./notification";
 
+export interface ErrorHandlingOptionsAsync { message: string; finallyCallback?: () => Promise<void> }
+export interface ErrorHandlingOptionsSync {
+  message: string;
+  finallyCallback?: () => void;
+}
+
 export interface IErrorHandlingStore {
   logErrorWithNotification: (message: string, error?: unknown) => void;
 }

@@ -11,6 +11,7 @@
   "packageManager": "pnpm@10.26.2",
   "devDependencies": {
     "@antfu/eslint-config": "^7.2.0",
+    "@typescript-eslint/utils": "^8.56.0",
     "eslint-plugin-format": "^1.1.0"
   }
 }

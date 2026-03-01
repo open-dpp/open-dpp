@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import process from "node:process";
 import { EnvService } from "@open-dpp/env";
 
 export function generateMongoConfig(configService: EnvService) {
@@ -5,6 +7,32 @@ export function generateMongoConfig(configService: EnvService) {
   const config_uri = configService.get("OPEN_DPP_MONGODB_URI");
   if (config_uri) {
     uri = config_uri;
+    // In test mode, replace the database name with a random one (test-<uuid>)
+    // to ensure each test run uses an isolated database and tests don't
+    // interfere with each other.
+    if (process.env.NODE_ENV === "test") {
+      const dbName = `test-${randomUUID()}`;
+      let base = uri;
+      let query = "";
+
+      if (uri.includes("?")) {
+        const [basePart, ...queryParts] = uri.split("?");
+        base = basePart;
+        query = queryParts.join("?");
+      }
+
+      // Remove existing path from base
+      const schemeEnd = base.indexOf("://");
+      if (schemeEnd > -1) {
+        const afterScheme = base.substring(schemeEnd + 3);
+        const firstSlash = afterScheme.indexOf("/");
+        if (firstSlash > -1) {
+          base = base.substring(0, schemeEnd + 3 + firstSlash);
+        }
+      }
+
+      uri = `${base}/${dbName}${query ? `?${query}` : ""}`;
+    }
     return {
       uri,
     };

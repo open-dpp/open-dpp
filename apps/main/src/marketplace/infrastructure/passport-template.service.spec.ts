@@ -7,12 +7,16 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { Auth } from "better-auth";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
-import { AuthGuard } from "../../auth/auth.guard";
-import { AuthModule } from "../../auth/auth.module";
-import { AuthService } from "../../auth/auth.service";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
+import { AuthModule } from "../../identity/auth/auth.module";
+import { AUTH } from "../../identity/auth/auth.provider";
+import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
+import { OrganizationsModule } from "../../identity/organizations/organizations.module";
+import { UsersService } from "../../identity/users/application/services/users.service";
+import { UsersModule } from "../../identity/users/users.module";
 import { PassportTemplatePublication } from "../domain/passport-template-publication";
 import { passportTemplatePublicationPropsFactory } from "../fixtures/passport.template.factory";
 import {
@@ -25,7 +29,6 @@ describe("passportTemplateService", () => {
   let app: INestApplication;
   let service: PassportTemplatePublicationService;
   let module: TestingModule;
-  let authService: AuthService;
 
   const betterAuthHelper = new BetterAuthHelper();
 
@@ -49,6 +52,8 @@ describe("passportTemplateService", () => {
           },
         ]),
         AuthModule,
+        OrganizationsModule,
+        UsersModule,
       ],
       providers: [PassportTemplatePublicationService, {
         provide: APP_GUARD,
@@ -61,10 +66,7 @@ describe("passportTemplateService", () => {
     service = module.get<PassportTemplatePublicationService>(
       PassportTemplatePublicationService,
     );
-    authService = module.get<AuthService>(
-      AuthService,
-    );
-    betterAuthHelper.setAuthService(authService);
+    betterAuthHelper.init(module.get<UsersService>(UsersService), module.get<Auth>(AUTH));
 
     app = module.createNestApplication();
     await app.init();

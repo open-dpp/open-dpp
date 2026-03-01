@@ -4,6 +4,7 @@ import ConfirmDialog from "primevue/confirmdialog";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
+import openDppLogo from "../../assets/logo-with-text.svg";
 import { authClient } from "../../auth-client.ts";
 import { useBrandingStore } from "../../stores/branding.ts";
 
@@ -66,7 +67,7 @@ const menuItems = computed(() => {
     <template #start>
       <img
         class="h-16 p-2 w-auto"
-        :src="brandingStore.logo ? brandingStore.logo.url : '../../assets/logo-with-text.svg'"
+        :src="brandingStore.logo ? brandingStore.logo.url : openDppLogo"
         alt="open-dpp GmbH logo"
       >
     </template>

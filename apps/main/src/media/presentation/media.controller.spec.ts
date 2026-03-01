@@ -5,13 +5,16 @@ import { APP_GUARD } from "@nestjs/core";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { Auth } from "better-auth";
 import { BetterAuthHelper } from "../../../test/better-auth-helper";
-import { AuthGuard } from "../../auth/auth.guard";
-import { AuthModule } from "../../auth/auth.module";
-import { AuthService } from "../../auth/auth.service";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
-
+import { AuthModule } from "../../identity/auth/auth.module";
+import { AUTH } from "../../identity/auth/auth.provider";
+import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
+import { OrganizationsModule } from "../../identity/organizations/organizations.module";
+import { UsersService } from "../../identity/users/application/services/users.service";
+import { UsersModule } from "../../identity/users/users.module";
 import { MediaDbSchema, MediaDoc } from "../infrastructure/media.schema";
 import { MediaService } from "../infrastructure/media.service";
 import { MediaController } from "./media.controller";
@@ -19,7 +22,6 @@ import { MediaController } from "./media.controller";
 describe("mediaController", () => {
   let app: INestApplication;
   let module: TestingModule;
-  let authService: AuthService;
 
   const betterAuthHelper = new BetterAuthHelper();
   let controller: MediaController;
@@ -42,6 +44,8 @@ describe("mediaController", () => {
           },
         ]),
         AuthModule,
+        OrganizationsModule,
+        UsersModule,
       ],
       providers: [
         MediaService,
@@ -57,10 +61,7 @@ describe("mediaController", () => {
 
     app = module.createNestApplication();
     controller = module.get<MediaController>(MediaController);
-    authService = module.get<AuthService>(
-      AuthService,
-    );
-    betterAuthHelper.setAuthService(authService);
+    betterAuthHelper.init(module.get<UsersService>(UsersService), module.get<Auth>(AUTH));
 
     await app.init();
   });

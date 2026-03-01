@@ -14,8 +14,9 @@ import { JsonVisitor } from "../json-visitor";
 import { SpecificAssetId } from "../specific-asset-id";
 import { IVisitor } from "../visitor";
 import {
+  deleteSubmodelElementOrFail,
   ISubmodelElement,
-  parseSubmodelBaseUnion,
+  parseSubmodelElement,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
@@ -76,7 +77,7 @@ export class Entity implements ISubmodelElement {
       baseObjects.supplementalSemanticIds,
       baseObjects.qualifiers,
       baseObjects.embeddedDataSpecifications,
-      parsed.statements.map(parseSubmodelBaseUnion),
+      parsed.statements.map(parseSubmodelElement),
       parsed.globalAssetId,
       parsed.specificAssetIds.map(s => SpecificAssetId.fromPlain(s)),
     );
@@ -91,8 +92,8 @@ export class Entity implements ISubmodelElement {
     return this.accept(jsonVisitor);
   }
 
-  * getSubmodelElements(): IterableIterator<ISubmodelElement> {
-    yield* this.statements;
+  getSubmodelElements(): ISubmodelElement[] {
+    return this.statements;
   }
 
   addSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
@@ -101,6 +102,10 @@ export class Entity implements ISubmodelElement {
     }
     this.statements.push(submodelElement);
     return submodelElement;
+  }
+
+  deleteSubmodelElement(idShort: string) {
+    deleteSubmodelElementOrFail(this.statements, idShort);
   }
 
   getSubmodelElementType(): AasSubmodelElementsType {
