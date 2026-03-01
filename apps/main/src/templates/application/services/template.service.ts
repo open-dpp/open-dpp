@@ -78,7 +78,7 @@ export class TemplateService {
       if (!oldId || typeof oldId !== "string") {
         this.logger.warn(
           `Skipping submodel at index ${index} during import: missing or invalid id (got ${JSON.stringify(oldId)}). `
-            + `Available fields: idShort=${JSON.stringify(submodelData.idShort)}, modelType=${JSON.stringify(submodelData.modelType)}`,
+          + `Available fields: idShort=${JSON.stringify(submodelData.idShort)}, modelType=${JSON.stringify(submodelData.modelType)}`,
         );
         continue;
       }
