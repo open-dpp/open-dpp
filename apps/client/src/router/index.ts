@@ -23,7 +23,8 @@ export const routes: RouteRecordRaw[] = [
 
       if (org) {
         return `/organizations/${indexStore.selectedOrganization}/models`;
-      } else {
+      }
+      else {
         return "/organizations"; // fallback
       }
     },
@@ -101,7 +102,8 @@ export const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior(to, from, savedPosition) {
-    if (savedPosition) return savedPosition;
+    if (savedPosition)
+      return savedPosition;
     if (to.hash) {
       return { el: to.hash, behavior: "smooth", top: 150 };
     }
@@ -143,7 +145,7 @@ router.beforeEach(async (to, from, next) => {
   const paramOrganizationId = to.params.organizationId;
   if (paramOrganizationId) {
     const organization = organizationStore.organizations.find(
-      (o) => o.id === paramOrganizationId,
+      o => o.id === paramOrganizationId,
     );
     if (!organization) {
       next("/organizations");

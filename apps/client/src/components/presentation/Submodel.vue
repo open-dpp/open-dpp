@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import type { SubmodelElementResponseDto } from "@open-dpp/dto";
-import type { Ref } from "vue";
 import type { DisplayName } from "../../composables/display-name";
 import { useDisplayName } from "../../composables/display-name";
 import SubmodelElement from "./SubmodelElement.vue";

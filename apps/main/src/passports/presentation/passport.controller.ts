@@ -24,6 +24,7 @@ import {
   ValueResponseDto,
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
+import z from "zod";
 import { Environment } from "../../aas/domain/environment";
 import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import {
@@ -77,11 +78,10 @@ import { TemplateRepository } from "../../templates/infrastructure/template.repo
 import {
   UniqueProductIdentifierService,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
-import { Passport } from "../domain/passport";
 
-import { PassportRepository } from "../infrastructure/passport.repository";
-import z from "zod";
 import { PassportService } from "../application/services/passport.service";
+import { Passport } from "../domain/passport";
+import { PassportRepository } from "../infrastructure/passport.repository";
 
 const ExpandedPassportDtoSchema = PassportDtoSchema.extend({
   environment: z.object({

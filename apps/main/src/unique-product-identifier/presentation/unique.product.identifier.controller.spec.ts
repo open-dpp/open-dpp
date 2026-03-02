@@ -1,11 +1,11 @@
 import type { TemplateDbProps } from "../../old-templates/domain/template";
 import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
+import { EnvService } from "@open-dpp/env";
 import request from "supertest";
 import { Environment } from "../../aas/domain/environment";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
-import { expect } from "@jest/globals";
-import { EnvService } from "@open-dpp/env";
 import { Item } from "../../items/domain/item";
 import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
 import { ItemsService } from "../../items/infrastructure/items.service";
