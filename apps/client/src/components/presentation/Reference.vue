@@ -17,7 +17,7 @@ const property = computed(() => {
       v-if="model.type === 'ExternalReference' && property"
       :href="property.value"
       target="blank"
-      class="mt-1 text-sm/6 text-gray-700 sm:mt-2"
+      class="mt-1 text-sm/6 text-[#6BAD87] hover:underline sm:mt-2"
     >{{ property.value }}</a>
   </dd>
 </template>

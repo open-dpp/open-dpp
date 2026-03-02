@@ -11,7 +11,14 @@ const { description: elementName } = useDisplayName(element.displayName);
 </script>
 
 <template>
-  <div :data-cy="element.idShort" class="px-4 py-6 sm:col-span-1 sm:px-0 m-2">
+  <div
+    :id="element.idShort"
+    :data-cy="element.idShort"
+    class="px-4 py-6 sm:px-0 m-2"
+    :class="{
+      'col-span-full': element.modelType === 'SubmodelElementList',
+    }"
+  >
     <dt class="text-sm/6 font-bold text-gray-900">
       {{ elementName }}
     </dt>

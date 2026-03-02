@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import type { SubmodelElementResponseDto } from "@open-dpp/dto";
-import SubmodelElement from "./SubmodelElement.vue";
 import type { Ref } from "vue";
-import { useDisplayName, type DisplayName } from "../../composables/display-name";
+import type { DisplayName } from "../../composables/display-name";
+import { useDisplayName } from "../../composables/display-name";
+import SubmodelElement from "./SubmodelElement.vue";
 
 const { title } = defineProps<{
   title: DisplayName[];
@@ -15,8 +16,8 @@ const { description: name } = useDisplayName(title);
 
 <template>
   <div
-    class="overflow-hidden bg-white shadow sm:rounded-lg w-full"
     :id="idShort"
+    class="overflow-hidden bg-white shadow sm:rounded-lg w-full"
   >
     <div class="overflow-hidden  bg-white shadow-sm sm:rounded-lg p-4">
       <div class="px-4 sm:px-0">

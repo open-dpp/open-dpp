@@ -1,14 +1,14 @@
 <script lang="ts" setup>
+import type { SharedDppDto } from "@open-dpp/dto";
+import { AxiosError } from "axios";
 import { Button, useToast } from "primevue";
-import { onMounted, ref, useTemplateRef } from "vue";
+import { onMounted, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import DppTable from "../../components/DppTable.vue";
 import PassportCreateDialog from "../../components/passport/PassportCreateDialog.vue";
 import { usePagination } from "../../composables/pagination";
 import { usePassports } from "../../composables/passports";
-import { AxiosError } from "axios";
-import type { SharedDppDto } from "@open-dpp/dto";
 import axiosIns from "../../lib/axios";
 import { useErrorHandlingStore } from "../../stores/error.handling";
 
@@ -58,7 +58,8 @@ async function routeToQrCode(id: string) {
 
 function forwardToPresentationErrorMessage(e: unknown): string {
   if (e instanceof AxiosError) {
-    if (!e.response) return t("dpp.forwardToPresentationErrorNetwork");
+    if (!e.response)
+      return t("dpp.forwardToPresentationErrorNetwork");
     if (e.response.status === 404)
       return t("dpp.forwardToPresentationError404");
     if (e.response.status === 403)
@@ -78,7 +79,8 @@ async function forwardToPresentationChat(item: SharedDppDto) {
   try {
     const uuid = await resolvePassportUuid(item);
     await router.push(`/presentation/${uuid}/chat`);
-  } catch (e) {
+  }
+  catch (e) {
     errorHandlingStore.logErrorWithNotification(
       forwardToPresentationErrorMessage(e),
       e,
@@ -99,7 +101,8 @@ async function exportPassport(id: string) {
     document.body.appendChild(link);
     link.click();
     link.remove();
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Failed to export passport", error);
     toast.add({
       severity: "error",
@@ -107,7 +110,8 @@ async function exportPassport(id: string) {
       detail: t("common.exportFailed"),
       life: 5000,
     });
-  } finally {
+  }
+  finally {
     if (url) {
       globalThis.URL.revokeObjectURL(url);
     }
@@ -121,7 +125,8 @@ function triggerImport() {
 async function handleFileUpload(event: Event) {
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
-  if (!file) return;
+  if (!file)
+    return;
 
   try {
     const json = JSON.parse(await file.text());
@@ -133,7 +138,8 @@ async function handleFileUpload(event: Event) {
       detail: t("common.importSuccess"),
       life: 5000,
     });
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Failed to import passport", error);
     toast.add({
       severity: "error",
@@ -141,8 +147,10 @@ async function handleFileUpload(event: Event) {
       detail: t("common.importFailed"),
       life: 5000,
     });
-  } finally {
-    if (fileInput.value) fileInput.value.value = "";
+  }
+  finally {
+    if (fileInput.value)
+      fileInput.value.value = "";
   }
 }
 
@@ -176,7 +184,7 @@ onMounted(async () => {
         accept=".json"
         class="hidden"
         @change="handleFileUpload"
-      />
+      >
     </template>
     <template #actions="{ passport, editItem }">
       <Button
