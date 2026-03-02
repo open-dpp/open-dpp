@@ -1,13 +1,16 @@
 import { expect } from "@jest/globals";
+import { MongoMemoryServer } from "mongodb-memory-server";
 import { connect, Connection, Model } from "mongoose";
 import { Account, AccountSchema } from "./account.schema";
 
 describe("accountSchema", () => {
+  let mongod: MongoMemoryServer;
   let mongoConnection: Connection;
   let AccountModel: Model<Account>;
 
   beforeAll(async () => {
-    const uri = process.env.OPEN_DPP_MONGODB_URI!;
+    mongod = await MongoMemoryServer.create();
+    const uri = mongod.getUri();
     mongoConnection = (await connect(uri)).connection;
     AccountModel = mongoConnection.model(Account.name, AccountSchema);
   });
@@ -21,7 +24,9 @@ describe("accountSchema", () => {
   });
 
   afterAll(async () => {
+    await mongoConnection.dropDatabase();
     await mongoConnection.close();
+    await mongod.stop();
   });
 
   it("should create an account document", async () => {

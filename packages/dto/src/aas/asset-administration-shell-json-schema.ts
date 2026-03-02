@@ -30,3 +30,4 @@ export const AssetAdministrationShellPaginationResponseDtoSchema = z
 export type AssetAdministrationShellPaginationResponseDto = z.infer<
   typeof AssetAdministrationShellPaginationResponseDtoSchema
 >
+export type AssetAdministrationShellDto = z.infer<typeof AssetAdministrationShellJsonSchema>

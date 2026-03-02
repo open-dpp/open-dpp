@@ -37,10 +37,8 @@ describe("passports", () => {
     setActivePinia(createPinia());
   });
 
-  const changeQueryParams = vi.fn();
-
   it("should create passport", async () => {
-    const { createPassport } = usePassports({ changeQueryParams });
+    const { createPassport } = usePassports();
     const p1 = passportsPlainFactory.build();
 
     mocks.createPassport.mockResolvedValueOnce({ data: p1, status: HTTPCode.CREATED });
@@ -50,15 +48,5 @@ describe("passports", () => {
     await createPassport({});
     expect(mocks.createPassport).toHaveBeenCalledWith({});
     expect(mocks.routerPush).toHaveBeenCalledWith(`/passports/${p1.id}`);
-  });
-
-  it("should init passport", async () => {
-    const { passports, init } = usePassports({ changeQueryParams });
-    const p1 = passportsPlainFactory.build();
-    const passportsResponse = { paging_metadata: { cursor: p1.id }, result: [p1] };
-    mocks.fetchPassports.mockResolvedValueOnce({ data: passportsResponse });
-    await init();
-    expect(mocks.fetchPassports).toHaveBeenCalledWith({ limit: 10, cursor: undefined });
-    expect(passports.value).toEqual(passportsResponse);
   });
 });

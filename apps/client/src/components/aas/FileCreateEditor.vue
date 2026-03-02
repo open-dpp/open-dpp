@@ -5,8 +5,8 @@ import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { FileJsonSchema } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
-
 import { computed } from "vue";
+
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import { EditorMode } from "../../composables/aas-drawer.ts";

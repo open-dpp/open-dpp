@@ -13,137 +13,145 @@ import { IdShortPath } from "../domain/submodel-base/submodel-base";
 
 const DeleteHttpCode = HttpCode(204);
 
+// Helper to safely join an optional prefix with the original path
+function withPrefix(path: string, prefix?: string): string {
+  if (!prefix)
+    return path;
+  const trim = (s: string) => s.replace(/^\/+|\/+$/g, "");
+  return `/${trim(prefix)}/${trim(path)}`;
+}
+
 export const ApiGetShellsPath = "/:id/shells";
-export function ApiGetShells() {
+export function ApiGetShells(prefix?: string) {
   return applyDecorators(
-    Get(ApiGetShellsPath),
+    Get(withPrefix(ApiGetShellsPath, prefix)),
   );
 }
 export const ApiSubmodelsPath = "/:id/submodels";
-export function ApiGetSubmodels() {
+export function ApiGetSubmodels(prefix?: string) {
   return applyDecorators(
-    Get(ApiSubmodelsPath),
+    Get(withPrefix(ApiSubmodelsPath, prefix)),
   );
 }
 
-export function ApiPostSubmodel() {
+export function ApiPostSubmodel(prefix?: string) {
   return applyDecorators(
-    Post(ApiSubmodelsPath),
+    Post(withPrefix(ApiSubmodelsPath, prefix)),
   );
 }
 
 export const ApiGetSubmodelByIdPath = "/:id/submodels/:submodelId";
-export function ApiGetSubmodelById() {
+export function ApiGetSubmodelById(prefix?: string) {
   return applyDecorators(
-    Get(ApiGetSubmodelByIdPath),
+    Get(withPrefix(ApiGetSubmodelByIdPath, prefix)),
   );
 }
 
-export function ApiDeleteSubmodelById() {
+export function ApiDeleteSubmodelById(prefix?: string) {
   return applyDecorators(
-    Delete(ApiGetSubmodelByIdPath),
+    Delete(withPrefix(ApiGetSubmodelByIdPath, prefix)),
     HttpCode(204), // Explicitly state the HTTP status code
   );
 }
 
-export function ApiPatchSubmodel() {
+export function ApiPatchSubmodel(prefix?: string) {
   return applyDecorators(
-    Patch(ApiGetSubmodelByIdPath),
+    Patch(withPrefix(ApiGetSubmodelByIdPath, prefix)),
   );
 }
 
 export const ApiGetSubmodelValuePath = "/:id/submodels/:submodelId/$value";
-export function ApiGetSubmodelValue() {
+export function ApiGetSubmodelValue(prefix?: string) {
   return applyDecorators(
-    Get(ApiGetSubmodelValuePath),
+    Get(withPrefix(ApiGetSubmodelValuePath, prefix)),
   );
 }
 
 export const ApiSubmodelElementsPath = "/:id/submodels/:submodelId/submodel-elements";
-export function ApiGetSubmodelElements() {
+export function ApiGetSubmodelElements(prefix?: string) {
   return applyDecorators(
-    Get(ApiSubmodelElementsPath),
+    Get(withPrefix(ApiSubmodelElementsPath, prefix)),
   );
 }
 
-export function ApiPostSubmodelElement() {
+export function ApiPostSubmodelElement(prefix?: string) {
   return applyDecorators(
-    Post(ApiSubmodelElementsPath),
+    Post(withPrefix(ApiSubmodelElementsPath, prefix)),
   );
 }
 
 export const ApiGetSubmodelElementByIdPath = "/:id/submodels/:submodelId/submodel-elements/:idShortPath";
-export function ApiGetSubmodelElementById() {
+export function ApiGetSubmodelElementById(prefix?: string) {
   return applyDecorators(
-    Get(ApiGetSubmodelElementByIdPath),
+    Get(withPrefix(ApiGetSubmodelElementByIdPath, prefix)),
   );
 }
 
-export function ApiDeleteSubmodelElementById() {
+export function ApiDeleteSubmodelElementById(prefix?: string) {
   return applyDecorators(
-    Delete(ApiGetSubmodelElementByIdPath),
+    Delete(withPrefix(ApiGetSubmodelElementByIdPath, prefix)),
     DeleteHttpCode,
   );
 }
 
-export function ApiPatchSubmodelElement() {
+export function ApiPatchSubmodelElement(prefix?: string) {
   return applyDecorators(
-    Patch(ApiGetSubmodelElementByIdPath),
+    Patch(withPrefix(ApiGetSubmodelElementByIdPath, prefix)),
   );
 }
 
-export function ApiPostSubmodelElementAtIdShortPath() {
+export function ApiPostSubmodelElementAtIdShortPath(prefix?: string) {
   return applyDecorators(
-    Post(ApiGetSubmodelElementByIdPath),
+    Post(withPrefix(ApiGetSubmodelElementByIdPath, prefix)),
   );
 }
 export const ApiPostColumnPath = `${ApiGetSubmodelElementByIdPath}/columns`;
 
-export function ApiPostColumn() {
+export function ApiPostColumn(prefix?: string) {
   return applyDecorators(
-    Post(ApiPostColumnPath),
+    Post(withPrefix(ApiPostColumnPath, prefix)),
   );
 }
 
 export const ApiGetColumnByIdShortPath = `${ApiPostColumnPath}/:idShortOfColumn`;
 
-export function ApiDeleteColumn() {
+export function ApiDeleteColumn(prefix?: string) {
   return applyDecorators(
-    Delete(ApiGetColumnByIdShortPath),
+    Delete(withPrefix(ApiGetColumnByIdShortPath, prefix)),
   );
 }
 
-export function ApiPatchColumn() {
+export function ApiPatchColumn(prefix?: string) {
   return applyDecorators(
-    Patch(ApiGetColumnByIdShortPath),
+    Patch(withPrefix(ApiGetColumnByIdShortPath, prefix)),
   );
 }
 
 export const ApiPostRowPath = `${ApiGetSubmodelElementByIdPath}/rows`;
 
-export function ApiPostRow() {
+export function ApiPostRow(prefix?: string) {
   return applyDecorators(
-    Post(ApiPostRowPath),
+    Post(withPrefix(ApiPostRowPath, prefix)),
   );
 }
 
 export const ApiDeleteRowPath = `${ApiPostRowPath}/:idShortOfRow`;
-export function ApiDeleteRow() {
+export function ApiDeleteRow(prefix?: string) {
   return applyDecorators(
-    Delete(ApiDeleteRowPath),
+    Delete(withPrefix(ApiDeleteRowPath, prefix)),
   );
 }
 
 export const ApiGetSubmodelElementValuePath = "/:id/submodels/:submodelId/submodel-elements/:idShortPath/$value";
-export function ApiGetSubmodelElementValue() {
+export function ApiGetSubmodelElementValue(prefix?: string) {
   return applyDecorators(
-    Get(ApiGetSubmodelElementValuePath),
+    Get(withPrefix(ApiGetSubmodelElementValuePath, prefix)),
   );
 }
 
-export function ApiPatchSubmodelElementValue() {
+export function ApiPatchSubmodelElementValue(prefix?: string) {
   return applyDecorators(
-    Patch(ApiGetSubmodelElementValuePath),
+    Patch(withPrefix(ApiGetSubmodelElementValuePath, prefix)),
   );
 }
 
