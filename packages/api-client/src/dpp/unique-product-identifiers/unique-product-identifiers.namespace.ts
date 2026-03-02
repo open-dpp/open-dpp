@@ -25,13 +25,13 @@ export class UniqueProductIdentifiersNamespace {
 
   public async getByReference(reference: string) {
     return this.axiosInstance.get<UniqueProductIdentifierDto[]>(
-      `/organizations/${this.organizationId}/unique-product-identifiers?reference=${reference}`,
+      `/unique-product-identifiers?reference=${reference}`,
     )
   }
 
   public async getPassport(uuid: string) {
     return this.axiosInstance.get<PassportDto>(
-      `/organizations/${this.organizationId}/unique-product-identifiers/${uuid}/passport`,
+      `/unique-product-identifiers/${uuid}/passport`,
     )
   }
 

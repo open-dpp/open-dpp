@@ -104,9 +104,9 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     }
   }
 
-  @Get("organizations/:orgaId/unique-product-identifiers")
+  @AllowAnonymous()
+  @Get("/unique-product-identifiers")
   async getUniqueProductIdentifierByReference(
-    @Param("orgaId") organizationId: string,
     @Query("reference") reference: string,
   ) {
     if (!reference || reference.length === 0) {
@@ -118,9 +118,9 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     return UniqueProductIdentifierListDtoSchema.parse(upids);
   }
 
-  @Get("organizations/:orgaId/unique-product-identifiers/:id/passport")
+  @AllowAnonymous()
+  @Get("/unique-product-identifiers/:id/passport")
   async getReferencedPassport(
-    @Param("orgaId") organizationId: string,
     @Param("id") id: string,
   ) {
     return PassportDtoSchema.parse((await this.loadPassport(id)));

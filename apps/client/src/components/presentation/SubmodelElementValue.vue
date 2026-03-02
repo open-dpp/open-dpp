@@ -19,6 +19,9 @@ const { element } = defineProps<{
   >
     {{ element.value }}
   </dd>
+  <dd v-if="element.modelType === 'ReferenceElement' && typeof element.value === 'string'">
+    <a :href="element.value">{{ element.value }}</a>
+  </dd>
   <MediaFieldView
     v-if="element.modelType === 'File' && typeof element.value === 'string'"
     :media-id="element.value"
