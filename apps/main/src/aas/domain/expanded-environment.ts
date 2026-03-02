@@ -62,7 +62,9 @@ export class ExpandedEnvironment {
       const submodelData = parsed.submodels[index];
       const oldId = submodelData.id;
       if (!oldId || typeof oldId !== "string") {
-        continue;
+        throw new ValueError(
+          `Submodel at index ${index} has a missing or invalid id`,
+        );
       }
 
       try {

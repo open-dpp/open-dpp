@@ -76,19 +76,17 @@ describe("expandedEnvironment", () => {
       expect(env.conceptDescriptions).toEqual(["cd-1"]);
     });
 
-    it("should skip submodels with missing id", () => {
-      const shell = createShell();
-
+    it("should throw ValueError for submodel with missing id", () => {
       const plain = {
-        assetAdministrationShells: [shell.toPlain()],
+        assetAdministrationShells: [],
         submodels: [{ idShort: "no-id", modelType: "Submodel" }],
         conceptDescriptions: [],
       };
 
-      const env = ExpandedEnvironment.fromPlain(plain);
-
-      expect(env.submodels).toHaveLength(0);
-      expect(env.shells).toHaveLength(1);
+      expect(() => ExpandedEnvironment.fromPlain(plain)).toThrow(ValueError);
+      expect(() => ExpandedEnvironment.fromPlain(plain)).toThrow(
+        "Submodel at index 0 has a missing or invalid id",
+      );
     });
 
     it("should default conceptDescriptions to empty array when not provided", () => {
