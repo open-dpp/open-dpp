@@ -580,6 +580,7 @@
       "intro": "Guten Tag,\n\nich habe folgendes Reparaturanliegen:",
       "sendError": "Die Reperaturanfrage konnte nicht abgeschickt werden. Haben Sie bereits einen Emailclient konfiguriert?"
     },
+    "missingValue": "Kein Wert gesetzt",
     "passportNotFound": "Produktpass nicht gefunden",
     "passportNotFoundLong": "Ihr digitaler Produktpass konnte nicht gefunden werden. Bitte prüfen Sie Ihre Daten oder kontaktieren Sie den Support."
   },

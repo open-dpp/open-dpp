@@ -580,6 +580,7 @@
       "intro": "Hello,\n\nI have the following repair request:",
       "sendError": "The repair request could not be sent. Have you already configured an email client?"
     },
+    "missingValue": "Value is missing",
     "passportNotFound": "Productpass passport not found",
     "passportNotFoundLong": "Your digital product passport could not be found. Please validate your data or contact support."
   },
