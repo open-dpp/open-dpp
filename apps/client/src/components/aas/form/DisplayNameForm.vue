@@ -1,8 +1,12 @@
 <script setup lang="ts">
+import type { LanguageTextDto, LanguageType } from "@open-dpp/dto";
 import type { FormErrors } from "vee-validate";
+import { Language, LanguageEnum } from "@open-dpp/dto";
 import { Button, DataView } from "primevue";
 import { useFieldArray } from "vee-validate";
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
+import { convertLocaleToLanguage } from "../../../translations/i18n.ts";
 import LanguageSelect from "../../basics/LanguageSelect.vue";
 import TextFieldWithValidation from "../../basics/TextFieldWithValidation.vue";
 
@@ -10,12 +14,34 @@ const props = defineProps<{
   showErrors: boolean;
   errors: FormErrors<any>;
 }>();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const {
   fields: displayName,
   push: pushDisplayName,
   remove: removeDisplayName,
-} = useFieldArray("displayName");
+} = useFieldArray<LanguageTextDto>("displayName");
+
+const remainingLanguages = computed(() =>
+  Object.keys(Language).filter(
+    l =>
+      !displayName.value
+        .map(f => f.value.language)
+        .includes(LanguageEnum.parse(l)),
+  ),
+);
+
+function nextLanguage(): LanguageType {
+  const bestMatch = remainingLanguages.value.find(
+    l => l === convertLocaleToLanguage(locale.value),
+  );
+  return LanguageEnum.parse(bestMatch ?? remainingLanguages.value[0]);
+}
+
+function ignoreOptions(language: string) {
+  return displayName.value
+    .map(f => f.value.language)
+    .filter(l => l !== language);
+}
 </script>
 
 <template>
@@ -28,7 +54,13 @@ const {
         <Button
           icon="pi pi-plus"
           raised
-          @click="pushDisplayName({ text: '', language: '' })"
+          :disabled="remainingLanguages.length === 0"
+          @click="
+            pushDisplayName({
+              text: '',
+              language: nextLanguage(),
+            })
+          "
         />
       </div>
     </template>
@@ -39,7 +71,10 @@ const {
           :key="index"
           class="grid lg:grid-cols-3 gap-4 pt-2"
         >
-          <LanguageSelect v-model="field.value.language" />
+          <LanguageSelect
+            v-model="field.value.language"
+            :ignore-options="ignoreOptions(field.value.language)"
+          />
           <TextFieldWithValidation
             :id="`displayName-${index}`"
             v-model="field.value.text"

@@ -2,7 +2,6 @@ import {
   AssetAdministrationShellModificationSchema,
   AssetInformationModificationSchema,
   FileModificationSchema,
-  NameAndDescriptionModificationDto,
   NameAndDescriptionModificationSchema,
   PropertyModificationSchema,
   ReferenceElementModificationSchema,
@@ -16,7 +15,7 @@ import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";
 import { AdministrativeInformation } from "./common/administrative-information";
 import { Key } from "./common/key";
-import { LanguageText } from "./common/language-text";
+import { hasUniqueLanguagesOrFail, LanguageText } from "./common/language-text";
 import { Qualifier } from "./common/qualififiable";
 import { Reference } from "./common/reference";
 import { ConceptDescription } from "./concept-description";
@@ -41,10 +40,13 @@ import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
 
 export class ModifierVisitor implements IVisitor<unknown, void> {
-  private modifyNameAndDescription(generalInfoDto: NameAndDescriptionModificationDto, data: unknown) {
+  private modifyNameAndDescription<T extends { displayName: LanguageText[]; description: LanguageText[] }>(generalInfoDto: T, data: unknown) {
     const { displayName, description } = NameAndDescriptionModificationSchema.parse(data);
+
     generalInfoDto.displayName = displayName?.map(LanguageText.fromPlain) ?? generalInfoDto.displayName;
     generalInfoDto.description = description?.map(LanguageText.fromPlain) ?? generalInfoDto.description;
+    hasUniqueLanguagesOrFail(generalInfoDto.displayName);
+    hasUniqueLanguagesOrFail(generalInfoDto.description);
   }
 
   visitAdministrativeInformation(_element: AdministrativeInformation, _context: unknown): void {
