@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import { computed } from "vue";
 import { useRoute } from "vue-router";
+import { useSubmodelTree } from "../../composables/submodel-tree";
 import { usePassportStore } from "../../stores/passport";
+import Breadcrumbs from "./Breadcrumbs.vue";
 import PassportHeader from "./PassportHeader.vue";
 import Sidebar from "./Sidebar.vue";
 import Submodel from "./Submodel.vue";
-import { useSubmodelTree } from "../../composables/submodel-tree";
 
 const passportStore = usePassportStore();
 const route = useRoute();
@@ -46,6 +47,9 @@ const submodels = computed(() => {
       <Sidebar data-cy="sidebar" />
     </div>
     <div data-cy="content" class="flex flex-col gap-5 w-full relative">
+      <div class="px-6 flex md:hidden">
+        <Breadcrumbs />
+      </div>
       <PassportHeader />
       <Submodel
         v-for="submodel in submodels"

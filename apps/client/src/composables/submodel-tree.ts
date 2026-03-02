@@ -1,6 +1,6 @@
 import type { SubmodelElementResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
 import type { DisplayName } from "./display-name";
-import { computed, type Ref } from "vue";
+import { computed } from "vue";
 
 export interface SubmodelTreeElement {
   idShort: string;
@@ -15,16 +15,16 @@ export function useSubmodelTree(submodels: SubmodelResponseDto[]) {
       submodels: SubmodelElementResponseDto[],
     ): SubmodelTreeElement[] => {
       return submodels
-        .filter((element) => element.modelType === "SubmodelElementCollection")
+        .filter(element => element.modelType === "SubmodelElementCollection")
         .map((element) => {
-          const submodelElements =
-            element.value as SubmodelElementResponseDto[];
+          const submodelElements
+            = element.value as SubmodelElementResponseDto[];
 
           return {
             idShort: element.idShort,
             name: element.displayName,
             children: treeMapping(submodelElements),
-            submodelElements: submodelElements,
+            submodelElements,
           };
         });
     };
@@ -46,7 +46,7 @@ export function useSubmodelTree(submodels: SubmodelResponseDto[]) {
       }
 
       return Math.max(
-        ...elements.map((element) => 1 + getTreeDepth(element.children)),
+        ...elements.map(element => 1 + getTreeDepth(element.children)),
       );
     };
 
@@ -76,20 +76,51 @@ export function useSubmodelTree(submodels: SubmodelResponseDto[]) {
 
       for (const submodelelement of element.submodelElements) {
         if (submodelelement.idShort === id) {
-          return element
+          return element;
         }
       }
-
-
     }
 
     return undefined;
+  };
+
+  const getSubmodelTreeElementsBefore = (
+    elements: SubmodelTreeElement[],
+    targetId: string,
+  ): SubmodelTreeElement[] => {
+    const elementsBeforeTarget: SubmodelTreeElement[] = [];
+    let targetFound = false;
+
+    const collect = (treeElements: SubmodelTreeElement[]): void => {
+      if (targetFound) {
+        return;
+      }
+
+      for (const element of treeElements) {
+        if (element.idShort === targetId) {
+          targetFound = true;
+          return;
+        }
+
+        elementsBeforeTarget.push(element);
+        collect(element.children);
+
+        if (targetFound) {
+          return;
+        }
+      }
+    };
+
+    collect(elements);
+
+    return targetFound ? elementsBeforeTarget : [];
   };
 
   return {
     submodelTree,
     submodelTreeDepth,
     findTreeElementById,
-    mapTreeElementsToSubmodels
-  }
+    mapTreeElementsToSubmodels,
+    getSubmodelTreeElementsBefore,
+  };
 }

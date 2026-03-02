@@ -7,7 +7,6 @@ export const usePassportStore = defineStore("passport", () => {
   const submodels = ref<SubmodelResponseDto[]>([]);
   const shells = ref<AssetAdministrationShellDto[]>();
 
-
   return {
     productPassport,
     submodels,

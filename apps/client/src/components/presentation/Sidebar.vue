@@ -1,23 +1,22 @@
 <script lang="ts" setup>
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
+import { useSubmodelTree } from "../../composables/submodel-tree";
 import { usePassportStore } from "../../stores/passport";
 import SidebarLink from "./SidebarLink.vue";
-import { computed } from "vue";
-import { useSubmodelTree } from "../../composables/submodel-tree";
 
 const { t } = useI18n();
 
 const route = useRoute();
 
 const rootLinksActive = computed(() => {
- return !route.query.submodelid
+  return !route.query.submodelid;
 });
 
 const passportStore = usePassportStore();
 
 const { submodelTree } = useSubmodelTree(passportStore.submodels);
-
 </script>
 
 <template>
@@ -31,11 +30,11 @@ const { submodelTree } = useSubmodelTree(passportStore.submodels);
     <ul role="list" class="-mx-2 space-y-1 pt-2">
       <SidebarLink
         v-for="element in submodelTree"
+        :key="element.idShort"
         :tree-element="element"
         :parent-active="rootLinksActive"
-        :parent-id="''"
         :level="0"
-      ></SidebarLink>
+      />
     </ul>
   </nav>
 </template>

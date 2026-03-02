@@ -12,6 +12,12 @@ export const ReferenceJsonSchema: z.ZodType<any> = z.lazy(() =>
   }),
 )
 
+export interface ReferenceValue {
+  type: ReferenceTypesType
+  referredSemanticId: ReferenceValue | null
+  keys: { type: KeyTypesType, value: string }[]
+}
+
 export interface ReferenceModification {
   type?: ReferenceTypesType
   referredSemanticId?: ReferenceModification | null

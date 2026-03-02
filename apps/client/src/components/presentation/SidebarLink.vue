@@ -1,38 +1,38 @@
 <script lang="ts" setup>
+import type { SubmodelTreeElement } from "../../composables/submodel-tree";
 import { computed } from "vue";
 import { useDisplayName } from "../../composables/display-name";
-import type { SubmodelTreeElement } from "../../composables/submodel-tree";
 
 const { treeElement, parentId } = defineProps<{
   treeElement: SubmodelTreeElement;
   level: number;
-  parentId: string;
+  parentId?: string;
 }>();
 
 const linkTarget = computed(() => {
-    if (parentId === '') {
-      return {
-        hash: `#${treeElement.idShort}` 
-      }
-    }
+  if (!parentId || parentId === "") {
     return {
-      query: {
-        submodelid: parentId
-      },
-      hash: `#${treeElement.idShort}` 
-    }
-})
+      hash: `#${treeElement.idShort}`,
+    };
+  }
+  return {
+    query: {
+      submodelid: parentId,
+    },
+    hash: `#${treeElement.idShort}`,
+  };
+});
 
 const { description: name } = useDisplayName(treeElement.name);
 
 const levelToPadding = [
-    "pl-0",
-    "pl-2",
-    "pl-4",
-    "pl-6",
-    "pl-8",
-    "pl-10"
-]
+  "pl-0",
+  "pl-2",
+  "pl-4",
+  "pl-6",
+  "pl-8",
+  "pl-10",
+];
 </script>
 
 <template>
@@ -46,10 +46,11 @@ const levelToPadding = [
     <ul v-if="treeElement.children && treeElement.children.length > 0">
       <SidebarLink
         v-for="child in treeElement.children"
+        :key="child.idShort"
         :tree-element="child"
         :parent-id="treeElement.idShort"
         :level="level + 1"
-      ></SidebarLink>
+      />
     </ul>
   </li>
 </template>

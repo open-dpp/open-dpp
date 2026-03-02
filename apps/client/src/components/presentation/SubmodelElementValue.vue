@@ -1,10 +1,12 @@
 <script lang="ts" setup>
 import type {
+  ReferenceValue,
   SubmodelElementCollectionResponseDto,
   SubmodelElementResponseDto,
 } from "@open-dpp/dto";
 import MediaFieldView from "../media/MediaFieldView.vue";
 import List from "./List.vue";
+import Reference from "./Reference.vue";
 import Subsection from "./SubmodelElementCollection.vue";
 
 const { element } = defineProps<{
@@ -19,9 +21,7 @@ const { element } = defineProps<{
   >
     {{ element.value }}
   </dd>
-  <dd v-if="element.modelType === 'ReferenceElement' && typeof element.value === 'string'">
-    <a :href="element.value">{{ element.value }}</a>
-  </dd>
+  <Reference v-if="element.modelType === 'ReferenceElement'" :model="element.value as ReferenceValue" />
   <MediaFieldView
     v-if="element.modelType === 'File' && typeof element.value === 'string'"
     :media-id="element.value"

@@ -57,7 +57,6 @@ async function pushNotFound(permalink: string) {
   });
 }
 
-// Cleanup object URLs when component unmounts to prevent memory leaks
 onBeforeUnmount(() => {
   productPassportStore.cleanupMediaUrls();
 });
