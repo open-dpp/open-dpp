@@ -27,7 +27,7 @@ export class LanguageText implements IVisitable {
   }
 }
 
-export function hasUniqueLanguagesOrFail(items: Array<LanguageText>) {
+export function hasUniqueLanguagesOrFail(items: Array<LanguageText>): void {
   const langs = items.map(i => i.language.trim().toLowerCase());
   if (new Set(langs).size !== langs.length) {
     throw new ValueError("All language texts must have unique languages");
