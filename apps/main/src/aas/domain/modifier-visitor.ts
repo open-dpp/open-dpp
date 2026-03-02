@@ -42,6 +42,7 @@ import { IVisitor } from "./visitor";
 export class ModifierVisitor implements IVisitor<unknown, void> {
   private modifyNameAndDescription(generalInfoDto: NameAndDescriptionModificationDto, data: unknown) {
     const { displayName, description } = NameAndDescriptionModificationSchema.parse(data);
+
     generalInfoDto.displayName = displayName?.map(LanguageText.fromPlain) ?? generalInfoDto.displayName;
     generalInfoDto.description = description?.map(LanguageText.fromPlain) ?? generalInfoDto.description;
   }

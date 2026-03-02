@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { AssetKind, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
+import { AssetKind, KeyTypes, Language, ReferenceTypes } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";
 import { AdministrativeInformation } from "./common/administrative-information";
@@ -15,6 +16,23 @@ describe("assetAdministrationShell", () => {
     });
     expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);
     expect(aas.administration).toEqual(AdministrativeInformation.create({ version: "1", revision: "0" }));
+  });
+
+  it("fails to create a new asset administration shell cause of duplicates in language texts", () => {
+    const expectedError = new ValueError("All language texts must have unique languages");
+    const languageWithDuplicates = [
+      LanguageText.create({ language: Language.en, text: "Test AAS" }),
+      LanguageText.create({ language: Language.en, text: "Test other AAS" }),
+    ];
+    expect(() => AssetAdministrationShell.create({
+      assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
+      displayName: languageWithDuplicates,
+    })).toThrow(expectedError);
+
+    expect(() => AssetAdministrationShell.create({
+      assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
+      description: languageWithDuplicates,
+    })).toThrow(expectedError);
   });
 
   it("should delete submodel", () => {
