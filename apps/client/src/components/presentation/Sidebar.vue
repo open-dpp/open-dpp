@@ -22,7 +22,7 @@ const { submodelTree } = useSubmodelTree(passportStore.submodels);
     <ul role="list" class="-mx-2 space-y-1 pt-2">
       <SidebarLink
         v-for="element in submodelTree"
-        :key="element.idShort"
+        :key="`sidebar-${element.idShort}`"
         :tree-element="element"
         :level="0"
       />

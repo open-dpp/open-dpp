@@ -7,6 +7,7 @@ import SubmodelElement from "./SubmodelElement.vue";
 const { title } = defineProps<{
   title: DisplayName[];
   idShort: string;
+  parentId?: string;
   submodelElements: SubmodelElementResponseDto[];
 }>();
 
@@ -18,7 +19,7 @@ const { description: name } = useDisplayName(title);
     :id="idShort"
     class="overflow-hidden bg-white shadow sm:rounded-lg w-full"
   >
-    <div class="overflow-hidden  bg-white shadow-sm sm:rounded-lg p-4">
+    <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg p-4">
       <div class="px-4 sm:px-0">
         <h3 class="font-extrabold text-gray-900">
           {{ name }}
@@ -29,6 +30,7 @@ const { description: name } = useDisplayName(title);
           v-for="element in submodelElements"
           :key="element.idShort"
           :element="element"
+          :parent-id="parentId"
         />
       </dl>
     </div>

@@ -50,7 +50,7 @@ const paddingClass = computed(
     <ul v-if="treeElement.children && treeElement.children.length > 0">
       <SidebarLink
         v-for="child in treeElement.children"
-        :key="child.idShort"
+        :key="`sidebar-${child.idShort}`"
         :tree-element="child"
         :parent-id="treeElement.idShort"
         :level="level + 1"

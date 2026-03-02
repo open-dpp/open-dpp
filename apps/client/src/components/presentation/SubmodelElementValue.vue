@@ -8,7 +8,7 @@ import { useI18n } from "vue-i18n";
 import MediaFieldView from "../media/MediaFieldView.vue";
 import List from "./List.vue";
 import Reference from "./Reference.vue";
-import Subsection from "./SubmodelElementCollection.vue";
+import SubmodelElementCollection from "./SubmodelElementCollection.vue";
 
 const { element } = defineProps<{
   element: SubmodelElementResponseDto;
@@ -24,7 +24,10 @@ const { t } = useI18n();
   >
     {{ element.value }}
   </dd>
-  <div v-if="!element.value" class="mt-1 text-sm/6 font-semibold text-red-800 sm:mt-2">
+  <div
+    v-if="!element.value"
+    class="mt-1 text-sm/6 font-semibold text-red-800 sm:mt-2"
+  >
     {{ t("presentation.missingValue") }}
   </div>
   <Reference
@@ -41,7 +44,7 @@ const { t } = useI18n();
     v-else-if="element.modelType === 'SubmodelElementList'"
     :content="element.value as SubmodelElementCollectionResponseDto[]"
   />
-  <Subsection
+  <SubmodelElementCollection
     v-else-if="element.modelType === 'SubmodelElementCollection'"
     :id-short="element.idShort"
   />

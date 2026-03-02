@@ -116,11 +116,43 @@ export function useSubmodelTree(submodels: SubmodelResponseDto[]) {
     return targetFound ? elementsBeforeTarget : [];
   };
 
+  const getParent = (
+    elements: SubmodelTreeElement[],
+    targetId: string,
+  ): SubmodelTreeElement | undefined => {
+    const findParent = (
+      treeElements: SubmodelTreeElement[],
+      parent: SubmodelTreeElement | undefined,
+    ): SubmodelTreeElement | undefined => {
+      for (const element of treeElements) {
+        if (element.idShort === targetId) {
+          return parent;
+        }
+
+        for (const submodelElement of element.submodelElements) {
+          if (submodelElement.idShort === targetId) {
+            return element;
+          }
+        }
+
+        const parentInChildren = findParent(element.children, element);
+        if (parentInChildren) {
+          return parentInChildren;
+        }
+      }
+
+      return undefined;
+    };
+
+    return findParent(elements, undefined);
+  };
+
   return {
     submodelTree,
     submodelTreeDepth,
     findTreeElementById,
     mapTreeElementsToSubmodels,
     getSubmodelTreeElementsBefore,
+    getParent,
   };
 }
