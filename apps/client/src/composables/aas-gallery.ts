@@ -14,15 +14,16 @@ export function useAasGallery(props: AasGalleryProps) {
   const { files, download, add, remove, modify, move } = useMediaFileCollection(props);
 
   async function downloadDefaultThumbnails(assetAdministrationShell: AssetAdministrationShellResponseDto) {
-    assetInformation.value = assetAdministrationShell.assetInformation;
+    assetInformation.value = { ...assetAdministrationShell.assetInformation };
+
     await download(assetInformation.value.defaultThumbnails.map(thumbnail => thumbnail.path));
   }
 
   async function addImage(image: MediaInfo) {
     const thumbnail = { path: image.id, contentType: image.mimeType };
     if (assetInformation.value) {
-      assetInformation.value.defaultThumbnails.push(thumbnail);
       await add(thumbnail.path);
+      assetInformation.value.defaultThumbnails.push(thumbnail);
     }
   }
 
@@ -65,8 +66,9 @@ export function useAasGallery(props: AasGalleryProps) {
       );
       if (!thumbnail)
         return;
-      thumbnail.path = newMediaInfo.id;
       await modify(oldMediaInfo.id, newMediaInfo.id);
+      thumbnail.path = newMediaInfo.id;
+      thumbnail.contentType = newMediaInfo.mimeType;
     }
   }
 

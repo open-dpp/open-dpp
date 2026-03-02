@@ -34,12 +34,16 @@ export function useTemplates({ changeQueryParams, initialCursor }: TemplateProps
 
   const fetchTemplates = async (pagingParams: PagingParamsDto): Promise<PagingResult> => {
     loading.value = true;
-    const response = await apiClient.dpp.templates.getAll(
-      { ...pagingParams, populate: [Populates.assetAdministrationShells] },
-    );
-    templates.value = response.data;
-    loading.value = false;
-    return response.data;
+    try {
+      const response = await apiClient.dpp.templates.getAll(
+        { ...pagingParams, populate: [Populates.assetAdministrationShells] },
+      );
+      templates.value = response.data;
+      return response.data;
+    }
+    finally {
+      loading.value = false;
+    }
   };
   const pagination = usePagination({ initialCursor, limit: 10, fetchCallback: fetchTemplates, changeQueryParams });
 

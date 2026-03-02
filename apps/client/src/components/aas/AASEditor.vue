@@ -163,7 +163,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
             <dl class="divide-y divide-gray-100">
               <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt class="text-sm font-medium text-gray-900">
-                  {{ t("models.form.id") }}
+                  {{ t("aasEditor.formLabels.id") }}
                 </dt>
                 <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
                   {{ id }}
@@ -171,7 +171,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
               </div>
               <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt class="text-sm font-medium text-gray-900">
-                  {{ t("models.form.name.label") }}
+                  {{ t("aasEditor.formLabels.name") }}
                 </dt>
                 <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
                   {{ displayName === "" ? t("common.untitled") : displayName }}

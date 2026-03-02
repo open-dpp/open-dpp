@@ -5,6 +5,7 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import MediaModal from "./MediaModal.vue";
 
+const props = defineProps<{ title?: string }>();
 const emits = defineEmits<{
   (e: "addImage", images: MediaInfo): void;
   (e: "removeImage", image: MediaInfo): void;
@@ -69,7 +70,7 @@ function onMoveImageDown(image: MediaInfo) {
     <DataTable :value="images">
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="text-xl font-bold">{{ t("media.media") }}</span>
+          <span class="text-xl font-bold">{{ props.title ?? t("media.media") }}</span>
           <Button
             data-cy="add-image"
             icon="pi pi-plus"
@@ -85,7 +86,7 @@ function onMoveImageDown(image: MediaInfo) {
           <Image :src="slotProps.data.url" preview width="100px" />
         </template>
       </Column>
-      <Column class="w-24 !text-end">
+      <Column class="w-24 text-end!">
         <template #body="{ data, index }">
           <div class="flex items-center rounded-md gap-2">
             <Button
@@ -122,6 +123,6 @@ function onMoveImageDown(image: MediaInfo) {
         </template>
       </Column>
     </DataTable>
-    <MediaModal v-model="openMediaModal" @confirm="onMediaModalConfirm" />
+    <MediaModal v-if="openMediaModal" v-model="openMediaModal" @confirm="onMediaModalConfirm" />
   </div>
 </template>

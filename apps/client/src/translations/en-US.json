@@ -59,9 +59,11 @@
     "importSuccess": "Passport imported successfully."
   },
   "aasEditor": {
+    "productImages": "Product images",
     "formLabels": {
       "value": "Value",
-      "name": "Name"
+      "name": "Name",
+      "id": "Identifier"
     },
     "table": {
       "saveAndAddEntries": "Save and add list entries",
@@ -86,7 +88,7 @@
     },
     "link": "Link",
     "errorLoading": "Loading @:common.failed",
-    "errorLoadingSubmodels": "@.capitalize:common.failed to @:aasEditor.load the submodels",
+    "errorLoadingSubmodels": "@.capitalize:common.failed to load the submodels",
     "addSubmodel": "Add section",
     "submodelElementCollection": "Sub section",
     "edit": "Edit {formItem}",

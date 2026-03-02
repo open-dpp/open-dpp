@@ -49,7 +49,7 @@ import {
 import { useAasGallery } from "./aas-gallery.ts";
 import { usePagination } from "./pagination.ts";
 
-interface AasEditorProps {
+export interface AasEditorProps {
   id: string;
   aasNamespace: AasNamespace;
   initialSelectedKeys?: string;

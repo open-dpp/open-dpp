@@ -70,7 +70,7 @@ defineExpose<{
   <FormContainer>
     <DisplayNameForm :show-errors="showErrors" :errors="errors" />
   </FormContainer>
-  <GalleriaEdit v-model="files" @add-image="addImage" @remove-image="removeImage" @modify-image="modifyImage" @move-image="moveImage" />
+  <GalleriaEdit v-model="files" :title="t('aasEditor.productImages')" @add-image="addImage" @remove-image="removeImage" @modify-image="modifyImage" @move-image="moveImage" />
 </template>
 
 <style scoped></style>

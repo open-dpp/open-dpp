@@ -77,12 +77,13 @@ export function useMediaFileCollection({ errorHandlingStore, translate }: MediaF
   }
 
   async function add(mediaId: string, position?: number) {
-    const { blob, mediaInfo: fetchedMediaInfo } = await mediaStore.fetchMedia(
-      mediaId,
-    );
     if (files.value.some(file => file.mediaInfo.id === mediaId)) {
       return;
     }
+    const { blob, mediaInfo: fetchedMediaInfo } = await mediaStore.fetchMedia(
+      mediaId,
+    );
+
     if (blob) {
       const newMedia = {
         blob,
@@ -130,6 +131,9 @@ export function useMediaFileCollection({ errorHandlingStore, translate }: MediaF
     const foundIndex = files.value.findIndex(
       file => file.mediaInfo.id === oldMediaId,
     );
+    if (foundIndex === -1) {
+      return;
+    }
     await add(newMediaId, foundIndex);
   }
 

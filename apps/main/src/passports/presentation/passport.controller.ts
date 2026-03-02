@@ -176,7 +176,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
         false,
       ) };
     }).otherwise(() => {
-      throw new BadRequestException("Either templateId or assetInformation must be provided");
+      throw new BadRequestException("Either templateId or environment.assetAdministrationShells must be provided");
     });
 
     const passport = Passport.create({

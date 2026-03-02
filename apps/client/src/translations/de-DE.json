@@ -59,9 +59,11 @@
     }
   },
   "aasEditor": {
+    "productImages": "Produktbilder",
     "formLabels": {
       "value": "Wert",
-      "name": "Name"
+      "name": "Name",
+      "id": "Identifikator"
     },
     "table": {
       "saveAndAddEntries": "Speichern und Listeneinträge hinzufügen",
