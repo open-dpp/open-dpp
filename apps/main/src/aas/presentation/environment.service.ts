@@ -33,7 +33,7 @@ import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
-import { ExpandedEnvironment, ExpandedEnvironmentPlain } from "../domain/expanded-environment";
+import { ExpandedEnvironment } from "../domain/expanded-environment";
 
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath, ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
@@ -265,11 +265,6 @@ export class EnvironmentService {
     const submodels = environment.submodels.map(id => submodelMap.get(id)!);
 
     return ExpandedEnvironment.fromLoaded(shells, submodels, environment.conceptDescriptions);
-  }
-
-  async getFullEnvironmentAsPlain(environment: Environment): Promise<ExpandedEnvironmentPlain> {
-    const expanded = await this.loadExpandedEnvironment(environment);
-    return expanded.toPlain();
   }
 
   async persistImportedEnvironment(
