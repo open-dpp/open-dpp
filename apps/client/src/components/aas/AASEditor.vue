@@ -143,8 +143,8 @@ const isFullPosition = computed(() => position.value === fullPosition);
       <Button
         icon="pi pi-pencil"
         severity="primary"
-        :aria-label="t('aasEditor.edit')"
-        :label="t('aasEditor.edit')"
+        :aria-label="t('common.edit')"
+        :label="t('common.edit')"
         @click="openAssetAdministrationShellEditor"
       />
     </div>
