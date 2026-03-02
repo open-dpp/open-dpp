@@ -83,9 +83,8 @@ describe("expandedEnvironment", () => {
         conceptDescriptions: [],
       };
 
-      expect(() => ExpandedEnvironment.fromPlain(plain)).toThrow(ValueError);
       expect(() => ExpandedEnvironment.fromPlain(plain)).toThrow(
-        "Submodel at index 0 has a missing or invalid id",
+        new ValueError("Submodel at index 0 has a missing or invalid id"),
       );
     });
 
