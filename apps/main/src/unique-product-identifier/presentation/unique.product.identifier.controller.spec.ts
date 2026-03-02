@@ -15,6 +15,7 @@ import { ModelsService } from "../../models/infrastructure/models.service";
 import { Template } from "../../old-templates/domain/template";
 import { OldTemplateDoc, TemplateSchema } from "../../old-templates/infrastructure/template.schema";
 import { TemplateService } from "../../old-templates/infrastructure/template.service";
+import { PassportService } from "../../passports/application/services/passport.service";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { PassportSchema } from "../../passports/infrastructure/passport.schema";
@@ -36,6 +37,7 @@ describe("uniqueProductIdentifierController", () => {
     providers: [
       UniqueProductIdentifierService,
       PassportRepository,
+      PassportService,
       ModelsService,
       UniqueProductIdentifierService,
       UniqueProductIdentifierApplicationService,
@@ -105,7 +107,7 @@ describe("uniqueProductIdentifierController", () => {
 
     const response = await request(ctx.globals().app.getHttpServer())
       .get(
-        `/organizations/${org.id}/unique-product-identifiers/${upid.id}/passport`,
+        `/unique-product-identifiers/${upid.id}/passport`,
       )
       .set("Cookie", userCookie);
 
@@ -124,7 +126,7 @@ describe("uniqueProductIdentifierController", () => {
 
     const response = await request(ctx.globals().app.getHttpServer())
       .get(
-        `/organizations/${org.id}/unique-product-identifiers?reference=${upid.passport.id}`,
+        `/unique-product-identifiers?reference=${upid.passport.id}`,
       )
       .set("Cookie", userCookie);
 
