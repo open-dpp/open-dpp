@@ -41,13 +41,17 @@ describe("assetAdministrationShell", () => {
 
   it("should be modified", () => {
     const aas = AssetAdministrationShell.create({
-      assetInformation: AssetInformation.create({ assetKind: "Instance" }),
+      assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance, globalAssetId: "globalAssetId" }),
     });
     const displayName = [{ language: "en", text: "MyAAS" }];
     const description = [{ language: "en", text: "My description" }];
-    aas.modify({ displayName, description });
+    const defaultThumbnails = [{ path: "path.to.image", contentType: "application/jpg" }];
+    aas.modify({ displayName, description, assetInformation: { defaultThumbnails } });
     expect(aas.displayName).toEqual(displayName.map(LanguageText.fromPlain));
     expect(aas.description).toEqual(description.map(LanguageText.fromPlain));
+    expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);
+    expect(aas.assetInformation.globalAssetId).toEqual("globalAssetId");
+    expect(aas.assetInformation.defaultThumbnails).toEqual(defaultThumbnails);
   });
 
   it("should be able to be copied", () => {

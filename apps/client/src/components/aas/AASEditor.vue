@@ -8,6 +8,8 @@ import {
   ConfirmDialog,
   Divider,
   Drawer,
+  Galleria,
+  Image,
   Menu,
   TreeTable,
 } from "primevue";
@@ -15,6 +17,7 @@ import { useConfirm } from "primevue/useconfirm";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
+import emptyState from "../../assets/empty-state.png";
 import { useAasEditor } from "../../composables/aas-editor.ts";
 import { AasEditMode } from "../../lib/aas-editor.ts";
 import apiClient from "../../lib/api-client.ts";
@@ -90,6 +93,7 @@ const {
   resetCursor,
   nextPage,
   displayName,
+  aasGalleryFiles,
 } = aasEditor;
 
 onMounted(async () => {
@@ -136,10 +140,47 @@ const isFullPosition = computed(() => position.value === fullPosition);
 
 <template>
   <div class="flex flex-col gap-1 p-4">
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <span class="text-xl font-bold">
-        {{ displayName === "" ? t("common.untitled") : displayName }}
-      </span>
+    <div class="flex justify-between items-start gap-2">
+      <div class="flex gap-2">
+        <Galleria
+          :value="
+            aasGalleryFiles.length > 0 ? aasGalleryFiles : [{ url: emptyState }]
+          "
+          :num-visible="aasGalleryFiles.length > 0 ? 5 : 0"
+          :show-thumbnails="aasGalleryFiles.length > 0"
+          thumbnails-position="bottom"
+          container-style="max-width: 340px"
+        >
+          <template #item="slotProps">
+            <Image :src="slotProps.item.url" alt="Image" width="100%" preview />
+          </template>
+          <template #thumbnail="slotProps">
+            <Image :src="slotProps.item.url" width="40px" />
+          </template>
+        </Galleria>
+        <div class="flex flex-col gap-2">
+          <div>
+            <dl class="divide-y divide-gray-100">
+              <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-900">
+                  {{ t("models.form.id") }}
+                </dt>
+                <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+                  {{ id }}
+                </dd>
+              </div>
+              <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-900">
+                  {{ t("models.form.name.label") }}
+                </dt>
+                <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+                  {{ displayName === "" ? t("common.untitled") : displayName }}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </div>
       <Button
         icon="pi pi-pencil"
         severity="primary"

@@ -80,6 +80,19 @@ vi.mock("../lib/api-client", () => ({
   },
 }));
 
+const fetchMediaMock
+  = vi.fn<
+    (
+      mediaId: string,
+    ) => Promise<{ blob: Blob | null; mediaInfo: { id: string } }>
+  >();
+
+vi.mock("../stores/media.ts", () => ({
+  useMediaStore: () => ({
+    fetchMedia: fetchMediaMock,
+  }),
+}));
+
 describe("aasEditor composable", () => {
   beforeEach(() => {
     vi.resetAllMocks();

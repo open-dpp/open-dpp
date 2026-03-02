@@ -10,3 +10,9 @@ export const AssetInformationJsonSchema = z.object({
   assetType: z.nullish(z.string()),
   defaultThumbnails: ResourceJsonSchema.array().default([]),
 })
+
+export type AssetInformationDto = z.infer<typeof AssetInformationJsonSchema>
+
+export const AssetInformationModificationSchema = AssetInformationJsonSchema.pick({ defaultThumbnails: true }).partial()
+
+export type AssetInformationModificationDto = z.input<typeof AssetInformationModificationSchema>

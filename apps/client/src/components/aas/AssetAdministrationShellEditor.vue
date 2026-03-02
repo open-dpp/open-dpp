@@ -2,15 +2,16 @@
 import type { AssetAdministrationShellModificationDto } from "@open-dpp/dto";
 import type { AssetAdministrationShellEditorProps } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
-import {
-
-  AssetAdministrationShellModificationSchema,
-} from "@open-dpp/dto";
+import { AssetAdministrationShellModificationSchema } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
 import { z } from "zod";
+import { useAasGallery } from "../../composables/aas-gallery.ts";
 import { LanguageTextFormSchema } from "../../lib/submodel-base-form.ts";
+import { useErrorHandlingStore } from "../../stores/error.handling.ts";
+import GalleriaEdit from "../media/GalleriaEdit.vue";
 import DisplayNameForm from "./form/DisplayNameForm.vue";
 import FormContainer from "./form/FormContainer.vue";
 
@@ -21,6 +22,10 @@ const props
       AssetAdministrationShellModificationDto
     >
   >();
+
+const { t } = useI18n();
+const errorHandlingStore = useErrorHandlingStore();
+const { files, downloadDefaultThumbnails, assetInformation, addImage, removeImage, moveImage, modifyImage } = useAasGallery({ translate: t, errorHandlingStore });
 
 const formSchema = z.object({
   displayName: LanguageTextFormSchema.array(),
@@ -44,10 +49,15 @@ async function submit() {
     await props.callback(
       AssetAdministrationShellModificationSchema.parse({
         ...data,
+        assetInformation: assetInformation.value,
       }),
     );
   })();
 }
+
+onMounted(async () => {
+  await downloadDefaultThumbnails(props.data);
+});
 
 defineExpose<{
   submit: () => Promise<void>;
@@ -60,6 +70,7 @@ defineExpose<{
   <FormContainer>
     <DisplayNameForm :show-errors="showErrors" :errors="errors" />
   </FormContainer>
+  <GalleriaEdit v-model="files" @add-image="addImage" @remove-image="removeImage" @modify-image="modifyImage" @move-image="moveImage" />
 </template>
 
 <style scoped></style>

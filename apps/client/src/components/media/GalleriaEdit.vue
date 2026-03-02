@@ -12,7 +12,8 @@ const emits = defineEmits<{
   (e: "modifyImage", image: MediaInfo, newMediaInfo: MediaInfo): void;
 }>();
 const { t } = useI18n();
-const images = defineModel<{ blob: Blob | null; mediaInfo: MediaInfo; url: string }[]>();
+const images
+  = defineModel<{ blob: Blob | null; mediaInfo: MediaInfo; url: string }[]>();
 const openMediaModal = ref(false);
 const imageToModify = ref<MediaInfo | null>(null);
 
@@ -121,10 +122,6 @@ function onMoveImageDown(image: MediaInfo) {
         </template>
       </Column>
     </DataTable>
-    <MediaModal
-      class="z-1200"
-      :open="openMediaModal"
-      @confirm="onMediaModalConfirm"
-    />
+    <MediaModal v-model="openMediaModal" @confirm="onMediaModalConfirm" />
   </div>
 </template>
