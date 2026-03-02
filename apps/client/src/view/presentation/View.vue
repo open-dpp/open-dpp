@@ -38,12 +38,18 @@ async function loadPassport(id: string): Promise<boolean> {
   passportStore.productPassport = response.data;
 
   const submodels = await apiClient.dpp.uniqueProductIdentifiers.aas.getSubmodels(id, {});
-
+  if (submodels.status !== 200) {
+    console.error("Failed to load submodels");
+    return false;
+  }
   passportStore.submodels = submodels.data.result || [];
 
   const aas = await apiClient.dpp.uniqueProductIdentifiers.aas.getShells(id, {});
-
-  passportStore.shells = aas.data.result;
+  if (aas.status !== 200) {
+    console.error("Failed to load shells");
+    return false;
+  }
+  passportStore.shells = aas.data.result || [];
 
   return true;
 }

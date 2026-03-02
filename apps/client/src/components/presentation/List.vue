@@ -27,13 +27,13 @@ const columns = computed(() => {
 const rows = computed(() => {
   const result: Record<string, SubmodelElementRequestDto>[] = [];
   if (content.length >= 1) {
-    for (let rowIndex = 0; rowIndex <= content.length; rowIndex++) {
+    for (let rowIndex = 0; rowIndex < content.length; rowIndex++) {
       const row = content[rowIndex];
       if (row && row.value) {
         const rowRecord: Record<string, SubmodelElementRequestDto> = {};
         for (
           let columnIndex = 0;
-          columnIndex <= row.value.length;
+          columnIndex < row.value.length;
           columnIndex++
         ) {
           const key = columns.value[columnIndex]?.field;

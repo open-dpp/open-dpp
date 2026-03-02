@@ -190,11 +190,15 @@ onMounted(async () => {
       <Button
         icon="pi pi-qrcode"
         severity="info"
+        :aria-label="t('common.qrCode')"
+        :title="t('common.qrCode')"
         @click="routeToQrCode(passport.id)"
       />
       <Button
         icon="pi pi-pencil"
         severity="primary"
+        :aria-label="t('common.edit')"
+        :title="t('common.edit')"
         @click="editItem(passport)"
       />
       <Button

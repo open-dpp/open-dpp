@@ -9,6 +9,19 @@ const { model } = defineProps<{
 const property = computed(() => {
   return model.keys.find(key => key.type === "GlobalReference");
 });
+
+const safeHref = computed(() => {
+  const raw = property.value?.value?.trim();
+  if (!raw)
+    return undefined;
+  try {
+    const parsed = new URL(raw);
+    return ["http:", "https:"].includes(parsed.protocol) ? parsed.toString() : undefined;
+  }
+  catch {
+    return undefined;
+  }
+});
 </script>
 
 <template>
@@ -16,8 +29,9 @@ const property = computed(() => {
     <a
       v-if="model.type === 'ExternalReference' && property"
       :href="property.value"
-      target="blank"
+      target="_blank"
+      rel="noopener noreferrer"
       class="mt-1 text-sm/6 text-[#6BAD87] hover:underline sm:mt-2"
-    >{{ property.value }}</a>
+    >{{ safeHref }}</a>
   </dd>
 </template>

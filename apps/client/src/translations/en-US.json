@@ -27,6 +27,7 @@
     "toHome": "To home",
     "home": "Home",
     "backTo": "Back to { link }",
+    "unknownName": "Uknown name",
     "presentationMode": "Presentation mode",
     "form": {
       "email": {
@@ -579,7 +580,7 @@
       "intro": "Hello,\n\nI have the following repair request:",
       "sendError": "The repair request could not be sent. Have you already configured an email client?"
     },
-    "passportNotFound": "Productpass not found",
+    "passportNotFound": "Productpass passport not found",
     "passportNotFoundLong": "Your digital product passport could not be found. Please validate your data or contact support."
   },
   "uniqueproductidentifier": {

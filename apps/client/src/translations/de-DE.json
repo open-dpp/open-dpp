@@ -42,6 +42,7 @@
     "home": "Startseite",
     "backTo": "Zurück zu { link }",
     "presentationMode": "Präsentations-Modus",
+    "unknownName": "Unbekannter Name",
     "form": {
       "email": {
         "help": "Geben Sie eine E-Mail Adresse ein.",

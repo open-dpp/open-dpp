@@ -3,7 +3,7 @@ import type { SubmodelTreeElement } from "../../composables/submodel-tree";
 import { computed } from "vue";
 import { useDisplayName } from "../../composables/display-name";
 
-const { treeElement, parentId } = defineProps<{
+const { treeElement, parentId, level } = defineProps<{
   treeElement: SubmodelTreeElement;
   level: number;
   parentId?: string;
@@ -33,10 +33,14 @@ const levelToPadding = [
   "pl-8",
   "pl-10",
 ];
+
+const paddingClass = computed(
+  () => levelToPadding[Math.min(level, levelToPadding.length - 1)],
+);
 </script>
 
 <template>
-  <li :class="[levelToPadding[level]]">
+  <li :class="[paddingClass]">
     <router-link
       :to="linkTarget"
       class="text-gray-700 hover:bg-gray-50 hover:text-indigo-600 group flex gap-x-3 rounded-md p-2 pl-3 text-sm/6 font-semibold"

@@ -1,18 +1,10 @@
 <script lang="ts" setup>
-import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { useRoute } from "vue-router";
 import { useSubmodelTree } from "../../composables/submodel-tree";
 import { usePassportStore } from "../../stores/passport";
 import SidebarLink from "./SidebarLink.vue";
 
 const { t } = useI18n();
-
-const route = useRoute();
-
-const rootLinksActive = computed(() => {
-  return !route.query.submodelid;
-});
 
 const passportStore = usePassportStore();
 
@@ -25,14 +17,13 @@ const { submodelTree } = useSubmodelTree(passportStore.submodels);
     aria-label="Sidebar"
   >
     <div class="font-bold py-3 text-xl">
-      {{ t('presentation.navigation') }}
+      {{ t("presentation.navigation") }}
     </div>
     <ul role="list" class="-mx-2 space-y-1 pt-2">
       <SidebarLink
         v-for="element in submodelTree"
         :key="element.idShort"
         :tree-element="element"
-        :parent-active="rootLinksActive"
         :level="0"
       />
     </ul>

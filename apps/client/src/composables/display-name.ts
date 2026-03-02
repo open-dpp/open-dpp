@@ -22,7 +22,7 @@ export function useDisplayName(options: DisplayName[]) {
       option = options[0];
     }
 
-    return option ? option.text : t("unknown name");
+    return option ? option.text : t("common.unknownName");
   });
 
   return { description };
