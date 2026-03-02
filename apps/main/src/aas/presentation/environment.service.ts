@@ -1,6 +1,6 @@
 import type { Connection } from "mongoose";
 
-import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import {
   AssetAdministrationShellPaginationResponseDto,
@@ -48,6 +48,7 @@ class SubmodelNotPartOfEnvironmentException extends BadRequestException {
 
 @Injectable()
 export class EnvironmentService {
+  private readonly logger = new Logger(EnvironmentService.name);
   private aasRepository: AasRepository;
   private submodelRepository: SubmodelRepository;
   private membersService: MembersService;
@@ -243,19 +244,25 @@ export class EnvironmentService {
       this.submodelRepository.findByIds(environment.submodels),
     ]);
 
-    const shells: AssetAdministrationShell[] = [];
-    for (const id of environment.assetAdministrationShells) {
-      const shell = shellMap.get(id);
-      if (shell)
-        shells.push(shell);
+    const missingShellIds = environment.assetAdministrationShells.filter(id => !shellMap.has(id));
+    const missingSubmodelIds = environment.submodels.filter(id => !submodelMap.has(id));
+
+    if (missingShellIds.length > 0 || missingSubmodelIds.length > 0) {
+      if (missingShellIds.length > 0) {
+        this.logger.error(`Referenced shells not found in database: ${missingShellIds.join(", ")}`);
+      }
+      if (missingSubmodelIds.length > 0) {
+        this.logger.error(`Referenced submodels not found in database: ${missingSubmodelIds.join(", ")}`);
+      }
+      throw new Error(
+        `Environment references entities missing from the database. `
+        + `Missing shells: [${missingShellIds.join(", ")}], `
+        + `missing submodels: [${missingSubmodelIds.join(", ")}]`,
+      );
     }
 
-    const submodels: Submodel[] = [];
-    for (const id of environment.submodels) {
-      const submodel = submodelMap.get(id);
-      if (submodel)
-        submodels.push(submodel);
-    }
+    const shells = environment.assetAdministrationShells.map(id => shellMap.get(id)!);
+    const submodels = environment.submodels.map(id => submodelMap.get(id)!);
 
     return ExpandedEnvironment.fromLoaded(shells, submodels, environment.conceptDescriptions);
   }
