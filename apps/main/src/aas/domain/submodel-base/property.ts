@@ -41,7 +41,6 @@ export class Property implements ISubmodelElement {
   }
 
   set displayName(value: Array<LanguageText>) {
-    hasUniqueLanguagesOrFail(value);
     this._displayName = value;
   }
 
