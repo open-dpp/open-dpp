@@ -5,13 +5,11 @@ import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
 import { Button, Column, DataTable } from "primevue";
-import { useToast } from "primevue/usetoast";
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useAasUtils } from "../composables/aas-utils.ts";
-import axiosIns from "../lib/axios.ts";
-import { useErrorHandlingStore } from "../stores/error.handling.ts";
+
 import { convertLocaleToLanguage } from "../translations/i18n.ts";
 import TablePagination from "./pagination/TablePagination.vue";
 
@@ -42,7 +40,6 @@ const { parseDisplayNameFromEnvironment } = useAasUtils({
   translate: t,
   selectedLanguage: selectedLanguage.value,
 });
-
 
 async function editItem(item: SharedDppDto) {
   await router.push(`${route.path}/${item.id}`);
