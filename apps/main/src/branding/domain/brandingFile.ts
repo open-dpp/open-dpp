@@ -1,4 +1,4 @@
 export interface BrandingFile {
   path: string;
-  filetye: string;
+  filetype: string;
 }

@@ -59,7 +59,7 @@ export class BrandingRepository {
     }
 
     return {
-      filetye: responseType,
+      filetype: responseType,
       path: imagePath,
     };
   }

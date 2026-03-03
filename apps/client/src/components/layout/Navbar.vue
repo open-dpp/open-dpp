@@ -17,7 +17,7 @@ const isSignedIn = computed<boolean>(() => {
   return session.value?.data != null;
 });
 
-const { logo } = useBrandingAnonymous(permalink);
+const { src } = useBrandingAnonymous(permalink);
 
 function navigateToPassportView() {
   router.push(`/presentation/${permalink.value}`);
@@ -66,7 +66,7 @@ const menuItems = computed(() => {
 <template>
   <Menubar class="p-10!" :model="menuItems">
     <template #start>
-      <BrandingLogo :url="logo ? logo.url : '/api/branding/instance'" />
+      <BrandingLogo :url="src" />
     </template>
     <template #end>
       <div class="flex items-center gap-2">

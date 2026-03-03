@@ -3,7 +3,6 @@ import {
   Button,
   Card,
   Checkbox,
-  Divider,
   InputText,
   Message,
   Password,
@@ -70,18 +69,6 @@ async function signin() {
     loading.value = false;
     password.value = "";
   }
-}
-
-async function signInWithOpenDppCloud() {
-  await authClient.signIn.oauth2({
-    providerId: "auth.demo1.open-dpp.de", // required
-    callbackURL: decodeURIComponent(route.query.redirect as string),
-    errorCallbackURL: "/signin",
-    newUserCallbackURL: "/",
-    disableRedirect: false,
-    scopes: ["openid", "profile", "email"],
-    requestSignUp: false,
-  });
 }
 </script>
 
@@ -180,24 +167,6 @@ async function signInWithOpenDppCloud() {
               />
             </div>
           </form>
-
-          <div v-if="false">
-            <Divider align="center" class="mt-10">
-              <span class="text-sm text-gray-500">{{
-                t("auth.signin.textForProviders")
-              }}</span>
-            </Divider>
-
-            <div class="mt-6">
-              <Button
-                :disabled="true"
-                type="button"
-                class="w-full"
-                label="open-dpp Cloud"
-                @click="signInWithOpenDppCloud"
-              />
-            </div>
-          </div>
         </div>
       </template>
       <template #footer>

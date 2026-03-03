@@ -8,6 +8,6 @@ const { url = "/api/branding/instance" } = defineProps<{
   <img
     class="mx-auto h-16 w-auto"
     :src="url"
-    alt="open-dpp"
+    alt="brand-image"
   >
 </template>

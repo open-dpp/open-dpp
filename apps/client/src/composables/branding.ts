@@ -3,7 +3,7 @@ import type { AxiosResponse } from "axios";
 import type { Ref } from "vue";
 import type { MediaFile } from "../lib/media";
 import { storeToRefs } from "pinia";
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import apiClient from "../lib/api-client";
 import { createObjectUrl, revokeObjectUrl } from "../lib/media";
@@ -24,6 +24,8 @@ function useBrandingCommon(requestLogo: () => Promise<AxiosResponse<BrandingDto>
       logo.value = undefined;
     }
   };
+
+  const src = computed(() => logo.value ? logo.value.url : "/api/branding/instance");
 
   const applyBranding = async () => {
     cleanupMediaUrls();
@@ -48,11 +50,11 @@ function useBrandingCommon(requestLogo: () => Promise<AxiosResponse<BrandingDto>
     }
   };
 
-  return { logo, applyBranding };
+  return { logo, src, applyBranding };
 };
 
 export function useBranding() {
-  const { logo, applyBranding } = useBrandingCommon(async () => await apiClient.dpp.branding.get());
+  const { src, applyBranding } = useBrandingCommon(async () => await apiClient.dpp.branding.get());
   const indexStore = useIndexStore();
   const { selectedOrganization } = storeToRefs(indexStore);
 
@@ -66,11 +68,11 @@ export function useBranding() {
     { immediate: true },
   );
 
-  return { logo, applyBranding };
+  return { src, applyBranding };
 }
 
 export function useBrandingAnonymous(upi: Ref<string>) {
-  const { logo, applyBranding } = useBrandingCommon(async () => apiClient.dpp.uniqueProductIdentifiers.getBranding(upi.value));
+  const { src, applyBranding } = useBrandingCommon(async () => apiClient.dpp.uniqueProductIdentifiers.getBranding(upi.value));
 
   watch(
     () => upi.value,
@@ -82,5 +84,5 @@ export function useBrandingAnonymous(upi: Ref<string>) {
     { immediate: true },
   );
 
-  return { logo, applyBranding };
+  return { src, applyBranding };
 }

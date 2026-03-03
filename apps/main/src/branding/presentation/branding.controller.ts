@@ -32,7 +32,7 @@ export class BrandingController {
   ) {
     const file = await this.brandingRepository.getInstanceBrandingPath();
     const fileContent = await readFile(file.path);
-    response.type(file.filetye);
+    response.type(file.filetype);
     return response.send(fileContent);
   }
 }
