@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { jest } from "@jest/globals";
 import { Test, TestingModule } from "@nestjs/testing";
 import { DataTypeDef } from "@open-dpp/dto";
 import { Passport } from "../../../passports/domain/passport";
