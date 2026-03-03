@@ -6,6 +6,11 @@ import { AssetKind } from "@open-dpp/dto";
 import request from "supertest";
 import { LanguageText } from "../../aas/domain/common/language-text";
 import { Environment } from "../../aas/domain/environment";
+import {
+  ConceptDescriptionDoc,
+  ConceptDescriptionSchema,
+} from "../../aas/infrastructure/schemas/concept-description.schema";
+import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { DateTime } from "../../lib/date-time";
 import { encodeCursor } from "../../pagination/pagination";
@@ -19,8 +24,8 @@ describe("templateController", () => {
   const basePath = "/templates";
   const ctx = createAasTestContext(
     basePath,
-    { imports: [TemplatesModule], providers: [TemplateRepository], controllers: [TemplateController] },
-    [{ name: TemplateDoc.name, schema: TemplateSchema }],
+    { imports: [TemplatesModule], providers: [TemplateRepository, AasSerializationService], controllers: [TemplateController] },
+    [{ name: TemplateDoc.name, schema: TemplateSchema }, { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema }],
     TemplateRepository,
   );
 

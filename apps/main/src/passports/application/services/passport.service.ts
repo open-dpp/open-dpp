@@ -3,8 +3,6 @@ import {
   Logger,
   NotFoundException,
 } from "@nestjs/common";
-import { InjectConnection } from "@nestjs/mongoose";
-import { Connection } from "mongoose";
 import { AasExportable } from "../../../aas/domain/exportable/aas-exportable";
 import { AasRepository } from "../../../aas/infrastructure/aas.repository";
 import { SubmodelRepository } from "../../../aas/infrastructure/submodel.repository";
@@ -12,7 +10,6 @@ import {
   DigitalProductPassportIdentifiableEnvironmentPopulateDecorator,
 } from "../../../aas/presentation/digital-product-passport-identifiable-environment-populate-decorator";
 import { EnvironmentService } from "../../../aas/presentation/environment.service";
-import { UniqueProductIdentifierService } from "../../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { PassportRepository } from "../../infrastructure/passport.repository";
 
 @Injectable()
@@ -24,8 +21,6 @@ export class PassportService {
     private readonly environmentService: EnvironmentService,
     private readonly aasRepository: AasRepository,
     private readonly submodelRepository: SubmodelRepository,
-    private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
-    @InjectConnection() private readonly connection: Connection,
   ) {}
 
   async getExpandedProductPassport(passportId: string) {

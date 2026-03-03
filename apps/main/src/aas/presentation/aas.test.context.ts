@@ -54,6 +54,7 @@ import { SubmodelElementCollection } from "../domain/submodel-base/submodel-elem
 import { SubmodelElementList } from "../domain/submodel-base/submodel-element-list";
 import { TableExtension } from "../domain/submodel-base/table-extension";
 import { AasRepository } from "../infrastructure/aas.repository";
+import { ConceptDescriptionRepository } from "../infrastructure/concept-description.repository";
 import {
   AssetAdministrationShellDoc,
   AssetAdministrationShellSchema,
@@ -97,6 +98,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       providers: [
         AasRepository,
         SubmodelRepository,
+        ConceptDescriptionRepository,
         {
           provide: APP_GUARD,
           useClass: AuthGuard,

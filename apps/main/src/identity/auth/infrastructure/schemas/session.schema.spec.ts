@@ -7,7 +7,6 @@ import { generateMongoConfig } from "../../../../database/config";
 import { Session, SessionSchema } from "./session.schema";
 
 describe("sessionSchema", () => {
-  let mongoConnection: Connection;
   let SessionModel: Model<Session>;
   let module: TestingModule;
 
@@ -27,17 +26,10 @@ describe("sessionSchema", () => {
         ]),
       ],
     }).compile();
-    mongoConnection = module.get<Connection>(getConnectionToken());
-    SessionModel = mongoConnection.model(Session.name, SessionSchema);
-    await SessionModel.createIndexes();
-  });
+    const connection = module.get<Connection>(getConnectionToken());
+    SessionModel = connection.model(Session.name, SessionSchema);
 
-  afterEach(async () => {
-    const collections = mongoConnection.collections;
-    for (const key in collections) {
-      const collection = collections[key];
-      await collection.deleteMany({});
-    }
+    await SessionModel.createIndexes();
   });
 
   afterAll(async () => {

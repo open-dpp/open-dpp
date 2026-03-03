@@ -448,8 +448,8 @@ export class AasSerializationService {
       // create environment
       const environment = Environment.create({
         assetAdministrationShells: newShells.map(aas => aas.id),
-        submodels: newSubmodels.map(submodel => submodel.id),
-        conceptDescriptions: newConceptDescriptions.map(conceptDescription => conceptDescription.id),
+        submodels: newSubmodels.map(submodel => submodel.id).slice(0, 0),
+        conceptDescriptions: newConceptDescriptions.map(conceptDescription => conceptDescription.id).slice(0, 0),
       });
       // save environment
       // create passport
