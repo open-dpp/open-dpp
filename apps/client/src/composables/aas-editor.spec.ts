@@ -5,7 +5,7 @@ import type {
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { Component } from "vue";
-import type { IAasEditor } from "./aas-editor.ts";
+import type { AasEditorProps, IAasEditor } from "./aas-editor.ts";
 import {
   AasSubmodelElements,
   AssetKind,
@@ -22,9 +22,11 @@ import {
   submodelPlainToResponse,
 } from "@open-dpp/testing";
 import { waitFor } from "@testing-library/vue";
+import { mount } from "@vue/test-utils";
 import { omit } from "lodash";
 import { v4 as uuid4 } from "uuid";
 import { describe, expect, it, vi } from "vitest";
+import { defineComponent } from "vue";
 import AssetAdministrationShellEditor from "../components/aas/AssetAdministrationShellEditor.vue";
 import FileCreateEditor from "../components/aas/FileCreateEditor.vue";
 import FileEditor from "../components/aas/FileEditor.vue";
@@ -81,9 +83,49 @@ vi.mock("../lib/api-client", () => ({
   },
 }));
 
+const { fetchMediaMock } = vi.hoisted(() => ({
+  fetchMediaMock: vi.fn<
+    (
+      mediaId: string,
+    ) => Promise<{ blob: Blob | null; mediaInfo: { id: string } }>
+  >(),
+}));
+
+vi.mock("../stores/media.ts", () => ({
+  useMediaStore: () => ({
+    fetchMedia: fetchMediaMock,
+  }),
+}));
+
 describe("aasEditor composable", () => {
+  const mountedWrappers: Array<ReturnType<typeof mount>> = [];
+
+  function mountHarness(aasEditorProps: AasEditorProps) {
+    const Harness = defineComponent({
+      name: "MediaFileCollectionHarness",
+      setup() {
+        const api = useAasEditor(aasEditorProps);
+        return { api };
+      },
+      template: "<div />",
+    });
+
+    const wrapper = mount(Harness);
+    mountedWrappers.push(wrapper);
+    return {
+      wrapper,
+      ...wrapper.vm.api as ReturnType<typeof useAasEditor>,
+    };
+  }
+
   beforeEach(() => {
     vi.resetAllMocks();
+  });
+
+  afterEach(() => {
+    mountedWrappers.splice(0).forEach((w) => {
+      w.unmount();
+    });
   });
   const translate = (key: string) => key;
   const changeQueryParams = vi.fn();
@@ -109,7 +151,7 @@ describe("aasEditor composable", () => {
     ],
     description: [],
     embeddedDataSpecifications: [],
-    assetInformation: { assetKind: AssetKind.Instance, specificAssetIds: [] },
+    assetInformation: { assetKind: AssetKind.Instance, specificAssetIds: [], defaultThumbnails: [] },
     extensions: [],
     submodels: [
       {
@@ -147,7 +189,7 @@ describe("aasEditor composable", () => {
       status: HTTPCode.OK,
     });
 
-    const { init, displayName } = useAasEditor({
+    const { init, displayName } = mountHarness({
       id: aasWrapperId,
       aasNamespace: apiClient.dpp.templates.aas,
       changeQueryParams,
@@ -191,7 +233,7 @@ describe("aasEditor composable", () => {
       displayName,
       editorVNode,
       drawerVisible,
-    } = useAasEditor({
+    } = mountHarness({
       id: aasWrapperId,
       aasNamespace: apiClient.dpp.templates.aas,
       changeQueryParams,
@@ -247,7 +289,7 @@ describe("aasEditor composable", () => {
       status: HTTPCode.OK,
     });
 
-    const { init, submodels, findTreeNodeByKey } = useAasEditor({
+    const { init, submodels, findTreeNodeByKey } = mountHarness({
       id: aasWrapperId,
       aasNamespace: apiClient.dpp.templates.aas,
       changeQueryParams,
@@ -437,7 +479,7 @@ describe("aasEditor composable", () => {
       status: HTTPCode.OK,
     });
 
-    const { init, selectTreeNode, selectedKeys, editorVNode } = useAasEditor({
+    const { init, selectTreeNode, selectedKeys, editorVNode } = mountHarness({
       id: aasWrapperId,
       aasNamespace: apiClient.dpp.templates.aas,
       changeQueryParams,
@@ -480,7 +522,7 @@ describe("aasEditor composable", () => {
         status: HTTPCode.OK,
       });
       mocks.createSubmodel.mockResolvedValue({ status: HTTPCode.CREATED });
-      const { createSubmodel, init, drawerVisible, editorVNode } = useAasEditor(
+      const { createSubmodel, init, drawerVisible, editorVNode } = mountHarness(
         {
           id: aasWrapperId,
           aasNamespace: apiClient.dpp.templates.aas,
@@ -589,7 +631,7 @@ describe("aasEditor composable", () => {
         status: HTTPCode.CREATED,
       });
 
-      const aasEditor = useAasEditor({
+      const aasEditor = mountHarness({
         id: aasWrapperId,
         aasNamespace: apiClient.dpp.templates.aas,
         changeQueryParams,
@@ -635,7 +677,7 @@ describe("aasEditor composable", () => {
         status: HTTPCode.CREATED,
       });
 
-      const aasEditor = useAasEditor({
+      const aasEditor = mountHarness({
         id: aasWrapperId,
         aasNamespace: apiClient.dpp.templates.aas,
         changeQueryParams,
@@ -685,7 +727,7 @@ describe("aasEditor composable", () => {
         status: HTTPCode.CREATED,
       });
 
-      const aasEditor = useAasEditor({
+      const aasEditor = mountHarness({
         id: aasWrapperId,
         aasNamespace: apiClient.dpp.templates.aas,
         changeQueryParams,
@@ -756,7 +798,7 @@ describe("aasEditor composable", () => {
         status: HTTPCode.CREATED,
       });
 
-      const aasEditor = useAasEditor({
+      const aasEditor = mountHarness({
         id: aasWrapperId,
         aasNamespace: apiClient.dpp.templates.aas,
         changeQueryParams,
@@ -804,7 +846,7 @@ describe("aasEditor composable", () => {
         status: HTTPCode.CREATED,
       });
 
-      const aasEditor = useAasEditor({
+      const aasEditor = mountHarness({
         id: aasWrapperId,
         aasNamespace: apiClient.dpp.templates.aas,
         changeQueryParams,
@@ -866,7 +908,7 @@ describe("aasEditor composable", () => {
       const openAutoConfirm = async (data: ConfirmationOptions) => {
         data.accept!();
       };
-      const { deleteSubmodel, init, drawerVisible } = useAasEditor({
+      const { deleteSubmodel, init, drawerVisible } = mountHarness({
         id: aasWrapperId,
         aasNamespace: apiClient.dpp.templates.aas,
         changeQueryParams,
@@ -903,7 +945,7 @@ describe("aasEditor composable", () => {
       const openAutoConfirm = async (data: ConfirmationOptions) => {
         data.accept!();
       };
-      const { deleteSubmodelElement, init, drawerVisible } = useAasEditor({
+      const { deleteSubmodelElement, init, drawerVisible } = mountHarness({
         id: aasWrapperId,
         aasNamespace: apiClient.dpp.templates.aas,
         changeQueryParams,

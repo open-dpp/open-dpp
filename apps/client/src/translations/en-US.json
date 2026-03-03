@@ -63,9 +63,11 @@
     "templateImportFailed": "Failed to import template."
   },
   "aasEditor": {
+    "productImages": "Product images",
     "formLabels": {
       "value": "Value",
-      "name": "Name"
+      "name": "Name",
+      "id": "Identifier"
     },
     "table": {
       "saveAndAddEntries": "Save and add list entries",
@@ -90,7 +92,7 @@
     },
     "link": "Link",
     "errorLoading": "Loading @:common.failed",
-    "errorLoadingSubmodels": "@.capitalize:common.failed to @:aasEditor.load the submodels",
+    "errorLoadingSubmodels": "@.capitalize:common.failed to load the submodels",
     "addSubmodel": "Add section",
     "submodelElementCollection": "Sub section",
     "edit": "Edit {formItem}",
@@ -508,7 +510,7 @@
     "select": "Select file",
     "noSelection": "No file selected",
     "notFound": "File not found",
-    "couldNotBeLoaded": "File could not be loaded.",
+    "couldNotBeLoaded": "Failed to load file. | Failed to load files.",
     "errorRevokingUrl": "Error revoking previous object URL:",
     "errorRevokingUrlError": "Error revoking object URL after error:"
   },

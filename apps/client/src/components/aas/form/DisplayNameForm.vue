@@ -68,7 +68,7 @@ function ignoreOptions(language: string) {
       <div>
         <div
           v-for="(field, index) in slotProps.items"
-          :key="index"
+          :key="field.key"
           class="grid lg:grid-cols-3 gap-4 pt-2"
         >
           <LanguageSelect
@@ -76,9 +76,9 @@ function ignoreOptions(language: string) {
             :ignore-options="ignoreOptions(field.value.language)"
           />
           <TextFieldWithValidation
-            :id="`displayName-${index}`"
+            :id="`displayName-${field.key}`"
             v-model="field.value.text"
-            label="Name"
+            :label="t('aasEditor.formLabels.name')"
             :show-errors="props.showErrors"
             :error="props.errors[`displayName[${index}].text`]"
           />
