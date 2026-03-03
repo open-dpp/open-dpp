@@ -1,4 +1,5 @@
 import { LanguageTextJsonSchema, LanguageType } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 import { IVisitable, IVisitor } from "../visitor";
 
 export class LanguageText implements IVisitable {
@@ -23,5 +24,12 @@ export class LanguageText implements IVisitable {
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
     return visitor.visitLanguageText(this, context);
+  }
+}
+
+export function hasUniqueLanguagesOrFail(items: Array<LanguageText>): void {
+  const langs = items.map(i => i.language.trim().toLowerCase());
+  if (new Set(langs).size !== langs.length) {
+    throw new ValueError("All language texts must have unique languages");
   }
 }

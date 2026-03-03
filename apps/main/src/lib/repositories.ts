@@ -87,5 +87,5 @@ export async function findAllByOrganizationId<T extends Document<string>, V exte
     const lastObject = domainObjects[domainObjects.length - 1];
     tmpPagination.setCursor(encodeCursor(lastObject.createdAt.toISOString(), lastObject.id));
   }
-  return PagingResult.create({ pagination: tmpPagination, items: domainObjects });
+  return PagingResult.create<V>({ pagination: tmpPagination, items: domainObjects });
 }

@@ -1,5 +1,7 @@
 import type {
+  AssetAdministrationShellModificationDto,
   AssetAdministrationShellPaginationResponseDto,
+  AssetAdministrationShellResponseDto,
   PagingParamsDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
@@ -28,6 +30,13 @@ export class AasNamespace {
 
   public async getShells(id: string, params: PagingParamsDto) {
     return this.axiosInstance.get<AssetAdministrationShellPaginationResponseDto>(`${this.aasEndpoint}/${id}/shells`, { params })
+  }
+
+  public async modifyShell(id: string, aasId: string, data: AssetAdministrationShellModificationDto) {
+    return this.axiosInstance.patch<AssetAdministrationShellResponseDto>(
+      `${this.aasEndpoint}/${id}/shells/${aasId}`,
+      data,
+    )
   }
 
   public async getSubmodels(id: string, params: PagingParamsDto) {

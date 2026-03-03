@@ -1,3 +1,4 @@
+import { Language, Populates } from "@open-dpp/dto";
 import { passportsPlainFactory } from "@open-dpp/testing";
 import { createPinia, setActivePinia } from "pinia";
 import { expect, it, vi } from "vitest";
@@ -41,12 +42,42 @@ describe("passports", () => {
     const { createPassport } = usePassports();
     const p1 = passportsPlainFactory.build();
 
-    mocks.createPassport.mockResolvedValueOnce({ data: p1, status: HTTPCode.CREATED });
     const passports = { paging_metadata: { cursor: p1.id }, result: [p1] };
+    // From template
+    mocks.createPassport.mockResolvedValueOnce({
+      data: p1,
+      status: HTTPCode.CREATED,
+    });
     mocks.fetchPassports.mockResolvedValueOnce({ data: passports });
-
-    await createPassport({});
-    expect(mocks.createPassport).toHaveBeenCalledWith({});
+    await createPassport({ templateId: "t1" });
+    expect(mocks.createPassport).toHaveBeenCalledWith({ templateId: "t1" });
     expect(mocks.routerPush).toHaveBeenCalledWith(`/passports/${p1.id}`);
+    // From blank
+    mocks.createPassport.mockResolvedValueOnce({
+      data: p1,
+      status: HTTPCode.CREATED,
+    });
+    mocks.fetchPassports.mockResolvedValueOnce({ data: passports });
+    const displayName = [{ language: Language.en, text: "test" }];
+    await createPassport({ displayName });
+    expect(mocks.createPassport).toHaveBeenCalledWith({
+      environment: { assetAdministrationShells: [{ displayName }] },
+    });
+    expect(mocks.routerPush).toHaveBeenCalledWith(`/passports/${p1.id}`);
+  });
+
+  it("should fetch passports", async () => {
+    const { passports, fetchPassports } = usePassports();
+    const p1 = passportsPlainFactory.build();
+    const passportsResponse = { paging_metadata: { cursor: p1.id }, result: [p1] };
+    mocks.fetchPassports.mockResolvedValueOnce({ data: passportsResponse });
+    await fetchPassports({ limit: 10, cursor: undefined });
+
+    expect(mocks.fetchPassports).toHaveBeenCalledWith({
+      limit: 10,
+      cursor: undefined,
+      populate: [Populates.assetAdministrationShells],
+    });
+    expect(passports.value).toEqual(passportsResponse);
   });
 });

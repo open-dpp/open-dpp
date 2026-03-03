@@ -1,4 +1,6 @@
 import {
+  AssetAdministrationShellJsonSchema,
+  AssetAdministrationShellModificationSchema,
   AssetAdministrationShellPaginationResponseDtoSchema,
   PassportDtoSchema,
   PassportPaginationDtoSchema,
@@ -11,6 +13,7 @@ import {
   SubmodelModificationSchema,
   SubmodelPaginationResponseDtoSchema,
   SubmodelRequestDtoSchema,
+  TemplateCreateDtoSchema,
   TemplateDtoSchema,
   TemplatePaginationDtoSchema,
   ValueSchema,
@@ -23,15 +26,18 @@ import {
   ApiGetSubmodelElementByIdPath,
   ApiGetSubmodelElementValuePath,
   ApiGetSubmodelValuePath,
+  ApiPatchShellPath,
   ApiPostColumnPath,
   ApiPostRowPath,
   ApiSubmodelElementsPath,
   ApiSubmodelsPath,
+  AssetAdministrationShellIdParamSchema,
   ColumnParamSchema,
   CursorQueryParamSchema,
   IdParamSchema,
   IdShortPathParamSchema,
   LimitQueryParamSchema,
+  PopulateQueryParamSchema,
   PositionQueryParamSchema,
   RowParamSchema,
   SubmodelIdParamSchema,
@@ -58,6 +64,25 @@ export function createAasPaths(tag: string) {
           [HTTPCode.OK]: {
             content: {
               [ContentType.JSON]: { schema: AssetAdministrationShellPaginationResponseDtoSchema },
+            },
+          },
+        },
+      },
+    },
+    [`${tag}${ApiPatchShellPath}`]: {
+      patch: {
+        tags: [tag],
+        summary: "Modifies a Asset Administration Shell with specified id",
+        parameters: [IdParamSchema, AssetAdministrationShellIdParamSchema],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: AssetAdministrationShellModificationSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: AssetAdministrationShellJsonSchema },
             },
           },
         },
@@ -339,7 +364,7 @@ function createTemplatePaths() {
       get: {
         tags: [tag],
         summary: `Get templates`,
-        parameters: [LimitQueryParamSchema, CursorQueryParamSchema],
+        parameters: [LimitQueryParamSchema, CursorQueryParamSchema, PopulateQueryParamSchema],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -351,6 +376,11 @@ function createTemplatePaths() {
       post: {
         tags: [tag],
         summary: `Creates template`,
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: TemplateCreateDtoSchema },
+          },
+        },
         responses: {
           [HTTPCode.CREATED]: {
             content: {
@@ -371,7 +401,7 @@ function createPassportPaths() {
       get: {
         tags: [tag],
         summary: `Get passports`,
-        parameters: [LimitQueryParamSchema, CursorQueryParamSchema],
+        parameters: [LimitQueryParamSchema, CursorQueryParamSchema, PopulateQueryParamSchema],
         responses: {
           [HTTPCode.OK]: {
             content: {

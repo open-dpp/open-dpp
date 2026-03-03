@@ -1,9 +1,10 @@
 import {
+  AssetAdministrationShellModificationSchema,
   FileModificationSchema,
+  NameAndDescriptionModificationSchema,
   PropertyModificationSchema,
   ReferenceElementModificationSchema,
   ReferenceModificationSchema,
-  SubmodelBaseModificationSchema,
   SubmodelElementCollectionModificationSchema,
   SubmodelElementListModificationSchema,
   SubmodelElementModificationDto,
@@ -13,7 +14,7 @@ import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";
 import { AdministrativeInformation } from "./common/administrative-information";
 import { Key } from "./common/key";
-import { LanguageText } from "./common/language-text";
+import { hasUniqueLanguagesOrFail, LanguageText } from "./common/language-text";
 import { Qualifier } from "./common/qualififiable";
 import { Reference } from "./common/reference";
 import { ConceptDescription } from "./concept-description";
@@ -31,17 +32,20 @@ import { Range } from "./submodel-base/range";
 import { ReferenceElement } from "./submodel-base/reference-element";
 import { RelationshipElement } from "./submodel-base/relationship-element";
 import { Submodel } from "./submodel-base/submodel";
-import { ISubmodelBase, ISubmodelElement } from "./submodel-base/submodel-base";
+import { ISubmodelElement } from "./submodel-base/submodel-base";
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
 
 export class ModifierVisitor implements IVisitor<unknown, void> {
-  private modifySubmodelBase(submodelBase: ISubmodelBase, data: unknown) {
-    const { displayName, description } = SubmodelBaseModificationSchema.parse(data);
-    submodelBase.displayName = displayName?.map(LanguageText.fromPlain) ?? submodelBase.displayName;
-    submodelBase.description = description?.map(LanguageText.fromPlain) ?? submodelBase.description;
+  private modifyNameAndDescription<T extends { displayName: LanguageText[]; description: LanguageText[] }>(generalInfoDto: T, data: unknown) {
+    const { displayName, description } = NameAndDescriptionModificationSchema.parse(data);
+
+    generalInfoDto.displayName = displayName?.map(LanguageText.fromPlain) ?? generalInfoDto.displayName;
+    generalInfoDto.description = description?.map(LanguageText.fromPlain) ?? generalInfoDto.description;
+    hasUniqueLanguagesOrFail(generalInfoDto.displayName);
+    hasUniqueLanguagesOrFail(generalInfoDto.description);
   }
 
   visitAdministrativeInformation(_element: AdministrativeInformation, _context: unknown): void {
@@ -56,10 +60,9 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
     );
   }
 
-  visitAssetAdministrationShell(_element: AssetAdministrationShell, _context: unknown): void {
-    throw new NotSupportedError(
-      "AssetAdministrationShell is not supported.",
-    );
+  visitAssetAdministrationShell(element: AssetAdministrationShell, context: unknown): void {
+    const parsed = AssetAdministrationShellModificationSchema.parse(context);
+    this.modifyNameAndDescription(element, parsed);
   }
 
   visitAssetInformation(_element: AssetInformation, _context: unknown): void {
@@ -100,7 +103,7 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
 
   visitFile(element: File, context: unknown): void {
     const parsed = FileModificationSchema.parse(context);
-    this.modifySubmodelBase(element, parsed);
+    this.modifyNameAndDescription(element, parsed);
     if (parsed.value !== undefined) {
       element.value = parsed.value;
     }
@@ -129,7 +132,7 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
 
   visitProperty(element: Property, context: unknown): void {
     const parsed = PropertyModificationSchema.parse(context);
-    this.modifySubmodelBase(element, parsed);
+    this.modifyNameAndDescription(element, parsed);
     if (parsed.value !== undefined) {
       element.value = parsed.value;
     }
@@ -171,7 +174,7 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
 
   visitReferenceElement(element: ReferenceElement, context: unknown): void {
     const parsed = ReferenceElementModificationSchema.parse(context);
-    this.modifySubmodelBase(element, parsed);
+    this.modifyNameAndDescription(element, parsed);
     if (parsed.value === null) {
       element.value = parsed.value;
     }
@@ -204,12 +207,12 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
   }
 
   visitSubmodel(element: Submodel, context: unknown): void {
-    this.modifySubmodelBase(element, context);
+    this.modifyNameAndDescription(element, context);
   }
 
   visitSubmodelElementCollection(element: SubmodelElementCollection, context: unknown): void {
     const parsed = SubmodelElementCollectionModificationSchema.parse(context);
-    this.modifySubmodelBase(element, parsed);
+    this.modifyNameAndDescription(element, parsed);
     if (parsed.value !== undefined) {
       this.visitSubmodelElements(element, parsed.value);
     }
@@ -217,7 +220,7 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
 
   visitSubmodelElementList(element: SubmodelElementList, context: unknown): void {
     const parsed = SubmodelElementListModificationSchema.parse(context);
-    this.modifySubmodelBase(element, parsed);
+    this.modifyNameAndDescription(element, parsed);
     if (parsed.value !== undefined) {
       this.visitSubmodelElements(element, parsed.value);
     }
