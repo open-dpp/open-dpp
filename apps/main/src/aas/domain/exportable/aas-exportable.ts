@@ -80,8 +80,8 @@ export class AasExportable {
       id: this.id,
       environment: this.environment.toPlain(),
       templateId: this.templateId,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
       format: this.EXPORT_FORMAT,
       version: this.EXPORT_VERSION,
     };
