@@ -123,7 +123,9 @@ describe("aasEditor composable", () => {
   });
 
   afterEach(() => {
-    mountedWrappers.splice(0).forEach(w => w.unmount());
+    mountedWrappers.splice(0).forEach((w) => {
+      w.unmount();
+    });
   });
   const translate = (key: string) => key;
   const changeQueryParams = vi.fn();
