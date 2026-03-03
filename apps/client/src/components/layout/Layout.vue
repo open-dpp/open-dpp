@@ -14,7 +14,6 @@ import {
   ChartBarIcon,
   CloudIcon,
   LinkIcon,
-  Squares2X2Icon,
 } from "@heroicons/vue/16/solid";
 import {
   Bars3Icon,
@@ -76,25 +75,13 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
       name: "",
       items: [
         {
-          name: t("models.models"),
-          to: `/organizations/${indexStore.selectedOrganization}/models`,
-          icon: CubeIcon,
-          show: () => indexStore.selectedOrganization !== null,
-        },
-        {
-          name: t("draft.passportDraft", 2),
-          to: `/organizations/${indexStore.selectedOrganization}/data-model-drafts`,
-          icon: Square3Stack3DIcon,
-          show: () => indexStore.selectedOrganization !== null,
-        },
-        {
-          name: `${t("passports.label", 2)} AAS @beta`,
+          name: `${t("passports.label", 2)}`,
           to: `/organizations/${indexStore.selectedOrganization}/passports`,
           icon: CubeIcon,
           show: () => indexStore.selectedOrganization !== null,
         },
         {
-          name: `${t("templates.label", 2)} AAS @beta`,
+          name: `${t("templates.label", 2)}`,
           to: `/organizations/${indexStore.selectedOrganization}/templates`,
           icon: Square3Stack3DIcon,
           show: () => indexStore.selectedOrganization !== null,
@@ -133,17 +120,6 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
           to: "/organizations",
           icon: BuildingOfficeIcon,
           show: () => indexStore.selectedOrganization === null,
-        },
-      ],
-    },
-    {
-      name: t("marketplace.marketplace"),
-      items: [
-        {
-          name: t("marketplace.marketplace"),
-          to: "/marketplace",
-          icon: Squares2X2Icon,
-          show: () => indexStore.selectedOrganization !== null,
         },
       ],
     },
