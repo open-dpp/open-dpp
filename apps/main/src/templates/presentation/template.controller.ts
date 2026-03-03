@@ -373,7 +373,11 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     if (!activeOrganizationId) {
       throw new BadRequestException("activeOrganizationId is required in session");
     }
-    const template = await this.aasSerializationService.importTemplate(body, activeOrganizationId);
+    const template = await this.aasSerializationService.importTemplate(
+      body,
+      activeOrganizationId,
+      async (t, options) => { await this.templateRepository.save(t, options); },
+    );
     if (!template) {
       throw new BadRequestException("Template cant be imported");
     }

@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { DataTypeDef, KeyTypes, Language, ModellingKind, QualifierKind, ReferenceTypes } from "@open-dpp/dto";
 import { z } from "zod/v4";
 import { EnvironmentService } from "../../../aas/presentation/environment.service";
+import { DbSessionOptions } from "../../../database/query-options";
 import { Passport } from "../../../passports/domain/passport";
 import { Template } from "../../../templates/domain/template";
 import { AssetAdministrationShell } from "../../domain/asset-adminstration-shell";
@@ -657,29 +658,378 @@ export class AasSerializationService {
     }
   }
 
-  async importTemplate(data: any, organizationId: string): Promise<Template | null> {
+  async importTemplate(
+    data: any,
+    organizationId: string,
+    saveTemplate: (template: Template, options: DbSessionOptions) => Promise<void>,
+  ): Promise<Template> {
     try {
       const aasExportableSchema = aasExportSchemaJsonV1_0.parse(data);
-      const environment = Environment.fromPlain(aasExportableSchema.environment);
+
+      // Map asset administration shells to domain objects
+      const assetAdministrationShells: AssetAdministrationShell[] = [];
+      for (const shell of aasExportableSchema.environment.assetAdministrationShells) {
+        const assetInformation = AssetInformation.create({
+          assetKind: shell.assetInformation.assetKind,
+          globalAssetId: shell.assetInformation.globalAssetId,
+          specificAssetIds: shell.assetInformation.specificAssetIds
+            .map(specificAssetId => SpecificAssetId.create({
+              name: specificAssetId.name,
+              value: specificAssetId.value,
+              semanticId: specificAssetId.semanticId
+                ? Reference.create({
+                    type: ReferenceTypes[specificAssetId.semanticId.type],
+                    referredSemanticId: Reference.fromPlain(specificAssetId.semanticId.referredSemanticId),
+                    keys: specificAssetId.semanticId.keys.map(key => Key.create({
+                      type: KeyTypes[key.type],
+                      value: key.value,
+                    })),
+                  })
+                : null,
+            })),
+          assetType: shell.assetInformation.assetType,
+          defaultThumbnail: shell.assetInformation.defaultThumbnail
+            ? Resource.create({
+                path: shell.assetInformation.defaultThumbnail.path,
+                contentType: shell.assetInformation.defaultThumbnail.contentType,
+              })
+            : null,
+        });
+        const aas = AssetAdministrationShell.create({
+          assetInformation,
+          extensions: shell.extensions.map(extension => Extension.create({
+            name: extension.name,
+            semanticId: extension.semanticId
+              ? Reference.create({
+                  type: ReferenceTypes[extension.semanticId.type],
+                  referredSemanticId: Reference.fromPlain(extension.semanticId.referredSemanticId),
+                  keys: extension.semanticId.keys.map(key => Key.create({
+                    type: KeyTypes[key.type],
+                    value: key.value,
+                  })),
+                })
+              : null,
+            supplementalSemanticIds: extension.supplementalSemanticIds.map(supplementalSemanticId => Reference.create({
+              type: ReferenceTypes[supplementalSemanticId.type],
+              referredSemanticId: Reference.fromPlain(supplementalSemanticId.referredSemanticId),
+              keys: supplementalSemanticId.keys.map(key => Key.create({
+                type: KeyTypes[key.type],
+                value: key.value,
+              })),
+            })),
+            valueType: extension.valueType ? DataTypeDef[extension.valueType] : null,
+            value: extension.value,
+            refersTo: extension.refersTo.map(ref => Reference.create({
+              type: ReferenceTypes[ref.type],
+              referredSemanticId: Reference.fromPlain(ref.referredSemanticId),
+              keys: ref.keys.map(key => Key.create({
+                type: KeyTypes[key.type],
+                value: key.value,
+              })),
+            })),
+          })),
+          category: shell.category,
+          idShort: shell.idShort,
+          displayName: shell.displayName
+            ? shell.displayName.filter(displayName => displayName._text).map(displayName => LanguageText.create({
+                language: Language[displayName.language],
+                text: displayName._text ?? "",
+              }))
+            : [],
+          description: shell.description
+            ? shell.description.filter(desc => desc._text).map(description => LanguageText.create({
+                language: Language[description.language],
+                text: description._text ?? "",
+              }))
+            : [],
+          administration: shell.administration
+            ? AdministrativeInformation.create({
+                version: shell.administration.version,
+                revision: shell.administration.revision,
+              })
+            : undefined,
+          embeddedDataSpecifications: shell.embeddedDataSpecifications
+            ? shell.embeddedDataSpecifications.map(embeddedDataSpecification => EmbeddedDataSpecification.create({
+                dataSpecification: Reference.create({
+                  type: ReferenceTypes[embeddedDataSpecification.dataSpecification.type],
+                  referredSemanticId: Reference.fromPlain(embeddedDataSpecification.dataSpecification.referredSemanticId),
+                  keys: embeddedDataSpecification.dataSpecification.keys.map(key => Key.create({
+                    type: KeyTypes[key.type],
+                    value: key.value,
+                  })),
+                }),
+              }))
+            : [],
+          derivedFrom: shell.derivedFrom
+            ? Reference.create({
+                type: ReferenceTypes[shell.derivedFrom.type],
+                referredSemanticId: Reference.fromPlain(shell.derivedFrom.referredSemanticId),
+                keys: shell.derivedFrom.keys.map(key => Key.create({
+                  type: KeyTypes[key.type],
+                  value: key.value,
+                })),
+              })
+            : null,
+          submodels: shell.submodels.map(submodel => Reference.create({
+            type: ReferenceTypes[submodel.type],
+            referredSemanticId: Reference.fromPlain(submodel.referredSemanticId),
+            keys: submodel.keys.map(key => Key.create({
+              type: KeyTypes[key.type],
+              value: key.value,
+            })),
+          })),
+        });
+        assetAdministrationShells.push(aas);
+      }
+
+      // Map submodels to domain objects
+      const submodels: Array<Submodel> = [];
+      for (const submodel of aasExportableSchema.environment.submodels) {
+        const sub = Submodel.create({
+          id: submodel.id,
+          extensions: submodel.extensions.map(extension => Extension.create({
+            name: extension.name,
+            semanticId: extension.semanticId
+              ? Reference.create({
+                  type: ReferenceTypes[extension.semanticId.type],
+                  referredSemanticId: Reference.fromPlain(extension.semanticId.referredSemanticId),
+                  keys: extension.semanticId.keys.map(key => Key.create({
+                    type: KeyTypes[key.type],
+                    value: key.value,
+                  })),
+                })
+              : null,
+            supplementalSemanticIds: extension.supplementalSemanticIds.map(ref => Reference.create({
+              type: ReferenceTypes[ref.type],
+              referredSemanticId: Reference.fromPlain(ref.referredSemanticId),
+              keys: ref.keys.map(key => Key.create({
+                type: KeyTypes[key.type],
+                value: key.value,
+              })),
+            })),
+            valueType: extension.valueType ? DataTypeDef[extension.valueType] : null,
+            value: extension.value,
+            refersTo: extension.refersTo.map(ref => Reference.create({
+              type: ReferenceTypes[ref.type],
+              referredSemanticId: Reference.fromPlain(ref.referredSemanticId),
+              keys: ref.keys.map(key => Key.create({
+                type: KeyTypes[key.type],
+                value: key.value,
+              })),
+            })),
+          })),
+          category: submodel.category,
+          idShort: submodel.idShort,
+          displayName: submodel.displayName
+            .filter(langText => langText._text)
+            .map(langText => LanguageText.create({
+              language: Language[langText.language],
+              text: langText._text ?? "",
+            })),
+          description: submodel.description
+            .filter(langText => langText._text)
+            .map(langText => LanguageText.create({
+              language: Language[langText.language],
+              text: langText._text ?? "",
+            })),
+          administration: submodel.administration
+            ? AdministrativeInformation.create({
+                version: submodel.administration.version,
+                revision: submodel.administration.revision,
+              })
+            : null,
+          kind: submodel.kind ? ModellingKind[submodel.kind] : null,
+          semanticId: submodel.semanticId
+            ? Reference.create({
+                type: ReferenceTypes[submodel.semanticId.type],
+                referredSemanticId: Reference.fromPlain(submodel.semanticId.referredSemanticId),
+                keys: submodel.semanticId.keys.map(key => Key.create({
+                  type: KeyTypes[key.type],
+                  value: key.value,
+                })),
+              })
+            : null,
+          supplementalSemanticIds: submodel.supplementalSemanticIds.map(ref => Reference.create({
+            type: ReferenceTypes[ref.type],
+            referredSemanticId: Reference.fromPlain(ref.referredSemanticId),
+            keys: ref.keys.map(key => Key.create({
+              type: KeyTypes[key.type],
+              value: key.value,
+            })),
+          })),
+          qualifiers: submodel.qualifiers
+            .filter(qualifier => qualifier.valueType != null && qualifier.kind != null)
+            .map(qualifier => Qualifier.create({
+              type: qualifier.type,
+              valueType: DataTypeDef[qualifier.valueType!],
+              semanticId: qualifier.semanticId
+                ? Reference.create({
+                    type: ReferenceTypes[qualifier.semanticId.type],
+                    referredSemanticId: Reference.fromPlain(qualifier.semanticId.referredSemanticId),
+                    keys: qualifier.semanticId.keys.map(key => Key.create({
+                      type: KeyTypes[key.type],
+                      value: key.value,
+                    })),
+                  })
+                : null,
+              supplementalSemanticIds: qualifier.supplementalSemanticIds.map(ref => Reference.create({
+                type: ReferenceTypes[ref.type],
+                referredSemanticId: Reference.fromPlain(ref.referredSemanticId),
+                keys: ref.keys.map(key => Key.create({
+                  type: KeyTypes[key.type],
+                  value: key.value,
+                })),
+              })),
+              kind: QualifierKind[qualifier.kind!],
+              value: qualifier.value,
+              valueId: qualifier.valueId
+                ? Reference.create({
+                    type: ReferenceTypes[qualifier.valueId.type],
+                    referredSemanticId: Reference.fromPlain(qualifier.valueId.referredSemanticId),
+                    keys: qualifier.valueId.keys.map(key => Key.create({
+                      type: KeyTypes[key.type],
+                      value: key.value,
+                    })),
+                  })
+                : null,
+            })),
+          embeddedDataSpecifications: submodel.embeddedDataSpecifications.map(eds => EmbeddedDataSpecification.create({
+            dataSpecification: Reference.create({
+              type: ReferenceTypes[eds.dataSpecification.type],
+              referredSemanticId: Reference.fromPlain(eds.dataSpecification.referredSemanticId),
+              keys: eds.dataSpecification.keys.map(key => Key.create({
+                type: KeyTypes[key.type],
+                value: key.value,
+              })),
+            }),
+          })),
+          submodelElements: submodel.submodelElements.map(element => parseSubmodelElement(element)),
+        });
+        submodels.push(sub);
+      }
+
+      // Map concept descriptions to domain objects
+      const conceptDescriptions: Array<ConceptDescription> = [];
+      for (const conceptDescription of aasExportableSchema.environment.conceptDescriptions) {
+        const conceptDesc = ConceptDescription.create({
+          id: "",
+          extensions: conceptDescription.extensions.map(extension => Extension.create({
+            name: extension.name,
+            semanticId: extension.semanticId
+              ? Reference.create({
+                  type: ReferenceTypes[extension.semanticId.type],
+                  referredSemanticId: Reference.fromPlain(extension.semanticId.referredSemanticId),
+                  keys: extension.semanticId.keys.map(key => Key.create({
+                    type: KeyTypes[key.type],
+                    value: key.value,
+                  })),
+                })
+              : null,
+            supplementalSemanticIds: extension.supplementalSemanticIds.map(ref => Reference.create({
+              type: ReferenceTypes[ref.type],
+              referredSemanticId: Reference.fromPlain(ref.referredSemanticId),
+              keys: ref.keys.map(key => Key.create({
+                type: KeyTypes[key.type],
+                value: key.value,
+              })),
+            })),
+            valueType: extension.valueType ? DataTypeDef[extension.valueType] : null,
+            value: extension.value,
+            refersTo: extension.refersTo.map(ref => Reference.create({
+              type: ReferenceTypes[ref.type],
+              referredSemanticId: Reference.fromPlain(ref.referredSemanticId),
+              keys: ref.keys.map(key => Key.create({
+                type: KeyTypes[key.type],
+                value: key.value,
+              })),
+            })),
+          })),
+          category: conceptDescription.category,
+          idShort: conceptDescription.idShort,
+          displayName: conceptDescription.displayName
+            .filter(langText => langText._text)
+            .map(langText => LanguageText.create({
+              language: Language[langText.language],
+              text: langText._text ?? "",
+            })),
+          description: conceptDescription.description
+            .filter(langText => langText._text)
+            .map(langText => LanguageText.create({
+              language: Language[langText.language],
+              text: langText._text ?? "",
+            })),
+          semanticId: conceptDescription.semanticId
+            ? Reference.create({
+                type: ReferenceTypes[conceptDescription.semanticId.type],
+                referredSemanticId: Reference.fromPlain(conceptDescription.semanticId.referredSemanticId),
+                keys: conceptDescription.semanticId.keys.map(key => Key.create({
+                  type: KeyTypes[key.type],
+                  value: key.value,
+                })),
+              })
+            : null,
+          administration: conceptDescription.administration
+            ? AdministrativeInformation.create({
+                version: conceptDescription.administration.version,
+                revision: conceptDescription.administration.revision,
+              })
+            : undefined,
+          embeddedDataSpecifications: conceptDescription.embeddedDataSpecifications.map(eds => EmbeddedDataSpecification.create({
+            dataSpecification: Reference.create({
+              type: ReferenceTypes[eds.dataSpecification.type],
+              referredSemanticId: Reference.fromPlain(eds.dataSpecification.referredSemanticId),
+              keys: eds.dataSpecification.keys.map(key => Key.create({
+                type: KeyTypes[key.type],
+                value: key.value,
+              })),
+            }),
+          })),
+          isCaseOf: conceptDescription.isCaseOf.map(ref => Reference.create({
+            type: ReferenceTypes[ref.type],
+            referredSemanticId: Reference.fromPlain(ref.referredSemanticId),
+            keys: ref.keys.map(key => Key.create({
+              type: KeyTypes[key.type],
+              value: key.value,
+            })),
+          })),
+        });
+        conceptDescriptions.push(conceptDesc);
+      }
+
+      // Save concept descriptions
+      for (const conceptDescription of conceptDescriptions) {
+        await this.conceptDescriptionRepository.save(conceptDescription);
+      }
+
+      // Create environment with saved entity IDs
+      const environment = Environment.create({
+        assetAdministrationShells: assetAdministrationShells.map(aas => aas.id),
+        submodels: submodels.map(submodel => submodel.id),
+        conceptDescriptions: conceptDescriptions.map(cd => cd.id),
+      });
+
+      // Create template
       const template = Template.create({
         organizationId,
         environment,
         createdAt: aasExportableSchema.createdAt,
         updatedAt: aasExportableSchema.updatedAt,
       });
-      /* await this.environmentService.persistImportedEnvironment(
-        shells,
+
+      // Persist shells, submodels, and template transactionally
+      await this.environmentService.persistImportedEnvironment(
+        assetAdministrationShells,
         submodels,
-        async (options) => { await this.templateRepository.save(entity, options); },
-      ); */
+        async (options) => { await saveTemplate(template, options); },
+      );
 
       return template;
     }
     catch (error) {
       if (error instanceof z.ZodError) {
-        throw new BadRequestException();
+        throw new BadRequestException("Invalid import data format");
       }
+      throw error;
     }
-    return null;
   }
 }
