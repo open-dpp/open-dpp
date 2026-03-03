@@ -453,7 +453,11 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     if (!activeOrganizationId) {
       throw new BadRequestException("activeOrganizationId is required in session");
     }
-    const passport = await this.aasSerializationService.importPassport(body, activeOrganizationId);
+    const passport = await this.aasSerializationService.importPassport(
+      body,
+      activeOrganizationId,
+      async (p, options) => { await this.passportRepository.save(p, options); },
+    );
     if (!passport) {
       throw new BadRequestException("Passport cant be imported");
     }

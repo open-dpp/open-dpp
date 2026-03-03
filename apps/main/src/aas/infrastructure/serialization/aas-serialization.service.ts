@@ -262,7 +262,11 @@ export class AasSerializationService {
     return aasExportSchemaJsonV1_0.parse(aasExportable.toExportPlain());
   }
 
-  async importPassport(data: any, organizationId: string): Promise<Passport | null> {
+  async importPassport(
+    data: any,
+    organizationId: string,
+    savePassport: (passport: Passport, options: DbSessionOptions) => Promise<void>,
+  ): Promise<Passport | null> {
     try {
       // parse full schema
       const aasExportableSchema = aasExportSchemaJsonV1_0.parse(data);
@@ -616,38 +620,25 @@ export class AasSerializationService {
       // create environment
       const environment = Environment.create({
         assetAdministrationShells: newShells.map(aas => aas.id),
-        submodels: newSubmodels.map(submodel => submodel.id).slice(0, 0),
-        conceptDescriptions: newConceptDescriptions.map(conceptDescription => conceptDescription.id).slice(0, 0),
+        submodels: newSubmodels.map(submodel => submodel.id),
+        conceptDescriptions: newConceptDescriptions.map(cd => cd.id),
       });
-      // save environment
-      // create passport
+
+      // Create passport
       const passport = Passport.create({
         organizationId,
         environment,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      // save passport
 
-      // const upid = passport.createUniqueProductIdentifier();
+      // Persist shells, submodels, and passport transactionally
+      await this.environmentService.persistImportedEnvironment(
+        assetAdministrationShells,
+        submodels,
+        async (options) => { await savePassport(passport, options); },
+      );
 
-      // Persist all entities in a single transaction to avoid partial commits
-      /* const session = await this.connection.startSession();
-      try {
-        await session.withTransaction(async () => {
-          for (const submodel of Array.from(oldIdToNewSubmodelMap.values())) {
-            await this.submodelRepository.save(submodel, { session });
-          }
-          for (const shell of newShells) {
-            await this.aasRepository.save(shell, { session });
-          }
-          await this.passportRepository.save(newPassport, { session });
-          await this.uniqueProductIdentifierService.save(upid);
-        });
-      }
-      catch (e) {
-        // TODO
-      } */
       return passport;
     }
     catch (error) {
