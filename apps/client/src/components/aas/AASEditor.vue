@@ -20,6 +20,7 @@ import { AasEditMode } from "../../lib/aas-editor.ts";
 import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import ProductImageGalleria from "../media/ProductImageGalleria.vue";
 import TablePagination from "../pagination/TablePagination.vue";
 import SubmodelElementListCreateEditor from "./SubmodelElementListCreateEditor.vue";
 
@@ -90,6 +91,7 @@ const {
   resetCursor,
   nextPage,
   displayName,
+  aasGalleryFiles,
 } = aasEditor;
 
 onMounted(async () => {
@@ -136,10 +138,34 @@ const isFullPosition = computed(() => position.value === fullPosition);
 
 <template>
   <div class="flex flex-col gap-1 p-4">
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <span class="text-xl font-bold">
-        {{ displayName === "" ? t("common.untitled") : displayName }}
-      </span>
+    <div class="flex justify-between items-start gap-2">
+      <div class="flex gap-2">
+        <div style="width: 340px">
+          <ProductImageGalleria v-model="aasGalleryFiles" />
+        </div>
+        <div class="flex flex-col gap-2">
+          <div>
+            <dl class="divide-y divide-gray-100">
+              <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-900">
+                  {{ t("aasEditor.formLabels.id") }}
+                </dt>
+                <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+                  {{ id }}
+                </dd>
+              </div>
+              <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt class="text-sm font-medium text-gray-900">
+                  {{ t("aasEditor.formLabels.name") }}
+                </dt>
+                <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+                  {{ displayName === "" ? t("common.untitled") : displayName }}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </div>
       <Button
         icon="pi pi-pencil"
         severity="primary"

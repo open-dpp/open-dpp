@@ -60,9 +60,11 @@
     }
   },
   "aasEditor": {
+    "productImages": "Produktbilder",
     "formLabels": {
       "value": "Wert",
-      "name": "Name"
+      "name": "Name",
+      "id": "Identifikator"
     },
     "table": {
       "saveAndAddEntries": "Speichern und Listeneinträge hinzufügen",
@@ -383,7 +385,7 @@
     "select": "Datei auswählen",
     "noSelection": "Keine Datei ausgewählt",
     "notFound": "Datei nicht vorhanden",
-    "couldNotBeLoaded": "Datei konnte nicht geladen werden.",
+    "couldNotBeLoaded": "Datei konnte nicht geladen werden. | Dateien konnten nicht geladen werden.",
     "errorRevokingUrl": "Fehler beim Freigeben der vorherigen Objekt-URL:",
     "errorRevokingUrlError": "Fehler beim Freigeben der Objekt-URL nach Fehler:"
   },

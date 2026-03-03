@@ -1,5 +1,6 @@
 import {
   AssetAdministrationShellModificationSchema,
+  AssetInformationModificationSchema,
   FileModificationSchema,
   NameAndDescriptionModificationSchema,
   PropertyModificationSchema,
@@ -33,8 +34,8 @@ import { ReferenceElement } from "./submodel-base/reference-element";
 import { RelationshipElement } from "./submodel-base/relationship-element";
 import { Submodel } from "./submodel-base/submodel";
 import { ISubmodelElement } from "./submodel-base/submodel-base";
-import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 
+import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
 
@@ -63,12 +64,16 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
   visitAssetAdministrationShell(element: AssetAdministrationShell, context: unknown): void {
     const parsed = AssetAdministrationShellModificationSchema.parse(context);
     this.modifyNameAndDescription(element, parsed);
+    if (parsed.assetInformation) {
+      element.assetInformation.accept(this, parsed.assetInformation);
+    }
   }
 
-  visitAssetInformation(_element: AssetInformation, _context: unknown): void {
-    throw new NotSupportedError(
-      "AssetInformation is not supported.",
-    );
+  visitAssetInformation(element: AssetInformation, context: unknown): void {
+    const parsed = AssetInformationModificationSchema.parse(context);
+    if (parsed.defaultThumbnails) {
+      element.defaultThumbnails = parsed.defaultThumbnails.map(Resource.fromPlain);
+    }
   }
 
   visitBlob(_element: Blob, _context: unknown): void {

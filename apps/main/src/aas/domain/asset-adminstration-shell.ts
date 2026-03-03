@@ -17,7 +17,7 @@ import { IVisitable, IVisitor } from "./visitor";
 
 export interface AssetAdministrationShellCreateProps {
   id?: string;
-  assetInformation: AssetInformation;
+  assetInformation?: AssetInformation;
   extensions?: Extension[];
   category?: string | null;
   idShort?: string | null;
