@@ -125,17 +125,6 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
       ],
     },
     {
-      name: t("marketplace.marketplace"),
-      items: [
-        {
-          name: t("marketplace.marketplace"),
-          to: "/marketplace",
-          icon: Squares2X2Icon,
-          show: () => indexStore.selectedOrganization !== null,
-        },
-      ],
-    },
-    {
       name: t("media.media"),
       items: [
         {
