@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
-import { DataTypeDef, KeyTypes, Language, ReferenceTypes } from "@open-dpp/dto";
+import { DataTypeDef, KeyTypes, Language, ModellingKind, QualifierKind, ReferenceTypes } from "@open-dpp/dto";
 import { z } from "zod/v4";
 import { EnvironmentService } from "../../../aas/presentation/environment.service";
 import { Passport } from "../../../passports/domain/passport";
@@ -9,6 +9,7 @@ import { AssetInformation } from "../../domain/asset-information";
 import { AdministrativeInformation } from "../../domain/common/administrative-information";
 import { Key } from "../../domain/common/key";
 import { LanguageText } from "../../domain/common/language-text";
+import { Qualifier } from "../../domain/common/qualififiable";
 import { Reference } from "../../domain/common/reference";
 import { ConceptDescription } from "../../domain/concept-description";
 import { EmbeddedDataSpecification } from "../../domain/embedded-data-specification";
@@ -18,6 +19,7 @@ import { Extension } from "../../domain/extension";
 import { Resource } from "../../domain/resource";
 import { SpecificAssetId } from "../../domain/specific-asset-id";
 import { Submodel } from "../../domain/submodel-base/submodel";
+import { parseSubmodelElement } from "../../domain/submodel-base/submodel-base";
 import { AasRepository } from "../aas.repository";
 import { ConceptDescriptionRepository } from "../concept-description.repository";
 import { SubmodelRepository } from "../submodel.repository";
@@ -147,6 +149,7 @@ const aasExportSchemaJsonV1_0 = z.object({
       submodels: z.array(ReferenceSchemaV1_0),
     })),
     submodels: z.array(z.object({
+      id: z.string(),
       extensions: z.array(z.object({
         name: z.string(),
         semanticId: ReferenceSchemaV1_0.nullable(),
@@ -378,34 +381,125 @@ export class AasSerializationService {
       // mapping submodels to current domain
       const submodels: Array<Submodel> = [];
       for (const submodel of aasExportableSchema.environment.submodels) {
-        // TODO
         const sub = Submodel.create({
+          id: submodel.id,
           extensions: submodel.extensions.map(extension => Extension.create({
             name: extension.name,
-            semanticId: Reference.fromPlain(extension.semanticId),
-            supplementalSemanticIds: extension.supplementalSemanticIds.map(ref => Reference.fromPlain(ref)),
-            valueType: extension.valueType,
+            semanticId: extension.semanticId
+              ? Reference.create({
+                  type: ReferenceTypes[extension.semanticId.type],
+                  referredSemanticId: Reference.fromPlain(extension.semanticId.referredSemanticId),
+                  keys: extension.semanticId.keys.map(key => Key.create({
+                    type: KeyTypes[key.type],
+                    value: key.value,
+                  })),
+                })
+              : null,
+            supplementalSemanticIds: extension.supplementalSemanticIds.map(ref => Reference.create({
+              type: ReferenceTypes[ref.type],
+              referredSemanticId: Reference.fromPlain(ref.referredSemanticId),
+              keys: ref.keys.map(key => Key.create({
+                type: KeyTypes[key.type],
+                value: key.value,
+              })),
+            })),
+            valueType: extension.valueType ? DataTypeDef[extension.valueType] : null,
             value: extension.value,
-            refersTo: extension.refersTo.map(ref => Reference.fromPlain(ref)),
+            refersTo: extension.refersTo.map(ref => Reference.create({
+              type: ReferenceTypes[ref.type],
+              referredSemanticId: Reference.fromPlain(ref.referredSemanticId),
+              keys: ref.keys.map(key => Key.create({
+                type: KeyTypes[key.type],
+                value: key.value,
+              })),
+            })),
           })),
           category: submodel.category,
           idShort: submodel.idShort,
-          displayName: submodel.displayName.filter(displayName => displayName._text).map(langText => LanguageText.create({
-            language: langText.language,
-            text: langText._text ?? "",
+          displayName: submodel.displayName
+            .filter(langText => langText._text)
+            .map(langText => LanguageText.create({
+              language: Language[langText.language],
+              text: langText._text ?? "",
+            })),
+          description: submodel.description
+            .filter(langText => langText._text)
+            .map(langText => LanguageText.create({
+              language: Language[langText.language],
+              text: langText._text ?? "",
+            })),
+          administration: submodel.administration
+            ? AdministrativeInformation.create({
+                version: submodel.administration.version,
+                revision: submodel.administration.revision,
+              })
+            : null,
+          kind: submodel.kind ? ModellingKind[submodel.kind] : null,
+          semanticId: submodel.semanticId
+            ? Reference.create({
+                type: ReferenceTypes[submodel.semanticId.type],
+                referredSemanticId: Reference.fromPlain(submodel.semanticId.referredSemanticId),
+                keys: submodel.semanticId.keys.map(key => Key.create({
+                  type: KeyTypes[key.type],
+                  value: key.value,
+                })),
+              })
+            : null,
+          supplementalSemanticIds: submodel.supplementalSemanticIds.map(ref => Reference.create({
+            type: ReferenceTypes[ref.type],
+            referredSemanticId: Reference.fromPlain(ref.referredSemanticId),
+            keys: ref.keys.map(key => Key.create({
+              type: KeyTypes[key.type],
+              value: key.value,
+            })),
           })),
-          description: submodel.description.filter(displayName => displayName._text).map(langText => LanguageText.create({
-            language: langText.language,
-            text: langText._text ?? "",
+          qualifiers: submodel.qualifiers
+            .filter(qualifier => qualifier.valueType != null && qualifier.kind != null)
+            .map(qualifier => Qualifier.create({
+              type: qualifier.type,
+              valueType: DataTypeDef[qualifier.valueType!],
+              semanticId: qualifier.semanticId
+                ? Reference.create({
+                    type: ReferenceTypes[qualifier.semanticId.type],
+                    referredSemanticId: Reference.fromPlain(qualifier.semanticId.referredSemanticId),
+                    keys: qualifier.semanticId.keys.map(key => Key.create({
+                      type: KeyTypes[key.type],
+                      value: key.value,
+                    })),
+                  })
+                : null,
+              supplementalSemanticIds: qualifier.supplementalSemanticIds.map(ref => Reference.create({
+                type: ReferenceTypes[ref.type],
+                referredSemanticId: Reference.fromPlain(ref.referredSemanticId),
+                keys: ref.keys.map(key => Key.create({
+                  type: KeyTypes[key.type],
+                  value: key.value,
+                })),
+              })),
+              kind: QualifierKind[qualifier.kind!],
+              value: qualifier.value,
+              valueId: qualifier.valueId
+                ? Reference.create({
+                    type: ReferenceTypes[qualifier.valueId.type],
+                    referredSemanticId: Reference.fromPlain(qualifier.valueId.referredSemanticId),
+                    keys: qualifier.valueId.keys.map(key => Key.create({
+                      type: KeyTypes[key.type],
+                      value: key.value,
+                    })),
+                  })
+                : null,
+            })),
+          embeddedDataSpecifications: submodel.embeddedDataSpecifications.map(eds => EmbeddedDataSpecification.create({
+            dataSpecification: Reference.create({
+              type: ReferenceTypes[eds.dataSpecification.type],
+              referredSemanticId: Reference.fromPlain(eds.dataSpecification.referredSemanticId),
+              keys: eds.dataSpecification.keys.map(key => Key.create({
+                type: KeyTypes[key.type],
+                value: key.value,
+              })),
+            }),
           })),
-          administration: undefined,
-          embeddedDataSpecifications: undefined,
-          id: "",
-          kind: undefined,
-          qualifiers: undefined,
-          semanticId: undefined,
-          submodelElements: undefined,
-          supplementalSemanticIds: undefined,
+          submodelElements: submodel.submodelElements.map(element => parseSubmodelElement(element)),
         });
         submodels.push(sub);
       }
