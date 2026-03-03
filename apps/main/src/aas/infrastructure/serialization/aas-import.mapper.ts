@@ -117,12 +117,12 @@ export function mapAssetAdministrationShells(shells: ShellSchema[]): AssetAdmini
         }),
       ),
       assetType: shell.assetInformation.assetType,
-      defaultThumbnail: shell.assetInformation.defaultThumbnail
-        ? Resource.create({
+      defaultThumbnails: shell.assetInformation.defaultThumbnail
+        ? [Resource.create({
             path: shell.assetInformation.defaultThumbnail.path,
             contentType: shell.assetInformation.defaultThumbnail.contentType,
-          })
-        : null,
+          })]
+        : [],
     });
 
     return AssetAdministrationShell.create({
