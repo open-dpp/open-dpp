@@ -4,12 +4,28 @@ import Image from "primevue/image";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import emptyState from "../../assets/empty-state.png";
+import { useAasUtils } from "../../composables/aas-utils.ts";
 import { usePassportStore } from "../../stores/passport";
+import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 
 const passportStore = usePassportStore();
 
+const { t, locale } = useI18n();
+
+const aasUtils = useAasUtils({
+  translate: t,
+  selectedLanguage: convertLocaleToLanguage(locale.value),
+});
+
+const displayName = computed(() =>
+  passportStore.shells
+  && passportStore.shells.length > 0
+  && passportStore.shells[0]
+    ? aasUtils.parseDisplayNameFromAas(passportStore.shells[0])
+    : undefined,
+);
+
 const productPassport = computed(() => passportStore.productPassport);
-const { t } = useI18n();
 </script>
 
 <template>
@@ -32,11 +48,11 @@ const { t } = useI18n();
             <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
               {{ productPassport.id }}
             </dd>
-            <dt class="text-sm font-medium text-gray-900">
+            <dt v-if="displayName" class="text-sm font-medium text-gray-900">
               {{ t("common.name") }}
             </dt>
-            <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-              Placeholder
+            <dd v-if="displayName" class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+              {{ displayName }}
             </dd>
           </div>
         </dl>
