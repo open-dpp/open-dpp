@@ -38,10 +38,8 @@ describe("passports", () => {
     setActivePinia(createPinia());
   });
 
-  const changeQueryParams = vi.fn();
-
   it("should create passport", async () => {
-    const { createPassport } = usePassports({ changeQueryParams });
+    const { createPassport } = usePassports();
     const p1 = passportsPlainFactory.build();
 
     const passports = { paging_metadata: { cursor: p1.id }, result: [p1] };

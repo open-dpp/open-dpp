@@ -18,10 +18,7 @@ const { templates, loading, init, hasNext, nextPage } = useTemplates({
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
 });
 
-const { createPassport } = usePassports({
-  changeQueryParams,
-  initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
-});
+const { createPassport } = usePassports();
 
 const { t, locale } = useI18n();
 type TemplateOption = TemplateDto & { label: string };

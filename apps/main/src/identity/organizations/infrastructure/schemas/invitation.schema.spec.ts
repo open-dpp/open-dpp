@@ -1,15 +1,18 @@
 import { expect } from "@jest/globals";
+import { MongoMemoryServer } from "mongodb-memory-server";
 import { connect, Connection, Model } from "mongoose";
 import { InvitationStatus } from "../../domain/invitation-status.enum";
 import { MemberRole } from "../../domain/member-role.enum";
 import { Invitation, InvitationSchema } from "./invitation.schema";
 
 describe("invitationSchema", () => {
+  let mongod: MongoMemoryServer;
   let mongoConnection: Connection;
   let InvitationModel: Model<Invitation>;
 
   beforeAll(async () => {
-    const uri = process.env.OPEN_DPP_MONGODB_URI!;
+    mongod = await MongoMemoryServer.create();
+    const uri = mongod.getUri();
     mongoConnection = (await connect(uri)).connection;
     InvitationModel = mongoConnection.model(Invitation.name, InvitationSchema);
   });
@@ -23,7 +26,9 @@ describe("invitationSchema", () => {
   });
 
   afterAll(async () => {
+    await mongoConnection.dropDatabase();
     await mongoConnection.close();
+    await mongod.stop();
   });
 
   it("should create an invitation document", async () => {
