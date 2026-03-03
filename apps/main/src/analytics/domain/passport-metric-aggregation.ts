@@ -6,7 +6,7 @@ interface PassportMetricAggregationProps {
   type: MeasurementType;
   valueKey: string;
   templateId: string;
-  modelId?: string;
+  passportId?: string;
   organizationId: string;
   startDate: Date;
   endDate: Date;
@@ -30,7 +30,7 @@ export class PassportMetricAggregation {
       data.type,
       data.valueKey,
       data.templateId,
-      data.modelId ?? null,
+      data.passportId ?? null,
       data.organizationId,
       data.startDate,
       data.endDate,

@@ -7,7 +7,7 @@ export const PassportMetricQuerySchema = z.object({
   startDate: z.iso.datetime().transform(v => new Date(v)),
   endDate: z.iso.datetime().transform(v => new Date(v)),
   templateId: z.uuid(),
-  modelId: z.uuid(),
+  passportId: z.uuid(),
   type: z.enum(MeasurementType),
   valueKey: z.string(),
   period: z.enum(TimePeriod),

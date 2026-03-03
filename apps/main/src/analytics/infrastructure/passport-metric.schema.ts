@@ -21,7 +21,7 @@ export class MetricValueDoc {
 const MetricValueSchema = SchemaFactory.createForClass(MetricValueDoc);
 
 @Schema({
-  collection: "passport_metric",
+  collection: "passport_metrics",
   timeseries: {
     timeField: "date",
     metaField: "source",
@@ -41,7 +41,7 @@ export class PassportMetricDoc extends Document {
 
   @Prop({ type: Object, required: true })
   source: {
-    modelId: string;
+    passportId: string;
     templateId: string;
     organizationId: string;
     type: MeasurementType;

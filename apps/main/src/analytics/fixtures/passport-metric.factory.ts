@@ -13,7 +13,7 @@ export const nowDate = new Date("2025-01-01T12:00:00Z");
 export const passportMetricCreateFactory
   = Factory.define<PassportMetricCreateProps>(() => ({
     source: {
-      modelId: randomUUID(),
+      passportId: randomUUID(),
       type: MeasurementType.PAGE_VIEWS,
       templateId: randomUUID(),
       organizationId: randomUUID(),
@@ -25,7 +25,7 @@ export const passportMetricFactory = Factory.define<PassportMetricDbProps>(
   () => ({
     id: uuidv7(),
     source: {
-      modelId: randomUUID(),
+      passportId: randomUUID(),
       type: MeasurementType.PAGE_VIEWS,
       templateId: randomUUID(),
       organizationId: randomUUID(),

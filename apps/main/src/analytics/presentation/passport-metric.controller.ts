@@ -40,7 +40,7 @@ export class PassportMetricController {
       source: {
         templateId: passportMetadata.templateId,
         organizationId: passportMetadata.organizationId,
-        modelId: passportMetadata.modelId,
+        passportId: passportMetadata.modelId,
       },
       date: new Date(Date.now()),
       page: passportPageViewDto.page,

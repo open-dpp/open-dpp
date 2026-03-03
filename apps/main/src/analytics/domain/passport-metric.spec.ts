@@ -33,13 +33,13 @@ describe("passportMetric", () => {
   });
 
   it("create page view", () => {
-    const modelId = randomUUID();
+    const passportId = randomUUID();
     const templateId = randomUUID();
     const organizationId = randomUUID();
     const page = "http://example.com/page1";
     const date = new Date();
     const passportMetric = PassportMetric.createPageView({
-      source: { modelId, templateId, organizationId },
+      source: { passportId, templateId, organizationId },
       page,
       date,
     });
@@ -53,7 +53,7 @@ describe("passportMetric", () => {
   });
 
   it("create metric for numeric data fields", () => {
-    const modelId = randomUUID();
+    const passportId = randomUUID();
     const templateId = randomUUID();
     const organizationId = randomUUID();
     const field1row0 = dataFieldFactory.build({ value: 3 });
@@ -70,7 +70,7 @@ describe("passportMetric", () => {
     const dataFields = [field1row0, field2, field1row1, textFieldToIgnore];
     const date = new Date();
     const passportMetric = PassportMetric.createFieldAggregate({
-      source: { modelId, templateId, organizationId },
+      source: { passportId, templateId, organizationId },
       fieldValues: dataFields,
       date,
     });

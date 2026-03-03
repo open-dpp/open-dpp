@@ -70,7 +70,7 @@ describe("passportMetricService", () => {
     const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     await passportMetricService.findOne(
       {
-        modelId: randomUUID(),
+        passportId: randomUUID(),
         type: MeasurementType.PAGE_VIEWS,
         templateId: randomUUID(),
         organizationId: org.id,
@@ -98,7 +98,7 @@ describe("passportMetricService", () => {
     await passportMetricService.create(passportMetric);
 
     const source = {
-      modelId: passportMetric.source.modelId,
+      passportId: passportMetric.source.passportId,
       organizationId: org.id,
       templateId: passportMetric.source.templateId,
       type: passportMetric.source.type,
@@ -123,7 +123,7 @@ describe("passportMetricService", () => {
     await expect(
       passportMetricService.findOneOrFail(
         {
-          modelId: randomUUID(),
+          passportId: randomUUID(),
           type: MeasurementType.PAGE_VIEWS,
           organizationId: org.id,
           templateId: randomUUID(),
@@ -136,7 +136,7 @@ describe("passportMetricService", () => {
   it("get passport page view statistic", async () => {
     const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const source = {
-      modelId: randomUUID(),
+      passportId: randomUUID(),
       organizationId: org.id,
       templateId: randomUUID(),
     };
@@ -197,7 +197,7 @@ describe("passportMetricService", () => {
       source.organizationId,
       {
         templateId: source.templateId,
-        modelId: source.modelId,
+        passportId: source.passportId,
         type: MeasurementType.PAGE_VIEWS,
         valueKey: "http://example.com",
         startDate: new Date("2025-01-01T00:00:00Z"),
@@ -224,7 +224,7 @@ describe("passportMetricService", () => {
   it("get passport field value statistic", async () => {
     const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const source = {
-      modelId: randomUUID(),
+      passportId: randomUUID(),
       organizationId: org.id,
       templateId: randomUUID(),
     };
@@ -300,7 +300,7 @@ describe("passportMetricService", () => {
       source.organizationId,
       {
         templateId: source.templateId,
-        modelId: source.modelId,
+        passportId: source.passportId,
         type: MeasurementType.FIELD_AGGREGATE,
         valueKey: dataFieldId1,
         startDate: new Date("2025-01-01T00:00:00.000Z"),
@@ -327,7 +327,7 @@ describe("passportMetricService", () => {
       source.organizationId,
       {
         templateId: source.templateId,
-        modelId: source.modelId,
+        passportId: source.passportId,
         type: MeasurementType.FIELD_AGGREGATE,
         valueKey: dataFieldId2,
         startDate: new Date("2025-01-01T00:00:00Z"),

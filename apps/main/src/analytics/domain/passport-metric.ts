@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 
 export interface MetricSourceProps {
   type: MeasurementType;
-  modelId: string;
+  passportId: string;
   templateId: string;
   organizationId: string;
 }

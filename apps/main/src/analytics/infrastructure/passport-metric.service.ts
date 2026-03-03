@@ -75,7 +75,7 @@ export class PassportMetricService {
       $expr: {
         $and: [
           { $eq: ["$date", date] },
-          { $eq: ["$source.modelId", source.modelId] },
+          { $eq: ["$source.modelId", source.passportId] },
           { $eq: ["$source.organizationId", source.organizationId] },
           { $eq: ["$source.templateId", source.templateId] },
           { $eq: ["$source.type", source.type] },
