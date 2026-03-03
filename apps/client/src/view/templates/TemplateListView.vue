@@ -7,7 +7,6 @@ import DppTable from "../../components/DppTable.vue";
 import TemplateCreateDialog from "../../components/template/TemplateCreateDialog.vue";
 import { useTemplates } from "../../composables/templates.ts";
 import apiClient from "../../lib/api-client.ts";
-import axiosIns from "../../lib/axios.ts";
 
 const route = useRoute();
 const router = useRouter();
@@ -40,7 +39,6 @@ const { t } = useI18n();
 const toast = useToast();
 
 const createDialogVisible = ref(false);
-const fileInput = ref<HTMLInputElement | null>(null);
 const templateFileInput = ref<HTMLInputElement | null>(null);
 const importingTemplate = ref<boolean>(false);
 
@@ -66,28 +64,6 @@ async function exportTemplate(id: string) {
     if (url) {
       globalThis.URL.revokeObjectURL(url);
     }
-  }
-}
-
-async function handleFileUpload(event: Event) {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
-  if (!file)
-    return;
-
-  try {
-    const json = JSON.parse(await file.text());
-    await axiosIns.post("/templates/import", json);
-    // emits("resetCursor");
-    toast.add({ severity: "success", summary: t("notifications.success"), detail: t("common.importSuccess"), life: 5000 });
-  }
-  catch (error) {
-    console.error("Failed to import passport", error);
-    toast.add({ severity: "error", summary: t("notifications.error"), detail: t("common.importFailed"), life: 5000 });
-  }
-  finally {
-    if (fileInput.value)
-      fileInput.value.value = "";
   }
 }
 
