@@ -1,8 +1,7 @@
 import { access } from "node:fs/promises";
 import path from "node:path";
-import { BadRequestException, ForbiddenException, Injectable, Logger } from "@nestjs/common";
+import { ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
-import { Session } from "../../identity/auth/domain/session";
 import { OrganizationsService } from "../../identity/organizations/application/services/organizations.service";
 import { Branding } from "../domain/branding";
 import { BrandingFile } from "../domain/brandingFile";
@@ -17,12 +16,8 @@ export class BrandingRepository {
   ) {
   }
 
-  async findOneByActiveOrganizationId(session: Session): Promise<Branding> {
-    const activeOrganizationId = session.activeOrganizationId;
-    if (!activeOrganizationId) {
-      throw new BadRequestException();
-    }
-    const activeOrganization = await this.organizationsService.getOrganization(activeOrganizationId, session);
+  async findOneByOrganizationId(orgId: string): Promise<Branding> {
+    const activeOrganization = await this.organizationsService.getOrganization(orgId);
     if (!activeOrganization) {
       throw new ForbiddenException("User is not part of any organization");
     }

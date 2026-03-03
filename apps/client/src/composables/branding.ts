@@ -1,0 +1,86 @@
+import type { BrandingDto } from "@open-dpp/dto";
+import type { AxiosResponse } from "axios";
+import type { Ref } from "vue";
+import type { MediaFile } from "../lib/media";
+import { storeToRefs } from "pinia";
+import { ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
+import apiClient from "../lib/api-client";
+import { createObjectUrl, revokeObjectUrl } from "../lib/media";
+import { useIndexStore } from "../stores";
+import { useErrorHandlingStore } from "../stores/error.handling";
+import { HTTPCode } from "../stores/http-codes";
+import { useMediaStore } from "../stores/media";
+
+function useBrandingCommon(requestLogo: () => Promise<AxiosResponse<BrandingDto>>) {
+  const logo = ref<MediaFile>();
+  const errorHandlingStore = useErrorHandlingStore();
+  const mediaStore = useMediaStore();
+  const { t } = useI18n();
+
+  const cleanupMediaUrls = () => {
+    if (logo.value) {
+      revokeObjectUrl(logo.value.url);
+      logo.value = undefined;
+    }
+  };
+
+  const applyBranding = async () => {
+    cleanupMediaUrls();
+    try {
+      const response = await requestLogo();
+      if (response.status === HTTPCode.OK && response.data.logo) {
+        const mediaResult = await mediaStore.fetchMedia(response.data.logo);
+        if (mediaResult && mediaResult.blob) {
+          logo.value = {
+            blob: mediaResult.blob,
+            mediaInfo: mediaResult.mediaInfo,
+            url: createObjectUrl(mediaResult.blob),
+          };
+        }
+      }
+    }
+    catch (error) {
+      errorHandlingStore.logErrorWithNotification(
+        t("presentation.loadPassportMediaError"),
+        error,
+      );
+    }
+  };
+
+  return { logo, applyBranding };
+};
+
+export function useBranding() {
+  const { logo, applyBranding } = useBrandingCommon(async () => await apiClient.dpp.branding.get());
+  const indexStore = useIndexStore();
+  const { selectedOrganization } = storeToRefs(indexStore);
+
+  watch(
+    () => selectedOrganization.value,
+    async (newValue) => {
+      if (newValue) {
+        await applyBranding();
+      }
+    },
+    { immediate: true },
+  );
+
+  return { logo, applyBranding };
+}
+
+export function useBrandingAnonymous(upi: Ref<string>) {
+  const { logo, applyBranding } = useBrandingCommon(async () => apiClient.dpp.uniqueProductIdentifiers.getBranding(upi.value));
+
+  watch(
+    () => upi.value,
+    async (newValue) => {
+      if (newValue) {
+        await applyBranding();
+      }
+    },
+    { immediate: true },
+  );
+
+  return { logo, applyBranding };
+}

@@ -5,7 +5,7 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { authClient } from "../../auth-client.ts";
-import { useBrandingStore } from "../../stores/branding.ts";
+import { useBrandingAnonymous } from "../../composables/branding.ts";
 import BrandingLogo from "../media/BrandingLogo.vue";
 
 const { t } = useI18n();
@@ -16,7 +16,8 @@ const permalink = computed(() => String(route.params.permalink ?? ""));
 const isSignedIn = computed<boolean>(() => {
   return session.value?.data != null;
 });
-const brandingStore = useBrandingStore();
+
+const { logo } = useBrandingAnonymous(permalink);
 
 function navigateToPassportView() {
   router.push(`/presentation/${permalink.value}`);
@@ -65,11 +66,7 @@ const menuItems = computed(() => {
 <template>
   <Menubar class="p-10!" :model="menuItems">
     <template #start>
-      <BrandingLogo
-        :url="
-          brandingStore.logo ? brandingStore.logo.url : '/api/branding/instance'
-        "
-      />
+      <BrandingLogo :url="logo ? logo.url : '/api/branding/instance'" />
     </template>
     <template #end>
       <div class="flex items-center gap-2">

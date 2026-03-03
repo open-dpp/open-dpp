@@ -1,6 +1,6 @@
 import type express from "express";
 import { readFile } from "node:fs/promises";
-import { Controller, Get, Res } from "@nestjs/common";
+import { Controller, ForbiddenException, Get, Res } from "@nestjs/common";
 import { BrandingDto, BrandingDtoSchema } from "@open-dpp/dto";
 import { Session } from "../../identity/auth/domain/session";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
@@ -18,7 +18,11 @@ export class BrandingController {
   async getOrganizationBranding(
     @AuthSession() session: Session,
   ): Promise<BrandingDto> {
-    return BrandingDtoSchema.parse((await this.brandingRepository.findOneByActiveOrganizationId(session)).toPlain());
+    if (!session.activeOrganizationId) {
+      throw new ForbiddenException("User is not logged in");
+    }
+
+    return BrandingDtoSchema.parse((await this.brandingRepository.findOneByOrganizationId(session.activeOrganizationId)).toPlain());
   }
 
   @AllowAnonymous()

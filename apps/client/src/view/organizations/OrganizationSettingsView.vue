@@ -7,9 +7,9 @@ import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 import MediaInput from "../../components/media/MediaInput.vue";
+import { useBranding } from "../../composables/branding";
 import apiClient from "../../lib/api-client";
 import { useIndexStore } from "../../stores";
-import { useBrandingStore } from "../../stores/branding.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling";
 import { useMediaStore } from "../../stores/media";
 import { useNotificationStore } from "../../stores/notification";
@@ -27,9 +27,11 @@ const currentMedia = ref<MediaResult | null>(null);
 const submitted = ref(false);
 const selectedFile = ref<File | null>(null);
 const fileUploadKey = ref(0);
-const brandingStore = useBrandingStore();
+const { applyBranding } = useBranding();
 
-const mediaInputId = computed(() => `organization-image-${indexStore.selectedOrganization}`);
+const mediaInputId = computed(
+  () => `organization-image-${indexStore.selectedOrganization}`,
+);
 
 async function fetchOrganization() {
   const data = await organizationStore.fetchCurrentOrganization();
@@ -69,10 +71,16 @@ async function save() {
 
   if (selectedFile.value) {
     try {
-      logo = await apiClient.media.media.uploadOrganizationProfileMedia(indexStore.selectedOrganization, selectedFile.value);
+      logo = await apiClient.media.media.uploadOrganizationProfileMedia(
+        indexStore.selectedOrganization,
+        selectedFile.value,
+      );
     }
     catch (e) {
-      errorHandlingStore.logErrorWithNotification(t("organizations.form.updateError"), e);
+      errorHandlingStore.logErrorWithNotification(
+        t("organizations.form.updateError"),
+        e,
+      );
       selectedFile.value = null;
       fileUploadKey.value++;
       submitted.value = false;
@@ -88,11 +96,16 @@ async function save() {
 
     await fetchOrganization();
     await organizationStore.fetchOrganizations();
-    await brandingStore.applyBranding();
-    notificationStore.addSuccessNotification(t("organizations.form.updateSuccess"));
+    await applyBranding();
+    notificationStore.addSuccessNotification(
+      t("organizations.form.updateSuccess"),
+    );
   }
   catch (e) {
-    errorHandlingStore.logErrorWithNotification(t("organizations.form.updateError"), e);
+    errorHandlingStore.logErrorWithNotification(
+      t("organizations.form.updateError"),
+      e,
+    );
   }
   finally {
     selectedFile.value = null;
@@ -110,15 +123,24 @@ onMounted(() => {
   <div class="bg-white shadow sm:rounded-lg">
     <div class="px-4 py-5 sm:p-6">
       <h3 class="text-base font-semibold leading-6 text-gray-900">
-        {{ t('organizations.settings.title') }}
+        {{ t("organizations.settings.title") }}
       </h3>
       <div class="mt-5 max-w-xl">
         <form @submit.prevent="save">
           <div class="flex flex-col gap-4">
             <div class="flex flex-col gap-2">
-              <label for="name" class="block text-sm font-medium leading-6 text-gray-900">{{ t('organizations.form.name.label') }}</label>
-              <InputText id="name" v-model="name" :invalid="submitted && !name" />
-              <small v-if="submitted && !name" class="text-red-500">{{ t('organizations.form.name.error') }}</small>
+              <label
+                for="name"
+                class="block text-sm font-medium leading-6 text-gray-900"
+              >{{ t("organizations.form.name.label") }}</label>
+              <InputText
+                id="name"
+                v-model="name"
+                :invalid="submitted && !name"
+              />
+              <small v-if="submitted && !name" class="text-red-500">{{
+                t("organizations.form.name.error")
+              }}</small>
             </div>
 
             <div class="flex flex-col gap-2">
@@ -129,9 +151,11 @@ onMounted(() => {
                   :label="t('organizations.form.image.label')"
                   :value="currentMedia"
                   @update-by-id="(id) => fetchMedia(id)"
-                  @select-file="(file) => selectedFile = file"
+                  @select-file="(file) => (selectedFile = file)"
                 />
-                <span v-if="selectedFile" class="text-sm text-gray-600">{{ selectedFile.name }}</span>
+                <span v-if="selectedFile" class="text-sm text-gray-600">{{
+                  selectedFile.name
+                }}</span>
               </div>
             </div>
 

@@ -29,8 +29,8 @@ import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { authClient } from "../../auth-client.ts";
+import { useBranding } from "../../composables/branding.ts";
 import { useIndexStore } from "../../stores";
-import { useBrandingStore } from "../../stores/branding.ts";
 import { useLayoutStore } from "../../stores/layout";
 import Breadcrumbs from "../Breadcrumbs.vue";
 import BrandingLogo from "../media/BrandingLogo.vue";
@@ -43,8 +43,8 @@ const router = useRouter();
 
 const indexStore = useIndexStore();
 const layoutStore = useLayoutStore();
-const brandingStore = useBrandingStore();
-const logo = computed(() => brandingStore.logo ? brandingStore.logo.url : "/api/branding/instance");
+const { logo: brandingLogo } = useBranding();
+const logo = computed(() => brandingLogo.value ? brandingLogo.value.url : "/api/branding/instance");
 
 const { t } = useI18n();
 
