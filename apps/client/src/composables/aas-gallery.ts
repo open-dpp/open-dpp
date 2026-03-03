@@ -22,8 +22,9 @@ export function useAasGallery(props: AasGalleryProps) {
   async function addImage(image: MediaInfo) {
     const thumbnail = { path: image.id, contentType: image.mimeType };
     if (assetInformation.value) {
-      await add(thumbnail.path);
-      assetInformation.value.defaultThumbnails.push(thumbnail);
+      if (await add(thumbnail.path)) {
+        assetInformation.value.defaultThumbnails.push(thumbnail);
+      }
     }
   }
 
@@ -64,8 +65,9 @@ export function useAasGallery(props: AasGalleryProps) {
       const thumbnail = assetInformation.value.defaultThumbnails.find(
         thumbnail => thumbnail.path === oldMediaInfo.id,
       );
-      if (!thumbnail)
+      if (!thumbnail) {
         return;
+      }
       await modify(oldMediaInfo.id, newMediaInfo.id);
       thumbnail.path = newMediaInfo.id;
       thumbnail.contentType = newMediaInfo.mimeType;

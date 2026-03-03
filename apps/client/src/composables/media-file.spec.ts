@@ -160,7 +160,7 @@ describe("useMediaFileCollection", () => {
     }));
     const { api } = mountHarness();
 
-    const { download, files, modify } = api;
+    const { download, files, modify, add } = api;
 
     await download(["a", "b", "c"]);
     await nextTick();
@@ -169,7 +169,9 @@ describe("useMediaFileCollection", () => {
 
     await modify("b", "d");
     await modify("a", "e");
-    expect(files.value).toHaveLength(3);
-    expect(files.value.map(m => m.mediaInfo.id)).toEqual(["e", "d", "c"]);
+    await add("f");
+    await modify("f", "g");
+    expect(files.value).toHaveLength(4);
+    expect(files.value.map(m => m.mediaInfo.id)).toEqual(["e", "d", "c", "g"]);
   });
 });

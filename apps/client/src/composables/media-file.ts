@@ -77,30 +77,40 @@ export function useMediaFileCollection({ errorHandlingStore, translate }: MediaF
   }
 
   async function add(mediaId: string, position?: number) {
+    const errorMsg = translate("file.couldNotBeLoaded");
     if (files.value.some(file => file.mediaInfo.id === mediaId)) {
-      return;
+      return false;
     }
-    const { blob, mediaInfo: fetchedMediaInfo } = await mediaStore.fetchMedia(
-      mediaId,
-    );
+    try {
+      const { blob, mediaInfo: fetchedMediaInfo } = await mediaStore.fetchMedia(
+        mediaId,
+      );
+      if (blob) {
+        const newMedia = {
+          blob,
+          mediaInfo: fetchedMediaInfo,
+          url: URL.createObjectURL(blob),
+        };
 
-    if (blob) {
-      const newMedia = {
-        blob,
-        mediaInfo: fetchedMediaInfo,
-        url: URL.createObjectURL(blob),
-      };
-
-      if (position !== undefined && position >= 0 && position < files.value.length) {
-        if (files.value[position]) {
-          URL.revokeObjectURL(files.value[position].url);
+        if (position !== undefined && position >= 0 && position < files.value.length) {
+          if (files.value[position]) {
+            URL.revokeObjectURL(files.value[position].url);
+          }
+          files.value[position] = newMedia;
         }
-        files.value[position] = newMedia;
+        else {
+          files.value.push(newMedia);
+        }
+        return true;
       }
       else {
-        files.value.push(newMedia);
+        errorHandlingStore.logErrorWithNotification(errorMsg);
       }
     }
+    catch (error) {
+      errorHandlingStore.logErrorWithNotification(errorMsg, error);
+    }
+    return false;
   }
 
   function remove(mediaId: string) {

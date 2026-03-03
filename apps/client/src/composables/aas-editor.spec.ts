@@ -83,12 +83,13 @@ vi.mock("../lib/api-client", () => ({
   },
 }));
 
-const fetchMediaMock
-  = vi.fn<
+const { fetchMediaMock } = vi.hoisted(() => ({
+  fetchMediaMock: vi.fn<
     (
       mediaId: string,
     ) => Promise<{ blob: Blob | null; mediaInfo: { id: string } }>
-  >();
+  >(),
+}));
 
 vi.mock("../stores/media.ts", () => ({
   useMediaStore: () => ({
@@ -97,6 +98,8 @@ vi.mock("../stores/media.ts", () => ({
 }));
 
 describe("aasEditor composable", () => {
+  const mountedWrappers: Array<ReturnType<typeof mount>> = [];
+
   function mountHarness(aasEditorProps: AasEditorProps) {
     const Harness = defineComponent({
       name: "MediaFileCollectionHarness",
@@ -108,6 +111,7 @@ describe("aasEditor composable", () => {
     });
 
     const wrapper = mount(Harness);
+    mountedWrappers.push(wrapper);
     return {
       wrapper,
       ...wrapper.vm.api as ReturnType<typeof useAasEditor>,
@@ -116,6 +120,10 @@ describe("aasEditor composable", () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+  });
+
+  afterEach(() => {
+    mountedWrappers.splice(0).forEach(w => w.unmount());
   });
   const translate = (key: string) => key;
   const changeQueryParams = vi.fn();
