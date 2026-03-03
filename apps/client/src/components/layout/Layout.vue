@@ -14,7 +14,6 @@ import {
   ChartBarIcon,
   CloudIcon,
   LinkIcon,
-  Squares2X2Icon,
 } from "@heroicons/vue/16/solid";
 import {
   Bars3Icon,
