@@ -4,14 +4,12 @@ import type { Page } from "../composables/pagination.ts";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
-import { Button, Column, DataTable, useToast } from "primevue";
-import { computed, ref } from "vue";
+import { Button, Column, DataTable } from "primevue";
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useAasUtils } from "../composables/aas-utils.ts";
 
-import apiClient from "../lib/api-client.ts";
-import axiosIns from "../lib/axios.ts";
 import { convertLocaleToLanguage } from "../translations/i18n.ts";
 import TablePagination from "./pagination/TablePagination.vue";
 
@@ -22,7 +20,6 @@ const props = defineProps<{
   currentPage: Page;
   hasPrevious: boolean;
   hasNext: boolean;
-  usesTemplates?: boolean;
 }>();
 
 const emits = defineEmits<{
@@ -38,7 +35,6 @@ dayjs.extend(localizedFormat);
 const route = useRoute();
 const router = useRouter();
 const { t, locale } = useI18n();
-const toast = useToast();
 const selectedLanguage = computed(() => convertLocaleToLanguage(locale.value));
 const { parseDisplayNameFromEnvironment } = useAasUtils({
   translate: t,
@@ -47,113 +43,6 @@ const { parseDisplayNameFromEnvironment } = useAasUtils({
 
 async function editItem(item: SharedDppDto) {
   await router.push(`${route.path}/${item.id}`);
-}
-
-const fileInput = ref<HTMLInputElement | null>(null);
-const templateFileInput = ref<HTMLInputElement | null>(null);
-const importingTemplate = ref<boolean>(false);
-
-async function exportPassport(id: string) {
-  let url: string | undefined;
-  try {
-    const response = await axiosIns.get(`/passports/${id}/export`);
-    const data = JSON.stringify(response.data, null, 2);
-    const blob = new Blob([data], { type: "application/json" });
-    url = globalThis.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `passport-${id}.json`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  }
-  catch (error) {
-    console.error("Failed to export passport", error);
-    toast.add({ severity: "error", summary: t("notifications.error"), detail: t("common.exportFailed"), life: 5000 });
-  }
-  finally {
-    if (url) {
-      globalThis.URL.revokeObjectURL(url);
-    }
-  }
-}
-
-function triggerImport() {
-  fileInput.value?.click();
-}
-
-async function handleFileUpload(event: Event) {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
-  if (!file)
-    return;
-
-  try {
-    const json = JSON.parse(await file.text());
-    await axiosIns.post("/passports/import", json);
-    emits("resetCursor");
-    toast.add({ severity: "success", summary: t("notifications.success"), detail: t("common.importSuccess"), life: 5000 });
-  }
-  catch (error) {
-    console.error("Failed to import passport", error);
-    toast.add({ severity: "error", summary: t("notifications.error"), detail: t("common.importFailed"), life: 5000 });
-  }
-  finally {
-    if (fileInput.value)
-      fileInput.value.value = "";
-  }
-}
-
-async function exportTemplate(id: string) {
-  let url: string | undefined;
-  try {
-    const response = await apiClient.dpp.templates.export(id);
-    const dataStr = JSON.stringify(response.data, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    url = globalThis.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `template-${id}.json`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  }
-  catch (error) {
-    console.error("Failed to export template", error);
-    toast.add({ severity: "error", summary: t("notifications.error"), detail: t("common.templateExportFailed"), life: 5000 });
-  }
-  finally {
-    if (url) {
-      globalThis.URL.revokeObjectURL(url);
-    }
-  }
-}
-
-function triggerTemplateImport() {
-  templateFileInput.value?.click();
-}
-
-async function handleTemplateFileUpload(event: Event) {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
-  if (!file)
-    return;
-
-  importingTemplate.value = true;
-  try {
-    const json = JSON.parse(await file.text());
-    const response = await apiClient.dpp.templates.import(json);
-    await router.push(`${route.path}/${response.data.id}`);
-  }
-  catch (error) {
-    console.error("Failed to import template", error);
-    toast.add({ severity: "error", summary: t("notifications.error"), detail: t("common.templateImportFailed"), life: 5000 });
-  }
-  finally {
-    if (templateFileInput.value)
-      templateFileInput.value.value = "";
-    importingTemplate.value = false;
-  }
 }
 </script>
 
@@ -172,24 +61,6 @@ async function handleTemplateFileUpload(event: Event) {
         <div class="flex items-center gap-2">
           <slot name="headerActions">
             <Button :label="t('common.add')" @click="emits('create')" />
-            <Button v-if="!props.usesTemplates" :label="t('common.import')" @click="triggerImport" />
-            <Button v-if="props.usesTemplates" :label="t('common.import')" :disabled="importingTemplate" @click="triggerTemplateImport" />
-            <input
-              v-if="!props.usesTemplates"
-              ref="fileInput"
-              type="file"
-              accept=".json"
-              class="hidden"
-              @change="handleFileUpload"
-            >
-            <input
-              v-if="props.usesTemplates"
-              ref="templateFileInput"
-              type="file"
-              accept=".json"
-              class="hidden"
-              @change="handleTemplateFileUpload"
-            >
           </slot>
         </div>
       </div>
@@ -228,24 +99,6 @@ async function handleTemplateFileUpload(event: Event) {
               @click="editItem(data)"
             />
           </slot>
-          <div v-if="props.usesTemplates" class="flex items-center rounded-md gap-2">
-            <Button
-              icon="pi pi-download"
-              severity="secondary"
-              :aria-label="t('common.exportTemplate')"
-              :title="t('common.exportTemplate')"
-              @click="exportTemplate(data.id)"
-            />
-          </div>
-          <div v-if="!props.usesTemplates" class="flex items-center rounded-md gap-2">
-            <Button
-              icon="pi pi-download"
-              severity="secondary"
-              :aria-label="t('common.exportTemplate')"
-              :title="t('common.exportTemplate')"
-              @click="exportPassport(data.id)"
-            />
-          </div>
         </div>
       </template>
     </Column>

@@ -38,21 +38,8 @@ export class AasSerializationService {
 
   async exportPassport(passport: Passport): Promise<AasExportSchema> {
     const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(passport.environment);
-    const aaxExportable = AasExportable.createFromPassport(passport, expandedEnvironment);
-    const exp = {
-      id: aaxExportable.id,
-      environment: {
-        assetAdministrationShells: aaxExportable.environment.shells,
-        ...aaxExportable.environment,
-      },
-      templateId: aaxExportable.templateId,
-      createdAt: aaxExportable.createdAt.toISOString(),
-      updatedAt: aaxExportable.updatedAt.toISOString(),
-      format: "open-dpp:json",
-      version: "1.0",
-    };
-    console.debug(JSON.stringify(exp));
-    return aasExportSchemaJsonV1_0.parse(exp);
+    const aasExportable = AasExportable.createFromPassport(passport, expandedEnvironment);
+    return aasExportSchemaJsonV1_0.parse(aasExportable.toExportPlain());
   }
 
   async exportTemplate(template: Template): Promise<AasExportSchema> {
