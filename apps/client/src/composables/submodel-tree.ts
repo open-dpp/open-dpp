@@ -1,0 +1,158 @@
+import type { SubmodelElementResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
+import type { DisplayName } from "./display-name";
+import { computed } from "vue";
+
+export interface SubmodelTreeElement {
+  idShort: string;
+  name: DisplayName[];
+  children: SubmodelTreeElement[];
+  submodelElements: SubmodelElementResponseDto[];
+}
+
+export function useSubmodelTree(submodels: SubmodelResponseDto[]) {
+  const submodelTree = computed<SubmodelTreeElement[]>(() => {
+    const treeMapping = (
+      submodels: SubmodelElementResponseDto[],
+    ): SubmodelTreeElement[] => {
+      return submodels
+        .filter(element => element.modelType === "SubmodelElementCollection")
+        .map((element) => {
+          const submodelElements
+            = element.value as SubmodelElementResponseDto[];
+
+          return {
+            idShort: element.idShort,
+            name: element.displayName,
+            children: treeMapping(submodelElements),
+            submodelElements,
+          };
+        });
+    };
+
+    return submodels.map((submodel) => {
+      return {
+        idShort: submodel.idShort,
+        name: submodel.displayName,
+        children: treeMapping(submodel.submodelElements),
+        submodelElements: submodel.submodelElements,
+      };
+    });
+  });
+
+  const submodelTreeDepth = computed(() => {
+    const getTreeDepth = (elements: SubmodelTreeElement[]): number => {
+      if (elements.length === 0) {
+        return 0;
+      }
+
+      return Math.max(
+        ...elements.map(element => 1 + getTreeDepth(element.children)),
+      );
+    };
+
+    return getTreeDepth(submodelTree.value);
+  });
+
+  const mapTreeElementsToSubmodels = (elements: SubmodelTreeElement[]) => {
+    return elements.map((element) => {
+      return {
+        id: element.idShort,
+        title: element.name,
+        submodelElements: element.submodelElements,
+      };
+    });
+  };
+
+  const findTreeElementById = (elements: SubmodelTreeElement[], id: string): SubmodelTreeElement | undefined => {
+    for (const element of elements) {
+      if (element.idShort === id) {
+        return element;
+      }
+
+      const foundInChildren = findTreeElementById(element.children, id);
+      if (foundInChildren && foundInChildren.children.length > 0) {
+        return foundInChildren;
+      }
+
+      for (const submodelelement of element.submodelElements) {
+        if (submodelelement.idShort === id) {
+          return element;
+        }
+      }
+    }
+
+    return undefined;
+  };
+
+  const getSubmodelTreeElementsBefore = (
+    elements: SubmodelTreeElement[],
+    targetId: string,
+  ): SubmodelTreeElement[] => {
+    const elementsBeforeTarget: SubmodelTreeElement[] = [];
+    let targetFound = false;
+
+    const collect = (treeElements: SubmodelTreeElement[]): void => {
+      if (targetFound) {
+        return;
+      }
+
+      for (const element of treeElements) {
+        if (element.idShort === targetId) {
+          targetFound = true;
+          return;
+        }
+
+        elementsBeforeTarget.push(element);
+        collect(element.children);
+
+        if (targetFound) {
+          return;
+        }
+      }
+    };
+
+    collect(elements);
+
+    return targetFound ? elementsBeforeTarget : [];
+  };
+
+  const getParent = (
+    elements: SubmodelTreeElement[],
+    targetId: string,
+  ): SubmodelTreeElement | undefined => {
+    const findParent = (
+      treeElements: SubmodelTreeElement[],
+      parent: SubmodelTreeElement | undefined,
+    ): SubmodelTreeElement | undefined => {
+      for (const element of treeElements) {
+        if (element.idShort === targetId) {
+          return parent;
+        }
+
+        for (const submodelElement of element.submodelElements) {
+          if (submodelElement.idShort === targetId) {
+            return element;
+          }
+        }
+
+        const parentInChildren = findParent(element.children, element);
+        if (parentInChildren) {
+          return parentInChildren;
+        }
+      }
+
+      return undefined;
+    };
+
+    return findParent(elements, undefined);
+  };
+
+  return {
+    submodelTree,
+    submodelTreeDepth,
+    findTreeElementById,
+    mapTreeElementsToSubmodels,
+    getSubmodelTreeElementsBefore,
+    getParent,
+  };
+}

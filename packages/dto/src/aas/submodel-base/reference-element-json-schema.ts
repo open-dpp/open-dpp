@@ -14,6 +14,7 @@ export const ReferenceElementModificationSchema = z.object({
   value: z.nullish(ReferenceModificationSchema),
 })
 
+export type ReferenceElementValue = z.infer<typeof ReferenceJsonSchema>
 export type ReferenceElementResponseDto = z.infer<typeof ReferenceElementJsonSchema>
 export type ReferenceElementRequestDto = z.input<typeof ReferenceElementJsonSchema>
 export type ReferenceElementModificationDto = z.input<typeof ReferenceElementModificationSchema>

@@ -30,7 +30,6 @@ export class File implements ISubmodelElement {
   }
 
   set displayName(value: Array<LanguageText>) {
-    hasUniqueLanguagesOrFail(value);
     this._displayName = value;
   }
 

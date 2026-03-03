@@ -10,7 +10,8 @@ import type {
   SubmodelRequestDto,
   ValueRequestDto,
 } from "@open-dpp/dto";
-import { BadRequestException, Body, Controller, Get, NotFoundException, Post } from "@nestjs/common";
+import type express from "express";
+import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Post } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellResponseDto,
@@ -25,9 +26,8 @@ import {
   ValueResponseDto,
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
-
 import { match, P } from "ts-pattern";
-import { z } from "zod";
+import z from "zod";
 import { Environment } from "../../aas/domain/environment";
 import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import {
@@ -61,6 +61,7 @@ import {
   LimitQueryParam,
   PopulateQueryParam,
   PositionQueryParam,
+  RequestParam,
   RowParam,
   SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
@@ -86,6 +87,7 @@ import { TemplateRepository } from "../../templates/infrastructure/template.repo
 import {
   UniqueProductIdentifierService,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+
 import { PassportService } from "../application/services/passport.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
@@ -132,6 +134,14 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     }
 
     return PassportPaginationDtoSchema.parse(pagingResult.toPlain());
+  }
+
+  @Get(":passportId")
+  async getPassport(
+    @RequestParam() req: express.Request,
+    @Param("passportId") id: string,
+  ): Promise<PassportDto> {
+    return PassportDtoSchema.parse((await this.passportRepository.findOneOrFail(id)).toPlain());
   }
 
   @Get(":id/unique-product-identifier")

@@ -29,7 +29,6 @@ export class ReferenceElement implements ISubmodelElement {
   }
 
   set displayName(value: Array<LanguageText>) {
-    hasUniqueLanguagesOrFail(value);
     this._displayName = value;
   }
 

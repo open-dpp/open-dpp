@@ -43,6 +43,7 @@
     "home": "Startseite",
     "backTo": "Zurück zu { link }",
     "presentationMode": "Präsentations-Modus",
+    "unknownName": "Unbekannter Name",
     "form": {
       "email": {
         "help": "Geben Sie eine E-Mail Adresse ein.",
@@ -583,6 +584,12 @@
       "subject": "Reparaturanfrage",
       "intro": "Guten Tag,\n\nich habe folgendes Reparaturanliegen:",
       "sendError": "Die Reperaturanfrage konnte nicht abgeschickt werden. Haben Sie bereits einen Emailclient konfiguriert?"
-    }
+    },
+    "missingValue": "Kein Wert gesetzt",
+    "passportNotFound": "Produktpass nicht gefunden",
+    "passportNotFoundLong": "Ihr digitaler Produktpass konnte nicht gefunden werden. Bitte prüfen Sie Ihre Daten oder kontaktieren Sie den Support."
+  },
+  "uniqueproductidentifier": {
+    "notfound": "UniqueProductIdentifier konnte nicht gefunden werden, bitte Administrator kontaktieren."
   }
 }

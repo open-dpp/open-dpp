@@ -30,6 +30,10 @@ export class PassportNamespace {
     )
   }
 
+  public async getById(id: string) {
+    return await this.axiosInstance.get<PassportDto>(`${this.passportEndpoint}/${id}`)
+  }
+
   public async create(data: PassportRequestCreateDto): Promise<AxiosResponse<PassportDto>> {
     return await this.axiosInstance.post<PassportDto>(this.passportEndpoint, data)
   }
