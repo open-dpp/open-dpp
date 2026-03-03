@@ -412,18 +412,87 @@ export class AasSerializationService {
       // mapping conceptDescriptions to current domain
       const conceptDescriptions: Array<ConceptDescription> = [];
       for (const conceptDescription of aasExportableSchema.environment.conceptDescriptions) {
-        // TODO
         const conceptDesc = ConceptDescription.create({
-          administration: undefined,
-          description: undefined,
-          displayName: undefined,
-          embeddedDataSpecifications: undefined,
-          extensions: undefined,
           id: "",
-          idShort: undefined,
-          isCaseOf: [],
-          semanticId: undefined,
+          extensions: conceptDescription.extensions.map(extension => Extension.create({
+            name: extension.name,
+            semanticId: extension.semanticId
+              ? Reference.create({
+                  type: ReferenceTypes[extension.semanticId.type],
+                  referredSemanticId: Reference.fromPlain(extension.semanticId.referredSemanticId),
+                  keys: extension.semanticId.keys.map(key => Key.create({
+                    type: KeyTypes[key.type],
+                    value: key.value,
+                  })),
+                })
+              : null,
+            supplementalSemanticIds: extension.supplementalSemanticIds.map(ref => Reference.create({
+              type: ReferenceTypes[ref.type],
+              referredSemanticId: Reference.fromPlain(ref.referredSemanticId),
+              keys: ref.keys.map(key => Key.create({
+                type: KeyTypes[key.type],
+                value: key.value,
+              })),
+            })),
+            valueType: extension.valueType ? DataTypeDef[extension.valueType] : null,
+            value: extension.value,
+            refersTo: extension.refersTo.map(ref => Reference.create({
+              type: ReferenceTypes[ref.type],
+              referredSemanticId: Reference.fromPlain(ref.referredSemanticId),
+              keys: ref.keys.map(key => Key.create({
+                type: KeyTypes[key.type],
+                value: key.value,
+              })),
+            })),
+          })),
           category: conceptDescription.category,
+          idShort: conceptDescription.idShort,
+          displayName: conceptDescription.displayName
+            .filter(langText => langText._text)
+            .map(langText => LanguageText.create({
+              language: Language[langText.language],
+              text: langText._text ?? "",
+            })),
+          description: conceptDescription.description
+            .filter(langText => langText._text)
+            .map(langText => LanguageText.create({
+              language: Language[langText.language],
+              text: langText._text ?? "",
+            })),
+          semanticId: conceptDescription.semanticId
+            ? Reference.create({
+                type: ReferenceTypes[conceptDescription.semanticId.type],
+                referredSemanticId: Reference.fromPlain(conceptDescription.semanticId.referredSemanticId),
+                keys: conceptDescription.semanticId.keys.map(key => Key.create({
+                  type: KeyTypes[key.type],
+                  value: key.value,
+                })),
+              })
+            : null,
+          administration: conceptDescription.administration
+            ? AdministrativeInformation.create({
+                version: conceptDescription.administration.version,
+                revision: conceptDescription.administration.revision,
+              })
+            : undefined,
+          embeddedDataSpecifications: conceptDescription.embeddedDataSpecifications.map(eds => EmbeddedDataSpecification.create({
+            dataSpecification: Reference.create({
+              type: ReferenceTypes[eds.dataSpecification.type],
+              referredSemanticId: Reference.fromPlain(eds.dataSpecification.referredSemanticId),
+              keys: eds.dataSpecification.keys.map(key => Key.create({
+                type: KeyTypes[key.type],
+                value: key.value,
+              })),
+            }),
+          })),
+          isCaseOf: conceptDescription.isCaseOf.map(ref => Reference.create({
+            type: ReferenceTypes[ref.type],
+            referredSemanticId: Reference.fromPlain(ref.referredSemanticId),
+            keys: ref.keys.map(key => Key.create({
+              type: KeyTypes[key.type],
+              value: key.value,
+            })),
+          })),
         });
         conceptDescriptions.push(conceptDesc);
       }
