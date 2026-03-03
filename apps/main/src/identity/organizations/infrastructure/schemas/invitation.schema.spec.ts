@@ -1,6 +1,5 @@
 import type { Connection, Model } from "mongoose";
 import { expect } from "@jest/globals";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
@@ -10,7 +9,6 @@ import { MemberRole } from "../../domain/member-role.enum";
 import { Invitation, InvitationSchema } from "./invitation.schema";
 
 describe("invitationSchema", () => {
-  let mongod: MongoMemoryServer;
   let mongoConnection: Connection;
   let InvitationModel: Model<Invitation>;
   let module: TestingModule;
@@ -46,7 +44,6 @@ describe("invitationSchema", () => {
   afterAll(async () => {
     await mongoConnection.dropDatabase();
     await module.close();
-    await mongod.stop();
   });
 
   it("should create an invitation document", async () => {

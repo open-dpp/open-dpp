@@ -25,8 +25,6 @@ import {
   ValueResponseDto,
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { z } from "zod";
-import { ZodValidationPipe } from "@open-dpp/exception";
 
 import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 
@@ -82,26 +80,14 @@ import { Session } from "../../identity/auth/domain/session";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
-import { TemplateService } from "../application/services/template.service";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
-
-const ExpandedTemplateDtoSchema = TemplateDtoSchema.extend({
-  environment: z.object({
-    assetAdministrationShells: z.array(z.record(z.string(), z.any())),
-    submodels: z.array(z.record(z.string(), z.any())),
-    conceptDescriptions: z.array(z.string()).default([]),
-  }),
-});
-
-type ExpandedTemplateDto = z.infer<typeof ExpandedTemplateDtoSchema>;
 
 @Controller("/templates")
 export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoints, IAasModifyEndpoints, IAasDeleteEndpoints {
   constructor(
     private readonly environmentService: EnvironmentService,
     private readonly templateRepository: TemplateRepository,
-    private readonly templateService: TemplateService,
     private readonly aasSerializationService: AasSerializationService,
   ) {}
 
@@ -374,42 +360,23 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @AuthSession() session: Session,
   ) {
     const template = await this.loadTemplateAndCheckOwnership(id, session);
-    return await this.aasSerializationService.exportTemplate(template.id);
+    return await this.aasSerializationService.exportTemplate(template);
   }
 
   @Post("/import")
   @HttpCode(HttpStatus.CREATED)
   async importTemplate(
-    @Body(new ZodValidationPipe(ExpandedTemplateDtoSchema)) body: ExpandedTemplateDto,
+    @Body() body: any,
     @AuthSession() session: Session,
   ) {
     const activeOrganizationId = session.activeOrganizationId;
     if (!activeOrganizationId) {
       throw new BadRequestException("activeOrganizationId is required in session");
     }
-    const toValidDate = (value: unknown): Date => {
-      if (value == null) {
-        return new Date();
-      }
-      let ms: number;
-      if (typeof value === "number") {
-        ms = value;
-      }
-      else if (typeof value === "string") {
-        ms = Date.parse(value);
-      }
-      else {
-        ms = Number.NaN;
-      }
-      return Number.isFinite(ms) ? new Date(ms) : new Date();
-    };
-    const payload = {
-      ...body,
-      organizationId: activeOrganizationId,
-      createdAt: toValidDate(body.createdAt),
-      updatedAt: toValidDate(body.updatedAt),
-    };
-    const template = await this.templateService.importTemplate(payload);
+    const template = await this.aasSerializationService.importTemplate(body, activeOrganizationId);
+    if (!template) {
+      throw new BadRequestException("Template cant be imported");
+    }
     return TemplateDtoSchema.parse(template.toPlain());
   }
 

@@ -6,7 +6,7 @@ import { Template } from "../../../templates/domain/template";
 import { ExpandedEnvironment } from "../expanded-environment";
 
 export class AasExportable {
-  private readonly EXPORT_FORMAT = "open-dpp";
+  private readonly EXPORT_FORMAT = "open-dpp:json";
   private readonly EXPORT_VERSION = "1.0";
 
   private constructor(

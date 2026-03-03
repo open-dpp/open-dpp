@@ -4,13 +4,14 @@ import type { Page } from "../composables/pagination.ts";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
-import { Button, Column, DataTable } from "primevue";
-import { computed } from "vue";
+import { Button, Column, DataTable, useToast } from "primevue";
+import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
-import apiClient from "../lib/api-client.ts";
 import { useAasUtils } from "../composables/aas-utils.ts";
 
+import apiClient from "../lib/api-client.ts";
+import axiosIns from "../lib/axios.ts";
 import { convertLocaleToLanguage } from "../translations/i18n.ts";
 import TablePagination from "./pagination/TablePagination.vue";
 
@@ -21,6 +22,7 @@ const props = defineProps<{
   currentPage: Page;
   hasPrevious: boolean;
   hasNext: boolean;
+  usesTemplates?: boolean;
 }>();
 
 const emits = defineEmits<{
@@ -36,6 +38,7 @@ dayjs.extend(localizedFormat);
 const route = useRoute();
 const router = useRouter();
 const { t, locale } = useI18n();
+const toast = useToast();
 const selectedLanguage = computed(() => convertLocaleToLanguage(locale.value));
 const { parseDisplayNameFromEnvironment } = useAasUtils({
   translate: t,
@@ -44,43 +47,6 @@ const { parseDisplayNameFromEnvironment } = useAasUtils({
 
 async function editItem(item: SharedDppDto) {
   await router.push(`${route.path}/${item.id}`);
-}
-
-function forwardToPresentationErrorMessage(e: unknown): string {
-  if (e instanceof AxiosError) {
-    if (!e.response)
-      return t("dpp.forwardToPresentationErrorNetwork");
-    if (e.response.status === 404)
-      return t("dpp.forwardToPresentationError404");
-    if (e.response.status === 403)
-      return t("dpp.forwardToPresentationError403");
-  }
-  return t("dpp.forwardToPresentationError");
-}
-
-async function resolvePassportUuid(item: SharedDppDto): Promise<string> {
-  const { data } = await axiosIns.get<{ uuid: string }>(`/passports/${item.id}/unique-product-identifier`);
-  return data.uuid;
-}
-
-async function forwardToPresentation(item: SharedDppDto) {
-  try {
-    const uuid = await resolvePassportUuid(item);
-    await router.push(`/presentation/${uuid}`);
-  }
-  catch (e) {
-    errorHandlingStore.logErrorWithNotification(forwardToPresentationErrorMessage(e), e);
-  }
-}
-
-async function forwardToPresentationChat(item: SharedDppDto) {
-  try {
-    const uuid = await resolvePassportUuid(item);
-    await router.push(`/presentation/${uuid}/chat`);
-  }
-  catch (e) {
-    errorHandlingStore.logErrorWithNotification(forwardToPresentationErrorMessage(e), e);
-  }
 }
 
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -205,25 +171,25 @@ async function handleTemplateFileUpload(event: Event) {
         <span class="text-xl font-bold">{{ props.title }}</span>
         <div class="flex items-center gap-2">
           <slot name="headerActions">
-          <Button :label="t('common.add')" @click="emits('create')" />
-          <Button v-if="!props.usesTemplates" :label="t('common.import')" @click="triggerImport" />
-          <Button v-if="props.usesTemplates" :label="t('common.import')" :disabled="importingTemplate" @click="triggerTemplateImport" />
-          <input
-            v-if="!props.usesTemplates"
-            ref="fileInput"
-            type="file"
-            accept=".json"
-            class="hidden"
-            @change="handleFileUpload"
-          >
-          <input
-            v-if="props.usesTemplates"
-            ref="templateFileInput"
-            type="file"
-            accept=".json"
-            class="hidden"
-            @change="handleTemplateFileUpload"
-          >
+            <Button :label="t('common.add')" @click="emits('create')" />
+            <Button v-if="!props.usesTemplates" :label="t('common.import')" @click="triggerImport" />
+            <Button v-if="props.usesTemplates" :label="t('common.import')" :disabled="importingTemplate" @click="triggerTemplateImport" />
+            <input
+              v-if="!props.usesTemplates"
+              ref="fileInput"
+              type="file"
+              accept=".json"
+              class="hidden"
+              @change="handleFileUpload"
+            >
+            <input
+              v-if="props.usesTemplates"
+              ref="templateFileInput"
+              type="file"
+              accept=".json"
+              class="hidden"
+              @change="handleTemplateFileUpload"
+            >
           </slot>
         </div>
       </div>
@@ -269,6 +235,15 @@ async function handleTemplateFileUpload(event: Event) {
               :aria-label="t('common.exportTemplate')"
               :title="t('common.exportTemplate')"
               @click="exportTemplate(data.id)"
+            />
+          </div>
+          <div v-if="!props.usesTemplates" class="flex items-center rounded-md gap-2">
+            <Button
+              icon="pi pi-download"
+              severity="secondary"
+              :aria-label="t('common.exportTemplate')"
+              :title="t('common.exportTemplate')"
+              @click="exportPassport(data.id)"
             />
           </div>
         </div>

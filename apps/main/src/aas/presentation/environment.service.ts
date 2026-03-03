@@ -334,6 +334,8 @@ export class EnvironmentService {
     finally {
       await session.endSession();
     }
+  }
+
   async populateEnvironmentForPagingResult(pagingResult: PagingResult<Passport | Template>, populateOptions: PopulateOptions) {
     const populatedItems = await Promise.all(pagingResult.items.map(
       async i => await new DigitalProductPassportIdentifiableEnvironmentPopulateDecorator(

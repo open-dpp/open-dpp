@@ -28,9 +28,7 @@ import {
 import { ZodValidationPipe } from "@open-dpp/exception";
 
 import { match, P } from "ts-pattern";
-import z from "zod";
 import { Environment } from "../../aas/domain/environment";
-import { AasExportable } from "../../aas/domain/exportable/aas-exportable";
 import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import {
@@ -443,7 +441,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     @AuthSession() session: Session,
   ): Promise<any> {
     const passport = await this.loadPassportAndCheckOwnership(id, session);
-    return await this.aasSerializationService.exportPassport(passport.id);
+    return await this.aasSerializationService.exportPassport(passport);
   }
 
   @Post("/import")
@@ -455,9 +453,10 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     if (!activeOrganizationId) {
       throw new BadRequestException("activeOrganizationId is required in session");
     }
-    const aasExportable = AasExportable.fromPlain(body);
-
-    const passport = await this.passportService.importPassport(aasExportable, activeOrganizationId);
+    const passport = await this.aasSerializationService.importPassport(body, activeOrganizationId);
+    if (!passport) {
+      throw new BadRequestException("Passport cant be imported");
+    }
     return PassportDtoSchema.parse(passport.toPlain());
   }
 
