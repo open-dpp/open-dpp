@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import Galleria from "primevue/galleria";
-import Image from "primevue/image";
 import { computed, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import emptyState from "../../assets/empty-state.png";
 import { useAasGallery } from "../../composables/aas-gallery.ts";
 import { useAasUtils } from "../../composables/aas-utils.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { usePassportStore } from "../../stores/passport";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import ProductImageGalleria from "../media/ProductImageGalleria.vue";
 
 const passportStore = usePassportStore();
 
@@ -85,24 +83,9 @@ watch(
       </div>
     </div>
     <div
-      class="order-1 md:order-2 col-span-3 md:col-span-1 w-full max-w-80 mx-auto"
+      class="order-1 md:order-2 col-span-3 md:col-span-1 w-full mx-auto"
     >
-      <Galleria
-        :value="
-          files.length > 0 ? files : [{ url: emptyState }]
-        "
-        :num-visible="files.length > 0 ? 5 : 0"
-        :show-thumbnails="files.length > 0"
-        thumbnails-position="bottom"
-        container-style="max-width: 340px"
-      >
-        <template #item="slotProps">
-          <Image :src="slotProps.item.url" alt="Image" width="100%" preview />
-        </template>
-        <template #thumbnail="slotProps">
-          <Image :src="slotProps.item.url" width="40px" />
-        </template>
-      </Galleria>
+      <ProductImageGalleria v-model="files" auto-play />
     </div>
   </div>
 </template>

@@ -8,8 +8,6 @@ import {
   ConfirmDialog,
   Divider,
   Drawer,
-  Galleria,
-  Image,
   Menu,
   TreeTable,
 } from "primevue";
@@ -17,12 +15,12 @@ import { useConfirm } from "primevue/useconfirm";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
-import emptyState from "../../assets/empty-state.png";
 import { useAasEditor } from "../../composables/aas-editor.ts";
 import { AasEditMode } from "../../lib/aas-editor.ts";
 import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import ProductImageGalleria from "../media/ProductImageGalleria.vue";
 import TablePagination from "../pagination/TablePagination.vue";
 import SubmodelElementListCreateEditor from "./SubmodelElementListCreateEditor.vue";
 
@@ -142,22 +140,9 @@ const isFullPosition = computed(() => position.value === fullPosition);
   <div class="flex flex-col gap-1 p-4">
     <div class="flex justify-between items-start gap-2">
       <div class="flex gap-2">
-        <Galleria
-          :value="
-            aasGalleryFiles.length > 0 ? aasGalleryFiles : [{ url: emptyState }]
-          "
-          :num-visible="aasGalleryFiles.length > 0 ? 5 : 0"
-          :show-thumbnails="aasGalleryFiles.length > 0"
-          thumbnails-position="bottom"
-          container-style="max-width: 340px"
-        >
-          <template #item="slotProps">
-            <Image :src="slotProps.item.url" alt="Image" width="100%" preview />
-          </template>
-          <template #thumbnail="slotProps">
-            <Image :src="slotProps.item.url" width="40px" />
-          </template>
-        </Galleria>
+        <div style="width: 340px">
+          <ProductImageGalleria v-model="aasGalleryFiles" />
+        </div>
         <div class="flex flex-col gap-2">
           <div>
             <dl class="divide-y divide-gray-100">
