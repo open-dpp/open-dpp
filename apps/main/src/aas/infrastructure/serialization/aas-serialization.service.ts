@@ -94,7 +94,7 @@ export const LanguageTypeSchemaV1_0 = {
 } as const;
 const ReferenceSchemaV1_0 = z.object({
   type: z.enum(["ExternalReference", "ModelReference"]),
-  referredSemanticId: z.object().nullable(), // this should be reference too
+  referredSemanticId: z.object().nullable().optional(), // this should be reference too
   keys: z.array(z.object({
     type: z.enum(KeyTypesV1_0),
     value: z.string(),
@@ -102,7 +102,7 @@ const ReferenceSchemaV1_0 = z.object({
 });
 const LanguageTextSchemaV1_0 = z.object({
   language: z.enum(LanguageTypeSchemaV1_0),
-  _text: z.string(),
+  _text: z.string().optional(),
 });
 const aasExportSchemaJsonV1_0 = z.object({
   id: z.string(),
@@ -110,7 +110,7 @@ const aasExportSchemaJsonV1_0 = z.object({
     assetAdministrationShells: z.array(z.object({
       assetInformation: z.object({
         assetKind: z.enum(["Type", "Instance"]),
-        globalAssedId: z.string().nullable(),
+        globalAssetId: z.string().nullable().optional(),
         specificAssetIds: z.array(z.object({
           name: z.string(),
           value: z.string(),
@@ -122,7 +122,7 @@ const aasExportSchemaJsonV1_0 = z.object({
         defaultThumbnail: z.object({
           path: z.string(),
           contentType: z.string().nullable(),
-        }).nullable(),
+        }).nullable().optional(),
       }),
       extensions: z.array(z.object({
         name: z.string(),
@@ -143,7 +143,7 @@ const aasExportSchemaJsonV1_0 = z.object({
       embeddedDataSpecifications: z.array(z.object({
         dataSpecification: ReferenceSchemaV1_0,
       })),
-      derivedFrom: ReferenceSchemaV1_0.nullable(),
+      derivedFrom: ReferenceSchemaV1_0.nullable().optional(),
       submodels: z.array(ReferenceSchemaV1_0),
     })),
     submodels: z.array(z.object({
@@ -162,9 +162,9 @@ const aasExportSchemaJsonV1_0 = z.object({
       administration: z.object({
         version: z.string(),
         revision: z.string(),
-      }).nullable(),
+      }).nullable().optional(),
       kind: z.enum(["Template", "Instance"]).nullable(),
-      semanticId: ReferenceSchemaV1_0.nullable(),
+      semanticId: ReferenceSchemaV1_0.nullable().optional(),
       supplementalSemanticIds: z.array(ReferenceSchemaV1_0),
       qualifiers: z.array(z.object({
         type: z.string(),
@@ -183,7 +183,7 @@ const aasExportSchemaJsonV1_0 = z.object({
         idShort: z.string().nullable(),
         displayName: z.array(LanguageTextSchemaV1_0),
         description: z.array(LanguageTextSchemaV1_0),
-        semanticId: ReferenceSchemaV1_0.nullable(),
+        semanticId: ReferenceSchemaV1_0.nullable().optional(),
         supplementalSemanticIds: z.array(ReferenceSchemaV1_0),
         qualifiers: z.array(z.object({
           type: z.string(),
@@ -265,7 +265,7 @@ export class AasSerializationService {
       for (const shell of aasExportableSchema.environment.assetAdministrationShells) {
         const assetInformation = AssetInformation.create({
           assetKind: shell.assetInformation.assetKind,
-          globalAssetId: shell.assetInformation.globalAssedId,
+          globalAssetId: shell.assetInformation.globalAssetId,
           specificAssetIds: shell.assetInformation.specificAssetIds
             .map(specificAssetId => SpecificAssetId.create({
               name: specificAssetId.name,
@@ -325,15 +325,15 @@ export class AasSerializationService {
           category: shell.category,
           idShort: shell.idShort,
           displayName: shell.displayName
-            ? shell.displayName.map(displayName => LanguageText.create({
+            ? shell.displayName.filter(displayName => displayName._text).map(displayName => LanguageText.create({
                 language: Language[displayName.language],
-                text: displayName._text,
+                text: displayName._text ?? "",
               }))
             : [],
           description: shell.description
-            ? shell.description.map(description => LanguageText.create({
+            ? shell.description.filter(displayName => displayName._text).map(description => LanguageText.create({
                 language: Language[description.language],
-                text: description._text,
+                text: description._text ?? "",
               }))
             : [],
           administration: shell.administration
@@ -390,13 +390,13 @@ export class AasSerializationService {
           })),
           category: submodel.category,
           idShort: submodel.idShort,
-          displayName: submodel.displayName.map(langText => LanguageText.create({
+          displayName: submodel.displayName.filter(displayName => displayName._text).map(langText => LanguageText.create({
             language: langText.language,
-            text: langText._text,
+            text: langText._text ?? "",
           })),
-          description: submodel.description.map(langText => LanguageText.create({
+          description: submodel.description.filter(displayName => displayName._text).map(langText => LanguageText.create({
             language: langText.language,
-            text: langText._text,
+            text: langText._text ?? "",
           })),
           administration: undefined,
           embeddedDataSpecifications: undefined,
