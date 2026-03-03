@@ -94,13 +94,17 @@ export const LanguageTypeSchemaV1_0 = {
   en: "en",
   de: "de",
 } as const;
+const KeySchemaV1_0 = z.object({
+  type: z.enum(KeyTypesV1_0),
+  value: z.string(),
+});
+
 const ReferenceSchemaV1_0 = z.object({
   type: z.enum(["ExternalReference", "ModelReference"]),
-  referredSemanticId: z.object().nullable().optional(), // this should be reference too
-  keys: z.array(z.object({
-    type: z.enum(KeyTypesV1_0),
-    value: z.string(),
-  })),
+  get referredSemanticId() {
+    return ReferenceSchemaV1_0.nullable();
+  },
+  keys: z.array(KeySchemaV1_0),
 });
 const LanguageTextSchemaV1_0 = z.object({
   language: z.enum(LanguageTypeSchemaV1_0),
@@ -647,10 +651,10 @@ export class AasSerializationService {
     }
     catch (error) {
       if (error instanceof z.ZodError) {
-        throw new BadRequestException();
+        throw new BadRequestException("Invalid import data format");
       }
+      throw error;
     }
-    return null;
   }
 
   async importTemplate(data: any, organizationId: string): Promise<Template | null> {
