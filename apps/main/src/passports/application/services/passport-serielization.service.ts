@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { ValueError } from "@open-dpp/exception";
+import { ExpandedEnvironment } from "../../../aas/domain/expanded-environment";
 import { AasExportable } from "../../../aas/domain/exportable/aas-exportable";
 import { EnvironmentService } from "../../../aas/presentation/environment.service";
 import { Passport } from "../../domain/passport";
 import { PassportRepository } from "../../infrastructure/passport.repository";
-import {AssetKind} from "@open-dpp/dto";
 
 @Injectable()
 export class PassportService {
@@ -15,31 +15,44 @@ export class PassportService {
     private readonly environmentService: EnvironmentService,
   ) { }
 
-  async getExpandedProductPassport(passportId: string) {
+  async getProductPassport(passportId: string) {
+    this.logger.log(`getProductPassport called with id: ${passportId}`);
+
     const passport = await this.passportRepository.findOne(passportId);
     if (!passport) {
       throw new NotFoundException(`Product passport with id ${passportId} not found`);
     }
 
+    if (!passport.environment) {
+      this.logger.warn(`Passport ${passportId} has no environment; returning empty shells and submodels`);
+      return {
+        ...passport.toPlain(),
+        environment: ExpandedEnvironment.empty().toPlain(),
+      };
+    }
+
+    const expandedEnv = await this.environmentService.loadExpandedEnvironment(passport.environment);
+
+    return {
+      ...passport.toPlain(),
+      environment: expandedEnv.toPlain(),
+    };
+  }
+
+  async exportPassport(passportId: string): Promise<AasExportable> {
+    const passport = await this.passportRepository.findOneOrFail(passportId);
     const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(passport.environment);
-    if (!expandedEnvironment) {
-      throw new NotFoundException(`Environment for passport ${passport.id} not found`);
-    }
-    return AasExportable.createFromPassport(passport, expandedEnvironment);
+    const aasExportable = AasExportable.createFromPassport(passport, expandedEnvironment);
+    return aasExportable.toExportPlain();
   }
 
-  async exportPassport(passportId: string) {
-    const aasExportable = await this.getExpandedProductPassport(passportId);
-    if (!aasExportable) {
-      throw new NotFoundException(`Passport ${passportId} not found`);
-    }
-    return aasExportable;
-  }
-
-  async importPassport(data: AasExportable, organizationId: string): Promise<Passport> {
-    const environment = await this.environmentService.createEnvironmentWithEmptyAas(AssetKind.Instance);
-    const aas =
-    const result = Passport.create();
+  async importPassport(data: {
+    organizationId: string;
+    templateId?: string | null;
+    environment: unknown;
+    createdAt?: Date;
+    updatedAt?: Date;
+  }): Promise<Passport> {
     if (!data.organizationId) {
       throw new BadRequestException("organizationId is required");
     }

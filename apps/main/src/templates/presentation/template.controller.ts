@@ -24,6 +24,7 @@ import { ZodValidationPipe } from "@open-dpp/exception";
 import { z } from "zod";
 import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 
+import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import {
   ApiDeleteColumn,
   ApiDeleteRow,
@@ -90,6 +91,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     private readonly environmentService: EnvironmentService,
     private readonly templateRepository: TemplateRepository,
     private readonly templateService: TemplateService,
+    private readonly aasSerializationService: AasSerializationService,
   ) {}
 
   @ApiGetShells()
@@ -346,7 +348,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @AuthSession() session: Session,
   ) {
     const template = await this.loadTemplateAndCheckOwnership(id, session);
-    return await this.templateService.exportTemplate(template.id);
+    return await this.aasSerializationService.exportTemplate(template.id);
   }
 
   @Post("/import")

@@ -1,13 +1,8 @@
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { ValueError } from "@open-dpp/exception";
-import { ExpandedEnvironment, ExpandedEnvironmentPlain } from "../../../aas/domain/expanded-environment";
 import { EnvironmentService } from "../../../aas/presentation/environment.service";
-import { Template } from "../../domain/template";
+import { ExpandedTemplatePlain, Template } from "../../domain/template";
 import { TemplateRepository } from "../../infrastructure/template.repository";
-
-export type ExpandedTemplatePlain = Omit<ReturnType<Template["toPlain"]>, "environment"> & {
-  environment: ExpandedEnvironmentPlain;
-};
 
 @Injectable()
 export class TemplateService {
@@ -20,20 +15,7 @@ export class TemplateService {
 
   async exportTemplate(templateId: string): Promise<ExpandedTemplatePlain> {
     const template = await this.templateRepository.findOneOrFail(templateId);
-
-    if (!template.environment) {
-      return {
-        ...template.toPlain(),
-        environment: ExpandedEnvironment.empty().toPlain(),
-      } as ExpandedTemplatePlain;
-    }
-
-    const expandedEnv = await this.environmentService.loadExpandedEnvironment(template.environment);
-
-    return {
-      ...template.toPlain(),
-      environment: expandedEnv.toPlain(),
-    } as ExpandedTemplatePlain;
+    return template.toExportPlain();
   }
 
   async importTemplate(data: {
@@ -46,9 +28,9 @@ export class TemplateService {
       throw new BadRequestException("organizationId is required");
     }
 
-    let expandedEnv: ExpandedEnvironment;
+    let result: ReturnType<typeof Template.importFromPlain>;
     try {
-      expandedEnv = ExpandedEnvironment.fromPlain(data.environment);
+      result = Template.importFromPlain(data as ExpandedTemplatePlain, data.organizationId);
     }
     catch (err) {
       if (err instanceof ValueError) {
@@ -57,21 +39,14 @@ export class TemplateService {
       throw err;
     }
 
-    const { environment, shells, submodels } = expandedEnv.copyWithNewIds();
-
-    const newTemplate = Template.create({
-      organizationId: data.organizationId,
-      environment,
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
-    });
+    const { entity, shells, submodels } = result;
 
     await this.environmentService.persistImportedEnvironment(
       shells,
       submodels,
-      async (options) => { await this.templateRepository.save(newTemplate, options); },
+      async (options) => { await this.templateRepository.save(entity, options); },
     );
 
-    return newTemplate;
+    return entity;
   }
 }

@@ -1,10 +1,18 @@
 import { randomUUID } from "node:crypto";
 import { TemplateDtoSchema } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
+import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
 import { IDigitalProductPassportIdentifiable } from "../../aas/domain/digital-product-passport-identifiable";
 import { Environment } from "../../aas/domain/environment";
+import { ExpandedEnvironment, ExpandedEnvironmentPlain } from "../../aas/domain/expanded-environment";
 import { IPersistable } from "../../aas/domain/persistable";
+import { Submodel } from "../../aas/domain/submodel-base/submodel";
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
+
+export type ExpandedTemplatePlain = Omit<ReturnType<Template["toPlain"]>, "environment"> & {
+  environment: ExpandedEnvironmentPlain;
+};
 
 export class Template implements IPersistable, IDigitalProductPassportIdentifiable, HasCreatedAt {
   private constructor(
@@ -60,5 +68,39 @@ export class Template implements IPersistable, IDigitalProductPassportIdentifiab
 
   getOrganizationId(): string {
     return this.organizationId;
+  }
+
+  async toExportPlain(expandedEnvironment: any) {
+    return {
+      ...this.toPlain(),
+      environment: expandedEnvironment,
+    };
+  }
+
+  static importFromPlain(
+    data: ExpandedTemplatePlain,
+    organizationId: string,
+  ): { entity: Template; shells: AssetAdministrationShell[]; submodels: Submodel[] } {
+    let expandedEnv: ExpandedEnvironment;
+    try {
+      expandedEnv = ExpandedEnvironment.fromPlain(data.environment);
+    }
+    catch (err) {
+      if (err instanceof ValueError) {
+        throw err;
+      }
+      throw err;
+    }
+
+    const { environment, shells, submodels } = expandedEnv.copyWithNewIds();
+
+    const entity = Template.create({
+      organizationId,
+      environment,
+      createdAt: data.createdAt instanceof Date ? data.createdAt : undefined,
+      updatedAt: data.updatedAt instanceof Date ? data.updatedAt : undefined,
+    });
+
+    return { entity, shells, submodels };
   }
 }

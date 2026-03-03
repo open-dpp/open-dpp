@@ -25,7 +25,6 @@ describe("templateService", () => {
   };
 
   const mockEnvironmentService = {
-    loadExpandedEnvironment: jest.fn<() => Promise<ExpandedEnvironment>>(),
     persistImportedEnvironment: jest.fn<(
       shells: AssetAdministrationShell[],
       submodels: Submodel[],
@@ -33,6 +32,10 @@ describe("templateService", () => {
     ) => Promise<void>>().mockImplementation(async (_shells, _submodels, saveEntity) => {
       await saveEntity({});
     }),
+  };
+
+  const mockLoader = {
+    load: jest.fn<() => Promise<ExpandedEnvironment>>(),
   };
 
   beforeEach(async () => {
@@ -86,7 +89,7 @@ describe("templateService", () => {
       });
 
       mockTemplateRepository.findOneOrFail.mockResolvedValue(template);
-      mockEnvironmentService.loadExpandedEnvironment.mockResolvedValue(
+      mockLoader.load.mockResolvedValue(
         ExpandedEnvironment.fromLoaded([aas], [submodel], []),
       );
 
@@ -101,14 +104,10 @@ describe("templateService", () => {
 
     it("should fallback to empty environment when template environment is undefined", async () => {
       const templateId = randomUUID();
-      const templateWithoutEnvironment = {
+      const templateWithoutEnvironment = Template.create({
         id: templateId,
-        environment: undefined,
-        toPlain: () => ({
-          id: templateId,
-          organizationId: "org-1",
-        }),
-      } as unknown as Template;
+        organizationId: "org-1",
+      });
 
       mockTemplateRepository.findOneOrFail.mockResolvedValue(templateWithoutEnvironment);
 
@@ -117,7 +116,7 @@ describe("templateService", () => {
       expect(result.environment.conceptDescriptions).toEqual([]);
       expect(result.environment.assetAdministrationShells).toEqual([]);
       expect(result.environment.submodels).toEqual([]);
-      expect(mockEnvironmentService.loadExpandedEnvironment).not.toHaveBeenCalled();
+      expect(mockLoader.load).not.toHaveBeenCalled();
     });
   });
 
@@ -167,6 +166,45 @@ describe("templateService", () => {
 
       expect(mockEnvironmentService.persistImportedEnvironment).toHaveBeenCalledTimes(1);
       expect(mockTemplateRepository.save).toHaveBeenCalledTimes(1);
+    });
+
+    it("should preserve timestamps from import data on the created entity", async () => {
+      const aasId = randomUUID();
+      const submodelId = randomUUID();
+      const createdAt = new Date("2024-01-01T00:00:00.000Z");
+      const updatedAt = new Date("2024-06-15T12:00:00.000Z");
+
+      const aasData = AssetAdministrationShell.create({
+        id: aasId,
+        assetInformation: AssetInformation.create({ assetKind: "Type" as AssetKindType }),
+        submodels: [
+          Reference.create({
+            type: ReferenceTypes.ModelReference,
+            keys: [Key.create({ type: KeyTypes.Submodel, value: submodelId })],
+          }),
+        ],
+      }).toPlain();
+
+      const submodelData = Submodel.create({
+        id: submodelId,
+        idShort: "testSubmodel",
+      }).toPlain();
+
+      const exportData = {
+        organizationId: "org-1",
+        environment: {
+          assetAdministrationShells: [aasData],
+          submodels: [submodelData],
+          conceptDescriptions: [],
+        },
+        createdAt,
+        updatedAt,
+      };
+
+      const result = await service.importTemplate(exportData);
+
+      expect(result.createdAt).toEqual(createdAt);
+      expect(result.updatedAt).toEqual(updatedAt);
     });
 
     it("should throw BadRequestException if organizationId is missing", async () => {

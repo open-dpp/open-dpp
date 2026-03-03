@@ -1,5 +1,9 @@
+import type { Connection, Model } from "mongoose";
 import { expect } from "@jest/globals";
-import { connect, Connection, Model } from "mongoose";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { Test, TestingModule } from "@nestjs/testing";
+import { EnvModule, EnvService } from "@open-dpp/env";
+import { generateMongoConfig } from "../../../../database/config";
 import { InvitationStatus } from "../../domain/invitation-status.enum";
 import { MemberRole } from "../../domain/member-role.enum";
 import { Invitation, InvitationSchema } from "./invitation.schema";
@@ -7,10 +11,25 @@ import { Invitation, InvitationSchema } from "./invitation.schema";
 describe("invitationSchema", () => {
   let mongoConnection: Connection;
   let InvitationModel: Model<Invitation>;
+  let module: TestingModule;
 
   beforeAll(async () => {
-    const uri = process.env.OPEN_DPP_MONGODB_URI!;
-    mongoConnection = (await connect(uri)).connection;
+    module = await Test.createTestingModule({
+      imports: [
+        EnvModule.forRoot(),
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
+        MongooseModule.forFeature([
+          { name: Invitation.name, schema: InvitationSchema },
+        ]),
+      ],
+    }).compile();
+    mongoConnection = module.get<Connection>(getConnectionToken());
     InvitationModel = mongoConnection.model(Invitation.name, InvitationSchema);
   });
 
@@ -23,7 +42,7 @@ describe("invitationSchema", () => {
   });
 
   afterAll(async () => {
-    await mongoConnection.close();
+    await module.close();
   });
 
   it("should create an invitation document", async () => {

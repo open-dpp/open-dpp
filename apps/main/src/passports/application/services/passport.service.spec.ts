@@ -25,8 +25,6 @@ describe("passportService", () => {
   };
 
   const mockEnvironmentService = {
-    getFullEnvironmentAsPlain: jest.fn(),
-    loadExpandedEnvironment: jest.fn<() => Promise<ExpandedEnvironment>>(),
     persistImportedEnvironment: jest.fn<(
       shells: AssetAdministrationShell[],
       submodels: Submodel[],
@@ -34,6 +32,10 @@ describe("passportService", () => {
     ) => Promise<void>>().mockImplementation(async (_shells, _submodels, saveEntity) => {
       await saveEntity({});
     }),
+  };
+
+  const mockLoader = {
+    load: jest.fn<() => Promise<ExpandedEnvironment>>(),
   };
 
   beforeEach(async () => {
@@ -87,7 +89,7 @@ describe("passportService", () => {
       });
 
       mockPassportRepository.findOneOrFail.mockResolvedValue(passport);
-      mockEnvironmentService.loadExpandedEnvironment.mockResolvedValue(
+      mockLoader.load.mockResolvedValue(
         ExpandedEnvironment.fromLoaded([aas], [submodel], []),
       );
 
@@ -102,14 +104,11 @@ describe("passportService", () => {
 
     it("should fallback to empty environment when passport environment is undefined", async () => {
       const passportId = randomUUID();
-      const passportWithoutEnvironment = {
+      const passportWithoutEnvironment = Passport.create({
         id: passportId,
-        environment: undefined,
-        toPlain: () => ({
-          id: passportId,
-          organizationId: "org-1",
-        }),
-      } as unknown as Passport;
+        organizationId: "org-1",
+        environment: Environment.create({}),
+      });
 
       mockPassportRepository.findOneOrFail.mockResolvedValue(passportWithoutEnvironment);
 
@@ -118,7 +117,7 @@ describe("passportService", () => {
       expect(result.environment.conceptDescriptions).toEqual([]);
       expect(result.environment.assetAdministrationShells).toEqual([]);
       expect(result.environment.submodels).toEqual([]);
-      expect(mockEnvironmentService.loadExpandedEnvironment).not.toHaveBeenCalled();
+      expect(mockLoader.load).not.toHaveBeenCalled();
     });
   });
 
@@ -169,6 +168,46 @@ describe("passportService", () => {
 
       expect(mockEnvironmentService.persistImportedEnvironment).toHaveBeenCalledTimes(1);
       expect(mockPassportRepository.save).toHaveBeenCalledTimes(1);
+    });
+
+    it("should preserve timestamps from import data on the created entity", async () => {
+      const aasId = randomUUID();
+      const submodelId = randomUUID();
+      const createdAt = new Date("2024-01-01T00:00:00.000Z");
+      const updatedAt = new Date("2024-06-15T12:00:00.000Z");
+
+      const aasData = AssetAdministrationShell.create({
+        id: aasId,
+        assetInformation: AssetInformation.create({ assetKind: "Type" as AssetKindType }),
+        submodels: [
+          Reference.create({
+            type: ReferenceTypes.ModelReference,
+            keys: [Key.create({ type: KeyTypes.Submodel, value: submodelId })],
+          }),
+        ],
+      }).toPlain();
+
+      const submodelData = Submodel.create({
+        id: submodelId,
+        idShort: "testSubmodel",
+      }).toPlain();
+
+      const exportData = {
+        organizationId: "org-1",
+        templateId: null,
+        environment: {
+          assetAdministrationShells: [aasData],
+          submodels: [submodelData],
+          conceptDescriptions: [],
+        },
+        createdAt,
+        updatedAt,
+      };
+
+      const result = await service.importPassport(exportData);
+
+      expect(result.createdAt).toEqual(createdAt);
+      expect(result.updatedAt).toEqual(updatedAt);
     });
 
     it("should throw BadRequestException if environment data is missing", async () => {

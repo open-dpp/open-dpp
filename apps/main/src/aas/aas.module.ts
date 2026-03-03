@@ -7,6 +7,7 @@ import {
   AssetAdministrationShellSchema,
 } from "./infrastructure/schemas/asset-administration-shell.schema";
 import { SubmodelDoc, SubmodelSchema } from "./infrastructure/schemas/submodel.schema";
+import { AasSerializationService } from "./infrastructure/serialization/aas-serialization.service";
 import { SubmodelRepository } from "./infrastructure/submodel.repository";
 import { EnvironmentService } from "./presentation/environment.service";
 import { SubmodelRegistryInitializer } from "./presentation/submodel-registry-initializer";
@@ -19,7 +20,13 @@ import { SubmodelRegistryInitializer } from "./presentation/submodel-registry-in
     ]),
     OrganizationsModule,
   ],
-  providers: [SubmodelRegistryInitializer, AasRepository, SubmodelRepository, EnvironmentService],
-  exports: [AasRepository, SubmodelRepository, EnvironmentService],
+  providers: [
+    SubmodelRegistryInitializer,
+    AasRepository,
+    SubmodelRepository,
+    EnvironmentService,
+    AasSerializationService,
+  ],
+  exports: [AasRepository, SubmodelRepository, EnvironmentService, AasSerializationService],
 })
 export class AasModule { }
