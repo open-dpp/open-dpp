@@ -25,6 +25,9 @@ export const iriDomain = `https://open-dpp.de/${randomUUID()}`
 export const aasResponse = AssetAdministrationShellJsonSchema.parse(
   aasPlainFactory.build(undefined, { transient: { iriDomain } }),
 )
+export const aasModification = {
+  displayName: [{ language: 'en', text: 'modify' }],
+}
 export const submodelCarbonFootprintResponse = SubmodelJsonSchema.parse(
   submodelCarbonFootprintPlainFactory.build(undefined, {
     transient: { iriDomain },
@@ -60,15 +63,26 @@ export function aasHandlers(basePath: string) {
 
         return (
           errorResponse
-          || HttpResponse.json({
-            paging_metadata: {
-              cursor: aasResponse.id,
+          || HttpResponse.json(
+            {
+              paging_metadata: {
+                cursor: aasResponse.id,
+              },
+              result: [aasResponse],
             },
-            result: [aasResponse],
-          }, {
-            status: 200,
-          })
+            {
+              status: 200,
+            },
+          )
         )
+      },
+    ),
+    http.patch(
+      `${aasEndpointUrl}/${aasWrapperId}/shells/${btoa(aasResponse.id)}`,
+      async () => {
+        return HttpResponse.json({ ...aasResponse, displayName: aasModification.displayName }, {
+          status: 200,
+        })
       },
     ),
     http.get(
@@ -135,12 +149,9 @@ export function aasHandlers(basePath: string) {
     http.delete(
       `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements/${submodelCarbonFootprintElement0.idShort}`,
       async () => {
-        return HttpResponse.json(
-          undefined,
-          {
-            status: 204,
-          },
-        )
+        return HttpResponse.json(undefined, {
+          status: 204,
+        })
       },
     ),
     http.get(
@@ -210,11 +221,14 @@ export function aasHandlers(basePath: string) {
         status: 200,
       })
     }),
-    http.patch(`${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}`, async () => {
-      return HttpResponse.json(submodelCarbonFootprintResponse, {
-        status: 200,
-      })
-    }),
+    http.patch(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}`,
+      async () => {
+        return HttpResponse.json(submodelCarbonFootprintResponse, {
+          status: 200,
+        })
+      },
+    ),
     http.post(
       `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements`,
       async () => {
@@ -231,15 +245,21 @@ export function aasHandlers(basePath: string) {
         })
       },
     ),
-    http.patch(`${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements/${submodelCarbonFootprintElement0.idShort}`, async () => {
-      return HttpResponse.json(SubmodelElementSchema.parse(propertyToAdd), {
-        status: 200,
-      })
-    }),
-    http.patch(`${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements/${submodelCarbonFootprintElement0.idShort}/$value`, async () => {
-      return HttpResponse.json(SubmodelElementSchema.parse(propertyToAdd), {
-        status: 200,
-      })
-    }),
+    http.patch(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements/${submodelCarbonFootprintElement0.idShort}`,
+      async () => {
+        return HttpResponse.json(SubmodelElementSchema.parse(propertyToAdd), {
+          status: 200,
+        })
+      },
+    ),
+    http.patch(
+      `${aasEndpointUrl}/${aasWrapperId}/submodels/${btoa(submodelCarbonFootprintResponse.id)}/submodel-elements/${submodelCarbonFootprintElement0.idShort}/$value`,
+      async () => {
+        return HttpResponse.json(SubmodelElementSchema.parse(propertyToAdd), {
+          status: 200,
+        })
+      },
+    ),
   ]
 }

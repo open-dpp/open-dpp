@@ -3,7 +3,7 @@ import { NotFoundException } from "@nestjs/common";
 import { ModellingKindType, SubmodelJsonSchema } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { AdministrativeInformation } from "../common/administrative-information";
-import { LanguageText } from "../common/language-text";
+import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
@@ -28,13 +28,15 @@ import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
 
 export class Submodel implements ISubmodelBase, IPersistable {
+  private _displayName: Array<LanguageText>;
+  private _description: Array<LanguageText>;
   private constructor(
     public readonly id: string,
     public readonly extensions: Array<Extension>,
     public readonly category: string | null,
     public readonly idShort: string,
-    public displayName: Array<LanguageText>,
-    public description: Array<LanguageText>,
+    displayName: Array<LanguageText>,
+    description: Array<LanguageText>,
     public readonly administration: AdministrativeInformation | null,
     public readonly kind: ModellingKindType | null,
     public readonly semanticId: Reference | null,
@@ -43,6 +45,25 @@ export class Submodel implements ISubmodelBase, IPersistable {
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
     public readonly submodelElements: Array<ISubmodelElement>,
   ) {
+    this.displayName = displayName;
+    this.description = description;
+  }
+
+  set displayName(value: Array<LanguageText>) {
+    this._displayName = value;
+  }
+
+  get displayName(): Array<LanguageText> {
+    return this._displayName;
+  }
+
+  set description(value: Array<LanguageText>) {
+    hasUniqueLanguagesOrFail(value);
+    this._description = value;
+  }
+
+  get description(): Array<LanguageText> {
+    return this._description;
   }
 
   static create(

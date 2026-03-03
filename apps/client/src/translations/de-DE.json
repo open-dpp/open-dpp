@@ -3,6 +3,7 @@
     "required": "Erforderlich"
   },
   "common": {
+    "untitled": "Unbenannt",
     "id": "ID",
     "identification": "Identifikation",
     "name": "Name",
@@ -45,6 +46,7 @@
     "home": "Startseite",
     "backTo": "Zurück zu { link }",
     "presentationMode": "Präsentations-Modus",
+    "unknownName": "Unbekannter Name",
     "form": {
       "email": {
         "help": "Geben Sie eine E-Mail Adresse ein.",
@@ -87,11 +89,12 @@
       "errorEditEntries": "@:common.edit der @:aasEditor.table.entries @:common.failed"
     },
     "link": "Link",
+    "errorLoading": "Laden @:common.failed",
     "errorLoadingSubmodels": "Laden der Abschnitte @.lower:common.failed",
     "addSubmodel": "Abschnitt hinzufügen",
     "submodelElementCollection": "Unterabschnitt",
     "edit": "{formItem} bearbeiten",
-    "submodel": "Abschnitt",
+    "submodel": "Abschnitt | Abschnitte",
     "removeSubmodel": "Soll der @:aasEditor.submodel wirklich entfernt werden?",
     "errorRemoveSubmodel": "@:common.remove des Abschnitts @:common.failed",
     "removeSubmodelElement": "Soll das Element wirklich entfernt werden?",
@@ -401,6 +404,7 @@
   },
   "templates": {
     "label": "Passvorlagen",
+    "create": "Neue Passvorlage erstellen",
     "createdAt": "Erstellt am",
     "updatedAt": "Aktualisiert am"
   },
@@ -581,6 +585,12 @@
       "subject": "Reparaturanfrage",
       "intro": "Guten Tag,\n\nich habe folgendes Reparaturanliegen:",
       "sendError": "Die Reperaturanfrage konnte nicht abgeschickt werden. Haben Sie bereits einen Emailclient konfiguriert?"
-    }
+    },
+    "missingValue": "Kein Wert gesetzt",
+    "passportNotFound": "Produktpass nicht gefunden",
+    "passportNotFoundLong": "Ihr digitaler Produktpass konnte nicht gefunden werden. Bitte prüfen Sie Ihre Daten oder kontaktieren Sie den Support."
+  },
+  "uniqueproductidentifier": {
+    "notfound": "UniqueProductIdentifier konnte nicht gefunden werden, bitte Administrator kontaktieren."
   }
 }

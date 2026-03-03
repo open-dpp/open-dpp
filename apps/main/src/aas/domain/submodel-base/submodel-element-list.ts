@@ -1,5 +1,5 @@
 import { AasSubmodelElements, AasSubmodelElementsType, DataTypeDefType, SubmodelElementListJsonSchema } from "@open-dpp/dto";
-import { LanguageText } from "../common/language-text";
+import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
@@ -16,13 +16,15 @@ import {
 } from "./submodel-base";
 
 export class SubmodelElementList implements ISubmodelElement {
+  private _displayName: Array<LanguageText>;
+  private _description: Array<LanguageText>;
   private constructor(
     public readonly typeValueListElement: AasSubmodelElementsType,
     public readonly extensions: Array<Extension>,
     public readonly category: string | null,
     public readonly idShort: string,
-    public readonly displayName: Array<LanguageText>,
-    public readonly description: Array<LanguageText>,
+    displayName: Array<LanguageText>,
+    description: Array<LanguageText>,
     public readonly semanticId: Reference | null,
     public readonly supplementalSemanticIds: Array<Reference>,
     public readonly qualifiers: Qualifier[],
@@ -32,6 +34,25 @@ export class SubmodelElementList implements ISubmodelElement {
     public readonly valueTypeListElement: DataTypeDefType | null = null,
     public readonly value: Array<ISubmodelElement>,
   ) {
+    this.displayName = displayName;
+    this.description = description;
+  }
+
+  set displayName(value: Array<LanguageText>) {
+    this._displayName = value;
+  }
+
+  get displayName(): Array<LanguageText> {
+    return this._displayName;
+  }
+
+  set description(value: Array<LanguageText>) {
+    hasUniqueLanguagesOrFail(value);
+    this._description = value;
+  }
+
+  get description(): Array<LanguageText> {
+    return this._description;
   }
 
   static create(data: SubmodelBaseProps & {

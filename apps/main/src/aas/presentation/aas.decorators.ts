@@ -1,6 +1,8 @@
 import { applyDecorators, Body, Delete, Get, HttpCode, Param, Patch, Post, Query, Req } from "@nestjs/common";
 
 import {
+  AssetAdministrationShellModificationSchema,
+  PopulateSchema,
   SubmodelElementModificationSchema,
   SubmodelElementSchema,
   SubmodelModificationSchema,
@@ -13,137 +15,153 @@ import { IdShortPath } from "../domain/submodel-base/submodel-base";
 
 const DeleteHttpCode = HttpCode(204);
 
-export const ApiGetShellsPath = "/:id/shells";
-export function ApiGetShells() {
-  return applyDecorators(
-    Get(ApiGetShellsPath),
-  );
+// Helper to safely join an optional prefix with the original path
+function withPrefix(path: string, prefix?: string): string {
+  if (!prefix)
+    return path;
+  const trim = (s: string) => s.replace(/^\/+|\/+$/g, "");
+  return `/${trim(prefix)}/${trim(path)}`;
 }
-export const ApiSubmodelsPath = "/:id/submodels";
-export function ApiGetSubmodels() {
+
+export const ApiGetShellsPath = "/:id/shells";
+export function ApiGetShells(prefix?: string) {
   return applyDecorators(
-    Get(ApiSubmodelsPath),
+    Get(withPrefix(ApiGetShellsPath, prefix)),
   );
 }
 
-export function ApiPostSubmodel() {
+export const ApiPatchShellPath = "/:id/shells/:aasId";
+export function ApiPatchShell() {
   return applyDecorators(
-    Post(ApiSubmodelsPath),
+    Patch(ApiPatchShellPath),
+  );
+}
+
+export const ApiSubmodelsPath = "/:id/submodels";
+export function ApiGetSubmodels(prefix?: string) {
+  return applyDecorators(
+    Get(withPrefix(ApiSubmodelsPath, prefix)),
+  );
+}
+
+export function ApiPostSubmodel(prefix?: string) {
+  return applyDecorators(
+    Post(withPrefix(ApiSubmodelsPath, prefix)),
   );
 }
 
 export const ApiGetSubmodelByIdPath = "/:id/submodels/:submodelId";
-export function ApiGetSubmodelById() {
+export function ApiGetSubmodelById(prefix?: string) {
   return applyDecorators(
-    Get(ApiGetSubmodelByIdPath),
+    Get(withPrefix(ApiGetSubmodelByIdPath, prefix)),
   );
 }
 
-export function ApiDeleteSubmodelById() {
+export function ApiDeleteSubmodelById(prefix?: string) {
   return applyDecorators(
-    Delete(ApiGetSubmodelByIdPath),
+    Delete(withPrefix(ApiGetSubmodelByIdPath, prefix)),
     HttpCode(204), // Explicitly state the HTTP status code
   );
 }
 
-export function ApiPatchSubmodel() {
+export function ApiPatchSubmodel(prefix?: string) {
   return applyDecorators(
-    Patch(ApiGetSubmodelByIdPath),
+    Patch(withPrefix(ApiGetSubmodelByIdPath, prefix)),
   );
 }
 
 export const ApiGetSubmodelValuePath = "/:id/submodels/:submodelId/$value";
-export function ApiGetSubmodelValue() {
+export function ApiGetSubmodelValue(prefix?: string) {
   return applyDecorators(
-    Get(ApiGetSubmodelValuePath),
+    Get(withPrefix(ApiGetSubmodelValuePath, prefix)),
   );
 }
 
 export const ApiSubmodelElementsPath = "/:id/submodels/:submodelId/submodel-elements";
-export function ApiGetSubmodelElements() {
+export function ApiGetSubmodelElements(prefix?: string) {
   return applyDecorators(
-    Get(ApiSubmodelElementsPath),
+    Get(withPrefix(ApiSubmodelElementsPath, prefix)),
   );
 }
 
-export function ApiPostSubmodelElement() {
+export function ApiPostSubmodelElement(prefix?: string) {
   return applyDecorators(
-    Post(ApiSubmodelElementsPath),
+    Post(withPrefix(ApiSubmodelElementsPath, prefix)),
   );
 }
 
 export const ApiGetSubmodelElementByIdPath = "/:id/submodels/:submodelId/submodel-elements/:idShortPath";
-export function ApiGetSubmodelElementById() {
+export function ApiGetSubmodelElementById(prefix?: string) {
   return applyDecorators(
-    Get(ApiGetSubmodelElementByIdPath),
+    Get(withPrefix(ApiGetSubmodelElementByIdPath, prefix)),
   );
 }
 
-export function ApiDeleteSubmodelElementById() {
+export function ApiDeleteSubmodelElementById(prefix?: string) {
   return applyDecorators(
-    Delete(ApiGetSubmodelElementByIdPath),
+    Delete(withPrefix(ApiGetSubmodelElementByIdPath, prefix)),
     DeleteHttpCode,
   );
 }
 
-export function ApiPatchSubmodelElement() {
+export function ApiPatchSubmodelElement(prefix?: string) {
   return applyDecorators(
-    Patch(ApiGetSubmodelElementByIdPath),
+    Patch(withPrefix(ApiGetSubmodelElementByIdPath, prefix)),
   );
 }
 
-export function ApiPostSubmodelElementAtIdShortPath() {
+export function ApiPostSubmodelElementAtIdShortPath(prefix?: string) {
   return applyDecorators(
-    Post(ApiGetSubmodelElementByIdPath),
+    Post(withPrefix(ApiGetSubmodelElementByIdPath, prefix)),
   );
 }
 export const ApiPostColumnPath = `${ApiGetSubmodelElementByIdPath}/columns`;
 
-export function ApiPostColumn() {
+export function ApiPostColumn(prefix?: string) {
   return applyDecorators(
-    Post(ApiPostColumnPath),
+    Post(withPrefix(ApiPostColumnPath, prefix)),
   );
 }
 
 export const ApiGetColumnByIdShortPath = `${ApiPostColumnPath}/:idShortOfColumn`;
 
-export function ApiDeleteColumn() {
+export function ApiDeleteColumn(prefix?: string) {
   return applyDecorators(
-    Delete(ApiGetColumnByIdShortPath),
+    Delete(withPrefix(ApiGetColumnByIdShortPath, prefix)),
   );
 }
 
-export function ApiPatchColumn() {
+export function ApiPatchColumn(prefix?: string) {
   return applyDecorators(
-    Patch(ApiGetColumnByIdShortPath),
+    Patch(withPrefix(ApiGetColumnByIdShortPath, prefix)),
   );
 }
 
 export const ApiPostRowPath = `${ApiGetSubmodelElementByIdPath}/rows`;
 
-export function ApiPostRow() {
+export function ApiPostRow(prefix?: string) {
   return applyDecorators(
-    Post(ApiPostRowPath),
+    Post(withPrefix(ApiPostRowPath, prefix)),
   );
 }
 
 export const ApiDeleteRowPath = `${ApiPostRowPath}/:idShortOfRow`;
-export function ApiDeleteRow() {
+export function ApiDeleteRow(prefix?: string) {
   return applyDecorators(
-    Delete(ApiDeleteRowPath),
+    Delete(withPrefix(ApiDeleteRowPath, prefix)),
   );
 }
 
 export const ApiGetSubmodelElementValuePath = "/:id/submodels/:submodelId/submodel-elements/:idShortPath/$value";
-export function ApiGetSubmodelElementValue() {
+export function ApiGetSubmodelElementValue(prefix?: string) {
   return applyDecorators(
-    Get(ApiGetSubmodelElementValuePath),
+    Get(withPrefix(ApiGetSubmodelElementValuePath, prefix)),
   );
 }
 
-export function ApiPatchSubmodelElementValue() {
+export function ApiPatchSubmodelElementValue(prefix?: string) {
   return applyDecorators(
-    Patch(ApiGetSubmodelElementValuePath),
+    Patch(withPrefix(ApiGetSubmodelElementValuePath, prefix)),
   );
 }
 
@@ -172,8 +190,15 @@ export const SubmodelIdParamSchema = IdBaseSchema.meta({
   example: "032a7e62-29e2-4530-8f4b-765e32514a56",
   param: { in: "path", name: "submodelId" },
 });
-
 export const SubmodelIdParam = () => Param("submodelId", new ZodValidationPipe(SubmodelIdParamSchema));
+
+export const AssetAdministrationShellIdParamSchema = IdBaseSchema.meta({
+  description: "The asset administration shell id",
+  example: "032a7e62-29e2-4530-8f4b-765e32514a56",
+  param: { in: "path", name: "aasId" },
+});
+
+export const AssetAdministrationShellIdParam = () => Param("aasId", new ZodValidationPipe(AssetAdministrationShellIdParamSchema));
 
 export const IdShortPathParamSchema = z.string().regex(
   /^[^./]+(?:\.[^./]+)*$/,
@@ -223,9 +248,19 @@ export const PositionQueryParamSchema = z.coerce.number().optional().meta({
   param: { in: "query", name: "position" },
 });
 
+export const PopulateQueryParamSchema = PopulateSchema.meta({
+  description: "Populates specified environment property",
+  example: "environment.assetAdministrationShells",
+  param: { in: "query", name: "populate" },
+});
+
+export const PopulateQueryParam = () => Query("populate", new ZodValidationPipe(PopulateQueryParamSchema));
+
 export const PositionQueryParam = () => Query("position", new ZodValidationPipe(PositionQueryParamSchema));
 
 export const CursorQueryParam = () => Query("cursor", new ZodValidationPipe(CursorQueryParamSchema));
+
+export const AssetAdministrationShellModificationRequestBody = () => Body(new ZodValidationPipe(AssetAdministrationShellModificationSchema));
 
 export const SubmodelRequestBody = () => Body(new ZodValidationPipe(SubmodelRequestDtoSchema));
 export const SubmodelModificationRequestBody = () => Body(new ZodValidationPipe(SubmodelModificationSchema));

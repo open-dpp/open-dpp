@@ -1,5 +1,6 @@
 import type { Connection, Model } from "mongoose";
 import { expect } from "@jest/globals";
+import { MongoMemoryServer } from "mongodb-memory-server";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
@@ -7,6 +8,7 @@ import { generateMongoConfig } from "../../../../database/config";
 import { Session, SessionSchema } from "./session.schema";
 
 describe("sessionSchema", () => {
+  let mongod: MongoMemoryServer;
   let mongoConnection: Connection;
   let SessionModel: Model<Session>;
   let module: TestingModule;
@@ -42,6 +44,7 @@ describe("sessionSchema", () => {
 
   afterAll(async () => {
     await module.close();
+    await mongod.stop();
   });
 
   it("should create a session document", async () => {

@@ -1,11 +1,16 @@
 import type { Connection } from "mongoose";
 
+import { randomUUID } from "node:crypto";
 import { BadRequestException, ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import {
+  AssetAdministrationShellCreateDto,
+  AssetAdministrationShellJsonSchema,
+  AssetAdministrationShellModificationDto,
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellPaginationResponseDtoSchema,
-  AssetKindType,
+  AssetAdministrationShellResponseDto,
+  AssetKind,
   SubmodelElementListJsonSchema,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
@@ -27,10 +32,15 @@ import {
 import { DbSessionOptions } from "../../database/query-options";
 import { Session } from "../../identity/auth/domain/session";
 import { MembersService } from "../../identity/organizations/application/services/members.service";
-import { Pagination } from "../../pagination/pagination";
-import { PagingResult } from "../../pagination/paging-result";
-import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 
+import { Pagination } from "../../pagination/pagination";
+
+import { PagingResult } from "../../pagination/paging-result";
+import { Passport } from "../../passports/domain/passport";
+import { Template } from "../../templates/domain/template";
+import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
+import { AssetInformation } from "../domain/asset-information";
+import { LanguageText } from "../domain/common/language-text";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
 import { ExpandedEnvironment } from "../domain/expanded-environment";
@@ -38,6 +48,10 @@ import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath, ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
+import {
+  DigitalProductPassportIdentifiableEnvironmentPopulateDecorator,
+} from "./digital-product-passport-identifiable-environment-populate-decorator";
+import { PopulateOptions } from "./environment-populate-decorator";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
@@ -63,10 +77,28 @@ export class EnvironmentService {
     this.membersService = membersService;
   }
 
-  async createEnvironmentWithEmptyAas(assetKind: AssetKindType): Promise<Environment> {
+  async createEnvironment(environmentData: { assetAdministrationShells: AssetAdministrationShellCreateDto[] }, isTemplate: boolean): Promise<Environment> {
     const environment = Environment.create({});
-    const aas = environment.addAssetAdministrationShell({ assetKind });
-    await this.aasRepository.save(aas);
+    if (environmentData.assetAdministrationShells.length > 1) {
+      throw new BadRequestException("Multiple asset administration shells are not supported yet.");
+    }
+    const assetKind = isTemplate ? AssetKind.Type : AssetKind.Instance;
+    const createIdAndAssetInformation = () => {
+      const id = randomUUID();
+      const assetInformation = AssetInformation.create({ assetKind, globalAssetId: id });
+      return { id, assetInformation };
+    };
+    const assetAdministrationShells = environmentData.assetAdministrationShells.length > 0
+      ? environmentData.assetAdministrationShells.map(aas => AssetAdministrationShell.create({
+          ...createIdAndAssetInformation(),
+          displayName: aas.displayName?.map(LanguageText.fromPlain),
+          description: aas.description?.map(LanguageText.fromPlain),
+        }))
+      : [AssetAdministrationShell.create(createIdAndAssetInformation())];
+    const firstAas = assetAdministrationShells[0];
+    await this.aasRepository.save(firstAas);
+    environment.addAssetAdministrationShell(firstAas);
+
     return environment;
   }
 
@@ -74,6 +106,13 @@ export class EnvironmentService {
     const pages = pagination.nextPages(environment.assetAdministrationShells);
     const shells = await Promise.all(pages.map(p => this.aasRepository.findOneOrFail(p)));
     return AssetAdministrationShellPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: shells }).toPlain());
+  }
+
+  async modifyAasShell(environment: Environment, aasId: string, modification: AssetAdministrationShellModificationDto): Promise<AssetAdministrationShellResponseDto> {
+    const aas = await this.findAssetAdministrationShellByIdOrFail(environment, aasId);
+    aas.modify(modification);
+    await this.aasRepository.save(aas);
+    return AssetAdministrationShellJsonSchema.parse(aas.toPlain());
   }
 
   async getSubmodels(environment: Environment, pagination: Pagination): Promise<SubmodelPaginationResponseDto> {
@@ -150,6 +189,15 @@ export class EnvironmentService {
     }
     else {
       throw new SubmodelNotPartOfEnvironmentException(submodelId);
+    }
+  }
+
+  public async findAssetAdministrationShellByIdOrFail(environment: Environment, aasId: string): Promise<AssetAdministrationShell> {
+    if (environment.assetAdministrationShells.includes(aasId)) {
+      return await this.aasRepository.findOneOrFail(aasId);
+    }
+    else {
+      throw new BadRequestException(`Environment has no asset administration shell with id ${aasId}`);
     }
   }
 
@@ -286,6 +334,15 @@ export class EnvironmentService {
     finally {
       await session.endSession();
     }
+  async populateEnvironmentForPagingResult(pagingResult: PagingResult<Passport | Template>, populateOptions: PopulateOptions) {
+    const populatedItems = await Promise.all(pagingResult.items.map(
+      async i => await new DigitalProductPassportIdentifiableEnvironmentPopulateDecorator(
+        i,
+        this.aasRepository,
+        this.submodelRepository,
+      ).populate(populateOptions),
+    ));
+    return PagingResult.create({ pagination: pagingResult.pagination, items: populatedItems });
   }
 
   async copyEnvironment(environment: Environment): Promise<Environment> {

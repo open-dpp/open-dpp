@@ -1,6 +1,7 @@
 import type { Connection, Model } from "mongoose";
 import { expect } from "@jest/globals";
 import { ObjectId } from "mongodb";
+import { MongoMemoryServer } from "mongodb-memory-server";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
@@ -9,6 +10,7 @@ import { UserRole } from "../../domain/user-role.enum";
 import { User, UserSchema } from "./user.schema";
 
 describe("userSchema", () => {
+  let mongod: MongoMemoryServer;
   let mongoConnection: Connection;
   let UserModel: Model<User>;
   let module: TestingModule;
@@ -42,7 +44,9 @@ describe("userSchema", () => {
   });
 
   afterAll(async () => {
+    await mongoConnection.dropDatabase();
     await module.close();
+    await mongod.stop();
   });
 
   it("should create a user document", async () => {

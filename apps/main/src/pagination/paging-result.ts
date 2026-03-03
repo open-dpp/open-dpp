@@ -1,11 +1,11 @@
 import { IConvertableToPlain } from "../aas/domain/convertable-to-plain";
 import { Pagination } from "./pagination";
 
-export class PagingResult {
-  constructor(private readonly pagination: Pagination, private readonly items: IConvertableToPlain[]) {
+export class PagingResult<T extends IConvertableToPlain> {
+  constructor(public readonly pagination: Pagination, public readonly items: T[]) {
   }
 
-  static create(data: { pagination: Pagination; items: IConvertableToPlain[] }): PagingResult {
+  static create<T extends IConvertableToPlain>(data: { pagination: Pagination; items: T[] }): PagingResult<T> {
     return new PagingResult(data.pagination, data.items);
   }
 

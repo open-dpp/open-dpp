@@ -1,5 +1,6 @@
 import type { Connection, Model } from "mongoose";
 import { expect } from "@jest/globals";
+import { MongoMemoryServer } from "mongodb-memory-server";
 import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Types } from "mongoose";
@@ -9,6 +10,7 @@ import { MemberRole } from "../../domain/member-role.enum";
 import { Member, MemberSchema } from "./member.schema";
 
 describe("memberSchema", () => {
+  let mongod: MongoMemoryServer;
   let mongoConnection: Connection;
   let MemberModel: Model<Member>;
   let module: TestingModule;
@@ -42,7 +44,9 @@ describe("memberSchema", () => {
   });
 
   afterAll(async () => {
+    await mongoConnection.dropDatabase();
     await module.close();
+    await mongod.stop();
   });
 
   it("should create a member document", async () => {
