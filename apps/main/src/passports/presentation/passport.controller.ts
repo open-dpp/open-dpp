@@ -456,7 +456,11 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     const passport = await this.aasSerializationService.importPassport(
       body,
       activeOrganizationId,
-      async (p, options) => { await this.passportRepository.save(p, options); },
+      async (p, options) => {
+        await this.passportRepository.save(p, options);
+        const upid = p.createUniqueProductIdentifier();
+        await this.uniqueProductIdentifierService.save(upid, options);
+      },
     );
     if (!passport) {
       throw new BadRequestException("Passport cant be imported");
