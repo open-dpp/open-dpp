@@ -42,11 +42,13 @@ import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
 import { LanguageText } from "../domain/common/language-text";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
+import { ConceptDescription } from "../domain/concept-description";
 import { Environment } from "../domain/environment";
 import { ExpandedEnvironment } from "../domain/expanded-environment";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath, ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
+import { ConceptDescriptionRepository } from "../infrastructure/concept-description.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import {
   DigitalProductPassportIdentifiableEnvironmentPopulateDecorator,
@@ -64,16 +66,19 @@ export class EnvironmentService {
   private readonly logger = new Logger(EnvironmentService.name);
   private aasRepository: AasRepository;
   private submodelRepository: SubmodelRepository;
+  private conceptDescriptionRepository: ConceptDescriptionRepository;
   private membersService: MembersService;
 
   constructor(
     aasRepository: AasRepository,
     submodelRepository: SubmodelRepository,
+    conceptDescriptionRepository: ConceptDescriptionRepository,
     membersService: MembersService,
     @InjectConnection() private connection: Connection,
   ) {
     this.aasRepository = aasRepository;
     this.submodelRepository = submodelRepository;
+    this.conceptDescriptionRepository = conceptDescriptionRepository;
     this.membersService = membersService;
   }
 
@@ -317,11 +322,15 @@ export class EnvironmentService {
   async persistImportedEnvironment(
     shells: AssetAdministrationShell[],
     submodels: Submodel[],
+    conceptDescriptions: ConceptDescription[],
     saveEntity: (options: DbSessionOptions) => Promise<void>,
   ): Promise<void> {
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
+        for (const conceptDescription of conceptDescriptions) {
+          await this.conceptDescriptionRepository.save(conceptDescription, { session });
+        }
         for (const submodel of submodels) {
           await this.submodelRepository.save(submodel, { session });
         }

@@ -56,16 +56,10 @@ export class AasSerializationService {
     try {
       const { shells, submodels, conceptDescriptions } = this.parseAndMapEnvironment(data);
 
-      const newShells = await Promise.all(shells.map(s => this.aasRepository.save(s)));
-      const newSubmodels = await Promise.all(submodels.map(s => this.submodelRepository.save(s)));
-      const newConceptDescriptions = await Promise.all(
-        conceptDescriptions.map(cd => this.conceptDescriptionRepository.save(cd)),
-      );
-
       const environment = Environment.create({
-        assetAdministrationShells: newShells.map(aas => aas.id),
-        submodels: newSubmodels.map(s => s.id),
-        conceptDescriptions: newConceptDescriptions.map(cd => cd.id),
+        assetAdministrationShells: shells.map(aas => aas.id),
+        submodels: submodels.map(s => s.id),
+        conceptDescriptions: conceptDescriptions.map(cd => cd.id),
       });
 
       const passport = Passport.create({
@@ -78,6 +72,7 @@ export class AasSerializationService {
       await this.environmentService.persistImportedEnvironment(
         shells,
         submodels,
+        conceptDescriptions,
         async (options) => { await savePassport(passport, options); },
       );
 
@@ -100,10 +95,6 @@ export class AasSerializationService {
     try {
       const { shells, submodels, conceptDescriptions, schema } = this.parseAndMapEnvironment(data);
 
-      for (const cd of conceptDescriptions) {
-        await this.conceptDescriptionRepository.save(cd);
-      }
-
       const environment = Environment.create({
         assetAdministrationShells: shells.map(aas => aas.id),
         submodels: submodels.map(s => s.id),
@@ -120,6 +111,7 @@ export class AasSerializationService {
       await this.environmentService.persistImportedEnvironment(
         shells,
         submodels,
+        conceptDescriptions,
         async (options) => { await saveTemplate(template, options); },
       );
 
