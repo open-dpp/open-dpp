@@ -4,11 +4,6 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { AasExportable } from "../../../aas/domain/exportable/aas-exportable";
-import { AasRepository } from "../../../aas/infrastructure/aas.repository";
-import { SubmodelRepository } from "../../../aas/infrastructure/submodel.repository";
-import {
-  DigitalProductPassportIdentifiableEnvironmentPopulateDecorator,
-} from "../../../aas/presentation/digital-product-passport-identifiable-environment-populate-decorator";
 import { EnvironmentService } from "../../../aas/presentation/environment.service";
 import { PassportRepository } from "../../infrastructure/passport.repository";
 
@@ -19,8 +14,6 @@ export class PassportService {
   constructor(
     private readonly passportRepository: PassportRepository,
     private readonly environmentService: EnvironmentService,
-    private readonly aasRepository: AasRepository,
-    private readonly submodelRepository: SubmodelRepository,
   ) {}
 
   async getExpandedProductPassport(passportId: string) {
@@ -44,10 +37,6 @@ export class PassportService {
         },
       };
     }
-
-    const extendEnvironmentDecorator = new DigitalProductPassportIdentifiableEnvironmentPopulateDecorator(passport, this.aasRepository, this.submodelRepository);
-    await extendEnvironmentDecorator.populate({ assetAdministrationShells: true, submodels: true, ignoreMissing: true });
-    // return extendEnvironmentDecorator.toPlain();
 
     const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(passport.environment);
     return AasExportable.createFromPassport(passport, expandedEnvironment);

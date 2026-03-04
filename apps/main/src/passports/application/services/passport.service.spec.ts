@@ -2,14 +2,11 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { AasModule } from "../../../aas/aas.module";
-import { AasRepository } from "../../../aas/infrastructure/aas.repository";
 import {
   AssetAdministrationShellDoc,
   AssetAdministrationShellSchema,
 } from "../../../aas/infrastructure/schemas/asset-administration-shell.schema";
 import { SubmodelDoc, SubmodelSchema } from "../../../aas/infrastructure/schemas/submodel.schema";
-import { SubmodelRepository } from "../../../aas/infrastructure/submodel.repository";
-import { EnvironmentService } from "../../../aas/presentation/environment.service";
 import { generateMongoConfig } from "../../../database/config";
 import { OrganizationsModule } from "../../../identity/organizations/organizations.module";
 import { UsersModule } from "../../../identity/users/users.module";
@@ -48,9 +45,6 @@ describe("passportService", () => {
       providers: [
         PassportService,
         PassportRepository,
-        EnvironmentService,
-        AasRepository,
-        SubmodelRepository,
       ],
     }).compile();
 
