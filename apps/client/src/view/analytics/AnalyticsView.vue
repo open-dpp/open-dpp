@@ -15,6 +15,7 @@ import { Line } from "vue-chartjs";
 import { useI18n } from "vue-i18n";
 import MetricQuery from "../../components/analytics/MetricQuery.vue";
 import { useAnalyticsStore } from "../../stores/analytics";
+import ContentViewWrapper from "../ContentViewWrapper.vue";
 
 const analyticsStore = useAnalyticsStore();
 const { t } = useI18n();
@@ -57,10 +58,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="py-3 px-4">
+  <ContentViewWrapper>
     <MetricQuery />
     <div class="h-[400px]">
       <Line :data="data" :options="options" />
     </div>
-  </div>
+  </ContentViewWrapper>
 </template>

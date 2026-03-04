@@ -2,7 +2,7 @@
 </script>
 
 <template>
-  <div class="flex flex-col gap-1 p-4">
+  <div class="p-3">
     <slot />
   </div>
 </template>
