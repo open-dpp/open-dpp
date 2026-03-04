@@ -19,8 +19,8 @@ export interface PassportMeasurementDto {
 export interface PassportMetricQueryDto {
   startDate: Date
   endDate: Date
-  templateId: string
-  modelId: string
+  templateId?: string
+  passportId: string
   type: MeasurementType
   valueKey: string
   period: string

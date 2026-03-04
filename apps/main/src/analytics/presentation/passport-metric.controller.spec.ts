@@ -11,6 +11,7 @@ import { BetterAuthHelper } from "../../../test/better-auth-helper";
 import {
   getApp,
 } from "../../../test/utils.for.test";
+import { Environment } from "../../aas/domain/environment";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
 import { AuthModule } from "../../identity/auth/auth.module";
@@ -21,11 +22,11 @@ import { UsersService } from "../../identity/users/application/services/users.se
 import { UsersModule } from "../../identity/users/users.module";
 import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
 import { ItemsService } from "../../items/infrastructure/items.service";
-import { Model } from "../../models/domain/model";
 import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
 import { ModelsService } from "../../models/infrastructure/models.service";
-import { Template } from "../../old-templates/domain/template";
-import { laptopFactory } from "../../old-templates/fixtures/laptop.factory";
+import { Passport } from "../../passports/domain/passport";
+import { PassportRepository } from "../../passports/infrastructure/passport.repository";
+import { PassportDoc, PassportSchema } from "../../passports/infrastructure/passport.schema";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
@@ -44,9 +45,10 @@ import { PassportMetricController } from "./passport-metric.controller";
 
 describe("passportMetricController", () => {
   let app: INestApplication;
-  let modelsService: ModelsService;
+  let passportRepository: PassportRepository;
   let passportMetricService: PassportMetricService;
   let module: TestingModule;
+  let uniqueProductIdentifierService: UniqueProductIdentifierService;
 
   const betterAuthHelper = new BetterAuthHelper();
 
@@ -74,6 +76,10 @@ describe("passportMetricController", () => {
             name: ModelDoc.name,
             schema: ModelSchema,
           },
+          {
+            name: PassportDoc.name,
+            schema: PassportSchema,
+          },
         ]),
         AnalyticsModule,
         AuthModule,
@@ -83,6 +89,7 @@ describe("passportMetricController", () => {
       providers: [
         UniqueProductIdentifierService,
         UniqueProductIdentifierApplicationService,
+        PassportRepository,
         ModelsService,
         ItemsService,
         {
@@ -101,7 +108,8 @@ describe("passportMetricController", () => {
     passportMetricService = module.get<PassportMetricService>(
       PassportMetricService,
     );
-    modelsService = module.get<ModelsService>(ModelsService);
+    passportRepository = module.get<PassportRepository>(PassportRepository);
+    uniqueProductIdentifierService = module.get<UniqueProductIdentifierService>(UniqueProductIdentifierService);
     betterAuthHelper.init(module.get<UsersService>(UsersService), module.get<Auth>(AUTH));
 
     app = module.createNestApplication();
@@ -114,7 +122,7 @@ describe("passportMetricController", () => {
 
     await passportMetricService.findOne(
       {
-        modelId: randomUUID(),
+        passportId: randomUUID(),
         type: MeasurementType.PAGE_VIEWS,
         templateId: randomUUID(),
         organizationId: randomUUID(),
@@ -124,19 +132,15 @@ describe("passportMetricController", () => {
   });
 
   it("/POST should create page view metric", async () => {
-    const { org, user, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
-    const template = Template.loadFromDb(
-      laptopFactory.build({ organizationId: org.id, userId: user.id }),
-    );
-    const model = Model.create({
-      name: "My product",
-      userId: user.id,
+    const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+    const passport = Passport.create({
+      templateId: randomUUID(),
       organizationId: org.id,
-      template,
+      environment: Environment.create({}),
     });
-    const uniqueProductIdentifier = model.createUniqueProductIdentifier();
-
-    await modelsService.save(model);
+    const uniqueProductIdentifier = passport.createUniqueProductIdentifier();
+    await uniqueProductIdentifierService.save(uniqueProductIdentifier);
+    await passportRepository.save(passport);
 
     const page = "http://example.com/page";
     const response: { status: number; body: { id: string } } = await request(
@@ -153,9 +157,9 @@ describe("passportMetricController", () => {
       response.body.id,
     );
     expect(passportMetric.source).toEqual({
-      organizationId: model.ownedByOrganizationId,
-      templateId: model.templateId,
-      modelId: model.id,
+      organizationId: passport.getOrganizationId(),
+      templateId: passport.templateId,
+      passportId: passport.id,
       type: MeasurementType.PAGE_VIEWS,
     });
     expect(passportMetric.values).toEqual([
@@ -172,7 +176,7 @@ describe("passportMetricController", () => {
     const source = {
       templateId,
       organizationId: org.id,
-      modelId: randomUUID(),
+      passportId: randomUUID(),
     };
     const page = "http://example.com/page1";
     const pageView1 = PassportMetric.createPageView({
@@ -191,7 +195,7 @@ describe("passportMetricController", () => {
 
     const response = await request(getApp(app))
       .get(
-        `/organizations/${org.id}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T00:00:00Z&endDate=2025-03-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
+        `/organizations/${org.id}/passport-metrics?templateId=${templateId}&passportId=${source.passportId}&startDate=2025-01-01T00:00:00Z&endDate=2025-03-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
       )
       .set("Cookie", userCookie)
       .send();
@@ -222,7 +226,7 @@ describe("passportMetricController", () => {
     const source = {
       templateId,
       organizationId: org.id,
-      modelId: randomUUID(),
+      passportId: randomUUID(),
     };
 
     const page = "http://example.com/page1";
@@ -235,7 +239,7 @@ describe("passportMetricController", () => {
     await passportMetricService.create(pageView);
     const response = await request(getApp(app))
       .get(
-        `/organizations/${org2.id}/passport-metrics?templateId=${templateId}&modelId=${source.modelId}&startDate=2025-01-01T00:00:00Z&endDate=2025-02-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
+        `/organizations/${org2.id}/passport-metrics?templateId=${templateId}&passportId=${source.passportId}&startDate=2025-01-01T00:00:00Z&endDate=2025-02-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
       )
       .set("Cookie", user2Cookie)
       .send();

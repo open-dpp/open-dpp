@@ -50,6 +50,7 @@ async function loadPassport(id: string): Promise<boolean> {
     return false;
   }
   passportStore.shells = aas.data.result || [];
+  await analyticsStore.addPageView();
 
   return true;
 }

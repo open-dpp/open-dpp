@@ -129,7 +129,7 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
   @AllowServiceAccess()
   @Get("unique-product-identifiers/:id/metadata")
   async get(@Param("id") id: string) {
-    return this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifier(
+    return this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifierOld(
       id,
     );
   }
