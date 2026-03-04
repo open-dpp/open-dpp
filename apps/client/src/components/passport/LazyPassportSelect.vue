@@ -23,7 +23,6 @@ const passport = computed({
     return model.value?.id;
   },
   set: (updateId: string) => {
-    console.log("set", updateId);
     model.value = passportList.value.find(
       passport => passport.id === updateId,
     );
