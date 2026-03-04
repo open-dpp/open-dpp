@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { AasExportSchema } from "./aas-export-v1.schema";
 import { DataTypeDef, KeyTypes, Language, ModellingKind, QualifierKind, ReferenceTypes } from "@open-dpp/dto";
 import { z } from "zod/v4";
@@ -168,7 +169,7 @@ export function mapSubmodels(submodels: SubmodelSchema[]): Submodel[] {
 export function mapConceptDescriptions(cds: ConceptDescriptionSchema[]): ConceptDescription[] {
   return cds.map(cd =>
     ConceptDescription.create({
-      id: "",
+      id: randomUUID(),
       extensions: mapExtensions(cd.extensions),
       category: cd.category,
       idShort: cd.idShort,
