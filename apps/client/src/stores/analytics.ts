@@ -40,8 +40,8 @@ export const useAnalyticsStore = defineStore("analytics", () => {
   const queryMetric = async (query: {
     startDate: Date;
     endDate: Date;
-    templateId: string;
-    modelId: string;
+    templateId?: string;
+    passportId: string;
     valueKey: string;
     type: MeasurementType;
     selectedView: TimeView;
@@ -97,7 +97,12 @@ export const useAnalyticsStore = defineStore("analytics", () => {
     }));
   };
 
+  function reset() {
+    passportMeasurements.value = [];
+  }
+
   return {
+    reset,
     addPageView,
     queryMetric,
     getMeasurementsAsTimeseries,

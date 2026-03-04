@@ -398,6 +398,7 @@
     "preview": "Vorschau"
   },
   "passports": {
+    "select": "Produktpass auswählen",
     "label": "Produktpass | Produktpässe",
     "create": "Neuen Produktpass erstellen",
     "blank": "Leer",

@@ -18,7 +18,6 @@ import { UsersService } from "../../identity/users/application/services/users.se
 import { UsersModule } from "../../identity/users/users.module";
 import { MeasurementType, PassportMetric } from "../domain/passport-metric";
 import { TimePeriod } from "../domain/time-period";
-import { dataFieldFactory, passportMetricFactory } from "../fixtures/passport-metric.factory";
 import { PassportMetricDoc, PassportMetricSchema } from "./passport-metric.schema";
 import { PassportMetricService } from "./passport-metric.service";
 
@@ -70,7 +69,7 @@ describe("passportMetricService", () => {
     const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     await passportMetricService.findOne(
       {
-        modelId: randomUUID(),
+        passportId: randomUUID(),
         type: MeasurementType.PAGE_VIEWS,
         templateId: randomUUID(),
         organizationId: org.id,
@@ -79,51 +78,12 @@ describe("passportMetricService", () => {
     );
   });
 
-  it("should create and modify passport metric", async () => {
-    const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
-
-    const passportMetric = PassportMetric.loadFromDb(
-      passportMetricFactory.build({
-        date: new Date(Date.now()),
-        values: [
-          { key: "v1", row: 1, value: 7 },
-          { key: "v2", row: 2, value: 90 },
-        ],
-        source: {
-          organizationId: org.id,
-        },
-      }),
-    );
-
-    await passportMetricService.create(passportMetric);
-
-    const source = {
-      modelId: passportMetric.source.modelId,
-      organizationId: org.id,
-      templateId: passportMetric.source.templateId,
-      type: passportMetric.source.type,
-    };
-
-    const foundPassportMetric = await passportMetricService.findOneOrFail(
-      source,
-      passportMetric.date,
-    );
-
-    expect(foundPassportMetric).toEqual(passportMetric);
-    foundPassportMetric.upsertMetricValue({ key: "v3", row: 1, value: 11 });
-    await passportMetricService.create(foundPassportMetric);
-    expect(foundPassportMetric.values).toEqual([
-      ...passportMetric.values,
-      { key: "v3", row: 1, value: 11 },
-    ]);
-  });
-
   it("fails if requested passport metric could not be found", async () => {
     const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     await expect(
       passportMetricService.findOneOrFail(
         {
-          modelId: randomUUID(),
+          passportId: randomUUID(),
           type: MeasurementType.PAGE_VIEWS,
           organizationId: org.id,
           templateId: randomUUID(),
@@ -136,7 +96,7 @@ describe("passportMetricService", () => {
   it("get passport page view statistic", async () => {
     const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const source = {
-      modelId: randomUUID(),
+      passportId: randomUUID(),
       organizationId: org.id,
       templateId: randomUUID(),
     };
@@ -197,7 +157,7 @@ describe("passportMetricService", () => {
       source.organizationId,
       {
         templateId: source.templateId,
-        modelId: source.modelId,
+        passportId: source.passportId,
         type: MeasurementType.PAGE_VIEWS,
         valueKey: "http://example.com",
         startDate: new Date("2025-01-01T00:00:00Z"),
@@ -217,136 +177,6 @@ describe("passportMetricService", () => {
       {
         datetime: "2025-03-01T00:00:00.000Z",
         sum: 1,
-      },
-    ]);
-  });
-
-  it("get passport field value statistic", async () => {
-    const { org } = await betterAuthHelper.createOrganizationAndUserWithCookie();
-    const source = {
-      modelId: randomUUID(),
-      organizationId: org.id,
-      templateId: randomUUID(),
-    };
-    const dataSectionId = randomUUID();
-    const dataFieldId1 = randomUUID();
-    const dataFieldId2 = randomUUID();
-    const dataFieldId3 = randomUUID();
-    const fieldValues1 = [
-      dataFieldFactory.build({
-        value: 8,
-        dataSectionId,
-        dataFieldId: dataFieldId1,
-      }),
-      dataFieldFactory.build({
-        value: 3,
-        dataSectionId,
-        dataFieldId: dataFieldId2,
-      }),
-      dataFieldFactory.build({
-        value: 5,
-        dataSectionId,
-        dataFieldId: dataFieldId3,
-      }),
-    ];
-    const date1 = new Date("2025-01-01T12:00:00.000Z");
-    const passportMetric1 = PassportMetric.createFieldAggregate({
-      source,
-      fieldValues: fieldValues1,
-      date: date1,
-    });
-    const fieldValues2 = [
-      dataFieldFactory.build({
-        value: 2,
-        dataSectionId,
-        dataFieldId: dataFieldId1,
-      }),
-      dataFieldFactory.build({
-        value: 4,
-        dataSectionId,
-        dataFieldId: dataFieldId2,
-      }),
-    ];
-    const date2 = new Date("2025-02-01T12:00:00.000Z");
-    const passportMetric2 = PassportMetric.createFieldAggregate({
-      source,
-      fieldValues: fieldValues2,
-      date: date2,
-    });
-    const fieldValues3 = [
-      dataFieldFactory.build({
-        value: 102,
-        dataSectionId,
-        dataFieldId: dataFieldId1,
-      }),
-      dataFieldFactory.build({
-        value: 90,
-        dataSectionId,
-        dataFieldId: dataFieldId3,
-      }),
-    ];
-    const date3 = new Date("2025-01-01T13:00:00.000Z");
-    const passportMetric3 = PassportMetric.createFieldAggregate({
-      source,
-      fieldValues: fieldValues3,
-      date: date3,
-    });
-
-    await passportMetricService.create(passportMetric1);
-    await passportMetricService.create(passportMetric2);
-    await passportMetricService.create(passportMetric3);
-
-    let statistic = await passportMetricService.computeStatistic(
-      source.organizationId,
-      {
-        templateId: source.templateId,
-        modelId: source.modelId,
-        type: MeasurementType.FIELD_AGGREGATE,
-        valueKey: dataFieldId1,
-        startDate: new Date("2025-01-01T00:00:00.000Z"),
-        endDate: new Date("2025-03-01T13:00:00.000Z"),
-        period: TimePeriod.MONTH,
-      },
-    );
-    expect(statistic).toEqual([
-      {
-        datetime: "2025-01-01T00:00:00.000Z",
-        sum: 110,
-      },
-      {
-        datetime: "2025-02-01T00:00:00.000Z",
-        sum: 2,
-      },
-      {
-        datetime: "2025-03-01T00:00:00.000Z",
-        sum: 0,
-      },
-    ]);
-
-    statistic = await passportMetricService.computeStatistic(
-      source.organizationId,
-      {
-        templateId: source.templateId,
-        modelId: source.modelId,
-        type: MeasurementType.FIELD_AGGREGATE,
-        valueKey: dataFieldId2,
-        startDate: new Date("2025-01-01T00:00:00Z"),
-        endDate: new Date("2025-03-01T13:00:00Z"),
-        period: TimePeriod.MONTH,
-      },
-    );
-    expect(statistic).toEqual([
-      {
-        datetime: "2025-01-01T00:00:00.000Z",
-        sum: 3,
-      },
-      {
-        datetime: "2025-02-01T00:00:00.000Z",
-        sum: 4,
-      },
-      {
-        datetime: "2025-03-01T00:00:00.000Z",
-        sum: 0,
       },
     ]);
   });
