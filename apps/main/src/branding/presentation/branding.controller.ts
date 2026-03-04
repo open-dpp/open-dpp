@@ -19,7 +19,7 @@ export class BrandingController {
     @AuthSession() session: Session,
   ): Promise<BrandingDto> {
     if (!session.activeOrganizationId) {
-      throw new ForbiddenException("User is not logged in");
+      throw new ForbiddenException("No active organization selected");
     }
 
     return BrandingDtoSchema.parse((await this.brandingRepository.findOneByOrganizationId(session.activeOrganizationId)).toPlain());
