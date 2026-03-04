@@ -26,10 +26,10 @@ importers:
         version: 2.2.0(vue@3.5.27(typescript@5.9.3))
       '@open-dpp/api-client':
         specifier: workspace:*
-        version: file:packages/api-client
+        version: link:../../packages/api-client
       '@open-dpp/dto':
         specifier: workspace:*
-        version: file:packages/dto
+        version: link:../../packages/dto
       '@primeuix/themes':
         specifier: ^2.0.3
         version: 2.0.3
@@ -114,10 +114,10 @@ importers:
         version: 9.39.2
       '@open-dpp/config-eslint':
         specifier: workspace:*
-        version: file:packages/config-eslint
+        version: link:../../packages/config-eslint
       '@open-dpp/testing':
         specifier: workspace:*
-        version: file:packages/testing(@nestjs/microservices@11.1.13)(@nestjs/platform-express@11.1.13)(@nestjs/websockets@11.1.13)(class-validator@0.14.3)(mongoose@9.1.6)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+        version: link:../../packages/testing
       '@tailwindcss/postcss':
         specifier: ^4.1.18
         version: 4.1.18

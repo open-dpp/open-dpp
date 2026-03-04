@@ -3,7 +3,7 @@ import {
   Language,
 } from "@open-dpp/dto";
 
-import { expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { useAasUtils } from "./aas-utils.ts";
 
 describe("aas", () => {

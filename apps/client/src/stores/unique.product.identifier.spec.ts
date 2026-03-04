@@ -6,7 +6,8 @@ import {
 } from "@open-dpp/api-client";
 import { waitFor } from "@testing-library/vue";
 import { createPinia, setActivePinia } from "pinia";
-import { expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import apiClient from "../lib/api-client";
 import { useUniqueProductIdentifierStore } from "./unique.product.identifier";
 

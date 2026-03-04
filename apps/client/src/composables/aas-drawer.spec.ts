@@ -2,7 +2,7 @@ import type { SubmodelResponseDto } from "@open-dpp/dto";
 import { DataTypeDef, KeyTypes, PropertyJsonSchema } from "@open-dpp/dto";
 import { propertyPlainFactory, submodelDesignOfProductPlainFactory, submodelPlainToResponse } from "@open-dpp/testing";
 import { v4 as uuid4 } from "uuid";
-import { expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import PropertyCreateEditor from "../components/aas/PropertyCreateEditor.vue";
 import PropertyEditor from "../components/aas/PropertyEditor.vue";
 import SubmodelEditor from "../components/aas/SubmodelEditor.vue";
