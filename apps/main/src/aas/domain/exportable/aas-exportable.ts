@@ -76,10 +76,19 @@ export class AasExportable {
   }
 
   toExportPlain() {
+    const envPlain = this.environment.toPlain();
     return {
       id: this.id,
-      environment: this.environment.toPlain(),
-      templateId: this.templateId,
+      environment: {
+        ...envPlain,
+        assetAdministrationShells: envPlain.assetAdministrationShells.map(shell => ({
+          ...shell,
+          assetInformation: {
+            ...shell.assetInformation,
+            defaultThumbnail: shell.assetInformation.defaultThumbnails?.[0] ?? null,
+          },
+        })),
+      },
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
       format: this.EXPORT_FORMAT,

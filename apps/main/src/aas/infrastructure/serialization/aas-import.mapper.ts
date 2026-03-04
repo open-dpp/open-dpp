@@ -44,12 +44,12 @@ export function mapReferences(refs: ReferenceSchema[]): Reference[] {
   return refs.map(mapReference);
 }
 
-export function mapLanguageTexts(texts: Array<{ language: string; _text?: string }>): LanguageText[] {
+export function mapLanguageTexts(texts: Array<{ language: string; text: string }>): LanguageText[] {
   return texts
-    .filter(t => t._text && t.language in Language)
+    .filter(t => t.text && t.language in Language)
     .map(t => LanguageText.create({
       language: Language[t.language as keyof typeof Language],
-      text: t._text ?? "",
+      text: t.text,
     }));
 }
 
