@@ -79,7 +79,7 @@ export class OrganizationsService {
       const member = await this.membersRepository.findOneByUserIdAndOrganizationId(session.userId, organizationId);
 
       if (!member) {
-        this.logger.warn(`User ${session.userId} is not a member of organization ${organizationId}`);
+        this.logger.warn("Authorization denied in getOrganization: requester is not a member");
         throw new ForbiddenException();
       }
     }
