@@ -22,7 +22,7 @@ export class AasExportable {
   static create(data: {
     id?: string;
     organizationId: string;
-    templateId?: string;
+    templateId?: string | null;
     environment: ExpandedEnvironment;
     createdAt?: Date;
     updatedAt?: Date;
@@ -40,27 +40,24 @@ export class AasExportable {
   }
 
   static createFromPassport(data: Passport, expandedEnvironment: ExpandedEnvironment) {
-    const now = DateTime.now();
-    return new AasExportable(
-      data.id ?? randomUUID(),
-      data.organizationId,
-      data.templateId ?? null,
-      expandedEnvironment,
-      data.createdAt ?? now,
-      data.updatedAt ?? now,
-    );
+    return AasExportable.create({
+      id: data.id,
+      organizationId: data.organizationId,
+      templateId: data.templateId,
+      environment: expandedEnvironment,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+    });
   }
 
   static createFromTemplate(data: Template, expandedEnvironment: ExpandedEnvironment) {
-    const now = DateTime.now();
-    return new AasExportable(
-      data.id ?? randomUUID(),
-      data.organizationId,
-      null,
-      expandedEnvironment,
-      data.createdAt ?? now,
-      data.updatedAt ?? now,
-    );
+    return AasExportable.create({
+      id: data.id,
+      organizationId: data.organizationId,
+      environment: expandedEnvironment,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+    });
   }
 
   static fromPlain(data: unknown) {
