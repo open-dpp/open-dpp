@@ -8,18 +8,14 @@ import apiClient from "../../lib/api-client";
 import { useIndexStore } from "../../stores";
 import { useMediaStore } from "../../stores/media";
 import { useNotificationStore } from "../../stores/notification";
-import { usePassportFormStore } from "../../stores/passport.form";
 import MediaModal from "./MediaModal.vue";
 import MediaPreview from "./MediaPreview.vue";
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
   id: string;
   label: string;
   value: MediaResult | null;
-  context?: "dpp" | "organization";
-}>(), {
-  context: "dpp",
-});
+}>();
 
 const emits = defineEmits<{
   (e: "clicked"): void;
@@ -29,7 +25,6 @@ const emits = defineEmits<{
 }>();
 
 const { t } = useI18n();
-const passportFormStore = usePassportFormStore();
 const indexStore = useIndexStore();
 const notificationStore = useNotificationStore();
 const mediaStore = useMediaStore();
@@ -84,24 +79,11 @@ async function uploadFile() {
     return;
   }
   try {
-    let mediaId: string;
-
-    if (props.context === "organization") {
-      mediaId = await apiClient.media.media.uploadOrganizationProfileMedia(
-        indexStore.selectedOrganization,
-        selectedLocalFile.value,
-        (progress: number) => (uploadProgress.value = progress),
-      );
-    }
-    else {
-      mediaId = await mediaStore.uploadDppMedia(
-        indexStore.selectedOrganization,
-        passportFormStore.getUUID(),
-        props.id,
-        selectedLocalFile.value,
-        (progress: number) => (uploadProgress.value = progress),
-      );
-    }
+    const mediaId = await apiClient.media.media.uploadOrganizationProfileMedia(
+      indexStore.selectedOrganization,
+      selectedLocalFile.value,
+      (progress: number) => (uploadProgress.value = progress),
+    );
 
     const mediaResult = await mediaStore.fetchMedia(mediaId);
     selectedFile.value = mediaResult.mediaInfo;
