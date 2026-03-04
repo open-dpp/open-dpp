@@ -18,10 +18,6 @@ describe("passportService", () => {
   let service: PassportService;
   let module: TestingModule;
 
-  afterAll(async () => {
-    await module.close();
-  });
-
   beforeEach(async () => {
     module = await Test.createTestingModule({
       imports: [
@@ -49,6 +45,10 @@ describe("passportService", () => {
     }).compile();
 
     service = module.get<PassportService>(PassportService);
+  });
+
+  afterAll(async () => {
+    await module.close();
   });
 
   it("should be defined", () => {

@@ -1,5 +1,5 @@
-import { randomUUID } from "node:crypto";
 import type { AasExportSchema } from "./aas-export-v1.schema";
+import { randomUUID } from "node:crypto";
 import { DataTypeDef, KeyTypes, Language, ModellingKind, QualifierKind, ReferenceTypes } from "@open-dpp/dto";
 import { z } from "zod/v4";
 import { AssetAdministrationShell } from "../../domain/asset-adminstration-shell";

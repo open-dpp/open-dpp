@@ -1,6 +1,7 @@
 import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { DbSessionOptions } from "../../database/query-options";
 import { findOne, findOneOrFail, save } from "../../lib/repositories";
 import { ConceptDescription } from "../domain/concept-description";
 import { ConceptDescriptionDbSchema } from "./schemas/concept-description-db-schema";
@@ -21,8 +22,8 @@ export class ConceptDescriptionRepository {
     return ConceptDescription.fromPlain(ConceptDescriptionDbSchema.encode(plain));
   }
 
-  async save(conceptDescription: ConceptDescription) {
-    return await save(conceptDescription, this.conceptDescriptionDoc, ConceptDescriptionDocSchemaVersion.v1_0_0, this.fromPlain, ConceptDescriptionDbSchema);
+  async save(conceptDescription: ConceptDescription, options?: DbSessionOptions) {
+    return await save(conceptDescription, this.conceptDescriptionDoc, ConceptDescriptionDocSchemaVersion.v1_0_0, this.fromPlain, ConceptDescriptionDbSchema, options);
   }
 
   async findOneOrFail(id: string): Promise<ConceptDescription> {
