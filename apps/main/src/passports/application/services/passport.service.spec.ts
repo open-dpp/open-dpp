@@ -19,9 +19,14 @@ import { PassportService } from "./passport.service";
 
 describe("passportService", () => {
   let service: PassportService;
+  let module: TestingModule;
+
+  afterAll(async () => {
+    await module.close();
+  });
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       imports: [
         EnvModule.forRoot(),
         MongooseModule.forRootAsync({
