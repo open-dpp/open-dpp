@@ -26,8 +26,7 @@ import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema"
 import { ModelsService } from "../../models/infrastructure/models.service";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
-import { PassportSchema } from "../../passports/infrastructure/passport.schema";
-import { PassportDoc } from "../../product-passport-data/infrastructure/product-passport-data.schema";
+import { PassportDoc, PassportSchema } from "../../passports/infrastructure/passport.schema";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,

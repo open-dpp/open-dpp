@@ -374,6 +374,7 @@
     "marketplace": "Marketplace"
   },
   "passports": {
+    "select": "Select passport",
     "label": "Passport | Passports",
     "create": "Create passport",
     "blank": "Blank",
