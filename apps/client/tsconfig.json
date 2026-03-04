@@ -2,7 +2,7 @@
   "extends": "@vue/tsconfig/tsconfig.json",
   "include": [
     "**/*.ts",
-    "**/*.vue",
+    "**/*.vue"
   ],
   "exclude": [
     "vitest.config.ts"
