@@ -22,7 +22,7 @@ export const routes: RouteRecordRaw[] = [
       const org = indexStore.selectedOrganization;
 
       if (org) {
-        return `/organizations/${indexStore.selectedOrganization}/models`;
+        return `/organizations/${indexStore.selectedOrganization}/passports`;
       }
       else {
         return "/organizations"; // fallback

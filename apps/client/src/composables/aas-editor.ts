@@ -1,5 +1,23 @@
 import type { AasNamespace } from "@open-dpp/api-client";
-import type { AssetAdministrationShellResponseDto, DataTypeDefType, FileRequestDto, LanguageTextDto, LanguageType, PagingParamsDto, PropertyRequestDto, ReferenceElementRequestDto, SubmodelElementCollectionRequestDto, SubmodelElementListRequestDto, SubmodelElementModificationDto, SubmodelElementSharedRequestDto, SubmodelElementSharedResponseDto, SubmodelModificationDto, SubmodelRequestDto, SubmodelResponseDto } from "@open-dpp/dto";
+import type {
+  AssetAdministrationShellModificationDto,
+  AssetAdministrationShellResponseDto,
+  DataTypeDefType,
+  FileRequestDto,
+  LanguageTextDto,
+  LanguageType,
+  PagingParamsDto,
+  PropertyRequestDto,
+  ReferenceElementRequestDto,
+  SubmodelElementCollectionRequestDto,
+  SubmodelElementListRequestDto,
+  SubmodelElementModificationDto,
+  SubmodelElementSharedRequestDto,
+  SubmodelElementSharedResponseDto,
+  SubmodelModificationDto,
+  SubmodelRequestDto,
+  SubmodelResponseDto,
+} from "@open-dpp/dto";
 import type { TreeTableSelectionKeys } from "primevue";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
@@ -7,6 +25,7 @@ import type { TreeNode } from "primevue/treenode";
 import type { Ref } from "vue";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import type { AasEditorPath, IAasDrawer } from "./aas-drawer.ts";
+import type { MediaFileCollectionItem } from "./media-file.ts";
 import type { IPagination, PagingResult } from "./pagination.ts";
 import {
   AasSubmodelElements,
@@ -27,9 +46,10 @@ import {
   EditorMode,
   useAasDrawer,
 } from "./aas-drawer.ts";
+import { useAasGallery } from "./aas-gallery.ts";
 import { usePagination } from "./pagination.ts";
 
-interface AasEditorProps {
+export interface AasEditorProps {
   id: string;
   aasNamespace: AasNamespace;
   initialSelectedKeys?: string;
@@ -58,6 +78,7 @@ export interface IAasEditor extends IAasDrawer, IPagination {
   selectedKeys: Ref<TreeTableSelectionKeys | undefined>;
   selectTreeNode: (key: string) => void;
   openAssetAdministrationShellEditor: () => void;
+  aasGalleryFiles: Ref<MediaFileCollectionItem[]>;
 }
 
 export function useAasEditor({
@@ -86,6 +107,8 @@ export function useAasEditor({
 
   const loading = ref(false);
   const submodelElementsToAdd = ref<MenuItem[]>([]);
+
+  const { files: aasGalleryFiles, downloadDefaultThumbnails } = useAasGallery({ translate, errorHandlingStore });
 
   const fetchSubmodels = async (
     pagingParams: PagingParamsDto,
@@ -124,17 +147,17 @@ export function useAasEditor({
     }
   }
 
-  async function modifyAasEditor(data: { displayName: LanguageTextDto[] }) {
+  async function modifyAasEditor(data: AssetAdministrationShellModificationDto) {
     const errorMessage = translate(`${translatePrefix}.error`, { method: translate("common.edit") });
     if (assetAdministrationShell.value) {
       try {
         const response = await aasNamespace.modifyShell(
           id,
           assetAdministrationShell.value.id,
-          { displayName: data.displayName },
+          data,
         );
         if (response.status === HTTPCode.OK) {
-          updateAssetAdministrationShell(response.data);
+          await updateAssetAdministrationShell(response.data);
           drawer.hideDrawer();
         }
         else {
@@ -153,7 +176,7 @@ export function useAasEditor({
     try {
       const response = await aasNamespace.getShells(id, { limit: 1 });
       if (response.status === HTTPCode.OK && response.data.result.length > 0) {
-        updateAssetAdministrationShell(response.data.result[0]);
+        await updateAssetAdministrationShell(response.data.result[0]);
       }
       else {
         errorHandlingStore.logErrorWithNotification(errorMessage);
@@ -164,9 +187,12 @@ export function useAasEditor({
     }
   };
 
-  function updateAssetAdministrationShell(data: AssetAdministrationShellResponseDto | undefined) {
+  async function updateAssetAdministrationShell(data: AssetAdministrationShellResponseDto | undefined) {
     assetAdministrationShell.value = data;
     displayName.value = data?.displayName.find(d => d.language === selectedLanguage)?.text ?? "";
+    if (data) {
+      await downloadDefaultThumbnails(data);
+    }
   }
 
   const pagination
@@ -604,6 +630,7 @@ export function useAasEditor({
   }
 
   return {
+    aasGalleryFiles,
     displayName,
     init,
     submodels,

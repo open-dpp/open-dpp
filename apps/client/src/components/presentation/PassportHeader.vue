@@ -1,31 +1,52 @@
 <script setup lang="ts">
-import Galleria from "primevue/galleria";
-import Image from "primevue/image";
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import emptyState from "../../assets/empty-state.png";
+import { useAasGallery } from "../../composables/aas-gallery.ts";
 import { useAasUtils } from "../../composables/aas-utils.ts";
+import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { usePassportStore } from "../../stores/passport";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
+import ProductImageGalleria from "../media/ProductImageGalleria.vue";
 
 const passportStore = usePassportStore();
 
 const { t, locale } = useI18n();
+const errorHandlingStore = useErrorHandlingStore();
 
 const aasUtils = useAasUtils({
   translate: t,
   selectedLanguage: convertLocaleToLanguage(locale.value),
 });
 
+const { files, downloadDefaultThumbnails } = useAasGallery({
+  translate: t,
+  errorHandlingStore,
+});
+
+const firstShell = computed(() => {
+  if (passportStore.shells && passportStore.shells.length > 0) {
+    return passportStore.shells[0];
+  }
+  return undefined;
+});
+
 const displayName = computed(() =>
-  passportStore.shells
-  && passportStore.shells.length > 0
-  && passportStore.shells[0]
-    ? aasUtils.parseDisplayNameFromAas(passportStore.shells[0])
+  firstShell.value
+    ? aasUtils.parseDisplayNameFromAas(firstShell.value)
     : undefined,
 );
 
 const productPassport = computed(() => passportStore.productPassport);
+
+watch(
+  () => firstShell.value,
+  async (newShell) => {
+    if (newShell) {
+      await downloadDefaultThumbnails(newShell);
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -51,7 +72,10 @@ const productPassport = computed(() => passportStore.productPassport);
             <dt v-if="displayName" class="text-sm font-medium text-gray-900">
               {{ t("common.name") }}
             </dt>
-            <dd v-if="displayName" class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+            <dd
+              v-if="displayName"
+              class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0"
+            >
               {{ displayName }}
             </dd>
           </div>
@@ -59,22 +83,9 @@ const productPassport = computed(() => passportStore.productPassport);
       </div>
     </div>
     <div
-      class="order-1 md:order-2 col-span-3 md:col-span-1 w-full max-w-80 mx-auto"
+      class="order-1 md:order-2 col-span-3 md:col-span-1 w-full mx-auto"
     >
-      <Galleria
-        class="mx-auto"
-        :value="[{ url: emptyState }]"
-        :num-visible="0"
-        :show-thumbnails="false"
-        thumbnails-position="bottom"
-      >
-        <template #item="slotProps">
-          <Image :src="slotProps.item.url" alt="Image" width="100%" preview />
-        </template>
-        <template #thumbnail="slotProps">
-          <Image :src="slotProps.item.url" width="40px" />
-        </template>
-      </Galleria>
+      <ProductImageGalleria v-model="files" auto-play />
     </div>
   </div>
 </template>
