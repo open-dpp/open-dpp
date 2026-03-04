@@ -76,7 +76,7 @@ async function applyQuery() {
     const metricQuery = {
       startDate: startDate!,
       endDate: endDate!,
-      templateId: selectedPassport.value.templateId,
+      templateId: selectedPassport.value.templateId ?? undefined,
       passportId: selectedPassport.value.id,
       valueKey: getViewDomain(),
       type: MeasurementType.PAGE_VIEWS,

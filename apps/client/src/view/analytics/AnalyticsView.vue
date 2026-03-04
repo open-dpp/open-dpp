@@ -10,7 +10,7 @@ import {
   Tooltip,
 } from "chart.js";
 
-import { computed, ref } from "vue";
+import { computed, onUnmounted, ref } from "vue";
 import { Line } from "vue-chartjs";
 import { useI18n } from "vue-i18n";
 import MetricQuery from "../../components/analytics/MetricQuery.vue";
@@ -50,6 +50,10 @@ ChartJS.register(
   Tooltip,
   Legend,
 );
+
+onUnmounted(() => {
+  analyticsStore.reset();
+});
 </script>
 
 <template>

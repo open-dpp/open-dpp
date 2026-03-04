@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto";
 import { Factory } from "fishery";
 import { v7 as uuidv7 } from "uuid";
 import {
-  FieldValue,
   MeasurementType,
   PassportMetricCreateProps,
   PassportMetricDbProps,
@@ -34,12 +33,3 @@ export const passportMetricFactory = Factory.define<PassportMetricDbProps>(
     values: [],
   }),
 );
-
-export const dataFieldFactory = Factory.define<FieldValue>(() => {
-  return {
-    value: 3,
-    dataSectionId: randomUUID(),
-    dataFieldId: randomUUID(),
-    row: 0,
-  };
-});

@@ -38,9 +38,9 @@ export class PassportMetricController {
 
     const passportMetric = PassportMetric.createPageView({
       source: {
-        templateId: passportMetadata.templateId,
         organizationId: passportMetadata.organizationId,
-        passportId: passportMetadata.modelId,
+        passportId: passportMetadata.passportId,
+        templateId: passportMetadata.templateId ?? null,
       },
       date: new Date(Date.now()),
       page: passportPageViewDto.page,
@@ -57,8 +57,8 @@ export class PassportMetricController {
     @Param("organizationId") organizationId: string,
     @Query("startDate") startDate: string,
     @Query("endDate") endDate: string,
-    @Query("templateId") templateId: string,
-    @Query("modelId") modelId: string,
+    @Query("templateId") templateId: string | undefined,
+    @Query("passportId") passportId: string,
     @Query("type") type: string,
     @Query("valueKey") valueKey: string,
     @Query("period") period: string,
@@ -68,7 +68,7 @@ export class PassportMetricController {
       startDate,
       endDate,
       templateId,
-      modelId,
+      passportId,
       type,
       valueKey,
       period,

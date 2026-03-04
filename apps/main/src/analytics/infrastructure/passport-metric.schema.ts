@@ -42,7 +42,7 @@ export class PassportMetricDoc extends Document {
   @Prop({ type: Object, required: true })
   source: {
     passportId: string;
-    templateId: string;
+    templateId: string | null;
     organizationId: string;
     type: MeasurementType;
   };

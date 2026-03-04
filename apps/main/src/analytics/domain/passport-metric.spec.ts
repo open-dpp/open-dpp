@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import {
-  dataFieldFactory,
   passportMetricCreateFactory,
   passportMetricFactory,
 } from "../fixtures/passport-metric.factory";
@@ -49,37 +48,6 @@ describe("passportMetric", () => {
     expect(passportMetric.values).toEqual([
       { key: page, row: null, value: 1 },
       { key: "http://example.com", row: null, value: 1 },
-    ]);
-  });
-
-  it("create metric for numeric data fields", () => {
-    const passportId = randomUUID();
-    const templateId = randomUUID();
-    const organizationId = randomUUID();
-    const field1row0 = dataFieldFactory.build({ value: 3 });
-    const field2 = dataFieldFactory.build({ value: 7 });
-    const field1row1 = dataFieldFactory.build({
-      ...field1row0,
-      value: 9,
-      row: 1,
-    });
-    const textFieldToIgnore = dataFieldFactory.build({
-      value: "text",
-    });
-
-    const dataFields = [field1row0, field2, field1row1, textFieldToIgnore];
-    const date = new Date();
-    const passportMetric = PassportMetric.createFieldAggregate({
-      source: { passportId, templateId, organizationId },
-      fieldValues: dataFields,
-      date,
-    });
-    expect(passportMetric).toBeInstanceOf(PassportMetric);
-    expect(passportMetric.source.type).toEqual(MeasurementType.FIELD_AGGREGATE);
-    expect(passportMetric.values).toEqual([
-      { key: field1row0.dataFieldId, row: 0, value: 3 },
-      { key: field2.dataFieldId, row: 0, value: 7 },
-      { key: field1row1.dataFieldId, row: 1, value: 9 },
     ]);
   });
 });
