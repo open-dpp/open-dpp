@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
+import { MediaModule } from "../media/media.module";
 import { AasRepository } from "./infrastructure/aas.repository";
 import { ConceptDescriptionRepository } from "./infrastructure/concept-description.repository";
 import {
@@ -22,6 +23,7 @@ import { SubmodelRegistryInitializer } from "./presentation/submodel-registry-in
       { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
     ]),
     OrganizationsModule,
+    MediaModule,
   ],
   providers: [
     SubmodelRegistryInitializer,

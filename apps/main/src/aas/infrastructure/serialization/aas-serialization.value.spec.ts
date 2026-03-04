@@ -10,6 +10,7 @@ import { Submodel } from "../../domain/submodel-base/submodel";
 import { SubmodelElementCollection } from "../../domain/submodel-base/submodel-element-collection";
 import { EnvironmentService } from "../../presentation/environment.service";
 import { AasRepository } from "../aas.repository";
+import { MediaService } from "../../../media/infrastructure/media.service";
 import { ConceptDescriptionRepository } from "../concept-description.repository";
 import { SubmodelRepository } from "../submodel.repository";
 import { AasSerializationService } from "./aas-serialization.service";
@@ -31,6 +32,7 @@ describe("export submodel value", () => {
         { provide: AasRepository, useValue: {} },
         { provide: SubmodelRepository, useValue: {} },
         { provide: ConceptDescriptionRepository, useValue: {} },
+        { provide: MediaService, useValue: { findByIds: jest.fn().mockResolvedValue([]) } },
       ],
     }).compile();
 

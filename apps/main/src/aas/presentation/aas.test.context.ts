@@ -36,6 +36,7 @@ import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard"
 import { OrganizationsModule } from "../../identity/organizations/organizations.module";
 import { UsersService } from "../../identity/users/application/services/users.service";
 import { UsersModule } from "../../identity/users/users.module";
+import { MediaModule } from "../../media/media.module";
 import { AasModule } from "../aas.module";
 
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
@@ -93,6 +94,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
         AuthModule,
         OrganizationsModule,
         UsersModule,
+        MediaModule,
         ...(metadataTestingModule.imports || []),
       ],
       providers: [

@@ -13,7 +13,9 @@ import { EnvironmentService } from "../../presentation/environment.service";
 import { AasRepository } from "../aas.repository";
 import { ConceptDescriptionRepository } from "../concept-description.repository";
 import { SubmodelRepository } from "../submodel.repository";
+import { MediaService } from "../../../media/infrastructure/media.service";
 import { aasExportSchemaJsonV1_0 } from "./aas-export-v1.schema";
+import { extractMediaIds } from "./extract-media-ids";
 import { mapAssetAdministrationShells, mapConceptDescriptions, mapSubmodels } from "./aas-import.mapper";
 
 export { DataTypeDefV1_0, KeyTypesV1_0, LanguageTypeSchemaV1_0 } from "./aas-export-v1.schema";
@@ -34,6 +36,7 @@ export class AasSerializationService {
     private readonly aasRepository: AasRepository,
     private readonly submodelRepository: SubmodelRepository,
     private readonly conceptDescriptionRepository: ConceptDescriptionRepository,
+    private readonly mediaService: MediaService,
   ) {}
 
   async exportPassport(passport: Passport): Promise<AasExportSchema> {
@@ -55,6 +58,8 @@ export class AasSerializationService {
   ): Promise<Passport | null> {
     try {
       const { shells, submodels, conceptDescriptions } = this.parseAndMapEnvironment(data);
+
+      await this.validateMediaOwnership(shells, submodels, organizationId);
 
       const environment = Environment.create({
         assetAdministrationShells: shells.map(aas => aas.id),
@@ -95,6 +100,8 @@ export class AasSerializationService {
     try {
       const { shells, submodels, conceptDescriptions, schema } = this.parseAndMapEnvironment(data);
 
+      await this.validateMediaOwnership(shells, submodels, organizationId);
+
       const environment = Environment.create({
         assetAdministrationShells: shells.map(aas => aas.id),
         submodels: submodels.map(s => s.id),
@@ -122,6 +129,28 @@ export class AasSerializationService {
         throw new BadRequestException("Invalid import data format");
       }
       throw error;
+    }
+  }
+
+  private async validateMediaOwnership(
+    shells: AssetAdministrationShell[],
+    submodels: Submodel[],
+    organizationId: string,
+  ): Promise<void> {
+    const mediaIds = extractMediaIds(shells, submodels);
+    if (mediaIds.length === 0) {
+      return;
+    }
+
+    const foundMedia = await this.mediaService.findByIds(mediaIds);
+    const foreignMedia = foundMedia.filter(
+      m => m.ownedByOrganizationId !== organizationId,
+    );
+
+    if (foreignMedia.length > 0) {
+      throw new BadRequestException(
+        "Import contains media references belonging to a different organization",
+      );
     }
   }
 
