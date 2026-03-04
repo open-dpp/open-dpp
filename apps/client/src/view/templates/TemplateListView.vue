@@ -1,10 +1,11 @@
 <script lang="ts" setup>
-import { Button, useToast } from "primevue";
+import { Button, FileUpload } from "primevue";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import DppTable from "../../components/DppTable.vue";
 import TemplateCreateDialog from "../../components/template/TemplateCreateDialog.vue";
+import { useExportImport } from "../../composables/export-import.ts";
 import { useTemplates } from "../../composables/templates.ts";
 import apiClient from "../../lib/api-client.ts";
 
@@ -36,63 +37,22 @@ const {
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
 });
 const { t } = useI18n();
-const toast = useToast();
 
 const createDialogVisible = ref(false);
-const templateFileInput = ref<HTMLInputElement | null>(null);
-const importingTemplate = ref<boolean>(false);
 
-async function exportTemplate(id: string) {
-  let url: string | undefined;
-  try {
+const { importing: importingTemplate, exportItem: exportTemplate, onFileSelect: onTemplateFileSelect } = useExportImport({
+  exportFn: async (id) => {
     const response = await apiClient.dpp.templates.export(id);
-    const dataStr = JSON.stringify(response.data, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    url = globalThis.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `template-${id}.json`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  }
-  catch (error) {
-    console.error("Failed to export template", error);
-    toast.add({ severity: "error", summary: t("notifications.error"), detail: t("common.templateExportFailed"), life: 5000 });
-  }
-  finally {
-    if (url) {
-      globalThis.URL.revokeObjectURL(url);
-    }
-  }
-}
-
-function triggerTemplateImport() {
-  templateFileInput.value?.click();
-}
-
-async function handleTemplateFileUpload(event: Event) {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
-  if (!file)
-    return;
-
-  importingTemplate.value = true;
-  try {
-    const json = JSON.parse(await file.text());
+    return response.data;
+  },
+  importFn: async (json) => {
     const response = await apiClient.dpp.templates.import(json);
     await router.push(`${route.path}/${response.data.id}`);
-  }
-  catch (error) {
-    console.error("Failed to import template", error);
-    toast.add({ severity: "error", summary: t("notifications.error"), detail: t("common.templateImportFailed"), life: 5000 });
-  }
-  finally {
-    if (templateFileInput.value)
-      templateFileInput.value.value = "";
-    importingTemplate.value = false;
-  }
-}
+  },
+  filenamePrefix: "template",
+  exportErrorKey: "common.templateExportFailed",
+  importErrorKey: "common.templateImportFailed",
+});
 
 onMounted(async () => {
   await init();
@@ -115,14 +75,15 @@ onMounted(async () => {
   >
     <template #headerActions>
       <Button :label="t('common.add')" @click="createDialogVisible = true" />
-      <Button :label="t('common.import')" :disabled="importingTemplate" @click="triggerTemplateImport" />
-      <input
-        ref="templateFileInput"
-        type="file"
+      <FileUpload
+        mode="basic"
+        :auto="true"
         accept=".json"
-        class="hidden"
-        @change="handleTemplateFileUpload"
-      >
+        :choose-label="t('common.import')"
+        :disabled="importingTemplate"
+        custom-upload
+        @select="onTemplateFileSelect"
+      />
     </template>
     <template #actions="{ passport, editItem }">
       <Button
