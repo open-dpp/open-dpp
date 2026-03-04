@@ -46,7 +46,7 @@ export class OrganizationsController {
   @Patch(":id")
   async updateOrganization(
     @Param("id") id: string,
-    @Body() body: { name: string; logo: string },
+    @Body() body: { name: string; logo?: string },
     @Headers() headers: Record<string, string>,
     @AuthSession() session: Session,
   ) {
