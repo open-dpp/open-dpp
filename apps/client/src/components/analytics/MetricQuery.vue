@@ -3,14 +3,13 @@ import type { PassportDto } from "@open-dpp/dto";
 import { MeasurementType } from "@open-dpp/api-client";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { DatePicker, Select } from "primevue";
+import { Button, DatePicker, Select } from "primevue";
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod/v4";
 import { VIEW_ROOT_URL } from "../../const";
 import { getNowInCurrentTimezone } from "../../lib/time.ts";
 import { TimeView, useAnalyticsStore } from "../../stores/analytics";
-import BaseButton from "../basics/BaseButton.vue";
 import LazyPassportSelect from "../passport/LazyPassportSelect.vue";
 
 dayjs.extend(utc);
@@ -130,8 +129,8 @@ async function applyQuery() {
       date-format="yy"
       @date-select="selectRange"
     />
-    <BaseButton variant="primary" :disabled="!isQueryValid" @click="applyQuery">
+    <Button :disabled="!isQueryValid" @click="applyQuery">
       {{ t("analytics.startAnalysis") }}
-    </BaseButton>
+    </Button>
   </div>
 </template>

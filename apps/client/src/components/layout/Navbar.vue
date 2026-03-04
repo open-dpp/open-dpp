@@ -6,7 +6,9 @@ import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import openDppLogo from "../../assets/logo-with-text.svg";
 import { authClient } from "../../auth-client.ts";
+import { useSubmodelTree } from "../../composables/submodel-tree.ts";
 import { useBrandingStore } from "../../stores/branding.ts";
+import { usePassportStore } from "../../stores/passport.ts";
 
 const { t } = useI18n();
 const route = useRoute();
@@ -30,7 +32,11 @@ function backToApp() {
   router.push("/");
 }
 
+const passportStore = usePassportStore();
+
+const { submodelTree } = useSubmodelTree(passportStore.submodels);
 const menuItems = computed(() => {
+  console.log(submodelTree.value);
   const items = [
     {
       label: t("presentation.toPass"),

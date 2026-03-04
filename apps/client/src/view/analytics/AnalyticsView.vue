@@ -57,7 +57,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div>
+  <div class="py-3 px-4">
     <MetricQuery />
     <div class="h-[400px]">
       <Line :data="data" :options="options" />
