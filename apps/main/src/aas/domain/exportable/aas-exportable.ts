@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
-import { PassportDtoSchema } from "@open-dpp/dto";
 import { DateTime } from "../../../lib/date-time";
 import { Passport } from "../../../passports/domain/passport";
 import { Template } from "../../../templates/domain/template";
+import { aasExportSchemaJsonV1_0 } from "../../infrastructure/serialization/aas-export-v1.schema";
 import { ExpandedEnvironment } from "../expanded-environment";
 
 export class AasExportable {
@@ -60,15 +60,15 @@ export class AasExportable {
     });
   }
 
-  static fromPlain(data: unknown) {
-    const parsed = PassportDtoSchema.parse(data);
+  static fromPlain(data: unknown, organizationId: string, templateId: string | null = null) {
+    const parsed = aasExportSchemaJsonV1_0.parse(data);
     return new AasExportable(
       parsed.id,
-      parsed.organizationId,
-      parsed.templateId,
+      organizationId,
+      templateId,
       ExpandedEnvironment.fromPlain(parsed.environment),
-      new Date(parsed.createdAt),
-      new Date(parsed.updatedAt),
+      parsed.createdAt,
+      parsed.updatedAt,
     );
   }
 
@@ -78,13 +78,7 @@ export class AasExportable {
       id: this.id,
       environment: {
         ...envPlain,
-        assetAdministrationShells: envPlain.assetAdministrationShells.map(shell => ({
-          ...shell,
-          assetInformation: {
-            ...shell.assetInformation,
-            defaultThumbnail: shell.assetInformation.defaultThumbnails?.[0] ?? null,
-          },
-        })),
+        assetAdministrationShells: envPlain.assetAdministrationShells,
       },
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),

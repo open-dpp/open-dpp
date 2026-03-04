@@ -247,10 +247,10 @@ export const aasExportSchemaJsonV1_0 = z.object({
           externalSubjectId: ReferenceSchemaV1_0.nullable(),
         })),
         assetType: z.string().nullable(),
-        defaultThumbnail: z.object({
+        defaultThumbnails: z.array(z.object({
           path: z.string(),
           contentType: z.string().nullable(),
-        }).nullable().optional(),
+        })),
       }),
       extensions: z.array(ExtensionSchemaV1_0),
       category: z.string().nullable(),
