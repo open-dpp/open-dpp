@@ -3,12 +3,14 @@ import { watchEffect } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Passport from "../../components/presentation/Passport.vue";
 import apiClient from "../../lib/api-client.ts";
+import { useAnalyticsStore } from "../../stores/analytics.ts";
 import { usePassportStore } from "../../stores/passport.ts";
 
 const route = useRoute();
 const router = useRouter();
 
 const passportStore = usePassportStore();
+const analyticsStore = useAnalyticsStore();
 
 async function loadPassport(id: string): Promise<boolean> {
   const response = await apiClient.dpp.uniqueProductIdentifiers.getPassport(id);
