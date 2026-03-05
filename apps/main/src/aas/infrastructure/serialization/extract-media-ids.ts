@@ -1,7 +1,7 @@
 import type { AssetAdministrationShell } from "../../domain/asset-adminstration-shell";
-import { File } from "../../domain/submodel-base/file";
-import type { ISubmodelElement } from "../../domain/submodel-base/submodel-base";
 import type { Submodel } from "../../domain/submodel-base/submodel";
+import type { ISubmodelElement } from "../../domain/submodel-base/submodel-base";
+import { File } from "../../domain/submodel-base/file";
 
 function collectFileValues(elements: ISubmodelElement[], ids: Set<string>): void {
   for (const element of elements) {

@@ -3,9 +3,9 @@ import { AssetAdministrationShell } from "../../domain/asset-adminstration-shell
 import { AssetInformation } from "../../domain/asset-information";
 import { Resource } from "../../domain/resource";
 import { File } from "../../domain/submodel-base/file";
+import { Property } from "../../domain/submodel-base/property";
 import { Submodel } from "../../domain/submodel-base/submodel";
 import { SubmodelElementCollection } from "../../domain/submodel-base/submodel-element-collection";
-import { Property } from "../../domain/submodel-base/property";
 import { extractMediaIds } from "./extract-media-ids";
 
 describe("extractMediaIds", () => {

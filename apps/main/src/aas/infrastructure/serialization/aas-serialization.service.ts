@@ -1,22 +1,24 @@
+import type { ISubmodelElement } from "../../domain/submodel-base/submodel-base";
 import type { AasExportSchema } from "./aas-export-v1.schema";
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { z } from "zod/v4";
 import { DbSessionOptions } from "../../../database/query-options";
+import { MediaService } from "../../../media/infrastructure/media.service";
 import { Passport } from "../../../passports/domain/passport";
 import { Template } from "../../../templates/domain/template";
 import { AssetAdministrationShell } from "../../domain/asset-adminstration-shell";
 import { ConceptDescription } from "../../domain/concept-description";
 import { Environment } from "../../domain/environment";
 import { AasExportable } from "../../domain/exportable/aas-exportable";
+import { File } from "../../domain/submodel-base/file";
 import { Submodel } from "../../domain/submodel-base/submodel";
 import { EnvironmentService } from "../../presentation/environment.service";
 import { AasRepository } from "../aas.repository";
 import { ConceptDescriptionRepository } from "../concept-description.repository";
 import { SubmodelRepository } from "../submodel.repository";
-import { MediaService } from "../../../media/infrastructure/media.service";
 import { aasExportSchemaJsonV1_0 } from "./aas-export-v1.schema";
-import { extractMediaIds } from "./extract-media-ids";
 import { mapAssetAdministrationShells, mapConceptDescriptions, mapSubmodels } from "./aas-import.mapper";
+import { extractMediaIds } from "./extract-media-ids";
 
 export { DataTypeDefV1_0, KeyTypesV1_0, LanguageTypeSchemaV1_0 } from "./aas-export-v1.schema";
 
@@ -59,7 +61,7 @@ export class AasSerializationService {
     try {
       const { shells, submodels, conceptDescriptions } = this.parseAndMapEnvironment(data);
 
-      await this.validateMediaOwnership(shells, submodels, organizationId);
+      await this.nullifyForeignMedia(shells, submodels, organizationId);
 
       const environment = Environment.create({
         assetAdministrationShells: shells.map(aas => aas.id),
@@ -100,7 +102,7 @@ export class AasSerializationService {
     try {
       const { shells, submodels, conceptDescriptions, schema } = this.parseAndMapEnvironment(data);
 
-      await this.validateMediaOwnership(shells, submodels, organizationId);
+      await this.nullifyForeignMedia(shells, submodels, organizationId);
 
       const environment = Environment.create({
         assetAdministrationShells: shells.map(aas => aas.id),
@@ -132,7 +134,7 @@ export class AasSerializationService {
     }
   }
 
-  private async validateMediaOwnership(
+  private async nullifyForeignMedia(
     shells: AssetAdministrationShell[],
     submodels: Submodel[],
     organizationId: string,
@@ -143,14 +145,34 @@ export class AasSerializationService {
     }
 
     const foundMedia = await this.mediaService.findByIds(mediaIds);
-    const foreignMedia = foundMedia.filter(
-      m => m.ownedByOrganizationId !== organizationId,
+    const foreignMediaIds = new Set(
+      foundMedia
+        .filter(m => m.ownedByOrganizationId !== organizationId)
+        .map(m => m.id),
     );
 
-    if (foreignMedia.length > 0) {
-      throw new BadRequestException(
-        "Import contains media references belonging to a different organization",
-      );
+    if (foreignMediaIds.size === 0) {
+      return;
+    }
+
+    for (const shell of shells) {
+      shell.assetInformation.defaultThumbnails
+        = shell.assetInformation.defaultThumbnails.filter(
+          t => !foreignMediaIds.has(t.path),
+        );
+    }
+
+    for (const submodel of submodels) {
+      this.nullifyForeignFileValues(submodel.getSubmodelElements(), foreignMediaIds);
+    }
+  }
+
+  private nullifyForeignFileValues(elements: ISubmodelElement[], foreignMediaIds: Set<string>): void {
+    for (const element of elements) {
+      if (element instanceof File && element.value && foreignMediaIds.has(element.value)) {
+        element.value = null;
+      }
+      this.nullifyForeignFileValues(element.getSubmodelElements(), foreignMediaIds);
     }
   }
 

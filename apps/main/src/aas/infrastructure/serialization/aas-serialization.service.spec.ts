@@ -1,22 +1,21 @@
 import { randomUUID } from "node:crypto";
 import { jest } from "@jest/globals";
-import { BadRequestException } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../../database/config";
 
-import { Media } from "../../../media/domain/media";
-import { MediaService } from "../../../media/infrastructure/media.service";
 import { OrganizationsModule } from "../../../identity/organizations/organizations.module";
 import { UsersModule } from "../../../identity/users/users.module";
+import { Media } from "../../../media/domain/media";
+import { MediaService } from "../../../media/infrastructure/media.service";
 import { Passport } from "../../../passports/domain/passport";
 import { PassportRepository } from "../../../passports/infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../../../passports/infrastructure/passport.schema";
-import { Template } from "../../../templates/domain/template";
 import { TemplateRepository } from "../../../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../../../templates/infrastructure/template.schema";
 import { Environment } from "../../domain/environment";
+import { registerSubmodelElementClasses } from "../../domain/submodel-base/register-submodel-element-classes";
 import { EnvironmentService } from "../../presentation/environment.service";
 import { AasRepository } from "../aas.repository";
 import { ConceptDescriptionRepository } from "../concept-description.repository";
@@ -27,7 +26,6 @@ import {
 import { ConceptDescriptionDoc, ConceptDescriptionSchema } from "../schemas/concept-description.schema";
 import { SubmodelDoc, SubmodelSchema } from "../schemas/submodel.schema";
 import { SubmodelRepository } from "../submodel.repository";
-import { registerSubmodelElementClasses } from "../../domain/submodel-base/register-submodel-element-classes";
 import { AasSerializationService } from "./aas-serialization.service";
 
 function buildExportData(overrides: {
@@ -228,7 +226,7 @@ describe("aasSerializationService", () => {
       expect(mockMediaService.findByIds).toHaveBeenCalledWith([mediaId]);
     });
 
-    it("should reject import when media belongs to a different organization", async () => {
+    it("should nullify thumbnail when media belongs to a different organization", async () => {
       const mediaId = randomUUID();
       const data = buildExportData({
         defaultThumbnails: [{ path: mediaId, contentType: "image/webp" }],
@@ -238,13 +236,16 @@ describe("aasSerializationService", () => {
         createMockMedia(mediaId, "other-org"),
       ]);
 
-      await expect(
-        aasSerializationService.importPassport(
-          data,
-          orgId,
-          async (p, options) => { await passportRepository.save(p, options); },
-        ),
-      ).rejects.toThrow(BadRequestException);
+      const passport = await aasSerializationService.importPassport(
+        data,
+        orgId,
+        async (p, options) => { await passportRepository.save(p, options); },
+      );
+
+      expect(passport).toBeDefined();
+      const loaded = await passportRepository.findOneOrFail(passport!.id);
+      const exported = await aasSerializationService.exportPassport(loaded);
+      expect(exported.environment.assetAdministrationShells[0].assetInformation.defaultThumbnails).toEqual([]);
     });
 
     it("should allow import when media ID does not exist in database", async () => {
@@ -264,7 +265,7 @@ describe("aasSerializationService", () => {
       expect(passport).toBeDefined();
     });
 
-    it("should validate File submodel element values", async () => {
+    it("should nullify File value when media belongs to a different organization", async () => {
       const fileMediaId = randomUUID();
       const data = buildExportData({
         submodelElements: [
@@ -289,13 +290,20 @@ describe("aasSerializationService", () => {
         createMockMedia(fileMediaId, "other-org"),
       ]);
 
-      await expect(
-        aasSerializationService.importPassport(
-          data,
-          orgId,
-          async (p, options) => { await passportRepository.save(p, options); },
-        ),
-      ).rejects.toThrow(BadRequestException);
+      const passport = await aasSerializationService.importPassport(
+        data,
+        orgId,
+        async (p, options) => { await passportRepository.save(p, options); },
+      );
+
+      expect(passport).toBeDefined();
+      const loaded = await passportRepository.findOneOrFail(passport!.id);
+      const exported = await aasSerializationService.exportPassport(loaded);
+      const fileElement = exported.environment.submodels[0].submodelElements[0];
+      expect(fileElement).toMatchObject({
+        idShort: "productImage",
+        value: null,
+      });
     });
   });
 
@@ -321,7 +329,7 @@ describe("aasSerializationService", () => {
       expect(template).toBeDefined();
     });
 
-    it("should reject template import when media belongs to a different organization", async () => {
+    it("should nullify thumbnail when media belongs to a different organization", async () => {
       const mediaId = randomUUID();
       const data = buildExportData({
         defaultThumbnails: [{ path: mediaId, contentType: "image/webp" }],
@@ -331,13 +339,16 @@ describe("aasSerializationService", () => {
         createMockMedia(mediaId, "other-org"),
       ]);
 
-      await expect(
-        aasSerializationService.importTemplate(
-          data,
-          orgId,
-          async (t, options) => { await templateRepository.save(t, options); },
-        ),
-      ).rejects.toThrow(BadRequestException);
+      const template = await aasSerializationService.importTemplate(
+        data,
+        orgId,
+        async (t, options) => { await templateRepository.save(t, options); },
+      );
+
+      expect(template).toBeDefined();
+      const loaded = await templateRepository.findOneOrFail(template.id);
+      const exported = await aasSerializationService.exportTemplate(loaded);
+      expect(exported.environment.assetAdministrationShells[0].assetInformation.defaultThumbnails).toEqual([]);
     });
   });
 
