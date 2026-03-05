@@ -36,7 +36,7 @@ ENV OPEN_DPP_BACKEND_MAIN=/app/dist/main.js
 ENV OPEN_DPP_FRONTEND_ROOT=/app/dist/client/dist
 
 COPY --chown=node:node --from=build /build/prod/main/dist /app/dist
-COPY --chown=node:node /apps/main/public /app/dist/public
+COPY --chown=node:node /apps/main/public /app/public
 COPY --chown=node:node --from=build /build/prod/main/node_modules /app/node_modules
 COPY --chown=node:node --from=build /build/apps/client/dist /app/dist/client/dist
 COPY --chown=node:node /docker/startup.sh /startup.sh
