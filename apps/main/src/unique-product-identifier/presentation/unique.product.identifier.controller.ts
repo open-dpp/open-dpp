@@ -1,6 +1,8 @@
-import { Controller, Get, NotFoundException, Param, Query } from "@nestjs/common";
+import { BadRequestException, Controller, Get, NotFoundException, Param, Query } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
+  BrandingDto,
+  BrandingDtoSchema,
   PassportDtoSchema,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
@@ -25,6 +27,7 @@ import {
 } from "../../aas/presentation/aas.decorators";
 import { IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
+import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
 import { AllowServiceAccess } from "../../identity/auth/presentation/decorators/allow-service-access.decorator";
 import { ItemsService } from "../../items/infrastructure/items.service";
@@ -47,6 +50,7 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
   private readonly uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService;
   private readonly environmentService: EnvironmentService;
   private readonly passportRepository: PassportRepository;
+  private readonly brandingRepository: BrandingRepository;
 
   constructor(
     modelsService: ModelsService,
@@ -55,20 +59,25 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
     passportRepository: PassportRepository,
     environmentService: EnvironmentService,
+    brandingRepository: BrandingRepository,
   ) {
     this.modelsService = modelsService;
     this.uniqueProductIdentifierService = uniqueProductIdentifierService;
     this.itemService = itemService;
     this.uniqueProductIdentifierApplicationService = uniqueProductIdentifierApplicationService;
+    this.brandingRepository = brandingRepository;
     this.passportRepository = passportRepository;
     this.environmentService = environmentService;
   }
 
   @Get("organizations/:orgaId/unique-product-identifiers/:id/reference")
   async getReferencedProductPassport(
-    @Param("orgaId") organizationId: string,
     @Param("id") id: string,
   ) {
+    return await this.getUPI(id);
+  }
+
+  private async getUPI(id: string) {
     const uniqueProductIdentifier
       = await this.uniqueProductIdentifierService.findOneOrFail(id);
 
@@ -100,6 +109,7 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
       return UniqueProductIdentifierReferenceDtoSchema.parse({
         id: passport.id,
         organizationId: passport.organizationId,
+        granularityLevel: "Model",
       });
     }
   }
@@ -126,10 +136,24 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     return PassportDtoSchema.parse((await this.loadPassport(id)));
   }
 
+  @AllowAnonymous()
+  @Get("/unique-product-identifiers/:id/branding")
+  async getPassportBranding(
+    @Param("id") id: string,
+  ): Promise<BrandingDto> {
+    const upi = await this.getUPI(id);
+
+    if (!upi) {
+      throw new BadRequestException();
+    }
+
+    return BrandingDtoSchema.parse((await this.brandingRepository.findOneByOrganizationId(upi.organizationId)).toPlain());
+  }
+
   @AllowServiceAccess()
   @Get("unique-product-identifiers/:id/metadata")
   async get(@Param("id") id: string) {
-    return this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifier(
+    return this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifierOld(
       id,
     );
   }

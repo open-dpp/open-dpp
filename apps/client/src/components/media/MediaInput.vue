@@ -1,159 +1,40 @@
 <script lang="ts" setup>
-import type { MediaInfo, MediaResult } from "./MediaInfo.interface";
-import { DocumentIcon, PencilIcon } from "@heroicons/vue/16/solid";
-import InputText from "primevue/inputtext";
-import { computed, onUnmounted, ref, useAttrs, watch } from "vue";
+import type { MediaInfo } from "./MediaInfo.interface";
+import { PencilIcon, TrashIcon } from "@heroicons/vue/16/solid";
+import { ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import apiClient from "../../lib/api-client";
-import { useIndexStore } from "../../stores";
-import { useMediaStore } from "../../stores/media";
-import { useNotificationStore } from "../../stores/notification";
+import { useMediaFile } from "../../composables/media-file";
 import MediaModal from "./MediaModal.vue";
 import MediaPreview from "./MediaPreview.vue";
 
-const props = defineProps<{
-  id: string;
+const { label } = defineProps<{
   label: string;
-  value: MediaResult | null;
 }>();
 
-const emits = defineEmits<{
-  (e: "clicked"): void;
-  (e: "update:value", value: MediaResult | null): void;
-  (e: "updateById", value: string | null): void;
-  (e: "selectFile", value: File | null): void;
-}>();
+const openFileModal = ref(false);
 
+const { download, mediaInfo } = useMediaFile();
+
+const model = defineModel<string>();
 const { t } = useI18n();
-const indexStore = useIndexStore();
-const notificationStore = useNotificationStore();
-const mediaStore = useMediaStore();
 
-const attrs = useAttrs() as Record<string, unknown>;
-
-const fileInput = ref<HTMLInputElement>();
-const selectedLocalFile = ref<File | null>(null);
-const selectedFile = ref<MediaInfo | null>(null);
-const uploadProgress = ref<number>(0);
-const openFileModal = ref<boolean>(false);
-
-const computedAttrs = computed(() => ({
-  ...attrs,
-}));
-
-const isImage = computed(() => {
-  if (!selectedLocalFile.value) {
-    return false;
-  }
-  return selectedLocalFile.value.type.startsWith("image/");
-});
-
-const fileUrl = ref<string | null>(null);
-
-const selectedFileSizeKB = computed(() => {
-  const size = selectedLocalFile.value?.size;
-  if (typeof size !== "number") {
-    return null;
-  }
-  return (size / 1024).toFixed(1);
-});
-
-function openFileInput() {
-  if (fileInput.value) {
-    fileInput.value.click();
-  }
-}
-
-function selectFile(event: Event) {
-  const target = event.target as HTMLInputElement;
-  if (target.files && target.files.length > 0) {
-    selectedLocalFile.value = target.files[0] as File;
-  }
-  else {
-    selectedLocalFile.value = null;
-  }
-}
-
-async function uploadFile() {
-  if (!selectedLocalFile.value) {
-    return;
-  }
-  try {
-    const mediaId = await apiClient.media.media.uploadOrganizationProfileMedia(
-      indexStore.selectedOrganization,
-      selectedLocalFile.value,
-      (progress: number) => (uploadProgress.value = progress),
-    );
-
-    const mediaResult = await mediaStore.fetchMedia(mediaId);
-    selectedFile.value = mediaResult.mediaInfo;
-
-    emits("updateById", mediaId);
-    emits("update:value", mediaResult);
-
-    notificationStore.addSuccessNotification(
-      t("models.form.file.uploadSuccess"),
-    );
-    // selectedLocalFile.value = null;
-    // await loadFile();
-  }
-  catch (error: unknown) {
-    console.error("Fehler beim Hochladen der Datei:", error);
-    notificationStore.addErrorNotification(t("models.form.file.uploadError"));
-    selectedLocalFile.value = null;
-  }
-  finally {
-    uploadProgress.value = 0;
-  }
-}
-
-async function updateFileFromModal(items: Array<MediaInfo>) {
-  if (items.length === 0) {
+function updateFileFromModal(files: MediaInfo[]) {
+  const id = files[0]?.id;
+  if (id) {
+    model.value = id;
     openFileModal.value = false;
-    return;
-  }
-  if (items.length > 0) {
-    const item = items[0] as MediaInfo;
-    emits("updateById", item.id);
-
-    try {
-      const result = await mediaStore.fetchMedia(item.id);
-      emits("update:value", result);
-      selectedFile.value = result.mediaInfo;
-    }
-    catch (e) {
-      console.error("Failed to fetch selected media", e);
-    }
-
-    openFileModal.value = false;
-    selectedLocalFile.value = null;
   }
 }
 
-onUnmounted(() => {
-  if (fileUrl.value) {
-    URL.revokeObjectURL(fileUrl.value);
-  }
-});
-
-watch(() => props.value, (newValue) => {
-  if (newValue) {
-    selectedLocalFile.value = null;
-  }
-}, { deep: true });
-
-watch(selectedLocalFile, (newFile) => {
-  if (fileUrl.value) {
-    URL.revokeObjectURL(fileUrl.value);
-  }
-  if (newFile) {
-    fileUrl.value = URL.createObjectURL(newFile);
-  }
-  else {
-    fileUrl.value = null;
-  }
-  emits("selectFile", newFile);
-});
+watch(
+  () => model.value,
+  (newModelValue) => {
+    if (newModelValue) {
+      download(newModelValue);
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -166,93 +47,41 @@ watch(selectedLocalFile, (newFile) => {
     style="position: relative"
   >
     <div
-      class="mb-1.5 flex flex-col items-start justify-start last:mb-0 formkit-wrapper"
+      class="mb-1.5 flex flex-col gap-2 items-start justify-start last:mb-0 formkit-wrapper"
     >
       <label
-        class="block text-neutral-900 text-sm mb-1 dark:text-neutral-100 formkit-label"
+        class="block text-sm font-medium leading-6 text-gray-900"
         for="input_1"
-      >{{ props.label }}</label>
-      <div
-        class="flex flex-row gap-4 p-2 w-full shadow-xs ring-1 ring-inset ring-gray-300 rounded-md border-0"
-      >
-        <InputText
-          v-if="value"
-          :value="value.mediaInfo.title"
-          :data-cy="id"
-          :name="id"
-          type="hidden"
-          v-bind="computedAttrs"
+      >{{ label }}</label>
+      <div class="flex w-full gap-4">
+        <MediaPreview
+          v-if="model && mediaInfo"
+          :media="mediaInfo"
+          class="grow h-48"
         />
-        <form>
-          <input
-            v-show="false"
-            ref="fileInput"
-            :placeholder="label"
-            class="cursor-pointer select-none py-1.5 text-gray-900 placeholder:text-gray-400 sm:text-sm sm:leading-6"
-            readonly
-            type="file"
-            @change="selectFile"
-            @mousedown.prevent="emits('clicked')"
-          >
-        </form>
-        <div v-if="selectedLocalFile" class="flex flex-row gap-4">
-          <img
-            v-if="isImage && fileUrl"
-            :alt="label"
-            :src="fileUrl"
-            class="max-w-24 max-h-24"
-          >
-          <DocumentIcon v-else class="w-24 h-24 text-gray-600" />
-          <div class="text-gray-600 my-auto">
-            {{ selectedLocalFile.name
-            }}<span v-if="selectedFileSizeKB">
-              ({{ selectedFileSizeKB }} KB)</span>
-          </div>
+        <div v-else class="text-gray-600 my-auto">
+          {{ t("models.form.file.noSelection") }}
+        </div>
+        <div class="flex flex-col justify-center gap-2 shrink">
           <button
-            class="bg-[#6BAD87] rounded-sm p-2 hover:cursor-pointer h-12 my-auto"
-            @click="openFileInput"
+            class="shrink bg-[#6BAD87]/50 rounded-sm p-2 hover:cursor-pointer"
+            @click.prevent="openFileModal = true"
           >
-            {{ t('models.form.file.change') }}
+            <PencilIcon class="h-4 w-4" />
           </button>
           <button
-            class="bg-[#6BAD87] rounded-sm p-2 hover:cursor-pointer h-12 my-auto"
-            @click="uploadFile"
+            v-if="model"
+            class="shrink bg-red-200 rounded-sm p-2 hover:cursor-pointer"
+            @click.prevent="model = undefined"
           >
-            {{ t('models.form.file.upload') }}
+            <TrashIcon class="h-4 w-4" />
           </button>
         </div>
-        <div v-else-if="value" class="max-w-full flex flex-col gap-4">
-          <div class="flex flex-row gap-4 w-full justify-between">
-            <MediaPreview :media="value.mediaInfo" class="grow h-48" />
-            <button
-              class="shrink bg-[#6BAD87]/50 rounded-sm p-2 hover:cursor-pointer my-auto"
-              @click.prevent="openFileModal = true"
-            >
-              <PencilIcon class="h-4 w-4" />
-            </button>
-          </div>
-          <div class="text-gray-600 text-sm my-auto max-w-full truncate">
-            {{ value.mediaInfo.title }}
-          </div>
-        </div>
-        <div v-else class="flex flex-row gap-4 w-full justify-between">
-          <div class="text-gray-600 my-auto">
-            {{ t('models.form.file.noSelection') }}
-          </div>
-          <div class="my-auto">
-            <button
-              class="bg-[#6BAD87]/50 rounded-sm p-2 hover:cursor-pointer my-auto"
-              @click.prevent="openFileModal = true"
-            >
-              <PencilIcon class="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-        <MediaModal
-          v-model="openFileModal"
-          @confirm="items => updateFileFromModal(items)"
-        />
       </div>
+      <MediaModal
+        v-model="openFileModal"
+        @confirm="(items) => updateFileFromModal(items)"
+      />
     </div>
   </div>
 </template>

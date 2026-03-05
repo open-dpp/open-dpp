@@ -73,13 +73,15 @@ export class OrganizationsService {
 
   async getOrganization(
     organizationId: string,
-    session: Session,
+    session?: Session,
   ): Promise<Organization | null> {
-    const member = await this.membersRepository.findOneByUserIdAndOrganizationId(session.userId, organizationId);
+    if (session) {
+      const member = await this.membersRepository.findOneByUserIdAndOrganizationId(session.userId, organizationId);
 
-    if (!member) {
-      this.logger.warn(`User ${session.userId} is not a member of organization ${organizationId}`);
-      throw new ForbiddenException();
+      if (!member) {
+        this.logger.warn("Authorization denied in getOrganization: requester is not a member");
+        throw new ForbiddenException();
+      }
     }
 
     return this.organizationsRepository.findOneById(organizationId);
