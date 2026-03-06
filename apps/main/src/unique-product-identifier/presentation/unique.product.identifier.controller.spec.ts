@@ -4,6 +4,10 @@ import { expect } from "@jest/globals";
 import { EnvService } from "@open-dpp/env";
 import request from "supertest";
 import { Environment } from "../../aas/domain/environment";
+import {
+  ConceptDescriptionDoc,
+  ConceptDescriptionSchema,
+} from "../../aas/infrastructure/schemas/concept-description.schema";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
@@ -68,6 +72,7 @@ describe("uniqueProductIdentifierController", () => {
       name: OldTemplateDoc.name,
       schema: TemplateSchema,
     },
+    { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
   ], UniqueProductIdentifierService);
 
   async function createPassportWithUniqueProductIdentifier(orgId: string) {

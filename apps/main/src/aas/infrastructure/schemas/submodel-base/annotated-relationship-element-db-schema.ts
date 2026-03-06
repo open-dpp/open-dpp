@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ReferenceDbSchema } from "../common/reference-db-schema";
 import { ExtensionDbSchema } from "../extension-db-schema";
 import { SubmodelBaseDbSchema } from "./submodel-base-db-schema";
+import { SubmodelElementDbSchema } from "./submodel-element-db-schema";
 
 export const AnnotatedRelationshipElementDbSchema = z.lazy(() =>
   AnnotatedRelationshipElementDbSchemaImpl(),
@@ -13,6 +14,6 @@ export function AnnotatedRelationshipElementDbSchemaImpl() {
     first: ReferenceDbSchema,
     second: ReferenceDbSchema,
     extensions: ExtensionDbSchema.array().default([]),
-    annotations: SubmodelBaseDbSchema.array().default([]),
+    annotations: SubmodelElementDbSchema.array().default([]),
   });
 };

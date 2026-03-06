@@ -33,7 +33,7 @@ export class JsonVisitor implements IVisitor<undefined, any> {
       idShort: submodelBase.idShort,
       displayName: submodelBase.displayName.map(lt => lt.accept(this)),
       description: submodelBase.description.map(lt => lt.accept(this)),
-      semanticId: submodelBase.semanticId?.accept(this),
+      semanticId: submodelBase.semanticId?.accept(this) ?? null,
       supplementalSemanticIds: submodelBase.supplementalSemanticIds.map(s => s.accept(this)),
       qualifiers: submodelBase.qualifiers.map(q => q.accept(this)),
       embeddedDataSpecifications: submodelBase.embeddedDataSpecifications.map(e => e.accept(this)),
@@ -47,7 +47,7 @@ export class JsonVisitor implements IVisitor<undefined, any> {
       extensions: element.extensions.map(e => e.accept(this)),
       valueType: element.valueType,
       value: element.value,
-      valueId: element.valueId?.accept(this),
+      valueId: element.valueId?.accept(this) ?? null,
     };
   }
 
@@ -61,7 +61,7 @@ export class JsonVisitor implements IVisitor<undefined, any> {
   visitReference(element: Reference): any {
     return {
       type: element.type,
-      referredSemanticId: element.referredSemanticId?.accept(this),
+      referredSemanticId: element.referredSemanticId?.accept(this) ?? null,
       keys: element.keys.map(key => key.accept(this)),
     };
   }
@@ -77,11 +77,11 @@ export class JsonVisitor implements IVisitor<undefined, any> {
     return {
       type: element.type,
       valueType: element.valueType,
-      semanticId: element.semanticId?.accept(this),
+      semanticId: element.semanticId?.accept(this) ?? null,
       supplementalSemanticIds: element.supplementalSemanticIds.map(s => s.accept(this)),
       kind: element.kind,
       value: element.value,
-      valueId: element.valueId?.accept(this),
+      valueId: element.valueId?.accept(this) ?? null,
     };
   }
 
@@ -94,7 +94,7 @@ export class JsonVisitor implements IVisitor<undefined, any> {
   visitExtension(element: Extension): any {
     return {
       name: element.name,
-      semanticId: element.semanticId?.accept(this),
+      semanticId: element.semanticId?.accept(this) ?? null,
       supplementalSemanticIds: element.supplementalSemanticIds.map(s => s.accept(this)),
       valueType: element.valueType,
       value: element.value,
@@ -108,7 +108,7 @@ export class JsonVisitor implements IVisitor<undefined, any> {
       modelType: KeyTypes.Submodel,
       id: element.id,
       extensions: element.extensions.map(e => e.accept(this)),
-      administration: element.administration?.accept(this),
+      administration: element.administration?.accept(this) ?? null,
       kind: element.kind,
       submodelElements: element.submodelElements.map(e => e.accept(this)),
     };
@@ -170,7 +170,7 @@ export class JsonVisitor implements IVisitor<undefined, any> {
       modelType: KeyTypes.MultiLanguageProperty,
       extensions: element.extensions.map(e => e.accept(this)),
       value: element.value.map(lt => lt.accept(this)),
-      valueId: element.valueId?.accept(this),
+      valueId: element.valueId?.accept(this) ?? null,
     };
   }
 
@@ -190,7 +190,7 @@ export class JsonVisitor implements IVisitor<undefined, any> {
       ...this.buildBase(element),
       modelType: KeyTypes.ReferenceElement,
       extensions: element.extensions.map(e => e.accept(this)),
-      value: element.value?.accept(this),
+      value: element.value?.accept(this) ?? null,
     };
   }
 
@@ -219,7 +219,7 @@ export class JsonVisitor implements IVisitor<undefined, any> {
       modelType: KeyTypes.SubmodelElementList,
       extensions: element.extensions.map(e => e.accept(this)),
       orderRelevant: element.orderRelevant,
-      semanticIdListElement: element.semanticIdListElement?.accept(this),
+      semanticIdListElement: element.semanticIdListElement?.accept(this) ?? null,
       valueTypeListElement: element.valueTypeListElement,
       typeValueListElement: element.typeValueListElement,
       value: element.value.map(e => e.accept(this)),
@@ -230,9 +230,9 @@ export class JsonVisitor implements IVisitor<undefined, any> {
     return {
       name: element.name,
       value: element.value,
-      semanticId: element.semanticId?.accept(this),
+      semanticId: element.semanticId?.accept(this) ?? null,
       supplementalSemanticIds: element.supplementalSemanticIds.map(s => s.accept(this)),
-      externalSubjectId: element.externalSubjectId?.accept(this),
+      externalSubjectId: element.externalSubjectId?.accept(this) ?? null,
     };
   }
 
@@ -245,9 +245,9 @@ export class JsonVisitor implements IVisitor<undefined, any> {
       idShort: element.idShort,
       displayName: element.displayName.map(lt => lt.accept(this)),
       description: element.description.map(lt => lt.accept(this)),
-      administration: element.administration?.accept(this),
+      administration: element.administration?.accept(this) ?? null,
       embeddedDataSpecifications: element.embeddedDataSpecifications.map(e => e.accept(this)),
-      derivedFrom: element.derivedFrom?.accept(this),
+      derivedFrom: element.derivedFrom?.accept(this) ?? null,
       submodels: element.submodels.map(s => s.accept(this)),
     };
   }
@@ -277,8 +277,8 @@ export class JsonVisitor implements IVisitor<undefined, any> {
       idShort: element.idShort,
       displayName: element.displayName.map(lt => lt.accept(this)),
       description: element.description.map(lt => lt.accept(this)),
-      semanticId: element.semanticId?.accept(this),
-      administration: element.administration?.accept(this),
+      semanticId: element.semanticId?.accept(this) ?? null,
+      administration: element.administration?.accept(this) ?? null,
       embeddedDataSpecifications: element.embeddedDataSpecifications.map(e => e.accept(this)),
       isCaseOf: element.isCaseOf.map(s => s.accept(this)),
     };

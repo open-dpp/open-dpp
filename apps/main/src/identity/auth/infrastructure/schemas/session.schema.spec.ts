@@ -1,18 +1,35 @@
+import type { Connection, Model } from "mongoose";
 import { expect } from "@jest/globals";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import { connect, Connection, Model } from "mongoose";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { Test, TestingModule } from "@nestjs/testing";
+import { EnvModule, EnvService } from "@open-dpp/env";
+import { generateMongoConfig } from "../../../../database/config";
 import { Session, SessionSchema } from "./session.schema";
 
 describe("sessionSchema", () => {
-  let mongod: MongoMemoryServer;
   let mongoConnection: Connection;
   let SessionModel: Model<Session>;
+  let module: TestingModule;
 
   beforeAll(async () => {
-    mongod = await MongoMemoryServer.create();
-    const uri = mongod.getUri();
-    mongoConnection = (await connect(uri)).connection;
+    module = await Test.createTestingModule({
+      imports: [
+        EnvModule.forRoot(),
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
+        MongooseModule.forFeature([
+          { name: Session.name, schema: SessionSchema },
+        ]),
+      ],
+    }).compile();
+    mongoConnection = module.get<Connection>(getConnectionToken());
     SessionModel = mongoConnection.model(Session.name, SessionSchema);
+
     await SessionModel.createIndexes();
   });
 
@@ -25,12 +42,8 @@ describe("sessionSchema", () => {
   });
 
   afterAll(async () => {
-    const collections = mongoConnection.collections;
-    for (const key in collections) {
-      await collections[key].drop();
-    }
-    await mongoConnection.close();
-    await mongod.stop();
+    await mongoConnection.dropDatabase();
+    await module.close();
   });
 
   it("should create a session document", async () => {

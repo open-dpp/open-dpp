@@ -36,6 +36,7 @@ import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard"
 import { OrganizationsModule } from "../../identity/organizations/organizations.module";
 import { UsersService } from "../../identity/users/application/services/users.service";
 import { UsersModule } from "../../identity/users/users.module";
+import { MediaModule } from "../../media/media.module";
 import { AasModule } from "../aas.module";
 
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
@@ -54,6 +55,7 @@ import { SubmodelElementCollection } from "../domain/submodel-base/submodel-elem
 import { SubmodelElementList } from "../domain/submodel-base/submodel-element-list";
 import { TableExtension } from "../domain/submodel-base/table-extension";
 import { AasRepository } from "../infrastructure/aas.repository";
+import { ConceptDescriptionRepository } from "../infrastructure/concept-description.repository";
 import {
   AssetAdministrationShellDoc,
   AssetAdministrationShellSchema,
@@ -92,11 +94,13 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
         AuthModule,
         OrganizationsModule,
         UsersModule,
+        MediaModule,
         ...(metadataTestingModule.imports || []),
       ],
       providers: [
         AasRepository,
         SubmodelRepository,
+        ConceptDescriptionRepository,
         {
           provide: APP_GUARD,
           useClass: AuthGuard,
@@ -259,9 +263,11 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
             value: "AuthorName",
           },
         ],
+        referredSemanticId: null,
         type: "ExternalReference",
       },
       value: "Fabrikvordenker:in ER28-0652",
+      valueId: null,
       valueType: "String",
       idShort: "AuthorName",
     });

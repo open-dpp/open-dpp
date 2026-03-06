@@ -29,6 +29,16 @@ export class AssetInformation implements IVisitable {
     );
   }
 
+  withDefaultThumbnails(defaultThumbnails: Resource[]): AssetInformation {
+    return new AssetInformation(
+      this.assetKind,
+      this.globalAssetId,
+      this.specificAssetIds,
+      this.assetType,
+      defaultThumbnails,
+    );
+  }
+
   static fromPlain(data: unknown): AssetInformation {
     const parsed = AssetInformationJsonSchema.parse(data);
     return new AssetInformation(

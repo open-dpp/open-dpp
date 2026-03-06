@@ -36,6 +36,6 @@ export class PassportTool {
   })
   async getProductPassport({ passportId }: { passportId: string }) {
     this.logger.log(`product-passport-tool is called with id: ${passportId}`);
-    return this.passportService.getProductPassport(passportId);
+    return this.passportService.getExpandedProductPassport(passportId);
   }
 }
