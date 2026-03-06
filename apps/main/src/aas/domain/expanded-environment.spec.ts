@@ -25,7 +25,9 @@ function createShell(id?: string, submodels: Submodel[] = []): AssetAdministrati
     id: id ?? randomUUID(),
     assetInformation: AssetInformation.create({ assetKind: "Type" as AssetKindType }),
   });
-  submodels.forEach(sm => shell.addSubmodel(sm));
+  submodels.forEach((sm) => {
+    shell.addSubmodel(sm);
+  });
   return shell;
 }
 
@@ -302,6 +304,9 @@ describe("expandedEnvironment", () => {
       expect(result.environment.assetAdministrationShells).toEqual([result.shells[0].id]);
       expect(result.environment.submodels).toEqual([result.submodels[0].id]);
       expect(result.environment.conceptDescriptions).toEqual(["cd-1"]);
+
+      expect(result.conceptDescriptions).toHaveLength(1);
+      expect(result.conceptDescriptions[0].id).toBe("cd-1");
     });
 
     it("should handle multiple shells and submodels", () => {
@@ -369,8 +374,10 @@ describe("expandedEnvironment", () => {
 
       expect(result.shells).toEqual([]);
       expect(result.submodels).toEqual([]);
+      expect(result.conceptDescriptions).toEqual([]);
       expect(result.environment.assetAdministrationShells).toEqual([]);
       expect(result.environment.submodels).toEqual([]);
+      expect(result.environment.conceptDescriptions).toEqual([]);
     });
 
     it("should roundtrip: fromPlain -> copyWithNewIds produces valid result", () => {

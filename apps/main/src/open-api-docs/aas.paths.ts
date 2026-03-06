@@ -48,6 +48,7 @@ const HTTPCode = {
   OK: 200,
   CREATED: 201,
   NO_CONTENT: 204,
+  BAD_REQUEST: 400,
 } as const;
 
 const ContentType = {
@@ -420,6 +421,21 @@ function createTemplatePaths() {
               [ContentType.JSON]: { schema: TemplateDtoSchema },
             },
           },
+          [HTTPCode.BAD_REQUEST]: {
+            description: "Invalid import data format",
+            content: {
+              [ContentType.JSON]: {
+                schema: {
+                  type: "object",
+                  properties: {
+                    statusCode: { type: "number", example: 400 },
+                    message: { type: "string" },
+                    error: { type: "string", example: "Bad Request" },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -487,6 +503,21 @@ function createPassportPaths() {
           [HTTPCode.CREATED]: {
             content: {
               [ContentType.JSON]: { schema: PassportDtoSchema },
+            },
+          },
+          [HTTPCode.BAD_REQUEST]: {
+            description: "Invalid import data format",
+            content: {
+              [ContentType.JSON]: {
+                schema: {
+                  type: "object",
+                  properties: {
+                    statusCode: { type: "number", example: 400 },
+                    message: { type: "string" },
+                    error: { type: "string", example: "Bad Request" },
+                  },
+                },
+              },
             },
           },
         },

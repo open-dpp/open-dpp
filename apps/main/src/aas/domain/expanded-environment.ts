@@ -21,6 +21,7 @@ export interface CopiedEnvironment {
   environment: Environment;
   shells: AssetAdministrationShell[];
   submodels: Submodel[];
+  conceptDescriptions: ConceptDescription[];
 }
 
 export class ExpandedEnvironment {
@@ -160,6 +161,7 @@ export class ExpandedEnvironment {
   /**
    * Copies all shells and submodels with fresh IDs, remapping submodel
    * references inside shells to point to the new submodel IDs.
+   * Concept descriptions are passed through unchanged (shared definitions).
    */
   copyWithNewIds(): CopiedEnvironment {
     const oldIdToNewSubmodel = new Map<string, Submodel>();
@@ -183,6 +185,7 @@ export class ExpandedEnvironment {
       }),
       shells: newShells,
       submodels: newSubmodels,
+      conceptDescriptions: this.conceptDescriptions,
     };
   }
 

@@ -190,7 +190,7 @@ export class JsonVisitor implements IVisitor<undefined, any> {
       ...this.buildBase(element),
       modelType: KeyTypes.ReferenceElement,
       extensions: element.extensions.map(e => e.accept(this)),
-      value: element.value?.accept(this),
+      value: element.value?.accept(this) ?? null,
     };
   }
 
@@ -219,7 +219,7 @@ export class JsonVisitor implements IVisitor<undefined, any> {
       modelType: KeyTypes.SubmodelElementList,
       extensions: element.extensions.map(e => e.accept(this)),
       orderRelevant: element.orderRelevant,
-      semanticIdListElement: element.semanticIdListElement?.accept(this),
+      semanticIdListElement: element.semanticIdListElement?.accept(this) ?? null,
       valueTypeListElement: element.valueTypeListElement,
       typeValueListElement: element.typeValueListElement,
       value: element.value.map(e => e.accept(this)),
