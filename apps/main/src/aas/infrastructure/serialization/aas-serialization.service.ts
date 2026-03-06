@@ -87,8 +87,12 @@ export class AasSerializationService {
     }
     catch (error) {
       if (error instanceof z.ZodError) {
-        console.error(error);
-        throw new BadRequestException("Invalid import data format");
+        const details = error.issues.map(
+          (i) => `${i.path.join(".")}: ${i.message}`,
+        );
+        throw new BadRequestException(
+          `Invalid import data format: ${details.join("; ")}`,
+        );
       }
       throw error;
     }
@@ -129,7 +133,12 @@ export class AasSerializationService {
     }
     catch (error) {
       if (error instanceof z.ZodError) {
-        throw new BadRequestException("Invalid import data format");
+        const details = error.issues.map(
+          (i) => `${i.path.join(".")}: ${i.message}`,
+        );
+        throw new BadRequestException(
+          `Invalid import data format: ${details.join("; ")}`,
+        );
       }
       throw error;
     }
