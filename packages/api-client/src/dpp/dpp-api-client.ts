@@ -53,7 +53,6 @@ export class DppApiClient implements IApiClient {
 
     this.uniqueProductIdentifiers = new UniqueProductIdentifiersNamespace(
       this.axiosInstance,
-      this.options.activeOrganizationId,
     )
     this.users = new UsersNamespace(this.axiosInstance)
   }

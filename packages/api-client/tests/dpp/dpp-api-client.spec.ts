@@ -26,11 +26,7 @@ import {
 } from './handlers/aas-integration'
 import { passport1, passport2 } from './handlers/passports'
 import { template1, template2 } from './handlers/templates'
-import {
-  uniqueProductIdentifierId,
-  uniqueProductIdentifierMetadata,
-  uniqueProductIdentifierReference,
-} from './handlers/unique-product-identifiers'
+
 import { server } from './msw.server'
 
 describe('apiClient', () => {
@@ -318,30 +314,6 @@ describe('apiClient', () => {
         { PCFCalculationMethod: 'GHG' },
       )
       expect(response.data).toEqual(SubmodelElementSchema.parse(propertyToAdd))
-    })
-  })
-
-  describe('unique-product-identifiers', () => {
-    it('should return reference of unique product identifier', async () => {
-      const sdk = new OpenDppClient({
-        dpp: { baseURL },
-      })
-      sdk.setActiveOrganizationId(activeOrganization.id)
-      const response = await sdk.dpp.uniqueProductIdentifiers.getReference(
-        uniqueProductIdentifierId,
-      )
-      expect(response.data).toEqual(uniqueProductIdentifierReference)
-    })
-
-    it('should get metadata of unique product identifier', async () => {
-      const sdk = new OpenDppClient({
-        dpp: { baseURL },
-      })
-      sdk.setActiveOrganizationId(activeOrganization.id)
-      const response = await sdk.dpp.uniqueProductIdentifiers.getMetadata(
-        uniqueProductIdentifierId,
-      )
-      expect(response.data).toEqual(uniqueProductIdentifierMetadata)
     })
   })
 

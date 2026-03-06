@@ -2,9 +2,8 @@ import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { ModelDocSchemaVersion } from "../../models/infrastructure/model.schema";
 import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
-import { UniqueProductIdentifierDoc } from "./unique-product-identifier.schema";
+import { UniqueProductIdentifierDoc, UniqueProductIdentifierSchemaVersion } from "./unique-product-identifier.schema";
 
 @Injectable()
 export class UniqueProductIdentifierService {
@@ -29,7 +28,7 @@ export class UniqueProductIdentifierService {
       await this.uniqueProductIdentifierDoc.findOneAndUpdate(
         { _id: uniqueProductIdentifier.uuid },
         {
-          _schemaVersion: ModelDocSchemaVersion.v1_0_0,
+          _schemaVersion: UniqueProductIdentifierSchemaVersion.v1_0_0,
           referenceId: uniqueProductIdentifier.referenceId,
         },
         {
@@ -68,14 +67,6 @@ export class UniqueProductIdentifierService {
       return undefined;
     }
     return this.convertToDomain(uniqueProductIdentifierDoc);
-  }
-
-  async findOneOrFailByReferencedId(referenceId: string) {
-    const uniqueProductIdentifier = await this.findOneByReferencedId(referenceId);
-    if (!uniqueProductIdentifier) {
-      throw new NotFoundInDatabaseException(UniqueProductIdentifier.name);
-    }
-    return uniqueProductIdentifier;
   }
 
   async findAllByReferencedId(referenceId: string) {
