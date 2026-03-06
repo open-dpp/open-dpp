@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { watchEffect } from "vue";
+import { ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Passport from "../../components/presentation/Passport.vue";
 import apiClient from "../../lib/api-client.ts";
@@ -11,6 +11,7 @@ const router = useRouter();
 
 const passportStore = usePassportStore();
 const analyticsStore = useAnalyticsStore();
+const passportAvailable = ref(false);
 
 async function loadPassport(id: string): Promise<boolean> {
   const response = await apiClient.dpp.uniqueProductIdentifiers.getPassport(id);
@@ -51,24 +52,32 @@ async function pushNotFound(permalink: string) {
   });
 }
 
-watchEffect(async () => {
-  const permalink = String(route.params.permalink);
-  let passportAvailable = false;
-  try {
-    passportAvailable = await loadPassport(permalink);
-  }
-  catch (e) {
-    console.error(e);
-  }
+watch(
+  () => String(route.params.permalink ?? ""),
+  async (permalink, _prev, onCleanup) => {
+    let cancelled = false;
+    onCleanup(() => {
+      cancelled = true;
+    });
 
-  if (!passportAvailable) {
-    await pushNotFound(permalink);
-  }
-});
+    passportAvailable.value = false;
+    try {
+      passportAvailable.value = await loadPassport(permalink);
+    }
+    catch (e) {
+      console.error(e);
+    }
+
+    if (!cancelled && !passportAvailable.value) {
+      await pushNotFound(permalink);
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
   <div class="flex flex-col items-center gap-5">
-    <Passport />
+    <Passport v-if="passportAvailable" />
   </div>
 </template>
