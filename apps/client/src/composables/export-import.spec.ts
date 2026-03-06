@@ -154,7 +154,7 @@ describe("useExportImport", () => {
       { json: "[1,2]", expectedType: "an array" },
       { json: "null", expectedType: "null" },
       { json: "42", expectedType: "number" },
-      { json: '"hello"', expectedType: "string" },
+      { json: "\"hello\"", expectedType: "string" },
     ])("should reject valid JSON that is $expectedType", async ({ json, expectedType }) => {
       const file = { name: "bad.json", text: () => Promise.resolve(json) };
       const event = { files: [file], originalEvent: new Event("select") } as unknown as FileUploadSelectEvent;

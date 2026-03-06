@@ -88,7 +88,7 @@ export class AasSerializationService {
     catch (error) {
       if (error instanceof z.ZodError) {
         const details = error.issues.map(
-          (i) => `${i.path.join(".")}: ${i.message}`,
+          i => `${i.path.join(".")}: ${i.message}`,
         );
         throw new BadRequestException(
           `Invalid import data format: ${details.join("; ")}`,
@@ -104,7 +104,7 @@ export class AasSerializationService {
     saveTemplate: (template: Template, options: DbSessionOptions) => Promise<void>,
   ): Promise<Template> {
     try {
-      const { shells, submodels, conceptDescriptions, schema } = this.parseAndMapEnvironment(data);
+      const { shells, submodels, conceptDescriptions } = this.parseAndMapEnvironment(data);
 
       const { shells: sanitizedShells, submodels: sanitizedSubmodels }
         = await this.nullifyForeignMedia(shells, submodels, organizationId);
@@ -134,7 +134,7 @@ export class AasSerializationService {
     catch (error) {
       if (error instanceof z.ZodError) {
         const details = error.issues.map(
-          (i) => `${i.path.join(".")}: ${i.message}`,
+          i => `${i.path.join(".")}: ${i.message}`,
         );
         throw new BadRequestException(
           `Invalid import data format: ${details.join("; ")}`,
@@ -175,7 +175,7 @@ export class AasSerializationService {
       ),
     );
 
-    const sanitizedSubmodels = submodels.map(submodel => {
+    const sanitizedSubmodels = submodels.map((submodel) => {
       const plain = submodel.toPlain();
       return Submodel.fromPlain({
         ...plain,
