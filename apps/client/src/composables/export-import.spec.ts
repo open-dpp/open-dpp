@@ -150,6 +150,27 @@ describe("useExportImport", () => {
       expect(importFn).not.toHaveBeenCalled();
     });
 
+    it.each([
+      { json: "[1,2]", expectedType: "an array" },
+      { json: "null", expectedType: "null" },
+      { json: "42", expectedType: "number" },
+      { json: '"hello"', expectedType: "string" },
+    ])("should reject valid JSON that is $expectedType", async ({ json, expectedType }) => {
+      const file = { name: "bad.json", text: () => Promise.resolve(json) };
+      const event = { files: [file], originalEvent: new Event("select") } as unknown as FileUploadSelectEvent;
+
+      const { onFileSelect } = useExportImport(defaultOptions);
+      await onFileSelect(event);
+
+      expect(importFn).not.toHaveBeenCalled();
+      expect(logErrorWithNotification).toHaveBeenCalledWith(
+        "common.importFailed",
+        expect.objectContaining({
+          message: expect.stringContaining(expectedType),
+        }),
+      );
+    });
+
     it("should reject concurrent imports", async () => {
       let resolveImport: () => void;
       importFn.mockImplementation(() => new Promise<void>((resolve) => {
