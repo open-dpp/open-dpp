@@ -313,19 +313,24 @@ export class EnvironmentService {
     saveEntity: (options: DbSessionOptions) => Promise<void>,
   ): Promise<void> {
     const session = await this.connection.startSession();
+    const options = { session };
     try {
-      await session.withTransaction(async () => {
-        for (const conceptDescription of conceptDescriptions) {
-          await this.conceptDescriptionRepository.save(conceptDescription, { session });
-        }
-        for (const submodel of submodels) {
-          await this.submodelRepository.save(submodel, { session });
-        }
-        for (const shell of shells) {
-          await this.aasRepository.save(shell, { session });
-        }
-        await saveEntity({ session });
-      });
+      session.startTransaction();
+      for (const conceptDescription of conceptDescriptions) {
+        await this.conceptDescriptionRepository.save(conceptDescription, options);
+      }
+      for (const submodel of submodels) {
+        await this.submodelRepository.save(submodel, options);
+      }
+      for (const shell of shells) {
+        await this.aasRepository.save(shell, options);
+      }
+      await saveEntity(options);
+      await session.commitTransaction();
+    }
+    catch (e) {
+      await session.abortTransaction();
+      throw e;
     }
     finally {
       await session.endSession();
