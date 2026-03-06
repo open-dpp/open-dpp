@@ -52,7 +52,7 @@ export class OrganizationsRepository {
         data: {
           name: organization.name,
           slug: organization.slug,
-          logo: organization.logo ?? undefined,
+          logo: organization.logo ?? "",
           metadata: organization.metadata,
         },
         organizationId: organization.id,

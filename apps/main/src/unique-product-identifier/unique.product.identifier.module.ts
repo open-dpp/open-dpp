@@ -7,6 +7,7 @@ import { ConceptDescriptionDoc, ConceptDescriptionSchema } from "../aas/infrastr
 import { SubmodelDoc, SubmodelSchema } from "../aas/infrastructure/schemas/submodel.schema";
 import { SubmodelRepository } from "../aas/infrastructure/submodel.repository";
 import { EnvironmentService } from "../aas/presentation/environment.service";
+import { BrandingRepository } from "../branding/infrastructure/branding.repository";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { UsersModule } from "../identity/users/users.module";
 import { ItemDoc, ItemSchema } from "../items/infrastructure/item.schema";
@@ -73,6 +74,7 @@ import { UniqueProductIdentifierController } from "./presentation/unique.product
     TemplateService,
     ItemsService,
     PassportRepository,
+    BrandingRepository,
   ],
   exports: [
     UniqueProductIdentifierService,

@@ -9,6 +9,7 @@ import {
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
+import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
 import { GranularityLevel } from "../../data-modelling/domain/granularity-level";
 import { Item } from "../../items/domain/item";
 import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
@@ -41,6 +42,7 @@ describe("uniqueProductIdentifierController", () => {
     providers: [
       UniqueProductIdentifierService,
       PassportRepository,
+      BrandingRepository,
       PassportService,
       ModelsService,
       UniqueProductIdentifierService,

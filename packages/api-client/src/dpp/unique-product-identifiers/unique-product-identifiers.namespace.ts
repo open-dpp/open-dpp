@@ -1,4 +1,4 @@
-import type { PassportDto } from '@open-dpp/dto'
+import type { BrandingDto, PassportDto } from '@open-dpp/dto'
 import type { AxiosInstance } from 'axios'
 import type {
   UniqueProductIdentifierDto,
@@ -32,6 +32,12 @@ export class UniqueProductIdentifiersNamespace {
   public async getPassport(uuid: string) {
     return this.axiosInstance.get<PassportDto>(
       `/unique-product-identifiers/${uuid}/passport`,
+    )
+  }
+
+  public async getBranding(uuid: string) {
+    return await this.axiosInstance.get<BrandingDto>(
+      `/unique-product-identifiers/${uuid}/branding`,
     )
   }
 
