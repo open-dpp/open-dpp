@@ -41,9 +41,10 @@ describe("useExportImport", () => {
 
       const clickSpy = vi.fn();
       const removeSpy = vi.fn();
+      const setAttributeSpy = vi.fn();
       vi.spyOn(document, "createElement").mockReturnValue({
         href: "",
-        setAttribute: vi.fn(),
+        setAttribute: setAttributeSpy,
         click: clickSpy,
         remove: removeSpy,
       } as unknown as HTMLElement);
@@ -54,6 +55,7 @@ describe("useExportImport", () => {
 
       expect(exportFn).toHaveBeenCalledWith("abc-123");
       expect(createObjectURL).toHaveBeenCalled();
+      expect(setAttributeSpy).toHaveBeenCalledWith("download", "test-entity-abc-123.json");
       expect(clickSpy).toHaveBeenCalled();
       expect(removeSpy).toHaveBeenCalled();
       expect(revokeObjectURL).toHaveBeenCalledWith("blob:mock-url");
