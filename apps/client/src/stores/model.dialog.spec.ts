@@ -1,6 +1,6 @@
 import { waitFor } from "@testing-library/vue";
 import { createPinia, setActivePinia } from "pinia";
-import { expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useModelDialogStore } from "./modal.dialog";
 
 describe("modelDialogStore", () => {
