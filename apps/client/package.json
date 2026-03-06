@@ -53,6 +53,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/vue": "^8.1.0",
     "@types/dompurify": "^3.2.0",
+    "@types/jest": "^30.0.0",
     "@types/lodash": "^4.17.21",
     "@vitejs/plugin-vue": "^6.0.3",
     "@vitejs/plugin-vue-jsx": "^5.1.3",
