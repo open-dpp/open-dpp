@@ -378,9 +378,6 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
       activeOrganizationId,
       async (t, options) => { await this.templateRepository.save(t, options); },
     );
-    if (!template) {
-      throw new BadRequestException("Template cant be imported");
-    }
     return TemplateDtoSchema.parse(template.toPlain());
   }
 

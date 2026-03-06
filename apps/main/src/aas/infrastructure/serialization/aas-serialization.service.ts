@@ -56,7 +56,7 @@ export class AasSerializationService {
     data: any,
     organizationId: string,
     savePassport: (passport: Passport, options: DbSessionOptions) => Promise<void>,
-  ): Promise<Passport | null> {
+  ): Promise<Passport> {
     try {
       const { shells, submodels, conceptDescriptions } = this.parseAndMapEnvironment(data);
 
@@ -118,8 +118,8 @@ export class AasSerializationService {
       const template = Template.create({
         organizationId,
         environment,
-        createdAt: schema.createdAt,
-        updatedAt: schema.updatedAt,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       await this.environmentService.persistImportedEnvironment(

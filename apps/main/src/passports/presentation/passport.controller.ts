@@ -462,9 +462,6 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
         await this.uniqueProductIdentifierService.save(upid, options);
       },
     );
-    if (!passport) {
-      throw new BadRequestException("Passport cant be imported");
-    }
     return PassportDtoSchema.parse(passport.toPlain());
   }
 

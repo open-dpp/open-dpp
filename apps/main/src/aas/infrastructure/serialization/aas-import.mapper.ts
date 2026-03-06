@@ -1,6 +1,7 @@
 import type { AasExportSchema } from "./aas-export-v1.schema";
 import { randomUUID } from "node:crypto";
 import { DataTypeDef, KeyTypes, Language, ModellingKind, QualifierKind, ReferenceTypes } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
 import { AssetAdministrationShell } from "../../domain/asset-adminstration-shell";
 import { AssetInformation } from "../../domain/asset-information";
@@ -88,12 +89,18 @@ export function mapEmbeddedDataSpecifications(
 }
 
 export function mapQualifier(q: QualifierSchema): Qualifier {
+  if (q.valueType == null) {
+    throw new ValueError(`Qualifier "${q.type}" is missing required field "valueType"`);
+  }
+  if (q.kind == null) {
+    throw new ValueError(`Qualifier "${q.type}" is missing required field "kind"`);
+  }
   return Qualifier.create({
     type: q.type,
-    valueType: DataTypeDef[q.valueType!],
+    valueType: DataTypeDef[q.valueType],
     semanticId: mapNullableReference(q.semanticId),
     supplementalSemanticIds: mapReferences(q.supplementalSemanticIds),
-    kind: QualifierKind[q.kind!],
+    kind: QualifierKind[q.kind],
     value: q.value,
     valueId: mapNullableReference(q.valueId),
   });
