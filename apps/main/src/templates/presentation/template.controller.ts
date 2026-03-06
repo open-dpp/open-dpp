@@ -8,7 +8,7 @@ import type {
   TemplateCreateDto,
   ValueRequestDto,
 } from "@open-dpp/dto";
-import { BadRequestException, Body, Controller, Get, Post } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Post } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellResponseDto,
@@ -27,6 +27,8 @@ import {
 import { ZodValidationPipe } from "@open-dpp/exception";
 
 import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
+
+import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import {
   ApiDeleteColumn,
   ApiDeleteRow,
@@ -83,8 +85,11 @@ import { TemplateRepository } from "../infrastructure/template.repository";
 
 @Controller("/templates")
 export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoints, IAasModifyEndpoints, IAasDeleteEndpoints {
-  constructor(private readonly environmentService: EnvironmentService, private readonly templateRepository: TemplateRepository) {
-  }
+  constructor(
+    private readonly environmentService: EnvironmentService,
+    private readonly templateRepository: TemplateRepository,
+    private readonly aasSerializationService: AasSerializationService,
+  ) {}
 
   @ApiGetShells()
   async getShells(
@@ -347,6 +352,33 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     }
     const template = Template.create({ organizationId: activeOrganizationId, environment });
     return TemplateDtoSchema.parse((await this.templateRepository.save(template)).toPlain());
+  }
+
+  @Get("/:id/export")
+  async exportTemplate(
+    @IdParam() id: string,
+    @AuthSession() session: Session,
+  ) {
+    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    return await this.aasSerializationService.exportTemplate(template);
+  }
+
+  @Post("/import")
+  @HttpCode(HttpStatus.CREATED)
+  async importTemplate(
+    @Body() body: any,
+    @AuthSession() session: Session,
+  ) {
+    const activeOrganizationId = session.activeOrganizationId?.toString();
+    if (!activeOrganizationId) {
+      throw new BadRequestException("activeOrganizationId is required in session");
+    }
+    const template = await this.aasSerializationService.importTemplate(
+      body,
+      activeOrganizationId,
+      async (t, options) => { await this.templateRepository.save(t, options); },
+    );
+    return TemplateDtoSchema.parse(template.toPlain());
   }
 
   @Get()

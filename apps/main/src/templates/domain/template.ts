@@ -2,9 +2,14 @@ import { randomUUID } from "node:crypto";
 import { TemplateDtoSchema } from "@open-dpp/dto";
 import { IDigitalProductPassportIdentifiable } from "../../aas/domain/digital-product-passport-identifiable";
 import { Environment } from "../../aas/domain/environment";
+import { ExpandedEnvironmentPlain } from "../../aas/domain/expanded-environment";
 import { IPersistable } from "../../aas/domain/persistable";
 import { DateTime } from "../../lib/date-time";
 import { HasCreatedAt } from "../../lib/has-created-at";
+
+export type ExpandedTemplatePlain = Omit<ReturnType<Template["toPlain"]>, "environment"> & {
+  environment: ExpandedEnvironmentPlain;
+};
 
 export class Template implements IPersistable, IDigitalProductPassportIdentifiable, HasCreatedAt {
   private constructor(

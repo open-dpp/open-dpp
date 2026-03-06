@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import type { SharedDppDto } from "@open-dpp/dto";
 import { AxiosError } from "axios";
-import { Button, useToast } from "primevue";
+import { Button, FileUpload, useToast } from "primevue";
 import { onMounted, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import DppTable from "../../components/DppTable.vue";
 import PassportCreateDialog from "../../components/passport/PassportCreateDialog.vue";
+import { useExportImport } from "../../composables/export-import";
 import { usePagination } from "../../composables/pagination";
 import { usePassports } from "../../composables/passports";
 import axiosIns from "../../lib/axios";
@@ -14,6 +15,8 @@ import { useErrorHandlingStore } from "../../stores/error.handling";
 
 const route = useRoute();
 const router = useRouter();
+const toast = useToast();
+const { t } = useI18n();
 
 function changeQueryParams(newQuery: Record<string, string | undefined>) {
   router.replace({
@@ -40,13 +43,29 @@ const {
   changeQueryParams,
 });
 
-const toast = useToast();
-
-const { t } = useI18n();
 const createDialog = useTemplateRef("createDialog");
-const fileInput = useTemplateRef("fileInput");
 
 const errorHandlingStore = useErrorHandlingStore();
+
+const { importing, exportItem: exportPassport, onFileSelect: onPassportFileSelect } = useExportImport({
+  exportFn: async (id) => {
+    const response = await axiosIns.get(`/passports/${id}/export`);
+    return response.data;
+  },
+  importFn: async (json) => {
+    await axiosIns.post("/passports/import", json);
+    resetCursor();
+    toast.add({
+      severity: "success",
+      summary: t("notifications.success"),
+      detail: t("common.importSuccess"),
+      life: 5000,
+    });
+  },
+  filenamePrefix: "passport",
+  exportErrorKey: "common.exportFailed",
+  importErrorKey: "common.importFailed",
+});
 
 function newPassport() {
   createDialog.value?.open();
@@ -88,72 +107,6 @@ async function forwardToPresentationChat(item: SharedDppDto) {
   }
 }
 
-async function exportPassport(id: string) {
-  let url: string | undefined;
-  try {
-    const response = await axiosIns.get(`/passports/${id}/export`);
-    const data = JSON.stringify(response.data, null, 2);
-    const blob = new Blob([data], { type: "application/json" });
-    url = globalThis.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `passport-${id}.json`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  }
-  catch (error) {
-    console.error("Failed to export passport", error);
-    toast.add({
-      severity: "error",
-      summary: t("notifications.error"),
-      detail: t("common.exportFailed"),
-      life: 5000,
-    });
-  }
-  finally {
-    if (url) {
-      globalThis.URL.revokeObjectURL(url);
-    }
-  }
-}
-
-function triggerImport() {
-  fileInput.value?.click();
-}
-
-async function handleFileUpload(event: Event) {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
-  if (!file)
-    return;
-
-  try {
-    const json = JSON.parse(await file.text());
-    await axiosIns.post("/passports/import", json);
-    resetCursor();
-    toast.add({
-      severity: "success",
-      summary: t("notifications.success"),
-      detail: t("common.importSuccess"),
-      life: 5000,
-    });
-  }
-  catch (error) {
-    console.error("Failed to import passport", error);
-    toast.add({
-      severity: "error",
-      summary: t("notifications.error"),
-      detail: t("common.importFailed"),
-      life: 5000,
-    });
-  }
-  finally {
-    if (fileInput.value)
-      fileInput.value.value = "";
-  }
-}
-
 onMounted(async () => {
   await nextPage();
 });
@@ -174,17 +127,15 @@ onMounted(async () => {
   >
     <template #headerActions>
       <Button :label="t('common.add')" @click="newPassport" />
-      <Button
-        :label="t('common.import')"
-        @click="triggerImport"
-      />
-      <input
-        ref="fileInput"
-        type="file"
+      <FileUpload
+        mode="basic"
+        :auto="true"
         accept=".json"
-        class="hidden"
-        @change="handleFileUpload"
-      >
+        :choose-label="t('common.import')"
+        :disabled="importing"
+        custom-upload
+        @select="onPassportFileSelect"
+      />
     </template>
     <template #actions="{ passport, editItem }">
       <Button
