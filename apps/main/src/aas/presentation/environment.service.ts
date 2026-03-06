@@ -135,24 +135,21 @@ export class EnvironmentService {
 
   async addSubmodelToEnvironment(environment: Environment, submodelPlain: SubmodelRequestDto, saveEnvironment: (options: DbSessionOptions) => Promise<void>): Promise<SubmodelResponseDto> {
     const session = await this.connection.startSession();
-    const options = { session };
+    let result: SubmodelResponseDto;
     try {
-      session.startTransaction();
-      const submodel = environment.addSubmodel(Submodel.fromPlain(submodelPlain));
-      await saveEnvironment(options);
-      await this.submodelRepository.save(submodel, options);
+      await session.withTransaction(async () => {
+        const options = { session };
+        const submodel = environment.addSubmodel(Submodel.fromPlain(submodelPlain));
+        await saveEnvironment(options);
+        await this.submodelRepository.save(submodel, options);
 
-      const aas = await this.getFirstAssetAdministrationShell(environment);
-      aas.addSubmodel(submodel);
-      await this.aasRepository.save(aas, options);
+        const aas = await this.getFirstAssetAdministrationShell(environment);
+        aas.addSubmodel(submodel);
+        await this.aasRepository.save(aas, options);
 
-      const result = SubmodelJsonSchema.parse(submodel.toPlain());
-      await session.commitTransaction();
-      return result;
-    }
-    catch (e) {
-      await session.abortTransaction();
-      throw e;
+        result = SubmodelJsonSchema.parse(submodel.toPlain());
+      });
+      return result!;
     }
     finally {
       await session.endSession();
@@ -161,21 +158,17 @@ export class EnvironmentService {
 
   async deleteSubmodelFromEnvironment(environment: Environment, submodelId: string, saveEnvironment: (options: DbSessionOptions) => Promise<void>): Promise<void> {
     const session = await this.connection.startSession();
-    const options = { session };
     try {
-      session.startTransaction();
-      const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-      await this.submodelRepository.deleteById(submodel.id, options);
-      const aas = await this.getFirstAssetAdministrationShell(environment);
-      aas.deleteSubmodel(submodel);
-      await this.aasRepository.save(aas, options);
-      environment.deleteSubmodel(submodel);
-      await saveEnvironment(options);
-      await session.commitTransaction();
-    }
-    catch (e) {
-      await session.abortTransaction();
-      throw e;
+      await session.withTransaction(async () => {
+        const options = { session };
+        const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+        await this.submodelRepository.deleteById(submodel.id, options);
+        const aas = await this.getFirstAssetAdministrationShell(environment);
+        aas.deleteSubmodel(submodel);
+        await this.aasRepository.save(aas, options);
+        environment.deleteSubmodel(submodel);
+        await saveEnvironment(options);
+      });
     }
     finally {
       await session.endSession();
@@ -313,24 +306,20 @@ export class EnvironmentService {
     saveEntity: (options: DbSessionOptions) => Promise<void>,
   ): Promise<void> {
     const session = await this.connection.startSession();
-    const options = { session };
     try {
-      session.startTransaction();
-      for (const conceptDescription of conceptDescriptions) {
-        await this.conceptDescriptionRepository.save(conceptDescription, options);
-      }
-      for (const submodel of submodels) {
-        await this.submodelRepository.save(submodel, options);
-      }
-      for (const shell of shells) {
-        await this.aasRepository.save(shell, options);
-      }
-      await saveEntity(options);
-      await session.commitTransaction();
-    }
-    catch (e) {
-      await session.abortTransaction();
-      throw e;
+      await session.withTransaction(async () => {
+        const options = { session };
+        for (const conceptDescription of conceptDescriptions) {
+          await this.conceptDescriptionRepository.save(conceptDescription, options);
+        }
+        for (const submodel of submodels) {
+          await this.submodelRepository.save(submodel, options);
+        }
+        for (const shell of shells) {
+          await this.aasRepository.save(shell, options);
+        }
+        await saveEntity(options);
+      });
     }
     finally {
       await session.endSession();
