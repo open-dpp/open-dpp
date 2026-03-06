@@ -60,7 +60,7 @@ watch(
           class="grow h-48"
         />
         <div v-else class="text-gray-600 my-auto">
-          {{ t("models.form.file.noSelection") }}
+          {{ t("file.noSelection") }}
         </div>
         <div class="flex flex-col justify-center gap-2 shrink">
           <button

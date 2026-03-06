@@ -6,7 +6,7 @@ import {
 } from "@open-dpp/dto";
 import { templatesPlainFactory } from "@open-dpp/testing";
 import { createPinia, setActivePinia } from "pinia";
-import { expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { useTemplates } from "./templates.ts";
 

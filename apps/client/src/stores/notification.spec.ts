@@ -1,6 +1,6 @@
 import { createPinia, setActivePinia } from "pinia";
 import { v4 as uuidv4 } from "uuid";
-import { expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { NotificationType, useNotificationStore } from "./notification";
 
 describe("notification", () => {
