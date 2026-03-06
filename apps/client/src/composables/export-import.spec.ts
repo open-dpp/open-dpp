@@ -150,6 +150,26 @@ describe("useExportImport", () => {
       expect(importFn).not.toHaveBeenCalled();
     });
 
+    it("should reject concurrent imports", async () => {
+      let resolveImport: () => void;
+      importFn.mockImplementation(() => new Promise<void>((resolve) => {
+        resolveImport = resolve;
+      }));
+
+      const { onFileSelect, importing } = useExportImport(defaultOptions);
+      const event = createFileSelectEvent(JSON.stringify({ data: "test" }));
+
+      const firstImport = onFileSelect(event);
+      expect(importing.value).toBe(true);
+
+      await onFileSelect(event);
+      expect(importFn).toHaveBeenCalledTimes(1);
+
+      resolveImport!();
+      await firstImport;
+      expect(importing.value).toBe(false);
+    });
+
     it("should do nothing when no file is selected", async () => {
       const { onFileSelect } = useExportImport(defaultOptions);
       const event = { files: [], originalEvent: new Event("select") } as unknown as FileUploadSelectEvent;

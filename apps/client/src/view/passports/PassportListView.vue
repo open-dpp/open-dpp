@@ -47,7 +47,7 @@ const createDialog = useTemplateRef("createDialog");
 
 const errorHandlingStore = useErrorHandlingStore();
 
-const { exportItem: exportPassport, onFileSelect: onPassportFileSelect } = useExportImport({
+const { importing, exportItem: exportPassport, onFileSelect: onPassportFileSelect } = useExportImport({
   exportFn: async (id) => {
     const response = await axiosIns.get(`/passports/${id}/export`);
     return response.data;
@@ -132,6 +132,7 @@ onMounted(async () => {
         :auto="true"
         accept=".json"
         :choose-label="t('common.import')"
+        :disabled="importing"
         custom-upload
         @select="onPassportFileSelect"
       />

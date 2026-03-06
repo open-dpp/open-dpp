@@ -48,14 +48,22 @@ export function useExportImport(options: ExportImportOptions): ExportImportRetur
   }
 
   async function onFileSelect(event: FileUploadSelectEvent) {
+    if (importing.value)
+      return;
+
     const file = event.files?.[0] as File | undefined;
     if (!file)
       return;
 
     importing.value = true;
     try {
-      const json = JSON.parse(await file.text());
-      await options.importFn(json);
+      const json: unknown = JSON.parse(await file.text());
+      if (typeof json !== "object" || json === null || Array.isArray(json)) {
+        throw new Error(
+          `Invalid import file "${file.name}": expected a JSON object but got ${json === null ? "null" : Array.isArray(json) ? "an array" : typeof json}`,
+        );
+      }
+      await options.importFn(json as Record<string, unknown>);
     }
     catch (error) {
       logErrorWithNotification(t(options.importErrorKey), error);

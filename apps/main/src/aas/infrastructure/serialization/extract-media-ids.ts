@@ -4,11 +4,13 @@ import type { ISubmodelElement } from "../../domain/submodel-base/submodel-base"
 import { File } from "../../domain/submodel-base/file";
 
 function collectFileValues(elements: ISubmodelElement[], ids: Set<string>): void {
-  for (const element of elements) {
+  const stack: ISubmodelElement[] = [...elements];
+  while (stack.length > 0) {
+    const element = stack.pop()!;
     if (element instanceof File && element.value) {
       ids.add(element.value);
     }
-    collectFileValues(element.getSubmodelElements(), ids);
+    stack.push(...element.getSubmodelElements());
   }
 }
 
