@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import enZod from "zod-vue-i18n/locales/v4/en.json";
 import { makeZodI18nMap } from "zod-vue-i18n/v4";
-import { LAST_SELECTED_LANGUAGE } from "../const.ts";
+import { DEFAULT_LANGUAGE, LAST_SELECTED_LANGUAGE } from "../const.ts";
 import deDE from "./de-DE.json";
 import enUS from "./en-US.json";
 import deZod from "./zod.de-DE.json";
@@ -17,7 +17,7 @@ const storedLocale = localStorage.getItem(LAST_SELECTED_LANGUAGE);
 
 export const i18n = createI18n<[MessageSchema], "en-US" | "de-DE">({
   legacy: false,
-  locale: storedLocale ?? undefined,
+  locale: storedLocale ?? DEFAULT_LANGUAGE ?? undefined,
   fallbackLocale: "en-US",
   messages: {
     "en-US": { ...enUS, ...enZod },
