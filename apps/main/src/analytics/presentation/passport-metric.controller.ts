@@ -32,7 +32,7 @@ export class PassportMetricController {
     passportPageViewDto: PassportPageViewDto,
   ) {
     const passportMetadata
-      = await this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifier(
+      = await this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifierOrFail(
         passportPageViewDto.uuid,
       );
 

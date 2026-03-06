@@ -25,7 +25,7 @@ import { waitFor } from "@testing-library/vue";
 import { mount } from "@vue/test-utils";
 import { omit } from "lodash";
 import { v4 as uuid4 } from "uuid";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent } from "vue";
 import AssetAdministrationShellEditor from "../components/aas/AssetAdministrationShellEditor.vue";
 import FileCreateEditor from "../components/aas/FileCreateEditor.vue";
@@ -84,11 +84,12 @@ vi.mock("../lib/api-client", () => ({
 }));
 
 const { fetchMediaMock } = vi.hoisted(() => ({
-  fetchMediaMock: vi.fn<
-    (
-      mediaId: string,
-    ) => Promise<{ blob: Blob | null; mediaInfo: { id: string } }>
-  >(),
+  fetchMediaMock:
+    vi.fn<
+      (
+        mediaId: string,
+      ) => Promise<{ blob: Blob | null; mediaInfo: { id: string } }>
+    >(),
 }));
 
 vi.mock("../stores/media.ts", () => ({
@@ -114,7 +115,7 @@ describe("aasEditor composable", () => {
     mountedWrappers.push(wrapper);
     return {
       wrapper,
-      ...wrapper.vm.api as ReturnType<typeof useAasEditor>,
+      ...(wrapper.vm.api as ReturnType<typeof useAasEditor>),
     };
   }
 
@@ -151,7 +152,11 @@ describe("aasEditor composable", () => {
     ],
     description: [],
     embeddedDataSpecifications: [],
-    assetInformation: { assetKind: AssetKind.Instance, specificAssetIds: [], defaultThumbnails: [] },
+    assetInformation: {
+      assetKind: AssetKind.Instance,
+      specificAssetIds: [],
+      defaultThumbnails: [],
+    },
     extensions: [],
     submodels: [
       {

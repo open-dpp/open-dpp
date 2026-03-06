@@ -1,5 +1,5 @@
 import { mount } from "@vue/test-utils";
-import { expect, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, nextTick } from "vue";
 import { generatedErrorHandlingStoreMock } from "../testing-utils/error-handling-store-mock.ts";
 import { useMediaFileCollection } from "./media-file";

@@ -1,6 +1,6 @@
 import { waitFor } from "@testing-library/vue";
 import { createPinia, setActivePinia } from "pinia";
-import { expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LAST_SELECTED_ORGANIZATION_ID_KEY } from "../const";
 import apiClient from "../lib/api-client";
 import { useIndexStore } from "./index";

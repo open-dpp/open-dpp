@@ -10,7 +10,7 @@ import {
   SubmodelElementSchema,
 } from "@open-dpp/dto";
 import { waitFor } from "@testing-library/vue";
-import { expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import ColumnCreateEditor from "../components/aas/ColumnCreateEditor.vue";
 import ColumnEditor from "../components/aas/ColumnEditor.vue";
 import SubmodelElementListEditor from "../components/aas/SubmodelElementListEditor.vue";

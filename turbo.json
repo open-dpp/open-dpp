@@ -24,14 +24,6 @@
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "cache": false
     },
-    "cypress:headless": {
-      "inputs": ["$TURBO_DEFAULT$", ".env"],
-      "cache": false
-    },
-    "cypress": {
-      "inputs": ["$TURBO_DEFAULT$", ".env"],
-      "cache": false
-    },
     "e2e-test": {
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "cache": false

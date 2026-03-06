@@ -20,10 +20,6 @@ import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard"
 import { OrganizationsModule } from "../../identity/organizations/organizations.module";
 import { UsersService } from "../../identity/users/application/services/users.service";
 import { UsersModule } from "../../identity/users/users.module";
-import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
-import { ItemsService } from "../../items/infrastructure/items.service";
-import { ModelDoc, ModelSchema } from "../../models/infrastructure/model.schema";
-import { ModelsService } from "../../models/infrastructure/models.service";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../../passports/infrastructure/passport.schema";
@@ -69,14 +65,6 @@ describe("passportMetricController", () => {
             schema: UniqueProductIdentifierSchema,
           },
           {
-            name: ItemDoc.name,
-            schema: ItemSchema,
-          },
-          {
-            name: ModelDoc.name,
-            schema: ModelSchema,
-          },
-          {
             name: PassportDoc.name,
             schema: PassportSchema,
           },
@@ -90,8 +78,6 @@ describe("passportMetricController", () => {
         UniqueProductIdentifierService,
         UniqueProductIdentifierApplicationService,
         PassportRepository,
-        ModelsService,
-        ItemsService,
         {
           provide: APP_GUARD,
           useClass: AuthGuard,
