@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { NameAndDescriptionModificationSchema } from '../common/basic-json-schema'
 import { LanguageTextJsonSchema } from '../common/language-text-json-schema'
 import { QualifierJsonSchema } from '../common/qualifier-json-schema'
 import { ReferenceJsonSchema } from '../common/reference-json-schema'
@@ -15,8 +16,4 @@ export const SubmodelBaseJsonSchema = z.object({
   embeddedDataSpecifications: z.array(EmbeddedDataSpecificationJsonSchema).default([]),
 })
 
-export const SubmodelBaseModificationSchema = z.object({
-  idShort: z.string(),
-  displayName: LanguageTextJsonSchema.array().optional(),
-  description: LanguageTextJsonSchema.array().optional(),
-})
+export const SubmodelBaseModificationSchema = NameAndDescriptionModificationSchema.extend({ idShort: z.string() })

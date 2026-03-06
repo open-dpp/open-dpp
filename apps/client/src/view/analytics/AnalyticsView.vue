@@ -10,11 +10,12 @@ import {
   Tooltip,
 } from "chart.js";
 
-import { computed, ref } from "vue";
+import { computed, onUnmounted, ref } from "vue";
 import { Line } from "vue-chartjs";
 import { useI18n } from "vue-i18n";
 import MetricQuery from "../../components/analytics/MetricQuery.vue";
 import { useAnalyticsStore } from "../../stores/analytics";
+import ContentViewWrapper from "../ContentViewWrapper.vue";
 
 const analyticsStore = useAnalyticsStore();
 const { t } = useI18n();
@@ -50,13 +51,17 @@ ChartJS.register(
   Tooltip,
   Legend,
 );
+
+onUnmounted(() => {
+  analyticsStore.reset();
+});
 </script>
 
 <template>
-  <div>
+  <ContentViewWrapper>
     <MetricQuery />
     <div class="h-[400px]">
       <Line :data="data" :options="options" />
     </div>
-  </div>
+  </ContentViewWrapper>
 </template>

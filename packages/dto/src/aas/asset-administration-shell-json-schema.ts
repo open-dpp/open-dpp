@@ -1,7 +1,8 @@
 import { z } from 'zod'
 import { PagingMetadataDtoSchema } from '../shared/pagination.dto'
 import { AdministrativeInformationJsonSchema } from './administrative-information-json-schema'
-import { AssetInformationJsonSchema } from './asset-information-json-schema'
+import { AssetInformationJsonSchema, AssetInformationModificationSchema } from './asset-information-json-schema'
+import { NameAndDescriptionModificationSchema } from './common/basic-json-schema'
 import { LanguageTextJsonSchema } from './common/language-text-json-schema'
 import { ReferenceJsonSchema } from './common/reference-json-schema'
 import { EmbeddedDataSpecificationJsonSchema } from './embedded-data-specification-json-schema'
@@ -29,4 +30,20 @@ export const AssetAdministrationShellPaginationResponseDtoSchema = z
   .meta({ id: 'AssetAdministrationShells' })
 export type AssetAdministrationShellPaginationResponseDto = z.infer<
   typeof AssetAdministrationShellPaginationResponseDtoSchema
+>
+export const AssetAdministrationShellCreateDtoSchema = AssetAdministrationShellJsonSchema.pick({
+  displayName: true,
+  description: true,
+})
+export type AssetAdministrationShellCreateDto = z.input<typeof AssetAdministrationShellCreateDtoSchema>
+export type AssetAdministrationShellResponseDto = z.infer<typeof AssetAdministrationShellJsonSchema>
+
+export type AssetAdministrationShellRequestDto = z.input<typeof AssetAdministrationShellJsonSchema>
+
+export const AssetAdministrationShellModificationSchema = NameAndDescriptionModificationSchema.extend({
+  assetInformation: AssetInformationModificationSchema.optional(),
+})
+
+export type AssetAdministrationShellModificationDto = z.infer<
+  typeof AssetAdministrationShellModificationSchema
 >

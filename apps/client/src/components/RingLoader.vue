@@ -42,12 +42,6 @@ const spinnerStyle = computed(() => {
 </template>
 
 <style>
-.v-spinner .v-ring {
-}
-
-.v-spinner .v-ring1 {
-}
-
 .v-spinner .v-ring2 {
   -webkit-animation: v-ringRightRotate 2s 0s infinite linear;
   animation: v-ringRightRotate 2s 0s infinite linear;

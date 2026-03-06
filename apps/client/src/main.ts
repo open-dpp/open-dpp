@@ -73,6 +73,7 @@ async function startApp() {
   }
 
   app.use(router);
+  await router.isReady();
   app.mount("#app");
 }
 

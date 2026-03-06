@@ -96,7 +96,7 @@ describe("OrganizationsRepository", () => {
       body: expect.objectContaining({
         data: expect.objectContaining({
           name: "Test Org Updated",
-          logo: undefined,
+          logo: "",
         }),
         organizationId: organizationObjectId.toString(),
       }),

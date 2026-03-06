@@ -60,7 +60,9 @@ export class UniqueProductIdentifierService {
 
   async findOneByReferencedId(referenceId: string) {
     const uniqueProductIdentifierDoc = await this.uniqueProductIdentifierDoc
-      .findOne({ referenceId })
+      .findOne({ referenceId: {
+        $eq: referenceId,
+      } })
       .sort({ createdAt: -1 });
     if (!uniqueProductIdentifierDoc) {
       return undefined;
@@ -78,7 +80,9 @@ export class UniqueProductIdentifierService {
 
   async findAllByReferencedId(referenceId: string) {
     const uniqueProductIdentifiers = await this.uniqueProductIdentifierDoc.find(
-      { referenceId },
+      { referenceId: {
+        $eq: referenceId,
+      } },
     );
     return uniqueProductIdentifiers.map(permalink =>
       this.convertToDomain(permalink),

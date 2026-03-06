@@ -23,7 +23,7 @@ async function onSubSectionClick(subSectionId: string, rowIndex: number) {
 </script>
 
 <template>
-  <div class="-mx-4 mt-8 sm:-mx-0">
+  <div class="-mx-4 mt-8 sm:mx-0">
     <DataTable :value="dataSection.dataValues" table-style="min-width: 50rem">
       <Column>
         <template #body="{ index }">

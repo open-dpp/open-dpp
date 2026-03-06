@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { DataTypeDef, DataTypeDefEnum } from '../enums/data-type-def'
+import { LanguageTextJsonSchema } from './language-text-json-schema'
 
 export const ValueTypeSchema = z.string().overwrite(
   (value) => {
@@ -17,3 +18,10 @@ export const ValueTypeSchema = z.string().overwrite(
     return key
   },
 ).pipe(DataTypeDefEnum)
+
+export const NameAndDescriptionModificationSchema = z.object({
+  displayName: LanguageTextJsonSchema.array().optional(),
+  description: LanguageTextJsonSchema.array().optional(),
+})
+
+export type NameAndDescriptionModificationDto = z.infer<typeof NameAndDescriptionModificationSchema>

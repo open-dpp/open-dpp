@@ -1,5 +1,10 @@
 import type { Connection } from "mongoose";
-import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import { z } from "zod";
 import { AssetAdministrationShell } from "../../../aas/domain/asset-adminstration-shell";
@@ -7,11 +12,18 @@ import { Environment } from "../../../aas/domain/environment";
 import { Submodel } from "../../../aas/domain/submodel-base/submodel";
 import { AasRepository } from "../../../aas/infrastructure/aas.repository";
 import { SubmodelRepository } from "../../../aas/infrastructure/submodel.repository";
+import {
+  DigitalProductPassportIdentifiableEnvironmentPopulateDecorator,
+} from "../../../aas/presentation/digital-product-passport-identifiable-environment-populate-decorator";
 import { EnvironmentService } from "../../../aas/presentation/environment.service";
+import { UniqueProductIdentifierService } from "../../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { Passport } from "../../domain/passport";
 import { PassportRepository } from "../../infrastructure/passport.repository";
 
-export type ExpandedPassport = Omit<ReturnType<Passport["toPlain"]>, "environment"> & {
+export type ExpandedPassport = Omit<
+  ReturnType<Passport["toPlain"]>,
+  "environment"
+> & {
   environment: {
     assetAdministrationShells: Record<string, any>[];
     submodels: Record<string, any>[];
@@ -19,14 +31,16 @@ export type ExpandedPassport = Omit<ReturnType<Passport["toPlain"]>, "environmen
   };
 };
 
-const ExpandedPassportSchema = z.object({
-  organizationId: z.string().min(1, "organizationId is required"),
-  environment: z.object({
-    assetAdministrationShells: z.array(z.record(z.string(), z.any())),
-    submodels: z.array(z.record(z.string(), z.any())),
-    conceptDescriptions: z.array(z.string()).optional(),
-  }),
-}).passthrough();
+const ExpandedPassportSchema = z
+  .object({
+    organizationId: z.string().min(1, "organizationId is required"),
+    environment: z.object({
+      assetAdministrationShells: z.array(z.record(z.string(), z.any())),
+      submodels: z.array(z.record(z.string(), z.any())),
+      conceptDescriptions: z.array(z.string()).optional(),
+    }),
+  })
+  .passthrough();
 
 @Injectable()
 export class PassportService {
@@ -37,19 +51,24 @@ export class PassportService {
     private readonly environmentService: EnvironmentService,
     private readonly aasRepository: AasRepository,
     private readonly submodelRepository: SubmodelRepository,
+    private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
     @InjectConnection() private readonly connection: Connection,
-  ) { }
+  ) {}
 
   async getProductPassport(passportId: string) {
     this.logger.log(`getProductPassport called with id: ${passportId}`);
 
     const passport = await this.passportRepository.findOne(passportId);
     if (!passport) {
-      throw new NotFoundException(`Product passport with id ${passportId} not found`);
+      throw new NotFoundException(
+        `Product passport with id ${passportId} not found`,
+      );
     }
 
     if (!passport.environment) {
-      this.logger.warn(`Passport ${passportId} has no environment; returning empty shells and submodels`);
+      this.logger.warn(
+        `Passport ${passportId} has no environment; returning empty shells and submodels`,
+      );
       return {
         ...passport.toPlain(),
         environment: {
@@ -60,12 +79,9 @@ export class PassportService {
       };
     }
 
-    const environmentPlain = await this.environmentService.getFullEnvironmentAsPlain(passport.environment);
-
-    return {
-      ...passport.toPlain(),
-      environment: environmentPlain,
-    };
+    const extendEnvironmentDecorator = new DigitalProductPassportIdentifiableEnvironmentPopulateDecorator(passport, this.aasRepository, this.submodelRepository);
+    await extendEnvironmentDecorator.populate({ assetAdministrationShells: true, submodels: true, ignoreMissing: true });
+    return extendEnvironmentDecorator.toPlain();
   }
 
   async exportPassport(passportId: string): Promise<ExpandedPassport> {
@@ -98,7 +114,9 @@ export class PassportService {
     const validationResult = ExpandedPassportSchema.safeParse(data);
 
     if (!validationResult.success) {
-      throw new BadRequestException(`Invalid passport data: ${validationResult.error.message}`);
+      throw new BadRequestException(
+        `Invalid passport data: ${validationResult.error.message}`,
+      );
     }
 
     // Re-doing the map logic with ID tracking
@@ -124,7 +142,9 @@ export class PassportService {
 
       const relatedNewSubmodels: Submodel[] = [];
       for (const ref of oldShell.submodels) {
-        const key = ref.keys.find(k => k.type === "Submodel" || k.type === "GlobalReference");
+        const key = ref.keys.find(
+          k => k.type === "Submodel" || k.type === "GlobalReference",
+        );
 
         if (!key) {
           if (ref.keys.length > 0) {
@@ -163,6 +183,8 @@ export class PassportService {
       updatedAt: data.updatedAt,
     });
 
+    const upid = newPassport.createUniqueProductIdentifier();
+
     // Persist all entities in a single transaction to avoid partial commits
     const session = await this.connection.startSession();
     try {
@@ -174,6 +196,7 @@ export class PassportService {
           await this.aasRepository.save(shell, { session });
         }
         await this.passportRepository.save(newPassport, { session });
+        await this.uniqueProductIdentifierService.save(upid);
       });
     }
     finally {
@@ -183,7 +206,9 @@ export class PassportService {
     return newPassport;
   }
 
-  private async loadEnvironment(passport: Passport): Promise<{ shells: AssetAdministrationShell[]; submodels: Submodel[] }> {
+  private async loadEnvironment(
+    passport: Passport,
+  ): Promise<{ shells: AssetAdministrationShell[]; submodels: Submodel[] }> {
     const shellIds = passport.environment.assetAdministrationShells;
     const submodelIds = passport.environment.submodels;
 
@@ -199,7 +224,9 @@ export class PassportService {
         shells.push(shell);
       }
       else {
-        this.logger.warn(`AssetAdministrationShell with id ${id} not found for passport ${passport.id}`);
+        this.logger.warn(
+          `AssetAdministrationShell with id ${id} not found for passport ${passport.id}`,
+        );
       }
     }
 
@@ -210,7 +237,9 @@ export class PassportService {
         submodels.push(submodel);
       }
       else {
-        this.logger.warn(`Submodel with id ${id} not found for passport ${passport.id}`);
+        this.logger.warn(
+          `Submodel with id ${id} not found for passport ${passport.id}`,
+        );
       }
     }
 

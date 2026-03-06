@@ -25,4 +25,11 @@ export class UniqueProductIdentifier {
   static loadFromDb(data: { uuid: string; referenceId: string }) {
     return new UniqueProductIdentifier(data.uuid, data.referenceId);
   }
+
+  toPlain() {
+    return {
+      uuid: this.uuid,
+      referenceId: this.referenceId,
+    };
+  }
 }

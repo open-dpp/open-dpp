@@ -7,6 +7,7 @@ export const UniqueProductIdentifierDtoSchema = z.object({
   referenceId: z.uuid(),
 });
 
+export const UniqueProductIdentifierListDtoSchema = z.array(UniqueProductIdentifierDtoSchema);
 export const UniqueProductIdentifierReferenceDtoSchema = z.object({
   id: z.uuid(),
   organizationId: z.string(),
@@ -14,11 +15,17 @@ export const UniqueProductIdentifierReferenceDtoSchema = z.object({
   granularityLevel: z.enum(GranularityLevel),
 });
 
-export const UniqueProductIdentifierMetadataDtoSchema = z.object({
+export const UniqueProductIdentifierMetadataOldDtoSchema = z.object({
   passportId: z.uuid(),
   organizationId: z.string(),
   templateId: z.uuid(),
   modelId: z.uuid(),
+});
+
+export const UniqueProductIdentifierMetadataDtoSchema = z.object({
+  passportId: z.uuid(),
+  organizationId: z.string(),
+  templateId: z.uuid().nullish(),
 });
 
 export function uniqueProductIdentifierToDto(

@@ -1,84 +1,101 @@
 <script lang="ts" setup>
-import type { ProductPassportDto } from "@open-dpp/api-client";
-import { onBeforeUnmount, watch } from "vue";
+import { onBeforeUnmount, ref, watchEffect } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import ViewInformation from "../../components/presentation-components/ViewInformation.vue";
+import ViewInformation from "../../components/presentation-components-old/ViewInformation.vue";
+import Passport from "../../components/presentation/Passport.vue";
 import apiClient from "../../lib/api-client.ts";
-import { useProductPassportStore } from "../../stores/product-passport";
+import { useAnalyticsStore } from "../../stores/analytics.ts";
+import { usePassportStore } from "../../stores/passport.ts";
+import { useProductPassportStore } from "../../stores/product-passport.ts";
 
 const route = useRoute();
 const router = useRouter();
 
 const productPassportStore = useProductPassportStore();
+const passportStore = usePassportStore();
+const analyticsStore = useAnalyticsStore();
+const isLegacy = ref(true);
 
-function isProductPassportDto(value: unknown): value is ProductPassportDto {
-  return (
-    !!value
-    && typeof value === "object"
-    && "id" in value
-    && "name" in value
-    && "description" in value
-    && "mediaReferences" in value
-    && "dataSections" in value
-    && "organizationName" in value
-  );
+async function loadLegacyProductPassport(id: string): Promise<boolean> {
+  const response = await apiClient.dpp.productPassports.getById(id);
+  if (response.status === 404) {
+    return false;
+  }
+
+  await analyticsStore.addPageView();
+  productPassportStore.productPassport = response.data;
+  await productPassportStore.loadMedia();
+
+  return true;
 }
 
-// Analytics tracking is intentionally disabled until the AAS view integration is restored.
-// const analyticsStore = useAnalyticsStore();
-// await analyticsStore.addPageView();
+async function loadPassport(id: string): Promise<boolean> {
+  const response = await apiClient.dpp.uniqueProductIdentifiers.getPassport(id);
+  if (response.status === 404) {
+    return false;
+  }
 
-// Cleanup object URLs when component unmounts to prevent memory leaks
+  passportStore.productPassport = response.data;
+
+  const submodels = await apiClient.dpp.uniqueProductIdentifiers.aas.getSubmodels(id, {});
+  if (submodels.status !== 200) {
+    console.error("Failed to load submodels");
+    return false;
+  }
+  passportStore.submodels = submodels.data.result || [];
+
+  const aas = await apiClient.dpp.uniqueProductIdentifiers.aas.getShells(id, {});
+  if (aas.status !== 200) {
+    console.error("Failed to load shells");
+    return false;
+  }
+  passportStore.shells = aas.data.result || [];
+  await analyticsStore.addPageView();
+
+  return true;
+}
+
+async function pushNotFound(permalink: string) {
+  await router.push({
+    path: "404",
+    query: {
+      permalink,
+    },
+  });
+}
+
 onBeforeUnmount(() => {
   productPassportStore.cleanupMediaUrls();
 });
 
-watch(
-  () => route.params.permalink,
-  async () => {
-    const permalink = String(route.params.permalink);
+watchEffect(async () => {
+  const permalink = String(route.params.permalink);
+  let passportAvailable = false;
+  try {
+    passportAvailable = await loadLegacyProductPassport(permalink);
+  }
+  catch (e) {
+    console.error(e);
+  }
+  if (!passportAvailable) {
     try {
-      const response = await apiClient.dpp.productPassports.getById(permalink);
-      if (response.status === 404) {
-        await router.push({
-          path: "404",
-          query: {
-            permalink,
-          },
-        });
-        return;
-      }
-      const data = response.data as ProductPassportDto | { passport?: ProductPassportDto } | null | undefined;
-      const passport = isProductPassportDto(data) ? data : data?.passport;
-      if (!passport) {
-        console.error("Passport not found in response");
-        await router.push({
-          path: "404",
-          query: {
-            permalink,
-          },
-        });
-        return;
-      }
-      productPassportStore.productPassport = passport;
-      await productPassportStore.loadMedia();
+      passportAvailable = await loadPassport(permalink);
+      isLegacy.value = false;
     }
     catch (e) {
       console.error(e);
-      await router.push({
-        path: "404",
-        query: {
-          permalink,
-        },
-      });
     }
-  },
-  { immediate: true },
-);
+  }
+
+  if (!passportAvailable) {
+    await pushNotFound(permalink);
+  }
+});
 </script>
 
 <template>
   <div class="flex flex-col items-center gap-5">
-    <ViewInformation />
+    <ViewInformation v-if="isLegacy" />
+    <Passport v-else />
   </div>
 </template>

@@ -8,7 +8,7 @@ describe("passportMetricAggregation", () => {
       type: MeasurementType.PAGE_VIEWS,
       valueKey: "http://view",
       templateId: "t1",
-      modelId: "m2",
+      passportId: "m2",
       organizationId: "orga1",
       startDate: new Date("2025-01-03T12:00:00Z"),
       endDate: new Date("2025-01-07T12:00:00Z"),
@@ -18,7 +18,7 @@ describe("passportMetricAggregation", () => {
       {
         $match: {
           "source.templateId": props.templateId,
-          "source.modelId": props.modelId,
+          "source.passportId": props.passportId,
           "source.organizationId": props.organizationId,
           "source.type": props.type,
           "date": {
