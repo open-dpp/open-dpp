@@ -263,9 +263,11 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
             value: "AuthorName",
           },
         ],
+        referredSemanticId: null,
         type: "ExternalReference",
       },
       value: "Fabrikvordenker:in ER28-0652",
+      valueId: null,
       valueType: "String",
       idShort: "AuthorName",
     });

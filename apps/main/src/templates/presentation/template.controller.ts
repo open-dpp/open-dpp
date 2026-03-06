@@ -369,7 +369,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @Body() body: any,
     @AuthSession() session: Session,
   ) {
-    const activeOrganizationId = session.activeOrganizationId;
+    const activeOrganizationId = session.activeOrganizationId?.toString();
     if (!activeOrganizationId) {
       throw new BadRequestException("activeOrganizationId is required in session");
     }

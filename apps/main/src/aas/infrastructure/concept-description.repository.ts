@@ -2,7 +2,7 @@ import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { DbSessionOptions } from "../../database/query-options";
-import { findOne, findOneOrFail, save } from "../../lib/repositories";
+import { findByIds, findOne, findOneOrFail, save } from "../../lib/repositories";
 import { ConceptDescription } from "../domain/concept-description";
 import { ConceptDescriptionDbSchema } from "./schemas/concept-description-db-schema";
 import { ConceptDescriptionDoc, ConceptDescriptionDocSchemaVersion } from "./schemas/concept-description.schema";
@@ -32,5 +32,9 @@ export class ConceptDescriptionRepository {
 
   async findOne(id: string): Promise<ConceptDescription | undefined> {
     return await findOne(id, this.conceptDescriptionDoc, this.fromPlain);
+  }
+
+  async findByIds(ids: string[]): Promise<Map<string, ConceptDescription>> {
+    return await findByIds(ids, this.conceptDescriptionDoc, this.fromPlain);
   }
 }

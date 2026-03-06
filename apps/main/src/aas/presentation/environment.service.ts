@@ -291,32 +291,19 @@ export class EnvironmentService {
   }
 
   async loadExpandedEnvironment(environment: Environment): Promise<ExpandedEnvironment> {
-    const [shellMap, submodelMap] = await Promise.all([
+    const [shellMap, submodelMap, conceptDescriptionMap] = await Promise.all([
       this.aasRepository.findByIds(environment.assetAdministrationShells),
       this.submodelRepository.findByIds(environment.submodels),
+      this.conceptDescriptionRepository.findByIds(environment.conceptDescriptions),
     ]);
 
-    const missingShellIds = environment.assetAdministrationShells.filter(id => !shellMap.has(id));
-    const missingSubmodelIds = environment.submodels.filter(id => !submodelMap.has(id));
-
-    if (missingShellIds.length > 0 || missingSubmodelIds.length > 0) {
-      if (missingShellIds.length > 0) {
-        this.logger.error(`Referenced shells not found in database: ${missingShellIds.join(", ")}`);
-      }
-      if (missingSubmodelIds.length > 0) {
-        this.logger.error(`Referenced submodels not found in database: ${missingSubmodelIds.join(", ")}`);
-      }
-      throw new Error(
-        `Environment references entities missing from the database. `
-        + `Missing shells: [${missingShellIds.join(", ")}], `
-        + `missing submodels: [${missingSubmodelIds.join(", ")}]`,
-      );
+    try {
+      return ExpandedEnvironment.fromEnvironment(environment, shellMap, submodelMap, conceptDescriptionMap);
     }
-
-    const shells = environment.assetAdministrationShells.map(id => shellMap.get(id)!);
-    const submodels = environment.submodels.map(id => submodelMap.get(id)!);
-
-    return ExpandedEnvironment.fromLoaded(shells, submodels, environment.conceptDescriptions);
+    catch (e) {
+      this.logger.error(e instanceof Error ? e.message : e);
+      throw e;
+    }
   }
 
   async persistImportedEnvironment(

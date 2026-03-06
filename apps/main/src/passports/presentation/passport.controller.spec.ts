@@ -56,6 +56,185 @@ describe("passportController", () => {
     return ctx.getRepositories().dppIdentifiableRepository.save(passport);
   }
 
+  function baseElement() {
+    return {
+      extensions: [],
+      category: null,
+      displayName: [],
+      description: [],
+      semanticId: null,
+      supplementalSemanticIds: [],
+      qualifiers: [],
+      embeddedDataSpecifications: [],
+    };
+  }
+
+  function makeReference(value = "urn:example:ref") {
+    return {
+      type: "ExternalReference" as const,
+      referredSemanticId: null,
+      keys: [{ type: "GlobalReference" as const, value }],
+    };
+  }
+
+  function buildEmptyExportPayload() {
+    return {
+      id: randomUUID(),
+      format: "open-dpp:json",
+      version: "1.0",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      environment: {
+        assetAdministrationShells: [
+          {
+            id: randomUUID(),
+            extensions: [],
+            category: null,
+            idShort: "empty-shell",
+            displayName: [{ language: "en", text: "Empty" }],
+            description: [],
+            administration: null,
+            embeddedDataSpecifications: [],
+            derivedFrom: null,
+            submodels: [],
+            assetInformation: {
+              assetKind: "Instance",
+              globalAssetId: null,
+              specificAssetIds: [],
+              assetType: null,
+              defaultThumbnails: [],
+            },
+          },
+        ],
+        submodels: [],
+        conceptDescriptions: [],
+      },
+    };
+  }
+
+  function buildRichExportPayload() {
+    const base = baseElement();
+    const ref = makeReference();
+
+    return {
+      id: randomUUID(),
+      format: "open-dpp:json",
+      version: "1.0",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      environment: {
+        assetAdministrationShells: [
+          {
+            id: randomUUID(),
+            extensions: [],
+            category: null,
+            idShort: "rich-shell",
+            displayName: [{ language: "en", text: "Rich Passport" }],
+            description: [{ language: "en", text: "A passport with all element types" }],
+            administration: null,
+            embeddedDataSpecifications: [],
+            derivedFrom: null,
+            submodels: [],
+            assetInformation: {
+              assetKind: "Instance",
+              globalAssetId: null,
+              specificAssetIds: [],
+              assetType: null,
+              defaultThumbnails: [],
+            },
+          },
+        ],
+        submodels: [
+          {
+            id: randomUUID(),
+            extensions: [],
+            category: null,
+            idShort: "rich-submodel",
+            displayName: [{ language: "en", text: "Rich Submodel" }],
+            description: [],
+            administration: null,
+            kind: null,
+            semanticId: null,
+            supplementalSemanticIds: [],
+            qualifiers: [],
+            embeddedDataSpecifications: [],
+            submodelElements: [
+              { ...base, modelType: "Property", idShort: "stringProp", valueType: "String", value: "hello", valueId: null },
+              { ...base, modelType: "Property", idShort: "intProp", valueType: "Int", value: "42", valueId: null },
+              { ...base, modelType: "File", idShort: "fileElement", contentType: "image/png", value: null },
+              { ...base, modelType: "Blob", idShort: "blobElement", contentType: "application/octet-stream", value: "SGVsbG8=" },
+              { ...base, modelType: "Range", idShort: "rangeElement", valueType: "Double", min: "0.0", max: "100.0" },
+              {
+                ...base,
+                modelType: "MultiLanguageProperty",
+                idShort: "mlProp",
+                value: [{ language: "en", text: "English" }, { language: "de", text: "Deutsch" }],
+                valueId: null,
+              },
+              { ...base, modelType: "ReferenceElement", idShort: "refElement", value: ref },
+              { ...base, modelType: "RelationshipElement", idShort: "relElement", first: ref, second: ref },
+              {
+                ...base,
+                modelType: "AnnotatedRelationshipElement",
+                idShort: "annotatedRelElement",
+                first: ref,
+                second: ref,
+                annotations: [
+                  { ...base, modelType: "Property", idShort: "annotProp", valueType: "String", value: "annotation-value", valueId: null },
+                ],
+              },
+              {
+                ...base,
+                modelType: "Entity",
+                idShort: "entityElement",
+                entityType: "SelfManagedEntity",
+                statements: [
+                  { ...base, modelType: "Property", idShort: "statementProp", valueType: "String", value: "statement-value", valueId: null },
+                ],
+                globalAssetId: null,
+                specificAssetIds: [],
+              },
+              {
+                ...base,
+                modelType: "SubmodelElementCollection",
+                idShort: "collection",
+                value: [
+                  { ...base, modelType: "Property", idShort: "nestedProp", valueType: "Boolean", value: "true", valueId: null },
+                ],
+              },
+              {
+                ...base,
+                modelType: "SubmodelElementList",
+                idShort: "list",
+                orderRelevant: true,
+                semanticIdListElement: null,
+                valueTypeListElement: "String",
+                typeValueListElement: "Property",
+                value: [
+                  { ...base, modelType: "Property", idShort: "listItem1", valueType: "String", value: "item-1", valueId: null },
+                  { ...base, modelType: "Property", idShort: "listItem2", valueType: "String", value: "item-2", valueId: null },
+                ],
+              },
+            ],
+          },
+        ],
+        conceptDescriptions: [
+          {
+            extensions: [],
+            category: null,
+            idShort: "conceptDesc1",
+            displayName: [{ language: "en", text: "Test Concept" }],
+            description: [{ language: "en", text: "A test concept description" }],
+            semanticId: null,
+            administration: null,
+            embeddedDataSpecifications: [],
+            isCaseOf: [ref],
+          },
+        ],
+      },
+    };
+  }
+
   it(`/GET List all passports`, async () => {
     const { betterAuthHelper, app } = ctx.globals();
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
@@ -365,54 +544,207 @@ describe("passportController", () => {
     await ctx.asserts.getSubmodelElementValue(createPassport);
   });
 
-  /* describe("exportPassport", () => {
-    it("should call service.exportPassport", async () => {
-      const passportId = randomUUID();
-      const passport = Passport.create({
-        id: passportId,
-        organizationId: "org-1",
-        environment: Environment.create({}),
-      });
+  it("/GET export passport", async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const passport = await createPassport(org.id);
 
-      const session = { activeOrganizationId: "org-1" } as any;
-      await controller.exportPassport(passportId, session);
-      expect(mockPassportService.exportPassport).toHaveBeenCalledWith(passportId);
-    });
+    const response = await request(app.getHttpServer())
+      .get(`${basePath}/${passport.id}/export`)
+      .set("Cookie", userCookie);
+
+    expect(response.status).toEqual(200);
+    expect(response.body.format).toEqual("open-dpp:json");
+    expect(response.body.version).toEqual("1.0");
+    expect(response.body.id).toBeDefined();
+    expect(response.body.environment).toBeDefined();
+    expect(response.body.environment.assetAdministrationShells).toHaveLength(1);
+    expect(response.body.environment.submodels).toHaveLength(2);
+    expect(response.body.createdAt).toBeDefined();
+    expect(response.body.updatedAt).toBeDefined();
   });
 
-  describe("importPassport", () => {
-    it("should call service.importPassport", async () => {
-      const now = new Date();
-      const body = {
-        id: "passport-1",
-        organizationId: "original-org",
-        environment: {
-          assetAdministrationShells: [],
-          submodels: [],
-          conceptDescriptions: [],
-        },
-        createdAt: now.toISOString(),
-        updatedAt: now.toISOString(),
-        templateId: null,
-      };
-      const passport = Passport.create({
-        organizationId: "org-1",
-        environment: Environment.create({}),
-      });
+  it("/POST import passport", async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const passport = await createPassport(org.id);
 
-      mockPassportService.importPassport.mockResolvedValue(passport);
+    const exportResponse = await request(app.getHttpServer())
+      .get(`${basePath}/${passport.id}/export`)
+      .set("Cookie", userCookie);
+    expect(exportResponse.status).toEqual(200);
 
-      const session = { activeOrganizationId: "org-1" } as any;
-      await controller.importPassport(body as any, session);
+    const importResponse = await request(app.getHttpServer())
+      .post(`${basePath}/import`)
+      .set("Cookie", userCookie)
+      .send(exportResponse.body);
 
-      expect(mockPassportService.importPassport).toHaveBeenCalledWith(expect.objectContaining({
-        ...body,
-        organizationId: "org-1",
-        createdAt: now,
-        updatedAt: now,
-      }));
-    });
-  }); */
+    expect(importResponse.status).toEqual(201);
+    expect(importResponse.body.id).toBeDefined();
+    expect(importResponse.body.id).not.toEqual(passport.id);
+    expect(importResponse.body.organizationId).toEqual(org.id);
+    expect(importResponse.body.templateId).toBeNull();
+    expect(importResponse.body.environment).toBeDefined();
+    expect(importResponse.body.environment.assetAdministrationShells).toHaveLength(1);
+    expect(importResponse.body.environment.submodels).toHaveLength(2);
+
+    const upidService = ctx.getModuleRef().get(UniqueProductIdentifierService);
+    const upids = await upidService.findAllByReferencedId(importResponse.body.id);
+    expect(upids).toHaveLength(1);
+  });
+
+  it("/POST import passport with invalid data returns 400", async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+
+    const response = await request(app.getHttpServer())
+      .post(`${basePath}/import`)
+      .set("Cookie", userCookie)
+      .send({ invalid: "data" });
+
+    expect(response.status).toEqual(400);
+  });
+
+  it("/POST import and /GET export empty passport round-trip", async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+
+    const emptyPayload = buildEmptyExportPayload();
+
+    const importResponse = await request(app.getHttpServer())
+      .post(`${basePath}/import`)
+      .set("Cookie", userCookie)
+      .send(emptyPayload);
+
+    expect(importResponse.status).toEqual(201);
+    expect(importResponse.body.id).toBeDefined();
+    expect(importResponse.body.organizationId).toEqual(org.id);
+    expect(importResponse.body.templateId).toBeNull();
+    expect(importResponse.body.environment.assetAdministrationShells).toHaveLength(1);
+    expect(importResponse.body.environment.submodels).toHaveLength(0);
+    expect(importResponse.body.environment.conceptDescriptions).toHaveLength(0);
+
+    const upidService = ctx.getModuleRef().get(UniqueProductIdentifierService);
+    const upids = await upidService.findAllByReferencedId(importResponse.body.id);
+    expect(upids).toHaveLength(1);
+
+    const exportResponse = await request(app.getHttpServer())
+      .get(`${basePath}/${importResponse.body.id}/export`)
+      .set("Cookie", userCookie);
+
+    expect(exportResponse.status).toEqual(200);
+    expect(exportResponse.body.format).toEqual("open-dpp:json");
+    expect(exportResponse.body.version).toEqual("1.0");
+    expect(exportResponse.body.environment.assetAdministrationShells).toHaveLength(1);
+    expect(exportResponse.body.environment.submodels).toHaveLength(0);
+    expect(exportResponse.body.environment.conceptDescriptions).toHaveLength(0);
+  });
+
+  it("/POST import and /GET export passport with all submodel element types", async () => {
+    const { betterAuthHelper, app } = ctx.globals();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+
+    const richPayload = buildRichExportPayload();
+
+    const importResponse = await request(app.getHttpServer())
+      .post(`${basePath}/import`)
+      .set("Cookie", userCookie)
+      .send(richPayload);
+
+    expect(importResponse.status).toEqual(201);
+    expect(importResponse.body.id).toBeDefined();
+    expect(importResponse.body.organizationId).toEqual(org.id);
+    expect(importResponse.body.templateId).toBeNull();
+    expect(importResponse.body.environment.assetAdministrationShells).toHaveLength(1);
+    expect(importResponse.body.environment.submodels).toHaveLength(1);
+    expect(importResponse.body.environment.conceptDescriptions).toHaveLength(1);
+
+    const upidService = ctx.getModuleRef().get(UniqueProductIdentifierService);
+    const upids = await upidService.findAllByReferencedId(importResponse.body.id);
+    expect(upids).toHaveLength(1);
+
+    const exportResponse = await request(app.getHttpServer())
+      .get(`${basePath}/${importResponse.body.id}/export`)
+      .set("Cookie", userCookie);
+
+    expect(exportResponse.status).toEqual(200);
+
+    const exportedSubmodel = exportResponse.body.environment.submodels[0];
+    expect(exportedSubmodel.submodelElements).toHaveLength(12);
+
+    const elementTypes = exportedSubmodel.submodelElements.map((e: any) => e.modelType).sort();
+    expect(elementTypes).toEqual([
+      "AnnotatedRelationshipElement",
+      "Blob",
+      "Entity",
+      "File",
+      "MultiLanguageProperty",
+      "Property",
+      "Property",
+      "Range",
+      "ReferenceElement",
+      "RelationshipElement",
+      "SubmodelElementCollection",
+      "SubmodelElementList",
+    ]);
+
+    // Verify property values are preserved
+    const stringProp = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "stringProp");
+    expect(stringProp.value).toEqual("hello");
+    expect(stringProp.valueType).toEqual("String");
+
+    const intProp = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "intProp");
+    expect(intProp.value).toEqual("42");
+    expect(intProp.valueType).toEqual("Int");
+
+    // Verify range values are preserved
+    const rangeElement = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "rangeElement");
+    expect(rangeElement.min).toEqual("0.0");
+    expect(rangeElement.max).toEqual("100.0");
+    expect(rangeElement.valueType).toEqual("Double");
+
+    // Verify multi-language property values are preserved
+    const mlProp = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "mlProp");
+    expect(mlProp.value).toEqual([
+      { language: "en", text: "English" },
+      { language: "de", text: "Deutsch" },
+    ]);
+
+    // Verify blob value is preserved
+    const blobElement = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "blobElement");
+    expect(blobElement.contentType).toEqual("application/octet-stream");
+    expect(blobElement.value).toEqual("SGVsbG8=");
+
+    // Verify nested structures are preserved
+    const collection = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "collection");
+    expect(collection.value).toHaveLength(1);
+    expect(collection.value[0].modelType).toEqual("Property");
+    expect(collection.value[0].idShort).toEqual("nestedProp");
+
+    const list = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "list");
+    expect(list.value).toHaveLength(2);
+    expect(list.value[0].idShort).toEqual("listItem1");
+    expect(list.value[1].idShort).toEqual("listItem2");
+
+    const entity = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "entityElement");
+    expect(entity.statements).toHaveLength(1);
+    expect(entity.entityType).toEqual("SelfManagedEntity");
+
+    const annotatedRel = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "annotatedRelElement");
+    expect(annotatedRel.annotations).toHaveLength(1);
+    expect(annotatedRel.annotations[0].modelType).toEqual("Property");
+    expect(annotatedRel.annotations[0].idShort).toEqual("annotProp");
+    expect(annotatedRel.annotations[0].value).toEqual("annotation-value");
+    expect(annotatedRel.first).toBeDefined();
+    expect(annotatedRel.second).toBeDefined();
+
+    // Verify concept descriptions are preserved after import/export round-trip
+    const exportedConceptDescriptions = exportResponse.body.environment.conceptDescriptions;
+    expect(exportedConceptDescriptions).toHaveLength(1);
+    expect(exportedConceptDescriptions[0].idShort).toEqual("conceptDesc1");
+    expect(exportedConceptDescriptions[0].displayName).toEqual([{ language: "en", text: "Test Concept" }]);
+    expect(exportedConceptDescriptions[0].isCaseOf).toHaveLength(1);
+  });
 
   afterAll(() => {
     jest.restoreAllMocks();

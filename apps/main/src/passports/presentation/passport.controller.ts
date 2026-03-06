@@ -449,7 +449,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     @Body() body: any,
     @AuthSession() session: Session,
   ): Promise<PassportDto> {
-    const activeOrganizationId = session.activeOrganizationId;
+    const activeOrganizationId = session.activeOrganizationId?.toString();
     if (!activeOrganizationId) {
       throw new BadRequestException("activeOrganizationId is required in session");
     }

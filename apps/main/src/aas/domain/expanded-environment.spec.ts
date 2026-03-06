@@ -6,12 +6,18 @@ import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";
 import { Key } from "./common/key";
 import { Reference } from "./common/reference";
+import { ConceptDescription } from "./concept-description";
+import { Environment } from "./environment";
 import { ExpandedEnvironment } from "./expanded-environment";
 import { Submodel } from "./submodel-base/submodel";
 
 function createSubmodel(id?: string, idShort?: string): Submodel {
   const resolvedId = id ?? randomUUID();
   return Submodel.create({ id: resolvedId, idShort: idShort ?? `submodel-${resolvedId}` });
+}
+
+function createConceptDescription(id?: string): ConceptDescription {
+  return ConceptDescription.create({ id: id ?? randomUUID() });
 }
 
 function createShell(id?: string, submodels: Submodel[] = []): AssetAdministrationShell {
@@ -46,13 +52,113 @@ describe("expandedEnvironment", () => {
     it("should create from loaded domain objects", () => {
       const submodel = createSubmodel();
       const shell = createShell(undefined, [submodel]);
-      const conceptDescriptions = ["cd-1"];
+      const cd = createConceptDescription("cd-1");
 
-      const env = ExpandedEnvironment.fromLoaded([shell], [submodel], conceptDescriptions);
+      const env = ExpandedEnvironment.fromLoaded([shell], [submodel], [cd]);
 
       expect(env.shells).toEqual([shell]);
       expect(env.submodels).toEqual([submodel]);
-      expect(env.conceptDescriptions).toEqual(["cd-1"]);
+      expect(env.conceptDescriptions).toEqual([cd]);
+    });
+  });
+
+  describe("fromEnvironment", () => {
+    it("should resolve all entities from maps when all IDs exist", () => {
+      const submodel = createSubmodel();
+      const shell = createShell(undefined, [submodel]);
+      const cd = createConceptDescription("cd-1");
+      const environment = Environment.create({
+        assetAdministrationShells: [shell.id],
+        submodels: [submodel.id],
+        conceptDescriptions: [cd.id],
+      });
+
+      const shellMap = new Map([[shell.id, shell]]);
+      const submodelMap = new Map([[submodel.id, submodel]]);
+      const cdMap = new Map([[cd.id, cd]]);
+
+      const expanded = ExpandedEnvironment.fromEnvironment(environment, shellMap, submodelMap, cdMap);
+
+      expect(expanded.shells).toEqual([shell]);
+      expect(expanded.submodels).toEqual([submodel]);
+      expect(expanded.conceptDescriptions).toEqual([cd]);
+    });
+
+    it("should throw ValueError when shells are missing from map", () => {
+      const environment = Environment.create({
+        assetAdministrationShells: ["missing-shell-id"],
+        submodels: [],
+        conceptDescriptions: [],
+      });
+
+      expect(() => ExpandedEnvironment.fromEnvironment(
+        environment,
+        new Map(),
+        new Map(),
+        new Map(),
+      )).toThrow(ValueError);
+    });
+
+    it("should throw ValueError when submodels are missing from map", () => {
+      const environment = Environment.create({
+        assetAdministrationShells: [],
+        submodels: ["missing-submodel-id"],
+        conceptDescriptions: [],
+      });
+
+      expect(() => ExpandedEnvironment.fromEnvironment(
+        environment,
+        new Map(),
+        new Map(),
+        new Map(),
+      )).toThrow(ValueError);
+    });
+
+    it("should throw ValueError when concept descriptions are missing from map", () => {
+      const environment = Environment.create({
+        assetAdministrationShells: [],
+        submodels: [],
+        conceptDescriptions: ["missing-cd-id"],
+      });
+
+      expect(() => ExpandedEnvironment.fromEnvironment(
+        environment,
+        new Map(),
+        new Map(),
+        new Map(),
+      )).toThrow(ValueError);
+    });
+
+    it("should include all missing IDs in the error message", () => {
+      const environment = Environment.create({
+        assetAdministrationShells: ["shell-1", "shell-2"],
+        submodels: ["sub-1"],
+        conceptDescriptions: ["cd-1"],
+      });
+
+      expect(() => ExpandedEnvironment.fromEnvironment(
+        environment,
+        new Map(),
+        new Map(),
+        new Map(),
+      )).toThrow(
+        /Missing shells: \[shell-1, shell-2\].*missing submodels: \[sub-1\].*missing concept descriptions: \[cd-1\]/,
+      );
+    });
+
+    it("should succeed with empty environment", () => {
+      const environment = Environment.create({});
+
+      const expanded = ExpandedEnvironment.fromEnvironment(
+        environment,
+        new Map(),
+        new Map(),
+        new Map(),
+      );
+
+      expect(expanded.shells).toEqual([]);
+      expect(expanded.submodels).toEqual([]);
+      expect(expanded.conceptDescriptions).toEqual([]);
     });
   });
 
@@ -60,11 +166,12 @@ describe("expandedEnvironment", () => {
     it("should reconstruct domain objects from valid plain data", () => {
       const submodel = createSubmodel();
       const shell = createShell(undefined, [submodel]);
+      const cd = createConceptDescription("cd-1");
 
       const plain = {
         assetAdministrationShells: [shell.toPlain()],
         submodels: [submodel.toPlain()],
-        conceptDescriptions: ["cd-1"],
+        conceptDescriptions: [cd.toPlain()],
       };
 
       const env = ExpandedEnvironment.fromPlain(plain);
@@ -73,7 +180,8 @@ describe("expandedEnvironment", () => {
       expect(env.shells[0].id).toBe(shell.id);
       expect(env.submodels).toHaveLength(1);
       expect(env.submodels[0].id).toBe(submodel.id);
-      expect(env.conceptDescriptions).toEqual(["cd-1"]);
+      expect(env.conceptDescriptions).toHaveLength(1);
+      expect(env.conceptDescriptions[0].id).toBe("cd-1");
     });
 
     it("should throw ValueError for submodel with missing id", () => {
@@ -120,27 +228,30 @@ describe("expandedEnvironment", () => {
   });
 
   describe("toPlain", () => {
-    it("should serialize all shells and submodels to plain objects", () => {
+    it("should serialize all shells, submodels, and concept descriptions to plain objects", () => {
       const submodel = createSubmodel();
       const shell = createShell(undefined, [submodel]);
+      const cd = createConceptDescription("cd-1");
 
-      const env = ExpandedEnvironment.fromLoaded([shell], [submodel], ["cd-1"]);
+      const env = ExpandedEnvironment.fromLoaded([shell], [submodel], [cd]);
       const plain = env.toPlain();
 
       expect(plain.assetAdministrationShells).toHaveLength(1);
       expect(plain.assetAdministrationShells[0].id).toBe(shell.id);
       expect(plain.submodels).toHaveLength(1);
       expect(plain.submodels[0].id).toBe(submodel.id);
-      expect(plain.conceptDescriptions).toEqual(["cd-1"]);
+      expect(plain.conceptDescriptions).toHaveLength(1);
+      expect(plain.conceptDescriptions[0].id).toBe("cd-1");
     });
   });
 
   describe("toEnvironment", () => {
-    it("should produce an ID-only Environment from current shells and submodels", () => {
+    it("should produce an ID-only Environment from current shells, submodels, and concept descriptions", () => {
       const submodel = createSubmodel();
       const shell = createShell(undefined, [submodel]);
+      const cd = createConceptDescription("cd-1");
 
-      const env = ExpandedEnvironment.fromLoaded([shell], [submodel], ["cd-1"]);
+      const env = ExpandedEnvironment.fromLoaded([shell], [submodel], [cd]);
       const idEnv = env.toEnvironment();
 
       expect(idEnv.assetAdministrationShells).toEqual([shell.id]);
@@ -183,8 +294,9 @@ describe("expandedEnvironment", () => {
     it("should produce a valid Environment with the new IDs", () => {
       const submodel = createSubmodel();
       const shell = createShell(undefined, [submodel]);
+      const cd = createConceptDescription("cd-1");
 
-      const env = ExpandedEnvironment.fromLoaded([shell], [submodel], ["cd-1"]);
+      const env = ExpandedEnvironment.fromLoaded([shell], [submodel], [cd]);
       const result = env.copyWithNewIds();
 
       expect(result.environment.assetAdministrationShells).toEqual([result.shells[0].id]);
