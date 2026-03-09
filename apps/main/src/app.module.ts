@@ -18,6 +18,7 @@ import { AuthModule } from "./identity/auth/auth.module";
 import { AuthGuard } from "./identity/auth/infrastructure/guards/auth.guard";
 import { OrganizationsModule } from "./identity/organizations/organizations.module";
 import { UsersModule } from "./identity/users/users.module";
+import { InstanceSettingsModule } from "./instance-settings/instance-settings.module";
 import { IntegrationModule } from "./integrations/integration.module";
 import { ItemsModule } from "./items/items.module";
 import { MarketplaceModule } from "./marketplace/marketplace.module";
@@ -74,6 +75,7 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
     AnalyticsModule,
     AuthModule,
     EmailModule,
+    InstanceSettingsModule,
     PolicyModule,
   ],
   controllers: [],

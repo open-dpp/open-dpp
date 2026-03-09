@@ -365,11 +365,26 @@
       "title": "Administration",
       "organizations": "All organizations",
       "users": "All users",
+      "settings": "Settings",
       "inviteUserDialog": {
         "title": "Create user",
         "create": "Create",
-        "success": "User created successfully",
+        "success": "User created successfully. A setup email has been sent.",
         "error": "Error on creating user"
+      },
+      "inviteToOrganizationDialog": {
+        "title": "Invite to organization",
+        "selectOrganization": "Select organization",
+        "invite": "Invite",
+        "success": "User has been invited to the organization.",
+        "error": "Error on inviting user to organization"
+      },
+      "instanceSettings": {
+        "title": "Instance Settings",
+        "signupEnabled": "Public signup enabled",
+        "signupEnabledDescription": "When disabled, only admins can add new users.",
+        "saved": "Settings saved successfully",
+        "error": "Error saving settings"
       }
     }
   },
@@ -464,7 +479,8 @@
       "button": "Signup",
       "alreadyAMember": "Already a member?",
       "ctaSignIn": "Signin now",
-      "error": "Signup failed."
+      "error": "Signup failed.",
+      "disabled": "Signup is currently disabled. Please contact your administrator."
     },
     "passwordResetRequest": {
       "title": "Request password reset",

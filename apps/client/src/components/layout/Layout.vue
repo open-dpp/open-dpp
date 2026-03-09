@@ -150,6 +150,12 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
           icon: UserGroupIcon,
           show: () => role.value === "admin",
         },
+        {
+          name: t("organizations.admin.settings"),
+          to: "/admin/settings",
+          icon: Cog6ToothIcon,
+          show: () => role.value === "admin",
+        },
       ],
     });
   }

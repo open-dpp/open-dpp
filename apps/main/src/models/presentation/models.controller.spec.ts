@@ -17,6 +17,7 @@ import { AUTH } from "../../identity/auth/auth.provider";
 import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
 import { OrganizationsModule } from "../../identity/organizations/organizations.module";
 import { UsersService } from "../../identity/users/application/services/users.service";
+import { UsersModule } from "../../identity/users/users.module";
 import { AasConnectionDoc, AasConnectionSchema } from "../../integrations/infrastructure/aas-connection.schema";
 import { ItemDoc, ItemSchema } from "../../items/infrastructure/item.schema";
 import { ItemsService } from "../../items/infrastructure/items.service";
@@ -125,6 +126,7 @@ describe("modelsController", () => {
         ]),
         AuthModule,
         OrganizationsModule,
+        UsersModule,
       ],
       providers: [
         ModelsService,

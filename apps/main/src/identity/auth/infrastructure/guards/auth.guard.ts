@@ -2,12 +2,14 @@ import type { CanActivate, ExecutionContext } from "@nestjs/common";
 import { Buffer } from "node:buffer";
 import { timingSafeEqual } from "node:crypto";
 import {
+  ForbiddenException,
   Inject,
   Injectable,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { EnvService } from "@open-dpp/env";
 import { MembersService } from "../../../organizations/application/services/members.service";
+import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { SessionsService } from "../../application/services/sessions.service";
 import { Session } from "../../domain/session";
 import { ALLOW_SERVICE_ACCESS } from "../../presentation/decorators/allow-service-access.decorator";
@@ -22,6 +24,7 @@ export class AuthGuard implements CanActivate {
   private readonly configService: EnvService;
   private readonly sessionsService: SessionsService;
   private readonly membersService: MembersService;
+  private readonly usersRepository: UsersRepository;
 
   constructor(
     @Inject(Reflector)
@@ -29,11 +32,13 @@ export class AuthGuard implements CanActivate {
     configService: EnvService,
     sessionsService: SessionsService,
     membersService: MembersService,
+    usersRepository: UsersRepository,
   ) {
     this.reflector = reflector;
     this.configService = configService;
     this.sessionsService = sessionsService;
     this.membersService = membersService;
+    this.usersRepository = usersRepository;
   }
 
   /**
@@ -134,27 +139,20 @@ export class AuthGuard implements CanActivate {
       }
     }
 
-    /* const requiredRoles = this.reflector.getAllAndOverride<string[]>("ROLES", [
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>("ROLES", [
       context.getHandler(),
       context.getClass(),
     ]);
     if (requiredRoles && requiredRoles.length > 0) {
-      const userRole = session.user.role;
-      let hasRole = false;
-      if (Array.isArray(userRole)) {
-        hasRole = userRole.some(role => requiredRoles.includes(role));
-      }
-      else if (typeof userRole === "string") {
-        hasRole = requiredRoles.includes(userRole);
-      }
-
-      if (!hasRole) {
+      const user = await this.usersRepository.findOneById(session.userId);
+      const userRole = user?.role;
+      if (!userRole || !requiredRoles.includes(userRole)) {
         throw new ForbiddenException({
           code: "FORBIDDEN",
           message: "Insufficient permissions",
         });
       }
-    } */
+    }
 
     return true;
   }

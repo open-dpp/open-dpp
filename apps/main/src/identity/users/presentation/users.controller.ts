@@ -1,13 +1,14 @@
 import { Body, Controller, Get, NotFoundException, Param, Post } from "@nestjs/common";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { z } from "zod";
+import { Roles } from "../../auth/presentation/decorators/roles.decorator";
 import { UsersService } from "../application/services/users.service";
 import { User } from "../domain/user";
 
 export const CreateUserDtoSchema = z.object({
   email: z.string().email(),
-  firstName: z.string(),
-  lastName: z.string(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
 });
 
 export type CreateUserDto = z.infer<typeof CreateUserDtoSchema>;
@@ -19,6 +20,7 @@ export class UsersController {
   ) { }
 
   @Post()
+  @Roles(["admin"])
   async createUser(@Body(new ZodValidationPipe(CreateUserDtoSchema)) body: CreateUserDto): Promise<User> {
     return this.usersService.createUser(body.email, body.firstName, body.lastName);
   }

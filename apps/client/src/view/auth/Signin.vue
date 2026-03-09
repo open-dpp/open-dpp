@@ -7,11 +7,12 @@ import {
   Message,
   Password,
 } from "primevue";
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import BrandingLogo from "../../components/media/BrandingLogo.vue";
+import apiClient from "../../lib/api-client.ts";
 import { useIndexStore } from "../../stores";
 import { useOrganizationsStore } from "../../stores/organizations.ts";
 
@@ -25,6 +26,17 @@ const password = ref<string>("");
 const rememberMe = ref<boolean>(false);
 const showError = ref<boolean>(false);
 const loading = ref<boolean>(false);
+const signupEnabled = ref<boolean>(true);
+
+onMounted(async () => {
+  try {
+    const res = await apiClient.dpp.instanceSettings.getPublic();
+    signupEnabled.value = res.data.signupEnabled;
+  }
+  catch {
+    signupEnabled.value = true;
+  }
+});
 
 const redirectUri = computed(() => {
   return route.query.redirect
@@ -169,7 +181,7 @@ async function signin() {
           </form>
         </div>
       </template>
-      <template #footer>
+      <template v-if="signupEnabled" #footer>
         <p class="mt-10 text-center text-sm/6 text-gray-500 dark:text-gray-400">
           {{ t("auth.signin.notAMember") }}
           {{ " " }}

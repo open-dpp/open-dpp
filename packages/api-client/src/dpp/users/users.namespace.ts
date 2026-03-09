@@ -8,7 +8,7 @@ export class UsersNamespace {
     return this.axiosInstance.get<UserDto>(`/users/${id}`)
   }
 
-  public async create(data: { email: string, name?: string, image?: string }) {
+  public async create(data: { email: string, firstName?: string, lastName?: string }) {
     return this.axiosInstance.post<void>('/users', data)
   }
 }

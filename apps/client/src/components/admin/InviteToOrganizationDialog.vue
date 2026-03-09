@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { Organization } from "better-auth/client";
 import {
   Dialog,
   DialogPanel,
@@ -6,65 +7,70 @@ import {
   TransitionChild,
   TransitionRoot,
 } from "@headlessui/vue";
-import { EnvelopeIcon, XMarkIcon } from "@heroicons/vue/24/outline";
+import { BuildingOfficeIcon, XMarkIcon } from "@heroicons/vue/24/outline";
 import Button from "primevue/button";
-import InputText from "primevue/inputtext";
 import Message from "primevue/message";
-import { ref } from "vue";
+import Select from "primevue/select";
+import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { z } from "zod";
 import apiClient from "../../lib/api-client.ts";
+import axiosIns from "../../lib/axios.ts";
 import RingLoader from "../RingLoader.vue";
+
+const props = defineProps<{
+  userEmail: string;
+}>();
 
 const emit = defineEmits<{
   (e: "close"): void;
   (e: "success"): void;
 }>();
+
 const { t } = useI18n();
-const loading = ref<boolean>(false);
-const errors = ref<Array<string>>([]);
-const success = ref<boolean>(false);
-const email = ref("");
-const firstName = ref("");
-const lastName = ref("");
-const emailError = ref("");
+const loading = ref(false);
+const loadingOrganizations = ref(true);
+const errors = ref<string[]>([]);
+const success = ref(false);
+const organizations = ref<Organization[]>([]);
+const selectedOrganizationId = ref<string | null>(null);
 
-async function inviteUser() {
-  success.value = false;
-  errors.value = [];
-  emailError.value = "";
+onMounted(async () => {
+  try {
+    const res = await axiosIns.get("/organizations");
+    if (res.data) {
+      organizations.value = res.data;
+    }
+  }
+  catch {
+    errors.value.push(t("common.errorOccurred"));
+  }
+  finally {
+    loadingOrganizations.value = false;
+  }
+});
 
-  const emailSchema = z.email();
-  const result = emailSchema.safeParse(email.value);
-
-  if (!result.success) {
-    emailError.value = t("common.form.email.invalid");
+async function inviteToOrganization() {
+  if (!selectedOrganizationId.value) {
     return;
   }
 
+  success.value = false;
+  errors.value = [];
+
   try {
     loading.value = true;
-    const response = await apiClient.dpp.users.create({
-      email: email.value,
-      firstName: firstName.value || undefined,
-      lastName: lastName.value || undefined,
-    });
-    loading.value = false;
-    if (response.status === 201) {
-      success.value = true;
-      emit("success");
-      email.value = "";
-      firstName.value = "";
-      lastName.value = "";
-      errors.value = [];
-    }
-    else {
-      errors.value.push(t("common.errorOccurred"));
-    }
+    await apiClient.dpp.organizations.inviteUser(
+      props.userEmail,
+      selectedOrganizationId.value,
+    );
+    success.value = true;
+    emit("success");
   }
   catch (error) {
     console.error(error);
-    errors.value.push(t("common.errorOccurred"));
+    errors.value.push(t("organizations.admin.inviteToOrganizationDialog.error"));
+  }
+  finally {
     loading.value = false;
   }
 }
@@ -113,11 +119,11 @@ async function inviteUser() {
               </div>
               <div>
                 <div
-                  class="mx-auto flex size-12 items-center justify-center rounded-full bg-green-100"
+                  class="mx-auto flex size-12 items-center justify-center rounded-full bg-blue-100"
                 >
-                  <EnvelopeIcon
+                  <BuildingOfficeIcon
                     aria-hidden="true"
-                    class="size-6 text-green-600"
+                    class="size-6 text-blue-600"
                   />
                 </div>
                 <div class="mt-3 text-center sm:mt-5">
@@ -125,11 +131,14 @@ async function inviteUser() {
                     as="h3"
                     class="text-base font-semibold text-gray-900"
                   >
-                    {{ t('organizations.admin.inviteUserDialog.title') }}
+                    {{ t('organizations.admin.inviteToOrganizationDialog.title') }}
                   </DialogTitle>
+                  <p class="mt-1 text-sm text-gray-500">
+                    {{ userEmail }}
+                  </p>
                   <div v-if="success" class="mt-3">
                     <div class="text-sm text-green-600">
-                      {{ t('organizations.admin.inviteUserDialog.success') }}
+                      {{ t('organizations.admin.inviteToOrganizationDialog.success') }}
                     </div>
                     <button
                       class="mt-3 rounded-md bg-green-600 text-white px-3 py-2 text-sm font-semibold shadow-xs hover:bg-green-700 focus:outline-hidden focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
@@ -139,8 +148,11 @@ async function inviteUser() {
                       {{ t('common.close') }}
                     </button>
                   </div>
+                  <div v-else-if="loadingOrganizations" class="mt-3">
+                    <RingLoader class="mx-auto w-fit" />
+                  </div>
                   <div v-else class="mt-3">
-                    <form v-show="!loading" class="flex flex-col gap-4" @submit.prevent="inviteUser">
+                    <form class="flex flex-col gap-4" @submit.prevent="inviteToOrganization">
                       <div v-if="errors.length" class="flex flex-col gap-1">
                         <Message v-for="error in errors" :key="error" severity="error" :closable="false">
                           {{ error }}
@@ -148,55 +160,27 @@ async function inviteUser() {
                       </div>
 
                       <div class="flex flex-col gap-2">
-                        <label for="email" class="block text-sm font-medium text-gray-700">
-                          {{ t('common.form.email.label') }}
+                        <label for="organization" class="block text-sm font-medium text-gray-700">
+                          {{ t('organizations.admin.inviteToOrganizationDialog.selectOrganization') }}
                         </label>
-                        <InputText
-                          id="email"
-                          v-model="email"
-                          type="text"
-                          :invalid="!!emailError"
-                          class="w-full"
-                          :aria-describedby="emailError ? 'email-error' : 'email-help'"
-                        />
-                        <small v-if="emailError" id="email-error" class="text-red-600">{{ emailError }}</small>
-                        <small v-else id="email-help" class="text-gray-500">
-                          {{ t('common.form.email.help') }}
-                        </small>
-                      </div>
-
-                      <div class="flex flex-col gap-2">
-                        <label for="firstName" class="block text-sm font-medium text-gray-700">
-                          {{ t('user.firstName') }}
-                        </label>
-                        <InputText
-                          id="firstName"
-                          v-model="firstName"
-                          type="text"
-                          class="w-full"
-                        />
-                      </div>
-
-                      <div class="flex flex-col gap-2">
-                        <label for="lastName" class="block text-sm font-medium text-gray-700">
-                          {{ t('user.lastName') }}
-                        </label>
-                        <InputText
-                          id="lastName"
-                          v-model="lastName"
-                          type="text"
+                        <Select
+                          v-model="selectedOrganizationId"
+                          :options="organizations"
+                          option-label="name"
+                          option-value="id"
+                          :placeholder="t('organizations.admin.inviteToOrganizationDialog.selectOrganization')"
                           class="w-full"
                         />
                       </div>
 
                       <Button
-                        :label="t('organizations.admin.inviteUserDialog.create')"
+                        :label="t('organizations.admin.inviteToOrganizationDialog.invite')"
                         type="submit"
                         :loading="loading"
+                        :disabled="!selectedOrganizationId"
                         class="w-full"
                       />
                     </form>
-                    <RingLoader v-show="loading" class="mx-auto w-fit" />
                   </div>
                 </div>
               </div>

@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import { Button, Card, InputText, Message, Password } from "primevue";
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import BrandingLogo from "../../components/media/BrandingLogo.vue";
+import apiClient from "../../lib/api-client.ts";
 
 const router = useRouter();
 const route = useRoute();
@@ -16,11 +17,27 @@ const email = ref<string>("");
 const password = ref<string>("");
 const showError = ref<boolean>(false);
 const loading = ref<boolean>(false);
+const signupEnabled = ref<boolean>(true);
+const checkingSettings = ref<boolean>(true);
 
 const redirectUri = computed(() => {
   return route.query.redirect
     ? decodeURIComponent(route.query.redirect as string)
     : "/";
+});
+
+onMounted(async () => {
+  try {
+    const res = await apiClient.dpp.instanceSettings.getPublic();
+    signupEnabled.value = res.data.signupEnabled;
+  }
+  catch {
+    // If we can't fetch settings, assume signup is enabled
+    signupEnabled.value = true;
+  }
+  finally {
+    checkingSettings.value = false;
+  }
 });
 
 async function signup() {
@@ -54,7 +71,7 @@ async function signup() {
   <div
     class="flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8"
   >
-    <Card class="sm:mx-auto sm:w-full sm:max-w-md p-3">
+    <Card v-if="!checkingSettings" class="sm:mx-auto sm:w-full sm:max-w-md p-3">
       <template #header>
         <BrandingLogo />
       </template>
@@ -64,7 +81,12 @@ async function signup() {
         </p>
       </template>
       <template #content>
-        <div class="flex flex-col gap-5">
+        <div v-if="!signupEnabled" class="flex flex-col gap-5">
+          <Message severity="warn" :closable="false">
+            {{ t("auth.signup.disabled") }}
+          </Message>
+        </div>
+        <div v-else class="flex flex-col gap-5">
           <Message
             v-if="showError"
             class="mb-4"
