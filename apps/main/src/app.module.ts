@@ -19,18 +19,11 @@ import { AuthGuard } from "./identity/auth/infrastructure/guards/auth.guard";
 import { OrganizationsModule } from "./identity/organizations/organizations.module";
 import { UsersModule } from "./identity/users/users.module";
 import { InstanceSettingsModule } from "./instance-settings/instance-settings.module";
-import { IntegrationModule } from "./integrations/integration.module";
-import { ItemsModule } from "./items/items.module";
-import { MarketplaceModule } from "./marketplace/marketplace.module";
 import { McpServerModule } from "./mcp/mcp.server.module";
 import { MediaModule } from "./media/media.module";
-import { ModelsModule } from "./models/models.module";
-import { TemplateModule as OldTemplateModule } from "./old-templates/template.module";
 import { PassportsModule } from "./passports/passports.module";
 import { PolicyModule } from "./policy/policy.module";
 import { PolicyGuard } from "./policy/presentation/policy.guard";
-import { ProductPassportModule } from "./product-passport/product-passport.module";
-import { TemplateDraftModule } from "./template-draft/template-draft.module";
 import { TemplatesModule } from "./templates/templates.module";
 import { TraceabilityEventsModule } from "./traceability-events/traceability-events.module";
 import { UniqueProductIdentifierModule } from "./unique-product-identifier/unique.product.identifier.module";
@@ -47,19 +40,13 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
     }),
     AasModule,
     UniqueProductIdentifierModule,
-    TemplateDraftModule,
     BrandingModule,
-    OldTemplateModule,
     TemplatesModule,
     PassportsModule,
-    ItemsModule,
-    ModelsModule,
     OrganizationsModule,
     UsersModule,
     HttpModule,
     TraceabilityEventsModule,
-    IntegrationModule,
-    ProductPassportModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, "client", "dist"),
       exclude: ["/api", "/api/{*test}"],
@@ -68,7 +55,6 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
       },
     }),
     MediaModule,
-    MarketplaceModule,
     McpServerModule,
     AiConfigurationModule,
     AiModule,

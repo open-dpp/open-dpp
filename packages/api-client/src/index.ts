@@ -36,51 +36,14 @@ export type {
   UpdateAasConnectionDto,
 } from './dpp/integrations/aas-integration.dtos'
 export { AasIntegrationNamespace } from './dpp/integrations/aas-integration.namespace'
-export type { ItemDto } from './dpp/items/item.dtos'
-export { ItemsNamespace } from './dpp/items/items.namespace'
-export type { ModelCreateDto, ModelDto } from './dpp/models/model.dtos'
-export { ModelsNamespace } from './dpp/models/models.namespace'
-export { OldTemplatesNamespace } from './dpp/old-templates/oldTemplatesNamespace'
-export type {
-  TemplateDto,
-  TemplateGetAllDto,
-} from './dpp/old-templates/template.dtos'
+
 export type { MemberDto } from './dpp/organizations/member.dtos'
 export type {
   OrganizationCreateDto,
   OrganizationDto,
 } from './dpp/organizations/organization.dtos'
 export { OrganizationsNamespace } from './dpp/organizations/organizations.namespace'
-export type {
-  DataValueDto,
-  ProductPassportDataDto,
-} from './dpp/passport-data/data-value.dto'
-export { PassportsNamespace } from './dpp/passports/passports.namespace'
 
-export type {
-  DataSectionDto,
-  ProductPassportDto,
-} from './dpp/product-passport/product-passport.dtos'
-export { ProductPassportsNamespace } from './dpp/product-passport/product-passports.namespace'
-export {
-  MoveDirection,
-  MoveType,
-  VisibilityLevel,
-} from './dpp/template-drafts/template-draft.dtos'
-export type {
-  DataFieldDraftCreateDto,
-  DataFieldDraftUpdateDto,
-  MoveDto,
-  PublicationCreateDto,
-  PublicationDto,
-  SectionDraftCreateDto,
-  SectionDraftUpdateDto,
-  TemplateDraftCreateDto,
-  TemplateDraftDto,
-  TemplateDraftGetAllDto,
-  TemplateDraftUpdateDto,
-} from './dpp/template-drafts/template-draft.dtos'
-export { TemplateDraftsNamespace } from './dpp/template-drafts/template-drafts.namespace'
 export { TemplatesNamespace } from './dpp/templates/templates.namespace'
 
 export type {
@@ -90,14 +53,6 @@ export type {
 } from './dpp/unique-product-identifiers/unique-product-identifiers.dtos'
 export { UniqueProductIdentifiersNamespace } from './dpp/unique-product-identifiers/unique-product-identifiers.namespace'
 export { UsersNamespace } from './dpp/users/users.namespace'
-export { MarketplaceApiClient } from './marketplace/marketplace-api-client'
-
-export { Sector } from './marketplace/passport-templates/passport-templates.dtos'
-export type {
-  PassportTemplateDto,
-  PassportTemplateGetAllDto,
-} from './marketplace/passport-templates/passport-templates.dtos'
-export { PassportTemplatesNamespace } from './marketplace/passport-templates/passport-templates.namespace'
 export type { MediaInfoDto } from './media/media.dtos'
 export { MediaNamespace } from './media/media.namespace'
 

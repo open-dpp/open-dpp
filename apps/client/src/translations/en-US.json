@@ -466,7 +466,7 @@
   "auth": {
     "signin": {
       "title": "Sign in to your account",
-      "button": "Signin",
+      "button": "Sign in",
       "rememberMe": "Remember me",
       "forgotPassword": "Forgot password?",
       "textForProviders": "Or continue with",
@@ -478,8 +478,8 @@
       "title": "Signup a new account",
       "button": "Signup",
       "alreadyAMember": "Already a member?",
-      "ctaSignIn": "Signin now",
-      "error": "Signup failed.",
+      "ctaSignIn": "Sign in now",
+      "error": "Sign up failed.",
       "disabled": "Signup is currently disabled. Please contact your administrator."
     },
     "passwordResetRequest": {
