@@ -18,6 +18,7 @@ import {
   TemplatePaginationDtoSchema,
   ValueSchema,
 } from "@open-dpp/dto";
+import { aasExportSchemaJsonV1_0 } from "../aas/infrastructure/serialization/aas-export-v1.schema";
 import {
   ApiDeleteRowPath,
   ApiGetColumnByIdShortPath,
@@ -47,6 +48,7 @@ const HTTPCode = {
   OK: 200,
   CREATED: 201,
   NO_CONTENT: 204,
+  BAD_REQUEST: 400,
 } as const;
 
 const ContentType = {
@@ -390,6 +392,53 @@ function createTemplatePaths() {
         },
       },
     },
+    [`${tag}/{id}/export`]: {
+      get: {
+        tags: [tag],
+        summary: `Exports a template`,
+        parameters: [IdParamSchema],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: aasExportSchemaJsonV1_0 },
+            },
+          },
+        },
+      },
+    },
+    [`${tag}/import`]: {
+      post: {
+        tags: [tag],
+        summary: `Imports a template`,
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: aasExportSchemaJsonV1_0 },
+          },
+        },
+        responses: {
+          [HTTPCode.CREATED]: {
+            content: {
+              [ContentType.JSON]: { schema: TemplateDtoSchema },
+            },
+          },
+          [HTTPCode.BAD_REQUEST]: {
+            description: "Invalid import data format",
+            content: {
+              [ContentType.JSON]: {
+                schema: {
+                  type: "object",
+                  properties: {
+                    statusCode: { type: "number", example: 400 },
+                    message: { type: "string" },
+                    error: { type: "string", example: "Bad Request" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   };
 }
 
@@ -422,6 +471,53 @@ function createPassportPaths() {
           [HTTPCode.CREATED]: {
             content: {
               [ContentType.JSON]: { schema: PassportDtoSchema },
+            },
+          },
+        },
+      },
+    },
+    [`${tag}/{id}/export`]: {
+      get: {
+        tags: [tag],
+        summary: `Exports a passport`,
+        parameters: [IdParamSchema],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: aasExportSchemaJsonV1_0 },
+            },
+          },
+        },
+      },
+    },
+    [`${tag}/import`]: {
+      post: {
+        tags: [tag],
+        summary: `Imports a passport`,
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: aasExportSchemaJsonV1_0 },
+          },
+        },
+        responses: {
+          [HTTPCode.CREATED]: {
+            content: {
+              [ContentType.JSON]: { schema: PassportDtoSchema },
+            },
+          },
+          [HTTPCode.BAD_REQUEST]: {
+            description: "Invalid import data format",
+            content: {
+              [ContentType.JSON]: {
+                schema: {
+                  type: "object",
+                  properties: {
+                    statusCode: { type: "number", example: 400 },
+                    message: { type: "string" },
+                    error: { type: "string", example: "Bad Request" },
+                  },
+                },
+              },
             },
           },
         },

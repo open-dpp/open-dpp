@@ -1,7 +1,7 @@
 import type { Connection } from "mongoose";
 
 import { randomUUID } from "node:crypto";
-import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import {
   AssetAdministrationShellCreateDto,
@@ -41,11 +41,14 @@ import { Template } from "../../templates/domain/template";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
 import { LanguageText } from "../domain/common/language-text";
+import { ConceptDescription } from "../domain/concept-description";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
+import { ExpandedEnvironment } from "../domain/expanded-environment";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath, ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
+import { ConceptDescriptionRepository } from "../infrastructure/concept-description.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import {
   DigitalProductPassportIdentifiableEnvironmentPopulateDecorator,
@@ -60,18 +63,22 @@ class SubmodelNotPartOfEnvironmentException extends BadRequestException {
 
 @Injectable()
 export class EnvironmentService {
+  private readonly logger = new Logger(EnvironmentService.name);
   private aasRepository: AasRepository;
   private submodelRepository: SubmodelRepository;
+  private conceptDescriptionRepository: ConceptDescriptionRepository;
   private membersService: MembersService;
 
   constructor(
     aasRepository: AasRepository,
     submodelRepository: SubmodelRepository,
+    conceptDescriptionRepository: ConceptDescriptionRepository,
     membersService: MembersService,
     @InjectConnection() private connection: Connection,
   ) {
     this.aasRepository = aasRepository;
     this.submodelRepository = submodelRepository;
+    this.conceptDescriptionRepository = conceptDescriptionRepository;
     this.membersService = membersService;
   }
 
@@ -128,24 +135,21 @@ export class EnvironmentService {
 
   async addSubmodelToEnvironment(environment: Environment, submodelPlain: SubmodelRequestDto, saveEnvironment: (options: DbSessionOptions) => Promise<void>): Promise<SubmodelResponseDto> {
     const session = await this.connection.startSession();
-    const options = { session };
+    let result: SubmodelResponseDto;
     try {
-      session.startTransaction();
-      const submodel = environment.addSubmodel(Submodel.fromPlain(submodelPlain));
-      await saveEnvironment(options);
-      await this.submodelRepository.save(submodel, options);
+      await session.withTransaction(async () => {
+        const options = { session };
+        const submodel = environment.addSubmodel(Submodel.fromPlain(submodelPlain));
+        await saveEnvironment(options);
+        await this.submodelRepository.save(submodel, options);
 
-      const aas = await this.getFirstAssetAdministrationShell(environment);
-      aas.addSubmodel(submodel);
-      await this.aasRepository.save(aas, options);
+        const aas = await this.getFirstAssetAdministrationShell(environment);
+        aas.addSubmodel(submodel);
+        await this.aasRepository.save(aas, options);
 
-      const result = SubmodelJsonSchema.parse(submodel.toPlain());
-      await session.commitTransaction();
-      return result;
-    }
-    catch (e) {
-      await session.abortTransaction();
-      throw e;
+        result = SubmodelJsonSchema.parse(submodel.toPlain());
+      });
+      return result!;
     }
     finally {
       await session.endSession();
@@ -154,21 +158,17 @@ export class EnvironmentService {
 
   async deleteSubmodelFromEnvironment(environment: Environment, submodelId: string, saveEnvironment: (options: DbSessionOptions) => Promise<void>): Promise<void> {
     const session = await this.connection.startSession();
-    const options = { session };
     try {
-      session.startTransaction();
-      const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-      await this.submodelRepository.deleteById(submodel.id, options);
-      const aas = await this.getFirstAssetAdministrationShell(environment);
-      aas.deleteSubmodel(submodel);
-      await this.aasRepository.save(aas, options);
-      environment.deleteSubmodel(submodel);
-      await saveEnvironment(options);
-      await session.commitTransaction();
-    }
-    catch (e) {
-      await session.abortTransaction();
-      throw e;
+      await session.withTransaction(async () => {
+        const options = { session };
+        const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+        await this.submodelRepository.deleteById(submodel.id, options);
+        const aas = await this.getFirstAssetAdministrationShell(environment);
+        aas.deleteSubmodel(submodel);
+        await this.aasRepository.save(aas, options);
+        environment.deleteSubmodel(submodel);
+        await saveEnvironment(options);
+      });
     }
     finally {
       await session.endSession();
@@ -281,6 +281,49 @@ export class EnvironmentService {
   async getSubmodelElementValue(environment: Environment, submodelId: string, idShortPath: IdShortPath): Promise<ValueResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     return ValueSchema.parse(submodel.getValueRepresentation(idShortPath));
+  }
+
+  async loadExpandedEnvironment(environment: Environment): Promise<ExpandedEnvironment> {
+    const [shellMap, submodelMap, conceptDescriptionMap] = await Promise.all([
+      this.aasRepository.findByIds(environment.assetAdministrationShells),
+      this.submodelRepository.findByIds(environment.submodels),
+      this.conceptDescriptionRepository.findByIds(environment.conceptDescriptions),
+    ]);
+
+    try {
+      return ExpandedEnvironment.fromEnvironment(environment, shellMap, submodelMap, conceptDescriptionMap);
+    }
+    catch (e) {
+      this.logger.error(e instanceof Error ? e.message : e);
+      throw e;
+    }
+  }
+
+  async persistImportedEnvironment(
+    shells: AssetAdministrationShell[],
+    submodels: Submodel[],
+    conceptDescriptions: ConceptDescription[],
+    saveEntity: (options: DbSessionOptions) => Promise<void>,
+  ): Promise<void> {
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        const options = { session };
+        for (const conceptDescription of conceptDescriptions) {
+          await this.conceptDescriptionRepository.save(conceptDescription, options);
+        }
+        for (const submodel of submodels) {
+          await this.submodelRepository.save(submodel, options);
+        }
+        for (const shell of shells) {
+          await this.aasRepository.save(shell, options);
+        }
+        await saveEntity(options);
+      });
+    }
+    finally {
+      await session.endSession();
+    }
   }
 
   async populateEnvironmentForPagingResult(pagingResult: PagingResult<Passport | Template>, populateOptions: PopulateOptions) {

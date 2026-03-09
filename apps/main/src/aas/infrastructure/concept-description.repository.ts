@@ -1,7 +1,8 @@
 import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { findOne, findOneOrFail, save } from "../../lib/repositories";
+import { DbSessionOptions } from "../../database/query-options";
+import { findByIds, findOne, findOneOrFail, save } from "../../lib/repositories";
 import { ConceptDescription } from "../domain/concept-description";
 import { ConceptDescriptionDbSchema } from "./schemas/concept-description-db-schema";
 import { ConceptDescriptionDoc, ConceptDescriptionDocSchemaVersion } from "./schemas/concept-description.schema";
@@ -21,8 +22,8 @@ export class ConceptDescriptionRepository {
     return ConceptDescription.fromPlain(ConceptDescriptionDbSchema.encode(plain));
   }
 
-  async save(conceptDescription: ConceptDescription) {
-    return await save(conceptDescription, this.conceptDescriptionDoc, ConceptDescriptionDocSchemaVersion.v1_0_0, this.fromPlain, ConceptDescriptionDbSchema);
+  async save(conceptDescription: ConceptDescription, options?: DbSessionOptions) {
+    return await save(conceptDescription, this.conceptDescriptionDoc, ConceptDescriptionDocSchemaVersion.v1_0_0, this.fromPlain, ConceptDescriptionDbSchema, options);
   }
 
   async findOneOrFail(id: string): Promise<ConceptDescription> {
@@ -31,5 +32,9 @@ export class ConceptDescriptionRepository {
 
   async findOne(id: string): Promise<ConceptDescription | undefined> {
     return await findOne(id, this.conceptDescriptionDoc, this.fromPlain);
+  }
+
+  async findByIds(ids: string[]): Promise<Map<string, ConceptDescription>> {
+    return await findByIds(ids, this.conceptDescriptionDoc, this.fromPlain);
   }
 }

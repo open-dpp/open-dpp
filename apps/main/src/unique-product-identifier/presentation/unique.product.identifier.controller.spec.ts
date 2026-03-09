@@ -2,6 +2,10 @@ import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import request from "supertest";
 import { Environment } from "../../aas/domain/environment";
+import {
+  ConceptDescriptionDoc,
+  ConceptDescriptionSchema,
+} from "../../aas/infrastructure/schemas/concept-description.schema";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
 import { PassportService } from "../../passports/application/services/passport.service";
@@ -40,6 +44,7 @@ describe("uniqueProductIdentifierController", () => {
       name: UniqueProductIdentifierDoc.name,
       schema: UniqueProductIdentifierSchema,
     },
+    { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
 
   ], UniqueProductIdentifierService);
 

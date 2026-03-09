@@ -55,9 +55,12 @@
     "openPresentation": "Open presentation",
     "openChat": "Open chat",
     "exportPassport": "Export passport",
+    "exportTemplate": "Export template",
     "exportFailed": "Failed to export passport.",
     "importFailed": "Failed to import passport.",
-    "importSuccess": "Passport imported successfully."
+    "importSuccess": "Passport imported successfully.",
+    "templateExportFailed": "Failed to export template.",
+    "templateImportFailed": "Failed to import template."
   },
   "aasEditor": {
     "productImages": "Product images",
@@ -448,7 +451,7 @@
   "auth": {
     "signin": {
       "title": "Sign in to your account",
-      "button": "Signin",
+      "button": "Sign in",
       "rememberMe": "Remember me",
       "forgotPassword": "Forgot password?",
       "textForProviders": "Or continue with",
@@ -460,8 +463,8 @@
       "title": "Signup a new account",
       "button": "Signup",
       "alreadyAMember": "Already a member?",
-      "ctaSignIn": "Signin now",
-      "error": "Signup failed."
+      "ctaSignIn": "Sign in now",
+      "error": "Sign up failed."
     },
     "passwordResetRequest": {
       "title": "Request password reset",

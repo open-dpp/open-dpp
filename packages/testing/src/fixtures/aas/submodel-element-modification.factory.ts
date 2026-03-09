@@ -1,5 +1,5 @@
 import type { PropertyModificationSchema } from '@open-dpp/dto'
-import type { z } from 'zod/index'
+import type { z } from 'zod'
 import { randomUUID } from 'node:crypto'
 import { Language } from '@open-dpp/dto'
 import { Factory } from 'fishery'

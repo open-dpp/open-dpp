@@ -2,6 +2,8 @@ import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { DbSessionOptions } from "../../database/query-options";
+import { ModelDocSchemaVersion } from "../../models/infrastructure/model.schema";
 import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
 import { UniqueProductIdentifierDoc, UniqueProductIdentifierSchemaVersion } from "./unique-product-identifier.schema";
 
@@ -23,7 +25,7 @@ export class UniqueProductIdentifierService {
     });
   }
 
-  async save(uniqueProductIdentifier: UniqueProductIdentifier) {
+  async save(uniqueProductIdentifier: UniqueProductIdentifier, options?: DbSessionOptions) {
     return this.convertToDomain(
       await this.uniqueProductIdentifierDoc.findOneAndUpdate(
         { _id: uniqueProductIdentifier.uuid },
@@ -35,6 +37,7 @@ export class UniqueProductIdentifierService {
           new: true, // Return the updated document
           upsert: true, // Create a new document if none found
           runValidators: true,
+          session: options?.session ?? null,
         },
       ),
     );

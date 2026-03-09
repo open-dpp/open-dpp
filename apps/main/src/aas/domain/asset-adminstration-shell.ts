@@ -113,6 +113,22 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     return visitor.visitAssetAdministrationShell(this, context);
   }
 
+  withAssetInformation(assetInformation: AssetInformation): AssetAdministrationShell {
+    return new AssetAdministrationShell(
+      this.id,
+      assetInformation,
+      this.extensions,
+      this.category,
+      this.idShort,
+      this.displayName,
+      this.description,
+      this.administration,
+      this.embeddedDataSpecifications,
+      this.derivedFrom,
+      this.submodels,
+    );
+  }
+
   /**
    * Creates a copy of this AssetAdministrationShell with the specified submodels.
    * This will NOT copy the existing submodel references but will create new references to the specified submodels.
