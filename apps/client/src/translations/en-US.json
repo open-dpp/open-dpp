@@ -384,7 +384,8 @@
         "signupEnabled": "Public signup enabled",
         "signupEnabledDescription": "When disabled, only admins can add new users.",
         "saved": "Settings saved successfully",
-        "error": "Error saving settings"
+        "error": "Error saving settings",
+        "lockedByEnv": "This setting is controlled by an environment variable and cannot be changed here."
       }
     }
   },

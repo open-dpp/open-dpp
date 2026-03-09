@@ -63,6 +63,9 @@ export const envSchema = z.object({
   OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL: z.string().optional(),
   OPEN_DPP_AUTH_ADMIN_USERNAME: z.string().optional(),
   OPEN_DPP_AUTH_ADMIN_PASSWORD: z.string().optional(),
+  // Instance Settings
+  OPEN_DPP_INSTANCE_DEFAULT_SIGNUP_ENABLED: asBoolean.optional(),
+  OPEN_DPP_INSTANCE_SIGNUP_ENABLED: asBoolean.optional(),
   // Default Caps
   OPEN_DPP_DEFAULT_MODEL_CREATE_CAP: z.coerce.number().min(0).optional().default(0),
   OPEN_DPP_DEFAULT_AI_TOKEN_QUOTA: z.coerce.number().min(0).optional().default(0),

@@ -13,6 +13,7 @@ import { UsersRepository } from "../../../users/infrastructure/adapters/users.re
 import { SessionsService } from "../../application/services/sessions.service";
 import { Session } from "../../domain/session";
 import { ALLOW_SERVICE_ACCESS } from "../../presentation/decorators/allow-service-access.decorator";
+import { USER_HAS_ROLE } from "../../presentation/decorators/user-has-role.decorator";
 
 /**
  * NestJS guard that handles authentication for protected routes
@@ -139,7 +140,7 @@ export class AuthGuard implements CanActivate {
       }
     }
 
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>("ROLES", [
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>(USER_HAS_ROLE, [
       context.getHandler(),
       context.getClass(),
     ]);

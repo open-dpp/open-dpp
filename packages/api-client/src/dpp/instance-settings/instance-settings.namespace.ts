@@ -2,7 +2,10 @@ import type { AxiosInstance } from 'axios'
 
 export interface InstanceSettingsDto {
   id: string
-  signupEnabled: boolean
+  signupEnabled: {
+    value: boolean
+    locked?: boolean
+  }
 }
 
 export interface PublicInstanceSettingsDto {

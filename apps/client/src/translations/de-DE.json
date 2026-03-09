@@ -384,7 +384,8 @@
         "signupEnabled": "Öffentliche Registrierung aktiviert",
         "signupEnabledDescription": "Wenn deaktiviert, können nur Administratoren neue Benutzer hinzufügen.",
         "saved": "Einstellungen erfolgreich gespeichert",
-        "error": "Fehler beim Speichern der Einstellungen"
+        "error": "Fehler beim Speichern der Einstellungen",
+        "lockedByEnv": "Diese Einstellung wird durch eine Umgebungsvariable gesteuert und kann hier nicht geändert werden."
       }
     }
   },
