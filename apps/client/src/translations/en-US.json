@@ -530,8 +530,8 @@
       "title": "Signup a new account",
       "button": "Signup",
       "alreadyAMember": "Already a member?",
-      "ctaSignIn": "Signin now",
-      "error": "Signup failed."
+      "ctaSignIn": "Sign in now",
+      "error": "Sign up failed."
     },
     "passwordResetRequest": {
       "title": "Request password reset",
