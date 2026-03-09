@@ -20,7 +20,7 @@ export class InstanceSettingsService {
 
     const defaults = InstanceSettings.create({
       signupEnabled: {
-        value: this.envService.get("OPEN_DPP_INSTANCE_SIGNUP_ENABLED") === true,
+        value: this.envService.get("OPEN_DPP_INSTANCE_DEFAULT_SIGNUP_ENABLED") !== false,
       },
     });
     const saved = await this.repository.save(defaults);
@@ -28,7 +28,10 @@ export class InstanceSettingsService {
   }
 
   private validateUpdatesAgainstEnvironment(updates: Partial<InstanceSettingsDbProps>) {
-    if (updates.signupEnabled && this.envService.get("OPEN_DPP_INSTANCE_SIGNUP_ENABLED") === true) {
+    const settings = {
+      signupEnabled: this.envService.get("OPEN_DPP_INSTANCE_SIGNUP_ENABLED"),
+    };
+    if (settings.signupEnabled !== undefined && updates.signupEnabled !== settings.signupEnabled) {
       throw new ValueError("Cannot override signupEnabled when OPEN_DPP_INSTANCE_SIGNUP_ENABLED is true");
     }
   }

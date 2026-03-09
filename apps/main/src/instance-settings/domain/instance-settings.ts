@@ -56,7 +56,10 @@ export class InstanceSettings {
   public withEnvOverrides(overrides: EnvOverrideProps): InstanceSettings {
     return new InstanceSettings(
       this.id,
-      { value: overrides.signupEnabled !== undefined ? overrides.signupEnabled : this.signupEnabled.value, locked: overrides.signupEnabled !== undefined },
+      {
+        value: overrides.signupEnabled !== undefined ? overrides.signupEnabled : this.signupEnabled.value,
+        locked: overrides.signupEnabled === undefined ? undefined : true,
+      },
     );
   }
 

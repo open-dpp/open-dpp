@@ -5,19 +5,18 @@ describe("InstanceSettings", () => {
   describe("create", () => {
     it("should create with default signupEnabled=true", () => {
       const settings = InstanceSettings.create();
-      expect(settings.signupEnabled).toBe(true);
-      expect(settings.lockedFields).toEqual([]);
+      expect(settings.signupEnabled.value).toBe(true);
       expect(settings.id).toBeDefined();
     });
 
     it("should create with custom signupEnabled=false", () => {
-      const settings = InstanceSettings.create({ signupEnabled: false });
-      expect(settings.signupEnabled).toBe(false);
+      const settings = InstanceSettings.create({ signupEnabled: { value: false } });
+      expect(settings.signupEnabled.value).toBe(false);
     });
 
     it("should use default when signupEnabled is undefined", () => {
       const settings = InstanceSettings.create({ signupEnabled: undefined });
-      expect(settings.signupEnabled).toBe(true);
+      expect(settings.signupEnabled.value).toBe(true);
     });
   });
 
@@ -25,51 +24,45 @@ describe("InstanceSettings", () => {
     it("should restore from DB props", () => {
       const settings = InstanceSettings.loadFromDb({ id: "abc", signupEnabled: false });
       expect(settings.id).toBe("abc");
-      expect(settings.signupEnabled).toBe(false);
-      expect(settings.lockedFields).toEqual([]);
+      expect(settings.signupEnabled.value).toBe(false);
     });
   });
 
   describe("withEnvOverrides", () => {
     it("should apply enforced signupEnabled value", () => {
-      const original = InstanceSettings.create({ signupEnabled: true });
+      const original = InstanceSettings.create({ signupEnabled: { value: true } });
       const overridden = original.withEnvOverrides({
         signupEnabled: false,
-        lockedFields: ["signupEnabled"],
       });
 
-      expect(original.signupEnabled).toBe(true);
-      expect(overridden.signupEnabled).toBe(false);
-      expect(overridden.lockedFields).toEqual(["signupEnabled"]);
+      expect(original.signupEnabled.value).toBe(true);
+      expect(overridden.signupEnabled.locked).toBe(true);
     });
 
     it("should preserve signupEnabled when override is undefined", () => {
-      const original = InstanceSettings.create({ signupEnabled: true });
+      const original = InstanceSettings.create({ signupEnabled: { value: true } });
       const overridden = original.withEnvOverrides({
         signupEnabled: undefined,
-        lockedFields: [],
       });
 
-      expect(overridden.signupEnabled).toBe(true);
-      expect(overridden.lockedFields).toEqual([]);
+      expect(overridden.signupEnabled.value).toBe(true);
+      expect(overridden.signupEnabled.locked).toBeUndefined();
     });
 
     it("should not mutate the original instance", () => {
-      const original = InstanceSettings.create({ signupEnabled: true });
+      const original = InstanceSettings.create({ signupEnabled: { value: true } });
       original.withEnvOverrides({
         signupEnabled: false,
-        lockedFields: ["signupEnabled"],
       });
 
-      expect(original.signupEnabled).toBe(true);
-      expect(original.lockedFields).toEqual([]);
+      expect(original.signupEnabled.value).toBe(true);
+      expect(original.signupEnabled.locked).toBeUndefined();
     });
 
     it("should preserve the id", () => {
       const original = InstanceSettings.create();
       const overridden = original.withEnvOverrides({
         signupEnabled: false,
-        lockedFields: ["signupEnabled"],
       });
 
       expect(overridden.id).toBe(original.id);
@@ -78,64 +71,46 @@ describe("InstanceSettings", () => {
 
   describe("update", () => {
     it("should return a new instance with updated value", () => {
-      const original = InstanceSettings.create({ signupEnabled: true });
+      const original = InstanceSettings.create({ signupEnabled: { value: true } });
       const updated = original.update({ signupEnabled: false });
 
-      expect(updated.signupEnabled).toBe(false);
-      expect(original.signupEnabled).toBe(true);
-    });
-
-    it("should preserve lockedFields through update", () => {
-      const settings = InstanceSettings.create().withEnvOverrides({
-        lockedFields: ["signupEnabled"],
-      });
-      const updated = settings.update({ signupEnabled: false });
-
-      expect(updated.lockedFields).toEqual(["signupEnabled"]);
+      expect(updated.signupEnabled.value).toBe(false);
+      expect(original.signupEnabled.value).toBe(true);
     });
 
     it("should keep current value when update prop is undefined", () => {
-      const original = InstanceSettings.create({ signupEnabled: false });
+      const original = InstanceSettings.create({ signupEnabled: { value: false } });
       const updated = original.update({});
 
-      expect(updated.signupEnabled).toBe(false);
+      expect(updated.signupEnabled.value).toBe(false);
     });
   });
 
   describe("toPlain", () => {
     it("should exclude lockedFields", () => {
       const settings = InstanceSettings.create().withEnvOverrides({
-        lockedFields: ["signupEnabled"],
+        signupEnabled: true,
       });
       const plain = settings.toPlain();
 
       expect(plain).toEqual({
         id: settings.id,
-        signupEnabled: settings.signupEnabled,
+        signupEnabled: settings.signupEnabled.value,
       });
-      expect(plain).not.toHaveProperty("lockedFields");
     });
   });
 
   describe("toResponse", () => {
     it("should include lockedFields", () => {
       const settings = InstanceSettings.create().withEnvOverrides({
-        lockedFields: ["signupEnabled"],
+        signupEnabled: true,
       });
       const response = settings.toResponse();
 
       expect(response).toEqual({
         id: settings.id,
         signupEnabled: settings.signupEnabled,
-        lockedFields: ["signupEnabled"],
       });
-    });
-
-    it("should return empty lockedFields when none are locked", () => {
-      const settings = InstanceSettings.create();
-      const response = settings.toResponse();
-
-      expect(response.lockedFields).toEqual([]);
     });
   });
 });

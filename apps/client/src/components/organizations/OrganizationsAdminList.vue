@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import type { Organization } from "better-auth/client";
 import type { MenuItem } from "primevue/menuitem";
-import { Button, Column, DataTable, InputGroup, InputGroupAddon, InputText, Menu } from "primevue";
 import dayjs from "dayjs";
+import { Button, Column, DataTable, InputGroup, InputGroupAddon, InputText, Menu } from "primevue";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
