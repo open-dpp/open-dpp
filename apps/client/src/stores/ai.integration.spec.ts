@@ -1,7 +1,8 @@
 import type { AiConfigurationUpsertDto } from "@open-dpp/api-client";
 import { AiProvider } from "@open-dpp/api-client";
 import { createPinia, setActivePinia } from "pinia";
-import { expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { aiConfigurationFactory } from "../testing-utils/fixtures/ai-configuration.factory";
 import { useAiIntegrationStore } from "./ai.integration";
 

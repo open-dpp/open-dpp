@@ -61,7 +61,7 @@ async function updateFileFromModal(items: Array<MediaInfo>) {
           </div>
           <div v-else class="flex flex-row gap-4 w-full justify-between">
             <div class="text-gray-600 my-auto">
-              {{ t("models.form.file.noSelection") }}
+              {{ t("file.noSelection") }}
             </div>
             <div class="my-auto">
               <button

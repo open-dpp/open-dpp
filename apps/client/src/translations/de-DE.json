@@ -3,6 +3,7 @@
     "required": "Erforderlich"
   },
   "common": {
+    "untitled": "Unbenannt",
     "id": "ID",
     "identification": "Identifikation",
     "name": "Name",
@@ -32,9 +33,12 @@
     "openPresentation": "Präsentation öffnen",
     "openChat": "Chat öffnen",
     "exportPassport": "Produktpass exportieren",
+    "exportTemplate": "Vorlage exportieren",
     "exportFailed": "Produktpass konnte nicht exportiert werden.",
     "importFailed": "Produktpass konnte nicht importiert werden.",
     "importSuccess": "Produktpass erfolgreich importiert.",
+    "templateExportFailed": "Vorlage konnte nicht exportiert werden.",
+    "templateImportFailed": "Vorlage konnte nicht importiert werden.",
     "errorOccurred": "Ein Fehler ist aufgetreten",
     "unknownErrorOccurred": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
     "failed": "fehlgeschlagen",
@@ -42,6 +46,7 @@
     "home": "Startseite",
     "backTo": "Zurück zu { link }",
     "presentationMode": "Präsentations-Modus",
+    "unknownName": "Unbekannter Name",
     "form": {
       "email": {
         "help": "Geben Sie eine E-Mail Adresse ein.",
@@ -58,9 +63,11 @@
     }
   },
   "aasEditor": {
+    "productImages": "Produktbilder",
     "formLabels": {
       "value": "Wert",
-      "name": "Name"
+      "name": "Name",
+      "id": "Identifikator"
     },
     "table": {
       "saveAndAddEntries": "Speichern und Listeneinträge hinzufügen",
@@ -84,11 +91,12 @@
       "errorEditEntries": "@:common.edit der @:aasEditor.table.entries @:common.failed"
     },
     "link": "Link",
+    "errorLoading": "Laden @:common.failed",
     "errorLoadingSubmodels": "Laden der Abschnitte @.lower:common.failed",
     "addSubmodel": "Abschnitt hinzufügen",
     "submodelElementCollection": "Unterabschnitt",
     "edit": "{formItem} bearbeiten",
-    "submodel": "Abschnitt",
+    "submodel": "Abschnitt | Abschnitte",
     "removeSubmodel": "Soll der @:aasEditor.submodel wirklich entfernt werden?",
     "errorRemoveSubmodel": "@:common.remove des Abschnitts @:common.failed",
     "removeSubmodelElement": "Soll das Element wirklich entfernt werden?",
@@ -380,7 +388,7 @@
     "select": "Datei auswählen",
     "noSelection": "Keine Datei ausgewählt",
     "notFound": "Datei nicht vorhanden",
-    "couldNotBeLoaded": "Datei konnte nicht geladen werden.",
+    "couldNotBeLoaded": "Datei konnte nicht geladen werden. | Dateien konnten nicht geladen werden.",
     "errorRevokingUrl": "Fehler beim Freigeben der vorherigen Objekt-URL:",
     "errorRevokingUrlError": "Fehler beim Freigeben der Objekt-URL nach Fehler:"
   },
@@ -390,6 +398,7 @@
     "preview": "Vorschau"
   },
   "passports": {
+    "select": "Produktpass auswählen",
     "label": "Produktpass | Produktpässe",
     "create": "Neuen Produktpass erstellen",
     "blank": "Leer",
@@ -398,67 +407,9 @@
   },
   "templates": {
     "label": "Passvorlagen",
+    "create": "Neue Passvorlage erstellen",
     "createdAt": "Erstellt am",
     "updatedAt": "Aktualisiert am"
-  },
-  "models": {
-    "models": "Produktpässe",
-    "pass": "Modellpass",
-    "info": "Modellpass Informationen",
-    "errorLoad": "Laden der Modellpässe fehlgeschlagen",
-    "createPass": "Erstellen Sie einen neuen Modellpass.",
-    "submitCreatePass": "Modelpass erstellen",
-    "general": "Allgemein",
-    "myDrafts": "Meine Vorlagen",
-    "mediaEditDialog": {
-      "title": "Produktbilder bearbeiten",
-      "addImageError": "Hinzufügen des Produktbilds fehlgeschlagen.",
-      "deleteImageError": "Löschen des Produktbilds fehlgeschlagen.",
-      "modifyImageError": "Anpassen des Produktbilds fehlgeschlagen.",
-      "moveImageError": "Ändern der Reihenfolge der Produktbilder fehlgeschlagen.",
-      "loadModelError": "Laden des Modellpasses fehlgeschlagen."
-    },
-    "form": {
-      "mediaDownloadError": "Laden der Produktbilder fehlgeschlagen",
-      "id": "ID",
-      "name": {
-        "help": "Geben Sie Ihrem Modellpass einen Namen",
-        "label": "Name",
-        "error": "Bitte geben Sie einen Namen ein."
-      },
-      "passportDraft": {
-        "help": "Wählen Sie die passende Passvorlage aus",
-        "label": "Passvorlage",
-        "error": "Bitte wählen Sie eine Vorlage aus."
-      },
-      "file": {
-        "change": "Datei ändern",
-        "upload": "Datei hochladen",
-        "uploadSuccess": "Datei erfolgreich hochgeladen.",
-        "uploadError": "Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.",
-        "download": "Datei herunterladen",
-        "downloadError": "Die Datei konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
-        "select": "Datei auswählen",
-        "noSelection": "Keine Datei ausgewählt"
-      },
-      "link": {
-        "navigationError": "Navigation zum Produktpass fehlgeschlagen"
-      },
-      "repeater": {
-        "series": "Datenreihe",
-        "addSeries": "Datenreihe hinzufügen"
-      },
-      "section": {
-        "additional": "Weiterführende Abschnitte",
-        "saveSuccess": "Daten erfolgreich gesichert",
-        "saveError": "Daten konnten nicht gespeichert werden"
-      }
-    },
-    "list": {
-      "creation-label": "Modellpass hinzufügen",
-      "description": "Alle Pässe auf der Produktmodellebene. Ein Produktmodell ist zum Beispiel das Galaxy S22 Ultra.",
-      "title": "Modellpässe"
-    }
   },
   "actions": {
     "member": {
@@ -469,14 +420,6 @@
       "title": "Modell hinzufügen",
       "description": "Modelle der Organisation ansehen, um dort ein neues Modell hinzuzufügen."
     }
-  },
-  "items": {
-    "info": "Artikelpass Informationen",
-    "add": "Artikelpass hinzufügen",
-    "new": "Neuen Artikelpass hinzufügen",
-    "description": "Alle Pässe auf Einzelartikelebene.",
-    "label": "Artikelpässe",
-    "item": "Artikel"
   },
   "user": {
     "profile": "Dein Profil",
@@ -578,6 +521,12 @@
       "subject": "Reparaturanfrage",
       "intro": "Guten Tag,\n\nich habe folgendes Reparaturanliegen:",
       "sendError": "Die Reperaturanfrage konnte nicht abgeschickt werden. Haben Sie bereits einen Emailclient konfiguriert?"
-    }
+    },
+    "missingValue": "Kein Wert gesetzt",
+    "passportNotFound": "Produktpass nicht gefunden",
+    "passportNotFoundLong": "Ihr digitaler Produktpass konnte nicht gefunden werden. Bitte prüfen Sie Ihre Daten oder kontaktieren Sie den Support."
+  },
+  "uniqueproductidentifier": {
+    "notfound": "UniqueProductIdentifier konnte nicht gefunden werden, bitte Administrator kontaktieren."
   }
 }

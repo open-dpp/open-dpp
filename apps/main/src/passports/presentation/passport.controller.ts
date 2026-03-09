@@ -1,4 +1,5 @@
 import type {
+  AssetAdministrationShellModificationDto,
   PassportDto,
   PassportPaginationDto,
   PassportRequestCreateDto,
@@ -9,13 +10,15 @@ import type {
   SubmodelRequestDto,
   ValueRequestDto,
 } from "@open-dpp/dto";
-import { BadRequestException, Body, Controller, Get, NotFoundException, Post } from "@nestjs/common";
+import type express from "express";
+import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Post } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
-  AssetKind,
+  AssetAdministrationShellResponseDto,
   PassportDtoSchema,
   PassportPaginationDtoSchema,
   PassportRequestCreateDtoSchema,
+  Populates,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
   SubmodelPaginationResponseDto,
@@ -24,9 +27,10 @@ import {
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 
-import { z } from "zod";
+import { match, P } from "ts-pattern";
 import { Environment } from "../../aas/domain/environment";
 import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
+import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import {
   ApiDeleteColumn,
   ApiDeleteRow,
@@ -40,6 +44,7 @@ import {
   ApiGetSubmodels,
   ApiGetSubmodelValue,
   ApiPatchColumn,
+  ApiPatchShell,
   ApiPatchSubmodel,
   ApiPatchSubmodelElement,
   ApiPatchSubmodelElementValue,
@@ -48,12 +53,16 @@ import {
   ApiPostSubmodel,
   ApiPostSubmodelElement,
   ApiPostSubmodelElementAtIdShortPath,
+  AssetAdministrationShellIdParam,
+  AssetAdministrationShellModificationRequestBody,
   ColumnParam,
   CursorQueryParam,
   IdParam,
   IdShortPathParam,
   LimitQueryParam,
+  PopulateQueryParam,
   PositionQueryParam,
+  RequestParam,
   RowParam,
   SubmodelElementModificationRequestBody,
   SubmodelElementRequestBody,
@@ -73,24 +82,16 @@ import { DbSessionOptions } from "../../database/query-options";
 import { Session } from "../../identity/auth/domain/session";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { Pagination } from "../../pagination/pagination";
+import { PagingResult } from "../../pagination/paging-result";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
+
 import {
   UniqueProductIdentifierService,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+
 import { PassportService } from "../application/services/passport.service";
 import { Passport } from "../domain/passport";
-
 import { PassportRepository } from "../infrastructure/passport.repository";
-
-const ExpandedPassportDtoSchema = PassportDtoSchema.extend({
-  environment: z.object({
-    assetAdministrationShells: z.array(z.record(z.string(), z.any())),
-    submodels: z.array(z.record(z.string(), z.any())),
-    conceptDescriptions: z.array(z.string()).default([]),
-  }),
-});
-
-type ExpandedPassportDto = z.infer<typeof ExpandedPassportDtoSchema>;
 
 @Controller("/passports")
 export class PassportController implements IAasReadEndpoints, IAasCreateEndpoints, IAasModifyEndpoints, IAasDeleteEndpoints {
@@ -100,6 +101,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     private readonly templateRepository: TemplateRepository,
     private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
     private readonly passportService: PassportService,
+    private readonly aasSerializationService: AasSerializationService,
   ) {
   }
 
@@ -107,6 +109,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
   async getPassports(
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
+    @PopulateQueryParam() populate: string[],
     @AuthSession() session: Session,
   ): Promise<PassportPaginationDto> {
     const pagination = Pagination.create({ limit, cursor });
@@ -114,9 +117,23 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     if (!activeOrganizationId) {
       throw new BadRequestException("activeOrganizationId is required in session");
     }
-    return PassportPaginationDtoSchema.parse(
-      (await this.passportRepository.findAllByOrganizationId(activeOrganizationId, pagination)).toPlain(),
-    );
+    let pagingResult: PagingResult<any> = await this.passportRepository.findAllByOrganizationId(activeOrganizationId, pagination);
+    if (populate.includes(Populates.assetAdministrationShells)) {
+      pagingResult = await this.environmentService.populateEnvironmentForPagingResult(
+        pagingResult,
+        { assetAdministrationShells: true, submodels: false, ignoreMissing: false },
+      );
+    }
+
+    return PassportPaginationDtoSchema.parse(pagingResult.toPlain());
+  }
+
+  @Get(":passportId")
+  async getPassport(
+    @RequestParam() req: express.Request,
+    @Param("passportId") id: string,
+  ): Promise<PassportDto> {
+    return PassportDtoSchema.parse((await this.passportRepository.findOneOrFail(id)).toPlain());
   }
 
   @Get(":id/unique-product-identifier")
@@ -143,17 +160,30 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     if (!activeOrganizationId) {
       throw new BadRequestException("activeOrganizationId is required in session");
     }
-    let environment: Environment;
-    if (body && body.templateId) {
-      const template = await this.templateRepository.findOneOrFail(body.templateId);
-      environment = await this.environmentService.copyEnvironment(template.environment);
-    }
-    else {
-      environment = await this.environmentService.createEnvironmentWithEmptyAas(AssetKind.Instance);
-    }
+    const { environment, templateId } = await match(body).returnType<Promise<{
+      environment: Environment;
+      templateId?: string;
+    }>>().with(
+      { templateId: P.string },
+      async ({ templateId }) => {
+        const template = await this.templateRepository.findOneOrFail(templateId);
+        await this.environmentService.checkOwnerShipOfDppIdentifiable(template, session);
+        return { environment: await this.environmentService.copyEnvironment(template.environment), templateId };
+      },
+    ).with({
+      environment: { assetAdministrationShells: P.array() },
+    }, async ({ environment: localEnvironment }) => {
+      return { environment: await this.environmentService.createEnvironment(
+        localEnvironment,
+        false,
+      ) };
+    }).otherwise(() => {
+      throw new BadRequestException("Either templateId or environment.assetAdministrationShells must be provided");
+    });
+
     const passport = Passport.create({
       organizationId: activeOrganizationId,
-      templateId: body?.templateId ?? undefined,
+      templateId,
       environment,
     });
 
@@ -173,6 +203,17 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     const passport = await this.loadPassportAndCheckOwnership(id, session);
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getAasShells(passport.getEnvironment(), pagination);
+  }
+
+  @ApiPatchShell()
+  async modifyShell(
+    @IdParam() id: string,
+    @AssetAdministrationShellIdParam() aasId: string,
+    @AssetAdministrationShellModificationRequestBody() body: AssetAdministrationShellModificationDto,
+    @AuthSession() session: Session,
+  ): Promise<AssetAdministrationShellResponseDto> {
+    const passport = await this.loadPassportAndCheckOwnership(id, session);
+    return await this.environmentService.modifyAasShell(passport.getEnvironment(), aasId, body);
   }
 
   @ApiGetSubmodels()
@@ -400,26 +441,27 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     @AuthSession() session: Session,
   ): Promise<any> {
     const passport = await this.loadPassportAndCheckOwnership(id, session);
-    return await this.passportService.exportPassport(passport.id);
+    return await this.aasSerializationService.exportPassport(passport);
   }
 
   @Post("/import")
   async importPassport(
-    @Body(new ZodValidationPipe(ExpandedPassportDtoSchema)) body: ExpandedPassportDto,
+    @Body() body: any,
     @AuthSession() session: Session,
   ): Promise<PassportDto> {
-    const activeOrganizationId = session.activeOrganizationId;
+    const activeOrganizationId = session.activeOrganizationId?.toString();
     if (!activeOrganizationId) {
       throw new BadRequestException("activeOrganizationId is required in session");
     }
-    const payload = {
-      ...body,
-      organizationId: activeOrganizationId,
-      createdAt: new Date(body.createdAt),
-      updatedAt: new Date(body.updatedAt),
-    };
-
-    const passport = await this.passportService.importPassport(payload);
+    const passport = await this.aasSerializationService.importPassport(
+      body,
+      activeOrganizationId,
+      async (p, options) => {
+        await this.passportRepository.save(p, options);
+        const upid = p.createUniqueProductIdentifier();
+        await this.uniqueProductIdentifierService.save(upid, options);
+      },
+    );
     return PassportDtoSchema.parse(passport.toPlain());
   }
 

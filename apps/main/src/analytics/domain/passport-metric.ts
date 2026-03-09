@@ -1,10 +1,9 @@
 import { v7 as uuid7 } from "uuid";
-import { z } from "zod/v4";
 
 export interface MetricSourceProps {
   type: MeasurementType;
-  modelId: string;
-  templateId: string;
+  passportId: string;
+  templateId: string | null;
   organizationId: string;
 }
 
@@ -29,19 +28,6 @@ export interface MetricValue {
   value: number;
 }
 
-export interface FieldValue {
-  value: unknown;
-  dataSectionId: string;
-  dataFieldId: string;
-  row: number;
-}
-
-export interface FieldAggregateCreateProps {
-  source: Omit<MetricSourceProps, "type">;
-  fieldValues: FieldValue[];
-  date: Date;
-}
-
 export class PassportMetric {
   private constructor(
     public readonly id: string, // id must be sortable by date to make versioning pattern work (see https://medium.com/mongodb/versioning-pattern-with-time-series-data-in-mongodb-595b5e8cdac4)
@@ -52,23 +38,6 @@ export class PassportMetric {
 
   static create(data: PassportMetricCreateProps): PassportMetric {
     return new PassportMetric(uuid7(), data.source, data.date, []);
-  }
-
-  static createFieldAggregate(data: FieldAggregateCreateProps): PassportMetric {
-    const metric = PassportMetric.create({
-      source: { ...data.source, type: MeasurementType.FIELD_AGGREGATE },
-      date: data.date,
-    });
-    data.fieldValues.forEach((fieldValue) => {
-      if (z.number().safeParse(fieldValue.value).success) {
-        metric.upsertMetricValue({
-          key: fieldValue.dataFieldId,
-          row: fieldValue.row,
-          value: Number(fieldValue.value),
-        });
-      }
-    });
-    return metric;
   }
 
   static createPageView(data: {

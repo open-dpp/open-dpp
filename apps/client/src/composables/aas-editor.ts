@@ -1,5 +1,7 @@
 import type { AasNamespace } from "@open-dpp/api-client";
 import type {
+  AssetAdministrationShellModificationDto,
+  AssetAdministrationShellResponseDto,
   DataTypeDefType,
   FileRequestDto,
   LanguageTextDto,
@@ -23,13 +25,11 @@ import type { TreeNode } from "primevue/treenode";
 import type { Ref } from "vue";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import type { AasEditorPath, IAasDrawer } from "./aas-drawer.ts";
+import type { MediaFileCollectionItem } from "./media-file.ts";
 import type { IPagination, PagingResult } from "./pagination.ts";
 import {
-
   AasSubmodelElements,
-
   AasSubmodelElementsEnum,
-
   DataTypeDef,
   KeyTypes,
   PropertyJsonSchema,
@@ -46,9 +46,10 @@ import {
   EditorMode,
   useAasDrawer,
 } from "./aas-drawer.ts";
+import { useAasGallery } from "./aas-gallery.ts";
 import { usePagination } from "./pagination.ts";
 
-interface AasEditorProps {
+export interface AasEditorProps {
   id: string;
   aasNamespace: AasNamespace;
   initialSelectedKeys?: string;
@@ -66,6 +67,7 @@ export interface IAasEditor extends IAasDrawer, IPagination {
     key: string,
     children?: TreeNode[],
   ) => TreeNode | undefined;
+  displayName: Ref<string>;
   submodels: Ref<TreeNode[]>;
   buildAddSubmodelElementMenu: (node: TreeNode) => void;
   submodelElementsToAdd: Ref<MenuItem[]>;
@@ -75,6 +77,8 @@ export interface IAasEditor extends IAasDrawer, IPagination {
   loading: Ref<boolean>;
   selectedKeys: Ref<TreeTableSelectionKeys | undefined>;
   selectTreeNode: (key: string) => void;
+  openAssetAdministrationShellEditor: () => void;
+  aasGalleryFiles: Ref<MediaFileCollectionItem[]>;
 }
 
 export function useAasEditor({
@@ -88,6 +92,8 @@ export function useAasEditor({
   translate,
   openConfirm,
 }: AasEditorProps): IAasEditor {
+  const assetAdministrationShell = ref<AssetAdministrationShellResponseDto | undefined>(undefined);
+  const displayName = ref<string>("");
   const submodels = ref<TreeNode[]>([]);
   const selectedKeys = ref<TreeTableSelectionKeys | undefined>(undefined);
   const translatePrefix = "aasEditor";
@@ -101,6 +107,8 @@ export function useAasEditor({
 
   const loading = ref(false);
   const submodelElementsToAdd = ref<MenuItem[]>([]);
+
+  const { files: aasGalleryFiles, downloadDefaultThumbnails } = useAasGallery({ translate, errorHandlingStore });
 
   const fetchSubmodels = async (
     pagingParams: PagingParamsDto,
@@ -125,6 +133,67 @@ export function useAasEditor({
     }
     return { paging_metadata: { cursor: null }, result: [] };
   };
+
+  function openAssetAdministrationShellEditor() {
+    if (assetAdministrationShell.value) {
+      drawer.openDrawer({
+        type: KeyTypes.AssetAdministrationShell,
+        data: toRaw(assetAdministrationShell.value),
+        mode: EditorMode.EDIT,
+        title: translate(`common.edit`),
+        path: {},
+        callback: modifyAasEditor,
+      });
+    }
+  }
+
+  async function modifyAasEditor(data: AssetAdministrationShellModificationDto) {
+    const errorMessage = translate(`${translatePrefix}.error`, { method: translate("common.edit") });
+    if (assetAdministrationShell.value) {
+      try {
+        const response = await aasNamespace.modifyShell(
+          id,
+          assetAdministrationShell.value.id,
+          data,
+        );
+        if (response.status === HTTPCode.OK) {
+          await updateAssetAdministrationShell(response.data);
+          drawer.hideDrawer();
+        }
+        else {
+          errorHandlingStore.logErrorWithNotification(errorMessage);
+        }
+      }
+      catch (e) {
+        errorHandlingStore.logErrorWithNotification(errorMessage, e);
+      }
+    }
+  }
+
+  const fetchAssetAdministrationShell = async (
+  ): Promise<void> => {
+    const errorMessage = translate(`${translatePrefix}.errorLoading`);
+    try {
+      const response = await aasNamespace.getShells(id, { limit: 1 });
+      if (response.status === HTTPCode.OK && response.data.result.length > 0) {
+        await updateAssetAdministrationShell(response.data.result[0]);
+      }
+      else {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+      }
+    }
+    catch (e) {
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
+    }
+  };
+
+  async function updateAssetAdministrationShell(data: AssetAdministrationShellResponseDto | undefined) {
+    assetAdministrationShell.value = data;
+    displayName.value = data?.displayName.find(d => d.language === selectedLanguage)?.text ?? "";
+    if (data) {
+      await downloadDefaultThumbnails(data);
+    }
+  }
 
   const pagination
     = usePagination({ initialCursor, limit: 10, fetchCallback: fetchSubmodels, changeQueryParams });
@@ -553,6 +622,7 @@ export function useAasEditor({
   }
 
   async function init() {
+    await fetchAssetAdministrationShell();
     await pagination.nextPage();
     if (initialSelectedKeys) {
       selectTreeNode(initialSelectedKeys);
@@ -560,9 +630,12 @@ export function useAasEditor({
   }
 
   return {
+    aasGalleryFiles,
+    displayName,
     init,
     submodels,
     submodelElementsToAdd,
+    openAssetAdministrationShellEditor,
     buildAddSubmodelElementMenu,
     createSubmodel,
     deleteSubmodel,

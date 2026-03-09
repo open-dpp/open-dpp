@@ -1,14 +1,33 @@
+import type { Connection, Model } from "mongoose";
 import { expect } from "@jest/globals";
-import { connect, Connection, Model } from "mongoose";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { Test, TestingModule } from "@nestjs/testing";
+import { EnvModule, EnvService } from "@open-dpp/env";
+import { generateMongoConfig } from "../../../../database/config";
 import { Account, AccountSchema } from "./account.schema";
 
 describe("accountSchema", () => {
   let mongoConnection: Connection;
   let AccountModel: Model<Account>;
+  let module: TestingModule;
 
   beforeAll(async () => {
-    const uri = process.env.OPEN_DPP_MONGODB_URI!;
-    mongoConnection = (await connect(uri)).connection;
+    module = await Test.createTestingModule({
+      imports: [
+        EnvModule.forRoot(),
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
+        MongooseModule.forFeature([
+          { name: Account.name, schema: AccountSchema },
+        ]),
+      ],
+    }).compile();
+    mongoConnection = module.get<Connection>(getConnectionToken());
     AccountModel = mongoConnection.model(Account.name, AccountSchema);
   });
 
@@ -21,7 +40,8 @@ describe("accountSchema", () => {
   });
 
   afterAll(async () => {
-    await mongoConnection.close();
+    await mongoConnection.dropDatabase();
+    await module.close();
   });
 
   it("should create an account document", async () => {

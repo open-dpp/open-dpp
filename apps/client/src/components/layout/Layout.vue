@@ -14,7 +14,6 @@ import {
   ChartBarIcon,
   CloudIcon,
   LinkIcon,
-  Squares2X2Icon,
 } from "@heroicons/vue/16/solid";
 import {
   Bars3Icon,
@@ -29,12 +28,12 @@ import {
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
-import openDppLogo from "../../assets/logo-with-text.svg";
 import { authClient } from "../../auth-client.ts";
+import { useBranding } from "../../composables/branding.ts";
 import { useIndexStore } from "../../stores";
-import { useBrandingStore } from "../../stores/branding.ts";
 import { useLayoutStore } from "../../stores/layout";
 import Breadcrumbs from "../Breadcrumbs.vue";
+import BrandingLogo from "../media/BrandingLogo.vue";
 import NotificationHandler from "../notifications/NotificationHandler.vue";
 import SelectOrganization from "../organizations/SelectOrganization.vue";
 import RingLoader from "../RingLoader.vue";
@@ -44,8 +43,7 @@ const router = useRouter();
 
 const indexStore = useIndexStore();
 const layoutStore = useLayoutStore();
-const brandingStore = useBrandingStore();
-const logo = computed(() => brandingStore.logo ? brandingStore.logo.url : openDppLogo);
+const { src } = useBranding();
 
 const { t } = useI18n();
 
@@ -76,25 +74,13 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
       name: "",
       items: [
         {
-          name: t("models.models"),
-          to: `/organizations/${indexStore.selectedOrganization}/models`,
-          icon: CubeIcon,
-          show: () => indexStore.selectedOrganization !== null,
-        },
-        {
-          name: t("draft.passportDraft", 2),
-          to: `/organizations/${indexStore.selectedOrganization}/data-model-drafts`,
-          icon: Square3Stack3DIcon,
-          show: () => indexStore.selectedOrganization !== null,
-        },
-        {
-          name: `${t("passports.label", 2)} AAS @beta`,
+          name: `${t("passports.label", 2)}`,
           to: `/organizations/${indexStore.selectedOrganization}/passports`,
           icon: CubeIcon,
           show: () => indexStore.selectedOrganization !== null,
         },
         {
-          name: `${t("templates.label", 2)} AAS @beta`,
+          name: `${t("templates.label", 2)}`,
           to: `/organizations/${indexStore.selectedOrganization}/templates`,
           icon: Square3Stack3DIcon,
           show: () => indexStore.selectedOrganization !== null,
@@ -133,17 +119,6 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
           to: "/organizations",
           icon: BuildingOfficeIcon,
           show: () => indexStore.selectedOrganization === null,
-        },
-      ],
-    },
-    {
-      name: t("marketplace.marketplace"),
-      items: [
-        {
-          name: t("marketplace.marketplace"),
-          to: "/marketplace",
-          icon: Squares2X2Icon,
-          show: () => indexStore.selectedOrganization !== null,
         },
       ],
     },
@@ -273,7 +248,7 @@ const sidebarOpen = ref(false);
                 data-cy="sidebar"
               >
                 <div class="flex p-2 shrink-0 items-center">
-                  <img :src="logo" alt="open-dpp GmbH" class="h-20">
+                  <BrandingLogo :url="src" @click="router.push('/')" />
                 </div>
                 <nav class="flex flex-1 flex-col">
                   <ul class="flex flex-1 flex-col gap-y-7" role="list">
@@ -360,12 +335,7 @@ const sidebarOpen = ref(false);
         class="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6 pb-4"
       >
         <div class="flex p-2 shrink-0 items-start">
-          <img
-            :src="logo"
-            alt="open-dpp GmbH"
-            class="h-20 w-auto hover:cursor-pointer"
-            @click="router.push('/')"
-          >
+          <BrandingLogo :url="src" @click="router.push('/')" />
         </div>
         <nav class="flex flex-1 flex-col">
           <ul class="flex flex-1 flex-col gap-y-7" role="list">

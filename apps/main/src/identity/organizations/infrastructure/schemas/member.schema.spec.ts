@@ -1,15 +1,35 @@
+import type { Connection, Model } from "mongoose";
 import { expect } from "@jest/globals";
-import { connect, Connection, Model, Types } from "mongoose";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { Test, TestingModule } from "@nestjs/testing";
+import { EnvModule, EnvService } from "@open-dpp/env";
+import { Types } from "mongoose";
+import { generateMongoConfig } from "../../../../database/config";
 import { MemberRole } from "../../domain/member-role.enum";
 import { Member, MemberSchema } from "./member.schema";
 
 describe("memberSchema", () => {
   let mongoConnection: Connection;
   let MemberModel: Model<Member>;
+  let module: TestingModule;
 
   beforeAll(async () => {
-    const uri = process.env.OPEN_DPP_MONGODB_URI!;
-    mongoConnection = (await connect(uri)).connection;
+    module = await Test.createTestingModule({
+      imports: [
+        EnvModule.forRoot(),
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
+        MongooseModule.forFeature([
+          { name: Member.name, schema: MemberSchema },
+        ]),
+      ],
+    }).compile();
+    mongoConnection = module.get<Connection>(getConnectionToken());
     MemberModel = mongoConnection.model(Member.name, MemberSchema);
   });
 
@@ -22,7 +42,8 @@ describe("memberSchema", () => {
   });
 
   afterAll(async () => {
-    await mongoConnection.close();
+    await mongoConnection.dropDatabase();
+    await module.close();
   });
 
   it("should create a member document", async () => {

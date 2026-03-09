@@ -11,8 +11,6 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "test": "vitest --run src",
-    "cypress": "cypress open --component",
-    "cypress:headless": "cypress run --component --headless",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -48,7 +46,6 @@
     "zod-vue-i18n": "^0.0.8"
   },
   "devDependencies": {
-    "@cypress/vue": "^6.0.2",
     "@eslint/js": "^9.39.2",
     "@open-dpp/config-eslint": "workspace:*",
     "@open-dpp/testing": "workspace:*",
@@ -62,7 +59,6 @@
     "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.8.1",
     "autoprefixer": "^10.4.24",
-    "cypress": "^15.8.1",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",

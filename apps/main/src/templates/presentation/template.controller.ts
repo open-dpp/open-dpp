@@ -1,27 +1,34 @@
 import type {
+  AssetAdministrationShellModificationDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementRequestDto,
   SubmodelModificationDto,
   SubmodelRequestDto,
+  TemplateCreateDto,
   ValueRequestDto,
 } from "@open-dpp/dto";
-import { BadRequestException, Controller, Get, Post } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Post } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
-  AssetKind,
+  AssetAdministrationShellResponseDto,
+  Populates,
   SubmodelElementPaginationResponseDto,
   SubmodelElementResponseDto,
   SubmodelPaginationResponseDto,
   SubmodelResponseDto,
+  TemplateCreateDtoSchema,
   TemplateDto,
   TemplateDtoSchema,
   TemplatePaginationDto,
   TemplatePaginationDtoSchema,
   ValueResponseDto,
 } from "@open-dpp/dto";
+import { ZodValidationPipe } from "@open-dpp/exception";
+
 import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 
+import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import {
   ApiDeleteColumn,
   ApiDeleteRow,
@@ -35,6 +42,7 @@ import {
   ApiGetSubmodels,
   ApiGetSubmodelValue,
   ApiPatchColumn,
+  ApiPatchShell,
   ApiPatchSubmodel,
   ApiPatchSubmodelElement,
   ApiPatchSubmodelElementValue,
@@ -43,11 +51,14 @@ import {
   ApiPostSubmodel,
   ApiPostSubmodelElement,
   ApiPostSubmodelElementAtIdShortPath,
+  AssetAdministrationShellIdParam,
+  AssetAdministrationShellModificationRequestBody,
   ColumnParam,
   CursorQueryParam,
   IdParam,
   IdShortPathParam,
   LimitQueryParam,
+  PopulateQueryParam,
   PositionQueryParam,
   RowParam,
   SubmodelElementModificationRequestBody,
@@ -68,13 +79,17 @@ import { DbSessionOptions } from "../../database/query-options";
 import { Session } from "../../identity/auth/domain/session";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 import { Pagination } from "../../pagination/pagination";
+import { PagingResult } from "../../pagination/paging-result";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 
 @Controller("/templates")
 export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoints, IAasModifyEndpoints, IAasDeleteEndpoints {
-  constructor(private readonly environmentService: EnvironmentService, private readonly templateRepository: TemplateRepository) {
-  }
+  constructor(
+    private readonly environmentService: EnvironmentService,
+    private readonly templateRepository: TemplateRepository,
+    private readonly aasSerializationService: AasSerializationService,
+  ) {}
 
   @ApiGetShells()
   async getShells(
@@ -86,6 +101,17 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     const template = await this.loadTemplateAndCheckOwnership(id, session);
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getAasShells(template.getEnvironment(), pagination);
+  }
+
+  @ApiPatchShell()
+  async modifyShell(
+    @IdParam() id: string,
+    @AssetAdministrationShellIdParam() aasId: string,
+    @AssetAdministrationShellModificationRequestBody() body: AssetAdministrationShellModificationDto,
+    @AuthSession() session: Session,
+  ): Promise<AssetAdministrationShellResponseDto> {
+    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    return await this.environmentService.modifyAasShell(template.getEnvironment(), aasId, body);
   }
 
   @ApiGetSubmodels()
@@ -313,9 +339,13 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
 
   @Post()
   async createTemplate(
+    @Body(new ZodValidationPipe(TemplateCreateDtoSchema)) body: TemplateCreateDto,
     @AuthSession() session: Session,
   ): Promise<TemplateDto> {
-    const environment = await this.environmentService.createEnvironmentWithEmptyAas(AssetKind.Type);
+    const environment = await this.environmentService.createEnvironment(
+      body.environment,
+      true,
+    );
     const activeOrganizationId = session.activeOrganizationId;
     if (!activeOrganizationId) {
       throw new BadRequestException();
@@ -324,10 +354,38 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     return TemplateDtoSchema.parse((await this.templateRepository.save(template)).toPlain());
   }
 
+  @Get("/:id/export")
+  async exportTemplate(
+    @IdParam() id: string,
+    @AuthSession() session: Session,
+  ) {
+    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    return await this.aasSerializationService.exportTemplate(template);
+  }
+
+  @Post("/import")
+  @HttpCode(HttpStatus.CREATED)
+  async importTemplate(
+    @Body() body: any,
+    @AuthSession() session: Session,
+  ) {
+    const activeOrganizationId = session.activeOrganizationId?.toString();
+    if (!activeOrganizationId) {
+      throw new BadRequestException("activeOrganizationId is required in session");
+    }
+    const template = await this.aasSerializationService.importTemplate(
+      body,
+      activeOrganizationId,
+      async (t, options) => { await this.templateRepository.save(t, options); },
+    );
+    return TemplateDtoSchema.parse(template.toPlain());
+  }
+
   @Get()
   async getTemplates(
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
+    @PopulateQueryParam() populate: string[],
     @AuthSession() session: Session,
   ): Promise<TemplatePaginationDto> {
     const pagination = Pagination.create({ limit, cursor });
@@ -335,9 +393,14 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     if (!activeOrganizationId) {
       throw new BadRequestException();
     }
-    return TemplatePaginationDtoSchema.parse(
-      (await this.templateRepository.findAllByOrganizationId(activeOrganizationId, pagination)).toPlain(),
-    );
+    let pagingResult: PagingResult<any> = await this.templateRepository.findAllByOrganizationId(activeOrganizationId, pagination);
+    if (populate.includes(Populates.assetAdministrationShells)) {
+      pagingResult = await this.environmentService.populateEnvironmentForPagingResult(
+        pagingResult,
+        { assetAdministrationShells: true, submodels: false, ignoreMissing: false },
+      );
+    }
+    return TemplatePaginationDtoSchema.parse(pagingResult.toPlain());
   }
 
   private saveEnvironmentCallback(template: Template) {

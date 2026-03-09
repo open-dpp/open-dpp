@@ -1,11 +1,16 @@
 import type { Connection } from "mongoose";
 
-import { BadRequestException, ForbiddenException, Injectable } from "@nestjs/common";
+import { randomUUID } from "node:crypto";
+import { BadRequestException, ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import {
+  AssetAdministrationShellCreateDto,
+  AssetAdministrationShellJsonSchema,
+  AssetAdministrationShellModificationDto,
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellPaginationResponseDtoSchema,
-  AssetKindType,
+  AssetAdministrationShellResponseDto,
+  AssetKind,
   SubmodelElementListJsonSchema,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
@@ -27,17 +32,28 @@ import {
 import { DbSessionOptions } from "../../database/query-options";
 import { Session } from "../../identity/auth/domain/session";
 import { MembersService } from "../../identity/organizations/application/services/members.service";
-import { Pagination } from "../../pagination/pagination";
-import { PagingResult } from "../../pagination/paging-result";
-import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 
+import { Pagination } from "../../pagination/pagination";
+
+import { PagingResult } from "../../pagination/paging-result";
+import { Passport } from "../../passports/domain/passport";
+import { Template } from "../../templates/domain/template";
+import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
+import { AssetInformation } from "../domain/asset-information";
+import { LanguageText } from "../domain/common/language-text";
+import { ConceptDescription } from "../domain/concept-description";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
-
+import { ExpandedEnvironment } from "../domain/expanded-environment";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath, ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
+import { ConceptDescriptionRepository } from "../infrastructure/concept-description.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
+import {
+  DigitalProductPassportIdentifiableEnvironmentPopulateDecorator,
+} from "./digital-product-passport-identifiable-environment-populate-decorator";
+import { PopulateOptions } from "./environment-populate-decorator";
 
 class SubmodelNotPartOfEnvironmentException extends BadRequestException {
   constructor(id: string) {
@@ -47,25 +63,47 @@ class SubmodelNotPartOfEnvironmentException extends BadRequestException {
 
 @Injectable()
 export class EnvironmentService {
+  private readonly logger = new Logger(EnvironmentService.name);
   private aasRepository: AasRepository;
   private submodelRepository: SubmodelRepository;
+  private conceptDescriptionRepository: ConceptDescriptionRepository;
   private membersService: MembersService;
 
   constructor(
     aasRepository: AasRepository,
     submodelRepository: SubmodelRepository,
+    conceptDescriptionRepository: ConceptDescriptionRepository,
     membersService: MembersService,
     @InjectConnection() private connection: Connection,
   ) {
     this.aasRepository = aasRepository;
     this.submodelRepository = submodelRepository;
+    this.conceptDescriptionRepository = conceptDescriptionRepository;
     this.membersService = membersService;
   }
 
-  async createEnvironmentWithEmptyAas(assetKind: AssetKindType): Promise<Environment> {
+  async createEnvironment(environmentData: { assetAdministrationShells: AssetAdministrationShellCreateDto[] }, isTemplate: boolean): Promise<Environment> {
     const environment = Environment.create({});
-    const aas = environment.addAssetAdministrationShell({ assetKind });
-    await this.aasRepository.save(aas);
+    if (environmentData.assetAdministrationShells.length > 1) {
+      throw new BadRequestException("Multiple asset administration shells are not supported yet.");
+    }
+    const assetKind = isTemplate ? AssetKind.Type : AssetKind.Instance;
+    const createIdAndAssetInformation = () => {
+      const id = randomUUID();
+      const assetInformation = AssetInformation.create({ assetKind, globalAssetId: id });
+      return { id, assetInformation };
+    };
+    const assetAdministrationShells = environmentData.assetAdministrationShells.length > 0
+      ? environmentData.assetAdministrationShells.map(aas => AssetAdministrationShell.create({
+          ...createIdAndAssetInformation(),
+          displayName: aas.displayName?.map(LanguageText.fromPlain),
+          description: aas.description?.map(LanguageText.fromPlain),
+        }))
+      : [AssetAdministrationShell.create(createIdAndAssetInformation())];
+    const firstAas = assetAdministrationShells[0];
+    await this.aasRepository.save(firstAas);
+    environment.addAssetAdministrationShell(firstAas);
+
     return environment;
   }
 
@@ -73,6 +111,13 @@ export class EnvironmentService {
     const pages = pagination.nextPages(environment.assetAdministrationShells);
     const shells = await Promise.all(pages.map(p => this.aasRepository.findOneOrFail(p)));
     return AssetAdministrationShellPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: shells }).toPlain());
+  }
+
+  async modifyAasShell(environment: Environment, aasId: string, modification: AssetAdministrationShellModificationDto): Promise<AssetAdministrationShellResponseDto> {
+    const aas = await this.findAssetAdministrationShellByIdOrFail(environment, aasId);
+    aas.modify(modification);
+    await this.aasRepository.save(aas);
+    return AssetAdministrationShellJsonSchema.parse(aas.toPlain());
   }
 
   async getSubmodels(environment: Environment, pagination: Pagination): Promise<SubmodelPaginationResponseDto> {
@@ -90,24 +135,21 @@ export class EnvironmentService {
 
   async addSubmodelToEnvironment(environment: Environment, submodelPlain: SubmodelRequestDto, saveEnvironment: (options: DbSessionOptions) => Promise<void>): Promise<SubmodelResponseDto> {
     const session = await this.connection.startSession();
-    const options = { session };
+    let result: SubmodelResponseDto;
     try {
-      session.startTransaction();
-      const submodel = environment.addSubmodel(Submodel.fromPlain(submodelPlain));
-      await saveEnvironment(options);
-      await this.submodelRepository.save(submodel, options);
+      await session.withTransaction(async () => {
+        const options = { session };
+        const submodel = environment.addSubmodel(Submodel.fromPlain(submodelPlain));
+        await saveEnvironment(options);
+        await this.submodelRepository.save(submodel, options);
 
-      const aas = await this.getFirstAssetAdministrationShell(environment);
-      aas.addSubmodel(submodel);
-      await this.aasRepository.save(aas, options);
+        const aas = await this.getFirstAssetAdministrationShell(environment);
+        aas.addSubmodel(submodel);
+        await this.aasRepository.save(aas, options);
 
-      const result = SubmodelJsonSchema.parse(submodel.toPlain());
-      await session.commitTransaction();
-      return result;
-    }
-    catch (e) {
-      await session.abortTransaction();
-      throw e;
+        result = SubmodelJsonSchema.parse(submodel.toPlain());
+      });
+      return result!;
     }
     finally {
       await session.endSession();
@@ -116,21 +158,17 @@ export class EnvironmentService {
 
   async deleteSubmodelFromEnvironment(environment: Environment, submodelId: string, saveEnvironment: (options: DbSessionOptions) => Promise<void>): Promise<void> {
     const session = await this.connection.startSession();
-    const options = { session };
     try {
-      session.startTransaction();
-      const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-      await this.submodelRepository.deleteById(submodel.id, options);
-      const aas = await this.getFirstAssetAdministrationShell(environment);
-      aas.deleteSubmodel(submodel);
-      await this.aasRepository.save(aas, options);
-      environment.deleteSubmodel(submodel);
-      await saveEnvironment(options);
-      await session.commitTransaction();
-    }
-    catch (e) {
-      await session.abortTransaction();
-      throw e;
+      await session.withTransaction(async () => {
+        const options = { session };
+        const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+        await this.submodelRepository.deleteById(submodel.id, options);
+        const aas = await this.getFirstAssetAdministrationShell(environment);
+        aas.deleteSubmodel(submodel);
+        await this.aasRepository.save(aas, options);
+        environment.deleteSubmodel(submodel);
+        await saveEnvironment(options);
+      });
     }
     finally {
       await session.endSession();
@@ -149,6 +187,15 @@ export class EnvironmentService {
     }
     else {
       throw new SubmodelNotPartOfEnvironmentException(submodelId);
+    }
+  }
+
+  public async findAssetAdministrationShellByIdOrFail(environment: Environment, aasId: string): Promise<AssetAdministrationShell> {
+    if (environment.assetAdministrationShells.includes(aasId)) {
+      return await this.aasRepository.findOneOrFail(aasId);
+    }
+    else {
+      throw new BadRequestException(`Environment has no asset administration shell with id ${aasId}`);
     }
   }
 
@@ -236,32 +283,58 @@ export class EnvironmentService {
     return ValueSchema.parse(submodel.getValueRepresentation(idShortPath));
   }
 
-  /**
-   * Resolves all shell and submodel IDs of an environment to full plain objects.
-   * Can be used to populate the environment of a passport or template.
-   * Missing IDs are skipped (no throw).
-   */
-  async getFullEnvironmentAsPlain(environment: Environment): Promise<{
-    assetAdministrationShells: Array<Record<string, unknown>>;
-    submodels: Array<Record<string, unknown>>;
-    conceptDescriptions: Array<string>;
-  }> {
-    const shellIds = environment.assetAdministrationShells;
-    const submodelIds = environment.submodels;
-
-    const [shellResults, submodelResults] = await Promise.all([
-      Promise.all(shellIds.map(id => this.aasRepository.findOne(id))),
-      Promise.all(submodelIds.map(id => this.submodelRepository.findOne(id))),
+  async loadExpandedEnvironment(environment: Environment): Promise<ExpandedEnvironment> {
+    const [shellMap, submodelMap, conceptDescriptionMap] = await Promise.all([
+      this.aasRepository.findByIds(environment.assetAdministrationShells),
+      this.submodelRepository.findByIds(environment.submodels),
+      this.conceptDescriptionRepository.findByIds(environment.conceptDescriptions),
     ]);
 
-    const shells = shellResults.filter((aas): aas is AssetAdministrationShell => aas != null);
-    const submodels = submodelResults.filter((s): s is Submodel => s != null);
+    try {
+      return ExpandedEnvironment.fromEnvironment(environment, shellMap, submodelMap, conceptDescriptionMap);
+    }
+    catch (e) {
+      this.logger.error(e instanceof Error ? e.message : e);
+      throw e;
+    }
+  }
 
-    return {
-      assetAdministrationShells: shells.map(s => s.toPlain()),
-      submodels: submodels.map(s => s.toPlain()),
-      conceptDescriptions: environment.conceptDescriptions,
-    };
+  async persistImportedEnvironment(
+    shells: AssetAdministrationShell[],
+    submodels: Submodel[],
+    conceptDescriptions: ConceptDescription[],
+    saveEntity: (options: DbSessionOptions) => Promise<void>,
+  ): Promise<void> {
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        const options = { session };
+        for (const conceptDescription of conceptDescriptions) {
+          await this.conceptDescriptionRepository.save(conceptDescription, options);
+        }
+        for (const submodel of submodels) {
+          await this.submodelRepository.save(submodel, options);
+        }
+        for (const shell of shells) {
+          await this.aasRepository.save(shell, options);
+        }
+        await saveEntity(options);
+      });
+    }
+    finally {
+      await session.endSession();
+    }
+  }
+
+  async populateEnvironmentForPagingResult(pagingResult: PagingResult<Passport | Template>, populateOptions: PopulateOptions) {
+    const populatedItems = await Promise.all(pagingResult.items.map(
+      async i => await new DigitalProductPassportIdentifiableEnvironmentPopulateDecorator(
+        i,
+        this.aasRepository,
+        this.submodelRepository,
+      ).populate(populateOptions),
+    ));
+    return PagingResult.create({ pagination: pagingResult.pagination, items: populatedItems });
   }
 
   async copyEnvironment(environment: Environment): Promise<Environment> {

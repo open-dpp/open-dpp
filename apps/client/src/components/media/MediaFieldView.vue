@@ -23,7 +23,7 @@ onMounted(async () => {
         v-if="fileUrl"
         :download="mediaInfo.title"
         :href="fileUrl"
-        class="h-8 w-8 shrink bg-[#6BAD87]/50 rounded-sm p-2 hover:cursor-pointer my-auto"
+        class="h-8 w-8 shrink bg-[#6BAD87]/50 hover:bg-[#6BAD87] rounded-sm p-2 hover:cursor-pointer my-auto"
       >
         <ArrowDownTrayIcon class="h-4 w-4" />
       </a>

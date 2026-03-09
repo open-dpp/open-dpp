@@ -5,8 +5,8 @@ import { TimePeriod } from "./time-period";
 interface PassportMetricAggregationProps {
   type: MeasurementType;
   valueKey: string;
-  templateId: string;
-  modelId?: string;
+  templateId?: string;
+  passportId: string;
   organizationId: string;
   startDate: Date;
   endDate: Date;
@@ -16,8 +16,8 @@ export class PassportMetricAggregation {
   private constructor(
     private readonly type: MeasurementType,
     public readonly valueKey: string,
-    private readonly templateId: string,
-    private readonly modelId: string | null,
+    private readonly passportId: string,
+    private readonly templateId: string | null,
     private readonly organizationId: string,
     private readonly startDate: Date,
     private readonly endDate: Date,
@@ -29,8 +29,8 @@ export class PassportMetricAggregation {
     return new PassportMetricAggregation(
       data.type,
       data.valueKey,
-      data.templateId,
-      data.modelId ?? null,
+      data.passportId,
+      data.templateId ?? null,
       data.organizationId,
       data.startDate,
       data.endDate,
@@ -41,11 +41,11 @@ export class PassportMetricAggregation {
     const matchStage: { [key: string]: any } = {
       "source.type": this.type,
       "source.organizationId": this.organizationId,
-      "source.templateId": this.templateId,
+      "source.passportId": this.passportId,
     };
 
-    if (this.modelId) {
-      matchStage["source.modelId"] = this.modelId;
+    if (this.templateId) {
+      matchStage["source.templateId"] = this.templateId;
     }
 
     matchStage.date = {};

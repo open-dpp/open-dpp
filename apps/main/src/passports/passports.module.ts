@@ -2,7 +2,6 @@ import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AasModule } from "../aas/aas.module";
 
-import { EnvironmentService } from "../aas/presentation/environment.service";
 import { AuthModule } from "../identity/auth/auth.module";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { TemplateRepository } from "../templates/infrastructure/template.repository";
@@ -35,7 +34,7 @@ import { PassportController } from "./presentation/passport.controller";
     OrganizationsModule,
   ],
   controllers: [PassportController],
-  providers: [EnvironmentService, TemplateRepository, UniqueProductIdentifierService, PassportRepository, PassportService],
+  providers: [TemplateRepository, UniqueProductIdentifierService, PassportRepository, PassportService],
   exports: [PassportRepository, PassportService],
 })
 export class PassportsModule { }

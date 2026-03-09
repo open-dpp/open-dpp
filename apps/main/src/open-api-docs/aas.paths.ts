@@ -1,4 +1,6 @@
 import {
+  AssetAdministrationShellJsonSchema,
+  AssetAdministrationShellModificationSchema,
   AssetAdministrationShellPaginationResponseDtoSchema,
   PassportDtoSchema,
   PassportPaginationDtoSchema,
@@ -11,10 +13,12 @@ import {
   SubmodelModificationSchema,
   SubmodelPaginationResponseDtoSchema,
   SubmodelRequestDtoSchema,
+  TemplateCreateDtoSchema,
   TemplateDtoSchema,
   TemplatePaginationDtoSchema,
   ValueSchema,
 } from "@open-dpp/dto";
+import { aasExportSchemaJsonV1_0 } from "../aas/infrastructure/serialization/aas-export-v1.schema";
 import {
   ApiDeleteRowPath,
   ApiGetColumnByIdShortPath,
@@ -23,15 +27,18 @@ import {
   ApiGetSubmodelElementByIdPath,
   ApiGetSubmodelElementValuePath,
   ApiGetSubmodelValuePath,
+  ApiPatchShellPath,
   ApiPostColumnPath,
   ApiPostRowPath,
   ApiSubmodelElementsPath,
   ApiSubmodelsPath,
+  AssetAdministrationShellIdParamSchema,
   ColumnParamSchema,
   CursorQueryParamSchema,
   IdParamSchema,
   IdShortPathParamSchema,
   LimitQueryParamSchema,
+  PopulateQueryParamSchema,
   PositionQueryParamSchema,
   RowParamSchema,
   SubmodelIdParamSchema,
@@ -41,6 +48,7 @@ const HTTPCode = {
   OK: 200,
   CREATED: 201,
   NO_CONTENT: 204,
+  BAD_REQUEST: 400,
 } as const;
 
 const ContentType = {
@@ -58,6 +66,25 @@ export function createAasPaths(tag: string) {
           [HTTPCode.OK]: {
             content: {
               [ContentType.JSON]: { schema: AssetAdministrationShellPaginationResponseDtoSchema },
+            },
+          },
+        },
+      },
+    },
+    [`${tag}${ApiPatchShellPath}`]: {
+      patch: {
+        tags: [tag],
+        summary: "Modifies a Asset Administration Shell with specified id",
+        parameters: [IdParamSchema, AssetAdministrationShellIdParamSchema],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: AssetAdministrationShellModificationSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: AssetAdministrationShellJsonSchema },
             },
           },
         },
@@ -339,7 +366,7 @@ function createTemplatePaths() {
       get: {
         tags: [tag],
         summary: `Get templates`,
-        parameters: [LimitQueryParamSchema, CursorQueryParamSchema],
+        parameters: [LimitQueryParamSchema, CursorQueryParamSchema, PopulateQueryParamSchema],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -351,10 +378,62 @@ function createTemplatePaths() {
       post: {
         tags: [tag],
         summary: `Creates template`,
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: TemplateCreateDtoSchema },
+          },
+        },
         responses: {
           [HTTPCode.CREATED]: {
             content: {
               [ContentType.JSON]: { schema: TemplateDtoSchema },
+            },
+          },
+        },
+      },
+    },
+    [`${tag}/{id}/export`]: {
+      get: {
+        tags: [tag],
+        summary: `Exports a template`,
+        parameters: [IdParamSchema],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: aasExportSchemaJsonV1_0 },
+            },
+          },
+        },
+      },
+    },
+    [`${tag}/import`]: {
+      post: {
+        tags: [tag],
+        summary: `Imports a template`,
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: aasExportSchemaJsonV1_0 },
+          },
+        },
+        responses: {
+          [HTTPCode.CREATED]: {
+            content: {
+              [ContentType.JSON]: { schema: TemplateDtoSchema },
+            },
+          },
+          [HTTPCode.BAD_REQUEST]: {
+            description: "Invalid import data format",
+            content: {
+              [ContentType.JSON]: {
+                schema: {
+                  type: "object",
+                  properties: {
+                    statusCode: { type: "number", example: 400 },
+                    message: { type: "string" },
+                    error: { type: "string", example: "Bad Request" },
+                  },
+                },
+              },
             },
           },
         },
@@ -371,7 +450,7 @@ function createPassportPaths() {
       get: {
         tags: [tag],
         summary: `Get passports`,
-        parameters: [LimitQueryParamSchema, CursorQueryParamSchema],
+        parameters: [LimitQueryParamSchema, CursorQueryParamSchema, PopulateQueryParamSchema],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -392,6 +471,53 @@ function createPassportPaths() {
           [HTTPCode.CREATED]: {
             content: {
               [ContentType.JSON]: { schema: PassportDtoSchema },
+            },
+          },
+        },
+      },
+    },
+    [`${tag}/{id}/export`]: {
+      get: {
+        tags: [tag],
+        summary: `Exports a passport`,
+        parameters: [IdParamSchema],
+        responses: {
+          [HTTPCode.OK]: {
+            content: {
+              [ContentType.JSON]: { schema: aasExportSchemaJsonV1_0 },
+            },
+          },
+        },
+      },
+    },
+    [`${tag}/import`]: {
+      post: {
+        tags: [tag],
+        summary: `Imports a passport`,
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: aasExportSchemaJsonV1_0 },
+          },
+        },
+        responses: {
+          [HTTPCode.CREATED]: {
+            content: {
+              [ContentType.JSON]: { schema: PassportDtoSchema },
+            },
+          },
+          [HTTPCode.BAD_REQUEST]: {
+            description: "Invalid import data format",
+            content: {
+              [ContentType.JSON]: {
+                schema: {
+                  type: "object",
+                  properties: {
+                    statusCode: { type: "number", example: 400 },
+                    message: { type: "string" },
+                    error: { type: "string", example: "Bad Request" },
+                  },
+                },
+              },
             },
           },
         },

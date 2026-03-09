@@ -1,76 +1,75 @@
 <script lang="ts" setup>
-import type { ProductPassportDto } from "@open-dpp/api-client";
-import { onBeforeUnmount, watch } from "vue";
+import { ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import ViewInformation from "../../components/presentation-components/ViewInformation.vue";
+import Passport from "../../components/presentation/Passport.vue";
 import apiClient from "../../lib/api-client.ts";
-import { useProductPassportStore } from "../../stores/product-passport";
+import { useAnalyticsStore } from "../../stores/analytics.ts";
+import { usePassportStore } from "../../stores/passport.ts";
 
 const route = useRoute();
 const router = useRouter();
 
-const productPassportStore = useProductPassportStore();
+const passportStore = usePassportStore();
+const analyticsStore = useAnalyticsStore();
+const passportAvailable = ref(false);
 
-function isProductPassportDto(value: unknown): value is ProductPassportDto {
-  return (
-    !!value
-    && typeof value === "object"
-    && "id" in value
-    && "name" in value
-    && "description" in value
-    && "mediaReferences" in value
-    && "dataSections" in value
-    && "organizationName" in value
+async function loadPassport(id: string): Promise<boolean> {
+  const response = await apiClient.dpp.uniqueProductIdentifiers.getPassport(id);
+  if (response.status === 404) {
+    return false;
+  }
+
+  passportStore.productPassport = response.data;
+
+  const submodels
+    = await apiClient.dpp.uniqueProductIdentifiers.aas.getSubmodels(id, {});
+  if (submodels.status !== 200) {
+    console.error("Failed to load submodels");
+    return false;
+  }
+  passportStore.submodels = submodels.data.result || [];
+
+  const aas = await apiClient.dpp.uniqueProductIdentifiers.aas.getShells(
+    id,
+    {},
   );
+  if (aas.status !== 200) {
+    console.error("Failed to load shells");
+    return false;
+  }
+  passportStore.shells = aas.data.result || [];
+  await analyticsStore.addPageView();
+
+  return true;
 }
 
-// Analytics tracking is intentionally disabled until the AAS view integration is restored.
-// const analyticsStore = useAnalyticsStore();
-// await analyticsStore.addPageView();
-
-// Cleanup object URLs when component unmounts to prevent memory leaks
-onBeforeUnmount(() => {
-  productPassportStore.cleanupMediaUrls();
-});
+async function pushNotFound(permalink: string) {
+  await router.push({
+    path: "404",
+    query: {
+      permalink,
+    },
+  });
+}
 
 watch(
-  () => route.params.permalink,
-  async () => {
-    const permalink = String(route.params.permalink);
+  () => String(route.params.permalink ?? ""),
+  async (permalink, _prev, onCleanup) => {
+    let cancelled = false;
+    onCleanup(() => {
+      cancelled = true;
+    });
+
+    passportAvailable.value = false;
     try {
-      const response = await apiClient.dpp.productPassports.getById(permalink);
-      if (response.status === 404) {
-        await router.push({
-          path: "404",
-          query: {
-            permalink,
-          },
-        });
-        return;
-      }
-      const data = response.data as ProductPassportDto | { passport?: ProductPassportDto } | null | undefined;
-      const passport = isProductPassportDto(data) ? data : data?.passport;
-      if (!passport) {
-        console.error("Passport not found in response");
-        await router.push({
-          path: "404",
-          query: {
-            permalink,
-          },
-        });
-        return;
-      }
-      productPassportStore.productPassport = passport;
-      await productPassportStore.loadMedia();
+      passportAvailable.value = await loadPassport(permalink);
     }
     catch (e) {
       console.error(e);
-      await router.push({
-        path: "404",
-        query: {
-          permalink,
-        },
-      });
+    }
+
+    if (!cancelled && !passportAvailable.value) {
+      await pushNotFound(permalink);
     }
   },
   { immediate: true },
@@ -79,6 +78,6 @@ watch(
 
 <template>
   <div class="flex flex-col items-center gap-5">
-    <ViewInformation />
+    <Passport v-if="passportAvailable" />
   </div>
 </template>

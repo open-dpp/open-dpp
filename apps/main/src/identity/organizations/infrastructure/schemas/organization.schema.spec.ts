@@ -1,15 +1,34 @@
+import type { Connection, Model } from "mongoose";
 import { expect } from "@jest/globals";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
+import { Test, TestingModule } from "@nestjs/testing";
+import { EnvModule, EnvService } from "@open-dpp/env";
 import { ObjectId } from "mongodb";
-import { connect, Connection, Model } from "mongoose";
+import { generateMongoConfig } from "../../../../database/config";
 import { Organization, OrganizationSchema } from "./organization.schema";
 
 describe("organizationSchema", () => {
   let mongoConnection: Connection;
   let OrganizationModel: Model<Organization>;
+  let module: TestingModule;
 
   beforeAll(async () => {
-    const uri = process.env.OPEN_DPP_MONGODB_URI!;
-    mongoConnection = (await connect(uri)).connection;
+    module = await Test.createTestingModule({
+      imports: [
+        EnvModule.forRoot(),
+        MongooseModule.forRootAsync({
+          imports: [EnvModule],
+          useFactory: (configService: EnvService) => ({
+            ...generateMongoConfig(configService),
+          }),
+          inject: [EnvService],
+        }),
+        MongooseModule.forFeature([
+          { name: Organization.name, schema: OrganizationSchema },
+        ]),
+      ],
+    }).compile();
+    mongoConnection = module.get<Connection>(getConnectionToken());
     OrganizationModel = mongoConnection.model(Organization.name, OrganizationSchema);
   });
 
@@ -22,7 +41,8 @@ describe("organizationSchema", () => {
   });
 
   afterAll(async () => {
-    await mongoConnection.close();
+    await mongoConnection.dropDatabase();
+    await module.close();
   });
 
   it("should create an organization document", async () => {
