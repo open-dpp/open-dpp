@@ -13,8 +13,6 @@ tsconfig.tsbuildinfo
 src/.DS_Store
 src/assets/.DS_Store
 
-cypress/screenshots
-
 # local npm registry
 yalc.lock
 .yalc

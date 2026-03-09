@@ -7,7 +7,6 @@ import { useLayoutStore } from "../stores/layout";
 import { useOrganizationsStore } from "../stores/organizations.ts";
 import { ADMIN_ROUTES } from "./routes/admin.ts";
 import { AUTH_ROUTES } from "./routes/auth";
-import { MARKETPLACE_ROUTES } from "./routes/marketplace";
 import { MEDIA_ROUTES } from "./routes/media";
 import { ORGANIZATION_ROUTES } from "./routes/organizations";
 import { PRESENTATION_ROUTES } from "./routes/presentation/presentation";
@@ -92,7 +91,6 @@ export const routes: RouteRecordRaw[] = [
   },
   ...AUTH_ROUTES,
   ...ORGANIZATION_ROUTES,
-  ...MARKETPLACE_ROUTES,
   ...MEDIA_ROUTES,
   ...PRESENTATION_ROUTES,
   ...ADMIN_ROUTES,
