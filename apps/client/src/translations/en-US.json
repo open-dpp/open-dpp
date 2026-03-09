@@ -518,7 +518,7 @@
   "auth": {
     "signin": {
       "title": "Sign in to your account",
-      "button": "Signin",
+      "button": "Sign in",
       "rememberMe": "Remember me",
       "forgotPassword": "Forgot password?",
       "textForProviders": "Or continue with",
