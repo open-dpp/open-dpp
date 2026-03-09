@@ -46,7 +46,7 @@
     "@open-dpp/exception": "workspace:*",
     "@open-dpp/permission": "workspace:*",
     "@rekog/mcp-nest": "^1.9.3",
-    "axios": "^1.13.2",
+    "axios": "^1.13.5",
     "better-auth": "^1.4.8",
     "body-parser": "^2.2.1",
     "class-transformer": "^0.5.1",
