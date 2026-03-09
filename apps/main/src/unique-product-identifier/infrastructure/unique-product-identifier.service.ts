@@ -3,7 +3,6 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { DbSessionOptions } from "../../database/query-options";
-import { ModelDocSchemaVersion } from "../../models/infrastructure/model.schema";
 import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
 import { UniqueProductIdentifierDoc, UniqueProductIdentifierSchemaVersion } from "./unique-product-identifier.schema";
 
