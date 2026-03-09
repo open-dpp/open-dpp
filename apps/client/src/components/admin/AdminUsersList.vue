@@ -34,6 +34,10 @@ const rows = computed(() => {
   }));
 });
 
+function copyId() {
+  navigator.clipboard.writeText(activeRowId.value);
+}
+
 function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {
   activeRowId.value = row.id;
   rowMenuItems.value = [
@@ -98,7 +102,7 @@ function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {
           <InputGroupAddon>ID</InputGroupAddon>
           <InputText readonly :value="activeRowId" />
           <InputGroupAddon>
-            <Button icon="pi pi-copy" severity="secondary" />
+            <Button icon="pi pi-copy" severity="secondary" @click="copyId" />
           </InputGroupAddon>
         </InputGroup>
       </div>
