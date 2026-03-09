@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import type { UserWithRole } from "better-auth/plugins";
-import { BuildingOfficeIcon } from "@heroicons/vue/24/outline";
-import { computed } from "vue";
+import type { MenuItem } from "primevue/menuitem";
+import { Button, Column, DataTable, InputGroup, InputGroupAddon, InputText, Menu } from "primevue";
+import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import ListHeader from "../lists/ListHeader.vue";
 
 const props = defineProps<{
   users: (UserWithRole & {
@@ -20,75 +20,88 @@ const emits = defineEmits<{
 
 const { t } = useI18n();
 
+const rowMenuRef = ref();
+const rowMenuItems = ref<MenuItem[]>([]);
+const activeRowId = ref("");
+
 const rows = computed(() => {
   return props.users.map(i => ({
     id: i.id,
     email: i.email,
     role: i.role ?? "user",
     name: i.name ?? (`${i.firstName ?? ""} ${i.lastName ?? ""}`.trim() || "N/A"),
-    emailVerified: i.emailVerified ? "Verified" : "Not verified",
+    emailVerified: Boolean(i.emailVerified),
   }));
 });
+
+function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {
+  activeRowId.value = row.id;
+  rowMenuItems.value = [
+    {
+      label: t("organizations.admin.inviteToOrganizationDialog.title"),
+      icon: "pi pi-building",
+      command: () => emits("inviteToOrg", row.email),
+    },
+  ];
+  rowMenuRef.value.toggle(event);
+}
 </script>
 
 <template>
-  <div>
-    <ListHeader
-      creation-label="Add user"
-      description="All users on this instance."
-      title="Users"
-      @add="emits('add')"
-    />
-    <table class="min-w-full table-fixed divide-y divide-gray-300">
-      <thead>
-        <tr>
-          <th class="min-w-[12rem] py-3.5 pr-3 text-left text-sm font-semibold text-gray-900" scope="col">
-            ID
-          </th>
-          <th class="min-w-[12rem] py-3.5 pr-3 text-left text-sm font-semibold text-gray-900" scope="col">
-            email
-          </th>
-          <th class="min-w-[6rem] py-3.5 pr-3 text-left text-sm font-semibold text-gray-900" scope="col">
-            role
-          </th>
-          <th class="min-w-[8rem] py-3.5 pr-3 text-left text-sm font-semibold text-gray-900" scope="col">
-            name
-          </th>
-          <th class="min-w-[8rem] py-3.5 pr-3 text-left text-sm font-semibold text-gray-900" scope="col">
-            emailVerified
-          </th>
-          <th class="py-3.5 pr-3 text-right text-sm font-semibold text-gray-900" scope="col" />
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-200 bg-white">
-        <tr v-for="(row, rowIndex) in rows" :key="rowIndex">
-          <td class="whitespace-nowrap py-4 text-sm text-gray-500">
-            {{ row.id }}
-          </td>
-          <td class="whitespace-nowrap py-4 text-sm text-gray-500">
-            {{ row.email }}
-          </td>
-          <td class="whitespace-nowrap py-4 text-sm text-gray-500">
-            {{ row.role }}
-          </td>
-          <td class="whitespace-nowrap py-4 text-sm text-gray-500">
-            {{ row.name }}
-          </td>
-          <td class="whitespace-nowrap py-4 text-sm text-gray-500">
-            {{ row.emailVerified }}
-          </td>
-          <td class="whitespace-nowrap py-4 pr-4 text-right text-sm font-medium">
-            <button
-              class="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-900"
-              :title="t('organizations.admin.inviteToOrganizationDialog.title')"
-              @click="emits('inviteToOrg', row.email)"
-            >
-              <BuildingOfficeIcon class="size-4" />
-              {{ t('organizations.admin.inviteToOrganizationDialog.invite') }}
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <DataTable :value="rows" table-style="min-width: 50rem">
+    <template #header>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <span class="text-xl font-bold">{{ t('admin.users.title', 'Users') }}</span>
+        <Button :label="t('common.add')" @click="emits('add')" />
+      </div>
+    </template>
+    <Column field="email" header="Email">
+      <template #body="{ data }">
+        <div class="flex items-center gap-2">
+          <span>{{ data.email }}</span>
+          <i
+            v-if="!data.emailVerified"
+            v-tooltip.top="t('admin.users.emailNotVerified', 'Email not verified')"
+            class="pi pi-exclamation-circle text-orange-500"
+          />
+        </div>
+      </template>
+    </Column>
+    <Column field="role" header="Role" />
+    <Column field="name" header="Name" />
+    <Column style="width: 3rem">
+      <template #body="{ data }">
+        <div class="flex w-full justify-end">
+          <Button
+            icon="pi pi-ellipsis-v"
+            severity="secondary"
+            text
+            rounded
+            size="small"
+            :aria-label="t('common.actions', 'Actions')"
+            @click="toggleRowMenu($event, data)"
+          />
+        </div>
+      </template>
+    </Column>
+  </DataTable>
+  <Menu
+    id="overlay_row_menu"
+    ref="rowMenuRef"
+    :model="rowMenuItems"
+    :popup="true"
+    class="p-2"
+  >
+    <template #start>
+      <div>
+        <InputGroup>
+          <InputGroupAddon>ID</InputGroupAddon>
+          <InputText readonly :value="activeRowId" />
+          <InputGroupAddon>
+            <Button icon="pi pi-copy" severity="secondary" />
+          </InputGroupAddon>
+        </InputGroup>
+      </div>
+    </template>
+  </Menu>
 </template>
