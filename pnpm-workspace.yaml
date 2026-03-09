@@ -3,6 +3,7 @@ packages:
   - apps/*
   - packages/*
 
+injectWorkspacePackages: true
 
 onlyBuiltDependencies:
   - '@nestjs/core'
