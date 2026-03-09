@@ -29,89 +29,24 @@ import { IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
-import { AllowServiceAccess } from "../../identity/auth/presentation/decorators/allow-service-access.decorator";
-import { ItemsService } from "../../items/infrastructure/items.service";
-import { ModelsService } from "../../models/infrastructure/models.service";
 import { Pagination } from "../../pagination/pagination";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
 import {
   UniqueProductIdentifierListDtoSchema,
-  UniqueProductIdentifierReferenceDtoSchema,
 } from "./dto/unique-product-identifier-dto.schema";
 import { UniqueProductIdentifierApplicationService } from "./unique.product.identifier.application.service";
 
 @Controller()
 export class UniqueProductIdentifierController implements IAasReadEndpoints {
-  private readonly modelsService: ModelsService;
-  private readonly uniqueProductIdentifierService: UniqueProductIdentifierService;
-  private readonly itemService: ItemsService;
-  private readonly uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService;
-  private readonly environmentService: EnvironmentService;
-  private readonly passportRepository: PassportRepository;
-  private readonly brandingRepository: BrandingRepository;
-
   constructor(
-    modelsService: ModelsService,
-    uniqueProductIdentifierService: UniqueProductIdentifierService,
-    itemService: ItemsService,
-    uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
-    passportRepository: PassportRepository,
-    environmentService: EnvironmentService,
-    brandingRepository: BrandingRepository,
+    private readonly uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
+    private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
+    private readonly passportRepository: PassportRepository,
+    private readonly environmentService: EnvironmentService,
+    private readonly brandingRepository: BrandingRepository,
   ) {
-    this.modelsService = modelsService;
-    this.uniqueProductIdentifierService = uniqueProductIdentifierService;
-    this.itemService = itemService;
-    this.uniqueProductIdentifierApplicationService = uniqueProductIdentifierApplicationService;
-    this.brandingRepository = brandingRepository;
-    this.passportRepository = passportRepository;
-    this.environmentService = environmentService;
-  }
-
-  @Get("organizations/:orgaId/unique-product-identifiers/:id/reference")
-  async getReferencedProductPassport(
-    @Param("id") id: string,
-  ) {
-    return await this.getUPI(id);
-  }
-
-  private async getUPI(id: string) {
-    const uniqueProductIdentifier
-      = await this.uniqueProductIdentifierService.findOneOrFail(id);
-
-    const item = await this.itemService.findOne(
-      uniqueProductIdentifier.referenceId,
-    );
-    if (item) {
-      return UniqueProductIdentifierReferenceDtoSchema.parse({
-        id: item.id,
-        organizationId: item.ownedByOrganizationId,
-        modelId: item.modelId,
-        granularityLevel: item.granularityLevel,
-      });
-    }
-    const model = await this.modelsService.findOne(
-      uniqueProductIdentifier.referenceId,
-    );
-    if (model) {
-      return UniqueProductIdentifierReferenceDtoSchema.parse({
-        id: model.id,
-        organizationId: model.ownedByOrganizationId,
-        granularityLevel: model.granularityLevel,
-      });
-    }
-    const passport = await this.passportRepository.findOne(
-      uniqueProductIdentifier.referenceId,
-    );
-    if (passport) {
-      return UniqueProductIdentifierReferenceDtoSchema.parse({
-        id: passport.id,
-        organizationId: passport.organizationId,
-        granularityLevel: "Model",
-      });
-    }
   }
 
   @AllowAnonymous()
@@ -141,21 +76,13 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
   async getPassportBranding(
     @Param("id") id: string,
   ): Promise<BrandingDto> {
-    const upi = await this.getUPI(id);
+    const upiMetadata = await this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifier(id);
 
-    if (!upi) {
+    if (!upiMetadata) {
       throw new BadRequestException();
     }
 
-    return BrandingDtoSchema.parse((await this.brandingRepository.findOneByOrganizationId(upi.organizationId)).toPlain());
-  }
-
-  @AllowServiceAccess()
-  @Get("unique-product-identifiers/:id/metadata")
-  async get(@Param("id") id: string) {
-    return this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifierOld(
-      id,
-    );
+    return BrandingDtoSchema.parse((await this.brandingRepository.findOneByOrganizationId(upiMetadata.organizationId)).toPlain());
   }
 
   @AllowAnonymous()
