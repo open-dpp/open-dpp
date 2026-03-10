@@ -46,8 +46,8 @@ async function inviteUser() {
     loading.value = true;
     const response = await apiClient.dpp.users.create({
       email: email.value,
-      firstName: firstName.value || undefined,
-      lastName: lastName.value || undefined,
+      firstName: firstName.value.trim() || undefined,
+      lastName: lastName.value.trim() || undefined,
     });
     loading.value = false;
     if (response.status === 201) {
