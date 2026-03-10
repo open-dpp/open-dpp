@@ -11,6 +11,7 @@ const errorHandlingStore = useErrorHandlingStore();
 
 const signupEnabled = ref(true);
 const isSignupLocked = ref(false);
+const isSaving = ref(false);
 const loading = ref(true);
 const saveSuccess = ref(false);
 
@@ -33,10 +34,11 @@ async function fetchSettings() {
 }
 
 async function toggleSignup() {
-  if (isSignupLocked.value) {
+  if (isSignupLocked.value || isSaving.value) {
     return;
   }
   saveSuccess.value = false;
+  isSaving.value = true;
   try {
     const res = await apiClient.dpp.instanceSettings.update({
       signupEnabled: signupEnabled.value,
@@ -50,6 +52,9 @@ async function toggleSignup() {
       t("organizations.admin.instanceSettings.error"),
       error,
     );
+  }
+  finally {
+    isSaving.value = false;
   }
 }
 
@@ -75,7 +80,7 @@ onMounted(async () => {
             <div class="flex items-center gap-3">
               <ToggleSwitch
                 v-model="signupEnabled"
-                :disabled="isSignupLocked"
+                :disabled="isSignupLocked || isSaving"
                 @update:model-value="toggleSignup"
               />
               <div class="flex flex-col">
