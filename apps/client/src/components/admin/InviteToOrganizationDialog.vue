@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { Organization } from "better-auth/client";
+import type { OrganizationDto } from "@open-dpp/api-client";
 import {
   Dialog,
   DialogPanel,
@@ -14,7 +14,6 @@ import Select from "primevue/select";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import apiClient from "../../lib/api-client.ts";
-import axiosIns from "../../lib/axios.ts";
 import RingLoader from "../RingLoader.vue";
 
 const props = defineProps<{
@@ -31,15 +30,13 @@ const loading = ref(false);
 const loadingOrganizations = ref(true);
 const errors = ref<string[]>([]);
 const success = ref(false);
-const organizations = ref<Organization[]>([]);
+const organizations = ref<OrganizationDto[]>([]);
 const selectedOrganizationId = ref<string | null>(null);
 
 onMounted(async () => {
   try {
-    const res = await axiosIns.get("/organizations");
-    if (res.data) {
-      organizations.value = res.data;
-    }
+    const { data } = await apiClient.dpp.organizations.getAll();
+    organizations.value = data;
   }
   catch {
     errors.value.push(t("common.errorOccurred"));
