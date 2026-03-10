@@ -1,15 +1,18 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { InstanceSettings } from "../../domain/instance-settings";
-import { InstanceSettingsMapper } from "../mappers/instance-settings.mapper";
-import { INSTANCE_SETTINGS_SCHEMA_VERSION, InstanceSettingsSchema } from "../schemas/instance-settings.schema";
+import { convertToDomain, save } from "../../../lib/repositories";
+import { InstanceSettings, InstanceSettingsDbProps } from "../../domain/instance-settings";
+import { INSTANCE_SETTINGS_SCHEMA_VERSION, InstanceSettingsDocument, InstanceSettingsSchema } from "../schemas/instance-settings.schema";
+
+const fromPlain = (plain: unknown) =>
+  InstanceSettings.loadFromDb(plain as InstanceSettingsDbProps);
 
 @Injectable()
 export class InstanceSettingsRepository {
   constructor(
     @InjectModel(InstanceSettingsSchema.name)
-    private readonly model: Model<InstanceSettingsSchema>,
+    private readonly model: Model<InstanceSettingsDocument>,
   ) {}
 
   async findOne(): Promise<InstanceSettings | null> {
@@ -17,24 +20,15 @@ export class InstanceSettingsRepository {
     if (!document) {
       return null;
     }
-    return InstanceSettingsMapper.toDomain(document);
+    return convertToDomain(document, fromPlain);
   }
 
   async save(settings: InstanceSettings): Promise<InstanceSettings> {
-    const plain = settings.toPlain();
-    await this.model.findOneAndUpdate(
-      { _id: plain.id },
-      {
-        $set: {
-          signupEnabled: plain.signupEnabled,
-          _schemaVersion: INSTANCE_SETTINGS_SCHEMA_VERSION,
-        },
-        $setOnInsert: {
-          _id: plain.id,
-        },
-      },
-      { upsert: true, new: true },
+    return await save(
+      settings,
+      this.model,
+      INSTANCE_SETTINGS_SCHEMA_VERSION,
+      fromPlain,
     );
-    return settings;
   }
 }
