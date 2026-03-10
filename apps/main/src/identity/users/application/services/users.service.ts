@@ -16,10 +16,12 @@ export class UsersService {
   ) { }
 
   async createUser(email: string, firstName?: string, lastName?: string): Promise<User> {
+    const fn = firstName?.trim() ?? "";
+    const ln = lastName?.trim() ?? "";
     const user = User.create({
       email,
-      firstName: firstName ?? "",
-      lastName: lastName ?? "",
+      firstName: fn,
+      lastName: ln,
       role: UserRole.USER,
     });
     const saved = await this.usersRepository.save(user);
