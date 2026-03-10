@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { Button, Card, InputText, Message } from "primevue";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { authClient } from "../../auth-client.ts";

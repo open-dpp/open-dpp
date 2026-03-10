@@ -3,7 +3,7 @@
   "include": [
     "**/*.ts",
     "**/*.vue"
-  ],
+, "tailwind.config.js"  ],
   "exclude": [
     "vitest.config.ts"
   ]

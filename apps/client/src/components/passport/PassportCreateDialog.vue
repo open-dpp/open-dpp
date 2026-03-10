@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import type { TemplateDto } from "@open-dpp/dto";
-import { Button, Dialog, RadioButton, Select } from "primevue";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";

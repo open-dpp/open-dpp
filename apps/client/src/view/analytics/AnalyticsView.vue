@@ -60,7 +60,7 @@ onUnmounted(() => {
 <template>
   <ContentViewWrapper>
     <MetricQuery />
-    <div class="h-[400px]">
+    <div class="h-100">
       <Line :data="data" :options="options" />
     </div>
   </ContentViewWrapper>

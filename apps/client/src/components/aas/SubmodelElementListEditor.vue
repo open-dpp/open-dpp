@@ -8,7 +8,6 @@ import type {
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { AasSubmodelElements } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
-import { Button, Column, DataTable, InputText, Menu } from "primevue";
 import { useConfirm } from "primevue/useconfirm";
 import { useForm } from "vee-validate";
 import { computed, onErrorCaptured, ref, toRaw } from "vue";
