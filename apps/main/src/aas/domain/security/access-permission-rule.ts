@@ -9,6 +9,29 @@ export class AccessPermissionRule {
   }
 
   toCaslRules(): PlainRule[] {
-    return this.permissionsPerObject.map(p => p.toCaslRules()).flat();
+    return this.permissionsPerObject.flatMap(permissionPerObject => permissionPerObject.toCaslRules());
+    // const idShortPermissionObjectMap = new Map<string, PermissionPerObject>();
+    // for (const permissionPerObject of this.permissionsPerObject) {
+    //   idShortPermissionObjectMap.set(permissionPerObject.object.toString(), permissionPerObject);
+    // }
+    // const rules: PlainRule[] = [];
+    // for (const [idShort, permissionPerObject] of idShortPermissionObjectMap.entries()) {
+    //   const fields = [idShort];
+    //
+    //   const submodelElement = submodel.findSubmodelElementOrFail(IdShortPath.create({ path: idShort }));
+    //
+    //   for (const childs of submodelElement.getSubmodelElements()) {
+    //     const childPath = `${idShort}.${childs.idShort}`;
+    //     if (!idShortPermissionObjectMap.get(childPath)) {
+    //       fields.push(childPath);
+    //     }
+    //   }
+    //   rules.push({
+    //     subject: "Submodel",
+    //     fields,
+    //     action: permissionPerObject.permissions.filter(p => p.kindOfPermission === PermissionKind.Allow).map(p => p.permission),
+    //   });
+    // }
+    // return rules;
   }
 }

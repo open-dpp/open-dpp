@@ -1,5 +1,6 @@
 import { createMongoAbility } from "@casl/ability";
 import { PermissionType } from "@open-dpp/dto";
+import { AasAbility } from "./aas-ability";
 import { AccessControl } from "./access-control";
 import { AccessPermissionRule } from "./access-permission-rule";
 import { SubjectAttributes } from "./security-types";
@@ -16,8 +17,10 @@ export class Security {
     this.localAccessControl.addRule(rule);
   }
 
-  defineAbilityForSubject(subject: SubjectAttributes) {
+  defineAbilityForSubject(subject: SubjectAttributes): AasAbility {
     const rules = this.localAccessControl.toCaslRules(subject);
-    return createMongoAbility<[PermissionType, string]>(rules);
+    return AasAbility.create({
+      ability: createMongoAbility<[PermissionType, string]>(rules),
+    });
   }
 }

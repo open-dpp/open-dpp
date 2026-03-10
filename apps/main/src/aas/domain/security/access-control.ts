@@ -14,6 +14,8 @@ export class AccessControl {
   }
 
   toCaslRules(subject: SubjectAttributes): PlainRule[] {
-    return this.accessPermissionRules.filter(rule => rule.targetSubjectAttributes.role === subject.role).map(rule => rule.toCaslRules()).flat();
+    return this.accessPermissionRules.filter(
+      rule => rule.targetSubjectAttributes.role === subject.role,
+    ).map(rule => rule.toCaslRules()).flat();
   }
 }
