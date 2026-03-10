@@ -65,7 +65,7 @@ onMounted(async () => {
         @close="onInviteToOrgClose"
         @success="onInviteToOrgClose"
       />
-      <AdminUsersList v-if="users.length > 0" :users="users" @add="onAdd" @invite-to-org="onInviteToOrg" />
+      <AdminUsersList :users="users" @add="onAdd" @invite-to-org="onInviteToOrg" />
     </div>
   </section>
 </template>
