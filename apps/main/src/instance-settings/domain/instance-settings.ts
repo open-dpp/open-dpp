@@ -24,12 +24,14 @@ export interface EnvOverrideProps {
   signupEnabled?: boolean;
 }
 
+type SignupEnabledState = Readonly<{
+  value: boolean;
+  locked?: boolean;
+}>;
+
 export class InstanceSettings {
   public readonly id: string;
-  public readonly signupEnabled: {
-    value: boolean;
-    locked?: boolean;
-  };
+  public readonly signupEnabled: SignupEnabledState;
 
   private constructor(
     id: string,
@@ -39,7 +41,7 @@ export class InstanceSettings {
     },
   ) {
     this.id = id;
-    this.signupEnabled = signupEnabled;
+    this.signupEnabled = Object.freeze({ ...signupEnabled });
   }
 
   public static create(props: InstanceSettingsCreateProps = {}): InstanceSettings {
@@ -82,7 +84,7 @@ export class InstanceSettings {
   public toResponse(): InstanceSettingsResponseProps {
     return {
       id: this.id,
-      signupEnabled: this.signupEnabled,
+      signupEnabled: { ...this.signupEnabled },
     };
   }
 }
