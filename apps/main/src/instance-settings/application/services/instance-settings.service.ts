@@ -32,7 +32,7 @@ export class InstanceSettingsService {
       signupEnabled: this.envService.get("OPEN_DPP_INSTANCE_SIGNUP_ENABLED"),
     };
     if (settings.signupEnabled !== undefined && updates.signupEnabled !== settings.signupEnabled) {
-      throw new ValueError("Cannot override signupEnabled when OPEN_DPP_INSTANCE_SIGNUP_ENABLED is true");
+      throw new ValueError("Cannot override signupEnabled when OPEN_DPP_INSTANCE_SIGNUP_ENABLED is set");
     }
   }
 

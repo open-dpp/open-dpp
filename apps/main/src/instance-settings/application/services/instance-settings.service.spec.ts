@@ -150,7 +150,7 @@ describe("InstanceSettingsService", () => {
 
       await expect(
         service.updateSettings({ signupEnabled: true }),
-      ).rejects.toThrow("Cannot override signupEnabled when OPEN_DPP_INSTANCE_SIGNUP_ENABLED is true");
+      ).rejects.toThrow("Cannot override signupEnabled when OPEN_DPP_INSTANCE_SIGNUP_ENABLED is set");
     });
   });
 
