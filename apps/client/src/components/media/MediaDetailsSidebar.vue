@@ -7,10 +7,6 @@ defineProps<{
   media?: MediaInfo;
 }>();
 
-const emits = defineEmits<{
-  (e: "close"): void;
-}>();
-
 const open = defineModel<boolean>({ required: true });
 
 const { t } = useI18n();
@@ -62,13 +58,5 @@ const { t } = useI18n();
         </dd>
       </div>
     </dl>
-    <div class="flex flex-row gap-2 justify-end">
-      <button
-        class="bg-primary-500 p-2 rounded text-white text-sm hover:cursor-pointer"
-        @click="emits('close')"
-      >
-        {{ t("common.close") }}
-      </button>
-    </div>
   </Drawer>
 </template>
