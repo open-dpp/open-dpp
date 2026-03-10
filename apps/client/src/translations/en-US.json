@@ -366,6 +366,7 @@
       "organizations": "All organizations",
       "users": "All users",
       "settings": "Settings",
+      "emailNotVerified": "Email not verified",
       "inviteUserDialog": {
         "title": "Create user",
         "create": "Create",

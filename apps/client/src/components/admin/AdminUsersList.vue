@@ -55,24 +55,24 @@ function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {
   <DataTable :value="rows" table-style="min-width: 50rem">
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="text-xl font-bold">{{ t('admin.users.title', 'Users') }}</span>
+        <span class="text-xl font-bold">{{ t('organizations.admin.users') }}</span>
         <Button :label="t('common.add')" @click="emits('add')" />
       </div>
     </template>
-    <Column field="email" header="Email">
+    <Column field="email" :header="t('user.email')">
       <template #body="{ data }">
         <div class="flex items-center gap-2">
           <span>{{ data.email }}</span>
           <i
             v-if="!data.emailVerified"
-            v-tooltip.top="t('admin.users.emailNotVerified', 'Email not verified')"
+            v-tooltip.top="t('organizations.admin.emailNotVerified')"
             class="pi pi-exclamation-circle text-orange-500"
           />
         </div>
       </template>
     </Column>
-    <Column field="role" header="Role" />
-    <Column field="name" header="Name" />
+    <Column field="role" :header="t('organizations.memberRole')" />
+    <Column field="name" :header="t('common.name')" />
     <Column style="width: 3rem">
       <template #body="{ data }">
         <div class="flex w-full justify-end">
@@ -82,7 +82,7 @@ function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {
             text
             rounded
             size="small"
-            :aria-label="t('common.actions', 'Actions')"
+            :aria-label="t('common.actions')"
             @click="toggleRowMenu($event, data)"
           />
         </div>
@@ -99,7 +99,7 @@ function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {
     <template #start>
       <div>
         <InputGroup>
-          <InputGroupAddon>ID</InputGroupAddon>
+          <InputGroupAddon>{{ t('common.id') }}</InputGroupAddon>
           <InputText readonly :value="activeRowId" />
           <InputGroupAddon>
             <Button icon="pi pi-copy" severity="secondary" @click="copyId" />
