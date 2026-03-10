@@ -4,10 +4,10 @@ const asBoolean = z.string().transform(val => val.toLowerCase() === "true");
 
 const asStrictBoolean = z
   .string()
-  .refine((val) => val.toLowerCase() === "true" || val.toLowerCase() === "false", {
-    message: 'Expected "true" or "false"',
+  .refine(val => val.toLowerCase() === "true" || val.toLowerCase() === "false", {
+    message: "Expected \"true\" or \"false\"",
   })
-  .transform((val) => val.toLowerCase() === "true");
+  .transform(val => val.toLowerCase() === "true");
 
 export const envSchema = z.object({
   // Misc

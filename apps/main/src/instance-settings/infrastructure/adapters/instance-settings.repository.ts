@@ -5,8 +5,9 @@ import { convertToDomain, save } from "../../../lib/repositories";
 import { InstanceSettings, InstanceSettingsDbProps } from "../../domain/instance-settings";
 import { INSTANCE_SETTINGS_SCHEMA_VERSION, InstanceSettingsDocument, InstanceSettingsSchema } from "../schemas/instance-settings.schema";
 
-const fromPlain = (plain: unknown) =>
-  InstanceSettings.loadFromDb(plain as InstanceSettingsDbProps);
+function fromPlain(plain: unknown) {
+  return InstanceSettings.loadFromDb(plain as InstanceSettingsDbProps);
+}
 
 @Injectable()
 export class InstanceSettingsRepository {
