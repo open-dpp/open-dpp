@@ -52,8 +52,7 @@ watch(
       <label
         class="block text-sm font-medium leading-6 text-gray-900"
         for="input_1"
-        >{{ label }}</label
-      >
+      >{{ label }}</label>
       <div class="flex w-full gap-4">
         <MediaPreview
           v-if="model && mediaInfo"
