@@ -49,7 +49,7 @@ async function updateFileFromModal(items: Array<MediaInfo>) {
             <div class="flex flex-row gap-4 w-full justify-between">
               <MediaPreview :media="mediaInfo" class="grow h-48" />
               <button
-                class="shrink bg-[#6BAD87]/50 rounded-sm p-2 hover:cursor-pointer my-auto"
+                class="shrink bg-primary-500/50 rounded-sm p-2 hover:cursor-pointer my-auto"
                 @click.prevent="openFileModal = true"
               >
                 <PencilIcon class="h-4 w-4" />
@@ -65,7 +65,7 @@ async function updateFileFromModal(items: Array<MediaInfo>) {
             </div>
             <div class="my-auto">
               <button
-                class="bg-[#6BAD87]/50 rounded-sm p-2 hover:cursor-pointer my-auto"
+                class="bg-primary-500/50 rounded-sm p-2 hover:cursor-pointer my-auto"
                 @click.prevent="openFileModal = true"
               >
                 <PencilIcon class="h-4 w-4" />

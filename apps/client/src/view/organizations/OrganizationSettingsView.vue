@@ -11,6 +11,7 @@ import { useIndexStore } from "../../stores";
 import { useErrorHandlingStore } from "../../stores/error.handling";
 import { useNotificationStore } from "../../stores/notification";
 import { useOrganizationsStore } from "../../stores/organizations";
+import ContentViewWrapper from "../ContentViewWrapper.vue";
 
 const { t } = useI18n();
 const organizationStore = useOrganizationsStore();
@@ -59,43 +60,41 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
-    <div class="px-4 py-5 sm:p-6">
-      <h3 class="text-base font-semibold leading-6 text-gray-900">
-        {{ t("organizations.settings.title") }}
-      </h3>
-      <div class="mt-5 max-w-xl">
-        <form v-if="organization" @submit.prevent="save">
-          <div class="flex flex-col gap-4">
-            <div class="flex flex-col gap-2">
-              <label
-                for="name"
-                class="block text-sm font-medium leading-6 text-gray-900"
-              >{{ t("organizations.form.name.label") }}</label>
-              <InputText
-                id="name"
-                v-model="organization.name"
-                :invalid="nameInvalid"
-              />
-              <small v-if="nameInvalid" class="text-red-500">{{
-                t("organizations.form.name.error")
-              }}</small>
-            </div>
-
-            <div class="flex flex-col gap-2">
-              <MediaInput
-                v-model="organization.logo"
-                context="organization"
-                :label="t('organizations.form.image.label')"
-              />
-            </div>
-
-            <div class="mt-4">
-              <Button type="submit" :label="t('common.save')" />
-            </div>
+  <ContentViewWrapper>
+    <h3 class="text-xl py-2 font-semibold leading-6 text-gray-900">
+      {{ t("organizations.settings.title") }}
+    </h3>
+    <div class="mt-5 max-w-xl">
+      <form v-if="organization" @submit.prevent="save">
+        <div class="flex flex-col gap-4">
+          <div class="flex flex-col gap-2">
+            <label
+              for="name"
+              class="block text-sm font-medium leading-6 text-gray-900"
+            >{{ t("organizations.form.name.label") }}</label>
+            <InputText
+              id="name"
+              v-model="organization.name"
+              :invalid="nameInvalid"
+            />
+            <small v-if="nameInvalid" class="text-red-500">{{
+              t("organizations.form.name.error")
+            }}</small>
           </div>
-        </form>
-      </div>
+
+          <div class="flex flex-col gap-2">
+            <MediaInput
+              v-model="organization.logo"
+              context="organization"
+              :label="t('organizations.form.image.label')"
+            />
+          </div>
+
+          <div class="mt-4">
+            <Button type="submit" :label="t('common.save')" />
+          </div>
+        </div>
+      </form>
     </div>
-  </div>
+  </ContentViewWrapper>
 </template>

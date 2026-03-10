@@ -3,7 +3,6 @@ import type { PassportDto } from "@open-dpp/dto";
 import { MeasurementType } from "@open-dpp/api-client";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { Button, DatePicker, Select } from "primevue";
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod/v4";
@@ -87,48 +86,50 @@ async function applyQuery() {
 </script>
 
 <template>
-  <div class="flex items-center gap-2">
-    <LazyPassportSelect v-model="selectedPassport" />
-    <Select
-      v-model="selectedView"
-      :options="timeViewOptions"
-      option-value="id"
-      option-label="label"
-      :placeholder="t('analytics.timeViewSelection')"
-      class="w-full md:w-56"
-    />
-    <DatePicker
-      v-if="selectedView === TimeView.DAYLY"
-      v-model="selectedDate"
-      show-icon
-      date-format="dd/mm/yy"
-      @date-select="selectRange"
-    />
-    <DatePicker
-      v-else-if="selectedView === TimeView.WEEKLY"
-      v-model="range"
-      selection-mode="range"
-      show-icon
-      date-format="dd.mm.yy"
-      :manual-input="false"
-      @date-select="selectRange"
-    />
-    <DatePicker
-      v-else-if="selectedView === TimeView.MONTHLY"
-      v-model="selectedDate"
-      show-icon
-      view="month"
-      date-format="mm/yy"
-      @date-select="selectRange"
-    />
-    <DatePicker
-      v-else-if="selectedView === TimeView.YEARLY"
-      v-model="selectedDate"
-      show-icon
-      view="year"
-      date-format="yy"
-      @date-select="selectRange"
-    />
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <LazyPassportSelect v-model="selectedPassport" />
+      <Select
+        v-model="selectedView"
+        :options="timeViewOptions"
+        option-value="id"
+        option-label="label"
+        :placeholder="t('analytics.timeViewSelection')"
+        class="w-full md:w-56"
+      />
+      <DatePicker
+        v-if="selectedView === TimeView.DAYLY"
+        v-model="selectedDate"
+        show-icon
+        date-format="dd/mm/yy"
+        @date-select="selectRange"
+      />
+      <DatePicker
+        v-else-if="selectedView === TimeView.WEEKLY"
+        v-model="range"
+        selection-mode="range"
+        show-icon
+        date-format="dd.mm.yy"
+        :manual-input="false"
+        @date-select="selectRange"
+      />
+      <DatePicker
+        v-else-if="selectedView === TimeView.MONTHLY"
+        v-model="selectedDate"
+        show-icon
+        view="month"
+        date-format="mm/yy"
+        @date-select="selectRange"
+      />
+      <DatePicker
+        v-else-if="selectedView === TimeView.YEARLY"
+        v-model="selectedDate"
+        show-icon
+        view="year"
+        date-format="yy"
+        @date-select="selectRange"
+      />
+    </div>
     <Button :disabled="!isQueryValid" @click="applyQuery">
       {{ t("analytics.startAnalysis") }}
     </Button>

@@ -1,9 +1,7 @@
 <script lang="ts" setup>
-import { Button, Dialog, InputGroup, InputText } from "primevue";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { authClient } from "../../auth-client.ts";
-import SimpleTable from "../../components/lists/SimpleTable.vue";
 import { AI_INTEGRATION_ID } from "../../const";
 import { useIndexStore } from "../../stores";
 import { useAiIntegrationStore } from "../../stores/ai.integration";
@@ -23,14 +21,9 @@ const rows = computed(() => [
       ? t("integrations.connections.status.active")
       : t("integrations.connections.status.inactive"),
     id: AI_INTEGRATION_ID,
-  },
-]);
-
-const actions = computed(() => [
-  {
-    name: t("common.edit"),
-    actionLinkBuilder: (row: Record<string, string>) =>
-      `/organizations/${indexStore.selectedOrganization}/integrations/${row.id}`,
+    action: t("common.edit"),
+    actionLinkBuilder: (id: string) =>
+      `/organizations/${indexStore.selectedOrganization}/integrations/${id}`,
   },
 ]);
 
@@ -59,42 +52,60 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-3 p-3">
-    <Dialog :visible="apiKey.length > 0" modal header="API Key" :style="{ width: '75rem' }">
-      <span class="text-surface-500 dark:text-surface-400 block mb-8">{{ t('integrations.apiKey.createSuccess') }}</span>
-      <div class="flex items-center gap-4 mb-4">
-        <InputGroup>
-          <Button :label="t('common.copy')" @click="copyApiKeyToClipboard" />
-          <InputText placeholder="API-Key" :readonly="true" :value="apiKey" />
-        </InputGroup>
-      </div>
-      <div class="flex justify-end gap-2">
-        <Button type="button" :label="t('common.close')" severity="secondary" @click="apiKey = ''" />
-      </div>
-    </Dialog>
-    <div class="sm:flex sm:items-center">
-      <div class="sm:flex-auto">
-        <h1 class="text-base font-semibold text-gray-900">
-          {{ t('integrations.integrations') }}
-        </h1>
-        <p class="mt-2 text-sm text-gray-700">
-          {{ t('integrations.allIntegrations') }}
-        </p>
-      </div>
-      <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-        <button
-          class="block rounded-md bg-indigo-600 px-3 py-1.5 text-center text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-          @click="createApiKey"
-        >
-          {{ t('integrations.apiKey.create') }}
-        </button>
-      </div>
+  <Dialog
+    :visible="apiKey.length > 0"
+    modal
+    header="API Key"
+    :style="{ width: '75rem' }"
+  >
+    <span class="text-surface-500 dark:text-surface-400 block mb-8">{{
+      t("integrations.apiKey.createSuccess")
+    }}</span>
+    <div class="flex items-center gap-4 mb-4">
+      <InputGroup>
+        <Button :label="t('common.copy')" @click="copyApiKeyToClipboard" />
+        <InputText placeholder="API-Key" :readonly="true" :value="apiKey" />
+      </InputGroup>
     </div>
-    <SimpleTable
-      :headers="['Name', 'Status']"
-      :ignore-row-keys="['id']"
-      :row-actions="actions"
-      :rows="rows"
+    <div class="flex justify-end gap-2">
+      <Button
+        type="button"
+        :label="t('common.close')"
+        severity="secondary"
+        @click="apiKey = ''"
+      />
+    </div>
+  </Dialog>
+  <DataTable :value="rows">
+    <template #header>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <span class="text-xl font-bold">{{
+          t("integrations.integrations")
+        }}</span>
+        <div class="flex items-center gap-2">
+          <slot name="headerActions">
+            <Button
+              :label="t('integrations.apiKey.create')"
+              @click="createApiKey"
+            />
+          </slot>
+        </div>
+      </div>
+    </template>
+    <Column field="name" :header="t('common.name')" />
+    <Column
+      field="status"
+      :header="t('integrations.connections.status.label')"
     />
-  </div>
+    <Column field="action" :header="t('common.actions')">
+      <template #body="{ data }">
+        <router-link
+          :to="data.actionLinkBuilder(data.id)"
+          class="text-primary-600 hover:text-primary-500"
+        >
+          {{ data.action }}
+        </router-link>
+      </template>
+    </Column>
+  </DataTable>
 </template>

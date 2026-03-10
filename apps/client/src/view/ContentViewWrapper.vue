@@ -2,7 +2,7 @@
 </script>
 
 <template>
-  <div class="p-3">
+  <div class="py-3 px-4">
     <slot />
   </div>
 </template>

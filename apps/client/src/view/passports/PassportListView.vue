@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { SharedDppDto } from "@open-dpp/dto";
 import { AxiosError } from "axios";
-import { Button, FileUpload, useToast } from "primevue";
+import { useToast } from "primevue/usetoast";
 import { onMounted, useTemplateRef } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
