@@ -1,7 +1,7 @@
 import process from "node:process";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { HydratedDocument, SchemaTypes, Types } from "mongoose";
-import { UserRole } from "../../domain/user-role.enum";
+import { UserRoleType } from "../../domain/user-role.enum";
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -44,7 +44,7 @@ export class User {
   banExpires: Date | null;
 
   @Prop({ required: true, type: String })
-  role: UserRole;
+  role: UserRoleType;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

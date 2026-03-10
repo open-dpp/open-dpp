@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { UserRole } from "./user-role.enum";
+import { UserRole, UserRoleType } from "./user-role.enum";
 
 export interface UserCreateProps {
   email: string;
@@ -8,7 +8,7 @@ export interface UserCreateProps {
   name?: string;
   image?: string;
   emailVerified?: boolean;
-  role?: UserRole;
+  role?: UserRoleType;
   banned?: boolean;
   banReason?: string | null;
   banExpires?: Date | null;
@@ -20,7 +20,7 @@ export type UserDbProps = Omit<UserCreateProps, "firstName" | "lastName"> & {
   id: string;
   createdAt: Date;
   updatedAt: Date;
-  role: UserRole;
+  role: UserRoleType;
 };
 
 export class User {
@@ -33,7 +33,7 @@ export class User {
   public readonly emailVerified: boolean;
   public readonly createdAt: Date;
   public readonly updatedAt: Date;
-  public readonly role: UserRole;
+  public readonly role: UserRoleType;
   public readonly banned: boolean;
   public readonly banReason: string | null;
   public readonly banExpires: Date | null;
@@ -47,7 +47,7 @@ export class User {
     emailVerified: boolean,
     createdAt: Date,
     updatedAt: Date,
-    role: UserRole,
+    role: UserRoleType,
     banned: boolean,
     banReason: string | null,
     banExpires: Date | null,
