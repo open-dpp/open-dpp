@@ -261,3 +261,19 @@ jobs:
           fi
           docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}:${{ steps.meta.outputs.version }}
 
+  trigger-demo-deploy:
+    needs: merge
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send repository_dispatch to cloud-deployment
+        env:
+          GH_TOKEN: ${{ secrets.DEPLOY_REPO_TOKEN }}
+        run: |
+          curl -L \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer $GH_TOKEN" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/open-dpp/cloud-deployment/dispatches \
+          -d '{"event_type":"deploy-demo"}'
