@@ -53,6 +53,7 @@ export type {
 } from './dpp/unique-product-identifiers/unique-product-identifiers.dtos'
 export { UniqueProductIdentifiersNamespace } from './dpp/unique-product-identifiers/unique-product-identifiers.namespace'
 export { UsersNamespace } from './dpp/users/users.namespace'
+export type { CreateUserDto, UserDto } from './dpp/users/user.dtos'
 export type { MediaInfoDto } from './media/media.dtos'
 export { MediaNamespace } from './media/media.namespace'
 

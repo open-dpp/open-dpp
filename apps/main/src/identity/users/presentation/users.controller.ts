@@ -1,18 +1,11 @@
+import type { CreateUserDto } from "@open-dpp/dto";
 import { Body, Controller, Get, NotFoundException, Param, Post } from "@nestjs/common";
+import { CreateUserDtoSchema } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
-import { z } from "zod";
 import { UserHasRole } from "../../auth/presentation/decorators/user-has-role.decorator";
 import { UsersService } from "../application/services/users.service";
 import { User } from "../domain/user";
 import { UserRole } from "../domain/user-role.enum";
-
-export const CreateUserDtoSchema = z.object({
-  email: z.string().email(),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-});
-
-export type CreateUserDto = z.infer<typeof CreateUserDtoSchema>;
 
 @Controller("users")
 export class UsersController {

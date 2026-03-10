@@ -1,4 +1,4 @@
-import type { UserDto } from '@open-dpp/dto'
+import type { CreateUserDto, UserDto } from '@open-dpp/dto'
 import type { AxiosInstance } from 'axios'
 
 export class UsersNamespace {
@@ -8,7 +8,7 @@ export class UsersNamespace {
     return this.axiosInstance.get<UserDto>(`/users/${id}`)
   }
 
-  public async create(data: { email: string, firstName?: string, lastName?: string }) {
+  public async create(data: CreateUserDto) {
     return this.axiosInstance.post<void>('/users', data)
   }
 }
