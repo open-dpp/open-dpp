@@ -7,18 +7,20 @@ const { model } = defineProps<{
 }>();
 
 const property = computed(() => {
-  return model.keys.find((key) => key.type === "GlobalReference");
+  return model.keys.find(key => key.type === "GlobalReference");
 });
 
 const safeHref = computed(() => {
   const raw = property.value?.value?.trim();
-  if (!raw) return undefined;
+  if (!raw)
+    return undefined;
   try {
     const parsed = new URL(raw);
     return ["http:", "https:"].includes(parsed.protocol)
       ? parsed.toString()
       : undefined;
-  } catch {
+  }
+  catch {
     return undefined;
   }
 });
@@ -32,7 +34,6 @@ const safeHref = computed(() => {
       target="_blank"
       rel="noopener noreferrer"
       class="mt-1 text-sm/6 text-primary-500 hover:underline sm:mt-2"
-      >{{ safeHref }}</a
-    >
+    >{{ safeHref }}</a>
   </dd>
 </template>

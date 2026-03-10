@@ -45,7 +45,8 @@ const actions = computed<
   if (props.currentPage < 2) {
     // If we're at the beginning, show more pages after
     endPage = Math.min(totalPages.value - 1, startPage + maxPagesToShow - 1);
-  } else if (props.currentPage > totalPages.value - 3) {
+  }
+  else if (props.currentPage > totalPages.value - 3) {
     // If we're at the end, show more pages before
     startPage = Math.max(0, endPage - maxPagesToShow + 1);
   }
