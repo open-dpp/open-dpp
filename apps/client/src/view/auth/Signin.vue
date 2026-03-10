@@ -26,7 +26,8 @@ const password = ref<string>("");
 const rememberMe = ref<boolean>(false);
 const showError = ref<boolean>(false);
 const loading = ref<boolean>(false);
-const signupEnabled = ref<boolean>(true);
+const signupEnabled = ref<boolean>(false);
+const checkingSettings = ref<boolean>(true);
 
 onMounted(async () => {
   try {
@@ -34,7 +35,10 @@ onMounted(async () => {
     signupEnabled.value = res.data.signupEnabled;
   }
   catch {
-    signupEnabled.value = true;
+    signupEnabled.value = false;
+  }
+  finally {
+    checkingSettings.value = false;
   }
 });
 
@@ -181,7 +185,7 @@ async function signin() {
           </form>
         </div>
       </template>
-      <template v-if="signupEnabled" #footer>
+      <template v-if="!checkingSettings && signupEnabled" #footer>
         <p class="mt-10 text-center text-sm/6 text-gray-500 dark:text-gray-400">
           {{ t("auth.signin.notAMember") }}
           {{ " " }}
