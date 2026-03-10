@@ -32,7 +32,11 @@ const layoutStore = useLayoutStore();
 
 const invitations = ref<InvitedMember[]>([]);
 
-const rows = computed(() => [...members, ...invitations.value].sort((a, b) => a.role.localeCompare(b.role)));
+const rows = computed(() =>
+  [...members, ...invitations.value].sort((a, b) =>
+    a.role.localeCompare(b.role),
+  ),
+);
 async function loadInvitations() {
   invitations.value = [];
   const { data } = await authClient.organization.listInvitations();
@@ -73,17 +77,17 @@ onMounted(async () => {
     @invited-user="emit('invitedUser')"
   />
   <DataTable :value="rows">
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <span class="text-xl font-bold">{{ t("organizations.member") }}</span>
-      <div class="flex items-center gap-2">
-        <slot name="headerActions">
+    <template #header>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <span class="text-xl font-bold">{{ t("organizations.member") }}</span>
+        <div class="flex items-center gap-2">
           <Button
             :label="t('organizations.inviteUser')"
             @click="layoutStore.openModal(ModalType.INVITE_MEMBER_MODAL)"
           />
-        </slot>
+        </div>
       </div>
-    </div>
+    </template>
     <Column field="name" :header="t('organizations.memberName')">
       <template #body="{ data }: { data: MemberDto | InvitedMember }">
         <div class="flex items-center">
@@ -123,9 +127,13 @@ onMounted(async () => {
       </template>
     </Column>
     <Column :header="t('common.actions')">
-      <template #body="{ data }: { data: MemberDto | InvitedMember}">
-        <Button v-if="isInvited(data)" severity="secondary" @click="cancelInvite(data.id)">
-          {{ t('organizations.invitation.cancel') }}
+      <template #body="{ data }: { data: MemberDto | InvitedMember }">
+        <Button
+          v-if="isInvited(data)"
+          severity="secondary"
+          @click="cancelInvite(data.id)"
+        >
+          {{ t("organizations.invitation.cancel") }}
         </Button>
       </template>
     </Column>

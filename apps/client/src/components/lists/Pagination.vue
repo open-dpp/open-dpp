@@ -88,63 +88,63 @@ const actions = computed<
       </button>
     </div>
     <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-      <div>
-        <p class="text-sm text-gray-700">
-          {{ t("lists.shows") }}
-          <span class="font-medium">{{ currentPage * itemsPerPage + 1 }}</span>
-          {{ t("lists.to") }}
-          <span class="font-medium">{{
-            Math.min((currentPage + 1) * itemsPerPage, totalItems)
-          }}</span>
-          {{ t("lists.of") }}
-          <span class="font-medium">{{ totalItems }}</span>
-          {{ t("lists.elements") }}
-        </p>
-      </div>
-      <div>
-        <nav
-          aria-label="Pagination"
-          class="isolate inline-flex -space-x-px rounded-md shadow-xs"
+      <p class="text-sm text-gray-700">
+        {{ t("lists.shows") }}
+        <span class="font-medium">{{
+          totalItems === 0 ? 0 : currentPage * itemsPerPage + 1
+        }}</span>
+        {{ t("lists.to") }}
+        <span class="font-medium">{{
+          Math.min((currentPage + 1) * itemsPerPage, totalItems)
+        }}</span>
+        {{ t("lists.of") }}
+        <span class="font-medium">{{ totalItems }}</span>
+        {{ t("lists.elements") }}
+      </p>
+    </div>
+    <div>
+      <nav
+        aria-label="Pagination"
+        class="isolate inline-flex -space-x-px rounded-md shadow-xs"
+      >
+        <button
+          class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 hover:cursor-pointer"
+          @click="
+            currentPage === 0
+              ? () => {}
+              : emits('pageChanged', currentPage - 1)
+          "
         >
-          <button
-            class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 hover:cursor-pointer"
-            @click="
-              currentPage === 0
-                ? () => {}
-                : emits('pageChanged', currentPage - 1)
-            "
-          >
-            <span class="sr-only">Previous</span>
-            <ChevronLeftIcon aria-hidden="true" class="size-5" />
-          </button>
-          <button
-            v-for="(action, index) in actions"
-            :key="index"
-            :aria-current="action.page === currentPage ? 'page' : undefined"
-            :class="{
-              'bg-primary-500 text-white focus-visible:outline-primary-500':
-                action.page === currentPage,
-              'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50':
-                action.page !== currentPage,
-            }"
-            class="relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus-visible:outline-2 focus-visible:outline-offset-2 hover:cursor-pointer"
-            @click="emits('pageChanged', action.page)"
-          >
-            {{ action.page + 1 }}
-          </button>
-          <button
-            class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 hover:cursor-pointer"
-            @click="
-              currentPage === totalPages - 1
-                ? () => {}
-                : emits('pageChanged', currentPage + 1)
-            "
-          >
-            <span class="sr-only">Next</span>
-            <ChevronRightIcon aria-hidden="true" class="size-5" />
-          </button>
-        </nav>
-      </div>
+          <span class="sr-only">Previous</span>
+          <ChevronLeftIcon aria-hidden="true" class="size-5" />
+        </button>
+        <button
+          v-for="(action, index) in actions"
+          :key="index"
+          :aria-current="action.page === currentPage ? 'page' : undefined"
+          :class="{
+            'bg-primary-500 text-white focus-visible:outline-primary-500':
+              action.page === currentPage,
+            'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50':
+              action.page !== currentPage,
+          }"
+          class="relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus-visible:outline-2 focus-visible:outline-offset-2 hover:cursor-pointer"
+          @click="emits('pageChanged', action.page)"
+        >
+          {{ action.page + 1 }}
+        </button>
+        <button
+          class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 hover:cursor-pointer"
+          @click="
+            currentPage === totalPages - 1
+              ? () => {}
+              : emits('pageChanged', currentPage + 1)
+          "
+        >
+          <span class="sr-only">Next</span>
+          <ChevronRightIcon aria-hidden="true" class="size-5" />
+        </button>
+      </nav>
     </div>
   </div>
 </template>
