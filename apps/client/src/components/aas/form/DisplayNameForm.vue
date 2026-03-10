@@ -2,7 +2,6 @@
 import type { LanguageTextDto, LanguageType } from "@open-dpp/dto";
 import type { FormErrors } from "vee-validate";
 import { Language, LanguageEnum } from "@open-dpp/dto";
-import { Button, DataView } from "primevue";
 import { useFieldArray } from "vee-validate";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";

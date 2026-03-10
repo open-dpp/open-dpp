@@ -45,8 +45,7 @@ const actions = computed<
   if (props.currentPage < 2) {
     // If we're at the beginning, show more pages after
     endPage = Math.min(totalPages.value - 1, startPage + maxPagesToShow - 1);
-  }
-  else if (props.currentPage > totalPages.value - 3) {
+  } else if (props.currentPage > totalPages.value - 3) {
     // If we're at the end, show more pages before
     startPage = Math.max(0, endPage - maxPagesToShow + 1);
   }
@@ -90,15 +89,15 @@ const actions = computed<
     <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
       <div>
         <p class="text-sm text-gray-700">
-          {{ t('lists.shows') }}
+          {{ t("lists.shows") }}
           <span class="font-medium">{{ currentPage * itemsPerPage + 1 }}</span>
-          {{ t('lists.to') }}
+          {{ t("lists.to") }}
           <span class="font-medium">{{
             Math.min((currentPage + 1) * itemsPerPage, totalItems)
           }}</span>
-          {{ t('lists.of') }}
+          {{ t("lists.of") }}
           <span class="font-medium">{{ totalItems }}</span>
-          {{ t('lists.elements') }}
+          {{ t("lists.elements") }}
         </p>
       </div>
       <div>
@@ -122,7 +121,7 @@ const actions = computed<
             :key="index"
             :aria-current="action.page === currentPage ? 'page' : undefined"
             :class="{
-              'bg-[#6BAD87] text-white focus-visible:outline-[#6BAD87]':
+              'bg-primary-500 text-white focus-visible:outline-primary-500':
                 action.page === currentPage,
               'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50':
                 action.page !== currentPage,

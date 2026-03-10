@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Button, InputGroupAddon } from "primevue";
 import { v4 as uuid4 } from "uuid";
 import PropertyValueField from "./PropertyValueField.vue";
 

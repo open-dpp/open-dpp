@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { Button, Card, InputText, Message, Password } from "primevue";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";

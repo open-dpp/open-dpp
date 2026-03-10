@@ -5,7 +5,6 @@ import {
 } from "@heroicons/vue/16/solid";
 import DOMPurify from "dompurify";
 import { marked } from "marked";
-import { Button } from "primevue";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { MsgStatus, Sender, useAiAgentStore } from "../../stores/ai-agent";
@@ -49,12 +48,12 @@ function sanitizeMarkdown(text: string): string {
         <div class="flex gap-2">
           <UserCircleIcon
             v-if="message.sender === Sender.User"
-            class="size-8 text-[#6EAED7] "
+            class="size-8 text-[#6EAED7]"
             aria-hidden="true"
           />
           <ChatBubbleOvalLeftEllipsisIcon
             v-else-if="message.sender === Sender.Bot"
-            class="size-8 text-[#6BAD87] dark:text-gray-400"
+            class="size-8 text-primary-500 dark:text-gray-400"
             aria-hidden="true"
           />
           <div
@@ -70,10 +69,7 @@ function sanitizeMarkdown(text: string): string {
       </li>
     </ul>
     <div class="flex gap-2">
-      <UserCircleIcon
-        class="size-8 text-[#6EAED7]"
-        aria-hidden="true"
-      />
+      <UserCircleIcon class="size-8 text-[#6EAED7]" aria-hidden="true" />
       <textarea
         id="question"
         v-model="input"

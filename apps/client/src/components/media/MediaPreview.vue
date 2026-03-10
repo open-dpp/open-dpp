@@ -6,17 +6,19 @@ import {
   PhotoIcon,
   VideoCameraIcon,
 } from "@heroicons/vue/24/solid";
-import { Image } from "primevue";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useMediaStore } from "../../stores/media";
 import RingLoader from "../RingLoader.vue";
 
-const props = withDefaults(defineProps<{
-  media: MediaInfo;
-  showType?: boolean;
-  preview?: boolean;
-}>(), { preview: true });
+const props = withDefaults(
+  defineProps<{
+    media: MediaInfo;
+    showType?: boolean;
+    preview?: boolean;
+  }>(),
+  { preview: true },
+);
 const { t } = useI18n();
 const mediaStore = useMediaStore();
 
@@ -42,13 +44,19 @@ onUnmounted(() => {
   }
 });
 
-watch(() => props.media, async (newValue) => {
-  await loadMedia(newValue);
-}, { deep: true });
+watch(
+  () => props.media,
+  async (newValue) => {
+    await loadMedia(newValue);
+  },
+  { deep: true },
+);
 </script>
 
 <template>
-  <div class="relative w-full flex items-center justify-center bg-gray-50 rounded overflow-hidden border border-gray-200">
+  <div
+    class="relative w-full flex items-center justify-center bg-gray-50 rounded overflow-hidden border border-gray-200"
+  >
     <div v-if="loading" class="mx-auto my-auto">
       <RingLoader />
     </div>
@@ -60,8 +68,14 @@ watch(() => props.media, async (newValue) => {
       :alt="media.title || ''"
       :preview="props.preview"
     />
-    <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
-      <PhotoIcon v-if="media.mimeType.startsWith('image/')" class="w-1/3 h-1/3" />
+    <div
+      v-else
+      class="w-full h-full flex items-center justify-center text-gray-400"
+    >
+      <PhotoIcon
+        v-if="media.mimeType.startsWith('image/')"
+        class="w-1/3 h-1/3"
+      />
       <VideoCameraIcon
         v-else-if="media.mimeType.startsWith('video/')"
         class="w-1/3 h-1/3"
@@ -74,15 +88,15 @@ watch(() => props.media, async (newValue) => {
     >
       <div class="flex flex-row gap-1 items-center justify-center">
         <ExclamationTriangleIcon class="w-3 h-3" />
-        <span class="truncate">{{ t('file.notFound') }}</span>
+        <span class="truncate">{{ t("file.notFound") }}</span>
       </div>
     </div>
     <div
       v-if="showType"
-      class="absolute bottom-1 right-1 z-10 bg-[#6BAD87] text-white text-xs px-2 py-0.5 rounded shadow-sm"
+      class="absolute bottom-1 right-1 z-10 bg-primary-500 text-white text-xs px-2 py-0.5 rounded shadow-sm"
     >
       <div>
-        {{ media.mimeType.substring(media.mimeType.indexOf('/') + 1) }}
+        {{ media.mimeType.substring(media.mimeType.indexOf("/") + 1) }}
       </div>
     </div>
   </div>

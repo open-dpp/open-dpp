@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { DataTypeDefType } from "@open-dpp/dto";
-import { FloatLabel, InputGroup, Message } from "primevue";
 import { useI18n } from "vue-i18n";
 import PropertyValue from "../PropertyValue.vue";
 
