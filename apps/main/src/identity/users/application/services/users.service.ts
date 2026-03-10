@@ -27,12 +27,12 @@ export class UsersService {
       throw new Error(`Failed to save user with email ${email}`);
     }
     try {
-      await (this.auth.api as any).forgetPassword({
+      await (this.auth.api).requestPasswordReset({
         body: { email, redirectTo: "/password-reset" },
       });
     }
     catch (error) {
-      this.logger.error(`Failed to send password reset email to ${email}`, error);
+      this.logger.error("Failed to send password reset email", error);
     }
     return saved;
   }

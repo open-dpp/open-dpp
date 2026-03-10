@@ -22,7 +22,7 @@ export class AuthController {
   ) {
     if (request.url.includes("/sign-up/email")) {
       const settings = await this.instanceSettingsService.getSettings();
-      if (!settings.signupEnabled) {
+      if (!settings.signupEnabled.value) {
         throw new ForbiddenException("Signup is disabled");
       }
     }

@@ -22,7 +22,7 @@ describe("UsersService", () => {
 
     mockAuth = {
       api: {
-        forgetPassword: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+        requestPasswordReset: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
       },
     };
 
