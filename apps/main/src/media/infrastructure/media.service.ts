@@ -297,6 +297,14 @@ export class MediaService {
     return this.convertToDomain(dataModelDoc);
   }
 
+  async findByIds(ids: string[]): Promise<Media[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+    const docs = await this.mediaDoc.find({ _id: { $in: ids } });
+    return docs.map(d => this.convertToDomain(d));
+  }
+
   async findOneOrFail(id: string) {
     const mediaDocument = await this.mediaDoc.findById(id);
     if (!mediaDocument) {

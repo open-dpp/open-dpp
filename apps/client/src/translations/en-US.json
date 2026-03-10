@@ -55,9 +55,12 @@
     "openPresentation": "Open presentation",
     "openChat": "Open chat",
     "exportPassport": "Export passport",
+    "exportTemplate": "Export template",
     "exportFailed": "Failed to export passport.",
     "importFailed": "Failed to import passport.",
-    "importSuccess": "Passport imported successfully."
+    "importSuccess": "Passport imported successfully.",
+    "templateExportFailed": "Failed to export template.",
+    "templateImportFailed": "Failed to import template."
   },
   "aasEditor": {
     "productImages": "Product images",
@@ -387,65 +390,6 @@
     "createdAt": "Created at",
     "updatedAt": "Updated at"
   },
-  "models": {
-    "models": "Passports",
-    "pass": "Model passport",
-    "info": "Model passport information",
-    "errorLoad": "Failed to load model passports",
-    "createPass": "Create a new model passport.",
-    "submitCreatePass": "Create model passport",
-    "general": "General",
-    "myDrafts": "My templates",
-    "mediaEditDialog": {
-      "title": "Edit product images",
-      "addImageError": "Failed to add product image.",
-      "deleteImageError": "Failed to delete product image.",
-      "modifyImageError": "Failed to modify product image.",
-      "moveImageError": "Failed to change order of product images.",
-      "loadModelError": "Failed to load model passport."
-    },
-    "form": {
-      "mediaDownloadError": "Failed to load product images",
-      "id": "ID",
-      "name": {
-        "help": "Give your model passport a name",
-        "label": "Name",
-        "error": "Please enter a name."
-      },
-      "passportDraft": {
-        "help": "Select the appropriate passport template",
-        "label": "Passport template",
-        "error": "Please select a template."
-      },
-      "file": {
-        "change": "Change file",
-        "upload": "Upload file",
-        "uploadSuccess": "File uploaded successfully.",
-        "uploadError": "An unexpected error occurred while uploading the file. Please try again.",
-        "download": "Download file",
-        "downloadError": "The file could not be loaded. Please try again.",
-        "select": "Select file",
-        "noSelection": "No file selected"
-      },
-      "link": {
-        "navigationError": "Navigation to passport failed"
-      },
-      "repeater": {
-        "series": "Data series",
-        "addSeries": "Add data series"
-      },
-      "section": {
-        "additional": "Additional sections",
-        "saveSuccess": "Data saved successfully",
-        "saveError": "Data could not be saved"
-      }
-    },
-    "list": {
-      "creation-label": "Add model passport",
-      "description": "All passports at the product model level. A product model is, for example, the Galaxy S22 Ultra.",
-      "title": "Model passports"
-    }
-  },
   "actions": {
     "member": {
       "title": "Add members",
@@ -455,14 +399,6 @@
       "title": "Add model",
       "description": "View organization models to add a new model there."
     }
-  },
-  "items": {
-    "info": "Item passport information",
-    "add": "Add item passport",
-    "new": "New item passport",
-    "description": "All passports at item level.",
-    "label": "Item passports",
-    "item": "Item"
   },
   "user": {
     "profile": "Your profile",
@@ -515,7 +451,7 @@
   "auth": {
     "signin": {
       "title": "Sign in to your account",
-      "button": "Signin",
+      "button": "Sign in",
       "rememberMe": "Remember me",
       "forgotPassword": "Forgot password?",
       "textForProviders": "Or continue with",
@@ -527,8 +463,8 @@
       "title": "Signup a new account",
       "button": "Signup",
       "alreadyAMember": "Already a member?",
-      "ctaSignIn": "Signin now",
-      "error": "Signup failed."
+      "ctaSignIn": "Sign in now",
+      "error": "Sign up failed."
     },
     "passwordResetRequest": {
       "title": "Request password reset",

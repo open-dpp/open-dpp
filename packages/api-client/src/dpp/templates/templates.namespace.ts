@@ -32,4 +32,12 @@ export class TemplatesNamespace {
   public async create(data: TemplateCreateDto): Promise<AxiosResponse<TemplateDto>> {
     return await this.axiosInstance.post<TemplateDto>(this.templatesEndpoint, data)
   }
+
+  public async export(id: string) {
+    return await this.axiosInstance.get<Record<string, unknown>>(`${this.templatesEndpoint}/${id}/export`)
+  }
+
+  public async import(data: Record<string, unknown>): Promise<AxiosResponse<TemplateDto>> {
+    return await this.axiosInstance.post<TemplateDto>(`${this.templatesEndpoint}/import`, data)
+  }
 }

@@ -33,9 +33,12 @@
     "openPresentation": "Präsentation öffnen",
     "openChat": "Chat öffnen",
     "exportPassport": "Produktpass exportieren",
+    "exportTemplate": "Vorlage exportieren",
     "exportFailed": "Produktpass konnte nicht exportiert werden.",
     "importFailed": "Produktpass konnte nicht importiert werden.",
     "importSuccess": "Produktpass erfolgreich importiert.",
+    "templateExportFailed": "Vorlage konnte nicht exportiert werden.",
+    "templateImportFailed": "Vorlage konnte nicht importiert werden.",
     "errorOccurred": "Ein Fehler ist aufgetreten",
     "unknownErrorOccurred": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
     "failed": "fehlgeschlagen",
@@ -408,65 +411,6 @@
     "createdAt": "Erstellt am",
     "updatedAt": "Aktualisiert am"
   },
-  "models": {
-    "models": "Produktpässe",
-    "pass": "Modellpass",
-    "info": "Modellpass Informationen",
-    "errorLoad": "Laden der Modellpässe fehlgeschlagen",
-    "createPass": "Erstellen Sie einen neuen Modellpass.",
-    "submitCreatePass": "Modelpass erstellen",
-    "general": "Allgemein",
-    "myDrafts": "Meine Vorlagen",
-    "mediaEditDialog": {
-      "title": "Produktbilder bearbeiten",
-      "addImageError": "Hinzufügen des Produktbilds fehlgeschlagen.",
-      "deleteImageError": "Löschen des Produktbilds fehlgeschlagen.",
-      "modifyImageError": "Anpassen des Produktbilds fehlgeschlagen.",
-      "moveImageError": "Ändern der Reihenfolge der Produktbilder fehlgeschlagen.",
-      "loadModelError": "Laden des Modellpasses fehlgeschlagen."
-    },
-    "form": {
-      "mediaDownloadError": "Laden der Produktbilder fehlgeschlagen",
-      "id": "ID",
-      "name": {
-        "help": "Geben Sie Ihrem Modellpass einen Namen",
-        "label": "Name",
-        "error": "Bitte geben Sie einen Namen ein."
-      },
-      "passportDraft": {
-        "help": "Wählen Sie die passende Passvorlage aus",
-        "label": "Passvorlage",
-        "error": "Bitte wählen Sie eine Vorlage aus."
-      },
-      "file": {
-        "change": "Datei ändern",
-        "upload": "Datei hochladen",
-        "uploadSuccess": "Datei erfolgreich hochgeladen.",
-        "uploadError": "Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.",
-        "download": "Datei herunterladen",
-        "downloadError": "Die Datei konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
-        "select": "Datei auswählen",
-        "noSelection": "Keine Datei ausgewählt"
-      },
-      "link": {
-        "navigationError": "Navigation zum Produktpass fehlgeschlagen"
-      },
-      "repeater": {
-        "series": "Datenreihe",
-        "addSeries": "Datenreihe hinzufügen"
-      },
-      "section": {
-        "additional": "Weiterführende Abschnitte",
-        "saveSuccess": "Daten erfolgreich gesichert",
-        "saveError": "Daten konnten nicht gespeichert werden"
-      }
-    },
-    "list": {
-      "creation-label": "Modellpass hinzufügen",
-      "description": "Alle Pässe auf der Produktmodellebene. Ein Produktmodell ist zum Beispiel das Galaxy S22 Ultra.",
-      "title": "Modellpässe"
-    }
-  },
   "actions": {
     "member": {
       "title": "Mitglieder hinzufügen",
@@ -476,14 +420,6 @@
       "title": "Modell hinzufügen",
       "description": "Modelle der Organisation ansehen, um dort ein neues Modell hinzuzufügen."
     }
-  },
-  "items": {
-    "info": "Artikelpass Informationen",
-    "add": "Artikelpass hinzufügen",
-    "new": "Neuen Artikelpass hinzufügen",
-    "description": "Alle Pässe auf Einzelartikelebene.",
-    "label": "Artikelpässe",
-    "item": "Artikel"
   },
   "user": {
     "profile": "Dein Profil",

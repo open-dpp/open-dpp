@@ -2,9 +2,9 @@ import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
-import { ModelDocSchemaVersion } from "../../models/infrastructure/model.schema";
+import { DbSessionOptions } from "../../database/query-options";
 import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
-import { UniqueProductIdentifierDoc } from "./unique-product-identifier.schema";
+import { UniqueProductIdentifierDoc, UniqueProductIdentifierSchemaVersion } from "./unique-product-identifier.schema";
 
 @Injectable()
 export class UniqueProductIdentifierService {
@@ -24,18 +24,19 @@ export class UniqueProductIdentifierService {
     });
   }
 
-  async save(uniqueProductIdentifier: UniqueProductIdentifier) {
+  async save(uniqueProductIdentifier: UniqueProductIdentifier, options?: DbSessionOptions) {
     return this.convertToDomain(
       await this.uniqueProductIdentifierDoc.findOneAndUpdate(
         { _id: uniqueProductIdentifier.uuid },
         {
-          _schemaVersion: ModelDocSchemaVersion.v1_0_0,
+          _schemaVersion: UniqueProductIdentifierSchemaVersion.v1_0_0,
           referenceId: uniqueProductIdentifier.referenceId,
         },
         {
           new: true, // Return the updated document
           upsert: true, // Create a new document if none found
           runValidators: true,
+          session: options?.session ?? null,
         },
       ),
     );
@@ -68,14 +69,6 @@ export class UniqueProductIdentifierService {
       return undefined;
     }
     return this.convertToDomain(uniqueProductIdentifierDoc);
-  }
-
-  async findOneOrFailByReferencedId(referenceId: string) {
-    const uniqueProductIdentifier = await this.findOneByReferencedId(referenceId);
-    if (!uniqueProductIdentifier) {
-      throw new NotFoundInDatabaseException(UniqueProductIdentifier.name);
-    }
-    return uniqueProductIdentifier;
   }
 
   async findAllByReferencedId(referenceId: string) {

@@ -4,7 +4,7 @@ import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { authClient } from "../../auth-client.ts";
 import SimpleTable from "../../components/lists/SimpleTable.vue";
-import { AI_INTEGRATION_ID, PRO_ALPHA_INTEGRATION_ID } from "../../const";
+import { AI_INTEGRATION_ID } from "../../const";
 import { useIndexStore } from "../../stores";
 import { useAiIntegrationStore } from "../../stores/ai.integration";
 import { useNotificationStore } from "../../stores/notification";
@@ -17,11 +17,6 @@ const { t } = useI18n();
 const apiKey = ref<string>("");
 
 const rows = computed(() => [
-  {
-    name: t("integrations.proAlpha"),
-    status: t("integrations.connections.status.active"),
-    id: PRO_ALPHA_INTEGRATION_ID,
-  },
   {
     name: t("integrations.ai.label"),
     status: aiIntegrationStore.configuration?.isEnabled

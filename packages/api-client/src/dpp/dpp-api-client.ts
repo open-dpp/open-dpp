@@ -3,29 +3,19 @@ import type { ApiClientOptions, IApiClient } from '../api-client'
 import { createAxiosClient } from '../api-client'
 import { BrandingNamespace } from './branding/branding.namespace'
 import { AasIntegrationNamespace } from './integrations/aas-integration.namespace'
-import { ItemsNamespace } from './items/items.namespace'
-import { ModelsNamespace } from './models/models.namespace'
-import { OldTemplatesNamespace } from './old-templates/oldTemplatesNamespace'
 import { OrganizationsNamespace } from './organizations/organizations.namespace'
 import { PassportNamespace } from './passport/passports.namespace'
-import { ProductPassportsNamespace } from './product-passport/product-passports.namespace'
-import { TemplateDraftsNamespace } from './template-drafts/template-drafts.namespace'
 import { TemplatesNamespace } from './templates/templates.namespace'
 import { UniqueProductIdentifiersNamespace } from './unique-product-identifiers/unique-product-identifiers.namespace'
 import { UsersNamespace } from './users/users.namespace'
 
 export class DppApiClient implements IApiClient {
   public organizations!: OrganizationsNamespace
-  public models!: ModelsNamespace
-  public items!: ItemsNamespace
-  public templateDrafts!: TemplateDraftsNamespace
-  public oldTemplates!: OldTemplatesNamespace
   public templates!: TemplatesNamespace
   public passports!: PassportNamespace
   public branding!: BrandingNamespace
 
   public uniqueProductIdentifiers!: UniqueProductIdentifiersNamespace
-  public productPassports!: ProductPassportsNamespace
   public aasIntegration!: AasIntegrationNamespace
   public users!: UsersNamespace
   private axiosInstance!: AxiosInstance
@@ -52,34 +42,17 @@ export class DppApiClient implements IApiClient {
       'https://api.cloud.open-dpp.de',
     )
     this.organizations = new OrganizationsNamespace(this.axiosInstance)
-    this.models = new ModelsNamespace(
-      this.axiosInstance,
-      this.options.activeOrganizationId,
-    )
-    this.items = new ItemsNamespace(
-      this.axiosInstance,
-      this.options.activeOrganizationId,
-    )
-    this.oldTemplates = new OldTemplatesNamespace(
-      this.axiosInstance,
-      this.options.activeOrganizationId,
-    )
+
     this.templates = new TemplatesNamespace(this.axiosInstance)
     this.passports = new PassportNamespace(this.axiosInstance)
-    this.templateDrafts = new TemplateDraftsNamespace(
-      this.axiosInstance,
-      this.options.activeOrganizationId,
-    )
     this.branding = new BrandingNamespace(this.axiosInstance)
     this.aasIntegration = new AasIntegrationNamespace(
       this.axiosInstance,
       this.options.activeOrganizationId,
     )
-    this.productPassports = new ProductPassportsNamespace(this.axiosInstance)
 
     this.uniqueProductIdentifiers = new UniqueProductIdentifiersNamespace(
       this.axiosInstance,
-      this.options.activeOrganizationId,
     )
     this.users = new UsersNamespace(this.axiosInstance)
   }

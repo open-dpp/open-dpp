@@ -1,6 +1,5 @@
 // eslint-disable-next-line import/no-mutable-exports
 export let API_URL = import.meta.env.VITE_API_ROOT as string;
-export const APPEND_TO = import.meta.env.VITE_APPEND_TO as string ?? "body"; // This is set to self for cypress component tests to fix rendering issues for primevue components using teleport like SplitButton
 async function fetchConfig() {
   if (!API_URL) {
     // Get runtime configuration
@@ -35,7 +34,5 @@ export const AGENT_WEBSOCKET_URL = (() => {
 const LOCAL_STORAGE_PREFIX = "open-dpp-local";
 export const LAST_SELECTED_ORGANIZATION_ID_KEY = `${LOCAL_STORAGE_PREFIX}-last-selected-organization-id`;
 export const LAST_SELECTED_LANGUAGE = `${LOCAL_STORAGE_PREFIX}-last-language`;
-export const QUICK_ACCESS_ITEMS_KEY = `${LOCAL_STORAGE_PREFIX}-quick-access-items`;
 
-export const PRO_ALPHA_INTEGRATION_ID = "pro-alpha";
 export const AI_INTEGRATION_ID = "ai-integration";
