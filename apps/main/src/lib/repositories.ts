@@ -10,13 +10,13 @@ import { HasCreatedAt } from "./has-created-at";
 
 export async function convertToDomain<T>(
   mongoDoc: Document<string>,
-  fromPlain: (plain: unknown) => T,
+  fromPlain: (plain: unknown) => Promise<T>,
 ): Promise<T> {
   const plain = mongoDoc.toObject();
-  return fromPlain({ ...plain, id: plain._id });
+  return await fromPlain({ ...plain, id: plain._id });
 }
 
-export async function save<T extends Document<string>, V>(domainObject: IPersistable, docModel: MongooseModel<T>, schemaVersion: string, fromPlain: (plain: unknown) => V, ValidationSchema?: ZodObject<any>, options?: DbSessionOptions): Promise<V> {
+export async function save<T extends Document<string>, V>(domainObject: IPersistable, docModel: MongooseModel<T>, schemaVersion: string, fromPlain: (plain: unknown) => Promise<V>, ValidationSchema?: ZodObject<any>, options?: DbSessionOptions): Promise<V> {
   // 1. Try to find an existing document
   let doc = await docModel.findById(domainObject.id).session(options?.session ?? null);
   // 2. If none exists, create a new discriminator document
@@ -36,7 +36,7 @@ export async function save<T extends Document<string>, V>(domainObject: IPersist
   return convertToDomain(await doc.save({ ...options, validateBeforeSave: true, session: options?.session }), fromPlain);
 }
 
-export async function findOneOrFail<T extends Document<string>, V>(id: string, docModel: MongooseModel<T>, fromPlain: (plain: unknown) => V): Promise<V> {
+export async function findOneOrFail<T extends Document<string>, V>(id: string, docModel: MongooseModel<T>, fromPlain: (plain: unknown) => Promise<V>): Promise<V> {
   const domainObject = await findOne(id, docModel as any, fromPlain);
   if (!domainObject) {
     throw new NotFoundInDatabaseException(docModel.modelName);
@@ -44,7 +44,7 @@ export async function findOneOrFail<T extends Document<string>, V>(id: string, d
   return domainObject;
 }
 
-export async function findOne<T extends Document<string>, V>(id: string, docModel: MongooseModel<T>, fromPlain: (plain: unknown) => V): Promise<V | undefined> {
+export async function findOne<T extends Document<string>, V>(id: string, docModel: MongooseModel<T>, fromPlain: (plain: unknown) => Promise<V>): Promise<V | undefined> {
   const mongoDoc = await docModel.findById(id);
   if (!mongoDoc) {
     return undefined;
@@ -55,7 +55,7 @@ export async function findOne<T extends Document<string>, V>(id: string, docMode
   );
 }
 
-export async function findByIds<T extends Document<string>, V>(ids: string[], docModel: MongooseModel<T>, fromPlain: (plain: unknown) => V): Promise<Map<string, V>> {
+export async function findByIds<T extends Document<string>, V>(ids: string[], docModel: MongooseModel<T>, fromPlain: (plain: unknown) => Promise<V>): Promise<Map<string, V>> {
   const result = new Map<string, V>();
   if (ids.length === 0)
     return result;

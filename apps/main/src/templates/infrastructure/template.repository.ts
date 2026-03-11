@@ -21,16 +21,20 @@ export class TemplateRepository implements IDigitalProductPassportIdentifiableRe
     this.templateDoc = templateDoc;
   }
 
+  async fromPlain(plain: any) {
+    return Template.fromPlain(plain);
+  }
+
   async save(template: Template, options?: DbSessionOptions) {
-    return await save(template, this.templateDoc, TemplateDocVersion.v1_0_0, Template.fromPlain, undefined, options);
+    return await save(template, this.templateDoc, TemplateDocVersion.v1_0_0, this.fromPlain.bind(this), undefined, options);
   }
 
   async findOneOrFail(id: string) {
-    return await findOneOrFail(id, this.templateDoc, Template.fromPlain);
+    return await findOneOrFail(id, this.templateDoc, this.fromPlain.bind(this));
   }
 
   async findOne(id: string) {
-    return await findOne(id, this.templateDoc, Template.fromPlain);
+    return await findOne(id, this.templateDoc, this.fromPlain.bind(this));
   }
 
   async findAllByOrganizationId(organizationId: string, pagination?: Pagination) {

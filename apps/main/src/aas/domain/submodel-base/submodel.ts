@@ -68,7 +68,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   static create(
     data: SubmodelBaseProps & {
-      id: string;
+      id?: string;
       extensions?: Array<Extension>;
       administration?: AdministrativeInformation | null;
       kind?: ModellingKindType | null;
@@ -76,7 +76,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     },
   ) {
     return new Submodel(
-      data.id,
+      data.id ?? randomUUID(),
       data.extensions ?? [],
       data.category ?? null,
       data.idShort,

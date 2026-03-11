@@ -22,7 +22,7 @@ export class SecurityRepository {
     this.securityDoc = securityDoc;
   }
 
-  fromPlain(plain: any): Security {
+  async fromPlain(plain: any) {
     return Security.fromPlain(plain);
   }
 
