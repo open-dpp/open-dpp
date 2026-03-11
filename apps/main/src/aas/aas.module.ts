@@ -9,7 +9,9 @@ import {
   AssetAdministrationShellSchema,
 } from "./infrastructure/schemas/asset-administration-shell.schema";
 import { ConceptDescriptionDoc, ConceptDescriptionSchema } from "./infrastructure/schemas/concept-description.schema";
+import { SecurityDbSchema, SecurityDoc } from "./infrastructure/schemas/security/security-db-schema";
 import { SubmodelDoc, SubmodelSchema } from "./infrastructure/schemas/submodel.schema";
+import { SecurityRepository } from "./infrastructure/security.repository";
 import { AasSerializationService } from "./infrastructure/serialization/aas-serialization.service";
 import { SubmodelRepository } from "./infrastructure/submodel.repository";
 import { EnvironmentService } from "./presentation/environment.service";
@@ -21,6 +23,7 @@ import { SubmodelRegistryInitializer } from "./presentation/submodel-registry-in
       { name: AssetAdministrationShellDoc.name, schema: AssetAdministrationShellSchema },
       { name: SubmodelDoc.name, schema: SubmodelSchema },
       { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
+      { name: SecurityDoc.name, schema: SecurityDbSchema },
     ]),
     OrganizationsModule,
     MediaModule,
@@ -28,11 +31,12 @@ import { SubmodelRegistryInitializer } from "./presentation/submodel-registry-in
   providers: [
     SubmodelRegistryInitializer,
     AasRepository,
+    SecurityRepository,
     SubmodelRepository,
     ConceptDescriptionRepository,
     EnvironmentService,
     AasSerializationService,
   ],
-  exports: [AasRepository, SubmodelRepository, EnvironmentService, AasSerializationService],
+  exports: [AasRepository, SecurityRepository, SubmodelRepository, EnvironmentService, AasSerializationService],
 })
 export class AasModule { }

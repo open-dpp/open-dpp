@@ -168,6 +168,7 @@ describe("aasEditor composable", () => {
         keys: [{ type: KeyTypes.Submodel, value: submodel2.id }],
       },
     ],
+    security: uuid4(),
   };
 
   const selectedLanguage = Language.en;

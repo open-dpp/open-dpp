@@ -3,8 +3,8 @@ import { jest } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { generateMongoConfig } from "../../../database/config";
 
+import { generateMongoConfig } from "../../../database/config";
 import { OrganizationsModule } from "../../../identity/organizations/organizations.module";
 import { UsersModule } from "../../../identity/users/users.module";
 import { Media } from "../../../media/domain/media";
@@ -24,7 +24,9 @@ import {
   AssetAdministrationShellSchema,
 } from "../schemas/asset-administration-shell.schema";
 import { ConceptDescriptionDoc, ConceptDescriptionSchema } from "../schemas/concept-description.schema";
+import { SecurityDbSchema, SecurityDoc } from "../schemas/security/security-db-schema";
 import { SubmodelDoc, SubmodelSchema } from "../schemas/submodel.schema";
+import { SecurityRepository } from "../security.repository";
 import { SubmodelRepository } from "../submodel.repository";
 import { AasSerializationService } from "./aas-serialization.service";
 
@@ -107,7 +109,7 @@ describe("aasSerializationService", () => {
   let passportRepository: PassportRepository;
   let templateRepository: TemplateRepository;
   let module: TestingModule;
-  let mockMediaService: { findByIds: jest.Mock };
+  let mockMediaService: { findByIds: jest.Mock<any> };
 
   beforeAll(async () => {
     registerSubmodelElementClasses();
@@ -141,6 +143,10 @@ describe("aasSerializationService", () => {
             name: ConceptDescriptionDoc.name,
             schema: ConceptDescriptionSchema,
           },
+          {
+            name: SecurityDoc.name,
+            schema: SecurityDbSchema,
+          },
         ]),
         UsersModule,
         OrganizationsModule,
@@ -149,6 +155,7 @@ describe("aasSerializationService", () => {
         EnvironmentService,
         PassportRepository,
         TemplateRepository,
+        SecurityRepository,
         AasRepository,
         SubmodelRepository,
         AasSerializationService,

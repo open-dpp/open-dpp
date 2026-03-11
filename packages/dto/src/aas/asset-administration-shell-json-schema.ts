@@ -21,7 +21,7 @@ export const AssetAdministrationShellJsonSchema = z.object({
   embeddedDataSpecifications: EmbeddedDataSpecificationJsonSchema.array().default([]),
   derivedFrom: z.nullish(ResourceJsonSchema),
   submodels: ReferenceJsonSchema.array().default([]),
-  security: z.nullish(z.string()),
+  security: z.uuid(),
 })
 export const AssetAdministrationShellPaginationResponseDtoSchema = z
   .object({

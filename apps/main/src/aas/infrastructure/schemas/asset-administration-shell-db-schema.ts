@@ -19,4 +19,5 @@ export const AssetAdministrationShellDbSchema = z.object({
   embeddedDataSpecifications: EmbeddedDataSpecificationDbSchema.array().default([]),
   derivedFrom: z.nullish(ResourceDbSchema),
   submodels: ReferenceDbSchema.array().default([]),
+  security: z.string(),
 });

@@ -8,7 +8,6 @@ import {
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
-import { PassportService } from "../../passports/application/services/passport.service";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 
@@ -30,7 +29,6 @@ describe("uniqueProductIdentifierController", () => {
       UniqueProductIdentifierService,
       PassportRepository,
       BrandingRepository,
-      PassportService,
       UniqueProductIdentifierService,
       UniqueProductIdentifierApplicationService,
     ],

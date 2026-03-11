@@ -62,6 +62,7 @@ describe("aasRepository", () => {
       assetInformation: AssetInformation.create({
         assetKind: AssetKind.Instance,
       }),
+      security: randomUUID(),
     });
     await aasRepository.save(aas);
     const foundAas = await aasRepository.findOneOrFail(aas.id);

@@ -50,6 +50,9 @@ export class AssetAdministrationShellDoc extends Document<string> {
 
   @Prop({ type: [MongooseSchema.Types.Mixed] })
   submodels: ReferenceDb[];
+
+  @Prop({ type: String })
+  security: string;
 }
 
 export const AssetAdministrationShellSchema = SchemaFactory.createForClass(AssetAdministrationShellDoc);

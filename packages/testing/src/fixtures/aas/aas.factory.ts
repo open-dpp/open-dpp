@@ -1,5 +1,6 @@
 import type { AssetAdministrationShellJsonSchema } from '@open-dpp/dto'
 import type { z } from 'zod'
+import { randomUUID } from 'node:crypto'
 import { Factory } from 'fishery'
 
 interface AasTransientParams {
@@ -310,4 +311,5 @@ export const aasPlainFactory
       },
     ],
     idShort: 'Truck',
+    security: randomUUID(),
   }))
