@@ -28,7 +28,6 @@ export async function save<T extends Document<string>, V>(domainObject: IPersist
   }
   const plain = ValidationSchema ? ValidationSchema.parse(domainObject.toPlain()) : domainObject.toPlain();
 
-  console.log("plain", plain);
   // 3. Modify fields — casting and validation occur on save()
   doc.set({
     _schemaVersion: schemaVersion,
