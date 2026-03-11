@@ -1,12 +1,12 @@
 import { AbilityBuilder } from "@casl/ability";
-import { PermissionKind } from "@open-dpp/dto";
+import { PermissionKind, ReferenceElementJsonSchema } from "@open-dpp/dto";
 import { z } from "zod/v4";
 import { ReferenceElement } from "../submodel-base/reference-element";
-import { CaslAbility } from "./casl-ability";
+import { AasResourceKey, CaslAbility } from "./casl-ability";
 import { Permission, PermissionSchema } from "./permission";
 
 export const PermissionPerObjectSchema = z.object({
-  object: z.string(),
+  object: ReferenceElementJsonSchema,
   permissions: z.array(PermissionSchema),
 });
 
@@ -20,17 +20,28 @@ export class PermissionPerObject {
   }
 
   addCaslRules({ can, cannot }: AbilityBuilder<CaslAbility>) {
-    const allowAction = this.permissions.filter(p => p.kindOfPermission === PermissionKind.Allow).map(p => p.permission);
-    can(allowAction, "AasResource", { idShortPath: this.object.idShort });
-    const denyAction = this.permissions.filter(p => p.kindOfPermission === PermissionKind.Deny).map(p => p.permission);
-    cannot(denyAction, "AasResource", { idShortPath: this.object.idShort });
+    const allowActions = this.permissions.filter(p => p.kindOfPermission === PermissionKind.Allow).map(p => p.permission);
+    if (allowActions.length > 0) {
+      can(allowActions, AasResourceKey, { idShortPath: this.object.idShort });
+    }
+    const denyActions = this.permissions.filter(p => p.kindOfPermission === PermissionKind.Deny).map(p => p.permission);
+    if (denyActions.length > 0) {
+      cannot(denyActions, AasResourceKey, { idShortPath: this.object.idShort });
+    }
   }
 
-  // static fromPlain(json: unknown): PermissionPerObject {
-  //   const parsed = PermissionPerObjectSchema.parse(json);
-  //   return PermissionPerObject.create({
-  //     object: IdShortPath.create({ path: parsed.object }),
-  //     permissions: parsed.permissions.map(Permission.fromPlain),
-  //   });
-  // }
+  static fromPlain(json: unknown): PermissionPerObject {
+    const parsed = PermissionPerObjectSchema.parse(json);
+    return new PermissionPerObject(
+      ReferenceElement.fromPlain(parsed.object) as ReferenceElement,
+      parsed.permissions.map(Permission.fromPlain),
+    );
+  }
+
+  toPlain(): Record<string, any> {
+    return {
+      object: this.object.toPlain(),
+      permissions: this.permissions.map(p => p.toPlain()),
+    };
+  }
 }

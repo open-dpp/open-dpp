@@ -10,6 +10,8 @@ export class AasResource implements IAasResource {
   }
 }
 
+export const AasResourceKey = "AasResource";
+
 type Subject = IAasResource | "AasResource";
 
 export type CaslAbility = MongoAbility<[PermissionType, Subject]>;

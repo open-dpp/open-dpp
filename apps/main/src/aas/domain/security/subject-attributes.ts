@@ -1,25 +1,30 @@
-import { DataTypeDef } from "@open-dpp/dto";
+import { DataTypeDef, PropertyJsonSchema } from "@open-dpp/dto";
 import { z } from "zod/v4";
-import { UserRoleEnum } from "../../../identity/users/domain/user-role.enum";
 import { Property } from "../submodel-base/property";
 
 export const SubjectAttributesSchema = z.object({
-  role: UserRoleEnum,
+  subjectAttribute: PropertyJsonSchema.array(),
 });
 
 export class SubjectAttributes {
   private readonly subjectAttribute: Property[];
-  private constructor(role: string) {
-    this.subjectAttribute = [Property.create({ idShort: "role", valueType: DataTypeDef.String, value: role })];
+  private constructor(subjectAttribute: Property[]) {
+    this.subjectAttribute = subjectAttribute;
   }
 
   static create(data: { role: string }): SubjectAttributes {
-    return new SubjectAttributes(data.role);
+    return new SubjectAttributes([Property.create({ idShort: "role", valueType: DataTypeDef.String, value: data.role })]);
   }
 
   static fromPlain(json: unknown): SubjectAttributes {
     const parsed = SubjectAttributesSchema.parse(json);
-    return new SubjectAttributes(parsed.role);
+    return new SubjectAttributes(parsed.subjectAttribute.map(Property.fromPlain) as Property[]);
+  }
+
+  toPlain(): Record<string, any> {
+    return {
+      subjectAttribute: this.subjectAttribute.map(p => p.toPlain()),
+    };
   }
 
   get role(): string {

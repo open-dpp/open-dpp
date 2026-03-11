@@ -28,11 +28,18 @@ export class AccessPermissionRule {
     this.permissionsPerObject.flatMap(permissionPerObject => permissionPerObject.addCaslRules(abilityBuilder));
   }
 
-  // static fromPlain(json: unknown): AccessPermissionRule {
-  //   const parsed = AccessPermissionRuleSchema.parse(json);
-  //   return AccessPermissionRule.create({
-  //     targetSubjectAttributes: SubjectAttributes.fromPlain(parsed.targetSubjectAttributes),
-  //     permissionsPerObject: parsed.permissionsPerObject.map(PermissionPerObject.fromPlain),
-  //   });
-  // }
+  static fromPlain(json: unknown): AccessPermissionRule {
+    const parsed = AccessPermissionRuleSchema.parse(json);
+    return AccessPermissionRule.create({
+      targetSubjectAttributes: SubjectAttributes.fromPlain(parsed.targetSubjectAttributes),
+      permissionsPerObject: parsed.permissionsPerObject.map(PermissionPerObject.fromPlain),
+    });
+  }
+
+  toPlain(): Record<string, any> {
+    return {
+      targetSubjectAttributes: this.targetSubjectAttributes.toPlain(),
+      permissionsPerObject: this.permissionsPerObject.map(p => p.toPlain()),
+    };
+  }
 }

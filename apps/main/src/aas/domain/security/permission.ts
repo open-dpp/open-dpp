@@ -17,9 +17,16 @@ export class Permission {
 
   static fromPlain(json: unknown): Permission {
     const parsed = PermissionSchema.parse(json);
-    return Permission.create({
-      permission: parsed.permission,
-      kindOfPermission: parsed.kindOfPermission,
-    });
+    return new Permission(
+      parsed.permission,
+      parsed.kindOfPermission,
+    );
+  }
+
+  toPlain(): Record<string, any> {
+    return {
+      permission: this.permission,
+      kindOfPermission: this.kindOfPermission,
+    };
   }
 }

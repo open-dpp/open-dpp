@@ -1,8 +1,13 @@
 import { AbilityBuilder, createMongoAbility } from "@casl/ability";
+import { z } from "zod/v4";
 import { AasAbility } from "./aas-ability";
-import { AccessPermissionRule } from "./access-permission-rule";
+import { AccessPermissionRule, AccessPermissionRuleSchema } from "./access-permission-rule";
 import { CaslAbility } from "./casl-ability";
 import { SubjectAttributes } from "./subject-attributes";
+
+export const AccessControlSchema = z.object({
+  accessPermissionRules: AccessPermissionRuleSchema.array(),
+});
 
 export class AccessControl {
   private constructor(public readonly accessPermissionRules: AccessPermissionRule[]) {
@@ -10,6 +15,19 @@ export class AccessControl {
 
   static create(data: { accessPermissionRules?: AccessPermissionRule[] }): AccessControl {
     return new AccessControl(data.accessPermissionRules ?? []);
+  }
+
+  static fromPlain(json: unknown): AccessControl {
+    const parsed = AccessControlSchema.parse(json);
+    return new AccessControl(
+      parsed.accessPermissionRules.map(AccessPermissionRule.fromPlain),
+    );
+  }
+
+  toPlain(): Record<string, any> {
+    return {
+      accessPermissionRules: this.accessPermissionRules.map(p => p.toPlain()),
+    };
   }
 
   findRuleOfSubject(subject: SubjectAttributes): AccessPermissionRule | undefined {
