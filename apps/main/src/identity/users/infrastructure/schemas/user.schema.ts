@@ -2,6 +2,7 @@ import type { UserRoleType } from "../../domain/user-role.enum";
 import process from "node:process";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { HydratedDocument, SchemaTypes, Types } from "mongoose";
+import { UserRole } from "../../domain/user-role.enum";
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -43,7 +44,7 @@ export class User {
   @Prop({ default: null, type: Date })
   banExpires: Date | null;
 
-  @Prop({ required: true, type: String })
+  @Prop({ required: true, type: String, enum: Object.values(UserRole) })
   role: UserRoleType;
 }
 

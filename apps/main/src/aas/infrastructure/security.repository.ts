@@ -23,7 +23,7 @@ export class SecurityRepository {
   }
 
   fromPlain(plain: any): Security {
-    return Security.fromPlain(SecurityDbValidationSchema.encode(plain));
+    return Security.fromPlain(plain);
   }
 
   async save(security: Security, options?: DbSessionOptions) {

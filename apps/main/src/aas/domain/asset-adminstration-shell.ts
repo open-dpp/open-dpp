@@ -27,6 +27,7 @@ export interface AssetAdministrationShellCreateProps {
   embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
   derivedFrom?: Reference | null;
   submodels?: Array<Reference>;
+  security?: string | null;
 }
 
 export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable {
@@ -44,6 +45,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
     public readonly derivedFrom: Reference | null = null,
     public readonly submodels: Array<Reference>,
+    public readonly security: string | null = null,
   ) {
     this.displayName = displayName;
     this.description = description;
@@ -84,6 +86,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
       data.embeddedDataSpecifications ?? [],
       data.derivedFrom ?? null,
       data.submodels ?? [],
+      data.security ?? null,
     );
   };
 
@@ -168,6 +171,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
       parsed.embeddedDataSpecifications.map(EmbeddedDataSpecification.fromPlain),
       parsed.derivedFrom ? Reference.fromPlain(parsed.derivedFrom) : null,
       parsed.submodels.map(Reference.fromPlain),
+      parsed.security,
     );
   }
 

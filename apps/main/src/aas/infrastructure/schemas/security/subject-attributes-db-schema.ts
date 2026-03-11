@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import { z } from "zod";
 import { PropertyDbSchema } from "../submodel-base/property-db-schema";
 
 export const SubjectAttributesDbSchema = z.object({

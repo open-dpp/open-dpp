@@ -1,4 +1,5 @@
 import { DataTypeDef, PropertyJsonSchema } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
 import { Property } from "../submodel-base/property";
 
@@ -7,9 +8,21 @@ export const SubjectAttributesSchema = z.object({
 });
 
 export class SubjectAttributes {
-  private readonly subjectAttribute: Property[];
+  private _subjectAttribute: Property[];
   private constructor(subjectAttribute: Property[]) {
     this.subjectAttribute = subjectAttribute;
+  }
+
+  set subjectAttribute(subjectAttribute: Property[]) {
+    const role = subjectAttribute.find(p => p.idShort === "role");
+    if (!role || role.valueType !== DataTypeDef.String || typeof role.value !== "string") {
+      throw new ValueError("subjectAttribute.role must be a string Property");
+    }
+    this._subjectAttribute = subjectAttribute;
+  }
+
+  get subjectAttribute(): Property[] {
+    return this._subjectAttribute;
   }
 
   static create(data: { role: string }): SubjectAttributes {

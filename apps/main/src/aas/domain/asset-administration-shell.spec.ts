@@ -17,6 +17,7 @@ describe("assetAdministrationShell", () => {
     });
     expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);
     expect(aas.administration).toEqual(AdministrativeInformation.create({ version: "1", revision: "0" }));
+    expect(aas.security).toBeNull();
   });
 
   it("fails to create a new asset administration shell cause of duplicates in language texts", () => {
