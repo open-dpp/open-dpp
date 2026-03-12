@@ -11,3 +11,5 @@ export const PropertyDbSchema = z.object({
   value: z.nullish(z.string()),
   valueId: z.nullish(ReferenceDbSchema),
 });
+
+export type PropertyDb = z.infer<typeof PropertyDbSchema>;

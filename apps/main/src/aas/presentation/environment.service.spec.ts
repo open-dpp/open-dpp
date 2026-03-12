@@ -1,7 +1,8 @@
 import type { TestingModule } from "@nestjs/testing";
+import { randomUUID } from "node:crypto";
 import { MongooseModule } from "@nestjs/mongoose";
-import { Test } from "@nestjs/testing";
 
+import { Test } from "@nestjs/testing";
 import { AssetKind, LanguageTextDto } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";
@@ -9,10 +10,10 @@ import { AuthModule } from "../../identity/auth/auth.module";
 import { OrganizationsModule } from "../../identity/organizations/organizations.module";
 import { UsersModule } from "../../identity/users/users.module";
 import { Pagination } from "../../pagination/pagination";
+
 import { PagingResult } from "../../pagination/paging-result";
 
 import { Passport } from "../../passports/domain/passport";
-
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { PassportsModule } from "../../passports/passports.module";
 import { AasModule } from "../aas.module";
@@ -75,7 +76,9 @@ describe("environmentService", () => {
   });
 
   it("should populate paging result", async () => {
-    const assetAdministrationShell = AssetAdministrationShell.create({ assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }) });
+    const assetAdministrationShell = AssetAdministrationShell.create(
+      { assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }), security: randomUUID() },
+    );
     const environment = Environment.create({ assetAdministrationShells: [assetAdministrationShell.id] });
     await aasRepository.save(assetAdministrationShell);
     const passport = Passport.create({ environment, organizationId: "organizationId" });

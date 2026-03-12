@@ -24,6 +24,7 @@ function createShell(id?: string, submodels: Submodel[] = []): AssetAdministrati
   const shell = AssetAdministrationShell.create({
     id: id ?? randomUUID(),
     assetInformation: AssetInformation.create({ assetKind: "Type" as AssetKindType }),
+    security: randomUUID(),
   });
   submodels.forEach((sm) => {
     shell.addSubmodel(sm);

@@ -11,12 +11,15 @@ import { Resource } from "./resource";
 import { Submodel } from "./submodel-base/submodel";
 
 describe("assetAdministrationShell", () => {
+  const security = "sec1";
   it("should create a new asset administration shell", () => {
     const aas = AssetAdministrationShell.create({
       assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
+      security: "sec1",
     });
     expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);
     expect(aas.administration).toEqual(AdministrativeInformation.create({ version: "1", revision: "0" }));
+    expect(aas.security).toEqual("sec1");
   });
 
   it("fails to create a new asset administration shell cause of duplicates in language texts", () => {
@@ -28,11 +31,13 @@ describe("assetAdministrationShell", () => {
     expect(() => AssetAdministrationShell.create({
       assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
       displayName: languageWithDuplicates,
+      security,
     })).toThrow(expectedError);
 
     expect(() => AssetAdministrationShell.create({
       assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
       description: languageWithDuplicates,
+      security,
     })).toThrow(expectedError);
   });
 
@@ -53,6 +58,7 @@ describe("assetAdministrationShell", () => {
     const aas = AssetAdministrationShell.create({
       assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
       submodels: [submodelRef1, submodelRef2],
+      security,
     });
     aas.deleteSubmodel(submodelToDelete);
     expect(aas.submodels).toEqual([submodelRef2]);
@@ -61,6 +67,7 @@ describe("assetAdministrationShell", () => {
   it("should be modified", () => {
     const aas = AssetAdministrationShell.create({
       assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance, globalAssetId: "globalAssetId" }),
+      security,
     });
     const displayName = [{ language: "en", text: "MyAAS" }];
     const description = [{ language: "en", text: "My description" }];
@@ -78,6 +85,7 @@ describe("assetAdministrationShell", () => {
     const aas = AssetAdministrationShell.create({
       id,
       assetInformation: AssetInformation.create({ assetKind: "Instance", globalAssetId: id }),
+      security,
     });
 
     const submodel = Submodel.create({
@@ -107,6 +115,7 @@ describe("assetAdministrationShell", () => {
   it("should add a submodel", () => {
     const aas = AssetAdministrationShell.create({
       assetInformation: AssetInformation.create({ assetKind: "Instance" }),
+      security,
     });
 
     const submodel = Submodel.create({

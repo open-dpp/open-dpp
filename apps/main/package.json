@@ -22,6 +22,7 @@
     "check-ts": "tsc --noEmit"
   },
   "dependencies": {
+    "@casl/ability": "^6.8.0",
     "@langchain/core": "^1.1.18",
     "@langchain/langgraph": "^0.4.9",
     "@langchain/mcp-adapters": "^1.1.2",

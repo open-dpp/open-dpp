@@ -7,6 +7,7 @@ import { LanguageTextDoc, LanguageTextSchema } from "./language.text.schema";
 export const AssetAdministrationShellDocSchemaVersion = {
   v1_0_0: "1.0.0",
   v1_1_0: "1.1.0",
+  v1_2_0: "1.2.0",
 } as const;
 type AssetAdministrationShellDocSchemaVersionType = (typeof AssetAdministrationShellDocSchemaVersion)[keyof typeof AssetAdministrationShellDocSchemaVersion];
 @Schema({ collection: "asset_administration_shells" })
@@ -15,7 +16,7 @@ export class AssetAdministrationShellDoc extends Document<string> {
   declare _id: string;
 
   @Prop({
-    default: AssetAdministrationShellDocSchemaVersion.v1_1_0,
+    default: AssetAdministrationShellDocSchemaVersion.v1_2_0,
     enum: Object.values(AssetAdministrationShellDocSchemaVersion),
     type: String,
   }) // Track schema version
@@ -50,6 +51,9 @@ export class AssetAdministrationShellDoc extends Document<string> {
 
   @Prop({ type: [MongooseSchema.Types.Mixed] })
   submodels: ReferenceDb[];
+
+  @Prop({ type: String })
+  security: string;
 }
 
 export const AssetAdministrationShellSchema = SchemaFactory.createForClass(AssetAdministrationShellDoc);

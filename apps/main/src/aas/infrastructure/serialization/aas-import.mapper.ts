@@ -144,6 +144,7 @@ export function mapAssetAdministrationShells(shells: ShellSchema[]): AssetAdmini
       embeddedDataSpecifications: mapEmbeddedDataSpecifications(shell.embeddedDataSpecifications),
       derivedFrom: mapNullableReference(shell.derivedFrom),
       submodels: mapReferences(shell.submodels),
+      security: randomUUID(), // TODO: ticket 26, replace by default security here
     });
   });
 }

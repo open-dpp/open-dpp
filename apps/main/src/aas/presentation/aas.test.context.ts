@@ -156,6 +156,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const entity = await createEntity(org.id);
     const newAas = AssetAdministrationShell.create({
       assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
+      security: randomUUID(),
     });
     await aasRepository.save(newAas);
     entity.getEnvironment().addAssetAdministrationShell(newAas);

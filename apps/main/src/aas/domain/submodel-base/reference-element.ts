@@ -12,7 +12,7 @@ import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from 
 export class ReferenceElement implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
-  constructor(
+  private constructor(
     public readonly extensions: Array<Extension>,
     public readonly category: string | null,
     public readonly idShort: string,

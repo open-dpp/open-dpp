@@ -249,6 +249,7 @@ export class JsonVisitor implements IVisitor<undefined, any> {
       embeddedDataSpecifications: element.embeddedDataSpecifications.map(e => e.accept(this)),
       derivedFrom: element.derivedFrom?.accept(this) ?? null,
       submodels: element.submodels.map(s => s.accept(this)),
+      security: element.security ?? null,
     };
   }
 
