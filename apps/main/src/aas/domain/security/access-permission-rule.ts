@@ -24,8 +24,12 @@ export class AccessPermissionRule {
     this.permissionsPerObject.push(permissionPerObject);
   }
 
-  addCaslRules(abilityBuilder: AbilityBuilder<CaslAbility>) {
-    this.permissionsPerObject.flatMap(permissionPerObject => permissionPerObject.addCaslRules(abilityBuilder));
+  addCaslRules(abilityBuilder: AbilityBuilder<CaslAbility>, subject: SubjectAttributes) {
+    this.permissionsPerObject.flatMap(
+      permissionPerObject => permissionPerObject.addCaslRules(abilityBuilder, {
+        organizationId: subject.organizationId,
+      }),
+    );
   }
 
   static fromPlain(json: unknown): AccessPermissionRule {

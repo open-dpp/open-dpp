@@ -19,14 +19,14 @@ export class PermissionPerObject {
     return new PermissionPerObject(data.object, data.permissions ?? []);
   }
 
-  addCaslRules({ can, cannot }: AbilityBuilder<CaslAbility>) {
+  addCaslRules({ can, cannot }: AbilityBuilder<CaslAbility>, { organizationId }: { organizationId?: string }) {
     const allowActions = this.permissions.filter(p => p.kindOfPermission === PermissionKind.Allow).map(p => p.permission);
     if (allowActions.length > 0) {
-      can(allowActions, AasResourceKey, { idShortPath: this.object.idShort });
+      can(allowActions, AasResourceKey, { idShortPath: this.object.idShort, organizationId });
     }
     const denyActions = this.permissions.filter(p => p.kindOfPermission === PermissionKind.Deny).map(p => p.permission);
     if (denyActions.length > 0) {
-      cannot(denyActions, AasResourceKey, { idShortPath: this.object.idShort });
+      cannot(denyActions, AasResourceKey, { idShortPath: this.object.idShort, organizationId });
     }
   }
 

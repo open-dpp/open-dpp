@@ -25,8 +25,11 @@ export class SubjectAttributes {
     return this._subjectAttribute;
   }
 
-  static create(data: { role: string }): SubjectAttributes {
-    return new SubjectAttributes([Property.create({ idShort: "role", valueType: DataTypeDef.String, value: data.role })]);
+  static create(data: { role: string; organizationId?: string }): SubjectAttributes {
+    return new SubjectAttributes([
+      Property.create({ idShort: "role", valueType: DataTypeDef.String, value: data.role }),
+      Property.create({ idShort: "organizationId", valueType: DataTypeDef.String, value: data.organizationId }),
+    ]);
   }
 
   static fromPlain(json: unknown): SubjectAttributes {
@@ -40,11 +43,15 @@ export class SubjectAttributes {
     };
   }
 
+  get organizationId(): string | undefined {
+    return this.subjectAttribute.find(p => p.idShort === "organizationId")?.value ?? undefined;
+  }
+
   get role(): string {
     return this.subjectAttribute.find(p => p.idShort === "role")!.value!;
   }
 
   isEqual(other: SubjectAttributes): boolean {
-    return this.role === other.role;
+    return this.role === other.role && this.organizationId === other.organizationId;
   }
 }

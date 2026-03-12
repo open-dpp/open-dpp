@@ -4,6 +4,7 @@ import { OrganizationsModule } from "../identity/organizations/organizations.mod
 import { MediaModule } from "../media/media.module";
 import { AasRepository } from "./infrastructure/aas.repository";
 import { ConceptDescriptionRepository } from "./infrastructure/concept-description.repository";
+import { InitializeSecurityMigrationService } from "./infrastructure/initialize-security-migration.service";
 import {
   AssetAdministrationShellDoc,
   AssetAdministrationShellSchema,
@@ -36,7 +37,8 @@ import { SubmodelRegistryInitializer } from "./presentation/submodel-registry-in
     ConceptDescriptionRepository,
     EnvironmentService,
     AasSerializationService,
+    InitializeSecurityMigrationService,
   ],
-  exports: [AasRepository, SecurityRepository, SubmodelRepository, EnvironmentService, AasSerializationService],
+  exports: [AasRepository, SecurityRepository, SubmodelRepository, EnvironmentService, AasSerializationService, InitializeSecurityMigrationService],
 })
 export class AasModule { }

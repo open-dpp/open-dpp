@@ -45,7 +45,7 @@ export class AccessControl {
 
     this.accessPermissionRules.filter(
       rule => rule.targetSubjectAttributes.isEqual(subject),
-    ).map(rule => rule.addCaslRules(abilityBuilder)).flat();
+    ).map(rule => rule.addCaslRules(abilityBuilder, subject)).flat();
     return AasAbility.create({ ability: abilityBuilder.build() });
   }
 }
