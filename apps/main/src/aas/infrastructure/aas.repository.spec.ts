@@ -15,6 +15,7 @@ import { PassportDoc, PassportSchema } from "../../passports/infrastructure/pass
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
 import { AasRepository } from "./aas.repository";
+import { InitializeSecurityMigrationService } from "./initialize-security-migration.service";
 import {
   AssetAdministrationShellDoc,
   AssetAdministrationShellDocSchemaVersion,
@@ -63,6 +64,7 @@ describe("aasRepository", () => {
         ]),
       ],
       providers: [
+        InitializeSecurityMigrationService,
         PassportRepository,
         AasRepository,
         SubmodelRepository,

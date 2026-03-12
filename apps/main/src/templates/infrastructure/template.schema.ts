@@ -4,6 +4,7 @@ import { EnvironmentDoc, EnvironmentSchema } from "../../aas/infrastructure/sche
 
 export const TemplateDocVersion = {
   v1_0_0: "1.0.0",
+  v1_1_0: "1.1.0",
 } as const;
 type TemplateDocVersionType = (typeof TemplateDocVersion)[keyof typeof TemplateDocVersion];
 
