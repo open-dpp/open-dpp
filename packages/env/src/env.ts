@@ -2,6 +2,13 @@ import { z } from "zod";
 
 const asBoolean = z.string().transform(val => val.toLowerCase() === "true");
 
+const asStrictBoolean = z
+  .string()
+  .refine(val => val.toLowerCase() === "true" || val.toLowerCase() === "false", {
+    message: "Expected \"true\" or \"false\"",
+  })
+  .transform(val => val.toLowerCase() === "true");
+
 export const envSchema = z.object({
   // Misc
   NODE_ENV: z.coerce.string().optional(),
@@ -63,6 +70,8 @@ export const envSchema = z.object({
   OPEN_DPP_AUTH_CLOUD_DISCOVERY_URL: z.string().optional(),
   OPEN_DPP_AUTH_ADMIN_USERNAME: z.string().optional(),
   OPEN_DPP_AUTH_ADMIN_PASSWORD: z.string().optional(),
+  // Instance Settings
+  OPEN_DPP_INSTANCE_SIGNUP_ENABLED: asStrictBoolean.optional(),
   // Default Caps
   OPEN_DPP_DEFAULT_MODEL_CREATE_CAP: z.coerce.number().min(0).optional().default(0),
   OPEN_DPP_DEFAULT_AI_TOKEN_QUOTA: z.coerce.number().min(0).optional().default(0),

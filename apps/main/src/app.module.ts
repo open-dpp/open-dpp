@@ -18,6 +18,7 @@ import { AuthModule } from "./identity/auth/auth.module";
 import { AuthGuard } from "./identity/auth/infrastructure/guards/auth.guard";
 import { OrganizationsModule } from "./identity/organizations/organizations.module";
 import { UsersModule } from "./identity/users/users.module";
+import { InstanceSettingsModule } from "./instance-settings/instance-settings.module";
 import { McpServerModule } from "./mcp/mcp.server.module";
 import { MediaModule } from "./media/media.module";
 import { PassportsModule } from "./passports/passports.module";
@@ -60,6 +61,7 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
     AnalyticsModule,
     AuthModule,
     EmailModule,
+    InstanceSettingsModule,
     PolicyModule,
   ],
   controllers: [],
