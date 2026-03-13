@@ -55,36 +55,6 @@ describe("InstanceSettingsService", () => {
     });
   });
 
-  describe("getSettings — default env var set", () => {
-    it("should use env default for initial creation when no DB record exists", async () => {
-      mockRepository.findOne.mockResolvedValue(null);
-      mockEnvService.get.mockImplementation((key: string) => {
-        if (key === "OPEN_DPP_INSTANCE_DEFAULT_SIGNUP_ENABLED")
-          return false;
-        return undefined;
-      });
-
-      const result = await service.getSettings();
-
-      expect(result.signupEnabled.value).toBe(false);
-      expect(result.signupEnabled.locked).toBeUndefined();
-    });
-
-    it("should NOT override existing DB value with env default", async () => {
-      const existing = InstanceSettings.create({ signupEnabled: { value: true } });
-      mockRepository.findOne.mockResolvedValue(existing);
-      mockEnvService.get.mockImplementation((key: string) => {
-        if (key === "OPEN_DPP_INSTANCE_DEFAULT_SIGNUP_ENABLED")
-          return false;
-        return undefined;
-      });
-
-      const result = await service.getSettings();
-
-      expect(result.signupEnabled.value).toBe(true);
-    });
-  });
-
   describe("getSettings — enforced env var set", () => {
     it("should override DB value with enforced env var", async () => {
       const existing = InstanceSettings.create({ signupEnabled: { value: true } });
@@ -155,15 +125,13 @@ describe("InstanceSettingsService", () => {
   });
 
   describe("hierarchy precedence", () => {
-    it("enforced env > DB > default env > hardcoded", async () => {
+    it("enforced env > DB > hardcoded", async () => {
       // Enforced = false, DB = true → result should be false
       const existing = InstanceSettings.create({ signupEnabled: { value: true } });
       mockRepository.findOne.mockResolvedValue(existing);
       mockEnvService.get.mockImplementation((key: string) => {
         if (key === "OPEN_DPP_INSTANCE_SIGNUP_ENABLED")
           return false;
-        if (key === "OPEN_DPP_INSTANCE_DEFAULT_SIGNUP_ENABLED")
-          return true;
         return undefined;
       });
 
@@ -173,41 +141,10 @@ describe("InstanceSettingsService", () => {
       expect(result.signupEnabled.locked).toBe(true);
     });
 
-    it("DB > default env when DB exists", async () => {
-      // DB = true, Default env = false → result should be true (DB wins)
-      const existing = InstanceSettings.create({ signupEnabled: { value: true } });
-      mockRepository.findOne.mockResolvedValue(existing);
-      mockEnvService.get.mockImplementation((key: string) => {
-        if (key === "OPEN_DPP_INSTANCE_DEFAULT_SIGNUP_ENABLED")
-          return false;
-        return undefined;
-      });
-
-      const result = await service.getSettings();
-
-      expect(result.signupEnabled.value).toBe(true);
-    });
-
-    it("default env > hardcoded when no DB record", async () => {
-      // No DB, Default env = false, Hardcoded = true → result should be false
-      mockRepository.findOne.mockResolvedValue(null);
-      mockEnvService.get.mockImplementation((key: string) => {
-        if (key === "OPEN_DPP_INSTANCE_DEFAULT_SIGNUP_ENABLED")
-          return false;
-        return undefined;
-      });
-
-      const result = await service.getSettings();
-
-      expect(result.signupEnabled.value).toBe(false);
-    });
-
     it("hardcoded default when nothing else is set", async () => {
       // No DB, no env → result should be true (hardcoded)
       mockRepository.findOne.mockResolvedValue(null);
       mockEnvService.get.mockImplementation((key: string) => {
-        if (key === "OPEN_DPP_INSTANCE_DEFAULT_SIGNUP_ENABLED")
-          return undefined;
         if (key === "OPEN_DPP_INSTANCE_SIGNUP_ENABLED")
           return undefined;
         return undefined;

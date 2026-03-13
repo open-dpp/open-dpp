@@ -20,7 +20,7 @@ export class InstanceSettingsService {
 
     const defaults = InstanceSettings.create({
       signupEnabled: {
-        value: this.envService.get("OPEN_DPP_INSTANCE_DEFAULT_SIGNUP_ENABLED") !== false,
+        value: true,
       },
     });
     const saved = await this.repository.save(defaults);
