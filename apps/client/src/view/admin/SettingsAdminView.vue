@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { LockClosedIcon } from "@heroicons/vue/24/outline";
-import { Card, Message, ToggleSwitch } from "primevue";
+import { Card, ToggleSwitch, useToast } from "primevue";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import apiClient from "../../lib/api-client.ts";
@@ -8,12 +8,12 @@ import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 
 const { t } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();
+const toast = useToast();
 
 const signupEnabled = ref(true);
 const isSignupLocked = ref(false);
 const isSaving = ref(false);
 const loading = ref(true);
-const saveSuccess = ref(false);
 
 async function fetchSettings() {
   try {
@@ -37,14 +37,17 @@ async function toggleSignup() {
   if (isSignupLocked.value || isSaving.value) {
     return;
   }
-  saveSuccess.value = false;
   isSaving.value = true;
   try {
     const res = await apiClient.dpp.instanceSettings.update({
       signupEnabled: signupEnabled.value,
     });
     signupEnabled.value = res.data.signupEnabled.value;
-    saveSuccess.value = true;
+    toast.add({
+      severity: "success",
+      summary: t("organizations.admin.instanceSettings.saved"),
+      life: 3000,
+    });
   }
   catch (error) {
     signupEnabled.value = !signupEnabled.value;
@@ -73,10 +76,6 @@ onMounted(async () => {
       <Card v-if="!loading">
         <template #content>
           <div class="flex flex-col gap-4">
-            <Message v-if="saveSuccess" severity="success" :closable="true" @close="saveSuccess = false">
-              {{ t("organizations.admin.instanceSettings.saved") }}
-            </Message>
-
             <div class="flex items-center gap-3">
               <ToggleSwitch
                 v-model="signupEnabled"
