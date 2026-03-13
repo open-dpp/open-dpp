@@ -136,13 +136,29 @@ export function mapAssetAdministrationShells(
       ),
     });
 
-    const remappedSubmodelRefs = shell.submodels.map((ref) => {
-      const remappedKeys = ref.keys.map((key) => {
-        const newId = submodelIdMapping.get(key.value);
-        return newId ? { ...key, value: newId } : key;
-      });
-      return { ...ref, keys: remappedKeys };
-    });
+    const remappedSubmodelRefs = shell.submodels
+      .map((ref) => {
+        let hasUnmappedSubmodelKey = false;
+        const remappedKeys = ref.keys.map((key) => {
+          if (key.type === KeyTypes.Submodel || key.type === KeyTypes.GlobalReference) {
+            const newId = submodelIdMapping.get(key.value);
+            if (!newId) {
+              hasUnmappedSubmodelKey = true;
+              return key;
+            }
+            return { ...key, value: newId };
+          }
+          return key;
+        });
+
+        if (hasUnmappedSubmodelKey) {
+          // Drop references that cannot be resolved to a new submodel ID
+          return null;
+        }
+
+        return { ...ref, keys: remappedKeys };
+      })
+      .filter((ref): ref is ReferenceSchema => ref !== null);
 
     return AssetAdministrationShell.create({
       assetInformation,
