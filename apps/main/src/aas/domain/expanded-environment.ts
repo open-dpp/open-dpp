@@ -158,37 +158,6 @@ export class ExpandedEnvironment {
     });
   }
 
-  /**
-   * Copies all shells and submodels with fresh IDs, remapping submodel
-   * references inside shells to point to the new submodel IDs.
-   * Concept descriptions are passed through unchanged (shared definitions).
-   */
-  copyWithNewIds(): CopiedEnvironment {
-    const oldIdToNewSubmodel = new Map<string, Submodel>();
-    for (const submodel of this.submodels) {
-      oldIdToNewSubmodel.set(submodel.id, submodel.copy());
-    }
-
-    const newShells: AssetAdministrationShell[] = [];
-    for (const shell of this.shells) {
-      const relatedNewSubmodels = this.resolveSubmodelReferences(shell, oldIdToNewSubmodel);
-      newShells.push(shell.copy(relatedNewSubmodels));
-    }
-
-    const newSubmodels = Array.from(oldIdToNewSubmodel.values());
-
-    return {
-      environment: Environment.create({
-        assetAdministrationShells: newShells.map(s => s.id),
-        submodels: newSubmodels.map(s => s.id),
-        conceptDescriptions: this.conceptDescriptions.map(cd => cd.id),
-      }),
-      shells: newShells,
-      submodels: newSubmodels,
-      conceptDescriptions: this.conceptDescriptions,
-    };
-  }
-
   private resolveSubmodelReferences(
     shell: AssetAdministrationShell,
     idMap: Map<string, Submodel>,
