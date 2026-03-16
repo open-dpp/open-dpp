@@ -362,30 +362,6 @@ describe("aasSerializationService", () => {
     });
   });
 
-  describe("importPassport - validation errors", () => {
-    const orgId = "org-1";
-
-    it("should throw ValueError when shell references a submodel ID not in the imported environment", async () => {
-      const data = buildExportData();
-      const nonExistentSubmodelId = randomUUID();
-      data.environment.assetAdministrationShells[0].submodels = [
-        {
-          type: "ModelReference",
-          keys: [{ type: "Submodel", value: nonExistentSubmodelId }],
-          referredSemanticId: null,
-        },
-      ];
-
-      await expect(
-        aasSerializationService.importPassport(
-          data,
-          orgId,
-          async (p, options) => { await passportRepository.save(p, options); },
-        ),
-      ).rejects.toThrow(`Shell "shell-1" references submodel ID "${nonExistentSubmodelId}" which is not present in the imported environment`);
-    });
-  });
-
   describe("importTemplate - media ownership validation", () => {
     const orgId = "org-1";
 

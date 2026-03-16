@@ -136,22 +136,29 @@ export function mapAssetAdministrationShells(
       ),
     });
 
-    const remappedSubmodelRefs = shell.submodels.map((ref) => {
-      const remappedKeys = ref.keys.map((key) => {
-        if (key.type === KeyTypes.Submodel || key.type === KeyTypes.GlobalReference) {
-          const newId = submodelIdMapping.get(key.value);
-          if (!newId) {
-            throw new ValueError(
-              `Shell "${shell.idShort}" references submodel ID "${key.value}" `
-              + `which is not present in the imported environment`,
-            );
+    const remappedSubmodelRefs = shell.submodels
+      .map((ref) => {
+        let hasUnmappedSubmodelKey = false;
+        const remappedKeys = ref.keys.map((key) => {
+          if (key.type === KeyTypes.Submodel || key.type === KeyTypes.GlobalReference) {
+            const newId = submodelIdMapping.get(key.value);
+            if (!newId) {
+              hasUnmappedSubmodelKey = true;
+              return key;
+            }
+            return { ...key, value: newId };
           }
-          return { ...key, value: newId };
+          return key;
+        });
+
+        if (hasUnmappedSubmodelKey) {
+          // Drop references that cannot be resolved to a new submodel ID
+          return null;
         }
-        return key;
-      });
-      return { ...ref, keys: remappedKeys };
-    });
+
+        return { ...ref, keys: remappedKeys };
+      })
+      .filter((ref): ref is ReferenceSchema => ref !== null);
 
     return AssetAdministrationShell.create({
       assetInformation,
