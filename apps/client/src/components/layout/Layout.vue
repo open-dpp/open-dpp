@@ -96,7 +96,7 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
       ],
     },
     {
-      name: "Organization",
+      name: t("organizations.organizations"),
       items: [
         {
           name: t("members.members"),

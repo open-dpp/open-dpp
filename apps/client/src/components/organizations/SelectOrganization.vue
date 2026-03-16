@@ -108,7 +108,7 @@ function setOrganization(organizationId: string) {
       <router-link to="/organizations/create">
         <button
           type="button"
-          class="flex items-center p-2 rounded-sm mt-2 bg-primary-500 text-white"
+          class="flex items-center p-2 rounded-sm mt-2 bg-primary-500 hover:bg-primary-600 text-white"
         >
           <PlusCircleIcon class="size-5" />
           <span
