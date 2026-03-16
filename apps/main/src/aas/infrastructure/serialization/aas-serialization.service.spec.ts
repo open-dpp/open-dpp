@@ -307,6 +307,61 @@ describe("aasSerializationService", () => {
     });
   });
 
+  describe("importPassport - ID isolation", () => {
+    const orgId = "org-1";
+
+    it("should generate new submodel IDs so imported passport does not share submodels with the original", async () => {
+      const originalSubmodelId = randomUUID();
+      const data = buildExportData();
+      data.environment.submodels[0].id = originalSubmodelId;
+      data.environment.assetAdministrationShells[0].submodels = [
+        {
+          type: "ModelReference",
+          keys: [{ type: "Submodel", value: originalSubmodelId }],
+          referredSemanticId: null,
+        },
+      ];
+
+      const passport = await aasSerializationService.importPassport(
+        data,
+        orgId,
+        async (p, options) => { await passportRepository.save(p, options); },
+      );
+
+      const importedSubmodelIds = passport.environment.submodels;
+      expect(importedSubmodelIds).toHaveLength(1);
+      expect(importedSubmodelIds[0]).not.toBe(originalSubmodelId);
+    });
+
+    it("should remap shell submodel references to the new submodel IDs", async () => {
+      const originalSubmodelId = randomUUID();
+      const data = buildExportData();
+      data.environment.submodels[0].id = originalSubmodelId;
+      data.environment.assetAdministrationShells[0].submodels = [
+        {
+          type: "ModelReference",
+          keys: [{ type: "Submodel", value: originalSubmodelId }],
+          referredSemanticId: null,
+        },
+      ];
+
+      const passport = await aasSerializationService.importPassport(
+        data,
+        orgId,
+        async (p, options) => { await passportRepository.save(p, options); },
+      );
+
+      const loaded = await passportRepository.findOneOrFail(passport.id);
+      const exported = await aasSerializationService.exportPassport(loaded);
+
+      const exportedSubmodelId = exported.environment.submodels[0].id;
+      expect(exportedSubmodelId).not.toBe(originalSubmodelId);
+
+      const shellSubmodelRef = exported.environment.assetAdministrationShells[0].submodels[0];
+      expect(shellSubmodelRef.keys[0].value).toBe(exportedSubmodelId);
+    });
+  });
+
   describe("importTemplate - media ownership validation", () => {
     const orgId = "org-1";
 
