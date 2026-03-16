@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { CreateTemplateCallback } from "../../composables/templates.ts";
 import { toTypedSchema } from "@vee-validate/zod";
-import { Button, Dialog } from "primevue";
 import { useForm } from "vee-validate";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";

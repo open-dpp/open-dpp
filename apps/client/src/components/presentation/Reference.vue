@@ -16,7 +16,9 @@ const safeHref = computed(() => {
     return undefined;
   try {
     const parsed = new URL(raw);
-    return ["http:", "https:"].includes(parsed.protocol) ? parsed.toString() : undefined;
+    return ["http:", "https:"].includes(parsed.protocol)
+      ? parsed.toString()
+      : undefined;
   }
   catch {
     return undefined;
@@ -31,7 +33,7 @@ const safeHref = computed(() => {
       :href="property.value"
       target="_blank"
       rel="noopener noreferrer"
-      class="mt-1 text-sm/6 text-[#6BAD87] hover:underline sm:mt-2"
+      class="mt-1 text-sm/6 text-primary-500 hover:underline sm:mt-2"
     >{{ safeHref }}</a>
   </dd>
 </template>

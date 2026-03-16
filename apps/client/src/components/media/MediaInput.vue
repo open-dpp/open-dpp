@@ -64,7 +64,7 @@ watch(
         </div>
         <div class="flex flex-col justify-center gap-2 shrink">
           <button
-            class="shrink bg-[#6BAD87]/50 rounded-sm p-2 hover:cursor-pointer"
+            class="shrink bg-primary-500/50 rounded-sm p-2 hover:cursor-pointer"
             @click.prevent="openFileModal = true"
           >
             <PencilIcon class="h-4 w-4" />

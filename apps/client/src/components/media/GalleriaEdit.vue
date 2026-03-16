@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { MediaInfo } from "./MediaInfo.interface.ts";
-import { Button, Column, DataTable, Image } from "primevue";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import MediaModal from "./MediaModal.vue";

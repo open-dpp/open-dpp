@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import type { MediaInfo } from "./MediaInfo.interface";
-import { DataView } from "primevue";
 import { computed, onMounted } from "vue";
 import { useMediaStore } from "../../stores/media";
 import MediaListItem from "./MediaListItem.vue";

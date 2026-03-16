@@ -345,7 +345,7 @@
       "status": "Status",
       "accept": "Akzeptieren",
       "decline": "Ablehnen",
-      "cancel": "Zurücknehmen",
+      "cancel": "Einladung zurücknehmen",
       "acceptSuccess": "Die Einladung wurde erfolgreich angenommen.",
       "acceptError": "Fehler bei der Akzeptanz der Einladung.",
       "acceptTitle": "Du wurdest zu einer Organisation eingeladen."

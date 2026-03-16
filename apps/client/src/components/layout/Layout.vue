@@ -10,11 +10,7 @@ import {
   TransitionChild,
   TransitionRoot,
 } from "@headlessui/vue";
-import {
-  ChartBarIcon,
-  CloudIcon,
-  LinkIcon,
-} from "@heroicons/vue/16/solid";
+import { ChartBarIcon, CloudIcon, LinkIcon } from "@heroicons/vue/16/solid";
 import {
   Bars3Icon,
   BuildingOfficeIcon,
@@ -100,7 +96,7 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
       ],
     },
     {
-      name: "Organization",
+      name: t("organizations.organizations"),
       items: [
         {
           name: t("members.members"),
@@ -442,7 +438,7 @@ const sidebarOpen = ref(false);
             <Menu as="div" class="relative">
               <MenuButton class="-m-1.5 flex items-center p-1.5">
                 <div
-                  class="hover:bg-indigo-700 cursor-pointer inline-flex items-center justify-center w-10 h-10 rounded-full bg-indigo-600 text-white text-sm font-medium"
+                  class="hover:bg-primary-600 cursor-pointer inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary-500 text-white text-sm font-medium"
                 >
                   {{ initials }}
                 </div>

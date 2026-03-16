@@ -4,7 +4,6 @@ import type { Page } from "../composables/pagination.ts";
 import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
-import { Button, Column, DataTable } from "primevue";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
