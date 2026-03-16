@@ -42,7 +42,7 @@ function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {
   <DataTable :value="rows" table-style="min-width: 50rem">
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="text-xl font-bold">{{ t('admin.organizations.title', 'Organizations') }}</span>
+        <span class="text-xl font-bold">{{ t('organizations.admin.organizations') }}</span>
       </div>
     </template>
     <Column field="name" header="Name" />
