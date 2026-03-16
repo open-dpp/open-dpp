@@ -35,7 +35,7 @@ const selectedOrganizationId = ref<string | null>(null);
 
 onMounted(async () => {
   try {
-    const { data } = await apiClient.dpp.organizations.getAll();
+    const { data } = await apiClient.dpp.organizations.getMemberOrganizations();
     organizations.value = data;
   }
   catch {
