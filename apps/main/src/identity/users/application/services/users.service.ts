@@ -1,25 +1,40 @@
-import { Injectable } from "@nestjs/common";
+import type { Auth } from "better-auth";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
 import { UserRole } from "../../domain/user-role.enum";
 import { UsersRepository } from "../../infrastructure/adapters/users.repository";
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     private readonly usersRepository: UsersRepository,
+    @Inject(AUTH) private readonly auth: Auth,
   ) { }
 
-  async createUser(email: string, firstName: string, lastName: string): Promise<User> {
+  async createUser(email: string, firstName?: string, lastName?: string): Promise<User> {
+    const fn = firstName?.trim() ?? "";
+    const ln = lastName?.trim() ?? "";
     const user = User.create({
       email,
-      firstName,
-      lastName,
+      firstName: fn,
+      lastName: ln,
       role: UserRole.USER,
     });
     const saved = await this.usersRepository.save(user);
     if (!saved) {
       throw new Error(`Failed to save user with email ${email}`);
+    }
+    try {
+      await (this.auth.api).requestPasswordReset({
+        body: { email, redirectTo: "/password-reset" },
+      });
+    }
+    catch (error) {
+      this.logger.error("Failed to send password reset email", error);
     }
     return saved;
   }

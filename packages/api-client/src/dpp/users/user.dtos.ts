@@ -1,1 +1,1 @@
-export type { UserDto } from '@open-dpp/dto'
+export type { CreateUserDto, UserDto } from '@open-dpp/dto'

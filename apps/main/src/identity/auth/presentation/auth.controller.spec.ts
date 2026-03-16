@@ -27,12 +27,21 @@ describe("AuthController", () => {
 
     mockAuth = {};
 
+    const instanceSettingsModule = await import("../../../instance-settings/application/services/instance-settings.service");
+    const InstanceSettingsService = instanceSettingsModule.InstanceSettingsService;
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
         {
           provide: AUTH,
           useValue: mockAuth,
+        },
+        {
+          provide: InstanceSettingsService,
+          useValue: {
+            getSettings: jest.fn<() => Promise<{ signupEnabled: boolean }>>().mockResolvedValue({ signupEnabled: true }),
+          },
         },
       ],
     }).compile();
@@ -41,7 +50,7 @@ describe("AuthController", () => {
   });
 
   it("should handle POST requests using better-auth handler", async () => {
-    const req = { method: "POST" } as any;
+    const req = { method: "POST", url: "/api/auth/some-path" } as any;
     const res = { status: jest.fn() } as any;
 
     await controller.handleBetterAuthPostRequest(req, res);
@@ -51,7 +60,7 @@ describe("AuthController", () => {
   });
 
   it("should handle GET requests using better-auth handler", async () => {
-    const req = { method: "GET" } as any;
+    const req = { method: "GET", url: "/api/auth/some-path" } as any;
     const res = { status: jest.fn() } as any;
 
     await controller.handleBetterAuthGetRequest(req, res);

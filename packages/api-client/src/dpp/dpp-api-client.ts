@@ -2,6 +2,7 @@ import type { AxiosInstance } from 'axios'
 import type { ApiClientOptions, IApiClient } from '../api-client'
 import { createAxiosClient } from '../api-client'
 import { BrandingNamespace } from './branding/branding.namespace'
+import { InstanceSettingsNamespace } from './instance-settings/instance-settings.namespace'
 import { AasIntegrationNamespace } from './integrations/aas-integration.namespace'
 import { OrganizationsNamespace } from './organizations/organizations.namespace'
 import { PassportNamespace } from './passport/passports.namespace'
@@ -18,6 +19,7 @@ export class DppApiClient implements IApiClient {
   public uniqueProductIdentifiers!: UniqueProductIdentifiersNamespace
   public aasIntegration!: AasIntegrationNamespace
   public users!: UsersNamespace
+  public instanceSettings!: InstanceSettingsNamespace
   private axiosInstance!: AxiosInstance
   private options: ApiClientOptions
 
@@ -55,5 +57,6 @@ export class DppApiClient implements IApiClient {
       this.axiosInstance,
     )
     this.users = new UsersNamespace(this.axiosInstance)
+    this.instanceSettings = new InstanceSettingsNamespace(this.axiosInstance)
   }
 }
