@@ -112,7 +112,10 @@ export function mapQualifiers(qualifiers: QualifierSchema[]): Qualifier[] {
     .map(mapQualifier);
 }
 
-export function mapAssetAdministrationShells(shells: ShellSchema[]): AssetAdministrationShell[] {
+export function mapAssetAdministrationShells(
+  shells: ShellSchema[],
+  submodelIdMapping: Map<string, string>,
+): AssetAdministrationShell[] {
   return shells.map((shell) => {
     const assetInformation = AssetInformation.create({
       assetKind: shell.assetInformation.assetKind,
@@ -133,6 +136,30 @@ export function mapAssetAdministrationShells(shells: ShellSchema[]): AssetAdmini
       ),
     });
 
+    const remappedSubmodelRefs = shell.submodels
+      .map((ref) => {
+        let hasUnmappedSubmodelKey = false;
+        const remappedKeys = ref.keys.map((key) => {
+          if (key.type === KeyTypes.Submodel || key.type === KeyTypes.GlobalReference) {
+            const newId = submodelIdMapping.get(key.value);
+            if (!newId) {
+              hasUnmappedSubmodelKey = true;
+              return key;
+            }
+            return { ...key, value: newId };
+          }
+          return key;
+        });
+
+        if (hasUnmappedSubmodelKey) {
+          // Drop references that cannot be resolved to a new submodel ID
+          return null;
+        }
+
+        return { ...ref, keys: remappedKeys };
+      })
+      .filter((ref): ref is ReferenceSchema => ref !== null);
+
     return AssetAdministrationShell.create({
       assetInformation,
       extensions: mapExtensions(shell.extensions),
@@ -143,15 +170,23 @@ export function mapAssetAdministrationShells(shells: ShellSchema[]): AssetAdmini
       administration: mapAdministration(shell.administration) ?? undefined,
       embeddedDataSpecifications: mapEmbeddedDataSpecifications(shell.embeddedDataSpecifications),
       derivedFrom: mapNullableReference(shell.derivedFrom),
-      submodels: mapReferences(shell.submodels),
+      submodels: mapReferences(remappedSubmodelRefs),
     });
   });
 }
 
-export function mapSubmodels(submodels: SubmodelSchema[]): Submodel[] {
-  return submodels.map(submodel =>
-    Submodel.create({
-      id: submodel.id,
+export interface MappedSubmodels {
+  submodels: Submodel[];
+  idMapping: Map<string, string>;
+}
+
+export function mapSubmodels(submodels: SubmodelSchema[]): MappedSubmodels {
+  const idMapping = new Map<string, string>();
+  const mapped = submodels.map((submodel) => {
+    const newId = randomUUID();
+    idMapping.set(submodel.id, newId);
+    return Submodel.create({
+      id: newId,
       extensions: mapExtensions(submodel.extensions),
       category: submodel.category,
       idShort: submodel.idShort,
@@ -169,8 +204,9 @@ export function mapSubmodels(submodels: SubmodelSchema[]): Submodel[] {
       qualifiers: mapQualifiers(submodel.qualifiers),
       embeddedDataSpecifications: mapEmbeddedDataSpecifications(submodel.embeddedDataSpecifications),
       submodelElements: submodel.submodelElements.map(element => parseSubmodelElement(element)),
-    }),
-  );
+    });
+  });
+  return { submodels: mapped, idMapping };
 }
 
 export function mapConceptDescriptions(cds: ConceptDescriptionSchema[]): ConceptDescription[] {
