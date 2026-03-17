@@ -12,7 +12,7 @@ class TestController {
   }
 }
 
-describe("OrganizationId decorator", () => {
+describe("organizationId decorator", () => {
   let app: INestApplication;
 
   beforeAll(async () => {

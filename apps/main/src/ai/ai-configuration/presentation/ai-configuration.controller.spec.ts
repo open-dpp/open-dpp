@@ -99,7 +99,8 @@ describe("aiConfigurationController", () => {
       model: "codestral-latest",
     };
     const response = await request(getApp(app))
-      .put(`/organizations/${org.id}/configurations`)
+      .put(`/configurations`)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(200);
@@ -120,7 +121,8 @@ describe("aiConfigurationController", () => {
       model: "codestral-latest",
     };
     const response = await request(getApp(app))
-      .put(`/organizations/${org2.id}/configurations`)
+      .put(`/configurations`)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org2.id)
       .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(403);
@@ -140,7 +142,8 @@ describe("aiConfigurationController", () => {
       model: "qwen3:0.6b",
     };
     const response = await request(getApp(app))
-      .put(`/organizations/${org.id}/configurations`)
+      .put(`/configurations`)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .set("Cookie", userCookie)
       .send(body);
     expect(response.status).toEqual(200);
@@ -160,7 +163,8 @@ describe("aiConfigurationController", () => {
     );
     await aiConfigurationService.save(aiConfiguration);
     const response = await request(getApp(app))
-      .get(`/organizations/${org.id}/configurations`)
+      .get(`/configurations`)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .set("Cookie", userCookie);
     expect(response.status).toEqual(200);
     expect(response.body).toEqual(aiConfigurationToDto(aiConfiguration));
@@ -174,7 +178,8 @@ describe("aiConfigurationController", () => {
     );
     await aiConfigurationService.save(aiConfiguration);
     const response = await request(getApp(app))
-      .get(`/organizations/${org2.id}/configurations`)
+      .get(`/configurations`)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org2.id)
       .set("Cookie", userCookie);
     expect(response.status).toEqual(403);
   });
@@ -182,7 +187,8 @@ describe("aiConfigurationController", () => {
   it(`/GET cannot find configuration`, async () => {
     const { org, userCookie } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const response = await request(getApp(app))
-      .get(`/organizations/${org.id}/configurations`)
+      .get(`/configurations`)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .set("Cookie", userCookie);
     expect(response.status).toEqual(404);
   });

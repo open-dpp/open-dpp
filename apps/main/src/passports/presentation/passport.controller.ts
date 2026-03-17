@@ -81,6 +81,7 @@ import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { DbSessionOptions } from "../../database/query-options";
 import { Session } from "../../identity/auth/domain/session";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
+import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
@@ -110,14 +111,10 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
     @PopulateQueryParam() populate: string[],
-    @AuthSession() session: Session,
+    @OrganizationId() organizationId: string,
   ): Promise<PassportPaginationDto> {
     const pagination = Pagination.create({ limit, cursor });
-    const activeOrganizationId = session.activeOrganizationId;
-    if (!activeOrganizationId) {
-      throw new BadRequestException("activeOrganizationId is required in session");
-    }
-    let pagingResult: PagingResult<any> = await this.passportRepository.findAllByOrganizationId(activeOrganizationId, pagination);
+    let pagingResult: PagingResult<any> = await this.passportRepository.findAllByOrganizationId(organizationId, pagination);
     if (populate.includes(Populates.assetAdministrationShells)) {
       pagingResult = await this.environmentService.populateEnvironmentForPagingResult(
         pagingResult,
@@ -155,11 +152,8 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
   async createPassport(
     @Body(new ZodValidationPipe(PassportRequestCreateDtoSchema)) body: PassportRequestCreateDto,
     @AuthSession() session: Session,
+    @OrganizationId() organizationId: string,
   ): Promise<PassportDto> {
-    const activeOrganizationId = session.activeOrganizationId;
-    if (!activeOrganizationId) {
-      throw new BadRequestException("activeOrganizationId is required in session");
-    }
     const { environment, templateId } = await match(body).returnType<Promise<{
       environment: Environment;
       templateId?: string;
@@ -182,7 +176,7 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     });
 
     const passport = Passport.create({
-      organizationId: activeOrganizationId,
+      organizationId,
       templateId,
       environment,
     });
@@ -448,14 +442,11 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
   async importPassport(
     @Body() body: any,
     @AuthSession() session: Session,
+    @OrganizationId() organizationId: string,
   ): Promise<PassportDto> {
-    const activeOrganizationId = session.activeOrganizationId?.toString();
-    if (!activeOrganizationId) {
-      throw new BadRequestException("activeOrganizationId is required in session");
-    }
     const passport = await this.aasSerializationService.importPassport(
       body,
-      activeOrganizationId,
+      organizationId,
       async (p, options) => {
         await this.passportRepository.save(p, options);
         const upid = p.createUniqueProductIdentifier();
