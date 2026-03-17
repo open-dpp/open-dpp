@@ -7,14 +7,12 @@ import { useI18n } from "vue-i18n";
 import MediaDetailsSidebar from "../../components/media/MediaDetailsSidebar.vue";
 import MediaGrid from "../../components/media/MediaGrid.vue";
 import { handleApiError, LimitError } from "../../lib/api-error-mapping";
-import { useIndexStore } from "../../stores";
 import { useMediaStore } from "../../stores/media";
 import { useNotificationStore } from "../../stores/notification";
 
 const { t } = useI18n();
 const mediaStore = useMediaStore();
 const notificationStore = useNotificationStore();
-const indexStore = useIndexStore();
 
 const selected = ref<Array<MediaInfo>>([]);
 const sidebarOpen = ref<boolean>(false);
@@ -28,12 +26,11 @@ function updateSelected(items: Array<MediaInfo>) {
 }
 
 async function uploadFile() {
-  if (!selectedLocalFile.value || !indexStore.selectedOrganization) {
+  if (!selectedLocalFile.value) {
     return;
   }
   try {
     await mediaStore.uploadMedia(
-      indexStore.selectedOrganization,
       selectedLocalFile.value,
       progress => (uploadProgress.value = progress),
     );

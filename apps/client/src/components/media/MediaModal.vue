@@ -5,7 +5,6 @@ import { Button, FileUpload } from "primevue";
 import Dialog from "primevue/dialog";
 import { ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { useIndexStore } from "../../stores";
 import { useMediaStore } from "../../stores/media";
 import { useNotificationStore } from "../../stores/notification";
 
@@ -18,7 +17,6 @@ const open = defineModel<boolean>();
 const { t } = useI18n();
 const mediaStore = useMediaStore();
 const notificationStore = useNotificationStore();
-const indexStore = useIndexStore();
 
 const selected = ref<Array<MediaInfo>>([]);
 const selectedLocalFile = ref<File | null>(null);
@@ -26,13 +24,11 @@ const selectedFile = ref<MediaInfo | null>(null);
 const uploadProgress = ref<number>(0);
 
 async function uploadFile() {
-  const organizationId = indexStore.selectedOrganization;
-  if (!selectedLocalFile.value || !organizationId) {
+  if (!selectedLocalFile.value) {
     return;
   }
   try {
     await mediaStore.uploadMedia(
-      organizationId,
       selectedLocalFile.value,
       progress => (uploadProgress.value = progress),
     );
