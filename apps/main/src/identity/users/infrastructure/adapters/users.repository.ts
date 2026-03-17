@@ -1,5 +1,5 @@
 import type { Auth } from "better-auth";
-import { randomUUID } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { ObjectId } from "mongodb";
@@ -22,8 +22,8 @@ export class UsersRepository {
   async save(user: User, password?: string): Promise<User | null> {
     // If no password provided, generate a secure random one
     // This prevents empty password accounts while still allowing programmatic creation
-    const finalPassword = password || randomUUID();
-
+    const generatedPassword = randomBytes(32).toString("base64url"); // 256-bit
+    const finalPassword = password?.trim() ? password : generatedPassword;
     try {
       await (this.auth.api as any).createUser({
         body: {

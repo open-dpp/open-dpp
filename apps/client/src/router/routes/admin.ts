@@ -48,9 +48,20 @@ export const ADMIN_USERS: RouteRecordRaw = {
   },
 };
 
+export const ADMIN_SETTINGS: RouteRecordRaw = {
+  path: "settings",
+  name: "AdminSettingsView",
+  component: () =>
+    import("../../view/admin/SettingsAdminView.vue"),
+  beforeEnter: (to: RouteLocationNormalizedGeneric) => {
+    const layoutStore = useLayoutStore();
+    layoutStore.breadcrumbs = adminListBreadCrumbs(to);
+  },
+};
+
 export const ADMIN_PARENT: RouteRecordRaw = {
   path: "/admin",
-  children: [ADMIN_BASE, ADMIN_ORGANIZATIONS, ADMIN_USERS],
+  children: [ADMIN_BASE, ADMIN_ORGANIZATIONS, ADMIN_USERS, ADMIN_SETTINGS],
 };
 
 export const ADMIN_ROUTES = [ADMIN_PARENT];

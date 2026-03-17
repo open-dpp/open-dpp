@@ -4,6 +4,7 @@ import { Reflector } from "@nestjs/core";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
 import { MembersService } from "../../../organizations/application/services/members.service";
+import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { SessionsService } from "../../application/services/sessions.service";
 import { AuthGuard } from "./auth.guard";
 
@@ -36,6 +37,12 @@ describe("authGuard Allowlist Repro", () => {
           provide: MembersService,
           useValue: {
             isMemberOfOrganization: jest.fn<() => Promise<boolean>>().mockResolvedValue(false),
+          },
+        },
+        {
+          provide: UsersRepository,
+          useValue: {
+            findOneById: jest.fn(),
           },
         },
       ],

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Test, TestingModule } from "@nestjs/testing";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
 import { UsersRepository } from "../../infrastructure/adapters/users.repository";
 import { UsersService } from "./users.service";
@@ -8,6 +9,7 @@ import { UsersService } from "./users.service";
 describe("UsersService", () => {
   let service: UsersService;
   let mockRepo: any;
+  let mockAuth: any;
 
   beforeEach(async () => {
     mockRepo = {
@@ -18,10 +20,17 @@ describe("UsersService", () => {
       setUserEmailVerified: jest.fn(),
     };
 
+    mockAuth = {
+      api: {
+        requestPasswordReset: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+      },
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
         { provide: UsersRepository, useValue: mockRepo },
+        { provide: AUTH, useValue: mockAuth },
       ],
     }).compile();
 

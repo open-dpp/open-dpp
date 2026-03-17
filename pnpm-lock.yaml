@@ -118,6 +118,9 @@ importers:
       '@open-dpp/testing':
         specifier: workspace:*
         version: link:../../packages/testing
+      '@primevue/auto-import-resolver':
+        specifier: ^4.5.4
+        version: 4.5.4
       '@tailwindcss/postcss':
         specifier: ^4.1.18
         version: 4.1.18
@@ -190,6 +193,9 @@ importers:
       typescript-eslint:
         specifier: ^8.54.0
         version: 8.54.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
+      unplugin-vue-components:
+        specifier: ^31.0.0
+        version: 31.0.0(vue@3.5.27(typescript@5.9.3))
       uuid:
         specifier: ^13.0.0
         version: 13.0.0
@@ -2331,6 +2337,10 @@ packages:
     resolution: {integrity: sha512-pZ5f+vj7wSzRhC7KoEQRU5fvYAe+RP9+m39CTscZ3UywCD1Y2o6Fe1rRgklMPSkzUcty2jzkA0zMYkiJBD1hgg==}
     engines: {node: '>=12.11.0'}
 
+  '@primevue/auto-import-resolver@4.5.4':
+    resolution: {integrity: sha512-YQHrZ9PQSG/4K2BwthA2Xuna4WyS0JMHajiHD9PljaDyQtBVwCadX5ZpKcrAUWR8E/1gjva8x/si0RYxxYrRJw==}
+    engines: {node: '>=12.11.0'}
+
   '@primevue/core@4.5.4':
     resolution: {integrity: sha512-lYJJB3wTrDJ8MkLctzHfrPZAqXVxoatjIsswSJzupatf6ZogJHVYADUKcn1JAkLLk8dtV1FA2AxDek663fHO5Q==}
     engines: {node: '>=12.11.0'}
@@ -2339,6 +2349,10 @@ packages:
 
   '@primevue/icons@4.5.4':
     resolution: {integrity: sha512-DxgryEc7ZmUqcEhYMcxGBRyFzdtLIoy3jLtlH1zsVSRZaG+iSAcjQ88nvfkZxGUZtZBFL7sRjF6KLq3bJZJwUw==}
+    engines: {node: '>=12.11.0'}
+
+  '@primevue/metadata@4.5.4':
+    resolution: {integrity: sha512-jJFD0KYm8bPYgFo0JP3Dc2RkyXzrMI1XHQGsEKTysx9Jx2d1XdxtFji/ZsQeoo/RmwUNof5ciZ72URq37rnK+g==}
     engines: {node: '>=12.11.0'}
 
   '@rekog/mcp-nest@1.9.3':
@@ -8153,6 +8167,20 @@ packages:
     resolution: {integrity: sha512-5lWVjgi6vuHhJ526bI4nlCOmkCIF3nnfXkCMDeMJrtdvxTs6ZFCM8oNufGTsDbKv/tJ/xj8RpvXjRuPBZJuJog==}
     engines: {node: '>=20.19.0'}
 
+  unplugin-vue-components@31.0.0:
+    resolution: {integrity: sha512-4ULwfTZTLuWJ7+S9P7TrcStYLsSRkk6vy2jt/WTfgUEUb0nW9//xxmrfhyHUEVpZ2UKRRwfRb8Yy15PDbVZf+Q==}
+    engines: {node: '>=20.19.0'}
+    peerDependencies:
+      '@nuxt/kit': ^3.2.2 || ^4.0.0
+      vue: ^3.0.0
+    peerDependenciesMeta:
+      '@nuxt/kit':
+        optional: true
+
+  unplugin@2.3.11:
+    resolution: {integrity: sha512-5uKD0nqiYVzlmCRs01Fhs2BdkEgBS3SAVP6ndrBsuK42iC2+JHyxM05Rm9G8+5mkmRtzMZGY8Ct5+mliZxU/Ww==}
+    engines: {node: '>=18.12.0'}
+
   unplugin@3.0.0:
     resolution: {integrity: sha512-0Mqk3AT2TZCXWKdcoaufeXNukv2mTrEZExeXlHIOZXdqYoHHr4n51pymnwV8x2BOVxwXbK2HLlI7usrqMpycdg==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -10210,6 +10238,10 @@ snapshots:
 
   '@primeuix/utils@0.6.4': {}
 
+  '@primevue/auto-import-resolver@4.5.4':
+    dependencies:
+      '@primevue/metadata': 4.5.4
+
   '@primevue/core@4.5.4(vue@3.5.27(typescript@5.9.3))':
     dependencies:
       '@primeuix/styled': 0.7.4
@@ -10222,6 +10254,8 @@ snapshots:
       '@primevue/core': 4.5.4(vue@3.5.27(typescript@5.9.3))
     transitivePeerDependencies:
       - vue
+
+  '@primevue/metadata@4.5.4': {}
 
   '@rekog/mcp-nest@1.9.3(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(@nestjs/common@11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.13)(@nestjs/jwt@11.0.2(@nestjs/common@11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)))(@nestjs/passport@11.0.5(@nestjs/common@11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(passport@0.7.0))(express@5.2.1)(reflect-metadata@0.2.2)(zod@4.3.6)':
     dependencies:
@@ -16918,6 +16952,26 @@ snapshots:
     dependencies:
       pathe: 2.0.3
       picomatch: 4.0.3
+
+  unplugin-vue-components@31.0.0(vue@3.5.27(typescript@5.9.3)):
+    dependencies:
+      chokidar: 5.0.0
+      local-pkg: 1.1.2
+      magic-string: 0.30.21
+      mlly: 1.8.0
+      obug: 2.1.1
+      picomatch: 4.0.3
+      tinyglobby: 0.2.15
+      unplugin: 2.3.11
+      unplugin-utils: 0.3.1
+      vue: 3.5.27(typescript@5.9.3)
+
+  unplugin@2.3.11:
+    dependencies:
+      '@jridgewell/remapping': 2.3.5
+      acorn: 8.15.0
+      picomatch: 4.0.3
+      webpack-virtual-modules: 0.6.2
 
   unplugin@3.0.0:
     dependencies:

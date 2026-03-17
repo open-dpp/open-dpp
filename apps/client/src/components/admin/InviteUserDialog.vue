@@ -25,6 +25,8 @@ const loading = ref<boolean>(false);
 const errors = ref<Array<string>>([]);
 const success = ref<boolean>(false);
 const email = ref("");
+const firstName = ref("");
+const lastName = ref("");
 const emailError = ref("");
 
 async function inviteUser() {
@@ -44,12 +46,16 @@ async function inviteUser() {
     loading.value = true;
     const response = await apiClient.dpp.users.create({
       email: email.value,
+      firstName: firstName.value.trim(),
+      lastName: lastName.value.trim(),
     });
     loading.value = false;
     if (response.status === 201) {
       success.value = true;
       emit("success");
       email.value = "";
+      firstName.value = "";
+      lastName.value = "";
       errors.value = [];
     }
     else {
@@ -157,6 +163,30 @@ async function inviteUser() {
                         <small v-else id="email-help" class="text-gray-500">
                           {{ t('common.form.email.help') }}
                         </small>
+                      </div>
+
+                      <div class="flex flex-col gap-2">
+                        <label for="firstName" class="block text-sm font-medium text-gray-700">
+                          {{ t('user.firstName') }}
+                        </label>
+                        <InputText
+                          id="firstName"
+                          v-model="firstName"
+                          type="text"
+                          class="w-full"
+                        />
+                      </div>
+
+                      <div class="flex flex-col gap-2">
+                        <label for="lastName" class="block text-sm font-medium text-gray-700">
+                          {{ t('user.lastName') }}
+                        </label>
+                        <InputText
+                          id="lastName"
+                          v-model="lastName"
+                          type="text"
+                          class="w-full"
+                        />
                       </div>
 
                       <Button

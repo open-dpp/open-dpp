@@ -2,15 +2,6 @@
 import type { TreeNode } from "primevue/treenode";
 import type { AasEditModeType } from "../../lib/aas-editor.ts";
 import { KeyTypes } from "@open-dpp/dto";
-import {
-  Button,
-  Column,
-  ConfirmDialog,
-  Divider,
-  Drawer,
-  Menu,
-  TreeTable,
-} from "primevue";
 import { useConfirm } from "primevue/useconfirm";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";

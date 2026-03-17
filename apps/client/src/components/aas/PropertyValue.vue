@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { DataTypeDefType } from "@open-dpp/dto";
 import { DataTypeDef } from "@open-dpp/dto";
-import { InputNumber, InputText } from "primevue";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";

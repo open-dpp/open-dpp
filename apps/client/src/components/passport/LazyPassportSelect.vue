@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { PassportDto } from "@open-dpp/dto";
-import { Select } from "primevue";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useAasUtils } from "../../composables/aas-utils";

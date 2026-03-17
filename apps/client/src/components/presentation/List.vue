@@ -3,7 +3,6 @@ import type {
   SubmodelElementCollectionResponseDto,
   SubmodelElementRequestDto,
 } from "@open-dpp/dto";
-import { Column, DataTable } from "primevue";
 import { computed } from "vue";
 import { useDisplayName } from "../../composables/display-name";
 import SubmodelElementValue from "./SubmodelElementValue.vue";

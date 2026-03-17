@@ -345,7 +345,7 @@
       "status": "Status",
       "accept": "Akzeptieren",
       "decline": "Ablehnen",
-      "cancel": "Zurücknehmen",
+      "cancel": "Einladung zurücknehmen",
       "acceptSuccess": "Die Einladung wurde erfolgreich angenommen.",
       "acceptError": "Fehler bei der Akzeptanz der Einladung.",
       "acceptTitle": "Du wurdest zu einer Organisation eingeladen."
@@ -365,11 +365,28 @@
       "title": "Administration",
       "organizations": "Alle Organisationen",
       "users": "Alle Benutzer",
+      "settings": "Einstellungen",
+      "emailNotVerified": "E-Mail nicht verifiziert",
       "inviteUserDialog": {
         "title": "Benutzer erstellen",
         "create": "Erstellen",
-        "success": "Benutzer erfolgreich erstellt",
+        "success": "Benutzer erfolgreich erstellt. Eine Einrichtungs-E-Mail wurde gesendet.",
         "error": "Fehler beim Erstellen des Benutzers"
+      },
+      "inviteToOrganizationDialog": {
+        "title": "Zu Organisation einladen",
+        "selectOrganization": "Organisation auswählen",
+        "invite": "Einladen",
+        "success": "Benutzer wurde zur Organisation eingeladen.",
+        "error": "Fehler beim Einladen des Benutzers zur Organisation"
+      },
+      "instanceSettings": {
+        "title": "Instanz-Einstellungen",
+        "signupEnabled": "Öffentliche Registrierung aktiviert",
+        "signupEnabledDescription": "Wenn deaktiviert, können nur Administratoren neue Benutzer hinzufügen.",
+        "saved": "Einstellungen erfolgreich gespeichert",
+        "error": "Fehler beim Speichern der Einstellungen",
+        "lockedByEnv": "Diese Einstellung wird durch eine Umgebungsvariable gesteuert und kann hier nicht geändert werden."
       }
     }
   },
@@ -464,7 +481,8 @@
       "button": "Registrieren",
       "alreadyAMember": "Bereits registriert?",
       "ctaSignIn": "Jetzt anmelden",
-      "error": "Registrierung fehlgeschlagen."
+      "error": "Registrierung fehlgeschlagen.",
+      "disabled": "Die Registrierung ist derzeit deaktiviert. Bitte kontaktieren Sie Ihren Administrator."
     },
     "passwordResetRequest": {
       "title": "Passwort zurücksetzen",

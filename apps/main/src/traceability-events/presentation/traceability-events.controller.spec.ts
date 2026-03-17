@@ -9,6 +9,7 @@ import { EmailService } from "../../email/email.service";
 import { AuthModule } from "../../identity/auth/auth.module";
 import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
 import { OrganizationsModule } from "../../identity/organizations/organizations.module";
+import { UsersModule } from "../../identity/users/users.module";
 import {
   DppEventSchema,
   TraceabilityEventDocument,
@@ -38,6 +39,7 @@ describe("dppEventsController", () => {
         ]),
         AuthModule,
         OrganizationsModule,
+        UsersModule,
       ],
       controllers: [TraceabilityEventsController],
       providers: [

@@ -1,12 +1,4 @@
 <script setup lang="ts">
-import {
-  FloatLabel,
-  InputGroup,
-  InputGroupAddon,
-  InputText,
-  Message,
-} from "primevue";
-
 import { computed } from "vue";
 
 const props = defineProps<{

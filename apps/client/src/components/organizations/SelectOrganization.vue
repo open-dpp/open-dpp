@@ -45,9 +45,7 @@ function setOrganization(organizationId: string) {
     @update:model-value="(org) => setOrganization(org.id)"
   >
     <ListboxLabel class="block text-sm/6 font-medium text-gray-900">
-      {{
-        t('organizations.select')
-      }}
+      {{ t("organizations.select") }}
     </ListboxLabel>
     <div class="relative flex flex-row gap-2">
       <div
@@ -56,7 +54,7 @@ function setOrganization(organizationId: string) {
       >
         <ListboxButton
           data-cy="organizationSelect"
-          class="grid w-full cursor-default grid-cols-1 rounded-md bg-white py-1.5 pl-3 pr-2 text-left text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+          class="grid w-full cursor-default grid-cols-1 rounded-md bg-white py-1.5 pl-3 pr-2 text-left text-gray-900 outline -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-primary-600 sm:text-sm/6"
         >
           <span class="col-start-1 row-start-1 truncate pr-6">{{
             nameOfSelectedOrganization
@@ -84,22 +82,21 @@ function setOrganization(organizationId: string) {
               :value="organization"
             >
               <li
-                class="relative cursor-default select-none py-2 pl-8 pr-4" :class="[
+                class="relative cursor-default select-none py-2 pl-8 pr-4"
+                :class="[
                   active
-                    ? 'bg-indigo-600 text-white outline-hidden'
+                    ? 'bg-primary-600 text-white outline-hidden'
                     : 'text-gray-900',
                 ]"
               >
                 <span
-                  class="block truncate" :class="[
-                    selected ? 'font-semibold' : 'font-normal',
-                  ]"
+                  class="block truncate"
+                  :class="[selected ? 'font-semibold' : 'font-normal']"
                 >{{ organization.name }}</span>
                 <span
                   v-if="selected"
-                  class="absolute inset-y-0 left-0 flex items-center pl-1.5" :class="[
-                    active ? 'text-white' : 'text-indigo-600',
-                  ]"
+                  class="absolute inset-y-0 left-0 flex items-center pl-1.5"
+                  :class="[active ? 'text-white' : 'text-primary-600']"
                 >
                   <CheckIcon class="size-5" aria-hidden="true" />
                 </span>
@@ -111,19 +108,19 @@ function setOrganization(organizationId: string) {
       <router-link to="/organizations/create">
         <button
           type="button"
-          class="flex items-center p-2 rounded-sm mt-2 bg-indigo-500 text-white"
+          class="flex items-center p-2 rounded-sm mt-2 bg-primary-500 hover:bg-primary-600 text-white"
         >
           <PlusCircleIcon class="size-5" />
           <span
             v-if="organizationsStore.organizations.length === 0"
             class="text-md pl-1"
-          >{{ t('organizations.new') }}</span>
+          >{{ t("organizations.new") }}</span>
         </button>
       </router-link>
       <router-link v-if="false" to="/organizations">
         <button
           type="button"
-          class="flex items-center p-2 rounded-sm mt-2 bg-indigo-700 text-white"
+          class="flex items-center p-2 rounded-sm mt-2 bg-primary-600 text-white"
         >
           <ListBulletIcon class="size-5" />
         </button>
