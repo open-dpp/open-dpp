@@ -131,7 +131,7 @@ export class AuthGuard implements CanActivate {
 
     const isBetterAuthUrl = url.startsWith("/api/auth");
     if (!isBetterAuthUrl) {
-      const organizationId = request.params.organizationId ?? request.params.orgaId ?? null;
+      const organizationId = request.headers["x-open-dpp-organization-id"] ?? null;
       if (organizationId) {
         const isMember = await this.membersService.isMemberOfOrganization(session.userId, organizationId);
         if (!isMember) {
