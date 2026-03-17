@@ -28,6 +28,6 @@ export class MediaApiClient implements IApiClient {
       this.options,
       'https://api.cloud.open-dpp.de',
     )
-    this.media = new MediaNamespace(this.axiosInstance, this.options.activeOrganizationId)
+    this.media = new MediaNamespace(this.axiosInstance)
   }
 }

@@ -1,13 +1,14 @@
-import { Body, Controller, Get, Param, Put } from "@nestjs/common";
+import { Body, Controller, Get, Put } from "@nestjs/common";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { Session } from "../../../identity/auth/domain/session";
 import { AuthSession } from "../../../identity/auth/presentation/decorators/auth-session.decorator";
+import { OrganizationId } from "../../../identity/auth/presentation/decorators/organization-id.decorator";
 import { AiConfiguration } from "../domain/ai-configuration";
 import { AiConfigurationService } from "../infrastructure/ai-configuration.service";
 import * as aiConfigurationDto from "./dto/ai-configuration.dto";
 import { AiConfigurationUpsertDtoSchema } from "./dto/ai-configuration.dto";
 
-@Controller("organizations/:organizationId/configurations")
+@Controller("configurations")
 export class AiConfigurationController {
   private readonly aiConfigurationService: AiConfigurationService;
 
@@ -19,7 +20,7 @@ export class AiConfigurationController {
 
   @Put()
   async upsertConfiguration(
-    @Param("organizationId") organizationId: string,
+    @OrganizationId() organizationId: string,
     @AuthSession() session: Session,
     @Body(new ZodValidationPipe(AiConfigurationUpsertDtoSchema))
     aiConfigurationUpsertDto: aiConfigurationDto.AiConfigurationUpsertDto,
@@ -47,7 +48,7 @@ export class AiConfigurationController {
 
   @Get()
   async findConfigurationByOrganization(
-    @Param("organizationId") organizationId: string,
+    @OrganizationId() organizationId: string,
   ) {
     return aiConfigurationDto.aiConfigurationToDto(
       await this.aiConfigurationService.findOneByOrganizationIdOrFail(

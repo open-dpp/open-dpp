@@ -109,6 +109,7 @@ describe("passportController", () => {
     let response = await request(app.getHttpServer())
       .get(`${basePath}?populate=environment.assetAdministrationShells`)
       .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send();
 
     expect(response.status).toEqual(200);
@@ -130,6 +131,7 @@ describe("passportController", () => {
     response = await request(app.getHttpServer())
       .get(`${basePath}`)
       .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send();
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
@@ -201,6 +203,7 @@ describe("passportController", () => {
     const response = await request(app.getHttpServer())
       .post(basePath)
       .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send(body);
     expect(response.status).toEqual(201);
     expect(response.body).toEqual({
@@ -257,6 +260,7 @@ describe("passportController", () => {
     const response = await request(app.getHttpServer())
       .post(basePath)
       .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send({
         templateId,
       });
@@ -402,6 +406,7 @@ describe("passportController", () => {
     const importResponse = await request(app.getHttpServer())
       .post(`${basePath}/import`)
       .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send(exportResponse.body);
 
     expect(importResponse.status).toEqual(201);
@@ -420,11 +425,12 @@ describe("passportController", () => {
 
   it("/POST import passport with invalid data returns 400", async () => {
     const { betterAuthHelper, app } = ctx.globals();
-    const { userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
 
     const response = await request(app.getHttpServer())
       .post(`${basePath}/import`)
       .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send({ invalid: "data" });
 
     expect(response.status).toEqual(400);
@@ -439,6 +445,7 @@ describe("passportController", () => {
     const importResponse = await request(app.getHttpServer())
       .post(`${basePath}/import`)
       .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send(emptyPayload);
 
     expect(importResponse.status).toEqual(201);
@@ -474,6 +481,7 @@ describe("passportController", () => {
     const importResponse = await request(app.getHttpServer())
       .post(`${basePath}/import`)
       .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send(richPayload);
 
     expect(importResponse.status).toEqual(201);

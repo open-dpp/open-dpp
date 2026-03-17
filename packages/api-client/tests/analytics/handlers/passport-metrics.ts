@@ -9,7 +9,6 @@ import {
   MeasurementType,
   TimePeriod,
 } from '../../../src'
-import { activeOrganization } from '../../organization'
 import { checkQueryParameters } from '../../utils'
 import { analyticsUrl } from './index'
 
@@ -36,7 +35,7 @@ export const passportMetricHandler = [
   http.post(`${analyticsUrl}/passport-metrics/page-views`, () =>
     HttpResponse.json(pageViewDto)),
   http.get(
-    `${analyticsUrl}/organizations/${activeOrganization.id}/passport-metrics`,
+    `${analyticsUrl}/passport-metrics`,
     ({ request }) => {
       checkQueryParameters(request, {
         endDate: passportMetricQueryDto.endDate.toISOString(),

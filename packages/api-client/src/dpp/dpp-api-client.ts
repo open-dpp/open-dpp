@@ -50,7 +50,6 @@ export class DppApiClient implements IApiClient {
     this.branding = new BrandingNamespace(this.axiosInstance)
     this.aasIntegration = new AasIntegrationNamespace(
       this.axiosInstance,
-      this.options.activeOrganizationId,
     )
 
     this.uniqueProductIdentifiers = new UniqueProductIdentifiersNamespace(

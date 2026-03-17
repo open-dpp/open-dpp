@@ -45,23 +45,6 @@ describe("media store", () => {
   });
 
   describe("uploadDppMedia", () => {
-    it("throws if no organization selected", async () => {
-      await expect(
-        apiClient.media.media.uploadDppMedia(null, "uuid", "field", new File(["a"], "a.txt")),
-      ).rejects.toThrow("No organization selected");
-    });
-
-    it("throws if no uuid provided", async () => {
-      await expect(
-        apiClient.media.media.uploadDppMedia(
-          "org",
-          undefined,
-          "field",
-          new File(["a"], "a.txt"),
-        ),
-      ).rejects.toThrow("No UUID provided");
-    });
-
     it("returns mediaId on 200/201/304 and calls progress handler", async () => {
       const statuses = [200, 201, 304] as const;
       for (const status of statuses) {
@@ -77,7 +60,6 @@ describe("media store", () => {
         );
         const progressCalls: number[] = [];
         const mediaId = await apiClient.media.media.uploadDppMedia(
-          "org",
           "uuid",
           "field",
           new File(["a"], "a.txt"),
@@ -87,7 +69,7 @@ describe("media store", () => {
         // Verify URL formatting
         expect(postMock).toHaveBeenLastCalledWith(
           expect.stringMatching(
-            /\/media\/media\/dpp\/org\/uuid\/field$/,
+            /\/media\/dpp\/uuid\/field$/,
           ),
           expect.any(FormData),
           expect.objectContaining({ onUploadProgress: expect.any(Function) }),
@@ -108,7 +90,6 @@ describe("media store", () => {
       );
       const progressCalls: number[] = [];
       await apiClient.media.media.uploadDppMedia(
-        "org",
         "uuid",
         "field",
         new File(["a"], "a.txt"),
@@ -120,7 +101,7 @@ describe("media store", () => {
     it("throws on unexpected status", async () => {
       postMock.mockResolvedValueOnce({ status: 418, data: {} });
       await expect(
-        apiClient.media.media.uploadDppMedia("org", "uuid", "field", new File(["a"], "a.txt")),
+        apiClient.media.media.uploadDppMedia("uuid", "field", new File(["a"], "a.txt")),
       ).rejects.toThrow("Unexpected upload status 418");
     });
   });
