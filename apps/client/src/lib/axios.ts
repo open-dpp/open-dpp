@@ -12,9 +12,10 @@ export function setAxiosAuthHeader(token: string) {
 
 export function setAxiosOrganizationId(organizationId?: string | null) {
   if (organizationId) {
-    axiosIns.defaults.headers.common["X-OPEN-DPP-ORGANIZATION-ID"] =
-      organizationId;
-  } else {
+    axiosIns.defaults.headers.common["X-OPEN-DPP-ORGANIZATION-ID"]
+      = organizationId;
+  }
+  else {
     delete axiosIns.defaults.headers.common["X-OPEN-DPP-ORGANIZATION-ID"];
   }
 }
