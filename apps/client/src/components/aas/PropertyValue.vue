@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { DataTypeDefType } from "@open-dpp/dto";
 import { DataTypeDef } from "@open-dpp/dto";
+import dayjs from "dayjs";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
@@ -75,18 +76,15 @@ const dateValue = computed({
   get: () => {
     if (!props.modelValue)
       return null;
-    const parsed = new Date(props.modelValue);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
+    const parsed = dayjs(props.modelValue);
+    return parsed.isValid() ? parsed.toDate() : null;
   },
   set: (v: Date | null | undefined) => {
     if (!v) {
       emit("update:modelValue", null);
       return;
     }
-    const year = v.getFullYear();
-    const month = String(v.getMonth() + 1).padStart(2, "0");
-    const day = String(v.getDate()).padStart(2, "0");
-    emit("update:modelValue", `${year}-${month}-${day}`);
+    emit("update:modelValue", dayjs(v).format("YYYY-MM-DD"));
   },
 });
 
