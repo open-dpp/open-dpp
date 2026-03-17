@@ -3,7 +3,6 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { PermissionKind, Permissions } from "@open-dpp/dto";
 import { DbSessionOptions } from "../../database/query-options";
-import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { findByIds, findOne, findOneOrFail, save } from "../../lib/repositories";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
@@ -58,36 +57,16 @@ export class AasRepository {
 
     for (const submodelReference of aas.submodels) {
       const submodel = await this.submodelRepository.findOneOrFail(submodelReference.keys[0].value);
-      let [subject, aasObject, permissions] = [
-        SubjectAttributes.create({ role: UserRole.ADMIN }),
-        IdShortPath.create({ path: submodel.idShort }),
-        Object.values(Permissions).map(
-          p => Permission.create({ permission: p, kindOfPermission: PermissionKind.Allow }),
-        ),
-      ];
-      if (!security.hasPolicy(subject, aasObject, permissions)) {
-        security.addPolicy(subject, aasObject, permissions);
-      }
-      // member of the organization to which the passport belongs to should have all permissions
-      [subject, aasObject, permissions] = [
-        SubjectAttributes.create({ role: MemberRole.MEMBER }),
-        IdShortPath.create({ path: submodel.idShort }),
-        Object.values(Permissions).map(
-          p => Permission.create({ permission: p, kindOfPermission: PermissionKind.Allow }),
-        ),
-      ];
-      if (!security.hasPolicy(subject, aasObject, permissions)) {
-        security.addPolicy(subject, aasObject, permissions);
-      }
+      security.addDefaultPolicyForSubmodel(submodel);
       // anonymous user should have only read permissions
-      [subject, aasObject, permissions] = [
+      const [subject, aasObject, permissions] = [
         SubjectAttributes.create({ role: UserRole.ANONYMOUS }),
         IdShortPath.create({ path: submodel.idShort }),
         [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
       ];
       if (!security.hasPolicy(subject, aasObject, permissions)) {
         security.addPolicy(subject, aasObject, permissions);
-      };
+      }
     }
 
     return {

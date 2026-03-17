@@ -1,4 +1,8 @@
+import { PermissionKind, Permissions } from "@open-dpp/dto";
 import { z } from "zod/v4";
+import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
+import { UserRole } from "../../../identity/users/domain/user-role.enum";
+import { Submodel } from "../submodel-base/submodel";
 import { IdShortPath } from "../submodel-base/submodel-base";
 import { AasAbility } from "./aas-ability";
 import { createAasObject } from "./aas-object";
@@ -52,6 +56,30 @@ export class Security {
     }
     else {
       this.localAccessControl.addRule(AccessPermissionRule.create({ targetSubjectAttributes: subject, permissionsPerObject: [permissionPerObject] }));
+    }
+  }
+
+  addDefaultPolicyForSubmodel(submodel: Submodel): void {
+    let [subject, aasObject, permissions] = [
+      SubjectAttributes.create({ role: UserRole.ADMIN }),
+      IdShortPath.create({ path: submodel.idShort }),
+      Object.values(Permissions).map(
+        p => Permission.create({ permission: p, kindOfPermission: PermissionKind.Allow }),
+      ),
+    ];
+    if (!this.hasPolicy(subject, aasObject, permissions)) {
+      this.addPolicy(subject, aasObject, permissions);
+    }
+    // member of the organization to which the passport belongs to should have all permissions
+    [subject, aasObject, permissions] = [
+      SubjectAttributes.create({ role: MemberRole.MEMBER }),
+      IdShortPath.create({ path: submodel.idShort }),
+      Object.values(Permissions).map(
+        p => Permission.create({ permission: p, kindOfPermission: PermissionKind.Allow }),
+      ),
+    ];
+    if (!this.hasPolicy(subject, aasObject, permissions)) {
+      this.addPolicy(subject, aasObject, permissions);
     }
   }
 
