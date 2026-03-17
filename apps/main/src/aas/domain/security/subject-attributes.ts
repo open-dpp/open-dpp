@@ -25,10 +25,9 @@ export class SubjectAttributes {
     return this._subjectAttribute;
   }
 
-  static create(data: { role: string; organizationId?: string }): SubjectAttributes {
+  static create(data: { role: string }): SubjectAttributes {
     return new SubjectAttributes([
       Property.create({ idShort: "role", valueType: DataTypeDef.String, value: data.role }),
-      Property.create({ idShort: "organizationId", valueType: DataTypeDef.String, value: data.organizationId }),
     ]);
   }
 
@@ -37,14 +36,14 @@ export class SubjectAttributes {
     return new SubjectAttributes(parsed.subjectAttribute.map(Property.fromPlain) as Property[]);
   }
 
+  copy(): SubjectAttributes {
+    return SubjectAttributes.fromPlain(this.toPlain());
+  }
+
   toPlain(): Record<string, any> {
     return {
       subjectAttribute: this.subjectAttribute.map(p => p.toPlain()),
     };
-  }
-
-  get organizationId(): string | undefined {
-    return this.subjectAttribute.find(p => p.idShort === "organizationId")?.value ?? undefined;
   }
 
   get role(): string {
@@ -52,6 +51,6 @@ export class SubjectAttributes {
   }
 
   isEqual(other: SubjectAttributes): boolean {
-    return this.role === other.role && this.organizationId === other.organizationId;
+    return this.role === other.role;
   }
 }

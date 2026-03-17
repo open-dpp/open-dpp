@@ -1,41 +1,23 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
-import { getModelToken, MongooseModule } from "@nestjs/mongoose";
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 
-import { Permissions } from "@open-dpp/dto";
-
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { Model, Model as MongooseModel } from "mongoose";
 import { AasModule } from "../../aas/aas.module";
-import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
 import { Environment } from "../../aas/domain/environment";
-import { AasResource } from "../../aas/domain/security/casl-ability";
-import { Security } from "../../aas/domain/security/security";
-import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
-import { Submodel } from "../../aas/domain/submodel-base/submodel";
-import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
-import { AasRepository } from "../../aas/infrastructure/aas.repository";
-import { SecurityRepository } from "../../aas/infrastructure/security.repository";
-import { SubmodelRepository } from "../../aas/infrastructure/submodel.repository";
 import { generateMongoConfig } from "../../database/config";
-import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
-import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
-import { PassportDocVersion } from "../../passports/infrastructure/passport.schema";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "./template.repository";
 import { TemplateDoc, TemplateSchema } from "./template.schema";
 
 describe("templateRepository", () => {
   let templateRepository: TemplateRepository;
-  let securityRepository: SecurityRepository;
-  let aasRepository: AasRepository;
-  let submodelRepository: SubmodelRepository;
+
   let module: TestingModule;
-  let TemplateDocument: MongooseModel<TemplateDoc>;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -62,12 +44,6 @@ describe("templateRepository", () => {
     }).compile();
 
     templateRepository = module.get<TemplateRepository>(TemplateRepository);
-    securityRepository = module.get<SecurityRepository>(SecurityRepository);
-    aasRepository = module.get<AasRepository>(AasRepository);
-    submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);
-    TemplateDocument = module.get<Model<TemplateDoc>>(
-      getModelToken(TemplateDoc.name),
-    );
   });
 
   it("should save a template", async () => {
@@ -157,54 +133,6 @@ describe("templateRepository", () => {
       pagination: Pagination.create({ cursor: encodeCursor(t3.createdAt.toISOString(), t3.id), limit: 1 }),
       items: [t3],
     }));
-  });
-
-  it(`should load and migrate aas from version 1.0.0 to 1.1.0`, async () => {
-    const id = randomUUID();
-    const security = Security.create({});
-    await securityRepository.save(security);
-    const submodel = await submodelRepository.save(Submodel.create({ idShort: "section1" }));
-    const aas = AssetAdministrationShell.create({ security: security.id });
-    aas.addSubmodel(submodel);
-
-    await aasRepository.save(aas);
-    const legacyDoc = new TemplateDocument({
-      _id: id,
-      _schemaVersion: PassportDocVersion.v1_0_0,
-      organizationId: randomUUID(),
-      environment: {
-        assetAdministrationShells: [aas.id],
-        submodels: [submodel.id],
-      },
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-    await legacyDoc.save();
-    await templateRepository.findOneOrFail(id);
-    const foundSecurity = await securityRepository.findOneOrFail(security.id);
-    // admin should have all permissions
-    let ability = foundSecurity.defineAbilityForSubject(SubjectAttributes.create({ role: UserRole.ADMIN }));
-    for (const permission of [Permissions.Create, Permissions.Read, Permissions.Edit, Permissions.Delete]) {
-      expect(ability.can({ action: permission, object: AasResource.create({ idShortPath: IdShortPath.create({ path: submodel.idShort }) }) })).toBeTruthy();
-    }
-
-    // member of the organization to which the passport belongs to should have all permissions
-    ability = foundSecurity.defineAbilityForSubject(SubjectAttributes.create({ role: MemberRole.MEMBER, organizationId: legacyDoc.organizationId }));
-    for (const permission of [Permissions.Create, Permissions.Read, Permissions.Edit, Permissions.Delete]) {
-      expect(ability.can(
-        { action: permission, object: AasResource.create({ idShortPath: IdShortPath.create({ path: submodel.idShort }), organizationId: legacyDoc.organizationId }) },
-      )).toBeTruthy();
-    }
-
-    // anonymous user should have only read permissions
-    ability = foundSecurity.defineAbilityForSubject(SubjectAttributes.create({ role: UserRole.ANONYMOUS }));
-    expect(ability.can({ action: Permissions.Read, object: AasResource.create({ idShortPath: IdShortPath.create({ path: submodel.idShort }) }) })).toBeTruthy();
-    for (const permission of [Permissions.Create, Permissions.Edit, Permissions.Delete]) {
-      expect(ability.can({
-        action: permission,
-        object: AasResource.create({ idShortPath: IdShortPath.create({ path: submodel.idShort }) }),
-      })).toBeFalsy();
-    }
   });
 
   afterAll(async () => {

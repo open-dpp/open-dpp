@@ -1,34 +1,42 @@
-import { PermissionType } from "@open-dpp/dto";
-import { AasResource, CaslAbility } from "./casl-ability";
+import { PermissionKind, PermissionType } from "@open-dpp/dto";
+import { IdShortPath } from "../submodel-base/submodel-base";
+import { AccessPermissionRule } from "./access-permission-rule";
+import { PermissionPerObject } from "./permission-per-object";
 
 export class AasAbility {
-  private ability: CaslAbility;
-
-  private constructor(ability: CaslAbility) {
-    this.ability = ability;
+  private constructor(private rules: AccessPermissionRule[]) {
   }
 
-  static create(data: { ability: CaslAbility }): AasAbility {
-    return new AasAbility(data.ability);
+  static create(data: { rules: AccessPermissionRule[] }): AasAbility {
+    return new AasAbility(data.rules);
   }
 
-  private hasAnyRuleFor(object: AasResource) {
-    return this.ability.rules.some(rule =>
-      rule.conditions?.idShortPath === object.idShortPath.toString()
-      && rule.conditions?.organizationId === object.organizationId,
-    );
-  }
-
-  can(data: { action: PermissionType; object: AasResource }): boolean {
-    const specificCan = this.ability.can(data.action, data.object);
-    if (specificCan) {
-      return true;
-    }
-    if (!this.hasAnyRuleFor(data.object)) {
-      const parentAasResource = data.object.getParentAasResource();
-      if (parentAasResource !== undefined) {
-        return this.can({ action: data.action, object: parentAasResource });
+  private findPermissionForObject(object: IdShortPath): PermissionPerObject | undefined {
+    for (const rule of this.rules) {
+      for (const permissionPerObject of rule.permissionsPerObject) {
+        if (permissionPerObject.object.idShort === object.toString()) {
+          return permissionPerObject;
+        }
       }
+    }
+  }
+
+  can(action: PermissionType, object: IdShortPath): boolean {
+    const permissionForObject = this.findPermissionForObject(object);
+    if (permissionForObject) {
+      const deny = permissionForObject.permissions.some(p => p.permission === action && p.kindOfPermission === PermissionKind.Deny);
+      if (deny) {
+        return false;
+      }
+      else {
+        return permissionForObject.permissions.some(p => p.permission === action && p.kindOfPermission === PermissionKind.Allow);
+      }
+    }
+
+    const parentPath = object.getParentPath();
+
+    if (!parentPath.isEmpty()) {
+      return this.can(action, parentPath);
     }
     return false;
   }

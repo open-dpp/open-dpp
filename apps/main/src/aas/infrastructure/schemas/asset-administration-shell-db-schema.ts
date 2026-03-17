@@ -6,6 +6,7 @@ import { ReferenceDbSchema } from "./common/reference-db-schema";
 import { EmbeddedDataSpecificationDbSchema } from "./embedded-data-specification-db-schema";
 import { ExtensionDbSchema } from "./extension-db-schema";
 import { ResourceDbSchema } from "./resource-db-schema";
+import { SecurityDbSchema } from "./security/security-db-schema";
 
 export const AssetAdministrationShellDbSchema = z.object({
   id: z.string().meta({ description: "Id of the AAS" }),
@@ -19,5 +20,5 @@ export const AssetAdministrationShellDbSchema = z.object({
   embeddedDataSpecifications: EmbeddedDataSpecificationDbSchema.array().default([]),
   derivedFrom: z.nullish(ResourceDbSchema),
   submodels: ReferenceDbSchema.array().default([]),
-  security: z.string(),
+  security: SecurityDbSchema,
 });

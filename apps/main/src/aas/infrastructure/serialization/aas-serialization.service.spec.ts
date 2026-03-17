@@ -24,9 +24,7 @@ import {
   AssetAdministrationShellSchema,
 } from "../schemas/asset-administration-shell.schema";
 import { ConceptDescriptionDoc, ConceptDescriptionSchema } from "../schemas/concept-description.schema";
-import { SecurityDbSchema, SecurityDoc } from "../schemas/security/security-db-schema";
 import { SubmodelDoc, SubmodelSchema } from "../schemas/submodel.schema";
-import { SecurityRepository } from "../security.repository";
 import { SubmodelRepository } from "../submodel.repository";
 import { AasSerializationService } from "./aas-serialization.service";
 
@@ -143,10 +141,6 @@ describe("aasSerializationService", () => {
             name: ConceptDescriptionDoc.name,
             schema: ConceptDescriptionSchema,
           },
-          {
-            name: SecurityDoc.name,
-            schema: SecurityDbSchema,
-          },
         ]),
         UsersModule,
         OrganizationsModule,
@@ -155,7 +149,6 @@ describe("aasSerializationService", () => {
         EnvironmentService,
         PassportRepository,
         TemplateRepository,
-        SecurityRepository,
         AasRepository,
         SubmodelRepository,
         AasSerializationService,

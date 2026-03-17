@@ -4,31 +4,34 @@ import { randomUUID } from "node:crypto";
 import { expect, jest } from "@jest/globals";
 import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
+import { AasSubmodelElements, AssetKind, Permissions, ReferenceTypes } from "@open-dpp/dto";
 
-import { AssetKind } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { Model } from "mongoose";
 import { generateMongoConfig } from "../../database/config";
 import { EmailService } from "../../email/email.service";
+import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
+import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../../passports/infrastructure/passport.schema";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
+import { Security } from "../domain/security/security";
+import { SubjectAttributes } from "../domain/security/subject-attributes";
+import { Submodel } from "../domain/submodel-base/submodel";
+import { IdShortPath } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "./aas.repository";
-import { InitializeSecurityMigrationService } from "./initialize-security-migration.service";
 import {
   AssetAdministrationShellDoc,
   AssetAdministrationShellDocSchemaVersion,
   AssetAdministrationShellSchema,
 } from "./schemas/asset-administration-shell.schema";
-import { SecurityDbSchema, SecurityDoc } from "./schemas/security/security-db-schema";
 import { SubmodelDoc, SubmodelSchema } from "./schemas/submodel.schema";
-import { SecurityRepository } from "./security.repository";
 import { SubmodelRepository } from "./submodel.repository";
 
 describe("aasRepository", () => {
   let aasRepository: AasRepository;
-  let securityRepository: SecurityRepository;
+  let submodelRepository: SubmodelRepository;
   let module: TestingModule;
 
   let AasDoc: MongooseModel<AssetAdministrationShellDoc>;
@@ -54,28 +57,22 @@ describe("aasRepository", () => {
             schema: SubmodelSchema,
           },
           {
-            name: SecurityDoc.name,
-            schema: SecurityDbSchema,
-          },
-          {
             name: PassportDoc.name,
             schema: PassportSchema,
           },
         ]),
       ],
       providers: [
-        InitializeSecurityMigrationService,
         PassportRepository,
         AasRepository,
         SubmodelRepository,
-        SecurityRepository,
       ],
     }).overrideProvider(EmailService).useValue({
       send: jest.fn(),
     }).compile();
 
     aasRepository = module.get<AasRepository>(AasRepository);
-    securityRepository = module.get<SecurityRepository>(SecurityRepository);
+    submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);
     AasDoc = module.get<Model<AssetAdministrationShellDoc>>(
       getModelToken(AssetAdministrationShellDoc.name),
     );
@@ -88,7 +85,6 @@ describe("aasRepository", () => {
       assetInformation: AssetInformation.create({
         assetKind: AssetKind.Instance,
       }),
-      security: randomUUID(),
     });
     await aasRepository.save(aas);
     const foundAas = await aasRepository.findOneOrFail(aas.id);
@@ -109,8 +105,9 @@ describe("aasRepository", () => {
           contentType: "image/png",
         },
       },
+      submodels: [],
     });
-    await legacyDoc.save();
+    await legacyDoc.save({ validateBeforeSave: false });
     const foundAas = await aasRepository.findOneOrFail(id);
     expect(foundAas).toEqual(AssetAdministrationShell.fromPlain({
       id,
@@ -123,17 +120,40 @@ describe("aasRepository", () => {
         specificAssetIds: [],
         globalAssetId: id,
       },
-      security: foundAas.security,
+      security: Security.create({}).toPlain(),
     }));
   });
 
   it(`should load and migrate aas without security from version $1.1.0 to 1.2.0`, async () => {
     const id = randomUUID();
+    const submodel1 = Submodel.create({ idShort: "submodel1" });
+    const submodel2 = Submodel.create({ idShort: "submodel2" });
+    await submodelRepository.save(submodel1);
+    await submodelRepository.save(submodel2);
+    const submodelReferences = [{
+      type: ReferenceTypes.ModelReference,
+      referredSemanticId: null,
+      keys: [
+        {
+          type: AasSubmodelElements.SubmodelElement,
+          value: submodel1.id,
+        },
+      ],
+    }, {
+      type: ReferenceTypes.ModelReference,
+      referredSemanticId: null,
+      keys: [
+        {
+          type: AasSubmodelElements.SubmodelElement,
+          value: submodel2.id,
+        },
+      ],
+    }];
 
     const legacyDoc = new AasDoc({
       _id: id,
       _schemaVersion: AssetAdministrationShellDocSchemaVersion.v1_1_0,
-      submodels: [],
+      submodels: submodelReferences,
       assetInformation: {
         assetKind: "Instance",
         specificAssetIds: [],
@@ -141,9 +161,32 @@ describe("aasRepository", () => {
         defaultThumbnails: [],
       },
     });
-    await legacyDoc.save();
+    await legacyDoc.save({ validateBeforeSave: false });
     const foundAas = await aasRepository.findOneOrFail(id);
-    expect(await securityRepository.findOne(foundAas.security)).toBeDefined();
+    const security = foundAas.security;
+    // admin should have all permissions
+    let ability = security.defineAbilityForSubject(SubjectAttributes.create({ role: UserRole.ADMIN }));
+    for (const permission of [Permissions.Create, Permissions.Read, Permissions.Edit, Permissions.Delete]) {
+      expect(ability.can(permission, IdShortPath.create({ path: submodel1.idShort }))).toBeTruthy();
+      expect(ability.can(permission, IdShortPath.create({ path: submodel2.idShort }))).toBeTruthy();
+    }
+
+    // member of the organization to which the passport belongs to should have all permissions
+    ability = security.defineAbilityForSubject(SubjectAttributes.create({ role: MemberRole.MEMBER }));
+    for (const permission of [Permissions.Create, Permissions.Read, Permissions.Edit, Permissions.Delete]) {
+      expect(ability.can(permission, IdShortPath.create({ path: submodel1.idShort }))).toBeTruthy();
+      expect(ability.can(permission, IdShortPath.create({ path: submodel2.idShort }))).toBeTruthy();
+    }
+
+    // anonymous user should have only read permissions
+    ability = security.defineAbilityForSubject(SubjectAttributes.create({ role: UserRole.ANONYMOUS }));
+    expect(ability.can(Permissions.Read, IdShortPath.create({ path: submodel1.idShort }))).toBeTruthy();
+    expect(ability.can(Permissions.Read, IdShortPath.create({ path: submodel2.idShort }))).toBeTruthy();
+
+    for (const permission of [Permissions.Create, Permissions.Edit, Permissions.Delete]) {
+      expect(ability.can(permission, IdShortPath.create({ path: submodel1.idShort }))).toBeFalsy();
+      expect(ability.can(permission, IdShortPath.create({ path: submodel2.idShort }))).toBeFalsy();
+    }
   });
 
   afterAll(async () => {

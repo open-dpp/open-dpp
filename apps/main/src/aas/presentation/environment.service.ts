@@ -45,12 +45,11 @@ import { ConceptDescription } from "../domain/concept-description";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
 import { ExpandedEnvironment } from "../domain/expanded-environment";
-import { Security } from "../domain/security/security";
+import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath, ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
 import { ConceptDescriptionRepository } from "../infrastructure/concept-description.repository";
-import { SecurityRepository } from "../infrastructure/security.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import {
   DigitalProductPassportIdentifiableEnvironmentPopulateDecorator,
@@ -67,24 +66,26 @@ class SubmodelNotPartOfEnvironmentException extends BadRequestException {
 export class EnvironmentService {
   private readonly logger = new Logger(EnvironmentService.name);
   private aasRepository: AasRepository;
-  private securityRepository: SecurityRepository;
   private submodelRepository: SubmodelRepository;
   private conceptDescriptionRepository: ConceptDescriptionRepository;
   private membersService: MembersService;
 
   constructor(
     aasRepository: AasRepository,
-    securityRepository: SecurityRepository,
     submodelRepository: SubmodelRepository,
     conceptDescriptionRepository: ConceptDescriptionRepository,
     membersService: MembersService,
     @InjectConnection() private connection: Connection,
   ) {
     this.aasRepository = aasRepository;
-    this.securityRepository = securityRepository;
     this.submodelRepository = submodelRepository;
     this.conceptDescriptionRepository = conceptDescriptionRepository;
     this.membersService = membersService;
+  }
+
+  async loadSecurityPoliciesForSubject(environment: Environment, subjet: SubjectAttributes) {
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+    return aas.security.findPoliciesBySubject(subjet);
   }
 
   async createEnvironment(environmentData: { assetAdministrationShells: AssetAdministrationShellCreateDto[] }, isTemplate: boolean): Promise<Environment> {
@@ -93,8 +94,6 @@ export class EnvironmentService {
       throw new BadRequestException("Multiple asset administration shells are not supported yet.");
     }
     const assetKind = isTemplate ? AssetKind.Type : AssetKind.Instance;
-    const security = Security.create({});
-    await this.securityRepository.save(security);
     const createIdAndAssetInformation = () => {
       const id = randomUUID();
       const assetInformation = AssetInformation.create({ assetKind, globalAssetId: id });
@@ -106,9 +105,8 @@ export class EnvironmentService {
           ...createIdAndAssetInformation(),
           displayName: aas.displayName?.map(LanguageText.fromPlain),
           description: aas.description?.map(LanguageText.fromPlain),
-          security: security.id,
         }))
-      : [AssetAdministrationShell.create({ ...createIdAndAssetInformation(), security: security.id })];
+      : [AssetAdministrationShell.create({ ...createIdAndAssetInformation() })];
     const firstAas = assetAdministrationShells[0];
     await this.aasRepository.save(firstAas);
     environment.addAssetAdministrationShell(firstAas);
@@ -116,10 +114,10 @@ export class EnvironmentService {
     return environment;
   }
 
-  async getAasShells(environment: Environment, pagination: Pagination): Promise<AssetAdministrationShellPaginationResponseDto> {
+  async getAasShells(environment: Environment, pagination: Pagination, subjet: SubjectAttributes): Promise<AssetAdministrationShellPaginationResponseDto> {
     const pages = pagination.nextPages(environment.assetAdministrationShells);
     const shells = await Promise.all(pages.map(p => this.aasRepository.findOneOrFail(p)));
-    return AssetAdministrationShellPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: shells }).toPlain());
+    return AssetAdministrationShellPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: shells }).toPlain({ filterBySubject: subjet }));
   }
 
   async modifyAasShell(environment: Environment, aasId: string, modification: AssetAdministrationShellModificationDto): Promise<AssetAdministrationShellResponseDto> {

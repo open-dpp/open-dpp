@@ -3,7 +3,7 @@ import { beforeAll, expect } from "@jest/globals";
 import { AasSubmodelElements, DataTypeDef } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import {
-  propertyPlainFactory,
+  propertyInputPlainFactory,
   submodelBillOfMaterialPlainFactory,
   submodelCarbonFootprintPlainFactory,
   submodelDesignOfProductPlainFactory,
@@ -55,7 +55,7 @@ describe("submodel", () => {
     submodel.addSubmodelElement(submodelElement);
     expect(submodel.findSubmodelElementOrFail(IdShortPath.create({ path: submodelElement.idShort }))).toEqual(submodelElement);
 
-    const submodelElement0 = Property.fromPlain(propertyPlainFactory.build({ idShort: "submodelElement0" }));
+    const submodelElement0 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "submodelElement0" }));
     submodel.addSubmodelElement(submodelElement0, { position: 0 });
     expect(submodel.getSubmodelElements()[0]).toEqual(submodelElement0);
 

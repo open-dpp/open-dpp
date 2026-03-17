@@ -143,8 +143,7 @@ export function mapAssetAdministrationShells(shells: ShellSchema[]): AssetAdmini
       administration: mapAdministration(shell.administration) ?? undefined,
       embeddedDataSpecifications: mapEmbeddedDataSpecifications(shell.embeddedDataSpecifications),
       derivedFrom: mapNullableReference(shell.derivedFrom),
-      submodels: mapReferences(shell.submodels),
-      security: randomUUID(), // TODO: ticket 26, replace by default security here
+      submodels: mapReferences(shell.submodels), // TODO: ticket 26, add default security here
     });
   });
 }

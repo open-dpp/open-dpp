@@ -23,6 +23,10 @@ export class Permission {
     );
   }
 
+  copy(): Permission {
+    return Permission.fromPlain(this.toPlain());
+  }
+
   toPlain(): Record<string, any> {
     return {
       permission: this.permission,

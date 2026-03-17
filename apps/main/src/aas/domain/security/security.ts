@@ -1,8 +1,7 @@
-import { randomUUID } from "node:crypto";
 import { z } from "zod/v4";
-import { IPersistable } from "../persistable";
-import { ReferenceElement } from "../submodel-base/reference-element";
+import { IdShortPath } from "../submodel-base/submodel-base";
 import { AasAbility } from "./aas-ability";
+import { createAasObject } from "./aas-object";
 import { AccessControl, AccessControlSchema } from "./access-control";
 import { AccessPermissionRule } from "./access-permission-rule";
 import { Permission } from "./permission";
@@ -10,36 +9,44 @@ import { PermissionPerObject } from "./permission-per-object";
 import { SubjectAttributes } from "./subject-attributes";
 
 export const SecuritySchema = z.object({
-  id: z.uuid(),
   localAccessControl: AccessControlSchema,
 });
 
-export class Security implements IPersistable {
-  private constructor(public readonly id: string, public readonly localAccessControl: AccessControl) {
+export class Security {
+  private constructor(public readonly localAccessControl: AccessControl) {
   }
 
-  static create(data: { id?: string; localAccessControl?: AccessControl }): Security {
-    return new Security(data.id ?? randomUUID(), data.localAccessControl ?? AccessControl.create({}));
+  static create(data: { localAccessControl?: AccessControl }): Security {
+    return new Security(data.localAccessControl ?? AccessControl.create({}));
   }
 
   static fromPlain(json: unknown): Security {
     const parsed = SecuritySchema.parse(json);
     return new Security(
-      parsed.id,
       AccessControl.fromPlain(parsed.localAccessControl),
     );
   }
 
-  toPlain() {
+  toPlain(options?: { filterBySubject?: SubjectAttributes }) {
+    const opts = options ?? {};
     return {
-      id: this.id,
-      localAccessControl: this.localAccessControl.toPlain(),
+      localAccessControl: this.localAccessControl.toPlain(opts),
     };
   }
 
-  addPolicy(subject: SubjectAttributes, object: ReferenceElement, permissions: Permission[]): void {
+  findPoliciesBySubject(subject: SubjectAttributes) {
     const rule = this.localAccessControl.findRuleOfSubject(subject);
-    const permissionPerObject = PermissionPerObject.create({ object, permissions });
+    return rule ? [rule] : [];
+  }
+
+  hasPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): boolean {
+    const rule = this.localAccessControl.findRuleOfSubject(subject);
+    return !!rule && rule.hasPermissionForObject(PermissionPerObject.create({ object: createAasObject(object), permissions }));
+  }
+
+  addPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): void {
+    const rule = this.localAccessControl.findRuleOfSubject(subject);
+    const permissionPerObject = PermissionPerObject.create({ object: createAasObject(object), permissions });
     if (rule) {
       rule.addPermissionPerObject(permissionPerObject);
     }
@@ -49,6 +56,6 @@ export class Security implements IPersistable {
   }
 
   defineAbilityForSubject(subject: SubjectAttributes): AasAbility {
-    return this.localAccessControl.buildAbility(subject);
+    return AasAbility.create({ rules: this.findPoliciesBySubject(subject) });
   }
 }

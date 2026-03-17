@@ -1,7 +1,8 @@
 import type { AssetAdministrationShellJsonSchema } from '@open-dpp/dto'
 import type { z } from 'zod'
-import { randomUUID } from 'node:crypto'
+import { PermissionKind, Permissions } from '@open-dpp/dto'
 import { Factory } from 'fishery'
+import { propertyInputPlainFactory } from './submodel-element.factory'
 
 interface AasTransientParams {
   iriDomain: string
@@ -311,5 +312,26 @@ export const aasPlainFactory
       },
     ],
     idShort: 'Truck',
-    security: randomUUID(),
+    security: {
+      localAccessControl: {
+        accessPermissionRules: [
+          {
+            targetSubjectAttributes: {
+              subjectAttribute: [propertyInputPlainFactory.build({ idShort: 'role', value: 'member' })],
+            },
+            permissionsPerObject: [{
+              object: {
+                idShort: 'DesignOfProduct',
+              },
+              permissions: [
+                { permission: Permissions.Create, kindOfPermission: PermissionKind.Allow },
+                { permission: Permissions.Read, kindOfPermission: PermissionKind.Allow },
+                { permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow },
+                { permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow },
+              ],
+            }],
+          },
+        ],
+      },
+    },
   }))

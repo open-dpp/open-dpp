@@ -12,6 +12,8 @@ import { Extension } from "./extension";
 import { JsonVisitor } from "./json-visitor";
 import { ModifierVisitor } from "./modifier-visitor";
 import { IPersistable } from "./persistable";
+import { Security } from "./security/security";
+import { SubjectAttributes } from "./security/subject-attributes";
 import { Submodel } from "./submodel-base/submodel";
 import { IVisitable, IVisitor } from "./visitor";
 
@@ -27,7 +29,7 @@ export interface AssetAdministrationShellCreateProps {
   embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
   derivedFrom?: Reference | null;
   submodels?: Array<Reference>;
-  security: string;
+  security?: Security;
 }
 
 export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable {
@@ -45,7 +47,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
     public readonly derivedFrom: Reference | null = null,
     public readonly submodels: Array<Reference>,
-    public readonly security: string,
+    public readonly security: Security,
   ) {
     this.displayName = displayName;
     this.description = description;
@@ -86,7 +88,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
       data.embeddedDataSpecifications ?? [],
       data.derivedFrom ?? null,
       data.submodels ?? [],
-      data.security,
+      data.security ?? Security.create({}),
     );
   };
 
@@ -172,7 +174,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
       parsed.embeddedDataSpecifications.map(EmbeddedDataSpecification.fromPlain),
       parsed.derivedFrom ? Reference.fromPlain(parsed.derivedFrom) : null,
       parsed.submodels.map(Reference.fromPlain),
-      parsed.security,
+      Security.fromPlain(parsed.security),
     );
   }
 
@@ -183,8 +185,8 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     }
   }
 
-  toPlain(): Record<string, any> {
-    const jsonVisitor = new JsonVisitor();
+  toPlain(options?: { filterBySubject?: SubjectAttributes }): Record<string, any> {
+    const jsonVisitor = new JsonVisitor(options);
     return this.accept(jsonVisitor);
   }
 }

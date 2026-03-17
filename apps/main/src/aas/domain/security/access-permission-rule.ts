@@ -1,7 +1,5 @@
-import { AbilityBuilder } from "@casl/ability";
 import { ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
-import { CaslAbility } from "./casl-ability";
 import { PermissionPerObject, PermissionPerObjectSchema } from "./permission-per-object";
 import { SubjectAttributes, SubjectAttributesSchema } from "./subject-attributes";
 
@@ -17,19 +15,15 @@ export class AccessPermissionRule {
     return new AccessPermissionRule(data.targetSubjectAttributes, data.permissionsPerObject ?? []);
   }
 
+  hasPermissionForObject(permissionPerObject: PermissionPerObject): boolean {
+    return this.permissionsPerObject.some(p => p.object.idShort === permissionPerObject.object.idShort);
+  }
+
   addPermissionPerObject(permissionPerObject: PermissionPerObject): void {
-    if (this.permissionsPerObject.find(p => p.object.idShort === permissionPerObject.object.idShort)) {
+    if (this.hasPermissionForObject(permissionPerObject)) {
       throw new ValueError(`Permission for subject { role: ${this.targetSubjectAttributes.role} } and object ${permissionPerObject.object.idShort} already exists`);
     }
     this.permissionsPerObject.push(permissionPerObject);
-  }
-
-  addCaslRules(abilityBuilder: AbilityBuilder<CaslAbility>, subject: SubjectAttributes) {
-    this.permissionsPerObject.flatMap(
-      permissionPerObject => permissionPerObject.addCaslRules(abilityBuilder, {
-        organizationId: subject.organizationId,
-      }),
-    );
   }
 
   static fromPlain(json: unknown): AccessPermissionRule {

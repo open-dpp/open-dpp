@@ -1,8 +1,5 @@
-import { AbilityBuilder, createMongoAbility } from "@casl/ability";
 import { z } from "zod/v4";
-import { AasAbility } from "./aas-ability";
 import { AccessPermissionRule, AccessPermissionRuleSchema } from "./access-permission-rule";
-import { CaslAbility } from "./casl-ability";
 import { SubjectAttributes } from "./subject-attributes";
 
 export const AccessControlSchema = z.object({
@@ -24,7 +21,13 @@ export class AccessControl {
     );
   }
 
-  toPlain(): Record<string, any> {
+  toPlain(options: { filterBySubject?: SubjectAttributes }): Record<string, any> {
+    if (options.filterBySubject) {
+      const rule = this.findRuleOfSubject(options.filterBySubject);
+      return {
+        accessPermissionRules: rule ? [rule.toPlain()] : [],
+      };
+    }
     return {
       accessPermissionRules: this.accessPermissionRules.map(p => p.toPlain()),
     };
@@ -38,14 +41,5 @@ export class AccessControl {
 
   addRule(rule: AccessPermissionRule): void {
     this.accessPermissionRules.push(rule);
-  }
-
-  buildAbility(subject: SubjectAttributes): AasAbility {
-    const abilityBuilder = new AbilityBuilder<CaslAbility>(createMongoAbility);
-
-    this.accessPermissionRules.filter(
-      rule => rule.targetSubjectAttributes.isEqual(subject),
-    ).map(rule => rule.addCaslRules(abilityBuilder, subject)).flat();
-    return AasAbility.create({ ability: abilityBuilder.build() });
   }
 }

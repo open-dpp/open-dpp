@@ -1,7 +1,7 @@
 import { expect } from "@jest/globals";
 import { AasSubmodelElements } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
-import { propertyPlainFactory } from "@open-dpp/testing";
+import { propertyInputPlainFactory } from "@open-dpp/testing";
 import { LanguageText } from "../common/language-text";
 import { Property } from "./property";
 import { registerSubmodelElementClasses } from "./register-submodel-element-classes";
@@ -21,7 +21,7 @@ describe("tableExtension", () => {
       idShort: "idShort",
     });
     const table = new TableExtension(submodelElementList);
-    const col1Plain = propertyPlainFactory.build({ idShort: "col1", value: "10" });
+    const col1Plain = propertyInputPlainFactory.build({ idShort: "col1", value: "10" });
     const col1 = Property.fromPlain(col1Plain);
     // Add first column
     table.addColumn(col1);
@@ -39,14 +39,14 @@ describe("tableExtension", () => {
     expect(secondRowId).not.toEqual(firstRowId);
 
     // Add third column
-    const col3 = Property.fromPlain(propertyPlainFactory.build({ idShort: "col3" }));
+    const col3 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col3" }));
     expHeaderRow.addSubmodelElement(col3);
     expRow1.addSubmodelElement(cloneSubmodelElement(col3));
     table.addColumn(col3);
     expect(table.rows).toEqual([expHeaderRow, expRow1]);
 
     // Add second column between first and third
-    const col2 = Property.fromPlain(propertyPlainFactory.build({ idShort: "col2" }));
+    const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" }));
     expHeaderRow.addSubmodelElement(col2, { position: 1 });
     expRow1.addSubmodelElement(cloneSubmodelElement(col2), { position: 1 });
     table.addColumn(col2, { position: 1 });
@@ -71,8 +71,8 @@ describe("tableExtension", () => {
       idShort: "idShort",
     });
     const table = new TableExtension(submodelElementList);
-    const col1 = Property.fromPlain(propertyPlainFactory.build({ idShort: "col1" }));
-    const col2 = Property.fromPlain(propertyPlainFactory.build({ idShort: "col2" }));
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" }));
+    const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" }));
     table.addColumn(col1);
     table.addColumn(col2);
     table.addRow();
@@ -90,7 +90,7 @@ describe("tableExtension", () => {
     });
     const table = new TableExtension(submodelElementList);
 
-    const col1 = Property.fromPlain(propertyPlainFactory.build({ idShort: "col1", value: "10" }));
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1", value: "10" }));
     table.addColumn(col1);
     expect(table.columns).toEqual([col1]);
     // The header row is updated to the new row at position 0.
@@ -104,8 +104,8 @@ describe("tableExtension", () => {
       idShort: "idShort",
     });
     const table = new TableExtension(submodelElementList);
-    const col1 = Property.fromPlain(propertyPlainFactory.build({ idShort: "col1" }));
-    const col2 = Property.fromPlain(propertyPlainFactory.build({ idShort: "col2" }));
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" }));
+    const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" }));
     table.addColumn(col1);
     table.addColumn(col2);
     table.addRow();
@@ -136,8 +136,8 @@ describe("tableExtension", () => {
       idShort: "idShort",
     });
     const table = new TableExtension(submodelElementList);
-    const col1 = Property.fromPlain(propertyPlainFactory.build({ idShort: "col1" }));
-    const col2 = Property.fromPlain(propertyPlainFactory.build({ idShort: "col2" }));
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" }));
+    const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" }));
     table.addColumn(col1);
     table.addColumn(col2);
     const rowToDelete = table.addRow();

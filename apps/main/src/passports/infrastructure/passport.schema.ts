@@ -4,14 +4,13 @@ import { EnvironmentDoc, EnvironmentSchema } from "../../aas/infrastructure/sche
 
 export const PassportDocVersion = {
   v1_0_0: "1.0.0",
-  v1_1_0: "1.1.0",
 } as const;
 type PassportDocVersionType = (typeof PassportDocVersion)[keyof typeof PassportDocVersion];
 
 @Schema({ collection: "passports" })
 export class PassportDoc extends Document<string> {
   @Prop({
-    default: PassportDocVersion.v1_1_0,
+    default: PassportDocVersion.v1_0_0,
     enum: Object.values(PassportDocVersion),
     type: String,
   })

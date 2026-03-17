@@ -26,8 +26,9 @@ import {
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 
-import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
+import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 
+import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import {
   ApiDeleteColumn,
@@ -78,6 +79,7 @@ import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { DbSessionOptions } from "../../database/query-options";
 import { Session } from "../../identity/auth/domain/session";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
+import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Template } from "../domain/template";
@@ -100,7 +102,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
   ): Promise<AssetAdministrationShellPaginationResponseDto> {
     const template = await this.loadTemplateAndCheckOwnership(id, session);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getAasShells(template.getEnvironment(), pagination);
+    return await this.environmentService.getAasShells(template.getEnvironment(), pagination, SubjectAttributes.create({ role: MemberRole.MEMBER }));
   }
 
   @ApiPatchShell()

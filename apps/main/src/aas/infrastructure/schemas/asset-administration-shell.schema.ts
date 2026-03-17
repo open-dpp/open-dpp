@@ -1,4 +1,5 @@
 import type { AssetInformationDb, EmbeddedDataSpecificationDb, ExtensionDb, ReferenceDb } from "./db-types";
+import type { SecurityDb } from "./security/security-db-schema";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Schema as MongooseSchema } from "mongoose";
 import { AdministrativeInformationDoc, AdministrativeInformationSchema } from "./administration.information.schema";
@@ -52,8 +53,8 @@ export class AssetAdministrationShellDoc extends Document<string> {
   @Prop({ type: [MongooseSchema.Types.Mixed] })
   submodels: ReferenceDb[];
 
-  @Prop({ type: String })
-  security: string;
+  @Prop({ type: MongooseSchema.Types.Mixed, required: true })
+  security: SecurityDb;
 }
 
 export const AssetAdministrationShellSchema = SchemaFactory.createForClass(AssetAdministrationShellDoc);

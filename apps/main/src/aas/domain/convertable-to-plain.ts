@@ -1,3 +1,3 @@
 export interface IConvertableToPlain {
-  toPlain: () => Record<string, any>;
+  toPlain: (options?: any) => Record<string, any>;
 }
