@@ -9,15 +9,11 @@ import type {
 } from './aas-integration.dtos'
 
 export class AasIntegrationNamespace {
-  private readonly aasBaseEndpoint: string
-  private readonly aasConnectionsEndpoint: string
+  private readonly aasBaseEndpoint = `/integration/aas`
+  private readonly aasConnectionsEndpoint = `${this.aasBaseEndpoint}/connections`
   constructor(
     private readonly axiosInstance: AxiosInstance,
-    private readonly organizationId?: string,
-  ) {
-    this.aasBaseEndpoint = `/organizations/${this.organizationId}/integration/aas`
-    this.aasConnectionsEndpoint = `${this.aasBaseEndpoint}/connections`
-  }
+  ) {}
 
   public async getConnection(connectionId: string) {
     return this.axiosInstance.get<AasConnectionDto>(
