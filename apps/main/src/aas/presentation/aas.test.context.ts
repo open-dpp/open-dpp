@@ -48,6 +48,7 @@ import { LanguageText } from "../domain/common/language-text";
 import { Reference } from "../domain/common/reference";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { IPersistable } from "../domain/persistable";
+import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { Property } from "../domain/submodel-base/property";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
@@ -140,7 +141,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
   type CreateEntity = (orgaId: string) => Promise<IPersistable & IDigitalProductPassportIdentifiable>;
   type SaveEntity = (entity: any) => Promise<IPersistable & IDigitalProductPassportIdentifiable>;
 
-  async function assertGetShells(createEntity: CreateEntity) {
+  async function assertGetShells(createEntity: CreateEntity, subject: SubjectAttributes) {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const passport = await createEntity(org.id);
     const response = await request(app.getHttpServer())
@@ -149,7 +150,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       .send();
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toEqual(aas.id);
-    expect(response.body.result).toEqual(AssetAdministrationShellPaginationResponseDtoSchema.shape.result.parse([aas.toPlain()]));
+    expect(response.body.result).toEqual(AssetAdministrationShellPaginationResponseDtoSchema.shape.result.parse([aas.toPlain({ filterBySubject: subject })]));
   }
 
   async function assertModifyShell(createEntity: CreateEntity, saveEntity: SaveEntity) {

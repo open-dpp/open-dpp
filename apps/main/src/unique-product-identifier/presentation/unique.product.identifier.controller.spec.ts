@@ -2,15 +2,17 @@ import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import request from "supertest";
 import { Environment } from "../../aas/domain/environment";
+import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import {
   ConceptDescriptionDoc,
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
+
+import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
-
 import { PassportDoc, PassportSchema } from "../../passports/infrastructure/passport.schema";
 import {
   UniqueProductIdentifierDoc,
@@ -115,7 +117,7 @@ describe("uniqueProductIdentifierController", () => {
   });
 
   it(`/GET shells`, async () => {
-    await ctx.asserts.getShells(createPassportWithUniqueProductIdentifier);
+    await ctx.asserts.getShells(createPassportWithUniqueProductIdentifier, SubjectAttributes.create({ role: UserRole.ANONYMOUS }));
   });
 
   it(`/GET submodels`, async () => {

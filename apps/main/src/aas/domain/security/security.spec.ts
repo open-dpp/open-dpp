@@ -102,7 +102,7 @@ describe("security", () => {
     ]);
     expect(security.toPlain({ filterBySubject: SubjectAttributes.create({ role: UserRole.USER }) })).toEqual({
       localAccessControl: {
-        accessPermissionRules: {
+        accessPermissionRules: [{
           permissionsPerObject: [
             {
               object: {
@@ -145,7 +145,7 @@ describe("security", () => {
               },
             ],
           },
-        },
+        }],
       },
     });
   });
