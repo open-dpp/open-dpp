@@ -5,6 +5,7 @@ export enum DataFieldType {
   PRODUCT_PASSPORT_LINK = 'ProductPassportLink',
   NUMERIC_FIELD = 'NumericField',
   FILE_FIELD = 'FileField',
+  DATE_FIELD = 'DateField',
 }
 
 export interface DataFieldDto {

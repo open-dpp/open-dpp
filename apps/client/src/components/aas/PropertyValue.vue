@@ -42,8 +42,17 @@ const NUMERIC_TYPES = new Set<DataTypeDefType>([
   DataTypeDef.Decimal,
 ]);
 
+const DATE_TYPES = new Set<DataTypeDefType>([
+  DataTypeDef.Date,
+  DataTypeDef.DateTime,
+]);
+
 const isNumeric = computed(() =>
   props.valueType ? NUMERIC_TYPES.has(props.valueType) : false,
+);
+
+const isDate = computed(() =>
+  props.valueType ? DATE_TYPES.has(props.valueType) : false,
 );
 
 const maxFractionDigits = computed(() =>
@@ -60,6 +69,25 @@ const numericValue = computed({
     }
   },
   set: v => emit("update:modelValue", z.coerce.string().nullish().parse(v)),
+});
+
+const dateValue = computed({
+  get: () => {
+    if (!props.modelValue)
+      return null;
+    const parsed = new Date(props.modelValue);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  },
+  set: (v: Date | null | undefined) => {
+    if (!v) {
+      emit("update:modelValue", null);
+      return;
+    }
+    const year = v.getFullYear();
+    const month = String(v.getMonth() + 1).padStart(2, "0");
+    const day = String(v.getDate()).padStart(2, "0");
+    emit("update:modelValue", `${year}-${month}-${day}`);
+  },
 });
 
 const textValue = computed({
@@ -81,6 +109,16 @@ const textValue = computed({
     :locale="locale"
     :max-fraction-digits="maxFractionDigits"
     show-buttons
+  />
+  <DatePicker
+    v-else-if="isDate"
+    :id="props.id"
+    v-model="dateValue"
+    :disabled="props.disabled"
+    :invalid="props.invalid"
+    date-format="yy-mm-dd"
+    show-icon
+    fluid
   />
   <InputText
     v-else

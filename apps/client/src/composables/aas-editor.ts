@@ -339,6 +339,9 @@ export function useAasEditor({
       if (valueType === DataTypeDef.Double) {
         return translate(`${translatePrefix}.numberField`);
       }
+      if (valueType === DataTypeDef.Date) {
+        return translate(`${translatePrefix}.dateField`);
+      }
     }
     if (submodelBase.modelType === AasSubmodelElements.SubmodelElementList) {
       return translate(`${translatePrefix}.submodelElementList`);
@@ -410,6 +413,11 @@ export function useAasEditor({
         translate(`${translatePrefix}.numberField`),
         "pi pi-calculator",
         DataTypeDef.Double,
+      ),
+      buildPropertyEntry(
+        translate(`${translatePrefix}.dateField`),
+        "pi pi-calendar",
+        DataTypeDef.Date,
       ),
       {
         label: translate(`${translatePrefix}.file`),
