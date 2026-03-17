@@ -18,7 +18,6 @@ export const propertyInputPlainFactory
 
 export const propertyOutputPlainFactory
   = Factory.define<z.infer<typeof PropertyJsonSchema>> (() => ({
-    modelType: 'Property',
     value: `some-value`,
     valueType: DataTypeDef.String,
     idShort: randomUUID(),

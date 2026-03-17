@@ -1,22 +1,24 @@
-import type {
-  AssetAdministrationShellResponseDto,
-  SubmodelResponseDto,
-} from "@open-dpp/dto";
+import type { AssetAdministrationShellResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
 import type { Component } from "vue";
 import type { AasEditorProps, IAasEditor } from "./aas-editor.ts";
 import {
+
   AasSubmodelElements,
   AssetKind,
   DataTypeDef,
   KeyTypes,
   Language,
+  MemberRoleDto,
   ReferenceTypes,
   SubmodelElementCollectionJsonSchema,
   SubmodelElementSchema,
+
 } from "@open-dpp/dto";
 import {
+  allPermissionsAllow,
+  securityPlainFactory,
   submodelCarbonFootprintPlainFactory,
   submodelDesignOfProductPlainFactory,
   submodelPlainToResponse,
@@ -168,7 +170,12 @@ describe("aasEditor composable", () => {
         keys: [{ type: KeyTypes.Submodel, value: submodel2.id }],
       },
     ],
-    security: uuid4(),
+    security: securityPlainFactory.build({}, { transient: {
+      policies: [
+        { subject: { role: MemberRoleDto.MEMBER }, object: { idShortPath: submodel1.idShort }, permissions: allPermissionsAllow },
+        { subject: { role: MemberRoleDto.MEMBER }, object: { idShortPath: submodel2.idShort }, permissions: allPermissionsAllow },
+      ],
+    } }),
   };
 
   const selectedLanguage = Language.en;

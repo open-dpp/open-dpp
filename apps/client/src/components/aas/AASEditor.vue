@@ -7,7 +7,6 @@ import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { useAasEditor } from "../../composables/aas-editor.ts";
-import { useAasSecurity } from "../../composables/aas-security.ts";
 import { AasEditMode } from "../../lib/aas-editor.ts";
 import apiClient from "../../lib/api-client.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
@@ -60,11 +59,6 @@ const aasEditor = useAasEditor({
   openConfirm: confirm.require,
 });
 
-const { init: initSecurity, accessPermissionRules } = useAasSecurity({
-  aasNamespace,
-  id: props.id,
-});
-
 const {
   selectedKeys,
   submodels,
@@ -93,8 +87,6 @@ const {
 
 onMounted(async () => {
   await init();
-  await initSecurity();
-  console.log(accessPermissionRules.value);
 });
 
 const popover = ref();

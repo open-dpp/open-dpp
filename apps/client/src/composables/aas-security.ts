@@ -1,30 +1,21 @@
-import type { AasNamespace } from "@open-dpp/api-client";
 import type {
   AccessPermissionRuleResponseDto,
+  SecurityResponseDto,
 } from "@open-dpp/dto";
 import { ref } from "vue";
-import { HTTPCode } from "../stores/http-codes.ts";
 
 export interface AasSecurityProps {
-  id: string;
-  aasNamespace: AasNamespace;
 }
 
 export interface IAasSecurity {
+  setAasSecurity: (security: SecurityResponseDto[]) => void;
 }
 
-export function useAasSecurity({ aasNamespace, id }: AasSecurityProps) {
+export function useAasSecurity() {
   const accessPermissionRules = ref<AccessPermissionRuleResponseDto[]>([]);
-  const fetchRules = async () => {
-    const response = await aasNamespace.getSecurity(id);
-    if (response.status === HTTPCode.OK) {
-      accessPermissionRules.value = response.data;
-    }
-  };
 
-  async function init() {
-    await fetchRules();
+  function setAasSecurity(security: SecurityResponseDto[]) {
   }
 
-  return { init, accessPermissionRules };
+  return { setAasSecurity };
 }

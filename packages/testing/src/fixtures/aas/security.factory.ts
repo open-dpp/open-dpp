@@ -1,11 +1,17 @@
 import type {
   AccessPermissionRuleResponseDto,
-  PermissionPerObjectDtoSchema,
+  PermissionKindType,
+  PermissionType,
   ReferenceJsonSchema,
+  SecurityResponseDto,
 } from '@open-dpp/dto'
 import type { z } from 'zod'
+
 import { randomUUID } from 'node:crypto'
-import { PermissionKind, Permissions } from '@open-dpp/dto'
+import {
+  PermissionKind,
+  Permissions,
+} from '@open-dpp/dto'
 import { Factory } from 'fishery'
 import { propertyOutputPlainFactory } from './submodel-element.factory'
 
@@ -21,25 +27,42 @@ const permissionObjectPlainFactory
     value: null,
   }))
 
-export const permissionPerObjectPlainFactory = Factory.define<z.infer<typeof PermissionPerObjectDtoSchema>> (
-  () => ({
-    object: permissionObjectPlainFactory.build({ idShort: 'section1' }),
-    permissions: [{ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }],
-  }),
-)
-
-interface AccessPermissionRulePlainFactoryParams {
-  role: string
-  organizationId: string
+export interface SecurityPlainTransientParams {
+  policies: {
+    subject: { role: string }
+    object: { idShortPath: string }
+    permissions: { permission: PermissionType, kindOfPermission: PermissionKindType }[]
+  }[]
 }
 
-export const accessPermissionRulePlainFactory
-  = Factory.define<AccessPermissionRuleResponseDto, AccessPermissionRulePlainFactoryParams> (({ transientParams }) => ({
-    targetSubjectAttributes: {
-      subjectAttribute: [
-        propertyOutputPlainFactory.build({ idShort: 'role', value: transientParams.role }),
-        propertyOutputPlainFactory.build({ idShort: 'organizationId', value: transientParams.organizationId }),
-      ],
-    },
-    permissionsPerObject: [permissionPerObjectPlainFactory.build()],
-  }))
+export const allPermissionsAllow = Object.values(Permissions).map(permission => ({ permission, kindOfPermission: PermissionKind.Allow }))
+
+export const securityPlainFactory
+  = Factory.define<SecurityResponseDto, SecurityPlainTransientParams>(({ transientParams }) => {
+    const { policies } = transientParams
+    const accessPermissionRules: AccessPermissionRuleResponseDto[] = []
+    if (policies) {
+      for (const policy of policies) {
+        const rule = accessPermissionRules.find(rule => rule.targetSubjectAttributes.subjectAttribute.some(attr => attr.idShort === 'role' && attr.value === policy.subject.role))
+        const permissionPerObject = { object: permissionObjectPlainFactory.build({ idShort: policy.object.idShortPath }), permissions: policy.permissions }
+        if (rule) {
+          rule.permissionsPerObject.push({
+            ...permissionPerObject,
+          })
+        }
+        else {
+          accessPermissionRules.push({
+            targetSubjectAttributes: {
+              subjectAttribute: [propertyOutputPlainFactory.build({ idShort: 'role', value: policy.subject.role })],
+            },
+            permissionsPerObject: [permissionPerObject],
+          })
+        }
+      }
+    }
+    return {
+      localAccessControl: {
+        accessPermissionRules,
+      },
+    }
+  })
