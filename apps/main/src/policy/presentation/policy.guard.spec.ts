@@ -25,41 +25,16 @@ describe("PolicyGuard", () => {
     expect(guard).toBeDefined();
   });
 
-  it("should enforce policy using organizationId from params", async () => {
+  it("should enforce policy using organizationId from X-OPEN-DPP-ORGANIZATION-ID header", async () => {
     const context = createMockContext({
-      params: { organizationId: "org-1" },
+      headers: { "x-open-dpp-organization-id": "org-1" },
     });
 
-    // Mock reflector to return some keys so enforce is called
     (reflector.getAllAndOverride as jest.Mock).mockReturnValue([PolicyKey.AI_TOKEN_QUOTA]);
 
     await guard.canActivate(context);
 
     expect(policyService.enforce).toHaveBeenCalledWith("org-1", [PolicyKey.AI_TOKEN_QUOTA]);
-  });
-
-  it("should enforce policy using orgaId from params (reproduction)", async () => {
-    const context = createMockContext({
-      params: { orgaId: "org-2" },
-    });
-
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([PolicyKey.AI_TOKEN_QUOTA]);
-
-    await guard.canActivate(context);
-
-    expect(policyService.enforce).toHaveBeenCalledWith("org-2", [PolicyKey.AI_TOKEN_QUOTA]);
-  });
-
-  it("should enforce policy using orgId from params", async () => {
-    const context = createMockContext({
-      params: { orgId: "org-3" },
-    });
-
-    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([PolicyKey.AI_TOKEN_QUOTA]);
-
-    await guard.canActivate(context);
-
-    expect(policyService.enforce).toHaveBeenCalledWith("org-3", [PolicyKey.AI_TOKEN_QUOTA]);
   });
 });
 

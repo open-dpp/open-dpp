@@ -19,7 +19,7 @@ export class PolicyGuard implements CanActivate {
     if (!keys.length)
       return true;
 
-    const orgId = req.params.organizationId || req.params.orgaId || req.params.orgId;
+    const orgId = req.headers["x-open-dpp-organization-id"];
 
     const result = await this.policy.enforce(orgId, keys);
     if (result) {
