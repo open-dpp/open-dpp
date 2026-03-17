@@ -1,15 +1,16 @@
+import type { SecurityResponseDto } from "@open-dpp/dto";
 import type { SecurityPlainTransientParams } from "@open-dpp/testing";
 import {
   MemberRoleDto,
   PermissionKind,
   Permissions,
-  SecurityDtoSchema,
+
 } from "@open-dpp/dto";
 import {
   securityPlainFactory,
 } from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
-import { afterEach, beforeEach, describe, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent } from "vue";
 import { useAasSecurity } from "./aas-security.ts";
 
@@ -44,7 +45,7 @@ describe("aasSecurity composable", () => {
     });
   });
 
-  it("should", async () => {
+  it("should set security and check permissions", async () => {
     const transientParams: SecurityPlainTransientParams = {
       policies: [
         {
@@ -59,9 +60,15 @@ describe("aasSecurity composable", () => {
         },
       ],
     };
-    const security = securityPlainFactory.build(undefined, { transient: transientParams });
-    SecurityDtoSchema.parse(security);
+    const security: SecurityResponseDto = securityPlainFactory.build(undefined, { transient: transientParams });
 
-    const { setAasSecurity } = mountHarness();
+    const { setAasSecurity, can } = mountHarness();
+    setAasSecurity(security);
+
+    expect(can(Permissions.Create, "section1")).toBeTruthy();
+    expect(can(Permissions.Create, "section1.field1")).toBeTruthy();
+    expect(can(Permissions.Create, "section2.field1")).toBeFalsy();
+
+    expect(can(Permissions.Read, "section1")).toBeFalsy();
   });
 });
