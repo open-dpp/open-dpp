@@ -105,6 +105,7 @@
     "creation": "Erstellung des {formItem}",
     "textField": "Textfeld",
     "file": "Datei",
+    "dateField": "Datumsfeld",
     "numberField": "Zahlenfeld",
     "type": "Typ",
     "error": "{method} @:common.failed"
@@ -148,6 +149,9 @@
     },
     "file": {
       "name": "Name des Dateifeldes"
+    },
+    "date": {
+      "name": "Name des Datumsfeldes"
     },
     "name": "Name des Abschnitts",
     "dataFieldType": "Datenfeldtyp",
@@ -216,6 +220,8 @@
     "addNumberField": "Numerisches Feld",
     "fileField": "Datei",
     "addFileField": "Fügen Sie einen Dateiupload hinzu",
+    "dateField": "Datumsfeld",
+    "addDateField": "Datumsfeld hinzufügen",
     "passportDraft": "Passvorlagen Entwurf | Passvorlagen Entwürfe",
     "passportDraftDescription": "Alle Passvorlagen Entwürfe",
     "changeDataFieldType": "Datenfeldtyp ändern"
