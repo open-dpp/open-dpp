@@ -16,6 +16,7 @@ export const useIndexStore = defineStore("index", () => {
     if (!organizationId) {
       localStorage.removeItem(LAST_SELECTED_ORGANIZATION_ID_KEY);
       selectedOrganization.value = null;
+      setAxiosOrganizationId(null);
       return;
     }
     localStorage.setItem(LAST_SELECTED_ORGANIZATION_ID_KEY, organizationId);

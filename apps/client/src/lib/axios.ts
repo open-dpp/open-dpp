@@ -10,8 +10,13 @@ export function setAxiosAuthHeader(token: string) {
   axiosIns.defaults.headers.common.Authorization = `Bearer ${token}`;
 }
 
-export function setAxiosOrganizationId(organizationId: string) {
-  axiosIns.defaults.headers.common["X-OPEN-DPP-ORGANIZATION-ID"] = organizationId;
+export function setAxiosOrganizationId(organizationId?: string | null) {
+  if (organizationId) {
+    axiosIns.defaults.headers.common["X-OPEN-DPP-ORGANIZATION-ID"] =
+      organizationId;
+  } else {
+    delete axiosIns.defaults.headers.common["X-OPEN-DPP-ORGANIZATION-ID"];
+  }
 }
 
 export default axiosIns;
