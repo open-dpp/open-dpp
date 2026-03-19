@@ -60,7 +60,7 @@ export class AasRepository {
       security.addDefaultPolicyForSubmodel(submodel);
       // anonymous user should have only read permissions
       const [subject, aasObject, permissions] = [
-        SubjectAttributes.create({ role: UserRole.ANONYMOUS }),
+        SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }),
         IdShortPath.create({ path: submodel.idShort }),
         [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
       ];

@@ -17,6 +17,7 @@ import {
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
+import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
@@ -287,7 +288,7 @@ describe("passportController", () => {
   });
 
   it(`/GET shells`, async () => {
-    await ctx.asserts.getShells(createPassport, SubjectAttributes.create({ role: MemberRole.MEMBER }));
+    await ctx.asserts.getShells(createPassport, SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }));
   });
 
   it(`/PATCH shell`, async () => {

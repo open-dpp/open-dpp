@@ -21,7 +21,7 @@ export class AccessPermissionRule {
 
   addPermissionPerObject(permissionPerObject: PermissionPerObject): void {
     if (this.hasPermissionForObject(permissionPerObject)) {
-      throw new ValueError(`Permission for subject { role: ${this.targetSubjectAttributes.role} } and object ${permissionPerObject.object.idShort} already exists`);
+      throw new ValueError(`Permission for subject { userRole: ${this.targetSubjectAttributes.userRole}, memberRole: ${this.targetSubjectAttributes.memberRole} } and object ${permissionPerObject.object.idShort} already exists`);
     }
     this.permissionsPerObject.push(permissionPerObject);
   }

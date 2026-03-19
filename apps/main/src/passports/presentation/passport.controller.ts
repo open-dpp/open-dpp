@@ -85,6 +85,7 @@ import { AuthSession } from "../../identity/auth/presentation/decorators/auth-se
 
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 
+import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
@@ -205,7 +206,8 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     const passport = await this.loadPassportAndCheckOwnership(id, session);
     const pagination = Pagination.create({ limit, cursor });
 
-    return await this.environmentService.getAasShells(passport.getEnvironment(), pagination, SubjectAttributes.create({ role: MemberRole.MEMBER }));
+    // TODO: Replace hard coded user role and member role here
+    return await this.environmentService.getAasShells(passport.getEnvironment(), pagination, SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }));
   }
 
   @ApiPatchShell()

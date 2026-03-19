@@ -317,7 +317,7 @@ export const aasPlainFactory
         accessPermissionRules: [
           {
             targetSubjectAttributes: {
-              subjectAttribute: [propertyInputPlainFactory.build({ idShort: 'role', value: 'member' })],
+              subjectAttribute: [propertyInputPlainFactory.build({ idShort: 'userRole', value: 'user' }), propertyInputPlainFactory.build({ idShort: 'memberRole', value: 'member' })],
             },
             permissionsPerObject: [{
               object: {

@@ -1,6 +1,6 @@
-import { it } from "@jest/globals";
+import { expect, it } from "@jest/globals";
 import { PermissionKind, Permissions } from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
+import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { IdShortPath } from "../submodel-base/submodel-base";
@@ -13,9 +13,9 @@ import { SubjectAttributes } from "./subject-attributes";
 describe("security", () => {
   it("create security schema and checks permissions", () => {
     const security = Security.create({ });
-    security.addPolicy(SubjectAttributes.create({ role: UserRole.USER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
-    security.addPolicy(SubjectAttributes.create({ role: UserRole.USER }), IdShortPath.create({ path: "section1.field1" }), [Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })]);
-    let ability = security.defineAbilityForSubject(SubjectAttributes.create({ role: UserRole.USER }));
+    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER }), IdShortPath.create({ path: "section1.field1" }), [Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })]);
+    let ability = security.defineAbilityForSubject(SubjectAttributes.create({ userRole: UserRole.USER }));
     expect(ability.can(
       Permissions.Read,
       IdShortPath.create({ path: "section1" }),
@@ -39,33 +39,52 @@ describe("security", () => {
       IdShortPath.create({ path: "section1.subsection1.field1" }),
     )).toBeTruthy();
 
-    ability = security.defineAbilityForSubject(SubjectAttributes.create({ role: UserRole.ADMIN }));
+    ability = security.defineAbilityForSubject(SubjectAttributes.create({ userRole: UserRole.ADMIN }));
     expect(ability.can(
       Permissions.Read,
       IdShortPath.create({ path: "section1" }),
-    )).toBeFalsy();
+    )).toBeTruthy();
   });
 
   it("should add policy fails if it already exists", () => {
     const security = Security.create({ });
-    security.addPolicy(SubjectAttributes.create({ role: UserRole.USER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
-    expect(() => security.addPolicy(SubjectAttributes.create({ role: UserRole.USER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })])).toThrow(
-      new ValueError(`Permission for subject { role: user } and object section1 already exists`),
+    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    expect(() => security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })])).toThrow(
+      new ValueError(`Permission for subject { userRole: user, memberRole: undefined } and object section1 already exists`),
+    );
+  });
+
+  it("should check permission of administrator to add policy", () => {
+    let security = Security.create({ }).withAdministrator(SubjectAttributes.create({ userRole: UserRole.USER }));
+    const expectedError = new ForbiddenError(`Administrator has no permission to add policy.`);
+    expect(() => security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })])).toThrow(
+      expectedError,
+    );
+
+    expect(() => security.addPolicy(SubjectAttributes.create({ userRole: UserRole.ADMIN }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })])).toThrow(
+      expectedError,
+    );
+
+    security = Security.create({ }).withAdministrator(SubjectAttributes.create({ userRole: UserRole.ADMIN }));
+
+    expect(() => security.addPolicy(SubjectAttributes.create({ userRole: UserRole.ADMIN }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })])).not.toThrow(
     );
   });
 
   it("return security rule for given subject", () => {
     const security = Security.create({ });
-    security.addPolicy(SubjectAttributes.create({ role: UserRole.USER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
-    security.addPolicy(SubjectAttributes.create({ role: MemberRole.MEMBER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.ADMIN }), IdShortPath.create({ path: "adminSection" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
 
-    security.addPolicy(SubjectAttributes.create({ role: MemberRole.MEMBER }), IdShortPath.create({ path: "section2" }), [
+    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+
+    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }), IdShortPath.create({ path: "section2" }), [
       Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
       Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
     ]);
-    expect(security.findPoliciesBySubject(SubjectAttributes.create({ role: UserRole.USER }))).toEqual([
+    expect(security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.USER }))).toEqual([
       {
-        targetSubjectAttributes: SubjectAttributes.create({ role: UserRole.USER }),
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER }),
         permissionsPerObject: [
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: "section1" })),
@@ -74,9 +93,9 @@ describe("security", () => {
         ],
       },
     ]);
-    expect(security.findPoliciesBySubject(SubjectAttributes.create({ role: MemberRole.MEMBER }))).toEqual([
+    expect(security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }))).toEqual([
       {
-        targetSubjectAttributes: SubjectAttributes.create({ role: MemberRole.MEMBER }),
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
         permissionsPerObject: [
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: "section1" })),
@@ -88,19 +107,62 @@ describe("security", () => {
           }),
         ],
       },
+      {
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER }),
+        permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "section1" })),
+            permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
+          }),
+        ],
+      },
+    ]);
+
+    expect(security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.ADMIN }))).toEqual([
+      {
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.ADMIN }),
+        permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "adminSection" })),
+            permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
+          }),
+        ],
+      },
+      {
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
+        permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "section1" })),
+            permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
+          }),
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "section2" })),
+            permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })],
+          }),
+        ],
+      },
+      {
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER }),
+        permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "section1" })),
+            permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
+          }),
+        ],
+      },
     ]);
   });
 
   it("return plain for security", () => {
     const security = Security.create({ });
-    security.addPolicy(SubjectAttributes.create({ role: UserRole.USER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
-    security.addPolicy(SubjectAttributes.create({ role: MemberRole.MEMBER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
 
-    security.addPolicy(SubjectAttributes.create({ role: MemberRole.MEMBER }), IdShortPath.create({ path: "section2" }), [
+    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }), IdShortPath.create({ path: "section2" }), [
       Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
       Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
     ]);
-    expect(security.toPlain({ filterBySubject: SubjectAttributes.create({ role: UserRole.USER }) })).toEqual({
+    expect(security.toPlain({ filterBySubject: SubjectAttributes.create({ userRole: UserRole.USER }) })).toEqual({
       localAccessControl: {
         accessPermissionRules: [{
           permissionsPerObject: [
@@ -134,7 +196,7 @@ describe("security", () => {
                 displayName: [],
                 embeddedDataSpecifications: [],
                 extensions: [],
-                idShort: "role",
+                idShort: "userRole",
                 modelType: "Property",
                 qualifiers: [],
                 semanticId: null,

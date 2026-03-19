@@ -8,10 +8,11 @@ import { generateMongoConfig } from "../../database/config";
 import { AuthModule } from "../../identity/auth/auth.module";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { OrganizationsModule } from "../../identity/organizations/organizations.module";
+import { UserRole } from "../../identity/users/domain/user-role.enum";
+
 import { UsersModule } from "../../identity/users/users.module";
 
 import { Pagination } from "../../pagination/pagination";
-
 import { PagingResult } from "../../pagination/paging-result";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
@@ -110,8 +111,8 @@ describe("environmentService", () => {
 
   it("should load security policies for given subject", async () => {
     const security = Security.create({});
-    security.addPolicy(SubjectAttributes.create({ role: MemberRole.MEMBER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
-    security.addPolicy(SubjectAttributes.create({ role: MemberRole.MEMBER }), IdShortPath.create({ path: "section2" }), [
+    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }), IdShortPath.create({ path: "section2" }), [
       Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
       Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
     ]);
@@ -122,7 +123,7 @@ describe("environmentService", () => {
     await aasRepository.save(assetAdministrationShell);
     const environment = Environment.create({ assetAdministrationShells: [assetAdministrationShell.id] });
     await aasRepository.save(assetAdministrationShell);
-    const subject = SubjectAttributes.create({ role: MemberRole.MEMBER });
+    const subject = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
     const result = await environmentService.loadSecurityPoliciesForSubject(environment, subject);
     expect(result).toEqual(security.findPoliciesBySubject(subject));
   });

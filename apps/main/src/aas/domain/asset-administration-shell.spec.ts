@@ -136,14 +136,14 @@ describe("assetAdministrationShell", () => {
     })]);
     expect(aas.security.localAccessControl.accessPermissionRules).toEqual([
       AccessPermissionRule.create({
-        targetSubjectAttributes: SubjectAttributes.create({ role: UserRole.ADMIN }),
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.ADMIN }),
         permissionsPerObject: [PermissionPerObject.create({
           object: createAasObject(IdShortPath.create({ path: submodel.idShort })),
           permissions: allPermissionsAllow.map(Permission.fromPlain),
         })],
       }),
       AccessPermissionRule.create({
-        targetSubjectAttributes: SubjectAttributes.create({ role: MemberRole.MEMBER }),
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
         permissionsPerObject: [PermissionPerObject.create({
           object: createAasObject(IdShortPath.create({ path: submodel.idShort })),
           permissions: allPermissionsAllow.map(Permission.fromPlain),

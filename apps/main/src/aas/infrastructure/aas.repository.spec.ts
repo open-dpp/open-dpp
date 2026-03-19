@@ -165,21 +165,21 @@ describe("aasRepository", () => {
     const foundAas = await aasRepository.findOneOrFail(id);
     const security = foundAas.security;
     // admin should have all permissions
-    let ability = security.defineAbilityForSubject(SubjectAttributes.create({ role: UserRole.ADMIN }));
+    let ability = security.defineAbilityForSubject(SubjectAttributes.create({ userRole: UserRole.ADMIN }));
     for (const permission of [Permissions.Create, Permissions.Read, Permissions.Edit, Permissions.Delete]) {
       expect(ability.can(permission, IdShortPath.create({ path: submodel1.idShort }))).toBeTruthy();
       expect(ability.can(permission, IdShortPath.create({ path: submodel2.idShort }))).toBeTruthy();
     }
 
     // member of the organization to which the passport belongs to should have all permissions
-    ability = security.defineAbilityForSubject(SubjectAttributes.create({ role: MemberRole.MEMBER }));
+    ability = security.defineAbilityForSubject(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }));
     for (const permission of [Permissions.Create, Permissions.Read, Permissions.Edit, Permissions.Delete]) {
       expect(ability.can(permission, IdShortPath.create({ path: submodel1.idShort }))).toBeTruthy();
       expect(ability.can(permission, IdShortPath.create({ path: submodel2.idShort }))).toBeTruthy();
     }
 
     // anonymous user should have only read permissions
-    ability = security.defineAbilityForSubject(SubjectAttributes.create({ role: UserRole.ANONYMOUS }));
+    ability = security.defineAbilityForSubject(SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }));
     expect(ability.can(Permissions.Read, IdShortPath.create({ path: submodel1.idShort }))).toBeTruthy();
     expect(ability.can(Permissions.Read, IdShortPath.create({ path: submodel2.idShort }))).toBeTruthy();
 

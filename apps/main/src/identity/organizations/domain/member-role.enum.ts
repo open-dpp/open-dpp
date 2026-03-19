@@ -2,7 +2,6 @@ import { z } from "zod";
 
 export const MemberRole = {
   OWNER: "owner",
-  ADMIN: "admin",
   MEMBER: "member",
 } as const;
 

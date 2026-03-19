@@ -1,4 +1,5 @@
 import { PermissionKind, Permissions } from "@open-dpp/dto";
+import { ForbiddenError } from "@open-dpp/exception";
 import { z } from "zod/v4";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
@@ -17,6 +18,7 @@ export const SecuritySchema = z.object({
 });
 
 export class Security {
+  private administrator = SubjectAttributes.create({ userRole: UserRole.ADMIN });
   private constructor(public readonly localAccessControl: AccessControl) {
   }
 
@@ -31,6 +33,11 @@ export class Security {
     );
   }
 
+  withAdministrator(newAdministrator: SubjectAttributes): Security {
+    this.administrator = newAdministrator;
+    return this;
+  }
+
   toPlain(options?: { filterBySubject?: SubjectAttributes }) {
     const opts = options ?? {};
     return {
@@ -38,9 +45,11 @@ export class Security {
     };
   }
 
-  findPoliciesBySubject(subject: SubjectAttributes) {
-    const rule = this.localAccessControl.findRuleOfSubject(subject);
-    return rule ? [rule] : [];
+  findPoliciesBySubject(subject: SubjectAttributes): AccessPermissionRule[] {
+    const subjectsToConsider = [subject, ...subject.getSubjectsWithSubordinatedRoles()];
+    return subjectsToConsider.map(s => this.localAccessControl.findRuleOfSubject(s)).filter(
+      r => !!r,
+    );
   }
 
   hasPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): boolean {
@@ -48,7 +57,14 @@ export class Security {
     return !!rule && rule.hasPermissionForObject(PermissionPerObject.create({ object: createAasObject(object), permissions }));
   }
 
+  private administratePolicyGuard(subject: SubjectAttributes) {
+    if (this.administrator.userRole !== UserRole.ADMIN && this.administrator.hasLowerThanOrEqualRoles(subject)) {
+      throw new ForbiddenError(`Administrator has no permission to add policy.`);
+    }
+  }
+
   addPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): void {
+    this.administratePolicyGuard(subject);
     const rule = this.localAccessControl.findRuleOfSubject(subject);
     const permissionPerObject = PermissionPerObject.create({ object: createAasObject(object), permissions });
     if (rule) {
@@ -61,7 +77,7 @@ export class Security {
 
   addDefaultPolicyForSubmodel(submodel: Submodel): void {
     let [subject, aasObject, permissions] = [
-      SubjectAttributes.create({ role: UserRole.ADMIN }),
+      SubjectAttributes.create({ userRole: UserRole.ADMIN }),
       IdShortPath.create({ path: submodel.idShort }),
       Object.values(Permissions).map(
         p => Permission.create({ permission: p, kindOfPermission: PermissionKind.Allow }),
@@ -72,7 +88,7 @@ export class Security {
     }
     // member of the organization to which the passport belongs to should have all permissions
     [subject, aasObject, permissions] = [
-      SubjectAttributes.create({ role: MemberRole.MEMBER }),
+      SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
       IdShortPath.create({ path: submodel.idShort }),
       Object.values(Permissions).map(
         p => Permission.create({ permission: p, kindOfPermission: PermissionKind.Allow }),

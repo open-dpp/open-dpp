@@ -117,7 +117,7 @@ describe("uniqueProductIdentifierController", () => {
   });
 
   it(`/GET shells`, async () => {
-    await ctx.asserts.getShells(createPassportWithUniqueProductIdentifier, SubjectAttributes.create({ role: UserRole.ANONYMOUS }));
+    await ctx.asserts.getShells(createPassportWithUniqueProductIdentifier, SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }));
   });
 
   it(`/GET submodels`, async () => {

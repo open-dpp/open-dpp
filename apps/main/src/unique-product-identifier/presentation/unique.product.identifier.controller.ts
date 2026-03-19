@@ -97,7 +97,7 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     const passport = await this.loadPassport(id);
 
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getAasShells(passport.getEnvironment(), pagination, SubjectAttributes.create({ role: UserRole.ANONYMOUS }));
+    return await this.environmentService.getAasShells(passport.getEnvironment(), pagination, SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }));
   }
 
   @AllowAnonymous()

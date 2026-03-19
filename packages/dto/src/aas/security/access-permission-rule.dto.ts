@@ -13,6 +13,8 @@ export const PermissionDtoSchema = z.object({
   kindOfPermission: PermissionKindEnum,
 })
 
+export type PermissionDto = z.infer<typeof PermissionDtoSchema>
+
 export const PermissionPerObjectDtoSchema = z.object({
   object: ReferenceElementJsonSchema,
   permissions: z.array(PermissionDtoSchema),
