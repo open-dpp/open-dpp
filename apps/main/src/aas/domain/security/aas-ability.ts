@@ -24,13 +24,7 @@ export class AasAbility {
   can(action: PermissionType, object: IdShortPath): boolean {
     const permissionForObject = this.findPermissionForObject(object);
     if (permissionForObject) {
-      const deny = permissionForObject.permissions.some(p => p.permission === action && p.kindOfPermission === PermissionKind.Deny);
-      if (deny) {
-        return false;
-      }
-      else {
-        return permissionForObject.permissions.some(p => p.permission === action && p.kindOfPermission === PermissionKind.Allow);
-      }
+      return permissionForObject.permissions.some(p => p.permission === action && p.kindOfPermission === PermissionKind.Allow);
     }
 
     const parentPath = object.getParentPath();

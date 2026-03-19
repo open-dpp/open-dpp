@@ -10,7 +10,6 @@ import {
   DataTypeDef,
   KeyTypes,
   Language,
-  MemberRoleDto,
   ReferenceTypes,
   SubmodelElementCollectionJsonSchema,
   SubmodelElementSchema,
@@ -170,12 +169,25 @@ describe("aasEditor composable", () => {
         keys: [{ type: KeyTypes.Submodel, value: submodel2.id }],
       },
     ],
-    security: securityPlainFactory.build({}, { transient: {
-      policies: [
-        { subject: { role: MemberRoleDto.MEMBER }, object: { idShortPath: submodel1.idShort }, permissions: allPermissionsAllow },
-        { subject: { role: MemberRoleDto.MEMBER }, object: { idShortPath: submodel2.idShort }, permissions: allPermissionsAllow },
-      ],
-    } }),
+    security: securityPlainFactory.build(
+      {},
+      {
+        transient: {
+          policies: [
+            {
+              subject: { role: "member" },
+              object: { idShortPath: submodel1.idShort },
+              permissions: allPermissionsAllow,
+            },
+            {
+              subject: { role: "member" },
+              object: { idShortPath: submodel2.idShort },
+              permissions: allPermissionsAllow,
+            },
+          ],
+        },
+      },
+    ),
   };
 
   const selectedLanguage = Language.en;
