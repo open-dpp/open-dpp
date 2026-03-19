@@ -1,9 +1,11 @@
 import type {
   AccessPermissionRuleResponseDto,
+  MemberRoleDtoType,
   PermissionKindType,
   PermissionType,
   ReferenceJsonSchema,
   SecurityResponseDto,
+  UserRoleDtoType,
 } from '@open-dpp/dto'
 import type { z } from 'zod'
 
@@ -29,7 +31,7 @@ const permissionObjectPlainFactory
 
 export interface SecurityPlainTransientParams {
   policies: {
-    subject: { role: string }
+    subject: { userRole: UserRoleDtoType, memberRole?: MemberRoleDtoType }
     object: { idShortPath: string }
     permissions: { permission: PermissionType, kindOfPermission: PermissionKindType }[]
   }[]
@@ -43,7 +45,10 @@ export const securityPlainFactory
     const accessPermissionRules: AccessPermissionRuleResponseDto[] = []
     if (policies) {
       for (const policy of policies) {
-        const rule = accessPermissionRules.find(rule => rule.targetSubjectAttributes.subjectAttribute.some(attr => attr.idShort === 'role' && attr.value === policy.subject.role))
+        const rule = accessPermissionRules.find(rule =>
+          rule.targetSubjectAttributes.subjectAttribute.some(attr => attr.idShort === 'userRole' && attr.value === policy.subject.userRole)
+          && rule.targetSubjectAttributes.subjectAttribute.some(attr => attr.idShort === 'memberRole' && attr.value === policy.subject.memberRole),
+        )
         const permissionPerObject = { object: permissionObjectPlainFactory.build({ idShort: policy.object.idShortPath }), permissions: policy.permissions }
         if (rule) {
           rule.permissionsPerObject.push({
@@ -53,7 +58,10 @@ export const securityPlainFactory
         else {
           accessPermissionRules.push({
             targetSubjectAttributes: {
-              subjectAttribute: [propertyOutputPlainFactory.build({ idShort: 'role', value: policy.subject.role })],
+              subjectAttribute: [
+                propertyOutputPlainFactory.build({ idShort: 'userRole', value: policy.subject.userRole }),
+                ...policy.subject.memberRole ? [propertyOutputPlainFactory.build({ idShort: 'memberRole', value: policy.subject.memberRole })] : [],
+              ],
             },
             permissionsPerObject: [permissionPerObject],
           })

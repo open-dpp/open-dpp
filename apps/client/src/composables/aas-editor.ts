@@ -25,6 +25,7 @@ import type { TreeNode } from "primevue/treenode";
 import type { Ref } from "vue";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import type { AasEditorPath, IAasDrawer } from "./aas-drawer.ts";
+import type { IAasSecurity } from "./aas-security.ts";
 import type { MediaFileCollectionItem } from "./media-file.ts";
 import type { IPagination, PagingResult } from "./pagination.ts";
 import {
@@ -47,6 +48,7 @@ import {
   useAasDrawer,
 } from "./aas-drawer.ts";
 import { useAasGallery } from "./aas-gallery.ts";
+import { useAasSecurity } from "./aas-security.ts";
 import { usePagination } from "./pagination.ts";
 
 export interface AasEditorProps {
@@ -61,7 +63,7 @@ export interface AasEditorProps {
   openConfirm: (option: ConfirmationOptions) => void;
 }
 
-export interface IAasEditor extends IAasDrawer, IPagination {
+export interface IAasEditor extends IAasDrawer, IPagination, IAasSecurity {
   init: () => Promise<void>;
   findTreeNodeByKey: (
     key: string,
@@ -97,6 +99,7 @@ export function useAasEditor({
   const submodels = ref<TreeNode[]>([]);
   const selectedKeys = ref<TreeTableSelectionKeys | undefined>(undefined);
   const translatePrefix = "aasEditor";
+  const security = useAasSecurity();
 
   const onHideDrawer = () => {
     selectedKeys.value = undefined;
@@ -191,6 +194,7 @@ export function useAasEditor({
     assetAdministrationShell.value = data;
     displayName.value = data?.displayName.find(d => d.language === selectedLanguage)?.text ?? "";
     if (data) {
+      security.setAasSecurity(data.security);
       await downloadDefaultThumbnails(data);
     }
   }
@@ -644,6 +648,7 @@ export function useAasEditor({
     loading,
     selectedKeys,
     selectTreeNode,
+    ...security,
     ...pagination,
     ...drawer,
   };

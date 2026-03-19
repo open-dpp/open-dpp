@@ -6,14 +6,17 @@ import type { AasEditorProps, IAasEditor } from "./aas-editor.ts";
 import {
 
   AasSubmodelElements,
+
   AssetKind,
+
   DataTypeDef,
   KeyTypes,
   Language,
+  MemberRoleDto,
   ReferenceTypes,
   SubmodelElementCollectionJsonSchema,
   SubmodelElementSchema,
-
+  UserRoleDto,
 } from "@open-dpp/dto";
 import {
   allPermissionsAllow,
@@ -175,12 +178,18 @@ describe("aasEditor composable", () => {
         transient: {
           policies: [
             {
-              subject: { role: "member" },
+              subject: {
+                userRole: UserRoleDto.USER,
+                memberRole: MemberRoleDto.MEMBER,
+              },
               object: { idShortPath: submodel1.idShort },
               permissions: allPermissionsAllow,
             },
             {
-              subject: { role: "member" },
+              subject: {
+                userRole: UserRoleDto.USER,
+                memberRole: MemberRoleDto.MEMBER,
+              },
               object: { idShortPath: submodel2.idShort },
               permissions: allPermissionsAllow,
             },
