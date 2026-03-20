@@ -6,6 +6,7 @@ import { NestFactory } from "@nestjs/core";
 import { Transport } from "@nestjs/microservices";
 import { EnvService } from "@open-dpp/env";
 import {
+  ForbiddenExceptionFilter,
   NotFoundExceptionFilter,
   NotFoundInDatabaseExceptionFilter,
   ValueErrorFilter,
@@ -67,6 +68,7 @@ async function bootstrap() {
     new NotFoundInDatabaseExceptionFilter(),
     new NotFoundExceptionFilter(),
     new ValueErrorFilter(),
+    new ForbiddenExceptionFilter(),
   );
   applyBodySizeHandler(app);
   app.use(

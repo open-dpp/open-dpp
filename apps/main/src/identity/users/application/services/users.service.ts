@@ -1,6 +1,5 @@
 import type { Auth } from "better-auth";
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
 import { UserRole } from "../../domain/user-role.enum";
@@ -44,11 +43,7 @@ export class UsersService {
   }
 
   async findOneAndFail(id: string) {
-    const userEntity = await this.usersRepository.findOneById(id);
-    if (!userEntity) {
-      throw new NotFoundInDatabaseException(User.name);
-    }
-    return userEntity;
+    return await this.usersRepository.findOneOrFail(id);
   }
 
   async findByEmail(email: string) {

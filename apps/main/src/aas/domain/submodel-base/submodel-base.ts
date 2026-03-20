@@ -71,6 +71,10 @@ export class IdShortPath {
     return this._segments[Symbol.iterator]();
   }
 
+  isEmpty(): boolean {
+    return this._segments.length === 0;
+  }
+
   toString(): string {
     return this._segments.join(".");
   }

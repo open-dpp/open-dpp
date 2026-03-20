@@ -8,6 +8,7 @@ import {
 import { AasModule } from "../../aas/aas.module";
 import { LanguageText } from "../../aas/domain/common/language-text";
 import { Environment } from "../../aas/domain/environment";
+import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { AasRepository } from "../../aas/infrastructure/aas.repository";
 import {
   ConceptDescriptionDoc,
@@ -15,6 +16,8 @@ import {
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
+import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
+import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
@@ -285,7 +288,7 @@ describe("passportController", () => {
   });
 
   it(`/GET shells`, async () => {
-    await ctx.asserts.getShells(createPassport);
+    await ctx.asserts.getShells(createPassport, SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }));
   });
 
   it(`/PATCH shell`, async () => {

@@ -3,7 +3,7 @@ import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundEx
 import { Session } from "../../../auth/domain/session";
 import { UserRole } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
-import { MemberRole } from "../../domain/member-role.enum";
+import { MemberRoleEnum, MemberRoleType } from "../../domain/member-role.enum";
 import { Organization, OrganizationCreateProps, OrganizationUpdateProps } from "../../domain/organization";
 import { InvitationsRepository } from "../../infrastructure/adapters/invitations.repository";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
@@ -89,7 +89,7 @@ export class OrganizationsService {
 
   async inviteMember(
     email: string,
-    role: MemberRole,
+    role: MemberRoleType,
     organizationId: string,
     session: Session,
     headers?: BetterAuthHeaders,
@@ -106,7 +106,7 @@ export class OrganizationsService {
     if (!organization) {
       throw new NotFoundException("Organization not found");
     }
-    const invitation = organization.inviteMember(email, session.userId, role as MemberRole);
+    const invitation = organization.inviteMember(email, session.userId, MemberRoleEnum.parse(role));
     await this.invitationsRepository.save(invitation, headers);
   }
 

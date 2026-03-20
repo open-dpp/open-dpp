@@ -19,16 +19,20 @@ export class PassportRepository {
     this.passportDoc = passportDoc;
   }
 
+  async fromPlain(plain: any) {
+    return Passport.fromPlain(plain);
+  }
+
   async save(passport: Passport, options?: DbSessionOptions) {
-    return await save(passport, this.passportDoc, PassportDocVersion.v1_0_0, Passport.fromPlain, undefined, options);
+    return await save(passport, this.passportDoc, PassportDocVersion.v1_0_0, this.fromPlain.bind(this), undefined, options);
   }
 
   async findOneOrFail(id: string) {
-    return await findOneOrFail(id, this.passportDoc, Passport.fromPlain);
+    return await findOneOrFail(id, this.passportDoc, this.fromPlain.bind(this));
   }
 
   async findOne(id: string) {
-    return await findOne(id, this.passportDoc, Passport.fromPlain);
+    return await findOne(id, this.passportDoc, this.fromPlain.bind(this));
   }
 
   async findAllByOrganizationId(organizationId: string, pagination?: Pagination): Promise<PagingResult<Passport>> {

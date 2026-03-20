@@ -10,12 +10,15 @@ import {
 } from "../../../test/export-payload.fixtures";
 import { LanguageText } from "../../aas/domain/common/language-text";
 import { Environment } from "../../aas/domain/environment";
+import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import {
   ConceptDescriptionDoc,
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
+import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
+import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
 import { encodeCursor } from "../../pagination/pagination";
 import { Template } from "../domain/template";
@@ -54,7 +57,7 @@ describe("templateController", () => {
   }
 
   it(`/GET shells`, async () => {
-    await ctx.asserts.getShells(createTemplate);
+    await ctx.asserts.getShells(createTemplate, SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }));
   });
 
   it(`/PATCH shell`, async () => {

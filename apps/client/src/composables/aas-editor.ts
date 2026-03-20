@@ -41,6 +41,7 @@ import {
 import { omit } from "lodash";
 import { ref, toRaw } from "vue";
 import { z } from "zod";
+import { useAasSecurity } from "../stores/aas-security.ts";
 import { HTTPCode } from "../stores/http-codes.ts";
 import {
   EditorMode,
@@ -97,6 +98,7 @@ export function useAasEditor({
   const submodels = ref<TreeNode[]>([]);
   const selectedKeys = ref<TreeTableSelectionKeys | undefined>(undefined);
   const translatePrefix = "aasEditor";
+  const security = useAasSecurity();
 
   const onHideDrawer = () => {
     selectedKeys.value = undefined;
@@ -141,7 +143,7 @@ export function useAasEditor({
         data: toRaw(assetAdministrationShell.value),
         mode: EditorMode.EDIT,
         title: translate(`common.edit`),
-        path: {},
+        path: { idShortPathIncludingSubmodel: assetAdministrationShell.value.idShort ?? undefined },
         callback: modifyAasEditor,
       });
     }
@@ -191,6 +193,7 @@ export function useAasEditor({
     assetAdministrationShell.value = data;
     displayName.value = data?.displayName.find(d => d.language === selectedLanguage)?.text ?? "";
     if (data) {
+      security.setAasSecurity(data.security);
       await downloadDefaultThumbnails(data);
     }
   }
@@ -302,7 +305,9 @@ export function useAasEditor({
     return submodelElements.map((submodelElement): TreeNode => {
       const key = pathOfParent.idShortPath ? `${pathOfParent.idShortPath}.${submodelElement.idShort}` : `${submodelIdShort}.${submodelElement.idShort}`;
       const idShortPath = pathOfParent.idShortPath ? `${pathOfParent.idShortPath}.${submodelElement.idShort}` : submodelElement.idShort;
-      const path = { submodelId: pathOfParent.submodelId, idShortPath };
+      const idShortPathIncludingSubmodel = `${submodelIdShort}.${idShortPath}`;
+      const path = { submodelId: pathOfParent.submodelId, idShortPath, idShortPathIncludingSubmodel };
+
       const canHaveChildren = submodelElementCanHaveChildren(submodelElement);
       const children = getChildrenOfSubmodelElement(submodelElement);
       return {
@@ -379,9 +384,13 @@ export function useAasEditor({
           addChildren: true,
           delete: true,
         },
-        path: { submodelId: submodel.id },
+        path: { submodelId: submodel.id, idShortPathIncludingSubmodel: submodel.idShort },
       },
-      children: convertSubmodelElementsToTree(submodel.idShort, { submodelId: submodel.id }, submodel.submodelElements),
+      children: convertSubmodelElementsToTree(
+        submodel.idShort,
+        { submodelId: submodel.id },
+        submodel.submodelElements,
+      ),
     }));
   }
 
@@ -476,13 +485,14 @@ export function useAasEditor({
     async function createCallback(data: SubmodelRequestDto) {
       const response = await aasNamespace.createSubmodel(id, data);
       await finalizeApiRequest(response);
+      await fetchAssetAdministrationShell();
     }
     drawer.openDrawer({
       type: KeyTypes.Submodel,
       data: {},
       title: translate(`${translatePrefix}.addSubmodel`),
       mode: EditorMode.CREATE,
-      path: {},
+      path: { },
       callback: createCallback,
     });
   };

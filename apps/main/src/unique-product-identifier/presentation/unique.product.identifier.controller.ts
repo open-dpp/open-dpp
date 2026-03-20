@@ -10,6 +10,7 @@ import {
   SubmodelResponseDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
+import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
 import {
   ApiGetShells,
@@ -29,6 +30,7 @@ import { IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
+import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { Pagination } from "../../pagination/pagination";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
@@ -95,7 +97,7 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     const passport = await this.loadPassport(id);
 
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getAasShells(passport.getEnvironment(), pagination);
+    return await this.environmentService.getAasShells(passport.getEnvironment(), pagination, SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }));
   }
 
   @AllowAnonymous()

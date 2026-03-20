@@ -1,18 +1,20 @@
 import type { TestingModule } from "@nestjs/testing";
 import { MongooseModule } from "@nestjs/mongoose";
-import { Test } from "@nestjs/testing";
 
-import { AssetKind, LanguageTextDto } from "@open-dpp/dto";
+import { Test } from "@nestjs/testing";
+import { AssetKind, LanguageTextDto, PermissionKind, Permissions } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";
 import { AuthModule } from "../../identity/auth/auth.module";
+import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { OrganizationsModule } from "../../identity/organizations/organizations.module";
+import { UserRole } from "../../identity/users/domain/user-role.enum";
+
 import { UsersModule } from "../../identity/users/users.module";
+
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
-
 import { Passport } from "../../passports/domain/passport";
-
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { PassportsModule } from "../../passports/passports.module";
 import { AasModule } from "../aas.module";
@@ -20,6 +22,10 @@ import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
 import { LanguageText } from "../domain/common/language-text";
 import { Environment } from "../domain/environment";
+import { Permission } from "../domain/security/permission";
+import { Security } from "../domain/security/security";
+import { SubjectAttributes } from "../domain/security/subject-attributes";
+import { IdShortPath } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
 import { EnvironmentService } from "./environment.service";
 
@@ -75,7 +81,9 @@ describe("environmentService", () => {
   });
 
   it("should populate paging result", async () => {
-    const assetAdministrationShell = AssetAdministrationShell.create({ assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }) });
+    const assetAdministrationShell = AssetAdministrationShell.create(
+      { assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }) },
+    );
     const environment = Environment.create({ assetAdministrationShells: [assetAdministrationShell.id] });
     await aasRepository.save(assetAdministrationShell);
     const passport = Passport.create({ environment, organizationId: "organizationId" });
@@ -99,6 +107,25 @@ describe("environmentService", () => {
         cursor: null,
       },
     });
+  });
+
+  it("should load security policies for given subject", async () => {
+    const security = Security.create({});
+    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }), IdShortPath.create({ path: "section2" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+    ]);
+
+    const assetAdministrationShell = AssetAdministrationShell.create(
+      { assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }), security },
+    );
+    await aasRepository.save(assetAdministrationShell);
+    const environment = Environment.create({ assetAdministrationShells: [assetAdministrationShell.id] });
+    await aasRepository.save(assetAdministrationShell);
+    const subject = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const result = await environmentService.loadSecurityPoliciesForSubject(environment, subject);
+    expect(result).toEqual(security.findPoliciesBySubject(subject));
   });
 
   afterAll(async () => {

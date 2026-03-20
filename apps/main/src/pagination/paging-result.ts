@@ -9,10 +9,10 @@ export class PagingResult<T extends IConvertableToPlain> {
     return new PagingResult(data.pagination, data.items);
   }
 
-  toPlain() {
+  toPlain(options?: any) {
     return {
       paging_metadata: { cursor: this.pagination.cursor },
-      result: this.items.map(item => item.toPlain()),
+      result: this.items.map(item => item.toPlain(options)),
     };
   }
 }

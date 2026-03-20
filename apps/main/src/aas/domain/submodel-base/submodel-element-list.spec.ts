@@ -1,7 +1,7 @@
 import { expect } from "@jest/globals";
 import { AasSubmodelElements } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
-import { propertyPlainFactory } from "@open-dpp/testing";
+import { propertyInputPlainFactory } from "@open-dpp/testing";
 import { Property } from "./property";
 import { registerSubmodelElementClasses } from "./register-submodel-element-classes";
 import { SubmodelElementCollection } from "./submodel-element-collection";
@@ -16,11 +16,11 @@ describe("submodelElementList", () => {
       typeValueListElement: AasSubmodelElements.Property,
       idShort: "idShort",
     });
-    const submodelElement = Property.fromPlain(propertyPlainFactory.build({ idShort: "submodelElement1" }));
+    const submodelElement = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "submodelElement1" }));
     submodelElementList.addSubmodelElement(submodelElement);
     expect(submodelElementList.getSubmodelElements()).toEqual([submodelElement]);
 
-    const submodelElement0 = Property.fromPlain(propertyPlainFactory.build({ idShort: "submodelElement0" }));
+    const submodelElement0 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "submodelElement0" }));
     submodelElementList.addSubmodelElement(submodelElement0, { position: 0 });
     expect(submodelElementList.getSubmodelElements()).toEqual([submodelElement0, submodelElement]);
 
@@ -37,9 +37,9 @@ describe("submodelElementList", () => {
       typeValueListElement: AasSubmodelElements.Property,
       idShort: "idShort",
     });
-    const submodelElement0 = Property.fromPlain(propertyPlainFactory.build({ idShort: "submodelElement0" }));
+    const submodelElement0 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "submodelElement0" }));
     submodelElementList.addSubmodelElement(submodelElement0);
-    const submodelElement1 = Property.fromPlain(propertyPlainFactory.build({ idShort: "submodelElement1" }));
+    const submodelElement1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "submodelElement1" }));
     submodelElementList.addSubmodelElement(submodelElement1);
     expect(submodelElementList.getSubmodelElements()).toEqual([submodelElement0, submodelElement1]);
     submodelElementList.deleteSubmodelElement(submodelElement0.idShort);

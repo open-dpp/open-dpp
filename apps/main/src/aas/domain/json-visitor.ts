@@ -25,8 +25,12 @@ import type { SubmodelElementCollection } from "./submodel-base/submodel-element
 import type { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import type { IVisitor } from "./visitor";
 import { KeyTypes } from "@open-dpp/dto";
+import { SubjectAttributes } from "./security/subject-attributes";
 
 export class JsonVisitor implements IVisitor<undefined, any> {
+  constructor(private readonly options?: { filterBySubject?: SubjectAttributes }) {
+  }
+
   private buildBase(submodelBase: ISubmodelBase) {
     return {
       category: submodelBase.category,
@@ -249,6 +253,7 @@ export class JsonVisitor implements IVisitor<undefined, any> {
       embeddedDataSpecifications: element.embeddedDataSpecifications.map(e => e.accept(this)),
       derivedFrom: element.derivedFrom?.accept(this) ?? null,
       submodels: element.submodels.map(s => s.accept(this)),
+      security: element.security.toPlain(this.options),
     };
   }
 

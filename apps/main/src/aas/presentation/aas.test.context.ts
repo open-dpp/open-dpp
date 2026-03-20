@@ -20,7 +20,7 @@ import {
 import { EnvModule, EnvService } from "@open-dpp/env";
 import {
   aasPlainFactory,
-  propertyPlainFactory,
+  propertyInputPlainFactory,
   submodelBillOfMaterialPlainFactory,
   submodelCarbonFootprintPlainFactory,
   submodelDesignOfProductPlainFactory,
@@ -37,17 +37,18 @@ import { OrganizationsModule } from "../../identity/organizations/organizations.
 import { UsersService } from "../../identity/users/application/services/users.service";
 import { UsersModule } from "../../identity/users/users.module";
 import { MediaModule } from "../../media/media.module";
+
 import { AasModule } from "../aas.module";
 
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
-
 import { AssetInformation } from "../domain/asset-information";
 import { Key } from "../domain/common/key";
 import { LanguageText } from "../domain/common/language-text";
-import { Reference } from "../domain/common/reference";
 
+import { Reference } from "../domain/common/reference";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { IPersistable } from "../domain/persistable";
+import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { Property } from "../domain/submodel-base/property";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
@@ -120,11 +121,12 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     aasRepository = moduleRef.get<AasRepository>(AasRepository);
     submodelRepository = moduleRef.get<SubmodelRepository>(SubmodelRepository);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+
     aas = AssetAdministrationShell.fromPlain(aasPlainFactory.build(undefined, { transient: { iriDomain } }));
-    submodels = [
-      Submodel.fromPlain(submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } })),
-      Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } })),
-    ];
+    const submodel1 = Submodel.fromPlain(submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodel2 = Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }));
+
+    submodels = [submodel1, submodel2];
     await aasRepository.save(aas);
     for (const s of submodels) {
       await submodelRepository.save(s);
@@ -139,7 +141,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
   type CreateEntity = (orgaId: string) => Promise<IPersistable & IDigitalProductPassportIdentifiable>;
   type SaveEntity = (entity: any) => Promise<IPersistable & IDigitalProductPassportIdentifiable>;
 
-  async function assertGetShells(createEntity: CreateEntity) {
+  async function assertGetShells(createEntity: CreateEntity, subject: SubjectAttributes) {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const passport = await createEntity(org.id);
     const response = await request(app.getHttpServer())
@@ -148,7 +150,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
       .send();
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toEqual(aas.id);
-    expect(response.body.result).toEqual(AssetAdministrationShellPaginationResponseDtoSchema.shape.result.parse([aas.toPlain()]));
+    expect(response.body.result).toEqual(AssetAdministrationShellPaginationResponseDtoSchema.shape.result.parse([aas.toPlain({ filterBySubject: subject })]));
   }
 
   async function assertModifyShell(createEntity: CreateEntity, saveEntity: SaveEntity) {
@@ -226,7 +228,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
   async function assertPostSubmodelElement(createEntity: CreateEntity) {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const entity = await createEntity(org.id);
-    const submodelElementJson = propertyPlainFactory.build();
+    const submodelElementJson = propertyInputPlainFactory.build();
 
     const response = await request(app.getHttpServer())
       .post(`${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements`)
@@ -276,7 +278,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
   async function assertPostSubmodelElementAtIdShortPath(createEntity: CreateEntity) {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const entity = await createEntity(org.id);
-    const submodelElementJson = propertyPlainFactory.build();
+    const submodelElementJson = propertyInputPlainFactory.build();
 
     const response = await request(app.getHttpServer())
       .post(`${basePath}/${entity.id}/submodels/${btoa(submodels[0].id)}/submodel-elements/Design_V01.Author`)
@@ -432,7 +434,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
-    const property = Property.fromPlain(propertyPlainFactory.build({ idShort: "Property01" }));
+    const property = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01" }));
     submodel.addSubmodelElement(property);
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -458,7 +460,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
-    const property = Property.fromPlain(propertyPlainFactory.build({ idShort: "Property01", value: "old value" }));
+    const property = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01", value: "old value" }));
     const submodelElementCollection = SubmodelElementCollection.create({ idShort: "collection" });
     submodelElementCollection.addSubmodelElement(property);
 
@@ -487,7 +489,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
     const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
-    const col1 = Property.fromPlain(propertyPlainFactory.build({ idShort: "column1" }));
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
     row0.addSubmodelElement(col1);
     submodelElementList.addSubmodelElement(row0);
     submodel.addSubmodelElement(submodelElementList);
@@ -496,7 +498,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     entity.getEnvironment().submodels.push(submodel.id);
     await saveEntity(entity);
 
-    const col0Body = propertyPlainFactory.build({ idShort: "column0" });
+    const col0Body = propertyInputPlainFactory.build({ idShort: "column0" });
 
     const response = await request(app.getHttpServer())
       .post(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns?position=0`)
@@ -518,7 +520,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
     const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
-    const col1 = Property.fromPlain(propertyPlainFactory.build({ idShort: "column1" }));
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
     row0.addSubmodelElement(col1);
     submodelElementList.addSubmodelElement(row0);
     submodel.addSubmodelElement(submodelElementList);
@@ -556,7 +558,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
     const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
-    const col1 = Property.fromPlain(propertyPlainFactory.build({ idShort: "column1" }));
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
     row0.addSubmodelElement(col1);
     submodelElementList.addSubmodelElement(row0);
     submodel.addSubmodelElement(submodelElementList);
@@ -586,7 +588,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
     const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
     const row1 = SubmodelElementCollection.create({ idShort: "row_1" });
-    const col1 = Property.fromPlain(propertyPlainFactory.build({ idShort: "column1" }));
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
     row1.addSubmodelElement(col1);
     submodelElementList.addSubmodelElement(row1);
     submodel.addSubmodelElement(submodelElementList);
@@ -616,7 +618,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
     const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
     const row1 = SubmodelElementCollection.create({ idShort: "row_1" });
-    const col1 = Property.fromPlain(propertyPlainFactory.build({ idShort: "column1" }));
+    const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
     row1.addSubmodelElement(col1);
     submodelElementList.addSubmodelElement(row1);
     submodel.addSubmodelElement(submodelElementList);
@@ -671,7 +673,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const entity = await createEntity(org.id);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
     const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
-    const submodelElement = Property.fromPlain(propertyPlainFactory.build({ idShort: "Property01" }));
+    const submodelElement = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01" }));
     submodel.addSubmodelElement(submodelElement);
     entity.getEnvironment().addSubmodel(submodel);
     await saveEntity(entity);

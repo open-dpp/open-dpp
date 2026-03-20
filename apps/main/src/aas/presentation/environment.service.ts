@@ -45,6 +45,7 @@ import { ConceptDescription } from "../domain/concept-description";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
 import { ExpandedEnvironment } from "../domain/expanded-environment";
+import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath, ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
@@ -82,6 +83,11 @@ export class EnvironmentService {
     this.membersService = membersService;
   }
 
+  async loadSecurityPoliciesForSubject(environment: Environment, subjet: SubjectAttributes) {
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+    return aas.security.findPoliciesBySubject(subjet);
+  }
+
   async createEnvironment(environmentData: { assetAdministrationShells: AssetAdministrationShellCreateDto[] }, isTemplate: boolean): Promise<Environment> {
     const environment = Environment.create({});
     if (environmentData.assetAdministrationShells.length > 1) {
@@ -93,13 +99,14 @@ export class EnvironmentService {
       const assetInformation = AssetInformation.create({ assetKind, globalAssetId: id });
       return { id, assetInformation };
     };
+
     const assetAdministrationShells = environmentData.assetAdministrationShells.length > 0
       ? environmentData.assetAdministrationShells.map(aas => AssetAdministrationShell.create({
           ...createIdAndAssetInformation(),
           displayName: aas.displayName?.map(LanguageText.fromPlain),
           description: aas.description?.map(LanguageText.fromPlain),
         }))
-      : [AssetAdministrationShell.create(createIdAndAssetInformation())];
+      : [AssetAdministrationShell.create({ ...createIdAndAssetInformation() })];
     const firstAas = assetAdministrationShells[0];
     await this.aasRepository.save(firstAas);
     environment.addAssetAdministrationShell(firstAas);
@@ -107,10 +114,10 @@ export class EnvironmentService {
     return environment;
   }
 
-  async getAasShells(environment: Environment, pagination: Pagination): Promise<AssetAdministrationShellPaginationResponseDto> {
+  async getAasShells(environment: Environment, pagination: Pagination, subjet: SubjectAttributes): Promise<AssetAdministrationShellPaginationResponseDto> {
     const pages = pagination.nextPages(environment.assetAdministrationShells);
     const shells = await Promise.all(pages.map(p => this.aasRepository.findOneOrFail(p)));
-    return AssetAdministrationShellPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: shells }).toPlain());
+    return AssetAdministrationShellPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: shells }).toPlain({ filterBySubject: subjet }));
   }
 
   async modifyAasShell(environment: Environment, aasId: string, modification: AssetAdministrationShellModificationDto): Promise<AssetAdministrationShellResponseDto> {
@@ -358,10 +365,10 @@ export class EnvironmentService {
     return await this.aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
   }
 
-  async checkOwnerShipOfDppIdentifiable<T extends IDigitalProductPassportIdentifiable>(dppIdentifiable: T, session: Session): Promise<T> {
-    const isMember = await this.membersService.isMemberOfOrganization(session.userId, dppIdentifiable.getOrganizationId());
-    if (session.userId && isMember) {
-      return dppIdentifiable;
+  async checkOwnerShipOfDppIdentifiable<T extends IDigitalProductPassportIdentifiable>(dppIdentifiable: T, session: Session): Promise<SubjectAttributes> {
+    const { userRole, memberRole } = await this.membersService.getUserAndMemberRole(session.userId, dppIdentifiable.getOrganizationId());
+    if (session.userId && memberRole) {
+      return SubjectAttributes.create({ userRole, memberRole });
     }
     else {
       throw new ForbiddenException();
