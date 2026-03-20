@@ -68,7 +68,9 @@ export class SubjectAttributes {
   }
 
   private computeRoleHierarchyIndex(roles: { userRole: UserRoleType; memberRole?: MemberRoleType }): number {
-    return roleHierarchy.findIndex(role => role.userRole === roles.userRole && role.memberRole === roles.memberRole);
+    return roleHierarchy.findIndex(role =>
+      (role.userRole === roles.userRole && role.userRole === UserRole.ADMIN) || (role.userRole === roles.userRole && role.memberRole === roles.memberRole),
+    );
   }
 
   getRoles() {
@@ -95,7 +97,7 @@ export class SubjectAttributes {
   }
 
   isEqual(other: SubjectAttributes): boolean {
-    return this.userRole === other.userRole && this.memberRole === other.memberRole;
+    return (this.userRole === other.userRole && this.userRole === UserRole.ADMIN) || (this.userRole === other.userRole && this.memberRole === other.memberRole);
   }
 
   getSubjectsWithSubordinatedRoles(): SubjectAttributes[] {

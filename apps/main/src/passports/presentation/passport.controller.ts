@@ -83,9 +83,6 @@ import { DbSessionOptions } from "../../database/query-options";
 import { Session } from "../../identity/auth/domain/session";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
 
-import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
-
-import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
@@ -203,11 +200,9 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     @CursorQueryParam() cursor: string | undefined,
     @AuthSession() session: Session,
   ): Promise<AssetAdministrationShellPaginationResponseDto> {
-    const { passport } = await this.loadPassportAndCheckOwnership(id, session);
+    const { passport, subject } = await this.loadPassportAndCheckOwnership(id, session);
     const pagination = Pagination.create({ limit, cursor });
-
-    // TODO: Replace hard coded user role and member role here
-    return await this.environmentService.getAasShells(passport.getEnvironment(), pagination, SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }));
+    return await this.environmentService.getAasShells(passport.getEnvironment(), pagination, subject);
   }
 
   @ApiPatchShell()
