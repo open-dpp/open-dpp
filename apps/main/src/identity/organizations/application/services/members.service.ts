@@ -1,8 +1,9 @@
 import type { BetterAuthHeaders } from "../../../auth/domain/better-auth-headers";
 import { Injectable, Logger } from "@nestjs/common";
-import { UserRole } from "../../../users/domain/user-role.enum";
+import { UserRole, UserRoleType } from "../../../users/domain/user-role.enum";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { MemberWithUser } from "../../domain/member";
+import { MemberRoleType } from "../../domain/member-role.enum";
 import { Organization } from "../../domain/organization";
 import { MembersRepository } from "../../infrastructure/adapters/members.repository";
 import { OrganizationsRepository } from "../../infrastructure/adapters/organizations.repository";
@@ -20,6 +21,12 @@ export class MembersService {
   async isMemberOfOrganization(userId: string, organizationId: string): Promise<boolean> {
     const member = await this.membersRepository.findOneByUserIdAndOrganizationId(userId, organizationId);
     return !!member;
+  }
+
+  async getUserAndMemberRole(userId: string, organizationId: string): Promise<{ userRole: UserRoleType; memberRole?: MemberRoleType }> {
+    const user = await this.usersRepository.findOneOrFail(userId);
+    const member = await this.membersRepository.findOneByUserIdAndOrganizationId(userId, organizationId);
+    return { userRole: user.role, memberRole: member?.role };
   }
 
   async isOwnerOrAdmin(organizationId: string, userId: string): Promise<boolean> {

@@ -101,7 +101,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @CursorQueryParam() cursor: string | undefined,
     @AuthSession() session: Session,
   ): Promise<AssetAdministrationShellPaginationResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     const pagination = Pagination.create({ limit, cursor });
     // TODO: Replace hard coded user role and member role here
     return await this.environmentService.getAasShells(template.getEnvironment(), pagination, SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }));
@@ -114,7 +114,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @AssetAdministrationShellModificationRequestBody() body: AssetAdministrationShellModificationDto,
     @AuthSession() session: Session,
   ): Promise<AssetAdministrationShellResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     return await this.environmentService.modifyAasShell(template.getEnvironment(), aasId, body);
   }
 
@@ -125,7 +125,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @CursorQueryParam() cursor: string | undefined,
     @AuthSession() session: Session,
   ): Promise<SubmodelPaginationResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getSubmodels(template.getEnvironment(), pagination);
   }
@@ -136,7 +136,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelRequestBody() body: SubmodelRequestDto,
     @AuthSession() session: Session,
   ): Promise<SubmodelResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     return await this.environmentService.addSubmodelToEnvironment(
       template.getEnvironment(),
       body,
@@ -150,7 +150,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelIdParam() submodelId: string,
     @AuthSession() session: Session,
   ): Promise<void> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     await this.environmentService.deleteSubmodelFromEnvironment(template.getEnvironment(), submodelId, this.saveEnvironmentCallback(template));
   }
 
@@ -161,7 +161,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelModificationRequestBody() body: SubmodelModificationDto,
     @AuthSession() session: Session,
   ): Promise<SubmodelResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     return await this.environmentService.modifySubmodel(template.getEnvironment(), submodelId, body);
   }
 
@@ -171,7 +171,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelIdParam() submodelId: string,
     @AuthSession() session: Session,
   ): Promise<SubmodelResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     return await this.environmentService.getSubmodelById(template.getEnvironment(), submodelId);
   }
 
@@ -181,7 +181,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelIdParam() submodelId: string,
     @AuthSession() session: Session,
   ): Promise<ValueResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     return await this.environmentService.getSubmodelValue(template.getEnvironment(), submodelId);
   }
 
@@ -193,7 +193,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @CursorQueryParam() cursor: string | undefined,
     @AuthSession() session: Session,
   ): Promise<SubmodelElementPaginationResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     const pagination = Pagination.create({ limit, cursor });
     return await this.environmentService.getSubmodelElements(template.getEnvironment(), submodelId, pagination);
   }
@@ -205,7 +205,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
     @AuthSession() session: Session,
   ): Promise<SubmodelElementResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body);
   }
 
@@ -216,7 +216,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @IdShortPathParam() idShortPath: IdShortPath,
     @AuthSession() session: Session,
   ): Promise<void> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     await this.environmentService.deleteSubmodelElement(template.getEnvironment(), submodelId, idShortPath);
   }
 
@@ -229,7 +229,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @PositionQueryParam() position: number | undefined,
     @AuthSession() session: Session,
   ): Promise<SubmodelElementListResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     const column = parseSubmodelElement(body);
     return await this.environmentService.addColumn(template.getEnvironment(), submodelId, idShortPath, column, position);
   }
@@ -243,7 +243,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
     @AuthSession() session: Session,
   ): Promise<SubmodelElementListResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     return await this.environmentService.modifyColumn(template.getEnvironment(), submodelId, idShortPath, idShortOfColumn, body);
   }
 
@@ -255,7 +255,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @ColumnParam() idShortOfColumn: string,
     @AuthSession() session: Session,
   ): Promise<SubmodelElementListResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     return await this.environmentService.deleteColumn(template.getEnvironment(), submodelId, idShortPath, idShortOfColumn);
   }
 
@@ -267,7 +267,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @PositionQueryParam() position: number | undefined,
     @AuthSession() session: Session,
   ): Promise<SubmodelElementListResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     return await this.environmentService.addRow(template.getEnvironment(), submodelId, idShortPath, position);
   }
 
@@ -279,7 +279,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @RowParam() idShortOfRow: string,
     @AuthSession() session: Session,
   ): Promise<SubmodelElementListResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     return await this.environmentService.deleteRow(template.getEnvironment(), submodelId, idShortPath, idShortOfRow);
   }
 
@@ -291,7 +291,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
     @AuthSession() session: Session,
   ): Promise<SubmodelElementResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     return await this.environmentService.modifySubmodelElement(template.getEnvironment(), submodelId, body, idShortPath);
   }
 
@@ -303,7 +303,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelElementValueModificationRequestBody() body: ValueRequestDto,
     @AuthSession() session: Session,
   ): Promise<SubmodelElementResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     return await this.environmentService.modifyValueOfSubmodelElement(template.getEnvironment(), submodelId, body, idShortPath);
   }
 
@@ -314,7 +314,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @IdShortPathParam() idShortPath: IdShortPath,
     @AuthSession() session: Session,
   ): Promise<SubmodelElementResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     return await this.environmentService.getSubmodelElementById(template.getEnvironment(), submodelId, idShortPath);
   }
 
@@ -326,7 +326,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
     @AuthSession() session: Session,
   ): Promise<SubmodelElementResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body, idShortPath);
   }
 
@@ -337,7 +337,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @IdShortPathParam() idShortPath: IdShortPath,
     @AuthSession() session: Session,
   ): Promise<ValueResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     return await this.environmentService.getSubmodelElementValue(template.getEnvironment(), submodelId, idShortPath);
   }
 
@@ -363,7 +363,7 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @IdParam() id: string,
     @AuthSession() session: Session,
   ) {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
     return await this.aasSerializationService.exportTemplate(template);
   }
 
@@ -413,8 +413,9 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     };
   }
 
-  private async loadTemplateAndCheckOwnership(id: string, session: Session): Promise<Template> {
+  private async loadTemplateAndCheckOwnership(id: string, session: Session): Promise<{ template: Template; subject: SubjectAttributes }> {
     const template = await this.templateRepository.findOneOrFail(id);
-    return this.environmentService.checkOwnerShipOfDppIdentifiable(template, session);
+    const subject = await this.environmentService.checkOwnerShipOfDppIdentifiable(template, session);
+    return { template, subject };
   }
 }

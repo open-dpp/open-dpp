@@ -14,6 +14,7 @@ describe("UsersService", () => {
   beforeEach(async () => {
     mockRepo = {
       save: jest.fn(),
+      findOneOrFail: jest.fn(),
       findOneById: jest.fn(),
       findOneByEmail: jest.fn(),
       findAllByIds: jest.fn(),
@@ -60,7 +61,7 @@ describe("UsersService", () => {
   });
 
   it("should throw if not found in findOneAndFail", async () => {
-    mockRepo.findOneById.mockResolvedValue(null);
+    mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
     await expect(service.findOneAndFail("1")).rejects.toThrow(NotFoundInDatabaseException);
   });
 

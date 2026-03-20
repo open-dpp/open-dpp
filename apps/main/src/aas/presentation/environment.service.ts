@@ -365,10 +365,10 @@ export class EnvironmentService {
     return await this.aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
   }
 
-  async checkOwnerShipOfDppIdentifiable<T extends IDigitalProductPassportIdentifiable>(dppIdentifiable: T, session: Session): Promise<T> {
-    const isMember = await this.membersService.isMemberOfOrganization(session.userId, dppIdentifiable.getOrganizationId());
-    if (session.userId && isMember) {
-      return dppIdentifiable;
+  async checkOwnerShipOfDppIdentifiable<T extends IDigitalProductPassportIdentifiable>(dppIdentifiable: T, session: Session): Promise<SubjectAttributes> {
+    const { userRole, memberRole } = await this.membersService.getUserAndMemberRole(session.userId, dppIdentifiable.getOrganizationId());
+    if (session.userId && memberRole) {
+      return SubjectAttributes.create({ userRole, memberRole });
     }
     else {
       throw new ForbiddenException();

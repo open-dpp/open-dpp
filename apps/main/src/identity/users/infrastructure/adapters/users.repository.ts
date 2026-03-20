@@ -2,6 +2,7 @@ import type { Auth } from "better-auth";
 import { randomBytes } from "node:crypto";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { AUTH } from "../../../auth/auth.provider";
@@ -43,6 +44,14 @@ export class UsersRepository {
       this.logger.error(`Failed to create user ${user.email}`, error);
       return null;
     }
+  }
+
+  async findOneOrFail(id: string) {
+    const userEntity = await this.findOneById(id);
+    if (!userEntity) {
+      throw new NotFoundInDatabaseException(User.name);
+    }
+    return userEntity;
   }
 
   async findOneById(id: string): Promise<User | null> {
