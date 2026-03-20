@@ -20,7 +20,7 @@ const roleHierarchy: { userRole: UserRoleType; memberRole?: MemberRoleType }[] =
 export class SubjectAttributes {
   private _subjectAttribute: Property[];
   private static UserRoleKey = "userRole";
-  private static MemberRoleKey = "organizationRole";
+  private static MemberRoleKey = "memberRole";
   private constructor(subjectAttribute: Property[]) {
     this.subjectAttribute = subjectAttribute;
   }

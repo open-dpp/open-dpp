@@ -25,7 +25,6 @@ import type { TreeNode } from "primevue/treenode";
 import type { Ref } from "vue";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import type { AasEditorPath, IAasDrawer } from "./aas-drawer.ts";
-import type { IAasSecurity } from "./aas-security.ts";
 import type { MediaFileCollectionItem } from "./media-file.ts";
 import type { IPagination, PagingResult } from "./pagination.ts";
 import {
@@ -42,13 +41,13 @@ import {
 import { omit } from "lodash";
 import { ref, toRaw } from "vue";
 import { z } from "zod";
+import { useAasSecurity } from "../stores/aas-security.ts";
 import { HTTPCode } from "../stores/http-codes.ts";
 import {
   EditorMode,
   useAasDrawer,
 } from "./aas-drawer.ts";
 import { useAasGallery } from "./aas-gallery.ts";
-import { useAasSecurity } from "./aas-security.ts";
 import { usePagination } from "./pagination.ts";
 
 export interface AasEditorProps {
@@ -63,7 +62,7 @@ export interface AasEditorProps {
   openConfirm: (option: ConfirmationOptions) => void;
 }
 
-export interface IAasEditor extends IAasDrawer, IPagination, IAasSecurity {
+export interface IAasEditor extends IAasDrawer, IPagination {
   init: () => Promise<void>;
   findTreeNodeByKey: (
     key: string,
@@ -144,7 +143,7 @@ export function useAasEditor({
         data: toRaw(assetAdministrationShell.value),
         mode: EditorMode.EDIT,
         title: translate(`common.edit`),
-        path: {},
+        path: { idShortPathIncludingSubmodel: assetAdministrationShell.value.idShort ?? undefined },
         callback: modifyAasEditor,
       });
     }
@@ -306,7 +305,9 @@ export function useAasEditor({
     return submodelElements.map((submodelElement): TreeNode => {
       const key = pathOfParent.idShortPath ? `${pathOfParent.idShortPath}.${submodelElement.idShort}` : `${submodelIdShort}.${submodelElement.idShort}`;
       const idShortPath = pathOfParent.idShortPath ? `${pathOfParent.idShortPath}.${submodelElement.idShort}` : submodelElement.idShort;
-      const path = { submodelId: pathOfParent.submodelId, idShortPath };
+      const idShortPathIncludingSubmodel = `${submodelIdShort}.${idShortPath}`;
+      const path = { submodelId: pathOfParent.submodelId, idShortPath, idShortPathIncludingSubmodel };
+
       const canHaveChildren = submodelElementCanHaveChildren(submodelElement);
       const children = getChildrenOfSubmodelElement(submodelElement);
       return {
@@ -383,9 +384,13 @@ export function useAasEditor({
           addChildren: true,
           delete: true,
         },
-        path: { submodelId: submodel.id },
+        path: { submodelId: submodel.id, idShortPathIncludingSubmodel: submodel.idShort },
       },
-      children: convertSubmodelElementsToTree(submodel.idShort, { submodelId: submodel.id }, submodel.submodelElements),
+      children: convertSubmodelElementsToTree(
+        submodel.idShort,
+        { submodelId: submodel.id },
+        submodel.submodelElements,
+      ),
     }));
   }
 
@@ -480,13 +485,14 @@ export function useAasEditor({
     async function createCallback(data: SubmodelRequestDto) {
       const response = await aasNamespace.createSubmodel(id, data);
       await finalizeApiRequest(response);
+      await fetchAssetAdministrationShell();
     }
     drawer.openDrawer({
       type: KeyTypes.Submodel,
       data: {},
       title: translate(`${translatePrefix}.addSubmodel`),
       mode: EditorMode.CREATE,
-      path: {},
+      path: { },
       callback: createCallback,
     });
   };
@@ -648,7 +654,6 @@ export function useAasEditor({
     loading,
     selectedKeys,
     selectTreeNode,
-    ...security,
     ...pagination,
     ...drawer,
   };

@@ -51,5 +51,6 @@ defineExpose<{
       :errors="errors"
       :editor-mode="EditorMode.EDIT"
     />
+    <PermissionsForm :path="props.path" />
   </FormContainer>
 </template>

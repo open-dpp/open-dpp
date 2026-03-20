@@ -13,6 +13,7 @@ import {
 
 } from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
+import { createPinia, setActivePinia } from "pinia";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent } from "vue";
 import { useAasSecurity } from "./aas-security.ts";
@@ -39,6 +40,9 @@ describe("aasSecurity composable", () => {
   }
 
   beforeEach(() => {
+    // Create a fresh pinia instance and make it active
+    setActivePinia(createPinia());
+
     vi.resetAllMocks();
   });
 
