@@ -579,6 +579,78 @@ describe("passportController", () => {
     expect(exportedConceptDescriptions[0].isCaseOf).toHaveLength(1);
   });
 
+  describe("aPI key authentication", () => {
+    it("/GET List passports with API key", async () => {
+      const { betterAuthHelper, app } = ctx.globals();
+      const { org, apiKey } = await betterAuthHelper.createOrganizationAndUserWithApiKey();
+      const passport = await createPassport(org.id);
+
+      const response = await request(app.getHttpServer())
+        .get(basePath)
+        .set("x-api-key", apiKey)
+        .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
+        .send();
+
+      expect(response.status).toEqual(200);
+      expect(response.body.result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: passport.id }),
+        ]),
+      );
+    });
+
+    it("/POST Create passport with API key", async () => {
+      const { betterAuthHelper, app } = ctx.globals();
+      const { org, apiKey } = await betterAuthHelper.createOrganizationAndUserWithApiKey();
+
+      const now = new Date("2022-01-01T00:00:00.000Z");
+      jest.spyOn(DateTime, "now").mockReturnValue(now);
+
+      const displayName = [{ language: "en", text: "API key passport" }];
+      const body = {
+        environment: {
+          assetAdministrationShells: [{ displayName }],
+        },
+      };
+
+      const response = await request(app.getHttpServer())
+        .post(basePath)
+        .set("x-api-key", apiKey)
+        .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
+        .send(body);
+
+      expect(response.status).toEqual(201);
+      expect(response.body.organizationId).toEqual(org.id);
+      expect(response.body.id).toBeDefined();
+    });
+
+    it("rejects request with invalid API key", async () => {
+      const { app } = ctx.globals();
+
+      const response = await request(app.getHttpServer())
+        .get(basePath)
+        .set("x-api-key", "invalid-key")
+        .set("X-OPEN-DPP-ORGANIZATION-ID", randomUUID())
+        .send();
+
+      expect(response.status).toEqual(403);
+    });
+
+    it("rejects request when API key user is not member of organization", async () => {
+      const { betterAuthHelper, app } = ctx.globals();
+      const { apiKey } = await betterAuthHelper.createOrganizationAndUserWithApiKey();
+      const { org: otherOrg } = await betterAuthHelper.createOrganizationAndUserWithCookie();
+
+      const response = await request(app.getHttpServer())
+        .get(basePath)
+        .set("x-api-key", apiKey)
+        .set("X-OPEN-DPP-ORGANIZATION-ID", otherOrg.id)
+        .send();
+
+      expect(response.status).toEqual(403);
+    });
+  });
+
   afterAll(() => {
     jest.restoreAllMocks();
   });
