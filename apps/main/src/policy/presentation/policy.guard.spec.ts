@@ -78,6 +78,18 @@ describe("PolicyGuard", () => {
     await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
   });
 
+  it("should throw ForbiddenException when session exists but userId is missing", async () => {
+    const context = createMockContext({
+      headers: { "x-open-dpp-organization-id": "org-1" },
+      session: {},
+    });
+
+    (reflector.getAllAndOverride as jest.Mock).mockReturnValue([PolicyKey.AI_TOKEN_QUOTA]);
+
+    await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
+    expect(membersService.isMemberOfOrganization).not.toHaveBeenCalled();
+  });
+
   it("should throw ForbiddenException when user is not a member of organization", async () => {
     const context = createMockContext({
       headers: { "x-open-dpp-organization-id": "org-1" },

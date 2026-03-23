@@ -33,7 +33,7 @@ export class PolicyGuard implements CanActivate {
     }
 
     const session = req.session;
-    if (!session) {
+    if (!session?.userId) {
       throw new ForbiddenException("Authentication required for policy-protected resources");
     }
 
