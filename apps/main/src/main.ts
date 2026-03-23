@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
-import process from "node:process";
+import { writeFileSync } from "node:fs";
+import process, { exit } from "node:process";
 import { ConsoleLogger, Logger, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { EnvService } from "@open-dpp/env";
@@ -13,9 +14,25 @@ import { createProxyServer } from "http-proxy-3";
 import { McpClientService } from "./ai/mcp-client/mcp-client.service";
 import { AppModule } from "./app.module";
 import { applyBodySizeHandler } from "./body-handler";
-import { buildOpenApiDocumentation } from "./open-api-docs";
+import { addSwaggerToApp, buildOpenApiDocumentation } from "./open-api-docs";
+
+const EXPORT_API_DOC_FLAG = "--export-api-doc";
+const DEFAULT_API_DOC_OUTPUT_PATH = "docs/api-docs.json";
 
 async function bootstrap() {
+  if (process.argv[2] && process.argv[2] === EXPORT_API_DOC_FLAG) {
+    const outputPath = process.argv[3] ?? DEFAULT_API_DOC_OUTPUT_PATH;
+
+    const apiDoc = buildOpenApiDocumentation();
+    try {
+      writeFileSync(outputPath, JSON.stringify(apiDoc), "utf-8");
+    }
+    catch (error) {
+      console.error(error);
+    }
+    exit(0);
+  }
+
   // Determine log format from environment variable
   const logFormat = process.env.OPEN_DPP_LOG_FORMAT || "plain";
   const useJsonLogging = logFormat === "json";
@@ -74,7 +91,8 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe());
   if (envService.get("OPEN_DPP_BUILD_API_DOC")) {
-    buildOpenApiDocumentation(app);
+    const doc = buildOpenApiDocumentation();
+    addSwaggerToApp(app, doc);
   }
   const port = envService.get("OPEN_DPP_PORT");
   logger.log(`Application is running on: ${port}`);
@@ -89,4 +107,5 @@ async function bootstrap() {
     process.exit(1);
   }
 }
+
 bootstrap();

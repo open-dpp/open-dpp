@@ -15,7 +15,10 @@ const document
     },
   });
 
-export function buildOpenApiDocumentation(app: INestApplication) {
-  const swaggerDoc = JSON.parse(JSON.stringify(document)) as unknown as OpenAPIObject;
-  SwaggerModule.setup("api", app, swaggerDoc);
+export function buildOpenApiDocumentation(): OpenAPIObject {
+  return JSON.parse(JSON.stringify(document)) as unknown as OpenAPIObject;
+}
+
+export function addSwaggerToApp(app: INestApplication, openApiDoc: OpenAPIObject) {
+  SwaggerModule.setup("api", app, openApiDoc);
 }
