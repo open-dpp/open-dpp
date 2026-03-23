@@ -1,5 +1,6 @@
 import type { SecurityResponseDto } from "@open-dpp/dto";
 import type { SecurityPlainTransientParams } from "@open-dpp/testing";
+import type { AasSecurityProps } from "./aas-security.ts";
 import {
   MemberRoleDto,
 
@@ -21,11 +22,11 @@ import { useAasSecurity } from "./aas-security.ts";
 describe("aasSecurity composable", () => {
   const mountedWrappers: Array<ReturnType<typeof mount>> = [];
 
-  function mountHarness() {
+  function mountHarness(props: AasSecurityProps) {
     const Harness = defineComponent({
       name: "MediaFileCollectionHarness",
       setup() {
-        const api = useAasSecurity();
+        const api = useAasSecurity(props);
         return { api };
       },
       template: "<div />",
@@ -79,8 +80,7 @@ describe("aasSecurity composable", () => {
     };
     const security: SecurityResponseDto = securityPlainFactory.build(undefined, { transient: transientParams });
 
-    const { setAasSecurity, can } = mountHarness();
-    setAasSecurity(security);
+    const { can } = mountHarness({ initialAccessPermissionRules: security.localAccessControl.accessPermissionRules });
 
     expect(can(Permissions.Create, "section1")).toBeTruthy();
     expect(can(Permissions.Create, "section1.field1")).toBeTruthy();
@@ -130,8 +130,10 @@ describe("aasSecurity composable", () => {
       { transient: transientParams },
     );
 
-    const { setAasSecurity, findPermissionForObject } = mountHarness();
-    setAasSecurity(security);
+    const { findPermissionForObject } = mountHarness({
+      initialAccessPermissionRules:
+        security.localAccessControl.accessPermissionRules,
+    });
 
     expect(findPermissionForObject("section1")).toEqual([
       {

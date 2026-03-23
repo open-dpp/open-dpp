@@ -42,6 +42,26 @@ export type AssetAdministrationShellResponseDto = z.infer<typeof AssetAdministra
 
 export type AssetAdministrationShellRequestDto = z.input<typeof AssetAdministrationShellJsonSchema>
 
+/*
+{
+  localAccessControl: {
+    accessPermissionRules: [
+      {
+        targetSubjectAttributes: {subjectAttribute: Property[]},
+        permissionsPerObject: [
+          object: {idShort: section1},
+          permissions: {permission: Create, kind: Allow}
+        ],
+      }
+    ],
+  },
+}
+
+add create to member -> add create to owner
+remove create from member -> do not remove create from owner
+
+ */
+
 export const AssetAdministrationShellModificationSchema = NameAndDescriptionModificationSchema.extend({
   assetInformation: AssetInformationModificationSchema.optional(),
 })

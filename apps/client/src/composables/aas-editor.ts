@@ -1,5 +1,6 @@
 import type { AasNamespace } from "@open-dpp/api-client";
 import type {
+  AccessPermissionRuleResponseDto,
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellResponseDto,
   DataTypeDefType,
@@ -41,7 +42,6 @@ import {
 import { omit } from "lodash";
 import { ref, toRaw } from "vue";
 import { z } from "zod";
-import { useAasSecurity } from "../stores/aas-security.ts";
 import { HTTPCode } from "../stores/http-codes.ts";
 import {
   EditorMode,
@@ -80,6 +80,7 @@ export interface IAasEditor extends IAasDrawer, IPagination {
   selectTreeNode: (key: string) => void;
   openAssetAdministrationShellEditor: () => void;
   aasGalleryFiles: Ref<MediaFileCollectionItem[]>;
+  getAccessPermissionRules: () => AccessPermissionRuleResponseDto[];
 }
 
 export function useAasEditor({
@@ -98,7 +99,6 @@ export function useAasEditor({
   const submodels = ref<TreeNode[]>([]);
   const selectedKeys = ref<TreeTableSelectionKeys | undefined>(undefined);
   const translatePrefix = "aasEditor";
-  const security = useAasSecurity();
 
   const onHideDrawer = () => {
     selectedKeys.value = undefined;
@@ -193,7 +193,6 @@ export function useAasEditor({
     assetAdministrationShell.value = data;
     displayName.value = data?.displayName.find(d => d.language === selectedLanguage)?.text ?? "";
     if (data) {
-      security.setAasSecurity(data.security);
       await downloadDefaultThumbnails(data);
     }
   }
@@ -639,6 +638,13 @@ export function useAasEditor({
     }
   }
 
+  function getAccessPermissionRules(): AccessPermissionRuleResponseDto[] {
+    return (
+      assetAdministrationShell.value?.security.localAccessControl
+        .accessPermissionRules ?? []
+    );
+  }
+
   return {
     aasGalleryFiles,
     displayName,
@@ -656,5 +662,6 @@ export function useAasEditor({
     selectTreeNode,
     ...pagination,
     ...drawer,
+    getAccessPermissionRules,
   };
 }

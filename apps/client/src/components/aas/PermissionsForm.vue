@@ -1,25 +1,49 @@
 <script setup lang="ts">
-import type { MemberRoleDtoType, UserRoleDtoType } from "@open-dpp/dto";
+import type {
+  AccessPermissionRuleResponseDto,
+  MemberRoleDtoType,
+  PermissionType,
+  UserRoleDtoType,
+} from "@open-dpp/dto";
 import type { AasEditorPath } from "../../composables/aas-drawer.ts";
 import { Permissions } from "@open-dpp/dto";
-import { computed, ref } from "vue";
-import { useAasSecurity } from "../../stores/aas-security.ts";
+import { ref, watch } from "vue";
+import { useAasSecurity } from "../../composables/aas-security.ts";
 
 const props = defineProps<{
   path: AasEditorPath;
+  getAccessPermissionRules: () => AccessPermissionRuleResponseDto[];
 }>();
 
-const { findPermissionForObject, roleHierarchy } = useAasSecurity();
-const permissionPerObjects = computed(() => {
-  return props.path.idShortPathIncludingSubmodel
-    ? findPermissionForObject(props.path.idShortPathIncludingSubmodel)
-    : [];
+const { findPermissionForObject, roleHierarchy } = useAasSecurity({
+  initialAccessPermissionRules: props.getAccessPermissionRules(),
 });
+
+const permissionPerObjects = ref<ReturnType<typeof findPermissionForObject>>(
+  [],
+);
 
 const selectedRole = ref<{
   userRole: UserRoleDtoType;
   memberRole?: MemberRoleDtoType;
-} | null>(permissionPerObjects.value[0]?.subject ?? null);
+} | null>(null);
+
+const selectedPermissions = ref<PermissionType[]>([]);
+
+watch(
+  () => props.path.idShortPathIncludingSubmodel,
+  (newPath) => {
+    permissionPerObjects.value = newPath
+      ? findPermissionForObject(newPath)
+      : [];
+    selectedRole.value = permissionPerObjects.value[0]?.subject ?? null;
+
+    selectedPermissions.value
+      = permissionPerObjects.value[0]?.permissions.map(p => p.permission) ?? [];
+  },
+  { immediate: true },
+);
+
 const roles = ref(roleHierarchy);
 
 const permissionOptions = ref([
@@ -28,19 +52,18 @@ const permissionOptions = ref([
   { name: "Edit", key: Permissions.Edit },
   { name: "Delete", key: Permissions.Delete },
 ]);
-const selectedPermissions = ref(
-  permissionPerObjects.value[0]
-    ? permissionPerObjects.value[0].permissions.map(p => p.permission)
-    : [],
-);
 
 function onRoleChange(role: {
   userRole: UserRoleDtoType;
   memberRole?: MemberRoleDtoType;
 }) {
-  const foundPermissionPerObject = permissionPerObjects.value.find(p => JSON.stringify(p.subject) === JSON.stringify(role));
+  const foundPermissionPerObject = permissionPerObjects.value.find(
+    p => JSON.stringify(p.subject) === JSON.stringify(role),
+  );
   if (foundPermissionPerObject) {
-    selectedPermissions.value = foundPermissionPerObject.permissions.map(p => p.permission);
+    selectedPermissions.value = foundPermissionPerObject.permissions.map(
+      p => p.permission,
+    );
   }
   else {
     selectedPermissions.value = [];
