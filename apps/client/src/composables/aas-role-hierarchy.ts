@@ -13,5 +13,6 @@ export function useAasRoleHierarchy() {
     }, // organization member
     { name: "Öffentlich", key: { userRole: UserRoleDto.ANONYMOUS } }, // anonymous user without an account
   ];
+
   return { hierarchy: roleHierarchy };
 }

@@ -114,17 +114,17 @@ export class EnvironmentService {
     return environment;
   }
 
-  async getAasShells(environment: Environment, pagination: Pagination, subjet: SubjectAttributes): Promise<AssetAdministrationShellPaginationResponseDto> {
+  async getAasShells(environment: Environment, pagination: Pagination, subject: SubjectAttributes): Promise<AssetAdministrationShellPaginationResponseDto> {
     const pages = pagination.nextPages(environment.assetAdministrationShells);
     const shells = await Promise.all(pages.map(p => this.aasRepository.findOneOrFail(p)));
-    return AssetAdministrationShellPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: shells }).toPlain({ filterBySubject: subjet }));
+    return AssetAdministrationShellPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: shells }).toPlain({ filterBySubject: subject }));
   }
 
   async modifyAasShell(environment: Environment, aasId: string, modification: AssetAdministrationShellModificationDto, subject: SubjectAttributes): Promise<AssetAdministrationShellResponseDto> {
     const aas = await this.findAssetAdministrationShellByIdOrFail(environment, aasId);
     aas.modify(modification, subject);
     await this.aasRepository.save(aas);
-    return AssetAdministrationShellJsonSchema.parse(aas.toPlain());
+    return AssetAdministrationShellJsonSchema.parse(aas.toPlain({ filterBySubject: subject }));
   }
 
   async getSubmodels(environment: Environment, pagination: Pagination): Promise<SubmodelPaginationResponseDto> {

@@ -1,6 +1,8 @@
 import type { AccessPermissionRuleResponseDto, MemberRoleDtoType, PermissionDto, UserRoleDtoType } from "@open-dpp/dto";
 import {
 
+  DataTypeDef,
+
   MemberRoleDtoEnum,
 
   UserRoleDto,
@@ -21,8 +23,8 @@ export function findPermissionForObject(object: string, accessPermissionRules: A
   for (const rule of accessPermissionRules) {
     for (const permissionPerObject of rule.permissionsPerObject) {
       if (permissionPerObject.object.idShort === object) {
-        const userRole = makeRule(rule).userRole;
-        const memberRole = makeRule(rule).memberRole;
+        const userRole = ruleHelper(rule).userRole;
+        const memberRole = ruleHelper(rule).memberRole;
         const subject = memberRole ? { userRole, memberRole } : { userRole };
         if (userRole) {
           permissions.push({
@@ -36,7 +38,39 @@ export function findPermissionForObject(object: string, accessPermissionRules: A
   return permissions;
 }
 
-export function makeRule(accessPermissionRule: AccessPermissionRuleResponseDto) {
+export function makeRule(data: { subject: Subject; object: string; permissions: PermissionDto[] }): AccessPermissionRuleResponseDto {
+  const defaultValues = {
+    extensions: [],
+    displayName: [],
+    description: [],
+    supplementalSemanticIds: [],
+    qualifiers: [],
+    embeddedDataSpecifications: [],
+  };
+  const userRole = {
+    ...defaultValues,
+    idShort: "userRole",
+    value: data.subject.userRole,
+    valueType: DataTypeDef.String,
+  };
+  const memberRole = {
+    ...defaultValues,
+    idShort: "memberRole",
+    value: data.subject.memberRole,
+    valueType: DataTypeDef.String,
+  };
+  return {
+    targetSubjectAttributes: {
+      subjectAttribute: [userRole, memberRole],
+    },
+    permissionsPerObject: [{
+      object: { ...defaultValues, idShort: data.object },
+      permissions: data.permissions,
+    }],
+  };
+}
+
+export function ruleHelper(accessPermissionRule: AccessPermissionRuleResponseDto) {
   const rule: AccessPermissionRuleResponseDto = accessPermissionRule;
 
   const userRole = UserRoleDtoEnum.parse(

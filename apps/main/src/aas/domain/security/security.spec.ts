@@ -70,6 +70,11 @@ describe("security", () => {
 
     expect(() => security.addPolicy(SubjectAttributes.create({ userRole: UserRole.ADMIN }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })])).not.toThrow(
     );
+
+    security = Security.create({ }).withAdministrator(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }));
+    expect(() => security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })])).toThrow(
+      expectedError,
+    );
   });
 
   it("should modify policy", () => {

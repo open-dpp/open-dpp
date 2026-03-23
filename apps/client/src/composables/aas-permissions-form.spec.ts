@@ -122,6 +122,16 @@ describe("aasPermissionsForm composable", () => {
       },
     ]);
 
+    expect(permissionsForm.getPermissions({ subject: { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER } })).toEqual([{
+      subject: { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER },
+      permissions: [
+        {
+          permission: Permissions.Create,
+          kindOfPermission: PermissionKind.Allow,
+        },
+      ],
+    }]);
+
     permissionsForm = mountHarness({
       initialAccessPermissionRules:
         security.localAccessControl.accessPermissionRules,
@@ -188,8 +198,10 @@ describe("aasPermissionsForm composable", () => {
       modifyShell: modifyShellMock,
     });
     const member = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER };
+    const owner = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.OWNER };
     editPermissions([Permissions.Create, Permissions.Edit], member);
     editPermissions([Permissions.Create, Permissions.Edit], member);
+    editPermissions([Permissions.Read], owner);
     expect(getPermissions()).toEqual([
       {
         subject: {
@@ -208,7 +220,7 @@ describe("aasPermissionsForm composable", () => {
         ],
       },
       {
-        subject: { userRole: UserRoleDto.ADMIN, memberRole: undefined },
+        subject: { userRole: UserRoleDto.ADMIN },
         permissions: [
           {
             permission: Permissions.Create,
@@ -216,6 +228,15 @@ describe("aasPermissionsForm composable", () => {
           },
           {
             permission: Permissions.Edit,
+            kindOfPermission: PermissionKind.Allow,
+          },
+        ],
+      },
+      {
+        subject: { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.OWNER },
+        permissions: [
+          {
+            permission: Permissions.Read,
             kindOfPermission: PermissionKind.Allow,
           },
         ],
@@ -278,6 +299,34 @@ describe("aasPermissionsForm composable", () => {
                     },
                     {
                       permission: Permissions.Edit,
+                      kindOfPermission: PermissionKind.Allow,
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              targetSubjectAttributes: {
+                subjectAttribute: [
+                  propertyOutputPlainFactory.build({
+                    idShort: "userRole",
+                    value: "user",
+                  }),
+                  propertyOutputPlainFactory.build({
+                    idShort: "memberRole",
+                    value: "owner",
+                  }),
+                ],
+              },
+              permissionsPerObject: [
+                {
+                  object: permissionObjectPlainFactory.build({
+                    idShort: "section1",
+                    value: undefined,
+                  }),
+                  permissions: [
+                    {
+                      permission: Permissions.Read,
                       kindOfPermission: PermissionKind.Allow,
                     },
                   ],

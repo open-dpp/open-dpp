@@ -5,12 +5,14 @@ import type {
   UserRoleDtoType,
 } from "@open-dpp/dto";
 import type { IAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
+import type { Subject } from "../../lib/aas-security.ts";
 import { Permissions } from "@open-dpp/dto";
-import { onMounted, ref } from "vue";
 
+import { onMounted, ref } from "vue";
 import { useAasRoleHierarchy } from "../../composables/aas-role-hierarchy.ts";
 
-const { getPermissions, editPermissions } = defineProps<Omit<IAasPermissionsForm, "savePermissions">>();
+const { getPermissions, editPermissions }
+  = defineProps<Omit<IAasPermissionsForm, "savePermissions">>();
 
 const permissionPerObjects = ref<ReturnType<typeof getPermissions>>([]);
 
@@ -23,11 +25,27 @@ const selectedPermissions = ref<PermissionType[]>([]);
 
 onMounted(() => {
   permissionPerObjects.value = getPermissions();
+
   selectedRole.value = permissionPerObjects.value[0]?.subject ?? null;
 
-  selectedPermissions.value
-    = permissionPerObjects.value[0]?.permissions.map(p => p.permission) ?? [];
+  if (selectedRole.value) {
+    setPermissions(selectedRole.value);
+  }
 });
+
+function setPermissions(subject: Subject) {
+  const foundPermissionPerObject = permissionPerObjects.value.find(
+    p => JSON.stringify(p.subject) === JSON.stringify(subject),
+  );
+  if (foundPermissionPerObject) {
+    selectedPermissions.value = foundPermissionPerObject.permissions.map(
+      p => p.permission,
+    );
+  }
+  else {
+    selectedPermissions.value = [];
+  }
+}
 
 const { hierarchy } = useAasRoleHierarchy();
 
@@ -44,17 +62,7 @@ function onRoleChange(role: {
   userRole: UserRoleDtoType;
   memberRole?: MemberRoleDtoType;
 }) {
-  const foundPermissionPerObject = permissionPerObjects.value.find(
-    p => JSON.stringify(p.subject) === JSON.stringify(role),
-  );
-  if (foundPermissionPerObject) {
-    selectedPermissions.value = foundPermissionPerObject.permissions.map(
-      p => p.permission,
-    );
-  }
-  else {
-    selectedPermissions.value = [];
-  }
+  setPermissions(role);
 }
 function onPermissionChange() {
   if (selectedRole.value) {
