@@ -3,10 +3,11 @@ import type {
   MemberRoleDtoType,
   PermissionKindType,
   PermissionType,
-  ReferenceJsonSchema,
+  ReferenceElementJsonSchema,
   SecurityResponseDto,
   UserRoleDtoType,
 } from '@open-dpp/dto'
+
 import type { z } from 'zod'
 
 import { randomUUID } from 'node:crypto'
@@ -18,7 +19,7 @@ import { Factory } from 'fishery'
 import { propertyOutputPlainFactory } from './submodel-element.factory'
 
 const permissionObjectPlainFactory
-  = Factory.define<z.infer<typeof ReferenceJsonSchema>> (({ params }) => ({
+  = Factory.define<z.infer<typeof ReferenceElementJsonSchema>> (({ params }) => ({
     idShort: params.idShort ?? randomUUID(),
     extensions: [],
     displayName: [],

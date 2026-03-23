@@ -1,5 +1,7 @@
 import { ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
+import { ReferenceElement } from "../submodel-base/reference-element";
+import { Permission } from "./permission";
 import { PermissionPerObject, PermissionPerObjectSchema } from "./permission-per-object";
 import { SubjectAttributes, SubjectAttributesSchema } from "./subject-attributes";
 
@@ -24,6 +26,14 @@ export class AccessPermissionRule {
       throw new ValueError(`Permission for subject { userRole: ${this.targetSubjectAttributes.userRole}, memberRole: ${this.targetSubjectAttributes.memberRole} } and object ${permissionPerObject.object.idShort} already exists`);
     }
     this.permissionsPerObject.push(permissionPerObject);
+  }
+
+  modifyPermissionForObject(object: ReferenceElement, permissions: Permission[]): void {
+    const permissionsPerObject = this.permissionsPerObject.find(p => p.object.idShort === object.idShort);
+    if (!permissionsPerObject) {
+      throw new ValueError(`Permission for subject { userRole: ${this.targetSubjectAttributes.userRole}, memberRole: ${this.targetSubjectAttributes.memberRole} } and object ${object.idShort} does not exist`);
+    }
+    permissionsPerObject.permissions = permissions;
   }
 
   static fromPlain(json: unknown): AccessPermissionRule {

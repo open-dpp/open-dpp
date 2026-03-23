@@ -56,7 +56,7 @@ export class Security {
 
   private administratePolicyGuard(subject: SubjectAttributes) {
     if (this.administrator.userRole !== UserRole.ADMIN && this.administrator.hasLowerThanOrEqualRoles(subject)) {
-      throw new ForbiddenError(`Administrator has no permission to add policy.`);
+      throw new ForbiddenError(`Administrator has no permission to add/ modify policy.`);
     }
   }
 
@@ -69,6 +69,30 @@ export class Security {
     }
     else {
       this.localAccessControl.addRule(AccessPermissionRule.create({ targetSubjectAttributes: subject, permissionsPerObject: [permissionPerObject] }));
+    }
+  }
+
+  modifyPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): void {
+    this.administratePolicyGuard(subject);
+    const rule = this.localAccessControl.findRuleOfSubject(subject);
+    if (!rule) {
+      throw new ForbiddenError(`Policy for subject { userRole: ${subject.userRole}, memberRole: ${subject.memberRole} } and object ${object.toString()} does not exist.`);
+    }
+    const aasObject = createAasObject(object);
+    rule.modifyPermissionForObject(aasObject, permissions);
+  }
+
+  applyModifiedRules(modifications: AccessPermissionRule[]): void {
+    for (const modification of modifications) {
+      for (const permissionsPerObject of modification.permissionsPerObject) {
+        const policy = { subject: modification.targetSubjectAttributes, object: IdShortPath.create({ path: permissionsPerObject.object.idShort }), permissions: permissionsPerObject.permissions };
+        if (this.hasPolicy(policy.subject, policy.object, policy.permissions)) {
+          this.modifyPolicy(policy.subject, policy.object, policy.permissions);
+        }
+        else {
+          this.addPolicy(policy.subject, policy.object, policy.permissions);
+        }
+      }
     }
   }
 

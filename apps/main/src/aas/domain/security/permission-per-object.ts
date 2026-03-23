@@ -10,7 +10,7 @@ export const PermissionPerObjectSchema = z.object({
 
 export class PermissionPerObject {
   // object maybe submodel, and objectAttributes maybe IdShortPaths
-  private constructor(public readonly object: ReferenceElement, public readonly permissions: Permission[]) {
+  private constructor(public readonly object: ReferenceElement, public permissions: Permission[]) {
   }
 
   static create(data: { object: ReferenceElement; permissions?: Permission[] }): PermissionPerObject {

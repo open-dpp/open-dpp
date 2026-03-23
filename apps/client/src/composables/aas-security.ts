@@ -10,7 +10,7 @@ import {
   UserRoleDtoEnum,
 
 } from "@open-dpp/dto";
-import { ref, watch } from "vue";
+import { ref } from "vue";
 
 interface Subject {
   userRole: UserRoleDtoType;
@@ -109,10 +109,6 @@ export function useAasSecurity({
     return permissions;
   }
 
-  watch(() => accessPermissionRules.value, (newValue) => {
-    console.log("Access permission rules changed", newValue);
-  }, { deep: true, immediate: true });
-
   return { can, editPermissions, findPermissionForObject, roleHierarchy };
 };
 
@@ -131,7 +127,7 @@ function makeRule(accessPermissionRule: AccessPermissionRuleResponseDto) {
   );
 
   function hasEqualSubject(subject: Subject) {
-    return (subject.userRole === userRole && userRole === UserRoleDto.ADMIN) || subject.userRole === userRole && subject.memberRole === memberRole;
+    return (subject.userRole === userRole && userRole === UserRoleDto.ADMIN) || (subject.userRole === userRole && subject.memberRole === memberRole);
   }
 
   return {

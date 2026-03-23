@@ -22,6 +22,7 @@ import { ConceptDescription } from "./concept-description";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
 import { Resource } from "./resource";
+import { AccessPermissionRule } from "./security/access-permission-rule";
 import { SpecificAssetId } from "./specific-asset-id";
 import { AnnotatedRelationshipElement } from "./submodel-base/annotated-relationship-element";
 import { Blob } from "./submodel-base/blob";
@@ -33,8 +34,8 @@ import { Range } from "./submodel-base/range";
 import { ReferenceElement } from "./submodel-base/reference-element";
 import { RelationshipElement } from "./submodel-base/relationship-element";
 import { Submodel } from "./submodel-base/submodel";
-import { ISubmodelElement } from "./submodel-base/submodel-base";
 
+import { ISubmodelElement } from "./submodel-base/submodel-base";
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
@@ -66,6 +67,9 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
     this.modifyNameAndDescription(element, parsed);
     if (parsed.assetInformation) {
       element.assetInformation.accept(this, parsed.assetInformation);
+    }
+    if (parsed.security) {
+      element.security.applyModifiedRules(parsed.security.localAccessControl.accessPermissionRules.map(AccessPermissionRule.fromPlain));
     }
   }
 
