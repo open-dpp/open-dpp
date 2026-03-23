@@ -109,7 +109,7 @@ describe("authGuard Allowlist Repro", () => {
     expect(await guard.canActivate(context)).toBe(false);
   });
 
-  describe("API key authentication", () => {
+  describe("aPI key authentication", () => {
     it("should create synthetic session when API key is valid", async () => {
       mockSessionsService.verifyApiKey.mockResolvedValue({ userId: "user-789" });
       const context = createMockContext("/api/items", { "x-api-key": "valid-key" });
