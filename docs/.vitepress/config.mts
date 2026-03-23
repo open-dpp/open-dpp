@@ -56,9 +56,9 @@ export default defineConfig({
           {
             text: "Guides",
             items: [
-              { text: "Branding", link: "guides/branding"},
-              { text: "AI Integration", link: "guides/ai"},
-              { text: "Development", link: "guides/development"},
+              { text: "Branding", link: "/guides/branding"},
+              { text: "AI Integration", link: "/guides/ai"},
+              { text: "Development", link: "/guides/development"},
             ]
           }
         ],

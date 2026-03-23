@@ -10,6 +10,37 @@ We welcome contributions of all sizes, including bug fixes, documentation improv
 - For small fixes (typos, docs improvements, minor bug fixes), you can usually open a PR directly.
 - Keep pull requests focused. Smaller, well-scoped PRs are easier to review and merge.
 
+## Architecture and on-ramp
+
+This repository is a pnpm + Turborepo monorepo. If you are new to open-dpp, start by understanding the runtime boundaries (backend API, frontend app, shared packages, and supporting infrastructure), then pick a small issue in one area.
+
+### System layout
+
+- `apps/main/src/` — NestJS backend API and domain logic.
+- `apps/client/src/` — Vue frontend that consumes backend APIs.
+- `apps/e2e/` — Playwright end-to-end tests.
+- `packages/` — shared libraries (`dto`, `api-client`, `env`, `exception`, `permission`, `testing`).
+- `docs/` — VitePress documentation and guides.
+- `docker/`, `docker-compose*.yml` — local infrastructure setup (MongoDB, MinIO, Mailpit, ClamAV).
+
+Primary runtime boundaries:
+
+- API/runtime boundary: `apps/client` ↔ `apps/main`.
+- Data boundary: `apps/main` ↔ MongoDB and object storage services.
+- Shared contract boundary: apps ↔ `packages/*` (types, DTOs, helpers).
+
+### How the pieces fit
+
+The frontend calls backend endpoints and websocket/chat features exposed by `apps/main`. The backend orchestrates domain services, persistence, and integrations, while shared packages provide common schemas, client types, and utilities used across applications. Supporting Docker services provide local persistence, media, email testing, and malware scanning.
+
+### Starter issues
+
+Start with issues labeled for newcomers:
+
+- [good first issue](https://github.com/open-dpp/open-dpp/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+- [help wanted](https://github.com/open-dpp/open-dpp/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
+- [Issue tracker](https://github.com/open-dpp/open-dpp/issues)
+
 ## Development setup
 
 ### Prerequisites
