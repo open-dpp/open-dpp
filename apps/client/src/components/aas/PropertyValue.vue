@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { DataTypeDefType } from "@open-dpp/dto";
 import { DataTypeDef } from "@open-dpp/dto";
+import dayjs from "dayjs";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
@@ -42,8 +43,17 @@ const NUMERIC_TYPES = new Set<DataTypeDefType>([
   DataTypeDef.Decimal,
 ]);
 
+const DATE_TYPES = new Set<DataTypeDefType>([
+  DataTypeDef.Date,
+  DataTypeDef.DateTime,
+]);
+
 const isNumeric = computed(() =>
   props.valueType ? NUMERIC_TYPES.has(props.valueType) : false,
+);
+
+const isDate = computed(() =>
+  props.valueType ? DATE_TYPES.has(props.valueType) : false,
 );
 
 const maxFractionDigits = computed(() =>
@@ -60,6 +70,22 @@ const numericValue = computed({
     }
   },
   set: v => emit("update:modelValue", z.coerce.string().nullish().parse(v)),
+});
+
+const dateValue = computed({
+  get: () => {
+    if (!props.modelValue)
+      return null;
+    const parsed = dayjs(props.modelValue);
+    return parsed.isValid() ? parsed.toDate() : null;
+  },
+  set: (v: Date | null | undefined) => {
+    if (!v) {
+      emit("update:modelValue", null);
+      return;
+    }
+    emit("update:modelValue", dayjs(v).format("YYYY-MM-DD"));
+  },
 });
 
 const textValue = computed({
@@ -81,6 +107,15 @@ const textValue = computed({
     :locale="locale"
     :max-fraction-digits="maxFractionDigits"
     show-buttons
+  />
+  <DatePicker
+    v-else-if="isDate"
+    :id="props.id"
+    v-model="dateValue"
+    :disabled="props.disabled"
+    :invalid="props.invalid"
+    show-icon
+    fluid
   />
   <InputText
     v-else
