@@ -12,6 +12,7 @@ describe("SessionsService", () => {
     mockAuth = {
       api: {
         getSession: jest.fn(),
+        verifyApiKey: jest.fn(),
       },
     };
 
@@ -67,5 +68,36 @@ describe("SessionsService", () => {
     expect(result).toBeInstanceOf(Session);
     expect(result?.id).toBe("session-123");
     expect(result?.userId).toBe("user-123");
+  });
+
+  describe("verifyApiKey", () => {
+    it("should return null if API key is invalid", async () => {
+      mockAuth.api.verifyApiKey.mockResolvedValue({ valid: false, error: { code: "INVALID_API_KEY", message: "Invalid" }, key: null });
+
+      const result = await service.verifyApiKey("invalid-key");
+
+      expect(result).toBeNull();
+      expect(mockAuth.api.verifyApiKey).toHaveBeenCalledWith({ body: { key: "invalid-key" } });
+    });
+
+    it("should return userId if API key is valid", async () => {
+      mockAuth.api.verifyApiKey.mockResolvedValue({
+        valid: true,
+        error: null,
+        key: { id: "key-1", userId: "user-456", name: "test-key" },
+      });
+
+      const result = await service.verifyApiKey("valid-key");
+
+      expect(result).toEqual({ userId: "user-456" });
+    });
+
+    it("should return null if result has no key", async () => {
+      mockAuth.api.verifyApiKey.mockResolvedValue({ valid: true, error: null, key: null });
+
+      const result = await service.verifyApiKey("some-key");
+
+      expect(result).toBeNull();
+    });
   });
 });

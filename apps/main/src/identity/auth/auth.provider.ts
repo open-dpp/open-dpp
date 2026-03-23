@@ -166,9 +166,11 @@ export const AuthProvider: Provider = {
       },
       hooks: {},
       plugins: [apiKey({
-        enableSessionForAPIKeys: true,
+        enableSessionForAPIKeys: false,
         rateLimit: {
-          enabled: false,
+          enabled: true,
+          timeWindow: 1000 * 60, // 1 minute
+          maxRequests: 100, // 100 requests per timeWindow
         },
       }), organization({
         async sendInvitationEmail(data) {

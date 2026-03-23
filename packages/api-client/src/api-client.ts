@@ -23,7 +23,7 @@ export function createAxiosClient(
     headers: {
       ...options.headers,
       service_token: options.serviceToken ? options.serviceToken : '',
-      Authorization: options.apiKey ? `Bearer ${options.apiKey}` : '',
+      'x-api-key': options.apiKey ? options.apiKey : '',
       ...(options.activeOrganizationId
         ? { 'X-OPEN-DPP-ORGANIZATION-ID': options.activeOrganizationId }
         : {}),

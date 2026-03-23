@@ -78,13 +78,17 @@ export class AuthGuard implements CanActivate {
     }
 
     if (apiKeyHeader) {
-      const headers = new Headers();
-      headers.set("x-api-key", apiKeyHeader);
       try {
-        session = await this.sessionsService.getSession(headers);
+        const verifiedKey = await this.sessionsService.verifyApiKey(apiKeyHeader);
+        if (verifiedKey) {
+          session = Session.create({
+            userId: verifiedKey.userId,
+            token: "api-key",
+          });
+        }
       }
       catch {
-        // If session retrieval fails, treat as no session
+        // If API key verification fails, treat as no session
       }
     }
     else {
