@@ -13,6 +13,9 @@ export default defineConfig({
   title: "open-dpp Documentation",
   description: "Documentation for the open-dpp project.",
   head: [["link", { rel: "icon", href: "/logo.svg" }]],
+  ignoreDeadLinks: [
+    /^https?:\/\/localhost/,
+  ],
   themeConfig: {
     logo: {
       src: "/logo.svg",
