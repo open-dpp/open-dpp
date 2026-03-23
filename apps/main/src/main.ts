@@ -78,13 +78,6 @@ async function bootstrap() {
   if (envService.get("OPEN_DPP_BUILD_API_DOC")) {
     buildOpenApiDocumentation(app);
   }
-  app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.TCP,
-    options: {
-      port: envService.get("OPEN_DPP_MSG_PORT"), // Microservice port
-    },
-  });
-  await app.startAllMicroservices();
   const port = envService.get("OPEN_DPP_PORT");
   logger.log(`Application is running on: ${port}`);
   await app.listen(port);

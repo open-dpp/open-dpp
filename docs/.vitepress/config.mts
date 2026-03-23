@@ -21,7 +21,7 @@ export default defineConfig({
       src: "/logo.svg",
       alt: "open-dpp Logo",
     },
-    nav: [{ text: "Home", link: "/" }, { text: "Rest API", link: "/api"}],
+    nav: [{ text: "Home", link: "/home" }, { text: "Rest API", link: "/api"}],
 
     sidebar: {
       "/api": [

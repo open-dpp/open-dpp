@@ -43,7 +43,8 @@ open-dpp is configured through environment variables. Some settings can also be 
 | `OPEN_DPP_S3_SSL` | boolean (string-parsed) | Yes | – | Enable SSL for S3 connection (`"true"` => true). |
 | `OPEN_DPP_S3_ACCESS_KEY` | string | Yes | – | S3 access key. |
 | `OPEN_DPP_S3_SECRET_KEY` | string | Yes | – | S3 secret key. |
-| `OPEN_DPP_S3_DEFAULT_BUCKET` | string | Yes | – | Default bucket name. |
+| `OPEN_DPP_S3_DEFAULT_BUCKET` | string | No | `open-dpp` | Default bucket name. |
+| `OPEN_DPP_S3_PROFILE_PICTURE_BUCKET` | string | No | `open-dpp-profile-pictures` | Profile picture bucket name. |
 
 ## ClamAV
 
