@@ -15,9 +15,10 @@ const props = defineProps<{
   getAccessPermissionRules: () => AccessPermissionRuleResponseDto[];
 }>();
 
-const { findPermissionForObject, roleHierarchy } = useAasSecurity({
-  initialAccessPermissionRules: props.getAccessPermissionRules(),
-});
+const { findPermissionForObject, roleHierarchy, editPermissions }
+  = useAasSecurity({
+    initialAccessPermissionRules: props.getAccessPermissionRules(),
+  });
 
 const permissionPerObjects = ref<ReturnType<typeof findPermissionForObject>>(
   [],
@@ -69,6 +70,15 @@ function onRoleChange(role: {
     selectedPermissions.value = [];
   }
 }
+function onPermissionChange() {
+  if (props.path.idShortPathIncludingSubmodel && selectedRole.value) {
+    editPermissions(
+      selectedPermissions.value,
+      props.path.idShortPathIncludingSubmodel!,
+      selectedRole.value,
+    );
+  }
+}
 </script>
 
 <template>
@@ -93,6 +103,7 @@ function onRoleChange(role: {
         :input-id="permission.key"
         name="permissions"
         :value="permission.name"
+        @update:model-value="onPermissionChange"
       />
       <label :for="permission.key">{{ permission.name }}</label>
     </div>

@@ -163,4 +163,90 @@ describe("aasSecurity composable", () => {
       { subject: { userRole: "user", memberRole: "member" }, permissions: allPermissionsAllow },
     ]);
   });
+
+  it("should modify security", async () => {
+    const transientParams: SecurityPlainTransientParams = {
+      policies: [
+        {
+          subject: {
+            userRole: UserRoleDto.USER,
+            memberRole: MemberRoleDto.MEMBER,
+          },
+          object: { idShortPath: "section1" },
+          permissions: [
+            {
+              permission: Permissions.Create,
+              kindOfPermission: PermissionKind.Allow,
+            },
+          ],
+        },
+        {
+          subject: {
+            userRole: UserRoleDto.USER,
+            memberRole: MemberRoleDto.MEMBER,
+          },
+          object: { idShortPath: "section3" },
+          permissions: allPermissionsAllow,
+        },
+        {
+          subject: { userRole: UserRoleDto.ADMIN },
+          object: { idShortPath: "section1" },
+          permissions: [
+            {
+              permission: Permissions.Create,
+              kindOfPermission: PermissionKind.Allow,
+            },
+            {
+              permission: Permissions.Edit,
+              kindOfPermission: PermissionKind.Allow,
+            },
+          ],
+        },
+      ],
+    };
+    const security: SecurityResponseDto = securityPlainFactory.build(
+      undefined,
+      { transient: transientParams },
+    );
+
+    const { editPermissions, findPermissionForObject } = mountHarness({
+      initialAccessPermissionRules:
+        security.localAccessControl.accessPermissionRules,
+    });
+    const member = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER };
+    editPermissions([Permissions.Create, Permissions.Edit], "section1", member);
+    editPermissions([Permissions.Create, Permissions.Edit], "section1", member);
+
+    expect(findPermissionForObject("section1")).toEqual([
+      {
+        subject: {
+          userRole: UserRoleDto.USER,
+          memberRole: MemberRoleDto.MEMBER,
+        },
+        permissions: [
+          {
+            permission: Permissions.Create,
+            kindOfPermission: PermissionKind.Allow,
+          },
+          {
+            permission: Permissions.Edit,
+            kindOfPermission: PermissionKind.Allow,
+          },
+        ],
+      },
+      {
+        subject: { userRole: UserRoleDto.ADMIN, memberRole: undefined },
+        permissions: [
+          {
+            permission: Permissions.Create,
+            kindOfPermission: PermissionKind.Allow,
+          },
+          {
+            permission: Permissions.Edit,
+            kindOfPermission: PermissionKind.Allow,
+          },
+        ],
+      },
+    ]);
+  });
 });

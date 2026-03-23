@@ -10,12 +10,18 @@ import {
   UserRoleDtoEnum,
 
 } from "@open-dpp/dto";
-import { ref } from "vue";
+import { ref, watch } from "vue";
+
+interface Subject {
+  userRole: UserRoleDtoType;
+  memberRole?: MemberRoleDtoType;
+}
 
 export interface IAasSecurity {
   roleHierarchy: { name: string; key: { userRole: UserRoleDtoType; memberRole?: MemberRoleDtoType } }[];
   can: (action: PermissionType, object: string) => boolean;
   findPermissionForObject: (object: string) => { subject: { userRole: UserRoleDtoType; memberRole?: MemberRoleDtoType }; permissions: PermissionDto[] }[];
+  editPermissions: (permissions: PermissionType[], object: string, subject: Subject) => void;
 }
 
 export interface AasSecurityProps {
@@ -62,24 +68,34 @@ export function useAasSecurity({
     return false;
   }
 
+  function editPermissions(
+    permissions: PermissionType[],
+    object: string,
+    subject: Subject,
+  ) {
+    const foundRule = accessPermissionRules.value.find(r =>
+      makeRule(r).hasEqualSubject(subject),
+    );
+    if (foundRule) {
+      const permissionPerObject = foundRule.permissionsPerObject.find(
+        p => p.object.idShort === object,
+      );
+      if (permissionPerObject) {
+        permissionPerObject.permissions = permissions.map(p => ({ permission: p, kindOfPermission: PermissionKind.Allow }));
+      }
+    }
+  }
+
   function findPermissionForObject(object: string) {
     const permissions: {
-      subject: { userRole: UserRoleDtoType; memberRole?: MemberRoleDtoType };
+      subject: Subject;
       permissions: PermissionDto[];
     }[] = [];
     for (const rule of accessPermissionRules.value) {
       for (const permissionPerObject of rule.permissionsPerObject) {
         if (permissionPerObject.object.idShort === object) {
-          const userRole = UserRoleDtoEnum.parse(
-            rule.targetSubjectAttributes.subjectAttribute.find(
-              p => p.idShort === "userRole",
-            )?.value,
-          );
-          const memberRole = MemberRoleDtoEnum.optional().parse(
-            rule.targetSubjectAttributes.subjectAttribute.find(
-              p => p.idShort === "memberRole",
-            )?.value ?? undefined,
-          );
+          const userRole = makeRule(rule).userRole;
+          const memberRole = makeRule(rule).memberRole;
           const subject = memberRole ? { userRole, memberRole } : { userRole };
           if (userRole) {
             permissions.push({
@@ -93,8 +109,38 @@ export function useAasSecurity({
     return permissions;
   }
 
-  return { can, findPermissionForObject, roleHierarchy };
+  watch(() => accessPermissionRules.value, (newValue) => {
+    console.log("Access permission rules changed", newValue);
+  }, { deep: true, immediate: true });
+
+  return { can, editPermissions, findPermissionForObject, roleHierarchy };
 };
+
+function makeRule(accessPermissionRule: AccessPermissionRuleResponseDto) {
+  const rule: AccessPermissionRuleResponseDto = accessPermissionRule;
+
+  const userRole = UserRoleDtoEnum.parse(
+    rule.targetSubjectAttributes.subjectAttribute.find(
+      p => p.idShort === "userRole",
+    )?.value,
+  );
+  const memberRole = MemberRoleDtoEnum.optional().parse(
+    rule.targetSubjectAttributes.subjectAttribute.find(
+      p => p.idShort === "memberRole",
+    )?.value ?? undefined,
+  );
+
+  function hasEqualSubject(subject: Subject) {
+    return (subject.userRole === userRole && userRole === UserRoleDto.ADMIN) || subject.userRole === userRole && subject.memberRole === memberRole;
+  }
+
+  return {
+    ...rule,
+    userRole,
+    memberRole,
+    hasEqualSubject,
+  };
+}
 
 /*
 how to update assetAdministrationShell on security change
