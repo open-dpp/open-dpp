@@ -114,7 +114,6 @@ const textValue = computed({
     v-model="dateValue"
     :disabled="props.disabled"
     :invalid="props.invalid"
-    date-format="yy-mm-dd"
     show-icon
     fluid
   />
