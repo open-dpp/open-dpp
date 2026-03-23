@@ -1,6 +1,6 @@
 import type { SecurityResponseDto } from "@open-dpp/dto";
 import type { SecurityPlainTransientParams } from "@open-dpp/testing";
-import type { AasSecurityProps } from "./aas-security.ts";
+import type { AasPermissionsFormProps } from "./aas-permissions-form.ts";
 import {
   MemberRoleDto,
 
@@ -8,25 +8,21 @@ import {
   Permissions,
   UserRoleDto,
 } from "@open-dpp/dto";
-import {
-  allPermissionsAllow,
-  securityPlainFactory,
-
-} from "@open-dpp/testing";
+import { allPermissionsAllow, permissionObjectPlainFactory, propertyOutputPlainFactory, securityPlainFactory } from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent } from "vue";
-import { useAasSecurity } from "./aas-security.ts";
+import { useAasPermissionsForm } from "./aas-permissions-form.ts";
 
-describe("aasSecurity composable", () => {
+describe("aasPermissionsForm composable", () => {
   const mountedWrappers: Array<ReturnType<typeof mount>> = [];
 
-  function mountHarness(props: AasSecurityProps) {
+  function mountHarness(props: AasPermissionsFormProps) {
     const Harness = defineComponent({
       name: "MediaFileCollectionHarness",
       setup() {
-        const api = useAasSecurity(props);
+        const api = useAasPermissionsForm(props);
         return { api };
       },
       template: "<div />",
@@ -36,7 +32,7 @@ describe("aasSecurity composable", () => {
     mountedWrappers.push(wrapper);
     return {
       wrapper,
-      ...(wrapper.vm.api as ReturnType<typeof useAasSecurity>),
+      ...(wrapper.vm.api as ReturnType<typeof useAasPermissionsForm>),
     };
   }
 
@@ -53,43 +49,7 @@ describe("aasSecurity composable", () => {
     });
   });
 
-  it("should set security and check permissions", async () => {
-    const transientParams: SecurityPlainTransientParams = {
-      policies: [
-        {
-          subject: { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER },
-          object: { idShortPath: "section1" },
-          permissions: [
-            {
-              permission: Permissions.Create,
-              kindOfPermission: PermissionKind.Allow,
-            },
-          ],
-        },
-        {
-          subject: { userRole: UserRoleDto.ADMIN },
-          object: { idShortPath: "section1" },
-          permissions: [
-            {
-              permission: Permissions.Edit,
-              kindOfPermission: PermissionKind.Allow,
-            },
-          ],
-        },
-      ],
-    };
-    const security: SecurityResponseDto = securityPlainFactory.build(undefined, { transient: transientParams });
-
-    const { can } = mountHarness({ initialAccessPermissionRules: security.localAccessControl.accessPermissionRules });
-
-    expect(can(Permissions.Create, "section1")).toBeTruthy();
-    expect(can(Permissions.Create, "section1.field1")).toBeTruthy();
-    expect(can(Permissions.Edit, "section1.field1")).toBeTruthy();
-
-    expect(can(Permissions.Create, "section2.field1")).toBeFalsy();
-
-    expect(can(Permissions.Read, "section1")).toBeFalsy();
-  });
+  const modifyShellMock = vi.fn();
 
   it("should return all permissions for given object", async () => {
     const transientParams: SecurityPlainTransientParams = {
@@ -130,12 +90,14 @@ describe("aasSecurity composable", () => {
       { transient: transientParams },
     );
 
-    const { findPermissionForObject } = mountHarness({
+    let permissionsForm = mountHarness({
       initialAccessPermissionRules:
         security.localAccessControl.accessPermissionRules,
+      object: "section1",
+      modifyShell: modifyShellMock,
     });
 
-    expect(findPermissionForObject("section1")).toEqual([
+    expect(permissionsForm.getPermissions()).toEqual([
       {
         subject: { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER },
         permissions: [
@@ -159,8 +121,18 @@ describe("aasSecurity composable", () => {
         ],
       },
     ]);
-    expect(findPermissionForObject("section3")).toEqual([
-      { subject: { userRole: "user", memberRole: "member" }, permissions: allPermissionsAllow },
+
+    permissionsForm = mountHarness({
+      initialAccessPermissionRules:
+        security.localAccessControl.accessPermissionRules,
+      object: "section3",
+      modifyShell: modifyShellMock,
+    });
+    expect(permissionsForm.getPermissions()).toEqual([
+      {
+        subject: { userRole: "user", memberRole: "member" },
+        permissions: allPermissionsAllow,
+      },
     ]);
   });
 
@@ -209,15 +181,16 @@ describe("aasSecurity composable", () => {
       { transient: transientParams },
     );
 
-    const { editPermissions, findPermissionForObject } = mountHarness({
+    const { editPermissions, getPermissions, savePermissions } = mountHarness({
       initialAccessPermissionRules:
         security.localAccessControl.accessPermissionRules,
+      object: "section1",
+      modifyShell: modifyShellMock,
     });
     const member = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER };
-    editPermissions([Permissions.Create, Permissions.Edit], "section1", member);
-    editPermissions([Permissions.Create, Permissions.Edit], "section1", member);
-
-    expect(findPermissionForObject("section1")).toEqual([
+    editPermissions([Permissions.Create, Permissions.Edit], member);
+    editPermissions([Permissions.Create, Permissions.Edit], member);
+    expect(getPermissions()).toEqual([
       {
         subject: {
           userRole: UserRoleDto.USER,
@@ -248,5 +221,72 @@ describe("aasSecurity composable", () => {
         ],
       },
     ]);
+    await savePermissions();
+    expect(modifyShellMock).toHaveBeenCalledWith({
+      security: {
+        localAccessControl: {
+          accessPermissionRules: [
+            {
+              targetSubjectAttributes: {
+                subjectAttribute: [
+                  propertyOutputPlainFactory.build({
+                    idShort: "userRole",
+                    value: "user",
+                  }),
+                  propertyOutputPlainFactory.build({
+                    idShort: "memberRole",
+                    value: "member",
+                  }),
+                ],
+              },
+              permissionsPerObject: [
+                {
+                  object: permissionObjectPlainFactory.build({
+                    idShort: "section1",
+                  }),
+                  permissions: [
+                    {
+                      permission: Permissions.Create,
+                      kindOfPermission: PermissionKind.Allow,
+                    },
+                    {
+                      permission: Permissions.Edit,
+                      kindOfPermission: PermissionKind.Allow,
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              targetSubjectAttributes: {
+                subjectAttribute: [
+                  propertyOutputPlainFactory.build({
+                    idShort: "userRole",
+                    value: "admin",
+                  }),
+                ],
+              },
+              permissionsPerObject: [
+                {
+                  object: permissionObjectPlainFactory.build({
+                    idShort: "section1",
+                  }),
+                  permissions: [
+                    {
+                      permission: Permissions.Create,
+                      kindOfPermission: PermissionKind.Allow,
+                    },
+                    {
+                      permission: Permissions.Edit,
+                      kindOfPermission: PermissionKind.Allow,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+    });
   });
 });

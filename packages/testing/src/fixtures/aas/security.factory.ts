@@ -18,7 +18,7 @@ import {
 import { Factory } from 'fishery'
 import { propertyOutputPlainFactory } from './submodel-element.factory'
 
-const permissionObjectPlainFactory
+export const permissionObjectPlainFactory
   = Factory.define<z.infer<typeof ReferenceElementJsonSchema>> (({ params }) => ({
     idShort: params.idShort ?? randomUUID(),
     extensions: [],

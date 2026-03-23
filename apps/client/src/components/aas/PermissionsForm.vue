@@ -1,28 +1,18 @@
 <script setup lang="ts">
 import type {
-  AccessPermissionRuleResponseDto,
   MemberRoleDtoType,
   PermissionType,
   UserRoleDtoType,
 } from "@open-dpp/dto";
-import type { AasEditorPath } from "../../composables/aas-drawer.ts";
+import type { IAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
 import { Permissions } from "@open-dpp/dto";
-import { ref, watch } from "vue";
-import { useAasSecurity } from "../../composables/aas-security.ts";
+import { onMounted, ref } from "vue";
 
-const props = defineProps<{
-  path: AasEditorPath;
-  getAccessPermissionRules: () => AccessPermissionRuleResponseDto[];
-}>();
+import { useAasRoleHierarchy } from "../../composables/aas-role-hierarchy.ts";
 
-const { findPermissionForObject, roleHierarchy, editPermissions }
-  = useAasSecurity({
-    initialAccessPermissionRules: props.getAccessPermissionRules(),
-  });
+const { getPermissions, editPermissions } = defineProps<Omit<IAasPermissionsForm, "savePermissions">>();
 
-const permissionPerObjects = ref<ReturnType<typeof findPermissionForObject>>(
-  [],
-);
+const permissionPerObjects = ref<ReturnType<typeof getPermissions>>([]);
 
 const selectedRole = ref<{
   userRole: UserRoleDtoType;
@@ -31,21 +21,17 @@ const selectedRole = ref<{
 
 const selectedPermissions = ref<PermissionType[]>([]);
 
-watch(
-  () => props.path.idShortPathIncludingSubmodel,
-  (newPath) => {
-    permissionPerObjects.value = newPath
-      ? findPermissionForObject(newPath)
-      : [];
-    selectedRole.value = permissionPerObjects.value[0]?.subject ?? null;
+onMounted(() => {
+  permissionPerObjects.value = getPermissions();
+  selectedRole.value = permissionPerObjects.value[0]?.subject ?? null;
 
-    selectedPermissions.value
-      = permissionPerObjects.value[0]?.permissions.map(p => p.permission) ?? [];
-  },
-  { immediate: true },
-);
+  selectedPermissions.value
+    = permissionPerObjects.value[0]?.permissions.map(p => p.permission) ?? [];
+});
 
-const roles = ref(roleHierarchy);
+const { hierarchy } = useAasRoleHierarchy();
+
+const roles = ref(hierarchy);
 
 const permissionOptions = ref([
   { name: "Read", key: Permissions.Read },
@@ -71,12 +57,8 @@ function onRoleChange(role: {
   }
 }
 function onPermissionChange() {
-  if (props.path.idShortPathIncludingSubmodel && selectedRole.value) {
-    editPermissions(
-      selectedPermissions.value,
-      props.path.idShortPathIncludingSubmodel!,
-      selectedRole.value,
-    );
+  if (selectedRole.value) {
+    editPermissions(selectedPermissions.value, selectedRole.value);
   }
 }
 </script>

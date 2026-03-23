@@ -81,6 +81,7 @@ export interface IAasEditor extends IAasDrawer, IPagination {
   openAssetAdministrationShellEditor: () => void;
   aasGalleryFiles: Ref<MediaFileCollectionItem[]>;
   getAccessPermissionRules: () => AccessPermissionRuleResponseDto[];
+  modifyShell: (data: AssetAdministrationShellModificationDto) => Promise<void>;
 }
 
 export function useAasEditor({
@@ -144,12 +145,12 @@ export function useAasEditor({
         mode: EditorMode.EDIT,
         title: translate(`common.edit`),
         path: { idShortPathIncludingSubmodel: assetAdministrationShell.value.idShort ?? undefined },
-        callback: modifyAasEditor,
+        callback: modifyShell,
       });
     }
   }
 
-  async function modifyAasEditor(data: AssetAdministrationShellModificationDto) {
+  async function modifyShell(data: AssetAdministrationShellModificationDto) {
     const errorMessage = translate(`${translatePrefix}.error`, { method: translate("common.edit") });
     if (assetAdministrationShell.value) {
       try {
@@ -663,5 +664,6 @@ export function useAasEditor({
     ...pagination,
     ...drawer,
     getAccessPermissionRules,
+    modifyShell,
   };
 }

@@ -176,7 +176,7 @@ describe("environmentService", () => {
         undefined,
         { transient: transientParams },
       ) },
-      SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
+      SubjectAttributes.create({ userRole: UserRole.ADMIN }),
     );
 
     const foundAas = await aasRepository.findOneOrFail(assetAdministrationShell.id);

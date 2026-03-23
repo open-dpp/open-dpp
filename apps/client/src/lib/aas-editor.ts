@@ -1,6 +1,7 @@
 import type { AasNamespace } from "@open-dpp/api-client";
 import type {
   AccessPermissionRuleResponseDto,
+  AssetAdministrationShellModificationDto,
 } from "@open-dpp/dto";
 import type {
   AasEditorPath,
@@ -27,4 +28,5 @@ export interface SharedEditorProps<Data, RequestDto> {
   id: string;
   translate: (label: string, ...args: unknown[]) => string;
   getAccessPermissionRules: () => AccessPermissionRuleResponseDto[];
+  modifyShell: (data: AssetAdministrationShellModificationDto) => Promise<void>;
 }
