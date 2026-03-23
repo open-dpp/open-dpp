@@ -60,25 +60,36 @@ onMounted(async () => {
 
 const signup = handleSubmit(async (values) => {
   loading.value = true;
-  const { error } = await authClient.signUp.email({
-    email: values.email,
-    password: values.password,
-    firstName: values.firstName,
-    lastName: values.lastName,
-    name: `${values.firstName} ${values.lastName}`,
-    callbackURL: redirectUri.value,
-  });
-  loading.value = false;
+  try {
+    const { error } = await authClient.signUp.email({
+      email: values.email,
+      password: values.password,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      name: `${values.firstName} ${values.lastName}`,
+      callbackURL: redirectUri.value,
+    });
 
-  if (error) {
+    if (error) {
+      toast.add({
+        severity: "error",
+        summary: t("auth.signup.error"),
+        life: 5000,
+      });
+    }
+    else {
+      router.push("/signin");
+    }
+  }
+  catch {
     toast.add({
       severity: "error",
       summary: t("auth.signup.error"),
       life: 5000,
     });
   }
-  else {
-    router.push("/signin");
+  finally {
+    loading.value = false;
   }
 });
 </script>
