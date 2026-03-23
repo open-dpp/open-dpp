@@ -1,23 +1,42 @@
 <script lang="ts" setup>
+import { toTypedSchema } from "@vee-validate/zod";
+import { useToast } from "primevue/usetoast";
+import { useForm } from "vee-validate";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import BrandingLogo from "../../components/media/BrandingLogo.vue";
 import apiClient from "../../lib/api-client.ts";
+import { SignupFormSchema } from "../../lib/signup-form.ts";
 
 const router = useRouter();
 const route = useRoute();
 const { t } = useI18n();
+const toast = useToast();
 
-const firstName = ref<string>("");
-const lastName = ref<string>("");
-const email = ref<string>("");
-const password = ref<string>("");
-const showError = ref<boolean>(false);
 const loading = ref<boolean>(false);
 const signupEnabled = ref<boolean>(true);
 const checkingSettings = ref<boolean>(true);
+
+const { handleSubmit, errors, submitCount, defineField } = useForm({
+  validationSchema: toTypedSchema(SignupFormSchema),
+  initialValues: {
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+  },
+});
+
+const [firstName, firstNameAttrs] = defineField("firstName");
+const [lastName, lastNameAttrs] = defineField("lastName");
+const [email, emailAttrs] = defineField("email");
+const [password, passwordAttrs] = defineField("password");
+
+const showErrors = computed(() => {
+  return submitCount.value > 0;
+});
 
 const redirectUri = computed(() => {
   return route.query.redirect
@@ -39,31 +58,29 @@ onMounted(async () => {
   }
 });
 
-async function signup() {
-  await authClient.signUp.email(
-    {
-      email: email.value,
-      password: password.value,
-      firstName: firstName.value,
-      lastName: lastName.value,
-      name: `${firstName.value} ${lastName.value}`,
-      callbackURL: redirectUri.value,
-    },
-    {
-      onRequest: () => {
-        loading.value = true;
-      },
-      onSuccess: () => {
-        router.push("/signin");
-        loading.value = false;
-      },
-      onError: () => {
-        loading.value = false;
-        showError.value = true;
-      },
-    },
-  );
-}
+const signup = handleSubmit(async (values) => {
+  loading.value = true;
+  const { error } = await authClient.signUp.email({
+    email: values.email,
+    password: values.password,
+    firstName: values.firstName,
+    lastName: values.lastName,
+    name: `${values.firstName} ${values.lastName}`,
+    callbackURL: redirectUri.value,
+  });
+  loading.value = false;
+
+  if (error) {
+    toast.add({
+      severity: "error",
+      summary: t("auth.signup.error"),
+      life: 5000,
+    });
+  }
+  else {
+    router.push("/signin");
+  }
+});
 </script>
 
 <template>
@@ -86,17 +103,7 @@ async function signup() {
           </Message>
         </div>
         <div v-else class="flex flex-col gap-5">
-          <Message
-            v-if="showError"
-            class="mb-4"
-            closable
-            severity="error"
-            @close="showError = false"
-          >
-            {{ t("auth.signup.error") }}
-          </Message>
-
-          <form class="space-y-6" @submit.prevent="signup()">
+          <form class="space-y-6" @submit.prevent="signup">
             <div>
               <label
                 for="firstName"
@@ -106,14 +113,23 @@ async function signup() {
                 <InputText
                   id="firstName"
                   v-model="firstName"
+                  v-bind="firstNameAttrs"
                   type="text"
                   name="given-name"
                   autocomplete="given-name"
-                  required
                   class="w-full"
                   :disabled="loading"
+                  :invalid="showErrors && !!errors.firstName"
                 />
               </div>
+              <Message
+                v-if="showErrors && errors.firstName"
+                size="small"
+                severity="error"
+                variant="simple"
+              >
+                {{ errors.firstName }}
+              </Message>
             </div>
 
             <div>
@@ -125,14 +141,23 @@ async function signup() {
                 <InputText
                   id="lastName"
                   v-model="lastName"
+                  v-bind="lastNameAttrs"
                   type="text"
                   name="lastName"
                   autocomplete="family-name"
-                  required
                   class="w-full"
                   :disabled="loading"
+                  :invalid="showErrors && !!errors.lastName"
                 />
               </div>
+              <Message
+                v-if="showErrors && errors.lastName"
+                size="small"
+                severity="error"
+                variant="simple"
+              >
+                {{ errors.lastName }}
+              </Message>
             </div>
 
             <div>
@@ -144,14 +169,23 @@ async function signup() {
                 <InputText
                   id="email"
                   v-model="email"
+                  v-bind="emailAttrs"
                   type="email"
                   name="email"
                   autocomplete="email"
-                  required
                   class="w-full"
                   :disabled="loading"
+                  :invalid="showErrors && !!errors.email"
                 />
               </div>
+              <Message
+                v-if="showErrors && errors.email"
+                size="small"
+                severity="error"
+                variant="simple"
+              >
+                {{ errors.email }}
+              </Message>
             </div>
 
             <div>
@@ -162,18 +196,27 @@ async function signup() {
               <div class="mt-2">
                 <Password
                   v-model="password"
+                  v-bind="passwordAttrs"
                   input-id="password"
                   :feedback="false"
                   toggle-mask
                   fluid
                   :disabled="loading"
+                  :invalid="showErrors && !!errors.password"
                   :input-props="{
                     name: 'password',
                     autocomplete: 'new-password',
-                    required: true,
                   }"
                 />
               </div>
+              <Message
+                v-if="showErrors && errors.password"
+                size="small"
+                severity="error"
+                variant="simple"
+              >
+                {{ errors.password }}
+              </Message>
             </div>
 
             <div>
