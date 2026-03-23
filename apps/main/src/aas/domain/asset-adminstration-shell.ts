@@ -92,8 +92,8 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     );
   };
 
-  modify(data: unknown) {
-    this.accept(new ModifierVisitor(), data);
+  modify(data: unknown, subject: SubjectAttributes) {
+    this.accept(new ModifierVisitor(subject), data);
   }
 
   addSubmodelReference(reference: Reference) {

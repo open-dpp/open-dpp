@@ -1,6 +1,7 @@
 import type { TestingModule } from "@nestjs/testing";
-import { MongooseModule } from "@nestjs/mongoose";
+import { expect } from "@jest/globals";
 
+import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import {
   AssetKind,
@@ -11,14 +12,15 @@ import {
   UserRoleDto,
 } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
+import { ForbiddenError } from "@open-dpp/exception";
 import { securityPlainFactory, SecurityPlainTransientParams } from "@open-dpp/testing";
 import { generateMongoConfig } from "../../database/config";
 import { AuthModule } from "../../identity/auth/auth.module";
+
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
+
 import { OrganizationsModule } from "../../identity/organizations/organizations.module";
-
 import { UserRole } from "../../identity/users/domain/user-role.enum";
-
 import { UsersModule } from "../../identity/users/users.module";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
@@ -174,6 +176,7 @@ describe("environmentService", () => {
         undefined,
         { transient: transientParams },
       ) },
+      SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
     );
 
     const foundAas = await aasRepository.findOneOrFail(assetAdministrationShell.id);
@@ -194,6 +197,45 @@ describe("environmentService", () => {
         ],
       },
     ]);
+  });
+
+  it("should modify asset administration shell fails due to insufficient permissions", async () => {
+    const security = Security.create({});
+    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.ADMIN }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow })]);
+    const assetAdministrationShell = AssetAdministrationShell.create({ security });
+    await aasRepository.save(assetAdministrationShell);
+    const environment = Environment.create({ assetAdministrationShells: [assetAdministrationShell.id] });
+
+    const transientParams: SecurityPlainTransientParams = {
+      policies: [
+        {
+          subject: {
+            userRole: UserRoleDto.ADMIN,
+          },
+          object: { idShortPath: "section1" },
+          permissions: [
+            {
+              permission: Permissions.Create,
+              kindOfPermission: PermissionKind.Allow,
+            },
+            {
+              permission: Permissions.Edit,
+              kindOfPermission: PermissionKind.Allow,
+            },
+          ],
+        },
+      ],
+    };
+
+    await expect(environmentService.modifyAasShell(
+      environment,
+      assetAdministrationShell.id,
+      { security: securityPlainFactory.build(
+        undefined,
+        { transient: transientParams },
+      ) },
+      SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
+    )).rejects.toThrow(new ForbiddenError("Administrator has no permission to add/ modify policy."));
   });
 
   afterAll(async () => {

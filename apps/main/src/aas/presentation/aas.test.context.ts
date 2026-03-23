@@ -12,15 +12,21 @@ import {
   AssetAdministrationShellPaginationResponseDtoSchema,
   AssetKind,
   KeyTypes,
+  MemberRoleDto,
+  PermissionKind,
+  Permissions,
   ReferenceTypes,
   SubmodelElementSchema,
   SubmodelJsonSchema,
   SubmodelPaginationResponseDtoSchema,
+  UserRoleDto,
 } from "@open-dpp/dto";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import {
   aasPlainFactory,
   propertyInputPlainFactory,
+  securityPlainFactory,
+  SecurityPlainTransientParams,
   submodelBillOfMaterialPlainFactory,
   submodelCarbonFootprintPlainFactory,
   submodelDesignOfProductPlainFactory,
@@ -48,6 +54,7 @@ import { LanguageText } from "../domain/common/language-text";
 import { Reference } from "../domain/common/reference";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { IPersistable } from "../domain/persistable";
+import { Security } from "../domain/security/security";
 import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { Property } from "../domain/submodel-base/property";
 import { Submodel } from "../domain/submodel-base/submodel";
@@ -163,8 +170,37 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     entity.getEnvironment().addAssetAdministrationShell(newAas);
     await saveEntity(entity);
 
+    const transientParams: SecurityPlainTransientParams = {
+      policies: [
+        {
+          subject: {
+            userRole: UserRoleDto.USER,
+            memberRole: MemberRoleDto.MEMBER,
+          },
+          object: { idShortPath: "section1" },
+          permissions: [
+            {
+              permission: Permissions.Create,
+              kindOfPermission: PermissionKind.Allow,
+            },
+            {
+              permission: Permissions.Edit,
+              kindOfPermission: PermissionKind.Allow,
+            },
+          ],
+        },
+      ],
+    };
+
     const newDisplayName = [{ language: "en", text: "MyAAS" }];
-    const body = { displayName: newDisplayName };
+
+    const body = {
+      displayName: newDisplayName,
+      security: securityPlainFactory.build(
+        undefined,
+        { transient: transientParams },
+      ),
+    };
     const response = await request(app.getHttpServer())
       .patch(`${basePath}/${entity.id}/shells/${btoa(newAas.id)}`)
       .set("Cookie", userCookie)
@@ -173,6 +209,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     expect(response.body.displayName).toEqual(newDisplayName);
     const found = await aasRepository.findOneOrFail(newAas.id);
     expect(found.displayName).toEqual(newDisplayName.map(LanguageText.fromPlain));
+    expect(found.security).toEqual(Security.fromPlain(body.security));
   }
 
   async function assertGetSubmodels(createEntity: CreateEntity) {

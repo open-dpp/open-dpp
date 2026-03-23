@@ -111,8 +111,8 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @AssetAdministrationShellModificationRequestBody() body: AssetAdministrationShellModificationDto,
     @AuthSession() session: Session,
   ): Promise<AssetAdministrationShellResponseDto> {
-    const { template } = await this.loadTemplateAndCheckOwnership(id, session);
-    return await this.environmentService.modifyAasShell(template.getEnvironment(), aasId, body);
+    const { template, subject } = await this.loadTemplateAndCheckOwnership(id, session);
+    return await this.environmentService.modifyAasShell(template.getEnvironment(), aasId, body, subject);
   }
 
   @ApiGetSubmodels()

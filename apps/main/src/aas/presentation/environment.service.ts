@@ -120,9 +120,9 @@ export class EnvironmentService {
     return AssetAdministrationShellPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: shells }).toPlain({ filterBySubject: subjet }));
   }
 
-  async modifyAasShell(environment: Environment, aasId: string, modification: AssetAdministrationShellModificationDto): Promise<AssetAdministrationShellResponseDto> {
+  async modifyAasShell(environment: Environment, aasId: string, modification: AssetAdministrationShellModificationDto, subject: SubjectAttributes): Promise<AssetAdministrationShellResponseDto> {
     const aas = await this.findAssetAdministrationShellByIdOrFail(environment, aasId);
-    aas.modify(modification);
+    aas.modify(modification, subject);
     await this.aasRepository.save(aas);
     return AssetAdministrationShellJsonSchema.parse(aas.toPlain());
   }

@@ -23,6 +23,7 @@ import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
 import { Resource } from "./resource";
 import { AccessPermissionRule } from "./security/access-permission-rule";
+import { SubjectAttributes } from "./security/subject-attributes";
 import { SpecificAssetId } from "./specific-asset-id";
 import { AnnotatedRelationshipElement } from "./submodel-base/annotated-relationship-element";
 import { Blob } from "./submodel-base/blob";
@@ -33,14 +34,17 @@ import { Property } from "./submodel-base/property";
 import { Range } from "./submodel-base/range";
 import { ReferenceElement } from "./submodel-base/reference-element";
 import { RelationshipElement } from "./submodel-base/relationship-element";
-import { Submodel } from "./submodel-base/submodel";
 
+import { Submodel } from "./submodel-base/submodel";
 import { ISubmodelElement } from "./submodel-base/submodel-base";
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
 
 export class ModifierVisitor implements IVisitor<unknown, void> {
+  constructor(private readonly subject?: SubjectAttributes) {
+  }
+
   private modifyNameAndDescription<T extends { displayName: LanguageText[]; description: LanguageText[] }>(generalInfoDto: T, data: unknown) {
     const { displayName, description } = NameAndDescriptionModificationSchema.parse(data);
 
@@ -68,8 +72,8 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
     if (parsed.assetInformation) {
       element.assetInformation.accept(this, parsed.assetInformation);
     }
-    if (parsed.security) {
-      element.security.applyModifiedRules(parsed.security.localAccessControl.accessPermissionRules.map(AccessPermissionRule.fromPlain));
+    if (parsed.security && this.subject) {
+      element.security.withAdministrator(this.subject).applyModifiedRules(parsed.security.localAccessControl.accessPermissionRules.map(AccessPermissionRule.fromPlain));
     }
   }
 

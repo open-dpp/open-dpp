@@ -212,8 +212,8 @@ export class PassportController implements IAasReadEndpoints, IAasCreateEndpoint
     @AssetAdministrationShellModificationRequestBody() body: AssetAdministrationShellModificationDto,
     @AuthSession() session: Session,
   ): Promise<AssetAdministrationShellResponseDto> {
-    const { passport } = await this.loadPassportAndCheckOwnership(id, session);
-    return await this.environmentService.modifyAasShell(passport.getEnvironment(), aasId, body);
+    const { passport, subject } = await this.loadPassportAndCheckOwnership(id, session);
+    return await this.environmentService.modifyAasShell(passport.getEnvironment(), aasId, body, subject);
   }
 
   @ApiGetSubmodels()
