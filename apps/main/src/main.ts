@@ -1,9 +1,7 @@
-import type { MicroserviceOptions } from "@nestjs/microservices";
 import type { NextFunction, Request, Response } from "express";
 import process from "node:process";
 import { ConsoleLogger, Logger, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
-import { Transport } from "@nestjs/microservices";
 import { EnvService } from "@open-dpp/env";
 import {
   NotFoundExceptionFilter,
