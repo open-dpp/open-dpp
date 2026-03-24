@@ -67,13 +67,17 @@ async function changeRole() {
   success.value = false;
   errors.value = [];
 
+  const MIN_LOADING_MS = 400;
+
   try {
     loading.value = true;
-    await apiClient.dpp.users.setRole(props.userId, {
-      role: selectedRole.value,
-    });
+    await Promise.all([
+      apiClient.dpp.users.setRole(props.userId, {
+        role: selectedRole.value,
+      }),
+      new Promise(resolve => setTimeout(resolve, MIN_LOADING_MS)),
+    ]);
     success.value = true;
-    emit("success");
   }
   catch (error) {
     console.error(error);
@@ -105,7 +109,7 @@ async function changeRole() {
     modal
     :header="t('organizations.admin.changeRoleDialog.title')"
     class="w-full sm:w-[28rem]"
-    @hide="emit('close')"
+    @hide="success ? emit('success') : emit('close')"
   >
     <div class="flex flex-col gap-5">
       <div class="flex items-center gap-3">
@@ -132,7 +136,7 @@ async function changeRole() {
           <Button
             :label="t('common.close')"
             severity="success"
-            @click="emit('close')"
+            @click="emit('success')"
           />
         </div>
       </div>
