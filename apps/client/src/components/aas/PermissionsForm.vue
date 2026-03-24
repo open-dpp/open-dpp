@@ -1,21 +1,15 @@
 <script setup lang="ts">
-import type {
-  MemberRoleDtoType,
-  PermissionType,
-  UserRoleDtoType,
-} from "@open-dpp/dto";
+import type { PermissionType } from "@open-dpp/dto";
 import type { IAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
 import type { Subject } from "../../lib/aas-security.ts";
 import { Permissions } from "@open-dpp/dto";
 
-import { computed, onMounted, ref } from "vue";
+import { computed, ref } from "vue";
 import { useRoleHierarchy } from "../../composables/role-hierarchy.ts";
 import { useUserStore } from "../../stores/user.ts";
 
 const { getPermissions, editPermissions }
   = defineProps<Omit<IAasPermissionsForm, "savePermissions">>();
-
-const permissionPerObjects = ref<ReturnType<typeof getPermissions>>([]);
 
 const { asSubject } = useUserStore();
 const { getVisibleRoles, canEditPermissionsOfRole } = useRoleHierarchy();
@@ -23,38 +17,13 @@ const { getVisibleRoles, canEditPermissionsOfRole } = useRoleHierarchy();
 const roles = ref(getVisibleRoles(asSubject()));
 const selectedRole = ref<Subject>(asSubject());
 
-const selectedPermissions = ref<PermissionType[]>([]);
-
-onMounted(() => {
-  permissionPerObjects.value = getPermissions();
-
-  if (selectedRole.value) {
-    setPermissions(selectedRole.value);
-  }
-});
-
-function setPermissions(subject: Subject) {
-  const foundPermissionPerObject = permissionPerObjects.value.find(
-    p => JSON.stringify(p.subject) === JSON.stringify(subject),
-  );
-  if (foundPermissionPerObject) {
-    selectedPermissions.value = foundPermissionPerObject.permissions.map(
-      p => p.permission,
-    );
-  }
-  else {
-    selectedPermissions.value = [];
-  }
-}
+const selectedPermissions = computed(() => getPermissions(selectedRole.value));
 
 const canEditPermissions = computed(() => {
   if (!selectedRole.value) {
     return false;
   }
-  return canEditPermissionsOfRole(
-    asSubject(),
-    selectedRole.value,
-  );
+  return canEditPermissionsOfRole(asSubject(), selectedRole.value);
 });
 
 const permissionOptions = ref([
@@ -64,17 +33,8 @@ const permissionOptions = ref([
   { name: "Delete", key: Permissions.Delete },
 ]);
 
-function onRoleChange(role: {
-  userRole: UserRoleDtoType;
-  memberRole?: MemberRoleDtoType;
-}) {
-  setPermissions(role);
-}
-
-function onPermissionChange() {
-  if (selectedRole.value) {
-    editPermissions(selectedPermissions.value, selectedRole.value);
-  }
+function onPermissionChange(newPermissions: PermissionType[]) {
+  editPermissions(newPermissions, selectedRole.value);
 }
 </script>
 
@@ -88,7 +48,6 @@ function onPermissionChange() {
       option-label="name"
       placeholder="Select a role"
       class="w-full md:w-56"
-      @update:model-value="onRoleChange"
     />
     <div
       v-for="permission in permissionOptions"
@@ -96,7 +55,7 @@ function onPermissionChange() {
       class="flex items-center gap-2"
     >
       <Checkbox
-        v-model="selectedPermissions"
+        :model-value="selectedPermissions"
         :input-id="permission.key"
         :disabled="!canEditPermissions"
         name="permissions"

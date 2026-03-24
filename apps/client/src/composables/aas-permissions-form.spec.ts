@@ -97,40 +97,13 @@ describe("aasPermissionsForm composable", () => {
       modifyShell: modifyShellMock,
     });
 
-    expect(permissionsForm.getPermissions()).toEqual([
-      {
-        subject: { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER },
-        permissions: [
-          {
-            permission: Permissions.Create,
-            kindOfPermission: PermissionKind.Allow,
-          },
-        ],
-      },
-      {
-        subject: { userRole: UserRoleDto.ADMIN, memberRole: undefined },
-        permissions: [
-          {
-            permission: Permissions.Create,
-            kindOfPermission: PermissionKind.Allow,
-          },
-          {
-            permission: Permissions.Edit,
-            kindOfPermission: PermissionKind.Allow,
-          },
-        ],
-      },
-    ]);
+    expect(
+      permissionsForm.getPermissions({
+        userRole: UserRoleDto.ADMIN,
+      }),
+    ).toEqual([Permissions.Create, Permissions.Edit]);
 
-    expect(permissionsForm.getPermissions({ subject: { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER } })).toEqual([{
-      subject: { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER },
-      permissions: [
-        {
-          permission: Permissions.Create,
-          kindOfPermission: PermissionKind.Allow,
-        },
-      ],
-    }]);
+    expect(permissionsForm.getPermissions({ userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER })).toEqual([Permissions.Create]);
 
     permissionsForm = mountHarness({
       initialAccessPermissionRules:
@@ -138,12 +111,12 @@ describe("aasPermissionsForm composable", () => {
       object: "section3",
       modifyShell: modifyShellMock,
     });
-    expect(permissionsForm.getPermissions()).toEqual([
-      {
-        subject: { userRole: "user", memberRole: "member" },
-        permissions: allPermissionsAllow,
-      },
-    ]);
+    expect(
+      permissionsForm.getPermissions({
+        userRole: UserRoleDto.USER,
+        memberRole: MemberRoleDto.MEMBER,
+      }),
+    ).toEqual(allPermissionsAllow.map(p => p.permission));
   });
 
   it("should modify security", async () => {
@@ -201,47 +174,10 @@ describe("aasPermissionsForm composable", () => {
     const owner = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.OWNER };
     editPermissions([Permissions.Create, Permissions.Edit], member);
     editPermissions([Permissions.Create, Permissions.Edit], member);
+    expect(getPermissions(member)).toEqual([Permissions.Create, Permissions.Edit]);
     editPermissions([Permissions.Read], owner);
-    expect(getPermissions()).toEqual([
-      {
-        subject: {
-          userRole: UserRoleDto.USER,
-          memberRole: MemberRoleDto.MEMBER,
-        },
-        permissions: [
-          {
-            permission: Permissions.Create,
-            kindOfPermission: PermissionKind.Allow,
-          },
-          {
-            permission: Permissions.Edit,
-            kindOfPermission: PermissionKind.Allow,
-          },
-        ],
-      },
-      {
-        subject: { userRole: UserRoleDto.ADMIN },
-        permissions: [
-          {
-            permission: Permissions.Create,
-            kindOfPermission: PermissionKind.Allow,
-          },
-          {
-            permission: Permissions.Edit,
-            kindOfPermission: PermissionKind.Allow,
-          },
-        ],
-      },
-      {
-        subject: { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.OWNER },
-        permissions: [
-          {
-            permission: Permissions.Read,
-            kindOfPermission: PermissionKind.Allow,
-          },
-        ],
-      },
-    ]);
+
+    expect(getPermissions(owner)).toEqual([Permissions.Read]);
     await savePermissions();
     expect(modifyShellMock).toHaveBeenCalledWith({
       security: {

@@ -8,8 +8,9 @@ import { useForm } from "vee-validate";
 import { computed } from "vue";
 import { z } from "zod";
 import { EditorMode } from "../../composables/aas-drawer.ts";
-import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
+import { useAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
 
+import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import PropertyForm from "./PropertyForm.vue";
 
@@ -40,6 +41,13 @@ async function submit() {
   })();
 }
 
+const { getPermissions, editPermissions, savePermissions }
+  = useAasPermissionsForm({
+    initialAccessPermissionRules: props.getAccessPermissionRules(),
+    object: props.path.idShortPathIncludingSubmodel ?? "",
+    modifyShell: props.modifyShell,
+  });
+
 defineExpose<{
   submit: () => Promise<void>;
 }>({
@@ -54,6 +62,10 @@ defineExpose<{
       :show-errors="showErrors"
       :errors="errors"
       :editor-mode="EditorMode.EDIT"
+    />
+    <PermissionsForm
+      :edit-permissions="editPermissions"
+      :get-permissions="getPermissions"
     />
   </FormContainer>
 </template>

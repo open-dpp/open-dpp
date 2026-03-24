@@ -1,4 +1,4 @@
-import type { AccessPermissionRuleResponseDto, AssetAdministrationShellModificationDto, MemberRoleDtoType, PermissionDto, PermissionType, UserRoleDtoType } from "@open-dpp/dto";
+import type { AccessPermissionRuleResponseDto, AssetAdministrationShellModificationDto, MemberRoleDtoType, PermissionType, UserRoleDtoType } from "@open-dpp/dto";
 import {
   PermissionKind,
 
@@ -12,10 +12,7 @@ interface Subject {
 }
 
 export interface IAasPermissionsForm {
-  getPermissions: (options?: { subject?: Subject }) => {
-    subject: { userRole: UserRoleDtoType; memberRole?: MemberRoleDtoType };
-    permissions: PermissionDto[];
-  }[];
+  getPermissions: (subject: Subject) => PermissionType[];
   editPermissions: (permissions: PermissionType[], subject: Subject) => void;
   savePermissions: () => Promise<void>;
 }
@@ -70,21 +67,12 @@ export function useAasPermissionsForm({
     });
   }
 
-  function getPermissions(options?: { subject?: Subject }) {
-    const permissions: {
-      subject: Subject;
-      permissions: PermissionDto[];
-    }[] = [];
+  function getPermissions(subject: Subject): PermissionType[] {
+    const permissions: PermissionType[] = [];
     for (const rule of accessPermissionRules.value) {
       for (const permissionPerObject of rule.permissionsPerObject) {
-        const userRole = ruleHelper(rule).userRole;
-        const memberRole = ruleHelper(rule).memberRole;
-        const subject = memberRole ? { userRole, memberRole } : { userRole };
-        if (!options?.subject || ruleHelper(rule).hasEqualSubject(options.subject)) {
-          permissions.push({
-            subject,
-            permissions: permissionPerObject.permissions,
-          });
+        if (ruleHelper(rule).hasEqualSubject(subject)) {
+          permissions.push(...permissionPerObject.permissions.map(p => p.permission));
         }
       }
     }
