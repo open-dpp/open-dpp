@@ -22,6 +22,16 @@ const emits = defineEmits<{
 
 const { t } = useI18n();
 
+const roleLabels: Record<string, string> = {
+  admin: "organizations.admin.changeRoleDialog.roleAdmin",
+  user: "organizations.admin.changeRoleDialog.roleUser",
+};
+
+function translateRole(role: string): string {
+  const key = roleLabels[role];
+  return key ? t(key) : role;
+}
+
 const rowMenuRef = ref();
 const rowMenuItems = ref<MenuItem[]>([]);
 const activeRowId = ref("");
@@ -81,7 +91,11 @@ function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {
         </div>
       </template>
     </Column>
-    <Column field="role" :header="t('organizations.memberRole')" />
+    <Column field="role" :header="t('organizations.memberRole')">
+      <template #body="{ data }">
+        {{ translateRole(data.role) }}
+      </template>
+    </Column>
     <Column field="name" :header="t('common.name')" />
     <Column style="width: 3rem">
       <template #body="{ data }">
