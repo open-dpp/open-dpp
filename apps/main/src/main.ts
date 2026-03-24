@@ -74,7 +74,7 @@ async function bootstrap() {
     });
 
     httpServer.on("upgrade", (req, socket, head) => {
-      if (!req.url?.startsWith("/api")) {
+      if (req.url && !req.url.startsWith("/api")) {
         proxy.ws(req, socket, head, { target: "http://localhost:5173" });
       }
     });
