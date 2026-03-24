@@ -33,13 +33,13 @@ async function create() {
 <template>
   <form class="w-full" @submit.prevent="create">
     <div class="w-full">
-      <h3 class="mb-4">
-        {{ t('common.general') }}
+      <h3 class="mb-4 font-bold">
+        {{ t("common.general") }}
       </h3>
 
       <div class="field">
         <label for="organization-name" class="block mb-2">
-          {{ t('organizations.form.name.label') }}
+          {{ t("organizations.form.name.label") }}
         </label>
         <InputText
           id="organization-name"
@@ -48,9 +48,6 @@ async function create() {
           :required="true"
           aria-describedby="organization-name-help"
         />
-        <small id="organization-name-help" class="block mt-2">
-          {{ t('organizations.form.name.help') }}
-        </small>
       </div>
 
       <div class="mt-4">

@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import type { FileUploadSelectEvent } from "primevue";
 import type { MediaInfo } from "../../components/media/MediaInfo.interface";
-import { FileUpload } from "primevue";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import MediaDetailsSidebar from "../../components/media/MediaDetailsSidebar.vue";
@@ -67,16 +66,23 @@ async function onFileSelect(event: FileUploadSelectEvent) {
 </script>
 
 <template>
+  <MediaDetailsSidebar
+    v-model="sidebarOpen"
+    :media="selected[0]"
+    @update:model-value="updateSelected([])"
+  />
   <div class="flex flex-row gap-3 h-full w-full">
     <div class="mt-8 flex flex-col gap-10 grow">
-      <FileUpload
-        mode="basic"
-        :auto="true"
-        accept="image/jpeg, image/png, application/pdf"
-        :choose-label="t('file.upload')"
-        custom-upload
-        @select="onFileSelect"
-      />
+      <div class="flex justify-end">
+        <FileUpload
+          mode="basic"
+          :auto="true"
+          accept="image/jpeg, image/png, application/pdf"
+          :choose-label="t('file.upload')"
+          custom-upload
+          @select="onFileSelect"
+        />
+      </div>
       <div>
         <MediaGrid
           :multiple="false"
@@ -85,16 +91,6 @@ async function onFileSelect(event: FileUploadSelectEvent) {
           @update-selected-items="updateSelected"
         />
       </div>
-    </div>
-    <div
-      v-if="sidebarOpen"
-      class="flex flex-col gap-4 w-sm shadow-sm p-4 h-full shrink"
-    >
-      <MediaDetailsSidebar
-        v-if="selected.length > 0 && selected[0]"
-        :media="selected[0]"
-        @close="updateSelected([])"
-      />
     </div>
   </div>
 </template>

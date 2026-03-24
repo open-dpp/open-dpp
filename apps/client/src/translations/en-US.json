@@ -105,6 +105,7 @@
     "submodelElementList": "List",
     "textField": "Text field",
     "file": "File",
+    "dateField": "Date field",
     "numberField": "Number field",
     "type": "Type",
     "error": "{method} @:common.failed"
@@ -148,6 +149,9 @@
     },
     "file": {
       "name": "File field name"
+    },
+    "date": {
+      "name": "Date field name"
     },
     "name": "Section name",
     "dataFieldType": "Datafield type",
@@ -216,6 +220,8 @@
     "addNumberField": "Add numeric field",
     "fileField": "File",
     "addFileField": "Add file upload",
+    "dateField": "Date field",
+    "addDateField": "Add date field",
     "passportDraft": "Passport draft | Passport drafts",
     "passportDraftDescription": "All passport drafts",
     "changeDataFieldType": "Change datafield type"
@@ -345,7 +351,7 @@
       "status": "Status",
       "accept": "Accept",
       "decline": "Decline",
-      "cancel": "Cancel",
+      "cancel": "Cancel invitation",
       "acceptSuccess": "Successfully accepted invitation.",
       "acceptError": "Error on accepting invitation.",
       "acceptTitle": "You have been invited to join an organization"

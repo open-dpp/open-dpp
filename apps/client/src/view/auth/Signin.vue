@@ -1,18 +1,14 @@
 <script lang="ts" setup>
-import {
-  Button,
-  Card,
-  Checkbox,
-  InputText,
-  Message,
-  Password,
-} from "primevue";
+import { toTypedSchema } from "@vee-validate/zod";
+import { useToast } from "primevue/usetoast";
+import { useForm } from "vee-validate";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import BrandingLogo from "../../components/media/BrandingLogo.vue";
 import apiClient from "../../lib/api-client.ts";
+import { SigninFormSchema } from "../../lib/signin-form.ts";
 import { useIndexStore } from "../../stores";
 import { useOrganizationsStore } from "../../stores/organizations.ts";
 
@@ -20,14 +16,27 @@ const indexStore = useIndexStore();
 const organizationsStore = useOrganizationsStore();
 const route = useRoute();
 const { t } = useI18n();
+const toast = useToast();
 
-const email = ref<string>("");
-const password = ref<string>("");
 const rememberMe = ref<boolean>(false);
-const showError = ref<boolean>(false);
 const loading = ref<boolean>(false);
 const signupEnabled = ref<boolean>(false);
 const checkingSettings = ref<boolean>(true);
+
+const { handleSubmit, errors, submitCount, defineField, resetField } = useForm({
+  validationSchema: toTypedSchema(SigninFormSchema),
+  initialValues: {
+    email: "",
+    password: "",
+  },
+});
+
+const [email, emailAttrs] = defineField("email");
+const [password, passwordAttrs] = defineField("password");
+
+const showErrors = computed(() => {
+  return submitCount.value > 0;
+});
 
 onMounted(async () => {
   try {
@@ -48,26 +57,26 @@ const redirectUri = computed(() => {
     : "/";
 });
 
-async function signin() {
+const signin = handleSubmit(async (values) => {
+  loading.value = true;
   try {
-    await authClient.signIn.email(
-      {
-        email: email.value,
-        password: password.value,
-        callbackURL: redirectUri.value,
-        rememberMe: rememberMe.value,
-      },
-      {
-        onRequest() {
-          showError.value = false;
-          loading.value = true;
-        },
-        onError() {
-          loading.value = false;
-          showError.value = true;
-        },
-      },
-    );
+    const { error } = await authClient.signIn.email({
+      email: values.email,
+      password: values.password,
+      callbackURL: redirectUri.value,
+      rememberMe: rememberMe.value,
+    });
+
+    if (error) {
+      toast.add({
+        severity: "error",
+        summary: t("auth.signin.error"),
+        life: 5000,
+      });
+      resetField("password");
+      return;
+    }
+
     await organizationsStore.fetchOrganizations();
     const lastSelectedOrganization = indexStore.selectedOrganization;
     if (
@@ -79,13 +88,17 @@ async function signin() {
     }
   }
   catch {
-    showError.value = true;
+    toast.add({
+      severity: "error",
+      summary: t("auth.signin.error"),
+      life: 5000,
+    });
+    resetField("password");
   }
   finally {
     loading.value = false;
-    password.value = "";
   }
-}
+});
 </script>
 
 <template>
@@ -103,17 +116,7 @@ async function signin() {
       </template>
       <template #content>
         <div class="flex flex-col gap-5">
-          <Message
-            v-if="showError"
-            class="mb-4"
-            closable
-            severity="error"
-            @close="showError = false"
-          >
-            {{ t("auth.signin.error") }}
-          </Message>
-
-          <form class="space-y-6" @submit.prevent="signin()">
+          <form class="space-y-6" @submit.prevent="signin">
             <div>
               <label
                 for="email"
@@ -123,14 +126,23 @@ async function signin() {
                 <InputText
                   id="email"
                   v-model="email"
+                  v-bind="emailAttrs"
                   type="email"
                   name="email"
                   autocomplete="email"
-                  required="true"
                   class="w-full"
                   :disabled="loading"
+                  :invalid="showErrors && !!errors.email"
                 />
               </div>
+              <Message
+                v-if="showErrors && errors.email"
+                size="small"
+                severity="error"
+                variant="simple"
+              >
+                {{ errors.email }}
+              </Message>
             </div>
 
             <div>
@@ -141,6 +153,7 @@ async function signin() {
               <div class="mt-2">
                 <Password
                   v-model="password"
+                  v-bind="passwordAttrs"
                   fluid
                   input-id="password"
                   :feedback="false"
@@ -148,11 +161,19 @@ async function signin() {
                   :input-props="{
                     name: 'password',
                     autocomplete: 'current-password',
-                    required: true,
                   }"
                   :disabled="loading"
+                  :invalid="showErrors && !!errors.password"
                 />
               </div>
+              <Message
+                v-if="showErrors && errors.password"
+                size="small"
+                severity="error"
+                variant="simple"
+              >
+                {{ errors.password }}
+              </Message>
             </div>
 
             <div class="flex items-center justify-between">

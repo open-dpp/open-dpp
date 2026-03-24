@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { Page } from "../../composables/pagination.ts";
-import { Button } from "primevue";
 import { useI18n } from "vue-i18n";
 
 const props = defineProps<{

@@ -6,9 +6,8 @@ import type {
   RowMenuOptions,
 } from "../../composables/aas-table-extension.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
-import { AasSubmodelElements } from "@open-dpp/dto";
+import { AasSubmodelElements, DataTypeDef } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
-import { Button, Column, DataTable, InputText, Menu } from "primevue";
 import { useConfirm } from "primevue/useconfirm";
 import { useForm } from "vee-validate";
 import { computed, onErrorCaptured, ref, toRaw } from "vue";
@@ -217,6 +216,24 @@ onErrorCaptured((err) => {
                 (value) => onFileChange(value, cellData, rowIndex, field)
               "
             />
+            <PropertyValue
+              v-else-if="
+                col.plain.modelType === AasSubmodelElements.Property
+                  && (col.plain.valueType === DataTypeDef.Date
+                    || col.plain.valueType === DataTypeDef.DateTime)
+              "
+              :id="`${rowIndex}-${field}`"
+              :model-value="cellData[field]"
+              :value-type="col.plain.valueType"
+              @update:model-value="
+                (value) => onCellEditComplete({
+                  data: cellData,
+                  newValue: value ?? null,
+                  field,
+                  index: rowIndex,
+                })
+              "
+            />
             <span
               v-else-if="
                 (col.plain.modelType === AasSubmodelElements.Property
@@ -231,7 +248,12 @@ onErrorCaptured((err) => {
           </div>
         </template>
         <template
-          v-if="col.plain.modelType !== AasSubmodelElements.File"
+          v-if="
+            col.plain.modelType !== AasSubmodelElements.File
+              && !(col.plain.modelType === AasSubmodelElements.Property
+                && (col.plain.valueType === DataTypeDef.Date
+                  || col.plain.valueType === DataTypeDef.DateTime))
+          "
           #editor="{ data: editorData, field, index: rowIndex }"
         >
           <PropertyValue

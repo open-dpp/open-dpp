@@ -1,13 +1,11 @@
 <script lang="ts" setup>
 import type { FileUploadSelectEvent } from "primevue";
 import type { MediaInfo } from "./MediaInfo.interface";
-import { Button, FileUpload } from "primevue";
-import Dialog from "primevue/dialog";
 import { ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useMediaStore } from "../../stores/media";
-import { useNotificationStore } from "../../stores/notification";
 
+import { useNotificationStore } from "../../stores/notification";
 import MediaGrid from "./MediaGrid.vue";
 
 const emits = defineEmits<{

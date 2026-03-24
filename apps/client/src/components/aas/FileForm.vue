@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import type { FormErrors } from "vee-validate";
 import type { EditorModeType } from "../../composables/aas-drawer.ts";
-
-import { Message } from "primevue";
 import { useField } from "vee-validate";
-
 import { useI18n } from "vue-i18n";
 import FileField from "./form/FileField.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
