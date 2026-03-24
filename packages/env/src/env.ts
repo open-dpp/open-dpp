@@ -58,7 +58,7 @@ export const envSchema = z.object({
   OPEN_DPP_MAIL_MAILPIT_SMTP_ALLOW_INSECURE: z.coerce.string().optional(),
   // Auth
   OPEN_DPP_AUTH_SECRET: z.coerce.string(),
-  OPEN_DPP_AUTH_CLOUD_ENABLED: asStrictBoolean.optional(),
+  OPEN_DPP_AUTH_CLOUD_ENABLED: asStrictBoolean.optional().default(false),
   OPEN_DPP_AUTH_CLOUD_PROVIDER: z.string().optional(),
   OPEN_DPP_AUTH_CLOUD_CLIENT_ID: z.string().optional(),
   OPEN_DPP_AUTH_CLOUD_CLIENT_SECRET: z.string().optional(),
