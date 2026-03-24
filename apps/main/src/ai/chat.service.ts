@@ -107,12 +107,19 @@ export class ChatService {
     ]);
     this.logger.log(`Ask agent`);
 
+    const errorFunc = (type: string, err: any) => {
+      console.error(type, err);
+    };
+
     const result = await chain.invoke({ input: query }, {
       callbacks: [
         {
+          handleLLMError: (err: any) => errorFunc("LLMError", err),
+          handleChainError: (err: any) => errorFunc("Chain Error", err),
           handleLLMEnd: async (output) => {
             const generation = output.generations?.[0]?.[0];
             const usageMetadata = (generation as any)?.message?.usage_metadata || output.llmOutput?.tokenUsage;
+            this.logger.log(`In asking`);
 
             if (usageMetadata?.total_tokens) {
               this.logger.debug(`Tokens used: ${usageMetadata.total_tokens} (input: ${usageMetadata.input_tokens}, output: ${usageMetadata.output_tokens})`);
