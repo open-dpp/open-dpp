@@ -579,7 +579,7 @@ describe("passportController", () => {
     expect(exportedConceptDescriptions[0].isCaseOf).toHaveLength(1);
   });
 
-  describe("aPI key authentication", () => {
+  describe("api key authentication", () => {
     it("/GET List passports with API key", async () => {
       const { betterAuthHelper, app } = ctx.globals();
       const { org, apiKey } = await betterAuthHelper.createOrganizationAndUserWithApiKey();
