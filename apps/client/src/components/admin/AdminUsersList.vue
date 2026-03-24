@@ -11,11 +11,13 @@ const props = defineProps<{
     lastName?: string;
     name?: string;
   })[];
+  currentUserRole: string;
 }>();
 
 const emits = defineEmits<{
   (e: "add"): void;
   (e: "inviteToOrg", email: string): void;
+  (e: "changeRole", userId: string, email: string, role: string): void;
 }>();
 
 const { t } = useI18n();
@@ -40,13 +42,21 @@ function copyId() {
 
 function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {
   activeRowId.value = row.id;
-  rowMenuItems.value = [
+  const items: MenuItem[] = [
     {
       label: t("organizations.admin.inviteToOrganizationDialog.title"),
       icon: "pi pi-building",
       command: () => emits("inviteToOrg", row.email),
     },
   ];
+  if (props.currentUserRole === "admin") {
+    items.push({
+      label: t("organizations.admin.changeRoleDialog.title"),
+      icon: "pi pi-shield",
+      command: () => emits("changeRole", row.id, row.email, row.role),
+    });
+  }
+  rowMenuItems.value = items;
   rowMenuRef.value.toggle(event);
 }
 </script>

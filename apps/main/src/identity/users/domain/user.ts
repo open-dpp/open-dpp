@@ -86,6 +86,23 @@ export class User {
     );
   }
 
+  public withRole(role: UserRole): User {
+    return new User(
+      this.id,
+      this.email,
+      this.firstName,
+      this.lastName,
+      this.image,
+      this.emailVerified,
+      this.createdAt,
+      new Date(),
+      role,
+      this.banned,
+      this.banReason,
+      this.banExpires,
+    );
+  }
+
   public static loadFromDb(data: UserDbProps) {
     return new User(
       data.id,
