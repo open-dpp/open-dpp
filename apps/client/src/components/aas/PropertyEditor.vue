@@ -35,18 +35,19 @@ const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
 });
 
-async function submit() {
-  await handleSubmit(async (data) => {
-    await props.callback(PropertyModificationSchema.parse({ ...data }));
-  })();
-}
-
-const { getPermissions, editPermissions, savePermissions }
+const { getPermissions, editPermissions, savePermissions, resetPermissions }
   = useAasPermissionsForm({
-    initialAccessPermissionRules: props.getAccessPermissionRules(),
+    allAccessPermissionRules: props.getAccessPermissionRules(),
     object: props.path.idShortPathIncludingSubmodel ?? "",
     modifyShell: props.modifyShell,
   });
+
+async function submit() {
+  await handleSubmit(async (data) => {
+    await props.callback(PropertyModificationSchema.parse({ ...data }));
+    await savePermissions();
+  })();
+}
 
 defineExpose<{
   submit: () => Promise<void>;
@@ -66,6 +67,7 @@ defineExpose<{
     <PermissionsForm
       :edit-permissions="editPermissions"
       :get-permissions="getPermissions"
+      :reset-permissions="resetPermissions"
     />
   </FormContainer>
 </template>

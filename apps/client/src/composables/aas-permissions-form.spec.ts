@@ -91,7 +91,7 @@ describe("aasPermissionsForm composable", () => {
     );
 
     let permissionsForm = mountHarness({
-      initialAccessPermissionRules:
+      allAccessPermissionRules:
         security.localAccessControl.accessPermissionRules,
       object: "section1",
       modifyShell: modifyShellMock,
@@ -101,12 +101,29 @@ describe("aasPermissionsForm composable", () => {
       permissionsForm.getPermissions({
         userRole: UserRoleDto.ADMIN,
       }),
-    ).toEqual([Permissions.Create, Permissions.Edit]);
+    ).toEqual({ permissions: [Permissions.Create, Permissions.Edit], inheritsPermissionsOf: null });
 
-    expect(permissionsForm.getPermissions({ userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER })).toEqual([Permissions.Create]);
+    expect(
+      permissionsForm.getPermissions({
+        userRole: UserRoleDto.USER,
+        memberRole: MemberRoleDto.MEMBER,
+      }),
+    ).toEqual({ permissions: [Permissions.Create], inheritsPermissionsOf: null });
 
     permissionsForm = mountHarness({
-      initialAccessPermissionRules:
+      allAccessPermissionRules: security.localAccessControl.accessPermissionRules,
+      object: "section1.field1",
+      modifyShell: modifyShellMock,
+    });
+
+    expect(
+      permissionsForm.getPermissions({
+        userRole: UserRoleDto.ADMIN,
+      }),
+    ).toEqual({ permissions: [Permissions.Create, Permissions.Edit], inheritsPermissionsOf: "section1" });
+
+    permissionsForm = mountHarness({
+      allAccessPermissionRules:
         security.localAccessControl.accessPermissionRules,
       object: "section3",
       modifyShell: modifyShellMock,
@@ -116,10 +133,10 @@ describe("aasPermissionsForm composable", () => {
         userRole: UserRoleDto.USER,
         memberRole: MemberRoleDto.MEMBER,
       }),
-    ).toEqual(allPermissionsAllow.map(p => p.permission));
+    ).toEqual({ permissions: allPermissionsAllow.map(p => p.permission), inheritsPermissionsOf: null });
   });
 
-  it("should modify security", async () => {
+  it("should modify permissions", async () => {
     const transientParams: SecurityPlainTransientParams = {
       policies: [
         {
@@ -165,7 +182,7 @@ describe("aasPermissionsForm composable", () => {
     );
 
     const { editPermissions, getPermissions, savePermissions } = mountHarness({
-      initialAccessPermissionRules:
+      allAccessPermissionRules:
         security.localAccessControl.accessPermissionRules,
       object: "section1",
       modifyShell: modifyShellMock,
@@ -174,10 +191,10 @@ describe("aasPermissionsForm composable", () => {
     const owner = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.OWNER };
     editPermissions([Permissions.Create, Permissions.Edit], member);
     editPermissions([Permissions.Create, Permissions.Edit], member);
-    expect(getPermissions(member)).toEqual([Permissions.Create, Permissions.Edit]);
-    editPermissions([Permissions.Read], owner);
+    expect(getPermissions(member)).toEqual({ permissions: [Permissions.Create, Permissions.Edit], inheritsPermissionsOf: null });
+    editPermissions([Permissions.Read, Permissions.Delete], owner);
 
-    expect(getPermissions(owner)).toEqual([Permissions.Read]);
+    expect(getPermissions(owner)).toEqual({ permissions: [Permissions.Read, Permissions.Delete], inheritsPermissionsOf: null });
     await savePermissions();
     expect(modifyShellMock).toHaveBeenCalledWith({
       security: {
@@ -263,6 +280,141 @@ describe("aasPermissionsForm composable", () => {
                   permissions: [
                     {
                       permission: Permissions.Read,
+                      kindOfPermission: PermissionKind.Allow,
+                    },
+                    {
+                      permission: Permissions.Delete,
+                      kindOfPermission: PermissionKind.Allow,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+    });
+  });
+
+  it("should reset permissions", async () => {
+    const transientParams: SecurityPlainTransientParams = {
+      policies: [
+        {
+          subject: {
+            userRole: UserRoleDto.USER,
+            memberRole: MemberRoleDto.MEMBER,
+          },
+          object: { idShortPath: "section1" },
+          permissions: [
+            {
+              permission: Permissions.Create,
+              kindOfPermission: PermissionKind.Allow,
+            },
+          ],
+        },
+      ],
+    };
+    const security: SecurityResponseDto = securityPlainFactory.build(
+      undefined,
+      { transient: transientParams },
+    );
+    let permissionsForm = mountHarness({
+      allAccessPermissionRules:
+        security.localAccessControl.accessPermissionRules,
+      object: "section1",
+      modifyShell: modifyShellMock,
+    });
+    const member = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER };
+    permissionsForm.editPermissions([Permissions.Create, Permissions.Edit], member);
+    expect(permissionsForm.getPermissions(member)).toEqual({ permissions: [Permissions.Create, Permissions.Edit], inheritsPermissionsOf: null });
+    permissionsForm.resetPermissions(member);
+    expect(permissionsForm.getPermissions(member)).toEqual({
+      permissions: [Permissions.Create],
+      inheritsPermissionsOf: null,
+    });
+    await permissionsForm.savePermissions();
+    expect(modifyShellMock).toHaveBeenCalledWith({
+      security: {
+        localAccessControl: {
+          accessPermissionRules: [
+            {
+              targetSubjectAttributes: {
+                subjectAttribute: [
+                  propertyOutputPlainFactory.build({
+                    idShort: "userRole",
+                    value: "user",
+                  }),
+                  propertyOutputPlainFactory.build({
+                    idShort: "memberRole",
+                    value: "member",
+                  }),
+                ],
+              },
+              permissionsPerObject: [
+                {
+                  object: permissionObjectPlainFactory.build({
+                    idShort: "section1",
+                  }),
+                  permissions: [
+                    {
+                      permission: Permissions.Create,
+                      kindOfPermission: PermissionKind.Allow,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+    });
+
+    permissionsForm = mountHarness({
+      allAccessPermissionRules:
+        security.localAccessControl.accessPermissionRules,
+      object: "section1.field1",
+      modifyShell: modifyShellMock,
+    });
+
+    permissionsForm.editPermissions(
+      [Permissions.Create, Permissions.Edit],
+      member,
+    );
+    expect(permissionsForm.getPermissions(member)).toEqual({
+      permissions: [Permissions.Create, Permissions.Edit],
+      inheritsPermissionsOf: null,
+    });
+    permissionsForm.resetPermissions(member);
+    expect(permissionsForm.getPermissions(member)).toEqual({
+      permissions: [Permissions.Create],
+      inheritsPermissionsOf: "section1",
+    });
+    await permissionsForm.savePermissions();
+    expect(modifyShellMock).toHaveBeenCalledWith({
+      security: {
+        localAccessControl: {
+          accessPermissionRules: [
+            {
+              targetSubjectAttributes: {
+                subjectAttribute: [
+                  propertyOutputPlainFactory.build({
+                    idShort: "userRole",
+                    value: "user",
+                  }),
+                  propertyOutputPlainFactory.build({
+                    idShort: "memberRole",
+                    value: "member",
+                  }),
+                ],
+              },
+              permissionsPerObject: [
+                {
+                  object: permissionObjectPlainFactory.build({
+                    idShort: "section1",
+                  }),
+                  permissions: [
+                    {
+                      permission: Permissions.Create,
                       kindOfPermission: PermissionKind.Allow,
                     },
                   ],
