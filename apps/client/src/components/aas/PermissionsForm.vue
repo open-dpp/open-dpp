@@ -8,25 +8,25 @@ import type { IAasPermissionsForm } from "../../composables/aas-permissions-form
 import type { Subject } from "../../lib/aas-security.ts";
 import { Permissions } from "@open-dpp/dto";
 
-import { onMounted, ref } from "vue";
-import { useAasRoleHierarchy } from "../../composables/aas-role-hierarchy.ts";
+import { computed, onMounted, ref } from "vue";
+import { useRoleHierarchy } from "../../composables/role-hierarchy.ts";
+import { useUserStore } from "../../stores/user.ts";
 
 const { getPermissions, editPermissions }
   = defineProps<Omit<IAasPermissionsForm, "savePermissions">>();
 
 const permissionPerObjects = ref<ReturnType<typeof getPermissions>>([]);
 
-const selectedRole = ref<{
-  userRole: UserRoleDtoType;
-  memberRole?: MemberRoleDtoType;
-} | null>(null);
+const { asSubject } = useUserStore();
+const { getVisibleRoles, canEditPermissionsOfRole } = useRoleHierarchy();
+
+const roles = ref(getVisibleRoles(asSubject()));
+const selectedRole = ref<Subject>(asSubject());
 
 const selectedPermissions = ref<PermissionType[]>([]);
 
 onMounted(() => {
   permissionPerObjects.value = getPermissions();
-
-  selectedRole.value = permissionPerObjects.value[0]?.subject ?? null;
 
   if (selectedRole.value) {
     setPermissions(selectedRole.value);
@@ -47,9 +47,15 @@ function setPermissions(subject: Subject) {
   }
 }
 
-const { hierarchy } = useAasRoleHierarchy();
-
-const roles = ref(hierarchy);
+const canEditPermissions = computed(() => {
+  if (!selectedRole.value) {
+    return false;
+  }
+  return canEditPermissionsOfRole(
+    asSubject(),
+    selectedRole.value,
+  );
+});
 
 const permissionOptions = ref([
   { name: "Read", key: Permissions.Read },
@@ -64,6 +70,7 @@ function onRoleChange(role: {
 }) {
   setPermissions(role);
 }
+
 function onPermissionChange() {
   if (selectedRole.value) {
     editPermissions(selectedPermissions.value, selectedRole.value);
@@ -91,6 +98,7 @@ function onPermissionChange() {
       <Checkbox
         v-model="selectedPermissions"
         :input-id="permission.key"
+        :disabled="!canEditPermissions"
         name="permissions"
         :value="permission.name"
         @update:model-value="onPermissionChange"
