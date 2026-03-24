@@ -1,5 +1,9 @@
 <script lang="ts" setup>
+import { ref } from "vue";
+import NavigationDrawer from "../presentation/NavigationDrawer.vue";
 import Navbar from "./Navbar.vue";
+
+const drawerVisible = ref(false);
 </script>
 
 <template>
@@ -7,7 +11,7 @@ import Navbar from "./Navbar.vue";
     <div class="xl:max-w-7xl mx-auto relative">
       <div class="flex flex-col gap-5">
         <div class="sticky top-0 z-10">
-          <Navbar />
+          <Navbar @toggle-menu="drawerVisible = !drawerVisible" />
         </div>
         <div class="bg-white shadow-sm">
           <main>
@@ -18,5 +22,6 @@ import Navbar from "./Navbar.vue";
         </div>
       </div>
     </div>
+    <NavigationDrawer v-model="drawerVisible" />
   </div>
 </template>

@@ -3,9 +3,8 @@ import { computed } from "vue";
 import { useRoute } from "vue-router";
 import { useSubmodelTree } from "../../composables/submodel-tree";
 import { usePassportStore } from "../../stores/passport";
-import Breadcrumbs from "./Breadcrumbs.vue";
+import NavigationTree from "./NavigationTree.vue";
 import PassportHeader from "./PassportHeader.vue";
-import Sidebar from "./Sidebar.vue";
 import Submodel from "./Submodel.vue";
 
 const passportStore = usePassportStore();
@@ -44,12 +43,9 @@ const submodels = computed(() => {
       v-if="submodelTreeDepth > 1"
       class="bg-white shadow-sm px-6 py-4 min-w-48 hidden md:flex md:sticky md:top-40 self-start max-h-[calc(100vh-5rem)] overflow-y-auto"
     >
-      <Sidebar data-cy="sidebar" />
+      <NavigationTree data-cy="sidebar" />
     </div>
     <div data-cy="content" class="flex flex-col gap-5 w-full relative">
-      <div class="px-6 flex md:hidden">
-        <Breadcrumbs />
-      </div>
       <PassportHeader />
       <Submodel
         v-for="submodel in submodels"

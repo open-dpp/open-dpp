@@ -6,6 +6,10 @@ import { authClient } from "../../auth-client.ts";
 import { useBrandingAnonymous } from "../../composables/branding.ts";
 import BrandingLogo from "../media/BrandingLogo.vue";
 
+const emit = defineEmits<{
+  toggleMenu: [];
+}>();
+
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
@@ -64,7 +68,17 @@ const menuItems = computed(() => {
 <template>
   <Menubar class="p-10!" :model="menuItems">
     <template #start>
-      <BrandingLogo :url="src" />
+      <div class="flex items-center gap-2">
+        <Button
+          icon="pi pi-bars"
+          text
+          rounded
+          class="md:hidden!"
+          :aria-label="t('presentation.navigation')"
+          @click="emit('toggleMenu')"
+        />
+        <BrandingLogo :url="src" />
+      </div>
     </template>
     <template #end>
       <div class="flex items-center gap-2">
