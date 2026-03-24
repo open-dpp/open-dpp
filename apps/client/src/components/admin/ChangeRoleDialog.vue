@@ -107,6 +107,9 @@ async function changeRole() {
   <Dialog
     v-model:visible="visible"
     modal
+    :closable="!loading"
+    :dismissable-mask="!loading"
+    :close-on-escape="!loading"
     :header="t('organizations.admin.changeRoleDialog.title')"
     class="w-full sm:w-[28rem]"
     @hide="success ? emit('success') : emit('close')"
