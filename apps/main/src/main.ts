@@ -29,6 +29,7 @@ async function bootstrap() {
     }
     catch (error) {
       console.error(error);
+      exit(1);
     }
     exit(0);
   }

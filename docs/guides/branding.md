@@ -5,7 +5,7 @@ open-dpp supports branding at two levels:
 - **Instance logo**: a default logo used across the platform
 - **Organization logo**: a logo configured for a specific organization
 
-If both are set, the organization logo takes precedence.
+If both are set and the user is logged in, the organization logo takes precedence.
 
 ## Instance Logo
 

@@ -4,9 +4,9 @@ open-dpp can add an AI assistant to product passports. The assistant helps users
 
 ## Setup
 
-Before enabling AI features, configure the required environment variables:
+Before enabling AI features, configure the required environment variables, depending of your model choice:
 
-- `OPEN_DPP_MISTRAL_API_KEY`
+- `OPEN_DPP_MISTRAL_API_KEY` or
 - `OPEN_DPP_OLLAMA_URL`
 
 For full environment details, see [configuration options](/reference/configuration).
