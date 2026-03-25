@@ -13,10 +13,6 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AASEditor: typeof import('./src/components/aas/AASEditor.vue')['default']
-    Accordion: typeof import('primevue/accordion')['default']
-    AccordionContent: typeof import('primevue/accordioncontent')['default']
-    AccordionHeader: typeof import('primevue/accordionheader')['default']
-    AccordionPanel: typeof import('primevue/accordionpanel')['default']
     AdminUsersList: typeof import('./src/components/admin/AdminUsersList.vue')['default']
     AssetAdministrationShellEditor: typeof import('./src/components/aas/AssetAdministrationShellEditor.vue')['default']
     BaseButton: typeof import('./src/components/basics/BaseButton.vue')['default']
@@ -43,7 +39,6 @@ declare module 'vue' {
     Drawer: typeof import('primevue/drawer')['default']
     Dropdown: typeof import('./src/components/Dropdown.vue')['default']
     EmptyState: typeof import('./src/components/organizations/EmptyState.vue')['default']
-    Fieldset: typeof import('primevue/fieldset')['default']
     FileCreateEditor: typeof import('./src/components/aas/FileCreateEditor.vue')['default']
     FileEditor: typeof import('./src/components/aas/FileEditor.vue')['default']
     FileField: typeof import('./src/components/aas/form/FileField.vue')['default']
@@ -128,7 +123,6 @@ declare module 'vue' {
     Tabs: typeof import('./src/components/lists/Tabs.vue')['default']
     TemplateCreateDialog: typeof import('./src/components/template/TemplateCreateDialog.vue')['default']
     TextFieldWithValidation: typeof import('./src/components/basics/TextFieldWithValidation.vue')['default']
-    ToggleButton: typeof import('primevue/togglebutton')['default']
     TreeTable: typeof import('primevue/treetable')['default']
     UserInvitationsList: typeof import('./src/components/organizations/UserInvitationsList.vue')['default']
   }
@@ -140,10 +134,6 @@ declare module 'vue' {
 // For TSX support
 declare global {
   const AASEditor: typeof import('./src/components/aas/AASEditor.vue')['default']
-  const Accordion: typeof import('primevue/accordion')['default']
-  const AccordionContent: typeof import('primevue/accordioncontent')['default']
-  const AccordionHeader: typeof import('primevue/accordionheader')['default']
-  const AccordionPanel: typeof import('primevue/accordionpanel')['default']
   const AdminUsersList: typeof import('./src/components/admin/AdminUsersList.vue')['default']
   const AssetAdministrationShellEditor: typeof import('./src/components/aas/AssetAdministrationShellEditor.vue')['default']
   const BaseButton: typeof import('./src/components/basics/BaseButton.vue')['default']
@@ -170,7 +160,6 @@ declare global {
   const Drawer: typeof import('primevue/drawer')['default']
   const Dropdown: typeof import('./src/components/Dropdown.vue')['default']
   const EmptyState: typeof import('./src/components/organizations/EmptyState.vue')['default']
-  const Fieldset: typeof import('primevue/fieldset')['default']
   const FileCreateEditor: typeof import('./src/components/aas/FileCreateEditor.vue')['default']
   const FileEditor: typeof import('./src/components/aas/FileEditor.vue')['default']
   const FileField: typeof import('./src/components/aas/form/FileField.vue')['default']
@@ -255,7 +244,6 @@ declare global {
   const Tabs: typeof import('./src/components/lists/Tabs.vue')['default']
   const TemplateCreateDialog: typeof import('./src/components/template/TemplateCreateDialog.vue')['default']
   const TextFieldWithValidation: typeof import('./src/components/basics/TextFieldWithValidation.vue')['default']
-  const ToggleButton: typeof import('primevue/togglebutton')['default']
   const TreeTable: typeof import('primevue/treetable')['default']
   const UserInvitationsList: typeof import('./src/components/organizations/UserInvitationsList.vue')['default']
 }

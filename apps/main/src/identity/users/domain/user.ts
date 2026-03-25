@@ -86,7 +86,7 @@ export class User {
     );
   }
 
-  public withRole(role: UserRole): User {
+  public withRole(role: UserRoleType): User {
     return new User(
       this.id,
       this.email,
