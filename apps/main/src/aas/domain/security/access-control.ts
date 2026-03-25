@@ -23,7 +23,7 @@ export class AccessControl {
 
   toPlain(options: { filterBySubject?: SubjectAttributes }): Record<string, any> {
     if (options.filterBySubject) {
-      const rules = this.findRulesOfAllRolesAccessibleBySubject(options.filterBySubject);
+      const rules = this.findRulesOfAllVisibleRolesOfSubject(options.filterBySubject);
       return {
         accessPermissionRules: rules.map(p => p.toPlain()),
       };
@@ -33,7 +33,7 @@ export class AccessControl {
     };
   }
 
-  findRulesOfAllRolesAccessibleBySubject(subject: SubjectAttributes): AccessPermissionRule[] {
+  findRulesOfAllVisibleRolesOfSubject(subject: SubjectAttributes): AccessPermissionRule[] {
     const subjectsToConsider = [subject, ...subject.getSubjectsWithSubordinatedRoles()];
     return subjectsToConsider.map(s => this.findRuleOfSubject(s)).filter(
       r => !!r,

@@ -11,6 +11,7 @@ import { Extension } from "../extension";
 import { JsonVisitor } from "../json-visitor";
 import { ModifierVisitor } from "../modifier-visitor";
 import { IPersistable } from "../persistable";
+import { AasAbility } from "../security/aas-ability";
 import { ValueModifierVisitor } from "../value-modifier-visitor";
 import { JsonType, ValueVisitor } from "../value-visitor";
 import { IVisitor } from "../visitor";
@@ -239,8 +240,8 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return visitor.visitSubmodel(this, context);
   }
 
-  toPlain(): Record<string, any> {
-    const jsonVisitor = new JsonVisitor();
+  toPlain(options?: { ability: AasAbility }): Record<string, any> {
+    const jsonVisitor = new JsonVisitor(options);
     return this.accept(jsonVisitor);
   }
 

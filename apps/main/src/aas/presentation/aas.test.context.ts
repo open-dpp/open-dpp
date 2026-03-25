@@ -39,18 +39,19 @@ import { EmailService } from "../../email/email.service";
 import { AuthModule } from "../../identity/auth/auth.module";
 import { AUTH } from "../../identity/auth/auth.provider";
 import { AuthGuard } from "../../identity/auth/infrastructure/guards/auth.guard";
+import { ORGANIZATION_ID_HEADER } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { OrganizationsModule } from "../../identity/organizations/organizations.module";
 import { UsersService } from "../../identity/users/application/services/users.service";
 import { UsersModule } from "../../identity/users/users.module";
+
 import { MediaModule } from "../../media/media.module";
 
 import { AasModule } from "../aas.module";
-
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
 import { Key } from "../domain/common/key";
-import { LanguageText } from "../domain/common/language-text";
 
+import { LanguageText } from "../domain/common/language-text";
 import { Reference } from "../domain/common/reference";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { IPersistable } from "../domain/persistable";
@@ -154,6 +155,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .get(`${basePath}/${passport.id}/shells?limit=1`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send();
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toEqual(aas.id);
@@ -204,6 +206,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .patch(`${basePath}/${entity.id}/shells/${btoa(newAas.id)}`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send(body);
     expect(response.status).toEqual(200);
     expect(response.body.displayName).toEqual(newDisplayName);
@@ -218,6 +221,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .get(`${basePath}/${passport.id}/submodels?limit=2`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send();
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toEqual(submodels[1].id);
@@ -230,6 +234,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .get(`${basePath}/${passport.id}/submodels/${btoa(submodels[1].id)}`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send();
     expect(response.status).toEqual(200);
     expect(response.body).toEqual(SubmodelJsonSchema.parse(submodels[1].toPlain()));
@@ -244,6 +249,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .post(`${basePath}/${passport.id}/submodels`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send(submodelJson);
     expect(response.status).toEqual(201);
     const foundSubmodel = await submodelRepository.findOneOrFail(response.body.id);
@@ -256,6 +262,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .get(`${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send();
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toEqual(submodels[1].submodelElements[submodels[1].submodelElements.length - 1].idShort);
@@ -270,6 +277,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .post(`${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send(submodelElementJson);
     expect(response.status).toEqual(201);
     const foundSubmodelElement = await submodelRepository.findOneOrFail(submodels[1].id);
@@ -284,6 +292,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .get(`${basePath}/${entity.id}/submodels/${btoa(submodels[0].id)}/submodel-elements/Design_V01.Author.AuthorName`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send();
     expect(response.status).toEqual(200);
     expect(response.body).toEqual({
@@ -320,6 +329,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .post(`${basePath}/${entity.id}/submodels/${btoa(submodels[0].id)}/submodel-elements/Design_V01.Author`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send(submodelElementJson);
     expect(response.status).toEqual(201);
     const foundSubmodelElement = await submodelRepository.findOneOrFail(submodels[0].id);
@@ -334,6 +344,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .get(`${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/$value`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send();
     expect(response.status).toEqual(200);
     expect(response.body).toEqual(
@@ -408,6 +419,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .get(`${basePath}/${entity.id}/submodels/${btoa(submodels[1].id)}/submodel-elements/ProductCarbonFootprint_A1A3/$value`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send();
     expect(response.status).toEqual(200);
     expect(response.body).toEqual(
@@ -460,6 +472,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .patch(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send(modificationBody);
     expect(response.status).toEqual(200);
     expect({ idShort: response.body.idShort, displayName: response.body.displayName, description: response.body.description }).toEqual(modificationBody);
@@ -486,6 +499,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .patch(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/Property01`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send(modificationBody);
     expect(response.status).toEqual(200);
     expect({ idShort: response.body.idShort, displayName: response.body.displayName, description: response.body.description }).toEqual(modificationBody);
@@ -513,6 +527,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .patch(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/collection/$value`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send(modificationBody);
     expect(response.status).toEqual(200);
     expect({ idShort: response.body.value[0].idShort, value: response.body.value[0].value }).toEqual({ idShort: property.idShort, value: "value new" });
@@ -540,6 +555,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .post(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns?position=0`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send(col0Body);
     expect(response.status).toEqual(201);
     const bodyRow0 = response.body.value[0];
@@ -578,6 +594,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .patch(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col1.idShort}`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send(colBody);
     expect(response.status).toEqual(200);
     const bodyRow0 = response.body.value[0];
@@ -607,6 +624,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .delete(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/columns/${col1.idShort}`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send();
     expect(response.status).toEqual(200);
     const bodyRow0 = response.body.value[0];
@@ -637,6 +655,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .post(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows?position=0`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send();
     expect(response.status).toEqual(201);
 
@@ -667,6 +686,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .delete(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/tableList/rows/${row1.idShort}`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send();
     expect(response.status).toEqual(200);
     expect(response.body.value).toEqual([]);
@@ -698,6 +718,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .delete(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send();
     expect(response.status).toEqual(204);
     const foundAas = await aasRepository.findOneOrFail(aasId);
@@ -723,6 +744,7 @@ export function createAasTestContext<T>(basePath: string, metadataTestingModule:
     const response = await request(app.getHttpServer())
       .delete(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/${path}`)
       .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send();
     expect(response.status).toEqual(204);
     const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);

@@ -1,7 +1,7 @@
 import type { Connection } from "mongoose";
 
 import { randomUUID } from "node:crypto";
-import { BadRequestException, ForbiddenException, Injectable, Logger } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import {
   AssetAdministrationShellCreateDto,
@@ -30,7 +30,6 @@ import {
   ValueSchema,
 } from "@open-dpp/dto";
 import { DbSessionOptions } from "../../database/query-options";
-import { Session } from "../../identity/auth/domain/session";
 import { MembersService } from "../../identity/organizations/application/services/members.service";
 
 import { Pagination } from "../../pagination/pagination";
@@ -42,7 +41,6 @@ import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
 import { LanguageText } from "../domain/common/language-text";
 import { ConceptDescription } from "../domain/concept-description";
-import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
 import { ExpandedEnvironment } from "../domain/expanded-environment";
 import { SubjectAttributes } from "../domain/security/subject-attributes";
@@ -363,15 +361,5 @@ export class EnvironmentService {
       throw new Error("No asset administration shell for environment. Can't add submodel");
     }
     return await this.aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
-  }
-
-  async checkOwnerShipOfDppIdentifiable<T extends IDigitalProductPassportIdentifiable>(dppIdentifiable: T, session: Session): Promise<SubjectAttributes> {
-    const { userRole, memberRole } = await this.membersService.getUserAndMemberRole(session.userId, dppIdentifiable.getOrganizationId());
-    if (session.userId && memberRole) {
-      return SubjectAttributes.create({ userRole, memberRole });
-    }
-    else {
-      throw new ForbiddenException();
-    }
   }
 }

@@ -46,7 +46,8 @@ export class Security {
   }
 
   findPoliciesBySubject(subject: SubjectAttributes): AccessPermissionRule[] {
-    return this.localAccessControl.findRulesOfAllRolesAccessibleBySubject(subject);
+    const rule = this.localAccessControl.findRuleOfSubject(subject);
+    return rule ? [rule] : [];
   }
 
   hasPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): boolean {

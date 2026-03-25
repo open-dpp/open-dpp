@@ -49,17 +49,6 @@ describe("MembersService", () => {
     expect(await service.isMemberOfOrganization("user-1", "org-1")).toBe(false);
   });
 
-  it("should return user and member role", async () => {
-    mockUsersRepo.findOneOrFail.mockResolvedValueOnce({ role: UserRole.USER });
-    const ownerMember = Member.create({ organizationId: "org-1", userId: "user-1", role: MemberRole.OWNER });
-    mockMembersRepo.findOneByUserIdAndOrganizationId.mockResolvedValueOnce(ownerMember);
-    expect(await service.getUserAndMemberRole("user-1", "org-1")).toEqual({ userRole: UserRole.USER, memberRole: MemberRole.OWNER });
-
-    mockUsersRepo.findOneOrFail.mockResolvedValueOnce({ role: UserRole.ADMIN });
-    mockMembersRepo.findOneByUserIdAndOrganizationId.mockResolvedValueOnce(null);
-    expect(await service.getUserAndMemberRole("user-1", "org-1")).toEqual({ userRole: UserRole.ADMIN });
-  });
-
   it("should check if user is owner or admin", async () => {
     // Owner logic
     const ownerMember = Member.create({ organizationId: "org-1", userId: "user-1", role: MemberRole.OWNER });

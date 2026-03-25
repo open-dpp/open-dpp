@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { beforeAll, expect } from "@jest/globals";
-import { AasSubmodelElements, DataTypeDef } from "@open-dpp/dto";
+import { AasSubmodelElements, DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import {
   propertyInputPlainFactory,
@@ -9,7 +9,12 @@ import {
   submodelDesignOfProductPlainFactory,
   submodelDesignOfProductValuePlainFactory,
 } from "@open-dpp/testing";
+import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
+import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { LanguageText } from "../common/language-text";
+import { Permission } from "../security/permission";
+import { Security } from "../security/security";
+import { SubjectAttributes } from "../security/subject-attributes";
 import { Property } from "./property";
 import { registerSubmodelElementClasses } from "./register-submodel-element-classes";
 import { Submodel } from "./submodel";
@@ -202,6 +207,22 @@ describe("submodel", () => {
         },
       ],
     });
+  });
+
+  it("should get values readable by specified subject", () => {
+    const security = Security.create({});
+    const submodel = Submodel.create({ idShort: "section1" });
+
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const prop1 = Property.create({ idShort: "prop1", value: "10", valueType: DataTypeDef.Double });
+    const prop2 = Property.create({ idShort: "prop2", value: "10", valueType: DataTypeDef.Double });
+    submodel.addSubmodelElement(prop1);
+    submodel.addSubmodelElement(prop2);
+
+    security.addPolicy(member, IdShortPath.create({ path: "section1.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+
+    const ability = security.defineAbilityForSubject(member);
+    expect(submodel.toPlain({ ability })).toEqual({ ...submodel.toPlain(), submodelElements: [prop1.toPlain()] });
   });
 
   it("should get value representation for bill of material", () => {

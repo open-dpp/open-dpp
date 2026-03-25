@@ -20,15 +20,17 @@ import type { Range } from "./submodel-base/range";
 import type { ReferenceElement } from "./submodel-base/reference-element";
 import type { RelationshipElement } from "./submodel-base/relationship-element";
 import type { Submodel } from "./submodel-base/submodel";
-import type { ISubmodelBase } from "./submodel-base/submodel-base";
 import type { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import type { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import type { IVisitor } from "./visitor";
-import { KeyTypes } from "@open-dpp/dto";
+import { KeyTypes, Permissions } from "@open-dpp/dto";
+import { AasAbility } from "./security/aas-ability";
 import { SubjectAttributes } from "./security/subject-attributes";
+import { IdShortPath, ISubmodelBase } from "./submodel-base/submodel-base";
 
-export class JsonVisitor implements IVisitor<undefined, any> {
-  constructor(private readonly options?: { filterBySubject?: SubjectAttributes }) {
+interface ContextType { idShortPath: IdShortPath }
+export class JsonVisitor implements IVisitor<ContextType, any> {
+  constructor(private readonly options?: { filterBySubject?: SubjectAttributes; ability?: AasAbility }) {
   }
 
   private buildBase(submodelBase: ISubmodelBase) {
@@ -44,7 +46,13 @@ export class JsonVisitor implements IVisitor<undefined, any> {
     };
   }
 
-  visitProperty(element: Property): any {
+  visitProperty(element: Property, context?: ContextType): any {
+    if (this.options?.ability && context) {
+      if (!this.options.ability.can(Permissions.Read, context.idShortPath.addPathSegment(element.idShort))) {
+        return null;
+      }
+    }
+
     return {
       modelType: KeyTypes.Property,
       ...this.buildBase(element),
@@ -114,7 +122,7 @@ export class JsonVisitor implements IVisitor<undefined, any> {
       extensions: element.extensions.map(e => e.accept(this)),
       administration: element.administration?.accept(this) ?? null,
       kind: element.kind,
-      submodelElements: element.submodelElements.map(e => e.accept(this)),
+      submodelElements: element.submodelElements.map(e => e.accept(this, { idShortPath: IdShortPath.create({ path: element.idShort }) })).filter(e => e !== null),
     };
   }
 

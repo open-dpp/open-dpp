@@ -16,6 +16,7 @@ import {
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
+import { ORGANIZATION_ID_HEADER } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
@@ -383,7 +384,9 @@ describe("passportController", () => {
 
     const response = await request(app.getHttpServer())
       .get(`${basePath}/${passport.id}/export`)
-      .set("Cookie", userCookie);
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
+    ;
 
     expect(response.status).toEqual(200);
     expect(response.body.format).toEqual("open-dpp:json");
@@ -403,7 +406,9 @@ describe("passportController", () => {
 
     const exportResponse = await request(app.getHttpServer())
       .get(`${basePath}/${passport.id}/export`)
-      .set("Cookie", userCookie);
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
+    ;
     expect(exportResponse.status).toEqual(200);
 
     const importResponse = await request(app.getHttpServer())
@@ -465,7 +470,9 @@ describe("passportController", () => {
 
     const exportResponse = await request(app.getHttpServer())
       .get(`${basePath}/${importResponse.body.id}/export`)
-      .set("Cookie", userCookie);
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
+    ;
 
     expect(exportResponse.status).toEqual(200);
     expect(exportResponse.body.format).toEqual("open-dpp:json");
@@ -501,7 +508,9 @@ describe("passportController", () => {
 
     const exportResponse = await request(app.getHttpServer())
       .get(`${basePath}/${importResponse.body.id}/export`)
-      .set("Cookie", userCookie);
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
+    ;
 
     expect(exportResponse.status).toEqual(200);
 

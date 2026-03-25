@@ -44,7 +44,7 @@ describe("security", () => {
     expect(ability.can(
       Permissions.Read,
       IdShortPath.create({ path: "section1" }),
-    )).toBeTruthy();
+    )).toBeFalsy();
   });
 
   it("should add policy fails if it already exists", () => {
@@ -142,7 +142,7 @@ describe("security", () => {
     ]);
   });
 
-  it("return security rule for given subject", () => {
+  it("return policies for given subject", () => {
     const security = Security.create({ });
     security.addPolicy(SubjectAttributes.create({ userRole: UserRole.ADMIN }), IdShortPath.create({ path: "adminSection" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
 
@@ -178,15 +178,6 @@ describe("security", () => {
           }),
         ],
       },
-      {
-        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER }),
-        permissionsPerObject: [
-          PermissionPerObject.create({
-            object: createAasObject(IdShortPath.create({ path: "section1" })),
-            permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
-          }),
-        ],
-      },
     ]);
 
     expect(security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.ADMIN }))).toEqual([
@@ -195,28 +186,6 @@ describe("security", () => {
         permissionsPerObject: [
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: "adminSection" })),
-            permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
-          }),
-        ],
-      },
-      {
-        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
-        permissionsPerObject: [
-          PermissionPerObject.create({
-            object: createAasObject(IdShortPath.create({ path: "section1" })),
-            permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
-          }),
-          PermissionPerObject.create({
-            object: createAasObject(IdShortPath.create({ path: "section2" })),
-            permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })],
-          }),
-        ],
-      },
-      {
-        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER }),
-        permissionsPerObject: [
-          PermissionPerObject.create({
-            object: createAasObject(IdShortPath.create({ path: "section1" })),
             permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
           }),
         ],
@@ -279,6 +248,141 @@ describe("security", () => {
             ],
           },
         }],
+      },
+    });
+
+    expect(security.toPlain({ filterBySubject: SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }) })).toEqual({
+      localAccessControl: {
+        accessPermissionRules: [
+          {
+            permissionsPerObject: [
+              {
+                object: {
+                  category: null,
+                  description: [],
+                  displayName: [],
+                  embeddedDataSpecifications: [],
+                  extensions: [],
+                  idShort: "section1",
+                  modelType: "ReferenceElement",
+                  qualifiers: [],
+                  semanticId: null,
+                  supplementalSemanticIds: [],
+                  value: null,
+                },
+                permissions: [
+                  {
+                    kindOfPermission: "Allow",
+                    permission: "Read",
+                  },
+                ],
+              },
+              {
+                object: {
+                  category: null,
+                  description: [],
+                  displayName: [],
+                  embeddedDataSpecifications: [],
+                  extensions: [],
+                  idShort: "section2",
+                  modelType: "ReferenceElement",
+                  qualifiers: [],
+                  semanticId: null,
+                  supplementalSemanticIds: [],
+                  value: null,
+                },
+                permissions: [
+                  {
+                    kindOfPermission: "Allow",
+                    permission: "Read",
+                  },
+                  {
+                    kindOfPermission: "Allow",
+                    permission: "Edit",
+                  },
+                ],
+              },
+            ],
+            targetSubjectAttributes: {
+              subjectAttribute: [
+                {
+                  category: null,
+                  description: [],
+                  displayName: [],
+                  embeddedDataSpecifications: [],
+                  extensions: [],
+                  idShort: "userRole",
+                  modelType: "Property",
+                  qualifiers: [],
+                  semanticId: null,
+                  supplementalSemanticIds: [],
+                  value: "user",
+                  valueId: null,
+                  valueType: "String",
+                },
+                {
+                  category: null,
+                  description: [],
+                  displayName: [],
+                  embeddedDataSpecifications: [],
+                  extensions: [],
+                  idShort: "memberRole",
+                  modelType: "Property",
+                  qualifiers: [],
+                  semanticId: null,
+                  supplementalSemanticIds: [],
+                  value: "member",
+                  valueId: null,
+                  valueType: "String",
+                },
+              ],
+            },
+          },
+          {
+            permissionsPerObject: [
+              {
+                object: {
+                  category: null,
+                  description: [],
+                  displayName: [],
+                  embeddedDataSpecifications: [],
+                  extensions: [],
+                  idShort: "section1",
+                  modelType: "ReferenceElement",
+                  qualifiers: [],
+                  semanticId: null,
+                  supplementalSemanticIds: [],
+                  value: null,
+                },
+                permissions: [
+                  {
+                    kindOfPermission: "Allow",
+                    permission: "Read",
+                  },
+                ],
+              },
+            ],
+            targetSubjectAttributes: {
+              subjectAttribute: [
+                {
+                  category: null,
+                  description: [],
+                  displayName: [],
+                  embeddedDataSpecifications: [],
+                  extensions: [],
+                  idShort: "userRole",
+                  modelType: "Property",
+                  qualifiers: [],
+                  semanticId: null,
+                  supplementalSemanticIds: [],
+                  value: "user",
+                  valueId: null,
+                  valueType: "String",
+                },
+              ],
+            },
+          },
+        ],
       },
     });
   });
