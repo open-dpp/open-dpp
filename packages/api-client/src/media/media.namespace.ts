@@ -2,13 +2,10 @@ import type { AxiosInstance } from 'axios'
 import type { MediaInfoDto } from './media.dtos'
 
 export class MediaNamespace {
-  private readonly mediaEndpoint: string
+  private readonly mediaEndpoint = `/media`
   constructor(
     private readonly axiosInstance: AxiosInstance,
-    private readonly organizationId?: string,
-  ) {
-    this.mediaEndpoint = `/media`
-  }
+  ) {}
 
   async download(id: string) {
     return this.axiosInstance.get<Blob>(
@@ -34,7 +31,7 @@ export class MediaNamespace {
 
   async getMediaInfoByOrganization() {
     return this.axiosInstance.get<MediaInfoDto[]>(
-      `${this.mediaEndpoint}/by-organization/${this.organizationId}`,
+      `${this.mediaEndpoint}/by-organization`,
     )
   }
 
@@ -45,35 +42,30 @@ export class MediaNamespace {
   }
 
   async uploadOrganizationProfileMedia(
-    organizationId: string | null,
     file: File,
     onUploadProgress?: (progress: number) => void,
   ): Promise<string> {
-    if (!organizationId) {
-      throw new Error('No organization selected')
-    }
-    const url = `${this.mediaEndpoint}/media/organization-profile/${organizationId}`
+    const url = `${this.mediaEndpoint}/organization-profile`
     return this.uploadMedia(url, file, onUploadProgress)
   }
 
   async uploadDppMedia(
-    organizationId: string | null,
-    uuid: string | undefined,
+    uuid: string,
     dataFieldId: string,
     file: File,
     onUploadProgress?: (progress: number) => void,
   ): Promise<string> {
-    if (!organizationId) {
-      throw new Error('No organization selected')
-    }
-    if (!uuid) {
-      throw new Error('No UUID provided')
-    }
-
-    const url = `${this.mediaEndpoint}/media/dpp/${organizationId}/${uuid}/${dataFieldId}`
-
+    const url = `${this.mediaEndpoint}/dpp/${uuid}/${dataFieldId}`
     return this.uploadMedia(url, file, onUploadProgress)
   };
+
+  async uploadGeneralMedia(
+    file: File,
+    onUploadProgress?: (progress: number) => void,
+  ): Promise<string> {
+    const url = `${this.mediaEndpoint}/upload`
+    return this.uploadMedia(url, file, onUploadProgress)
+  }
 
   async uploadMedia(
     url: string,

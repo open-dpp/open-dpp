@@ -4,66 +4,20 @@ open-dpp is an open-source platform for managing digital product passports (DPPs
 
 > **Note:** This repository is under active development and is rapidly evolving. Features, APIs, and architecture may change frequently, and a stable release has not yet been established. We recommend using open-dpp for testing and experimentation purposes only at this stage.
 
-# Local Development
-## Install dependencies
-```shell
-pnpm install
-```
+# Getting started
 
-## Configure environment
-```shell
-cp .env.dev.example .env.dev
-```
-Replace the secrets and api tokens marked with:
-* change-to-secure-mongo-password
-* change-to-a-secret-key
-* your-mistral-key
+To get up and running quickly, start with the [Getting Started guide](https://docs.open-dpp.de/home/getting-started).
 
-## Build
-```shell
-pnpm run build
-```
+# Documentation
 
-## Run
-Before starting the containers create a mongo_keyfile
-```shell
-openssl rand -base64 756 > docker/mongo_keyfile
-chmod 0400 docker/mongo_keyfile
-```
-Download all necessary docker images
-```shell
-docker compose -f docker-compose.dev.yml pull
-```
-Start all containers with
-```shell
-docker compose -f docker-compose.dev.yml up
-```
-Run application with
-```shell
-pnpm run dev
-```
-Now navigate to http://localhost:3000
-For email verification go to http://localhost:8025.
-## Run tests
-To run the tests you have to run
-```shell
-docker compose -f docker-compose-test.yml up
-cd packages/testing
-pnpm build
-cd ../../
-pnpm test
-```
+See the [documentation](https://docs.open-dpp.de) for setup instructions, configuration details, and usage guides. 
 
-# Deployment
-// TODO curl command to download all files for deployment
+If you want to contribute to the documentation visit the `docs` folder.
 
-* Create a directory for the project
-* Download docker-compose.yml
-* Download .env-example and rename it to .env
-* Download Caddyfile
-* Create secrets with your favorite secret generator and replace all secrets in .env
-* Adapt all urls to your domain
+# Contributing
 
-```
-docker compose up
-```
+We welcome contributions to both the codebase and the documentation.
+
+Before implementing larger changes, please open an issue first so we can discuss the proposal and align on scope. More information on that can be found in our [contributing guide](./CONTRIBUTING.md).
+
+For day-to-day documentation contributions, you can usually start directly by editing files in the `docs` folder and opening a pull request.

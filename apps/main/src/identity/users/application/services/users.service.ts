@@ -57,4 +57,13 @@ export class UsersService {
   async setUserEmailVerified(email: string, emailVerified: boolean): Promise<void> {
     await this.usersRepository.setUserEmailVerified(email, emailVerified);
   }
+
+  async setUserRole(id: string, role: UserRole): Promise<User> {
+    await this.findOneAndFail(id);
+    const saved = await this.usersRepository.setUserRole(id, role);
+    if (!saved) {
+      throw new Error(`Failed to update role for user ${id}`);
+    }
+    return saved;
+  }
 }

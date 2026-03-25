@@ -33,6 +33,7 @@ import {
   SubmodelElementSchema,
   ValueSchema,
 } from "@open-dpp/dto";
+import dayjs from "dayjs";
 import { match, P } from "ts-pattern";
 import { ref, toRaw } from "vue";
 import { HTTPCode } from "../stores/http-codes.ts";
@@ -542,6 +543,13 @@ export function useAasTableExtension({
         DataTypeDef.Double,
       ),
       buildColumnMenuItem(
+        translate(`${translatePrefix}.dateField`),
+        icon,
+        options,
+        AasSubmodelElements.Property,
+        DataTypeDef.Date,
+      ),
+      buildColumnMenuItem(
         translate(`${translatePrefix}.file`),
         icon,
         options,
@@ -732,6 +740,10 @@ export function useAasTableExtension({
         return new Intl.NumberFormat(selectedLanguage, {
           style: "decimal",
         }).format(Number(value));
+      case DataTypeDef.Date: {
+        const parsed = dayjs(String(value));
+        return parsed.isValid() ? parsed.format("YYYY-MM-DD") : String(value);
+      }
       default:
         return value;
     }

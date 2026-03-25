@@ -52,8 +52,6 @@ jobs:
       # Common
       OPEN_DPP_PORT: "3000"
       OPEN_DPP_URL: "http://dpp.example.de"
-      OPEN_DPP_SERVICE_TOKEN: "test-servivce-token"
-      OPEN_DPP_AAS_TOKEN: "test-servivce-token"
       # MongoDB
       OPEN_DPP_MONGODB_PORT: "27017"
       OPEN_DPP_MONGODB_HOST: "localhost"

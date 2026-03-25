@@ -105,6 +105,7 @@
     "submodelElementList": "List",
     "textField": "Text field",
     "file": "File",
+    "dateField": "Date field",
     "numberField": "Number field",
     "type": "Type",
     "error": "{method} @:common.failed"
@@ -148,6 +149,9 @@
     },
     "file": {
       "name": "File field name"
+    },
+    "date": {
+      "name": "Date field name"
     },
     "name": "Section name",
     "dataFieldType": "Datafield type",
@@ -216,6 +220,8 @@
     "addNumberField": "Add numeric field",
     "fileField": "File",
     "addFileField": "Add file upload",
+    "dateField": "Date field",
+    "addDateField": "Add date field",
     "passportDraft": "Passport draft | Passport drafts",
     "passportDraftDescription": "All passport drafts",
     "changeDataFieldType": "Change datafield type"
@@ -379,6 +385,20 @@
         "invite": "Invite",
         "success": "User has been invited to the organization.",
         "error": "Error on inviting user to organization"
+      },
+      "changeRoleDialog": {
+        "title": "Change role",
+        "selectRole": "Role",
+        "roleAdmin": "Admin",
+        "roleUser": "User",
+        "currentRole": "Currently {role}",
+        "confirmEscalation": "This will grant full admin privileges to this user. Continue?",
+        "change": "Change role",
+        "confirmChange": "Grant admin",
+        "success": "Role changed to {role}.",
+        "errorForbidden": "You don't have permission to change roles. Contact an admin.",
+        "errorNotFound": "This user no longer exists.",
+        "error": "Could not change role. Please try again."
       },
       "instanceSettings": {
         "title": "Instance Settings",

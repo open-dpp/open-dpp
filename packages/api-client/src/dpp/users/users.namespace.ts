@@ -1,4 +1,4 @@
-import type { CreateUserDto, UserDto } from '@open-dpp/dto'
+import type { CreateUserDto, SetUserRoleDto, UserDto } from '@open-dpp/dto'
 import type { AxiosInstance } from 'axios'
 
 export class UsersNamespace {
@@ -10,5 +10,9 @@ export class UsersNamespace {
 
   public async create(data: CreateUserDto) {
     return this.axiosInstance.post<void>('/users', data)
+  }
+
+  public async setRole(id: string, data: SetUserRoleDto) {
+    return this.axiosInstance.patch<void>(`/users/${id}/role`, data)
   }
 }

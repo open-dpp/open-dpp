@@ -102,7 +102,7 @@
   },
   "types": {
     "regex": "input",
-    "email": "email address",
+    "email": "E-Mail Adresse",
     "url": "URL",
     "emoji": "emoji",
     "uuid": "UUID",

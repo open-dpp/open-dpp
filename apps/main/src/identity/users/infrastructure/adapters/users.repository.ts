@@ -7,6 +7,7 @@ import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
+import { UserRole } from "../../domain/user-role.enum";
 import { UserMapper } from "../mappers/user.mapper";
 import { User as UserSchema } from "../schemas/user.schema";
 
@@ -93,5 +94,19 @@ export class UsersRepository {
 
   async setUserEmailVerified(email: string, emailVerified: boolean): Promise<void> {
     await this.userModel.findOneAndUpdate({ email }, { $set: { emailVerified } });
+  }
+
+  async setUserRole(id: string, role: UserRole): Promise<User | null> {
+    if (!ObjectId.isValid(id)) {
+      return null;
+    }
+    const document = await this.userModel.findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      { $set: { role } },
+      { new: true },
+    );
+    if (!document)
+      return null;
+    return UserMapper.toDomain(document);
   }
 }

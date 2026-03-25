@@ -1,6 +1,4 @@
 import type { CanActivate, ExecutionContext } from "@nestjs/common";
-import { Buffer } from "node:buffer";
-import { timingSafeEqual } from "node:crypto";
 import {
   ForbiddenException,
   Inject,
@@ -12,7 +10,6 @@ import { MembersService } from "../../../organizations/application/services/memb
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { SessionsService } from "../../application/services/sessions.service";
 import { Session } from "../../domain/session";
-import { ALLOW_SERVICE_ACCESS } from "../../presentation/decorators/allow-service-access.decorator";
 import { USER_HAS_ROLE } from "../../presentation/decorators/user-has-role.decorator";
 
 /**
@@ -53,38 +50,21 @@ export class AuthGuard implements CanActivate {
     const url = request.url as string;
 
     const apiKeyHeader = request.headers["x-api-key"] || request.headers["X-API-KEY"];
-    const serviceTokenHeader = request.headers.service_token;
 
     let session: Session | null = null;
 
-    const isAllowServiceAccess = this.reflector.getAllAndOverride<boolean>(ALLOW_SERVICE_ACCESS, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-
-    if (isAllowServiceAccess && serviceTokenHeader) {
-      const expected = this.configService.get("OPEN_DPP_SERVICE_TOKEN");
-      if (!expected) {
-        return false;
-      }
-      try {
-        const a = Buffer.from(String(serviceTokenHeader), "utf8");
-        const b = Buffer.from(String(expected), "utf8");
-        return a.byteLength === b.byteLength && timingSafeEqual(a, b);
-      }
-      catch {
-        return false;
-      }
-    }
-
     if (apiKeyHeader) {
-      const headers = new Headers();
-      headers.set("x-api-key", apiKeyHeader);
       try {
-        session = await this.sessionsService.getSession(headers);
+        const verifiedKey = await this.sessionsService.verifyApiKey(apiKeyHeader);
+        if (verifiedKey) {
+          session = Session.create({
+            userId: verifiedKey.userId,
+            token: "api-key",
+          });
+        }
       }
       catch {
-        // If session retrieval fails, treat as no session
+        // If API key verification fails, treat as no session
       }
     }
     else {
@@ -131,7 +111,7 @@ export class AuthGuard implements CanActivate {
 
     const isBetterAuthUrl = url.startsWith("/api/auth");
     if (!isBetterAuthUrl) {
-      const organizationId = request.params.organizationId ?? request.params.orgaId ?? null;
+      const organizationId = request.headers["x-open-dpp-organization-id"] ?? null;
       if (organizationId) {
         const isMember = await this.membersService.isMemberOfOrganization(session.userId, organizationId);
         if (!isMember) {

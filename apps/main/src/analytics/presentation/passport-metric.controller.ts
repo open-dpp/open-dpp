@@ -4,12 +4,12 @@ import {
   Controller,
   Get,
   Logger,
-  Param,
   Post,
   Query,
 } from "@nestjs/common";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
+import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { UniqueProductIdentifierApplicationService } from "../../unique-product-identifier/presentation/unique.product.identifier.application.service";
 import { PassportMetric } from "../domain/passport-metric";
 import { PassportMetricService } from "../infrastructure/passport-metric.service";
@@ -52,9 +52,9 @@ export class PassportMetricController {
     };
   }
 
-  @Get("/organizations/:organizationId/passport-metrics")
+  @Get("/passport-metrics")
   async getPassportMetric(
-    @Param("organizationId") organizationId: string,
+    @OrganizationId() organizationId: string,
     @Query("startDate") startDate: string,
     @Query("endDate") endDate: string,
     @Query("templateId") templateId: string | undefined,

@@ -30,7 +30,6 @@ export class AnalyticsApiClient implements IApiClient {
     )
     this.passportMetric = new PassportMetricNamespace(
       this.axiosInstance,
-      this.options.activeOrganizationId,
     )
   }
 }

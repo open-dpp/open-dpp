@@ -105,6 +105,7 @@
     "creation": "Erstellung des {formItem}",
     "textField": "Textfeld",
     "file": "Datei",
+    "dateField": "Datumsfeld",
     "numberField": "Zahlenfeld",
     "type": "Typ",
     "error": "{method} @:common.failed"
@@ -148,6 +149,9 @@
     },
     "file": {
       "name": "Name des Dateifeldes"
+    },
+    "date": {
+      "name": "Name des Datumsfeldes"
     },
     "name": "Name des Abschnitts",
     "dataFieldType": "Datenfeldtyp",
@@ -216,6 +220,8 @@
     "addNumberField": "Numerisches Feld",
     "fileField": "Datei",
     "addFileField": "Fügen Sie einen Dateiupload hinzu",
+    "dateField": "Datumsfeld",
+    "addDateField": "Datumsfeld hinzufügen",
     "passportDraft": "Passvorlagen Entwurf | Passvorlagen Entwürfe",
     "passportDraftDescription": "Alle Passvorlagen Entwürfe",
     "changeDataFieldType": "Datenfeldtyp ändern"
@@ -379,6 +385,20 @@
         "invite": "Einladen",
         "success": "Benutzer wurde zur Organisation eingeladen.",
         "error": "Fehler beim Einladen des Benutzers zur Organisation"
+      },
+      "changeRoleDialog": {
+        "title": "Rolle ändern",
+        "selectRole": "Rolle",
+        "roleAdmin": "Admin",
+        "roleUser": "Benutzer",
+        "currentRole": "Aktuell {role}",
+        "confirmEscalation": "Dieser Benutzer erhält damit volle Admin-Rechte. Fortfahren?",
+        "change": "Rolle ändern",
+        "confirmChange": "Admin-Rechte gewähren",
+        "success": "Rolle wurde zu {role} geändert.",
+        "errorForbidden": "Keine Berechtigung zum Ändern von Rollen. Wenden Sie sich an einen Admin.",
+        "errorNotFound": "Dieser Benutzer existiert nicht mehr.",
+        "error": "Rolle konnte nicht geändert werden. Bitte erneut versuchen."
       },
       "instanceSettings": {
         "title": "Instanz-Einstellungen",

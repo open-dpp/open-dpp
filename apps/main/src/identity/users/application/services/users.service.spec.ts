@@ -3,6 +3,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
+import { UserRole } from "../../domain/user-role.enum";
 import { UsersRepository } from "../../infrastructure/adapters/users.repository";
 import { UsersService } from "./users.service";
 
@@ -19,6 +20,7 @@ describe("UsersService", () => {
       findOneByEmail: jest.fn(),
       findAllByIds: jest.fn(),
       setUserEmailVerified: jest.fn(),
+      setUserRole: jest.fn(),
     };
 
     mockAuth = {
@@ -73,5 +75,36 @@ describe("UsersService", () => {
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe("1");
     expect(mockRepo.findAllByIds).toHaveBeenCalledWith(["1", "2"]);
+  });
+
+  it("should set user role", async () => {
+    const user = User.create({ email: "test@example.com", firstName: "John", lastName: "Doe", role: UserRole.USER });
+    const updatedUser = user.withRole(UserRole.ADMIN);
+    mockRepo.findOneById.mockResolvedValue(user);
+    mockRepo.setUserRole.mockResolvedValue(updatedUser);
+
+    const result = await service.setUserRole(user.id, UserRole.ADMIN);
+
+    expect(mockRepo.findOneById).toHaveBeenCalledWith(user.id);
+    expect(mockRepo.setUserRole).toHaveBeenCalledWith(user.id, UserRole.ADMIN);
+    expect(result.role).toBe(UserRole.ADMIN);
+  });
+
+  it("should throw if user not found when setting role", async () => {
+    mockRepo.findOneById.mockResolvedValue(null);
+
+    await expect(service.setUserRole("nonexistent", UserRole.ADMIN))
+      .rejects
+      .toThrow(NotFoundInDatabaseException);
+  });
+
+  it("should throw if repository fails to update role", async () => {
+    const user = User.create({ email: "test@example.com", firstName: "John", lastName: "Doe" });
+    mockRepo.findOneById.mockResolvedValue(user);
+    mockRepo.setUserRole.mockResolvedValue(null);
+
+    await expect(service.setUserRole(user.id, UserRole.ADMIN))
+      .rejects
+      .toThrow(`Failed to update role for user ${user.id}`);
   });
 });

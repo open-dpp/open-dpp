@@ -8,7 +8,7 @@ import type {
   TemplateCreateDto,
   ValueRequestDto,
 } from "@open-dpp/dto";
-import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Post } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Post } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellResponseDto,
@@ -79,6 +79,7 @@ import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { DbSessionOptions } from "../../database/query-options";
 import { Session } from "../../identity/auth/domain/session";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
+import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Template } from "../domain/template";
@@ -341,17 +342,13 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
   @Post()
   async createTemplate(
     @Body(new ZodValidationPipe(TemplateCreateDtoSchema)) body: TemplateCreateDto,
-    @AuthSession() session: Session,
+    @OrganizationId() organizationId: string,
   ): Promise<TemplateDto> {
     const environment = await this.environmentService.createEnvironment(
       body.environment,
       true,
     );
-    const activeOrganizationId = session.activeOrganizationId;
-    if (!activeOrganizationId) {
-      throw new BadRequestException();
-    }
-    const template = Template.create({ organizationId: activeOrganizationId, environment });
+    const template = Template.create({ organizationId, environment });
     return TemplateDtoSchema.parse((await this.templateRepository.save(template)).toPlain());
   }
 
@@ -368,15 +365,11 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
   @HttpCode(HttpStatus.CREATED)
   async importTemplate(
     @Body() body: any,
-    @AuthSession() session: Session,
+    @OrganizationId() organizationId: string,
   ) {
-    const activeOrganizationId = session.activeOrganizationId?.toString();
-    if (!activeOrganizationId) {
-      throw new BadRequestException("activeOrganizationId is required in session");
-    }
     const template = await this.aasSerializationService.importTemplate(
       body,
-      activeOrganizationId,
+      organizationId,
       async (t, options) => { await this.templateRepository.save(t, options); },
     );
     return TemplateDtoSchema.parse(template.toPlain());
@@ -387,14 +380,10 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
     @PopulateQueryParam() populate: string[],
-    @AuthSession() session: Session,
+    @OrganizationId() organizationId: string,
   ): Promise<TemplatePaginationDto> {
     const pagination = Pagination.create({ limit, cursor });
-    const activeOrganizationId = session.activeOrganizationId;
-    if (!activeOrganizationId) {
-      throw new BadRequestException();
-    }
-    let pagingResult: PagingResult<any> = await this.templateRepository.findAllByOrganizationId(activeOrganizationId, pagination);
+    let pagingResult: PagingResult<any> = await this.templateRepository.findAllByOrganizationId(organizationId, pagination);
     if (populate.includes(Populates.assetAdministrationShells)) {
       pagingResult = await this.environmentService.populateEnvironmentForPagingResult(
         pagingResult,
