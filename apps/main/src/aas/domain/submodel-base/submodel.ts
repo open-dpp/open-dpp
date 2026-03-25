@@ -6,12 +6,12 @@ import { AdministrativeInformation } from "../common/administrative-information"
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
+import { ConvertToPlainOptions } from "../convertable-to-plain";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import { JsonVisitor } from "../json-visitor";
 import { ModifierVisitor } from "../modifier-visitor";
 import { IPersistable } from "../persistable";
-import { AasAbility } from "../security/aas-ability";
 import { ValueModifierVisitor } from "../value-modifier-visitor";
 import { JsonType, ValueVisitor } from "../value-visitor";
 import { IVisitor } from "../visitor";
@@ -240,7 +240,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return visitor.visitSubmodel(this, context);
   }
 
-  toPlain(options?: { ability: AasAbility }): Record<string, any> {
+  toPlain(options?: ConvertToPlainOptions): Record<string, any> {
     const jsonVisitor = new JsonVisitor(options);
     return this.accept(jsonVisitor);
   }

@@ -219,7 +219,9 @@ describe("submodel", () => {
     submodel.addSubmodelElement(prop1);
     submodel.addSubmodelElement(prop2);
 
+    security.addPolicy(member, IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
     security.addPolicy(member, IdShortPath.create({ path: "section1.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "section1.prop2" }), []);
 
     const ability = security.defineAbilityForSubject(member);
     expect(submodel.toPlain({ ability })).toEqual({ ...submodel.toPlain(), submodelElements: [prop1.toPlain()] });

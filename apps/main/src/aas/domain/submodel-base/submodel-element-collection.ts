@@ -3,6 +3,7 @@ import { ValueError } from "@open-dpp/exception";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
+import { ConvertToPlainOptions } from "../convertable-to-plain";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import { JsonVisitor } from "../json-visitor";
@@ -104,8 +105,8 @@ export class SubmodelElementCollection implements ISubmodelElement {
     return visitor.visitSubmodelElementCollection(this, context);
   }
 
-  toPlain(): Record<string, any> {
-    const jsonVisitor = new JsonVisitor();
+  toPlain(options?: ConvertToPlainOptions): Record<string, any> {
+    const jsonVisitor = new JsonVisitor(options);
     return this.accept(jsonVisitor);
   }
 

@@ -24,13 +24,12 @@ import type { SubmodelElementCollection } from "./submodel-base/submodel-element
 import type { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import type { IVisitor } from "./visitor";
 import { KeyTypes, Permissions } from "@open-dpp/dto";
-import { AasAbility } from "./security/aas-ability";
-import { SubjectAttributes } from "./security/subject-attributes";
+import { ConvertToPlainOptions } from "./convertable-to-plain";
 import { IdShortPath, ISubmodelBase } from "./submodel-base/submodel-base";
 
 interface ContextType { idShortPath: IdShortPath }
 export class JsonVisitor implements IVisitor<ContextType, any> {
-  constructor(private readonly options?: { filterBySubject?: SubjectAttributes; ability?: AasAbility }) {
+  constructor(private readonly options?: ConvertToPlainOptions) {
   }
 
   private buildBase(submodelBase: ISubmodelBase) {
@@ -46,21 +45,29 @@ export class JsonVisitor implements IVisitor<ContextType, any> {
     };
   }
 
-  visitProperty(element: Property, context?: ContextType): any {
-    if (this.options?.ability && context) {
-      if (!this.options.ability.can(Permissions.Read, context.idShortPath.addPathSegment(element.idShort))) {
-        return null;
+  private filterByAbility(plainToFilter: any, element: any, context?: ContextType): any {
+    const idShortPath = context ? context.idShortPath.addPathSegment(element.idShort) : IdShortPath.create({ path: element.idShort });
+    if (this.options?.ability) {
+      if (!this.options.ability.can(Permissions.Read, idShortPath)) {
+        return { };
       }
     }
+    return plainToFilter;
+  }
 
-    return {
+  private removeEmptyItems(items: any[]): any[] {
+    return items.filter(item => Object.keys(item).length > 0);
+  }
+
+  visitProperty(element: Property, context?: ContextType): any {
+    return this.filterByAbility({
       modelType: KeyTypes.Property,
       ...this.buildBase(element),
       extensions: element.extensions.map(e => e.accept(this)),
       valueType: element.valueType,
       value: element.value,
       valueId: element.valueId?.accept(this) ?? null,
-    };
+    }, element, context);
   }
 
   visitLanguageText(element: LanguageText): any {
@@ -122,7 +129,7 @@ export class JsonVisitor implements IVisitor<ContextType, any> {
       extensions: element.extensions.map(e => e.accept(this)),
       administration: element.administration?.accept(this) ?? null,
       kind: element.kind,
-      submodelElements: element.submodelElements.map(e => e.accept(this, { idShortPath: IdShortPath.create({ path: element.idShort }) })).filter(e => e !== null),
+      submodelElements: this.removeEmptyItems(element.submodelElements.map(e => e.accept(this, { idShortPath: IdShortPath.create({ path: element.idShort }) }))),
     };
   }
 
@@ -176,14 +183,14 @@ export class JsonVisitor implements IVisitor<ContextType, any> {
     };
   }
 
-  visitMultiLanguageProperty(element: MultiLanguageProperty): any {
-    return {
+  visitMultiLanguageProperty(element: MultiLanguageProperty, context?: ContextType): any {
+    return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.MultiLanguageProperty,
       extensions: element.extensions.map(e => e.accept(this)),
       value: element.value.map(lt => lt.accept(this)),
       valueId: element.valueId?.accept(this) ?? null,
-    };
+    }, element, context);
   }
 
   visitRange(element: Range): any {
@@ -217,11 +224,12 @@ export class JsonVisitor implements IVisitor<ContextType, any> {
   }
 
   visitSubmodelElementCollection(element: SubmodelElementCollection): any {
+    const idShortPath = IdShortPath.create({ path: element.idShort });
     return {
       ...this.buildBase(element),
       modelType: KeyTypes.SubmodelElementCollection,
       extensions: element.extensions.map(e => e.accept(this)),
-      value: element.value.map(e => e.accept(this)),
+      value: this.removeEmptyItems(element.value.map(e => e.accept(this, { idShortPath }))),
     };
   }
 

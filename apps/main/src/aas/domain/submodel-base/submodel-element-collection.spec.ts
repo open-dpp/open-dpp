@@ -1,7 +1,14 @@
 import { expect } from "@jest/globals";
+import { DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { propertyInputPlainFactory } from "@open-dpp/testing";
+import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
+import { UserRole } from "../../../identity/users/domain/user-role.enum";
+import { Permission } from "../security/permission";
+import { Security } from "../security/security";
+import { SubjectAttributes } from "../security/subject-attributes";
 import { Property } from "./property";
+import { IdShortPath } from "./submodel-base";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 
 describe("submodelElementCollection", () => {
@@ -20,6 +27,23 @@ describe("submodelElementCollection", () => {
     expect(() => submodelElementCollection.addSubmodelElement(submodelElement)).toThrow(
       new Error(`Submodel element with idShort ${submodelElement.idShort} already exists`),
     );
+  });
+
+  it("should get values readable by specified subject", () => {
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const submodelElementCollection = SubmodelElementCollection.create({ idShort: "subSection1" });
+    const prop1 = Property.create({ idShort: "prop1", value: "10", valueType: DataTypeDef.Double });
+    const prop2 = Property.create({ idShort: "prop2", value: "10", valueType: DataTypeDef.Double });
+
+    submodelElementCollection.addSubmodelElement(prop1);
+    submodelElementCollection.addSubmodelElement(prop2);
+    security.addPolicy(member, IdShortPath.create({ path: "subSection1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "subSection1.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "subSection1.prop2" }), []);
+
+    const ability = security.defineAbilityForSubject(member);
+    expect(submodelElementCollection.toPlain({ ability })).toEqual({ ...submodelElementCollection.toPlain(), value: [prop1.toPlain()] });
   });
 
   it("should delete submodel element", () => {
