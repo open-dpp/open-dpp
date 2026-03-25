@@ -10,12 +10,21 @@ const document
       title: "open-dpp API",
       version: "1.0.0",
     },
+    servers: [
+      {
+        url: "http://localhost:3000/api",
+        description: "Local test server",
+      },
+    ],
     paths: {
       ...aasPaths,
     },
   });
 
-export function buildOpenApiDocumentation(app: INestApplication) {
-  const swaggerDoc = JSON.parse(JSON.stringify(document)) as unknown as OpenAPIObject;
-  SwaggerModule.setup("api", app, swaggerDoc);
+export function buildOpenApiDocumentation(): OpenAPIObject {
+  return JSON.parse(JSON.stringify(document)) as unknown as OpenAPIObject;
+}
+
+export function addSwaggerToApp(app: INestApplication, openApiDoc: OpenAPIObject) {
+  SwaggerModule.setup("api", app, openApiDoc);
 }

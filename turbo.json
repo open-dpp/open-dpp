@@ -7,6 +7,10 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
+    "docs:build": {
+      "dependsOn": ["^docs:build"],
+      "outputs": [".vitepress/dist/**"]
+    },
     "check-ts": {
       "dependsOn": ["^check-ts"]
     },

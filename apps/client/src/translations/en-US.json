@@ -386,6 +386,20 @@
         "success": "User has been invited to the organization.",
         "error": "Error on inviting user to organization"
       },
+      "changeRoleDialog": {
+        "title": "Change role",
+        "selectRole": "Role",
+        "roleAdmin": "Admin",
+        "roleUser": "User",
+        "currentRole": "Currently {role}",
+        "confirmEscalation": "This will grant full admin privileges to this user. Continue?",
+        "change": "Change role",
+        "confirmChange": "Grant admin",
+        "success": "Role changed to {role}.",
+        "errorForbidden": "You don't have permission to change roles. Contact an admin.",
+        "errorNotFound": "This user no longer exists.",
+        "error": "Could not change role. Please try again."
+      },
       "instanceSettings": {
         "title": "Instance Settings",
         "signupEnabled": "Public signup enabled",
