@@ -8,7 +8,6 @@ import { http, HttpResponse } from 'msw'
 import {
   AssetAdministrationShellType,
 } from '../../../src'
-import { activeOrganization } from '../../organization'
 import { baseURL } from './index'
 
 export const connection: AasConnectionDto = {
@@ -45,31 +44,31 @@ export const aasPropertiesWithParent: AasPropertyWithParentDto[] = [
 
 export const aasIntegrationHandlers = [
   http.get(
-    `${baseURL}/organizations/${activeOrganization.id}/integration/aas/connections/${connection.id}`,
+    `${baseURL}/integration/aas/connections/${connection.id}`,
     () => {
       return HttpResponse.json({ ...connection })
     },
   ),
   http.get(
-    `${baseURL}/organizations/${activeOrganization.id}/integration/aas/connections`,
+    `${baseURL}/integration/aas/connections`,
     () => {
       return HttpResponse.json(connectionList)
     },
   ),
   http.post(
-    `${baseURL}/organizations/${activeOrganization.id}/integration/aas/connections`,
+    `${baseURL}/integration/aas/connections`,
     () => {
       return HttpResponse.json({ ...connection })
     },
   ),
   http.patch(
-    `${baseURL}/organizations/${activeOrganization.id}/integration/aas/connections/${connection.id}`,
+    `${baseURL}/integration/aas/connections/${connection.id}`,
     () => {
       return HttpResponse.json({ ...connection })
     },
   ),
   http.get(
-    `${baseURL}/organizations/${activeOrganization.id}/integration/aas/Truck/properties`,
+    `${baseURL}/integration/aas/Truck/properties`,
     () => {
       return HttpResponse.json(aasPropertiesWithParent)
     },

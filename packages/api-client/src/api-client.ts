@@ -22,8 +22,11 @@ export function createAxiosClient(
     withCredentials: true,
     headers: {
       ...options.headers,
-      service_token: options.serviceToken ? options.serviceToken : '',
-      Authorization: options.apiKey ? `Bearer ${options.apiKey}` : '',
+      'service_token': options.serviceToken ? options.serviceToken : '',
+      'x-api-key': options.apiKey ? options.apiKey : '',
+      ...(options.activeOrganizationId
+        ? { 'X-OPEN-DPP-ORGANIZATION-ID': options.activeOrganizationId }
+        : {}),
     },
   })
 }

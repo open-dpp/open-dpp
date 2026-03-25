@@ -54,13 +54,17 @@ export class AuthGuard implements CanActivate {
     let session: Session | null = null;
 
     if (apiKeyHeader) {
-      const headers = new Headers();
-      headers.set("x-api-key", apiKeyHeader);
       try {
-        session = await this.sessionsService.getSession(headers);
+        const verifiedKey = await this.sessionsService.verifyApiKey(apiKeyHeader);
+        if (verifiedKey) {
+          session = Session.create({
+            userId: verifiedKey.userId,
+            token: "api-key",
+          });
+        }
       }
       catch {
-        // If session retrieval fails, treat as no session
+        // If API key verification fails, treat as no session
       }
     }
     else {
@@ -107,7 +111,7 @@ export class AuthGuard implements CanActivate {
 
     const isBetterAuthUrl = url.startsWith("/api/auth");
     if (!isBetterAuthUrl) {
-      const organizationId = request.params.organizationId ?? request.params.orgaId ?? null;
+      const organizationId = request.headers["x-open-dpp-organization-id"] ?? null;
       if (organizationId) {
         const isMember = await this.membersService.isMemberOfOrganization(session.userId, organizationId);
         if (!isMember) {

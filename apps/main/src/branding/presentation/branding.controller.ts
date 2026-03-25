@@ -1,10 +1,9 @@
 import type express from "express";
 import { readFile } from "node:fs/promises";
-import { Controller, ForbiddenException, Get, Res } from "@nestjs/common";
+import { Controller, Get, Res } from "@nestjs/common";
 import { BrandingDto, BrandingDtoSchema } from "@open-dpp/dto";
-import { Session } from "../../identity/auth/domain/session";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
-import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
+import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { BrandingRepository } from "../infrastructure/branding.repository";
 
 @Controller("/branding")
@@ -16,13 +15,9 @@ export class BrandingController {
 
   @Get()
   async getOrganizationBranding(
-    @AuthSession() session: Session,
+    @OrganizationId() organizationId: string,
   ): Promise<BrandingDto> {
-    if (!session.activeOrganizationId) {
-      throw new ForbiddenException("No active organization selected");
-    }
-
-    return BrandingDtoSchema.parse((await this.brandingRepository.findOneByOrganizationId(session.activeOrganizationId)).toPlain());
+    return BrandingDtoSchema.parse((await this.brandingRepository.findOneByOrganizationId(organizationId)).toPlain());
   }
 
   @AllowAnonymous()

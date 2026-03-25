@@ -17,6 +17,7 @@ import { memoryStorage } from "multer";
 import { Session } from "../../identity/auth/domain/session";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
 import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
+import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { PolicyKey } from "../../policy/domain/policy";
 import { Policy } from "../../policy/presentation/policy.decorator";
 import { BucketDefaultPaths, MediaService } from "../infrastructure/media.service";
@@ -60,7 +61,7 @@ export class MediaController {
     );
   }
 
-  @Post("dpp/:orgId/:upi/:dataFieldId")
+  @Post("dpp/:upi/:dataFieldId")
   @Policy(PolicyKey.MEDIA_STORAGE_CAP)
   @UseInterceptors(
     FileInterceptor("file", {
@@ -82,7 +83,7 @@ export class MediaController {
       }),
     )
     file: Express.Multer.File,
-    @Param("orgId") orgId: string,
+    @OrganizationId() orgId: string,
     @Param("upi") upi: string,
     @Param("dataFieldId") dataFieldId: string,
     @AuthSession() session: Session,
@@ -141,9 +142,9 @@ export class MediaController {
     }
   }
 
-  @Get("by-organization/:organizationId")
+  @Get("by-organization")
   async getFileInfoByOrganization(
-    @Param("organizationId") organizationId: string,
+    @OrganizationId() organizationId: string,
   ): Promise<Array<Media>> {
     return this.filesService.findAllByOrganizationId(organizationId);
   }
@@ -180,7 +181,7 @@ export class MediaController {
     return await this.filesService.findOneOrFail(id);
   }
 
-  @Post(":orgId")
+  @Post("upload")
   @Policy(PolicyKey.MEDIA_STORAGE_CAP)
   @UseInterceptors(
     FileInterceptor("file", {
@@ -202,7 +203,7 @@ export class MediaController {
       }),
     )
     file: Express.Multer.File,
-    @Param("orgId") orgId: string,
+    @OrganizationId() orgId: string,
     @AuthSession() session: Session,
   ): Promise<{
     mediaId: string;
@@ -218,7 +219,7 @@ export class MediaController {
     };
   }
 
-  @Post("organization-profile/:orgId")
+  @Post("organization-profile")
   @Policy(PolicyKey.MEDIA_STORAGE_CAP)
   @UseInterceptors(
     FileInterceptor("file", {
@@ -240,7 +241,7 @@ export class MediaController {
       }),
     )
     file: Express.Multer.File,
-    @Param("orgId") orgId: string,
+    @OrganizationId() orgId: string,
     @AuthSession() session: Session,
   ): Promise<{
     mediaId: string;
