@@ -1,28 +1,9 @@
 import type { TreeNode } from "primevue/treenode";
-import type { DisplayName } from "./display-name";
+import type { ComputedRef } from "vue";
 import type { SubmodelTreeElement } from "./submodel-tree";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-
-function resolveDisplayName(
-  options: DisplayName[],
-  locale: string,
-  fallback: string,
-): string {
-  const shortLocale = locale.split("-")[0];
-
-  let option = options.find(opt => opt.language === shortLocale);
-
-  if (!option) {
-    option = options.find(opt => opt.language === "en");
-  }
-
-  if (!option) {
-    option = options[0];
-  }
-
-  return option ? option.text : fallback;
-}
+import { resolveDisplayName } from "./display-name";
 
 function mapToTreeNodes(
   elements: SubmodelTreeElement[],
@@ -44,7 +25,7 @@ function mapToTreeNodes(
 }
 
 export function useSubmodelTreeNodes(
-  submodelTree: ReturnType<typeof import("./submodel-tree").useSubmodelTree>["submodelTree"],
+  submodelTree: ComputedRef<SubmodelTreeElement[]>,
 ) {
   const { locale, t } = useI18n();
 
