@@ -28,19 +28,30 @@ describe("templateController", () => {
   const basePath = "/templates";
   const ctx = createAasTestContext(
     basePath,
-    { imports: [TemplatesModule], providers: [TemplateRepository, AasSerializationService], controllers: [TemplateController] },
-    [{ name: TemplateDoc.name, schema: TemplateSchema }, { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema }],
+    {
+      imports: [TemplatesModule],
+      providers: [TemplateRepository, AasSerializationService],
+      controllers: [TemplateController],
+    },
+    [
+      { name: TemplateDoc.name, schema: TemplateSchema },
+      { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
+    ],
     TemplateRepository,
   );
 
-  async function createTemplate(orgId: string, createdAt?: Date, updatedAt?: Date): Promise<Template> {
+  async function createTemplate(
+    orgId: string,
+    createdAt?: Date,
+    updatedAt?: Date,
+  ): Promise<Template> {
     const { aas, submodels } = ctx.getAasObjects();
     const template = Template.create({
       id: randomUUID(),
       organizationId: orgId,
       environment: Environment.create({
         assetAdministrationShells: [aas.id],
-        submodels: submodels.map(s => s.id),
+        submodels: submodels.map((s) => s.id),
         conceptDescriptions: [],
       }),
       createdAt,
@@ -150,39 +161,50 @@ describe("templateController", () => {
     const t3 = await createTemplate(org.id, date3, date3);
 
     let response = await request(app.getHttpServer())
-      .get(`${basePath}?limit=2&cursor=${encodeCursor(t3.createdAt.toISOString(), t3.id)}&populate=environment.assetAdministrationShells`)
+      .get(
+        `${basePath}?limit=2&cursor=${encodeCursor(t3.createdAt.toISOString(), t3.id)}&populate=environment.assetAdministrationShells`,
+      )
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id);
     expect(response.status).toEqual(200);
-    expect(response.body.paging_metadata.cursor).toEqual(encodeCursor(t1.createdAt.toISOString(), t1.id));
-    expect(response.body.result).toEqual([t2, t1].map(t => ({
-      ...t.toPlain(),
-      environment: {
-        ...t.environment.toPlain(),
-        assetAdministrationShells: [{ id: aas.id, displayName: aas.displayName.map(d => ({ language: d.language, text: d.text })) }],
-      },
-      createdAt: t.createdAt.toISOString(),
-      updatedAt: t.updatedAt.toISOString(),
-    })));
+    expect(response.body.paging_metadata.cursor).toEqual(
+      encodeCursor(t1.createdAt.toISOString(), t1.id),
+    );
+    expect(response.body.result).toEqual(
+      [t2, t1].map((t) => ({
+        ...t.toPlain(),
+        environment: {
+          ...t.environment.toPlain(),
+          assetAdministrationShells: [
+            {
+              id: aas.id,
+              displayName: aas.displayName.map((d) => ({ language: d.language, text: d.text })),
+            },
+          ],
+        },
+        createdAt: t.createdAt.toISOString(),
+        updatedAt: t.updatedAt.toISOString(),
+      })),
+    );
 
     response = await request(app.getHttpServer())
       .get(`${basePath}?limit=2&cursor=${encodeCursor(t3.createdAt.toISOString(), t3.id)}`)
       .set("Cookie", userCookie)
       .set("X-OPEN-DPP-ORGANIZATION-ID", org.id);
     expect(response.status).toEqual(200);
-    expect(response.body.result).toEqual([t2, t1].map(t => ({
-      ...t.toPlain(),
-      createdAt: t.createdAt.toISOString(),
-      updatedAt: t.updatedAt.toISOString(),
-    })));
+    expect(response.body.result).toEqual(
+      [t2, t1].map((t) => ({
+        ...t.toPlain(),
+        createdAt: t.createdAt.toISOString(),
+        updatedAt: t.updatedAt.toISOString(),
+      })),
+    );
   });
 
   it(`/POST a template`, async () => {
     const { betterAuthHelper, app } = ctx.globals();
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
-    const now = new Date(
-      "2022-01-01T00:00:00.000Z",
-    );
+    const now = new Date("2022-01-01T00:00:00.000Z");
     jest.spyOn(DateTime, "now").mockReturnValue(now);
     const displayName = [{ language: "en", text: "Test" }];
 
@@ -201,16 +223,16 @@ describe("templateController", () => {
       id: expect.any(String),
       organizationId: org.id,
       environment: {
-        assetAdministrationShells: [
-          expect.any(String),
-        ],
+        assetAdministrationShells: [expect.any(String)],
         submodels: [],
         conceptDescriptions: [],
       },
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
     });
-    const foundAas = await ctx.getRepositories().aasRepository.findOneOrFail(response.body.environment.assetAdministrationShells[0]);
+    const foundAas = await ctx
+      .getRepositories()
+      .aasRepository.findOneOrFail(response.body.environment.assetAdministrationShells[0]);
     expect(foundAas.assetInformation.assetKind).toEqual(AssetKind.Type);
     expect(foundAas.displayName).toEqual(displayName.map(LanguageText.fromPlain));
   });
@@ -349,7 +371,9 @@ describe("templateController", () => {
     ]);
 
     // Verify property values are preserved
-    const stringProp = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "stringProp");
+    const stringProp = exportedSubmodel.submodelElements.find(
+      (e: any) => e.idShort === "stringProp",
+    );
     expect(stringProp.value).toEqual("hello");
     expect(stringProp.valueType).toEqual("String");
 
@@ -358,7 +382,9 @@ describe("templateController", () => {
     expect(intProp.valueType).toEqual("Int");
 
     // Verify range values are preserved
-    const rangeElement = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "rangeElement");
+    const rangeElement = exportedSubmodel.submodelElements.find(
+      (e: any) => e.idShort === "rangeElement",
+    );
     expect(rangeElement.min).toEqual("0.0");
     expect(rangeElement.max).toEqual("100.0");
     expect(rangeElement.valueType).toEqual("Double");
@@ -371,12 +397,16 @@ describe("templateController", () => {
     ]);
 
     // Verify blob value is preserved
-    const blobElement = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "blobElement");
+    const blobElement = exportedSubmodel.submodelElements.find(
+      (e: any) => e.idShort === "blobElement",
+    );
     expect(blobElement.contentType).toEqual("application/octet-stream");
     expect(blobElement.value).toEqual("SGVsbG8=");
 
     // Verify nested structures are preserved
-    const collection = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "collection");
+    const collection = exportedSubmodel.submodelElements.find(
+      (e: any) => e.idShort === "collection",
+    );
     expect(collection.value).toHaveLength(1);
     expect(collection.value[0].modelType).toEqual("Property");
     expect(collection.value[0].idShort).toEqual("nestedProp");
@@ -386,11 +416,15 @@ describe("templateController", () => {
     expect(list.value[0].idShort).toEqual("listItem1");
     expect(list.value[1].idShort).toEqual("listItem2");
 
-    const entity = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "entityElement");
+    const entity = exportedSubmodel.submodelElements.find(
+      (e: any) => e.idShort === "entityElement",
+    );
     expect(entity.statements).toHaveLength(1);
     expect(entity.entityType).toEqual("SelfManagedEntity");
 
-    const annotatedRel = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "annotatedRelElement");
+    const annotatedRel = exportedSubmodel.submodelElements.find(
+      (e: any) => e.idShort === "annotatedRelElement",
+    );
     expect(annotatedRel.annotations).toHaveLength(1);
     expect(annotatedRel.annotations[0].modelType).toEqual("Property");
     expect(annotatedRel.annotations[0].idShort).toEqual("annotProp");
@@ -402,7 +436,9 @@ describe("templateController", () => {
     const exportedConceptDescriptions = exportResponse.body.environment.conceptDescriptions;
     expect(exportedConceptDescriptions).toHaveLength(1);
     expect(exportedConceptDescriptions[0].idShort).toEqual("conceptDesc1");
-    expect(exportedConceptDescriptions[0].displayName).toEqual([{ language: "en", text: "Test Concept" }]);
+    expect(exportedConceptDescriptions[0].displayName).toEqual([
+      { language: "en", text: "Test Concept" },
+    ]);
     expect(exportedConceptDescriptions[0].isCaseOf).toHaveLength(1);
   });
 });

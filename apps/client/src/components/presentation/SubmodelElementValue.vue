@@ -18,16 +18,10 @@ const { t } = useI18n();
 </script>
 
 <template>
-  <dd
-    v-if="element.modelType === 'Property'"
-    class="mt-1 text-sm/6 text-gray-700 sm:mt-2"
-  >
+  <dd v-if="element.modelType === 'Property'" class="mt-1 text-sm/6 text-gray-700 sm:mt-2">
     {{ element.value }}
   </dd>
-  <div
-    v-if="!element.value"
-    class="mt-1 text-sm/6 font-semibold text-red-800 sm:mt-2"
-  >
+  <div v-if="!element.value" class="mt-1 text-sm/6 font-semibold text-red-800 sm:mt-2">
     {{ t("presentation.missingValue") }}
   </div>
   <Reference
@@ -35,9 +29,7 @@ const { t } = useI18n();
     :model="element.value as ReferenceValue"
   />
   <MediaFieldView
-    v-else-if="
-      element.modelType === 'File' && typeof element.value === 'string'
-    "
+    v-else-if="element.modelType === 'File' && typeof element.value === 'string'"
     :media-id="element.value"
   />
   <List

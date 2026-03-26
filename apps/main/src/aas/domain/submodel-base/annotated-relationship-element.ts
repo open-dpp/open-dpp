@@ -1,4 +1,8 @@
-import { AasSubmodelElements, AasSubmodelElementsType, AnnotatedRelationshipElementJsonSchema } from "@open-dpp/dto";
+import {
+  AasSubmodelElements,
+  AasSubmodelElementsType,
+  AnnotatedRelationshipElementJsonSchema,
+} from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
@@ -55,12 +59,14 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
     return this._description;
   }
 
-  static create(data: SubmodelBaseProps & {
-    first: Reference;
-    second: Reference;
-    extensions?: Array<Extension>;
-    annotations?: Array<ISubmodelElement>;
-  }) {
+  static create(
+    data: SubmodelBaseProps & {
+      first: Reference;
+      second: Reference;
+      extensions?: Array<Extension>;
+      annotations?: Array<ISubmodelElement>;
+    },
+  ) {
     return new AnnotatedRelationshipElement(
       data.first,
       data.second,
@@ -83,7 +89,7 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
     return new AnnotatedRelationshipElement(
       Reference.fromPlain(parsed.first),
       Reference.fromPlain(parsed.second),
-      parsed.extensions.map(e => Extension.fromPlain(e)),
+      parsed.extensions.map((e) => Extension.fromPlain(e)),
       baseObjects.category,
       baseObjects.idShort,
       baseObjects.displayName,
@@ -110,8 +116,10 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
   }
 
   addSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
-    if (this.annotations.some(e => e.idShort === submodelElement.idShort)) {
-      throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
+    if (this.annotations.some((e) => e.idShort === submodelElement.idShort)) {
+      throw new ValueError(
+        `Submodel element with idShort ${submodelElement.idShort} already exists`,
+      );
     }
     this.annotations.push(submodelElement);
     return submodelElement;

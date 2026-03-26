@@ -1,11 +1,7 @@
 import type { LanguageTextDto, PagingParamsDto, TemplatePaginationDto } from "@open-dpp/dto";
 import type { Ref } from "vue";
 import type { IPagination, PagingResult } from "./pagination.ts";
-import {
-
-  Populates,
-
-} from "@open-dpp/dto";
+import { Populates } from "@open-dpp/dto";
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import apiClient from "../lib/api-client.ts";
@@ -26,7 +22,10 @@ export interface ITemplateComposables extends IPagination {
   init: () => Promise<void>;
 }
 
-export function useTemplates({ changeQueryParams, initialCursor }: TemplateProps): ITemplateComposables {
+export function useTemplates({
+  changeQueryParams,
+  initialCursor,
+}: TemplateProps): ITemplateComposables {
   const templates = ref<TemplatePaginationDto>();
   const loading = ref(false);
   const route = useRoute();
@@ -35,17 +34,22 @@ export function useTemplates({ changeQueryParams, initialCursor }: TemplateProps
   const fetchTemplates = async (pagingParams: PagingParamsDto): Promise<PagingResult> => {
     loading.value = true;
     try {
-      const response = await apiClient.dpp.templates.getAll(
-        { ...pagingParams, populate: [Populates.assetAdministrationShells] },
-      );
+      const response = await apiClient.dpp.templates.getAll({
+        ...pagingParams,
+        populate: [Populates.assetAdministrationShells],
+      });
       templates.value = response.data;
       return response.data;
-    }
-    finally {
+    } finally {
       loading.value = false;
     }
   };
-  const pagination = usePagination({ initialCursor, limit: 10, fetchCallback: fetchTemplates, changeQueryParams });
+  const pagination = usePagination({
+    initialCursor,
+    limit: 10,
+    fetchCallback: fetchTemplates,
+    changeQueryParams,
+  });
 
   async function init() {
     await pagination.nextPage();
@@ -54,9 +58,7 @@ export function useTemplates({ changeQueryParams, initialCursor }: TemplateProps
   const createTemplate = async (data: { displayName: LanguageTextDto[] }) => {
     const response = await apiClient.dpp.templates.create({
       environment: {
-        assetAdministrationShells: [
-          { displayName: data.displayName },
-        ],
+        assetAdministrationShells: [{ displayName: data.displayName }],
       },
     });
     if (response.status === HTTPCode.CREATED) {

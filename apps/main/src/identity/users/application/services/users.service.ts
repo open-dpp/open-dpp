@@ -13,7 +13,7 @@ export class UsersService {
   constructor(
     private readonly usersRepository: UsersRepository,
     @Inject(AUTH) private readonly auth: Auth,
-  ) { }
+  ) {}
 
   async createUser(email: string, firstName?: string, lastName?: string): Promise<User> {
     const fn = firstName?.trim() ?? "";
@@ -29,11 +29,10 @@ export class UsersService {
       throw new Error(`Failed to save user with email ${email}`);
     }
     try {
-      await (this.auth.api).requestPasswordReset({
+      await this.auth.api.requestPasswordReset({
         body: { email, redirectTo: "/password-reset" },
       });
-    }
-    catch (error) {
+    } catch (error) {
       this.logger.error("Failed to send password reset email", error);
     }
     return saved;

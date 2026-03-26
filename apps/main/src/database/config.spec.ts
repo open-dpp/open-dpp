@@ -29,7 +29,9 @@ describe("generateMongoConfig", () => {
 
   it("should handle URI with query params in test environment", () => {
     process.env.NODE_ENV = "test";
-    (mockConfigService.get as jest.Mock).mockReturnValue("mongodb://localhost:27017/existing-db?replicaSet=rs0");
+    (mockConfigService.get as jest.Mock).mockReturnValue(
+      "mongodb://localhost:27017/existing-db?replicaSet=rs0",
+    );
 
     const config = generateMongoConfig(mockConfigService);
 

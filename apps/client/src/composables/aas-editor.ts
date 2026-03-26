@@ -36,16 +36,12 @@ import {
   SubmodelElementSchema,
   SubmodelElementSharedSchema,
   SubmodelJsonSchema,
-
 } from "@open-dpp/dto";
 import { omit } from "lodash";
 import { ref, toRaw } from "vue";
 import { z } from "zod";
 import { HTTPCode } from "../stores/http-codes.ts";
-import {
-  EditorMode,
-  useAasDrawer,
-} from "./aas-drawer.ts";
+import { EditorMode, useAasDrawer } from "./aas-drawer.ts";
 import { useAasGallery } from "./aas-gallery.ts";
 import { usePagination } from "./pagination.ts";
 
@@ -63,10 +59,7 @@ export interface AasEditorProps {
 
 export interface IAasEditor extends IAasDrawer, IPagination {
   init: () => Promise<void>;
-  findTreeNodeByKey: (
-    key: string,
-    children?: TreeNode[],
-  ) => TreeNode | undefined;
+  findTreeNodeByKey: (key: string, children?: TreeNode[]) => TreeNode | undefined;
   displayName: Ref<string>;
   submodels: Ref<TreeNode[]>;
   buildAddSubmodelElementMenu: (node: TreeNode) => void;
@@ -108,27 +101,27 @@ export function useAasEditor({
   const loading = ref(false);
   const submodelElementsToAdd = ref<MenuItem[]>([]);
 
-  const { files: aasGalleryFiles, downloadDefaultThumbnails } = useAasGallery({ translate, errorHandlingStore });
+  const { files: aasGalleryFiles, downloadDefaultThumbnails } = useAasGallery({
+    translate,
+    errorHandlingStore,
+  });
 
-  const fetchSubmodels = async (
-    pagingParams: PagingParamsDto,
-  ): Promise<PagingResult> => {
+  const fetchSubmodels = async (pagingParams: PagingParamsDto): Promise<PagingResult> => {
     loading.value = true;
     const errorMessage = translate(`${translatePrefix}.errorLoadingSubmodels`);
     try {
       const response = await aasNamespace.getSubmodels(id, pagingParams);
       if (response.status === HTTPCode.OK) {
-        submodels.value = convertSubmodelsToTree(SubmodelJsonSchema.array().parse(response.data.result));
+        submodels.value = convertSubmodelsToTree(
+          SubmodelJsonSchema.array().parse(response.data.result),
+        );
         return response.data;
-      }
-      else {
+      } else {
         errorHandlingStore.logErrorWithNotification(errorMessage);
       }
-    }
-    catch (e) {
+    } catch (e) {
       errorHandlingStore.logErrorWithNotification(errorMessage, e);
-    }
-    finally {
+    } finally {
       loading.value = false;
     }
     return { paging_metadata: { cursor: null }, result: [] };
@@ -148,7 +141,9 @@ export function useAasEditor({
   }
 
   async function modifyAasEditor(data: AssetAdministrationShellModificationDto) {
-    const errorMessage = translate(`${translatePrefix}.error`, { method: translate("common.edit") });
+    const errorMessage = translate(`${translatePrefix}.error`, {
+      method: translate("common.edit"),
+    });
     if (assetAdministrationShell.value) {
       try {
         const response = await aasNamespace.modifyShell(
@@ -159,51 +154,52 @@ export function useAasEditor({
         if (response.status === HTTPCode.OK) {
           await updateAssetAdministrationShell(response.data);
           drawer.hideDrawer();
-        }
-        else {
+        } else {
           errorHandlingStore.logErrorWithNotification(errorMessage);
         }
-      }
-      catch (e) {
+      } catch (e) {
         errorHandlingStore.logErrorWithNotification(errorMessage, e);
       }
     }
   }
 
-  const fetchAssetAdministrationShell = async (
-  ): Promise<void> => {
+  const fetchAssetAdministrationShell = async (): Promise<void> => {
     const errorMessage = translate(`${translatePrefix}.errorLoading`);
     try {
       const response = await aasNamespace.getShells(id, { limit: 1 });
       if (response.status === HTTPCode.OK && response.data.result.length > 0) {
         await updateAssetAdministrationShell(response.data.result[0]);
-      }
-      else {
+      } else {
         errorHandlingStore.logErrorWithNotification(errorMessage);
       }
-    }
-    catch (e) {
+    } catch (e) {
       errorHandlingStore.logErrorWithNotification(errorMessage, e);
     }
   };
 
-  async function updateAssetAdministrationShell(data: AssetAdministrationShellResponseDto | undefined) {
+  async function updateAssetAdministrationShell(
+    data: AssetAdministrationShellResponseDto | undefined,
+  ) {
     assetAdministrationShell.value = data;
-    displayName.value = data?.displayName.find(d => d.language === selectedLanguage)?.text ?? "";
+    displayName.value = data?.displayName.find((d) => d.language === selectedLanguage)?.text ?? "";
     if (data) {
       await downloadDefaultThumbnails(data);
     }
   }
 
-  const pagination
-    = usePagination({ initialCursor, limit: 10, fetchCallback: fetchSubmodels, changeQueryParams });
+  const pagination = usePagination({
+    initialCursor,
+    limit: 10,
+    fetchCallback: fetchSubmodels,
+    changeQueryParams,
+  });
 
   const findTreeNodeByKey = (key: string, children?: TreeNode[]): TreeNode | undefined => {
     if (!submodels.value) {
       return undefined;
     }
     const treeNodes = children ?? submodels.value;
-    const node = treeNodes.find(n => n.key === key);
+    const node = treeNodes.find((n) => n.key === key);
     if (node) {
       return node;
     }
@@ -219,7 +215,11 @@ export function useAasEditor({
   };
 
   async function finalizeApiRequest(response: { status: number }) {
-    if (response.status === HTTPCode.OK || response.status === HTTPCode.CREATED || response.status === HTTPCode.NO_CONTENT) {
+    if (
+      response.status === HTTPCode.OK ||
+      response.status === HTTPCode.CREATED ||
+      response.status === HTTPCode.NO_CONTENT
+    ) {
       await pagination.reloadCurrentPage();
       drawer.hideDrawer();
     }
@@ -227,19 +227,12 @@ export function useAasEditor({
 
   async function modifySubmodel(path: AasEditorPath, data: SubmodelModificationDto) {
     if (path.submodelId) {
-      const response = await aasNamespace.modifySubmodel(
-        id,
-        path.submodelId,
-        data,
-      );
+      const response = await aasNamespace.modifySubmodel(id, path.submodelId, data);
       await finalizeApiRequest(response);
     }
   }
 
-  async function modifySubmodelElement(
-    path: AasEditorPath,
-    data: SubmodelElementModificationDto,
-  ) {
+  async function modifySubmodelElement(path: AasEditorPath, data: SubmodelElementModificationDto) {
     if (path.submodelId && path.idShortPath) {
       const response = await aasNamespace.modifySubmodelElement(
         id,
@@ -257,18 +250,15 @@ export function useAasEditor({
       return async (data: any) => {
         try {
           await modifySubmodel(toRaw(node.data.path), data);
-        }
-        catch (e) {
+        } catch (e) {
           errorHandlingStore.logErrorWithNotification(errorMessage, e);
         }
       };
-    }
-    else if (AasSubmodelElementsEnum.safeParse(node.data.modelType).success) {
+    } else if (AasSubmodelElementsEnum.safeParse(node.data.modelType).success) {
       return async (data: any) => {
         try {
           await modifySubmodelElement(toRaw(node.data.path), data);
-        }
-        catch (e) {
+        } catch (e) {
           errorHandlingStore.logErrorWithNotification(errorMessage, e);
         }
       };
@@ -298,10 +288,18 @@ export function useAasEditor({
     }
   }
 
-  function convertSubmodelElementsToTree(submodelIdShort: string, pathOfParent: AasEditorPath, submodelElements: SubmodelElementSharedResponseDto[]) {
+  function convertSubmodelElementsToTree(
+    submodelIdShort: string,
+    pathOfParent: AasEditorPath,
+    submodelElements: SubmodelElementSharedResponseDto[],
+  ) {
     return submodelElements.map((submodelElement): TreeNode => {
-      const key = pathOfParent.idShortPath ? `${pathOfParent.idShortPath}.${submodelElement.idShort}` : `${submodelIdShort}.${submodelElement.idShort}`;
-      const idShortPath = pathOfParent.idShortPath ? `${pathOfParent.idShortPath}.${submodelElement.idShort}` : submodelElement.idShort;
+      const key = pathOfParent.idShortPath
+        ? `${pathOfParent.idShortPath}.${submodelElement.idShort}`
+        : `${submodelIdShort}.${submodelElement.idShort}`;
+      const idShortPath = pathOfParent.idShortPath
+        ? `${pathOfParent.idShortPath}.${submodelElement.idShort}`
+        : submodelElement.idShort;
       const path = { submodelId: pathOfParent.submodelId, idShortPath };
       const canHaveChildren = submodelElementCanHaveChildren(submodelElement);
       const children = getChildrenOfSubmodelElement(submodelElement);
@@ -318,13 +316,15 @@ export function useAasEditor({
           },
           path,
         },
-        children: children ? convertSubmodelElementsToTree(submodelIdShort, path, children) : undefined,
+        children: children
+          ? convertSubmodelElementsToTree(submodelIdShort, path, children)
+          : undefined,
       };
     });
   }
 
   function translateDisplayName(displayName: LanguageTextDto[]): string | undefined {
-    return displayName.find(d => d.language === selectedLanguage)?.text;
+    return displayName.find((d) => d.language === selectedLanguage)?.text;
   }
 
   function getVisualType(submodelBase: SubmodelElementSharedResponseDto): string {
@@ -358,11 +358,15 @@ export function useAasEditor({
     return submodelBase.modelType;
   }
 
-  function submodelElementCanHaveChildren(submodelElement: SubmodelElementSharedResponseDto): boolean {
+  function submodelElementCanHaveChildren(
+    submodelElement: SubmodelElementSharedResponseDto,
+  ): boolean {
     return submodelElement.modelType === AasSubmodelElements.SubmodelElementCollection;
   }
 
-  function getChildrenOfSubmodelElement(submodelElement: SubmodelElementSharedResponseDto): SubmodelElementSharedResponseDto[] | undefined {
+  function getChildrenOfSubmodelElement(
+    submodelElement: SubmodelElementSharedResponseDto,
+  ): SubmodelElementSharedResponseDto[] | undefined {
     const ChildrenParser = z.object({ value: SubmodelElementSharedSchema.array() });
     if (submodelElementCanHaveChildren(submodelElement)) {
       return ChildrenParser.parse(submodelElement).value;
@@ -384,23 +388,31 @@ export function useAasEditor({
         },
         path: { submodelId: submodel.id },
       },
-      children: convertSubmodelElementsToTree(submodel.idShort, { submodelId: submodel.id }, submodel.submodelElements),
+      children: convertSubmodelElementsToTree(
+        submodel.idShort,
+        { submodelId: submodel.id },
+        submodel.submodelElements,
+      ),
     }));
   }
 
   const buildAddSubmodelElementMenu = (node: TreeNode) => {
     const path = toRaw(node.data.path);
     function buildPropertyEntry(label: string, icon: string, valueType: DataTypeDefType) {
-      return { label, icon, command: (_event: MenuItemCommandEvent) => {
-        drawer.openDrawer({
-          type: KeyTypes.Property,
-          data: { valueType },
-          mode: EditorMode.CREATE,
-          title: label,
-          path,
-          callback: async (data: PropertyRequestDto) => createProperty(path, data, label),
-        });
-      } };
+      return {
+        label,
+        icon,
+        command: (_event: MenuItemCommandEvent) => {
+          drawer.openDrawer({
+            type: KeyTypes.Property,
+            data: { valueType },
+            mode: EditorMode.CREATE,
+            title: label,
+            path,
+            callback: async (data: PropertyRequestDto) => createProperty(path, data, label),
+          });
+        },
+      };
     }
 
     submodelElementsToAdd.value = [
@@ -522,8 +534,7 @@ export function useAasEditor({
             );
             await finalizeApiRequest({ status: response.status });
           }
-        }
-        catch (error: unknown) {
+        } catch (error: unknown) {
           errorHandlingStore.logErrorWithNotification(
             translate(`${translatePrefix}.errorRemoveSubmodelElement`),
             error,
@@ -552,13 +563,9 @@ export function useAasEditor({
       },
       accept: async () => {
         try {
-          const response = await aasNamespace.deleteSubmodelById(
-            id,
-            submodelId,
-          );
+          const response = await aasNamespace.deleteSubmodelById(id, submodelId);
           await finalizeApiRequest({ status: response.status });
-        }
-        catch (error: unknown) {
+        } catch (error: unknown) {
           errorHandlingStore.logErrorWithNotification(
             translate(`${translatePrefix}.errorRemoveSubmodel`),
             error,
@@ -568,16 +575,35 @@ export function useAasEditor({
     });
   }
 
-  async function createSubmodelElementList(path: AasEditorPath, data: SubmodelElementListRequestDto) {
-    await createSubmodelElement(path, { modelType: AasSubmodelElements.SubmodelElementList, ...data }, "submodelElementList", true);
+  async function createSubmodelElementList(
+    path: AasEditorPath,
+    data: SubmodelElementListRequestDto,
+  ) {
+    await createSubmodelElement(
+      path,
+      { modelType: AasSubmodelElements.SubmodelElementList, ...data },
+      "submodelElementList",
+      true,
+    );
   }
 
-  async function createSubmodelElementCollection(path: AasEditorPath, data: SubmodelElementCollectionRequestDto) {
-    await createSubmodelElement(path, { modelType: AasSubmodelElements.SubmodelElementCollection, ...data }, "submodelElementCollection");
+  async function createSubmodelElementCollection(
+    path: AasEditorPath,
+    data: SubmodelElementCollectionRequestDto,
+  ) {
+    await createSubmodelElement(
+      path,
+      { modelType: AasSubmodelElements.SubmodelElementCollection, ...data },
+      "submodelElementCollection",
+    );
   }
 
   async function createLink(path: AasEditorPath, data: ReferenceElementRequestDto) {
-    await createSubmodelElement(path, { ...data, modelType: AasSubmodelElements.ReferenceElement }, "link");
+    await createSubmodelElement(
+      path,
+      { ...data, modelType: AasSubmodelElements.ReferenceElement },
+      "link",
+    );
   }
 
   async function createFile(path: AasEditorPath, data: FileRequestDto) {
@@ -588,7 +614,12 @@ export function useAasEditor({
     await createSubmodelElement(path, { modelType: AasSubmodelElements.Property, ...data }, label);
   }
 
-  async function createSubmodelElement(path: AasEditorPath, data: SubmodelElementSharedRequestDto, label: string, selectSubmodelElementAfterCreation: boolean = false) {
+  async function createSubmodelElement(
+    path: AasEditorPath,
+    data: SubmodelElementSharedRequestDto,
+    label: string,
+    selectSubmodelElementAfterCreation: boolean = false,
+  ) {
     const errorMessage = translate(`${translatePrefix}.error`, {
       method: translate(`${translatePrefix}.creation`, {
         formItem: label,
@@ -604,27 +635,21 @@ export function useAasEditor({
               path.idShortPath,
               requestBody,
             )
-          : await aasNamespace.createSubmodelElement(
-              id,
-              path.submodelId!,
-              requestBody,
-            );
+          : await aasNamespace.createSubmodelElement(id, path.submodelId!, requestBody);
         await finalizeApiRequest(response);
 
         if (selectSubmodelElementAfterCreation) {
-          const submodelIdShort
-            = submodels.value.find(n => n.key === path.submodelId)?.data.plain.idShort ?? "";
+          const submodelIdShort =
+            submodels.value.find((n) => n.key === path.submodelId)?.data.plain.idShort ?? "";
           const key = path.idShortPath
             ? `${path.idShortPath}.${data.idShort}`
             : `${submodelIdShort}.${data.idShort}`;
           selectTreeNode(key);
         }
-      }
-      else {
+      } else {
         errorHandlingStore.logErrorWithNotification(errorMessage);
       }
-    }
-    catch (e) {
+    } catch (e) {
       errorHandlingStore.logErrorWithNotification(errorMessage, e);
     }
   }

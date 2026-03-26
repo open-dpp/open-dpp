@@ -1,6 +1,13 @@
 import type { AasExportSchema } from "./aas-export-v1.schema";
 import { randomUUID } from "node:crypto";
-import { DataTypeDef, KeyTypes, Language, ModellingKind, QualifierKind, ReferenceTypes } from "@open-dpp/dto";
+import {
+  DataTypeDef,
+  KeyTypes,
+  Language,
+  ModellingKind,
+  QualifierKind,
+  ReferenceTypes,
+} from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
 import { AssetAdministrationShell } from "../../domain/asset-adminstration-shell";
@@ -29,11 +36,15 @@ type QualifierSchema = SubmodelSchema["qualifiers"][number];
 export function mapReference(ref: ReferenceSchema): Reference {
   return Reference.create({
     type: ReferenceTypes[ref.type],
-    referredSemanticId: ref.referredSemanticId ? Reference.fromPlain(ref.referredSemanticId) : undefined,
-    keys: ref.keys.map(key => Key.create({
-      type: KeyTypes[key.type],
-      value: key.value,
-    })),
+    referredSemanticId: ref.referredSemanticId
+      ? Reference.fromPlain(ref.referredSemanticId)
+      : undefined,
+    keys: ref.keys.map((key) =>
+      Key.create({
+        type: KeyTypes[key.type],
+        value: key.value,
+      }),
+    ),
   });
 }
 
@@ -47,18 +58,19 @@ export function mapReferences(refs: ReferenceSchema[]): Reference[] {
 
 export function mapLanguageTexts(texts: Array<{ language: string; text: string }>): LanguageText[] {
   return texts
-    .filter(t => t.text && t.language in Language)
-    .map(t => LanguageText.create({
-      language: Language[t.language as keyof typeof Language],
-      text: t.text,
-    }));
+    .filter((t) => t.text && t.language in Language)
+    .map((t) =>
+      LanguageText.create({
+        language: Language[t.language as keyof typeof Language],
+        text: t.text,
+      }),
+    );
 }
 
 export function mapAdministration(
   admin: { version: string; revision: string } | null | undefined,
 ): AdministrativeInformation | null | undefined {
-  if (admin == null)
-    return admin;
+  if (admin == null) return admin;
   return AdministrativeInformation.create({
     version: admin.version,
     revision: admin.revision,
@@ -83,9 +95,11 @@ export function mapExtensions(exts: ExtensionSchema[]): Extension[] {
 export function mapEmbeddedDataSpecifications(
   specs: Array<{ dataSpecification: ReferenceSchema }>,
 ): EmbeddedDataSpecification[] {
-  return specs.map(s => EmbeddedDataSpecification.create({
-    dataSpecification: mapReference(s.dataSpecification),
-  }));
+  return specs.map((s) =>
+    EmbeddedDataSpecification.create({
+      dataSpecification: mapReference(s.dataSpecification),
+    }),
+  );
 }
 
 export function mapQualifier(q: QualifierSchema): Qualifier {
@@ -107,9 +121,7 @@ export function mapQualifier(q: QualifierSchema): Qualifier {
 }
 
 export function mapQualifiers(qualifiers: QualifierSchema[]): Qualifier[] {
-  return qualifiers
-    .filter(q => q.valueType != null && q.kind != null)
-    .map(mapQualifier);
+  return qualifiers.filter((q) => q.valueType != null && q.kind != null).map(mapQualifier);
 }
 
 export function mapAssetAdministrationShells(
@@ -120,7 +132,7 @@ export function mapAssetAdministrationShells(
     const assetInformation = AssetInformation.create({
       assetKind: shell.assetInformation.assetKind,
       globalAssetId: shell.assetInformation.globalAssetId,
-      specificAssetIds: shell.assetInformation.specificAssetIds.map(sa =>
+      specificAssetIds: shell.assetInformation.specificAssetIds.map((sa) =>
         SpecificAssetId.create({
           name: sa.name,
           value: sa.value,
@@ -128,7 +140,7 @@ export function mapAssetAdministrationShells(
         }),
       ),
       assetType: shell.assetInformation.assetType,
-      defaultThumbnails: shell.assetInformation.defaultThumbnails.map(t =>
+      defaultThumbnails: shell.assetInformation.defaultThumbnails.map((t) =>
         Resource.create({
           path: t.path,
           contentType: t.contentType,
@@ -202,15 +214,17 @@ export function mapSubmodels(submodels: SubmodelSchema[]): MappedSubmodels {
       semanticId: mapNullableReference(submodel.semanticId),
       supplementalSemanticIds: mapReferences(submodel.supplementalSemanticIds),
       qualifiers: mapQualifiers(submodel.qualifiers),
-      embeddedDataSpecifications: mapEmbeddedDataSpecifications(submodel.embeddedDataSpecifications),
-      submodelElements: submodel.submodelElements.map(element => parseSubmodelElement(element)),
+      embeddedDataSpecifications: mapEmbeddedDataSpecifications(
+        submodel.embeddedDataSpecifications,
+      ),
+      submodelElements: submodel.submodelElements.map((element) => parseSubmodelElement(element)),
     });
   });
   return { submodels: mapped, idMapping };
 }
 
 export function mapConceptDescriptions(cds: ConceptDescriptionSchema[]): ConceptDescription[] {
-  return cds.map(cd =>
+  return cds.map((cd) =>
     ConceptDescription.create({
       id: randomUUID(),
       extensions: mapExtensions(cd.extensions),

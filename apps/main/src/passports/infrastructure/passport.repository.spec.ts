@@ -34,9 +34,7 @@ describe("passportRepository", () => {
           },
         ]),
       ],
-      providers: [
-        PassportRepository,
-      ],
+      providers: [PassportRepository],
     }).compile();
 
     passportRepository = module.get<PassportRepository>(PassportRepository);
@@ -109,27 +107,39 @@ describe("passportRepository", () => {
 
     let foundTemplates = await passportRepository.findAllByOrganizationId(organizationId);
 
-    expect(foundTemplates).toEqual(PagingResult.create({
-      pagination: Pagination.create({ cursor: encodeCursor(p1.createdAt.toISOString(), p1.id), limit: 100 }),
-      items: [p4, p3, p1],
-    }));
+    expect(foundTemplates).toEqual(
+      PagingResult.create({
+        pagination: Pagination.create({
+          cursor: encodeCursor(p1.createdAt.toISOString(), p1.id),
+          limit: 100,
+        }),
+        items: [p4, p3, p1],
+      }),
+    );
     let pagination = Pagination.create({
       cursor: encodeCursor(p4.createdAt.toISOString(), p4.id),
     });
     foundTemplates = await passportRepository.findAllByOrganizationId(organizationId, pagination);
-    expect(foundTemplates).toEqual(PagingResult.create({
-      pagination: Pagination.create({ cursor: encodeCursor(p1.createdAt.toISOString(), p1.id) }),
-      items: [p3, p1],
-    }));
+    expect(foundTemplates).toEqual(
+      PagingResult.create({
+        pagination: Pagination.create({ cursor: encodeCursor(p1.createdAt.toISOString(), p1.id) }),
+        items: [p3, p1],
+      }),
+    );
     pagination = Pagination.create({
       cursor: encodeCursor(p4.createdAt.toISOString(), p4.id),
       limit: 1,
     });
     foundTemplates = await passportRepository.findAllByOrganizationId(organizationId, pagination);
-    expect(foundTemplates).toEqual(PagingResult.create({
-      pagination: Pagination.create({ cursor: encodeCursor(p3.createdAt.toISOString(), p3.id), limit: 1 }),
-      items: [p3],
-    }));
+    expect(foundTemplates).toEqual(
+      PagingResult.create({
+        pagination: Pagination.create({
+          cursor: encodeCursor(p3.createdAt.toISOString(), p3.id),
+          limit: 1,
+        }),
+        items: [p3],
+      }),
+    );
   });
 
   afterAll(async () => {

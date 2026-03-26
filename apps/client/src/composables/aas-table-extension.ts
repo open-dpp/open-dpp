@@ -46,9 +46,7 @@ interface AasTableExtensionProps {
   aasNamespace: AasNamespace;
   errorHandlingStore: IErrorHandlingStore;
   openDrawer: OpenDrawerCallback<EditorType, "CREATE" | "EDIT">;
-  callbackOfSubmodelElementListEditor: (
-    data: SubmodelElementModificationDto,
-  ) => Promise<void>;
+  callbackOfSubmodelElementListEditor: (data: SubmodelElementModificationDto) => Promise<void>;
   translate: (label: string, ...args: unknown[]) => string;
   selectedLanguage: LanguageType;
   openConfirm: (option: ConfirmationOptions) => void;
@@ -121,15 +119,9 @@ export function useAasTableExtension({
       | typeof AasSubmodelElements.ReferenceElement,
     valueType?: DataTypeDefType,
   ) {
-    const addColumLabel = translate(
-      `${translateTablePrefix}.addFieldAsColumn`,
-      {
-        field:
-          selectedLanguage === Language.de
-            ? fieldLabel
-            : fieldLabel.toLowerCase(),
-      },
-    );
+    const addColumLabel = translate(`${translateTablePrefix}.addFieldAsColumn`, {
+      field: selectedLanguage === Language.de ? fieldLabel : fieldLabel.toLowerCase(),
+    });
     const labelAndIcon = {
       label: fieldLabel,
       icon,
@@ -153,21 +145,18 @@ export function useAasTableExtension({
           });
         },
       }))
-      .with(
-        { type: AasSubmodelElements.Property, valueType: P.string },
-        ({ type, valueType }) => ({
-          ...labelAndIcon,
-          command: (_event: MenuItemCommandEvent) => {
-            openDrawer({
-              ...sharedDrawerProps,
-              type: ColumnEditorKey,
-              data: { modelType: type, valueType },
-              callback: async (data: PropertyRequestDto) =>
-                createColumn({ modelType: type, ...data }, options),
-            });
-          },
-        }),
-      )
+      .with({ type: AasSubmodelElements.Property, valueType: P.string }, ({ type, valueType }) => ({
+        ...labelAndIcon,
+        command: (_event: MenuItemCommandEvent) => {
+          openDrawer({
+            ...sharedDrawerProps,
+            type: ColumnEditorKey,
+            data: { modelType: type, valueType },
+            callback: async (data: PropertyRequestDto) =>
+              createColumn({ modelType: type, ...data }, options),
+          });
+        },
+      }))
       .with({ type: AasSubmodelElements.ReferenceElement }, ({ type }) => ({
         ...labelAndIcon,
         command: (_event: MenuItemCommandEvent) => {
@@ -199,8 +188,7 @@ export function useAasTableExtension({
         return false;
       }
       return true;
-    }
-    catch (e) {
+    } catch (e) {
       errorHandlingStore.logErrorWithNotification(errorMessage, e);
       return false;
     }
@@ -211,9 +199,7 @@ export function useAasTableExtension({
   }
 
   function convertRowToRequestDto(row: Row): ValueRequestDto {
-    const rowContext = rowsContext.value.find(
-      r => r.idShort === row.idShort,
-    );
+    const rowContext = rowsContext.value.find((r) => r.idShort === row.idShort);
     if (!rowContext) {
       throw new Error(`Row context not found for idShort: ${row.idShort}`);
     }
@@ -277,12 +263,10 @@ export function useAasTableExtension({
         );
         if (await saveRows(modifications)) {
           rowData[field] = newValue;
-        }
-        else {
+        } else {
           errorHandlingStore.logErrorWithNotification(errorMessage);
         }
-      }
-      catch (e) {
+      } catch (e) {
         errorHandlingStore.logErrorWithNotification(errorMessage, e);
       }
     }
@@ -290,24 +274,17 @@ export function useAasTableExtension({
 
   function convertDataToColumns(newData: SubmodelElementListResponseDto) {
     if (newData.value.length > 0) {
-      const headerRow = SubmodelElementCollectionJsonSchema.parse(
-        newData.value[0],
-      );
+      const headerRow = SubmodelElementCollectionJsonSchema.parse(newData.value[0]);
       for (const [index, col] of headerRow.value.entries()) {
-        const foundColumn = columns.value.find(
-          c => c.idShort === col.idShort,
-        );
+        const foundColumn = columns.value.find((c) => c.idShort === col.idShort);
         const column = {
           idShort: col.idShort,
-          label:
-            col.displayName.find(d => d.language === selectedLanguage)
-              ?.text ?? col.idShort,
+          label: col.displayName.find((d) => d.language === selectedLanguage)?.text ?? col.idShort,
           plain: col,
         };
         if (!foundColumn) {
           columns.value.splice(index, 0, column);
-        }
-        else if (foundColumn.label !== column.label) {
+        } else if (foundColumn.label !== column.label) {
           foundColumn.label = column.label;
           foundColumn.plain = column.plain;
         }
@@ -375,15 +352,13 @@ export function useAasTableExtension({
     }
     for (const [index, row] of newData.value.entries()) {
       const parsedRow = SubmodelElementCollectionJsonSchema.parse(row);
-      const foundRow = rows.value.find(r => r.idShort === row.idShort);
-      const foundRowContext = rowsContext.value.find(
-        r => r.idShort === row.idShort,
-      );
+      const foundRow = rows.value.find((r) => r.idShort === row.idShort);
+      const foundRowContext = rowsContext.value.find((r) => r.idShort === row.idShort);
       const rowToModify = foundRow || { idShort: row.idShort };
       const rowContextToModify = foundRowContext || { idShort: row.idShort };
 
       // Remove fields that are no longer present in the server data
-      const newColIds = new Set(parsedRow.value.map(col => col.idShort));
+      const newColIds = new Set(parsedRow.value.map((col) => col.idShort));
       for (const key of Object.keys(rowToModify)) {
         if (key !== "idShort" && !newColIds.has(key)) {
           delete rowToModify[key];
@@ -445,10 +420,7 @@ export function useAasTableExtension({
         icon: "pi pi-arrow-down",
         command: async () => {
           await addRow({
-            position:
-              options.position !== undefined
-                ? options.position + 1
-                : rows.value.length,
+            position: options.position !== undefined ? options.position + 1 : rows.value.length,
           });
         },
       },
@@ -479,20 +451,18 @@ export function useAasTableExtension({
           },
           accept: async () => {
             try {
-              const response
-                = await aasNamespace.deleteRowFromSubmodelElementList(
-                  id,
-                  pathToList.submodelId!,
-                  pathToList.idShortPath!,
-                  getRowIdShortAtIndexOrFail(rowIndex),
-                );
+              const response = await aasNamespace.deleteRowFromSubmodelElementList(
+                id,
+                pathToList.submodelId!,
+                pathToList.idShortPath!,
+                getRowIdShortAtIndexOrFail(rowIndex),
+              );
               if (response.status === HTTPCode.OK) {
                 data.value = response.data;
                 rows.value.splice(rowIndex, 1);
                 rowsContext.value.splice(rowIndex, 1);
               }
-            }
-            catch (e) {
+            } catch (e) {
               errorHandlingStore.logErrorWithNotification(
                 translate(`${translateTablePrefix}.errorRemoveRow`),
                 e,
@@ -515,12 +485,10 @@ export function useAasTableExtension({
       );
       if (response.status === HTTPCode.CREATED) {
         updateListData(response.data);
-      }
-      else {
+      } else {
         errorHandlingStore.logErrorWithNotification(errorMessage);
       }
-    }
-    catch (e) {
+    } catch (e) {
       errorHandlingStore.logErrorWithNotification(errorMessage, e);
     }
   }
@@ -578,12 +546,8 @@ export function useAasTableExtension({
           label: translate("common.actions"),
           items: [modifyColumnMenuItem(column), removeColumnMenuItem(column)],
         });
-      }
-      catch (e) {
-        errorHandlingStore.logErrorWithNotification(
-          translate(`common.errorOccurred`),
-          e,
-        );
+      } catch (e) {
+        errorHandlingStore.logErrorWithNotification(translate(`common.errorOccurred`), e);
       }
     }
   };
@@ -630,22 +594,20 @@ export function useAasTableExtension({
           },
           accept: async () => {
             try {
-              const response
-                = await aasNamespace.deleteColumnFromSubmodelElementList(
-                  id,
-                  pathToList.submodelId!,
-                  pathToList.idShortPath!,
-                  column.idShort,
-                );
+              const response = await aasNamespace.deleteColumnFromSubmodelElementList(
+                id,
+                pathToList.submodelId!,
+                pathToList.idShortPath!,
+                column.idShort,
+              );
               if (response.status === HTTPCode.OK) {
                 columns.value.splice(
-                  columns.value.findIndex(c => c.idShort === column.idShort),
+                  columns.value.findIndex((c) => c.idShort === column.idShort),
                   1,
                 );
                 updateListData(response.data);
               }
-            }
-            catch (e) {
+            } catch (e) {
               errorHandlingStore.logErrorWithNotification(
                 translate(`${translateTablePrefix}.errorRemoveColumn`),
                 e,
@@ -657,10 +619,7 @@ export function useAasTableExtension({
     };
   }
 
-  async function modifyPropertyColumn(
-    data: SubmodelElementModificationDto,
-    column: Column,
-  ) {
+  async function modifyPropertyColumn(data: SubmodelElementModificationDto, column: Column) {
     const errorMessage = translate(`${translatePrefix}.table.errorEditColumn`);
     try {
       const response = await aasNamespace.modifyColumnOfSubmodelElementList(
@@ -675,12 +634,10 @@ export function useAasTableExtension({
           pathToList,
           SubmodelElementListJsonSchema.parse(response.data),
         );
-      }
-      else {
+      } else {
         errorHandlingStore.logErrorWithNotification(errorMessage);
       }
-    }
-    catch (e) {
+    } catch (e) {
       errorHandlingStore.logErrorWithNotification(errorMessage, e);
     }
   }
@@ -706,12 +663,10 @@ export function useAasTableExtension({
           pathToList,
           SubmodelElementListJsonSchema.parse(response.data),
         );
-      }
-      else {
+      } else {
         errorHandlingStore.logErrorWithNotification(errorMessage);
       }
-    }
-    catch (e) {
+    } catch (e) {
       errorHandlingStore.logErrorWithNotification(errorMessage, e);
     }
   }

@@ -1,17 +1,17 @@
-import type { GranularityLevel } from './granularity-level'
+import type { GranularityLevel } from "./granularity-level";
 
 export enum DataFieldType {
-  TEXT_FIELD = 'TextField',
-  PRODUCT_PASSPORT_LINK = 'ProductPassportLink',
-  NUMERIC_FIELD = 'NumericField',
-  FILE_FIELD = 'FileField',
-  DATE_FIELD = 'DateField',
+  TEXT_FIELD = "TextField",
+  PRODUCT_PASSPORT_LINK = "ProductPassportLink",
+  NUMERIC_FIELD = "NumericField",
+  FILE_FIELD = "FileField",
+  DATE_FIELD = "DateField",
 }
 
 export interface DataFieldDto {
-  id: string
-  name: string
-  type: DataFieldType
-  options?: Record<string, unknown>
-  granularityLevel: GranularityLevel
+  id: string;
+  name: string;
+  type: DataFieldType;
+  options?: Record<string, unknown>;
+  granularityLevel: GranularityLevel;
 }

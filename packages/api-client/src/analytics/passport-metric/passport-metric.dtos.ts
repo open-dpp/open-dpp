@@ -1,36 +1,36 @@
 export enum MeasurementType {
-  PAGE_VIEWS = 'PageViews',
-  FIELD_AGGREGATE = 'FieldAggregate',
+  PAGE_VIEWS = "PageViews",
+  FIELD_AGGREGATE = "FieldAggregate",
 }
 
 export enum TimePeriod {
-  YEAR = 'year',
-  MONTH = 'month',
-  WEEK = 'week',
-  DAY = 'day',
-  HOUR = 'hour',
+  YEAR = "year",
+  MONTH = "month",
+  WEEK = "week",
+  DAY = "day",
+  HOUR = "hour",
 }
 
 export interface PassportMeasurementDto {
-  datetime: string
-  sum: number
+  datetime: string;
+  sum: number;
 }
 
 export interface PassportMetricQueryDto {
-  startDate: Date
-  endDate: Date
-  templateId?: string
-  passportId: string
-  type: MeasurementType
-  valueKey: string
-  period: string
+  startDate: Date;
+  endDate: Date;
+  templateId?: string;
+  passportId: string;
+  type: MeasurementType;
+  valueKey: string;
+  period: string;
 }
 
 export interface PageViewCreateDto {
-  uuid: string
-  page: string
+  uuid: string;
+  page: string;
 }
 
 export interface PageViewDto {
-  id: string
+  id: string;
 }

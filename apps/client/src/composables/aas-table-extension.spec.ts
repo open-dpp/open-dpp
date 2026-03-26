@@ -41,12 +41,9 @@ vi.mock("../lib/api-client", () => ({
           createSubmodel: mocks.createSubmodel,
           addColumnToSubmodelElementList: mocks.addColumnToSubmodelElementList,
           addRowToSubmodelElementList: mocks.addRowToSubmodelElementList,
-          deleteColumnFromSubmodelElementList:
-            mocks.deleteColumnFromSubmodelElementList,
-          deleteRowFromSubmodelElementList:
-            mocks.deleteRowFromSubmodelElementList,
-          modifyColumnOfSubmodelElementList:
-            mocks.modifyColumnOfSubmodelElementList,
+          deleteColumnFromSubmodelElementList: mocks.deleteColumnFromSubmodelElementList,
+          deleteRowFromSubmodelElementList: mocks.deleteRowFromSubmodelElementList,
+          modifyColumnOfSubmodelElementList: mocks.modifyColumnOfSubmodelElementList,
           modifyValueOfSubmodelElement: mocks.modifyValueOfSubmodelElement,
         },
       },
@@ -301,84 +298,79 @@ describe("aasTableExtension composable", () => {
     {
       label: "aasEditor.link",
       component: ColumnCreateEditor,
-      data: { },
+      data: {},
       modelType: AasSubmodelElements.ReferenceElement,
     },
-  ])(
-    "should add $label column",
-    async ({ label, component, data, modelType }) => {
-      const mockOnHideDrawer = vi.fn();
-      const mockOpenConfirmDialog = vi.fn();
+  ])("should add $label column", async ({ label, component, data, modelType }) => {
+    const mockOnHideDrawer = vi.fn();
+    const mockOpenConfirmDialog = vi.fn();
 
-      const { openDrawer, editorVNode, drawerVisible } = useAasDrawer({
-        onHideDrawer: mockOnHideDrawer,
-      });
-      const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
-      const { columnMenu, buildColumnMenu } = useAasTableExtension({
-        id: aasId,
-        pathToList,
-        initialData: submodelElementList,
-        aasNamespace: apiClient.dpp.templates.aas,
-        openConfirm: mockOpenConfirmDialog,
-        errorHandlingStore,
-        selectedLanguage: Language.en,
-        translate,
-        openDrawer,
-        callbackOfSubmodelElementListEditor,
-      });
-      buildColumnMenu({ position: 1 });
-      const textFieldColumn = columnMenu.value.find(e => e.label === label)!;
-      textFieldColumn.command!({} as MenuItemCommandEvent);
-      expect(drawerVisible.value).toBeTruthy();
-      expect(editorVNode.value!.props.path).toEqual(pathToList);
-      expect(editorVNode.value!.component).toEqual(component);
-      await waitFor(() =>
-        expect(editorVNode.value!.props.data).toEqual({
-          modelType,
-          ...data,
-        }),
-      );
+    const { openDrawer, editorVNode, drawerVisible } = useAasDrawer({
+      onHideDrawer: mockOnHideDrawer,
+    });
+    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const { columnMenu, buildColumnMenu } = useAasTableExtension({
+      id: aasId,
+      pathToList,
+      initialData: submodelElementList,
+      aasNamespace: apiClient.dpp.templates.aas,
+      openConfirm: mockOpenConfirmDialog,
+      errorHandlingStore,
+      selectedLanguage: Language.en,
+      translate,
+      openDrawer,
+      callbackOfSubmodelElementListEditor,
+    });
+    buildColumnMenu({ position: 1 });
+    const textFieldColumn = columnMenu.value.find((e) => e.label === label)!;
+    textFieldColumn.command!({} as MenuItemCommandEvent);
+    expect(drawerVisible.value).toBeTruthy();
+    expect(editorVNode.value!.props.path).toEqual(pathToList);
+    expect(editorVNode.value!.component).toEqual(component);
+    await waitFor(() =>
+      expect(editorVNode.value!.props.data).toEqual({
+        modelType,
+        ...data,
+      }),
+    );
 
-      const columnData = { idShort: "column 3", ...data };
+    const columnData = { idShort: "column 3", ...data };
 
-      const submodelElementListModified = {
-        ...submodelElementList,
-        value: submodelElementList.value.map((row: any) => ({
-          ...row,
-          value: [...row.value, { ...columnData, modelType }],
-        })),
-      };
+    const submodelElementListModified = {
+      ...submodelElementList,
+      value: submodelElementList.value.map((row: any) => ({
+        ...row,
+        value: [...row.value, { ...columnData, modelType }],
+      })),
+    };
 
-      mocks.addColumnToSubmodelElementList.mockResolvedValue({
-        data: submodelElementListModified,
-        status: HTTPCode.CREATED,
-      });
+    mocks.addColumnToSubmodelElementList.mockResolvedValue({
+      data: submodelElementListModified,
+      status: HTTPCode.CREATED,
+    });
 
-      await editorVNode.value!.props.callback!(columnData);
+    await editorVNode.value!.props.callback!(columnData);
 
-      expect(mocks.addColumnToSubmodelElementList).toHaveBeenCalledWith(
-        aasId,
-        pathToList.submodelId,
-        pathToList.idShortPath,
-        SubmodelElementSchema.parse({
-          ...columnData,
-          modelType,
-        }),
-        { position: 1 },
-      );
+    expect(mocks.addColumnToSubmodelElementList).toHaveBeenCalledWith(
+      aasId,
+      pathToList.submodelId,
+      pathToList.idShortPath,
+      SubmodelElementSchema.parse({
+        ...columnData,
+        modelType,
+      }),
+      { position: 1 },
+    );
 
-      // navigates back to list view after adding a column
-      expect(drawerVisible.value).toBeTruthy();
-      expect(editorVNode.value!.props.path).toEqual(pathToList);
-      expect(editorVNode.value!.component).toEqual(SubmodelElementListEditor);
-      expect(editorVNode.value!.props.data).toEqual(
-        SubmodelElementListJsonSchema.parse(submodelElementListModified),
-      );
-      expect(editorVNode.value!.props.callback).toEqual(
-        callbackOfSubmodelElementListEditor,
-      );
-    },
-  );
+    // navigates back to list view after adding a column
+    expect(drawerVisible.value).toBeTruthy();
+    expect(editorVNode.value!.props.path).toEqual(pathToList);
+    expect(editorVNode.value!.component).toEqual(SubmodelElementListEditor);
+    expect(editorVNode.value!.props.data).toEqual(
+      SubmodelElementListJsonSchema.parse(submodelElementListModified),
+    );
+    expect(editorVNode.value!.props.callback).toEqual(callbackOfSubmodelElementListEditor);
+  });
 
   it("should modify cell", async () => {
     const mockOnHideDrawer = vi.fn();
@@ -473,16 +465,13 @@ describe("aasTableExtension composable", () => {
     });
     buildColumnMenu({ position: 1, addColumnActions: true });
     const editMenuItem = columnMenu.value
-      .find(c => c.label === "common.actions")!
-      .items!
-      .find(e => e.label === "common.edit")!;
+      .find((c) => c.label === "common.actions")!
+      .items!.find((e) => e.label === "common.edit")!;
     editMenuItem.command!({} as MenuItemCommandEvent);
     expect(drawerVisible.value).toBeTruthy();
     expect(editorVNode.value!.props.path).toEqual(pathToList);
     expect(editorVNode.value!.component).toEqual(ColumnEditor);
-    expect(editorVNode.value!.props.data).toEqual(
-      SubmodelElementSchema.parse(cols[1]),
-    );
+    expect(editorVNode.value!.props.data).toEqual(SubmodelElementSchema.parse(cols[1]));
 
     const columnData = {
       ...cols[1],
@@ -491,7 +480,7 @@ describe("aasTableExtension composable", () => {
 
     const submodelElementListModified = {
       ...submodelElementList,
-      value: submodelElementList.value.map(row => ({
+      value: submodelElementList.value.map((row) => ({
         ...row,
         value: [cols[0], columnData],
       })),
@@ -515,9 +504,7 @@ describe("aasTableExtension composable", () => {
     // navigates back to list view after modifying a column
     expect(drawerVisible.value).toBeTruthy();
     expect(editorVNode.value!.props.path).toEqual(pathToList);
-    await waitFor(() =>
-      expect(editorVNode.value!.component).toEqual(SubmodelElementListEditor),
-    );
+    await waitFor(() => expect(editorVNode.value!.component).toEqual(SubmodelElementListEditor));
     expect(editorVNode.value!.props.data).toEqual(
       SubmodelElementListJsonSchema.parse(submodelElementListModified),
     );
@@ -546,9 +533,8 @@ describe("aasTableExtension composable", () => {
     buildColumnMenu({ position: 1, addColumnActions: true });
 
     const removeColumnButton = columnMenu.value
-      .find(c => c.label === "common.actions")!
-      .items!
-      .find(e => e.label === "common.remove")!;
+      .find((c) => c.label === "common.actions")!
+      .items!.find((e) => e.label === "common.remove")!;
 
     const columnToDelete = "Column2";
 
@@ -556,19 +542,15 @@ describe("aasTableExtension composable", () => {
       status: HTTPCode.OK,
       data: {
         ...submodelElementList,
-        value: submodelElementList.value.map(row => ({
+        value: submodelElementList.value.map((row) => ({
           ...row,
-          value: cols.filter(col => col.idShort !== columnToDelete),
+          value: cols.filter((col) => col.idShort !== columnToDelete),
         })),
       },
     });
 
-    expect(
-      rows.value.every(r => Object.hasOwn(r, columnToDelete)),
-    ).toBeTruthy();
-    expect(
-      rowsContext.value.every(r => Object.hasOwn(r, columnToDelete)),
-    ).toBeTruthy();
+    expect(rows.value.every((r) => Object.hasOwn(r, columnToDelete))).toBeTruthy();
+    expect(rowsContext.value.every((r) => Object.hasOwn(r, columnToDelete))).toBeTruthy();
 
     removeColumnButton.command!({} as MenuItemCommandEvent);
 
@@ -597,12 +579,8 @@ describe("aasTableExtension composable", () => {
         },
       ]),
     );
-    expect(
-      rows.value.every(r => !Object.hasOwn(r, columnToDelete)),
-    ).toBeTruthy();
-    expect(
-      rowsContext.value.every(r => !Object.hasOwn(r, columnToDelete)),
-    ).toBeTruthy();
+    expect(rows.value.every((r) => !Object.hasOwn(r, columnToDelete))).toBeTruthy();
+    expect(rowsContext.value.every((r) => !Object.hasOwn(r, columnToDelete))).toBeTruthy();
   });
 
   it("should delete row", async () => {
@@ -627,9 +605,7 @@ describe("aasTableExtension composable", () => {
     });
     buildRowMenu({ position: 1 });
 
-    const removeRowButton = rowMenu.value.find(
-      e => e.label === "common.remove",
-    )!;
+    const removeRowButton = rowMenu.value.find((e) => e.label === "common.remove")!;
 
     mocks.deleteRowFromSubmodelElementList.mockResolvedValue({
       status: HTTPCode.OK,
@@ -692,9 +668,7 @@ describe("aasTableExtension composable", () => {
     });
     buildRowMenu({ position: 1 });
 
-    const addRowButton = rowMenu.value.find(
-      e => e.label === "aasEditor.table.addRowAbove",
-    )!;
+    const addRowButton = rowMenu.value.find((e) => e.label === "aasEditor.table.addRowAbove")!;
 
     mocks.addRowToSubmodelElementList.mockResolvedValue({
       status: HTTPCode.CREATED,

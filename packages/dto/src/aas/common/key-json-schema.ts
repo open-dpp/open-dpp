@@ -1,10 +1,10 @@
-import { z } from 'zod'
+import { z } from "zod";
 
-import { KeyTypesEnum } from '../enums/key-types-enum'
+import { KeyTypesEnum } from "../enums/key-types-enum";
 
 export const KeyJsonSchema = z.object({
   type: KeyTypesEnum,
   value: z.string(),
-})
+});
 
-export const KeyModificationSchema = KeyJsonSchema
+export const KeyModificationSchema = KeyJsonSchema;

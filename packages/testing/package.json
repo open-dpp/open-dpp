@@ -1,10 +1,16 @@
 {
   "name": "@open-dpp/testing",
   "version": "1.0.0",
-  "packageManager": "pnpm@10.26.2",
   "description": "",
-  "author": "",
   "license": "ISC",
+  "author": "",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "./src/index.ts",
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -12,18 +18,9 @@
     },
     "./package.json": "./package.json"
   },
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "./src/index.ts",
-  "files": [
-    "dist",
-    "src"
-  ],
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "check-ts": "tsc --noEmit",
-    "lint": "eslint",
-    "lint:fix": "eslint --fix",
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
@@ -38,19 +35,17 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@open-dpp/config-eslint": "workspace:*",
     "@swc/core": "^1.15.7",
     "@swc/jest": "^0.2.39",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/node-ts": "^23.6.2",
     "@types/lodash": "^4.17.23",
     "@types/supertest": "^6.0.3",
-    "eslint": "^9.39.2",
-    "globals": "^17.1.0",
     "jest": "^30.2.0",
     "typescript": "^5.9.3"
   },
   "jest": {
+    "testEnvironment": "node",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": [
@@ -71,7 +66,7 @@
           }
         }
       ]
-    },
-    "testEnvironment": "node"
-  }
+    }
+  },
+  "packageManager": "pnpm@10.26.2"
 }

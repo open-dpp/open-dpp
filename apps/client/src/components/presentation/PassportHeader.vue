@@ -31,9 +31,7 @@ const firstShell = computed(() => {
 });
 
 const displayName = computed(() =>
-  firstShell.value
-    ? aasUtils.parseDisplayNameFromAas(firstShell.value)
-    : undefined,
+  firstShell.value ? aasUtils.parseDisplayNameFromAas(firstShell.value) : undefined,
 );
 
 const productPassport = computed(() => passportStore.productPassport);
@@ -51,7 +49,7 @@ watch(
 
 <template>
   <div class="grid grid-cols-3 grid-rows-1 gap-5">
-    <div class="order-2 md:order-1 col-span-3 md:col-span-2 bg-white shadow-sm">
+    <div class="order-2 col-span-3 bg-white shadow-sm md:order-1 md:col-span-2">
       <div id="product-details" class="px-4 py-6 sm:px-6">
         <h3 class="text-base/7 font-semibold text-gray-900">
           {{ t("presentation.productDetails") }}
@@ -72,19 +70,14 @@ watch(
             <dt v-if="displayName" class="text-sm font-medium text-gray-900">
               {{ t("common.name") }}
             </dt>
-            <dd
-              v-if="displayName"
-              class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0"
-            >
+            <dd v-if="displayName" class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
               {{ displayName }}
             </dd>
           </div>
         </dl>
       </div>
     </div>
-    <div
-      class="order-1 md:order-2 col-span-3 md:col-span-1 w-full mx-auto"
-    >
+    <div class="order-1 col-span-3 mx-auto w-full md:order-2 md:col-span-1">
       <ProductImageGalleria v-model="files" auto-play />
     </div>
   </div>

@@ -10,37 +10,45 @@ import { Submodel } from "./submodel-base/submodel";
 
 describe("environment", () => {
   it("should add aas", () => {
-    const environment = Environment.create({ });
+    const environment = Environment.create({});
     const displayName = [LanguageText.create({ language: "en", text: "Test AAS" })];
     const description = [LanguageText.create({ language: "en", text: "Test AAS description" })];
 
     const aas = environment.addAssetAdministrationShell(
-      AssetAdministrationShell.create({ assetInformation: AssetInformation.create({ assetKind: AssetKind.Type }), displayName, description }),
+      AssetAdministrationShell.create({
+        assetInformation: AssetInformation.create({ assetKind: AssetKind.Type }),
+        displayName,
+        description,
+      }),
     );
     expect(environment.assetAdministrationShells).toEqual([aas.id]);
-    expect(aas).toEqual(AssetAdministrationShell.create({
-      id: aas.id,
-      administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
-      assetInformation: AssetInformation.create({
-        assetKind: AssetKind.Type,
+    expect(aas).toEqual(
+      AssetAdministrationShell.create({
+        id: aas.id,
+        administration: AdministrativeInformation.create({ version: "1", revision: "0" }),
+        assetInformation: AssetInformation.create({
+          assetKind: AssetKind.Type,
+        }),
+        displayName,
+        description,
       }),
-      displayName,
-      description,
-    }));
+    );
   });
 
   it("should add empty submodel", () => {
-    const environment = Environment.create({ });
+    const environment = Environment.create({});
     const id = "sub1";
     const newSubmodel = Submodel.create({ id, idShort: id });
     const submodel = environment.addSubmodel(newSubmodel);
     expect(environment.submodels).toEqual([submodel.id]);
     expect(submodel).toEqual(newSubmodel);
-    expect(() => environment.addSubmodel(newSubmodel)).toThrow(new ValueError(`Submodel with id sub1 already exists`));
+    expect(() => environment.addSubmodel(newSubmodel)).toThrow(
+      new ValueError(`Submodel with id sub1 already exists`),
+    );
   });
 
   it("should delete submodel", () => {
-    const environment = Environment.create({ });
+    const environment = Environment.create({});
     const id = "sub1";
     const submodelToDelete = Submodel.create({ id, idShort: id });
     const otherSubmodel = Submodel.create({ id: "sub2", idShort: "sub2" });

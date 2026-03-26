@@ -39,21 +39,17 @@ const showErrors = computed(() => {
 });
 
 const redirectUri = computed(() => {
-  return route.query.redirect
-    ? decodeURIComponent(route.query.redirect as string)
-    : "/";
+  return route.query.redirect ? decodeURIComponent(route.query.redirect as string) : "/";
 });
 
 onMounted(async () => {
   try {
     const res = await apiClient.dpp.instanceSettings.getPublic();
     signupEnabled.value = res.data.signupEnabled;
-  }
-  catch {
+  } catch {
     // If we can't fetch settings, assume signup is enabled
     signupEnabled.value = true;
-  }
-  finally {
+  } finally {
     checkingSettings.value = false;
   }
 });
@@ -76,34 +72,29 @@ const signup = handleSubmit(async (values) => {
         summary: t("auth.signup.error"),
         life: 5000,
       });
-    }
-    else {
+    } else {
       router.push("/signin");
     }
-  }
-  catch {
+  } catch {
     toast.add({
       severity: "error",
       summary: t("auth.signup.error"),
       life: 5000,
     });
-  }
-  finally {
+  } finally {
     loading.value = false;
   }
 });
 </script>
 
 <template>
-  <div
-    class="flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8"
-  >
-    <Card v-if="!checkingSettings" class="sm:mx-auto sm:w-full sm:max-w-md p-3">
+  <div class="flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <Card v-if="!checkingSettings" class="p-3 sm:mx-auto sm:w-full sm:max-w-md">
       <template #header>
         <BrandingLogo />
       </template>
       <template #title>
-        <p class="text-center py-2">
+        <p class="py-2 text-center">
           {{ t("auth.signup.title") }}
         </p>
       </template>
@@ -119,7 +110,8 @@ const signup = handleSubmit(async (values) => {
               <label
                 for="firstName"
                 class="block text-sm/6 font-medium text-gray-900 dark:text-white"
-              >{{ t("user.firstName") }}</label>
+                >{{ t("user.firstName") }}</label
+              >
               <div class="mt-2">
                 <InputText
                   id="firstName"
@@ -147,7 +139,8 @@ const signup = handleSubmit(async (values) => {
               <label
                 for="lastName"
                 class="block text-sm/6 font-medium text-gray-900 dark:text-white"
-              >{{ t("user.lastName") }}</label>
+                >{{ t("user.lastName") }}</label
+              >
               <div class="mt-2">
                 <InputText
                   id="lastName"
@@ -175,7 +168,8 @@ const signup = handleSubmit(async (values) => {
               <label
                 for="email"
                 class="block text-sm/6 font-medium text-gray-900 dark:text-white"
-              >{{ t("user.email") }}</label>
+                >{{ t("user.email") }}</label
+              >
               <div class="mt-2">
                 <InputText
                   id="email"
@@ -203,7 +197,8 @@ const signup = handleSubmit(async (values) => {
               <label
                 for="password"
                 class="block text-sm/6 font-medium text-gray-900 dark:text-white"
-              >{{ t("user.password") }}</label>
+                >{{ t("user.password") }}</label
+              >
               <div class="mt-2">
                 <Password
                   v-model="password"

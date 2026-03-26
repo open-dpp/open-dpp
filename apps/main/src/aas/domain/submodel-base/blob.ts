@@ -48,11 +48,13 @@ export class Blob implements ISubmodelElement {
     return this._description;
   }
 
-  static create(data: SubmodelBaseProps & {
-    contentType: string;
-    extensions?: Array<Extension>;
-    value?: Buffer | null;
-  }) {
+  static create(
+    data: SubmodelBaseProps & {
+      contentType: string;
+      extensions?: Array<Extension>;
+      value?: Buffer | null;
+    },
+  ) {
     return new Blob(
       data.contentType,
       data.extensions ?? [],
@@ -73,7 +75,7 @@ export class Blob implements ISubmodelElement {
     const baseObjects = submodelBasePropsFromPlain(parsed);
     return new Blob(
       parsed.contentType,
-      parsed.extensions.map(e => Extension.fromPlain(e)),
+      parsed.extensions.map((e) => Extension.fromPlain(e)),
       baseObjects.category,
       baseObjects.idShort,
       baseObjects.displayName,

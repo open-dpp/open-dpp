@@ -13,9 +13,7 @@ export const MEDIA: RouteRecordRaw = {
 };
 
 function filesListBreadCrumbs(to: RouteLocationNormalizedGeneric) {
-  return [
-    { name: localizedBreadcrumb("media.media"), route: MEDIA, params: to.params },
-  ];
+  return [{ name: localizedBreadcrumb("media.media"), route: MEDIA, params: to.params }];
 }
 
 export const MEDIA_PARENT: RouteRecordRaw = {

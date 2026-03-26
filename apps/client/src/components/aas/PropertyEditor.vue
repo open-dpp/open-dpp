@@ -13,10 +13,7 @@ import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import PropertyForm from "./PropertyForm.vue";
 
-const props
-  = defineProps<
-    SharedEditorProps<PropertyEditorProps, PropertyModificationDto>
-  >();
+const props = defineProps<SharedEditorProps<PropertyEditorProps, PropertyModificationDto>>();
 
 const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,

@@ -20,9 +20,7 @@ describe("invitation", () => {
     expect(invitation.organizationId).toBe(props.organizationId);
     expect(invitation.role).toBe(props.role);
     expect(invitation.createdAt).toBeInstanceOf(Date);
-    expect(invitation.expiresAt.getTime()).toBeGreaterThan(
-      invitation.createdAt.getTime(),
-    );
+    expect(invitation.expiresAt.getTime()).toBeGreaterThan(invitation.createdAt.getTime());
   });
 
   it("should create an invitation with custom TTL", () => {
@@ -53,9 +51,7 @@ describe("invitation", () => {
 
     const invitation = Invitation.create(props);
 
-    expect(invitation.expiresAt.getTime()).toBeGreaterThan(
-      invitation.createdAt.getTime(),
-    );
+    expect(invitation.expiresAt.getTime()).toBeGreaterThan(invitation.createdAt.getTime());
     // It should be roughly default TTL (7 days)
     const sevenDays = 7 * 24 * 60 * 60 * 1000;
     expect(invitation.expiresAt.getTime()).toBeCloseTo(

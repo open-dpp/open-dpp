@@ -30,13 +30,7 @@ export class AiService {
     });
   }
 
-  getAgent({
-    llm,
-    tools,
-  }: {
-    llm: ChatOllama | ChatMistralAI;
-    tools: StructuredToolInterface[];
-  }) {
+  getAgent({ llm, tools }: { llm: ChatOllama | ChatMistralAI; tools: StructuredToolInterface[] }) {
     return createReactAgent({
       llm,
       tools,

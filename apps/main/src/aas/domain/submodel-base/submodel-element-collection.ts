@@ -1,4 +1,8 @@
-import { AasSubmodelElements, AasSubmodelElementsType, SubmodelElementCollectionJsonSchema } from "@open-dpp/dto";
+import {
+  AasSubmodelElements,
+  AasSubmodelElementsType,
+  SubmodelElementCollectionJsonSchema,
+} from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
@@ -52,10 +56,12 @@ export class SubmodelElementCollection implements ISubmodelElement {
     return this._description;
   }
 
-  static create(data: SubmodelBaseProps & {
-    extensions?: Array<Extension>;
-    value?: Array<ISubmodelElement>;
-  }) {
+  static create(
+    data: SubmodelBaseProps & {
+      extensions?: Array<Extension>;
+      value?: Array<ISubmodelElement>;
+    },
+  ) {
     return new SubmodelElementCollection(
       data.extensions ?? [],
       data.category ?? null,
@@ -68,16 +74,17 @@ export class SubmodelElementCollection implements ISubmodelElement {
       data.embeddedDataSpecifications ?? [],
       data.value ?? [],
     );
-  };
+  }
 
   addSubmodelElement(submodelElement: ISubmodelElement, options?: AddOptions): ISubmodelElement {
-    if (this.value.some(s => s.idShort === submodelElement.idShort)) {
-      throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
+    if (this.value.some((s) => s.idShort === submodelElement.idShort)) {
+      throw new ValueError(
+        `Submodel element with idShort ${submodelElement.idShort} already exists`,
+      );
     }
     if (options?.position !== undefined) {
       this.value.splice(options.position, 0, submodelElement);
-    }
-    else {
+    } else {
       this.value.push(submodelElement);
     }
     return submodelElement;

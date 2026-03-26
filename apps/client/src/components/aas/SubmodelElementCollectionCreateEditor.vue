@@ -16,8 +16,8 @@ import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import FormContainer from "./form/FormContainer.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
-const props
-  = defineProps<
+const props =
+  defineProps<
     SharedEditorProps<
       SubmodelElementCollectionCreateEditorProps,
       SubmodelElementCollectionRequestDto
@@ -58,10 +58,6 @@ defineExpose<{
 
 <template>
   <FormContainer>
-    <SubmodelBaseForm
-      :show-errors="showErrors"
-      :errors="errors"
-      :editor-mode="EditorMode.CREATE"
-    />
+    <SubmodelBaseForm :show-errors="showErrors" :errors="errors" :editor-mode="EditorMode.CREATE" />
   </FormContainer>
 </template>

@@ -66,15 +66,9 @@ export class MediaService {
       throw new Error(`Bucket ${bucketName} does not exist`);
     }
     const objectName = this.buildBucketPath(remoteFileBaseName, remoteFolders);
-    const uploadInfo = await this.client.putObject(
-      bucketName,
-      objectName,
-      buffer,
-      size,
-      {
-        "Content-Type": mimeType,
-      },
-    );
+    const uploadInfo = await this.client.putObject(bucketName, objectName, buffer, size, {
+      "Content-Type": mimeType,
+    });
     return {
       info: uploadInfo,
       location: {
@@ -97,9 +91,7 @@ export class MediaService {
   }
 
   async processImageBuffer(buffer: Buffer) {
-    return await sharp(buffer)
-      .webp({ quality: 85 })
-      .toBuffer();
+    return await sharp(buffer).webp({ quality: 85 }).toBuffer();
   }
 
   async uploadFileOfProductPassport(
@@ -217,14 +209,8 @@ export class MediaService {
     return await this.client.getObject(bucketName, objectName);
   }
 
-  async getFilestreamOfProductPassport(
-    dataFieldId: string,
-    uniqueProductIdentifier: string,
-  ) {
-    const media = await this.findOneDppFileOrFail(
-      dataFieldId,
-      uniqueProductIdentifier,
-    );
+  async getFilestreamOfProductPassport(dataFieldId: string, uniqueProductIdentifier: string) {
+    const media = await this.findOneDppFileOrFail(dataFieldId, uniqueProductIdentifier);
     const stream = await this.getFilestreamOfMedia(media);
     return {
       stream,
@@ -302,7 +288,7 @@ export class MediaService {
       return [];
     }
     const docs = await this.mediaDoc.find({ _id: { $in: ids } });
-    return docs.map(d => this.convertToDomain(d));
+    return docs.map((d) => this.convertToDomain(d));
   }
 
   async findOneOrFail(id: string) {
@@ -313,10 +299,7 @@ export class MediaService {
     return this.convertToDomain(mediaDocument);
   }
 
-  async findOneDppFileOrFail(
-    dataFieldId: string,
-    uniqueProductIdentifier: string,
-  ) {
+  async findOneDppFileOrFail(dataFieldId: string, uniqueProductIdentifier: string) {
     const mediaDocuments = await this.mediaDoc.find({
       dataFieldId,
       uniqueProductIdentifier,
@@ -329,9 +312,7 @@ export class MediaService {
 
   async findAll() {
     const mediaDocuments = await this.mediaDoc.find();
-    return mediaDocuments.map(mediaDocument =>
-      this.convertToDomain(mediaDocument),
-    );
+    return mediaDocuments.map((mediaDocument) => this.convertToDomain(mediaDocument));
   }
 
   async removeById(id: string) {
@@ -361,9 +342,7 @@ export class MediaService {
         originalFilename: true,
       },
     );
-    return mediaDocuments.map(mediaDocument =>
-      this.convertToDomain(mediaDocument),
-    );
+    return mediaDocuments.map((mediaDocument) => this.convertToDomain(mediaDocument));
   }
 
   /**

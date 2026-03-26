@@ -57,12 +57,14 @@ export class Property implements ISubmodelElement {
     return this._description;
   }
 
-  static create(data: SubmodelBaseProps & {
-    valueType: DataTypeDefType;
-    extensions?: Extension[];
-    value?: string | null;
-    valueId?: Reference | null;
-  }) {
+  static create(
+    data: SubmodelBaseProps & {
+      valueType: DataTypeDefType;
+      extensions?: Extension[];
+      value?: string | null;
+      valueId?: Reference | null;
+    },
+  ) {
     return new Property(
       data.valueType,
       data.extensions ?? [],
@@ -83,14 +85,15 @@ export class Property implements ISubmodelElement {
     function parse(schema: z.ZodSchema): void {
       const result = schema.safeParse(value);
       if (!result.success) {
-        throw new ValueError(`Invalid value for valueType ${valueType}: ${z.flattenError(result.error).formErrors[0]}`);
+        throw new ValueError(
+          `Invalid value for valueType ${valueType}: ${z.flattenError(result.error).formErrors[0]}`,
+        );
       }
     }
     if (value !== null) {
-      if ([DataTypeDef.Double, DataTypeDef.Float].find(n => n === valueType)) {
+      if ([DataTypeDef.Double, DataTypeDef.Float].find((n) => n === valueType)) {
         parse(z.coerce.number());
-      }
-      else {
+      } else {
         parse(z.string());
       }
     }

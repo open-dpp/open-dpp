@@ -9,4 +9,6 @@ export class AdministrativeInformationDoc {
   revision: string;
 }
 
-export const AdministrativeInformationSchema = SchemaFactory.createForClass(AdministrativeInformationDoc);
+export const AdministrativeInformationSchema = SchemaFactory.createForClass(
+  AdministrativeInformationDoc,
+);

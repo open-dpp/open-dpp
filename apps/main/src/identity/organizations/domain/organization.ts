@@ -85,7 +85,7 @@ export class Organization {
   }
 
   isMember(member: Member) {
-    return this.members.some(m => m.id === member.id);
+    return this.members.some((m) => m.id === member.id);
   }
 
   addMember(member: Member): Organization {

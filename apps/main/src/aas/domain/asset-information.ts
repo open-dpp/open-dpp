@@ -10,8 +10,7 @@ export class AssetInformation implements IVisitable {
     public readonly specificAssetIds: Array<SpecificAssetId>,
     public readonly assetType: string | null = null,
     public defaultThumbnails: Resource[],
-  ) {
-  }
+  ) {}
 
   static create(data: {
     assetKind: AssetKindType;

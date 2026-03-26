@@ -1,4 +1,11 @@
-import { BadRequestException, Controller, Get, NotFoundException, Param, Query } from "@nestjs/common";
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Query,
+} from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
   BrandingDto,
@@ -33,9 +40,7 @@ import { Pagination } from "../../pagination/pagination";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
-import {
-  UniqueProductIdentifierListDtoSchema,
-} from "./dto/unique-product-identifier-dto.schema";
+import { UniqueProductIdentifierListDtoSchema } from "./dto/unique-product-identifier-dto.schema";
 import { UniqueProductIdentifierApplicationService } from "./unique.product.identifier.application.service";
 
 @Controller()
@@ -46,14 +51,11 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     private readonly passportRepository: PassportRepository,
     private readonly environmentService: EnvironmentService,
     private readonly brandingRepository: BrandingRepository,
-  ) {
-  }
+  ) {}
 
   @AllowAnonymous()
   @Get("/unique-product-identifiers")
-  async getUniqueProductIdentifierByReference(
-    @Query("reference") reference: string,
-  ) {
+  async getUniqueProductIdentifierByReference(@Query("reference") reference: string) {
     if (!reference || reference.length === 0) {
       throw new NotFoundException();
     }
@@ -65,24 +67,23 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
 
   @AllowAnonymous()
   @Get("/unique-product-identifiers/:id/passport")
-  async getReferencedPassport(
-    @Param("id") id: string,
-  ) {
-    return PassportDtoSchema.parse((await this.loadPassport(id)));
+  async getReferencedPassport(@Param("id") id: string) {
+    return PassportDtoSchema.parse(await this.loadPassport(id));
   }
 
   @AllowAnonymous()
   @Get("/unique-product-identifiers/:id/branding")
-  async getPassportBranding(
-    @Param("id") id: string,
-  ): Promise<BrandingDto> {
-    const upiMetadata = await this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifier(id);
+  async getPassportBranding(@Param("id") id: string): Promise<BrandingDto> {
+    const upiMetadata =
+      await this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifier(id);
 
     if (!upiMetadata) {
       throw new BadRequestException();
     }
 
-    return BrandingDtoSchema.parse((await this.brandingRepository.findOneByOrganizationId(upiMetadata.organizationId)).toPlain());
+    return BrandingDtoSchema.parse(
+      (await this.brandingRepository.findOneByOrganizationId(upiMetadata.organizationId)).toPlain(),
+    );
   }
 
   @AllowAnonymous()
@@ -140,7 +141,11 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
   ): Promise<SubmodelElementPaginationResponseDto> {
     const passport = await this.loadPassport(id);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodelElements(passport.getEnvironment(), submodelId, pagination);
+    return await this.environmentService.getSubmodelElements(
+      passport.getEnvironment(),
+      submodelId,
+      pagination,
+    );
   }
 
   @AllowAnonymous()
@@ -151,7 +156,11 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     @IdShortPathParam() idShortPath: IdShortPath,
   ): Promise<SubmodelElementResponseDto> {
     const passport = await this.loadPassport(id);
-    return await this.environmentService.getSubmodelElementById(passport.getEnvironment(), submodelId, idShortPath);
+    return await this.environmentService.getSubmodelElementById(
+      passport.getEnvironment(),
+      submodelId,
+      idShortPath,
+    );
   }
 
   @AllowAnonymous()
@@ -162,7 +171,11 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     @IdShortPathParam() idShortPath: IdShortPath,
   ): Promise<ValueResponseDto> {
     const passport = await this.loadPassport(id);
-    return await this.environmentService.getSubmodelElementValue(passport.getEnvironment(), submodelId, idShortPath);
+    return await this.environmentService.getSubmodelElementValue(
+      passport.getEnvironment(),
+      submodelId,
+      idShortPath,
+    );
   }
 
   private async loadPassport(id: string): Promise<Passport> {

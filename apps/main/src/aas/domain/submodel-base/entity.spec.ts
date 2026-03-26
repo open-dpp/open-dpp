@@ -14,8 +14,8 @@ describe("entity", () => {
     const submodelElement = Property.fromPlain(propertyPlainFactory.build());
     entity.addSubmodelElement(submodelElement);
     expect(entity.getSubmodelElements()).toEqual([submodelElement]);
-    expect(() => entity.addSubmodelElement(submodelElement)).toThrow(new ValueError(
-      `Submodel element with idShort ${submodelElement.idShort} already exists`,
-    ));
+    expect(() => entity.addSubmodelElement(submodelElement)).toThrow(
+      new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`),
+    );
   });
 });

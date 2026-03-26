@@ -4,7 +4,7 @@ import Navbar from "./Navbar.vue";
 
 <template>
   <div>
-    <div class="xl:max-w-7xl mx-auto relative">
+    <div class="relative mx-auto xl:max-w-7xl">
       <div class="flex flex-col gap-5">
         <div class="sticky top-0 z-10">
           <Navbar />

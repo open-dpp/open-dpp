@@ -21,7 +21,7 @@ async function create() {
     name: organizationName.value,
   });
   if (responseData) {
-    await new Promise(resolve => setTimeout(resolve, 250));
+    await new Promise((resolve) => setTimeout(resolve, 250));
     organizationName.value = ""; // Reset form
     await organizationStore.fetchOrganizations();
     indexStore.selectOrganization(responseData.id);
@@ -38,7 +38,7 @@ async function create() {
       </h3>
 
       <div class="field">
-        <label for="organization-name" class="block mb-2">
+        <label for="organization-name" class="mb-2 block">
           {{ t("organizations.form.name.label") }}
         </label>
         <InputText
@@ -51,11 +51,7 @@ async function create() {
       </div>
 
       <div class="mt-4">
-        <Button
-          type="submit"
-          :label="t('common.create')"
-          :disabled="!organizationName"
-        />
+        <Button type="submit" :label="t('common.create')" :disabled="!organizationName" />
       </div>
     </div>
   </form>

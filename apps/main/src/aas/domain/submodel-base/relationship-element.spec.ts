@@ -13,9 +13,9 @@ describe("relationshipElement", () => {
       second: Reference.create({ type: ReferenceTypes.ExternalReference, keys: [] }),
     });
     const submodelElement = Property.create({ idShort: "prop1", valueType: DataTypeDef.String });
-    expect(() => relationshipElement.addSubmodelElement(submodelElement)).toThrow(new ValueError(
-      "RelationshipElement cannot contain submodel elements",
-    ));
+    expect(() => relationshipElement.addSubmodelElement(submodelElement)).toThrow(
+      new ValueError("RelationshipElement cannot contain submodel elements"),
+    );
   });
 
   it("should get submodel element", () => {

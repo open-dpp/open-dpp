@@ -12,8 +12,7 @@ const emits = defineEmits<{
   (e: "modifyImage", image: MediaInfo, newMediaInfo: MediaInfo): void;
 }>();
 const { t } = useI18n();
-const images
-  = defineModel<{ blob: Blob | null; mediaInfo: MediaInfo; url: string }[]>();
+const images = defineModel<{ blob: Blob | null; mediaInfo: MediaInfo; url: string }[]>();
 const openMediaModal = ref(false);
 const imageToModify = ref<MediaInfo | null>(null);
 
@@ -33,8 +32,7 @@ function onMediaModalConfirm(images: Array<MediaInfo>) {
     if (imageToModify.value) {
       emits("modifyImage", imageToModify.value, images[0]);
       imageToModify.value = null;
-    }
-    else {
+    } else {
       emits("addImage", images[0]);
     }
     openMediaModal.value = false;
@@ -48,7 +46,7 @@ function onModifyImage(image: MediaInfo) {
 
 function onMoveImageUp(image: MediaInfo) {
   if (images.value) {
-    const index = images.value.findIndex(i => i.mediaInfo.id === image.id);
+    const index = images.value.findIndex((i) => i.mediaInfo.id === image.id);
     if (index > 0) {
       emits("moveImage", image, index - 1);
     }
@@ -56,7 +54,7 @@ function onMoveImageUp(image: MediaInfo) {
 }
 function onMoveImageDown(image: MediaInfo) {
   if (images.value) {
-    const index = images.value.findIndex(i => i.mediaInfo.id === image.id);
+    const index = images.value.findIndex((i) => i.mediaInfo.id === image.id);
     if (index > -1 && index < images.value?.length - 1) {
       emits("moveImage", image, index + 1);
     }
@@ -87,7 +85,7 @@ function onMoveImageDown(image: MediaInfo) {
       </Column>
       <Column class="w-24 text-end!">
         <template #body="{ data, index }">
-          <div class="flex items-center rounded-md gap-2">
+          <div class="flex items-center gap-2 rounded-md">
             <Button
               icon="pi pi-pencil"
               :data-cy="`modify-media-${data.mediaInfo.id}`"

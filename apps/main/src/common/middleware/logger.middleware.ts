@@ -31,18 +31,15 @@ export class LoggerMiddleware implements NestMiddleware {
           userAgent,
           duration,
         };
-      }
-      else {
+      } else {
         message = `${method} ${originalUrl} ${statusCode} - ${ip} - ${userAgent} - ${duration}ms`;
       }
 
       if (statusCode >= 500) {
         this.logger.error(message);
-      }
-      else if (statusCode >= 400) {
+      } else if (statusCode >= 400) {
         this.logger.warn(message);
-      }
-      else {
+      } else {
         this.logger.debug(message);
       }
     });

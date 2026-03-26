@@ -56,9 +56,9 @@ export class TraceabilityEventWrapper<T extends TraceabilityEvent> {
     organizationId: string;
     geolocation?:
       | {
-        latitude: string;
-        longitude: string;
-      }
+          latitude: string;
+          longitude: string;
+        }
       | null
       | undefined;
     type: TraceabilityEventType_TYPE;
@@ -90,9 +90,9 @@ export class TraceabilityEventWrapper<T extends TraceabilityEvent> {
     organizationId: string | null;
     geolocation?:
       | {
-        latitude: string;
-        longitude: string;
-      }
+          latitude: string;
+          longitude: string;
+        }
       | null
       | undefined;
     type: TraceabilityEventType_TYPE;

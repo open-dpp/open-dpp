@@ -18,10 +18,7 @@ import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import FormContainer from "./form/FormContainer.vue";
 import PropertyForm from "./PropertyForm.vue";
 
-const props
-  = defineProps<
-    SharedEditorProps<PropertyCreateEditorProps, PropertyRequestDto>
-  >();
+const props = defineProps<SharedEditorProps<PropertyCreateEditorProps, PropertyRequestDto>>();
 
 const propertyFormSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
@@ -43,9 +40,7 @@ const showErrors = computed(() => {
 
 async function submit() {
   await handleSubmit(async (data) => {
-    await props.callback(
-      PropertyJsonSchema.parse({ ...data, valueType: props.data.valueType }),
-    );
+    await props.callback(PropertyJsonSchema.parse({ ...data, valueType: props.data.valueType }));
   })();
 }
 

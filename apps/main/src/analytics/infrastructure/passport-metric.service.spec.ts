@@ -49,17 +49,21 @@ describe("passportMetricService", () => {
         OrganizationsModule,
         UsersModule,
       ],
-      providers: [PassportMetricService, {
-        provide: APP_GUARD,
-        useClass: AuthGuard,
-      }],
-    }).overrideProvider(EmailService).useValue({
-      send: jest.fn(),
-    }).compile();
+      providers: [
+        PassportMetricService,
+        {
+          provide: APP_GUARD,
+          useClass: AuthGuard,
+        },
+      ],
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
 
-    passportMetricService = module.get<PassportMetricService>(
-      PassportMetricService,
-    );
+    passportMetricService = module.get<PassportMetricService>(PassportMetricService);
     betterAuthHelper.init(module.get<UsersService>(UsersService), module.get<Auth>(AUTH));
 
     app = module.createNestApplication();
@@ -153,18 +157,15 @@ describe("passportMetricService", () => {
     await passportMetricService.create(passportMetric6);
     await passportMetricService.create(passportMetric6Updated);
 
-    const statistic = await passportMetricService.computeStatistic(
-      source.organizationId,
-      {
-        templateId: source.templateId,
-        passportId: source.passportId,
-        type: MeasurementType.PAGE_VIEWS,
-        valueKey: "http://example.com",
-        startDate: new Date("2025-01-01T00:00:00Z"),
-        endDate: new Date("2025-03-01T00:00:00Z"),
-        period: TimePeriod.MONTH,
-      },
-    );
+    const statistic = await passportMetricService.computeStatistic(source.organizationId, {
+      templateId: source.templateId,
+      passportId: source.passportId,
+      type: MeasurementType.PAGE_VIEWS,
+      valueKey: "http://example.com",
+      startDate: new Date("2025-01-01T00:00:00Z"),
+      endDate: new Date("2025-03-01T00:00:00Z"),
+      period: TimePeriod.MONTH,
+    });
     expect(statistic).toEqual([
       {
         datetime: "2025-01-01T00:00:00.000Z",

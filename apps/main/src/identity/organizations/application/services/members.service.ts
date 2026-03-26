@@ -15,15 +15,21 @@ export class MembersService {
     private readonly membersRepository: MembersRepository,
     private readonly organizationsRepository: OrganizationsRepository,
     private readonly usersRepository: UsersRepository,
-  ) { }
+  ) {}
 
   async isMemberOfOrganization(userId: string, organizationId: string): Promise<boolean> {
-    const member = await this.membersRepository.findOneByUserIdAndOrganizationId(userId, organizationId);
+    const member = await this.membersRepository.findOneByUserIdAndOrganizationId(
+      userId,
+      organizationId,
+    );
     return !!member;
   }
 
   async isOwnerOrAdmin(organizationId: string, userId: string): Promise<boolean> {
-    const member = await this.membersRepository.findOneByUserIdAndOrganizationId(userId, organizationId);
+    const member = await this.membersRepository.findOneByUserIdAndOrganizationId(
+      userId,
+      organizationId,
+    );
     if (!member) {
       return false;
     }
@@ -34,7 +40,10 @@ export class MembersService {
     return user !== null && user.role === UserRole.ADMIN;
   }
 
-  async getMemberOrganizations(userId: string, headers: BetterAuthHeaders): Promise<Organization[]> {
+  async getMemberOrganizations(
+    userId: string,
+    headers: BetterAuthHeaders,
+  ): Promise<Organization[]> {
     this.logger.debug(`Getting organizations for user: ${userId}`);
     // Using default repo (BetterAuth) as per original handler
     return this.organizationsRepository.findManyByMember(headers);
@@ -46,11 +55,11 @@ export class MembersService {
       return [];
     }
 
-    const userIds = members.map(member => member.userId);
+    const userIds = members.map((member) => member.userId);
     const users = await this.usersRepository.findAllByIds(userIds);
-    const userMap = new Map(users.map(user => [user.id, user]));
+    const userMap = new Map(users.map((user) => [user.id, user]));
 
-    return members.map(member => ({
+    return members.map((member) => ({
       ...member,
       user: userMap.get(member.userId)
         ? {

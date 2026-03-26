@@ -13,14 +13,14 @@ export class PassportMetricService {
   constructor(
     @InjectModel(PassportMetricDoc.name)
     private passportMetricDoc: MongooseModel<PassportMetricDoc>,
-  ) { }
+  ) {}
 
   convertToDomain(passportMetricDoc: PassportMetricDoc) {
     return PassportMetric.loadFromDb({
       id: passportMetricDoc._id,
       source: passportMetricDoc.source,
       date: passportMetricDoc.date,
-      values: passportMetricDoc.values.map(mv => ({
+      values: passportMetricDoc.values.map((mv) => ({
         key: mv.key,
         value: mv.value,
         row: mv.row ?? null,
@@ -36,7 +36,7 @@ export class PassportMetricService {
       },
       date: passportMetric.date,
       _schemaVersion: PassportMetricSchemaVersion.v1_0_0,
-      values: passportMetric.values.map(mv => ({
+      values: passportMetric.values.map((mv) => ({
         key: mv.key,
         value: mv.value,
         row: mv.row,
@@ -56,10 +56,7 @@ export class PassportMetricService {
     return this.convertToDomain(passportMetric);
   }
 
-  async findOneOrFail(
-    source: MetricSourceProps,
-    date: Date,
-  ): Promise<PassportMetric> {
+  async findOneOrFail(source: MetricSourceProps, date: Date): Promise<PassportMetric> {
     const passportMetric = await this.findOne(source, date);
     if (!passportMetric) {
       throw new NotFoundInDatabaseException(PassportMetric.name);
@@ -67,10 +64,7 @@ export class PassportMetricService {
     return passportMetric;
   }
 
-  async findOne(
-    source: MetricSourceProps,
-    date: Date,
-  ): Promise<PassportMetric | undefined> {
+  async findOne(source: MetricSourceProps, date: Date): Promise<PassportMetric | undefined> {
     const passportMetricDocument = await this.passportMetricDoc.findOne({
       $expr: {
         $and: [
@@ -90,7 +84,7 @@ export class PassportMetricService {
 
   async findAll(): Promise<PassportMetric[]> {
     const passportMetricDocuments = await this.passportMetricDoc.find();
-    return passportMetricDocuments.map(passportMetricDocument =>
+    return passportMetricDocuments.map((passportMetricDocument) =>
       this.convertToDomain(passportMetricDocument),
     );
   }
@@ -106,13 +100,11 @@ export class PassportMetricService {
       ...aggregation.getAggregateQueryForTimePeriod(query.period),
     ]);
     const timeseries = Timeseries.create({ dataPoints });
-    return timeseries.densify(
-      {
-        startIsoString: query.startDate.toISOString(),
-        endIsoString: query.endDate.toISOString(),
-        step: 1,
-        unit: query.period,
-      },
-    );
+    return timeseries.densify({
+      startIsoString: query.startDate.toISOString(),
+      endIsoString: query.endDate.toISOString(),
+      step: 1,
+      unit: query.period,
+    });
   }
 }

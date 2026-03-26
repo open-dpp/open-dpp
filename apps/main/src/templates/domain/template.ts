@@ -18,8 +18,7 @@ export class Template implements IPersistable, IDigitalProductPassportIdentifiab
     public readonly environment: Environment,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
-  ) {
-  }
+  ) {}
 
   static create(data: {
     id?: string;

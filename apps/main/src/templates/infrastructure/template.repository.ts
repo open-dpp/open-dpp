@@ -1,9 +1,7 @@
 import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import {
-  IDigitalProductPassportIdentifiableRepository,
-} from "../../aas/infrastructure/digital-product-passport-identifiable.repository";
+import { IDigitalProductPassportIdentifiableRepository } from "../../aas/infrastructure/digital-product-passport-identifiable.repository";
 import { DbSessionOptions } from "../../database/query-options";
 import { findAllByOrganizationId, findOne, findOneOrFail, save } from "../../lib/repositories";
 import { Pagination } from "../../pagination/pagination";
@@ -22,7 +20,14 @@ export class TemplateRepository implements IDigitalProductPassportIdentifiableRe
   }
 
   async save(template: Template, options?: DbSessionOptions) {
-    return await save(template, this.templateDoc, TemplateDocVersion.v1_0_0, Template.fromPlain, undefined, options);
+    return await save(
+      template,
+      this.templateDoc,
+      TemplateDocVersion.v1_0_0,
+      Template.fromPlain,
+      undefined,
+      options,
+    );
   }
 
   async findOneOrFail(id: string) {
@@ -34,6 +39,11 @@ export class TemplateRepository implements IDigitalProductPassportIdentifiableRe
   }
 
   async findAllByOrganizationId(organizationId: string, pagination?: Pagination) {
-    return await findAllByOrganizationId(this.templateDoc, Template.fromPlain, organizationId, pagination);
+    return await findAllByOrganizationId(
+      this.templateDoc,
+      Template.fromPlain,
+      organizationId,
+      pagination,
+    );
   }
 }

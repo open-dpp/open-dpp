@@ -66,12 +66,11 @@ export class PassportMetric {
 
   upsertMetricValue(metricValue: MetricValue) {
     const foundMetric = this.values.find(
-      mv => mv.key === metricValue.key && mv.row === metricValue.row,
+      (mv) => mv.key === metricValue.key && mv.row === metricValue.row,
     );
     if (foundMetric) {
       foundMetric.value = metricValue.value;
-    }
-    else {
+    } else {
       this.values.push(metricValue);
     }
   }

@@ -90,14 +90,14 @@ export class Submodel implements ISubmodelBase, IPersistable {
       data.embeddedDataSpecifications ?? [],
       data.submodelElements ?? [],
     );
-  };
+  }
 
   static fromPlain(data: unknown): Submodel {
     const parsed = SubmodelJsonSchema.parse(data);
     const baseObjects = submodelBasePropsFromPlain(parsed);
     return new Submodel(
       parsed.id,
-      parsed.extensions.map(x => Extension.fromPlain(x)),
+      parsed.extensions.map((x) => Extension.fromPlain(x)),
       baseObjects.category,
       baseObjects.idShort,
       baseObjects.displayName,
@@ -110,7 +110,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
       baseObjects.embeddedDataSpecifications,
       parsed.submodelElements.map(parseSubmodelElement),
     );
-  };
+  }
 
   modify(data: unknown) {
     this.accept(new ModifierVisitor(), data);
@@ -132,9 +132,10 @@ export class Submodel implements ISubmodelBase, IPersistable {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
     if (submodelElement instanceof SubmodelElementList) {
       return new TableExtension(submodelElement);
-    }
-    else {
-      throw new ValueError(`Cannot add column to ${submodelElement.getSubmodelElementType()} submodel element`);
+    } else {
+      throw new ValueError(
+        `Cannot add column to ${submodelElement.getSubmodelElementType()} submodel element`,
+      );
     }
   }
 
@@ -179,7 +180,9 @@ export class Submodel implements ISubmodelBase, IPersistable {
   findSubmodelElementOrFail(idShortPath: IdShortPath): ISubmodelElement {
     const element = this.findSubmodelElement(idShortPath);
     if (!element) {
-      throw new NotFoundException(`Submodel element with idShortPath ${idShortPath.toString()} not found`);
+      throw new NotFoundException(
+        `Submodel element with idShortPath ${idShortPath.toString()} not found`,
+      );
     }
     return element;
   }
@@ -194,7 +197,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     let children = this.getSubmodelElements();
 
     for (const segment of idShortPath.segments) {
-      current = children.find(el => el.idShort === segment);
+      current = children.find((el) => el.idShort === segment);
       if (!current) {
         return undefined; // path broken
       }
@@ -204,19 +207,22 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return current;
   }
 
-  public addSubmodelElement(submodelElement: ISubmodelElement, options?: AddOptions): ISubmodelElement {
+  public addSubmodelElement(
+    submodelElement: ISubmodelElement,
+    options?: AddOptions,
+  ): ISubmodelElement {
     if (options?.idShortPath) {
       const parent = this.findSubmodelElementOrFail(options.idShortPath);
       parent.addSubmodelElement(submodelElement, options);
-    }
-    else {
-      if (this.submodelElements.find(el => el.idShort === submodelElement.idShort)) {
-        throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
+    } else {
+      if (this.submodelElements.find((el) => el.idShort === submodelElement.idShort)) {
+        throw new ValueError(
+          `Submodel element with idShort ${submodelElement.idShort} already exists`,
+        );
       }
       if (options?.position !== undefined) {
         this.submodelElements.splice(options.position, 0, submodelElement);
-      }
-      else {
+      } else {
         this.submodelElements.push(submodelElement);
       }
     }
@@ -228,8 +234,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     if (idShortPath.last) {
       if (!parent) {
         deleteSubmodelElementOrFail(this.submodelElements, idShortPath.last);
-      }
-      else {
+      } else {
         parent.deleteSubmodelElement(idShortPath.last);
       }
     }

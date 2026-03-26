@@ -1,7 +1,4 @@
-import {
-  LanguageEnum,
-  ReferenceModificationSchema,
-} from "@open-dpp/dto";
+import { LanguageEnum, ReferenceModificationSchema } from "@open-dpp/dto";
 import { NotSupportedError, ValueError } from "@open-dpp/exception";
 import { match, P } from "ts-pattern";
 import { z } from "zod";
@@ -35,84 +32,73 @@ import { IVisitor } from "./visitor";
 
 export class ValueModifierVisitor implements IVisitor<unknown, void> {
   visitAdministrativeInformation(_element: AdministrativeInformation, _context: unknown): void {
-    throw new NotSupportedError(
-      "AdministrativeInformation is not supported.",
-    );
+    throw new NotSupportedError("AdministrativeInformation is not supported.");
   }
 
-  visitAnnotatedRelationshipElement(_element: AnnotatedRelationshipElement, _context: unknown): void {
-    throw new NotSupportedError(
-      "AnnotatedRelationshipElement is not supported.",
-    );
+  visitAnnotatedRelationshipElement(
+    _element: AnnotatedRelationshipElement,
+    _context: unknown,
+  ): void {
+    throw new NotSupportedError("AnnotatedRelationshipElement is not supported.");
   }
 
   visitAssetAdministrationShell(_element: AssetAdministrationShell, _context: unknown): void {
-    throw new NotSupportedError(
-      "AssetAdministrationShell is not supported.",
-    );
+    throw new NotSupportedError("AssetAdministrationShell is not supported.");
   }
 
   visitAssetInformation(_element: AssetInformation, _context: unknown): void {
-    throw new NotSupportedError(
-      "AssetInformation is not supported.",
-    );
+    throw new NotSupportedError("AssetInformation is not supported.");
   }
 
   visitBlob(_element: Blob, _context: unknown): void {
-    throw new NotSupportedError(
-      "Blob is not supported.",
-    );
+    throw new NotSupportedError("Blob is not supported.");
   }
 
   visitConceptDescription(_element: ConceptDescription, _context: unknown): void {
-    throw new NotSupportedError(
-      "ConceptDescription is not supported.",
-    );
+    throw new NotSupportedError("ConceptDescription is not supported.");
   }
 
   visitEmbeddedDataSpecification(_element: EmbeddedDataSpecification, _context: unknown): void {
-    throw new NotSupportedError(
-      "EmbeddedDataSpecification is not supported.",
-    );
+    throw new NotSupportedError("EmbeddedDataSpecification is not supported.");
   }
 
   visitEntity(_element: Entity, _context: unknown): void {
-    throw new NotSupportedError(
-      "Entity is not supported.",
-    );
+    throw new NotSupportedError("Entity is not supported.");
   }
 
   visitExtension(_element: Extension, _context: unknown): void {
-    throw new NotSupportedError(
-      "Extension is not supported.",
-    );
+    throw new NotSupportedError("Extension is not supported.");
   }
 
   visitFile(element: File, context: unknown): void {
-    const parsed = z.object({
-      value: z.string().nullish(),
-      contentType: z.string().optional(),
-    }).parse(context);
+    const parsed = z
+      .object({
+        value: z.string().nullish(),
+        contentType: z.string().optional(),
+      })
+      .parse(context);
     element.value = parsed.value !== undefined ? parsed.value : element.value;
-    element.contentType = parsed.contentType !== undefined ? parsed.contentType : element.contentType;
+    element.contentType =
+      parsed.contentType !== undefined ? parsed.contentType : element.contentType;
   }
 
   visitKey(_element: Key, _context: unknown): void {
-    throw new NotSupportedError(
-      "Key is not supported.",
-    );
+    throw new NotSupportedError("Key is not supported.");
   }
 
   visitLanguageText(_element: LanguageText, _context: unknown): void {
-    throw new NotSupportedError(
-      "LanguageText is not supported.",
-    );
+    throw new NotSupportedError("LanguageText is not supported.");
   }
 
   visitMultiLanguageProperty(element: MultiLanguageProperty, context: unknown): void {
     const parsed = z.record(z.string(), z.string()).array().parse(context);
-    element.value = parsed.map(record =>
-      Object.entries(record).map(([language, text]) => LanguageText.create({ language: LanguageEnum.parse(language), text }))).flat();
+    element.value = parsed
+      .map((record) =>
+        Object.entries(record).map(([language, text]) =>
+          LanguageText.create({ language: LanguageEnum.parse(language), text }),
+        ),
+      )
+      .flat();
   }
 
   visitProperty(element: Property, context: unknown): void {
@@ -123,15 +109,11 @@ export class ValueModifierVisitor implements IVisitor<unknown, void> {
   }
 
   visitQualifier(_element: Qualifier, _context: unknown): void {
-    throw new NotSupportedError(
-      "Qualifier is not supported.",
-    );
+    throw new NotSupportedError("Qualifier is not supported.");
   }
 
   visitRange(_element: Range, _context: unknown): void {
-    throw new NotSupportedError(
-      "Range is not supported.",
-    );
+    throw new NotSupportedError("Range is not supported.");
   }
 
   visitReference(element: Reference, context: unknown): void {
@@ -141,49 +123,50 @@ export class ValueModifierVisitor implements IVisitor<unknown, void> {
   visitReferenceElement(element: ReferenceElement, context: unknown): void {
     const parsedValue = ReferenceModificationSchema.nullish().parse(context);
     const input = { value: element.value, newValue: parsedValue };
-    match(input).with({
-      value: P.any,
-      newValue: null,
-    }, ({ newValue }) => {
-      element.value = newValue;
-    }).with({ value: null, newValue: P.nonNullable }, ({ newValue }) => {
-      element.value = Reference.fromPlain(newValue);
-    }).with({ value: P.nonNullable, newValue: P.nonNullable }, ({ newValue }) => {
-      element.value?.accept(this, newValue);
-    }).otherwise(() => {});
+    match(input)
+      .with(
+        {
+          value: P.any,
+          newValue: null,
+        },
+        ({ newValue }) => {
+          element.value = newValue;
+        },
+      )
+      .with({ value: null, newValue: P.nonNullable }, ({ newValue }) => {
+        element.value = Reference.fromPlain(newValue);
+      })
+      .with({ value: P.nonNullable, newValue: P.nonNullable }, ({ newValue }) => {
+        element.value?.accept(this, newValue);
+      })
+      .otherwise(() => {});
   }
 
   visitRelationshipElement(_element: RelationshipElement, _context: unknown): void {
-    throw new NotSupportedError(
-      "RelationshipElement is not supported.",
-    );
+    throw new NotSupportedError("RelationshipElement is not supported.");
   }
 
   visitResource(_element: Resource, _context: unknown): void {
-    throw new NotSupportedError(
-      "Resource is not supported.",
-    );
+    throw new NotSupportedError("Resource is not supported.");
   }
 
   visitSpecificAssetId(_element: SpecificAssetId, _context: unknown): void {
-    throw new NotSupportedError(
-      "SpecificAssetId is not supported.",
-    );
+    throw new NotSupportedError("SpecificAssetId is not supported.");
   }
 
   visitSubmodel(_element: Submodel, _context: unknown): void {
-    throw new NotSupportedError(
-      "Submodel is not supported.",
-    );
+    throw new NotSupportedError("Submodel is not supported.");
   }
 
   visitSubmodelElementCollection(element: SubmodelElementCollection, context: unknown): void {
     const parsed = z.record(z.string(), z.any()).parse(context);
 
     for (const [key, value] of Object.entries(parsed)) {
-      const foundElement = element.value.find(e => e.idShort === key);
+      const foundElement = element.value.find((e) => e.idShort === key);
       if (!foundElement) {
-        throw new ValueError(`Could not find element with idShort ${key} within submodel element collection ${element.idShort}.`);
+        throw new ValueError(
+          `Could not find element with idShort ${key} within submodel element collection ${element.idShort}.`,
+        );
       }
       foundElement.accept(this, value);
     }
@@ -194,7 +177,9 @@ export class ValueModifierVisitor implements IVisitor<unknown, void> {
     for (const [index, row] of parsed.entries()) {
       const target = element.value[index];
       if (!target) {
-        throw new ValueError(`List index ${index} is out of bounds for submodel element list ${element.idShort}.`);
+        throw new ValueError(
+          `List index ${index} is out of bounds for submodel element list ${element.idShort}.`,
+        );
       }
       target.accept(this, row);
     }

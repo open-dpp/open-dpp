@@ -20,9 +20,9 @@ export class OpenDppEvent extends TraceabilityEvent {
     chargeId?: string | null | undefined;
     geolocation?:
       | {
-        latitude: string;
-        longitude: string;
-      }
+          latitude: string;
+          longitude: string;
+        }
       | null
       | undefined;
   }): TraceabilityEventWrapper<OpenDppEvent> {

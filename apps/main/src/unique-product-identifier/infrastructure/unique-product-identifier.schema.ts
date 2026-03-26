@@ -5,8 +5,8 @@ export const UniqueProductIdentifierSchemaVersion = {
   v1_0_0: "1.0.0",
 } as const;
 
-export type UniqueProductIdentifierSchemaVersion_TYPE
-  = (typeof UniqueProductIdentifierSchemaVersion)[keyof typeof UniqueProductIdentifierSchemaVersion];
+export type UniqueProductIdentifierSchemaVersion_TYPE =
+  (typeof UniqueProductIdentifierSchemaVersion)[keyof typeof UniqueProductIdentifierSchemaVersion];
 
 @Schema({
   collection: "unique_product_identifiers",

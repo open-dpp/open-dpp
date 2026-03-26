@@ -6,12 +6,8 @@ import { BrandingRepository } from "./infrastructure/branding.repository";
 import { BrandingController } from "./presentation/branding.controller";
 
 @Module({
-  imports: [
-    AasModule,
-    OrganizationsModule,
-    EnvModule,
-  ],
+  imports: [AasModule, OrganizationsModule, EnvModule],
   controllers: [BrandingController],
   providers: [BrandingRepository],
 })
-export class BrandingModule { }
+export class BrandingModule {}

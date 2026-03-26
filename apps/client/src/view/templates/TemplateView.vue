@@ -6,7 +6,7 @@ import { AasEditMode } from "../../lib/aas-editor.ts";
 
 const route = useRoute();
 
-const id = computed(() => route.params.templateId ? String(route.params.templateId) : undefined);
+const id = computed(() => (route.params.templateId ? String(route.params.templateId) : undefined));
 </script>
 
 <template>

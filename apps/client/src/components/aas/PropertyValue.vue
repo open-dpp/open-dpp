@@ -43,18 +43,11 @@ const NUMERIC_TYPES = new Set<DataTypeDefType>([
   DataTypeDef.Decimal,
 ]);
 
-const DATE_TYPES = new Set<DataTypeDefType>([
-  DataTypeDef.Date,
-  DataTypeDef.DateTime,
-]);
+const DATE_TYPES = new Set<DataTypeDefType>([DataTypeDef.Date, DataTypeDef.DateTime]);
 
-const isNumeric = computed(() =>
-  props.valueType ? NUMERIC_TYPES.has(props.valueType) : false,
-);
+const isNumeric = computed(() => (props.valueType ? NUMERIC_TYPES.has(props.valueType) : false));
 
-const isDate = computed(() =>
-  props.valueType ? DATE_TYPES.has(props.valueType) : false,
-);
+const isDate = computed(() => (props.valueType ? DATE_TYPES.has(props.valueType) : false));
 
 const maxFractionDigits = computed(() =>
   props.valueType && INTEGER_TYPES.has(props.valueType) ? 0 : 5,
@@ -64,18 +57,16 @@ const numericValue = computed({
   get: () => {
     try {
       return z.coerce.number().nullish().parse(props.modelValue);
-    }
-    catch {
+    } catch {
       return null;
     }
   },
-  set: v => emit("update:modelValue", z.coerce.string().nullish().parse(v)),
+  set: (v) => emit("update:modelValue", z.coerce.string().nullish().parse(v)),
 });
 
 const dateValue = computed({
   get: () => {
-    if (!props.modelValue)
-      return null;
+    if (!props.modelValue) return null;
     const parsed = dayjs(props.modelValue);
     return parsed.isValid() ? parsed.toDate() : null;
   },

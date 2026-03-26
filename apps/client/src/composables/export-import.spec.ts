@@ -48,7 +48,7 @@ describe("useExportImport", () => {
         click: clickSpy,
         remove: removeSpy,
       } as unknown as HTMLElement);
-      vi.spyOn(document.body, "appendChild").mockImplementation(node => node);
+      vi.spyOn(document.body, "appendChild").mockImplementation((node) => node);
 
       const { exportItem } = useExportImport(defaultOptions);
       await exportItem("abc-123");
@@ -81,10 +81,12 @@ describe("useExportImport", () => {
       vi.spyOn(document, "createElement").mockReturnValue({
         href: "",
         setAttribute: vi.fn(),
-        click: vi.fn(() => { throw new Error("click failed"); }),
+        click: vi.fn(() => {
+          throw new Error("click failed");
+        }),
         remove: vi.fn(),
       } as unknown as HTMLElement);
-      vi.spyOn(document.body, "appendChild").mockImplementation(node => node);
+      vi.spyOn(document.body, "appendChild").mockImplementation((node) => node);
 
       const { exportItem } = useExportImport(defaultOptions);
       await exportItem("abc-123");
@@ -96,7 +98,10 @@ describe("useExportImport", () => {
   describe("onFileSelect", () => {
     function createFileSelectEvent(content: string): FileUploadSelectEvent {
       const file = { text: () => Promise.resolve(content) };
-      return { files: [file], originalEvent: new Event("select") } as unknown as FileUploadSelectEvent;
+      return {
+        files: [file],
+        originalEvent: new Event("select"),
+      } as unknown as FileUploadSelectEvent;
     }
 
     it("should parse file and call importFn", async () => {
@@ -146,7 +151,10 @@ describe("useExportImport", () => {
 
       await onFileSelect(event);
 
-      expect(logErrorWithNotification).toHaveBeenCalledWith("common.importFailed", expect.any(SyntaxError));
+      expect(logErrorWithNotification).toHaveBeenCalledWith(
+        "common.importFailed",
+        expect.any(SyntaxError),
+      );
       expect(importFn).not.toHaveBeenCalled();
     });
 
@@ -154,10 +162,13 @@ describe("useExportImport", () => {
       { json: "[1,2]", expectedType: "an array" },
       { json: "null", expectedType: "null" },
       { json: "42", expectedType: "number" },
-      { json: "\"hello\"", expectedType: "string" },
+      { json: '"hello"', expectedType: "string" },
     ])("should reject valid JSON that is $expectedType", async ({ json, expectedType }) => {
       const file = { name: "bad.json", text: () => Promise.resolve(json) };
-      const event = { files: [file], originalEvent: new Event("select") } as unknown as FileUploadSelectEvent;
+      const event = {
+        files: [file],
+        originalEvent: new Event("select"),
+      } as unknown as FileUploadSelectEvent;
 
       const { onFileSelect } = useExportImport(defaultOptions);
       await onFileSelect(event);
@@ -173,9 +184,12 @@ describe("useExportImport", () => {
 
     it("should reject concurrent imports", async () => {
       let resolveImport: () => void;
-      importFn.mockImplementation(() => new Promise<void>((resolve) => {
-        resolveImport = resolve;
-      }));
+      importFn.mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveImport = resolve;
+          }),
+      );
 
       const { onFileSelect, importing } = useExportImport(defaultOptions);
       const event = createFileSelectEvent(JSON.stringify({ data: "test" }));
@@ -193,7 +207,10 @@ describe("useExportImport", () => {
 
     it("should do nothing when no file is selected", async () => {
       const { onFileSelect } = useExportImport(defaultOptions);
-      const event = { files: [], originalEvent: new Event("select") } as unknown as FileUploadSelectEvent;
+      const event = {
+        files: [],
+        originalEvent: new Event("select"),
+      } as unknown as FileUploadSelectEvent;
 
       await onFileSelect(event);
 

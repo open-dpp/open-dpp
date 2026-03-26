@@ -66,7 +66,9 @@ describe("export submodel value", () => {
     });
 
     const expandedEnvironment = ExpandedEnvironment.fromLoaded([], [submodel], []);
-    (environmentService.loadExpandedEnvironment as jest.Mock).mockResolvedValue(expandedEnvironment);
+    (environmentService.loadExpandedEnvironment as jest.Mock).mockResolvedValue(
+      expandedEnvironment,
+    );
 
     const exportResult = await aasSerializationService.exportPassport(passport);
     const exportedElement = exportResult.environment.submodels[0].submodelElements[0];
@@ -105,7 +107,9 @@ describe("export submodel value", () => {
     });
 
     const expandedEnvironment = ExpandedEnvironment.fromLoaded([], [submodel], []);
-    (environmentService.loadExpandedEnvironment as jest.Mock).mockResolvedValue(expandedEnvironment);
+    (environmentService.loadExpandedEnvironment as jest.Mock).mockResolvedValue(
+      expandedEnvironment,
+    );
 
     const exportResult = await aasSerializationService.exportPassport(passport);
     const exportedCollection = exportResult.environment.submodels[0].submodelElements[0] as any;
@@ -140,7 +144,9 @@ describe("export submodel value", () => {
     });
 
     const expandedEnvironment = ExpandedEnvironment.fromLoaded([], [submodel], []);
-    (environmentService.loadExpandedEnvironment as jest.Mock).mockResolvedValue(expandedEnvironment);
+    (environmentService.loadExpandedEnvironment as jest.Mock).mockResolvedValue(
+      expandedEnvironment,
+    );
 
     const exportResult = await aasSerializationService.exportPassport(passport);
     const exportedElement = exportResult.environment.submodels[0].submodelElements[0];

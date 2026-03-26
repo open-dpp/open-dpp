@@ -13,12 +13,11 @@ const { content } = defineProps<{
 
 const columns = computed(() => {
   if (content.length >= 1 && content[0] && content[0].value) {
-    return content[0].value.map(collectionElement => ({
+    return content[0].value.map((collectionElement) => ({
       header: useDisplayName(collectionElement.displayName).description.value,
       field: collectionElement.idShort,
     }));
-  }
-  else {
+  } else {
     return [];
   }
 });
@@ -30,11 +29,7 @@ const rows = computed(() => {
       const row = content[rowIndex];
       if (row && row.value) {
         const rowRecord: Record<string, SubmodelElementRequestDto> = {};
-        for (
-          let columnIndex = 0;
-          columnIndex < row.value.length;
-          columnIndex++
-        ) {
+        for (let columnIndex = 0; columnIndex < row.value.length; columnIndex++) {
           const key = columns.value[columnIndex]?.field;
           const value = row.value[columnIndex];
           if (key && value) {
@@ -53,12 +48,7 @@ const rows = computed(() => {
 
 <template>
   <DataTable :value="rows">
-    <Column
-      v-for="col of columns"
-      :key="col.field"
-      :field="col.field"
-      :header="col.header"
-    >
+    <Column v-for="col of columns" :key="col.field" :field="col.field" :header="col.header">
       <template #body="slotProps">
         <SubmodelElementValue :element="slotProps.data[col.field]" />
       </template>

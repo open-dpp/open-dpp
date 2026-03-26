@@ -11,12 +11,8 @@ import Submodel from "./Submodel.vue";
 const passportStore = usePassportStore();
 const route = useRoute();
 
-const {
-  submodelTree,
-  submodelTreeDepth,
-  mapTreeElementsToSubmodels,
-  findTreeElementById,
-} = useSubmodelTree(passportStore.submodels);
+const { submodelTree, submodelTreeDepth, mapTreeElementsToSubmodels, findTreeElementById } =
+  useSubmodelTree(passportStore.submodels);
 
 const submodels = computed(() => {
   const submodelIdFromQuery = route.query.submodelid;
@@ -39,15 +35,15 @@ const submodels = computed(() => {
 </script>
 
 <template>
-  <div class="w-full my-10 flex flex-row gap-10">
+  <div class="my-10 flex w-full flex-row gap-10">
     <div
       v-if="submodelTreeDepth > 1"
-      class="bg-white shadow-sm px-6 py-4 min-w-48 hidden md:flex md:sticky md:top-40 self-start max-h-[calc(100vh-5rem)] overflow-y-auto"
+      class="hidden max-h-[calc(100vh-5rem)] min-w-48 self-start overflow-y-auto bg-white px-6 py-4 shadow-sm md:sticky md:top-40 md:flex"
     >
       <Sidebar data-cy="sidebar" />
     </div>
-    <div data-cy="content" class="flex flex-col gap-5 w-full relative">
-      <div class="px-6 flex md:hidden">
+    <div data-cy="content" class="relative flex w-full flex-col gap-5">
+      <div class="flex px-6 md:hidden">
         <Breadcrumbs />
       </div>
       <PassportHeader />

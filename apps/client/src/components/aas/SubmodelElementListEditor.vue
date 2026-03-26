@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import type { SubmodelElementListModificationDto } from "@open-dpp/dto";
 import type { SubmodelElementListEditorProps } from "../../composables/aas-drawer.ts";
-import type {
-  ColumnMenuOptions,
-  RowMenuOptions,
-} from "../../composables/aas-table-extension.ts";
+import type { ColumnMenuOptions, RowMenuOptions } from "../../composables/aas-table-extension.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { AasSubmodelElements, DataTypeDef } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
@@ -23,12 +20,9 @@ import LinkCellField from "./LinkCellField.vue";
 import PropertyValue from "./PropertyValue.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
-const props
-  = defineProps<
-    SharedEditorProps<
-      SubmodelElementListEditorProps,
-      SubmodelElementListModificationDto
-    >
+const props =
+  defineProps<
+    SharedEditorProps<SubmodelElementListEditorProps, SubmodelElementListModificationDto>
   >();
 
 const columnMenuPopover = ref();
@@ -83,12 +77,8 @@ async function submit() {
   await handleSubmit(async (data) => {
     try {
       await save();
-    }
-    catch (e) {
-      props.errorHandlingStore.logErrorWithNotification(
-        t("aasEditor.table.errorEditEntries"),
-        e,
-      );
+    } catch (e) {
+      props.errorHandlingStore.logErrorWithNotification(t("aasEditor.table.errorEditEntries"), e);
     }
     await props.callback({ ...data });
   })();
@@ -110,12 +100,7 @@ function toggleColumnMenu(event: any, options: ColumnMenuOptions) {
   columnMenuPopover.value.toggle(event);
 }
 
-function onFileChange(
-  value: string | undefined,
-  cellData: any,
-  rowIndex: number,
-  field: string,
-) {
+function onFileChange(value: string | undefined, cellData: any, rowIndex: number, field: string) {
   onCellEditComplete({
     data: cellData,
     newValue: value ?? null,
@@ -124,10 +109,7 @@ function onFileChange(
   });
 }
 onErrorCaptured((err) => {
-  props.errorHandlingStore.logErrorWithNotification(
-    t("common.errorOccurred"),
-    err,
-  );
+  props.errorHandlingStore.logErrorWithNotification(t("common.errorOccurred"), err);
   return false; // stops error from bubbling further
 });
 </script>
@@ -135,11 +117,7 @@ onErrorCaptured((err) => {
 <template>
   <div class="flex flex-col gap-1 p-2">
     <FormContainer>
-      <SubmodelBaseForm
-        :show-errors="showErrors"
-        :errors="errors"
-        :editor-mode="EditorMode.EDIT"
-      />
+      <SubmodelBaseForm :show-errors="showErrors" :errors="errors" :editor-mode="EditorMode.EDIT" />
     </FormContainer>
     <DataTable
       scrollable
@@ -158,9 +136,7 @@ onErrorCaptured((err) => {
     >
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <span class="text-xl font-bold">{{
-            t("aasEditor.table.entries")
-          }}</span>
+          <span class="text-xl font-bold">{{ t("aasEditor.table.entries") }}</span>
           <Button
             :label="t('aasEditor.table.addColumnEnd')"
             @click="toggleColumnMenu($event, { position: columns.length })"
@@ -170,7 +146,7 @@ onErrorCaptured((err) => {
       <Column style="width: 10px" frozen class="font-bold">
         <template #body="{ index }">
           <div class="flex">
-            <div class="flex items-center rounded-md gap-2">
+            <div class="flex items-center gap-2 rounded-md">
               <Button
                 icon="pi pi-ellipsis-v"
                 severity="secondary"
@@ -181,11 +157,7 @@ onErrorCaptured((err) => {
           </div>
         </template>
       </Column>
-      <Column
-        v-for="(col, index) of columns"
-        :key="col.idShort"
-        :field="col.idShort"
-      >
+      <Column v-for="(col, index) of columns" :key="col.idShort" :field="col.idShort">
         <template #header>
           <Button
             icon="pi pi-ellipsis-v"
@@ -205,41 +177,39 @@ onErrorCaptured((err) => {
           <div v-else>
             <FileField
               v-if="
-                col.plain.modelType === AasSubmodelElements.File
-                  && rowsContext[rowIndex] != null
-                  && rowsContext[rowIndex][field] != null
+                col.plain.modelType === AasSubmodelElements.File &&
+                rowsContext[rowIndex] != null &&
+                rowsContext[rowIndex][field] != null
               "
               :id="`${rowIndex}-${field}`"
               v-model:content-type="rowsContext[rowIndex][field].contentType"
               :model-value="cellData[field]"
-              @update:model-value="
-                (value) => onFileChange(value, cellData, rowIndex, field)
-              "
+              @update:model-value="(value) => onFileChange(value, cellData, rowIndex, field)"
             />
             <PropertyValue
               v-else-if="
-                col.plain.modelType === AasSubmodelElements.Property
-                  && (col.plain.valueType === DataTypeDef.Date
-                    || col.plain.valueType === DataTypeDef.DateTime)
+                col.plain.modelType === AasSubmodelElements.Property &&
+                (col.plain.valueType === DataTypeDef.Date ||
+                  col.plain.valueType === DataTypeDef.DateTime)
               "
               :id="`${rowIndex}-${field}`"
               :model-value="cellData[field]"
               :value-type="col.plain.valueType"
               @update:model-value="
-                (value) => onCellEditComplete({
-                  data: cellData,
-                  newValue: value ?? null,
-                  field,
-                  index: rowIndex,
-                })
+                (value) =>
+                  onCellEditComplete({
+                    data: cellData,
+                    newValue: value ?? null,
+                    field,
+                    index: rowIndex,
+                  })
               "
             />
             <span
               v-else-if="
-                (col.plain.modelType === AasSubmodelElements.Property
-                  || col.plain.modelType
-                    === AasSubmodelElements.ReferenceElement)
-                  && cellData[field] != null
+                (col.plain.modelType === AasSubmodelElements.Property ||
+                  col.plain.modelType === AasSubmodelElements.ReferenceElement) &&
+                cellData[field] != null
               "
             >
               {{ formatCellValue(cellData[field], col) }}
@@ -249,10 +219,12 @@ onErrorCaptured((err) => {
         </template>
         <template
           v-if="
-            col.plain.modelType !== AasSubmodelElements.File
-              && !(col.plain.modelType === AasSubmodelElements.Property
-                && (col.plain.valueType === DataTypeDef.Date
-                  || col.plain.valueType === DataTypeDef.DateTime))
+            col.plain.modelType !== AasSubmodelElements.File &&
+            !(
+              col.plain.modelType === AasSubmodelElements.Property &&
+              (col.plain.valueType === DataTypeDef.Date ||
+                col.plain.valueType === DataTypeDef.DateTime)
+            )
           "
           #editor="{ data: editorData, field, index: rowIndex }"
         >
@@ -263,9 +235,7 @@ onErrorCaptured((err) => {
             :value-type="col.plain.valueType"
           />
           <LinkCellField
-            v-else-if="
-              col.plain.modelType === AasSubmodelElements.ReferenceElement
-            "
+            v-else-if="col.plain.modelType === AasSubmodelElements.ReferenceElement"
             :id="`${rowIndex}-${field}`"
             v-model="editorData[field]"
           />

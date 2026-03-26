@@ -25,25 +25,16 @@ const linkTarget = computed(() => {
 
 const { description: name } = useDisplayName(treeElement.name);
 
-const levelToPadding = [
-  "pl-0",
-  "pl-2",
-  "pl-4",
-  "pl-6",
-  "pl-8",
-  "pl-10",
-];
+const levelToPadding = ["pl-0", "pl-2", "pl-4", "pl-6", "pl-8", "pl-10"];
 
-const paddingClass = computed(
-  () => levelToPadding[Math.min(level, levelToPadding.length - 1)],
-);
+const paddingClass = computed(() => levelToPadding[Math.min(level, levelToPadding.length - 1)]);
 </script>
 
 <template>
   <li :class="[paddingClass]">
     <router-link
       :to="linkTarget"
-      class="text-gray-700 hover:bg-gray-50 hover:text-indigo-600 group flex gap-x-3 rounded-md p-2 pl-3 text-sm/6 font-semibold"
+      class="group flex gap-x-3 rounded-md p-2 pl-3 text-sm/6 font-semibold text-gray-700 hover:bg-gray-50 hover:text-indigo-600"
     >
       {{ name }}
     </router-link>

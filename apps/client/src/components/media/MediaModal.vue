@@ -28,19 +28,17 @@ async function uploadFile() {
   try {
     await mediaStore.uploadMedia(
       selectedLocalFile.value,
-      progress => (uploadProgress.value = progress),
+      (progress) => (uploadProgress.value = progress),
     );
     notificationStore.addSuccessNotification("Datei erfolgreich hochgeladen.");
     await mediaStore.fetchMediaByOrganizationId();
-  }
-  catch (error: unknown) {
+  } catch (error: unknown) {
     console.error("Fehler beim Hochladen der Datei:", error);
     notificationStore.addErrorNotification(
       "Beim Hochladen der Datei ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut.",
     );
     selectedFile.value = null;
-  }
-  finally {
+  } finally {
     uploadProgress.value = 0;
   }
 }
@@ -49,8 +47,7 @@ async function onFileSelect(event: FileUploadSelectEvent) {
   if (event.files && event.files.length > 0) {
     selectedLocalFile.value = event.files[0] as File;
     await uploadFile();
-  }
-  else {
+  } else {
     selectedLocalFile.value = null;
   }
 }
@@ -68,12 +65,7 @@ watch(
 </script>
 
 <template>
-  <Dialog
-    v-model:visible="open"
-    modal
-    class="w-3/4"
-    @mousedown.stop
-  >
+  <Dialog v-model:visible="open" modal class="w-3/4" @mousedown.stop>
     <template #header>
       <span class="text-xl font-bold">{{ t("file.select") }}</span>
       <FileUpload
@@ -85,7 +77,7 @@ watch(
         @select="onFileSelect"
       />
     </template>
-    <div class="px-4 py-2 sm:px-6 sm:py-4 max-h-[60vh] overflow-y-auto">
+    <div class="max-h-[60vh] overflow-y-auto px-4 py-2 sm:px-6 sm:py-4">
       <MediaGrid
         :multiple="false"
         :selected="selected"
@@ -107,6 +99,6 @@ watch(
         @click="emits('confirm', selected)"
       />
     </template>
-    <div class="mt-5 sm:mt-4 flex flex-row gap-2 justify-end" />
+    <div class="mt-5 flex flex-row justify-end gap-2 sm:mt-4" />
   </Dialog>
 </template>

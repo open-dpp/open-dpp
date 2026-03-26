@@ -21,7 +21,11 @@ describe("pagination", () => {
       nextPage,
       currentPage,
       reloadCurrentPage,
-    } = usePagination({ limit: 2, fetchCallback: params => fetchCallback(params, items), changeQueryParams });
+    } = usePagination({
+      limit: 2,
+      fetchCallback: (params) => fetchCallback(params, items),
+      changeQueryParams,
+    });
 
     const firstPageExpect: Page = {
       cursor: null,
@@ -96,11 +100,12 @@ describe("pagination", () => {
   it("should navigate from initial cursor onwards", async () => {
     const items = [0, 1, 2, 3, 4, 5, 6];
 
-    const {
-      nextPage,
-      currentPage,
-      resetCursor,
-    } = usePagination({ initialCursor: "3", limit: 2, fetchCallback: params => fetchCallback(params, items), changeQueryParams });
+    const { nextPage, currentPage, resetCursor } = usePagination({
+      initialCursor: "3",
+      limit: 2,
+      fetchCallback: (params) => fetchCallback(params, items),
+      changeQueryParams,
+    });
 
     const pageAfterReset = {
       cursor: null,

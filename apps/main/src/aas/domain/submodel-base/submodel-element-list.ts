@@ -1,4 +1,9 @@
-import { AasSubmodelElements, AasSubmodelElementsType, DataTypeDefType, SubmodelElementListJsonSchema } from "@open-dpp/dto";
+import {
+  AasSubmodelElements,
+  AasSubmodelElementsType,
+  DataTypeDefType,
+  SubmodelElementListJsonSchema,
+} from "@open-dpp/dto";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -55,14 +60,16 @@ export class SubmodelElementList implements ISubmodelElement {
     return this._description;
   }
 
-  static create(data: SubmodelBaseProps & {
-    typeValueListElement: AasSubmodelElementsType;
-    extensions?: Array<Extension>;
-    orderRelevant?: boolean | null;
-    semanticIdListElement?: Reference | null;
-    valueTypeListElement?: DataTypeDefType | null;
-    value?: Array<ISubmodelElement>;
-  }) {
+  static create(
+    data: SubmodelBaseProps & {
+      typeValueListElement: AasSubmodelElementsType;
+      extensions?: Array<Extension>;
+      orderRelevant?: boolean | null;
+      semanticIdListElement?: Reference | null;
+      valueTypeListElement?: DataTypeDefType | null;
+      value?: Array<ISubmodelElement>;
+    },
+  ) {
     return new SubmodelElementList(
       data.typeValueListElement,
       data.extensions ?? [],
@@ -116,17 +123,18 @@ export class SubmodelElementList implements ISubmodelElement {
   }
 
   addSubmodelElement(submodelElement: ISubmodelElement, options?: AddOptions): ISubmodelElement {
-    if (this.value.some(s => s.idShort === submodelElement.idShort)) {
+    if (this.value.some((s) => s.idShort === submodelElement.idShort)) {
       throw new Error(`Submodel element with idShort ${submodelElement.idShort} already exists`);
     }
     if (submodelElement.getSubmodelElementType() !== this.typeValueListElement) {
-      throw new Error(`Submodel element type ${submodelElement.getSubmodelElementType()} does not match list type ${this.typeValueListElement}`);
+      throw new Error(
+        `Submodel element type ${submodelElement.getSubmodelElementType()} does not match list type ${this.typeValueListElement}`,
+      );
     }
 
     if (options?.position !== undefined) {
       this.value.splice(options.position, 0, submodelElement);
-    }
-    else {
+    } else {
       this.value.push(submodelElement);
     }
     return submodelElement;

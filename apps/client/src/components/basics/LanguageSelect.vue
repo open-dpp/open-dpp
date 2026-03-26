@@ -12,7 +12,7 @@ const languageOptions = computed(() => {
   return [
     { name: t("languages.english"), language: Language.en },
     { name: t("languages.german"), language: Language.de },
-  ].filter(option => !props.ignoreOptions.includes(option.language));
+  ].filter((option) => !props.ignoreOptions.includes(option.language));
 });
 </script>
 

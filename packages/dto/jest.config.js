@@ -1,13 +1,13 @@
 export default {
-  testRegex: '.*\\.spec\\.ts$',
+  testRegex: ".*\\.spec\\.ts$",
   transform: {
-    '^.+\\.(t|j)s$': [
-      '@swc/jest',
+    "^.+\\.(t|j)s$": [
+      "@swc/jest",
       {
         jsc: {
-          target: 'es2022',
+          target: "es2022",
           parser: {
-            syntax: 'typescript',
+            syntax: "typescript",
             decorators: true,
           },
           transform: {
@@ -15,10 +15,10 @@ export default {
           },
         },
         module: {
-          type: 'commonjs',
+          type: "commonjs",
         },
       },
     ],
   },
-  testEnvironment: 'node',
-}
+  testEnvironment: "node",
+};

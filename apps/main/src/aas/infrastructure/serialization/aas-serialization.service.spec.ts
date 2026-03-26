@@ -23,15 +23,20 @@ import {
   AssetAdministrationShellDoc,
   AssetAdministrationShellSchema,
 } from "../schemas/asset-administration-shell.schema";
-import { ConceptDescriptionDoc, ConceptDescriptionSchema } from "../schemas/concept-description.schema";
+import {
+  ConceptDescriptionDoc,
+  ConceptDescriptionSchema,
+} from "../schemas/concept-description.schema";
 import { SubmodelDoc, SubmodelSchema } from "../schemas/submodel.schema";
 import { SubmodelRepository } from "../submodel.repository";
 import { AasSerializationService } from "./aas-serialization.service";
 
-function buildExportData(overrides: {
-  defaultThumbnails?: Array<{ path: string; contentType: string | null }>;
-  submodelElements?: any[];
-} = {}) {
+function buildExportData(
+  overrides: {
+    defaultThumbnails?: Array<{ path: string; contentType: string | null }>;
+    submodelElements?: any[];
+  } = {},
+) {
   return {
     id: randomUUID(),
     format: "open-dpp:json",
@@ -199,7 +204,9 @@ describe("aasSerializationService", () => {
       const passport = await aasSerializationService.importPassport(
         data,
         orgId,
-        async (p, options) => { await passportRepository.save(p, options); },
+        async (p, options) => {
+          await passportRepository.save(p, options);
+        },
       );
 
       expect(passport).toBeDefined();
@@ -212,14 +219,14 @@ describe("aasSerializationService", () => {
         defaultThumbnails: [{ path: mediaId, contentType: "image/webp" }],
       });
 
-      mockMediaService.findByIds.mockResolvedValue([
-        createMockMedia(mediaId, orgId),
-      ]);
+      mockMediaService.findByIds.mockResolvedValue([createMockMedia(mediaId, orgId)]);
 
       const passport = await aasSerializationService.importPassport(
         data,
         orgId,
-        async (p, options) => { await passportRepository.save(p, options); },
+        async (p, options) => {
+          await passportRepository.save(p, options);
+        },
       );
 
       expect(passport).toBeDefined();
@@ -232,20 +239,22 @@ describe("aasSerializationService", () => {
         defaultThumbnails: [{ path: mediaId, contentType: "image/webp" }],
       });
 
-      mockMediaService.findByIds.mockResolvedValue([
-        createMockMedia(mediaId, "other-org"),
-      ]);
+      mockMediaService.findByIds.mockResolvedValue([createMockMedia(mediaId, "other-org")]);
 
       const passport = await aasSerializationService.importPassport(
         data,
         orgId,
-        async (p, options) => { await passportRepository.save(p, options); },
+        async (p, options) => {
+          await passportRepository.save(p, options);
+        },
       );
 
       expect(passport).toBeDefined();
       const loaded = await passportRepository.findOneOrFail(passport!.id);
       const exported = await aasSerializationService.exportPassport(loaded);
-      expect(exported.environment.assetAdministrationShells[0].assetInformation.defaultThumbnails).toEqual([]);
+      expect(
+        exported.environment.assetAdministrationShells[0].assetInformation.defaultThumbnails,
+      ).toEqual([]);
     });
 
     it("should allow import when media ID does not exist in database", async () => {
@@ -259,7 +268,9 @@ describe("aasSerializationService", () => {
       const passport = await aasSerializationService.importPassport(
         data,
         orgId,
-        async (p, options) => { await passportRepository.save(p, options); },
+        async (p, options) => {
+          await passportRepository.save(p, options);
+        },
       );
 
       expect(passport).toBeDefined();
@@ -286,14 +297,14 @@ describe("aasSerializationService", () => {
         ],
       });
 
-      mockMediaService.findByIds.mockResolvedValue([
-        createMockMedia(fileMediaId, "other-org"),
-      ]);
+      mockMediaService.findByIds.mockResolvedValue([createMockMedia(fileMediaId, "other-org")]);
 
       const passport = await aasSerializationService.importPassport(
         data,
         orgId,
-        async (p, options) => { await passportRepository.save(p, options); },
+        async (p, options) => {
+          await passportRepository.save(p, options);
+        },
       );
 
       expect(passport).toBeDefined();
@@ -325,7 +336,9 @@ describe("aasSerializationService", () => {
       const passport = await aasSerializationService.importPassport(
         data,
         orgId,
-        async (p, options) => { await passportRepository.save(p, options); },
+        async (p, options) => {
+          await passportRepository.save(p, options);
+        },
       );
 
       const importedSubmodelIds = passport.environment.submodels;
@@ -348,7 +361,9 @@ describe("aasSerializationService", () => {
       const passport = await aasSerializationService.importPassport(
         data,
         orgId,
-        async (p, options) => { await passportRepository.save(p, options); },
+        async (p, options) => {
+          await passportRepository.save(p, options);
+        },
       );
 
       const loaded = await passportRepository.findOneOrFail(passport.id);
@@ -371,14 +386,14 @@ describe("aasSerializationService", () => {
         defaultThumbnails: [{ path: mediaId, contentType: "image/webp" }],
       });
 
-      mockMediaService.findByIds.mockResolvedValue([
-        createMockMedia(mediaId, orgId),
-      ]);
+      mockMediaService.findByIds.mockResolvedValue([createMockMedia(mediaId, orgId)]);
 
       const template = await aasSerializationService.importTemplate(
         data,
         orgId,
-        async (t, options) => { await templateRepository.save(t, options); },
+        async (t, options) => {
+          await templateRepository.save(t, options);
+        },
       );
 
       expect(template).toBeDefined();
@@ -390,20 +405,22 @@ describe("aasSerializationService", () => {
         defaultThumbnails: [{ path: mediaId, contentType: "image/webp" }],
       });
 
-      mockMediaService.findByIds.mockResolvedValue([
-        createMockMedia(mediaId, "other-org"),
-      ]);
+      mockMediaService.findByIds.mockResolvedValue([createMockMedia(mediaId, "other-org")]);
 
       const template = await aasSerializationService.importTemplate(
         data,
         orgId,
-        async (t, options) => { await templateRepository.save(t, options); },
+        async (t, options) => {
+          await templateRepository.save(t, options);
+        },
       );
 
       expect(template).toBeDefined();
       const loaded = await templateRepository.findOneOrFail(template.id);
       const exported = await aasSerializationService.exportTemplate(loaded);
-      expect(exported.environment.assetAdministrationShells[0].assetInformation.defaultThumbnails).toEqual([]);
+      expect(
+        exported.environment.assetAdministrationShells[0].assetInformation.defaultThumbnails,
+      ).toEqual([]);
     });
   });
 

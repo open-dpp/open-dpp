@@ -3,23 +3,22 @@ import { OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
 import { createDocument } from "zod-openapi";
 import { aasPaths } from "./aas.paths";
 
-const document
-  = createDocument({
-    openapi: "3.1.0",
-    info: {
-      title: "open-dpp API",
-      version: "1.0.0",
+const document = createDocument({
+  openapi: "3.1.0",
+  info: {
+    title: "open-dpp API",
+    version: "1.0.0",
+  },
+  servers: [
+    {
+      url: "http://localhost:3000/api",
+      description: "Local test server",
     },
-    servers: [
-      {
-        url: "http://localhost:3000/api",
-        description: "Local test server",
-      },
-    ],
-    paths: {
-      ...aasPaths,
-    },
-  });
+  ],
+  paths: {
+    ...aasPaths,
+  },
+});
 
 export function buildOpenApiDocumentation(): OpenAPIObject {
   return JSON.parse(JSON.stringify(document)) as unknown as OpenAPIObject;

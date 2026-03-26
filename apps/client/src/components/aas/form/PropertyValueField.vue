@@ -37,12 +37,7 @@ const { t } = useI18n();
       </FloatLabel>
       <slot name="addon-right" />
     </InputGroup>
-    <Message
-      v-if="props.showError && props.error"
-      size="small"
-      severity="error"
-      variant="simple"
-    >
+    <Message v-if="props.showError && props.error" size="small" severity="error" variant="simple">
       {{ props.error }}
     </Message>
   </div>

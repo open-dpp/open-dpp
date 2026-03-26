@@ -25,7 +25,7 @@ function useBrandingCommon(requestLogo: () => Promise<AxiosResponse<BrandingDto>
     }
   };
 
-  const src = computed(() => logo.value ? logo.value.url : "/api/branding/instance");
+  const src = computed(() => (logo.value ? logo.value.url : "/api/branding/instance"));
 
   const applyBranding = async () => {
     try {
@@ -41,17 +41,13 @@ function useBrandingCommon(requestLogo: () => Promise<AxiosResponse<BrandingDto>
           };
         }
       }
-    }
-    catch (error) {
-      errorHandlingStore.logErrorWithNotification(
-        t("presentation.loadPassportMediaError"),
-        error,
-      );
+    } catch (error) {
+      errorHandlingStore.logErrorWithNotification(t("presentation.loadPassportMediaError"), error);
     }
   };
 
   return { logo, src, applyBranding };
-};
+}
 
 export function useBranding() {
   const { src, applyBranding } = useBrandingCommon(async () => await apiClient.dpp.branding.get());
@@ -71,7 +67,9 @@ export function useBranding() {
 }
 
 export function useBrandingAnonymous(upi: Ref<string>) {
-  const { src, applyBranding } = useBrandingCommon(async () => apiClient.dpp.uniqueProductIdentifiers.getBranding(upi.value));
+  const { src, applyBranding } = useBrandingCommon(async () =>
+    apiClient.dpp.uniqueProductIdentifiers.getBranding(upi.value),
+  );
 
   watch(
     () => upi.value,

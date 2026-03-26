@@ -41,10 +41,7 @@ export const useMediaStore = defineStore("media", () => {
     return response.data;
   };
 
-  const downloadDppMedia = async (
-    uuid: string | undefined,
-    dataFieldId: string,
-  ): Promise<Blob> => {
+  const downloadDppMedia = async (uuid: string | undefined, dataFieldId: string): Promise<Blob> => {
     if (!uuid) {
       throw new Error("No UUID provided");
     }
@@ -65,26 +62,18 @@ export const useMediaStore = defineStore("media", () => {
 
   const downloadMedia = async (id: string): Promise<Blob | null> => {
     try {
-      const response = await apiClient.media.media.download(
-        id,
-      );
+      const response = await apiClient.media.media.download(id);
       if (response.status !== 200) {
         return null;
       }
       return response.data;
-    }
-    catch {
+    } catch {
       return null;
     }
   };
 
-  const fetchMedia = async (
-    id: string,
-  ): Promise<MediaResult> => {
-    const [info, blob] = await Promise.all([
-      getMediaInfo(id),
-      downloadMedia(id),
-    ]);
+  const fetchMedia = async (id: string): Promise<MediaResult> => {
+    const [info, blob] = await Promise.all([getMediaInfo(id), downloadMedia(id)]);
     return { blob, mediaInfo: info };
   };
 

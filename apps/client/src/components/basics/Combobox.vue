@@ -35,15 +35,10 @@ const queryOptions = computed(() => {
 <template>
   <Combobox v-model="selectedOption" as="div" @update:model-value="query = ''">
     <div
-      class="flex" :class="[
-        props.labelPosition === 'left'
-          ? 'flex-row items-center gap-2'
-          : 'flex-col gap-2',
-      ]"
+      class="flex"
+      :class="[props.labelPosition === 'left' ? 'flex-row items-center gap-2' : 'flex-col gap-2']"
     >
-      <ComboboxLabel
-        class="block text-sm/6 font-medium text-gray-900 dark:text-white'"
-      >
+      <ComboboxLabel class="dark:text-white' block text-sm/6 font-medium text-gray-900">
         {{ props.label }}
       </ComboboxLabel>
       <div class="relative">
@@ -76,7 +71,8 @@ const queryOptions = computed(() => {
               as="oldTemplate"
             >
               <li
-                class="relative cursor-default px-3 py-2 select-none" :class="[
+                class="relative cursor-default px-3 py-2 select-none"
+                :class="[
                   active
                     ? 'bg-indigo-600 text-white outline-hidden dark:bg-indigo-500'
                     : 'text-gray-900 dark:text-white',
@@ -95,7 +91,8 @@ const queryOptions = computed(() => {
               as="oldTemplate"
             >
               <li
-                class="relative cursor-default px-3 py-2 select-none" :class="[
+                class="relative cursor-default px-3 py-2 select-none"
+                :class="[
                   active
                     ? 'bg-indigo-600 text-white outline-hidden dark:bg-indigo-500'
                     : 'text-gray-900 dark:text-white',

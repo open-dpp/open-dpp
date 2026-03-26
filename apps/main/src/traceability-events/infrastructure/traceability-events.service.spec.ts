@@ -2,10 +2,7 @@ import type { TestingModule } from "@nestjs/testing";
 import type { Model } from "mongoose";
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
-import {
-  getModelToken,
-  MongooseModule,
-} from "@nestjs/mongoose";
+import { getModelToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { generateMongoConfig } from "../../database/config";
@@ -13,10 +10,7 @@ import { TraceabilityEventType } from "../domain/traceability-event-type.enum";
 import { TraceabilityEventWrapper } from "../domain/traceability-event-wrapper";
 import { OpenEpcisEvent } from "../modules/openepcis-events/domain/openepcis-event";
 import { UntpEvent } from "../modules/untp-events/domain/untp-event";
-import {
-  DppEventSchema,
-  TraceabilityEventDocument,
-} from "./traceability-event.document";
+import { DppEventSchema, TraceabilityEventDocument } from "./traceability-event.document";
 import { TraceabilityEventsService } from "./traceability-events.service";
 
 describe("traceabilityEventsService", () => {
@@ -333,7 +327,7 @@ describe("traceabilityEventsService", () => {
       expect(result[1].data.type).toBe(dataType);
 
       // Verify both events were found
-      const ids = result.map(event => event.id);
+      const ids = result.map((event) => event.id);
       expect(ids).toContain(id1);
       expect(ids).toContain(id2);
     });
@@ -363,23 +357,17 @@ describe("traceabilityEventsService", () => {
         await service.create(openDppEvent);
 
         // Assert
-        const savedDoc = await dppEventModel
-          .findOne({ _id: openDppEvent.id })
-          .exec();
+        const savedDoc = await dppEventModel.findOne({ _id: openDppEvent.id }).exec();
         expect(savedDoc).toBeDefined();
         if (savedDoc) {
           expect(savedDoc._id).toBe(openDppEvent.id);
           expect(savedDoc.data.type).toBe(TraceabilityEventType.OPEN_DPP);
 
           // Verify the document uses the correct discriminator
-          const retrievedEvents = await service.findByDataType(
-            TraceabilityEventType.OPEN_DPP,
-          );
+          const retrievedEvents = await service.findByDataType(TraceabilityEventType.OPEN_DPP);
           expect(retrievedEvents.length).toBeGreaterThanOrEqual(1);
           expect(retrievedEvents[0].id).toBe(savedDoc._id);
-          expect(retrievedEvents[0].data.type).toBe(
-            TraceabilityEventType.OPEN_DPP,
-          );
+          expect(retrievedEvents[0].data.type).toBe(TraceabilityEventType.OPEN_DPP);
         }
       });
     });
@@ -415,14 +403,10 @@ describe("traceabilityEventsService", () => {
           expect(savedDoc.data.type).toBe(TraceabilityEventType.OPENEPCIS);
 
           // Verify the document uses the correct discriminator
-          const retrievedEvents = await service.findByDataType(
-            TraceabilityEventType.OPENEPCIS,
-          );
+          const retrievedEvents = await service.findByDataType(TraceabilityEventType.OPENEPCIS);
           expect(retrievedEvents).toHaveLength(1);
           expect(retrievedEvents[0].id).toBe(id);
-          expect(retrievedEvents[0].data.type).toBe(
-            TraceabilityEventType.OPENEPCIS,
-          );
+          expect(retrievedEvents[0].data.type).toBe(TraceabilityEventType.OPENEPCIS);
         }
       });
 
@@ -468,14 +452,10 @@ describe("traceabilityEventsService", () => {
           await service.create(wrapper);
 
           // Assert
-          const retrievedEvents = await service.findByDataType(
-            TraceabilityEventType.OPENEPCIS,
-          );
+          const retrievedEvents = await service.findByDataType(TraceabilityEventType.OPENEPCIS);
 
           expect(retrievedEvents).toHaveLength(1);
-          expect(retrievedEvents[0].data.type).toBe(
-            TraceabilityEventType.OPENEPCIS,
-          );
+          expect(retrievedEvents[0].data.type).toBe(TraceabilityEventType.OPENEPCIS);
 
           // Cast to OpenEpcisEvent to access data property
           const retrievedEvent = retrievedEvents[0].data as OpenEpcisEvent;
@@ -511,9 +491,7 @@ describe("traceabilityEventsService", () => {
           expect(savedDoc.data.type).toBe(TraceabilityEventType.UNTP);
 
           // Verify the document uses the correct discriminator
-          const retrievedEvents = await service.findByDataType(
-            TraceabilityEventType.UNTP,
-          );
+          const retrievedEvents = await service.findByDataType(TraceabilityEventType.UNTP);
           expect(retrievedEvents).toHaveLength(1);
           expect(retrievedEvents[0].id).toBe(id);
           expect(retrievedEvents[0].data.type).toBe(TraceabilityEventType.UNTP);
@@ -563,9 +541,7 @@ describe("traceabilityEventsService", () => {
           await service.create(wrapper);
 
           // Assert
-          const retrievedEvents = await service.findByDataType(
-            TraceabilityEventType.UNTP,
-          );
+          const retrievedEvents = await service.findByDataType(TraceabilityEventType.UNTP);
 
           expect(retrievedEvents).toHaveLength(1);
           expect(retrievedEvents[0].data.type).toBe(TraceabilityEventType.UNTP);
@@ -614,27 +590,19 @@ describe("traceabilityEventsService", () => {
 
         // Act & Assert
         // Check OpenDpp events
-        const openDppEvents = await service.findByDataType(
-          TraceabilityEventType.OPEN_DPP,
-        );
+        const openDppEvents = await service.findByDataType(TraceabilityEventType.OPEN_DPP);
         expect(openDppEvents).toHaveLength(1);
         expect(openDppEvents[0].id).toBe(openDppId);
         expect(openDppEvents[0].data.type).toBe(TraceabilityEventType.OPEN_DPP);
 
         // Check Openepcis events
-        const openepcisEvents = await service.findByDataType(
-          TraceabilityEventType.OPENEPCIS,
-        );
+        const openepcisEvents = await service.findByDataType(TraceabilityEventType.OPENEPCIS);
         expect(openepcisEvents).toHaveLength(1);
         expect(openepcisEvents[0].id).toBe(openepcisId);
-        expect(openepcisEvents[0].data.type).toBe(
-          TraceabilityEventType.OPENEPCIS,
-        );
+        expect(openepcisEvents[0].data.type).toBe(TraceabilityEventType.OPENEPCIS);
 
         // Check Untp events
-        const untpEvents = await service.findByDataType(
-          TraceabilityEventType.UNTP,
-        );
+        const untpEvents = await service.findByDataType(TraceabilityEventType.UNTP);
         expect(untpEvents).toHaveLength(1);
         expect(untpEvents[0].id).toBe(untpId);
         expect(untpEvents[0].data.type).toBe(TraceabilityEventType.UNTP);

@@ -9,7 +9,7 @@ const notificationStore = useNotificationStore();
   <!-- Global notification live region, render this permanently at the end of the document -->
   <div
     aria-live="assertive"
-    class="pointer-events-none top-12 right-2 z-52 fixed inset-0 flex items-end px-4 py-6 sm:items-start sm:p-6"
+    class="pointer-events-none fixed inset-0 top-12 right-2 z-52 flex items-end px-4 py-6 sm:items-start sm:p-6"
   >
     <div class="flex w-full flex-col items-center space-y-4 sm:items-end">
       <!-- NotificationHandler panel, dynamically insert this into the live region when it needs to be displayed -->
@@ -23,7 +23,7 @@ const notificationStore = useNotificationStore();
       >
         <div
           v-if="notificationStore.notifications.length > 0"
-          class="flex flex-col w-full max-w-sm gap-4"
+          class="flex w-full max-w-sm flex-col gap-4"
         >
           <NotificationView
             v-for="notification in notificationStore.notifications"

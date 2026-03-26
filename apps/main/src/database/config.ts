@@ -36,8 +36,7 @@ export function generateMongoConfig(configService: EnvService) {
     return {
       uri,
     };
-  }
-  else {
+  } else {
     const host = configService.get("OPEN_DPP_MONGODB_HOST");
     const port = configService.get("OPEN_DPP_MONGODB_PORT");
     uri = `mongodb://${host}:${port}/`;

@@ -6,9 +6,7 @@ import { ConfigService } from "@nestjs/config";
 export class EnvService {
   private configService: ConfigService<Env, true>;
 
-  constructor(
-    configService: ConfigService,
-  ) {
+  constructor(configService: ConfigService) {
     this.configService = configService as unknown as ConfigService<Env, true>;
   }
 

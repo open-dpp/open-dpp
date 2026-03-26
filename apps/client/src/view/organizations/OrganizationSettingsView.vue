@@ -24,33 +24,23 @@ const nameInvalid = ref(false);
 const { applyBranding } = useBranding();
 
 async function save() {
-  if (!organization.value || !indexStore.selectedOrganization)
-    return;
+  if (!organization.value || !indexStore.selectedOrganization) return;
 
   try {
-    const result = await apiClient.dpp.organizations.update(
-      indexStore.selectedOrganization,
-      {
-        name: organization.value.name,
-        logo: organization.value.logo,
-      },
-    );
+    const result = await apiClient.dpp.organizations.update(indexStore.selectedOrganization, {
+      name: organization.value.name,
+      logo: organization.value.logo,
+    });
 
     nameInvalid.value = false;
     organization.value = result.data;
 
     await organizationStore.fetchOrganizations();
     await applyBranding();
-    notificationStore.addSuccessNotification(
-      t("organizations.form.updateSuccess"),
-    );
-  }
-  catch (e) {
+    notificationStore.addSuccessNotification(t("organizations.form.updateSuccess"));
+  } catch (e) {
     nameInvalid.value = true;
-    errorHandlingStore.logErrorWithNotification(
-      t("organizations.form.updateError"),
-      e,
-    );
+    errorHandlingStore.logErrorWithNotification(t("organizations.form.updateError"), e);
   }
 }
 
@@ -61,22 +51,17 @@ onMounted(async () => {
 
 <template>
   <ContentViewWrapper>
-    <h3 class="text-xl py-2 font-semibold leading-6 text-gray-900">
+    <h3 class="py-2 text-xl leading-6 font-semibold text-gray-900">
       {{ t("organizations.settings.title") }}
     </h3>
     <div class="mt-5 max-w-xl">
       <form v-if="organization" @submit.prevent="save">
         <div class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">
-            <label
-              for="name"
-              class="block text-sm font-medium leading-6 text-gray-900"
-            >{{ t("organizations.form.name.label") }}</label>
-            <InputText
-              id="name"
-              v-model="organization.name"
-              :invalid="nameInvalid"
-            />
+            <label for="name" class="block text-sm leading-6 font-medium text-gray-900">{{
+              t("organizations.form.name.label")
+            }}</label>
+            <InputText id="name" v-model="organization.name" :invalid="nameInvalid" />
             <small v-if="nameInvalid" class="text-red-500">{{
               t("organizations.form.name.error")
             }}</small>

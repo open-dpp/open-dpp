@@ -1,14 +1,23 @@
-import type { AssetInformationDb, EmbeddedDataSpecificationDb, ExtensionDb, ReferenceDb } from "./db-types";
+import type {
+  AssetInformationDb,
+  EmbeddedDataSpecificationDb,
+  ExtensionDb,
+  ReferenceDb,
+} from "./db-types";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Schema as MongooseSchema } from "mongoose";
-import { AdministrativeInformationDoc, AdministrativeInformationSchema } from "./administration.information.schema";
+import {
+  AdministrativeInformationDoc,
+  AdministrativeInformationSchema,
+} from "./administration.information.schema";
 import { LanguageTextDoc, LanguageTextSchema } from "./language.text.schema";
 
 export const AssetAdministrationShellDocSchemaVersion = {
   v1_0_0: "1.0.0",
   v1_1_0: "1.1.0",
 } as const;
-type AssetAdministrationShellDocSchemaVersionType = (typeof AssetAdministrationShellDocSchemaVersion)[keyof typeof AssetAdministrationShellDocSchemaVersion];
+type AssetAdministrationShellDocSchemaVersionType =
+  (typeof AssetAdministrationShellDocSchemaVersion)[keyof typeof AssetAdministrationShellDocSchemaVersion];
 @Schema({ collection: "asset_administration_shells" })
 export class AssetAdministrationShellDoc extends Document<string> {
   @Prop({ type: String })
@@ -52,4 +61,6 @@ export class AssetAdministrationShellDoc extends Document<string> {
   submodels: ReferenceDb[];
 }
 
-export const AssetAdministrationShellSchema = SchemaFactory.createForClass(AssetAdministrationShellDoc);
+export const AssetAdministrationShellSchema = SchemaFactory.createForClass(
+  AssetAdministrationShellDoc,
+);

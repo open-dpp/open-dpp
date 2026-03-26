@@ -7,7 +7,11 @@ import { EditorMode } from "../../composables/aas-drawer.ts";
 import DisplayNameForm from "./form/DisplayNameForm.vue";
 import IdField from "./form/IdField.vue";
 
-const props = defineProps<{ showErrors: boolean; errors: FormErrors<any>; editorMode: EditorModeType }>();
+const props = defineProps<{
+  showErrors: boolean;
+  errors: FormErrors<any>;
+  editorMode: EditorModeType;
+}>();
 
 const { value: idShort, errorMessage } = useField<string | undefined | null>("idShort");
 
@@ -15,7 +19,7 @@ const isEditMode = computed(() => props.editorMode === EditorMode.EDIT);
 </script>
 
 <template>
-  <div class="grid lg:grid-cols-3 grid-cols-1 gap-2">
+  <div class="grid grid-cols-1 gap-2 lg:grid-cols-3">
     <IdField
       id="idShort"
       v-model="idShort"

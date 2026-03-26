@@ -16,8 +16,7 @@ export class AasExportable {
     public readonly environment: ExpandedEnvironment,
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
-  ) {
-  }
+  ) {}
 
   static create(data: {
     id?: string;

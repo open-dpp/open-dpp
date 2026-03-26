@@ -21,9 +21,7 @@ export class UniqueProductIdentifierCreatedEventData extends OpenDppEventData {
       userId: data.userId,
       itemId: data.itemId,
       organizationId: data.organizationId,
-      childData: new UniqueProductIdentifierCreatedEventData(
-        data.uniqueProductIdentifierId,
-      ),
+      childData: new UniqueProductIdentifierCreatedEventData(data.uniqueProductIdentifierId),
     });
   }
 }

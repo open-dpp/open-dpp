@@ -27,7 +27,8 @@ describe("AuthController", () => {
 
     mockAuth = {};
 
-    const instanceSettingsModule = await import("../../../instance-settings/application/services/instance-settings.service");
+    const instanceSettingsModule =
+      await import("../../../instance-settings/application/services/instance-settings.service");
     const InstanceSettingsService = instanceSettingsModule.InstanceSettingsService;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -40,7 +41,9 @@ describe("AuthController", () => {
         {
           provide: InstanceSettingsService,
           useValue: {
-            getSettings: jest.fn<() => Promise<{ signupEnabled: boolean }>>().mockResolvedValue({ signupEnabled: true }),
+            getSettings: jest
+              .fn<() => Promise<{ signupEnabled: boolean }>>()
+              .mockResolvedValue({ signupEnabled: true }),
           },
         },
       ],

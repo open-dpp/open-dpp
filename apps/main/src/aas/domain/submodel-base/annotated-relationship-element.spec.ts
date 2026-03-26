@@ -15,9 +15,9 @@ describe("annotatedRelationshipElement", () => {
     const submodelElement = Property.create({ idShort: "prop1", valueType: DataTypeDef.String });
     annotatedRelationshipElement.addSubmodelElement(submodelElement);
     expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([submodelElement]);
-    expect(() => annotatedRelationshipElement.addSubmodelElement(submodelElement)).toThrow(new ValueError(
-      "Submodel element with idShort prop1 already exists",
-    ));
+    expect(() => annotatedRelationshipElement.addSubmodelElement(submodelElement)).toThrow(
+      new ValueError("Submodel element with idShort prop1 already exists"),
+    );
   });
 
   it("should delete submodel element", () => {
@@ -30,7 +30,10 @@ describe("annotatedRelationshipElement", () => {
     annotatedRelationshipElement.addSubmodelElement(submodelElement0);
     const submodelElement1 = Property.create({ idShort: "prop2", valueType: DataTypeDef.String });
     annotatedRelationshipElement.addSubmodelElement(submodelElement1);
-    expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([submodelElement0, submodelElement1]);
+    expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([
+      submodelElement0,
+      submodelElement1,
+    ]);
     annotatedRelationshipElement.deleteSubmodelElement(submodelElement0.idShort);
     expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([submodelElement1]);
     expect(() => annotatedRelationshipElement.deleteSubmodelElement("unknown")).toThrow(ValueError);
