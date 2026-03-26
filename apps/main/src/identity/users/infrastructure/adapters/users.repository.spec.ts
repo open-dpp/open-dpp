@@ -297,4 +297,21 @@ describe("UsersRepository", () => {
     const result = await repository.update(user);
     expect(result).toBeNull();
   });
+
+  it("should return null when user not found in update", async () => {
+    const user = User.loadFromDb({
+      id: new ObjectId().toString(),
+      email: "test@example.com",
+      firstName: "John",
+      lastName: "Doe",
+      role: UserRole.USER,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    mockUserModel.findOneAndUpdate.mockResolvedValue(null);
+
+    const result = await repository.update(user);
+
+    expect(result).toBeNull();
+  });
 });

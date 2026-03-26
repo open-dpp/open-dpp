@@ -86,10 +86,10 @@ export class UsersRepository {
     if (!ObjectId.isValid(user.id)) {
       return null;
     }
-    const persistence = UserMapper.toPersistence(user);
+    const { _id, ...fields } = UserMapper.toPersistence(user);
     const document = await this.userModel.findOneAndUpdate(
       { _id: new ObjectId(user.id) },
-      { $set: persistence },
+      { $set: fields },
       { new: true },
     );
     if (!document)
