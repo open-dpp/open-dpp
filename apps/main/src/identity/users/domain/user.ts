@@ -103,6 +103,23 @@ export class User {
     );
   }
 
+  public withEmailVerified(emailVerified: boolean): User {
+    return new User(
+      this.id,
+      this.email,
+      this.firstName,
+      this.lastName,
+      this.image,
+      emailVerified,
+      this.createdAt,
+      new Date(),
+      this.role,
+      this.banned,
+      this.banReason,
+      this.banExpires,
+    );
+  }
+
   public static loadFromDb(data: UserDbProps) {
     return new User(
       data.id,

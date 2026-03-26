@@ -252,11 +252,49 @@ describe("UsersRepository", () => {
     expect(mockUserModel.find).not.toHaveBeenCalled();
   });
 
-  it("should set email verified", async () => {
-    await repository.setUserEmailVerified("test@example.com", true);
+  it("should update user", async () => {
+    const userObjectId = new ObjectId();
+    const now = new Date();
+    const user = User.loadFromDb({
+      id: userObjectId.toString(),
+      email: "test@example.com",
+      firstName: "John",
+      lastName: "Doe",
+      role: UserRole.USER,
+      createdAt: now,
+      updatedAt: now,
+    });
+    const updatedUser = user.withRole(UserRole.ADMIN);
+    const doc = {
+      _id: userObjectId,
+      email: "test@example.com",
+      firstName: "John",
+      lastName: "Doe",
+      role: UserRole.ADMIN,
+      createdAt: now,
+      updatedAt: new Date(),
+    };
+    mockUserModel.findOneAndUpdate.mockResolvedValue(doc);
+
+    const result = await repository.update(updatedUser);
+
     expect(mockUserModel.findOneAndUpdate).toHaveBeenCalledWith(
-      { email: "test@example.com" },
-      { $set: { emailVerified: true } },
+      { _id: expect.any(ObjectId) },
+      { $set: expect.objectContaining({ role: UserRole.ADMIN }) },
+      { new: true },
     );
+    expect(result).toBeInstanceOf(User);
+    expect(result?.role).toBe(UserRole.ADMIN);
+  });
+
+  it("should return null for invalid id in update", async () => {
+    const user = User.create({
+      email: "test@example.com",
+      firstName: "John",
+      lastName: "Doe",
+    });
+    // User.create generates a UUID, not a valid ObjectId
+    const result = await repository.update(user);
+    expect(result).toBeNull();
   });
 });
