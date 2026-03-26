@@ -228,6 +228,9 @@ describe("submodel", () => {
     expect(submodel.toPlain({ ability })).toEqual({ ...submodel.toPlain(), submodelElements: [prop1.toPlain()] });
     ability = security.defineAbilityForSubject(anonymous);
     expect(submodel.toPlain({ ability })).toEqual({ });
+    security.addPolicy(anonymous, IdShortPath.create({ path: "section1.prop2" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    ability = security.defineAbilityForSubject(anonymous);
+    expect(submodel.toPlain({ ability })).toEqual({ ...submodel.toPlain(), submodelElements: [prop2.toPlain()] });
   });
 
   it("should get value representation for bill of material", () => {

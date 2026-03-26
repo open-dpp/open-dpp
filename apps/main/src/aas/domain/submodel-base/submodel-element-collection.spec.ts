@@ -48,6 +48,9 @@ describe("submodelElementCollection", () => {
     expect(submodelElementCollection.toPlain({ ability })).toEqual({ ...submodelElementCollection.toPlain(), value: [prop1.toPlain()] });
     ability = security.defineAbilityForSubject(anonymous);
     expect(submodelElementCollection.toPlain({ ability })).toEqual({ });
+    security.addPolicy(anonymous, IdShortPath.create({ path: "subSection1.prop2" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    ability = security.defineAbilityForSubject(anonymous);
+    expect(submodelElementCollection.toPlain({ ability })).toEqual({ ...submodelElementCollection.toPlain(), value: [prop2.toPlain()] });
   });
 
   it("should delete submodel element", () => {

@@ -126,15 +126,17 @@ class JsonVisitor implements IVisitor<ContextType, any> {
   }
 
   visitSubmodel(element: Submodel, context?: ContextType): any {
-    return this.filterByAbility({
+    const submodelElements = this.removeEmptyItems(element.submodelElements.map(e => e.accept(this, { idShortPath: this.buildIdShortPath(element, context) })));
+    const plain = {
       ...this.buildBase(element),
       modelType: KeyTypes.Submodel,
       id: element.id,
       extensions: element.extensions.map(e => e.accept(this)),
       administration: element.administration?.accept(this) ?? null,
       kind: element.kind,
-      submodelElements: this.removeEmptyItems(element.submodelElements.map(e => e.accept(this, { idShortPath: this.buildIdShortPath(element, context) }))),
-    }, element, context);
+      submodelElements,
+    };
+    return submodelElements.length > 0 ? plain : this.filterByAbility(plain, element, context);
   }
 
   visitAdministrativeInformation(element: AdministrativeInformation): any {
@@ -236,12 +238,14 @@ class JsonVisitor implements IVisitor<ContextType, any> {
   }
 
   visitSubmodelElementCollection(element: SubmodelElementCollection, context?: ContextType): any {
-    return this.filterByAbility({
+    const value = this.removeEmptyItems(element.value.map(e => e.accept(this, { idShortPath: this.buildIdShortPath(element, context) })));
+    const result = {
       ...this.buildBase(element),
       modelType: KeyTypes.SubmodelElementCollection,
       extensions: element.extensions.map(e => e.accept(this)),
-      value: this.removeEmptyItems(element.value.map(e => e.accept(this, { idShortPath: this.buildIdShortPath(element, context) }))),
-    }, element, context);
+      value,
+    };
+    return value.length > 0 ? result : this.filterByAbility(result, element, context);
   }
 
   visitSubmodelElementList(element: SubmodelElementList, context?: ContextType): any {
