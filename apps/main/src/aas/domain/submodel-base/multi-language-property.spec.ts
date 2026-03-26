@@ -27,12 +27,12 @@ describe("multiLanguageProperty", () => {
     const valueEn = LanguageText.create({ language: "en", text: "value" });
     const multiLanguageProperty = MultiLanguageProperty.create({ idShort: "prop1", value: [valueEn] });
     security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
-    // let ability = security.defineAbilityForSubject(member);
-    // expect(multiLanguageProperty.toPlain({ ability })).toMatchObject({
-    //   idShort: "prop1",
-    //   value: [{ language: "en", text: "value" }],
-    // });
-    const ability = security.defineAbilityForSubject(anonymous);
+    let ability = security.defineAbilityForSubject(member);
+    expect(multiLanguageProperty.toPlain({ ability })).toMatchObject({
+      idShort: "prop1",
+      value: [{ language: "en", text: "value" }],
+    });
+    ability = security.defineAbilityForSubject(anonymous);
     expect(multiLanguageProperty.toPlain({ ability })).toEqual({});
   });
 

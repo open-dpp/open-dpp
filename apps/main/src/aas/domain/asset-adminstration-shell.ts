@@ -9,7 +9,7 @@ import { hasUniqueLanguagesOrFail, LanguageText } from "./common/language-text";
 import { Reference } from "./common/reference";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
-import { JsonVisitor } from "./json-visitor";
+import JsonVisitor from "./json-visitor";
 import { ModifierVisitor } from "./modifier-visitor";
 import { IPersistable } from "./persistable";
 import { Security } from "./security/security";

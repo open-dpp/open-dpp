@@ -214,6 +214,7 @@ describe("submodel", () => {
     const submodel = Submodel.create({ idShort: "section1" });
 
     const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const prop1 = Property.create({ idShort: "prop1", value: "10", valueType: DataTypeDef.Double });
     const prop2 = Property.create({ idShort: "prop2", value: "10", valueType: DataTypeDef.Double });
     submodel.addSubmodelElement(prop1);
@@ -223,8 +224,10 @@ describe("submodel", () => {
     security.addPolicy(member, IdShortPath.create({ path: "section1.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
     security.addPolicy(member, IdShortPath.create({ path: "section1.prop2" }), []);
 
-    const ability = security.defineAbilityForSubject(member);
+    let ability = security.defineAbilityForSubject(member);
     expect(submodel.toPlain({ ability })).toEqual({ ...submodel.toPlain(), submodelElements: [prop1.toPlain()] });
+    ability = security.defineAbilityForSubject(anonymous);
+    expect(submodel.toPlain({ ability })).toEqual({ });
   });
 
   it("should get value representation for bill of material", () => {

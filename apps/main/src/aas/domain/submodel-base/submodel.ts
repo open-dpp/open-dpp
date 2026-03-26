@@ -9,7 +9,7 @@ import { Reference } from "../common/reference";
 import { ConvertToPlainOptions } from "../convertable-to-plain";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { JsonVisitor } from "../json-visitor";
+import JsonVisitor from "../json-visitor";
 import { ModifierVisitor } from "../modifier-visitor";
 import { IPersistable } from "../persistable";
 import { ValueModifierVisitor } from "../value-modifier-visitor";

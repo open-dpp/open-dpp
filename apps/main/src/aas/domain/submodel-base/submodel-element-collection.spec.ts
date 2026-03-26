@@ -32,6 +32,8 @@ describe("submodelElementCollection", () => {
   it("should get values readable by specified subject", () => {
     const security = Security.create({});
     const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+
     const submodelElementCollection = SubmodelElementCollection.create({ idShort: "subSection1" });
     const prop1 = Property.create({ idShort: "prop1", value: "10", valueType: DataTypeDef.Double });
     const prop2 = Property.create({ idShort: "prop2", value: "10", valueType: DataTypeDef.Double });
@@ -42,8 +44,10 @@ describe("submodelElementCollection", () => {
     security.addPolicy(member, IdShortPath.create({ path: "subSection1.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
     security.addPolicy(member, IdShortPath.create({ path: "subSection1.prop2" }), []);
 
-    const ability = security.defineAbilityForSubject(member);
+    let ability = security.defineAbilityForSubject(member);
     expect(submodelElementCollection.toPlain({ ability })).toEqual({ ...submodelElementCollection.toPlain(), value: [prop1.toPlain()] });
+    ability = security.defineAbilityForSubject(anonymous);
+    expect(submodelElementCollection.toPlain({ ability })).toEqual({ });
   });
 
   it("should delete submodel element", () => {

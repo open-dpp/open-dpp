@@ -6,7 +6,7 @@ import { Reference } from "../common/reference";
 import { ConvertToPlainOptions } from "../convertable-to-plain";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { JsonVisitor } from "../json-visitor";
+import JsonVisitor from "../json-visitor";
 import { IVisitor } from "../visitor";
 import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
