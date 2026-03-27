@@ -302,6 +302,17 @@ describe("environmentService", () => {
     expect(submodelElements.result).toEqual([]);
   });
 
+  it("should return submodel element by id", async () => {
+    const { environment, admin, member, submodel1, submodelElementCollection1, property1 } = await createDefaultEnvironment();
+    const idShortPath = IdShortPath.create({ path: `${submodelElementCollection1.idShort}.${property1.idShort}` });
+    const submodelElement = await environmentService.getSubmodelElementById(environment, submodel1.id, idShortPath, admin);
+    expect(submodelElement).toEqual(SubmodelElementSchema.parse(property1.toPlain()));
+
+    await expect(
+      environmentService.getSubmodelElementById(environment, submodel1.id, idShortPath, member),
+    ).rejects.toThrow(new ForbiddenError());
+  });
+
   afterAll(async () => {
     await module.close();
   });

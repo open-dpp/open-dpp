@@ -28,7 +28,7 @@ import { removeEmptyItems } from "../../utils";
 import { ConvertToPlainOptions } from "./convertable-to-plain";
 import { IdShortPath, ISubmodelBase } from "./submodel-base/submodel-base";
 
-export interface ContextType { idShortPath: IdShortPath }
+export interface ContextType { fullParentIdShortPath: IdShortPath }
 class JsonVisitor implements IVisitor<ContextType, any> {
   constructor(private readonly options?: ConvertToPlainOptions) {
   }
@@ -47,7 +47,7 @@ class JsonVisitor implements IVisitor<ContextType, any> {
   }
 
   private buildIdShortPath(element: any, context?: ContextType): IdShortPath {
-    return context ? context.idShortPath.addPathSegment(element.idShort) : IdShortPath.create({ path: element.idShort });
+    return context ? context.fullParentIdShortPath.addPathSegment(element.idShort) : IdShortPath.create({ path: element.idShort });
   }
 
   private filterByAbility(plainToFilter: any, element: any, context?: ContextType): any {
@@ -123,7 +123,7 @@ class JsonVisitor implements IVisitor<ContextType, any> {
   }
 
   visitSubmodel(element: Submodel, context?: ContextType): any {
-    const submodelElements = removeEmptyItems(element.submodelElements.map(e => e.accept(this, { idShortPath: this.buildIdShortPath(element, context) })));
+    const submodelElements = removeEmptyItems(element.submodelElements.map(e => e.accept(this, { fullParentIdShortPath: this.buildIdShortPath(element, context) })));
     const plain = {
       ...this.buildBase(element),
       modelType: KeyTypes.Submodel,
@@ -235,7 +235,7 @@ class JsonVisitor implements IVisitor<ContextType, any> {
   }
 
   visitSubmodelElementCollection(element: SubmodelElementCollection, context?: ContextType): any {
-    const value = removeEmptyItems(element.value.map(e => e.accept(this, { idShortPath: this.buildIdShortPath(element, context) })));
+    const value = removeEmptyItems(element.value.map(e => e.accept(this, { fullParentIdShortPath: this.buildIdShortPath(element, context) })));
     const result = {
       ...this.buildBase(element),
       modelType: KeyTypes.SubmodelElementCollection,
@@ -254,7 +254,7 @@ class JsonVisitor implements IVisitor<ContextType, any> {
       semanticIdListElement: element.semanticIdListElement?.accept(this) ?? null,
       valueTypeListElement: element.valueTypeListElement,
       typeValueListElement: element.typeValueListElement,
-      value: removeEmptyItems(element.value.map(e => e.accept(this, { idShortPath: this.buildIdShortPath(element, context) }))),
+      value: removeEmptyItems(element.value.map(e => e.accept(this, { fullParentIdShortPath: this.buildIdShortPath(element, context) }))),
     }, element, context);
   }
 

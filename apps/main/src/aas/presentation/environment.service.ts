@@ -30,10 +30,10 @@ import {
   ValueSchema,
 } from "@open-dpp/dto";
 import { ForbiddenError } from "@open-dpp/exception";
+
 import { DbSessionOptions } from "../../database/query-options";
 
 import { MembersService } from "../../identity/organizations/application/services/members.service";
-
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Passport } from "../../passports/domain/passport";
@@ -229,7 +229,7 @@ export class EnvironmentService {
     const submodelElements = submodel.submodelElements.filter(e => pages.includes(e.idShort));
     return SubmodelElementPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodelElements }).toPlain({
       ability,
-      context: { idShortPath: IdShortPath.create({ path: submodel.idShort }) },
+      context: { fullParentIdShortPath: IdShortPath.create({ path: submodel.idShort }) },
     }));
   }
 
@@ -289,10 +289,16 @@ export class EnvironmentService {
     return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
   }
 
-  async getSubmodelElementById(environment: Environment, submodelId: string, idShortPath: IdShortPath): Promise<SubmodelElementResponseDto> {
+  async getSubmodelElementById(environment: Environment, submodelId: string, idShortPath: IdShortPath, subject: SubjectAttributes): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const submodelElement = submodel.findSubmodelElementOrFail(idShortPath);
-    return SubmodelElementSchema.parse(submodelElement.toPlain());
+    const ability = await this.loadAbility(environment, subject);
+    const parentPath = IdShortPath.create({ path: `${submodel.idShort}.${idShortPath.getParentPath().toString()}` });
+    const result = submodelElement.toPlain({ ability, context: { fullParentIdShortPath: parentPath } });
+    if (isEmptyObject(result)) {
+      throw new ForbiddenError();
+    }
+    return SubmodelElementSchema.parse(result);
   }
 
   async getSubmodelElementValue(environment: Environment, submodelId: string, idShortPath: IdShortPath): Promise<ValueResponseDto> {

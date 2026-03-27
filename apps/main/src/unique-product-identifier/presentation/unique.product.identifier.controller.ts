@@ -165,9 +165,12 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassport(id);
-    return await this.environmentService.getSubmodelElementById(passport.getEnvironment(), submodelId, idShortPath);
+    return await this.environmentService.getSubmodelElementById(passport.getEnvironment(), submodelId, idShortPath, subject);
   }
 
   @AllowAnonymous()
