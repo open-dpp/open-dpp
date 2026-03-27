@@ -81,8 +81,9 @@ feature/
 
 ### Key Domain Patterns
 
-- **Immutable entities**: Private constructors with `static create()` and `static fromPlain()` factory methods. `toPlain()` for serialization. Never mutate domain objects — create new instances.
-- **Repository abstraction**: Generic helpers in `apps/main/src/lib/repositories.ts` (`save`, `findOne`, `findOneOrFail`, `findByIds`). Never call Mongoose models directly from services or controllers.
+- **Immutable entities**: Private constructors with `static create()` and `static fromPlain()` / `static loadFromDb()` factory methods. `toPlain()` for serialization. Never mutate domain objects — create new instances via `withX()` methods (e.g. `user.withRole(newRole)` returns a new `User`).
+- **Domain-driven updates**: State changes MUST go through domain methods, never through direct DB updates in repositories. Correct flow: (1) load entity from repository, (2) call domain `withX()` method to get a new instance, (3) persist via `repository.update(entity)`. **NEVER** write `findOneAndUpdate` with field-level `$set` in repositories to change domain state — this bypasses domain logic and invariant checks.
+- **Repository abstraction**: Generic helpers in `apps/main/src/lib/repositories.ts` (`save`, `findOne`, `findOneOrFail`, `findByIds`). Repositories expose `update(entity)` for persisting domain objects. Never call Mongoose models directly from services or controllers.
 - **Environment vs ExpandedEnvironment**: `Environment` stores only IDs (refs to shells/submodels). `ExpandedEnvironment` is the fully hydrated version loaded from DB. `EnvironmentService` manages loading/persisting within MongoDB transactions.
 - **Visitor pattern**: AAS submodel element trees use `IVisitor<ContextT, R>` (in `aas/domain/visitor.ts`). Implementations: `JsonVisitor`, `ModifierVisitor`, `ValueModifierVisitor`, `ValueVisitor`.
 - **Submodel element registry**: Classes registered at startup via `aas/domain/submodel-base/submodel-registry.ts`, mapping `KeyTypesType` to classes with `fromPlain`.

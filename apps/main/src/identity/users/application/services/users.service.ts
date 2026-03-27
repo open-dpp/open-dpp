@@ -59,13 +59,23 @@ export class UsersService {
     return this.usersRepository.findAllByIds(ids);
   }
 
-  async setUserEmailVerified(email: string, emailVerified: boolean): Promise<void> {
-    await this.usersRepository.setUserEmailVerified(email, emailVerified);
+  async setUserEmailVerified(email: string, emailVerified: boolean): Promise<User> {
+    const user = await this.usersRepository.findOneByEmail(email);
+    if (!user) {
+      throw new NotFoundInDatabaseException(User.name);
+    }
+    const updatedUser = user.withEmailVerified(emailVerified);
+    const saved = await this.usersRepository.update(updatedUser);
+    if (!saved) {
+      throw new Error(`Failed to update email verified for user ${email}`);
+    }
+    return saved;
   }
 
   async setUserRole(id: string, role: UserRole): Promise<User> {
-    await this.findOneAndFail(id);
-    const saved = await this.usersRepository.setUserRole(id, role);
+    const user = await this.findOneAndFail(id);
+    const updatedUser = user.withRole(role);
+    const saved = await this.usersRepository.update(updatedUser);
     if (!saved) {
       throw new Error(`Failed to update role for user ${id}`);
     }
