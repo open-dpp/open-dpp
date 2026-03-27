@@ -17,16 +17,18 @@ export class InvitationsRepository {
     @InjectModel(InvitationSchema.name)
     private readonly invitationModel: Model<InvitationSchema>,
     @Inject(AUTH) private readonly auth: Auth,
-  ) { }
+  ) {}
 
   async findOneById(id: string): Promise<Invitation | null> {
     const document = await this.invitationModel.findById(id);
-    if (!document)
-      return null;
+    if (!document) return null;
     return InvitationMapper.toDomain(document);
   }
 
-  async findOneUnexpiredByEmailAndOrganization(email: string, organizationId: string): Promise<Invitation | null> {
+  async findOneUnexpiredByEmailAndOrganization(
+    email: string,
+    organizationId: string,
+  ): Promise<Invitation | null> {
     // Query the raw MongoDB collection to bypass Mongoose's String schema casting,
     // since Better Auth's MongoDB adapter stores reference fields as ObjectId
     const orgIdFilter = ObjectId.isValid(organizationId)
@@ -38,8 +40,7 @@ export class InvitationsRepository {
       expiresAt: { $gte: new Date() },
       status: InvitationStatus.PENDING,
     });
-    if (!rawDoc)
-      return null;
+    if (!rawDoc) return null;
     return Invitation.loadFromDb({
       id: rawDoc._id.toString(),
       email: rawDoc.email as string,

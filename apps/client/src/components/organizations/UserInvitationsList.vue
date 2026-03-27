@@ -12,25 +12,31 @@ const { t } = useI18n();
 const organizationStore = useOrganizationsStore();
 const notificationStore = useNotificationStore();
 
-const invitations = ref<Array<{
-  id: string;
-  organizationId: string;
-  email: string;
-  role: "member" | "admin" | "owner";
-  status: InvitationStatus;
-  inviterId: string;
-  expiresAt: Date;
-  organizationName: string;
-}>>([]);
+const invitations = ref<
+  Array<{
+    id: string;
+    organizationId: string;
+    email: string;
+    role: "member" | "admin" | "owner";
+    status: InvitationStatus;
+    inviterId: string;
+    expiresAt: Date;
+    organizationName: string;
+  }>
+>([]);
 
 async function loadUserInvitations() {
   invitations.value = [];
   const { data } = await authClient.organization.listUserInvitations();
   if (data) {
-    const pendingInvitations = data.filter(inv => inv.status === "pending");
-    const orgNamePromises = pendingInvitations.map(invitation =>
-      axiosIns.get(`auth/organization/${invitation.organizationId}/name`)
-        .then(response => ({ invitation, name: response.data?.name ?? invitation.organizationId }))
+    const pendingInvitations = data.filter((inv) => inv.status === "pending");
+    const orgNamePromises = pendingInvitations.map((invitation) =>
+      axiosIns
+        .get(`auth/organization/${invitation.organizationId}/name`)
+        .then((response) => ({
+          invitation,
+          name: response.data?.name ?? invitation.organizationId,
+        }))
         .catch(() => ({ invitation, name: invitation.organizationId })),
     );
     const results = await Promise.all(orgNamePromises);
@@ -49,8 +55,7 @@ async function acceptInvite(invitationId: string) {
     await loadUserInvitations();
     await organizationStore.fetchOrganizations();
     notificationStore.addSuccessNotification(t("organizations.invitation.acceptSuccess"));
-  }
-  catch (error) {
+  } catch (error) {
     notificationStore.addErrorNotification(t("organizations.invitation.acceptError"));
     console.error("Failed to accept invitation:", error);
   }
@@ -65,11 +70,11 @@ onMounted(async () => {
   <div v-if="invitations.length > 0" class="mt-8 pb-10">
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
-        <h1 class="text-base font-semibold leading-6 text-gray-900">
-          {{ t('organizations.userInvitations.title') }}
+        <h1 class="text-base leading-6 font-semibold text-gray-900">
+          {{ t("organizations.userInvitations.title") }}
         </h1>
         <p class="mt-2 text-sm text-gray-700">
-          {{ t('organizations.userInvitations.description') }}
+          {{ t("organizations.userInvitations.description") }}
         </p>
       </div>
     </div>
@@ -80,25 +85,22 @@ onMounted(async () => {
             <thead>
               <tr>
                 <th
-                  class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0"
+                  class="py-3.5 pr-3 pl-4 text-left text-sm font-semibold text-gray-900 sm:pl-0"
                   scope="col"
                 >
-                  {{ t('organizations.invitation.name') }}
+                  {{ t("organizations.invitation.name") }}
                 </th>
-                <th
-                  class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                  scope="col"
-                >
-                  <span class="">{{ t('organizations.invitation.status') }}</span>
+                <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900" scope="col">
+                  <span class="">{{ t("organizations.invitation.status") }}</span>
                 </th>
-                <th class="relative py-3.5 pl-3 pr-4 sm:pr-0" scope="col">
-                  <span class="sr-only">{{ t('common.edit') }}</span>
+                <th class="relative py-3.5 pr-4 pl-3 sm:pr-0" scope="col">
+                  <span class="sr-only">{{ t("common.edit") }}</span>
                 </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 bg-white">
               <tr v-for="invitation in invitations" :key="invitation.id">
-                <td class="whitespace-nowrap py-5 pl-4 pr-3 text-sm sm:pl-0">
+                <td class="py-5 pr-3 pl-4 text-sm whitespace-nowrap sm:pl-0">
                   <div class="flex items-center">
                     <div class="ml-4">
                       <div class="font-medium text-gray-900">
@@ -107,7 +109,7 @@ onMounted(async () => {
                     </div>
                   </div>
                 </td>
-                <td class="whitespace-nowrap py-5 pl-4 pr-3 text-sm sm:pl-0">
+                <td class="py-5 pr-3 pl-4 text-sm whitespace-nowrap sm:pl-0">
                   <div class="flex items-center">
                     <div class="ml-4">
                       <div class="mt-1 text-gray-500">
@@ -116,9 +118,9 @@ onMounted(async () => {
                     </div>
                   </div>
                 </td>
-                <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
+                <td class="px-3 py-5 text-sm whitespace-nowrap text-gray-500">
                   <BaseButton @click="acceptInvite(invitation.id)">
-                    {{ t('organizations.invitation.accept') }}
+                    {{ t("organizations.invitation.accept") }}
                   </BaseButton>
                 </td>
               </tr>

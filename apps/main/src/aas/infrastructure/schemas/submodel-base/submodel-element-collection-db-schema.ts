@@ -13,4 +13,4 @@ export function SubmodelElementCollectionDbSchemaImpl() {
     extensions: ExtensionDbSchema.array().default([]),
     value: SubmodelElementDbSchema.array().default([]),
   });
-};
+}

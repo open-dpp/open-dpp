@@ -1,4 +1,8 @@
-import { AasSubmodelElements, AasSubmodelElementsType, RelationshipElementJsonSchema } from "@open-dpp/dto";
+import {
+  AasSubmodelElements,
+  AasSubmodelElementsType,
+  RelationshipElementJsonSchema,
+} from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
@@ -80,7 +84,7 @@ export class RelationshipElement implements ISubmodelElement, IRelationshipEleme
     return new RelationshipElement(
       Reference.fromPlain(parsed.first),
       Reference.fromPlain(parsed.second),
-      parsed.extensions.map(e => Extension.fromPlain(e)),
+      parsed.extensions.map((e) => Extension.fromPlain(e)),
       baseObjects.category,
       baseObjects.idShort,
       baseObjects.displayName,

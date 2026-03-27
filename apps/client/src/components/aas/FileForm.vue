@@ -25,18 +25,11 @@ const { value: contentType } = useField<string | undefined>("contentType");
       :errors="errors"
       :editor-mode="props.editorMode"
     />
-    <div class="grid lg:grid-cols-3 grid-cols-1 gap-2">
+    <div class="grid grid-cols-1 gap-2 lg:grid-cols-3">
       <div class="flex flex-col gap-2">
-        <span class="text-xl font-bold">{{
-          t("aasEditor.formLabels.value")
-        }}</span>
+        <span class="text-xl font-bold">{{ t("aasEditor.formLabels.value") }}</span>
         <FileField v-model="value" v-model:content-type="contentType" />
-        <Message
-          v-if="errorMessage"
-          size="small"
-          severity="error"
-          variant="simple"
-        >
+        <Message v-if="errorMessage" size="small" severity="error" variant="simple">
           {{ errorMessage }}
         </Message>
       </div>

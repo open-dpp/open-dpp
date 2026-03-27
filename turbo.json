@@ -18,12 +18,6 @@
       "persistent": true,
       "cache": false
     },
-    "lint": {
-      "cache": true
-    },
-    "lint:fix": {
-      "cache": true
-    },
     "test": {
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "cache": false

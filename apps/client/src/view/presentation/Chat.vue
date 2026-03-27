@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import {
-  ChatBubbleOvalLeftEllipsisIcon,
-  UserCircleIcon,
-} from "@heroicons/vue/16/solid";
+import { ChatBubbleOvalLeftEllipsisIcon, UserCircleIcon } from "@heroicons/vue/16/solid";
 import DOMPurify from "dompurify";
 import { marked } from "marked";
 import { onMounted, ref } from "vue";
@@ -39,12 +36,9 @@ function sanitizeMarkdown(text: string): string {
 </script>
 
 <template>
-  <div class="flex flex-col gap-6 w-full my-10">
+  <div class="my-10 flex w-full flex-col gap-6">
     <ul role="list" class="space-y-6">
-      <li
-        v-for="(message, messageIndex) in aiAgentStore.messages"
-        :key="messageIndex"
-      >
+      <li v-for="(message, messageIndex) in aiAgentStore.messages" :key="messageIndex">
         <div class="flex gap-2">
           <UserCircleIcon
             v-if="message.sender === Sender.User"
@@ -53,7 +47,7 @@ function sanitizeMarkdown(text: string): string {
           />
           <ChatBubbleOvalLeftEllipsisIcon
             v-else-if="message.sender === Sender.Bot"
-            class="size-8 text-primary-500 dark:text-gray-400"
+            class="text-primary-500 size-8 dark:text-gray-400"
             aria-hidden="true"
           />
           <div
@@ -75,7 +69,7 @@ function sanitizeMarkdown(text: string): string {
         v-model="input"
         rows="2"
         name="question"
-        class="flex-1 overflow-hidden outline-gray-300 rounded-lg pb-12 outline-1 -outline-offset-1 focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-[#6EAED7] dark:bg-white/5 dark:outline-white/10"
+        class="flex-1 overflow-hidden rounded-lg pb-12 outline-1 -outline-offset-1 outline-gray-300 focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-[#6EAED7] dark:bg-white/5 dark:outline-white/10"
         :placeholder="t('presentation.askQuestion')"
         :disabled="aiAgentStore.isLastMessagePendingFromBot"
         @keydown.enter.exact.prevent="sendMessage"

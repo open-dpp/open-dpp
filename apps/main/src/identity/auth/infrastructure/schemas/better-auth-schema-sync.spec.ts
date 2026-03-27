@@ -47,14 +47,14 @@ describe("Better Auth Schema Sync", () => {
         AuthModule,
         UsersModule,
       ],
-    }).overrideProvider(EmailService).useValue({
-      send: jest.fn(),
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
 
-    betterAuthHelper.init(
-      moduleRef.get<UsersService>(UsersService),
-      moduleRef.get<Auth>(AUTH),
-    );
+    betterAuthHelper.init(moduleRef.get<UsersService>(UsersService), moduleRef.get<Auth>(AUTH));
 
     mongoConnection = moduleRef.get<Connection>(getConnectionToken());
     app = moduleRef.createNestApplication();
@@ -72,45 +72,46 @@ describe("Better Auth Schema Sync", () => {
 
   it("user collection fields should match User Mongoose schema", async () => {
     const db = mongoConnection.db;
-    if (!db)
-      throw new Error("MongoDB connection not established");
+    if (!db) throw new Error("MongoDB connection not established");
     const rawUser = await db.collection("user").findOne({});
     if (!rawUser)
       throw new Error("user collection is empty — Better Auth did not create a user document");
 
     const rawFields = Object.keys(rawUser);
     const schemaFields = getSchemaFieldNames(UserSchema);
-    const unknownFields = rawFields.filter(f => !schemaFields.has(f));
+    const unknownFields = rawFields.filter((f) => !schemaFields.has(f));
 
     expect(unknownFields).toEqual([]);
   });
 
   it("session collection fields should match Session Mongoose schema", async () => {
     const db = mongoConnection.db;
-    if (!db)
-      throw new Error("MongoDB connection not established");
+    if (!db) throw new Error("MongoDB connection not established");
     const rawSession = await db.collection("session").findOne({});
     if (!rawSession)
-      throw new Error("session collection is empty — Better Auth did not create a session document");
+      throw new Error(
+        "session collection is empty — Better Auth did not create a session document",
+      );
 
     const rawFields = Object.keys(rawSession);
     const schemaFields = getSchemaFieldNames(SessionSchema);
-    const unknownFields = rawFields.filter(f => !schemaFields.has(f));
+    const unknownFields = rawFields.filter((f) => !schemaFields.has(f));
 
     expect(unknownFields).toEqual([]);
   });
 
   it("account collection fields should match Account Mongoose schema", async () => {
     const db = mongoConnection.db;
-    if (!db)
-      throw new Error("MongoDB connection not established");
+    if (!db) throw new Error("MongoDB connection not established");
     const rawAccount = await db.collection("account").findOne({});
     if (!rawAccount)
-      throw new Error("account collection is empty — Better Auth did not create an account document");
+      throw new Error(
+        "account collection is empty — Better Auth did not create an account document",
+      );
 
     const rawFields = Object.keys(rawAccount);
     const schemaFields = getSchemaFieldNames(AccountSchema);
-    const unknownFields = rawFields.filter(f => !schemaFields.has(f));
+    const unknownFields = rawFields.filter((f) => !schemaFields.has(f));
 
     expect(unknownFields).toEqual([]);
   });

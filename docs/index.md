@@ -16,4 +16,3 @@ hero:
       text: Open-API v3 Documentation
       link: /api
 ---
-

@@ -1,7 +1,10 @@
 import { defineStore } from "pinia";
 import { useNotificationStore } from "./notification";
 
-export interface ErrorHandlingOptionsAsync { message: string; finallyCallback?: () => Promise<void> }
+export interface ErrorHandlingOptionsAsync {
+  message: string;
+  finallyCallback?: () => Promise<void>;
+}
 export interface ErrorHandlingOptionsSync {
   message: string;
   finallyCallback?: () => void;
@@ -11,13 +14,16 @@ export interface IErrorHandlingStore {
   logErrorWithNotification: (message: string, error?: unknown) => void;
 }
 
-export const useErrorHandlingStore = defineStore("error-handling-store", (): IErrorHandlingStore => {
-  const notificationStore = useNotificationStore();
+export const useErrorHandlingStore = defineStore(
+  "error-handling-store",
+  (): IErrorHandlingStore => {
+    const notificationStore = useNotificationStore();
 
-  const logErrorWithNotification = (message: string, error?: unknown) => {
-    notificationStore.addErrorNotification(message);
-    console.error(message, error);
-  };
+    const logErrorWithNotification = (message: string, error?: unknown) => {
+      notificationStore.addErrorNotification(message);
+      console.error(message, error);
+    };
 
-  return { logErrorWithNotification };
-});
+    return { logErrorWithNotification };
+  },
+);

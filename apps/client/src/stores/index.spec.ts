@@ -38,17 +38,13 @@ describe("indexStore", () => {
     const indexStore = useIndexStore();
     const id = "someId";
     indexStore.selectOrganization(id);
-    await waitFor(() =>
-      expect(apiClient.setActiveOrganizationId).toHaveBeenCalledWith(id),
-    );
+    await waitFor(() => expect(apiClient.setActiveOrganizationId).toHaveBeenCalledWith(id));
   });
 
   it("should update organization id of api client on startup", async () => {
     const id = "initialId";
     localStorage.setItem(LAST_SELECTED_ORGANIZATION_ID_KEY, id);
     useIndexStore();
-    await waitFor(() =>
-      expect(apiClient.setActiveOrganizationId).toHaveBeenCalledWith(id),
-    );
+    await waitFor(() => expect(apiClient.setActiveOrganizationId).toHaveBeenCalledWith(id));
   });
 });

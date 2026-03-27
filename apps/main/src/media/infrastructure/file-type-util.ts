@@ -7,11 +7,9 @@ async function fileTypeFromBuffer(buffer: Uint8Array | ArrayBuffer) {
   return await (async () => {
     try {
       // Dynamically import the ESM module, including types
-      const { fileTypeFromBuffer }
-        = await loadEsm.loadEsm<typeof import("file-type")>("file-type");
+      const { fileTypeFromBuffer } = await loadEsm.loadEsm<typeof import("file-type")>("file-type");
       return fileTypeFromBuffer(buffer);
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Error importing module:", error);
     }
     return null;

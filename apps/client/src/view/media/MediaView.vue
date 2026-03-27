@@ -31,25 +31,20 @@ async function uploadFile() {
   try {
     await mediaStore.uploadMedia(
       selectedLocalFile.value,
-      progress => (uploadProgress.value = progress),
+      (progress) => (uploadProgress.value = progress),
     );
     notificationStore.addSuccessNotification(t("file.uploadSuccess"));
     await mediaStore.fetchMediaByOrganizationId();
-  }
-  catch (error: unknown) {
+  } catch (error: unknown) {
     const err = handleApiError(error);
     if (err instanceof LimitError) {
-      notificationStore.addErrorNotification(
-        t(`api.error.limit.${err.key}`, { limit: err.limit }),
-      );
-    }
-    else {
+      notificationStore.addErrorNotification(t(`api.error.limit.${err.key}`, { limit: err.limit }));
+    } else {
       console.error("Fehler beim Hochladen der Datei:", error);
       notificationStore.addErrorNotification(t("file.uploadError"));
     }
     selectedFile.value = null;
-  }
-  finally {
+  } finally {
     uploadProgress.value = 0;
   }
 }
@@ -58,8 +53,7 @@ async function onFileSelect(event: FileUploadSelectEvent) {
   if (event.files && event.files.length > 0) {
     selectedLocalFile.value = event.files[0] as File;
     await uploadFile();
-  }
-  else {
+  } else {
     selectedLocalFile.value = null;
   }
 }
@@ -71,8 +65,8 @@ async function onFileSelect(event: FileUploadSelectEvent) {
     :media="selected[0]"
     @update:model-value="updateSelected([])"
   />
-  <div class="flex flex-row gap-3 h-full w-full">
-    <div class="mt-8 flex flex-col gap-10 grow">
+  <div class="flex h-full w-full flex-row gap-3">
+    <div class="mt-8 flex grow flex-col gap-10">
       <div class="flex justify-end">
         <FileUpload
           mode="basic"

@@ -26,8 +26,7 @@ async function bootstrap() {
     const apiDoc = buildOpenApiDocumentation();
     try {
       writeFileSync(outputPath, JSON.stringify(apiDoc), "utf-8");
-    }
-    catch (error) {
+    } catch (error) {
       console.error(error);
       exit(1);
     }
@@ -67,8 +66,7 @@ async function bootstrap() {
     app.use((req: Request, res: Response, next: NextFunction) => {
       if (!req.path.startsWith("/api")) {
         proxy.web(req, res, { target: "http://localhost:5173" });
-      }
-      else {
+      } else {
         next();
       }
     });
@@ -92,10 +90,7 @@ async function bootstrap() {
     new ValueErrorFilter(),
   );
   applyBodySizeHandler(app);
-  app.use(
-    "/media/upload-dpp-file/:upi",
-    bodyParser.urlencoded({ limit: "50mb", extended: true }),
-  );
+  app.use("/media/upload-dpp-file/:upi", bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
   app.useGlobalPipes(new ValidationPipe());
   if (envService.get("OPEN_DPP_BUILD_API_DOC")) {
@@ -108,8 +103,7 @@ async function bootstrap() {
   try {
     const mcpClientService = app.get(McpClientService);
     await mcpClientService.connect();
-  }
-  catch (err) {
+  } catch (err) {
     logger.error(`MCP connect failed: ${err instanceof Error ? err.message : String(err)}`);
     await app.close();
     process.exit(1);

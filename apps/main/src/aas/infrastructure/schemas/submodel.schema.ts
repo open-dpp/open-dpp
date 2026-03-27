@@ -9,13 +9,17 @@ import type {
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { ModellingKind } from "@open-dpp/dto";
 import { Document, Schema as MongooseSchema } from "mongoose";
-import { AdministrativeInformationDoc, AdministrativeInformationSchema } from "./administration.information.schema";
+import {
+  AdministrativeInformationDoc,
+  AdministrativeInformationSchema,
+} from "./administration.information.schema";
 import { LanguageTextDoc, LanguageTextSchema } from "./language.text.schema";
 
 export const SubmodelDocSchemaVersion = {
   v1_0_0: "1.0.0",
 } as const;
-type SubmodelDocSchemaVersionType = (typeof SubmodelDocSchemaVersion)[keyof typeof SubmodelDocSchemaVersion];
+type SubmodelDocSchemaVersionType =
+  (typeof SubmodelDocSchemaVersion)[keyof typeof SubmodelDocSchemaVersion];
 
 @Schema({ collection: "submodels" })
 export class SubmodelDoc extends Document<string> {

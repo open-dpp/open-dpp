@@ -19,9 +19,7 @@ export enum MsgStatus {
 
 export const useAiAgentStore = defineStore("socket", () => {
   const socket = ref<Socket | null>(null);
-  const messages = ref<
-    { id: number; sender: Sender; text: string; status: MsgStatus }[]
-  >([]);
+  const messages = ref<{ id: number; sender: Sender; text: string; status: MsgStatus }[]>([]);
   const route = useRoute();
   const isLastMessagePendingFromBot = ref<boolean>(false);
   const { t } = useI18n();
@@ -37,11 +35,9 @@ export const useAiAgentStore = defineStore("socket", () => {
         autoConnect: true,
         path: "/api/ai-socket",
       });
-    }
-    else if (!socket.value.connected) {
+    } else if (!socket.value.connected) {
       socket.value.connect();
-    }
-    else {
+    } else {
       // already connected
       return;
     }
@@ -57,8 +53,8 @@ export const useAiAgentStore = defineStore("socket", () => {
         isLastMessagePendingFromBot.value = false;
       });
       socket.value.on("errorMessage", (msg: string) => {
-        const text
-          = msg === "AI is not enabled"
+        const text =
+          msg === "AI is not enabled"
             ? "Die KI Funktion ist für diesen Produktpass nicht aktiviert"
             : `Es ist ein Fehler aufgetreten`;
         messages.value.push({

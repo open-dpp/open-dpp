@@ -10,7 +10,7 @@ To get up and running quickly, start with the [Getting Started guide](https://do
 
 # Documentation
 
-See the [documentation](https://docs.open-dpp.de) for setup instructions, configuration details, and usage guides. 
+See the [documentation](https://docs.open-dpp.de) for setup instructions, configuration details, and usage guides.
 
 If you want to contribute to the documentation visit the `docs` folder.
 

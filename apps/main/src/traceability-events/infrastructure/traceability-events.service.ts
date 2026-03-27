@@ -17,9 +17,7 @@ export class TraceabilityEventsService {
     this.traceabilityEventDocument = traceabilityEventDocument;
   }
 
-  async create<T extends TraceabilityEvent>(
-    dppEvent: TraceabilityEventWrapper<T>,
-  ) {
+  async create<T extends TraceabilityEvent>(dppEvent: TraceabilityEventWrapper<T>) {
     const newTraceabilityEvent = await this.traceabilityEventDocument.create({
       _id: dppEvent.id,
       createdAt: dppEvent.createdAt,
@@ -60,7 +58,7 @@ export class TraceabilityEventsService {
         },
       )
       .exec();
-    return foundDocs.map(dm => TraceabilityEventWrapper.loadFromDb(dm));
+    return foundDocs.map((dm) => TraceabilityEventWrapper.loadFromDb(dm));
   }
 
   async findByDataType(type: TraceabilityEventType_TYPE) {
@@ -69,6 +67,6 @@ export class TraceabilityEventsService {
         "data.type": type,
       })
       .exec();
-    return foundData.map(dm => TraceabilityEventWrapper.loadFromDb(dm));
+    return foundData.map((dm) => TraceabilityEventWrapper.loadFromDb(dm));
   }
 }

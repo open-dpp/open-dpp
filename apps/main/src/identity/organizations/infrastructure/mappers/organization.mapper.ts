@@ -1,7 +1,10 @@
 import { Organization as BetterAuthOrganization } from "better-auth/plugins/organization";
 import { ObjectId } from "mongodb";
 import { Organization, OrganizationDbProps } from "../../domain/organization";
-import { OrganizationDocument, Organization as OrganizationSchema } from "../schemas/organization.schema";
+import {
+  OrganizationDocument,
+  Organization as OrganizationSchema,
+} from "../schemas/organization.schema";
 
 export class OrganizationMapper {
   static toDomainFromBetterAuth(betterAuthOrganization: BetterAuthOrganization): Organization {

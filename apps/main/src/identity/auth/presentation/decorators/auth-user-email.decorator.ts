@@ -7,8 +7,9 @@ import { createParamDecorator } from "@nestjs/common";
  * and stored on the request by the AuthGuard.
  * Works only with HTTP execution contexts.
  */
-export const AuthUserEmail: ReturnType<typeof createParamDecorator>
-  = createParamDecorator((_data: unknown, context: ExecutionContext): unknown => {
+export const AuthUserEmail: ReturnType<typeof createParamDecorator> = createParamDecorator(
+  (_data: unknown, context: ExecutionContext): unknown => {
     const request = context.switchToHttp().getRequest();
     return request.userEmail as string;
-  });
+  },
+);

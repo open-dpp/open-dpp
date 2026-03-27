@@ -62,11 +62,13 @@ describe("OrganizationsRepository", () => {
 
     await repository.create(organization, {});
 
-    expect(mockAuth.api.createOrganization).toHaveBeenCalledWith(expect.objectContaining({
-      body: expect.objectContaining({
-        logo: undefined,
+    expect(mockAuth.api.createOrganization).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({
+          logo: undefined,
+        }),
       }),
-    }));
+    );
   });
 
   it("should pass undefined for logo in update if organization has no logo", async () => {
@@ -92,14 +94,16 @@ describe("OrganizationsRepository", () => {
 
     await repository.update(organization, {});
 
-    expect(mockAuth.api.updateOrganization).toHaveBeenCalledWith(expect.objectContaining({
-      body: expect.objectContaining({
-        data: expect.objectContaining({
-          name: "Test Org Updated",
-          logo: "",
+    expect(mockAuth.api.updateOrganization).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({
+          data: expect.objectContaining({
+            name: "Test Org Updated",
+            logo: "",
+          }),
+          organizationId: organizationObjectId.toString(),
         }),
-        organizationId: organizationObjectId.toString(),
       }),
-    }));
+    );
   });
 });

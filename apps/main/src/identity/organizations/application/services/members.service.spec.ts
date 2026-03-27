@@ -42,7 +42,10 @@ describe("MembersService", () => {
   it("should check if user is member of organization", async () => {
     mockMembersRepo.findOneByUserIdAndOrganizationId.mockResolvedValue({ id: "1" });
     expect(await service.isMemberOfOrganization("user-1", "org-1")).toBe(true);
-    expect(mockMembersRepo.findOneByUserIdAndOrganizationId).toHaveBeenCalledWith("user-1", "org-1");
+    expect(mockMembersRepo.findOneByUserIdAndOrganizationId).toHaveBeenCalledWith(
+      "user-1",
+      "org-1",
+    );
 
     mockMembersRepo.findOneByUserIdAndOrganizationId.mockResolvedValue(null);
     expect(await service.isMemberOfOrganization("user-1", "org-1")).toBe(false);
@@ -50,12 +53,20 @@ describe("MembersService", () => {
 
   it("should check if user is owner or admin", async () => {
     // Owner logic
-    const ownerMember = Member.create({ organizationId: "org-1", userId: "user-1", role: MemberRole.OWNER });
+    const ownerMember = Member.create({
+      organizationId: "org-1",
+      userId: "user-1",
+      role: MemberRole.OWNER,
+    });
     mockMembersRepo.findOneByUserIdAndOrganizationId.mockResolvedValue(ownerMember);
     expect(await service.isOwnerOrAdmin("org-1", "user-1")).toBe(true);
 
     // Admin user logic
-    const regularMember = Member.create({ organizationId: "org-1", userId: "user-1", role: MemberRole.MEMBER });
+    const regularMember = Member.create({
+      organizationId: "org-1",
+      userId: "user-1",
+      role: MemberRole.MEMBER,
+    });
     mockMembersRepo.findOneByUserIdAndOrganizationId.mockResolvedValue(regularMember);
     mockUsersRepo.findOneById.mockResolvedValue({ role: UserRole.ADMIN });
     expect(await service.isOwnerOrAdmin("org-1", "user-1")).toBe(true);
@@ -71,9 +82,7 @@ describe("MembersService", () => {
   });
 
   it("should get members with user info", async () => {
-    mockMembersRepo.findByOrganizationId.mockResolvedValue([
-      { userId: "user-1", role: "member" },
-    ]);
+    mockMembersRepo.findByOrganizationId.mockResolvedValue([{ userId: "user-1", role: "member" }]);
     mockUsersRepo.findAllByIds.mockResolvedValue([
       { id: "user-1", email: "test@example.com", name: "Test", image: "img.png" },
     ]);

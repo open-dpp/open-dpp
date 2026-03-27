@@ -1,1 +1,1 @@
-export const analyticsUrl = 'https://analytics.cloud.open-dpp.de'
+export const analyticsUrl = "https://analytics.cloud.open-dpp.de";

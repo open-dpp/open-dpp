@@ -24,42 +24,36 @@ export class VirusScanFileValidator extends FileValidator<VirusScanValidatorOpti
         return false;
       }
 
-      const fileContent
-        = this.validationOptions.storageType === "disk"
+      const fileContent =
+        this.validationOptions.storageType === "disk"
           ? readFileSync(file.path)
           : file.buffer.toString();
       form.append("file", fileContent, file.originalname);
 
       try {
-        const result = (
-          await firstValueFrom(this.httpService.post(`${clamAvUrl}/scan`, form))
-        ).status;
+        const result = (await firstValueFrom(this.httpService.post(`${clamAvUrl}/scan`, form)))
+          .status;
         if (result === 200) {
           return true;
         }
-      }
-      catch (err: unknown) {
+      } catch (err: unknown) {
         console.error("Error during virus scan:", err);
         if (
-          typeof err === "object"
-          && err !== null
-          && "syscall" in err
-          && err.syscall === "getaddrinfo"
-          && process.env.NODE_ENV === "LOCAL"
+          typeof err === "object" &&
+          err !== null &&
+          "syscall" in err &&
+          err.syscall === "getaddrinfo" &&
+          process.env.NODE_ENV === "LOCAL"
         ) {
           return true; // ignore if in LOCAL env and clamav is not available
         }
       }
 
-      if (
-        this.validationOptions.storageType === "disk"
-        && existsSync(file.path)
-      ) {
+      if (this.validationOptions.storageType === "disk" && existsSync(file.path)) {
         unlinkSync(file.path); // delete a file when infected
       }
       return false;
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Error during virus scan:", error);
       return false;
     }

@@ -36,11 +36,9 @@ export function useExportImport(options: ExportImportOptions): ExportImportRetur
       document.body.appendChild(link);
       link.click();
       link.remove();
-    }
-    catch (error) {
+    } catch (error) {
       logErrorWithNotification(t(options.exportErrorKey), error);
-    }
-    finally {
+    } finally {
       if (url) {
         globalThis.URL.revokeObjectURL(url);
       }
@@ -48,12 +46,10 @@ export function useExportImport(options: ExportImportOptions): ExportImportRetur
   }
 
   async function onFileSelect(event: FileUploadSelectEvent) {
-    if (importing.value)
-      return;
+    if (importing.value) return;
 
     const file = event.files?.[0] as File | undefined;
-    if (!file)
-      return;
+    if (!file) return;
 
     importing.value = true;
     try {
@@ -64,11 +60,9 @@ export function useExportImport(options: ExportImportOptions): ExportImportRetur
         );
       }
       await options.importFn(json as Record<string, unknown>);
-    }
-    catch (error) {
+    } catch (error) {
       logErrorWithNotification(t(options.importErrorKey), error);
-    }
-    finally {
+    } finally {
       importing.value = false;
     }
   }

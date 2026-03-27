@@ -27,29 +27,43 @@ export class AasRepository {
   }
 
   fromPlainWithMigration(plain: any): AssetAdministrationShell {
-    return match(plain).with({
-      _schemaVersion: AssetAdministrationShellDocSchemaVersion.v1_0_0,
-      assetInformation: {
-        defaultThumbnail: P.optional({
-          path: P.string,
-          contentType: P.union(P.string, null),
-        }),
-      },
-    }, ({ assetInformation }) => {
-      return this.fromPlain({
-        ...plain,
-        assetInformation: {
-          ...assetInformation,
-          defaultThumbnails: assetInformation.defaultThumbnail ? [assetInformation.defaultThumbnail] : [],
+    return match(plain)
+      .with(
+        {
+          _schemaVersion: AssetAdministrationShellDocSchemaVersion.v1_0_0,
+          assetInformation: {
+            defaultThumbnail: P.optional({
+              path: P.string,
+              contentType: P.union(P.string, null),
+            }),
+          },
         },
+        ({ assetInformation }) => {
+          return this.fromPlain({
+            ...plain,
+            assetInformation: {
+              ...assetInformation,
+              defaultThumbnails: assetInformation.defaultThumbnail
+                ? [assetInformation.defaultThumbnail]
+                : [],
+            },
+          });
+        },
+      )
+      .otherwise(() => {
+        return this.fromPlain(plain);
       });
-    }).otherwise(() => {
-      return this.fromPlain(plain);
-    });
   }
 
   async save(assetAdministrationShell: AssetAdministrationShell, options?: DbSessionOptions) {
-    return await save(assetAdministrationShell, this.aasDoc, AssetAdministrationShellDocSchemaVersion.v1_1_0, this.fromPlain.bind(this), AssetAdministrationShellDbSchema, options);
+    return await save(
+      assetAdministrationShell,
+      this.aasDoc,
+      AssetAdministrationShellDocSchemaVersion.v1_1_0,
+      this.fromPlain.bind(this),
+      AssetAdministrationShellDbSchema,
+      options,
+    );
   }
 
   async findOneOrFail(id: string): Promise<AssetAdministrationShell> {

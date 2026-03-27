@@ -42,12 +42,13 @@ describe("aasRepository", () => {
           },
         ]),
       ],
-      providers: [
-        AasRepository,
-      ],
-    }).overrideProvider(EmailService).useValue({
-      send: jest.fn(),
-    }).compile();
+      providers: [AasRepository],
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
 
     aasRepository = module.get<AasRepository>(AasRepository);
     AasDoc = module.get<Model<AssetAdministrationShellDoc>>(
@@ -86,18 +87,22 @@ describe("aasRepository", () => {
     });
     await legacyDoc.save();
     const foundAas = await aasRepository.findOneOrFail(id);
-    expect(foundAas).toEqual(AssetAdministrationShell.fromPlain({
-      id,
-      assetInformation: {
-        assetKind: AssetKind.Instance,
-        defaultThumbnails: [{
-          path: "https://example.png",
-          contentType: "image/png",
-        }],
-        specificAssetIds: [],
-        globalAssetId: id,
-      },
-    }));
+    expect(foundAas).toEqual(
+      AssetAdministrationShell.fromPlain({
+        id,
+        assetInformation: {
+          assetKind: AssetKind.Instance,
+          defaultThumbnails: [
+            {
+              path: "https://example.png",
+              contentType: "image/png",
+            },
+          ],
+          specificAssetIds: [],
+          globalAssetId: id,
+        },
+      }),
+    );
   });
 
   afterAll(async () => {

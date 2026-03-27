@@ -55,45 +55,36 @@ watch(
 
 <template>
   <div
-    class="relative w-full flex items-center justify-center bg-gray-50 rounded overflow-hidden border border-gray-200"
+    class="relative flex w-full items-center justify-center overflow-hidden rounded border border-gray-200 bg-gray-50"
   >
     <div v-if="loading" class="mx-auto my-auto">
       <RingLoader />
     </div>
     <Image
       v-else-if="url && media.mimeType.startsWith('image/')"
-      class="w-full h-full flex items-center justify-center"
+      class="flex h-full w-full items-center justify-center"
       image-class="max-w-full max-h-full object-contain"
       :src="url"
       :alt="media.title || ''"
       :preview="props.preview"
     />
-    <div
-      v-else
-      class="w-full h-full flex items-center justify-center text-gray-400"
-    >
-      <PhotoIcon
-        v-if="media.mimeType.startsWith('image/')"
-        class="w-1/3 h-1/3"
-      />
-      <VideoCameraIcon
-        v-else-if="media.mimeType.startsWith('video/')"
-        class="w-1/3 h-1/3"
-      />
-      <DocumentIcon v-else class="w-1/3 h-1/3" />
+    <div v-else class="flex h-full w-full items-center justify-center text-gray-400">
+      <PhotoIcon v-if="media.mimeType.startsWith('image/')" class="h-1/3 w-1/3" />
+      <VideoCameraIcon v-else-if="media.mimeType.startsWith('video/')" class="h-1/3 w-1/3" />
+      <DocumentIcon v-else class="h-1/3 w-1/3" />
     </div>
     <div
       v-if="url === null && !loading"
-      class="absolute top-1 right-1 z-10 bg-red-500 text-white text-xs px-2 py-1 rounded shadow-sm max-w-[80%]"
+      class="absolute top-1 right-1 z-10 max-w-[80%] rounded bg-red-500 px-2 py-1 text-xs text-white shadow-sm"
     >
-      <div class="flex flex-row gap-1 items-center justify-center">
-        <ExclamationTriangleIcon class="w-3 h-3" />
+      <div class="flex flex-row items-center justify-center gap-1">
+        <ExclamationTriangleIcon class="h-3 w-3" />
         <span class="truncate">{{ t("file.notFound") }}</span>
       </div>
     </div>
     <div
       v-if="showType"
-      class="absolute bottom-1 right-1 z-10 bg-primary-500 text-white text-xs px-2 py-0.5 rounded shadow-sm"
+      class="bg-primary-500 absolute right-1 bottom-1 z-10 rounded px-2 py-0.5 text-xs text-white shadow-sm"
     >
       <div>
         {{ media.mimeType.substring(media.mimeType.indexOf("/") + 1) }}

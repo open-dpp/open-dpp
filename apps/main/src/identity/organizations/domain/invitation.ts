@@ -52,10 +52,7 @@ export class Invitation {
 
   public static create(data: InvitationCreateProps) {
     const now = new Date();
-    const ttl
-      = data.ttl !== undefined && data.ttl >= 0
-        ? data.ttl
-        : Invitation.DEFAULT_TTL;
+    const ttl = data.ttl !== undefined && data.ttl >= 0 ? data.ttl : Invitation.DEFAULT_TTL;
     const expiresAt = new Date(now.getTime() + ttl);
     return new Invitation(
       randomUUID(),

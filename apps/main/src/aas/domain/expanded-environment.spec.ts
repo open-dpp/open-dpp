@@ -77,7 +77,12 @@ describe("expandedEnvironment", () => {
       const submodelMap = new Map([[submodel.id, submodel]]);
       const cdMap = new Map([[cd.id, cd]]);
 
-      const expanded = ExpandedEnvironment.fromEnvironment(environment, shellMap, submodelMap, cdMap);
+      const expanded = ExpandedEnvironment.fromEnvironment(
+        environment,
+        shellMap,
+        submodelMap,
+        cdMap,
+      );
 
       expect(expanded.shells).toEqual([shell]);
       expect(expanded.submodels).toEqual([submodel]);
@@ -91,12 +96,9 @@ describe("expandedEnvironment", () => {
         conceptDescriptions: [],
       });
 
-      expect(() => ExpandedEnvironment.fromEnvironment(
-        environment,
-        new Map(),
-        new Map(),
-        new Map(),
-      )).toThrow(ValueError);
+      expect(() =>
+        ExpandedEnvironment.fromEnvironment(environment, new Map(), new Map(), new Map()),
+      ).toThrow(ValueError);
     });
 
     it("should throw ValueError when submodels are missing from map", () => {
@@ -106,12 +108,9 @@ describe("expandedEnvironment", () => {
         conceptDescriptions: [],
       });
 
-      expect(() => ExpandedEnvironment.fromEnvironment(
-        environment,
-        new Map(),
-        new Map(),
-        new Map(),
-      )).toThrow(ValueError);
+      expect(() =>
+        ExpandedEnvironment.fromEnvironment(environment, new Map(), new Map(), new Map()),
+      ).toThrow(ValueError);
     });
 
     it("should throw ValueError when concept descriptions are missing from map", () => {
@@ -121,12 +120,9 @@ describe("expandedEnvironment", () => {
         conceptDescriptions: ["missing-cd-id"],
       });
 
-      expect(() => ExpandedEnvironment.fromEnvironment(
-        environment,
-        new Map(),
-        new Map(),
-        new Map(),
-      )).toThrow(ValueError);
+      expect(() =>
+        ExpandedEnvironment.fromEnvironment(environment, new Map(), new Map(), new Map()),
+      ).toThrow(ValueError);
     });
 
     it("should include all missing IDs in the error message", () => {
@@ -136,12 +132,9 @@ describe("expandedEnvironment", () => {
         conceptDescriptions: ["cd-1"],
       });
 
-      expect(() => ExpandedEnvironment.fromEnvironment(
-        environment,
-        new Map(),
-        new Map(),
-        new Map(),
-      )).toThrow(
+      expect(() =>
+        ExpandedEnvironment.fromEnvironment(environment, new Map(), new Map(), new Map()),
+      ).toThrow(
         /Missing shells: \[shell-1, shell-2\].*missing submodels: \[sub-1\].*missing concept descriptions: \[cd-1\]/,
       );
     });

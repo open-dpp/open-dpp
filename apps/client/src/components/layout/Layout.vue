@@ -159,10 +159,10 @@ const navigation = computed<Array<MenuItemGroupInterface>>(() => {
     .map((group) => {
       return {
         ...group,
-        items: group.items.filter(item => item.show()),
+        items: group.items.filter((item) => item.show()),
       };
     })
-    .filter(group => group.items.length > 0);
+    .filter((group) => group.items.length > 0);
 });
 
 const userNavigation = [
@@ -172,8 +172,7 @@ const userNavigation = [
 
 const initials = computed(() => {
   const session = authClient.useSession();
-  if (!session.value.data)
-    return "AN";
+  if (!session.value.data) return "AN";
   const userSession = session.value.data;
   const first = userSession.user.firstName?.substring(0, 1) || "A";
   const last = userSession.user.lastName?.substring(0, 1) || "N";
@@ -182,8 +181,7 @@ const initials = computed(() => {
 
 const fullName = computed(() => {
   const session = authClient.useSession();
-  if (!session.value.data)
-    return "AN";
+  if (!session.value.data) return "AN";
   const userSession = session.value.data;
   const first = userSession.user.firstName;
   const last = userSession.user.lastName;
@@ -230,9 +228,7 @@ const sidebarOpen = ref(false);
                 leave-from="opacity-100"
                 leave-to="opacity-0"
               >
-                <div
-                  class="absolute left-full top-0 flex w-16 justify-center pt-5"
-                >
+                <div class="absolute top-0 left-full flex w-16 justify-center pt-5">
                   <button
                     class="-m-2.5 p-2.5"
                     data-cy="closeSidebar"
@@ -249,25 +245,19 @@ const sidebarOpen = ref(false);
                 class="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-4"
                 data-cy="sidebar"
               >
-                <div class="flex p-2 shrink-0 items-center">
-                  <BrandingLogo
-                    :center="false"
-                    :url="src"
-                    @click="router.push('/')"
-                  />
+                <div class="flex shrink-0 items-center p-2">
+                  <BrandingLogo :center="false" :url="src" @click="router.push('/')" />
                 </div>
                 <nav class="flex flex-1 flex-col">
                   <ul class="flex flex-1 flex-col gap-y-7" role="list">
                     <li v-for="group in navigation" :key="group.name">
-                      <div
-                        class="text-xs font-semibold leading-6 text-gray-400"
-                      >
+                      <div class="text-xs leading-6 font-semibold text-gray-400">
                         {{ group.name }}
                       </div>
                       <ul class="-mx-2 space-y-1" role="list">
                         <li v-for="item in group.items" :key="item.name">
                           <router-link
-                            class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6"
+                            class="group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold"
                             :class="[
                               item.to === route.path
                                 ? 'bg-gray-50 text-gray-700'
@@ -291,18 +281,13 @@ const sidebarOpen = ref(false);
                       </ul>
                     </li>
                     <li v-if="layoutStore.quickAccessItems.length > 0">
-                      <div
-                        class="text-xs font-semibold leading-6 text-gray-400"
-                      >
+                      <div class="text-xs leading-6 font-semibold text-gray-400">
                         Schnellzugriff
                       </div>
                       <ul class="-mx-2 mt-2 space-y-1" role="list">
-                        <li
-                          v-for="item in layoutStore.quickAccessItems"
-                          :key="item.name"
-                        >
+                        <li v-for="item in layoutStore.quickAccessItems" :key="item.name">
                           <router-link
-                            class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6"
+                            class="group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold"
                             :class="[
                               item.path === route.path
                                 ? 'bg-gray-50 text-black'
@@ -317,7 +302,8 @@ const sidebarOpen = ref(false);
                                   ? 'border-black text-black'
                                   : 'border-gray-200 text-gray-400 group-hover:border-black group-hover:text-black',
                               ]"
-                            >{{ item.name }}</span>
+                              >{{ item.name }}</span
+                            >
                             <span class="truncate">{{ item.name }}</span>
                           </router-link>
                         </li>
@@ -333,26 +319,24 @@ const sidebarOpen = ref(false);
     </TransitionRoot>
 
     <!-- Static sidebar for desktop -->
-    <div
-      class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col"
-    >
+    <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
       <!-- Sidebar component, swap this element with another sidebar if you like -->
       <div
         class="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6 pb-4"
       >
-        <div class="flex p-2 shrink-0 items-start">
+        <div class="flex shrink-0 items-start p-2">
           <BrandingLogo :center="false" :url="src" @click="router.push('/')" />
         </div>
         <nav class="flex flex-1 flex-col">
           <ul class="flex flex-1 flex-col gap-y-7" role="list">
             <li v-for="group in navigation" :key="group.name">
-              <div class="text-xs font-semibold leading-6 text-gray-400">
+              <div class="text-xs leading-6 font-semibold text-gray-400">
                 {{ group.name }}
               </div>
               <ul class="-mx-2 space-y-1" role="list">
                 <li v-for="item in group.items" :key="item.name">
                   <router-link
-                    class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6"
+                    class="group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold"
                     :class="[
                       item.to === route.path
                         ? 'bg-gray-50 text-black'
@@ -376,16 +360,11 @@ const sidebarOpen = ref(false);
               </ul>
             </li>
             <li v-if="layoutStore.quickAccessItems.length > 0">
-              <div class="text-xs font-semibold leading-6 text-gray-400">
-                Schnellzugriff
-              </div>
+              <div class="text-xs leading-6 font-semibold text-gray-400">Schnellzugriff</div>
               <ul class="-mx-2 mt-2 space-y-1" role="list">
-                <li
-                  v-for="item in layoutStore.quickAccessItems"
-                  :key="item.name"
-                >
+                <li v-for="item in layoutStore.quickAccessItems" :key="item.name">
                   <router-link
-                    class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6"
+                    class="group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold"
                     :class="[
                       item.path === route.path
                         ? 'bg-gray-50 text-black'
@@ -400,7 +379,8 @@ const sidebarOpen = ref(false);
                           ? 'border-black text-black'
                           : 'border-gray-200 text-gray-400 group-hover:border-black group-hover:text-black',
                       ]"
-                    >{{ item.name }}</span>
+                      >{{ item.name }}</span
+                    >
                     <span class="truncate">{{ item.name }}</span>
                   </router-link>
                 </li>
@@ -431,18 +411,19 @@ const sidebarOpen = ref(false);
         <!-- Separator -->
         <div aria-hidden="true" class="h-6 w-px bg-gray-200 lg:hidden" />
 
-        <div class="flex w-full md:justify-between gap-x-2 justify-end">
+        <div class="flex w-full justify-end gap-x-2 md:justify-between">
           <Breadcrumbs class="hidden md:flex" />
           <div class="flex items-center gap-x-2">
             <span
               aria-hidden="true"
-              class="hidden xl:inline-block ml-4 text-sm font-semibold leading-6 text-gray-900"
-            >{{ fullName ?? "AN" }}</span>
+              class="ml-4 hidden text-sm leading-6 font-semibold text-gray-900 xl:inline-block"
+              >{{ fullName ?? "AN" }}</span
+            >
             <!-- Profile dropdown -->
             <Menu as="div" class="relative">
               <MenuButton class="-m-1.5 flex items-center p-1.5">
                 <div
-                  class="hover:bg-primary-600 cursor-pointer inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary-500 text-white text-sm font-medium"
+                  class="hover:bg-primary-600 bg-primary-500 inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-sm font-medium text-white"
                 >
                   {{ initials }}
                 </div>
@@ -458,11 +439,7 @@ const sidebarOpen = ref(false);
                 <MenuItems
                   class="absolute right-0 z-10 mt-2.5 w-32 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-hidden"
                 >
-                  <MenuItem
-                    v-for="item in userNavigation"
-                    :key="item.name"
-                    v-slot="{ active }"
-                  >
+                  <MenuItem v-for="item in userNavigation" :key="item.name" v-slot="{ active }">
                     <router-link
                       class="block px-3 py-1 text-sm leading-6 text-gray-900"
                       :class="[active ? 'bg-gray-50' : '']"
@@ -484,7 +461,7 @@ const sidebarOpen = ref(false);
             <transition :duration="75" appear mode="out-in" name="fade">
               <div
                 v-if="layoutStore.isPageLoading"
-                class="w-full min-h-full flex items-center justify-items-center"
+                class="flex min-h-full w-full items-center justify-items-center"
               >
                 <RingLoader class="mx-auto" />
               </div>

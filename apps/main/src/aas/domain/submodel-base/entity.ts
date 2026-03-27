@@ -61,13 +61,15 @@ export class Entity implements ISubmodelElement {
     return this._description;
   }
 
-  static create(data: SubmodelBaseProps & {
-    entityType: EntityTypeType;
-    extensions?: Array<Extension>;
-    statements?: Array<ISubmodelElement>;
-    globalAssetId?: string | null;
-    specificAssetIds?: Array<SpecificAssetId>;
-  }) {
+  static create(
+    data: SubmodelBaseProps & {
+      entityType: EntityTypeType;
+      extensions?: Array<Extension>;
+      statements?: Array<ISubmodelElement>;
+      globalAssetId?: string | null;
+      specificAssetIds?: Array<SpecificAssetId>;
+    },
+  ) {
     return new Entity(
       data.entityType,
       data.extensions ?? [],
@@ -83,14 +85,14 @@ export class Entity implements ISubmodelElement {
       data.globalAssetId ?? null,
       data.specificAssetIds ?? [],
     );
-  };
+  }
 
   static fromPlain(data: unknown): ISubmodelElement {
     const parsed = EntityTypeJsonSchema.parse(data);
     const baseObjects = submodelBasePropsFromPlain(parsed);
     return new Entity(
       parsed.entityType,
-      parsed.extensions.map(e => Extension.fromPlain(e)),
+      parsed.extensions.map((e) => Extension.fromPlain(e)),
       baseObjects.category,
       baseObjects.idShort,
       baseObjects.displayName,
@@ -101,7 +103,7 @@ export class Entity implements ISubmodelElement {
       baseObjects.embeddedDataSpecifications,
       parsed.statements.map(parseSubmodelElement),
       parsed.globalAssetId,
-      parsed.specificAssetIds.map(s => SpecificAssetId.fromPlain(s)),
+      parsed.specificAssetIds.map((s) => SpecificAssetId.fromPlain(s)),
     );
   }
 
@@ -119,8 +121,10 @@ export class Entity implements ISubmodelElement {
   }
 
   addSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
-    if (this.statements.some(s => s.idShort === submodelElement.idShort)) {
-      throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
+    if (this.statements.some((s) => s.idShort === submodelElement.idShort)) {
+      throw new ValueError(
+        `Submodel element with idShort ${submodelElement.idShort} already exists`,
+      );
     }
     this.statements.push(submodelElement);
     return submodelElement;

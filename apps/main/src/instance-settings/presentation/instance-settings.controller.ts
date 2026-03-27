@@ -15,9 +15,7 @@ type UpdateInstanceSettingsDto = z.infer<typeof UpdateInstanceSettingsDtoSchema>
 
 @Controller("instance-settings")
 export class InstanceSettingsController {
-  constructor(
-    private readonly instanceSettingsService: InstanceSettingsService,
-  ) {}
+  constructor(private readonly instanceSettingsService: InstanceSettingsService) {}
 
   @Get()
   @UserHasRole([UserRole.ADMIN])

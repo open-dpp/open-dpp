@@ -14,9 +14,7 @@ export function applyBodySizeHandler(app: INestApplication) {
   const integrationRouteRegex = /^(?:\/api)?\/integration(?:\/|$)/;
   const betterAuthRouteRegex = /^(?:\/api)?\/auth(?:\/|$)/;
   const defaultJsonLimit = configService.get("OPEN_DPP_JSON_LIMIT_DEFAULT");
-  const integrationJsonLimit = configService.get(
-    "OPEN_DPP_JSON_LIMIT_INTEGRATION",
-  );
+  const integrationJsonLimit = configService.get("OPEN_DPP_JSON_LIMIT_INTEGRATION");
   const defaultJsonParser = express.json({ limit: defaultJsonLimit });
   const integrationJsonParser = express.json({ limit: integrationJsonLimit });
 
@@ -24,9 +22,7 @@ export function applyBodySizeHandler(app: INestApplication) {
     if (betterAuthRouteRegex.test(req.path)) {
       return next();
     }
-    const parser = integrationRouteRegex.test(req.path)
-      ? integrationJsonParser
-      : defaultJsonParser;
+    const parser = integrationRouteRegex.test(req.path) ? integrationJsonParser : defaultJsonParser;
     return parser(req, res, next);
   });
 
@@ -40,10 +36,7 @@ export function applyBodySizeHandler(app: INestApplication) {
         timestamp: new Date().toISOString(),
       });
     }
-    if (
-      err?.type === "entity.parse.failed"
-      || (err instanceof SyntaxError && "body" in err)
-    ) {
+    if (err?.type === "entity.parse.failed" || (err instanceof SyntaxError && "body" in err)) {
       return res.status(400).json({
         statusCode: 400,
         message: "Invalid JSON payload",

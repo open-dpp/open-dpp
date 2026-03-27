@@ -1,4 +1,9 @@
-import { AasSubmodelElements, AasSubmodelElementsType, DataTypeDefType, RangeJsonSchema } from "@open-dpp/dto";
+import {
+  AasSubmodelElements,
+  AasSubmodelElementsType,
+  DataTypeDefType,
+  RangeJsonSchema,
+} from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
@@ -48,12 +53,14 @@ export class Range implements ISubmodelElement {
     return this._description;
   }
 
-  static create(data: SubmodelBaseProps & {
-    valueType: DataTypeDefType;
-    extensions?: Array<Extension>;
-    min?: string | null;
-    max?: string | null;
-  }) {
+  static create(
+    data: SubmodelBaseProps & {
+      valueType: DataTypeDefType;
+      extensions?: Array<Extension>;
+      min?: string | null;
+      max?: string | null;
+    },
+  ) {
     return new Range(
       data.valueType,
       data.extensions ?? [],

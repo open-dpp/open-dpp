@@ -10,20 +10,16 @@ export class Extension implements IVisitable {
     public readonly valueType: DataTypeDefType | null = null,
     public readonly value: string | null = null,
     public readonly refersTo: Array<Reference>,
-  ) {
+  ) {}
 
-  }
-
-  static create(
-    data: {
-      name: string;
-      semanticId?: Reference | null;
-      supplementalSemanticIds?: Array<Reference>;
-      valueType?: DataTypeDefType | null;
-      value?: string | null;
-      refersTo?: Array<Reference>;
-    },
-  ) {
+  static create(data: {
+    name: string;
+    semanticId?: Reference | null;
+    supplementalSemanticIds?: Array<Reference>;
+    valueType?: DataTypeDefType | null;
+    value?: string | null;
+    refersTo?: Array<Reference>;
+  }) {
     return new Extension(
       data.name,
       data.semanticId ?? null,
@@ -39,10 +35,10 @@ export class Extension implements IVisitable {
     return new Extension(
       parsed.name,
       parsed.semanticId ? Reference.fromPlain(parsed.semanticId) : undefined,
-      parsed.supplementalSemanticIds.map(s => Reference.fromPlain(s)),
+      parsed.supplementalSemanticIds.map((s) => Reference.fromPlain(s)),
       parsed.valueType,
       parsed.value,
-      parsed.refersTo.map(s => Reference.fromPlain(s)),
+      parsed.refersTo.map((s) => Reference.fromPlain(s)),
     );
   }
 

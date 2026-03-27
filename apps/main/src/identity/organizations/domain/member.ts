@@ -51,23 +51,11 @@ export class Member {
 
   public static create(data: MemberCreateProps) {
     const now = new Date();
-    return new Member(
-      randomUUID(),
-      data.organizationId,
-      data.userId,
-      data.role,
-      now,
-    );
+    return new Member(randomUUID(), data.organizationId, data.userId, data.role, now);
   }
 
   public static loadFromDb(data: MemberDbProps) {
-    return new Member(
-      data.id,
-      data.organizationId,
-      data.userId,
-      data.role,
-      data.createdAt,
-    );
+    return new Member(data.id, data.organizationId, data.userId, data.role, data.createdAt);
   }
 
   public isOwner(): boolean {

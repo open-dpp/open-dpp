@@ -2,8 +2,14 @@ import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AasRepository } from "../aas/infrastructure/aas.repository";
 import { ConceptDescriptionRepository } from "../aas/infrastructure/concept-description.repository";
-import { AssetAdministrationShellDoc, AssetAdministrationShellSchema } from "../aas/infrastructure/schemas/asset-administration-shell.schema";
-import { ConceptDescriptionDoc, ConceptDescriptionSchema } from "../aas/infrastructure/schemas/concept-description.schema";
+import {
+  AssetAdministrationShellDoc,
+  AssetAdministrationShellSchema,
+} from "../aas/infrastructure/schemas/asset-administration-shell.schema";
+import {
+  ConceptDescriptionDoc,
+  ConceptDescriptionSchema,
+} from "../aas/infrastructure/schemas/concept-description.schema";
 import { SubmodelDoc, SubmodelSchema } from "../aas/infrastructure/schemas/submodel.schema";
 import { SubmodelRepository } from "../aas/infrastructure/submodel.repository";
 import { EnvironmentService } from "../aas/presentation/environment.service";
@@ -54,9 +60,6 @@ import { UniqueProductIdentifierController } from "./presentation/unique.product
     PassportRepository,
     BrandingRepository,
   ],
-  exports: [
-    UniqueProductIdentifierService,
-    UniqueProductIdentifierApplicationService,
-  ],
+  exports: [UniqueProductIdentifierService, UniqueProductIdentifierApplicationService],
 })
 export class UniqueProductIdentifierModule {}

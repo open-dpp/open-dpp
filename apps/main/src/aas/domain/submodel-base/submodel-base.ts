@@ -1,8 +1,4 @@
-import {
-  AasSubmodelElementsType,
-  KeyTypesEnum,
-  SubmodelBaseJsonSchema,
-} from "@open-dpp/dto";
+import { AasSubmodelElementsType, KeyTypesEnum, SubmodelBaseJsonSchema } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { z } from "zod";
 import { IHasDataSpecification } from "../common/has-data-specification";
@@ -27,26 +23,27 @@ export interface SubmodelBaseProps {
   embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
 }
 
-export interface SubmodelBaseObjects extends IReferable, IHasSemantics, IQualifiable, IHasDataSpecification {
-}
+export interface SubmodelBaseObjects
+  extends IReferable, IHasSemantics, IQualifiable, IHasDataSpecification {}
 
 export function submodelBasePropsFromPlain(data: Record<string, unknown>): SubmodelBaseObjects {
   const parsed = SubmodelBaseJsonSchema.parse(data);
   return {
     category: parsed.category ?? null,
     idShort: parsed.idShort,
-    displayName: parsed.displayName.map(x => LanguageText.fromPlain(x)),
-    description: parsed.description.map(x => LanguageText.fromPlain(x)),
+    displayName: parsed.displayName.map((x) => LanguageText.fromPlain(x)),
+    description: parsed.description.map((x) => LanguageText.fromPlain(x)),
     semanticId: parsed.semanticId ? Reference.fromPlain(parsed.semanticId) : null,
-    supplementalSemanticIds: parsed.supplementalSemanticIds.map(x => Reference.fromPlain(x)),
-    qualifiers: parsed.qualifiers.map(q => Qualifier.fromPlain(q)),
-    embeddedDataSpecifications: parsed.embeddedDataSpecifications.map(e => EmbeddedDataSpecification.fromPlain(e)),
+    supplementalSemanticIds: parsed.supplementalSemanticIds.map((x) => Reference.fromPlain(x)),
+    qualifiers: parsed.qualifiers.map((q) => Qualifier.fromPlain(q)),
+    embeddedDataSpecifications: parsed.embeddedDataSpecifications.map((e) =>
+      EmbeddedDataSpecification.fromPlain(e),
+    ),
   };
 }
 
 export class IdShortPath {
-  constructor(private readonly _segments: Array<string>) {
-  }
+  constructor(private readonly _segments: Array<string>) {}
 
   static create(data: { path: string }): IdShortPath {
     return new IdShortPath(data.path.split("."));
@@ -81,10 +78,7 @@ export interface AddOptions {
   position?: number;
 }
 
-export interface ISubmodelBase
-  extends SubmodelBaseObjects,
-  IVisitable,
-  IConvertableToPlain {
+export interface ISubmodelBase extends SubmodelBaseObjects, IVisitable, IConvertableToPlain {
   addSubmodelElement: (submodelElement: ISubmodelElement, options?: AddOptions) => ISubmodelElement;
   getSubmodelElements: () => ISubmodelElement[];
 }
@@ -100,15 +94,25 @@ export function parseSubmodelElement(submodelBase: any): ISubmodelElement {
   return AasClass.fromPlain(submodelBase);
 }
 
-export function deleteSubmodelElementOrFail(submodelElements: ISubmodelElement[], idShort: string): void {
-  const foundIndex = submodelElements.findIndex(e => e.idShort === idShort);
+export function deleteSubmodelElementOrFail(
+  submodelElements: ISubmodelElement[],
+  idShort: string,
+): void {
+  const foundIndex = submodelElements.findIndex((e) => e.idShort === idShort);
   if (foundIndex === -1) {
-    throw new ValueError(`Cannot delete submodel element with idShort ${idShort}, since it does not exist.`);
+    throw new ValueError(
+      `Cannot delete submodel element with idShort ${idShort}, since it does not exist.`,
+    );
   }
   submodelElements.splice(foundIndex, 1);
 }
 
-export function cloneSubmodelElement(submodelElement: ISubmodelElement, override?: any): ISubmodelElement {
-  const clone = override ? { ...submodelElement.toPlain(), ...override } : submodelElement.toPlain();
+export function cloneSubmodelElement(
+  submodelElement: ISubmodelElement,
+  override?: any,
+): ISubmodelElement {
+  const clone = override
+    ? { ...submodelElement.toPlain(), ...override }
+    : submodelElement.toPlain();
   return parseSubmodelElement(clone);
 }

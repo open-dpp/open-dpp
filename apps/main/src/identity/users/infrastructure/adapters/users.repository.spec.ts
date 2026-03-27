@@ -64,16 +64,18 @@ describe("UsersRepository", () => {
     const result = await repository.save(user);
 
     // Check that createUser was called with correct arguments
-    expect(mockAuth.api.createUser).toHaveBeenCalledWith(expect.objectContaining({
-      body: expect.objectContaining({
-        email: "test@example.com",
-        name: "John Doe",
-        data: expect.objectContaining({
-          firstName: "John",
-          lastName: "Doe",
+    expect(mockAuth.api.createUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({
+          email: "test@example.com",
+          name: "John Doe",
+          data: expect.objectContaining({
+            firstName: "John",
+            lastName: "Doe",
+          }),
         }),
       }),
-    }));
+    );
 
     // Verify password was generated (should be a non-empty string)
     const callArgs = (mockAuth.api.createUser as jest.Mock).mock.calls[0][0] as any;
@@ -98,11 +100,13 @@ describe("UsersRepository", () => {
 
     await repository.save(user);
 
-    expect(mockAuth.api.createUser).toHaveBeenCalledWith(expect.objectContaining({
-      body: expect.objectContaining({
-        name: "Doe",
+    expect(mockAuth.api.createUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({
+          name: "Doe",
+        }),
       }),
-    }));
+    );
   });
 
   it("should handle null lastName in name fallback", async () => {
@@ -120,11 +124,13 @@ describe("UsersRepository", () => {
 
     await repository.save(user);
 
-    expect(mockAuth.api.createUser).toHaveBeenCalledWith(expect.objectContaining({
-      body: expect.objectContaining({
-        name: "John",
+    expect(mockAuth.api.createUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({
+          name: "John",
+        }),
       }),
-    }));
+    );
   });
 
   it("should handle null firstName and lastName in name fallback", async () => {
@@ -142,11 +148,13 @@ describe("UsersRepository", () => {
 
     await repository.save(user);
 
-    expect(mockAuth.api.createUser).toHaveBeenCalledWith(expect.objectContaining({
-      body: expect.objectContaining({
-        name: "", // Should be empty string, not "null null"
+    expect(mockAuth.api.createUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({
+          name: "", // Should be empty string, not "null null"
+        }),
       }),
-    }));
+    );
   });
 
   it("should save user with provided password", async () => {
@@ -165,11 +173,13 @@ describe("UsersRepository", () => {
 
     await repository.save(user, "secure-password-123");
 
-    expect(mockAuth.api.createUser).toHaveBeenCalledWith(expect.objectContaining({
-      body: expect.objectContaining({
-        password: "secure-password-123",
+    expect(mockAuth.api.createUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({
+          password: "secure-password-123",
+        }),
       }),
-    }));
+    );
   });
 
   it("should find one by id using workaround", async () => {

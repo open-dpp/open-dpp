@@ -12,11 +12,8 @@ const { submodelTree } = useSubmodelTree(passportStore.submodels);
 </script>
 
 <template>
-  <nav
-    class="sticky top-0 flex flex-1 flex-col divide-y divide-gray-200"
-    aria-label="Sidebar"
-  >
-    <div class="font-bold py-3 text-xl">
+  <nav class="sticky top-0 flex flex-1 flex-col divide-y divide-gray-200" aria-label="Sidebar">
+    <div class="py-3 text-xl font-bold">
       {{ t("presentation.navigation") }}
     </div>
     <ul role="list" class="-mx-2 space-y-1 pt-2">

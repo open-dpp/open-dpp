@@ -11,14 +11,11 @@ export interface SubmodelTreeElement {
 
 export function useSubmodelTree(submodels: SubmodelResponseDto[]) {
   const submodelTree = computed<SubmodelTreeElement[]>(() => {
-    const treeMapping = (
-      submodels: SubmodelElementResponseDto[],
-    ): SubmodelTreeElement[] => {
+    const treeMapping = (submodels: SubmodelElementResponseDto[]): SubmodelTreeElement[] => {
       return submodels
-        .filter(element => element.modelType === "SubmodelElementCollection")
+        .filter((element) => element.modelType === "SubmodelElementCollection")
         .map((element) => {
-          const submodelElements
-            = element.value as SubmodelElementResponseDto[];
+          const submodelElements = element.value as SubmodelElementResponseDto[];
 
           return {
             idShort: element.idShort,
@@ -45,9 +42,7 @@ export function useSubmodelTree(submodels: SubmodelResponseDto[]) {
         return 0;
       }
 
-      return Math.max(
-        ...elements.map(element => 1 + getTreeDepth(element.children)),
-      );
+      return Math.max(...elements.map((element) => 1 + getTreeDepth(element.children)));
     };
 
     return getTreeDepth(submodelTree.value);
@@ -63,7 +58,10 @@ export function useSubmodelTree(submodels: SubmodelResponseDto[]) {
     });
   };
 
-  const findTreeElementById = (elements: SubmodelTreeElement[], id: string): SubmodelTreeElement | undefined => {
+  const findTreeElementById = (
+    elements: SubmodelTreeElement[],
+    id: string,
+  ): SubmodelTreeElement | undefined => {
     for (const element of elements) {
       if (element.idShort === id) {
         return element;

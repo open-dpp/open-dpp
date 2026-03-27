@@ -15,17 +15,22 @@ import GalleriaEdit from "../media/GalleriaEdit.vue";
 import DisplayNameForm from "./form/DisplayNameForm.vue";
 import FormContainer from "./form/FormContainer.vue";
 
-const props
-  = defineProps<
-    SharedEditorProps<
-      AssetAdministrationShellEditorProps,
-      AssetAdministrationShellModificationDto
-    >
+const props =
+  defineProps<
+    SharedEditorProps<AssetAdministrationShellEditorProps, AssetAdministrationShellModificationDto>
   >();
 
 const { t } = useI18n();
 const errorHandlingStore = useErrorHandlingStore();
-const { files, downloadDefaultThumbnails, assetInformation, addImage, removeImage, moveImage, modifyImage } = useAasGallery({ translate: t, errorHandlingStore });
+const {
+  files,
+  downloadDefaultThumbnails,
+  assetInformation,
+  addImage,
+  removeImage,
+  moveImage,
+  modifyImage,
+} = useAasGallery({ translate: t, errorHandlingStore });
 
 const formSchema = z.object({
   displayName: LanguageTextFormSchema.array(),
@@ -70,7 +75,14 @@ defineExpose<{
   <FormContainer>
     <DisplayNameForm :show-errors="showErrors" :errors="errors" />
   </FormContainer>
-  <GalleriaEdit v-model="files" :title="t('aasEditor.productImages')" @add-image="addImage" @remove-image="removeImage" @modify-image="modifyImage" @move-image="moveImage" />
+  <GalleriaEdit
+    v-model="files"
+    :title="t('aasEditor.productImages')"
+    @add-image="addImage"
+    @remove-image="removeImage"
+    @modify-image="modifyImage"
+    @move-image="moveImage"
+  />
 </template>
 
 <style scoped></style>

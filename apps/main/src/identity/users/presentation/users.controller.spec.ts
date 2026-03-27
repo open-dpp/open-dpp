@@ -18,9 +18,7 @@ describe("UsersController", () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
-      providers: [
-        { provide: UsersService, useValue: mockService },
-      ],
+      providers: [{ provide: UsersService, useValue: mockService }],
     }).compile();
 
     controller = module.get<UsersController>(UsersController);
@@ -43,7 +41,12 @@ describe("UsersController", () => {
   });
 
   it("should set user role", async () => {
-    const user = User.create({ email: "test@example.com", firstName: "John", lastName: "Doe", role: UserRole.USER });
+    const user = User.create({
+      email: "test@example.com",
+      firstName: "John",
+      lastName: "Doe",
+      role: UserRole.USER,
+    });
     const updatedUser = user.withRole(UserRole.ADMIN);
     mockService.setUserRole.mockResolvedValue(updatedUser);
 

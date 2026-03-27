@@ -54,7 +54,6 @@ export class PassportMetricDoc extends Document {
   values: MetricValue[];
 }
 
-export const PassportMetricSchema
-  = SchemaFactory.createForClass(PassportMetricDoc);
+export const PassportMetricSchema = SchemaFactory.createForClass(PassportMetricDoc);
 
 // PassportMetricSchema.index({ organizationId: 1, templateId: 1 });

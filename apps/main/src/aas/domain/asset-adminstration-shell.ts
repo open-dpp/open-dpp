@@ -1,5 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { AssetAdministrationShellJsonSchema, AssetKind, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
+import {
+  AssetAdministrationShellJsonSchema,
+  AssetKind,
+  KeyTypes,
+  ReferenceTypes,
+} from "@open-dpp/dto";
 import { AssetInformation } from "./asset-information";
 import { AdministrativeInformation } from "./common/administrative-information";
 import { IHasDataSpecification } from "./common/has-data-specification";
@@ -29,7 +34,9 @@ export interface AssetAdministrationShellCreateProps {
   submodels?: Array<Reference>;
 }
 
-export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable {
+export class AssetAdministrationShell
+  implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable
+{
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
   private constructor(
@@ -67,14 +74,13 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     return this._description;
   }
 
-  static create(
-    data: AssetAdministrationShellCreateProps,
-  ) {
+  static create(data: AssetAdministrationShellCreateProps) {
     const id = data.id ?? randomUUID();
 
     return new AssetAdministrationShell(
       id,
-      data.assetInformation ?? AssetInformation.create({ assetKind: AssetKind.Instance, globalAssetId: id }),
+      data.assetInformation ??
+        AssetInformation.create({ assetKind: AssetKind.Instance, globalAssetId: id }),
       data.extensions ?? [],
       data.category ?? null,
       data.idShort ?? null,
@@ -85,7 +91,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
       data.derivedFrom ?? null,
       data.submodels ?? [],
     );
-  };
+  }
 
   modify(data: unknown) {
     this.accept(new ModifierVisitor(), data);
@@ -98,10 +104,12 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
   addSubmodel(submodel: Submodel): Reference {
     const reference = Reference.create({
       type: ReferenceTypes.ModelReference,
-      keys: [Key.create({
-        type: KeyTypes.Submodel,
-        value: submodel.id,
-      })],
+      keys: [
+        Key.create({
+          type: KeyTypes.Submodel,
+          value: submodel.id,
+        }),
+      ],
     });
 
     this.addSubmodelReference(reference);
@@ -144,12 +152,15 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
       id: copyId,
       assetInformation: {
         ...plain.assetInformation,
-        globalAssetId: plain.id === plain.assetInformation.globalAssetId ? copyId : plain.assetInformation.globalAssetId,
+        globalAssetId:
+          plain.id === plain.assetInformation.globalAssetId
+            ? copyId
+            : plain.assetInformation.globalAssetId,
       },
       submodels: [],
     });
 
-    submodels.forEach(model => copy.addSubmodel(model));
+    submodels.forEach((model) => copy.addSubmodel(model));
 
     return copy;
   }
@@ -172,7 +183,9 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
   }
 
   deleteSubmodel(submodel: Submodel) {
-    const foundSubmodelIndex = this.submodels.findIndex(sm => sm.keys.some(k => k.value === submodel.id));
+    const foundSubmodelIndex = this.submodels.findIndex((sm) =>
+      sm.keys.some((k) => k.value === submodel.id),
+    );
     if (foundSubmodelIndex > -1) {
       this.submodels.splice(foundSubmodelIndex, 1);
     }

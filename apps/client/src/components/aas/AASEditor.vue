@@ -40,8 +40,8 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
 }
 
 const errorHandlingStore = useErrorHandlingStore();
-const aasNamespace
-  = props.editorMode === AasEditMode.Passport
+const aasNamespace =
+  props.editorMode === AasEditMode.Passport
     ? apiClient.dpp.passports.aas
     : apiClient.dpp.templates.aas;
 
@@ -113,8 +113,7 @@ function addClicked(event: any, node: TreeNode) {
 async function deleteClicked(node: TreeNode) {
   if (node.data.modelType === KeyTypes.Submodel) {
     await deleteSubmodel(node.key);
-  }
-  else {
+  } else {
     await deleteSubmodelElement(node.data.path);
   }
 }
@@ -129,7 +128,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
 
 <template>
   <div class="flex flex-col gap-1 p-4">
-    <div class="flex justify-between items-start gap-2">
+    <div class="flex items-start justify-between gap-2">
       <div class="flex gap-2">
         <div style="width: 340px">
           <ProductImageGalleria v-model="aasGalleryFiles" />
@@ -181,13 +180,8 @@ const isFullPosition = computed(() => position.value === fullPosition);
       >
         <template #header>
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="text-xl font-bold">{{
-              t("aasEditor.submodel", 2)
-            }}</span>
-            <Button
-              :label="t('aasEditor.addSubmodel')"
-              @click="createSubmodel"
-            />
+            <span class="text-xl font-bold">{{ t("aasEditor.submodel", 2) }}</span>
+            <Button :label="t('aasEditor.addSubmodel')" @click="createSubmodel" />
           </div>
         </template>
         <Column field="label" header="Name" expander style="width: 34%" />
@@ -195,7 +189,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
         <Column>
           <template #body="{ node }">
             <div class="flex w-full justify-end">
-              <div class="flex items-center rounded-md gap-2">
+              <div class="flex items-center gap-2 rounded-md">
                 <Button
                   v-if="node.data.actions.addChildren"
                   icon="pi pi-plus"
@@ -245,9 +239,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
         @hide="onHideDrawer"
       >
         <template #header>
-          <div
-            class="flex flex-row items-center justify-between w-full pr-2 gap-1"
-          >
+          <div class="flex w-full flex-row items-center justify-between gap-1 pr-2">
             <span class="text-xl font-bold">{{ drawerHeader }}</span>
             <div class="flex gap-3">
               <Button

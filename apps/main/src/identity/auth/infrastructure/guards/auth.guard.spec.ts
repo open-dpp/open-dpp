@@ -68,8 +68,8 @@ describe("authGuard Allowlist Repro", () => {
       switchToHttp: () => ({
         getRequest: () => request,
       }),
-      getHandler: () => { },
-      getClass: () => { },
+      getHandler: () => {},
+      getClass: () => {},
       _request: request,
     } as ExecutionContext & { _request: any };
   };

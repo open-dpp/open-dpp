@@ -1,1 +1,1 @@
-export type { MemberDto } from '@open-dpp/dto'
+export type { MemberDto } from "@open-dpp/dto";

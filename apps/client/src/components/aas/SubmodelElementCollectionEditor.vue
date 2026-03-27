@@ -11,12 +11,9 @@ import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
-const props
-  = defineProps<
-    SharedEditorProps<
-      SubmodelElementCollectionEditorProps,
-      SubmodelElementCollectionRequestDto
-    >
+const props =
+  defineProps<
+    SharedEditorProps<SubmodelElementCollectionEditorProps, SubmodelElementCollectionRequestDto>
   >();
 
 const propertyFormSchema = z.object({
@@ -51,10 +48,6 @@ defineExpose<{
 
 <template>
   <FormContainer>
-    <SubmodelBaseForm
-      :show-errors="showErrors"
-      :errors="errors"
-      :editor-mode="EditorMode.EDIT"
-    />
+    <SubmodelBaseForm :show-errors="showErrors" :errors="errors" :editor-mode="EditorMode.EDIT" />
   </FormContainer>
 </template>

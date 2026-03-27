@@ -8,9 +8,7 @@ export class PassportTool {
   private readonly logger: Logger = new Logger(PassportTool.name);
   private readonly passportService: PassportService;
 
-  constructor(
-    passportService: PassportService,
-  ) {
+  constructor(passportService: PassportService) {
     this.passportService = passportService;
   }
 
@@ -20,10 +18,7 @@ export class PassportTool {
     parameters: z.object({
       passportId: z
         .string()
-        .regex(
-          /<([^>]+)>/,
-          "Must be a valid id",
-        )
+        .regex(/<([^>]+)>/, "Must be a valid id")
         .transform((val) => {
           // Extract the content between < and >
           const match = /<([^>]+)>/.exec(val);

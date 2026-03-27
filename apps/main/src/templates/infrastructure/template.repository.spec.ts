@@ -34,9 +34,7 @@ describe("templateRepository", () => {
           },
         ]),
       ],
-      providers: [
-        TemplateRepository,
-      ],
+      providers: [TemplateRepository],
     }).compile();
 
     templateRepository = module.get<TemplateRepository>(TemplateRepository);
@@ -108,27 +106,39 @@ describe("templateRepository", () => {
 
     let foundTemplates = await templateRepository.findAllByOrganizationId(organizationId);
 
-    expect(foundTemplates).toEqual(PagingResult.create({
-      pagination: Pagination.create({ cursor: encodeCursor(t1.createdAt.toISOString(), t1.id), limit: 100 }),
-      items: [t4, t3, t1],
-    }));
+    expect(foundTemplates).toEqual(
+      PagingResult.create({
+        pagination: Pagination.create({
+          cursor: encodeCursor(t1.createdAt.toISOString(), t1.id),
+          limit: 100,
+        }),
+        items: [t4, t3, t1],
+      }),
+    );
     let pagination = Pagination.create({
       cursor: encodeCursor(t4.createdAt.toISOString(), t4.id),
     });
     foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, pagination);
-    expect(foundTemplates).toEqual(PagingResult.create({
-      pagination: Pagination.create({ cursor: encodeCursor(t1.createdAt.toISOString(), t1.id) }),
-      items: [t3, t1],
-    }));
+    expect(foundTemplates).toEqual(
+      PagingResult.create({
+        pagination: Pagination.create({ cursor: encodeCursor(t1.createdAt.toISOString(), t1.id) }),
+        items: [t3, t1],
+      }),
+    );
     pagination = Pagination.create({
       cursor: encodeCursor(t4.createdAt.toISOString(), t4.id),
       limit: 1,
     });
     foundTemplates = await templateRepository.findAllByOrganizationId(organizationId, pagination);
-    expect(foundTemplates).toEqual(PagingResult.create({
-      pagination: Pagination.create({ cursor: encodeCursor(t3.createdAt.toISOString(), t3.id), limit: 1 }),
-      items: [t3],
-    }));
+    expect(foundTemplates).toEqual(
+      PagingResult.create({
+        pagination: Pagination.create({
+          cursor: encodeCursor(t3.createdAt.toISOString(), t3.id),
+          limit: 1,
+        }),
+        items: [t3],
+      }),
+    );
   });
 
   afterAll(async () => {

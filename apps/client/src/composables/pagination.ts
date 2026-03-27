@@ -41,9 +41,7 @@ export function usePagination({
   changeQueryParams,
 }: PaginationProps): IPagination {
   const startCursor = ref<string | null>(initialCursor ?? null);
-  const pages = ref<Page[]>([
-    { cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 },
-  ]);
+  const pages = ref<Page[]>([{ cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 }]);
   const currentPageIndex = ref<number>(0);
   const currentPage = ref<Page>({
     cursor: startCursor.value,
@@ -57,15 +55,11 @@ export function usePagination({
   });
 
   const hasNext = computed(() => {
-    return (
-      currentPage.value.itemCount
-      === currentPage.value.to - currentPage.value.from + 1
-    );
+    return currentPage.value.itemCount === currentPage.value.to - currentPage.value.from + 1;
   });
 
   const updateCurrentPage = async () => {
-    currentPage.value
-      = pages.value[currentPageIndex.value] ?? currentPage.value;
+    currentPage.value = pages.value[currentPageIndex.value] ?? currentPage.value;
     const queryParams = { cursor: currentPage.value.cursor ?? undefined };
     changeQueryParams(queryParams);
   };
@@ -75,11 +69,11 @@ export function usePagination({
   };
 
   const findPageByCursor = (cursor: Cursor): Page | undefined => {
-    return pages.value.find(page => page.cursor === cursor);
+    return pages.value.find((page) => page.cursor === cursor);
   };
 
   const findNextPage = (page: Page): Page | undefined => {
-    const pageIndex = pages.value.findIndex(p => p === page);
+    const pageIndex = pages.value.findIndex((p) => p === page);
     return pages.value[pageIndex + 1];
   };
 
@@ -97,8 +91,7 @@ export function usePagination({
     let nextPage = pages.value[currentPageIndex.value + 1];
     if (nextPage) {
       currentPageIndex.value++;
-    }
-    else {
+    } else {
       nextPage = pages.value[currentPageIndex.value]!;
     }
 
@@ -119,8 +112,7 @@ export function usePagination({
     let previousPage = pages.value[currentPageIndex.value - 1];
     if (previousPage) {
       currentPageIndex.value--;
-    }
-    else {
+    } else {
       previousPage = currentPage.value;
     }
     await fetchCallback({ cursor: previousPage.cursor ?? undefined, limit });
@@ -142,9 +134,7 @@ export function usePagination({
 
   const resetCursor = async () => {
     startCursor.value = null;
-    pages.value = [
-      { cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 },
-    ];
+    pages.value = [{ cursor: startCursor.value, from: 0, to: limit - 1, itemCount: 0 }];
     currentPageIndex.value = 0;
     await updateCurrentPage();
     await nextPage();

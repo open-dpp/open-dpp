@@ -23,14 +23,14 @@ const { t } = useI18n();
 const data = computed(() => {
   const timeseries = analyticsStore.getMeasurementsAsTimeseries();
   return {
-    labels: timeseries.map(t => t.x),
+    labels: timeseries.map((t) => t.x),
     datasets: [
       {
         label: t("analytics.pageViews"),
         // Sets the line color
         borderColor: "#0095C8",
         backgroundColor: "#0095C8",
-        data: timeseries.map(t => t.y),
+        data: timeseries.map((t) => t.y),
       },
     ],
   };
@@ -42,15 +42,7 @@ const options = ref({
   maintainAspectRatio: false,
 });
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 onUnmounted(() => {
   analyticsStore.reset();

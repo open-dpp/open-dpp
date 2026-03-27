@@ -20,9 +20,23 @@ import { Session } from "../../identity/auth/domain/session";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
 
 export interface IAasReadEndpoints {
-  getShells: (id: string, limit: number | undefined, cursor: string | undefined, session: Session) => Promise<AssetAdministrationShellPaginationResponseDto>;
-  getSubmodels: (id: string, limit: number | undefined, cursor: string | undefined, session: Session) => Promise<SubmodelPaginationResponseDto>;
-  getSubmodelById: (id: string, submodelId: string, session: Session) => Promise<SubmodelResponseDto>;
+  getShells: (
+    id: string,
+    limit: number | undefined,
+    cursor: string | undefined,
+    session: Session,
+  ) => Promise<AssetAdministrationShellPaginationResponseDto>;
+  getSubmodels: (
+    id: string,
+    limit: number | undefined,
+    cursor: string | undefined,
+    session: Session,
+  ) => Promise<SubmodelPaginationResponseDto>;
+  getSubmodelById: (
+    id: string,
+    submodelId: string,
+    session: Session,
+  ) => Promise<SubmodelResponseDto>;
   getSubmodelValue: (id: string, submodelId: string, session: Session) => Promise<ValueResponseDto>;
   getSubmodelElements: (
     id: string,
@@ -46,7 +60,11 @@ export interface IAasReadEndpoints {
 }
 
 export interface IAasCreateEndpoints {
-  createSubmodel: (id: string, body: SubmodelRequestDto, session: Session) => Promise<SubmodelResponseDto>;
+  createSubmodel: (
+    id: string,
+    body: SubmodelRequestDto,
+    session: Session,
+  ) => Promise<SubmodelResponseDto>;
   createSubmodelElement: (
     id: string,
     submodelId: string,
@@ -78,8 +96,18 @@ export interface IAasCreateEndpoints {
 }
 
 export interface IAasModifyEndpoints {
-  modifyShell: (id: string, aasId: string, body: AssetAdministrationShellModificationDto, session: Session) => Promise<AssetAdministrationShellResponseDto>;
-  modifySubmodel: (id: string, submodelId: string, body: SubmodelModificationDto, session: Session) => Promise<SubmodelResponseDto>;
+  modifyShell: (
+    id: string,
+    aasId: string,
+    body: AssetAdministrationShellModificationDto,
+    session: Session,
+  ) => Promise<AssetAdministrationShellResponseDto>;
+  modifySubmodel: (
+    id: string,
+    submodelId: string,
+    body: SubmodelModificationDto,
+    session: Session,
+  ) => Promise<SubmodelResponseDto>;
   modifySubmodelElement: (
     id: string,
     submodelId: string,
@@ -87,7 +115,13 @@ export interface IAasModifyEndpoints {
     body: SubmodelElementModificationDto,
     session: Session,
   ) => Promise<SubmodelElementResponseDto>;
-  modifySubmodelElementValue: (id: string, submodelId: string, idShortPath: IdShortPath, body: ValueRequestDto, session: Session) => Promise<SubmodelElementResponseDto>;
+  modifySubmodelElementValue: (
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    body: ValueRequestDto,
+    session: Session,
+  ) => Promise<SubmodelElementResponseDto>;
   modifyColumnOfSubmodelElementList: (
     id: string,
     submodelId: string,
@@ -100,7 +134,12 @@ export interface IAasModifyEndpoints {
 
 export interface IAasDeleteEndpoints {
   deleteSubmodel: (id: string, submodelId: string, session: Session) => Promise<void>;
-  deleteSubmodelElement: (id: string, submodelId: string, idShortPath: IdShortPath, session: Session) => Promise<void>;
+  deleteSubmodelElement: (
+    id: string,
+    submodelId: string,
+    idShortPath: IdShortPath,
+    session: Session,
+  ) => Promise<void>;
   deleteColumnFromSubmodelElementList: (
     id: string,
     submodelId: string,

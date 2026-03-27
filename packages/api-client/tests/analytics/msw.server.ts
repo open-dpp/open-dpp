@@ -1,6 +1,6 @@
-import { setupServer } from 'msw/node'
-import { passportMetricHandler } from './handlers/passport-metrics'
+import { setupServer } from "msw/node";
+import { passportMetricHandler } from "./handlers/passport-metrics";
 
-const handlers = [...passportMetricHandler]
+const handlers = [...passportMetricHandler];
 
-export const server = setupServer(...handlers)
+export const server = setupServer(...handlers);

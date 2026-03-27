@@ -1,6 +1,6 @@
-import { setupServer } from 'msw/node'
-import { aiConfigurationHandler } from './handlers/ai-configurations'
+import { setupServer } from "msw/node";
+import { aiConfigurationHandler } from "./handlers/ai-configurations";
 
-const handlers = [...aiConfigurationHandler]
+const handlers = [...aiConfigurationHandler];
 
-export const server = setupServer(...handlers)
+export const server = setupServer(...handlers);

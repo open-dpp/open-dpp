@@ -20,7 +20,14 @@ export class PassportRepository {
   }
 
   async save(passport: Passport, options?: DbSessionOptions) {
-    return await save(passport, this.passportDoc, PassportDocVersion.v1_0_0, Passport.fromPlain, undefined, options);
+    return await save(
+      passport,
+      this.passportDoc,
+      PassportDocVersion.v1_0_0,
+      Passport.fromPlain,
+      undefined,
+      options,
+    );
   }
 
   async findOneOrFail(id: string) {
@@ -31,7 +38,15 @@ export class PassportRepository {
     return await findOne(id, this.passportDoc, Passport.fromPlain);
   }
 
-  async findAllByOrganizationId(organizationId: string, pagination?: Pagination): Promise<PagingResult<Passport>> {
-    return await findAllByOrganizationId(this.passportDoc, Passport.fromPlain, organizationId, pagination);
+  async findAllByOrganizationId(
+    organizationId: string,
+    pagination?: Pagination,
+  ): Promise<PagingResult<Passport>> {
+    return await findAllByOrganizationId(
+      this.passportDoc,
+      Passport.fromPlain,
+      organizationId,
+      pagination,
+    );
   }
 }

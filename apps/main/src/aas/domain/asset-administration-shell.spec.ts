@@ -16,7 +16,9 @@ describe("assetAdministrationShell", () => {
       assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
     });
     expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);
-    expect(aas.administration).toEqual(AdministrativeInformation.create({ version: "1", revision: "0" }));
+    expect(aas.administration).toEqual(
+      AdministrativeInformation.create({ version: "1", revision: "0" }),
+    );
   });
 
   it("fails to create a new asset administration shell cause of duplicates in language texts", () => {
@@ -25,15 +27,19 @@ describe("assetAdministrationShell", () => {
       LanguageText.create({ language: Language.en, text: "Test AAS" }),
       LanguageText.create({ language: Language.en, text: "Test other AAS" }),
     ];
-    expect(() => AssetAdministrationShell.create({
-      assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
-      displayName: languageWithDuplicates,
-    })).toThrow(expectedError);
+    expect(() =>
+      AssetAdministrationShell.create({
+        assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
+        displayName: languageWithDuplicates,
+      }),
+    ).toThrow(expectedError);
 
-    expect(() => AssetAdministrationShell.create({
-      assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
-      description: languageWithDuplicates,
-    })).toThrow(expectedError);
+    expect(() =>
+      AssetAdministrationShell.create({
+        assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
+        description: languageWithDuplicates,
+      }),
+    ).toThrow(expectedError);
   });
 
   it("should delete submodel", () => {
@@ -60,7 +66,10 @@ describe("assetAdministrationShell", () => {
 
   it("should be modified", () => {
     const aas = AssetAdministrationShell.create({
-      assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance, globalAssetId: "globalAssetId" }),
+      assetInformation: AssetInformation.create({
+        assetKind: AssetKind.Instance,
+        globalAssetId: "globalAssetId",
+      }),
     });
     const displayName = [{ language: "en", text: "MyAAS" }];
     const description = [{ language: "en", text: "My description" }];
@@ -70,7 +79,9 @@ describe("assetAdministrationShell", () => {
     expect(aas.description).toEqual(description.map(LanguageText.fromPlain));
     expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);
     expect(aas.assetInformation.globalAssetId).toEqual("globalAssetId");
-    expect(aas.assetInformation.defaultThumbnails).toEqual(defaultThumbnails.map(Resource.fromPlain));
+    expect(aas.assetInformation.defaultThumbnails).toEqual(
+      defaultThumbnails.map(Resource.fromPlain),
+    );
   });
 
   it("should be able to be copied", () => {
@@ -96,10 +107,12 @@ describe("assetAdministrationShell", () => {
     expect(copy.submodels).toEqual([
       Reference.create({
         type: ReferenceTypes.ModelReference,
-        keys: [Key.create({
-          type: KeyTypes.Submodel,
-          value: submodelCopy.id,
-        })],
+        keys: [
+          Key.create({
+            type: KeyTypes.Submodel,
+            value: submodelCopy.id,
+          }),
+        ],
       }),
     ]);
   });
@@ -116,12 +129,16 @@ describe("assetAdministrationShell", () => {
 
     aas.addSubmodel(submodel);
 
-    expect(aas.submodels).toEqual([Reference.create({
-      type: ReferenceTypes.ModelReference,
-      keys: [Key.create({
-        type: KeyTypes.Submodel,
-        value: submodel.id,
-      })],
-    })]);
+    expect(aas.submodels).toEqual([
+      Reference.create({
+        type: ReferenceTypes.ModelReference,
+        keys: [
+          Key.create({
+            type: KeyTypes.Submodel,
+            value: submodel.id,
+          }),
+        ],
+      }),
+    ]);
   });
 });

@@ -83,9 +83,7 @@ describe("extractMediaIds", () => {
     const shell = AssetAdministrationShell.create({
       assetInformation: AssetInformation.create({
         assetKind: AssetKind.Instance,
-        defaultThumbnails: [
-          Resource.create({ path: "shared-id", contentType: "image/webp" }),
-        ],
+        defaultThumbnails: [Resource.create({ path: "shared-id", contentType: "image/webp" })],
       }),
     });
 
@@ -104,9 +102,7 @@ describe("extractMediaIds", () => {
     const shell = AssetAdministrationShell.create({
       assetInformation: AssetInformation.create({
         assetKind: AssetKind.Instance,
-        defaultThumbnails: [
-          Resource.create({ path: "thumbnail-id", contentType: "image/webp" }),
-        ],
+        defaultThumbnails: [Resource.create({ path: "thumbnail-id", contentType: "image/webp" })],
       }),
     });
 

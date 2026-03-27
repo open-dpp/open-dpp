@@ -26,7 +26,7 @@ const { t } = useI18n();
   <router-link
     :to="`?submodelid=${parentId}`"
     :data-cy="parentId"
-    class="flex gap-2 p-2 border-2 rounded-md hover:bg-gray-50"
+    class="flex gap-2 rounded-md border-2 p-2 hover:bg-gray-50"
   >
     <div class="flex items-center">
       <FolderIcon class="size-5 shrink-0 text-gray-400" aria-hidden="true" />

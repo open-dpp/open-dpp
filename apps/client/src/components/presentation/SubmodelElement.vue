@@ -14,7 +14,7 @@ const { description: elementName } = useDisplayName(element.displayName);
   <div
     :id="element.idShort"
     :data-cy="element.idShort"
-    class="px-4 py-6 sm:px-0 m-2"
+    class="m-2 px-4 py-6 sm:px-0"
     :class="{
       'col-span-full': element.modelType === 'SubmodelElementList',
     }"

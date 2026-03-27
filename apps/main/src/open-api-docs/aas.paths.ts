@@ -180,7 +180,12 @@ export function createAasPaths(tag: string) {
       get: {
         tags: [tag],
         summary: `Returns all Submodel Elements of the given Submodel`,
-        parameters: [IdParamSchema, SubmodelIdParamSchema, LimitQueryParamSchema, CursorQueryParamSchema],
+        parameters: [
+          IdParamSchema,
+          SubmodelIdParamSchema,
+          LimitQueryParamSchema,
+          CursorQueryParamSchema,
+        ],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -211,7 +216,12 @@ export function createAasPaths(tag: string) {
       post: {
         tags: [tag],
         summary: `Add column to Submodel Element List with specified idShortPath. Column is itself a Submodel Element.`,
-        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, PositionQueryParamSchema],
+        parameters: [
+          IdParamSchema,
+          SubmodelIdParamSchema,
+          IdShortPathParamSchema,
+          PositionQueryParamSchema,
+        ],
         requestBody: {
           content: {
             [ContentType.JSON]: { schema: SubmodelElementSchema },
@@ -229,8 +239,14 @@ export function createAasPaths(tag: string) {
     [`/${tag}${ApiGetColumnByIdShortPath}`]: {
       delete: {
         tags: [tag],
-        summary: "Deletes column with specified idShort from Submodel Element List with specified idShortPath.",
-        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, ColumnParamSchema],
+        summary:
+          "Deletes column with specified idShort from Submodel Element List with specified idShortPath.",
+        parameters: [
+          IdParamSchema,
+          SubmodelIdParamSchema,
+          IdShortPathParamSchema,
+          ColumnParamSchema,
+        ],
         responses: {
           [HTTPCode.OK]: {
             content: {
@@ -241,8 +257,14 @@ export function createAasPaths(tag: string) {
       },
       patch: {
         tags: [tag],
-        summary: "Modifies column with specified idShort of Submodel Element List with specified idShortPath.",
-        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, ColumnParamSchema],
+        summary:
+          "Modifies column with specified idShort of Submodel Element List with specified idShortPath.",
+        parameters: [
+          IdParamSchema,
+          SubmodelIdParamSchema,
+          IdShortPathParamSchema,
+          ColumnParamSchema,
+        ],
         requestBody: {
           content: {
             [ContentType.JSON]: { schema: SubmodelElementModificationSchema },
@@ -261,7 +283,12 @@ export function createAasPaths(tag: string) {
       post: {
         tags: [tag],
         summary: `Add row to Submodel Element List with specified idShortPath.`,
-        parameters: [IdParamSchema, SubmodelIdParamSchema, IdShortPathParamSchema, PositionQueryParamSchema],
+        parameters: [
+          IdParamSchema,
+          SubmodelIdParamSchema,
+          IdShortPathParamSchema,
+          PositionQueryParamSchema,
+        ],
         responses: {
           [HTTPCode.CREATED]: {
             content: {

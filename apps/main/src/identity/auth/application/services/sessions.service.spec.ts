@@ -72,7 +72,11 @@ describe("SessionsService", () => {
 
   describe("verifyApiKey", () => {
     it("should return null if API key is invalid", async () => {
-      mockAuth.api.verifyApiKey.mockResolvedValue({ valid: false, error: { code: "INVALID_API_KEY", message: "Invalid" }, key: null });
+      mockAuth.api.verifyApiKey.mockResolvedValue({
+        valid: false,
+        error: { code: "INVALID_API_KEY", message: "Invalid" },
+        key: null,
+      });
 
       const result = await service.verifyApiKey("invalid-key");
 

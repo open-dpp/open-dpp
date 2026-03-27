@@ -36,7 +36,10 @@ export class ValueVisitor implements IVisitor<any, JsonType> {
   }
 
   visitAnnotatedRelationshipElement(element: AnnotatedRelationshipElement, context: any): JsonType {
-    return { first: element.first.accept(this, context), second: element.second.accept(this, context) };
+    return {
+      first: element.first.accept(this, context),
+      second: element.second.accept(this, context),
+    };
   }
 
   visitAssetAdministrationShell(_element: AssetAdministrationShell, _context: any): JsonType {
@@ -46,19 +49,17 @@ export class ValueVisitor implements IVisitor<any, JsonType> {
   }
 
   visitAssetInformation(_element: AssetInformation, _context: any): JsonType {
-    throw new NotSupportedError(
-      "AssetInformation is not supported for value serialization.",
-    );
+    throw new NotSupportedError("AssetInformation is not supported for value serialization.");
   }
 
   visitBlob(element: Blob, _context: any): JsonType {
-    return element.value ? { contentType: element.contentType, value: Buffer.from(element.value).toString("utf-8") } : { contentType: element.contentType, value: undefined };
+    return element.value
+      ? { contentType: element.contentType, value: Buffer.from(element.value).toString("utf-8") }
+      : { contentType: element.contentType, value: undefined };
   }
 
   visitConceptDescription(_element: ConceptDescription, _context: any): JsonType {
-    throw new NotSupportedError(
-      "ConceptDescription is not supported for value serialization.",
-    );
+    throw new NotSupportedError("ConceptDescription is not supported for value serialization.");
   }
 
   visitEmbeddedDataSpecification(_element: EmbeddedDataSpecification, _context: any): JsonType {
@@ -71,15 +72,15 @@ export class ValueVisitor implements IVisitor<any, JsonType> {
     return {
       entityType: element.entityType,
       globalAssetId: element.globalAssetId,
-      statements: element.statements.map(st => ({ [st.idShort]: st.accept(this, context) })),
-      specificAssetIds: element.specificAssetIds.map(specificAssetId => specificAssetId.accept(this, context)),
+      statements: element.statements.map((st) => ({ [st.idShort]: st.accept(this, context) })),
+      specificAssetIds: element.specificAssetIds.map((specificAssetId) =>
+        specificAssetId.accept(this, context),
+      ),
     };
   }
 
   visitExtension(_element: Extension, _context: any): JsonType {
-    throw new NotSupportedError(
-      "Extension is not supported for value serialization.",
-    );
+    throw new NotSupportedError("Extension is not supported for value serialization.");
   }
 
   visitFile(element: File, _context: any): JsonType {
@@ -95,7 +96,7 @@ export class ValueVisitor implements IVisitor<any, JsonType> {
   }
 
   visitMultiLanguageProperty(element: MultiLanguageProperty, context: any): JsonType {
-    return element.value.map(v => v.accept(this, context));
+    return element.value.map((v) => v.accept(this, context));
   }
 
   visitProperty(element: Property, _context: any): JsonType {
@@ -103,9 +104,7 @@ export class ValueVisitor implements IVisitor<any, JsonType> {
   }
 
   visitQualifier(_element: Qualifier, _context: any): JsonType {
-    throw new NotSupportedError(
-      "Qualifier is not supported for value serialization.",
-    );
+    throw new NotSupportedError("Qualifier is not supported for value serialization.");
   }
 
   visitRange(element: Range, _context: any): JsonType {
@@ -115,8 +114,10 @@ export class ValueVisitor implements IVisitor<any, JsonType> {
   visitReference(element: Reference, context: any): JsonType {
     return {
       type: element.type,
-      ...(element.referredSemanticId && { referredSemanticId: element.referredSemanticId.accept(this, context) }),
-      keys: element.keys.map(key => key.accept(this, context)),
+      ...(element.referredSemanticId && {
+        referredSemanticId: element.referredSemanticId.accept(this, context),
+      }),
+      keys: element.keys.map((key) => key.accept(this, context)),
     };
   }
 
@@ -125,13 +126,14 @@ export class ValueVisitor implements IVisitor<any, JsonType> {
   }
 
   visitRelationshipElement(element: RelationshipElement, context: any): JsonType {
-    return { first: element.first.accept(this, context), second: element.second.accept(this, context) };
+    return {
+      first: element.first.accept(this, context),
+      second: element.second.accept(this, context),
+    };
   }
 
   visitResource(_element: Resource, _context: any): JsonType {
-    throw new NotSupportedError(
-      "Resource is not supported for value serialization.",
-    );
+    throw new NotSupportedError("Resource is not supported for value serialization.");
   }
 
   visitSpecificAssetId(element: SpecificAssetId, _context: any): JsonType {
@@ -157,6 +159,6 @@ export class ValueVisitor implements IVisitor<any, JsonType> {
   }
 
   visitSubmodelElementList(element: SubmodelElementList, context: any): JsonType {
-    return element.value.map(v => v.accept(this, context));
+    return element.value.map((v) => v.accept(this, context));
   }
 }

@@ -23,7 +23,14 @@ export class SubmodelRepository {
   }
 
   async save(submodel: Submodel, options?: DbSessionOptions) {
-    return await save(submodel, this.submodelDoc, SubmodelDocSchemaVersion.v1_0_0, this.fromPlain, SubmodelDbSchema, options);
+    return await save(
+      submodel,
+      this.submodelDoc,
+      SubmodelDocSchemaVersion.v1_0_0,
+      this.fromPlain,
+      SubmodelDbSchema,
+      options,
+    );
   }
 
   async findOneOrFail(id: string): Promise<Submodel> {

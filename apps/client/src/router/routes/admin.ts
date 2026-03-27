@@ -1,15 +1,11 @@
-import type {
-  RouteLocationNormalizedGeneric,
-  RouteRecordRaw,
-} from "vue-router";
+import type { RouteLocationNormalizedGeneric, RouteRecordRaw } from "vue-router";
 import { localizedBreadcrumb } from "../../lib/breadcrumbs.ts";
 import { useLayoutStore } from "../../stores/layout";
 
 export const ADMIN_BASE: RouteRecordRaw = {
   path: "",
   name: "Administration",
-  component: () =>
-    import("../../view/admin/OrganizationsAdminView.vue"),
+  component: () => import("../../view/admin/OrganizationsAdminView.vue"),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = adminListBreadCrumbs(to);
@@ -29,8 +25,7 @@ function adminListBreadCrumbs(to: RouteLocationNormalizedGeneric) {
 export const ADMIN_ORGANIZATIONS: RouteRecordRaw = {
   path: "organizations",
   name: "AdminOrganizationsListView",
-  component: () =>
-    import("../../view/admin/OrganizationsAdminView.vue"),
+  component: () => import("../../view/admin/OrganizationsAdminView.vue"),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = adminListBreadCrumbs(to);
@@ -40,8 +35,7 @@ export const ADMIN_ORGANIZATIONS: RouteRecordRaw = {
 export const ADMIN_USERS: RouteRecordRaw = {
   path: "users",
   name: "AdminUsersListView",
-  component: () =>
-    import("../../view/admin/UsersAdminView.vue"),
+  component: () => import("../../view/admin/UsersAdminView.vue"),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = adminListBreadCrumbs(to);
@@ -51,8 +45,7 @@ export const ADMIN_USERS: RouteRecordRaw = {
 export const ADMIN_SETTINGS: RouteRecordRaw = {
   path: "settings",
   name: "AdminSettingsView",
-  component: () =>
-    import("../../view/admin/SettingsAdminView.vue"),
+  component: () => import("../../view/admin/SettingsAdminView.vue"),
   beforeEnter: (to: RouteLocationNormalizedGeneric) => {
     const layoutStore = useLayoutStore();
     layoutStore.breadcrumbs = adminListBreadCrumbs(to);

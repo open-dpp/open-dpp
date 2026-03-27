@@ -40,7 +40,11 @@ describe("UsersService", () => {
   });
 
   it("should create user", async () => {
-    const savedUser = User.create({ email: "test@example.com", firstName: "John", lastName: "Doe" });
+    const savedUser = User.create({
+      email: "test@example.com",
+      firstName: "John",
+      lastName: "Doe",
+    });
     mockRepo.save.mockResolvedValue(savedUser);
     const result = await service.createUser("test@example.com", "John", "Doe");
     expect(mockRepo.save).toHaveBeenCalledWith(expect.any(User));
@@ -49,9 +53,9 @@ describe("UsersService", () => {
 
   it("should throw if save returns null", async () => {
     mockRepo.save.mockResolvedValue(null);
-    await expect(service.createUser("test@example.com", "John", "Doe"))
-      .rejects
-      .toThrow("Failed to save user with email test@example.com");
+    await expect(service.createUser("test@example.com", "John", "Doe")).rejects.toThrow(
+      "Failed to save user with email test@example.com",
+    );
   });
 
   it("should find one by id", async () => {
@@ -77,7 +81,12 @@ describe("UsersService", () => {
   });
 
   it("should set user role", async () => {
-    const user = User.create({ email: "test@example.com", firstName: "John", lastName: "Doe", role: UserRole.USER });
+    const user = User.create({
+      email: "test@example.com",
+      firstName: "John",
+      lastName: "Doe",
+      role: UserRole.USER,
+    });
     const updatedUser = user.withRole(UserRole.ADMIN);
     mockRepo.findOneById.mockResolvedValue(user);
     mockRepo.setUserRole.mockResolvedValue(updatedUser);
@@ -92,9 +101,9 @@ describe("UsersService", () => {
   it("should throw if user not found when setting role", async () => {
     mockRepo.findOneById.mockResolvedValue(null);
 
-    await expect(service.setUserRole("nonexistent", UserRole.ADMIN))
-      .rejects
-      .toThrow(NotFoundInDatabaseException);
+    await expect(service.setUserRole("nonexistent", UserRole.ADMIN)).rejects.toThrow(
+      NotFoundInDatabaseException,
+    );
   });
 
   it("should throw if repository fails to update role", async () => {
@@ -102,8 +111,8 @@ describe("UsersService", () => {
     mockRepo.findOneById.mockResolvedValue(user);
     mockRepo.setUserRole.mockResolvedValue(null);
 
-    await expect(service.setUserRole(user.id, UserRole.ADMIN))
-      .rejects
-      .toThrow(`Failed to update role for user ${user.id}`);
+    await expect(service.setUserRole(user.id, UserRole.ADMIN)).rejects.toThrow(
+      `Failed to update role for user ${user.id}`,
+    );
   });
 });

@@ -3,11 +3,7 @@ import type { ReferenceElementRequestDto } from "@open-dpp/dto";
 import type { ReferenceElementCreateEditorProps } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 
-import {
-  KeyTypes,
-  ReferenceElementJsonSchema,
-  ReferenceTypes,
-} from "@open-dpp/dto";
+import { KeyTypes, ReferenceElementJsonSchema, ReferenceTypes } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { computed } from "vue";
@@ -22,13 +18,8 @@ import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import FormContainer from "./form/FormContainer.vue";
 import ReferenceElementForm from "./ReferenceElementForm.vue";
 
-const props
-  = defineProps<
-    SharedEditorProps<
-      ReferenceElementCreateEditorProps,
-      ReferenceElementRequestDto
-    >
-  >();
+const props =
+  defineProps<SharedEditorProps<ReferenceElementCreateEditorProps, ReferenceElementRequestDto>>();
 
 const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,

@@ -34,7 +34,10 @@ describe("tableExtension", () => {
     table.addRow();
     const col1Row1WithEmptyValue = Property.fromPlain({ ...col1Plain, value: undefined });
     const secondRowId = table.rows[1].idShort;
-    const expRow1 = SubmodelElementCollection.create({ idShort: secondRowId, value: [col1Row1WithEmptyValue] });
+    const expRow1 = SubmodelElementCollection.create({
+      idShort: secondRowId,
+      value: [col1Row1WithEmptyValue],
+    });
     expect(table.rows).toEqual([expHeaderRow, expRow1]);
     expect(secondRowId).not.toEqual(firstRowId);
 
@@ -55,11 +58,14 @@ describe("tableExtension", () => {
     // Add one row at position 1
     table.addRow({ position: 1 });
     const rowAtPos1Id = table.rows[1].idShort;
-    const expRowAtPos1 = SubmodelElementCollection.create({ idShort: rowAtPos1Id, value: [
-      cloneSubmodelElement(col1, { value: undefined }),
-      cloneSubmodelElement(col2, { value: undefined }),
-      cloneSubmodelElement(col3, { value: undefined }),
-    ] });
+    const expRowAtPos1 = SubmodelElementCollection.create({
+      idShort: rowAtPos1Id,
+      value: [
+        cloneSubmodelElement(col1, { value: undefined }),
+        cloneSubmodelElement(col2, { value: undefined }),
+        cloneSubmodelElement(col3, { value: undefined }),
+      ],
+    });
     expect(table.rows).toEqual([expHeaderRow, expRowAtPos1, expRow1]);
     expect(rowAtPos1Id).not.toEqual(secondRowId);
     expect(rowAtPos1Id).not.toEqual(firstRowId);
@@ -77,10 +83,14 @@ describe("tableExtension", () => {
     table.addColumn(col2);
     table.addRow();
     table.addRow();
-    expect(table.rows.some(r => r.getSubmodelElements().some(c => c.idShort === col1.idShort))).toBeTruthy();
+    expect(
+      table.rows.some((r) => r.getSubmodelElements().some((c) => c.idShort === col1.idShort)),
+    ).toBeTruthy();
     table.deleteColumn(col1.idShort);
     expect(table.columns).toEqual([col2]);
-    expect(table.rows.some(r => r.getSubmodelElements().some(c => c.idShort === col1.idShort))).toBeFalsy();
+    expect(
+      table.rows.some((r) => r.getSubmodelElements().some((c) => c.idShort === col1.idShort)),
+    ).toBeFalsy();
   });
 
   it("should add row at position 0", () => {
@@ -110,24 +120,34 @@ describe("tableExtension", () => {
     table.addColumn(col2);
     table.addRow();
     table.addRow();
-    const newDisplayNames = [{
-      language: "de",
-      text: "CO2 Footprint New Text",
-    }];
-    const newDescriptions = [{
-      language: "en",
-      text: "The Submodel Carbon Footprint NEW",
-    }, {
-      language: "de",
-      text: "Das Submodel liefert CO2",
-    }];
-    table.modifyColumn(col1.idShort, { displayName: newDisplayNames, description: newDescriptions });
+    const newDisplayNames = [
+      {
+        language: "de",
+        text: "CO2 Footprint New Text",
+      },
+    ];
+    const newDescriptions = [
+      {
+        language: "en",
+        text: "The Submodel Carbon Footprint NEW",
+      },
+      {
+        language: "de",
+        text: "Das Submodel liefert CO2",
+      },
+    ];
+    table.modifyColumn(col1.idShort, {
+      displayName: newDisplayNames,
+      description: newDescriptions,
+    });
     for (const row of table.rows) {
-      const column = row.getSubmodelElements().find(c => c.idShort === col1.idShort);
+      const column = row.getSubmodelElements().find((c) => c.idShort === col1.idShort);
       expect(column?.displayName).toEqual(newDisplayNames.map(LanguageText.fromPlain));
       expect(column?.description).toEqual(newDescriptions.map(LanguageText.fromPlain));
     }
-    expect(() => table.modifyColumn(col1.idShort, { displayName: newDisplayNames, value: "2" })).toThrow(new ValueError("Column value modification is not supported."));
+    expect(() =>
+      table.modifyColumn(col1.idShort, { displayName: newDisplayNames, value: "2" }),
+    ).toThrow(new ValueError("Column value modification is not supported."));
   });
 
   it("should delete row", () => {
@@ -142,12 +162,15 @@ describe("tableExtension", () => {
     table.addColumn(col2);
     const rowToDelete = table.addRow();
     table.addRow();
-    expect(table.rows.some(r => r.idShort === rowToDelete.idShort)).toBeTruthy();
+    expect(table.rows.some((r) => r.idShort === rowToDelete.idShort)).toBeTruthy();
     table.deleteRow(rowToDelete.idShort);
-    expect(table.rows.some(r => r.idShort === rowToDelete.idShort)).toBeFalsy();
+    expect(table.rows.some((r) => r.idShort === rowToDelete.idShort)).toBeFalsy();
     // If the header row is deleted, the first row should be used as header row.
     table.deleteRow(table.rows[0].idShort);
-    expect(table.columns).toEqual([cloneSubmodelElement(col1, { value: null }), cloneSubmodelElement(col2, { value: null })]);
+    expect(table.columns).toEqual([
+      cloneSubmodelElement(col1, { value: null }),
+      cloneSubmodelElement(col2, { value: null }),
+    ]);
     // If the last row is deleted, columns are empty. This a limitation of the AAS specification.
     table.deleteRow(table.rows[0].idShort);
     expect(table.columns).toEqual([]);

@@ -24,9 +24,7 @@ describe("invitationSchema", () => {
           }),
           inject: [EnvService],
         }),
-        MongooseModule.forFeature([
-          { name: Invitation.name, schema: InvitationSchema },
-        ]),
+        MongooseModule.forFeature([{ name: Invitation.name, schema: InvitationSchema }]),
       ],
     }).compile();
     mongoConnection = module.get<Connection>(getConnectionToken());
@@ -72,8 +70,7 @@ describe("invitationSchema", () => {
     let err: any;
     try {
       await invitation.save();
-    }
-    catch (error) {
+    } catch (error) {
       err = error;
     }
 
@@ -100,8 +97,7 @@ describe("invitationSchema", () => {
     let err: any;
     try {
       await invitation.save();
-    }
-    catch (error) {
+    } catch (error) {
       err = error;
     }
 

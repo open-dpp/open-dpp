@@ -13,8 +13,7 @@ export class BrandingRepository {
   constructor(
     private readonly organizationsService: OrganizationsService,
     private readonly envService: EnvService,
-  ) {
-  }
+  ) {}
 
   async findOneByOrganizationId(orgId: string): Promise<Branding> {
     const activeOrganization = await this.organizationsService.getOrganization(orgId);
@@ -42,18 +41,14 @@ export class BrandingRepository {
         const extension = path.extname(candidatePath).toLowerCase();
         if (extension === ".png") {
           responseType = "image/png";
-        }
-        else if (extension === ".jpg" || extension === ".jpeg") {
+        } else if (extension === ".jpg" || extension === ".jpeg") {
           responseType = "image/jpeg";
-        }
-        else if (extension === ".webp") {
+        } else if (extension === ".webp") {
           responseType = "image/webp";
-        }
-        else if (extension === ".gif") {
+        } else if (extension === ".gif") {
           responseType = "image/gif";
         }
-      }
-      catch (error) {
+      } catch (error) {
         this.logger.warn("Failed to use custom branding image falling back to default: ", error);
       }
     }

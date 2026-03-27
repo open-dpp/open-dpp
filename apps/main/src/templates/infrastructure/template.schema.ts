@@ -1,6 +1,9 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
-import { EnvironmentDoc, EnvironmentSchema } from "../../aas/infrastructure/schemas/environment.schema";
+import {
+  EnvironmentDoc,
+  EnvironmentSchema,
+} from "../../aas/infrastructure/schemas/environment.schema";
 
 export const TemplateDocVersion = {
   v1_0_0: "1.0.0",

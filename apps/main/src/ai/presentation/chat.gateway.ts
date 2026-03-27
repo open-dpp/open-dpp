@@ -43,8 +43,7 @@ export class ChatGateway {
       const endTime = Date.now();
       const executionTime = endTime - startTime;
       this.logger.log(`Processing time: ${executionTime}ms`);
-    }
-    catch (error) {
+    } catch (error) {
       if (error instanceof Error) {
         if (error.name !== "QuotaExceededError") {
           this.logger.error("Unexpected error in chat handler", error);
@@ -53,8 +52,7 @@ export class ChatGateway {
           msg: error.message,
           code: error.name === "QuotaExceededError" ? "QUOTA_EXCEEDED" : "ERROR",
         });
-      }
-      else {
+      } else {
         this.logger.error("Unknown error in chat handler", error);
         client.emit("limitError", {
           msg: "An error occurred",

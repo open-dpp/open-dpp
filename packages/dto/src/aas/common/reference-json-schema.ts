@@ -1,8 +1,8 @@
-import type { KeyTypesType } from '../enums/key-types-enum'
-import type { ReferenceTypesType } from '../enums/reference-types-enum'
-import { z } from 'zod'
-import { ReferenceTypesEnum } from '../enums/reference-types-enum'
-import { KeyJsonSchema, KeyModificationSchema } from './key-json-schema'
+import type { KeyTypesType } from "../enums/key-types-enum";
+import type { ReferenceTypesType } from "../enums/reference-types-enum";
+import { z } from "zod";
+import { ReferenceTypesEnum } from "../enums/reference-types-enum";
+import { KeyJsonSchema, KeyModificationSchema } from "./key-json-schema";
 
 export const ReferenceJsonSchema: z.ZodType<any> = z.lazy(() =>
   z.object({
@@ -10,18 +10,18 @@ export const ReferenceJsonSchema: z.ZodType<any> = z.lazy(() =>
     referredSemanticId: ReferenceJsonSchema.nullish(),
     keys: z.array(KeyJsonSchema),
   }),
-)
+);
 
 export interface ReferenceValue {
-  type: ReferenceTypesType
-  referredSemanticId: ReferenceValue | null
-  keys: { type: KeyTypesType, value: string }[]
+  type: ReferenceTypesType;
+  referredSemanticId: ReferenceValue | null;
+  keys: { type: KeyTypesType; value: string }[];
 }
 
 export interface ReferenceModification {
-  type?: ReferenceTypesType
-  referredSemanticId?: ReferenceModification | null
-  keys?: { type: KeyTypesType, value: string }[]
+  type?: ReferenceTypesType;
+  referredSemanticId?: ReferenceModification | null;
+  keys?: { type: KeyTypesType; value: string }[];
 }
 
 export const ReferenceModificationSchema: z.ZodType<ReferenceModification> = z.lazy(() =>
@@ -30,4 +30,4 @@ export const ReferenceModificationSchema: z.ZodType<ReferenceModification> = z.l
     referredSemanticId: ReferenceModificationSchema.nullish(),
     keys: z.array(KeyModificationSchema).optional(),
   }),
-)
+);

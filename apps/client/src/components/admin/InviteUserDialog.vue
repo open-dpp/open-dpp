@@ -1,11 +1,5 @@
 <script lang="ts" setup>
-import {
-  Dialog,
-  DialogPanel,
-  DialogTitle,
-  TransitionChild,
-  TransitionRoot,
-} from "@headlessui/vue";
+import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from "@headlessui/vue";
 import { EnvelopeIcon, XMarkIcon } from "@heroicons/vue/24/outline";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
@@ -57,12 +51,10 @@ async function inviteUser() {
       firstName.value = "";
       lastName.value = "";
       errors.value = [];
-    }
-    else {
+    } else {
       errors.value.push(t("common.errorOccurred"));
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.error(error);
     errors.value.push(t("common.errorOccurred"));
     loading.value = false;
@@ -99,15 +91,15 @@ async function inviteUser() {
             leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           >
             <DialogPanel
-              class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-sm sm:p-6"
+              class="relative transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-sm sm:p-6"
             >
-              <div class="absolute right-0 top-0 hidden pr-4 pt-4 sm:block">
+              <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                 <button
-                  class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-hidden"
                   type="button"
                   @click="emit('close')"
                 >
-                  <span class="sr-only">{{ t('common.close') }}</span>
+                  <span class="sr-only">{{ t("common.close") }}</span>
                   <XMarkIcon aria-hidden="true" class="size-6" />
                 </button>
               </div>
@@ -115,41 +107,44 @@ async function inviteUser() {
                 <div
                   class="mx-auto flex size-12 items-center justify-center rounded-full bg-green-100"
                 >
-                  <EnvelopeIcon
-                    aria-hidden="true"
-                    class="size-6 text-green-600"
-                  />
+                  <EnvelopeIcon aria-hidden="true" class="size-6 text-green-600" />
                 </div>
                 <div class="mt-3 text-center sm:mt-5">
-                  <DialogTitle
-                    as="h3"
-                    class="text-base font-semibold text-gray-900"
-                  >
-                    {{ t('organizations.admin.inviteUserDialog.title') }}
+                  <DialogTitle as="h3" class="text-base font-semibold text-gray-900">
+                    {{ t("organizations.admin.inviteUserDialog.title") }}
                   </DialogTitle>
                   <div v-if="success" class="mt-3">
                     <div class="text-sm text-green-600">
-                      {{ t('organizations.admin.inviteUserDialog.success') }}
+                      {{ t("organizations.admin.inviteUserDialog.success") }}
                     </div>
                     <button
-                      class="mt-3 rounded-md bg-green-600 text-white px-3 py-2 text-sm font-semibold shadow-xs hover:bg-green-700 focus:outline-hidden focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                      class="mt-3 rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-hidden"
                       type="button"
                       @click="emit('close')"
                     >
-                      {{ t('common.close') }}
+                      {{ t("common.close") }}
                     </button>
                   </div>
                   <div v-else class="mt-3">
-                    <form v-show="!loading" class="flex flex-col gap-4" @submit.prevent="inviteUser">
+                    <form
+                      v-show="!loading"
+                      class="flex flex-col gap-4"
+                      @submit.prevent="inviteUser"
+                    >
                       <div v-if="errors.length" class="flex flex-col gap-1">
-                        <Message v-for="error in errors" :key="error" severity="error" :closable="false">
+                        <Message
+                          v-for="error in errors"
+                          :key="error"
+                          severity="error"
+                          :closable="false"
+                        >
                           {{ error }}
                         </Message>
                       </div>
 
                       <div class="flex flex-col gap-2">
                         <label for="email" class="block text-sm font-medium text-gray-700">
-                          {{ t('common.form.email.label') }}
+                          {{ t("common.form.email.label") }}
                         </label>
                         <InputText
                           id="email"
@@ -159,34 +154,26 @@ async function inviteUser() {
                           class="w-full"
                           :aria-describedby="emailError ? 'email-error' : 'email-help'"
                         />
-                        <small v-if="emailError" id="email-error" class="text-red-600">{{ emailError }}</small>
+                        <small v-if="emailError" id="email-error" class="text-red-600">{{
+                          emailError
+                        }}</small>
                         <small v-else id="email-help" class="text-gray-500">
-                          {{ t('common.form.email.help') }}
+                          {{ t("common.form.email.help") }}
                         </small>
                       </div>
 
                       <div class="flex flex-col gap-2">
                         <label for="firstName" class="block text-sm font-medium text-gray-700">
-                          {{ t('user.firstName') }}
+                          {{ t("user.firstName") }}
                         </label>
-                        <InputText
-                          id="firstName"
-                          v-model="firstName"
-                          type="text"
-                          class="w-full"
-                        />
+                        <InputText id="firstName" v-model="firstName" type="text" class="w-full" />
                       </div>
 
                       <div class="flex flex-col gap-2">
                         <label for="lastName" class="block text-sm font-medium text-gray-700">
-                          {{ t('user.lastName') }}
+                          {{ t("user.lastName") }}
                         </label>
-                        <InputText
-                          id="lastName"
-                          v-model="lastName"
-                          type="text"
-                          class="w-full"
-                        />
+                        <InputText id="lastName" v-model="lastName" type="text" class="w-full" />
                       </div>
 
                       <Button

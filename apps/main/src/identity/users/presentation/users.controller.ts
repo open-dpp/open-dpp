@@ -9,13 +9,13 @@ import { UserRole } from "../domain/user-role.enum";
 
 @Controller("users")
 export class UsersController {
-  constructor(
-    private readonly usersService: UsersService,
-  ) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @Post()
   @UserHasRole([UserRole.ADMIN])
-  async createUser(@Body(new ZodValidationPipe(CreateUserDtoSchema)) body: CreateUserDto): Promise<User> {
+  async createUser(
+    @Body(new ZodValidationPipe(CreateUserDtoSchema)) body: CreateUserDto,
+  ): Promise<User> {
     return this.usersService.createUser(body.email, body.firstName, body.lastName);
   }
 

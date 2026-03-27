@@ -18,12 +18,7 @@ function generateIdShort() {
 </script>
 
 <template>
-  <PropertyValueField
-    v-model="model"
-    v-bind="props"
-    label="Id"
-    :disabled="props.disabled"
-  >
+  <PropertyValueField v-model="model" v-bind="props" label="Id" :disabled="props.disabled">
     <template #addon-right>
       <InputGroupAddon>
         <Button

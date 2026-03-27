@@ -6,9 +6,7 @@ import { ExtensionDbSchema } from "../extension-db-schema";
 import { SubmodelBaseDbSchema } from "./submodel-base-db-schema";
 import { SubmodelElementDbSchema } from "./submodel-element-db-schema";
 
-export const SubmodelElementListDbSchema = z.lazy(() =>
-  SubmodelElementListDbSchemaImpl(),
-);
+export const SubmodelElementListDbSchema = z.lazy(() => SubmodelElementListDbSchemaImpl());
 
 export function SubmodelElementListDbSchemaImpl() {
   return z.object({
@@ -20,4 +18,4 @@ export function SubmodelElementListDbSchemaImpl() {
     valueTypeListElement: ValueTypeDbSchema.nullish(),
     value: SubmodelElementDbSchema.array().default([]),
   });
-};
+}

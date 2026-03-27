@@ -7,8 +7,7 @@ async function fetchConfig() {
       const response = await fetch("/config.json");
       const config = await response.json();
       API_URL = config.API_URL || "";
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Failed to fetch runtime configuration:", error);
     }
   }
@@ -24,9 +23,9 @@ export const ANALYTICS_URL = API_URL;
 
 export const AGENT_WEBSOCKET_URL = (() => {
   try {
-    return new URL(API_URL, typeof window !== "undefined" ? window.location.origin : undefined).origin;
-  }
-  catch {
+    return new URL(API_URL, typeof window !== "undefined" ? window.location.origin : undefined)
+      .origin;
+  } catch {
     return API_URL;
   }
 })();

@@ -38,16 +38,12 @@ function isCurrent(record: RouteRecordRaw) {
 
 <template>
   <nav aria-label="Breadcrumb" class="flex">
-    <ol
-      data-cy="breadcrumb"
-      class="flex w-full max-w-(--breakpoint-xl) space-x-4"
-      role="list"
-    >
+    <ol data-cy="breadcrumb" class="flex w-full max-w-(--breakpoint-xl) space-x-4" role="list">
       <li class="flex">
         <div class="flex items-center">
           <router-link class="text-gray-400 hover:text-gray-500" to="/">
             <HomeIcon aria-hidden="true" class="h-5 w-5 shrink-0" />
-            <span class="sr-only">{{ t('common.home') }}</span>
+            <span class="sr-only">{{ t("common.home") }}</span>
           </router-link>
         </div>
       </li>
@@ -55,7 +51,7 @@ function isCurrent(record: RouteRecordRaw) {
         <div class="flex items-center">
           <svg
             aria-hidden="true"
-            class="w-2 h-3 shrink-0 text-gray-200"
+            class="h-3 w-2 shrink-0 text-gray-200"
             preserveAspectRatio="none"
             viewBox="0 0 24 44"
           >

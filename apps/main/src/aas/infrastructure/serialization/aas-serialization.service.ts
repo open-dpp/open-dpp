@@ -16,7 +16,11 @@ import { AasRepository } from "../aas.repository";
 import { ConceptDescriptionRepository } from "../concept-description.repository";
 import { SubmodelRepository } from "../submodel.repository";
 import { aasExportSchemaJsonV1_0 } from "./aas-export-v1.schema";
-import { mapAssetAdministrationShells, mapConceptDescriptions, mapSubmodels } from "./aas-import.mapper";
+import {
+  mapAssetAdministrationShells,
+  mapConceptDescriptions,
+  mapSubmodels,
+} from "./aas-import.mapper";
 import { extractMediaIds } from "./extract-media-ids";
 
 export { DataTypeDefV1_0, KeyTypesV1_0, LanguageTypeSchemaV1_0 } from "./aas-export-v1.schema";
@@ -41,13 +45,17 @@ export class AasSerializationService {
   ) {}
 
   async exportPassport(passport: Passport): Promise<AasExportSchema> {
-    const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(passport.environment);
+    const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(
+      passport.environment,
+    );
     const aasExportable = AasExportable.createFromPassport(passport, expandedEnvironment);
     return aasExportSchemaJsonV1_0.parse(aasExportable.toExportPlain());
   }
 
   async exportTemplate(template: Template): Promise<AasExportSchema> {
-    const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(template.environment);
+    const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(
+      template.environment,
+    );
     const aasExportable = AasExportable.createFromTemplate(template, expandedEnvironment);
     return aasExportSchemaJsonV1_0.parse(aasExportable.toExportPlain());
   }
@@ -60,13 +68,13 @@ export class AasSerializationService {
     try {
       const { shells, submodels, conceptDescriptions } = this.parseAndMapEnvironment(data);
 
-      const { shells: sanitizedShells, submodels: sanitizedSubmodels }
-        = await this.nullifyForeignMedia(shells, submodels, organizationId);
+      const { shells: sanitizedShells, submodels: sanitizedSubmodels } =
+        await this.nullifyForeignMedia(shells, submodels, organizationId);
 
       const environment = Environment.create({
-        assetAdministrationShells: sanitizedShells.map(aas => aas.id),
-        submodels: sanitizedSubmodels.map(s => s.id),
-        conceptDescriptions: conceptDescriptions.map(cd => cd.id),
+        assetAdministrationShells: sanitizedShells.map((aas) => aas.id),
+        submodels: sanitizedSubmodels.map((s) => s.id),
+        conceptDescriptions: conceptDescriptions.map((cd) => cd.id),
       });
 
       const passport = Passport.create({
@@ -80,19 +88,16 @@ export class AasSerializationService {
         sanitizedShells,
         sanitizedSubmodels,
         conceptDescriptions,
-        async (options) => { await savePassport(passport, options); },
+        async (options) => {
+          await savePassport(passport, options);
+        },
       );
 
       return passport;
-    }
-    catch (error) {
+    } catch (error) {
       if (error instanceof z.ZodError) {
-        const details = error.issues.map(
-          i => `${i.path.join(".")}: ${i.message}`,
-        );
-        throw new BadRequestException(
-          `Invalid import data format: ${details.join("; ")}`,
-        );
+        const details = error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
+        throw new BadRequestException(`Invalid import data format: ${details.join("; ")}`);
       }
       throw error;
     }
@@ -106,13 +111,13 @@ export class AasSerializationService {
     try {
       const { shells, submodels, conceptDescriptions } = this.parseAndMapEnvironment(data);
 
-      const { shells: sanitizedShells, submodels: sanitizedSubmodels }
-        = await this.nullifyForeignMedia(shells, submodels, organizationId);
+      const { shells: sanitizedShells, submodels: sanitizedSubmodels } =
+        await this.nullifyForeignMedia(shells, submodels, organizationId);
 
       const environment = Environment.create({
-        assetAdministrationShells: sanitizedShells.map(aas => aas.id),
-        submodels: sanitizedSubmodels.map(s => s.id),
-        conceptDescriptions: conceptDescriptions.map(cd => cd.id),
+        assetAdministrationShells: sanitizedShells.map((aas) => aas.id),
+        submodels: sanitizedSubmodels.map((s) => s.id),
+        conceptDescriptions: conceptDescriptions.map((cd) => cd.id),
       });
 
       const template = Template.create({
@@ -126,19 +131,16 @@ export class AasSerializationService {
         sanitizedShells,
         sanitizedSubmodels,
         conceptDescriptions,
-        async (options) => { await saveTemplate(template, options); },
+        async (options) => {
+          await saveTemplate(template, options);
+        },
       );
 
       return template;
-    }
-    catch (error) {
+    } catch (error) {
       if (error instanceof z.ZodError) {
-        const details = error.issues.map(
-          i => `${i.path.join(".")}: ${i.message}`,
-        );
-        throw new BadRequestException(
-          `Invalid import data format: ${details.join("; ")}`,
-        );
+        const details = error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
+        throw new BadRequestException(`Invalid import data format: ${details.join("; ")}`);
       }
       throw error;
     }
@@ -156,21 +158,17 @@ export class AasSerializationService {
 
     const foundMedia = await this.mediaService.findByIds(mediaIds);
     const foreignMediaIds = new Set(
-      foundMedia
-        .filter(m => m.ownedByOrganizationId !== organizationId)
-        .map(m => m.id),
+      foundMedia.filter((m) => m.ownedByOrganizationId !== organizationId).map((m) => m.id),
     );
 
     if (foreignMediaIds.size === 0) {
       return { shells, submodels };
     }
 
-    const sanitizedShells = shells.map(shell =>
+    const sanitizedShells = shells.map((shell) =>
       shell.withAssetInformation(
         shell.assetInformation.withDefaultThumbnails(
-          shell.assetInformation.defaultThumbnails.filter(
-            t => !foreignMediaIds.has(t.path),
-          ),
+          shell.assetInformation.defaultThumbnails.filter((t) => !foreignMediaIds.has(t.path)),
         ),
       ),
     );
@@ -179,7 +177,10 @@ export class AasSerializationService {
       const plain = submodel.toPlain();
       return Submodel.fromPlain({
         ...plain,
-        submodelElements: this.withNullifiedForeignFileValues(plain.submodelElements, foreignMediaIds),
+        submodelElements: this.withNullifiedForeignFileValues(
+          plain.submodelElements,
+          foreignMediaIds,
+        ),
       });
     });
 
@@ -193,17 +194,18 @@ export class AasSerializationService {
     return elements.map((element) => {
       let result = element;
 
-      if (element.modelType === KeyTypes.File
-        && typeof element.value === "string"
-        && foreignMediaIds.has(element.value)) {
+      if (
+        element.modelType === KeyTypes.File &&
+        typeof element.value === "string" &&
+        foreignMediaIds.has(element.value)
+      ) {
         result = { ...element, value: null };
       }
 
       if (Array.isArray(element.value)) {
         const newValue = this.withNullifiedForeignFileValues(element.value, foreignMediaIds);
-        result = result === element
-          ? { ...element, value: newValue }
-          : { ...result, value: newValue };
+        result =
+          result === element ? { ...element, value: newValue } : { ...result, value: newValue };
       }
 
       return result;

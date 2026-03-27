@@ -40,25 +40,28 @@ import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
 
 export class ModifierVisitor implements IVisitor<unknown, void> {
-  private modifyNameAndDescription<T extends { displayName: LanguageText[]; description: LanguageText[] }>(generalInfoDto: T, data: unknown) {
+  private modifyNameAndDescription<
+    T extends { displayName: LanguageText[]; description: LanguageText[] },
+  >(generalInfoDto: T, data: unknown) {
     const { displayName, description } = NameAndDescriptionModificationSchema.parse(data);
 
-    generalInfoDto.displayName = displayName?.map(LanguageText.fromPlain) ?? generalInfoDto.displayName;
-    generalInfoDto.description = description?.map(LanguageText.fromPlain) ?? generalInfoDto.description;
+    generalInfoDto.displayName =
+      displayName?.map(LanguageText.fromPlain) ?? generalInfoDto.displayName;
+    generalInfoDto.description =
+      description?.map(LanguageText.fromPlain) ?? generalInfoDto.description;
     hasUniqueLanguagesOrFail(generalInfoDto.displayName);
     hasUniqueLanguagesOrFail(generalInfoDto.description);
   }
 
   visitAdministrativeInformation(_element: AdministrativeInformation, _context: unknown): void {
-    throw new NotSupportedError(
-      "AdministrativeInformation is not supported.",
-    );
+    throw new NotSupportedError("AdministrativeInformation is not supported.");
   }
 
-  visitAnnotatedRelationshipElement(_element: AnnotatedRelationshipElement, _context: unknown): void {
-    throw new NotSupportedError(
-      "AnnotatedRelationshipElement is not supported.",
-    );
+  visitAnnotatedRelationshipElement(
+    _element: AnnotatedRelationshipElement,
+    _context: unknown,
+  ): void {
+    throw new NotSupportedError("AnnotatedRelationshipElement is not supported.");
   }
 
   visitAssetAdministrationShell(element: AssetAdministrationShell, context: unknown): void {
@@ -77,33 +80,23 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
   }
 
   visitBlob(_element: Blob, _context: unknown): void {
-    throw new NotSupportedError(
-      "Blob is not supported.",
-    );
+    throw new NotSupportedError("Blob is not supported.");
   }
 
   visitConceptDescription(_element: ConceptDescription, _context: unknown): void {
-    throw new NotSupportedError(
-      "ConceptDescription is not supported.",
-    );
+    throw new NotSupportedError("ConceptDescription is not supported.");
   }
 
   visitEmbeddedDataSpecification(_element: EmbeddedDataSpecification, _context: unknown): void {
-    throw new NotSupportedError(
-      "EmbeddedDataSpecification is not supported.",
-    );
+    throw new NotSupportedError("EmbeddedDataSpecification is not supported.");
   }
 
   visitEntity(_element: Entity, _context: unknown): void {
-    throw new NotSupportedError(
-      "Entity is not supported.",
-    );
+    throw new NotSupportedError("Entity is not supported.");
   }
 
   visitExtension(_element: Extension, _context: unknown): void {
-    throw new NotSupportedError(
-      "Extension is not supported.",
-    );
+    throw new NotSupportedError("Extension is not supported.");
   }
 
   visitFile(element: File, context: unknown): void {
@@ -118,21 +111,15 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
   }
 
   visitKey(_element: Key, _context: unknown): void {
-    throw new NotSupportedError(
-      "Key is not supported.",
-    );
+    throw new NotSupportedError("Key is not supported.");
   }
 
   visitLanguageText(_element: LanguageText, _context: unknown): void {
-    throw new NotSupportedError(
-      "LanguageText is not supported.",
-    );
+    throw new NotSupportedError("LanguageText is not supported.");
   }
 
   visitMultiLanguageProperty(_element: MultiLanguageProperty, _context: unknown): void {
-    throw new NotSupportedError(
-      "MultiLanguageProperty is not supported.",
-    );
+    throw new NotSupportedError("MultiLanguageProperty is not supported.");
   }
 
   visitProperty(element: Property, context: unknown): void {
@@ -144,15 +131,11 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
   }
 
   visitQualifier(_element: Qualifier, _context: unknown): void {
-    throw new NotSupportedError(
-      "Qualifier is not supported.",
-    );
+    throw new NotSupportedError("Qualifier is not supported.");
   }
 
   visitRange(_element: Range, _context: unknown): void {
-    throw new NotSupportedError(
-      "Range is not supported.",
-    );
+    throw new NotSupportedError("Range is not supported.");
   }
 
   visitReference(element: Reference, context: unknown): void {
@@ -163,12 +146,10 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
     }
     if (parsed.referredSemanticId === null) {
       element.referredSemanticId = parsed.referredSemanticId;
-    }
-    else if (parsed.referredSemanticId !== undefined) {
+    } else if (parsed.referredSemanticId !== undefined) {
       if (element.referredSemanticId !== null) {
         element.referredSemanticId.accept(this, parsed.referredSemanticId);
-      }
-      else {
+      } else {
         element.referredSemanticId = Reference.fromPlain(parsed.referredSemanticId);
       }
     }
@@ -182,33 +163,25 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
     this.modifyNameAndDescription(element, parsed);
     if (parsed.value === null) {
       element.value = parsed.value;
-    }
-    else if (parsed.value !== undefined) {
+    } else if (parsed.value !== undefined) {
       if (element.value !== null) {
         element.value.accept(this, parsed.value);
-      }
-      else {
+      } else {
         element.value = Reference.fromPlain(parsed.value);
       }
     }
   }
 
   visitRelationshipElement(_element: RelationshipElement, _context: unknown): void {
-    throw new NotSupportedError(
-      "RelationshipElement is not supported.",
-    );
+    throw new NotSupportedError("RelationshipElement is not supported.");
   }
 
   visitResource(_element: Resource, _context: unknown): void {
-    throw new NotSupportedError(
-      "Resource is not supported.",
-    );
+    throw new NotSupportedError("Resource is not supported.");
   }
 
   visitSpecificAssetId(_element: SpecificAssetId, _context: unknown): void {
-    throw new NotSupportedError(
-      "SpecificAssetId is not supported.",
-    );
+    throw new NotSupportedError("SpecificAssetId is not supported.");
   }
 
   visitSubmodel(element: Submodel, context: unknown): void {
@@ -231,11 +204,18 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
     }
   }
 
-  visitSubmodelElements(element: ISubmodelElement, submodelElementModifications: SubmodelElementModificationDto[]): void {
+  visitSubmodelElements(
+    element: ISubmodelElement,
+    submodelElementModifications: SubmodelElementModificationDto[],
+  ): void {
     for (const submodelElement of submodelElementModifications) {
-      const foundElement = element.getSubmodelElements().find(e => e.idShort === submodelElement.idShort);
+      const foundElement = element
+        .getSubmodelElements()
+        .find((e) => e.idShort === submodelElement.idShort);
       if (!foundElement) {
-        throw new ValueError(`Could not find element with idShort ${submodelElement.idShort} within submodel element ${element.idShort}.`);
+        throw new ValueError(
+          `Could not find element with idShort ${submodelElement.idShort} within submodel element ${element.idShort}.`,
+        );
       }
       foundElement.accept(this, submodelElement);
     }

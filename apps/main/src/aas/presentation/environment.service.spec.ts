@@ -55,9 +55,12 @@ describe("environmentService", () => {
   it("should create environment", async () => {
     const displayName: LanguageTextDto[] = [{ language: "en", text: "Test AAS" }];
     const description: LanguageTextDto[] = [{ language: "en", text: "Test AAS description" }];
-    const environment = await environmentService.createEnvironment({
-      assetAdministrationShells: [{ displayName, description }],
-    }, true);
+    const environment = await environmentService.createEnvironment(
+      {
+        assetAdministrationShells: [{ displayName, description }],
+      },
+      true,
+    );
     expect(environment.assetAdministrationShells).toHaveLength(1);
     const aas = await aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
     expect(aas.assetInformation.assetKind).toEqual(AssetKind.Type);
@@ -66,25 +69,35 @@ describe("environmentService", () => {
   });
 
   it("should create environment with empty aas", async () => {
-    const environment = await environmentService.createEnvironment({
-      assetAdministrationShells: [],
-    }, false);
+    const environment = await environmentService.createEnvironment(
+      {
+        assetAdministrationShells: [],
+      },
+      false,
+    );
     expect(environment.assetAdministrationShells).toHaveLength(1);
     const aas = await aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
     expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);
   });
 
   it("should populate paging result", async () => {
-    const assetAdministrationShell = AssetAdministrationShell.create({ assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }) });
-    const environment = Environment.create({ assetAdministrationShells: [assetAdministrationShell.id] });
+    const assetAdministrationShell = AssetAdministrationShell.create({
+      assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
+    });
+    const environment = Environment.create({
+      assetAdministrationShells: [assetAdministrationShell.id],
+    });
     await aasRepository.save(assetAdministrationShell);
     const passport = Passport.create({ environment, organizationId: "organizationId" });
     await passportRepository.save(passport);
-    const pagingResult = PagingResult.create({ pagination: Pagination.create({}), items: [passport] });
-    const result = await environmentService.populateEnvironmentForPagingResult(
-      pagingResult,
-      { assetAdministrationShells: true, ignoreMissing: false },
-    );
+    const pagingResult = PagingResult.create({
+      pagination: Pagination.create({}),
+      items: [passport],
+    });
+    const result = await environmentService.populateEnvironmentForPagingResult(pagingResult, {
+      assetAdministrationShells: true,
+      ignoreMissing: false,
+    });
     expect(result.toPlain()).toEqual({
       result: [
         {

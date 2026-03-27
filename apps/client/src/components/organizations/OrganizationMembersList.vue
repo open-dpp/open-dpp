@@ -33,9 +33,7 @@ const layoutStore = useLayoutStore();
 const invitations = ref<InvitedMember[]>([]);
 
 const rows = computed(() =>
-  [...members, ...invitations.value].sort((a, b) =>
-    a.role.localeCompare(b.role),
-  ),
+  [...members, ...invitations.value].sort((a, b) => a.role.localeCompare(b.role)),
 );
 async function loadInvitations() {
   invitations.value = [];
@@ -128,11 +126,7 @@ onMounted(async () => {
     </Column>
     <Column :header="t('common.actions')">
       <template #body="{ data }: { data: MemberDto | InvitedMember }">
-        <Button
-          v-if="isInvited(data)"
-          severity="secondary"
-          @click="cancelInvite(data.id)"
-        >
+        <Button v-if="isInvited(data)" severity="secondary" @click="cancelInvite(data.id)">
           {{ t("organizations.invitation.cancel") }}
         </Button>
       </template>

@@ -28,8 +28,7 @@ async function onSubmit() {
     await aiIntegrationStore.modifyConfiguration({
       isEnabled: formData.value.isEnabled,
       model: aiIntegrationStore.configuration?.model ?? "codestral-latest",
-      provider:
-        aiIntegrationStore.configuration?.provider ?? AiProvider.Mistral,
+      provider: aiIntegrationStore.configuration?.provider ?? AiProvider.Mistral,
     });
   }
 }
@@ -40,10 +39,10 @@ async function onSubmit() {
     <div class="sm:flex sm:items-center">
       <div class="sm:flex-auto">
         <h1 class="text-base font-semibold text-gray-900">
-          {{ t('integrations.ai.configuration') }}
+          {{ t("integrations.ai.configuration") }}
         </h1>
         <p class="mt-2 text-sm text-gray-700">
-          {{ t('integrations.ai.configurationDesc') }}
+          {{ t("integrations.ai.configurationDesc") }}
         </p>
       </div>
     </div>
@@ -57,7 +56,7 @@ async function onSubmit() {
             data-cy="toggle-integration"
           />
           <label for="isEnabled" class="cursor-pointer text-sm font-medium text-gray-700">
-            {{ t('integrations.ai.activate') }}
+            {{ t("integrations.ai.activate") }}
           </label>
         </div>
         <div class="mt-2">

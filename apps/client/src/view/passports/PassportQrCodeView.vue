@@ -20,15 +20,20 @@ onMounted(async () => {
   upids.value = result.data;
 });
 
-const link = computed(() => upids.value && upids.value[0] ? `/presentation/${upids.value[0].uuid}` : undefined);
-const content = computed(() => link.value ? `${VIEW_ROOT_URL}${link.value}` : undefined);
+const link = computed(() =>
+  upids.value && upids.value[0] ? `/presentation/${upids.value[0].uuid}` : undefined,
+);
+const content = computed(() => (link.value ? `${VIEW_ROOT_URL}${link.value}` : undefined));
 </script>
 
 <template>
   <QrCode v-if="link && content && !upidNotFound" :link="link" :content="content" />
-  <div v-if="!upids || !upids[0]" class="flex w-full justify-center flex-col p-10 items-center gap-5">
+  <div
+    v-if="!upids || !upids[0]"
+    class="flex w-full flex-col items-center justify-center gap-5 p-10"
+  >
     <span>
-      {{ t('uniqueproductidentifier.notfound') }}
+      {{ t("uniqueproductidentifier.notfound") }}
     </span>
   </div>
 </template>

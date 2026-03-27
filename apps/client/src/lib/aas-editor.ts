@@ -1,9 +1,5 @@
 import type { AasNamespace } from "@open-dpp/api-client";
-import type {
-  AasEditorPath,
-  EditorType,
-  OpenDrawerCallback,
-} from "../composables/aas-drawer.ts";
+import type { AasEditorPath, EditorType, OpenDrawerCallback } from "../composables/aas-drawer.ts";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import { z } from "zod";
 

@@ -8,7 +8,10 @@ import { generateMongoConfig } from "../../database/config";
 
 import { ConceptDescription } from "../domain/concept-description";
 import { ConceptDescriptionRepository } from "./concept-description.repository";
-import { ConceptDescriptionDoc, ConceptDescriptionSchema } from "./schemas/concept-description.schema";
+import {
+  ConceptDescriptionDoc,
+  ConceptDescriptionSchema,
+} from "./schemas/concept-description.schema";
 
 describe("conceptDescriptionRepository", () => {
   let conceptDescriptionRepository: ConceptDescriptionRepository;
@@ -31,12 +34,12 @@ describe("conceptDescriptionRepository", () => {
           },
         ]),
       ],
-      providers: [
-        ConceptDescriptionRepository,
-      ],
+      providers: [ConceptDescriptionRepository],
     }).compile();
 
-    conceptDescriptionRepository = module.get<ConceptDescriptionRepository>(ConceptDescriptionRepository);
+    conceptDescriptionRepository = module.get<ConceptDescriptionRepository>(
+      ConceptDescriptionRepository,
+    );
   });
 
   it("should save a concept description", async () => {

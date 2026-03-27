@@ -17,10 +17,16 @@ describe("value modifier visitor", () => {
     registerSubmodelElementClasses();
   });
 
-  const existingDisplayNames = [LanguageText.create({ language: "en", text: "Submodel Carbon Footprint" })];
+  const existingDisplayNames = [
+    LanguageText.create({ language: "en", text: "Submodel Carbon Footprint" }),
+  ];
 
   it("should modify value of property", () => {
-    const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames });
+    const submodel = Submodel.create({
+      id: "s1",
+      idShort: "s1",
+      displayName: existingDisplayNames,
+    });
     const property = Property.create({
       idShort: "prop1",
       displayName: existingDisplayNames,
@@ -34,7 +40,11 @@ describe("value modifier visitor", () => {
   });
 
   it("should modify value of file", () => {
-    const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames });
+    const submodel = Submodel.create({
+      id: "s1",
+      idShort: "s1",
+      displayName: existingDisplayNames,
+    });
     const file = File.create({
       idShort: "file",
       displayName: existingDisplayNames,
@@ -53,7 +63,11 @@ describe("value modifier visitor", () => {
   });
 
   it("should modify value of reference element", () => {
-    const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames });
+    const submodel = Submodel.create({
+      id: "s1",
+      idShort: "s1",
+      displayName: existingDisplayNames,
+    });
     const referenceElement = ReferenceElement.create({
       idShort: "ref",
       displayName: existingDisplayNames,
@@ -69,10 +83,15 @@ describe("value modifier visitor", () => {
     });
     const path = IdShortPath.create({ path: "ref" });
     submodel.addSubmodelElement(referenceElement);
-    let modifications: any = { keys: [{ type: KeyTypes.GlobalReference, value: "https://example.com/ref/other" }] };
+    let modifications: any = {
+      keys: [{ type: KeyTypes.GlobalReference, value: "https://example.com/ref/other" }],
+    };
     submodel.modifyValueOfSubmodelElement(modifications, path);
 
-    modifications = { type: ReferenceTypes.ModelReference, keys: [{ type: KeyTypes.AssetAdministrationShell, value: "https://example.com/ref/other" }] };
+    modifications = {
+      type: ReferenceTypes.ModelReference,
+      keys: [{ type: KeyTypes.AssetAdministrationShell, value: "https://example.com/ref/other" }],
+    };
     submodel.modifyValueOfSubmodelElement(modifications, path);
     // Undefined value should not change reference element value
     submodel.modifyValueOfSubmodelElement(undefined, path);
@@ -86,10 +105,25 @@ describe("value modifier visitor", () => {
   });
 
   it("should modify value of submodel element list", () => {
-    const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames });
-    const listItem = SubmodelElementList.create({ idShort: "list", displayName: existingDisplayNames, typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
-    const collection = SubmodelElementCollection.create({ idShort: "collection", displayName: existingDisplayNames });
-    const property = Property.create({ idShort: "prop1", displayName: existingDisplayNames, valueType: DataTypeDef.String });
+    const submodel = Submodel.create({
+      id: "s1",
+      idShort: "s1",
+      displayName: existingDisplayNames,
+    });
+    const listItem = SubmodelElementList.create({
+      idShort: "list",
+      displayName: existingDisplayNames,
+      typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
+    });
+    const collection = SubmodelElementCollection.create({
+      idShort: "collection",
+      displayName: existingDisplayNames,
+    });
+    const property = Property.create({
+      idShort: "prop1",
+      displayName: existingDisplayNames,
+      valueType: DataTypeDef.String,
+    });
     const multiLanguageProperty = MultiLanguageProperty.create({
       idShort: "prop2",
       displayName: existingDisplayNames,
@@ -100,13 +134,17 @@ describe("value modifier visitor", () => {
     collection.addSubmodelElement(multiLanguageProperty);
     listItem.addSubmodelElement(collection);
     submodel.addSubmodelElement(listItem);
-    const modifications = [{
-      prop1: "prop New",
-      prop2: [{ de: "CO2 Footprint New Text" }],
-    }];
+    const modifications = [
+      {
+        prop1: "prop New",
+        prop2: [{ de: "CO2 Footprint New Text" }],
+      },
+    ];
     submodel.modifyValueOfSubmodelElement(modifications, IdShortPath.create({ path: "list" }));
     expect(property.value).toEqual("prop New");
     expect(property.displayName).toEqual(existingDisplayNames.map(LanguageText.fromPlain));
-    expect(multiLanguageProperty.value).toEqual([LanguageText.create({ language: "de", text: "CO2 Footprint New Text" })]);
+    expect(multiLanguageProperty.value).toEqual([
+      LanguageText.create({ language: "de", text: "CO2 Footprint New Text" }),
+    ]);
   });
 });

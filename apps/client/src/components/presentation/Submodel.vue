@@ -15,11 +15,8 @@ const { description: name } = useDisplayName(title);
 </script>
 
 <template>
-  <div
-    :id="idShort"
-    class="overflow-hidden bg-white shadow sm:rounded-lg w-full"
-  >
-    <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg p-4">
+  <div :id="idShort" class="w-full overflow-hidden bg-white shadow sm:rounded-lg">
+    <div class="overflow-hidden bg-white p-4 shadow-sm sm:rounded-lg">
       <div class="px-4 sm:px-0">
         <h3 class="font-extrabold text-gray-900">
           {{ name }}

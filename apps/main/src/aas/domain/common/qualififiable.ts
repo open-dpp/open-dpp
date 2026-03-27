@@ -12,8 +12,7 @@ export class Qualifier implements IHasSemantics, IVisitable {
     public readonly kind: QualifierKindType,
     public value: string | null,
     public valueId: Reference | null,
-  ) {
-  }
+  ) {}
 
   static create(data: {
     type: string;
@@ -41,7 +40,7 @@ export class Qualifier implements IHasSemantics, IVisitable {
       type: parsed.type,
       valueType: parsed.valueType,
       semanticId: parsed.semanticId ? Reference.fromPlain(parsed.semanticId) : undefined,
-      supplementalSemanticIds: parsed.supplementalSemanticIds.map(s => Reference.fromPlain(s)),
+      supplementalSemanticIds: parsed.supplementalSemanticIds.map((s) => Reference.fromPlain(s)),
       kind: parsed.kind,
       value: parsed.value,
       valueId: parsed.valueId ? Reference.fromPlain(parsed.valueId) : undefined,

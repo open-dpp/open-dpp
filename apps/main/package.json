@@ -1,10 +1,9 @@
 {
   "name": "@open-dpp/main",
   "version": "1.0.0",
-  "packageManager": "pnpm@10.26.2",
   "description": "",
-  "author": "",
   "license": "ISC",
+  "author": "",
   "scripts": {
     "build": "nest build",
     "start": "nest start",
@@ -12,8 +11,6 @@
     "start:dev": "nest start --watch",
     "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "lint": "eslint",
-    "lint:fix": "eslint --fix",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:clear-cache": "jest --clearCache",
     "test:watch": "jest --watch",
@@ -82,13 +79,10 @@
     "zod-openapi": "^5.4.5"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.3",
-    "@eslint/js": "^9.39.2",
     "@jest/globals": "^30.2.0",
     "@nestjs/cli": "^11.0.14",
     "@nestjs/schematics": "^11.0.9",
     "@nestjs/testing": "^11.1.10",
-    "@open-dpp/config-eslint": "workspace:*",
     "@open-dpp/testing": "workspace:*",
     "@swc/core": "^1.15.7",
     "@swc/jest": "^0.2.39",
@@ -105,11 +99,7 @@
     "@types/nodemailer": "^6.4.21",
     "@types/semver": "^7.7.1",
     "@types/supertest": "^6.0.3",
-    "eslint": "^9.39.2",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.4",
     "fishery": "^2.4.0",
-    "globals": "^17.1.0",
     "jest": "^30.2.0",
     "mongodb-memory-server": "^11.0.0",
     "source-map-support": "^0.5.21",
@@ -117,7 +107,7 @@
     "ts-loader": "^9.5.4",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.54.0"
-  }
+    "typescript": "^5.9.3"
+  },
+  "packageManager": "pnpm@10.26.2"
 }

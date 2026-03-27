@@ -1,4 +1,10 @@
-import { BadRequestException, CanActivate, ExecutionContext, ForbiddenException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+} from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { MembersService } from "../../identity/organizations/application/services/members.service";
 import { PolicyKey } from "../domain/policy";
@@ -16,20 +22,18 @@ export class PolicyGuard implements CanActivate {
 
   async canActivate(ctx: ExecutionContext) {
     const req = ctx.switchToHttp().getRequest();
-    const keys = this.reflector.getAllAndOverride<PolicyKey[]>(POLICY_META, [
-      ctx.getHandler(),
-      ctx.getClass(),
-    ]) ?? [];
+    const keys =
+      this.reflector.getAllAndOverride<PolicyKey[]>(POLICY_META, [
+        ctx.getHandler(),
+        ctx.getClass(),
+      ]) ?? [];
 
-    if (!keys.length)
-      return true;
+    if (!keys.length) return true;
 
     const orgId = req.headers["x-open-dpp-organization-id"];
 
     if (!orgId || typeof orgId !== "string") {
-      throw new BadRequestException(
-        "X-OPEN-DPP-ORGANIZATION-ID header is required",
-      );
+      throw new BadRequestException("X-OPEN-DPP-ORGANIZATION-ID header is required");
     }
 
     const session = req.session;

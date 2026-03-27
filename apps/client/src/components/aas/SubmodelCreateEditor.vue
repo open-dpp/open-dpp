@@ -16,10 +16,7 @@ import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import FormContainer from "./form/FormContainer.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
-const props
-  = defineProps<
-    SharedEditorProps<SubmodelCreateEditorProps, SubmodelRequestDto>
-  >();
+const props = defineProps<SharedEditorProps<SubmodelCreateEditorProps, SubmodelRequestDto>>();
 
 const propertyFormSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
@@ -55,10 +52,6 @@ defineExpose<{
 
 <template>
   <FormContainer>
-    <SubmodelBaseForm
-      :show-errors="showErrors"
-      :errors="errors"
-      :editor-mode="EditorMode.CREATE"
-    />
+    <SubmodelBaseForm :show-errors="showErrors" :errors="errors" :editor-mode="EditorMode.CREATE" />
   </FormContainer>
 </template>
