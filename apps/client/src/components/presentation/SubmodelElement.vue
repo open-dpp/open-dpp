@@ -19,9 +19,9 @@ const isComplexType = computed(() =>
   <div
     :id="element.idShort"
     :data-cy="element.idShort"
-    class="py-4 border-b border-gray-50"
+    class="border-b border-gray-50"
     :class="[
-      isComplexType ? 'col-span-full py-5' : 'flex items-baseline justify-between gap-4',
+      isComplexType ? 'col-span-full py-5' : 'flex items-baseline justify-between gap-4 py-4',
     ]"
   >
     <dt class="text-sm font-medium text-gray-500 shrink-0">
