@@ -1,5 +1,5 @@
-import { test as setup, expect } from "@playwright/test";
-import path from "path";
+import { test as setup } from "@playwright/test";
+import * as path from "path";
 import { EnvConfig, ExampleOrganisation, User } from "./config";
 
 const authFile = path.join(__dirname, "../playwright/.auth/user.json");
