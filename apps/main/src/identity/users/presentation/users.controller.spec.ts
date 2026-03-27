@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Test, TestingModule } from "@nestjs/testing";
 import { UsersService } from "../application/services/users.service";
+import { User } from "../domain/user";
+import { UserRole } from "../domain/user-role.enum";
 import { UsersController } from "./users.controller";
 
 describe("UsersController", () => {
@@ -11,6 +13,7 @@ describe("UsersController", () => {
     mockService = {
       createUser: jest.fn(),
       findOne: jest.fn(),
+      setUserRole: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -37,5 +40,16 @@ describe("UsersController", () => {
     const result = await controller.getUser("1");
     expect(result).toEqual({ id: "1" });
     expect(mockService.findOne).toHaveBeenCalledWith("1");
+  });
+
+  it("should set user role", async () => {
+    const user = User.create({ email: "test@example.com", firstName: "John", lastName: "Doe", role: UserRole.USER });
+    const updatedUser = user.withRole(UserRole.ADMIN);
+    mockService.setUserRole.mockResolvedValue(updatedUser);
+
+    const result = await controller.setUserRole(user.id, { role: "admin" });
+
+    expect(mockService.setUserRole).toHaveBeenCalledWith(user.id, "admin");
+    expect(result.role).toBe(UserRole.ADMIN);
   });
 });

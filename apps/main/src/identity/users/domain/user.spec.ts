@@ -49,6 +49,23 @@ describe("user", () => {
     expect(user.createdAt).toEqual(dbProps.createdAt);
   });
 
+  it("should return a new user with the given role via withRole", () => {
+    const user = User.create({
+      email: "test@example.com",
+      firstName: "John",
+      lastName: "Doe",
+      role: UserRole.USER,
+    });
+
+    const admin = user.withRole(UserRole.ADMIN);
+
+    expect(admin).not.toBe(user);
+    expect(admin.role).toBe(UserRole.ADMIN);
+    expect(admin.id).toBe(user.id);
+    expect(admin.email).toBe(user.email);
+    expect(user.role).toBe(UserRole.USER);
+  });
+
   it("should format name correctly when first or last name is null", () => {
     const dbProps = {
       id: "user-123",

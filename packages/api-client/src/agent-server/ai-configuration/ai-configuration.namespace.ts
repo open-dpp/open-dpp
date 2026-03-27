@@ -7,16 +7,10 @@ import type {
 export class AiConfigurationNamespace {
   constructor(
     public readonly axiosInstance: AxiosInstance,
-    private readonly organizationId?: string,
   ) {}
 
   private get configurationsEndpoint() {
-    if (!this.organizationId) {
-      throw new Error(
-        'Active organizationId is required for AI Configuration operations. Did you call setActiveOrganizationId()?',
-      )
-    }
-    return `/organizations/${this.organizationId}/configurations`
+    return `/configurations`
   }
 
   public async upsert(data: AiConfigurationUpsertDto) {

@@ -181,9 +181,10 @@ describe("passportMetricController", () => {
 
     const response = await request(getApp(app))
       .get(
-        `/organizations/${org.id}/passport-metrics?templateId=${templateId}&passportId=${source.passportId}&startDate=2025-01-01T00:00:00Z&endDate=2025-03-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
+        `/passport-metrics?templateId=${templateId}&passportId=${source.passportId}&startDate=2025-01-01T00:00:00Z&endDate=2025-03-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
       )
       .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
       .send();
 
     expect(response.status).toEqual(200);
@@ -225,9 +226,10 @@ describe("passportMetricController", () => {
     await passportMetricService.create(pageView);
     const response = await request(getApp(app))
       .get(
-        `/organizations/${org2.id}/passport-metrics?templateId=${templateId}&passportId=${source.passportId}&startDate=2025-01-01T00:00:00Z&endDate=2025-02-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
+        `/passport-metrics?templateId=${templateId}&passportId=${source.passportId}&startDate=2025-01-01T00:00:00Z&endDate=2025-02-01T00:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
       )
       .set("Cookie", user2Cookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org2.id)
       .send();
     expect(response.status).toEqual(200);
     expect(response.body).toEqual([{
@@ -244,9 +246,10 @@ describe("passportMetricController", () => {
     const { org: org2 } = await betterAuthHelper.createOrganizationAndUserWithCookie();
     const response = await request(getApp(app))
       .get(
-        `/organizations/${org2.id}/passport-metrics?templateId=${randomUUID()}&modelId=${randomUUID()}&startDate=2025-01-01T12:00:00Z&endDate=2025-01-01T13:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
+        `/passport-metrics?templateId=${randomUUID()}&modelId=${randomUUID()}&startDate=2025-01-01T12:00:00Z&endDate=2025-01-01T13:00:00Z&type=${MeasurementType.PAGE_VIEWS}&valueKey=http://example.com/page1&period=${TimePeriod.MONTH}`,
       )
       .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org2.id)
       .send();
     expect(response.status).toEqual(403);
   });

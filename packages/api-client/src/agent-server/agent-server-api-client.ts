@@ -30,7 +30,6 @@ export class AgentServerApiClient implements IApiClient {
     )
     this.aiConfigurations = new AiConfigurationNamespace(
       this.axiosInstance,
-      this.options.activeOrganizationId,
     )
   }
 }

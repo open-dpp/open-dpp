@@ -57,7 +57,7 @@ const ContentType = {
 
 export function createAasPaths(tag: string) {
   return {
-    [`${tag}${ApiGetShellsPath}`]: {
+    [`/${tag}${ApiGetShellsPath}`]: {
       get: {
         tags: [tag],
         summary: "Returns all Asset Administration Shells",
@@ -71,7 +71,7 @@ export function createAasPaths(tag: string) {
         },
       },
     },
-    [`${tag}${ApiPatchShellPath}`]: {
+    [`/${tag}${ApiPatchShellPath}`]: {
       patch: {
         tags: [tag],
         summary: "Modifies a Asset Administration Shell with specified id",
@@ -90,7 +90,7 @@ export function createAasPaths(tag: string) {
         },
       },
     },
-    [`${tag}${ApiSubmodelsPath}`]: {
+    [`/${tag}${ApiSubmodelsPath}`]: {
       get: {
         tags: [tag],
         summary: `Returns all Submodels of the ${tag}`,
@@ -122,7 +122,7 @@ export function createAasPaths(tag: string) {
         },
       },
     },
-    [`${tag}${ApiGetSubmodelByIdPath}`]: {
+    [`/${tag}${ApiGetSubmodelByIdPath}`]: {
       get: {
         tags: [tag],
         summary: `Returns Submodel by id`,
@@ -162,7 +162,7 @@ export function createAasPaths(tag: string) {
         },
       },
     },
-    [`${tag}${ApiGetSubmodelValuePath}`]: {
+    [`/${tag}${ApiGetSubmodelValuePath}`]: {
       get: {
         tags: [tag],
         summary: `Returns Submodel value representation`,
@@ -176,7 +176,7 @@ export function createAasPaths(tag: string) {
         },
       },
     },
-    [`${tag}${ApiSubmodelElementsPath}`]: {
+    [`/${tag}${ApiSubmodelElementsPath}`]: {
       get: {
         tags: [tag],
         summary: `Returns all Submodel Elements of the given Submodel`,
@@ -207,7 +207,7 @@ export function createAasPaths(tag: string) {
         },
       },
     },
-    [`${tag}${ApiPostColumnPath}`]: {
+    [`/${tag}${ApiPostColumnPath}`]: {
       post: {
         tags: [tag],
         summary: `Add column to Submodel Element List with specified idShortPath. Column is itself a Submodel Element.`,
@@ -226,7 +226,7 @@ export function createAasPaths(tag: string) {
         },
       },
     },
-    [`${tag}${ApiGetColumnByIdShortPath}`]: {
+    [`/${tag}${ApiGetColumnByIdShortPath}`]: {
       delete: {
         tags: [tag],
         summary: "Deletes column with specified idShort from Submodel Element List with specified idShortPath.",
@@ -257,7 +257,7 @@ export function createAasPaths(tag: string) {
         },
       },
     },
-    [`${tag}${ApiPostRowPath}`]: {
+    [`/${tag}${ApiPostRowPath}`]: {
       post: {
         tags: [tag],
         summary: `Add row to Submodel Element List with specified idShortPath.`,
@@ -271,7 +271,7 @@ export function createAasPaths(tag: string) {
         },
       },
     },
-    [`${tag}${ApiDeleteRowPath}`]: {
+    [`/${tag}${ApiDeleteRowPath}`]: {
       delete: {
         tags: [tag],
         summary: `Deletes row with specified idShort from Submodel Element List with specified idShortPath.`,
@@ -285,7 +285,7 @@ export function createAasPaths(tag: string) {
         },
       },
     },
-    [`${tag}${ApiGetSubmodelElementByIdPath}`]: {
+    [`/${tag}${ApiGetSubmodelElementByIdPath}`]: {
       get: {
         tags: [tag],
         summary: `Returns Submodel Element by idShortPath`,
@@ -341,7 +341,7 @@ export function createAasPaths(tag: string) {
         },
       },
     },
-    [`${tag}${ApiGetSubmodelElementValuePath}`]: {
+    [`/${tag}${ApiGetSubmodelElementValuePath}`]: {
       get: {
         tags: [tag],
         summary: `Returns value representation of Submodel Element`,
@@ -362,7 +362,7 @@ function createTemplatePaths() {
   const tag = "templates";
   return {
     ...createAasPaths(tag),
-    [`${tag}`]: {
+    [`/${tag}`]: {
       get: {
         tags: [tag],
         summary: `Get templates`,
@@ -392,7 +392,7 @@ function createTemplatePaths() {
         },
       },
     },
-    [`${tag}/{id}/export`]: {
+    [`/${tag}/{id}/export`]: {
       get: {
         tags: [tag],
         summary: `Exports a template`,
@@ -406,7 +406,7 @@ function createTemplatePaths() {
         },
       },
     },
-    [`${tag}/import`]: {
+    [`/${tag}/import`]: {
       post: {
         tags: [tag],
         summary: `Imports a template`,
@@ -446,7 +446,7 @@ function createPassportPaths() {
   const tag = "passports";
   return {
     ...createAasPaths(tag),
-    [`${tag}`]: {
+    [`/${tag}`]: {
       get: {
         tags: [tag],
         summary: `Get passports`,
@@ -476,7 +476,7 @@ function createPassportPaths() {
         },
       },
     },
-    [`${tag}/{id}/export`]: {
+    [`/${tag}/{id}/export`]: {
       get: {
         tags: [tag],
         summary: `Exports a passport`,
@@ -490,7 +490,7 @@ function createPassportPaths() {
         },
       },
     },
-    [`${tag}/import`]: {
+    [`/${tag}/import`]: {
       post: {
         tags: [tag],
         summary: `Imports a passport`,

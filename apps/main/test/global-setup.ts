@@ -12,8 +12,6 @@ export default async () => {
 
   process.env.NODE_ENV = "test";
   process.env.OPEN_DPP_URL = "http://localhost:3000";
-  process.env.OPEN_DPP_SERVICE_TOKEN = "test-service-token-16chars";
-  process.env.OPEN_DPP_AAS_TOKEN = "test-aas-token-16chars00";
   process.env.OPEN_DPP_MONGODB_USER = "admin";
   process.env.OPEN_DPP_MONGODB_PASSWORD = "admin";
   process.env.OPEN_DPP_MONGODB_DATABASE = "test";

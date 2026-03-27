@@ -159,4 +159,16 @@ export class BetterAuthHelper {
       userCookie,
     };
   }
+
+  async createOrganizationAndUserWithApiKey() {
+    const userData = await this.createUser();
+    const user = userData.user;
+    const org = await this.createOrganization(user.id);
+    const apiKey = await this.createApiKey(user.id);
+    return {
+      org,
+      user,
+      apiKey,
+    };
+  }
 }

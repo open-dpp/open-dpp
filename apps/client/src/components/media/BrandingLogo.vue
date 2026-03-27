@@ -1,12 +1,14 @@
 <script setup lang="ts">
-const { url = "/api/branding/instance" } = defineProps<{
+const { url = "/api/branding/instance", center = true } = defineProps<{
   url?: string;
+  center?: boolean;
 }>();
 </script>
 
 <template>
   <img
-    class="mx-auto h-8 w-auto"
+    class="h-8 w-auto"
+    :class="{ 'mx-auto': center }"
     :src="url"
     alt="brand-image"
   >
