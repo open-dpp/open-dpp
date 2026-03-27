@@ -103,7 +103,7 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
 
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {
     const jsonVisitor = new JsonVisitor(options);
-    return this.accept(jsonVisitor);
+    return this.accept(jsonVisitor, options?.context);
   }
 
   getSubmodelElements(): ISubmodelElement[] {

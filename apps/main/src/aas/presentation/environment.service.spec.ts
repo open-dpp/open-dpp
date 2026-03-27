@@ -5,10 +5,12 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import {
   AssetKind,
+  DataTypeDef,
   LanguageTextDto,
   MemberRoleDto,
   PermissionKind,
   Permissions,
+  SubmodelElementSchema,
   SubmodelJsonSchema,
   UserRoleDto,
 } from "@open-dpp/dto";
@@ -38,8 +40,10 @@ import { Permission } from "../domain/security/permission";
 import { PermissionPerObject } from "../domain/security/permission-per-object";
 import { Security } from "../domain/security/security";
 import { SubjectAttributes } from "../domain/security/subject-attributes";
+import { Property } from "../domain/submodel-base/property";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
+import { SubmodelElementCollection } from "../domain/submodel-base/submodel-element-collection";
 import { AasRepository } from "../infrastructure/aas.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import { EnvironmentService } from "./environment.service";
@@ -243,7 +247,7 @@ describe("environmentService", () => {
     )).rejects.toThrow(new ForbiddenError("Administrator has no permission to add/ modify policy."));
   });
 
-  it("should return submodels for subject", async () => {
+  async function createDefaultEnvironment() {
     const security = Security.create({});
     const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
     const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
@@ -253,18 +257,49 @@ describe("environmentService", () => {
     })]);
 
     const submodel1 = Submodel.create({ idShort: "section1" });
+
+    const submodelElementCollection1 = SubmodelElementCollection.create({ idShort: "subSection1" });
+    const property1 = Property.create({ idShort: "property1", valueType: DataTypeDef.String });
+    const property2 = Property.create({ idShort: "property2", valueType: DataTypeDef.String });
+    submodelElementCollection1.addSubmodelElement(property1);
+    submodelElementCollection1.addSubmodelElement(property2);
+    submodel1.addSubmodelElement(submodelElementCollection1);
+
     await submodelRepository.save(submodel1);
     const assetAdministrationShell = AssetAdministrationShell.create({ security });
     assetAdministrationShell.addSubmodel(submodel1);
     await aasRepository.save(assetAdministrationShell);
 
     const environment = Environment.create({ assetAdministrationShells: [assetAdministrationShell.id], submodels: [submodel1.id] });
+    return { environment, admin, member, submodel1, submodelElementCollection1, property1, property2 };
+  }
+
+  it("should return submodels for subject", async () => {
+    const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
     const pagination = Pagination.create({ limit: 10 });
     let submodels = await environmentService.getSubmodels(environment, pagination, admin);
     expect(submodels.result).toEqual([SubmodelJsonSchema.parse(submodel1.toPlain())]);
 
     submodels = await environmentService.getSubmodels(environment, pagination, member);
     expect(submodels.result).toEqual([]);
+  });
+
+  it("should return submodel by id for subject", async () => {
+    const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
+    const result = await environmentService.getSubmodelById(environment, submodel1.id, admin);
+    expect(result).toEqual(SubmodelJsonSchema.parse(submodel1.toPlain()));
+
+    await expect(environmentService.getSubmodelById(environment, submodel1.id, member)).rejects.toThrow(new ForbiddenError());
+  });
+
+  it("should return submodels elements for submodel", async () => {
+    const { environment, admin, member, submodel1, submodelElementCollection1 } = await createDefaultEnvironment();
+    const pagination = Pagination.create({ limit: 10 });
+    let submodelElements = await environmentService.getSubmodelElements(environment, submodel1.id, pagination, admin);
+    expect(submodelElements.result).toEqual([SubmodelElementSchema.parse(submodelElementCollection1.toPlain())]);
+
+    submodelElements = await environmentService.getSubmodelElements(environment, submodel1.id, pagination, member);
+    expect(submodelElements.result).toEqual([]);
   });
 
   afterAll(async () => {

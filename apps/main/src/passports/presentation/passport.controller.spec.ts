@@ -53,11 +53,11 @@ describe("passportController", () => {
     SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.OWNER }),
   );
 
-  async function createPassport(orgId: string): Promise<Passport> {
+  async function createPassport(orgId?: string): Promise<Passport> {
     const { aas, submodels } = ctx.getAasObjects();
     return ctx.getRepositories().dppIdentifiableRepository.save(Passport.create({
       id: randomUUID(),
-      organizationId: orgId,
+      organizationId: orgId ?? randomUUID(),
       environment: Environment.create({
         assetAdministrationShells: [aas.id],
         submodels: submodels.map(s => s.id),

@@ -296,7 +296,7 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.getSubmodelById(passport.getEnvironment(), submodelId);
+    return await this.environmentService.getSubmodelById(passport.getEnvironment(), submodelId, subject);
   }
 
   @ApiGetSubmodelValue()
@@ -461,7 +461,7 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodelElements(passport.getEnvironment(), submodelId, pagination);
+    return await this.environmentService.getSubmodelElements(passport.getEnvironment(), submodelId, pagination, subject);
   }
 
   @ApiGetSubmodelElementById()

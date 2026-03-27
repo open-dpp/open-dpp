@@ -28,7 +28,7 @@ import { removeEmptyItems } from "../../utils";
 import { ConvertToPlainOptions } from "./convertable-to-plain";
 import { IdShortPath, ISubmodelBase } from "./submodel-base/submodel-base";
 
-interface ContextType { idShortPath: IdShortPath }
+export interface ContextType { idShortPath: IdShortPath }
 class JsonVisitor implements IVisitor<ContextType, any> {
   constructor(private readonly options?: ConvertToPlainOptions) {
   }

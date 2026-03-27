@@ -1,7 +1,11 @@
 import _ from "lodash";
 
+export function isEmptyObject(obj: any): boolean {
+  return Object.keys(obj).length === 0;
+}
+
 export function removeEmptyItems(items: any[]): any[] {
-  return items.filter(item => Object.keys(item).length > 0);
+  return items.filter(item => !isEmptyObject(item));
 }
 
 function mapKeysDeep(

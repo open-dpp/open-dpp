@@ -124,9 +124,13 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
   async getSubmodelById(
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+
     const passport = await this.loadPassport(id);
-    return await this.environmentService.getSubmodelById(passport.getEnvironment(), submodelId);
+    return await this.environmentService.getSubmodelById(passport.getEnvironment(), submodelId, subject);
   }
 
   @AllowAnonymous()
@@ -146,10 +150,13 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     @SubmodelIdParam() submodelId: string,
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementPaginationResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassport(id);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodelElements(passport.getEnvironment(), submodelId, pagination);
+    return await this.environmentService.getSubmodelElements(passport.getEnvironment(), submodelId, pagination, subject);
   }
 
   @AllowAnonymous()

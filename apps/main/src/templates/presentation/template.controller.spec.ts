@@ -38,11 +38,11 @@ describe("templateController", () => {
     SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.OWNER }),
   );
 
-  async function createTemplate(orgId: string, createdAt?: Date, updatedAt?: Date): Promise<Template> {
+  async function createTemplate(orgId?: string, createdAt?: Date, updatedAt?: Date): Promise<Template> {
     const { aas, submodels } = ctx.getAasObjects();
     const template = Template.create({
       id: randomUUID(),
-      organizationId: orgId,
+      organizationId: orgId ?? randomUUID(),
       environment: Environment.create({
         assetAdministrationShells: [aas.id],
         submodels: submodels.map(s => s.id),

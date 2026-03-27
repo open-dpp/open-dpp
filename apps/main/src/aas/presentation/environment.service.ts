@@ -29,14 +29,16 @@ import {
   ValueResponseDto,
   ValueSchema,
 } from "@open-dpp/dto";
+import { ForbiddenError } from "@open-dpp/exception";
 import { DbSessionOptions } from "../../database/query-options";
+
 import { MembersService } from "../../identity/organizations/application/services/members.service";
 
 import { Pagination } from "../../pagination/pagination";
-
 import { PagingResult } from "../../pagination/paging-result";
 import { Passport } from "../../passports/domain/passport";
 import { Template } from "../../templates/domain/template";
+import { isEmptyObject } from "../../utils";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
 import { LanguageText } from "../domain/common/language-text";
@@ -205,8 +207,13 @@ export class EnvironmentService {
     }
   }
 
-  async getSubmodelById(environment: Environment, submodelId: string): Promise<SubmodelResponseDto> {
-    return SubmodelJsonSchema.parse((await this.findSubmodelByIdOrFail(environment, submodelId)).toPlain());
+  async getSubmodelById(environment: Environment, submodelId: string, subject: SubjectAttributes): Promise<SubmodelResponseDto> {
+    const ability = await this.loadAbility(environment, subject);
+    const result = (await this.findSubmodelByIdOrFail(environment, submodelId)).toPlain({ ability });
+    if (isEmptyObject(result)) {
+      throw new ForbiddenError();
+    }
+    return SubmodelJsonSchema.parse(result);
   }
 
   async getSubmodelValue(environment: Environment, submodelId: string): Promise<ValueResponseDto> {
@@ -215,11 +222,15 @@ export class EnvironmentService {
     return ValueSchema.parse(value);
   }
 
-  async getSubmodelElements(environment: Environment, submodelId: string, pagination: Pagination): Promise<SubmodelElementPaginationResponseDto> {
+  async getSubmodelElements(environment: Environment, submodelId: string, pagination: Pagination, subject: SubjectAttributes): Promise<SubmodelElementPaginationResponseDto> {
+    const ability = await this.loadAbility(environment, subject);
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const pages = pagination.nextPages(submodel.submodelElements.map(e => e.idShort));
     const submodelElements = submodel.submodelElements.filter(e => pages.includes(e.idShort));
-    return SubmodelElementPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodelElements }).toPlain());
+    return SubmodelElementPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodelElements }).toPlain({
+      ability,
+      context: { idShortPath: IdShortPath.create({ path: submodel.idShort }) },
+    }));
   }
 
   async addSubmodelElement(environment: Environment, submodelId: string, submodelElementPlain: SubmodelElementRequestDto, idShortPath?: IdShortPath): Promise<SubmodelElementResponseDto> {

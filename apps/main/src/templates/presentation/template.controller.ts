@@ -193,7 +193,7 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.getSubmodelById(template.getEnvironment(), submodelId);
+    return await this.environmentService.getSubmodelById(template.getEnvironment(), submodelId, subject);
   }
 
   @ApiGetSubmodelValue()
@@ -222,7 +222,7 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodelElements(template.getEnvironment(), submodelId, pagination);
+    return await this.environmentService.getSubmodelElements(template.getEnvironment(), submodelId, pagination, subject);
   }
 
   @ApiPostSubmodelElement()
