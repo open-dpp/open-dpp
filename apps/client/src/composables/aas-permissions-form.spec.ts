@@ -110,6 +110,8 @@ describe("aasPermissionsForm composable", () => {
       }),
     ).toEqual({ permissions: [Permissions.Create], inheritsPermissionsOf: null });
 
+    expect(permissionsForm.getPermissions({ userRole: UserRoleDto.ANONYMOUS })).toEqual({ permissions: [], inheritsPermissionsOf: null });
+
     permissionsForm = mountHarness({
       allAccessPermissionRules: security.localAccessControl.accessPermissionRules,
       object: "section1.field1",

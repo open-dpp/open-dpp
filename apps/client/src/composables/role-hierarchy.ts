@@ -21,7 +21,7 @@ export function useRoleHierarchy() {
 
   function getRoleIndex(subject: Subject) {
     return roleHierarchy.findIndex((role) => {
-      return JSON.stringify(role.key) === JSON.stringify(subject);
+      return (subject.userRole === UserRoleDto.ADMIN && role.key.userRole === subject.userRole) || (JSON.stringify(role.key) === JSON.stringify(subject));
     });
   }
 

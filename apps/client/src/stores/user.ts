@@ -73,10 +73,10 @@ export const useUserStore = defineStore("user", (): IUserStore => {
     }
   }
 
-  function asSubject(): Subject {
+  function asSubject(ignoreMemberRoleForAdmin: boolean = true): Subject {
     return {
       userRole: user.value.role,
-      memberRole: memberRole.value,
+      ...(ignoreMemberRoleForAdmin && user.value.role === UserRoleDto.ADMIN ? {} : { memberRole: memberRole.value }),
     };
   }
 
