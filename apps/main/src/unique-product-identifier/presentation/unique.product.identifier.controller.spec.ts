@@ -8,8 +8,8 @@ import {
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
-import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
 
+import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
@@ -25,30 +25,36 @@ import { UniqueProductIdentifierController } from "./unique.product.identifier.c
 
 describe("uniqueProductIdentifierController", () => {
   const basePath = "/unique-product-identifiers";
-  const ctx = createAasTestContext(basePath, {
-    imports: [UniqueProductIdentifierModule],
-    providers: [
-      UniqueProductIdentifierService,
-      PassportRepository,
-      BrandingRepository,
-      UniqueProductIdentifierService,
-      UniqueProductIdentifierApplicationService,
+  const ctx = createAasTestContext(
+    basePath,
+    {
+      imports: [UniqueProductIdentifierModule],
+      providers: [
+        UniqueProductIdentifierService,
+        PassportRepository,
+        BrandingRepository,
+        UniqueProductIdentifierService,
+        UniqueProductIdentifierApplicationService,
+      ],
+      controllers: [UniqueProductIdentifierController],
+    },
+    [
+      {
+        name: PassportDoc.name,
+        schema: PassportSchema,
+      },
+      {
+        name: UniqueProductIdentifierDoc.name,
+        schema: UniqueProductIdentifierSchema,
+      },
+      { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
+
     ],
-    controllers: [UniqueProductIdentifierController],
-  }, [
-    {
-      name: PassportDoc.name,
-      schema: PassportSchema,
-    },
-    {
-      name: UniqueProductIdentifierDoc.name,
-      schema: UniqueProductIdentifierSchema,
-    },
-    { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
+    UniqueProductIdentifierService,
+    SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }),
+  );
 
-  ], UniqueProductIdentifierService);
-
-  async function createPassportWithUniqueProductIdentifier(orgId: string) {
+  async function createPassportWithUniqueProductIdentifier() {
     const { aas, submodels } = ctx.getAasObjects();
 
     const environment = Environment.create({
@@ -59,7 +65,7 @@ describe("uniqueProductIdentifierController", () => {
 
     const passport = Passport.create({
       id: randomUUID(),
-      organizationId: orgId,
+      organizationId: randomUUID(),
       environment,
     });
 
@@ -71,7 +77,7 @@ describe("uniqueProductIdentifierController", () => {
     const persistable = {
       id: upid.uuid,
       upid,
-      getOrganizationId: () => orgId,
+      getOrganizationId: () => passport.organizationId,
       getEnvironment: () => environment,
       toPlain: () => ({ id: upid.uuid }),
       passport,
@@ -81,9 +87,9 @@ describe("uniqueProductIdentifierController", () => {
   }
 
   it(`/GET passport from unique product identifier`, async () => {
-    const { org, userCookie } = await ctx.globals().betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { userCookie } = await ctx.globals().betterAuthHelper.getUserWithCookie(ctx.globals().userId);
 
-    const upid = await createPassportWithUniqueProductIdentifier(org.id);
+    const upid = await createPassportWithUniqueProductIdentifier();
 
     const response = await request(ctx.globals().app.getHttpServer())
       .get(
@@ -100,9 +106,9 @@ describe("uniqueProductIdentifierController", () => {
   });
 
   it(`/GET unique product identifier from reference`, async () => {
-    const { org, userCookie } = await ctx.globals().betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { userCookie } = await ctx.globals().betterAuthHelper.getUserWithCookie(ctx.globals().userId);
 
-    const upid = await createPassportWithUniqueProductIdentifier(org.id);
+    const upid = await createPassportWithUniqueProductIdentifier();
 
     const response = await request(ctx.globals().app.getHttpServer())
       .get(
@@ -117,7 +123,7 @@ describe("uniqueProductIdentifierController", () => {
   });
 
   it(`/GET shells`, async () => {
-    await ctx.asserts.getShells(createPassportWithUniqueProductIdentifier, SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }));
+    await ctx.asserts.getShells(createPassportWithUniqueProductIdentifier);
   });
 
   it(`/GET submodels`, async () => {

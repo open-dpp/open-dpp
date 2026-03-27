@@ -38,14 +38,20 @@ import { PassportController } from "./passport.controller";
 
 describe("passportController", () => {
   const basePath = "/passports";
-  const ctx = createAasTestContext(basePath, {
-    imports: [PassportsModule, AasModule],
-    providers: [PassportRepository, TemplateRepository, UniqueProductIdentifierService, AasSerializationService],
-    controllers: [PassportController],
-  }, [{ name: PassportDoc.name, schema: PassportSchema }, {
-    name: TemplateDoc.name,
-    schema: TemplateSchema,
-  }, { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema }, { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema }], PassportRepository);
+  const ctx = createAasTestContext(
+    basePath,
+    {
+      imports: [PassportsModule, AasModule],
+      providers: [PassportRepository, TemplateRepository, UniqueProductIdentifierService, AasSerializationService],
+      controllers: [PassportController],
+    },
+    [{ name: PassportDoc.name, schema: PassportSchema }, {
+      name: TemplateDoc.name,
+      schema: TemplateSchema,
+    }, { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema }, { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema }],
+    PassportRepository,
+    SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.OWNER }),
+  );
 
   async function createPassport(orgId: string): Promise<Passport> {
     const { aas, submodels } = ctx.getAasObjects();
@@ -293,7 +299,7 @@ describe("passportController", () => {
   });
 
   it(`/GET shells`, async () => {
-    await ctx.asserts.getShells(createPassport, SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }));
+    await ctx.asserts.getShells(createPassport);
   });
 
   it(`/PATCH shell`, async () => {

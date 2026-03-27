@@ -243,7 +243,7 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodels(passport.getEnvironment(), pagination);
+    return await this.environmentService.getSubmodels(passport.getEnvironment(), pagination, subject);
   }
 
   @ApiPostSubmodel()

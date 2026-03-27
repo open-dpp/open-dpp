@@ -81,9 +81,9 @@ export class EnvironmentService {
     this.membersService = membersService;
   }
 
-  async loadSecurityPoliciesForSubject(environment: Environment, subjet: SubjectAttributes) {
+  async loadAbility(environment: Environment, subjet: SubjectAttributes) {
     const aas = await this.getFirstAssetAdministrationShell(environment);
-    return aas.security.findPoliciesBySubject(subjet);
+    return aas.security.defineAbilityForSubject(subjet);
   }
 
   async createEnvironment(environmentData: { assetAdministrationShells: AssetAdministrationShellCreateDto[] }, isTemplate: boolean): Promise<Environment> {
@@ -125,10 +125,11 @@ export class EnvironmentService {
     return AssetAdministrationShellJsonSchema.parse(aas.toPlain({ filterBySubject: subject }));
   }
 
-  async getSubmodels(environment: Environment, pagination: Pagination): Promise<SubmodelPaginationResponseDto> {
+  async getSubmodels(environment: Environment, pagination: Pagination, subject: SubjectAttributes): Promise<SubmodelPaginationResponseDto> {
     const pages = pagination.nextPages(environment.submodels);
     const submodels = await Promise.all(pages.map(p => this.submodelRepository.findOneOrFail(p)));
-    return SubmodelPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodels }).toPlain());
+    const ability = await this.loadAbility(environment, subject);
+    return SubmodelPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodels }).toPlain({ ability }));
   }
 
   async modifySubmodel(environment: Environment, submodelId: string, modification: SubmodelModificationDto): Promise<SubmodelResponseDto> {

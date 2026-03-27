@@ -24,6 +24,7 @@ import type { SubmodelElementCollection } from "./submodel-base/submodel-element
 import type { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import type { IVisitor } from "./visitor";
 import { KeyTypes, Permissions } from "@open-dpp/dto";
+import { removeEmptyItems } from "../../utils";
 import { ConvertToPlainOptions } from "./convertable-to-plain";
 import { IdShortPath, ISubmodelBase } from "./submodel-base/submodel-base";
 
@@ -57,10 +58,6 @@ class JsonVisitor implements IVisitor<ContextType, any> {
       }
     }
     return plainToFilter;
-  }
-
-  private removeEmptyItems(items: any[]): any[] {
-    return items.filter(item => Object.keys(item).length > 0);
   }
 
   visitProperty(element: Property, context?: ContextType): any {
@@ -126,7 +123,7 @@ class JsonVisitor implements IVisitor<ContextType, any> {
   }
 
   visitSubmodel(element: Submodel, context?: ContextType): any {
-    const submodelElements = this.removeEmptyItems(element.submodelElements.map(e => e.accept(this, { idShortPath: this.buildIdShortPath(element, context) })));
+    const submodelElements = removeEmptyItems(element.submodelElements.map(e => e.accept(this, { idShortPath: this.buildIdShortPath(element, context) })));
     const plain = {
       ...this.buildBase(element),
       modelType: KeyTypes.Submodel,
@@ -238,7 +235,7 @@ class JsonVisitor implements IVisitor<ContextType, any> {
   }
 
   visitSubmodelElementCollection(element: SubmodelElementCollection, context?: ContextType): any {
-    const value = this.removeEmptyItems(element.value.map(e => e.accept(this, { idShortPath: this.buildIdShortPath(element, context) })));
+    const value = removeEmptyItems(element.value.map(e => e.accept(this, { idShortPath: this.buildIdShortPath(element, context) })));
     const result = {
       ...this.buildBase(element),
       modelType: KeyTypes.SubmodelElementCollection,
@@ -257,7 +254,7 @@ class JsonVisitor implements IVisitor<ContextType, any> {
       semanticIdListElement: element.semanticIdListElement?.accept(this) ?? null,
       valueTypeListElement: element.valueTypeListElement,
       typeValueListElement: element.typeValueListElement,
-      value: this.removeEmptyItems(element.value.map(e => e.accept(this, { idShortPath: this.buildIdShortPath(element, context) }))),
+      value: removeEmptyItems(element.value.map(e => e.accept(this, { idShortPath: this.buildIdShortPath(element, context) }))),
     }, element, context);
   }
 

@@ -57,7 +57,7 @@ export class AasRepository {
 
     for (const submodelReference of aas.submodels) {
       const submodel = await this.submodelRepository.findOneOrFail(submodelReference.keys[0].value);
-      security.addDefaultPolicyForSubmodel(submodel);
+      security.addDefaultPolicyForSubmodelIfNoExists(submodel);
       // anonymous user should have only read permissions
       const [subject, aasObject, permissions] = [
         SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }),

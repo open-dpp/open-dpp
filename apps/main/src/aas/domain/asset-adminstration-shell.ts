@@ -110,7 +110,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     });
 
     this.addSubmodelReference(reference);
-    this.security.addDefaultPolicyForSubmodel(submodel);
+    this.security.addDefaultPolicyForSubmodelIfNoExists(submodel);
 
     return reference;
   }

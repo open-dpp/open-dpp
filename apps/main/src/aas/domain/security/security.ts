@@ -50,6 +50,14 @@ export class Security {
     return rule ? [rule] : [];
   }
 
+  private hasPoliciesForObject(object: IdShortPath): boolean {
+    return this.localAccessControl.accessPermissionRules.some(
+      rule => rule.permissionsPerObject.some(
+        p => p.object.idShort === object.toString(),
+      ),
+    );
+  }
+
   hasPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): boolean {
     const rule = this.localAccessControl.findRuleOfSubject(subject);
     return !!rule && rule.hasPermissionForObject(PermissionPerObject.create({ object: createAasObject(object), permissions }));
@@ -97,27 +105,29 @@ export class Security {
     }
   }
 
-  addDefaultPolicyForSubmodel(submodel: Submodel): void {
-    let [subject, aasObject, permissions] = [
-      SubjectAttributes.create({ userRole: UserRole.ADMIN }),
-      IdShortPath.create({ path: submodel.idShort }),
-      Object.values(Permissions).map(
-        p => Permission.create({ permission: p, kindOfPermission: PermissionKind.Allow }),
-      ),
-    ];
-    if (!this.hasPolicy(subject, aasObject, permissions)) {
-      this.addPolicy(subject, aasObject, permissions);
-    }
-    // member of the organization to which the passport belongs to should have all permissions
-    [subject, aasObject, permissions] = [
-      SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
-      IdShortPath.create({ path: submodel.idShort }),
-      Object.values(Permissions).map(
-        p => Permission.create({ permission: p, kindOfPermission: PermissionKind.Allow }),
-      ),
-    ];
-    if (!this.hasPolicy(subject, aasObject, permissions)) {
-      this.addPolicy(subject, aasObject, permissions);
+  addDefaultPolicyForSubmodelIfNoExists(submodel: Submodel): void {
+    if (!this.hasPoliciesForObject(IdShortPath.create({ path: submodel.idShort }))) {
+      let [subject, aasObject, permissions] = [
+        SubjectAttributes.create({ userRole: UserRole.ADMIN }),
+        IdShortPath.create({ path: submodel.idShort }),
+        Object.values(Permissions).map(
+          p => Permission.create({ permission: p, kindOfPermission: PermissionKind.Allow }),
+        ),
+      ];
+      if (!this.hasPolicy(subject, aasObject, permissions)) {
+        this.addPolicy(subject, aasObject, permissions);
+      }
+      // member of the organization to which the passport belongs to should have all permissions
+      [subject, aasObject, permissions] = [
+        SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
+        IdShortPath.create({ path: submodel.idShort }),
+        Object.values(Permissions).map(
+          p => Permission.create({ permission: p, kindOfPermission: PermissionKind.Allow }),
+        ),
+      ];
+      if (!this.hasPolicy(subject, aasObject, permissions)) {
+        this.addPolicy(subject, aasObject, permissions);
+      }
     }
   }
 

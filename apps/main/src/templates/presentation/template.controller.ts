@@ -136,7 +136,7 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodels(template.getEnvironment(), pagination);
+    return await this.environmentService.getSubmodels(template.getEnvironment(), pagination, subject);
   }
 
   @ApiPostSubmodel()

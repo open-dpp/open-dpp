@@ -35,6 +35,7 @@ describe("templateController", () => {
     { imports: [TemplatesModule], providers: [TemplateRepository, AasSerializationService], controllers: [TemplateController] },
     [{ name: TemplateDoc.name, schema: TemplateSchema }, { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema }],
     TemplateRepository,
+    SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.OWNER }),
   );
 
   async function createTemplate(orgId: string, createdAt?: Date, updatedAt?: Date): Promise<Template> {
@@ -58,7 +59,7 @@ describe("templateController", () => {
   }
 
   it(`/GET shells`, async () => {
-    await ctx.asserts.getShells(createTemplate, SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }));
+    await ctx.asserts.getShells(createTemplate);
   });
 
   it(`/PATCH shell`, async () => {

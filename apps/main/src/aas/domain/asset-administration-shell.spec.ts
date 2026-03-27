@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { AssetKind, KeyTypes, Language, ReferenceTypes } from "@open-dpp/dto";
+import { AssetKind, KeyTypes, Language, PermissionKind, Permissions, ReferenceTypes } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { allPermissionsAllow } from "@open-dpp/testing";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
@@ -76,7 +76,8 @@ describe("assetAdministrationShell", () => {
     const displayName = [{ language: "en", text: "MyAAS" }];
     const description = [{ language: "en", text: "My description" }];
     const defaultThumbnails = [{ path: "path.to.image", contentType: "image/jepg" }];
-    aas.modify({ displayName, description, assetInformation: { defaultThumbnails } });
+    const subject = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+    aas.modify({ displayName, description, assetInformation: { defaultThumbnails } }, subject);
     expect(aas.displayName).toEqual(displayName.map(LanguageText.fromPlain));
     expect(aas.description).toEqual(description.map(LanguageText.fromPlain));
     expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);
@@ -147,6 +148,34 @@ describe("assetAdministrationShell", () => {
         permissionsPerObject: [PermissionPerObject.create({
           object: createAasObject(IdShortPath.create({ path: submodel.idShort })),
           permissions: allPermissionsAllow.map(Permission.fromPlain),
+        })],
+      }),
+    ]);
+  });
+
+  it("should add a submodel and keep existing policy", () => {
+    const security = Security.create({});
+    security.addPolicy(
+      SubjectAttributes.create({ userRole: UserRole.ADMIN }),
+      IdShortPath.create({ path: "section1" }),
+      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
+    );
+    const aas = AssetAdministrationShell.create({
+      assetInformation: AssetInformation.create({ assetKind: "Instance" }),
+      security,
+    });
+
+    const submodel = Submodel.create({
+      id: randomUUID(),
+      idShort: "section1",
+    });
+    aas.addSubmodel(submodel);
+    expect(aas.security.localAccessControl.accessPermissionRules).toEqual([
+      AccessPermissionRule.create({
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.ADMIN }),
+        permissionsPerObject: [PermissionPerObject.create({
+          object: createAasObject(IdShortPath.create({ path: submodel.idShort })),
+          permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
         })],
       }),
     ]);
