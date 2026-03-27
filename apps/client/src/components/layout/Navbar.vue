@@ -1,72 +1,31 @@
 <script lang="ts" setup>
-import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { useRoute, useRouter } from "vue-router";
-import { authClient } from "../../auth-client.ts";
 import { useBrandingAnonymous } from "../../composables/branding.ts";
+import { usePresentationMenu } from "../../composables/presentation-menu.ts";
 import BrandingLogo from "../media/BrandingLogo.vue";
+
+const props = defineProps<{
+  drawerVisible: boolean;
+}>();
 
 const emit = defineEmits<{
   toggleMenu: [];
 }>();
 
 const { t } = useI18n();
-const route = useRoute();
-const router = useRouter();
-const session = authClient.useSession();
-const permalink = computed(() => String(route.params.permalink ?? ""));
-const isSignedIn = computed<boolean>(() => {
-  return session.value?.data != null;
-});
-
+const { permalink, menuItems, navigateToAiChat } = usePresentationMenu();
 const { src } = useBrandingAnonymous(permalink);
-
-function navigateToPassportView() {
-  router.push(`/presentation/${permalink.value}`);
-}
-
-function navigateToAiChat() {
-  router.push(`/presentation/${permalink.value}/chat`);
-}
-
-function backToApp() {
-  router.push("/");
-}
-
-const menuItems = computed(() => {
-  const items = [
-    {
-      label: t("presentation.toPass"),
-      icon: "pi pi-home",
-      command: () => {
-        navigateToPassportView();
-      },
-    },
-    {
-      label: t("presentation.chatWithAI"),
-      icon: "pi pi-comments",
-      command: () => {
-        navigateToAiChat();
-      },
-    },
-  ];
-
-  if (isSignedIn.value) {
-    items.push({
-      label: t("presentation.backToApp"),
-      icon: "pi pi-arrow-left",
-      command: () => {
-        backToApp();
-      },
-    });
-  }
-
-  return items;
-});
 </script>
 
 <template>
-  <Menubar class="p-10!" :model="menuItems">
+  <Menubar
+    class="px-6! py-3! bg-white/80! backdrop-blur-md! border-b! border-gray-100!"
+    :model="menuItems"
+    :pt="{
+      button: { class: 'hidden!' },
+      rootList: { class: 'hidden! md:flex!' },
+    }"
+  >
     <template #start>
       <div class="flex items-center gap-2">
         <Button
@@ -75,6 +34,7 @@ const menuItems = computed(() => {
           rounded
           class="md:hidden!"
           :aria-label="t('presentation.navigation')"
+          :aria-expanded="props.drawerVisible"
           @click="emit('toggleMenu')"
         />
         <BrandingLogo :url="src" />

@@ -6,7 +6,7 @@ const { url = "/api/branding/instance" } = defineProps<{
 
 <template>
   <img
-    class="mx-auto h-16 w-auto"
+    class="mx-auto h-8 w-auto"
     :src="url"
     alt="brand-image"
   >

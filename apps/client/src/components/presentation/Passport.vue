@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { useSubmodelTree } from "../../composables/submodel-tree";
 import { usePassportStore } from "../../stores/passport";
@@ -7,6 +8,7 @@ import NavigationTree from "./NavigationTree.vue";
 import PassportHeader from "./PassportHeader.vue";
 import Submodel from "./Submodel.vue";
 
+const { t } = useI18n();
 const passportStore = usePassportStore();
 const route = useRoute();
 
@@ -38,22 +40,27 @@ const submodels = computed(() => {
 </script>
 
 <template>
-  <div class="w-full my-10 flex flex-row gap-10">
+  <div class="w-full py-8 flex flex-row gap-8">
     <div
       v-if="submodelTreeDepth > 1"
-      class="bg-white shadow-sm px-6 py-4 min-w-48 hidden md:flex md:sticky md:top-40 self-start max-h-[calc(100vh-5rem)] overflow-y-auto"
+      class="min-w-48 hidden md:flex md:flex-col md:sticky md:top-20 self-start max-h-[calc(100vh-5rem)] overflow-y-auto rounded-xl border border-surface-200 bg-surface-0 shadow-sm"
     >
+      <h2 class="px-4 pt-4 pb-2 text-sm font-semibold text-surface-700">
+        {{ t("presentation.productpass") }}
+      </h2>
       <NavigationTree data-cy="sidebar" />
     </div>
-    <div data-cy="content" class="flex flex-col gap-5 w-full relative">
+    <div data-cy="content" class="flex flex-col w-full relative">
       <PassportHeader />
-      <Submodel
-        v-for="submodel in submodels"
-        :key="submodel.id"
-        :id-short="submodel.id"
-        :title="submodel.title"
-        :submodel-elements="submodel.submodelElements"
-      />
+      <div class="mt-10 flex flex-col">
+        <Submodel
+          v-for="submodel in submodels"
+          :key="submodel.id"
+          :id-short="submodel.id"
+          :title="submodel.title"
+          :submodel-elements="submodel.submodelElements"
+        />
+      </div>
     </div>
   </div>
 </template>
