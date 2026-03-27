@@ -53,7 +53,7 @@ export class IdShortPath {
   }
 
   addPathSegment(segment: string) {
-    this._segments.push(segment);
+    return new IdShortPath([...this._segments, segment]);
   }
 
   getParentPath(): IdShortPath {
@@ -69,6 +69,10 @@ export class IdShortPath {
 
   get segments(): IterableIterator<string> {
     return this._segments[Symbol.iterator]();
+  }
+
+  isEmpty(): boolean {
+    return this._segments.length === 0;
   }
 
   toString(): string {

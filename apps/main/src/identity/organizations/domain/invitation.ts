@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { InvitationStatus } from "./invitation-status.enum";
-import { MemberRole } from "./member-role.enum";
+import { MemberRoleType } from "./member-role.enum";
 
 export interface InvitationCreateProps {
   email: string;
   inviterId: string;
   organizationId: string;
-  role: MemberRole;
+  role: MemberRoleType;
   status?: InvitationStatus;
   ttl?: number;
 }
@@ -23,7 +23,7 @@ export class Invitation {
   public readonly email: string;
   public readonly inviterId: string;
   public readonly organizationId: string;
-  public readonly role: MemberRole;
+  public readonly role: MemberRoleType;
   public readonly status: InvitationStatus;
   public readonly createdAt: Date;
   public readonly expiresAt: Date;
@@ -33,7 +33,7 @@ export class Invitation {
     email: string,
     inviterId: string,
     organizationId: string,
-    role: MemberRole,
+    role: MemberRoleType,
     status: InvitationStatus,
     createdAt: Date,
     expiresAt: Date,

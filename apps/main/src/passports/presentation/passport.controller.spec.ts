@@ -8,6 +8,7 @@ import {
 import { AasModule } from "../../aas/aas.module";
 import { LanguageText } from "../../aas/domain/common/language-text";
 import { Environment } from "../../aas/domain/environment";
+import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { AasRepository } from "../../aas/infrastructure/aas.repository";
 import {
   ConceptDescriptionDoc,
@@ -15,6 +16,9 @@ import {
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
+import { ORGANIZATION_ID_HEADER } from "../../identity/auth/presentation/decorators/organization-id.decorator";
+import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
+import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
 import { Template } from "../../templates/domain/template";
 import { TemplateRepository } from "../../templates/infrastructure/template.repository";
@@ -34,14 +38,20 @@ import { PassportController } from "./passport.controller";
 
 describe("passportController", () => {
   const basePath = "/passports";
-  const ctx = createAasTestContext(basePath, {
-    imports: [PassportsModule, AasModule],
-    providers: [PassportRepository, TemplateRepository, UniqueProductIdentifierService, AasSerializationService],
-    controllers: [PassportController],
-  }, [{ name: PassportDoc.name, schema: PassportSchema }, {
-    name: TemplateDoc.name,
-    schema: TemplateSchema,
-  }, { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema }, { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema }], PassportRepository);
+  const ctx = createAasTestContext(
+    basePath,
+    {
+      imports: [PassportsModule, AasModule],
+      providers: [PassportRepository, TemplateRepository, UniqueProductIdentifierService, AasSerializationService],
+      controllers: [PassportController],
+    },
+    [{ name: PassportDoc.name, schema: PassportSchema }, {
+      name: TemplateDoc.name,
+      schema: TemplateSchema,
+    }, { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema }, { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema }],
+    PassportRepository,
+    SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.OWNER }),
+  );
 
   async function createPassport(orgId: string): Promise<Passport> {
     const { aas, submodels } = ctx.getAasObjects();
@@ -380,7 +390,9 @@ describe("passportController", () => {
 
     const response = await request(app.getHttpServer())
       .get(`${basePath}/${passport.id}/export`)
-      .set("Cookie", userCookie);
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
+    ;
 
     expect(response.status).toEqual(200);
     expect(response.body.format).toEqual("open-dpp:json");
@@ -400,7 +412,9 @@ describe("passportController", () => {
 
     const exportResponse = await request(app.getHttpServer())
       .get(`${basePath}/${passport.id}/export`)
-      .set("Cookie", userCookie);
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
+    ;
     expect(exportResponse.status).toEqual(200);
 
     const importResponse = await request(app.getHttpServer())
@@ -462,7 +476,9 @@ describe("passportController", () => {
 
     const exportResponse = await request(app.getHttpServer())
       .get(`${basePath}/${importResponse.body.id}/export`)
-      .set("Cookie", userCookie);
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
+    ;
 
     expect(exportResponse.status).toEqual(200);
     expect(exportResponse.body.format).toEqual("open-dpp:json");
@@ -498,7 +514,9 @@ describe("passportController", () => {
 
     const exportResponse = await request(app.getHttpServer())
       .get(`${basePath}/${importResponse.body.id}/export`)
-      .set("Cookie", userCookie);
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id)
+    ;
 
     expect(exportResponse.status).toEqual(200);
 

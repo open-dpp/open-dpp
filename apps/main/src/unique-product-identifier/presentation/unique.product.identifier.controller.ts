@@ -1,3 +1,5 @@
+import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
+import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
 import { BadRequestException, Controller, Get, NotFoundException, Param, Query } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
@@ -10,6 +12,7 @@ import {
   SubmodelResponseDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
+import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
 import {
   ApiGetShells,
@@ -29,6 +32,9 @@ import { IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
+import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators/member-role.decorator";
+import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
+import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { Pagination } from "../../pagination/pagination";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
@@ -95,7 +101,7 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     const passport = await this.loadPassport(id);
 
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getAasShells(passport.getEnvironment(), pagination);
+    return await this.environmentService.getAasShells(passport.getEnvironment(), pagination, SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }));
   }
 
   @AllowAnonymous()
@@ -104,10 +110,13 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     @IdParam() id: string,
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelPaginationResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassport(id);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodels(passport.getEnvironment(), pagination);
+    return await this.environmentService.getSubmodels(passport.getEnvironment(), pagination, subject);
   }
 
   @AllowAnonymous()

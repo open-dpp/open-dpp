@@ -83,6 +83,8 @@ const {
   nextPage,
   displayName,
   aasGalleryFiles,
+  getAccessPermissionRules,
+  modifyShell,
 } = aasEditor;
 
 onMounted(async () => {
@@ -285,6 +287,8 @@ const isFullPosition = computed(() => position.value === fullPosition);
           :open-drawer="aasEditor.openDrawer"
           :error-handling-store="errorHandlingStore"
           :translate="t"
+          :get-access-permission-rules="getAccessPermissionRules"
+          :modify-shell="modifyShell"
         />
       </Drawer>
     </div>

@@ -3,8 +3,8 @@ import { jest } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { generateMongoConfig } from "../../../database/config";
 
+import { generateMongoConfig } from "../../../database/config";
 import { OrganizationsModule } from "../../../identity/organizations/organizations.module";
 import { UsersModule } from "../../../identity/users/users.module";
 import { Media } from "../../../media/domain/media";
@@ -107,7 +107,7 @@ describe("aasSerializationService", () => {
   let passportRepository: PassportRepository;
   let templateRepository: TemplateRepository;
   let module: TestingModule;
-  let mockMediaService: { findByIds: jest.Mock };
+  let mockMediaService: { findByIds: jest.Mock<any> };
 
   beforeAll(async () => {
     registerSubmodelElementClasses();

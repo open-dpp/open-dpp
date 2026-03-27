@@ -170,7 +170,7 @@ export function mapAssetAdministrationShells(
       administration: mapAdministration(shell.administration) ?? undefined,
       embeddedDataSpecifications: mapEmbeddedDataSpecifications(shell.embeddedDataSpecifications),
       derivedFrom: mapNullableReference(shell.derivedFrom),
-      submodels: mapReferences(remappedSubmodelRefs),
+      submodels: mapReferences(remappedSubmodelRefs), // TODO: ticket 26, add default security here
     });
   });
 }

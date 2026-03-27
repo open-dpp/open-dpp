@@ -1,7 +1,7 @@
 import type { Connection } from "mongoose";
 
 import { randomUUID } from "node:crypto";
-import { BadRequestException, ForbiddenException, Injectable, Logger } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { InjectConnection } from "@nestjs/mongoose";
 import {
   AssetAdministrationShellCreateDto,
@@ -30,7 +30,6 @@ import {
   ValueSchema,
 } from "@open-dpp/dto";
 import { DbSessionOptions } from "../../database/query-options";
-import { Session } from "../../identity/auth/domain/session";
 import { MembersService } from "../../identity/organizations/application/services/members.service";
 
 import { Pagination } from "../../pagination/pagination";
@@ -42,9 +41,9 @@ import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
 import { LanguageText } from "../domain/common/language-text";
 import { ConceptDescription } from "../domain/concept-description";
-import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { Environment } from "../domain/environment";
 import { ExpandedEnvironment } from "../domain/expanded-environment";
+import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath, ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "../infrastructure/aas.repository";
@@ -82,6 +81,11 @@ export class EnvironmentService {
     this.membersService = membersService;
   }
 
+  async loadAbility(environment: Environment, subjet: SubjectAttributes) {
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+    return aas.security.defineAbilityForSubject(subjet);
+  }
+
   async createEnvironment(environmentData: { assetAdministrationShells: AssetAdministrationShellCreateDto[] }, isTemplate: boolean): Promise<Environment> {
     const environment = Environment.create({});
     if (environmentData.assetAdministrationShells.length > 1) {
@@ -93,13 +97,14 @@ export class EnvironmentService {
       const assetInformation = AssetInformation.create({ assetKind, globalAssetId: id });
       return { id, assetInformation };
     };
+
     const assetAdministrationShells = environmentData.assetAdministrationShells.length > 0
       ? environmentData.assetAdministrationShells.map(aas => AssetAdministrationShell.create({
           ...createIdAndAssetInformation(),
           displayName: aas.displayName?.map(LanguageText.fromPlain),
           description: aas.description?.map(LanguageText.fromPlain),
         }))
-      : [AssetAdministrationShell.create(createIdAndAssetInformation())];
+      : [AssetAdministrationShell.create({ ...createIdAndAssetInformation() })];
     const firstAas = assetAdministrationShells[0];
     await this.aasRepository.save(firstAas);
     environment.addAssetAdministrationShell(firstAas);
@@ -107,23 +112,24 @@ export class EnvironmentService {
     return environment;
   }
 
-  async getAasShells(environment: Environment, pagination: Pagination): Promise<AssetAdministrationShellPaginationResponseDto> {
+  async getAasShells(environment: Environment, pagination: Pagination, subject: SubjectAttributes): Promise<AssetAdministrationShellPaginationResponseDto> {
     const pages = pagination.nextPages(environment.assetAdministrationShells);
     const shells = await Promise.all(pages.map(p => this.aasRepository.findOneOrFail(p)));
-    return AssetAdministrationShellPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: shells }).toPlain());
+    return AssetAdministrationShellPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: shells }).toPlain({ filterBySubject: subject }));
   }
 
-  async modifyAasShell(environment: Environment, aasId: string, modification: AssetAdministrationShellModificationDto): Promise<AssetAdministrationShellResponseDto> {
+  async modifyAasShell(environment: Environment, aasId: string, modification: AssetAdministrationShellModificationDto, subject: SubjectAttributes): Promise<AssetAdministrationShellResponseDto> {
     const aas = await this.findAssetAdministrationShellByIdOrFail(environment, aasId);
-    aas.modify(modification);
+    aas.modify(modification, subject);
     await this.aasRepository.save(aas);
-    return AssetAdministrationShellJsonSchema.parse(aas.toPlain());
+    return AssetAdministrationShellJsonSchema.parse(aas.toPlain({ filterBySubject: subject }));
   }
 
-  async getSubmodels(environment: Environment, pagination: Pagination): Promise<SubmodelPaginationResponseDto> {
+  async getSubmodels(environment: Environment, pagination: Pagination, subject: SubjectAttributes): Promise<SubmodelPaginationResponseDto> {
     const pages = pagination.nextPages(environment.submodels);
     const submodels = await Promise.all(pages.map(p => this.submodelRepository.findOneOrFail(p)));
-    return SubmodelPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodels }).toPlain());
+    const ability = await this.loadAbility(environment, subject);
+    return SubmodelPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodels }).toPlain({ ability }));
   }
 
   async modifySubmodel(environment: Environment, submodelId: string, modification: SubmodelModificationDto): Promise<SubmodelResponseDto> {
@@ -356,15 +362,5 @@ export class EnvironmentService {
       throw new Error("No asset administration shell for environment. Can't add submodel");
     }
     return await this.aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
-  }
-
-  async checkOwnerShipOfDppIdentifiable<T extends IDigitalProductPassportIdentifiable>(dppIdentifiable: T, session: Session): Promise<T> {
-    const isMember = await this.membersService.isMemberOfOrganization(session.userId, dppIdentifiable.getOrganizationId());
-    if (session.userId && isMember) {
-      return dppIdentifiable;
-    }
-    else {
-      throw new ForbiddenException();
-    }
   }
 }

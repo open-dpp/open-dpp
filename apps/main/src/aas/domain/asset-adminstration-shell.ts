@@ -9,9 +9,11 @@ import { hasUniqueLanguagesOrFail, LanguageText } from "./common/language-text";
 import { Reference } from "./common/reference";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
-import { JsonVisitor } from "./json-visitor";
+import JsonVisitor from "./json-visitor";
 import { ModifierVisitor } from "./modifier-visitor";
 import { IPersistable } from "./persistable";
+import { Security } from "./security/security";
+import { SubjectAttributes } from "./security/subject-attributes";
 import { Submodel } from "./submodel-base/submodel";
 import { IVisitable, IVisitor } from "./visitor";
 
@@ -27,6 +29,7 @@ export interface AssetAdministrationShellCreateProps {
   embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
   derivedFrom?: Reference | null;
   submodels?: Array<Reference>;
+  security?: Security;
 }
 
 export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable {
@@ -44,6 +47,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
     public readonly derivedFrom: Reference | null = null,
     public readonly submodels: Array<Reference>,
+    public readonly security: Security,
   ) {
     this.displayName = displayName;
     this.description = description;
@@ -84,11 +88,12 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
       data.embeddedDataSpecifications ?? [],
       data.derivedFrom ?? null,
       data.submodels ?? [],
+      data.security ?? Security.create({}),
     );
   };
 
-  modify(data: unknown) {
-    this.accept(new ModifierVisitor(), data);
+  modify(data: unknown, subject: SubjectAttributes) {
+    this.accept(new ModifierVisitor(subject), data);
   }
 
   addSubmodelReference(reference: Reference) {
@@ -105,6 +110,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     });
 
     this.addSubmodelReference(reference);
+    this.security.addDefaultPolicyForSubmodelIfNoExists(submodel);
 
     return reference;
   }
@@ -126,6 +132,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
       this.embeddedDataSpecifications,
       this.derivedFrom,
       this.submodels,
+      this.security,
     );
   }
 
@@ -168,6 +175,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
       parsed.embeddedDataSpecifications.map(EmbeddedDataSpecification.fromPlain),
       parsed.derivedFrom ? Reference.fromPlain(parsed.derivedFrom) : null,
       parsed.submodels.map(Reference.fromPlain),
+      Security.fromPlain(parsed.security),
     );
   }
 
@@ -178,8 +186,8 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     }
   }
 
-  toPlain(): Record<string, any> {
-    const jsonVisitor = new JsonVisitor();
+  toPlain(options?: { filterBySubject?: SubjectAttributes }): Record<string, any> {
+    const jsonVisitor = new JsonVisitor(options);
     return this.accept(jsonVisitor);
   }
 }

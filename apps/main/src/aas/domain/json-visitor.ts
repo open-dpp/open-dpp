@@ -20,13 +20,19 @@ import type { Range } from "./submodel-base/range";
 import type { ReferenceElement } from "./submodel-base/reference-element";
 import type { RelationshipElement } from "./submodel-base/relationship-element";
 import type { Submodel } from "./submodel-base/submodel";
-import type { ISubmodelBase } from "./submodel-base/submodel-base";
 import type { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import type { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import type { IVisitor } from "./visitor";
-import { KeyTypes } from "@open-dpp/dto";
+import { KeyTypes, Permissions } from "@open-dpp/dto";
+import { removeEmptyItems } from "../../utils";
+import { ConvertToPlainOptions } from "./convertable-to-plain";
+import { IdShortPath, ISubmodelBase } from "./submodel-base/submodel-base";
 
-export class JsonVisitor implements IVisitor<undefined, any> {
+interface ContextType { idShortPath: IdShortPath }
+class JsonVisitor implements IVisitor<ContextType, any> {
+  constructor(private readonly options?: ConvertToPlainOptions) {
+  }
+
   private buildBase(submodelBase: ISubmodelBase) {
     return {
       category: submodelBase.category,
@@ -40,15 +46,29 @@ export class JsonVisitor implements IVisitor<undefined, any> {
     };
   }
 
-  visitProperty(element: Property): any {
-    return {
+  private buildIdShortPath(element: any, context?: ContextType): IdShortPath {
+    return context ? context.idShortPath.addPathSegment(element.idShort) : IdShortPath.create({ path: element.idShort });
+  }
+
+  private filterByAbility(plainToFilter: any, element: any, context?: ContextType): any {
+    const idShortPath = this.buildIdShortPath(element, context);
+    if (this.options?.ability) {
+      if (!this.options.ability.can(Permissions.Read, idShortPath)) {
+        return { };
+      }
+    }
+    return plainToFilter;
+  }
+
+  visitProperty(element: Property, context?: ContextType): any {
+    return this.filterByAbility({
       modelType: KeyTypes.Property,
       ...this.buildBase(element),
       extensions: element.extensions.map(e => e.accept(this)),
       valueType: element.valueType,
       value: element.value,
       valueId: element.valueId?.accept(this) ?? null,
-    };
+    }, element, context);
   }
 
   visitLanguageText(element: LanguageText): any {
@@ -102,16 +122,18 @@ export class JsonVisitor implements IVisitor<undefined, any> {
     };
   }
 
-  visitSubmodel(element: Submodel): any {
-    return {
+  visitSubmodel(element: Submodel, context?: ContextType): any {
+    const submodelElements = removeEmptyItems(element.submodelElements.map(e => e.accept(this, { idShortPath: this.buildIdShortPath(element, context) })));
+    const plain = {
       ...this.buildBase(element),
       modelType: KeyTypes.Submodel,
       id: element.id,
       extensions: element.extensions.map(e => e.accept(this)),
       administration: element.administration?.accept(this) ?? null,
       kind: element.kind,
-      submodelElements: element.submodelElements.map(e => e.accept(this)),
+      submodelElements,
     };
+    return submodelElements.length > 0 ? plain : this.filterByAbility(plain, element, context);
   }
 
   visitAdministrativeInformation(element: AdministrativeInformation): any {
@@ -121,100 +143,110 @@ export class JsonVisitor implements IVisitor<undefined, any> {
     };
   }
 
-  visitAnnotatedRelationshipElement(element: AnnotatedRelationshipElement): any {
-    return {
+  visitAnnotatedRelationshipElement(element: AnnotatedRelationshipElement, context?: ContextType): any {
+    return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.AnnotatedRelationshipElement,
       first: element.first.accept(this),
       second: element.second.accept(this),
       extensions: element.extensions.map(e => e.accept(this)),
       annotations: element.annotations.map(a => a.accept(this)),
-    };
+    }, element, context);
   }
 
-  visitBlob(element: Blob): any {
-    return {
-      ...this.buildBase(element),
-      modelType: KeyTypes.Blob,
-      contentType: element.contentType,
-      extensions: element.extensions.map(e => e.accept(this)),
-      value: element.value ? element.value.toString() : element.value,
-    };
+  visitBlob(element: Blob, context?: ContextType): any {
+    return this.filterByAbility(
+      {
+        ...this.buildBase(element),
+        modelType: KeyTypes.Blob,
+        contentType: element.contentType,
+        extensions: element.extensions.map(e => e.accept(this)),
+        value: element.value ? element.value.toString() : element.value,
+      },
+      element,
+      context,
+    );
   }
 
-  visitEntity(element: Entity): any {
-    return {
-      ...this.buildBase(element),
-      modelType: KeyTypes.Entity,
-      entityType: element.entityType,
-      extensions: element.extensions.map(e => e.accept(this)),
-      statements: element.statements.map(s => s.accept(this)),
-      globalAssetId: element.globalAssetId,
-      specificAssetIds: element.specificAssetIds.map(s => s.accept(this)),
-    };
+  visitEntity(element: Entity, context?: ContextType): any {
+    return this.filterByAbility(
+      {
+        ...this.buildBase(element),
+        modelType: KeyTypes.Entity,
+        entityType: element.entityType,
+        extensions: element.extensions.map(e => e.accept(this)),
+        statements: element.statements.map(s => s.accept(this)),
+        globalAssetId: element.globalAssetId,
+        specificAssetIds: element.specificAssetIds.map(s => s.accept(this)),
+      },
+      element,
+      context,
+    );
   }
 
-  visitFile(element: File): any {
-    return {
+  visitFile(element: File, context?: ContextType): any {
+    return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.File,
       contentType: element.contentType,
       extensions: element.extensions.map(e => e.accept(this)),
       value: element.value,
-    };
+    }, element, context);
   }
 
-  visitMultiLanguageProperty(element: MultiLanguageProperty): any {
-    return {
+  visitMultiLanguageProperty(element: MultiLanguageProperty, context?: ContextType): any {
+    return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.MultiLanguageProperty,
       extensions: element.extensions.map(e => e.accept(this)),
       value: element.value.map(lt => lt.accept(this)),
       valueId: element.valueId?.accept(this) ?? null,
-    };
+    }, element, context);
   }
 
-  visitRange(element: Range): any {
-    return {
+  visitRange(element: Range, context?: ContextType): any {
+    return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.Range,
       valueType: element.valueType,
       extensions: element.extensions.map(e => e.accept(this)),
       min: element.min,
       max: element.max,
-    };
+    }, element, context);
   }
 
-  visitReferenceElement(element: ReferenceElement): any {
-    return {
+  visitReferenceElement(element: ReferenceElement, context?: ContextType): any {
+    return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.ReferenceElement,
       extensions: element.extensions.map(e => e.accept(this)),
       value: element.value?.accept(this) ?? null,
-    };
+    }, element, context);
   }
 
-  visitRelationshipElement(element: RelationshipElement): any {
-    return {
+  visitRelationshipElement(element: RelationshipElement, context?: ContextType): any {
+    return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.RelationshipElement,
       first: element.first.accept(this),
       second: element.second.accept(this),
       extensions: element.extensions.map(e => e.accept(this)),
-    };
+    }, element, context);
   }
 
-  visitSubmodelElementCollection(element: SubmodelElementCollection): any {
-    return {
+  visitSubmodelElementCollection(element: SubmodelElementCollection, context?: ContextType): any {
+    const value = removeEmptyItems(element.value.map(e => e.accept(this, { idShortPath: this.buildIdShortPath(element, context) })));
+    const result = {
       ...this.buildBase(element),
       modelType: KeyTypes.SubmodelElementCollection,
       extensions: element.extensions.map(e => e.accept(this)),
-      value: element.value.map(e => e.accept(this)),
+      value,
     };
+    return value.length > 0 ? result : this.filterByAbility(result, element, context);
   }
 
-  visitSubmodelElementList(element: SubmodelElementList): any {
-    return {
+  visitSubmodelElementList(element: SubmodelElementList, context?: ContextType): any {
+    return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.SubmodelElementList,
       extensions: element.extensions.map(e => e.accept(this)),
@@ -222,8 +254,8 @@ export class JsonVisitor implements IVisitor<undefined, any> {
       semanticIdListElement: element.semanticIdListElement?.accept(this) ?? null,
       valueTypeListElement: element.valueTypeListElement,
       typeValueListElement: element.typeValueListElement,
-      value: element.value.map(e => e.accept(this)),
-    };
+      value: removeEmptyItems(element.value.map(e => e.accept(this, { idShortPath: this.buildIdShortPath(element, context) }))),
+    }, element, context);
   }
 
   visitSpecificAssetId(element: SpecificAssetId): any {
@@ -249,6 +281,7 @@ export class JsonVisitor implements IVisitor<undefined, any> {
       embeddedDataSpecifications: element.embeddedDataSpecifications.map(e => e.accept(this)),
       derivedFrom: element.derivedFrom?.accept(this) ?? null,
       submodels: element.submodels.map(s => s.accept(this)),
+      security: element.security.toPlain(this.options),
     };
   }
 
@@ -284,3 +317,5 @@ export class JsonVisitor implements IVisitor<undefined, any> {
     };
   }
 }
+
+export default JsonVisitor;

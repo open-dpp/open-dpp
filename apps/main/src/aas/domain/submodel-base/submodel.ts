@@ -6,9 +6,10 @@ import { AdministrativeInformation } from "../common/administrative-information"
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
+import { ConvertToPlainOptions } from "../convertable-to-plain";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { JsonVisitor } from "../json-visitor";
+import JsonVisitor from "../json-visitor";
 import { ModifierVisitor } from "../modifier-visitor";
 import { IPersistable } from "../persistable";
 import { ValueModifierVisitor } from "../value-modifier-visitor";
@@ -68,7 +69,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   static create(
     data: SubmodelBaseProps & {
-      id: string;
+      id?: string;
       extensions?: Array<Extension>;
       administration?: AdministrativeInformation | null;
       kind?: ModellingKindType | null;
@@ -76,7 +77,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     },
   ) {
     return new Submodel(
-      data.id,
+      data.id ?? randomUUID(),
       data.extensions ?? [],
       data.category ?? null,
       data.idShort,
@@ -239,8 +240,8 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return visitor.visitSubmodel(this, context);
   }
 
-  toPlain(): Record<string, any> {
-    const jsonVisitor = new JsonVisitor();
+  toPlain(options?: ConvertToPlainOptions): Record<string, any> {
+    const jsonVisitor = new JsonVisitor(options);
     return this.accept(jsonVisitor);
   }
 

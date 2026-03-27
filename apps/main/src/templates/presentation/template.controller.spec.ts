@@ -10,12 +10,16 @@ import {
 } from "../../../test/export-payload.fixtures";
 import { LanguageText } from "../../aas/domain/common/language-text";
 import { Environment } from "../../aas/domain/environment";
+import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import {
   ConceptDescriptionDoc,
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
+import { ORGANIZATION_ID_HEADER } from "../../identity/auth/presentation/decorators/organization-id.decorator";
+import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
+import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { DateTime } from "../../lib/date-time";
 import { encodeCursor } from "../../pagination/pagination";
 import { Template } from "../domain/template";
@@ -31,6 +35,7 @@ describe("templateController", () => {
     { imports: [TemplatesModule], providers: [TemplateRepository, AasSerializationService], controllers: [TemplateController] },
     [{ name: TemplateDoc.name, schema: TemplateSchema }, { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema }],
     TemplateRepository,
+    SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.OWNER }),
   );
 
   async function createTemplate(orgId: string, createdAt?: Date, updatedAt?: Date): Promise<Template> {
@@ -194,7 +199,7 @@ describe("templateController", () => {
     const response = await request(app.getHttpServer())
       .post(basePath)
       .set("Cookie", userCookie)
-      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send(body);
     expect(response.status).toEqual(201);
     expect(response.body).toEqual({
@@ -222,7 +227,8 @@ describe("templateController", () => {
 
     const response = await request(app.getHttpServer())
       .get(`${basePath}/${template.id}/export`)
-      .set("Cookie", userCookie);
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id);
 
     expect(response.status).toEqual(200);
     expect(response.body.format).toEqual("open-dpp:json");
@@ -242,13 +248,14 @@ describe("templateController", () => {
 
     const exportResponse = await request(app.getHttpServer())
       .get(`${basePath}/${template.id}/export`)
-      .set("Cookie", userCookie);
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id);
     expect(exportResponse.status).toEqual(200);
 
     const importResponse = await request(app.getHttpServer())
       .post(`${basePath}/import`)
       .set("Cookie", userCookie)
-      .set("X-OPEN-DPP-ORGANIZATION-ID", org.id)
+      .set(ORGANIZATION_ID_HEADER, org.id)
       .send(exportResponse.body);
 
     expect(importResponse.status).toEqual(201);
@@ -294,7 +301,8 @@ describe("templateController", () => {
 
     const exportResponse = await request(app.getHttpServer())
       .get(`${basePath}/${importResponse.body.id}/export`)
-      .set("Cookie", userCookie);
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id);
 
     expect(exportResponse.status).toEqual(200);
     expect(exportResponse.body.format).toEqual("open-dpp:json");
@@ -325,7 +333,8 @@ describe("templateController", () => {
 
     const exportResponse = await request(app.getHttpServer())
       .get(`${basePath}/${importResponse.body.id}/export`)
-      .set("Cookie", userCookie);
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org.id);
 
     expect(exportResponse.status).toEqual(200);
 

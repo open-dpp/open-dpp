@@ -1,5 +1,6 @@
 import type { AasNamespace } from "@open-dpp/api-client";
 import type {
+  AccessPermissionRuleResponseDto,
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellResponseDto,
   DataTypeDefType,
@@ -79,6 +80,8 @@ export interface IAasEditor extends IAasDrawer, IPagination {
   selectTreeNode: (key: string) => void;
   openAssetAdministrationShellEditor: () => void;
   aasGalleryFiles: Ref<MediaFileCollectionItem[]>;
+  getAccessPermissionRules: () => AccessPermissionRuleResponseDto[];
+  modifyShell: (data: AssetAdministrationShellModificationDto) => Promise<void>;
 }
 
 export function useAasEditor({
@@ -141,13 +144,13 @@ export function useAasEditor({
         data: toRaw(assetAdministrationShell.value),
         mode: EditorMode.EDIT,
         title: translate(`common.edit`),
-        path: {},
-        callback: modifyAasEditor,
+        path: { idShortPathIncludingSubmodel: assetAdministrationShell.value.idShort ?? undefined },
+        callback: modifyShell,
       });
     }
   }
 
-  async function modifyAasEditor(data: AssetAdministrationShellModificationDto) {
+  async function modifyShell(data: AssetAdministrationShellModificationDto) {
     const errorMessage = translate(`${translatePrefix}.error`, { method: translate("common.edit") });
     if (assetAdministrationShell.value) {
       try {
@@ -302,7 +305,9 @@ export function useAasEditor({
     return submodelElements.map((submodelElement): TreeNode => {
       const key = pathOfParent.idShortPath ? `${pathOfParent.idShortPath}.${submodelElement.idShort}` : `${submodelIdShort}.${submodelElement.idShort}`;
       const idShortPath = pathOfParent.idShortPath ? `${pathOfParent.idShortPath}.${submodelElement.idShort}` : submodelElement.idShort;
-      const path = { submodelId: pathOfParent.submodelId, idShortPath };
+      const idShortPathIncludingSubmodel = `${submodelIdShort}.${idShortPath}`;
+      const path = { submodelId: pathOfParent.submodelId, idShortPath, idShortPathIncludingSubmodel };
+
       const canHaveChildren = submodelElementCanHaveChildren(submodelElement);
       const children = getChildrenOfSubmodelElement(submodelElement);
       return {
@@ -382,9 +387,13 @@ export function useAasEditor({
           addChildren: true,
           delete: true,
         },
-        path: { submodelId: submodel.id },
+        path: { submodelId: submodel.id, idShortPathIncludingSubmodel: submodel.idShort },
       },
-      children: convertSubmodelElementsToTree(submodel.idShort, { submodelId: submodel.id }, submodel.submodelElements),
+      children: convertSubmodelElementsToTree(
+        submodel.idShort,
+        { submodelId: submodel.id },
+        submodel.submodelElements,
+      ),
     }));
   }
 
@@ -484,13 +493,14 @@ export function useAasEditor({
     async function createCallback(data: SubmodelRequestDto) {
       const response = await aasNamespace.createSubmodel(id, data);
       await finalizeApiRequest(response);
+      await fetchAssetAdministrationShell();
     }
     drawer.openDrawer({
       type: KeyTypes.Submodel,
       data: {},
       title: translate(`${translatePrefix}.addSubmodel`),
       mode: EditorMode.CREATE,
-      path: {},
+      path: { },
       callback: createCallback,
     });
   };
@@ -637,6 +647,13 @@ export function useAasEditor({
     }
   }
 
+  function getAccessPermissionRules(): AccessPermissionRuleResponseDto[] {
+    return (
+      assetAdministrationShell.value?.security.localAccessControl
+        .accessPermissionRules ?? []
+    );
+  }
+
   return {
     aasGalleryFiles,
     displayName,
@@ -654,5 +671,7 @@ export function useAasEditor({
     selectTreeNode,
     ...pagination,
     ...drawer,
+    getAccessPermissionRules,
+    modifyShell,
   };
 }

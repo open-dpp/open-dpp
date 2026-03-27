@@ -7,6 +7,7 @@ import { AssetInformation } from "./asset-information";
 import { ConceptDescription } from "./concept-description";
 import { Environment } from "./environment";
 import { ExpandedEnvironment } from "./expanded-environment";
+import { Security } from "./security/security";
 import { Submodel } from "./submodel-base/submodel";
 
 function createSubmodel(id?: string, idShort?: string): Submodel {
@@ -19,9 +20,12 @@ function createConceptDescription(id?: string): ConceptDescription {
 }
 
 function createShell(id?: string, submodels: Submodel[] = []): AssetAdministrationShell {
+  const security = Security.create({});
+
   const shell = AssetAdministrationShell.create({
     id: id ?? randomUUID(),
     assetInformation: AssetInformation.create({ assetKind: "Type" as AssetKindType }),
+    security,
   });
   submodels.forEach((sm) => {
     shell.addSubmodel(sm);

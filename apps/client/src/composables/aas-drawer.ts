@@ -124,6 +124,7 @@ export type EditorType
 export interface AasEditorPath {
   submodelId?: string;
   idShortPath?: string;
+  idShortPathIncludingSubmodel?: string;
 }
 
 type callbackType = (data: any) => Promise<void>;
@@ -159,7 +160,7 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
   const activeEditor = ref<EditorType | null>(null);
   const activeMode = ref<EditorModeType>(EditorMode.EDIT);
   const activeData = ref<any | null>(null);
-  const activePath = ref<AasEditorPath>({ idShortPath: "" });
+  const activePath = ref<AasEditorPath>({ idShortPath: "", idShortPathIncludingSubmodel: "" });
   const activeCallback = ref<callbackType | null>(null);
 
   const openDrawer: OpenDrawerCallback<EditorType, EditorModeType> = ({

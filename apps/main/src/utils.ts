@@ -1,5 +1,9 @@
 import _ from "lodash";
 
+export function removeEmptyItems(items: any[]): any[] {
+  return items.filter(item => Object.keys(item).length > 0);
+}
+
 function mapKeysDeep(
   obj: any,
   cb: (value: unknown, key: string) => string,

@@ -1,9 +1,16 @@
 import { expect } from "@jest/globals";
-import { DataTypeDef, ReferenceTypes } from "@open-dpp/dto";
+import { DataTypeDef, KeyTypes, PermissionKind, Permissions, ReferenceTypes } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
+import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
+import { UserRole } from "../../../identity/users/domain/user-role.enum";
+import { Key } from "../common/key";
 import { Reference } from "../common/reference";
+import { Permission } from "../security/permission";
+import { Security } from "../security/security";
+import { SubjectAttributes } from "../security/subject-attributes";
 import { AnnotatedRelationshipElement } from "./annotated-relationship-element";
 import { Property } from "./property";
+import { IdShortPath } from "./submodel-base";
 
 describe("annotatedRelationshipElement", () => {
   it("should add submodel element", () => {
@@ -18,6 +25,30 @@ describe("annotatedRelationshipElement", () => {
     expect(() => annotatedRelationshipElement.addSubmodelElement(submodelElement)).toThrow(new ValueError(
       "Submodel element with idShort prop1 already exists",
     ));
+  });
+
+  it("should return plain value", () => {
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+    const first = Reference.create(
+      { type: ReferenceTypes.ExternalReference, keys: [Key.create({ type: KeyTypes.GlobalReference, value: "urn:uuid:first" })],
+      },
+    );
+    const second = Reference.create(
+      { type: ReferenceTypes.ExternalReference, keys: [Key.create({ type: KeyTypes.GlobalReference, value: "urn:uuid:second" })],
+      },
+    );
+    const annotatedRelationshipElement = AnnotatedRelationshipElement.create({ idShort: "prop1", first, second });
+    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    let ability = security.defineAbilityForSubject(member);
+    expect(annotatedRelationshipElement.toPlain({ ability })).toMatchObject({
+      idShort: "prop1",
+      first: { type: ReferenceTypes.ExternalReference, keys: [{ type: KeyTypes.GlobalReference, value: "urn:uuid:first" }] },
+      second: { type: ReferenceTypes.ExternalReference, keys: [{ type: KeyTypes.GlobalReference, value: "urn:uuid:second" }] },
+    });
+    ability = security.defineAbilityForSubject(anonymous);
+    expect(annotatedRelationshipElement.toPlain({ ability })).toEqual({});
   });
 
   it("should delete submodel element", () => {

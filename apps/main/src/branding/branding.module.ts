@@ -13,5 +13,6 @@ import { BrandingController } from "./presentation/branding.controller";
   ],
   controllers: [BrandingController],
   providers: [BrandingRepository],
+  exports: [BrandingRepository],
 })
 export class BrandingModule { }
