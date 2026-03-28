@@ -1,6 +1,7 @@
 {
   "name": "@open-dpp/config-eslint",
-  "version": "1.0.0",
+  "private": true,
+  "version": "0.1.0",
   "description": "Shared ESLint flat-config presets for the Open DPP monorepo",
   "type": "module",
   "exports": {
