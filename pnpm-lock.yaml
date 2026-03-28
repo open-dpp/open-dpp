@@ -513,6 +513,292 @@ importers:
         specifier: ^8.54.0
         version: 8.54.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
 
+  apps/main/dist:
+    dependencies:
+      '@langchain/core':
+        specifier: ^1.1.18
+        version: 1.1.19
+      '@langchain/langgraph':
+        specifier: ^0.4.9
+        version: 0.4.9(@langchain/core@1.1.19)(zod-to-json-schema@3.25.1(zod@4.3.6))
+      '@langchain/mcp-adapters':
+        specifier: ^1.1.2
+        version: 1.1.2(@cfworker/json-schema@4.1.1)(@langchain/core@1.1.19)(@langchain/langgraph@0.4.9(@langchain/core@1.1.19)(zod-to-json-schema@3.25.1(zod@4.3.6)))
+      '@langchain/mistralai':
+        specifier: ^0.2.3
+        version: 0.2.3(@langchain/core@1.1.19)
+      '@langchain/ollama':
+        specifier: ^1.2.1
+        version: 1.2.2(@langchain/core@1.1.19)
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.25.3
+        version: 1.26.0(@cfworker/json-schema@4.1.1)(zod@4.3.6)
+      '@nestjs/axios':
+        specifier: ^4.0.1
+        version: 4.0.1(@nestjs/common@11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.13.4)(rxjs@7.8.2)
+      '@nestjs/common':
+        specifier: ^11.1.10
+        version: 11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/config':
+        specifier: ^4.0.2
+        version: 4.0.3(@nestjs/common@11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: ^11.1.10
+        version: 11.1.13(@nestjs/common@11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@11.1.13)(@nestjs/platform-express@11.1.13)(@nestjs/websockets@11.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/mapped-types':
+        specifier: ^2.1.0
+        version: 2.1.0(@nestjs/common@11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)
+      '@nestjs/microservices':
+        specifier: ^11.1.10
+        version: 11.1.13(@nestjs/common@11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.13)(@nestjs/websockets@11.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/mongoose':
+        specifier: ^11.0.4
+        version: 11.0.4(@nestjs/common@11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.13)(mongoose@9.1.6)(rxjs@7.8.2)
+      '@nestjs/platform-express':
+        specifier: ^11.1.10
+        version: 11.1.13(@nestjs/common@11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.13)
+      '@nestjs/platform-socket.io':
+        specifier: ^11.1.11
+        version: 11.1.13(@nestjs/common@11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/websockets@11.1.13)(rxjs@7.8.2)
+      '@nestjs/serve-static':
+        specifier: ^5.0.4
+        version: 5.0.4(@nestjs/common@11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.13)(express@5.2.1)
+      '@nestjs/swagger':
+        specifier: ^11.2.3
+        version: 11.2.6(@nestjs/common@11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.13)(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)
+      '@nestjs/websockets':
+        specifier: ^11.1.10
+        version: 11.1.13(@nestjs/common@11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.13)(@nestjs/platform-socket.io@11.1.13)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@open-dpp/api-client':
+        specifier: workspace:*
+        version: link:../../../packages/api-client
+      '@open-dpp/dto':
+        specifier: workspace:*
+        version: link:../../../packages/dto
+      '@open-dpp/env':
+        specifier: workspace:*
+        version: link:../../../packages/env
+      '@open-dpp/exception':
+        specifier: workspace:*
+        version: link:../../../packages/exception
+      '@open-dpp/permission':
+        specifier: workspace:*
+        version: link:../../../packages/permission
+      '@rekog/mcp-nest':
+        specifier: ^1.9.3
+        version: 1.9.3(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@4.3.6))(@nestjs/common@11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.13)(@nestjs/jwt@11.0.2(@nestjs/common@11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)))(@nestjs/passport@11.0.5(@nestjs/common@11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(passport@0.7.0))(express@5.2.1)(reflect-metadata@0.2.2)(zod@4.3.6)
+      axios:
+        specifier: ^1.13.2
+        version: 1.13.4
+      better-auth:
+        specifier: ^1.4.8
+        version: 1.4.18(mongodb@7.0.0)(vitest@4.0.18(@types/node@25.2.1)(jiti@2.6.1)(jsdom@27.4.0(@noble/hashes@2.0.1))(lightningcss@1.30.2)(msw@2.12.8(@types/node@25.2.1)(typescript@5.9.3))(terser@5.46.0)(yaml@2.8.2))(vue@3.5.27(typescript@5.9.3))
+      body-parser:
+        specifier: ^2.2.1
+        version: 2.2.2
+      class-transformer:
+        specifier: ^0.5.1
+        version: 0.5.1
+      class-validator:
+        specifier: ^0.14.3
+        version: 0.14.3
+      cpx:
+        specifier: ^1.5.0
+        version: 1.5.0
+      dayjs:
+        specifier: ^1.11.19
+        version: 1.11.19
+      express:
+        specifier: ^5.2.1
+        version: 5.2.1
+      file-type:
+        specifier: ^21.1.1
+        version: 21.3.0
+      form-data:
+        specifier: ^4.0.5
+        version: 4.0.5
+      handlebars:
+        specifier: ^4.7.8
+        version: 4.7.8
+      handlebars-helpers:
+        specifier: ^0.10.0
+        version: 0.10.0
+      http-proxy-3:
+        specifier: ^1.23.2
+        version: 1.23.2
+      langchain:
+        specifier: ^1.2.14
+        version: 1.2.18(@langchain/core@1.1.19)(zod-to-json-schema@3.25.1(zod@4.3.6))
+      load-esm:
+        specifier: ^1.0.3
+        version: 1.0.3
+      lodash:
+        specifier: ^4.17.23
+        version: 4.17.23
+      minio:
+        specifier: ^8.0.6
+        version: 8.0.6
+      mjml:
+        specifier: ^4.18.0
+        version: 4.18.0
+      mjml-core:
+        specifier: ^4.18.0
+        version: 4.18.0
+      mongodb:
+        specifier: 7.0.0
+        version: 7.0.0
+      mongoose:
+        specifier: ^9.1.6
+        version: 9.1.6
+      multer:
+        specifier: ^2.0.2
+        version: 2.0.2
+      nodemailer:
+        specifier: ^7.0.12
+        version: 7.0.13
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      rxjs:
+        specifier: ^7.8.2
+        version: 7.8.2
+      semver:
+        specifier: ^7.7.3
+        version: 7.7.4
+      sharp:
+        specifier: ^0.34.5
+        version: 0.34.5
+      socket.io:
+        specifier: ^4.8.2
+        version: 4.8.3
+      socket.io-client:
+        specifier: ^4.8.2
+        version: 4.8.3
+      ts-pattern:
+        specifier: ^5.9.0
+        version: 5.9.0
+      uuid:
+        specifier: ^13.0.0
+        version: 13.0.0
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
+      zod-openapi:
+        specifier: ^5.4.5
+        version: 5.4.6(zod@4.3.6)
+    devDependencies:
+      '@eslint/eslintrc':
+        specifier: ^3.3.3
+        version: 3.3.3
+      '@eslint/js':
+        specifier: ^9.39.2
+        version: 9.39.2
+      '@jest/globals':
+        specifier: ^30.2.0
+        version: 30.2.0
+      '@nestjs/cli':
+        specifier: ^11.0.14
+        version: 11.0.16(@swc/core@1.15.11(@swc/helpers@0.5.19))(@types/node@25.2.1)
+      '@nestjs/schematics':
+        specifier: ^11.0.9
+        version: 11.0.9(chokidar@4.0.3)(typescript@5.9.3)
+      '@nestjs/testing':
+        specifier: ^11.1.10
+        version: 11.1.13(@nestjs/common@11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.13)(@nestjs/microservices@11.1.13)(@nestjs/platform-express@11.1.13)
+      '@open-dpp/config-eslint':
+        specifier: workspace:*
+        version: link:../../../packages/config-eslint
+      '@open-dpp/testing':
+        specifier: workspace:*
+        version: link:../../../packages/testing
+      '@swc/core':
+        specifier: ^1.15.7
+        version: 1.15.11(@swc/helpers@0.5.19)
+      '@swc/jest':
+        specifier: ^0.2.39
+        version: 0.2.39(@swc/core@1.15.11(@swc/helpers@0.5.19))
+      '@tsconfig/node-lts':
+        specifier: ^24.0.0
+        version: 24.0.0
+      '@tsconfig/node-ts':
+        specifier: ^23.6.2
+        version: 23.6.3
+      '@types/body-parser':
+        specifier: ^1.19.6
+        version: 1.19.6
+      '@types/express':
+        specifier: ^5.0.6
+        version: 5.0.6
+      '@types/jest':
+        specifier: ^30.0.0
+        version: 30.0.0
+      '@types/lodash':
+        specifier: ^4.17.21
+        version: 4.17.23
+      '@types/mjml':
+        specifier: ^4.7.4
+        version: 4.7.4
+      '@types/mjml-core':
+        specifier: ^4.15.2
+        version: 4.15.2
+      '@types/multer':
+        specifier: ^2.0.0
+        version: 2.0.0
+      '@types/node':
+        specifier: ^25.0.10
+        version: 25.2.1
+      '@types/nodemailer':
+        specifier: ^6.4.21
+        version: 6.4.22
+      '@types/semver':
+        specifier: ^7.7.1
+        version: 7.7.1
+      '@types/supertest':
+        specifier: ^6.0.3
+        version: 6.0.3
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.2(jiti@2.6.1)
+      eslint-config-prettier:
+        specifier: ^10.1.8
+        version: 10.1.8(eslint@9.39.2(jiti@2.6.1))
+      eslint-plugin-prettier:
+        specifier: ^5.5.4
+        version: 5.5.5(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@9.39.2(jiti@2.6.1)))(eslint@9.39.2(jiti@2.6.1))(prettier@3.8.1)
+      fishery:
+        specifier: ^2.4.0
+        version: 2.4.0
+      globals:
+        specifier: ^17.1.0
+        version: 17.3.0
+      jest:
+        specifier: ^30.2.0
+        version: 30.2.0(@types/node@25.2.1)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.19))(@types/node@25.2.1)(typescript@5.9.3))
+      mongodb-memory-server:
+        specifier: ^11.0.0
+        version: 11.0.1
+      source-map-support:
+        specifier: ^0.5.21
+        version: 0.5.21
+      supertest:
+        specifier: ^7.2.2
+        version: 7.2.2
+      ts-loader:
+        specifier: ^9.5.4
+        version: 9.5.4(typescript@5.9.3)(webpack@5.104.1(@swc/core@1.15.11(@swc/helpers@0.5.19)))
+      ts-node:
+        specifier: ^10.9.2
+        version: 10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.19))(@types/node@25.2.1)(typescript@5.9.3)
+      tsconfig-paths:
+        specifier: ^4.2.0
+        version: 4.2.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      typescript-eslint:
+        specifier: ^8.54.0
+        version: 8.54.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
+
   docs:
     dependencies:
       vitepress-openapi:
