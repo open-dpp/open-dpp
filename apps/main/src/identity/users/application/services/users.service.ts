@@ -1,6 +1,6 @@
 import type { Auth } from "better-auth";
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { NotFoundError } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
 import { UserRole } from "../../domain/user-role.enum";
@@ -46,7 +46,7 @@ export class UsersService {
   async findOneAndFail(id: string) {
     const userEntity = await this.usersRepository.findOneById(id);
     if (!userEntity) {
-      throw new NotFoundInDatabaseException(User.name);
+      throw new NotFoundError(User.name);
     }
     return userEntity;
   }
@@ -59,13 +59,23 @@ export class UsersService {
     return this.usersRepository.findAllByIds(ids);
   }
 
-  async setUserEmailVerified(email: string, emailVerified: boolean): Promise<void> {
-    await this.usersRepository.setUserEmailVerified(email, emailVerified);
+  async setUserEmailVerified(email: string, emailVerified: boolean): Promise<User> {
+    const user = await this.usersRepository.findOneByEmail(email);
+    if (!user) {
+      throw new NotFoundError(User.name);
+    }
+    const updatedUser = user.withEmailVerified(emailVerified);
+    const saved = await this.usersRepository.update(updatedUser);
+    if (!saved) {
+      throw new NotFoundError(User.name);
+    }
+    return saved;
   }
 
   async setUserRole(id: string, role: UserRole): Promise<User> {
-    await this.findOneAndFail(id);
-    const saved = await this.usersRepository.setUserRole(id, role);
+    const user = await this.findOneAndFail(id);
+    const updatedUser = user.withRole(role);
+    const saved = await this.usersRepository.update(updatedUser);
     if (!saved) {
       throw new Error(`Failed to update role for user ${id}`);
     }
