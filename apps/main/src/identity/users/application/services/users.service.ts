@@ -1,6 +1,6 @@
 import type { Auth } from "better-auth";
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { NotFoundError } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
 import { UserRole } from "../../domain/user-role.enum";
@@ -46,7 +46,7 @@ export class UsersService {
   async findOneAndFail(id: string) {
     const userEntity = await this.usersRepository.findOneById(id);
     if (!userEntity) {
-      throw new NotFoundInDatabaseException(User.name);
+      throw new NotFoundError(User.name);
     }
     return userEntity;
   }
@@ -62,12 +62,12 @@ export class UsersService {
   async setUserEmailVerified(email: string, emailVerified: boolean): Promise<User> {
     const user = await this.usersRepository.findOneByEmail(email);
     if (!user) {
-      throw new NotFoundInDatabaseException(User.name);
+      throw new NotFoundError(User.name);
     }
     const updatedUser = user.withEmailVerified(emailVerified);
     const saved = await this.usersRepository.update(updatedUser);
     if (!saved) {
-      throw new Error(`Failed to update email verified for user ${email}`);
+      throw new NotFoundError(User.name);
     }
     return saved;
   }

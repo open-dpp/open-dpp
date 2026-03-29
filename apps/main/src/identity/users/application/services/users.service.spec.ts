@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Test, TestingModule } from "@nestjs/testing";
-import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { NotFoundError } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
 import { UserRole } from "../../domain/user-role.enum";
@@ -62,7 +62,7 @@ describe("UsersService", () => {
 
   it("should throw if not found in findOneAndFail", async () => {
     mockRepo.findOneById.mockResolvedValue(null);
-    await expect(service.findOneAndFail("1")).rejects.toThrow(NotFoundInDatabaseException);
+    await expect(service.findOneAndFail("1")).rejects.toThrow(NotFoundError);
   });
 
   it("should find all by ids via batched repository call", async () => {
@@ -93,7 +93,7 @@ describe("UsersService", () => {
 
     await expect(service.setUserRole("nonexistent", UserRole.ADMIN))
       .rejects
-      .toThrow(NotFoundInDatabaseException);
+      .toThrow(NotFoundError);
   });
 
   it("should throw if repository fails to update role", async () => {
@@ -124,7 +124,7 @@ describe("UsersService", () => {
 
     await expect(service.setUserEmailVerified("nonexistent@example.com", true))
       .rejects
-      .toThrow(NotFoundInDatabaseException);
+      .toThrow(NotFoundError);
   });
 
   it("should throw if repository fails to update email verified", async () => {
@@ -134,6 +134,6 @@ describe("UsersService", () => {
 
     await expect(service.setUserEmailVerified("test@example.com", true))
       .rejects
-      .toThrow("Failed to update email verified for user test@example.com");
+      .toThrow(NotFoundError);
   });
 });
