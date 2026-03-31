@@ -28,8 +28,8 @@ import { removeEmptyItems } from "../../utils";
 import { ConvertToPlainOptions } from "./convertable-to-plain";
 import { IdShortPath, ISubmodelBase } from "./submodel-base/submodel-base";
 
-export interface ContextType { fullParentIdShortPath: IdShortPath }
-class JsonVisitor implements IVisitor<ContextType, any> {
+export interface JsonVisitorContextType { fullParentIdShortPath: IdShortPath }
+class JsonVisitor implements IVisitor<JsonVisitorContextType, any> {
   constructor(private readonly options?: ConvertToPlainOptions) {
   }
 
@@ -46,12 +46,12 @@ class JsonVisitor implements IVisitor<ContextType, any> {
     };
   }
 
-  private buildIdShortPath(element: any, context?: ContextType): IdShortPath {
+  private buildFullIdShortPath(element: any, context?: JsonVisitorContextType): IdShortPath {
     return context ? context.fullParentIdShortPath.addPathSegment(element.idShort) : IdShortPath.create({ path: element.idShort });
   }
 
-  private filterByAbility(plainToFilter: any, element: any, context?: ContextType): any {
-    const idShortPath = this.buildIdShortPath(element, context);
+  private filterByAbility(plainToFilter: any, element: any, context?: JsonVisitorContextType): any {
+    const idShortPath = this.buildFullIdShortPath(element, context);
     if (this.options?.ability) {
       if (!this.options.ability.can(Permissions.Read, idShortPath)) {
         return { };
@@ -60,7 +60,7 @@ class JsonVisitor implements IVisitor<ContextType, any> {
     return plainToFilter;
   }
 
-  visitProperty(element: Property, context?: ContextType): any {
+  visitProperty(element: Property, context?: JsonVisitorContextType): any {
     return this.filterByAbility({
       modelType: KeyTypes.Property,
       ...this.buildBase(element),
@@ -122,8 +122,8 @@ class JsonVisitor implements IVisitor<ContextType, any> {
     };
   }
 
-  visitSubmodel(element: Submodel, context?: ContextType): any {
-    const submodelElements = removeEmptyItems(element.submodelElements.map(e => e.accept(this, { fullParentIdShortPath: this.buildIdShortPath(element, context) })));
+  visitSubmodel(element: Submodel, context?: JsonVisitorContextType): any {
+    const submodelElements = removeEmptyItems(element.submodelElements.map(e => e.accept(this, { fullParentIdShortPath: this.buildFullIdShortPath(element, context) })));
     const plain = {
       ...this.buildBase(element),
       modelType: KeyTypes.Submodel,
@@ -143,7 +143,7 @@ class JsonVisitor implements IVisitor<ContextType, any> {
     };
   }
 
-  visitAnnotatedRelationshipElement(element: AnnotatedRelationshipElement, context?: ContextType): any {
+  visitAnnotatedRelationshipElement(element: AnnotatedRelationshipElement, context?: JsonVisitorContextType): any {
     return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.AnnotatedRelationshipElement,
@@ -154,7 +154,7 @@ class JsonVisitor implements IVisitor<ContextType, any> {
     }, element, context);
   }
 
-  visitBlob(element: Blob, context?: ContextType): any {
+  visitBlob(element: Blob, context?: JsonVisitorContextType): any {
     return this.filterByAbility(
       {
         ...this.buildBase(element),
@@ -168,7 +168,7 @@ class JsonVisitor implements IVisitor<ContextType, any> {
     );
   }
 
-  visitEntity(element: Entity, context?: ContextType): any {
+  visitEntity(element: Entity, context?: JsonVisitorContextType): any {
     return this.filterByAbility(
       {
         ...this.buildBase(element),
@@ -184,7 +184,7 @@ class JsonVisitor implements IVisitor<ContextType, any> {
     );
   }
 
-  visitFile(element: File, context?: ContextType): any {
+  visitFile(element: File, context?: JsonVisitorContextType): any {
     return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.File,
@@ -194,7 +194,7 @@ class JsonVisitor implements IVisitor<ContextType, any> {
     }, element, context);
   }
 
-  visitMultiLanguageProperty(element: MultiLanguageProperty, context?: ContextType): any {
+  visitMultiLanguageProperty(element: MultiLanguageProperty, context?: JsonVisitorContextType): any {
     return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.MultiLanguageProperty,
@@ -204,7 +204,7 @@ class JsonVisitor implements IVisitor<ContextType, any> {
     }, element, context);
   }
 
-  visitRange(element: Range, context?: ContextType): any {
+  visitRange(element: Range, context?: JsonVisitorContextType): any {
     return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.Range,
@@ -215,7 +215,7 @@ class JsonVisitor implements IVisitor<ContextType, any> {
     }, element, context);
   }
 
-  visitReferenceElement(element: ReferenceElement, context?: ContextType): any {
+  visitReferenceElement(element: ReferenceElement, context?: JsonVisitorContextType): any {
     return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.ReferenceElement,
@@ -224,7 +224,7 @@ class JsonVisitor implements IVisitor<ContextType, any> {
     }, element, context);
   }
 
-  visitRelationshipElement(element: RelationshipElement, context?: ContextType): any {
+  visitRelationshipElement(element: RelationshipElement, context?: JsonVisitorContextType): any {
     return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.RelationshipElement,
@@ -234,8 +234,8 @@ class JsonVisitor implements IVisitor<ContextType, any> {
     }, element, context);
   }
 
-  visitSubmodelElementCollection(element: SubmodelElementCollection, context?: ContextType): any {
-    const value = removeEmptyItems(element.value.map(e => e.accept(this, { fullParentIdShortPath: this.buildIdShortPath(element, context) })));
+  visitSubmodelElementCollection(element: SubmodelElementCollection, context?: JsonVisitorContextType): any {
+    const value = removeEmptyItems(element.value.map(e => e.accept(this, { fullParentIdShortPath: this.buildFullIdShortPath(element, context) })));
     const result = {
       ...this.buildBase(element),
       modelType: KeyTypes.SubmodelElementCollection,
@@ -245,7 +245,7 @@ class JsonVisitor implements IVisitor<ContextType, any> {
     return value.length > 0 ? result : this.filterByAbility(result, element, context);
   }
 
-  visitSubmodelElementList(element: SubmodelElementList, context?: ContextType): any {
+  visitSubmodelElementList(element: SubmodelElementList, context?: JsonVisitorContextType): any {
     return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.SubmodelElementList,
@@ -254,7 +254,7 @@ class JsonVisitor implements IVisitor<ContextType, any> {
       semanticIdListElement: element.semanticIdListElement?.accept(this) ?? null,
       valueTypeListElement: element.valueTypeListElement,
       typeValueListElement: element.typeValueListElement,
-      value: removeEmptyItems(element.value.map(e => e.accept(this, { fullParentIdShortPath: this.buildIdShortPath(element, context) }))),
+      value: removeEmptyItems(element.value.map(e => e.accept(this, { fullParentIdShortPath: this.buildFullIdShortPath(element, context) }))),
     }, element, context);
   }
 

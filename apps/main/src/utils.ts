@@ -1,7 +1,7 @@
 import _ from "lodash";
 
 export function isEmptyObject(obj: any): boolean {
-  return Object.keys(obj).length === 0;
+  return obj !== null && Object.keys(obj).length === 0;
 }
 
 export function removeEmptyItems(items: any[]): any[] {

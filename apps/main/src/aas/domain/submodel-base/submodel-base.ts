@@ -56,6 +56,10 @@ export class IdShortPath {
     return new IdShortPath([...this._segments, segment]);
   }
 
+  concat(idShortPath: IdShortPath) {
+    return new IdShortPath([...this.segments, ...idShortPath.segments]);
+  }
+
   getParentPath(): IdShortPath {
     return new IdShortPath(this._segments.slice(0, -1));
   }

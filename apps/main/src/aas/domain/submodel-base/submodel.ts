@@ -13,7 +13,7 @@ import JsonVisitor from "../json-visitor";
 import { ModifierVisitor } from "../modifier-visitor";
 import { IPersistable } from "../persistable";
 import { ValueModifierVisitor } from "../value-modifier-visitor";
-import { JsonType, ValueVisitor } from "../value-visitor";
+import { JsonType, ValueVisitor, ValueVisitorOptions } from "../value-visitor";
 import { IVisitor } from "../visitor";
 import {
   AddOptions,
@@ -171,10 +171,14 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return tableExtension.getTableElement();
   }
 
-  getValueRepresentation(idShortPath?: IdShortPath): JsonType {
+  getValueRepresentation({ idShortPath, options }: { idShortPath?: IdShortPath; options: ValueVisitorOptions }): JsonType {
     const element = idShortPath ? this.findSubmodelElementOrFail(idShortPath) : this;
-    const valueVisitor = new ValueVisitor();
-    return element.accept(valueVisitor);
+    const context = idShortPath
+      ? { fullParentIdShortPath: IdShortPath.create({ path: this.idShort }).concat(idShortPath) }
+      : undefined;
+
+    const valueVisitor = new ValueVisitor(options);
+    return element.accept(valueVisitor, context);
   }
 
   findSubmodelElementOrFail(idShortPath: IdShortPath): ISubmodelElement {

@@ -216,10 +216,13 @@ export class EnvironmentService {
     return SubmodelJsonSchema.parse(result);
   }
 
-  async getSubmodelValue(environment: Environment, submodelId: string): Promise<ValueResponseDto> {
+  async getSubmodelValue(environment: Environment, submodelId: string, subject: SubjectAttributes): Promise<ValueResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const value = submodel.getValueRepresentation();
-    return ValueSchema.parse(value);
+
+    const ability = await this.loadAbility(environment, subject);
+    const result = submodel.getValueRepresentation({ options: { ability } });
+
+    return ValueSchema.parse(result);
   }
 
   async getSubmodelElements(environment: Environment, submodelId: string, pagination: Pagination, subject: SubjectAttributes): Promise<SubmodelElementPaginationResponseDto> {
@@ -301,9 +304,15 @@ export class EnvironmentService {
     return SubmodelElementSchema.parse(result);
   }
 
-  async getSubmodelElementValue(environment: Environment, submodelId: string, idShortPath: IdShortPath): Promise<ValueResponseDto> {
+  async getSubmodelElementValue(environment: Environment, submodelId: string, idShortPath: IdShortPath, subject: SubjectAttributes): Promise<ValueResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    return ValueSchema.parse(submodel.getValueRepresentation(idShortPath));
+    const ability = await this.loadAbility(environment, subject);
+
+    const result = submodel.getValueRepresentation({ idShortPath, options: { ability } });
+    if (result === undefined || isEmptyObject(result)) {
+      throw new ForbiddenError();
+    }
+    return ValueSchema.parse(result);
   }
 
   async loadExpandedEnvironment(environment: Environment): Promise<ExpandedEnvironment> {

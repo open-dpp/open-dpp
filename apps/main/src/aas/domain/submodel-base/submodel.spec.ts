@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { beforeAll, expect } from "@jest/globals";
 import { AasSubmodelElements, DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
+import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import {
   propertyInputPlainFactory,
   submodelBillOfMaterialPlainFactory,
@@ -19,6 +19,7 @@ import { Property } from "./property";
 import { registerSubmodelElementClasses } from "./register-submodel-element-classes";
 import { Submodel } from "./submodel";
 import { IdShortPath } from "./submodel-base";
+import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
 
@@ -162,10 +163,14 @@ describe("submodel", () => {
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } }));
-    let element = submodel.getValueRepresentation();
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    security.addPolicy(member, IdShortPath.create({ path: submodel.idShort }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    const ability = security.defineAbilityForSubject(member);
+    let element = submodel.getValueRepresentation({ options: { ability } });
     expect(element).toEqual(submodelDesignOfProductValuePlainFactory.build());
 
-    element = submodel.getValueRepresentation(IdShortPath.create({ path: "Design_V01.Author" }));
+    element = submodel.getValueRepresentation({ idShortPath: IdShortPath.create({ path: "Design_V01.Author" }), options: { ability } });
     expect(element).toEqual({
       AuthorOrganization: "Technologie-Initiative SmartFactory KL e. V.",
       AuthorName: "Fabrikvordenker:in ER28-0652",
@@ -179,7 +184,7 @@ describe("submodel", () => {
       ],
     });
 
-    element = submodel.getValueRepresentation(IdShortPath.create({ path: "Design_V01.Author.ListProp" }));
+    element = submodel.getValueRepresentation({ idShortPath: IdShortPath.create({ path: "Design_V01.Author.ListProp" }), options: { ability } });
     expect(element).toEqual([
       {
         prop1: "val1",
@@ -189,7 +194,7 @@ describe("submodel", () => {
       },
     ],
     );
-    element = submodel.getValueRepresentation(IdShortPath.create({ path: "Design_V01.Author.AuthorName" }));
+    element = submodel.getValueRepresentation({ idShortPath: IdShortPath.create({ path: "Design_V01.Author.AuthorName" }), options: { ability } });
     expect(element).toEqual("Fabrikvordenker:in ER28-0652");
   });
 
@@ -197,7 +202,16 @@ describe("submodel", () => {
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }));
-    const element = submodel.getValueRepresentation(IdShortPath.create({ path: "ProductCarbonFootprint_A1A3.PCFFactSheet" }));
+
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    security.addPolicy(member, IdShortPath.create({ path: submodel.idShort }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    const ability = security.defineAbilityForSubject(member);
+
+    const element = submodel.getValueRepresentation({
+      idShortPath: IdShortPath.create({ path: "ProductCarbonFootprint_A1A3.PCFFactSheet" }),
+      options: { ability },
+    });
     expect(element).toEqual({
       type: "ExternalReference",
       keys: [
@@ -235,9 +249,16 @@ describe("submodel", () => {
 
   it("should get value representation for bill of material", () => {
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const security = Security.create({});
 
     const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
-    const element = submodel.getValueRepresentation();
+
+    security.addPolicy(member, IdShortPath.create({ path: submodel.idShort }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+
+    const ability = security.defineAbilityForSubject(member);
+
+    const element = submodel.getValueRepresentation({ options: { ability } });
     expect(element).toEqual({
       Truck: {
         statements: [
@@ -355,5 +376,44 @@ describe("submodel", () => {
       ),
     ]);
     expect(submodel.description).toEqual(newDescriptions.map(description => LanguageText.fromPlain(description)));
+  });
+
+  it("should return value representation of submodel with protected fields", () => {
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+    const submodel = Submodel.create({ idShort: "section1" });
+
+    const submodelElementCollection = SubmodelElementCollection.create({
+      idShort: "subSection1",
+    });
+    const property1 = Property.create({ idShort: "prop1", valueType: DataTypeDef.String, value: "blub1" });
+    const property2 = Property.create({ idShort: "prop2", valueType: DataTypeDef.String, value: "blub2" });
+    submodelElementCollection.addSubmodelElement(property1);
+    submodelElementCollection.addSubmodelElement(property2);
+
+    submodel.addSubmodelElement(submodelElementCollection);
+
+    const property3 = Property.create({ idShort: "prop3", valueType: DataTypeDef.String, value: "blub3" });
+    const property4 = Property.create({ idShort: "prop4", valueType: DataTypeDef.String, value: "blub4" });
+    submodel.addSubmodelElement(property3);
+    submodel.addSubmodelElement(property4);
+
+    security.addPolicy(member, IdShortPath.create({ path: "section1.subSection1.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "section1.subSection1.prop2" }), []);
+    security.addPolicy(member, IdShortPath.create({ path: "section1.prop4" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+
+    let ability = security.defineAbilityForSubject(member);
+
+    expect(submodel.getValueRepresentation({ options: { ability } })).toEqual({ subSection1: { prop1: "blub1" }, prop4: "blub4" });
+
+    ability = security.defineAbilityForSubject(anonymous);
+
+    expect(() => submodel.getValueRepresentation({ options: { ability } })).toThrow(new ForbiddenError("Cannot access submodel section1"));
+
+    const emptySubmodel = Submodel.create({ idShort: "emptySubmodel" });
+    security.addPolicy(member, IdShortPath.create({ path: "emptySubmodel" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    ability = security.defineAbilityForSubject(member);
+    expect(emptySubmodel.getValueRepresentation({ options: { ability } })).toEqual({});
   });
 });

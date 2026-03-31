@@ -313,6 +313,32 @@ describe("environmentService", () => {
     ).rejects.toThrow(new ForbiddenError());
   });
 
+  it("should return value representation of submodel element by idShortPath", async () => {
+    const { environment, admin, member, submodel1, submodelElementCollection1, property1 } = await createDefaultEnvironment();
+    const idShortPath = IdShortPath.create({ path: `${submodelElementCollection1.idShort}.${property1.idShort}` });
+    const submodelElement = await environmentService.getSubmodelElementValue(environment, submodel1.id, idShortPath, admin);
+    expect(submodelElement).toEqual(property1.value);
+    //
+    await expect(
+      environmentService.getSubmodelElementValue(environment, submodel1.id, idShortPath, member),
+    ).rejects.toThrow(new ForbiddenError());
+  });
+
+  it("should return value representation of submodel value ", async () => {
+    const { environment, admin, member, submodel1, property1, property2 } = await createDefaultEnvironment();
+    const submodelValue = await environmentService.getSubmodelValue(environment, submodel1.id, admin);
+    expect(submodelValue).toEqual({
+      subSection1: {
+        property1: property1.value,
+        property2: property2.value,
+      },
+    });
+    //
+    await expect(
+      environmentService.getSubmodelValue(environment, submodel1.id, member),
+    ).rejects.toThrow(new ForbiddenError("Cannot access submodel section1"));
+  });
+
   afterAll(async () => {
     await module.close();
   });

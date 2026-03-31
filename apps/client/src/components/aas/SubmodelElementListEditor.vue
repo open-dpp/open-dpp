@@ -14,6 +14,7 @@ import { computed, onErrorCaptured, ref, toRaw } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import { EditorMode } from "../../composables/aas-drawer.ts";
+import { useAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
 import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
@@ -49,6 +50,13 @@ const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
 
 const { t, locale } = useI18n();
 
+const { getPermissions, editPermissions, savePermissions, resetPermissions }
+  = useAasPermissionsForm({
+    allAccessPermissionRules: props.getAccessPermissionRules(),
+    object: props.path.idShortPathIncludingSubmodel ?? "",
+    modifyShell: props.modifyShell,
+  });
+
 const confirm = useConfirm();
 
 const {
@@ -83,6 +91,7 @@ async function submit() {
   await handleSubmit(async (data) => {
     try {
       await save();
+      await savePermissions();
     }
     catch (e) {
       props.errorHandlingStore.logErrorWithNotification(
@@ -139,6 +148,11 @@ onErrorCaptured((err) => {
         :show-errors="showErrors"
         :errors="errors"
         :editor-mode="EditorMode.EDIT"
+      />
+      <PermissionsForm
+        :edit-permissions="editPermissions"
+        :get-permissions="getPermissions"
+        :reset-permissions="resetPermissions"
       />
     </FormContainer>
     <DataTable
@@ -226,12 +240,13 @@ onErrorCaptured((err) => {
               :model-value="cellData[field]"
               :value-type="col.plain.valueType"
               @update:model-value="
-                (value) => onCellEditComplete({
-                  data: cellData,
-                  newValue: value ?? null,
-                  field,
-                  index: rowIndex,
-                })
+                (value) =>
+                  onCellEditComplete({
+                    data: cellData,
+                    newValue: value ?? null,
+                    field,
+                    index: rowIndex,
+                  })
               "
             />
             <span
@@ -250,9 +265,11 @@ onErrorCaptured((err) => {
         <template
           v-if="
             col.plain.modelType !== AasSubmodelElements.File
-              && !(col.plain.modelType === AasSubmodelElements.Property
+              && !(
+                col.plain.modelType === AasSubmodelElements.Property
                 && (col.plain.valueType === DataTypeDef.Date
-                  || col.plain.valueType === DataTypeDef.DateTime))
+                  || col.plain.valueType === DataTypeDef.DateTime)
+              )
           "
           #editor="{ data: editorData, field, index: rowIndex }"
         >

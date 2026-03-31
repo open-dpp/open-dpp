@@ -138,9 +138,12 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
   async getSubmodelValue(
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ValueResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassport(id);
-    return await this.environmentService.getSubmodelValue(passport.getEnvironment(), submodelId);
+    return await this.environmentService.getSubmodelValue(passport.getEnvironment(), submodelId, subject);
   }
 
   @AllowAnonymous()
@@ -179,9 +182,12 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ValueResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassport(id);
-    return await this.environmentService.getSubmodelElementValue(passport.getEnvironment(), submodelId, idShortPath);
+    return await this.environmentService.getSubmodelElementValue(passport.getEnvironment(), submodelId, idShortPath, subject);
   }
 
   private async loadPassport(id: string): Promise<Passport> {
