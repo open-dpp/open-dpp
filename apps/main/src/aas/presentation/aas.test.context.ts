@@ -152,9 +152,16 @@ export function createAasTestContext<T>(
 
     security.addPolicy(subject, IdShortPath.create({ path: submodel1.idShort }), [
       Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
     ]);
     security.addPolicy(subject, IdShortPath.create({ path: submodel2.idShort }), [
       Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+    ]);
+
+    security.addPolicy(subject, IdShortPath.create({ path: submodelBillOfMaterialPlainFactory.build().idShort! }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
     ]);
 
     // { userRole: user, memberRole: owner }
@@ -520,13 +527,15 @@ export function createAasTestContext<T>(
   }
 
   async function assertModifySubmodel(createEntity: CreateEntity, saveEntity: SaveEntity) {
-    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
-    const entity = await createEntity(org.id);
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const entity = await createEntity(org!.id);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
+
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
+
     await saveEntity(entity);
 
     const modificationBody = {
@@ -538,7 +547,7 @@ export function createAasTestContext<T>(
     const response = await request(app.getHttpServer())
       .patch(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}`)
       .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org.id)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
       .send(modificationBody);
     expect(response.status).toEqual(200);
     expect({ idShort: response.body.idShort, displayName: response.body.displayName, description: response.body.description }).toEqual(modificationBody);
@@ -697,7 +706,7 @@ export function createAasTestContext<T>(
     expect(bodyRow0.value).toEqual([]);
     const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
     const foundList = foundSubmodel.findSubmodelElementOrFail(IdShortPath.create({ path: "tableList" }));
-    const tableExtension = new TableExtension(foundList as SubmodelElementList);
+    const tableExtension = new TableExtension(foundList as SubmodelElementList, foundSubmodel.idShort);
     expect(tableExtension.columns).toEqual([]);
   }
 
@@ -758,7 +767,7 @@ export function createAasTestContext<T>(
     expect(response.body.value).toEqual([]);
     const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
     const foundList = foundSubmodel.findSubmodelElementOrFail(IdShortPath.create({ path: "tableList" }));
-    const tableExtension = new TableExtension(foundList as SubmodelElementList);
+    const tableExtension = new TableExtension(foundList as SubmodelElementList, foundSubmodel.idShort);
     expect(tableExtension.rows).toEqual([]);
   }
 

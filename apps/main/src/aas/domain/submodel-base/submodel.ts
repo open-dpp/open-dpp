@@ -10,7 +10,7 @@ import { ConvertToPlainOptions } from "../convertable-to-plain";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import JsonVisitor from "../json-visitor";
-import { ModifierVisitor } from "../modifier-visitor";
+import { ModifierVisitor, ModifierVisitorOptions } from "../modifier-visitor";
 import { IPersistable } from "../persistable";
 import { ValueModifierVisitor } from "../value-modifier-visitor";
 import { JsonType, ValueVisitor, ValueVisitorOptions } from "../value-visitor";
@@ -113,13 +113,17 @@ export class Submodel implements ISubmodelBase, IPersistable {
     );
   };
 
-  modify(data: unknown) {
-    this.accept(new ModifierVisitor(), data);
+  modify(data: unknown, options: ModifierVisitorOptions) {
+    this.accept(new ModifierVisitor(options), { data });
   }
 
-  modifySubmodelElement(data: unknown, idShortPath: IdShortPath) {
+  modifySubmodelElement(data: unknown, idShortPath: IdShortPath, options: ModifierVisitorOptions) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
-    submodelElement.accept(new ModifierVisitor(), data);
+    let fullParentIdShortPath = IdShortPath.create({ path: this.idShort });
+    if (!idShortPath.getParentPath().isEmpty()) {
+      fullParentIdShortPath = fullParentIdShortPath.concat(idShortPath.getParentPath());
+    }
+    submodelElement.accept(new ModifierVisitor(options), { data, fullParentIdShortPath });
     return submodelElement;
   }
 
@@ -132,7 +136,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
   private getListAsTableExtensionOrFail(idShortPath: IdShortPath) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
     if (submodelElement instanceof SubmodelElementList) {
-      return new TableExtension(submodelElement);
+      return new TableExtension(submodelElement, this.idShort);
     }
     else {
       throw new ValueError(`Cannot add column to ${submodelElement.getSubmodelElementType()} submodel element`);
@@ -159,9 +163,9 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return tableExtension.getTableElement();
   }
 
-  modifyColumn(idShortPath: IdShortPath, idShortOfColumn: string, data: unknown) {
+  modifyColumn(idShortPath: IdShortPath, idShortOfColumn: string, data: unknown, options: ModifierVisitorOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    tableExtension.modifyColumn(idShortOfColumn, data);
+    tableExtension.modifyColumn(idShortOfColumn, data, options);
     return tableExtension.getTableElement();
   }
 

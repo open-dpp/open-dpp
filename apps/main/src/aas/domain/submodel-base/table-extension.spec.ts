@@ -1,11 +1,16 @@
 import { expect } from "@jest/globals";
-import { AasSubmodelElements } from "@open-dpp/dto";
+import { AasSubmodelElements, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { propertyInputPlainFactory } from "@open-dpp/testing";
+import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
+import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { LanguageText } from "../common/language-text";
+import { Permission } from "../security/permission";
+import { Security } from "../security/security";
+import { SubjectAttributes } from "../security/subject-attributes";
 import { Property } from "./property";
 import { registerSubmodelElementClasses } from "./register-submodel-element-classes";
-import { cloneSubmodelElement } from "./submodel-base";
+import { cloneSubmodelElement, IdShortPath } from "./submodel-base";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";
@@ -15,12 +20,14 @@ describe("tableExtension", () => {
     registerSubmodelElementClasses();
   });
 
+  const submodelIdShort = "submodelIdShort";
+
   it("should add columns and rows", () => {
     const submodelElementList = SubmodelElementList.create({
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
       idShort: "idShort",
     });
-    const table = new TableExtension(submodelElementList);
+    const table = new TableExtension(submodelElementList, submodelIdShort);
     const col1Plain = propertyInputPlainFactory.build({ idShort: "col1", value: "10" });
     const col1 = Property.fromPlain(col1Plain);
     // Add first column
@@ -70,7 +77,7 @@ describe("tableExtension", () => {
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
       idShort: "idShort",
     });
-    const table = new TableExtension(submodelElementList);
+    const table = new TableExtension(submodelElementList, submodelIdShort);
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" }));
     const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" }));
     table.addColumn(col1);
@@ -88,7 +95,7 @@ describe("tableExtension", () => {
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
       idShort: "idShort",
     });
-    const table = new TableExtension(submodelElementList);
+    const table = new TableExtension(submodelElementList, submodelIdShort);
 
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1", value: "10" }));
     table.addColumn(col1);
@@ -103,7 +110,7 @@ describe("tableExtension", () => {
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
       idShort: "idShort",
     });
-    const table = new TableExtension(submodelElementList);
+    const table = new TableExtension(submodelElementList, submodelIdShort);
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" }));
     const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" }));
     table.addColumn(col1);
@@ -121,13 +128,21 @@ describe("tableExtension", () => {
       language: "de",
       text: "Das Submodel liefert CO2",
     }];
-    table.modifyColumn(col1.idShort, { displayName: newDisplayNames, description: newDescriptions });
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: submodelIdShort }),
+      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })],
+    );
+    const ability = security.defineAbilityForSubject(member);
+    table.modifyColumn(col1.idShort, { displayName: newDisplayNames, description: newDescriptions }, { ability });
     for (const row of table.rows) {
       const column = row.getSubmodelElements().find(c => c.idShort === col1.idShort);
       expect(column?.displayName).toEqual(newDisplayNames.map(LanguageText.fromPlain));
       expect(column?.description).toEqual(newDescriptions.map(LanguageText.fromPlain));
     }
-    expect(() => table.modifyColumn(col1.idShort, { displayName: newDisplayNames, value: "2" })).toThrow(new ValueError("Column value modification is not supported."));
+    expect(() => table.modifyColumn(col1.idShort, { displayName: newDisplayNames, value: "2" }, { ability })).toThrow(new ValueError("Column value modification is not supported."));
   });
 
   it("should delete row", () => {
@@ -135,7 +150,7 @@ describe("tableExtension", () => {
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
       idShort: "idShort",
     });
-    const table = new TableExtension(submodelElementList);
+    const table = new TableExtension(submodelElementList, submodelIdShort);
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" }));
     const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" }));
     table.addColumn(col1);

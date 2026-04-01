@@ -4,6 +4,7 @@ import { expect } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import {
+  AasSubmodelElements,
   AssetKind,
   DataTypeDef,
   LanguageTextDto,
@@ -44,6 +45,7 @@ import { Property } from "../domain/submodel-base/property";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { IdShortPath } from "../domain/submodel-base/submodel-base";
 import { SubmodelElementCollection } from "../domain/submodel-base/submodel-element-collection";
+import { SubmodelElementList } from "../domain/submodel-base/submodel-element-list";
 import { AasRepository } from "../infrastructure/aas.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import { EnvironmentService } from "./environment.service";
@@ -254,7 +256,7 @@ describe("environmentService", () => {
     security.addPolicy(admin, IdShortPath.create({ path: "section1" }), [Permission.create({
       permission: Permissions.Read,
       kindOfPermission: PermissionKind.Allow,
-    })]);
+    }), Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })]);
 
     const submodel1 = Submodel.create({ idShort: "section1" });
 
@@ -337,6 +339,74 @@ describe("environmentService", () => {
     await expect(
       environmentService.getSubmodelValue(environment, submodel1.id, member),
     ).rejects.toThrow(new ForbiddenError("Cannot access submodel section1"));
+  });
+
+  it("should modify submodel", async () => {
+    const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
+    const modification = { idShort: submodel1.idShort, displayName: [LanguageText.create({ text: "Test", language: "en" })] };
+    await environmentService.modifySubmodel(environment, submodel1.id, modification, admin);
+    //
+    await expect(
+      environmentService.modifySubmodel(environment, submodel1.id, modification, member),
+    ).rejects.toThrow(new ForbiddenError("Missing permissions to modify element section1."));
+  });
+
+  it("should modify submodel elemement", async () => {
+    const { environment, admin, member, submodel1, submodelElementCollection1, property1 } = await createDefaultEnvironment();
+    const modification = { idShort: property1.idShort, displayName: [LanguageText.create({ text: "Test", language: "en" })] };
+    const idShortPathToProperty1 = IdShortPath.create({ path: `${submodelElementCollection1.idShort}.${property1.idShort}` });
+    await environmentService.modifySubmodelElement(
+      environment,
+      submodel1.id,
+      modification,
+      idShortPathToProperty1,
+      admin,
+    );
+    //
+    await expect(
+      environmentService.modifySubmodelElement(environment, submodel1.id, modification, idShortPathToProperty1, member),
+    ).rejects.toThrow(new ForbiddenError("Missing permissions to modify element section1.subSection1.property1."));
+  });
+
+  it("should modify column", async () => {
+    const security = Security.create({});
+    const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    security.addPolicy(admin, IdShortPath.create({ path: "section1" }), [Permission.create({
+      permission: Permissions.Read,
+      kindOfPermission: PermissionKind.Allow,
+    }), Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })]);
+
+    const submodel1 = Submodel.create({ idShort: "section1" });
+
+    const submodelElementList = SubmodelElementList.create({ idShort: "list", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    submodel1.addSubmodelElement(submodelElementList);
+
+    const listIdShortPath = IdShortPath.create({ path: submodelElementList.idShort });
+    const col1 = Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double });
+    submodel1.addColumn(listIdShortPath, col1);
+
+    await submodelRepository.save(submodel1);
+    const assetAdministrationShell = AssetAdministrationShell.create({ security });
+    assetAdministrationShell.addSubmodel(submodel1);
+    await aasRepository.save(assetAdministrationShell);
+
+    const environment = Environment.create({ assetAdministrationShells: [assetAdministrationShell.id], submodels: [submodel1.id] });
+
+    const modification = { idShort: col1.idShort, displayName: [LanguageText.create({ text: "Test", language: "en" })] };
+    await environmentService.modifyColumn(
+      environment,
+      submodel1.id,
+      listIdShortPath,
+      col1.idShort,
+      modification,
+      admin,
+    );
+    const row1IdShort = submodelElementList.getSubmodelElements()[0].idShort;
+    //
+    await expect(
+      environmentService.modifyColumn(environment, submodel1.id, listIdShortPath, col1.idShort, modification, member),
+    ).rejects.toThrow(new ForbiddenError(`Missing permissions to modify element section1.list.${row1IdShort}.col1.`));
   });
 
   afterAll(async () => {

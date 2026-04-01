@@ -283,7 +283,7 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.modifySubmodel(passport.getEnvironment(), submodelId, body);
+    return await this.environmentService.modifySubmodel(passport.getEnvironment(), submodelId, body, subject);
   }
 
   @ApiGetSubmodelById()
@@ -342,7 +342,7 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.modifyColumn(passport.getEnvironment(), submodelId, idShortPath, idShortOfColumn, body);
+    return await this.environmentService.modifyColumn(passport.getEnvironment(), submodelId, idShortPath, idShortOfColumn, body, subject);
   }
 
   @ApiDeleteColumn()
@@ -430,7 +430,7 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.modifySubmodelElement(passport.getEnvironment(), submodelId, body, idShortPath);
+    return await this.environmentService.modifySubmodelElement(passport.getEnvironment(), submodelId, body, idShortPath, subject);
   }
 
   @ApiPatchSubmodelElementValue()

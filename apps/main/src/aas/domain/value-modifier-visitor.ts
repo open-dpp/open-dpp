@@ -15,7 +15,6 @@ import { Reference } from "./common/reference";
 import { ConceptDescription } from "./concept-description";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
-import { ModifierVisitor } from "./modifier-visitor";
 import { Resource } from "./resource";
 import { SpecificAssetId } from "./specific-asset-id";
 import { AnnotatedRelationshipElement } from "./submodel-base/annotated-relationship-element";
@@ -135,7 +134,25 @@ export class ValueModifierVisitor implements IVisitor<unknown, void> {
   }
 
   visitReference(element: Reference, context: unknown): void {
-    element.accept(new ModifierVisitor(), context);
+    const parsed = ReferenceModificationSchema.parse(context);
+
+    if (parsed.type !== undefined) {
+      element.type = parsed.type;
+    }
+    if (parsed.referredSemanticId === null) {
+      element.referredSemanticId = parsed.referredSemanticId;
+    }
+    else if (parsed.referredSemanticId !== undefined) {
+      if (element.referredSemanticId !== null) {
+        element.referredSemanticId.accept(this, parsed.referredSemanticId);
+      }
+      else {
+        element.referredSemanticId = Reference.fromPlain(parsed.referredSemanticId);
+      }
+    }
+    if (parsed.keys !== undefined) {
+      element.keys = parsed.keys.map(Key.fromPlain);
+    }
   }
 
   visitReferenceElement(element: ReferenceElement, context: unknown): void {

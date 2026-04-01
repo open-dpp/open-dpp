@@ -82,17 +82,24 @@ describe("submodel", () => {
 
   it("should modify column", () => {
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
-
+    const security = Security.create({});
     const submodel = Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }));
     const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
     submodel.addSubmodelElement(submodelElementList);
     const col1 = Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double });
     submodel.addColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1);
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: submodel.idShort }),
+      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })],
+    );
+    const ability = security.defineAbilityForSubject(member);
     const newDisplayNames = [{
       language: "de",
       text: "CO2 Footprint New Text",
     }];
-    const list = submodel.modifyColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1.idShort, { displayName: newDisplayNames });
+    const list = submodel.modifyColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1.idShort, { displayName: newDisplayNames }, { ability });
     expect(list.value[0].getSubmodelElements()[0].displayName).toEqual(newDisplayNames.map(LanguageText.fromPlain));
   });
 
@@ -104,10 +111,10 @@ describe("submodel", () => {
     submodel.addSubmodelElement(submodelElementList);
     const col1 = Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double });
     submodel.addColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1);
-    let tableExtension = new TableExtension(submodelElementList);
+    let tableExtension = new TableExtension(submodelElementList, submodel.idShort);
     expect(tableExtension.columns).toEqual([col1]);
     submodel.deleteColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1.idShort);
-    tableExtension = new TableExtension(submodelElementList);
+    tableExtension = new TableExtension(submodelElementList, submodel.idShort);
     expect(tableExtension.columns).toEqual([]);
   });
 
@@ -119,7 +126,7 @@ describe("submodel", () => {
     submodel.addSubmodelElement(submodelElementList);
     submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }));
     submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }));
-    expect(new TableExtension(submodelElementList).rows).toHaveLength(2);
+    expect(new TableExtension(submodelElementList, submodel.idShort).rows).toHaveLength(2);
   });
 
   it("should delete row", () => {
@@ -130,10 +137,10 @@ describe("submodel", () => {
     submodel.addSubmodelElement(submodelElementList);
     submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }));
     submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }));
-    let tableExtension = new TableExtension(submodelElementList);
+    let tableExtension = new TableExtension(submodelElementList, submodel.idShort);
     const [row0, row1] = tableExtension.rows;
     submodel.deleteRow(IdShortPath.create({ path: submodelElementList.idShort }), row0.idShort);
-    tableExtension = new TableExtension(submodelElementList);
+    tableExtension = new TableExtension(submodelElementList, submodel.idShort);
     expect(tableExtension.rows).toEqual([row1]);
   });
 
@@ -353,6 +360,7 @@ describe("submodel", () => {
   });
 
   it("should be modified", () => {
+    const security = Security.create({});
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }));
@@ -367,9 +375,17 @@ describe("submodel", () => {
       language: "de",
       text: "Das Submodel liefert CO2",
     }];
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: submodel.idShort }),
+      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })],
+    );
+    const ability = security.defineAbilityForSubject(member);
+
     submodel.modify({ idShort: submodel.idShort, displayName: [
       newGermanDisplayName,
-    ], description: newDescriptions });
+    ], description: newDescriptions }, { ability });
     expect(submodel.displayName).toEqual([
       LanguageText.fromPlain(
         newGermanDisplayName,

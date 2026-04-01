@@ -122,7 +122,8 @@ export class EnvironmentService {
 
   async modifyAasShell(environment: Environment, aasId: string, modification: AssetAdministrationShellModificationDto, subject: SubjectAttributes): Promise<AssetAdministrationShellResponseDto> {
     const aas = await this.findAssetAdministrationShellByIdOrFail(environment, aasId);
-    aas.modify(modification, subject);
+    const ability = aas.security.defineAbilityForSubject(subject);
+    aas.modify(modification, { subject, ability });
     await this.aasRepository.save(aas);
     return AssetAdministrationShellJsonSchema.parse(aas.toPlain({ filterBySubject: subject }));
   }
@@ -134,9 +135,10 @@ export class EnvironmentService {
     return SubmodelPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodels }).toPlain({ ability }));
   }
 
-  async modifySubmodel(environment: Environment, submodelId: string, modification: SubmodelModificationDto): Promise<SubmodelResponseDto> {
+  async modifySubmodel(environment: Environment, submodelId: string, modification: SubmodelModificationDto, subject: SubjectAttributes): Promise<SubmodelResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    submodel.modify(modification);
+    const ability = await this.loadAbility(environment, subject);
+    submodel.modify(modification, { ability });
     await this.submodelRepository.save(submodel);
     return SubmodelJsonSchema.parse(submodel.toPlain());
   }
@@ -243,9 +245,10 @@ export class EnvironmentService {
     return SubmodelElementSchema.parse(submodelElement.toPlain());
   }
 
-  async modifySubmodelElement(environment: Environment, submodelId: string, modification: SubmodelElementModificationDto, idShortPath: IdShortPath): Promise<SubmodelElementResponseDto> {
+  async modifySubmodelElement(environment: Environment, submodelId: string, modification: SubmodelElementModificationDto, idShortPath: IdShortPath, subject: SubjectAttributes): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const submodelElement = submodel.modifySubmodelElement(modification, idShortPath);
+    const ability = await this.loadAbility(environment, subject);
+    const submodelElement = submodel.modifySubmodelElement(modification, idShortPath, { ability });
     await this.submodelRepository.save(submodel);
     return SubmodelElementSchema.parse(submodelElement.toPlain());
   }
@@ -264,9 +267,10 @@ export class EnvironmentService {
     return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
   }
 
-  async modifyColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfColumn: string, modifications: SubmodelElementModificationDto): Promise<SubmodelElementListResponseDto> {
+  async modifyColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfColumn: string, modifications: SubmodelElementModificationDto, subject: SubjectAttributes): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const modifiedSubmodelElement = submodel.modifyColumn(idShortPath, idShortOfColumn, modifications);
+    const ability = await this.loadAbility(environment, subject);
+    const modifiedSubmodelElement = submodel.modifyColumn(idShortPath, idShortOfColumn, modifications, { ability });
     await this.submodelRepository.save(submodel);
     return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain());
   }

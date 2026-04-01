@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { AasSubmodelElements } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
-import { ModifierVisitor } from "../modifier-visitor";
-import { cloneSubmodelElement, ISubmodelElement } from "./submodel-base";
+import { ModifierVisitor, ModifierVisitorOptions } from "../modifier-visitor";
+import { cloneSubmodelElement, IdShortPath, ISubmodelElement } from "./submodel-base";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
 
@@ -12,10 +12,12 @@ interface TableModificationOptions {
 
 export class TableExtension {
   private headerRow: ISubmodelElement | undefined;
-  constructor(private data: SubmodelElementList) {
+  private listIdShortPath: IdShortPath;
+  constructor(private data: SubmodelElementList, submodelIdShort: string) {
     if (this.data.typeValueListElement !== AasSubmodelElements.SubmodelElementCollection) {
       throw new Error(`List type ${this.data.typeValueListElement} is not supported by table extension`);
     }
+    this.listIdShortPath = IdShortPath.create({ path: submodelIdShort }).addPathSegment(this.data.idShort);
     this.setHeaderRow();
   }
 
@@ -46,15 +48,17 @@ export class TableExtension {
     });
   }
 
-  modifyColumn(idShort: string, data: any) {
+  modifyColumn(idShort: string, data: any, options: ModifierVisitorOptions) {
     if (Object.prototype.hasOwnProperty.call(data, "value")) {
       // Otherwise the value of the column would be propagated to all rows
       throw new ValueError("Column value modification is not supported.");
     }
+
     for (const row of this.rows) {
       const column = row.getSubmodelElements().find(el => el.idShort === idShort);
       if (column) {
-        column.accept(new ModifierVisitor(), { ...data, idShort });
+        const fullParentIdShortPath = this.listIdShortPath.addPathSegment(row.idShort);
+        column.accept(new ModifierVisitor(options), { data: { ...data, idShort }, fullParentIdShortPath });
       }
     }
   }

@@ -77,7 +77,13 @@ describe("assetAdministrationShell", () => {
     const description = [{ language: "en", text: "My description" }];
     const defaultThumbnails = [{ path: "path.to.image", contentType: "image/jepg" }];
     const subject = SubjectAttributes.create({ userRole: UserRole.ADMIN });
-    aas.modify({ displayName, description, assetInformation: { defaultThumbnails } }, subject);
+    const security = Security.create({});
+    security.addPolicy(subject, IdShortPath.create({ path: aas.id }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+    ]);
+    const ability = security.defineAbilityForSubject(subject);
+    aas.modify({ displayName, description, assetInformation: { defaultThumbnails } }, { subject, ability });
     expect(aas.displayName).toEqual(displayName.map(LanguageText.fromPlain));
     expect(aas.description).toEqual(description.map(LanguageText.fromPlain));
     expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);

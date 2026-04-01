@@ -10,7 +10,7 @@ import { Reference } from "./common/reference";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
 import JsonVisitor from "./json-visitor";
-import { ModifierVisitor } from "./modifier-visitor";
+import { ModifierVisitor, ModifierVisitorOptions } from "./modifier-visitor";
 import { IPersistable } from "./persistable";
 import { Security } from "./security/security";
 import { SubjectAttributes } from "./security/subject-attributes";
@@ -92,8 +92,8 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     );
   };
 
-  modify(data: unknown, subject: SubjectAttributes) {
-    this.accept(new ModifierVisitor(subject), data);
+  modify(data: unknown, options: ModifierVisitorOptions) {
+    this.accept(new ModifierVisitor(options), { data });
   }
 
   addSubmodelReference(reference: Reference) {
