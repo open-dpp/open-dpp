@@ -84,7 +84,7 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
   visitAssetAdministrationShell(element: AssetAdministrationShell, context?: ModifierVisitorContextType): void {
     const parsed = AssetAdministrationShellModificationSchema.parse(context?.data);
     if (parsed.displayName || parsed.description) {
-      // this.modificationGuard(element, context);
+      // this.modificationGuard(element, context); Not yet supported
       this.modifyNameAndDescription(element, parsed);
     }
     if (parsed.assetInformation) {
@@ -96,7 +96,7 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
   }
 
   visitAssetInformation(element: AssetInformation, context?: ModifierVisitorContextType): void {
-    // this.modificationGuard(element, context);
+    // this.modificationGuard(element, context); // Not yet supported
     const parsed = AssetInformationModificationSchema.parse(context?.data);
     if (parsed.defaultThumbnails) {
       element.defaultThumbnails = parsed.defaultThumbnails.map(Resource.fromPlain);
@@ -208,8 +208,8 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
 
   visitReferenceElement(element: ReferenceElement, context?: ModifierVisitorContextType): void {
     const parsed = ReferenceElementModificationSchema.parse(context?.data);
+    this.modificationGuard(element, context);
     if (parsed.description || parsed.displayName) {
-      this.modificationGuard(element, context);
       this.modifyNameAndDescription(element, parsed);
     }
     if (parsed.value === null) {
