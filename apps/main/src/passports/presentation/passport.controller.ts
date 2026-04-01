@@ -269,7 +269,7 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    await this.environmentService.deleteSubmodelFromEnvironment(passport.getEnvironment(), submodelId, this.saveEnvironmentCallback(passport));
+    await this.environmentService.deleteSubmodelFromEnvironment(passport.getEnvironment(), submodelId, this.saveEnvironmentCallback(passport), subject);
   }
 
   @ApiPatchSubmodel()
@@ -357,7 +357,7 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.deleteColumn(passport.getEnvironment(), submodelId, idShortPath, idShortOfColumn);
+    return await this.environmentService.deleteColumn(passport.getEnvironment(), submodelId, idShortPath, idShortOfColumn, subject);
   }
 
   @ApiPostRow()
@@ -387,7 +387,7 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.deleteRow(passport.getEnvironment(), submodelId, idShortPath, idShortOfRow);
+    return await this.environmentService.deleteRow(passport.getEnvironment(), submodelId, idShortPath, idShortOfRow, subject);
   }
 
   @ApiPostSubmodelElement()
@@ -415,7 +415,7 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    await this.environmentService.deleteSubmodelElement(passport.getEnvironment(), submodelId, idShortPath);
+    await this.environmentService.deleteSubmodelElement(passport.getEnvironment(), submodelId, idShortPath, subject);
   }
 
   @ApiPatchSubmodelElement()

@@ -74,7 +74,6 @@ describe("submodelElementList", () => {
     submodelElementList.addSubmodelElement(row);
 
     security.addPolicy(member, IdShortPath.create({ path: "list" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
-    security.addPolicy(member, IdShortPath.create({ path: "list.row" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
     security.addPolicy(member, IdShortPath.create({ path: "list.row.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
     security.addPolicy(member, IdShortPath.create({ path: "list.row.prop2" }), []);
 

@@ -77,6 +77,14 @@ describe("tableExtension", () => {
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
       idShort: "idShort",
     });
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: submodelIdShort }),
+      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow })],
+    );
+    const ability = security.defineAbilityForSubject(member);
     const table = new TableExtension(submodelElementList, submodelIdShort);
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" }));
     const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" }));
@@ -85,7 +93,7 @@ describe("tableExtension", () => {
     table.addRow();
     table.addRow();
     expect(table.rows.some(r => r.getSubmodelElements().some(c => c.idShort === col1.idShort))).toBeTruthy();
-    table.deleteColumn(col1.idShort);
+    table.deleteColumn(col1.idShort, { ability });
     expect(table.columns).toEqual([col2]);
     expect(table.rows.some(r => r.getSubmodelElements().some(c => c.idShort === col1.idShort))).toBeFalsy();
   });
@@ -150,6 +158,14 @@ describe("tableExtension", () => {
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
       idShort: "idShort",
     });
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: submodelIdShort }),
+      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow })],
+    );
+    const ability = security.defineAbilityForSubject(member);
     const table = new TableExtension(submodelElementList, submodelIdShort);
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" }));
     const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" }));
@@ -158,13 +174,13 @@ describe("tableExtension", () => {
     const rowToDelete = table.addRow();
     table.addRow();
     expect(table.rows.some(r => r.idShort === rowToDelete.idShort)).toBeTruthy();
-    table.deleteRow(rowToDelete.idShort);
+    table.deleteRow(rowToDelete.idShort, { ability });
     expect(table.rows.some(r => r.idShort === rowToDelete.idShort)).toBeFalsy();
     // If the header row is deleted, the first row should be used as header row.
-    table.deleteRow(table.rows[0].idShort);
+    table.deleteRow(table.rows[0].idShort, { ability });
     expect(table.columns).toEqual([cloneSubmodelElement(col1, { value: null }), cloneSubmodelElement(col2, { value: null })]);
     // If the last row is deleted, columns are empty. This a limitation of the AAS specification.
-    table.deleteRow(table.rows[0].idShort);
+    table.deleteRow(table.rows[0].idShort, { ability });
     expect(table.columns).toEqual([]);
   });
 });

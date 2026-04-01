@@ -27,6 +27,8 @@ describe("submodel", () => {
   beforeAll(() => {
     registerSubmodelElementClasses();
   });
+  const prefixDeleteMessage = "Missing permissions to delete element";
+
   it("should find submodel element by idShortPath", () => {
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
@@ -107,15 +109,29 @@ describe("submodel", () => {
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: submodel.idShort }),
+      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow })],
+    );
+    const ability = security.defineAbilityForSubject(member);
+
     const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
     submodel.addSubmodelElement(submodelElementList);
     const col1 = Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double });
     submodel.addColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1);
     let tableExtension = new TableExtension(submodelElementList, submodel.idShort);
     expect(tableExtension.columns).toEqual([col1]);
-    submodel.deleteColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1.idShort);
+    submodel.deleteColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1.idShort, { ability });
     tableExtension = new TableExtension(submodelElementList, submodel.idShort);
     expect(tableExtension.columns).toEqual([]);
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+    const anonymousAbility = security.defineAbilityForSubject(anonymous);
+    expect(() => submodel.deleteColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1.idShort, { ability: anonymousAbility })).toThrow(
+      new ForbiddenError(`${prefixDeleteMessage} ${submodel.idShort}.${submodelElementList.idShort}.${submodelElementList.getSubmodelElements()[0].idShort}.${col1.idShort}.`),
+    );
   });
 
   it("should add row", () => {
@@ -133,15 +149,33 @@ describe("submodel", () => {
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }));
+
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: submodel.idShort }),
+      [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+      ],
+    );
+    const ability = security.defineAbilityForSubject(member);
+
     const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
     submodel.addSubmodelElement(submodelElementList);
     submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }));
     submodel.addRow(IdShortPath.create({ path: submodelElementList.idShort }));
     let tableExtension = new TableExtension(submodelElementList, submodel.idShort);
     const [row0, row1] = tableExtension.rows;
-    submodel.deleteRow(IdShortPath.create({ path: submodelElementList.idShort }), row0.idShort);
+    submodel.deleteRow(IdShortPath.create({ path: submodelElementList.idShort }), row0.idShort, { ability });
     tableExtension = new TableExtension(submodelElementList, submodel.idShort);
     expect(tableExtension.rows).toEqual([row1]);
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+    const anonymousAbility = security.defineAbilityForSubject(anonymous);
+    expect(() => submodel.deleteRow(IdShortPath.create({ path: submodelElementList.idShort }), row0.idShort, { ability: anonymousAbility })).toThrow(
+      new ForbiddenError(`${prefixDeleteMessage} ${submodel.idShort}.${submodelElementList.idShort}.${row0.idShort}.`),
+    );
   });
 
   it("should add submodel element by idShortPath", () => {
@@ -158,12 +192,28 @@ describe("submodel", () => {
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(submodelCarbonFootprintPlainFactory.build(undefined, { transient: { iriDomain } }));
+
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: submodel.idShort }),
+      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow })],
+    );
+    const ability = security.defineAbilityForSubject(member);
+
     const submodelElement = Property.create({ idShort: "prop1", value: "10", valueType: DataTypeDef.Double });
     submodel.addSubmodelElement(submodelElement, { idShortPath: IdShortPath.create({ path: "ProductCarbonFootprint_A1A3" }) });
-    submodel.deleteSubmodelElement(IdShortPath.create({ path: `ProductCarbonFootprint_A1A3.${submodelElement.idShort}` }));
+    const path = IdShortPath.create({ path: `ProductCarbonFootprint_A1A3.${submodelElement.idShort}` });
+    submodel.deleteSubmodelElement(path, { ability });
     expect(submodel.findSubmodelElement(
       IdShortPath.create({ path: `ProductCarbonFootprint_A1A3.${submodelElement.idShort}` }),
     )).toBeUndefined();
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+    const anonymousAbility = security.defineAbilityForSubject(anonymous);
+    expect(() => submodel.deleteSubmodelElement(path, { ability: anonymousAbility })).toThrow(
+      new ForbiddenError(`${prefixDeleteMessage} ${submodel.idShort}.ProductCarbonFootprint_A1A3.${submodelElement.idShort}.`),
+    );
   });
 
   it("should get value representation for design submodel", () => {

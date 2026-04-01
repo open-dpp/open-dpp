@@ -166,7 +166,7 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    await this.environmentService.deleteSubmodelFromEnvironment(template.getEnvironment(), submodelId, this.saveEnvironmentCallback(template));
+    await this.environmentService.deleteSubmodelFromEnvironment(template.getEnvironment(), submodelId, this.saveEnvironmentCallback(template), subject);
   }
 
   @ApiPatchSubmodel()
@@ -250,7 +250,7 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<void> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    await this.environmentService.deleteSubmodelElement(template.getEnvironment(), submodelId, idShortPath);
+    await this.environmentService.deleteSubmodelElement(template.getEnvironment(), submodelId, idShortPath, subject);
   }
 
   @ApiPostColumn()
@@ -298,7 +298,7 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.deleteColumn(template.getEnvironment(), submodelId, idShortPath, idShortOfColumn);
+    return await this.environmentService.deleteColumn(template.getEnvironment(), submodelId, idShortPath, idShortOfColumn, subject);
   }
 
   @ApiPostRow()
@@ -328,7 +328,7 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.deleteRow(template.getEnvironment(), submodelId, idShortPath, idShortOfRow);
+    return await this.environmentService.deleteRow(template.getEnvironment(), submodelId, idShortPath, idShortOfRow, subject);
   }
 
   @ApiPatchSubmodelElement()

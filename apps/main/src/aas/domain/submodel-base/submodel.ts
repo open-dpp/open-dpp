@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { NotFoundException } from "@nestjs/common";
-import { ModellingKindType, SubmodelJsonSchema } from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
+import { ModellingKindType, Permissions, SubmodelJsonSchema } from "@open-dpp/dto";
+import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { AdministrativeInformation } from "../common/administrative-information";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
@@ -12,6 +12,7 @@ import { Extension } from "../extension";
 import JsonVisitor from "../json-visitor";
 import { ModifierVisitor, ModifierVisitorOptions } from "../modifier-visitor";
 import { IPersistable } from "../persistable";
+import { AasAbility } from "../security/aas-ability";
 import { ValueModifierVisitor, ValueModifierVisitorOptions } from "../value-modifier-visitor";
 import { JsonType, ValueVisitor, ValueVisitorOptions } from "../value-visitor";
 import { IVisitor } from "../visitor";
@@ -26,7 +27,7 @@ import {
   submodelBasePropsFromPlain,
 } from "./submodel-base";
 import { SubmodelElementList } from "./submodel-element-list";
-import { TableExtension } from "./table-extension";
+import { TableDeleteOptions, TableExtension } from "./table-extension";
 
 export class Submodel implements ISubmodelBase, IPersistable {
   private _displayName: Array<LanguageText>;
@@ -154,9 +155,9 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return tableExtension.getTableElement();
   }
 
-  deleteRow(idShortPath: IdShortPath, idShortOfRow: string) {
+  deleteRow(idShortPath: IdShortPath, idShortOfRow: string, options: TableDeleteOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    tableExtension.deleteRow(idShortOfRow);
+    tableExtension.deleteRow(idShortOfRow, options);
     return tableExtension.getTableElement();
   }
 
@@ -173,9 +174,9 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return tableExtension.getTableElement();
   }
 
-  deleteColumn(idShortPath: IdShortPath, idShortOfColumn: string) {
+  deleteColumn(idShortPath: IdShortPath, idShortOfColumn: string, options: TableDeleteOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    tableExtension.deleteColumn(idShortOfColumn);
+    tableExtension.deleteColumn(idShortOfColumn, options);
     return tableExtension.getTableElement();
   }
 
@@ -236,7 +237,11 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return submodelElement;
   }
 
-  public deleteSubmodelElement(idShortPath: IdShortPath) {
+  public deleteSubmodelElement(idShortPath: IdShortPath, { ability}: { ability: AasAbility }) {
+    const fullIdShortPath = IdShortPath.create({ path: this.idShort }).concat(idShortPath);
+    if (!ability.can(Permissions.Delete, fullIdShortPath)) {
+      throw new ForbiddenError(`Missing permissions to delete element ${fullIdShortPath.toString()}.`);
+    }
     const parent = this.findSubmodelElementParent(idShortPath);
     if (idShortPath.last) {
       if (!parent) {

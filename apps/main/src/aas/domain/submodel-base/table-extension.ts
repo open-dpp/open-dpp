@@ -1,13 +1,18 @@
 import { randomUUID } from "node:crypto";
-import { AasSubmodelElements } from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
+import { AasSubmodelElements, Permissions } from "@open-dpp/dto";
+import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { ModifierVisitor, ModifierVisitorOptions } from "../modifier-visitor";
+import { AasAbility } from "../security/aas-ability";
 import { cloneSubmodelElement, IdShortPath, ISubmodelElement } from "./submodel-base";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
 
 interface TableModificationOptions {
   position: number;
+}
+
+export interface TableDeleteOptions {
+  ability: AasAbility;
 }
 
 export class TableExtension {
@@ -63,8 +68,10 @@ export class TableExtension {
     }
   }
 
-  deleteColumn(idShort: string) {
+  deleteColumn(idShort: string, { ability }: TableDeleteOptions) {
     this.rows.forEach((row) => {
+      const idShortPath = this.listIdShortPath.addPathSegment(row.idShort).addPathSegment(idShort);
+      this.deletionGuard(ability, idShortPath);
       row.deleteSubmodelElement(idShort);
     });
   }
@@ -98,10 +105,18 @@ export class TableExtension {
     }
   }
 
-  deleteRow(idShort: string) {
+  deleteRow(idShort: string, { ability }: TableDeleteOptions) {
+    const idShortPath = this.listIdShortPath.addPathSegment(idShort);
+    this.deletionGuard(ability, idShortPath);
     this.data.deleteSubmodelElement(idShort);
     if (this.headerRow && this.headerRow.idShort === idShort) {
       this.setHeaderRow();
+    }
+  }
+
+  private deletionGuard(ability: AasAbility, idShortPath: IdShortPath) {
+    if (!ability.can(Permissions.Delete, idShortPath)) {
+      throw new ForbiddenError(`Missing permissions to delete element ${idShortPath}.`);
     }
   }
 }

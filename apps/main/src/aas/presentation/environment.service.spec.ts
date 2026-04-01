@@ -1,5 +1,5 @@
 import type { TestingModule } from "@nestjs/testing";
-import { expect } from "@jest/globals";
+import { expect, jest } from "@jest/globals";
 
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
@@ -253,10 +253,18 @@ describe("environmentService", () => {
     const security = Security.create({});
     const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
     const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
-    security.addPolicy(admin, IdShortPath.create({ path: "section1" }), [Permission.create({
-      permission: Permissions.Read,
-      kindOfPermission: PermissionKind.Allow,
-    }), Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(
+      admin,
+      IdShortPath.create({ path: "section1" }),
+      [
+        Permission.create({
+          permission: Permissions.Read,
+          kindOfPermission: PermissionKind.Allow,
+        }),
+        Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+      ],
+    );
 
     const submodel1 = Submodel.create({ idShort: "section1" });
 
@@ -368,14 +376,22 @@ describe("environmentService", () => {
     ).rejects.toThrow(new ForbiddenError("Missing permissions to modify element section1.subSection1.property1."));
   });
 
-  it("should modify column", async () => {
+  async function createEnvironmentWithList() {
     const security = Security.create({});
     const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
     const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
-    security.addPolicy(admin, IdShortPath.create({ path: "section1" }), [Permission.create({
-      permission: Permissions.Read,
-      kindOfPermission: PermissionKind.Allow,
-    }), Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(
+      admin,
+      IdShortPath.create({ path: "section1" }),
+      [
+        Permission.create({
+          permission: Permissions.Read,
+          kindOfPermission: PermissionKind.Allow,
+        }),
+        Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+      ],
+    );
 
     const submodel1 = Submodel.create({ idShort: "section1" });
 
@@ -390,9 +406,13 @@ describe("environmentService", () => {
     const assetAdministrationShell = AssetAdministrationShell.create({ security });
     assetAdministrationShell.addSubmodel(submodel1);
     await aasRepository.save(assetAdministrationShell);
-
+    const row1 = submodelElementList.getSubmodelElements()[0];
     const environment = Environment.create({ assetAdministrationShells: [assetAdministrationShell.id], submodels: [submodel1.id] });
+    return { environment, admin, member, submodel1, submodelElementList, row1, col1, listIdShortPath };
+  }
 
+  it("should modify column", async () => {
+    const { environment, admin, member, submodel1, row1, col1, listIdShortPath } = await createEnvironmentWithList();
     const modification = { idShort: col1.idShort, displayName: [LanguageText.create({ text: "Test", language: "en" })] };
     await environmentService.modifyColumn(
       environment,
@@ -402,11 +422,46 @@ describe("environmentService", () => {
       modification,
       admin,
     );
-    const row1IdShort = submodelElementList.getSubmodelElements()[0].idShort;
     //
     await expect(
       environmentService.modifyColumn(environment, submodel1.id, listIdShortPath, col1.idShort, modification, member),
-    ).rejects.toThrow(new ForbiddenError(`Missing permissions to modify element section1.list.${row1IdShort}.col1.`));
+    ).rejects.toThrow(new ForbiddenError(`Missing permissions to modify element section1.list.${row1.idShort}.col1.`));
+  });
+
+  it("should delete column", async () => {
+    const { environment, admin, member, submodel1, row1, col1, listIdShortPath } = await createEnvironmentWithList();
+
+    await expect(
+      environmentService.deleteColumn(environment, submodel1.id, listIdShortPath, col1.idShort, member),
+    ).rejects.toThrow(new ForbiddenError(`Missing permissions to delete element section1.list.${row1.idShort}.col1.`));
+
+    const list: any = await environmentService.deleteColumn(
+      environment,
+      submodel1.id,
+      listIdShortPath,
+      col1.idShort,
+      admin,
+    );
+
+    expect(list.value[0].value.map((e: any) => e.idShort)).not.toContain(col1.idShort);
+  });
+
+  it("should delete row", async () => {
+    const { environment, admin, member, submodel1, row1, listIdShortPath } = await createEnvironmentWithList();
+
+    await expect(
+      environmentService.deleteRow(environment, submodel1.id, listIdShortPath, row1.idShort, member),
+    ).rejects.toThrow(new ForbiddenError(`Missing permissions to delete element section1.list.${row1.idShort}.`));
+
+    const list: any = await environmentService.deleteRow(
+      environment,
+      submodel1.id,
+      listIdShortPath,
+      row1.idShort,
+      admin,
+    );
+
+    expect(list.value.map((e: any) => e.idShort)).not.toContain(row1.idShort);
   });
 
   it("should modify value of submodel element", async () => {
@@ -424,6 +479,53 @@ describe("environmentService", () => {
     await expect(
       environmentService.modifyValueOfSubmodelElement(environment, submodel1.id, modification, idShortPathToProperty1, member),
     ).rejects.toThrow(new ForbiddenError("Missing permissions to modify element section1.subSection1.property1."));
+  });
+
+  it("should delete submodel from environment", async () => {
+    const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
+    const saveEnvironmentMock = jest.fn<() => Promise<void>>();
+
+    await expect(
+      environmentService.deleteSubmodelFromEnvironment(
+        environment,
+        submodel1.id,
+        saveEnvironmentMock,
+        member,
+      ),
+    ).rejects.toThrow(new ForbiddenError(`Missing permissions to delete element ${submodel1.idShort}.`));
+
+    await environmentService.deleteSubmodelFromEnvironment(
+      environment,
+      submodel1.id,
+      saveEnvironmentMock,
+      admin,
+    );
+    expect(environment.submodels).not.toContain(submodel1.id);
+    //
+  });
+
+  it("should delete submodel element", async () => {
+    const { environment, admin, member, submodel1, submodelElementCollection1, property1 } = await createDefaultEnvironment();
+    const idShortPath = IdShortPath.create({ path: `${submodelElementCollection1.idShort}.${property1.idShort}` });
+
+    await expect(
+      environmentService.deleteSubmodelElement(
+        environment,
+        submodel1.id,
+        idShortPath,
+        member,
+      ),
+    ).rejects.toThrow(new ForbiddenError(`Missing permissions to delete element ${submodel1.idShort}.${idShortPath.toString()}.`));
+
+    await environmentService.deleteSubmodelElement(
+      environment,
+      submodel1.id,
+      idShortPath,
+      admin,
+    );
+    const foundSubmodel = await submodelRepository.findOneOrFail(submodel1.id);
+    expect(foundSubmodel.findSubmodelElement(idShortPath)).toBeUndefined();
+    //
   });
 
   afterAll(async () => {

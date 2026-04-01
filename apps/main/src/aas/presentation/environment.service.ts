@@ -11,6 +11,7 @@ import {
   AssetAdministrationShellPaginationResponseDtoSchema,
   AssetAdministrationShellResponseDto,
   AssetKind,
+  Permissions,
   SubmodelElementListJsonSchema,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
@@ -166,14 +167,20 @@ export class EnvironmentService {
     }
   }
 
-  async deleteSubmodelFromEnvironment(environment: Environment, submodelId: string, saveEnvironment: (options: DbSessionOptions) => Promise<void>): Promise<void> {
+  async deleteSubmodelFromEnvironment(environment: Environment, submodelId: string, saveEnvironment: (options: DbSessionOptions) => Promise<void>, subject: SubjectAttributes): Promise<void> {
     const session = await this.connection.startSession();
     try {
       await session.withTransaction(async () => {
         const options = { session };
-        const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-        await this.submodelRepository.deleteById(submodel.id, options);
         const aas = await this.getFirstAssetAdministrationShell(environment);
+        const ability = aas.security.defineAbilityForSubject(subject);
+        const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+
+        if (!ability.can(Permissions.Delete, IdShortPath.create({ path: submodel.idShort }))) {
+          throw new ForbiddenError(`Missing permissions to delete element ${submodel.idShort}.`);
+        }
+        await this.submodelRepository.deleteById(submodel.id, options);
+
         aas.deleteSubmodel(submodel);
         await this.aasRepository.save(aas, options);
         environment.deleteSubmodel(submodel);
@@ -185,9 +192,10 @@ export class EnvironmentService {
     }
   }
 
-  async deleteSubmodelElement(environment: Environment, submodelId: string, idShortPath: IdShortPath): Promise<void> {
+  async deleteSubmodelElement(environment: Environment, submodelId: string, idShortPath: IdShortPath, subject: SubjectAttributes): Promise<void> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId.toString());
-    submodel.deleteSubmodelElement(idShortPath);
+    const ability = await this.loadAbility(environment, subject);
+    submodel.deleteSubmodelElement(idShortPath, { ability });
     await this.submodelRepository.save(submodel);
   }
 
@@ -250,7 +258,7 @@ export class EnvironmentService {
     const ability = await this.loadAbility(environment, subject);
     const submodelElement = submodel.modifySubmodelElement(modification, idShortPath, { ability });
     await this.submodelRepository.save(submodel);
-    return SubmodelElementSchema.parse(submodelElement.toPlain());
+    return SubmodelElementSchema.parse(submodelElement.toPlain({ ability, context: { fullParentIdShortPath: IdShortPath.create({ path: submodel.idShort }) } }));
   }
 
   async modifyValueOfSubmodelElement(environment: Environment, submodelId: string, modification: ValueRequestDto, idShortPath: IdShortPath, subject: SubjectAttributes): Promise<SubmodelElementResponseDto> {
@@ -258,7 +266,7 @@ export class EnvironmentService {
     const ability = await this.loadAbility(environment, subject);
     const submodelElement = submodel.modifyValueOfSubmodelElement(modification, idShortPath, { ability });
     await this.submodelRepository.save(submodel);
-    return SubmodelElementSchema.parse(submodelElement.toPlain());
+    return SubmodelElementSchema.parse(submodelElement.toPlain({ ability, context: { fullParentIdShortPath: IdShortPath.create({ path: submodel.idShort }) } }));
   }
 
   async addColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, column: ISubmodelElement, position?: number): Promise<SubmodelElementListResponseDto> {
@@ -273,14 +281,15 @@ export class EnvironmentService {
     const ability = await this.loadAbility(environment, subject);
     const modifiedSubmodelElement = submodel.modifyColumn(idShortPath, idShortOfColumn, modifications, { ability });
     await this.submodelRepository.save(submodel);
-    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain());
+    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain({ ability, context: { fullParentIdShortPath: IdShortPath.create({ path: submodel.idShort }) } }));
   }
 
-  async deleteColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfColumn: string): Promise<SubmodelElementListResponseDto> {
+  async deleteColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfColumn: string, subject: SubjectAttributes): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const modifiedSubmodelElementList = submodel.deleteColumn(idShortPath, idShortOfColumn);
+    const ability = await this.loadAbility(environment, subject);
+    const modifiedSubmodelElementList = submodel.deleteColumn(idShortPath, idShortOfColumn, { ability });
     await this.submodelRepository.save(submodel);
-    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
+    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability, context: { fullParentIdShortPath: IdShortPath.create({ path: submodel.idShort }) } }));
   }
 
   async addRow(environment: Environment, submodelId: string, idShortPath: IdShortPath, position?: number): Promise<SubmodelElementListResponseDto> {
@@ -290,11 +299,12 @@ export class EnvironmentService {
     return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain());
   }
 
-  async deleteRow(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfRow: string): Promise<SubmodelElementListResponseDto> {
+  async deleteRow(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfRow: string, subject: SubjectAttributes): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const modifiedSubmodelElementList = submodel.deleteRow(idShortPath, idShortOfRow);
+    const ability = await this.loadAbility(environment, subject);
+    const modifiedSubmodelElementList = submodel.deleteRow(idShortPath, idShortOfRow, { ability });
     await this.submodelRepository.save(submodel);
-    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
+    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability, context: { fullParentIdShortPath: IdShortPath.create({ path: submodel.idShort }) } }));
   }
 
   async getSubmodelElementById(environment: Environment, submodelId: string, idShortPath: IdShortPath, subject: SubjectAttributes): Promise<SubmodelElementResponseDto> {
