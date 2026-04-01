@@ -15,6 +15,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent } from "vue";
 import { useAasPermissionsForm } from "./aas-permissions-form.ts";
 
+const mocks = vi.hoisted(() => {
+  return {
+    asSubject: vi.fn(),
+  };
+});
+
+vi.mock("../stores/user.ts", () => ({
+  useUserStore: () => ({
+    asSubject: mocks.asSubject,
+  }),
+}));
+
 describe("aasPermissionsForm composable", () => {
   const mountedWrappers: Array<ReturnType<typeof mount>> = [];
 
@@ -182,7 +194,11 @@ describe("aasPermissionsForm composable", () => {
       undefined,
       { transient: transientParams },
     );
-
+    const owner = {
+      userRole: UserRoleDto.USER,
+      memberRole: MemberRoleDto.OWNER,
+    };
+    mocks.asSubject.mockReturnValue(owner);
     const { editPermissions, getPermissions, savePermissions } = mountHarness({
       allAccessPermissionRules:
         security.localAccessControl.accessPermissionRules,
@@ -190,13 +206,14 @@ describe("aasPermissionsForm composable", () => {
       modifyShell: modifyShellMock,
     });
     const member = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER };
-    const owner = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.OWNER };
+
     editPermissions([Permissions.Create, Permissions.Edit], member);
     editPermissions([Permissions.Create, Permissions.Edit], member);
     expect(getPermissions(member)).toEqual({ permissions: [Permissions.Create, Permissions.Edit], inheritsPermissionsOf: null });
     editPermissions([Permissions.Read, Permissions.Delete], owner);
 
     expect(getPermissions(owner)).toEqual({ permissions: [Permissions.Read, Permissions.Delete], inheritsPermissionsOf: null });
+
     await savePermissions();
     expect(modifyShellMock).toHaveBeenCalledWith({
       security: {
@@ -227,65 +244,6 @@ describe("aasPermissionsForm composable", () => {
                     },
                     {
                       permission: Permissions.Edit,
-                      kindOfPermission: PermissionKind.Allow,
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              targetSubjectAttributes: {
-                subjectAttribute: [
-                  propertyOutputPlainFactory.build({
-                    idShort: "userRole",
-                    value: "admin",
-                  }),
-                ],
-              },
-              permissionsPerObject: [
-                {
-                  object: permissionObjectPlainFactory.build({
-                    idShort: "section1",
-                  }),
-                  permissions: [
-                    {
-                      permission: Permissions.Create,
-                      kindOfPermission: PermissionKind.Allow,
-                    },
-                    {
-                      permission: Permissions.Edit,
-                      kindOfPermission: PermissionKind.Allow,
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              targetSubjectAttributes: {
-                subjectAttribute: [
-                  propertyOutputPlainFactory.build({
-                    idShort: "userRole",
-                    value: "user",
-                  }),
-                  propertyOutputPlainFactory.build({
-                    idShort: "memberRole",
-                    value: "owner",
-                  }),
-                ],
-              },
-              permissionsPerObject: [
-                {
-                  object: permissionObjectPlainFactory.build({
-                    idShort: "section1",
-                    value: undefined,
-                  }),
-                  permissions: [
-                    {
-                      permission: Permissions.Read,
-                      kindOfPermission: PermissionKind.Allow,
-                    },
-                    {
-                      permission: Permissions.Delete,
                       kindOfPermission: PermissionKind.Allow,
                     },
                   ],
@@ -326,6 +284,7 @@ describe("aasPermissionsForm composable", () => {
       object: "section1",
       modifyShell: modifyShellMock,
     });
+    const owner = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.OWNER };
     const member = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER };
     permissionsForm.editPermissions([Permissions.Create, Permissions.Edit], member);
     expect(permissionsForm.getPermissions(member)).toEqual({ permissions: [Permissions.Create, Permissions.Edit], inheritsPermissionsOf: null });
@@ -334,6 +293,7 @@ describe("aasPermissionsForm composable", () => {
       permissions: [Permissions.Create],
       inheritsPermissionsOf: null,
     });
+    mocks.asSubject.mockReturnValueOnce(owner);
     await permissionsForm.savePermissions();
     expect(modifyShellMock).toHaveBeenCalledWith({
       security: {

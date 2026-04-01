@@ -84,6 +84,10 @@ export function ruleHelper(accessPermissionRule: AccessPermissionRuleResponseDto
     )?.value ?? undefined,
   );
 
+  function getSubject(): Subject {
+    return { userRole, memberRole };
+  }
+
   function hasEqualSubject(subject: Subject) {
     return (
       (subject.userRole === userRole && userRole === UserRoleDto.ADMIN)
@@ -96,5 +100,6 @@ export function ruleHelper(accessPermissionRule: AccessPermissionRuleResponseDto
     userRole,
     memberRole,
     hasEqualSubject,
+    getSubject,
   };
 }

@@ -5,6 +5,8 @@ import {
 } from "@open-dpp/dto";
 import { ref, toRaw } from "vue";
 import { makeRule, ruleHelper } from "../lib/aas-security.ts";
+import { useUserStore } from "../stores/user.ts";
+import { useRoleHierarchy } from "./role-hierarchy.ts";
 
 interface Subject {
   userRole: UserRoleDtoType;
@@ -32,6 +34,9 @@ export function useAasPermissionsForm({
   object,
   modifyShell,
 }: AasPermissionsFormProps): IAasPermissionsForm {
+  const { canEditPermissionsOfRole } = useRoleHierarchy();
+  const { asSubject } = useUserStore();
+
   const accessPermissionRulesOfObject = ref<AccessPermissionRuleResponseDto[]>(
     filterRulesForObject(allAccessPermissionRules, object),
   );
@@ -85,10 +90,15 @@ export function useAasPermissionsForm({
 
   async function savePermissions() {
     if (accessPermissionRulesOfObject.value.length > 0) {
+      const rulesAllowedToModify = accessPermissionRulesOfObject.value.filter((r) => {
+        const subject = asSubject();
+        return canEditPermissionsOfRole(subject, ruleHelper(r).getSubject());
+      });
+
       await modifyShell({
         security: {
           localAccessControl: {
-            accessPermissionRules: accessPermissionRulesOfObject.value,
+            accessPermissionRules: rulesAllowedToModify,
           },
         },
       });
