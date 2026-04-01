@@ -358,7 +358,7 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.modifyValueOfSubmodelElement(template.getEnvironment(), submodelId, body, idShortPath);
+    return await this.environmentService.modifyValueOfSubmodelElement(template.getEnvironment(), submodelId, body, idShortPath, subject);
   }
 
   @ApiGetSubmodelElementById()

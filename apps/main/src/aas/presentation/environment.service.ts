@@ -253,9 +253,10 @@ export class EnvironmentService {
     return SubmodelElementSchema.parse(submodelElement.toPlain());
   }
 
-  async modifyValueOfSubmodelElement(environment: Environment, submodelId: string, modification: ValueRequestDto, idShortPath: IdShortPath): Promise<SubmodelElementResponseDto> {
+  async modifyValueOfSubmodelElement(environment: Environment, submodelId: string, modification: ValueRequestDto, idShortPath: IdShortPath, subject: SubjectAttributes): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const submodelElement = submodel.modifyValueOfSubmodelElement(modification, idShortPath);
+    const ability = await this.loadAbility(environment, subject);
+    const submodelElement = submodel.modifyValueOfSubmodelElement(modification, idShortPath, { ability });
     await this.submodelRepository.save(submodel);
     return SubmodelElementSchema.parse(submodelElement.toPlain());
   }

@@ -445,7 +445,7 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.modifyValueOfSubmodelElement(passport.getEnvironment(), submodelId, body, idShortPath);
+    return await this.environmentService.modifyValueOfSubmodelElement(passport.getEnvironment(), submodelId, body, idShortPath, subject);
   }
 
   @ApiGetSubmodelElements()

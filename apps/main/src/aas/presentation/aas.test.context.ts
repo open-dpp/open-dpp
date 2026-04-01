@@ -581,8 +581,8 @@ export function createAasTestContext<T>(
   }
 
   async function assertModifySubmodelElementValue(createEntity: CreateEntity, saveEntity: SaveEntity) {
-    const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
-    const entity = await createEntity(org.id);
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const entity = await createEntity(org!.id);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
@@ -602,7 +602,7 @@ export function createAasTestContext<T>(
     const response = await request(app.getHttpServer())
       .patch(`${basePath}/${entity.id}/submodels/${btoa(submodel.id)}/submodel-elements/collection/$value`)
       .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org.id)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
       .send(modificationBody);
     expect(response.status).toEqual(200);
     expect({ idShort: response.body.value[0].idShort, value: response.body.value[0].value }).toEqual({ idShort: property.idShort, value: "value new" });

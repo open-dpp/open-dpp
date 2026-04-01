@@ -409,6 +409,23 @@ describe("environmentService", () => {
     ).rejects.toThrow(new ForbiddenError(`Missing permissions to modify element section1.list.${row1IdShort}.col1.`));
   });
 
+  it("should modify value of submodel element", async () => {
+    const { environment, admin, member, submodel1, submodelElementCollection1, property1, property2 } = await createDefaultEnvironment();
+    const modification = { [property1.idShort]: "new value 1", [property2.idShort]: "new value 2" };
+    const idShortPathToProperty1 = IdShortPath.create({ path: `${submodelElementCollection1.idShort}` });
+    await environmentService.modifyValueOfSubmodelElement(
+      environment,
+      submodel1.id,
+      modification,
+      idShortPathToProperty1,
+      admin,
+    );
+    //
+    await expect(
+      environmentService.modifyValueOfSubmodelElement(environment, submodel1.id, modification, idShortPathToProperty1, member),
+    ).rejects.toThrow(new ForbiddenError("Missing permissions to modify element section1.subSection1.property1."));
+  });
+
   afterAll(async () => {
     await module.close();
   });
