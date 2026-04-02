@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { expect, jest } from "@jest/globals";
 import { DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { propertyInputPlainFactory } from "@open-dpp/testing";
@@ -84,11 +84,14 @@ describe("submodelElementCollection", () => {
     submodelElementCollection.addSubmodelElement(submodelElement2, { ability });
 
     expect(submodelElementCollection.getSubmodelElements()).toEqual([submodelElement1, submodelElement2]);
-    submodelElementCollection.deleteSubmodelElement(submodelElement1.idShort, { ability });
+    const onDelete = jest.fn();
+    submodelElementCollection.deleteSubmodelElement(submodelElement1.idShort, { ability, onDelete });
+    expect(onDelete).toHaveBeenCalledWith(submodelElement1);
     expect(submodelElementCollection.getSubmodelElements()).toEqual([submodelElement2]);
 
-    expect(() => submodelElementCollection.deleteSubmodelElement("unknown idShort", { ability })).toThrow(
+    expect(() => submodelElementCollection.deleteSubmodelElement("unknown idShort", { ability, onDelete })).toThrow(
       ValueError,
     );
+    expect(onDelete).toHaveBeenCalledTimes(1);
   });
 });

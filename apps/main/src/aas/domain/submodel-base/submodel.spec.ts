@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { beforeAll, expect } from "@jest/globals";
+import { beforeAll, expect, jest } from "@jest/globals";
 import { AasSubmodelElements, DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import {
@@ -175,13 +175,16 @@ describe("submodel", () => {
 
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const anonymousAbility = security.defineAbilityForSubject(anonymous);
-    expect(() => submodel.deleteColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1.idShort, { ability: anonymousAbility })).toThrow(
+    const onDelete = jest.fn();
+
+    expect(() => submodel.deleteColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1.idShort, { ability: anonymousAbility, onDelete })).toThrow(
       new ForbiddenError(`${prefixDeleteMessage} ${submodel.idShort}.${submodelElementList.idShort}.${submodelElementList.getSubmodelElements()[0].idShort}.${col1.idShort}.`),
     );
 
-    submodel.deleteColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1.idShort, { ability });
+    submodel.deleteColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1.idShort, { ability, onDelete });
     tableExtension = new TableExtension(submodelElementList);
     expect(tableExtension.columns).toEqual([]);
+    expect(onDelete).toHaveBeenCalledWith(col1);
   });
 
   it("should add row", () => {
@@ -233,13 +236,15 @@ describe("submodel", () => {
     const [row0, row1] = tableExtension.rows;
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const anonymousAbility = security.defineAbilityForSubject(anonymous);
-    expect(() => submodel.deleteRow(IdShortPath.create({ path: submodelElementList.idShort }), row0.idShort, { ability: anonymousAbility })).toThrow(
+    const onDelete = jest.fn();
+
+    expect(() => submodel.deleteRow(IdShortPath.create({ path: submodelElementList.idShort }), row0.idShort, { ability: anonymousAbility, onDelete })).toThrow(
       new ForbiddenError(`${prefixDeleteMessage} ${submodel.idShort}.${submodelElementList.idShort}.${row0.idShort}.`),
     );
-
-    submodel.deleteRow(IdShortPath.create({ path: submodelElementList.idShort }), row0.idShort, { ability });
+    submodel.deleteRow(IdShortPath.create({ path: submodelElementList.idShort }), row0.idShort, { ability, onDelete });
     tableExtension = new TableExtension(submodelElementList);
     expect(tableExtension.rows).toEqual([row1]);
+    expect(onDelete).toHaveBeenCalledWith(row0);
   });
 
   it("should add submodel element by idShortPath", () => {
@@ -294,14 +299,17 @@ describe("submodel", () => {
 
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const anonymousAbility = security.defineAbilityForSubject(anonymous);
-    expect(() => submodel.deleteSubmodelElement(path, { ability: anonymousAbility })).toThrow(
+    const onDelete = jest.fn();
+    expect(() => submodel.deleteSubmodelElement(path, { ability: anonymousAbility, onDelete })).toThrow(
       new ForbiddenError(`${prefixDeleteMessage} ${submodel.idShort}.ProductCarbonFootprint_A1A3.${submodelElement.idShort}.`),
     );
+    expect(onDelete).not.toHaveBeenCalled();
 
-    submodel.deleteSubmodelElement(path, { ability });
+    submodel.deleteSubmodelElement(path, { ability, onDelete });
     expect(submodel.findSubmodelElement(
       IdShortPath.create({ path: `ProductCarbonFootprint_A1A3.${submodelElement.idShort}` }),
     )).toBeUndefined();
+    expect(onDelete).toHaveBeenCalledWith(submodelElement);
   });
 
   it("should get value representation for design submodel", () => {

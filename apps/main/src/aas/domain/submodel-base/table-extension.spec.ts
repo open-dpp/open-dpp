@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { expect, jest } from "@jest/globals";
 import { AasSubmodelElements, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { propertyInputPlainFactory } from "@open-dpp/testing";
@@ -108,8 +108,12 @@ describe("tableExtension", () => {
     table.addRow({ ability });
     table.addRow({ ability });
     expect(table.rows.some(r => r.getSubmodelElements().some(c => c.idShort === col1.idShort))).toBeTruthy();
-    table.deleteColumn(col1.idShort, { ability });
+    const onDelete = jest.fn();
+    table.deleteColumn(col1.idShort, { ability, onDelete });
+    col1.setParentIdShortPath(table.rows[0].getIdShortPath());
     col2.setParentIdShortPath(table.rows[0].getIdShortPath());
+    expect(onDelete).toHaveBeenCalledWith(col1);
+
     expect(table.columns).toEqual([col2]);
     expect(table.rows.some(r => r.getSubmodelElements().some(c => c.idShort === col1.idShort))).toBeFalsy();
   });
@@ -210,17 +214,21 @@ describe("tableExtension", () => {
     const rowToDelete = table.addRow({ ability });
     table.addRow({ ability });
     expect(table.rows.some(r => r.idShort === rowToDelete.idShort)).toBeTruthy();
-    table.deleteRow(rowToDelete.idShort, { ability });
+    const onDelete = jest.fn();
+    table.deleteRow(rowToDelete.idShort, { ability, onDelete });
+    expect(onDelete).toHaveBeenCalledWith(rowToDelete);
     expect(table.rows.some(r => r.idShort === rowToDelete.idShort)).toBeFalsy();
     // If the header row is deleted, the first row should be used as header row.
-    table.deleteRow(table.rows[0].idShort, { ability });
+    const rowToDelete2 = table.rows[0];
+    table.deleteRow(rowToDelete2.idShort, { ability, onDelete });
+    expect(onDelete).toHaveBeenCalledWith(rowToDelete2);
     const expectedCol1 = cloneSubmodelElement(col1, { value: null });
     expectedCol1.setParentIdShortPath(table.rows[0].getIdShortPath());
     const expectedCol2 = cloneSubmodelElement(col2, { value: null });
     expectedCol2.setParentIdShortPath(table.rows[0].getIdShortPath());
     expect(table.columns).toEqual([expectedCol1, expectedCol2]);
     // If the last row is deleted, columns are empty. This a limitation of the AAS specification.
-    table.deleteRow(table.rows[0].idShort, { ability });
+    table.deleteRow(table.rows[0].idShort, { ability, onDelete });
     expect(table.columns).toEqual([]);
   });
 });

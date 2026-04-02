@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { expect, jest } from "@jest/globals";
 import { AasSubmodelElements, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { propertyInputPlainFactory } from "@open-dpp/testing";
@@ -71,10 +71,13 @@ describe("submodelElementList", () => {
     const submodelElement1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "submodelElement1" }));
     submodelElementList.addSubmodelElement(submodelElement1, { ability });
     expect(submodelElementList.getSubmodelElements()).toEqual([submodelElement0, submodelElement1]);
-    submodelElementList.deleteSubmodelElement(submodelElement0.idShort, { ability });
+    const onDelete = jest.fn();
+    submodelElementList.deleteSubmodelElement(submodelElement0.idShort, { ability, onDelete });
+    expect(onDelete).toHaveBeenCalledWith(submodelElement0);
     expect(submodelElementList.getSubmodelElements()).toEqual([submodelElement1]);
 
-    expect(() => submodelElementList.deleteSubmodelElement("unknown", { ability })).toThrow(ValueError);
+    expect(() => submodelElementList.deleteSubmodelElement("unknown", { ability, onDelete })).toThrow(ValueError);
+    expect(onDelete).toHaveBeenCalledTimes(1);
   });
 
   it("should get values readable by specified subject", () => {

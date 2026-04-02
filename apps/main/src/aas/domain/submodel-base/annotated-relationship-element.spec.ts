@@ -1,4 +1,4 @@
-import { expect } from "@jest/globals";
+import { expect, jest } from "@jest/globals";
 import { DataTypeDef, KeyTypes, PermissionKind, Permissions, ReferenceTypes } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
@@ -78,8 +78,11 @@ describe("annotatedRelationshipElement", () => {
     const submodelElement1 = Property.create({ idShort: "prop2", valueType: DataTypeDef.String });
     annotatedRelationshipElement.addSubmodelElement(submodelElement1, { ability });
     expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([submodelElement0, submodelElement1]);
-    annotatedRelationshipElement.deleteSubmodelElement(submodelElement0.idShort, { ability });
+    const onDelete = jest.fn();
+    annotatedRelationshipElement.deleteSubmodelElement(submodelElement0.idShort, { ability, onDelete });
+    expect(onDelete).toHaveBeenCalledWith(submodelElement0);
     expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([submodelElement1]);
-    expect(() => annotatedRelationshipElement.deleteSubmodelElement("unknown", { ability })).toThrow(ValueError);
+    expect(() => annotatedRelationshipElement.deleteSubmodelElement("unknown", { ability, onDelete })).toThrow(ValueError);
+    expect(onDelete).toHaveBeenCalledTimes(1);
   });
 });

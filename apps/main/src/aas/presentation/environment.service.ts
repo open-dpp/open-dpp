@@ -47,6 +47,7 @@ import { LanguageText } from "../domain/common/language-text";
 import { ConceptDescription } from "../domain/concept-description";
 import { Environment } from "../domain/environment";
 import { ExpandedEnvironment } from "../domain/expanded-environment";
+import { Security } from "../domain/security/security";
 import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { ISubmodelElement, parseSubmodelElement } from "../domain/submodel-base/submodel-base";
@@ -86,8 +87,13 @@ export class EnvironmentService {
   }
 
   async loadAbility(environment: Environment, subjet: SubjectAttributes) {
+    const security = await this.loadSecurity(environment);
+    return security.defineAbilityForSubject(subjet);
+  }
+
+  private async loadSecurity(environment: Environment): Promise<Security> {
     const aas = await this.getFirstAssetAdministrationShell(environment);
-    return aas.security.defineAbilityForSubject(subjet);
+    return aas.security;
   }
 
   async createEnvironment(environmentData: { assetAdministrationShells: AssetAdministrationShellCreateDto[] }, isTemplate: boolean): Promise<Environment> {
@@ -195,9 +201,22 @@ export class EnvironmentService {
 
   async deleteSubmodelElement(environment: Environment, submodelId: string, idShortPath: IdShortPath, subject: SubjectAttributes): Promise<void> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId.toString());
-    const ability = await this.loadAbility(environment, subject);
-    submodel.deleteSubmodelElement(idShortPath, { ability });
-    await this.submodelRepository.save(submodel);
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+    const ability = aas.security.defineAbilityForSubject(subject);
+    submodel.deleteSubmodelElement(
+      idShortPath,
+      { ability, onDelete: s => aas.security.deletePoliciesByObject(s.getIdShortPath()) },
+    );
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
+        await this.aasRepository.save(aas, { session });
+      });
+    }
+    finally {
+      await session.endSession();
+    }
   }
 
   private async findSubmodelByIdOrFail(environment: Environment, submodelId: string): Promise<Submodel> {
@@ -289,10 +308,24 @@ export class EnvironmentService {
 
   async deleteColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfColumn: string, subject: SubjectAttributes): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, subject);
-    const modifiedSubmodelElementList = submodel.deleteColumn(idShortPath, idShortOfColumn, { ability });
-    await this.submodelRepository.save(submodel);
-    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability, context: { fullParentIdShortPath: IdShortPath.create({ path: submodel.idShort }) } }));
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+    const ability = aas.security.defineAbilityForSubject(subject);
+    const modifiedSubmodelElementList = submodel.deleteColumn(
+      idShortPath,
+      idShortOfColumn,
+      { ability, onDelete: s => aas.security.deletePoliciesByObject(s.getIdShortPath()) },
+    );
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
+        await this.aasRepository.save(aas, { session });
+      });
+      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability, context: { fullParentIdShortPath: IdShortPath.create({ path: submodel.idShort }) } }));
+    }
+    finally {
+      await session.endSession();
+    }
   }
 
   async addRow(environment: Environment, submodelId: string, idShortPath: IdShortPath, subject: SubjectAttributes, position?: number): Promise<SubmodelElementListResponseDto> {
@@ -305,10 +338,24 @@ export class EnvironmentService {
 
   async deleteRow(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfRow: string, subject: SubjectAttributes): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const ability = await this.loadAbility(environment, subject);
-    const modifiedSubmodelElementList = submodel.deleteRow(idShortPath, idShortOfRow, { ability });
-    await this.submodelRepository.save(submodel);
-    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability, context: { fullParentIdShortPath: IdShortPath.create({ path: submodel.idShort }) } }));
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+    const ability = aas.security.defineAbilityForSubject(subject);
+    const modifiedSubmodelElementList = submodel.deleteRow(
+      idShortPath,
+      idShortOfRow,
+      { ability, onDelete: s => aas.security.deletePoliciesByObject(s.getIdShortPath()) },
+    );
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.submodelRepository.save(submodel, { session });
+        await this.aasRepository.save(aas, { session });
+      });
+      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability, context: { fullParentIdShortPath: IdShortPath.create({ path: submodel.idShort }) } }));
+    }
+    finally {
+      await session.endSession();
+    }
   }
 
   async getSubmodelElementById(environment: Environment, submodelId: string, idShortPath: IdShortPath, subject: SubjectAttributes): Promise<SubmodelElementResponseDto> {

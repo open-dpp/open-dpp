@@ -411,7 +411,7 @@ describe("environmentService", () => {
     await aasRepository.save(assetAdministrationShell);
     const row1 = submodelElementList.getSubmodelElements()[0];
     const environment = Environment.create({ assetAdministrationShells: [assetAdministrationShell.id], submodels: [submodel1.id] });
-    return { environment, admin, member, submodel1, submodelElementList, row1, col1, listIdShortPath };
+    return { security, environment, admin, member, submodel1, submodelElementList, row1, col1, listIdShortPath };
   }
 
   it("should modify column", async () => {
@@ -433,7 +433,6 @@ describe("environmentService", () => {
 
   it("should delete column", async () => {
     const { environment, admin, member, submodel1, row1, col1, listIdShortPath } = await createEnvironmentWithList();
-
     await expect(
       environmentService.deleteColumn(environment, submodel1.id, listIdShortPath, col1.idShort, member),
     ).rejects.toThrow(new ForbiddenError(`Missing permissions to delete element section1.list.${row1.idShort}.col1.`));

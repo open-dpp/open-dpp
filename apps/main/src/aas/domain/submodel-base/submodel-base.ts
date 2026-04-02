@@ -77,8 +77,9 @@ export function parseSubmodelElement(submodelBase: any): ISubmodelElement {
 
 export interface DeleteOptions {
   ability: AasAbility;
+  onDelete: (submodelElement: ISubmodelElement) => void;
 }
-export function deleteSubmodelElementOrFail(submodelElements: ISubmodelElement[], idShort: string, { ability }: DeleteOptions): void {
+export function deleteSubmodelElementOrFail(submodelElements: ISubmodelElement[], idShort: string, { ability, onDelete }: DeleteOptions): void {
   const foundIndex = submodelElements.findIndex(e => e.idShort === idShort);
   if (foundIndex === -1) {
     throw new ValueError(`Cannot delete submodel element with idShort ${idShort}, since it does not exist.`);
@@ -89,6 +90,7 @@ export function deleteSubmodelElementOrFail(submodelElements: ISubmodelElement[]
   }
 
   submodelElements.splice(foundIndex, 1);
+  onDelete(submodelElementToDelete);
 }
 
 export function setParentIdShortPaths(submodelBase: ISubmodelBase, idShort: string, parentIdShortPath?: IdShortPath): void {
