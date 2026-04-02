@@ -3,6 +3,7 @@
     "required": "Erforderlich"
   },
   "common": {
+    "reset": "Zurücksetzen",
     "untitled": "Unbenannt",
     "id": "ID",
     "identification": "Identifikation",
@@ -63,6 +64,14 @@
     }
   },
   "aasEditor": {
+    "security": {
+      "inheritedPermission": "Berechtigung von einem übergeordneten Abschnitt geerbt",
+      "permissions": "Berechtigungen",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "create": "Erstellen",
+      "read": "Lesen"
+    },
     "productImages": "Produktbilder",
     "formLabels": {
       "value": "Wert",
@@ -321,12 +330,11 @@
     "invite": "Einladen",
     "inviteUser": "Benutzer einladen",
     "inviteUserSuccess": "Der Benutzer wurde erfolgreich eingeladen.",
-    "member": "Mitglieder",
+    "member": "Mitglied | Mitglieder",
     "memberListDescription": "Eine Liste von allen Mitgliedern in dieser Organisation.",
     "memberName": "Name",
     "memberRole": "Rolle",
-    "memberAdmin": "Admin",
-    "memberCreator": "Ersteller",
+    "owner": "Eigentümer*in",
     "addUser": "Benutzer hinzufügen",
     "form": {
       "id": "ID",
@@ -459,6 +467,8 @@
     }
   },
   "user": {
+    "admin": "Administrator*in",
+    "public": "Öffentlich",
     "profile": "Dein Profil",
     "personalInformation": "Persönliche Informationen",
     "logout": "Abmelden",

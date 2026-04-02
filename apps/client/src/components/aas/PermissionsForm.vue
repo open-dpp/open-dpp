@@ -2,14 +2,23 @@
 import type { PermissionType } from "@open-dpp/dto";
 import type { IAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
 import type { Subject } from "../../lib/aas-security.ts";
-import { Permissions } from "@open-dpp/dto";
+import { Permissions, UserRoleDto } from "@open-dpp/dto";
 
 import { computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoleHierarchy } from "../../composables/role-hierarchy.ts";
 import { useUserStore } from "../../stores/user.ts";
 
-const { getPermissions, editPermissions, resetPermissions, ignoredPermissionOptions }
-  = defineProps<Omit<IAasPermissionsForm, "savePermissions"> & { ignoredPermissionOptions?: PermissionType[] }>();
+const {
+  getPermissions,
+  editPermissions,
+  resetPermissions,
+  ignoredPermissionOptions,
+} = defineProps<
+  Omit<IAasPermissionsForm, "savePermissions"> & {
+    ignoredPermissionOptions?: PermissionType[];
+  }
+>();
 
 const { asSubject } = useUserStore();
 const { getVisibleRoles, canEditPermissionsOfRole } = useRoleHierarchy();
@@ -28,21 +37,45 @@ const canEditPermissions = computed(() => {
   return canEditPermissionsOfRole(asSubject(), selectedRole.value);
 });
 
-const permissionOptions = ref([
-  { name: "Read", key: Permissions.Read },
-  { name: "Create", key: Permissions.Create },
-  { name: "Edit", key: Permissions.Edit },
-  { name: "Delete", key: Permissions.Delete },
-].filter(permission => ignoredPermissionOptions === undefined || !ignoredPermissionOptions.includes(permission.key)));
+const { t } = useI18n();
+
+const permissionOptions = computed(() => {
+  let options = [{ name: t("aasEditor.security.read"), key: Permissions.Read }];
+
+  if (selectedRole.value.userRole !== UserRoleDto.ANONYMOUS) {
+    options.push(
+      { name: t("aasEditor.security.create"), key: Permissions.Create },
+      { name: t("aasEditor.security.edit"), key: Permissions.Edit },
+      { name: t("aasEditor.security.delete"), key: Permissions.Delete },
+    );
+  }
+  if (ignoredPermissionOptions) {
+    options = options.filter(
+      permission => !ignoredPermissionOptions.includes(permission.key),
+    );
+  }
+
+  return options;
+});
+
+const disableResetButton = ref<boolean>(true);
 
 function onPermissionChange(newPermissions: PermissionType[]) {
   editPermissions(newPermissions, selectedRole.value);
+  disableResetButton.value = false;
+}
+
+function onResetPermissions() {
+  resetPermissions(selectedRole.value);
+  disableResetButton.value = true;
 }
 </script>
 
 <template>
   <div class="flex flex-col gap-2">
-    <span class="text-xl font-bold">Permissions</span>
+    <span class="text-xl font-bold">{{
+      t("aasEditor.security.permissions")
+    }}</span>
     <div class="flex flex-row gap-2">
       <Select
         v-model="selectedRole"
@@ -53,9 +86,9 @@ function onPermissionChange(newPermissions: PermissionType[]) {
         class="w-full md:w-56"
       />
       <Button
-        :disabled="!canEditPermissions"
-        label="Reset"
-        @click="resetPermissions(selectedRole)"
+        :disabled="!canEditPermissions || disableResetButton"
+        :label="t('common.reset')"
+        @click="onResetPermissions"
       />
     </div>
     <div class="p-2">
@@ -69,10 +102,12 @@ function onPermissionChange(newPermissions: PermissionType[]) {
           :input-id="permission.key"
           :disabled="!canEditPermissions"
           name="permissions"
-          :value="permission.name"
+          :value="permission.key"
           @update:model-value="onPermissionChange"
         />
-        <label :for="permission.key">{{ permission.name }}</label>
+        <label :for="permission.key">{{
+          `${permission.name}${permissions.inheritsPermissionsOf !== null ? ` (${t("aasEditor.security.inheritedPermission")})` : ""}`
+        }}</label>
       </div>
     </div>
   </div>

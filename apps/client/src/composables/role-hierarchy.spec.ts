@@ -1,6 +1,12 @@
 import { MemberRoleDto, UserRoleDto } from "@open-dpp/dto";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { useRoleHierarchy } from "./role-hierarchy.ts";
+
+vi.mock("vue-i18n", () => ({
+  useI18n: () => ({
+    t: (key: string) => key,
+  }),
+}));
 
 describe("useRoleHierarchy", () => {
   it("should return editable roles", () => {
@@ -13,15 +19,15 @@ describe("useRoleHierarchy", () => {
     ).toEqual([
       {
         key: { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.OWNER },
-        name: "Owner",
+        name: "organizations.owner",
       },
       {
         key: { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER },
-        name: "Member",
+        name: "organizations.member",
       },
       {
         key: { userRole: UserRoleDto.ANONYMOUS },
-        name: "Public",
+        name: "user.public",
       },
     ]);
 

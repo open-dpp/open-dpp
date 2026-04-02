@@ -4,19 +4,21 @@ import {
   UserRoleDto,
 
 } from "@open-dpp/dto";
+import { useI18n } from "vue-i18n";
 
 export function useRoleHierarchy() {
+  const { t } = useI18n();
   const roleHierarchy = [
-    { name: "Admin", key: { userRole: UserRoleDto.ADMIN } }, // instance admin, the organization role is not relevant
+    { name: t("user.admin"), key: { userRole: UserRoleDto.ADMIN } }, // instance admin, the organization role is not relevant
     {
-      name: "Owner",
+      name: t("organizations.owner"),
       key: { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.OWNER },
     }, // organization owner
     {
-      name: "Member",
+      name: t("organizations.member"),
       key: { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER },
     }, // organization member
-    { name: "Public", key: { userRole: UserRoleDto.ANONYMOUS } }, // anonymous user without an account
+    { name: t("user.public"), key: { userRole: UserRoleDto.ANONYMOUS } }, // anonymous user without an account
   ];
 
   function getRoleIndex(subject: Subject) {

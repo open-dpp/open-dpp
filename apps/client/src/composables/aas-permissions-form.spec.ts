@@ -27,6 +27,12 @@ vi.mock("../stores/user.ts", () => ({
   }),
 }));
 
+vi.mock("vue-i18n", () => ({
+  useI18n: () => ({
+    t: (key: string) => key,
+  }),
+}));
+
 describe("aasPermissionsForm composable", () => {
   const mountedWrappers: Array<ReturnType<typeof mount>> = [];
 
