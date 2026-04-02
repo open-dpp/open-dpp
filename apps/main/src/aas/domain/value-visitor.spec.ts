@@ -282,8 +282,8 @@ describe("value-visitor", () => {
     const entity = Entity.create({
       idShort: "entity",
       entityType: EntityType.SelfManagedEntity,
-      statements: [Property.create({ idShort: "prop1", valueType: DataTypeDef.String, value: "blub1" })],
     });
+    entity.addSubmodelElement(Property.create({ idShort: "prop1", valueType: DataTypeDef.String, value: "blub1" }));
 
     security.addPolicy(member, IdShortPath.create({ path: "entity.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
 

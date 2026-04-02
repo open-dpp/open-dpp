@@ -27,25 +27,21 @@ import { Range } from "./submodel-base/range";
 import { ReferenceElement } from "./submodel-base/reference-element";
 import { RelationshipElement } from "./submodel-base/relationship-element";
 import { Submodel } from "./submodel-base/submodel";
-import { IdShortPath } from "./submodel-base/submodel-base";
+import { IdShortPath, ISubmodelBase } from "./submodel-base/submodel-base";
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
 
 export interface ValueVisitorOptions { ability: AasAbility }
-export interface ValueVisitorContextType { fullParentIdShortPath: IdShortPath }
+export interface ValueVisitorContextType { }
 
 export type JsonType = z.infer<typeof z.json>;
 export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType> {
   constructor(private readonly options: ValueVisitorOptions) {
   }
 
-  private buildFullIdShortPath(element: any, context?: ValueVisitorContextType) {
-    return context ? context.fullParentIdShortPath.addPathSegment(element.idShort) : IdShortPath.create({ path: element.idShort });
-  }
-
-  private filterByAbility(plainToFilter: any, element: any, context?: ValueVisitorContextType): any {
-    const idShortPath = this.buildFullIdShortPath(element, context);
+  private filterByAbility(plainToFilter: any, element: ISubmodelBase): any {
+    const idShortPath = element.getIdShortPath();
     if (this.options?.ability) {
       if (!this.options.ability.can(Permissions.Read, idShortPath)) {
         return undefined;
@@ -64,8 +60,8 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
     );
   }
 
-  visitAnnotatedRelationshipElement(element: AnnotatedRelationshipElement, context?: ValueVisitorContextType): JsonType {
-    return this.filterByAbility({ first: element.first.accept(this, context), second: element.second.accept(this, context) }, element, context);
+  visitAnnotatedRelationshipElement(element: AnnotatedRelationshipElement, _context?: ValueVisitorContextType): JsonType {
+    return this.filterByAbility({ first: element.first.accept(this), second: element.second.accept(this) }, element);
   }
 
   visitAssetAdministrationShell(_element: AssetAdministrationShell, _context: any): JsonType {
@@ -80,9 +76,9 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
     );
   }
 
-  visitBlob(element: Blob, context?: ValueVisitorContextType): JsonType {
+  visitBlob(element: Blob, _context?: ValueVisitorContextType): JsonType {
     const plain = element.value ? { contentType: element.contentType, value: Buffer.from(element.value).toString("utf-8") } : { contentType: element.contentType, value: undefined };
-    return this.filterByAbility(plain, element, context);
+    return this.filterByAbility(plain, element);
   }
 
   visitConceptDescription(_element: ConceptDescription, _context: any): JsonType {
@@ -97,17 +93,16 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
     );
   }
 
-  visitEntity(element: Entity, context?: ValueVisitorContextType): JsonType {
-    const childContext = { fullParentIdShortPath: this.buildFullIdShortPath(element, context) };
-    const statements = element.statements.map(st => this.removeUndefined({ [st.idShort]: st.accept(this, childContext) })).filter(s => !isEmptyObject(s));
+  visitEntity(element: Entity, _context?: ValueVisitorContextType): JsonType {
+    const statements = element.statements.map(st => this.removeUndefined({ [st.idShort]: st.accept(this) })).filter(s => !isEmptyObject(s));
 
     const plain = {
       entityType: element.entityType,
       globalAssetId: element.globalAssetId,
       statements,
-      specificAssetIds: element.specificAssetIds.map(specificAssetId => specificAssetId.accept(this, childContext)),
+      specificAssetIds: element.specificAssetIds.map(specificAssetId => specificAssetId.accept(this)),
     };
-    return statements.length > 0 ? plain : this.filterByAbility(plain, element, context);
+    return statements.length > 0 ? plain : this.filterByAbility(plain, element);
   }
 
   visitExtension(_element: Extension, _context: any): JsonType {
@@ -116,8 +111,8 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
     );
   }
 
-  visitFile(element: File, context?: ValueVisitorContextType): JsonType {
-    return this.filterByAbility({ contentType: element.contentType, value: element.value }, element, context);
+  visitFile(element: File, _context?: ValueVisitorContextType): JsonType {
+    return this.filterByAbility({ contentType: element.contentType, value: element.value }, element);
   }
 
   visitKey(element: Key, _context: any): JsonType {
@@ -128,13 +123,13 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
     return { [element.language]: element.text };
   }
 
-  visitMultiLanguageProperty(element: MultiLanguageProperty, context?: ValueVisitorContextType): JsonType {
-    const plain = element.value.map(v => v.accept(this, context));
-    return this.filterByAbility(plain, element, context);
+  visitMultiLanguageProperty(element: MultiLanguageProperty, _context?: ValueVisitorContextType): JsonType {
+    const plain = element.value.map(v => v.accept(this));
+    return this.filterByAbility(plain, element);
   }
 
-  visitProperty(element: Property, context?: ValueVisitorContextType): JsonType {
-    return this.filterByAbility(element.value, element, context);
+  visitProperty(element: Property, _context?: ValueVisitorContextType): JsonType {
+    return this.filterByAbility(element.value, element);
   }
 
   visitQualifier(_element: Qualifier, _context: any): JsonType {
@@ -143,27 +138,27 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
     );
   }
 
-  visitRange(element: Range, context?: ValueVisitorContextType): JsonType {
-    return this.filterByAbility({ min: element.min, max: element.max }, element, context);
+  visitRange(element: Range, _context?: ValueVisitorContextType): JsonType {
+    return this.filterByAbility({ min: element.min, max: element.max }, element);
   }
 
-  visitReference(element: Reference, context?: ValueVisitorContextType): JsonType {
+  visitReference(element: Reference, _context?: ValueVisitorContextType): JsonType {
     return {
       type: element.type,
-      ...(element.referredSemanticId && { referredSemanticId: element.referredSemanticId.accept(this, context) }),
-      keys: element.keys.map(key => key.accept(this, context)),
+      ...(element.referredSemanticId && { referredSemanticId: element.referredSemanticId.accept(this) }),
+      keys: element.keys.map(key => key.accept(this)),
     };
   }
 
-  visitReferenceElement(element: ReferenceElement, context?: ValueVisitorContextType): JsonType {
-    const plain = element.value?.accept(this, context) ?? null;
+  visitReferenceElement(element: ReferenceElement, _context?: ValueVisitorContextType): JsonType {
+    const plain = element.value?.accept(this) ?? null;
 
-    return this.filterByAbility(plain, element, context);
+    return this.filterByAbility(plain, element);
   }
 
-  visitRelationshipElement(element: RelationshipElement, context?: ValueVisitorContextType): JsonType {
-    const plain = { first: element.first.accept(this, context), second: element.second.accept(this, context) };
-    return this.filterByAbility(plain, element, context);
+  visitRelationshipElement(element: RelationshipElement, _context?: ValueVisitorContextType): JsonType {
+    const plain = { first: element.first.accept(this), second: element.second.accept(this) };
+    return this.filterByAbility(plain, element);
   }
 
   visitResource(_element: Resource, _context: any): JsonType {
@@ -178,10 +173,10 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
     };
   }
 
-  visitSubmodel(element: Submodel, context?: ValueVisitorContextType): JsonType {
+  visitSubmodel(element: Submodel, _context?: ValueVisitorContextType): JsonType {
     const value: { [key: string]: any } = {};
     for (const submodelElement of element.submodelElements) {
-      value[submodelElement.idShort] = submodelElement.accept(this, { fullParentIdShortPath: this.buildFullIdShortPath(element, context) });
+      value[submodelElement.idShort] = submodelElement.accept(this);
     }
 
     const cleaned = this.removeUndefined(value);
@@ -193,16 +188,16 @@ export class ValueVisitor implements IVisitor<ValueVisitorContextType, JsonType>
     return cleaned;
   }
 
-  visitSubmodelElementCollection(element: SubmodelElementCollection, context?: ValueVisitorContextType): JsonType {
+  visitSubmodelElementCollection(element: SubmodelElementCollection, _context?: ValueVisitorContextType): JsonType {
     const value: { [key: string]: any } = {};
     for (const submodelElement of element.value) {
-      value[submodelElement.idShort] = submodelElement.accept(this, { fullParentIdShortPath: this.buildFullIdShortPath(element, context) });
+      value[submodelElement.idShort] = submodelElement.accept(this);
     }
     const cleaned = this.removeUndefined(value);
     return isEmptyObject(cleaned) ? undefined : cleaned;
   }
 
-  visitSubmodelElementList(element: SubmodelElementList, context?: ValueVisitorContextType): JsonType {
-    return element.value.map(v => v.accept(this, { fullParentIdShortPath: this.buildFullIdShortPath(element, context) })).filter(e => e !== undefined);
+  visitSubmodelElementList(element: SubmodelElementList, _context?: ValueVisitorContextType): JsonType {
+    return element.value.map(v => v.accept(this)).filter(e => e !== undefined);
   }
 }
