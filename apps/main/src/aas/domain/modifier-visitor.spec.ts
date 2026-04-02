@@ -45,9 +45,10 @@ describe("modifier visitor", () => {
 
   const prefixPermissionError = "Missing permissions to modify element";
 
+  const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+
   it("should modify submodel", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
 
     const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames(), description: existingDescriptions() });
     security.addPolicy(
@@ -81,7 +82,12 @@ describe("modifier visitor", () => {
   }])("should modify submodel element with type $type", ({ item, modifications }) => {
     const security = Security.create({});
     const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames(), description: existingDescriptions() });
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: `${submodel.idShort}` }),
+      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow })],
+    );
 
     security.addPolicy(
       member,
@@ -90,7 +96,7 @@ describe("modifier visitor", () => {
     );
 
     const ability = security.defineAbilityForSubject(member);
-    submodel.addSubmodelElement(item);
+    submodel.addSubmodelElement(item, { ability });
     submodel.modifySubmodelElement({ idShort: item.idShort, ...modifications }, IdShortPath.create({ path: item.idShort }), { ability });
     expect(item.toPlain()).toMatchObject(
       {
@@ -106,20 +112,23 @@ describe("modifier visitor", () => {
     const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames(), description: existingDescriptions() });
 
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
-
     security.addPolicy(
       member,
       IdShortPath.create({ path: `${submodel.idShort}` }),
-      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })],
+      [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+      ],
     );
+    const ability = security.defineAbilityForSubject(member);
 
     const listItem = SubmodelElementList.create({ idShort: "list", displayName: existingDisplayNames(), description: existingDescriptions(), typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
-    submodel.addSubmodelElement(listItem);
+    submodel.addSubmodelElement(listItem, { ability });
     const collection = SubmodelElementCollection.create({ idShort: "collection", displayName: existingDisplayNames(), description: existingDescriptions() });
-    listItem.addSubmodelElement(collection);
+    listItem.addSubmodelElement(collection, { ability });
     const property = Property.create({ idShort: "prop1", displayName: existingDisplayNames(), description: existingDescriptions(), valueType: DataTypeDef.String });
-    collection.addSubmodelElement(property);
+    collection.addSubmodelElement(property, { ability });
 
     const modifications = {
       idShort: "list",
@@ -127,7 +136,6 @@ describe("modifier visitor", () => {
       description: newDescriptions,
       value: [{ idShort: "collection", displayName: newDisplayNames, value: [{ idShort: "prop1", value: "prop New" }] }],
     };
-    const ability = security.defineAbilityForSubject(member);
 
     submodel.modifySubmodelElement(modifications, IdShortPath.create({ path: "list" }), { ability });
     expect(listItem.displayName).toEqual(newDisplayNames.map(LanguageText.fromPlain));
@@ -138,6 +146,17 @@ describe("modifier visitor", () => {
 
   it("should modify reference element", () => {
     const submodel = Submodel.create({ id: "s1", idShort: "s1", displayName: existingDisplayNames(), description: existingDescriptions() });
+    const security = Security.create({});
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: `${submodel.idShort}` }),
+      [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+      ],
+    );
+    const ability = security.defineAbilityForSubject(member);
     const referenceElement = ReferenceElement.create({
       idShort: "ref",
       displayName: existingDisplayNames(),
@@ -147,7 +166,7 @@ describe("modifier visitor", () => {
         keys: [Key.create({ type: KeyTypes.GlobalReference, value: "https://example.com/ref/1234567890" })],
       }),
     });
-    submodel.addSubmodelElement(referenceElement);
+    submodel.addSubmodelElement(referenceElement, { ability });
     const modifications = {
       idShort: "ref",
       displayName: newDisplayNames,
@@ -158,17 +177,6 @@ describe("modifier visitor", () => {
       },
     };
     const path = IdShortPath.create({ path: "ref" });
-
-    const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
-
-    security.addPolicy(
-      member,
-      IdShortPath.create({ path: `${submodel.idShort}` }),
-      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })],
-    );
-
-    const ability = security.defineAbilityForSubject(member);
 
     submodel.modifySubmodelElement(modifications, path, { ability });
     expect(referenceElement.displayName).toEqual(newDisplayNames.map(LanguageText.fromPlain));

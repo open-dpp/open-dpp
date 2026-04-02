@@ -246,9 +246,10 @@ export class EnvironmentService {
     }));
   }
 
-  async addSubmodelElement(environment: Environment, submodelId: string, submodelElementPlain: SubmodelElementRequestDto, idShortPath?: IdShortPath): Promise<SubmodelElementResponseDto> {
+  async addSubmodelElement(environment: Environment, submodelId: string, submodelElementPlain: SubmodelElementRequestDto, subject: SubjectAttributes, idShortPath?: IdShortPath): Promise<SubmodelElementResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const submodelElement = submodel.addSubmodelElement(parseSubmodelElement(submodelElementPlain), { idShortPath });
+    const ability = await this.loadAbility(environment, subject);
+    const submodelElement = submodel.addSubmodelElement(parseSubmodelElement(submodelElementPlain), { idShortPath, ability });
     await this.submodelRepository.save(submodel);
     return SubmodelElementSchema.parse(submodelElement.toPlain());
   }
@@ -269,9 +270,10 @@ export class EnvironmentService {
     return SubmodelElementSchema.parse(submodelElement.toPlain({ ability, context: { fullParentIdShortPath: IdShortPath.create({ path: submodel.idShort }) } }));
   }
 
-  async addColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, column: ISubmodelElement, position?: number): Promise<SubmodelElementListResponseDto> {
+  async addColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, column: ISubmodelElement, subject: SubjectAttributes, position?: number): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const modifiedSubmodelElementList = submodel.addColumn(idShortPath, column, position);
+    const ability = await this.loadAbility(environment, subject);
+    const modifiedSubmodelElementList = submodel.addColumn(idShortPath, column, { position, ability });
     await this.submodelRepository.save(submodel);
     return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain());
   }
@@ -292,9 +294,10 @@ export class EnvironmentService {
     return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability, context: { fullParentIdShortPath: IdShortPath.create({ path: submodel.idShort }) } }));
   }
 
-  async addRow(environment: Environment, submodelId: string, idShortPath: IdShortPath, position?: number): Promise<SubmodelElementListResponseDto> {
+  async addRow(environment: Environment, submodelId: string, idShortPath: IdShortPath, subject: SubjectAttributes, position?: number): Promise<SubmodelElementListResponseDto> {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-    const modifiedSubmodelElement = submodel.addRow(idShortPath, position);
+    const ability = await this.loadAbility(environment, subject);
+    const modifiedSubmodelElement = submodel.addRow(idShortPath, { position, ability });
     await this.submodelRepository.save(submodel);
     return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain());
   }

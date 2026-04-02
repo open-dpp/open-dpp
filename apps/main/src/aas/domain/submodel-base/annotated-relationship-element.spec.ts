@@ -14,15 +14,22 @@ import { IdShortPath } from "./submodel-base";
 
 describe("annotatedRelationshipElement", () => {
   it("should add submodel element", () => {
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    security.addPolicy(member, IdShortPath.create({ path: "idShort" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+    ]);
     const annotatedRelationshipElement = AnnotatedRelationshipElement.create({
       idShort: "idShort",
       first: Reference.create({ type: ReferenceTypes.ExternalReference, keys: [] }),
       second: Reference.create({ type: ReferenceTypes.ExternalReference, keys: [] }),
     });
+    const ability = security.defineAbilityForSubject(member);
     const submodelElement = Property.create({ idShort: "prop1", valueType: DataTypeDef.String });
-    annotatedRelationshipElement.addSubmodelElement(submodelElement);
+    annotatedRelationshipElement.addSubmodelElement(submodelElement, { ability });
     expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([submodelElement]);
-    expect(() => annotatedRelationshipElement.addSubmodelElement(submodelElement)).toThrow(new ValueError(
+    expect(() => annotatedRelationshipElement.addSubmodelElement(submodelElement, { ability })).toThrow(new ValueError(
       "Submodel element with idShort prop1 already exists",
     ));
   });
@@ -60,14 +67,15 @@ describe("annotatedRelationshipElement", () => {
     const security = Security.create({});
     const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
     security.addPolicy(member, IdShortPath.create({ path: "idShort" }), [
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
       Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
       Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
     ]);
     const ability = security.defineAbilityForSubject(member);
     const submodelElement0 = Property.create({ idShort: "prop1", valueType: DataTypeDef.String });
-    annotatedRelationshipElement.addSubmodelElement(submodelElement0);
+    annotatedRelationshipElement.addSubmodelElement(submodelElement0, { ability });
     const submodelElement1 = Property.create({ idShort: "prop2", valueType: DataTypeDef.String });
-    annotatedRelationshipElement.addSubmodelElement(submodelElement1);
+    annotatedRelationshipElement.addSubmodelElement(submodelElement1, { ability });
     expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([submodelElement0, submodelElement1]);
     annotatedRelationshipElement.deleteSubmodelElement(submodelElement0.idShort, { ability });
     expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([submodelElement1]);

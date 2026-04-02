@@ -13,14 +13,21 @@ import { IdShortPath } from "./submodel-base";
 
 describe("entity", () => {
   it("should add submodel element", () => {
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    security.addPolicy(member, IdShortPath.create({ path: "idShort" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+    ]);
+    const ability = security.defineAbilityForSubject(member);
     const entity = Entity.create({
       idShort: "idShort",
       entityType: EntityType.CoManagedEntity,
     });
     const submodelElement = Property.fromPlain(propertyInputPlainFactory.build());
-    entity.addSubmodelElement(submodelElement);
+    entity.addSubmodelElement(submodelElement, { ability });
     expect(entity.getSubmodelElements()).toEqual([submodelElement]);
-    expect(() => entity.addSubmodelElement(submodelElement)).toThrow(new ValueError(
+    expect(() => entity.addSubmodelElement(submodelElement, { ability })).toThrow(new ValueError(
       `Submodel element with idShort ${submodelElement.idShort} already exists`,
     ));
   });

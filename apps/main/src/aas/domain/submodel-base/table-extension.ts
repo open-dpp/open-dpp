@@ -2,13 +2,9 @@ import { randomUUID } from "node:crypto";
 import { AasSubmodelElements } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { ModifierVisitor, ModifierVisitorOptions } from "../modifier-visitor";
-import { cloneSubmodelElement, DeleteOptions, ISubmodelElement } from "./submodel-base";
+import { AddOptions, cloneSubmodelElement, DeleteOptions, ISubmodelElement } from "./submodel-base";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
-
-interface TableModificationOptions {
-  position: number;
-}
 
 export class TableExtension {
   private headerRow: ISubmodelElement | undefined;
@@ -37,9 +33,9 @@ export class TableExtension {
     return this.data.getSubmodelElements();
   }
 
-  addColumn(column: ISubmodelElement, options?: TableModificationOptions): void {
+  addColumn(column: ISubmodelElement, options: AddOptions): void {
     if (!this.headerRow) {
-      this.addHeaderRow();
+      this.addHeaderRow(options);
     }
     this.rows.forEach((row) => {
       row.addSubmodelElement(cloneSubmodelElement(column), options);
@@ -70,24 +66,24 @@ export class TableExtension {
     return `row_${randomUUID()}`;
   }
 
-  private addHeaderRow(): ISubmodelElement {
+  private addHeaderRow(options: AddOptions): ISubmodelElement {
     this.headerRow = SubmodelElementCollection.create({ idShort: this.generateRowIdShort(), value: [] });
-    this.data.addSubmodelElement(this.headerRow);
+    this.data.addSubmodelElement(this.headerRow, options);
     return this.headerRow;
   }
 
-  addRow(options?: TableModificationOptions) {
+  addRow(options: AddOptions) {
     if (!this.headerRow) {
-      return this.addHeaderRow();
+      return this.addHeaderRow(options);
     }
     else {
       const newRow = SubmodelElementCollection.create({ idShort: this.generateRowIdShort() });
-
+      this.data.addSubmodelElement(newRow, options);
       this.columns.forEach((column) => {
         const columnCopy = cloneSubmodelElement(column, { value: undefined });
-        newRow.addSubmodelElement(columnCopy);
+        newRow.addSubmodelElement(columnCopy, { ability: options.ability });
       });
-      this.data.addSubmodelElement(newRow, options);
+
       if (options?.position === 0) {
         this.setHeaderRow();
       }

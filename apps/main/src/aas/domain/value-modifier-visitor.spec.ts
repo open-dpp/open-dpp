@@ -34,7 +34,11 @@ describe("value modifier visitor", () => {
     security.addPolicy(
       member,
       IdShortPath.create({ path: submodel.idShort }),
-      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })],
+      [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+      ],
     );
 
     const ability = security.defineAbilityForSubject(member);
@@ -45,7 +49,7 @@ describe("value modifier visitor", () => {
       valueType: DataTypeDef.String,
       value: "old",
     });
-    submodel.addSubmodelElement(property);
+    submodel.addSubmodelElement(property, { ability });
     const modifications = "value new";
     submodel.modifyValueOfSubmodelElement(modifications, IdShortPath.create({ path: "prop1" }), { ability });
     expect(property.value).toEqual("value new");
@@ -65,7 +69,11 @@ describe("value modifier visitor", () => {
     security.addPolicy(
       member,
       IdShortPath.create({ path: submodel.idShort }),
-      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })],
+      [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+      ],
     );
     const ability = security.defineAbilityForSubject(member);
 
@@ -75,7 +83,7 @@ describe("value modifier visitor", () => {
       contentType: "image/png",
       value: "idToFile",
     });
-    submodel.addSubmodelElement(file);
+    submodel.addSubmodelElement(file, { ability });
     let modifications: any = { value: "value new", contentType: "image/jpeg" };
 
     submodel.modifyValueOfSubmodelElement(modifications, IdShortPath.create({ path: "file" }), { ability });
@@ -100,7 +108,11 @@ describe("value modifier visitor", () => {
     security.addPolicy(
       member,
       IdShortPath.create({ path: submodel.idShort }),
-      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })],
+      [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+      ],
     );
     const ability = security.defineAbilityForSubject(member);
 
@@ -118,7 +130,7 @@ describe("value modifier visitor", () => {
       }),
     });
     const path = IdShortPath.create({ path: "ref" });
-    submodel.addSubmodelElement(referenceElement);
+    submodel.addSubmodelElement(referenceElement, { ability });
     let modifications: any = { keys: [{ type: KeyTypes.GlobalReference, value: "https://example.com/ref/other" }] };
     submodel.modifyValueOfSubmodelElement(modifications, path, { ability });
 
@@ -149,12 +161,20 @@ describe("value modifier visitor", () => {
     security.addPolicy(
       member,
       IdShortPath.create({ path: submodel.idShort }),
-      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })],
+      [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+      ],
     );
     const ability = security.defineAbilityForSubject(member);
 
     const listItem = SubmodelElementList.create({ idShort: "list", displayName: existingDisplayNames, typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    submodel.addSubmodelElement(listItem, { ability });
+
     const collection = SubmodelElementCollection.create({ idShort: "collection", displayName: existingDisplayNames });
+    listItem.addSubmodelElement(collection, { ability });
+
     const property = Property.create({ idShort: "prop1", displayName: existingDisplayNames, valueType: DataTypeDef.String });
     const multiLanguageProperty = MultiLanguageProperty.create({
       idShort: "prop2",
@@ -162,10 +182,8 @@ describe("value modifier visitor", () => {
       value: [LanguageText.create({ language: "en", text: "english" })],
     });
 
-    collection.addSubmodelElement(property);
-    collection.addSubmodelElement(multiLanguageProperty);
-    listItem.addSubmodelElement(collection);
-    submodel.addSubmodelElement(listItem);
+    collection.addSubmodelElement(property, { ability });
+    collection.addSubmodelElement(multiLanguageProperty, { ability });
     const modifications = [{
       prop1: "prop New",
       prop2: [{ de: "CO2 Footprint New Text" }],

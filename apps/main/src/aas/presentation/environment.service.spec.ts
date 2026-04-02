@@ -257,6 +257,7 @@ describe("environmentService", () => {
       admin,
       IdShortPath.create({ path: "section1" }),
       [
+        Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
         Permission.create({
           permission: Permissions.Read,
           kindOfPermission: PermissionKind.Allow,
@@ -265,15 +266,15 @@ describe("environmentService", () => {
         Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
       ],
     );
+    const ability = security.defineAbilityForSubject(admin);
 
     const submodel1 = Submodel.create({ idShort: "section1" });
-
     const submodelElementCollection1 = SubmodelElementCollection.create({ idShort: "subSection1" });
-    submodel1.addSubmodelElement(submodelElementCollection1);
+    submodel1.addSubmodelElement(submodelElementCollection1, { ability });
     const property1 = Property.create({ idShort: "property1", valueType: DataTypeDef.String });
     const property2 = Property.create({ idShort: "property2", valueType: DataTypeDef.String });
-    submodelElementCollection1.addSubmodelElement(property1);
-    submodelElementCollection1.addSubmodelElement(property2);
+    submodelElementCollection1.addSubmodelElement(property1, { ability });
+    submodelElementCollection1.addSubmodelElement(property2, { ability });
 
     await submodelRepository.save(submodel1);
     const assetAdministrationShell = AssetAdministrationShell.create({ security });
@@ -390,17 +391,19 @@ describe("environmentService", () => {
         }),
         Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
         Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
       ],
     );
 
     const submodel1 = Submodel.create({ idShort: "section1" });
+    const ability = security.defineAbilityForSubject(admin);
 
     const submodelElementList = SubmodelElementList.create({ idShort: "list", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
-    submodel1.addSubmodelElement(submodelElementList);
+    submodel1.addSubmodelElement(submodelElementList, { ability });
 
     const listIdShortPath = IdShortPath.create({ path: submodelElementList.idShort });
     const col1 = Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double });
-    submodel1.addColumn(listIdShortPath, col1);
+    submodel1.addColumn(listIdShortPath, col1, { ability });
 
     await submodelRepository.save(submodel1);
     const assetAdministrationShell = AssetAdministrationShell.create({ security });

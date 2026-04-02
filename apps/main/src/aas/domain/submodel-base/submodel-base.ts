@@ -89,15 +89,22 @@ export class IdShortPath {
 export interface AddOptions {
   idShortPath?: IdShortPath;
   position?: number;
+  ability: AasAbility;
+}
+
+export interface IHasIdShortPath {
+  getIdShortPath: () => IdShortPath;
+}
+
+export interface IHasSubmodelElements {
+  addSubmodelElement: (submodelElement: ISubmodelElement, options: AddOptions) => ISubmodelElement;
+  getSubmodelElements: () => ISubmodelElement[];
 }
 
 export interface ISubmodelBase
-  extends SubmodelBaseObjects,
+  extends SubmodelBaseObjects, IHasIdShortPath,
   IVisitable,
-  IConvertableToPlain {
-  addSubmodelElement: (submodelElement: ISubmodelElement, options?: AddOptions) => ISubmodelElement;
-  getSubmodelElements: () => ISubmodelElement[];
-  getIdShortPath: () => IdShortPath;
+  IConvertableToPlain, IHasSubmodelElements {
 }
 
 export interface ISubmodelElement extends ISubmodelBase {
@@ -136,4 +143,22 @@ export function setParentIdShortPaths(submodelBase: ISubmodelBase, idShort: stri
 export function cloneSubmodelElement(submodelElement: ISubmodelElement, override?: any): ISubmodelElement {
   const clone = override ? { ...submodelElement.toPlain(), ...override } : submodelElement.toPlain();
   return parseSubmodelElement(clone);
+}
+
+export function addSubmodelElementOrFail(parent: IHasSubmodelElements & IHasIdShortPath, submodelElement: ISubmodelElement, options: AddOptions): ISubmodelElement {
+  submodelElement.setParentIdShortPath(parent.getIdShortPath());
+  if (!options.ability.can(Permissions.Create, parent.getIdShortPath())) {
+    throw new ForbiddenError(`Missing permissions to add element to ${parent.getIdShortPath()}.`);
+  }
+  const submodelElements = parent.getSubmodelElements();
+  if (submodelElements.some(s => s.idShort === submodelElement.idShort)) {
+    throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
+  }
+  if (options?.position !== undefined) {
+    submodelElements.splice(options.position, 0, submodelElement);
+  }
+  else {
+    submodelElements.push(submodelElement);
+  }
+  return submodelElement;
 }

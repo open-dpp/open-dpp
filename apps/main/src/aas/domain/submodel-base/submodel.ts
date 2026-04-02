@@ -17,6 +17,7 @@ import { JsonType, ValueVisitor, ValueVisitorOptions } from "../value-visitor";
 import { IVisitor } from "../visitor";
 import {
   AddOptions,
+  addSubmodelElementOrFail,
   DeleteOptions,
   deleteSubmodelElementOrFail,
   IdShortPath,
@@ -147,9 +148,8 @@ export class Submodel implements ISubmodelBase, IPersistable {
     }
   }
 
-  addRow(idShortPath: IdShortPath, position?: number) {
+  addRow(idShortPath: IdShortPath, options: AddOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    const options = position !== undefined ? { position } : undefined;
     tableExtension.addRow(options);
     return tableExtension.getTableElement();
   }
@@ -160,9 +160,8 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return tableExtension.getTableElement();
   }
 
-  addColumn(idShortPath: IdShortPath, column: ISubmodelElement, position?: number) {
+  addColumn(idShortPath: IdShortPath, column: ISubmodelElement, options: AddOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    const options = position !== undefined ? { position } : undefined;
     tableExtension.addColumn(column, options);
     return tableExtension.getTableElement();
   }
@@ -213,25 +212,13 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return current;
   }
 
-  public addSubmodelElement(submodelElement: ISubmodelElement, options?: AddOptions): ISubmodelElement {
-    if (options?.idShortPath) {
+  public addSubmodelElement(submodelElement: ISubmodelElement, options: AddOptions): ISubmodelElement {
+    if (options.idShortPath) {
       const parent = this.findSubmodelElementOrFail(options.idShortPath);
       submodelElement.setParentIdShortPath(parent.getIdShortPath());
-      parent.addSubmodelElement(submodelElement, options);
+      return parent.addSubmodelElement(submodelElement, options);
     }
-    else {
-      submodelElement.setParentIdShortPath(this.getIdShortPath());
-      if (this.submodelElements.find(el => el.idShort === submodelElement.idShort)) {
-        throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
-      }
-      if (options?.position !== undefined) {
-        this.submodelElements.splice(options.position, 0, submodelElement);
-      }
-      else {
-        this.submodelElements.push(submodelElement);
-      }
-    }
-    return submodelElement;
+    return addSubmodelElementOrFail(this, submodelElement, options);
   }
 
   public deleteSubmodelElement(idShortPath: IdShortPath, options: DeleteOptions) {

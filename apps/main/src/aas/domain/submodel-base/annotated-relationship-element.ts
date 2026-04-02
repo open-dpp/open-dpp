@@ -1,5 +1,4 @@
 import { AasSubmodelElements, AasSubmodelElementsType, AnnotatedRelationshipElementJsonSchema } from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -10,6 +9,8 @@ import JsonVisitor from "../json-visitor";
 import { IVisitor } from "../visitor";
 import { IRelationshipElement } from "./relationship-element";
 import {
+  AddOptions,
+  addSubmodelElementOrFail,
   DeleteOptions,
   deleteSubmodelElementOrFail,
   IdShortPath,
@@ -124,14 +125,8 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
     return this.annotations;
   }
 
-  addSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
-    submodelElement.setParentIdShortPath(this.getIdShortPath());
-
-    if (this.annotations.some(e => e.idShort === submodelElement.idShort)) {
-      throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
-    }
-    this.annotations.push(submodelElement);
-    return submodelElement;
+  addSubmodelElement(submodelElement: ISubmodelElement, options: AddOptions): ISubmodelElement {
+    return addSubmodelElementOrFail(this, submodelElement, options);
   }
 
   deleteSubmodelElement(idShort: string, options: DeleteOptions) {

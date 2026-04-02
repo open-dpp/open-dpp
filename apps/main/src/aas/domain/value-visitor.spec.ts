@@ -224,24 +224,29 @@ describe("value-visitor", () => {
     const security = Security.create({});
     const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+    security.addPolicy(member, IdShortPath.create({ path: "subSection1.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "subSection1.prop2" }), []);
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: "subSection1" }),
+      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow })],
+    );
+
     const submodelElementCollection = SubmodelElementCollection.create({
       idShort: "subSection1",
     });
     const property1 = Property.create({ idShort: "prop1", valueType: DataTypeDef.String, value: "blub1" });
     const property2 = Property.create({ idShort: "prop2", valueType: DataTypeDef.String, value: "blub2" });
-    submodelElementCollection.addSubmodelElement(property1);
-    submodelElementCollection.addSubmodelElement(property2);
+    const ability = security.defineAbilityForSubject(member);
 
-    security.addPolicy(member, IdShortPath.create({ path: "subSection1.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
-    security.addPolicy(member, IdShortPath.create({ path: "subSection1.prop2" }), []);
-
-    let ability = security.defineAbilityForSubject(member);
+    submodelElementCollection.addSubmodelElement(property1, { ability });
+    submodelElementCollection.addSubmodelElement(property2, { ability });
 
     let visitor = new ValueVisitor({ ability });
     expect(visitor.visitSubmodelElementCollection(submodelElementCollection)).toEqual({ prop1: "blub1" });
 
-    ability = security.defineAbilityForSubject(anonymous);
-    visitor = new ValueVisitor({ ability });
+    const anonymousAbility = security.defineAbilityForSubject(anonymous);
+    visitor = new ValueVisitor({ ability: anonymousAbility });
     expect(visitor.visitSubmodelElementCollection(submodelElementCollection)).toEqual(undefined);
   });
 
@@ -249,23 +254,26 @@ describe("value-visitor", () => {
     const security = Security.create({});
     const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
-    const submodelElementList = SubmodelElementList.create({
-      idShort: "subSection1",
-      typeValueListElement: KeyTypes.SubmodelElementCollection,
-    });
-
-    const row = SubmodelElementCollection.create({ idShort: "row1" });
-
-    const property1 = Property.create({ idShort: "prop1", valueType: DataTypeDef.String, value: "blub1" });
-    const property2 = Property.create({ idShort: "prop2", valueType: DataTypeDef.String, value: "blub2" });
-    row.addSubmodelElement(property1);
-    row.addSubmodelElement(property2);
-    submodelElementList.addSubmodelElement(row);
-
+    security.addPolicy(member, IdShortPath.create({ path: "subSection1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+    ]);
     security.addPolicy(member, IdShortPath.create({ path: "subSection1.row1.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
     security.addPolicy(member, IdShortPath.create({ path: "subSection1.row1.prop2" }), []);
 
     let ability = security.defineAbilityForSubject(member);
+
+    const submodelElementList = SubmodelElementList.create({
+      idShort: "subSection1",
+      typeValueListElement: KeyTypes.SubmodelElementCollection,
+    });
+    const row = SubmodelElementCollection.create({ idShort: "row1" });
+    submodelElementList.addSubmodelElement(row, { ability });
+
+    const property1 = Property.create({ idShort: "prop1", valueType: DataTypeDef.String, value: "blub1" });
+    const property2 = Property.create({ idShort: "prop2", valueType: DataTypeDef.String, value: "blub2" });
+    row.addSubmodelElement(property1, { ability });
+    row.addSubmodelElement(property2, { ability });
 
     let visitor = new ValueVisitor({ ability });
     expect(visitor.visitSubmodelElementList(submodelElementList)).toEqual([{ prop1: "blub1" }]);
@@ -279,15 +287,22 @@ describe("value-visitor", () => {
     const security = Security.create({});
     const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: "entity" }),
+      [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+      ],
+    );
+    security.addPolicy(member, IdShortPath.create({ path: "entity.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    let ability = security.defineAbilityForSubject(member);
+
     const entity = Entity.create({
       idShort: "entity",
       entityType: EntityType.SelfManagedEntity,
     });
-    entity.addSubmodelElement(Property.create({ idShort: "prop1", valueType: DataTypeDef.String, value: "blub1" }));
-
-    security.addPolicy(member, IdShortPath.create({ path: "entity.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
-
-    let ability = security.defineAbilityForSubject(member);
+    entity.addSubmodelElement(Property.create({ idShort: "prop1", valueType: DataTypeDef.String, value: "blub1" }), { ability });
 
     let visitor = new ValueVisitor({ ability });
     expect(visitor.visitEntity(entity)).toEqual({ entityType: EntityType.SelfManagedEntity, globalAssetId: null, statements: [{ prop1: "blub1" }], specificAssetIds: [] });

@@ -9,6 +9,7 @@ import JsonVisitor from "../json-visitor";
 import { IVisitor } from "../visitor";
 import {
   AddOptions,
+  addSubmodelElementOrFail,
   DeleteOptions,
   deleteSubmodelElementOrFail,
   IdShortPath,
@@ -130,22 +131,12 @@ export class SubmodelElementList implements ISubmodelElement {
     return this.value;
   }
 
-  addSubmodelElement(submodelElement: ISubmodelElement, options?: AddOptions): ISubmodelElement {
-    submodelElement.setParentIdShortPath(this.getIdShortPath());
-    if (this.value.some(s => s.idShort === submodelElement.idShort)) {
-      throw new Error(`Submodel element with idShort ${submodelElement.idShort} already exists`);
-    }
+  addSubmodelElement(submodelElement: ISubmodelElement, options: AddOptions): ISubmodelElement {
     if (submodelElement.getSubmodelElementType() !== this.typeValueListElement) {
       throw new Error(`Submodel element type ${submodelElement.getSubmodelElementType()} does not match list type ${this.typeValueListElement}`);
     }
-
-    if (options?.position !== undefined) {
-      this.value.splice(options.position, 0, submodelElement);
-    }
-    else {
-      this.value.push(submodelElement);
-    }
-    return submodelElement;
+    submodelElement.setParentIdShortPath(this.getIdShortPath());
+    return addSubmodelElementOrFail(this, submodelElement, options);
   }
 
   deleteSubmodelElement(idShort: string, options: DeleteOptions) {

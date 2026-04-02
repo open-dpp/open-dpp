@@ -4,7 +4,6 @@ import {
   EntityTypeJsonSchema,
   EntityTypeType,
 } from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -15,6 +14,8 @@ import JsonVisitor from "../json-visitor";
 import { SpecificAssetId } from "../specific-asset-id";
 import { IVisitor } from "../visitor";
 import {
+  AddOptions,
+  addSubmodelElementOrFail,
   DeleteOptions,
   deleteSubmodelElementOrFail,
   IdShortPath,
@@ -133,13 +134,8 @@ export class Entity implements ISubmodelElement {
     return this.statements;
   }
 
-  addSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
-    submodelElement.setParentIdShortPath(this.getIdShortPath());
-    if (this.statements.some(s => s.idShort === submodelElement.idShort)) {
-      throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
-    }
-    this.statements.push(submodelElement);
-    return submodelElement;
+  addSubmodelElement(submodelElement: ISubmodelElement, options: AddOptions): ISubmodelElement {
+    return addSubmodelElementOrFail(this, submodelElement, options);
   }
 
   deleteSubmodelElement(idShort: string, options: DeleteOptions) {

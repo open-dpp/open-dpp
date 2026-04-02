@@ -326,7 +326,7 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
     const column = parseSubmodelElement(body);
-    return await this.environmentService.addColumn(passport.getEnvironment(), submodelId, idShortPath, column, position);
+    return await this.environmentService.addColumn(passport.getEnvironment(), submodelId, idShortPath, column, subject, position);
   }
 
   @ApiPatchColumn()
@@ -372,7 +372,7 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.addRow(passport.getEnvironment(), submodelId, idShortPath, position);
+    return await this.environmentService.addRow(passport.getEnvironment(), submodelId, idShortPath, subject, position);
   }
 
   @ApiDeleteRow()
@@ -401,7 +401,7 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.addSubmodelElement(passport.getEnvironment(), submodelId, body);
+    return await this.environmentService.addSubmodelElement(passport.getEnvironment(), submodelId, body, subject);
   }
 
   @ApiDeleteSubmodelElementById()
@@ -490,7 +490,7 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.addSubmodelElement(passport.getEnvironment(), submodelId, body, idShortPath);
+    return await this.environmentService.addSubmodelElement(passport.getEnvironment(), submodelId, body, subject, idShortPath);
   }
 
   @ApiGetSubmodelElementValue()

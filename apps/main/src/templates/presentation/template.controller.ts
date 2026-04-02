@@ -236,7 +236,7 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body);
+    return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body, subject);
   }
 
   @ApiDeleteSubmodelElementById()
@@ -267,7 +267,7 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
     const column = parseSubmodelElement(body);
-    return await this.environmentService.addColumn(template.getEnvironment(), submodelId, idShortPath, column, position);
+    return await this.environmentService.addColumn(template.getEnvironment(), submodelId, idShortPath, column, subject, position);
   }
 
   @ApiPatchColumn()
@@ -313,7 +313,7 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementListResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.addRow(template.getEnvironment(), submodelId, idShortPath, position);
+    return await this.environmentService.addRow(template.getEnvironment(), submodelId, idShortPath, subject, position);
   }
 
   @ApiDeleteRow()
@@ -387,7 +387,7 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<SubmodelElementResponseDto> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body, idShortPath);
+    return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body, subject, idShortPath);
   }
 
   @ApiGetSubmodelElementValue()

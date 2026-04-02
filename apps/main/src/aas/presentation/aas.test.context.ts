@@ -56,6 +56,7 @@ import { LanguageText } from "../domain/common/language-text";
 import { Reference } from "../domain/common/reference";
 import { IDigitalProductPassportIdentifiable } from "../domain/digital-product-passport-identifiable";
 import { IPersistable } from "../domain/persistable";
+import { AasAbility } from "../domain/security/aas-ability";
 import { Permission } from "../domain/security/permission";
 import { Security } from "../domain/security/security";
 import { SubjectAttributes } from "../domain/security/subject-attributes";
@@ -92,6 +93,7 @@ export function createAasTestContext<T>(
   let submodels: Submodel[];
   let user1data: any;
   let orga1: any;
+  let ability: AasAbility;
 
   beforeAll(async () => {
     moduleRef = await Test.createTestingModule({
@@ -161,9 +163,12 @@ export function createAasTestContext<T>(
           Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
           Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
           Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+          Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
         ],
       );
     });
+
+    ability = security.defineAbilityForSubject(subject);
 
     // { userRole: user, memberRole: owner }
     aas = AssetAdministrationShell.fromPlain(aasPlainFactory.build({ security: security.toPlain() }, { transient: { iriDomain } }));
@@ -561,7 +566,7 @@ export function createAasTestContext<T>(
 
     const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
     const property = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01" }));
-    submodel.addSubmodelElement(property);
+    submodel.addSubmodelElement(property, { ability });
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
     await saveEntity(entity);
@@ -588,10 +593,10 @@ export function createAasTestContext<T>(
 
     const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
     const submodelElementCollection = SubmodelElementCollection.create({ idShort: "collection" });
-    submodel.addSubmodelElement(submodelElementCollection);
+    submodel.addSubmodelElement(submodelElementCollection, { ability });
     const property = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01", value: "old value" }));
 
-    submodelElementCollection.addSubmodelElement(property);
+    submodelElementCollection.addSubmodelElement(property, { ability });
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -619,10 +624,12 @@ export function createAasTestContext<T>(
     const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    submodel.addSubmodelElement(submodelElementList);
-    submodelElementList.addSubmodelElement(row0);
+    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodelElementList.addSubmodelElement(row0, {
+      ability,
+    });
 
-    row0.addSubmodelElement(col1);
+    row0.addSubmodelElement(col1, { ability });
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -652,10 +659,10 @@ export function createAasTestContext<T>(
     const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    submodel.addSubmodelElement(submodelElementList);
-    submodelElementList.addSubmodelElement(row0);
+    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodelElementList.addSubmodelElement(row0, { ability });
 
-    row0.addSubmodelElement(col1);
+    row0.addSubmodelElement(col1, { ability });
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -692,10 +699,10 @@ export function createAasTestContext<T>(
     const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    submodel.addSubmodelElement(submodelElementList);
-    submodelElementList.addSubmodelElement(row0);
+    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodelElementList.addSubmodelElement(row0, { ability });
 
-    row0.addSubmodelElement(col1);
+    row0.addSubmodelElement(col1, { ability });
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -711,7 +718,7 @@ export function createAasTestContext<T>(
     expect(bodyRow0.value).toEqual([]);
     const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
     const foundList = foundSubmodel.findSubmodelElementOrFail(IdShortPath.create({ path: "tableList" }));
-    const tableExtension = new TableExtension(foundList as SubmodelElementList, foundSubmodel.idShort);
+    const tableExtension = new TableExtension(foundList as SubmodelElementList);
     expect(tableExtension.columns).toEqual([]);
   }
 
@@ -724,10 +731,10 @@ export function createAasTestContext<T>(
     const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
     const row1 = SubmodelElementCollection.create({ idShort: "row_1" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    submodel.addSubmodelElement(submodelElementList);
-    submodelElementList.addSubmodelElement(row1);
+    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodelElementList.addSubmodelElement(row1, { ability });
 
-    row1.addSubmodelElement(col1);
+    row1.addSubmodelElement(col1, { ability });
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -756,10 +763,10 @@ export function createAasTestContext<T>(
     const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
     const row1 = SubmodelElementCollection.create({ idShort: "row_1" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    submodel.addSubmodelElement(submodelElementList);
-    submodelElementList.addSubmodelElement(row1);
+    submodel.addSubmodelElement(submodelElementList, { ability });
+    submodelElementList.addSubmodelElement(row1, { ability });
 
-    row1.addSubmodelElement(col1);
+    row1.addSubmodelElement(col1, { ability });
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -774,7 +781,7 @@ export function createAasTestContext<T>(
     expect(response.body.value).toEqual([]);
     const foundSubmodel = await submodelRepository.findOneOrFail(submodel.id);
     const foundList = foundSubmodel.findSubmodelElementOrFail(IdShortPath.create({ path: "tableList" }));
-    const tableExtension = new TableExtension(foundList as SubmodelElementList, foundSubmodel.idShort);
+    const tableExtension = new TableExtension(foundList as SubmodelElementList);
     expect(tableExtension.rows).toEqual([]);
   }
 
@@ -814,7 +821,7 @@ export function createAasTestContext<T>(
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
     const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
     const submodelElement = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01" }));
-    submodel.addSubmodelElement(submodelElement);
+    submodel.addSubmodelElement(submodelElement, { ability });
     entity.getEnvironment().addSubmodel(submodel);
     await saveEntity(entity);
 
