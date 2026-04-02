@@ -1,9 +1,8 @@
 import { randomUUID } from "node:crypto";
-import { AasSubmodelElements, Permissions } from "@open-dpp/dto";
-import { ForbiddenError, ValueError } from "@open-dpp/exception";
+import { AasSubmodelElements } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 import { ModifierVisitor, ModifierVisitorOptions } from "../modifier-visitor";
-import { AasAbility } from "../security/aas-ability";
-import { cloneSubmodelElement, IdShortPath, ISubmodelElement } from "./submodel-base";
+import { cloneSubmodelElement, DeleteOptions, ISubmodelElement } from "./submodel-base";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
 
@@ -11,18 +10,12 @@ interface TableModificationOptions {
   position: number;
 }
 
-export interface TableDeleteOptions {
-  ability: AasAbility;
-}
-
 export class TableExtension {
   private headerRow: ISubmodelElement | undefined;
-  private listIdShortPath: IdShortPath;
-  constructor(private data: SubmodelElementList, submodelIdShort: string) {
+  constructor(private data: SubmodelElementList) {
     if (this.data.typeValueListElement !== AasSubmodelElements.SubmodelElementCollection) {
       throw new Error(`List type ${this.data.typeValueListElement} is not supported by table extension`);
     }
-    this.listIdShortPath = IdShortPath.create({ path: submodelIdShort }).addPathSegment(this.data.idShort);
     this.setHeaderRow();
   }
 
@@ -67,11 +60,9 @@ export class TableExtension {
     }
   }
 
-  deleteColumn(idShort: string, { ability }: TableDeleteOptions) {
+  deleteColumn(idShort: string, options: DeleteOptions) {
     this.rows.forEach((row) => {
-      const idShortPath = this.listIdShortPath.addPathSegment(row.idShort).addPathSegment(idShort);
-      this.deletionGuard(ability, idShortPath);
-      row.deleteSubmodelElement(idShort);
+      row.deleteSubmodelElement(idShort, options);
     });
   }
 
@@ -104,18 +95,10 @@ export class TableExtension {
     }
   }
 
-  deleteRow(idShort: string, { ability }: TableDeleteOptions) {
-    const idShortPath = this.listIdShortPath.addPathSegment(idShort);
-    this.deletionGuard(ability, idShortPath);
-    this.data.deleteSubmodelElement(idShort);
+  deleteRow(idShort: string, options: DeleteOptions) {
+    this.data.deleteSubmodelElement(idShort, options);
     if (this.headerRow && this.headerRow.idShort === idShort) {
       this.setHeaderRow();
-    }
-  }
-
-  private deletionGuard(ability: AasAbility, idShortPath: IdShortPath) {
-    if (!ability.can(Permissions.Delete, idShortPath)) {
-      throw new ForbiddenError(`Missing permissions to delete element ${idShortPath}.`);
     }
   }
 }

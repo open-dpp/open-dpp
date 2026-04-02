@@ -15,6 +15,7 @@ import JsonVisitor from "../json-visitor";
 import { SpecificAssetId } from "../specific-asset-id";
 import { IVisitor } from "../visitor";
 import {
+  DeleteOptions,
   deleteSubmodelElementOrFail,
   IdShortPath,
   ISubmodelElement,
@@ -141,8 +142,8 @@ export class Entity implements ISubmodelElement {
     return submodelElement;
   }
 
-  deleteSubmodelElement(idShort: string) {
-    deleteSubmodelElementOrFail(this.statements, idShort);
+  deleteSubmodelElement(idShort: string, options: DeleteOptions) {
+    deleteSubmodelElementOrFail(this.statements, idShort, options);
   }
 
   getSubmodelElementType(): AasSubmodelElementsType {

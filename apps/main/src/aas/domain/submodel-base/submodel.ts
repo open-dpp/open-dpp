@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { NotFoundException } from "@nestjs/common";
-import { ModellingKindType, Permissions, SubmodelJsonSchema } from "@open-dpp/dto";
-import { ForbiddenError, ValueError } from "@open-dpp/exception";
+import { ModellingKindType, SubmodelJsonSchema } from "@open-dpp/dto";
+import { ValueError } from "@open-dpp/exception";
 import { AdministrativeInformation } from "../common/administrative-information";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
@@ -12,12 +12,12 @@ import { Extension } from "../extension";
 import JsonVisitor from "../json-visitor";
 import { ModifierVisitor, ModifierVisitorOptions } from "../modifier-visitor";
 import { IPersistable } from "../persistable";
-import { AasAbility } from "../security/aas-ability";
 import { ValueModifierVisitor, ValueModifierVisitorOptions } from "../value-modifier-visitor";
 import { JsonType, ValueVisitor, ValueVisitorOptions } from "../value-visitor";
 import { IVisitor } from "../visitor";
 import {
   AddOptions,
+  DeleteOptions,
   deleteSubmodelElementOrFail,
   IdShortPath,
   ISubmodelBase,
@@ -28,7 +28,7 @@ import {
   submodelBasePropsFromPlain,
 } from "./submodel-base";
 import { SubmodelElementList } from "./submodel-element-list";
-import { TableDeleteOptions, TableExtension } from "./table-extension";
+import { TableExtension } from "./table-extension";
 
 export class Submodel implements ISubmodelBase, IPersistable {
   private _displayName: Array<LanguageText>;
@@ -140,7 +140,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
   private getListAsTableExtensionOrFail(idShortPath: IdShortPath) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
     if (submodelElement instanceof SubmodelElementList) {
-      return new TableExtension(submodelElement, this.idShort);
+      return new TableExtension(submodelElement);
     }
     else {
       throw new ValueError(`Cannot add column to ${submodelElement.getSubmodelElementType()} submodel element`);
@@ -154,7 +154,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return tableExtension.getTableElement();
   }
 
-  deleteRow(idShortPath: IdShortPath, idShortOfRow: string, options: TableDeleteOptions) {
+  deleteRow(idShortPath: IdShortPath, idShortOfRow: string, options: DeleteOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
     tableExtension.deleteRow(idShortOfRow, options);
     return tableExtension.getTableElement();
@@ -173,7 +173,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return tableExtension.getTableElement();
   }
 
-  deleteColumn(idShortPath: IdShortPath, idShortOfColumn: string, options: TableDeleteOptions) {
+  deleteColumn(idShortPath: IdShortPath, idShortOfColumn: string, options: DeleteOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
     tableExtension.deleteColumn(idShortOfColumn, options);
     return tableExtension.getTableElement();
@@ -234,18 +234,14 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return submodelElement;
   }
 
-  public deleteSubmodelElement(idShortPath: IdShortPath, { ability}: { ability: AasAbility }) {
-    const fullIdShortPath = IdShortPath.create({ path: this.idShort }).concat(idShortPath);
-    if (!ability.can(Permissions.Delete, fullIdShortPath)) {
-      throw new ForbiddenError(`Missing permissions to delete element ${fullIdShortPath.toString()}.`);
-    }
+  public deleteSubmodelElement(idShortPath: IdShortPath, options: DeleteOptions) {
     const parent = this.findSubmodelElementParent(idShortPath);
     if (idShortPath.last) {
       if (!parent) {
-        deleteSubmodelElementOrFail(this.submodelElements, idShortPath.last);
+        deleteSubmodelElementOrFail(this.submodelElements, idShortPath.last, options);
       }
       else {
-        parent.deleteSubmodelElement(idShortPath.last);
+        parent.deleteSubmodelElement(idShortPath.last, options);
       }
     }
   }

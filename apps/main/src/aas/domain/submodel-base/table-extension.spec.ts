@@ -28,7 +28,7 @@ describe("tableExtension", () => {
       idShort: "idShort",
     });
     submodelElementList.setParentIdShortPath(IdShortPath.create({ path: submodelIdShort }));
-    const table = new TableExtension(submodelElementList, submodelIdShort);
+    const table = new TableExtension(submodelElementList);
     const col1Plain = propertyInputPlainFactory.build({ idShort: "col1", value: "10" });
     const col1 = Property.fromPlain(col1Plain);
     // Add first column
@@ -79,8 +79,9 @@ describe("tableExtension", () => {
   it("should delete column", () => {
     const submodelElementList = SubmodelElementList.create({
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
-      idShort: "idShort",
+      idShort: "list",
     });
+    submodelElementList.setParentIdShortPath(IdShortPath.create({ path: submodelIdShort }));
     const security = Security.create({});
     const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
     security.addPolicy(
@@ -89,7 +90,7 @@ describe("tableExtension", () => {
       [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow })],
     );
     const ability = security.defineAbilityForSubject(member);
-    const table = new TableExtension(submodelElementList, submodelIdShort);
+    const table = new TableExtension(submodelElementList);
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" }));
     const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" }));
     table.addColumn(col1);
@@ -97,8 +98,8 @@ describe("tableExtension", () => {
     table.addRow();
     table.addRow();
     expect(table.rows.some(r => r.getSubmodelElements().some(c => c.idShort === col1.idShort))).toBeTruthy();
-    col2.setParentIdShortPath(table.rows[0].getIdShortPath());
     table.deleteColumn(col1.idShort, { ability });
+    col2.setParentIdShortPath(table.rows[0].getIdShortPath());
     expect(table.columns).toEqual([col2]);
     expect(table.rows.some(r => r.getSubmodelElements().some(c => c.idShort === col1.idShort))).toBeFalsy();
   });
@@ -108,7 +109,7 @@ describe("tableExtension", () => {
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
       idShort: "idShort",
     });
-    const table = new TableExtension(submodelElementList, submodelIdShort);
+    const table = new TableExtension(submodelElementList);
 
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1", value: "10" }));
     table.addColumn(col1);
@@ -127,7 +128,7 @@ describe("tableExtension", () => {
       idShort: "idShort",
     });
     submodelElementList.setParentIdShortPath(IdShortPath.create({ path: submodelIdShort }));
-    const table = new TableExtension(submodelElementList, submodelIdShort);
+    const table = new TableExtension(submodelElementList);
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" }));
     const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" }));
     table.addColumn(col1);
@@ -176,7 +177,7 @@ describe("tableExtension", () => {
       [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow })],
     );
     const ability = security.defineAbilityForSubject(member);
-    const table = new TableExtension(submodelElementList, submodelIdShort);
+    const table = new TableExtension(submodelElementList);
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" }));
     const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" }));
     table.addColumn(col1);

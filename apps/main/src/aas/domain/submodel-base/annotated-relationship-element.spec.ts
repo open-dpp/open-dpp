@@ -57,13 +57,20 @@ describe("annotatedRelationshipElement", () => {
       first: Reference.create({ type: ReferenceTypes.ExternalReference, keys: [] }),
       second: Reference.create({ type: ReferenceTypes.ExternalReference, keys: [] }),
     });
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    security.addPolicy(member, IdShortPath.create({ path: "idShort" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+    ]);
+    const ability = security.defineAbilityForSubject(member);
     const submodelElement0 = Property.create({ idShort: "prop1", valueType: DataTypeDef.String });
     annotatedRelationshipElement.addSubmodelElement(submodelElement0);
     const submodelElement1 = Property.create({ idShort: "prop2", valueType: DataTypeDef.String });
     annotatedRelationshipElement.addSubmodelElement(submodelElement1);
     expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([submodelElement0, submodelElement1]);
-    annotatedRelationshipElement.deleteSubmodelElement(submodelElement0.idShort);
+    annotatedRelationshipElement.deleteSubmodelElement(submodelElement0.idShort, { ability });
     expect(annotatedRelationshipElement.getSubmodelElements()).toEqual([submodelElement1]);
-    expect(() => annotatedRelationshipElement.deleteSubmodelElement("unknown")).toThrow(ValueError);
+    expect(() => annotatedRelationshipElement.deleteSubmodelElement("unknown", { ability })).toThrow(ValueError);
   });
 });

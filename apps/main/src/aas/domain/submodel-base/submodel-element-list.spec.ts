@@ -41,17 +41,27 @@ describe("submodelElementList", () => {
   it("should delete submodel element", () => {
     const submodelElementList = SubmodelElementList.create({
       typeValueListElement: AasSubmodelElements.Property,
-      idShort: "idShort",
+      idShort: "list",
     });
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: "list" }),
+      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow })],
+    );
+    const ability = security.defineAbilityForSubject(member);
+
     const submodelElement0 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "submodelElement0" }));
     submodelElementList.addSubmodelElement(submodelElement0);
     const submodelElement1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "submodelElement1" }));
     submodelElementList.addSubmodelElement(submodelElement1);
     expect(submodelElementList.getSubmodelElements()).toEqual([submodelElement0, submodelElement1]);
-    submodelElementList.deleteSubmodelElement(submodelElement0.idShort);
+    submodelElementList.deleteSubmodelElement(submodelElement0.idShort, { ability });
     expect(submodelElementList.getSubmodelElements()).toEqual([submodelElement1]);
 
-    expect(() => submodelElementList.deleteSubmodelElement("unknown")).toThrow(ValueError);
+    expect(() => submodelElementList.deleteSubmodelElement("unknown", { ability })).toThrow(ValueError);
   });
 
   it("should get values readable by specified subject", () => {

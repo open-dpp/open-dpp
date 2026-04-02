@@ -1,9 +1,10 @@
 import {
   AasSubmodelElementsType,
   KeyTypesEnum,
+  Permissions,
   SubmodelBaseJsonSchema,
 } from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
+import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { z } from "zod";
 import { IHasDataSpecification } from "../common/has-data-specification";
 import { IHasSemantics } from "../common/has-semantics";
@@ -13,6 +14,7 @@ import { IReferable } from "../common/referable";
 import { Reference } from "../common/reference";
 import { IConvertableToPlain } from "../convertable-to-plain";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
+import { AasAbility } from "../security/aas-ability";
 import { IVisitable } from "../visitor";
 import { getSubmodelClass } from "./submodel-registry";
 
@@ -100,7 +102,7 @@ export interface ISubmodelBase
 
 export interface ISubmodelElement extends ISubmodelBase {
   getSubmodelElementType: () => AasSubmodelElementsType;
-  deleteSubmodelElement: (idShort: string) => void;
+  deleteSubmodelElement: (idShort: string, options: DeleteOptions) => void;
   setParentIdShortPath: (parentIdShortPath: IdShortPath) => void;
 }
 
@@ -110,11 +112,19 @@ export function parseSubmodelElement(submodelBase: any): ISubmodelElement {
   return AasClass.fromPlain(submodelBase);
 }
 
-export function deleteSubmodelElementOrFail(submodelElements: ISubmodelElement[], idShort: string): void {
+export interface DeleteOptions {
+  ability: AasAbility;
+}
+export function deleteSubmodelElementOrFail(submodelElements: ISubmodelElement[], idShort: string, { ability }: DeleteOptions): void {
   const foundIndex = submodelElements.findIndex(e => e.idShort === idShort);
   if (foundIndex === -1) {
     throw new ValueError(`Cannot delete submodel element with idShort ${idShort}, since it does not exist.`);
   }
+  const submodelElementToDelete = submodelElements[foundIndex];
+  if (!ability.can(Permissions.Delete, submodelElementToDelete.getIdShortPath())) {
+    throw new ForbiddenError(`Missing permissions to delete element ${submodelElementToDelete.getIdShortPath().toString()}.`);
+  }
+
   submodelElements.splice(foundIndex, 1);
 }
 

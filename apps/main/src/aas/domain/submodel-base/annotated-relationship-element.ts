@@ -10,6 +10,7 @@ import JsonVisitor from "../json-visitor";
 import { IVisitor } from "../visitor";
 import { IRelationshipElement } from "./relationship-element";
 import {
+  DeleteOptions,
   deleteSubmodelElementOrFail,
   IdShortPath,
   ISubmodelElement,
@@ -133,8 +134,8 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
     return submodelElement;
   }
 
-  deleteSubmodelElement(idShort: string) {
-    deleteSubmodelElementOrFail(this.annotations, idShort);
+  deleteSubmodelElement(idShort: string, options: DeleteOptions) {
+    deleteSubmodelElementOrFail(this.annotations, idShort, options);
   }
 
   getSubmodelElementType(): AasSubmodelElementsType {

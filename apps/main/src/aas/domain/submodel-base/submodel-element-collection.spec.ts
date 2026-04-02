@@ -57,16 +57,23 @@ describe("submodelElementCollection", () => {
     const submodelElementCollection = SubmodelElementCollection.create({
       idShort: "idShort",
     });
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    security.addPolicy(member, IdShortPath.create({ path: "idShort" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+    ]);
+    const ability = security.defineAbilityForSubject(member);
     const submodelElement1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "submodelElement1" }));
     submodelElementCollection.addSubmodelElement(submodelElement1);
     const submodelElement2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "submodelElement2" }));
     submodelElementCollection.addSubmodelElement(submodelElement2);
 
     expect(submodelElementCollection.getSubmodelElements()).toEqual([submodelElement1, submodelElement2]);
-    submodelElementCollection.deleteSubmodelElement(submodelElement1.idShort);
+    submodelElementCollection.deleteSubmodelElement(submodelElement1.idShort, { ability });
     expect(submodelElementCollection.getSubmodelElements()).toEqual([submodelElement2]);
 
-    expect(() => submodelElementCollection.deleteSubmodelElement("unknown idShort")).toThrow(
+    expect(() => submodelElementCollection.deleteSubmodelElement("unknown idShort", { ability })).toThrow(
       ValueError,
     );
   });

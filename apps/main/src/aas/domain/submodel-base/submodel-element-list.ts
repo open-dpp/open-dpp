@@ -9,6 +9,7 @@ import JsonVisitor from "../json-visitor";
 import { IVisitor } from "../visitor";
 import {
   AddOptions,
+  DeleteOptions,
   deleteSubmodelElementOrFail,
   IdShortPath,
   ISubmodelElement,
@@ -147,8 +148,8 @@ export class SubmodelElementList implements ISubmodelElement {
     return submodelElement;
   }
 
-  deleteSubmodelElement(idShort: string) {
-    deleteSubmodelElementOrFail(this.value, idShort);
+  deleteSubmodelElement(idShort: string, options: DeleteOptions) {
+    deleteSubmodelElementOrFail(this.value, idShort, options);
   }
 
   getSubmodelElementType(): AasSubmodelElementsType {
