@@ -165,10 +165,24 @@ describe("assetAdministrationShell", () => {
         })],
       }),
       AccessPermissionRule.create({
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.OWNER }),
+        permissionsPerObject: [PermissionPerObject.create({
+          object: createAasObject(IdShortPath.create({ path: submodel.idShort })),
+          permissions: allPermissionsAllow.map(Permission.fromPlain),
+        })],
+      }),
+      AccessPermissionRule.create({
         targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
         permissionsPerObject: [PermissionPerObject.create({
           object: createAasObject(IdShortPath.create({ path: submodel.idShort })),
           permissions: allPermissionsAllow.map(Permission.fromPlain),
+        })],
+      }),
+      AccessPermissionRule.create({
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }),
+        permissionsPerObject: [PermissionPerObject.create({
+          object: createAasObject(IdShortPath.create({ path: submodel.idShort })),
+          permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
         })],
       }),
     ]);

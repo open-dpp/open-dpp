@@ -1,15 +1,10 @@
 import type { Model as MongooseModel } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { PermissionKind, Permissions } from "@open-dpp/dto";
 import { DbSessionOptions } from "../../database/query-options";
-import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { findByIds, findOne, findOneOrFail, save } from "../../lib/repositories";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
-import { IdShortPath } from "../domain/common/id-short-path";
-import { Permission } from "../domain/security/permission";
 import { Security } from "../domain/security/security";
-import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { AssetAdministrationShellDbSchema } from "./schemas/asset-administration-shell-db-schema";
 import {
   AssetAdministrationShellDoc,
@@ -58,15 +53,6 @@ export class AasRepository {
     for (const submodelReference of aas.submodels) {
       const submodel = await this.submodelRepository.findOneOrFail(submodelReference.keys[0].value);
       security.addDefaultPolicyForSubmodelIfNoExists(submodel);
-      // anonymous user should have only read permissions
-      const [subject, aasObject, permissions] = [
-        SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }),
-        IdShortPath.create({ path: submodel.idShort }),
-        [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
-      ];
-      if (!security.hasPolicy(subject, aasObject, permissions)) {
-        security.addPolicy(subject, aasObject, permissions);
-      }
     }
 
     return {

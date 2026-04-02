@@ -89,26 +89,29 @@ export class Security {
 
   addDefaultPolicyForSubmodelIfNoExists(submodel: Submodel): void {
     if (!this.hasPoliciesForObject(IdShortPath.create({ path: submodel.idShort }))) {
-      let [subject, aasObject, permissions] = [
+      const subjectsWithAllPermissions = [
         SubjectAttributes.create({ userRole: UserRole.ADMIN }),
-        IdShortPath.create({ path: submodel.idShort }),
-        Object.values(Permissions).map(
-          p => Permission.create({ permission: p, kindOfPermission: PermissionKind.Allow }),
-        ),
-      ];
-      if (!this.hasPolicy(subject, aasObject, permissions)) {
-        this.addPolicy(subject, aasObject, permissions);
-      }
-      // member of the organization to which the passport belongs to should have all permissions
-      [subject, aasObject, permissions] = [
+        SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.OWNER }),
         SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
-        IdShortPath.create({ path: submodel.idShort }),
-        Object.values(Permissions).map(
-          p => Permission.create({ permission: p, kindOfPermission: PermissionKind.Allow }),
-        ),
       ];
-      if (!this.hasPolicy(subject, aasObject, permissions)) {
-        this.addPolicy(subject, aasObject, permissions);
+
+      for (const subject of subjectsWithAllPermissions) {
+        const aasObject = IdShortPath.create({ path: submodel.idShort });
+        const permissions = Object.values(Permissions).map(
+          p => Permission.create({ permission: p, kindOfPermission: PermissionKind.Allow }),
+        );
+
+        if (!this.hasPolicy(subject, aasObject, permissions)) {
+          this.addPolicy(subject, aasObject, permissions);
+        }
+      }
+
+      const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+      const aasObject = IdShortPath.create({ path: submodel.idShort });
+      const permissions = [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })];
+
+      if (!this.hasPolicy(anonymous, aasObject, permissions)) {
+        this.addPolicy(anonymous, aasObject, permissions);
       }
     }
   }

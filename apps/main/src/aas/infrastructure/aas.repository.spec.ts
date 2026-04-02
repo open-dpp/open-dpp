@@ -178,6 +178,12 @@ describe("aasRepository", () => {
       expect(ability.can(permission, IdShortPath.create({ path: submodel2.idShort }))).toBeTruthy();
     }
 
+    ability = security.defineAbilityForSubject(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.OWNER }));
+    for (const permission of [Permissions.Create, Permissions.Read, Permissions.Edit, Permissions.Delete]) {
+      expect(ability.can(permission, IdShortPath.create({ path: submodel1.idShort }))).toBeTruthy();
+      expect(ability.can(permission, IdShortPath.create({ path: submodel2.idShort }))).toBeTruthy();
+    }
+
     // anonymous user should have only read permissions
     ability = security.defineAbilityForSubject(SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }));
     expect(ability.can(Permissions.Read, IdShortPath.create({ path: submodel1.idShort }))).toBeTruthy();
