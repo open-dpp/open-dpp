@@ -26,9 +26,9 @@ import type { IVisitor } from "./visitor";
 import { KeyTypes, Permissions } from "@open-dpp/dto";
 import { removeEmptyItems } from "../../utils";
 import { ConvertToPlainOptions } from "./convertable-to-plain";
-import { IdShortPath, ISubmodelBase } from "./submodel-base/submodel-base";
+import { ISubmodelBase } from "./submodel-base/submodel-base";
 
-export interface JsonVisitorContextType { fullParentIdShortPath: IdShortPath }
+export interface JsonVisitorContextType { }
 class JsonVisitor implements IVisitor<JsonVisitorContextType, any> {
   constructor(private readonly options?: ConvertToPlainOptions) {
   }
@@ -46,12 +46,8 @@ class JsonVisitor implements IVisitor<JsonVisitorContextType, any> {
     };
   }
 
-  private buildFullIdShortPath(element: any, context?: JsonVisitorContextType): IdShortPath {
-    return context ? context.fullParentIdShortPath.addPathSegment(element.idShort) : IdShortPath.create({ path: element.idShort });
-  }
-
-  private filterByAbility(plainToFilter: any, element: any, context?: JsonVisitorContextType): any {
-    const idShortPath = this.buildFullIdShortPath(element, context);
+  private filterByAbility(plainToFilter: any, element: ISubmodelBase): any {
+    const idShortPath = element.getIdShortPath();
     if (this.options?.ability) {
       if (!this.options.ability.can(Permissions.Read, idShortPath)) {
         return { };
@@ -60,7 +56,7 @@ class JsonVisitor implements IVisitor<JsonVisitorContextType, any> {
     return plainToFilter;
   }
 
-  visitProperty(element: Property, context?: JsonVisitorContextType): any {
+  visitProperty(element: Property, _context?: JsonVisitorContextType): any {
     return this.filterByAbility({
       modelType: KeyTypes.Property,
       ...this.buildBase(element),
@@ -68,7 +64,7 @@ class JsonVisitor implements IVisitor<JsonVisitorContextType, any> {
       valueType: element.valueType,
       value: element.value,
       valueId: element.valueId?.accept(this) ?? null,
-    }, element, context);
+    }, element);
   }
 
   visitLanguageText(element: LanguageText): any {
@@ -122,8 +118,8 @@ class JsonVisitor implements IVisitor<JsonVisitorContextType, any> {
     };
   }
 
-  visitSubmodel(element: Submodel, context?: JsonVisitorContextType): any {
-    const submodelElements = removeEmptyItems(element.submodelElements.map(e => e.accept(this, { fullParentIdShortPath: this.buildFullIdShortPath(element, context) })));
+  visitSubmodel(element: Submodel, _context?: JsonVisitorContextType): any {
+    const submodelElements = removeEmptyItems(element.submodelElements.map(e => e.accept(this)));
     const plain = {
       ...this.buildBase(element),
       modelType: KeyTypes.Submodel,
@@ -133,7 +129,7 @@ class JsonVisitor implements IVisitor<JsonVisitorContextType, any> {
       kind: element.kind,
       submodelElements,
     };
-    return submodelElements.length > 0 ? plain : this.filterByAbility(plain, element, context);
+    return submodelElements.length > 0 ? plain : this.filterByAbility(plain, element);
   }
 
   visitAdministrativeInformation(element: AdministrativeInformation): any {
@@ -143,7 +139,7 @@ class JsonVisitor implements IVisitor<JsonVisitorContextType, any> {
     };
   }
 
-  visitAnnotatedRelationshipElement(element: AnnotatedRelationshipElement, context?: JsonVisitorContextType): any {
+  visitAnnotatedRelationshipElement(element: AnnotatedRelationshipElement, _context?: JsonVisitorContextType): any {
     return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.AnnotatedRelationshipElement,
@@ -151,10 +147,10 @@ class JsonVisitor implements IVisitor<JsonVisitorContextType, any> {
       second: element.second.accept(this),
       extensions: element.extensions.map(e => e.accept(this)),
       annotations: element.annotations.map(a => a.accept(this)),
-    }, element, context);
+    }, element);
   }
 
-  visitBlob(element: Blob, context?: JsonVisitorContextType): any {
+  visitBlob(element: Blob, _context?: JsonVisitorContextType): any {
     return this.filterByAbility(
       {
         ...this.buildBase(element),
@@ -164,11 +160,11 @@ class JsonVisitor implements IVisitor<JsonVisitorContextType, any> {
         value: element.value ? element.value.toString() : element.value,
       },
       element,
-      context,
+
     );
   }
 
-  visitEntity(element: Entity, context?: JsonVisitorContextType): any {
+  visitEntity(element: Entity, _context?: JsonVisitorContextType): any {
     return this.filterByAbility(
       {
         ...this.buildBase(element),
@@ -180,31 +176,30 @@ class JsonVisitor implements IVisitor<JsonVisitorContextType, any> {
         specificAssetIds: element.specificAssetIds.map(s => s.accept(this)),
       },
       element,
-      context,
     );
   }
 
-  visitFile(element: File, context?: JsonVisitorContextType): any {
+  visitFile(element: File, _context?: JsonVisitorContextType): any {
     return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.File,
       contentType: element.contentType,
       extensions: element.extensions.map(e => e.accept(this)),
       value: element.value,
-    }, element, context);
+    }, element);
   }
 
-  visitMultiLanguageProperty(element: MultiLanguageProperty, context?: JsonVisitorContextType): any {
+  visitMultiLanguageProperty(element: MultiLanguageProperty, _context?: JsonVisitorContextType): any {
     return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.MultiLanguageProperty,
       extensions: element.extensions.map(e => e.accept(this)),
       value: element.value.map(lt => lt.accept(this)),
       valueId: element.valueId?.accept(this) ?? null,
-    }, element, context);
+    }, element);
   }
 
-  visitRange(element: Range, context?: JsonVisitorContextType): any {
+  visitRange(element: Range, _context?: JsonVisitorContextType): any {
     return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.Range,
@@ -212,40 +207,40 @@ class JsonVisitor implements IVisitor<JsonVisitorContextType, any> {
       extensions: element.extensions.map(e => e.accept(this)),
       min: element.min,
       max: element.max,
-    }, element, context);
+    }, element);
   }
 
-  visitReferenceElement(element: ReferenceElement, context?: JsonVisitorContextType): any {
+  visitReferenceElement(element: ReferenceElement, _context?: JsonVisitorContextType): any {
     return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.ReferenceElement,
       extensions: element.extensions.map(e => e.accept(this)),
       value: element.value?.accept(this) ?? null,
-    }, element, context);
+    }, element);
   }
 
-  visitRelationshipElement(element: RelationshipElement, context?: JsonVisitorContextType): any {
+  visitRelationshipElement(element: RelationshipElement, _context?: JsonVisitorContextType): any {
     return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.RelationshipElement,
       first: element.first.accept(this),
       second: element.second.accept(this),
       extensions: element.extensions.map(e => e.accept(this)),
-    }, element, context);
+    }, element);
   }
 
-  visitSubmodelElementCollection(element: SubmodelElementCollection, context?: JsonVisitorContextType): any {
-    const value = removeEmptyItems(element.value.map(e => e.accept(this, { fullParentIdShortPath: this.buildFullIdShortPath(element, context) })));
+  visitSubmodelElementCollection(element: SubmodelElementCollection, _context?: JsonVisitorContextType): any {
+    const value = removeEmptyItems(element.value.map(e => e.accept(this)));
     const result = {
       ...this.buildBase(element),
       modelType: KeyTypes.SubmodelElementCollection,
       extensions: element.extensions.map(e => e.accept(this)),
       value,
     };
-    return value.length > 0 ? result : this.filterByAbility(result, element, context);
+    return value.length > 0 ? result : this.filterByAbility(result, element);
   }
 
-  visitSubmodelElementList(element: SubmodelElementList, context?: JsonVisitorContextType): any {
+  visitSubmodelElementList(element: SubmodelElementList, _context?: JsonVisitorContextType): any {
     return this.filterByAbility({
       ...this.buildBase(element),
       modelType: KeyTypes.SubmodelElementList,
@@ -254,8 +249,8 @@ class JsonVisitor implements IVisitor<JsonVisitorContextType, any> {
       semanticIdListElement: element.semanticIdListElement?.accept(this) ?? null,
       valueTypeListElement: element.valueTypeListElement,
       typeValueListElement: element.typeValueListElement,
-      value: removeEmptyItems(element.value.map(e => e.accept(this, { fullParentIdShortPath: this.buildFullIdShortPath(element, context) }))),
-    }, element, context);
+      value: removeEmptyItems(element.value.map(e => e.accept(this))),
+    }, element);
   }
 
   visitSpecificAssetId(element: SpecificAssetId): any {
