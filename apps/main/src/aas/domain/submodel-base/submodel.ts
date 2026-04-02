@@ -133,11 +133,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   modifyValueOfSubmodelElement(data: unknown, idShortPath: IdShortPath, options: ValueModifierVisitorOptions) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
-    let fullParentIdShortPath = IdShortPath.create({ path: this.idShort });
-    if (!idShortPath.getParentPath().isEmpty()) {
-      fullParentIdShortPath = fullParentIdShortPath.concat(idShortPath.getParentPath());
-    }
-    submodelElement.accept(new ValueModifierVisitor(options), { data, fullParentIdShortPath });
+    submodelElement.accept(new ValueModifierVisitor(options), { data });
     return submodelElement;
   }
 
@@ -185,12 +181,8 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   getValueRepresentation({ idShortPath, options }: { idShortPath?: IdShortPath; options: ValueVisitorOptions }): JsonType {
     const element = idShortPath ? this.findSubmodelElementOrFail(idShortPath) : this;
-    const context = idShortPath
-      ? { fullParentIdShortPath: IdShortPath.create({ path: this.idShort }).concat(idShortPath) }
-      : undefined;
-
     const valueVisitor = new ValueVisitor(options);
-    return element.accept(valueVisitor, context);
+    return element.accept(valueVisitor);
   }
 
   findSubmodelElementOrFail(idShortPath: IdShortPath): ISubmodelElement {

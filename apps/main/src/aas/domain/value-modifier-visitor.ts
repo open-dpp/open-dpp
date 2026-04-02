@@ -30,24 +30,20 @@ import { Range } from "./submodel-base/range";
 import { ReferenceElement } from "./submodel-base/reference-element";
 import { RelationshipElement } from "./submodel-base/relationship-element";
 import { Submodel } from "./submodel-base/submodel";
-import { IdShortPath } from "./submodel-base/submodel-base";
+import { ISubmodelBase } from "./submodel-base/submodel-base";
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
 
 export interface ValueModifierVisitorOptions { ability: AasAbility }
-export interface ValueModifierVisitorContextType { data: unknown; fullParentIdShortPath?: IdShortPath }
+export interface ValueModifierVisitorContextType { data: unknown }
 
 export class ValueModifierVisitor implements IVisitor<ValueModifierVisitorContextType, void> {
   constructor(private readonly options: ValueModifierVisitorOptions) {
   }
 
-  private buildFullIdShortPath(element: any, context?: ValueModifierVisitorContextType) {
-    return context && context.fullParentIdShortPath ? context.fullParentIdShortPath.addPathSegment(element.idShort) : IdShortPath.create({ path: element.idShort });
-  }
-
-  private modificationGuard(element: any, context?: ValueModifierVisitorContextType) {
-    const idShortPath = this.buildFullIdShortPath(element, context);
+  private modificationGuard(element: ISubmodelBase) {
+    const idShortPath = element.getIdShortPath();
     if (!this.options.ability.can(Permissions.Edit, idShortPath)) {
       throw new ForbiddenError(`Missing permissions to modify element ${idShortPath.toString()}.`);
     }
@@ -108,7 +104,7 @@ export class ValueModifierVisitor implements IVisitor<ValueModifierVisitorContex
   }
 
   visitFile(element: File, context?: ValueModifierVisitorContextType): void {
-    this.modificationGuard(element, context);
+    this.modificationGuard(element);
     const parsed = z.object({
       value: z.string().nullish(),
       contentType: z.string().optional(),
@@ -130,14 +126,14 @@ export class ValueModifierVisitor implements IVisitor<ValueModifierVisitorContex
   }
 
   visitMultiLanguageProperty(element: MultiLanguageProperty, context?: ValueModifierVisitorContextType): void {
-    this.modificationGuard(element, context);
+    this.modificationGuard(element);
     const parsed = z.record(z.string(), z.string()).array().parse(context?.data);
     element.value = parsed.map(record =>
       Object.entries(record).map(([language, text]) => LanguageText.create({ language: LanguageEnum.parse(language), text }))).flat();
   }
 
   visitProperty(element: Property, context?: ValueModifierVisitorContextType): void {
-    this.modificationGuard(element, context);
+    this.modificationGuard(element);
     const value = z.string().nullish().parse(context?.data ?? element.value);
     if (value !== undefined) {
       element.value = value;
@@ -179,7 +175,7 @@ export class ValueModifierVisitor implements IVisitor<ValueModifierVisitorContex
   }
 
   visitReferenceElement(element: ReferenceElement, context?: ValueModifierVisitorContextType): void {
-    this.modificationGuard(element, context);
+    this.modificationGuard(element);
     const parsedValue = ReferenceModificationSchema.nullish().parse(context?.data);
     const input = { value: element.value, newValue: parsedValue };
     match(input).with({
@@ -226,7 +222,7 @@ export class ValueModifierVisitor implements IVisitor<ValueModifierVisitorContex
       if (!foundElement) {
         throw new ValueError(`Could not find element with idShort ${key} within submodel element collection ${element.idShort}.`);
       }
-      foundElement.accept(this, { data: value, fullParentIdShortPath: this.buildFullIdShortPath(element, context) });
+      foundElement.accept(this, { data: value });
     }
   }
 
@@ -237,7 +233,7 @@ export class ValueModifierVisitor implements IVisitor<ValueModifierVisitorContex
       if (!target) {
         throw new ValueError(`List index ${index} is out of bounds for submodel element list ${element.idShort}.`);
       }
-      target.accept(this, { data: row, fullParentIdShortPath: this.buildFullIdShortPath(element, context) });
+      target.accept(this, { data: row });
     }
   }
 }
