@@ -8,8 +8,8 @@ import { computed, ref } from "vue";
 import { useRoleHierarchy } from "../../composables/role-hierarchy.ts";
 import { useUserStore } from "../../stores/user.ts";
 
-const { getPermissions, editPermissions, resetPermissions }
-  = defineProps<Omit<IAasPermissionsForm, "savePermissions">>();
+const { getPermissions, editPermissions, resetPermissions, ignoredPermissionOptions }
+  = defineProps<Omit<IAasPermissionsForm, "savePermissions"> & { ignoredPermissionOptions?: PermissionType[] }>();
 
 const { asSubject } = useUserStore();
 const { getVisibleRoles, canEditPermissionsOfRole } = useRoleHierarchy();
@@ -33,7 +33,7 @@ const permissionOptions = ref([
   { name: "Create", key: Permissions.Create },
   { name: "Edit", key: Permissions.Edit },
   { name: "Delete", key: Permissions.Delete },
-]);
+].filter(permission => ignoredPermissionOptions === undefined || !ignoredPermissionOptions.includes(permission.key)));
 
 function onPermissionChange(newPermissions: PermissionType[]) {
   editPermissions(newPermissions, selectedRole.value);

@@ -4,8 +4,10 @@ import type { ReferenceElementEditorProps } from "../../composables/aas-drawer.t
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import {
   KeyTypes,
+  Permissions,
   ReferenceElementModificationSchema,
   ReferenceTypes,
+
 } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 
@@ -94,6 +96,7 @@ defineExpose<{
       :edit-permissions="editPermissions"
       :get-permissions="getPermissions"
       :reset-permissions="resetPermissions"
+      :ignored-permission-options="[Permissions.Create]"
     />
   </FormContainer>
 </template>

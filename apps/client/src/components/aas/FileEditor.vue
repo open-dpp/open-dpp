@@ -2,7 +2,7 @@
 import type { FileModificationDto } from "@open-dpp/dto";
 import type { FileEditorProps } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
-import { FileModificationSchema } from "@open-dpp/dto";
+import { FileModificationSchema, Permissions } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 
@@ -65,6 +65,7 @@ defineExpose<{
       :edit-permissions="editPermissions"
       :get-permissions="getPermissions"
       :reset-permissions="resetPermissions"
+      :ignored-permission-options="[Permissions.Create]"
     />
   </div>
 </template>
