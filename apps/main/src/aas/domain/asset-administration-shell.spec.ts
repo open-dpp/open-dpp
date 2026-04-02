@@ -7,6 +7,7 @@ import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";
 import { AdministrativeInformation } from "./common/administrative-information";
+import { IdShortPath } from "./common/id-short-path";
 import { Key } from "./common/key";
 import { LanguageText } from "./common/language-text";
 import { Reference } from "./common/reference";
@@ -17,8 +18,8 @@ import { Permission } from "./security/permission";
 import { PermissionPerObject } from "./security/permission-per-object";
 import { Security } from "./security/security";
 import { SubjectAttributes } from "./security/subject-attributes";
+
 import { Submodel } from "./submodel-base/submodel";
-import { IdShortPath } from "./submodel-base/submodel-base";
 
 describe("assetAdministrationShell", () => {
   it("should create a new asset administration shell", () => {
@@ -60,13 +61,27 @@ describe("assetAdministrationShell", () => {
       type: ReferenceTypes.ModelReference,
       keys: [Key.create({ type: KeyTypes.Submodel, value: submodelId2 })],
     });
+    const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+    const security = Security.create({});
+    security.addPolicy(admin, IdShortPath.create({ path: submodelToDelete.idShort }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(admin, IdShortPath.create({ path: submodelId2 }), allPermissionsAllow.map(Permission.fromPlain));
 
     const aas = AssetAdministrationShell.create({
       assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance }),
       submodels: [submodelRef1, submodelRef2],
+      security,
     });
     aas.deleteSubmodel(submodelToDelete);
     expect(aas.submodels).toEqual([submodelRef2]);
+    expect(aas.security.localAccessControl.accessPermissionRules).toEqual([
+      AccessPermissionRule.create({
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.ADMIN }),
+        permissionsPerObject: [PermissionPerObject.create({
+          object: createAasObject(IdShortPath.create({ path: submodelId2 })),
+          permissions: allPermissionsAllow.map(Permission.fromPlain),
+        })],
+      }),
+    ]);
   });
 
   it("should be modified", () => {

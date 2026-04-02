@@ -18,7 +18,8 @@ import {
 } from "@open-dpp/dto";
 import { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
 import { UserRoleType } from "../../identity/users/domain/user-role.enum";
-import { IdShortPath } from "../domain/submodel-base/submodel-base";
+
+import { IdShortPath } from "../domain/common/id-short-path";
 
 export interface IAasReadEndpointsWithOrganizationId {
   getShells: (organizationId: string, id: string, limit: number | undefined, cursor: string | undefined, userRole: UserRoleType, memberRole: MemberRoleType | undefined) => Promise<AssetAdministrationShellPaginationResponseDto>;

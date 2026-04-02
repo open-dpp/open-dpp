@@ -29,8 +29,9 @@ import {
 } from "@open-dpp/dto";
 
 import { ZodValidationPipe } from "@open-dpp/exception";
+import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
-import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
+import { parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import {
   ApiDeleteColumn,

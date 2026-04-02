@@ -16,10 +16,10 @@ import { PassportRepository } from "../../passports/infrastructure/passport.repo
 import { PassportDoc, PassportSchema } from "../../passports/infrastructure/passport.schema";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
+import { IdShortPath } from "../domain/common/id-short-path";
 import { Security } from "../domain/security/security";
 import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { Submodel } from "../domain/submodel-base/submodel";
-import { IdShortPath } from "../domain/submodel-base/submodel-base";
 import { AasRepository } from "./aas.repository";
 import {
   AssetAdministrationShellDoc,

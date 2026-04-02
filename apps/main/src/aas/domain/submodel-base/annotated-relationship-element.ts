@@ -1,4 +1,5 @@
 import { AasSubmodelElements, AasSubmodelElementsType, AnnotatedRelationshipElementJsonSchema } from "@open-dpp/dto";
+import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -13,7 +14,6 @@ import {
   addSubmodelElementOrFail,
   DeleteOptions,
   deleteSubmodelElementOrFail,
-  IdShortPath,
   ISubmodelElement,
   parseSubmodelElement,
   setParentIdShortPaths,

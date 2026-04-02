@@ -4,12 +4,12 @@ import { ValueError } from "@open-dpp/exception";
 import { propertyInputPlainFactory } from "@open-dpp/testing";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
+import { IdShortPath } from "../common/id-short-path";
 import { Permission } from "../security/permission";
 import { Security } from "../security/security";
 import { SubjectAttributes } from "../security/subject-attributes";
 import { Property } from "./property";
 import { registerSubmodelElementClasses } from "./register-submodel-element-classes";
-import { IdShortPath } from "./submodel-base";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
 

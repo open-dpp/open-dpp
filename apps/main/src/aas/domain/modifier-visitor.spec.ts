@@ -3,6 +3,7 @@ import { AasSubmodelElements, DataTypeDef, KeyTypes, PermissionKind, Permissions
 import { ForbiddenError } from "@open-dpp/exception";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
+import { IdShortPath } from "./common/id-short-path";
 import { Key } from "./common/key";
 import { LanguageText } from "./common/language-text";
 import { Reference } from "./common/reference";
@@ -14,7 +15,6 @@ import { Property } from "./submodel-base/property";
 import { ReferenceElement } from "./submodel-base/reference-element";
 import { registerSubmodelElementClasses } from "./submodel-base/register-submodel-element-classes";
 import { Submodel } from "./submodel-base/submodel";
-import { IdShortPath } from "./submodel-base/submodel-base";
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 

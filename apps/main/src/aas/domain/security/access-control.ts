@@ -1,5 +1,11 @@
+import { ForbiddenError } from "@open-dpp/exception";
 import { z } from "zod/v4";
+import { UserRole } from "../../../identity/users/domain/user-role.enum";
+import { IdShortPath } from "../common/id-short-path";
+import { createAasObject } from "./aas-object";
 import { AccessPermissionRule, AccessPermissionRuleSchema } from "./access-permission-rule";
+import { Permission } from "./permission";
+import { PermissionPerObject } from "./permission-per-object";
 import { SubjectAttributes } from "./subject-attributes";
 
 export const AccessControlSchema = z.object({
@@ -7,7 +13,18 @@ export const AccessControlSchema = z.object({
 });
 
 export class AccessControl {
-  private constructor(public readonly accessPermissionRules: AccessPermissionRule[]) {
+  private administrator = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+
+  private constructor(private _accessPermissionRules: AccessPermissionRule[]) {
+  }
+
+  get accessPermissionRules(): AccessPermissionRule[] {
+    return this._accessPermissionRules;
+  }
+
+  withAdministrator(newAdministrator: SubjectAttributes) {
+    this.administrator = newAdministrator;
+    return this;
   }
 
   static create(data: { accessPermissionRules?: AccessPermissionRule[] }): AccessControl {
@@ -40,6 +57,28 @@ export class AccessControl {
     );
   }
 
+  modifyPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): void {
+    this.administratePolicyGuard(subject);
+    const rule = this.findRuleOfSubject(subject);
+    if (!rule) {
+      throw new ForbiddenError(`Policy for subject { userRole: ${subject.userRole}, memberRole: ${subject.memberRole} } and object ${object.toString()} does not exist.`);
+    }
+    const aasObject = createAasObject(object);
+    rule.modifyPermissionForObject(aasObject, permissions);
+  }
+
+  deletePoliciesByObject(object: IdShortPath): void {
+    const keepRules = [];
+    for (const rule of this.accessPermissionRules) {
+      this.administratePolicyGuard(rule.targetSubjectAttributes);
+      rule.deletePermissionPerObject(object);
+      if (rule.permissionsPerObject.length > 0) {
+        keepRules.push(rule);
+      }
+    }
+    this._accessPermissionRules = keepRules;
+  }
+
   findRuleOfSubject(subject: SubjectAttributes): AccessPermissionRule | undefined {
     return this.accessPermissionRules.find(
       rule => rule.targetSubjectAttributes.isEqual(subject),
@@ -48,5 +87,23 @@ export class AccessControl {
 
   addRule(rule: AccessPermissionRule): void {
     this.accessPermissionRules.push(rule);
+  }
+
+  addPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): void {
+    this.administratePolicyGuard(subject);
+    const rule = this.findRuleOfSubject(subject);
+    const permissionPerObject = PermissionPerObject.create({ object: createAasObject(object), permissions });
+    if (rule) {
+      rule.addPermissionPerObject(permissionPerObject);
+    }
+    else {
+      this.addRule(AccessPermissionRule.create({ targetSubjectAttributes: subject, permissionsPerObject: [permissionPerObject] }));
+    }
+  }
+
+  private administratePolicyGuard(subject: SubjectAttributes) {
+    if (this.administrator.userRole !== UserRole.ADMIN && this.administrator.hasLowerThanOrEqualRoles(subject)) {
+      throw new ForbiddenError(`Administrator has no permission to add/ modify/ delete policy.`);
+    }
   }
 }

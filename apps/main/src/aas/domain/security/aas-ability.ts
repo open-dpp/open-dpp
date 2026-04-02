@@ -1,5 +1,5 @@
 import { PermissionKind, PermissionType } from "@open-dpp/dto";
-import { IdShortPath } from "../submodel-base/submodel-base";
+import { IdShortPath } from "../common/id-short-path";
 import { AccessPermissionRule } from "./access-permission-rule";
 import { PermissionPerObject } from "./permission-per-object";
 

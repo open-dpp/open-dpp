@@ -12,8 +12,8 @@ import {
   SubmodelResponseDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
+import { IdShortPath } from "../../aas/domain/common/id-short-path";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
-import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
 import {
   ApiGetShells,
   ApiGetSubmodelById,

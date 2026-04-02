@@ -3,7 +3,7 @@ import { PermissionKind, Permissions } from "@open-dpp/dto";
 import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
-import { IdShortPath } from "../submodel-base/submodel-base";
+import { IdShortPath } from "../common/id-short-path";
 import { createAasObject } from "./aas-object";
 import { AccessPermissionRule } from "./access-permission-rule";
 import { Permission } from "./permission";
@@ -12,6 +12,7 @@ import { Security } from "./security";
 import { SubjectAttributes } from "./subject-attributes";
 
 describe("security", () => {
+  const policyManagementError = "Administrator has no permission to add/ modify/ delete policy.";
   it("create security schema and checks permissions", () => {
     const security = Security.create({ });
     security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
@@ -57,7 +58,7 @@ describe("security", () => {
 
   it("should check permission of administrator to add policy", () => {
     let security = Security.create({ }).withAdministrator(SubjectAttributes.create({ userRole: UserRole.USER }));
-    const expectedError = new ForbiddenError(`Administrator has no permission to add/ modify policy.`);
+    const expectedError = new ForbiddenError(policyManagementError);
     expect(() => security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })])).toThrow(
       expectedError,
     );
@@ -93,7 +94,7 @@ describe("security", () => {
     expect(security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.ADMIN }))).toEqual([
       {
         targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.ADMIN }),
-        permissionsPerObject: [
+        _permissionsPerObject: [
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: "section1" })),
             permissions: [
@@ -113,7 +114,7 @@ describe("security", () => {
         permission: Permissions.Create,
         kindOfPermission: PermissionKind.Allow,
       }),
-    ])).toThrow(new ForbiddenError(`Administrator has no permission to add/ modify policy.`));
+    ])).toThrow(new ForbiddenError(policyManagementError));
   });
 
   it("should apply rules", () => {
@@ -132,7 +133,7 @@ describe("security", () => {
     expect(security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.USER }))).toEqual([
       {
         targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER }),
-        permissionsPerObject: [
+        _permissionsPerObject: [
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: "section1" })),
             permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })],
@@ -156,7 +157,7 @@ describe("security", () => {
     expect(security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.USER }))).toEqual([
       {
         targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER }),
-        permissionsPerObject: [
+        _permissionsPerObject: [
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: "section1" })),
             permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
@@ -167,7 +168,7 @@ describe("security", () => {
     expect(security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }))).toEqual([
       {
         targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
-        permissionsPerObject: [
+        _permissionsPerObject: [
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: "section1" })),
             permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
@@ -183,9 +184,37 @@ describe("security", () => {
     expect(security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.ADMIN }))).toEqual([
       {
         targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.ADMIN }),
-        permissionsPerObject: [
+        _permissionsPerObject: [
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: "adminSection" })),
+            permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
+          }),
+        ],
+      },
+    ]);
+  });
+
+  it("should delete policies", () => {
+    const security = Security.create({ });
+    const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    security.addPolicy(SubjectAttributes.create(admin), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(SubjectAttributes.create(admin), IdShortPath.create({ path: "section1.subSection1.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+
+    security.addPolicy(SubjectAttributes.create(member), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(SubjectAttributes.create(member), IdShortPath.create({ path: "section2" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+
+    const pathToDelete = IdShortPath.create({ path: "section1" });
+    expect(() => security.withAdministrator(member).deletePoliciesByObject(pathToDelete)).toThrow(new ForbiddenError(policyManagementError));
+
+    security.withAdministrator(admin).deletePoliciesByObject(pathToDelete);
+    expect(security.findPoliciesBySubject(admin)).toEqual([]);
+    expect(security.findPoliciesBySubject(member)).toEqual([
+      {
+        targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
+        _permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "section2" })),
             permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
           }),
         ],

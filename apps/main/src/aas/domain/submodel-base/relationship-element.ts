@@ -1,5 +1,6 @@
 import { AasSubmodelElements, AasSubmodelElementsType, RelationshipElementJsonSchema } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
+import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -8,7 +9,7 @@ import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import JsonVisitor from "../json-visitor";
 import { IVisitor } from "../visitor";
-import { IdShortPath, ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
 export class IRelationshipElement {
   first: Reference;

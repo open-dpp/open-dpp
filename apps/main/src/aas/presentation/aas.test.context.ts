@@ -51,6 +51,7 @@ import { AasModule } from "../aas.module";
 
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
+import { IdShortPath } from "../domain/common/id-short-path";
 import { Key } from "../domain/common/key";
 import { LanguageText } from "../domain/common/language-text";
 import { Reference } from "../domain/common/reference";
@@ -62,7 +63,6 @@ import { Security } from "../domain/security/security";
 import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { Property } from "../domain/submodel-base/property";
 import { Submodel } from "../domain/submodel-base/submodel";
-import { IdShortPath } from "../domain/submodel-base/submodel-base";
 import { SubmodelElementCollection } from "../domain/submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "../domain/submodel-base/submodel-element-list";
 import { TableExtension } from "../domain/submodel-base/table-extension";
@@ -155,6 +155,7 @@ export function createAasTestContext<T>(
       IdShortPath.create({ path: submodel1.idShort }),
       IdShortPath.create({ path: submodel2.idShort }),
       IdShortPath.create({ path: submodelBillOfMaterialPlainFactory.build().idShort! }),
+      IdShortPath.create({ path: "toDelete" }),
     ].forEach((idShortPath) => {
       security.addPolicy(
         subject,
@@ -789,7 +790,7 @@ export function createAasTestContext<T>(
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const entity = await createEntity(org!.id);
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
-    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
+    const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build({ idShort: "toDelete" }, { transient: { iriDomain } }));
     await submodelRepository.save(submodel);
     const submodelRef = Reference.create({
       type: ReferenceTypes.ModelReference,

@@ -1,5 +1,6 @@
 import { ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
+import { IdShortPath } from "../common/id-short-path";
 import { ReferenceElement } from "../submodel-base/reference-element";
 import { Permission } from "./permission";
 import { PermissionPerObject, PermissionPerObjectSchema } from "./permission-per-object";
@@ -11,10 +12,25 @@ export const AccessPermissionRuleSchema = z.object({
 });
 
 export class AccessPermissionRule {
-  private constructor(public readonly targetSubjectAttributes: SubjectAttributes, public readonly permissionsPerObject: PermissionPerObject[]) {}
+  private constructor(public readonly targetSubjectAttributes: SubjectAttributes, private _permissionsPerObject: PermissionPerObject[]) {}
 
   static create(data: { targetSubjectAttributes: SubjectAttributes; permissionsPerObject?: PermissionPerObject[] }): AccessPermissionRule {
     return new AccessPermissionRule(data.targetSubjectAttributes, data.permissionsPerObject ?? []);
+  }
+
+  get permissionsPerObject(): PermissionPerObject[] {
+    return this._permissionsPerObject;
+  }
+
+  deletePermissionPerObject(object: IdShortPath): void {
+    const keepPermissions = [];
+    for (const permissionsPerObject of this.permissionsPerObject) {
+      if (!IdShortPath.create({ path: permissionsPerObject.object.idShort }).isChildOf(object)) {
+        keepPermissions.push(permissionsPerObject);
+      }
+    }
+
+    this._permissionsPerObject = keepPermissions;
   }
 
   hasPermissionForObject(permissionPerObject: PermissionPerObject): boolean {

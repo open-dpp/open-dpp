@@ -1,10 +1,9 @@
 import { PermissionKind, Permissions } from "@open-dpp/dto";
-import { ForbiddenError } from "@open-dpp/exception";
 import { z } from "zod/v4";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
+import { IdShortPath } from "../common/id-short-path";
 import { Submodel } from "../submodel-base/submodel";
-import { IdShortPath } from "../submodel-base/submodel-base";
 import { AasAbility } from "./aas-ability";
 import { createAasObject } from "./aas-object";
 import { AccessControl, AccessControlSchema } from "./access-control";
@@ -18,7 +17,6 @@ export const SecuritySchema = z.object({
 });
 
 export class Security {
-  private administrator = SubjectAttributes.create({ userRole: UserRole.ADMIN });
   private constructor(public readonly localAccessControl: AccessControl) {
   }
 
@@ -34,7 +32,7 @@ export class Security {
   }
 
   withAdministrator(newAdministrator: SubjectAttributes): Security {
-    this.administrator = newAdministrator;
+    this.localAccessControl.withAdministrator(newAdministrator);
     return this;
   }
 
@@ -63,32 +61,16 @@ export class Security {
     return !!rule && rule.hasPermissionForObject(PermissionPerObject.create({ object: createAasObject(object), permissions }));
   }
 
-  private administratePolicyGuard(subject: SubjectAttributes) {
-    if (this.administrator.userRole !== UserRole.ADMIN && this.administrator.hasLowerThanOrEqualRoles(subject)) {
-      throw new ForbiddenError(`Administrator has no permission to add/ modify policy.`);
-    }
+  addPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): void {
+    this.localAccessControl.addPolicy(subject, object, permissions);
   }
 
-  addPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): void {
-    this.administratePolicyGuard(subject);
-    const rule = this.localAccessControl.findRuleOfSubject(subject);
-    const permissionPerObject = PermissionPerObject.create({ object: createAasObject(object), permissions });
-    if (rule) {
-      rule.addPermissionPerObject(permissionPerObject);
-    }
-    else {
-      this.localAccessControl.addRule(AccessPermissionRule.create({ targetSubjectAttributes: subject, permissionsPerObject: [permissionPerObject] }));
-    }
+  deletePoliciesByObject(object: IdShortPath): void {
+    this.localAccessControl.deletePoliciesByObject(object);
   }
 
   modifyPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): void {
-    this.administratePolicyGuard(subject);
-    const rule = this.localAccessControl.findRuleOfSubject(subject);
-    if (!rule) {
-      throw new ForbiddenError(`Policy for subject { userRole: ${subject.userRole}, memberRole: ${subject.memberRole} } and object ${object.toString()} does not exist.`);
-    }
-    const aasObject = createAasObject(object);
-    rule.modifyPermissionForObject(aasObject, permissions);
+    this.localAccessControl.modifyPolicy(subject, object, permissions);
   }
 
   applyModifiedRules(modifications: AccessPermissionRule[]): void {

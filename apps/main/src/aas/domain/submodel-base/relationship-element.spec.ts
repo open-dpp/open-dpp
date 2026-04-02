@@ -3,13 +3,14 @@ import { DataTypeDef, PermissionKind, Permissions, ReferenceTypes } from "@open-
 import { ValueError } from "@open-dpp/exception";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
+import { IdShortPath } from "../common/id-short-path";
 import { Reference } from "../common/reference";
 import { Permission } from "../security/permission";
 import { Security } from "../security/security";
 import { SubjectAttributes } from "../security/subject-attributes";
 import { Property } from "./property";
+
 import { RelationshipElement } from "./relationship-element";
-import { IdShortPath } from "./submodel-base";
 
 describe("relationshipElement", () => {
   it("should add submodel element", () => {

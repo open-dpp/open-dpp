@@ -3,6 +3,7 @@ import { MemberRole } from "../../../identity/organizations/domain/member-role.e
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { AssetAdministrationShell } from "../../domain/asset-adminstration-shell";
 import { AssetInformation } from "../../domain/asset-information";
+import { IdShortPath } from "../../domain/common/id-short-path";
 import { Resource } from "../../domain/resource";
 import { Permission } from "../../domain/security/permission";
 import { Security } from "../../domain/security/security";
@@ -10,7 +11,6 @@ import { SubjectAttributes } from "../../domain/security/subject-attributes";
 import { File } from "../../domain/submodel-base/file";
 import { Property } from "../../domain/submodel-base/property";
 import { Submodel } from "../../domain/submodel-base/submodel";
-import { IdShortPath } from "../../domain/submodel-base/submodel-base";
 import { SubmodelElementCollection } from "../../domain/submodel-base/submodel-element-collection";
 import { extractMediaIds } from "./extract-media-ids";
 

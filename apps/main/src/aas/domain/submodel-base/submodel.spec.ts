@@ -11,6 +11,7 @@ import {
 } from "@open-dpp/testing";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
+import { IdShortPath } from "../common/id-short-path";
 import { LanguageText } from "../common/language-text";
 import { Permission } from "../security/permission";
 import { Security } from "../security/security";
@@ -18,7 +19,6 @@ import { SubjectAttributes } from "../security/subject-attributes";
 import { Property } from "./property";
 import { registerSubmodelElementClasses } from "./register-submodel-element-classes";
 import { Submodel } from "./submodel";
-import { IdShortPath } from "./submodel-base";
 import { SubmodelElementCollection } from "./submodel-element-collection";
 import { SubmodelElementList } from "./submodel-element-list";
 import { TableExtension } from "./table-extension";

@@ -6,10 +6,10 @@ import { DbSessionOptions } from "../../database/query-options";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { findByIds, findOne, findOneOrFail, save } from "../../lib/repositories";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
+import { IdShortPath } from "../domain/common/id-short-path";
 import { Permission } from "../domain/security/permission";
 import { Security } from "../domain/security/security";
 import { SubjectAttributes } from "../domain/security/subject-attributes";
-import { IdShortPath } from "../domain/submodel-base/submodel-base";
 import { AssetAdministrationShellDbSchema } from "./schemas/asset-administration-shell-db-schema";
 import {
   AssetAdministrationShellDoc,

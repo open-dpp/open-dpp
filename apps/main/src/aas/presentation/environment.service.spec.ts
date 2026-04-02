@@ -34,6 +34,7 @@ import { PassportsModule } from "../../passports/passports.module";
 import { AasModule } from "../aas.module";
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { AssetInformation } from "../domain/asset-information";
+import { IdShortPath } from "../domain/common/id-short-path";
 import { LanguageText } from "../domain/common/language-text";
 import { Environment } from "../domain/environment";
 import { createAasObject } from "../domain/security/aas-object";
@@ -43,7 +44,6 @@ import { Security } from "../domain/security/security";
 import { SubjectAttributes } from "../domain/security/subject-attributes";
 import { Property } from "../domain/submodel-base/property";
 import { Submodel } from "../domain/submodel-base/submodel";
-import { IdShortPath } from "../domain/submodel-base/submodel-base";
 import { SubmodelElementCollection } from "../domain/submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "../domain/submodel-base/submodel-element-list";
 import { AasRepository } from "../infrastructure/aas.repository";
@@ -194,7 +194,7 @@ describe("environmentService", () => {
     expect(foundAas.security.findPoliciesBySubject(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }))).toEqual([
       {
         targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
-        permissionsPerObject: [
+        _permissionsPerObject: [
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: "section1" })),
             permissions: [
@@ -246,7 +246,7 @@ describe("environmentService", () => {
         { transient: transientParams },
       ) },
       SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
-    )).rejects.toThrow(new ForbiddenError("Administrator has no permission to add/ modify policy."));
+    )).rejects.toThrow(new ForbiddenError("Administrator has no permission to add/ modify/ delete policy."));
   });
 
   async function createDefaultEnvironment() {

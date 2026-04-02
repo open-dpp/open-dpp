@@ -3,6 +3,7 @@ import { NotFoundException } from "@nestjs/common";
 import { ModellingKindType, SubmodelJsonSchema } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { AdministrativeInformation } from "../common/administrative-information";
+import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -20,7 +21,6 @@ import {
   addSubmodelElementOrFail,
   DeleteOptions,
   deleteSubmodelElementOrFail,
-  IdShortPath,
   ISubmodelBase,
   ISubmodelElement,
   parseSubmodelElement,
