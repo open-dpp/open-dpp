@@ -227,6 +227,10 @@ export function createAasTestContext<T>(
           object: { idShortPath: "section1" },
           permissions: [
             {
+              permission: Permissions.Read,
+              kindOfPermission: PermissionKind.Allow,
+            },
+            {
               permission: Permissions.Create,
               kindOfPermission: PermissionKind.Allow,
             },

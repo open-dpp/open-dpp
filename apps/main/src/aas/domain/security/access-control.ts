@@ -1,4 +1,5 @@
-import { ForbiddenError } from "@open-dpp/exception";
+import { Permissions } from "@open-dpp/dto";
+import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { IdShortPath } from "../common/id-short-path";
@@ -59,6 +60,8 @@ export class AccessControl {
 
   modifyPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): void {
     this.administratePolicyGuard(subject);
+
+    this.allowedCombinationOfPermissionsOrFail(permissions);
     const rule = this.findRuleOfSubject(subject);
     if (!rule) {
       throw new ForbiddenError(`Policy for subject { userRole: ${subject.userRole}, memberRole: ${subject.memberRole} } and object ${object.toString()} does not exist.`);
@@ -89,8 +92,20 @@ export class AccessControl {
     this.accessPermissionRules.push(rule);
   }
 
+  private allowedCombinationOfPermissionsOrFail(permissions: Permission[]) {
+    const readPermission = permissions.find(p => p.permission === Permissions.Read);
+    for (const permission of permissions) {
+      if (permission.permission !== Permissions.Read) {
+        if (!readPermission) {
+          throw new ValueError(`Permission ${permission.permission} is not allowed without Read permission.`);
+        }
+      }
+    }
+  }
+
   addPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): void {
     this.administratePolicyGuard(subject);
+    this.allowedCombinationOfPermissionsOrFail(permissions);
     const rule = this.findRuleOfSubject(subject);
     const permissionPerObject = PermissionPerObject.create({ object: createAasObject(object), permissions });
     if (rule) {

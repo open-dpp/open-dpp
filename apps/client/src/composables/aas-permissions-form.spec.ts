@@ -215,7 +215,10 @@ describe("aasPermissionsForm composable", () => {
 
     editPermissions([Permissions.Create, Permissions.Edit], member);
     editPermissions([Permissions.Create, Permissions.Edit], member);
-    expect(getPermissions(member)).toEqual({ permissions: [Permissions.Create, Permissions.Edit], inheritsPermissionsOf: null });
+    expect(getPermissions(member)).toEqual({
+      permissions: [Permissions.Create, Permissions.Edit, Permissions.Read],
+      inheritsPermissionsOf: null,
+    });
     editPermissions([Permissions.Read, Permissions.Delete], owner);
 
     expect(getPermissions(owner)).toEqual({ permissions: [Permissions.Read, Permissions.Delete], inheritsPermissionsOf: null });
@@ -252,6 +255,10 @@ describe("aasPermissionsForm composable", () => {
                       permission: Permissions.Edit,
                       kindOfPermission: PermissionKind.Allow,
                     },
+                    {
+                      permission: Permissions.Read,
+                      kindOfPermission: PermissionKind.Allow,
+                    },
                   ],
                 },
               ],
@@ -273,6 +280,10 @@ describe("aasPermissionsForm composable", () => {
           object: { idShortPath: "section1" },
           permissions: [
             {
+              permission: Permissions.Read,
+              kindOfPermission: PermissionKind.Allow,
+            },
+            {
               permission: Permissions.Create,
               kindOfPermission: PermissionKind.Allow,
             },
@@ -293,10 +304,10 @@ describe("aasPermissionsForm composable", () => {
     const owner = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.OWNER };
     const member = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER };
     permissionsForm.editPermissions([Permissions.Create, Permissions.Edit], member);
-    expect(permissionsForm.getPermissions(member)).toEqual({ permissions: [Permissions.Create, Permissions.Edit], inheritsPermissionsOf: null });
+    expect(permissionsForm.getPermissions(member)).toEqual({ permissions: [Permissions.Create, Permissions.Edit, Permissions.Read], inheritsPermissionsOf: null });
     permissionsForm.resetPermissions(member);
     expect(permissionsForm.getPermissions(member)).toEqual({
-      permissions: [Permissions.Create],
+      permissions: [Permissions.Read, Permissions.Create],
       inheritsPermissionsOf: null,
     });
     mocks.asSubject.mockReturnValueOnce(owner);
@@ -325,6 +336,10 @@ describe("aasPermissionsForm composable", () => {
                   }),
                   permissions: [
                     {
+                      permission: Permissions.Read,
+                      kindOfPermission: PermissionKind.Allow,
+                    },
+                    {
                       permission: Permissions.Create,
                       kindOfPermission: PermissionKind.Allow,
                     },
@@ -349,12 +364,12 @@ describe("aasPermissionsForm composable", () => {
       member,
     );
     expect(permissionsForm.getPermissions(member)).toEqual({
-      permissions: [Permissions.Create, Permissions.Edit],
+      permissions: [Permissions.Create, Permissions.Edit, Permissions.Read],
       inheritsPermissionsOf: null,
     });
     permissionsForm.resetPermissions(member);
     expect(permissionsForm.getPermissions(member)).toEqual({
-      permissions: [Permissions.Create],
+      permissions: [Permissions.Read, Permissions.Create],
       inheritsPermissionsOf: "section1",
     });
     await permissionsForm.savePermissions();
@@ -381,6 +396,10 @@ describe("aasPermissionsForm composable", () => {
                     idShort: "section1",
                   }),
                   permissions: [
+                    {
+                      permission: Permissions.Read,
+                      kindOfPermission: PermissionKind.Allow,
+                    },
                     {
                       permission: Permissions.Create,
                       kindOfPermission: PermissionKind.Allow,

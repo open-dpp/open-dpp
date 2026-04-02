@@ -15,8 +15,22 @@ describe("security", () => {
   const policyManagementError = "Administrator has no permission to add/ modify/ delete policy.";
   it("create security schema and checks permissions", () => {
     const security = Security.create({ });
-    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
-    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER }), IdShortPath.create({ path: "section1.field1" }), [Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(
+      SubjectAttributes.create({ userRole: UserRole.USER }),
+      IdShortPath.create({ path: "section1" }),
+      [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+      ],
+    );
+    security.addPolicy(
+      SubjectAttributes.create({ userRole: UserRole.USER }),
+      IdShortPath.create({ path: "section1.field1" }),
+      [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
+      ],
+    );
     let ability = security.defineAbilityForSubject(SubjectAttributes.create({ userRole: UserRole.USER }));
     expect(ability.can(
       Permissions.Read,
@@ -28,7 +42,7 @@ describe("security", () => {
     )).toBeTruthy();
     // the specific rule of the field1 should override general rule of section1
     expect(ability.can(
-      Permissions.Read,
+      Permissions.Delete,
       IdShortPath.create({ path: "section1.field1" }),
     )).toBeFalsy();
     // sub elements of section1 should inherit the rule of section1 if not overridden
@@ -51,9 +65,46 @@ describe("security", () => {
   it("should add policy fails if it already exists", () => {
     const security = Security.create({ });
     security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
-    expect(() => security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })])).toThrow(
+    expect(
+      () => security.addPolicy(
+        SubjectAttributes.create({ userRole: UserRole.USER }),
+        IdShortPath.create({ path: "section1" }),
+        [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
+      ),
+    ).toThrow(
       new ValueError(`Permission for subject { userRole: user, memberRole: undefined } and object section1 already exists`),
     );
+  });
+
+  it("should add policy fails if create, edit or delete is added without read", () => {
+    const security = Security.create({ });
+    [Permissions.Create, Permissions.Edit, Permissions.Delete].forEach((permission) => {
+      expect(() => security.addPolicy(
+        SubjectAttributes.create({ userRole: UserRole.USER }),
+        IdShortPath.create({ path: "section1" }),
+        [Permission.create({ permission, kindOfPermission: PermissionKind.Allow })],
+      )).toThrow(
+        new ValueError(`Permission ${permission} is not allowed without Read permission.`),
+      );
+    });
+  });
+
+  it("modify policy fails if create, edit or delete is added without read", () => {
+    const security = Security.create({ });
+    security.addPolicy(
+      SubjectAttributes.create({ userRole: UserRole.USER }),
+      IdShortPath.create({ path: "section1" }),
+      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
+    );
+    [Permissions.Create, Permissions.Edit, Permissions.Delete].forEach((permission) => {
+      expect(() => security.modifyPolicy(
+        SubjectAttributes.create({ userRole: UserRole.USER }),
+        IdShortPath.create({ path: "section1" }),
+        [Permission.create({ permission, kindOfPermission: PermissionKind.Allow })],
+      )).toThrow(
+        new ValueError(`Permission ${permission} is not allowed without Read permission.`),
+      );
+    });
   });
 
   it("should check permission of administrator to add policy", () => {
@@ -69,11 +120,23 @@ describe("security", () => {
 
     security = Security.create({ }).withAdministrator(SubjectAttributes.create({ userRole: UserRole.ADMIN }));
 
-    expect(() => security.addPolicy(SubjectAttributes.create({ userRole: UserRole.ADMIN }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })])).not.toThrow(
+    expect(
+      () => security.addPolicy(
+        SubjectAttributes.create({ userRole: UserRole.ADMIN }),
+        IdShortPath.create({ path: "section1" }),
+        [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
+      ),
+    ).not.toThrow(
     );
 
     security = Security.create({ }).withAdministrator(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }));
-    expect(() => security.addPolicy(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow })])).toThrow(
+    expect(
+      () => security.addPolicy(
+        SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
+        IdShortPath.create({ path: "section1" }),
+        [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
+      ),
+    ).toThrow(
       expectedError,
     );
   });
@@ -85,6 +148,10 @@ describe("security", () => {
       kindOfPermission: PermissionKind.Allow,
     })]);
     security.modifyPolicy(SubjectAttributes.create({ userRole: UserRole.ADMIN }), IdShortPath.create({ path: "section1" }), [
+      Permission.create({
+        permission: Permissions.Read,
+        kindOfPermission: PermissionKind.Allow,
+      }),
       Permission.create({
         permission: Permissions.Create,
         kindOfPermission: PermissionKind.Allow,
@@ -98,6 +165,10 @@ describe("security", () => {
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: "section1" })),
             permissions: [
+              Permission.create({
+                permission: Permissions.Read,
+                kindOfPermission: PermissionKind.Allow,
+              }),
               Permission.create({
                 permission: Permissions.Create,
                 kindOfPermission: PermissionKind.Allow,

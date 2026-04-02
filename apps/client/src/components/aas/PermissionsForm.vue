@@ -40,7 +40,7 @@ const canEditPermissions = computed(() => {
 const { t } = useI18n();
 
 const permissionOptions = computed(() => {
-  let options = [{ name: t("aasEditor.security.read"), key: Permissions.Read }];
+  let options: { name: string; key: PermissionType }[] = [{ name: t("aasEditor.security.read"), key: Permissions.Read }];
 
   if (selectedRole.value.userRole !== UserRoleDto.ANONYMOUS) {
     options.push(
@@ -100,7 +100,7 @@ function onResetPermissions() {
         <Checkbox
           :model-value="permissions.permissions"
           :input-id="permission.key"
-          :disabled="!canEditPermissions"
+          :disabled="!canEditPermissions || (permission.key === Permissions.Read && permissions.permissions.some(p => p !== Permissions.Read))"
           name="permissions"
           :value="permission.key"
           @update:model-value="onPermissionChange"

@@ -168,6 +168,10 @@ describe("environmentService", () => {
           object: { idShortPath: "section1" },
           permissions: [
             {
+              permission: Permissions.Read,
+              kindOfPermission: PermissionKind.Allow,
+            },
+            {
               permission: Permissions.Create,
               kindOfPermission: PermissionKind.Allow,
             },
@@ -199,6 +203,10 @@ describe("environmentService", () => {
             object: createAasObject(IdShortPath.create({ path: "section1" })),
             permissions: [
               Permission.create({
+                permission: Permissions.Read,
+                kindOfPermission: PermissionKind.Allow,
+              }),
+              Permission.create({
                 permission: Permissions.Create,
                 kindOfPermission: PermissionKind.Allow,
               }),
@@ -212,7 +220,14 @@ describe("environmentService", () => {
 
   it("should modify asset administration shell fails due to insufficient permissions", async () => {
     const security = Security.create({});
-    security.addPolicy(SubjectAttributes.create({ userRole: UserRole.ADMIN }), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(
+      SubjectAttributes.create({ userRole: UserRole.ADMIN }),
+      IdShortPath.create({ path: "section1" }),
+      [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+      ],
+    );
     const assetAdministrationShell = AssetAdministrationShell.create({ security });
     await aasRepository.save(assetAdministrationShell);
     const environment = Environment.create({ assetAdministrationShells: [assetAdministrationShell.id] });

@@ -1,6 +1,8 @@
 import type { AccessPermissionRuleResponseDto, AssetAdministrationShellModificationDto, MemberRoleDtoType, PermissionType, UserRoleDtoType } from "@open-dpp/dto";
 import {
+
   PermissionKind,
+  Permissions,
 
 } from "@open-dpp/dto";
 import { ref, toRaw } from "vue";
@@ -77,7 +79,19 @@ export function useAasPermissionsForm({
     const foundRule = accessPermissionRulesOfObject.value.find(r =>
       ruleHelper(r).hasEqualSubject(subject),
     );
-    const allowedPermissions = permissions.map(p => ({ permission: p, kindOfPermission: PermissionKind.Allow }));
+    const allowedPermissions = permissions.map(p => ({
+      permission: p,
+      kindOfPermission: PermissionKind.Allow,
+    }));
+
+    // Create / Edit / Delete do not make sense without Read permission
+    if (
+      !permissions.includes(Permissions.Read)
+      && permissions.some(p => p !== Permissions.Read)
+    ) {
+      allowedPermissions.push({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow });
+    }
+
     if (foundRule) {
       for (const permissionPerObject of foundRule.permissionsPerObject) {
         permissionPerObject.permissions = allowedPermissions;
