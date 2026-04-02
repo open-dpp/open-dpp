@@ -269,11 +269,11 @@ describe("environmentService", () => {
     const submodel1 = Submodel.create({ idShort: "section1" });
 
     const submodelElementCollection1 = SubmodelElementCollection.create({ idShort: "subSection1" });
+    submodel1.addSubmodelElement(submodelElementCollection1);
     const property1 = Property.create({ idShort: "property1", valueType: DataTypeDef.String });
     const property2 = Property.create({ idShort: "property2", valueType: DataTypeDef.String });
     submodelElementCollection1.addSubmodelElement(property1);
     submodelElementCollection1.addSubmodelElement(property2);
-    submodel1.addSubmodelElement(submodelElementCollection1);
 
     await submodelRepository.save(submodel1);
     const assetAdministrationShell = AssetAdministrationShell.create({ security });

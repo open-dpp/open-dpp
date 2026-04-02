@@ -38,13 +38,13 @@ import { ReferenceElement } from "./submodel-base/reference-element";
 
 import { RelationshipElement } from "./submodel-base/relationship-element";
 import { Submodel } from "./submodel-base/submodel";
-import { IdShortPath, ISubmodelElement } from "./submodel-base/submodel-base";
+import { ISubmodelBase, ISubmodelElement } from "./submodel-base/submodel-base";
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
 
 export interface ModifierVisitorOptions { subject?: SubjectAttributes; ability: AasAbility }
-export interface ModifierVisitorContextType { data: unknown; fullParentIdShortPath?: IdShortPath }
+export interface ModifierVisitorContextType { data: unknown }
 export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, void> {
   constructor(private readonly options: ModifierVisitorOptions) {
   }
@@ -58,12 +58,8 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
     hasUniqueLanguagesOrFail(generalInfoDto.description);
   }
 
-  private buildFullIdShortPath(element: any, context?: ModifierVisitorContextType) {
-    return context && context.fullParentIdShortPath ? context.fullParentIdShortPath.addPathSegment(element.idShort) : IdShortPath.create({ path: element.idShort });
-  }
-
-  private modificationGuard(element: any, context?: ModifierVisitorContextType) {
-    const idShortPath = this.buildFullIdShortPath(element, context);
+  private modificationGuard(element: ISubmodelBase) {
+    const idShortPath = element.getIdShortPath();
     if (!this.options.ability.can(Permissions.Edit, idShortPath)) {
       throw new ForbiddenError(`Missing permissions to modify element ${idShortPath.toString()}.`);
     }
@@ -134,7 +130,7 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
   }
 
   visitFile(element: File, context?: ModifierVisitorContextType): void {
-    this.modificationGuard(element, context);
+    this.modificationGuard(element);
     const parsed = FileModificationSchema.parse(context?.data);
     this.modifyNameAndDescription(element, parsed);
     if (parsed.value !== undefined) {
@@ -164,7 +160,7 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
   }
 
   visitProperty(element: Property, context?: ModifierVisitorContextType): void {
-    this.modificationGuard(element, context);
+    this.modificationGuard(element);
     const parsed = PropertyModificationSchema.parse(context?.data);
     this.modifyNameAndDescription(element, parsed);
     if (parsed.value !== undefined) {
@@ -208,7 +204,7 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
 
   visitReferenceElement(element: ReferenceElement, context?: ModifierVisitorContextType): void {
     const parsed = ReferenceElementModificationSchema.parse(context?.data);
-    this.modificationGuard(element, context);
+    this.modificationGuard(element);
     if (parsed.description || parsed.displayName) {
       this.modifyNameAndDescription(element, parsed);
     }
@@ -244,40 +240,40 @@ export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, voi
   }
 
   visitSubmodel(element: Submodel, context?: ModifierVisitorContextType): void {
-    this.modificationGuard(element, context);
+    this.modificationGuard(element);
     this.modifyNameAndDescription(element, context?.data);
   }
 
   visitSubmodelElementCollection(element: SubmodelElementCollection, context?: ModifierVisitorContextType): void {
     const parsed = SubmodelElementCollectionModificationSchema.parse(context?.data);
     if (parsed.description || parsed.displayName) {
-      this.modificationGuard(element, context);
+      this.modificationGuard(element);
       this.modifyNameAndDescription(element, parsed);
     }
     if (parsed.value !== undefined) {
-      this.visitSubmodelElements(element, parsed.value, context);
+      this.visitSubmodelElements(element, parsed.value);
     }
   }
 
   visitSubmodelElementList(element: SubmodelElementList, context?: ModifierVisitorContextType): void {
     const parsed = SubmodelElementListModificationSchema.parse(context?.data);
     if (parsed.description || parsed.displayName) {
-      this.modificationGuard(element, context);
+      this.modificationGuard(element);
       this.modifyNameAndDescription(element, parsed);
     }
 
     if (parsed.value !== undefined) {
-      this.visitSubmodelElements(element, parsed.value, context);
+      this.visitSubmodelElements(element, parsed.value);
     }
   }
 
-  visitSubmodelElements(element: ISubmodelElement, submodelElementModifications: SubmodelElementModificationDto[], context?: ModifierVisitorContextType): void {
+  visitSubmodelElements(element: ISubmodelElement, submodelElementModifications: SubmodelElementModificationDto[]): void {
     for (const submodelElement of submodelElementModifications) {
       const foundElement = element.getSubmodelElements().find(e => e.idShort === submodelElement.idShort);
       if (!foundElement) {
         throw new ValueError(`Could not find element with idShort ${submodelElement.idShort} within submodel element ${element.idShort}.`);
       }
-      foundElement.accept(this, { data: submodelElement, fullParentIdShortPath: this.buildFullIdShortPath(element, context) });
+      foundElement.accept(this, { data: submodelElement });
     }
   }
 }

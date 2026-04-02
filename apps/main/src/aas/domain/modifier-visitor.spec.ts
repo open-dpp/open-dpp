@@ -115,11 +115,12 @@ describe("modifier visitor", () => {
     );
 
     const listItem = SubmodelElementList.create({ idShort: "list", displayName: existingDisplayNames(), description: existingDescriptions(), typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
+    submodel.addSubmodelElement(listItem);
     const collection = SubmodelElementCollection.create({ idShort: "collection", displayName: existingDisplayNames(), description: existingDescriptions() });
+    listItem.addSubmodelElement(collection);
     const property = Property.create({ idShort: "prop1", displayName: existingDisplayNames(), description: existingDescriptions(), valueType: DataTypeDef.String });
     collection.addSubmodelElement(property);
-    listItem.addSubmodelElement(collection);
-    submodel.addSubmodelElement(listItem);
+
     const modifications = {
       idShort: "list",
       displayName: newDisplayNames,

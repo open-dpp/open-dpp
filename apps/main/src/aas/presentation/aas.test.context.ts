@@ -587,11 +587,12 @@ export function createAasTestContext<T>(
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
 
     const submodel = Submodel.fromPlain(submodelBillOfMaterialPlainFactory.build(undefined, { transient: { iriDomain } }));
-    const property = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01", value: "old value" }));
     const submodelElementCollection = SubmodelElementCollection.create({ idShort: "collection" });
+    submodel.addSubmodelElement(submodelElementCollection);
+    const property = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "Property01", value: "old value" }));
+
     submodelElementCollection.addSubmodelElement(property);
 
-    submodel.addSubmodelElement(submodelElementCollection);
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
     await saveEntity(entity);
@@ -618,9 +619,10 @@ export function createAasTestContext<T>(
     const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    row0.addSubmodelElement(col1);
-    submodelElementList.addSubmodelElement(row0);
     submodel.addSubmodelElement(submodelElementList);
+    submodelElementList.addSubmodelElement(row0);
+
+    row0.addSubmodelElement(col1);
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -650,9 +652,10 @@ export function createAasTestContext<T>(
     const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    row0.addSubmodelElement(col1);
-    submodelElementList.addSubmodelElement(row0);
     submodel.addSubmodelElement(submodelElementList);
+    submodelElementList.addSubmodelElement(row0);
+
+    row0.addSubmodelElement(col1);
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -689,9 +692,10 @@ export function createAasTestContext<T>(
     const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
     const row0 = SubmodelElementCollection.create({ idShort: "row_0" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    row0.addSubmodelElement(col1);
-    submodelElementList.addSubmodelElement(row0);
     submodel.addSubmodelElement(submodelElementList);
+    submodelElementList.addSubmodelElement(row0);
+
+    row0.addSubmodelElement(col1);
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -720,9 +724,10 @@ export function createAasTestContext<T>(
     const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
     const row1 = SubmodelElementCollection.create({ idShort: "row_1" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    row1.addSubmodelElement(col1);
-    submodelElementList.addSubmodelElement(row1);
     submodel.addSubmodelElement(submodelElementList);
+    submodelElementList.addSubmodelElement(row1);
+
+    row1.addSubmodelElement(col1);
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);
@@ -751,9 +756,10 @@ export function createAasTestContext<T>(
     const submodelElementList = SubmodelElementList.create({ idShort: "tableList", typeValueListElement: AasSubmodelElements.SubmodelElementCollection });
     const row1 = SubmodelElementCollection.create({ idShort: "row_1" });
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "column1" }));
-    row1.addSubmodelElement(col1);
-    submodelElementList.addSubmodelElement(row1);
     submodel.addSubmodelElement(submodelElementList);
+    submodelElementList.addSubmodelElement(row1);
+
+    row1.addSubmodelElement(col1);
 
     await submodelRepository.save(submodel);
     entity.getEnvironment().submodels.push(submodel.id);

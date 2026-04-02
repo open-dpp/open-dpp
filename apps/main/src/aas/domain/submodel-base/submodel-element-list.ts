@@ -10,8 +10,10 @@ import { IVisitor } from "../visitor";
 import {
   AddOptions,
   deleteSubmodelElementOrFail,
+  IdShortPath,
   ISubmodelElement,
   parseSubmodelElement,
+  setParentIdShortPaths,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
@@ -19,6 +21,8 @@ import {
 export class SubmodelElementList implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
+  private _parentIdShortPath: IdShortPath | undefined;
+
   private constructor(
     public readonly typeValueListElement: AasSubmodelElementsType,
     public readonly extensions: Array<Extension>,
@@ -103,6 +107,15 @@ export class SubmodelElementList implements ISubmodelElement {
     );
   }
 
+  setParentIdShortPath(parentIdShortPath: IdShortPath) {
+    this._parentIdShortPath = parentIdShortPath;
+    setParentIdShortPaths(this, this.idShort, this._parentIdShortPath);
+  }
+
+  getIdShortPath(): IdShortPath {
+    return this._parentIdShortPath ? this._parentIdShortPath.addPathSegment(this.idShort) : IdShortPath.create({ path: this.idShort });
+  }
+
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
     return visitor.visitSubmodelElementList(this, context);
   }
@@ -117,6 +130,7 @@ export class SubmodelElementList implements ISubmodelElement {
   }
 
   addSubmodelElement(submodelElement: ISubmodelElement, options?: AddOptions): ISubmodelElement {
+    submodelElement.setParentIdShortPath(this.getIdShortPath());
     if (this.value.some(s => s.idShort === submodelElement.idShort)) {
       throw new Error(`Submodel element with idShort ${submodelElement.idShort} already exists`);
     }

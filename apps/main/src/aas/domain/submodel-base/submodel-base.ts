@@ -95,11 +95,13 @@ export interface ISubmodelBase
   IConvertableToPlain {
   addSubmodelElement: (submodelElement: ISubmodelElement, options?: AddOptions) => ISubmodelElement;
   getSubmodelElements: () => ISubmodelElement[];
+  getIdShortPath: () => IdShortPath;
 }
 
 export interface ISubmodelElement extends ISubmodelBase {
   getSubmodelElementType: () => AasSubmodelElementsType;
   deleteSubmodelElement: (idShort: string) => void;
+  setParentIdShortPath: (parentIdShortPath: IdShortPath) => void;
 }
 
 export function parseSubmodelElement(submodelBase: any): ISubmodelElement {
@@ -114,6 +116,11 @@ export function deleteSubmodelElementOrFail(submodelElements: ISubmodelElement[]
     throw new ValueError(`Cannot delete submodel element with idShort ${idShort}, since it does not exist.`);
   }
   submodelElements.splice(foundIndex, 1);
+}
+
+export function setParentIdShortPaths(submodelBase: ISubmodelBase, idShort: string, parentIdShortPath?: IdShortPath): void {
+  const idShortPath = parentIdShortPath ? parentIdShortPath.addPathSegment(idShort) : IdShortPath.create({ path: idShort });
+  submodelBase.getSubmodelElements().forEach(element => element.setParentIdShortPath(idShortPath));
 }
 
 export function cloneSubmodelElement(submodelElement: ISubmodelElement, override?: any): ISubmodelElement {

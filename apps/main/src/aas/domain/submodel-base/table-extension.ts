@@ -62,8 +62,7 @@ export class TableExtension {
     for (const row of this.rows) {
       const column = row.getSubmodelElements().find(el => el.idShort === idShort);
       if (column) {
-        const fullParentIdShortPath = this.listIdShortPath.addPathSegment(row.idShort);
-        column.accept(new ModifierVisitor(options), { data: { ...data, idShort }, fullParentIdShortPath });
+        column.accept(new ModifierVisitor(options), { data: { ...data, idShort } });
       }
     }
   }

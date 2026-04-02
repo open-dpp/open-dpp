@@ -27,6 +27,7 @@ describe("tableExtension", () => {
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
       idShort: "idShort",
     });
+    submodelElementList.setParentIdShortPath(IdShortPath.create({ path: submodelIdShort }));
     const table = new TableExtension(submodelElementList, submodelIdShort);
     const col1Plain = propertyInputPlainFactory.build({ idShort: "col1", value: "10" });
     const col1 = Property.fromPlain(col1Plain);
@@ -34,6 +35,7 @@ describe("tableExtension", () => {
     table.addColumn(col1);
     const firstRowId = table.rows[0].idShort;
     const expHeaderRow = SubmodelElementCollection.create({ idShort: firstRowId });
+    expHeaderRow.setParentIdShortPath(submodelElementList.getIdShortPath());
     expHeaderRow.addSubmodelElement(col1);
     expect(table.rows).toEqual([expHeaderRow]);
 
@@ -42,6 +44,7 @@ describe("tableExtension", () => {
     const col1Row1WithEmptyValue = Property.fromPlain({ ...col1Plain, value: undefined });
     const secondRowId = table.rows[1].idShort;
     const expRow1 = SubmodelElementCollection.create({ idShort: secondRowId, value: [col1Row1WithEmptyValue] });
+    expRow1.setParentIdShortPath(submodelElementList.getIdShortPath());
     expect(table.rows).toEqual([expHeaderRow, expRow1]);
     expect(secondRowId).not.toEqual(firstRowId);
 
@@ -67,6 +70,7 @@ describe("tableExtension", () => {
       cloneSubmodelElement(col2, { value: undefined }),
       cloneSubmodelElement(col3, { value: undefined }),
     ] });
+    expRowAtPos1.setParentIdShortPath(submodelElementList.getIdShortPath());
     expect(table.rows).toEqual([expHeaderRow, expRowAtPos1, expRow1]);
     expect(rowAtPos1Id).not.toEqual(secondRowId);
     expect(rowAtPos1Id).not.toEqual(firstRowId);
@@ -93,6 +97,7 @@ describe("tableExtension", () => {
     table.addRow();
     table.addRow();
     expect(table.rows.some(r => r.getSubmodelElements().some(c => c.idShort === col1.idShort))).toBeTruthy();
+    col2.setParentIdShortPath(table.rows[0].getIdShortPath());
     table.deleteColumn(col1.idShort, { ability });
     expect(table.columns).toEqual([col2]);
     expect(table.rows.some(r => r.getSubmodelElements().some(c => c.idShort === col1.idShort))).toBeFalsy();
@@ -107,10 +112,13 @@ describe("tableExtension", () => {
 
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1", value: "10" }));
     table.addColumn(col1);
+    col1.setParentIdShortPath(table.rows[0].getIdShortPath());
     expect(table.columns).toEqual([col1]);
     // The header row is updated to the new row at position 0.
     table.addRow({ position: 0 });
-    expect(table.columns).toEqual([cloneSubmodelElement(col1, { value: null })]);
+    const expectedCol = cloneSubmodelElement(col1, { value: null });
+    expectedCol.setParentIdShortPath(table.rows[0].getIdShortPath());
+    expect(table.columns).toEqual([expectedCol]);
   });
 
   it("should modify column", () => {
@@ -118,6 +126,7 @@ describe("tableExtension", () => {
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
       idShort: "idShort",
     });
+    submodelElementList.setParentIdShortPath(IdShortPath.create({ path: submodelIdShort }));
     const table = new TableExtension(submodelElementList, submodelIdShort);
     const col1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col1" }));
     const col2 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "col2" }));
@@ -158,6 +167,7 @@ describe("tableExtension", () => {
       typeValueListElement: AasSubmodelElements.SubmodelElementCollection,
       idShort: "idShort",
     });
+    submodelElementList.setParentIdShortPath(IdShortPath.create({ path: submodelIdShort }));
     const security = Security.create({});
     const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
     security.addPolicy(
@@ -178,7 +188,11 @@ describe("tableExtension", () => {
     expect(table.rows.some(r => r.idShort === rowToDelete.idShort)).toBeFalsy();
     // If the header row is deleted, the first row should be used as header row.
     table.deleteRow(table.rows[0].idShort, { ability });
-    expect(table.columns).toEqual([cloneSubmodelElement(col1, { value: null }), cloneSubmodelElement(col2, { value: null })]);
+    const expectedCol1 = cloneSubmodelElement(col1, { value: null });
+    expectedCol1.setParentIdShortPath(table.rows[0].getIdShortPath());
+    const expectedCol2 = cloneSubmodelElement(col2, { value: null });
+    expectedCol2.setParentIdShortPath(table.rows[0].getIdShortPath());
+    expect(table.columns).toEqual([expectedCol1, expectedCol2]);
     // If the last row is deleted, columns are empty. This a limitation of the AAS specification.
     table.deleteRow(table.rows[0].idShort, { ability });
     expect(table.columns).toEqual([]);

@@ -11,8 +11,10 @@ import { IVisitor } from "../visitor";
 import { IRelationshipElement } from "./relationship-element";
 import {
   deleteSubmodelElementOrFail,
+  IdShortPath,
   ISubmodelElement,
   parseSubmodelElement,
+  setParentIdShortPaths,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
@@ -20,6 +22,8 @@ import {
 export class AnnotatedRelationshipElement implements ISubmodelElement, IRelationshipElement {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
+  private _parentIdShortPath: IdShortPath | undefined;
+
   protected constructor(
     public readonly first: Reference,
     public readonly second: Reference,
@@ -36,6 +40,15 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
   ) {
     this.displayName = displayName;
     this.description = description;
+  }
+
+  setParentIdShortPath(parentIdShortPath: IdShortPath) {
+    this._parentIdShortPath = parentIdShortPath;
+    setParentIdShortPaths(this, this.idShort, this._parentIdShortPath);
+  }
+
+  getIdShortPath(): IdShortPath {
+    return this._parentIdShortPath ? this._parentIdShortPath.addPathSegment(this.idShort) : IdShortPath.create({ path: this.idShort });
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -111,6 +124,8 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
   }
 
   addSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
+    submodelElement.setParentIdShortPath(this.getIdShortPath());
+
     if (this.annotations.some(e => e.idShort === submodelElement.idShort)) {
       throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
     }

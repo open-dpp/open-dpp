@@ -79,6 +79,7 @@ describe("submodel", () => {
     const col1 = Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double });
     submodel.addColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1);
     const row0 = submodelElementList.getSubmodelElements()[0];
+    col1.setParentIdShortPath(row0.getIdShortPath());
     expect(row0.getSubmodelElements()).toEqual([col1]);
   });
 
@@ -123,6 +124,7 @@ describe("submodel", () => {
     const col1 = Property.create({ idShort: "col1", value: "10", valueType: DataTypeDef.Double });
     submodel.addColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1);
     let tableExtension = new TableExtension(submodelElementList, submodel.idShort);
+    col1.setParentIdShortPath(tableExtension.rows[0].getIdShortPath());
     expect(tableExtension.columns).toEqual([col1]);
     submodel.deleteColumn(IdShortPath.create({ path: submodelElementList.idShort }), col1.idShort, { ability });
     tableExtension = new TableExtension(submodelElementList, submodel.idShort);

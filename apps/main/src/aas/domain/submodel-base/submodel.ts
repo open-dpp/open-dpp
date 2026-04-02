@@ -23,6 +23,7 @@ import {
   ISubmodelBase,
   ISubmodelElement,
   parseSubmodelElement,
+  setParentIdShortPaths,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
@@ -49,6 +50,11 @@ export class Submodel implements ISubmodelBase, IPersistable {
   ) {
     this.displayName = displayName;
     this.description = description;
+    setParentIdShortPaths(this, this.idShort);
+  }
+
+  getIdShortPath(): IdShortPath {
+    return IdShortPath.create({ path: this.idShort });
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -120,11 +126,8 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   modifySubmodelElement(data: unknown, idShortPath: IdShortPath, options: ModifierVisitorOptions) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
-    let fullParentIdShortPath = IdShortPath.create({ path: this.idShort });
-    if (!idShortPath.getParentPath().isEmpty()) {
-      fullParentIdShortPath = fullParentIdShortPath.concat(idShortPath.getParentPath());
-    }
-    submodelElement.accept(new ModifierVisitor(options), { data, fullParentIdShortPath });
+
+    submodelElement.accept(new ModifierVisitor(options), { data });
     return submodelElement;
   }
 
@@ -221,9 +224,11 @@ export class Submodel implements ISubmodelBase, IPersistable {
   public addSubmodelElement(submodelElement: ISubmodelElement, options?: AddOptions): ISubmodelElement {
     if (options?.idShortPath) {
       const parent = this.findSubmodelElementOrFail(options.idShortPath);
+      submodelElement.setParentIdShortPath(parent.getIdShortPath());
       parent.addSubmodelElement(submodelElement, options);
     }
     else {
+      submodelElement.setParentIdShortPath(this.getIdShortPath());
       if (this.submodelElements.find(el => el.idShort === submodelElement.idShort)) {
         throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
       }

@@ -16,8 +16,10 @@ import { SpecificAssetId } from "../specific-asset-id";
 import { IVisitor } from "../visitor";
 import {
   deleteSubmodelElementOrFail,
+  IdShortPath,
   ISubmodelElement,
   parseSubmodelElement,
+  setParentIdShortPaths,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
@@ -25,6 +27,8 @@ import {
 export class Entity implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
+  private _parentIdShortPath: IdShortPath | undefined;
+
   private constructor(
     public readonly entityType: EntityTypeType,
     public readonly extensions: Array<Extension>,
@@ -42,6 +46,15 @@ export class Entity implements ISubmodelElement {
   ) {
     this.displayName = displayName;
     this.description = description;
+  }
+
+  setParentIdShortPath(parentIdShortPath: IdShortPath) {
+    this._parentIdShortPath = parentIdShortPath;
+    setParentIdShortPaths(this, this.idShort, this._parentIdShortPath);
+  }
+
+  getIdShortPath(): IdShortPath {
+    return this._parentIdShortPath ? this._parentIdShortPath.addPathSegment(this.idShort) : IdShortPath.create({ path: this.idShort });
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -120,6 +133,7 @@ export class Entity implements ISubmodelElement {
   }
 
   addSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
+    submodelElement.setParentIdShortPath(this.getIdShortPath());
     if (this.statements.some(s => s.idShort === submodelElement.idShort)) {
       throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
     }

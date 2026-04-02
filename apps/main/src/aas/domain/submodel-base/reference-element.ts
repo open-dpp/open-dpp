@@ -8,11 +8,13 @@ import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import JsonVisitor from "../json-visitor";
 import { IVisitor } from "../visitor";
-import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
+import { IdShortPath, ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
 export class ReferenceElement implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
+  private _parentIdShortPath: IdShortPath | undefined;
+
   private constructor(
     public readonly extensions: Array<Extension>,
     public readonly category: string | null,
@@ -27,6 +29,14 @@ export class ReferenceElement implements ISubmodelElement {
   ) {
     this.displayName = displayName;
     this.description = description;
+  }
+
+  setParentIdShortPath(parentIdShortPath: IdShortPath) {
+    this._parentIdShortPath = parentIdShortPath;
+  }
+
+  getIdShortPath(): IdShortPath {
+    return this._parentIdShortPath ? this._parentIdShortPath.addPathSegment(this.idShort) : IdShortPath.create({ path: this.idShort });
   }
 
   set displayName(value: Array<LanguageText>) {
