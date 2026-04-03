@@ -517,7 +517,7 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
   ): Promise<any> {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
-    return await this.aasSerializationService.exportPassport(passport);
+    return await this.aasSerializationService.exportPassport(passport, subject);
   }
 
   @Post("/import")

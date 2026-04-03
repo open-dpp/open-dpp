@@ -15,7 +15,9 @@ describe("aasDrawer composable", () => {
     const submodel: SubmodelResponseDto = submodelPlainToResponse(
       submodelDesignOfProductPlainFactory.build(undefined, { transient: { iriDomain } }),
     );
-    const { openDrawer, drawerHeader, editorVNode } = useAasDrawer({ onHideDrawer });
+    const mockCan = vi.fn();
+
+    const { openDrawer, drawerHeader, editorVNode } = useAasDrawer({ onHideDrawer, can: mockCan });
     const data = submodel;
     const title = "Edit section";
     const path = { submodelId: submodel.id, idShortPath: data.idShort };
@@ -36,8 +38,9 @@ describe("aasDrawer composable", () => {
 
   it("should open drawer with PropertyEditor, PropertyCreateEditor", async () => {
     const data = PropertyJsonSchema.parse(propertyInputPlainFactory.build());
+    const mockCan = vi.fn();
 
-    const { openDrawer, drawerVisible, hideDrawer, drawerHeader, editorVNode } = useAasDrawer({ onHideDrawer });
+    const { openDrawer, drawerVisible, hideDrawer, drawerHeader, editorVNode } = useAasDrawer({ onHideDrawer, can: mockCan });
     const title = "Edit section";
     const path = { submodelId: "s1", idShortPath: data.idShort };
     const callback = async (_data: any) => { };

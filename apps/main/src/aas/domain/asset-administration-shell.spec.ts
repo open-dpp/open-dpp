@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
 import { AssetKind, KeyTypes, Language, PermissionKind, Permissions, ReferenceTypes } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { allPermissionsAllow } from "@open-dpp/testing";
@@ -17,9 +18,9 @@ import { AccessPermissionRule } from "./security/access-permission-rule";
 import { Permission } from "./security/permission";
 import { PermissionPerObject } from "./security/permission-per-object";
 import { Security } from "./security/security";
-import { SubjectAttributes } from "./security/subject-attributes";
 
-import { Submodel } from "./submodel-base/submodel";
+import { SubjectAttributes } from "./security/subject-attributes";
+import { Submodel, submodelToReference } from "./submodel-base/submodel";
 
 describe("assetAdministrationShell", () => {
   it("should create a new asset administration shell", () => {
@@ -213,6 +214,54 @@ describe("assetAdministrationShell", () => {
           permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
         })],
       }),
+    ]);
+  });
+
+  it("should return plain", () => {
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+    security.addPolicy(admin, IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "section2" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "section2.field1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    const aas = AssetAdministrationShell.create({
+      security,
+    });
+    const submodel1 = Submodel.create({ id: "submodel1", idShort: "section1" });
+    const submodel2 = Submodel.create({ id: "submodel2", idShort: "section2" });
+    aas.addSubmodel(submodel1);
+    aas.addSubmodel(submodel2);
+    let plain = aas.toPlain({ context: { filterSubmodels: [submodel1] } });
+    expect(plain.submodels).toEqual([
+      submodelToReference(submodel1),
+    ]);
+
+    expect(plain.security.localAccessControl.accessPermissionRules).toEqual([
+      AccessPermissionRule.create({
+        targetSubjectAttributes: admin,
+        permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "section1" })),
+            permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
+          }),
+        ],
+      }).toPlain(),
+      AccessPermissionRule.create({
+        targetSubjectAttributes: member,
+        permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "section1" })),
+            permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
+          }),
+        ],
+      }).toPlain(),
+    ]);
+
+    plain = aas.toPlain();
+    expect(plain.submodels).toEqual([
+      submodelToReference(submodel1),
+      submodelToReference(submodel2),
     ]);
   });
 });

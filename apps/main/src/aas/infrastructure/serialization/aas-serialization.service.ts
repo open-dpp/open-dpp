@@ -10,6 +10,7 @@ import { AssetAdministrationShell } from "../../domain/asset-adminstration-shell
 import { ConceptDescription } from "../../domain/concept-description";
 import { Environment } from "../../domain/environment";
 import { AasExportable } from "../../domain/exportable/aas-exportable";
+import { SubjectAttributes } from "../../domain/security/subject-attributes";
 import { Submodel } from "../../domain/submodel-base/submodel";
 import { EnvironmentService } from "../../presentation/environment.service";
 import { AasRepository } from "../aas.repository";
@@ -40,16 +41,19 @@ export class AasSerializationService {
     private readonly mediaService: MediaService,
   ) {}
 
-  async exportPassport(passport: Passport): Promise<AasExportSchema> {
+  async exportPassport(passport: Passport, subject: SubjectAttributes): Promise<AasExportSchema> {
     const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(passport.environment);
     const aasExportable = AasExportable.createFromPassport(passport, expandedEnvironment);
-    return aasExportSchemaJsonV1_0.parse(aasExportable.toExportPlain());
+    const ability = expandedEnvironment.shells.length > 0 ? expandedEnvironment.shells[0].security.defineAbilityForSubject(subject) : undefined;
+    return aasExportSchemaJsonV1_0.parse(aasExportable.toExportPlain({ ability }));
   }
 
-  async exportTemplate(template: Template): Promise<AasExportSchema> {
+  async exportTemplate(template: Template, subject: SubjectAttributes): Promise<AasExportSchema> {
     const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(template.environment);
     const aasExportable = AasExportable.createFromTemplate(template, expandedEnvironment);
-    return aasExportSchemaJsonV1_0.parse(aasExportable.toExportPlain());
+    const ability = expandedEnvironment.shells[0].security.defineAbilityForSubject(subject);
+
+    return aasExportSchemaJsonV1_0.parse(aasExportable.toExportPlain({ ability }));
   }
 
   async importPassport(

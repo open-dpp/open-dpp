@@ -13,7 +13,7 @@ import { ExpandedEnvironment } from "./expanded-environment";
 import { Permission } from "./security/permission";
 import { Security } from "./security/security";
 import { SubjectAttributes } from "./security/subject-attributes";
-import { Submodel } from "./submodel-base/submodel";
+import { Submodel, submodelToReference } from "./submodel-base/submodel";
 
 function createSubmodel(id?: string, idShort?: string): Submodel {
   const resolvedId = id ?? randomUUID();
@@ -255,9 +255,10 @@ describe("expandedEnvironment", () => {
 
       const env = ExpandedEnvironment.fromLoaded([shell], [submodel1, submodel2], [cd]);
       const plain = env.toPlain({ ability });
-
       expect(plain.assetAdministrationShells).toHaveLength(1);
       expect(plain.assetAdministrationShells[0].id).toBe(shell.id);
+      expect(plain.assetAdministrationShells[0].submodels).toEqual([submodelToReference(submodel1)]);
+
       expect(plain.submodels).toHaveLength(1);
       expect(plain.submodels[0].id).toBe(submodel1.id);
       expect(plain.conceptDescriptions).toHaveLength(1);

@@ -268,7 +268,6 @@ export class EnvironmentService {
     const submodelElements = submodel.submodelElements.filter(e => pages.includes(e.idShort));
     return SubmodelElementPaginationResponseDtoSchema.parse(PagingResult.create({ pagination, items: submodelElements }).toPlain({
       ability,
-      context: { fullParentIdShortPath: IdShortPath.create({ path: submodel.idShort }) },
     }));
   }
 
@@ -285,7 +284,7 @@ export class EnvironmentService {
     const ability = await this.loadAbility(environment, subject);
     const submodelElement = submodel.modifySubmodelElement(modification, idShortPath, { ability });
     await this.submodelRepository.save(submodel);
-    return SubmodelElementSchema.parse(submodelElement.toPlain({ ability, context: { fullParentIdShortPath: IdShortPath.create({ path: submodel.idShort }) } }));
+    return SubmodelElementSchema.parse(submodelElement.toPlain({ ability }));
   }
 
   async modifyValueOfSubmodelElement(environment: Environment, submodelId: string, modification: ValueRequestDto, idShortPath: IdShortPath, subject: SubjectAttributes): Promise<SubmodelElementResponseDto> {
@@ -293,7 +292,7 @@ export class EnvironmentService {
     const ability = await this.loadAbility(environment, subject);
     const submodelElement = submodel.modifyValueOfSubmodelElement(modification, idShortPath, { ability });
     await this.submodelRepository.save(submodel);
-    return SubmodelElementSchema.parse(submodelElement.toPlain({ ability, context: { fullParentIdShortPath: IdShortPath.create({ path: submodel.idShort }) } }));
+    return SubmodelElementSchema.parse(submodelElement.toPlain({ ability }));
   }
 
   async addColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, column: ISubmodelElement, subject: SubjectAttributes, position?: number): Promise<SubmodelElementListResponseDto> {
@@ -309,7 +308,7 @@ export class EnvironmentService {
     const ability = await this.loadAbility(environment, subject);
     const modifiedSubmodelElement = submodel.modifyColumn(idShortPath, idShortOfColumn, modifications, { ability });
     await this.submodelRepository.save(submodel);
-    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain({ ability, context: { fullParentIdShortPath: IdShortPath.create({ path: submodel.idShort }) } }));
+    return SubmodelElementListJsonSchema.parse(modifiedSubmodelElement.toPlain({ ability }));
   }
 
   async deleteColumn(environment: Environment, submodelId: string, idShortPath: IdShortPath, idShortOfColumn: string, subject: SubjectAttributes): Promise<SubmodelElementListResponseDto> {
@@ -327,7 +326,7 @@ export class EnvironmentService {
         await this.submodelRepository.save(submodel, { session });
         await this.aasRepository.save(aas, { session });
       });
-      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability, context: { fullParentIdShortPath: IdShortPath.create({ path: submodel.idShort }) } }));
+      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability }));
     }
     finally {
       await session.endSession();
@@ -357,7 +356,7 @@ export class EnvironmentService {
         await this.submodelRepository.save(submodel, { session });
         await this.aasRepository.save(aas, { session });
       });
-      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability, context: { fullParentIdShortPath: IdShortPath.create({ path: submodel.idShort }) } }));
+      return SubmodelElementListJsonSchema.parse(modifiedSubmodelElementList.toPlain({ ability }));
     }
     finally {
       await session.endSession();
@@ -368,8 +367,7 @@ export class EnvironmentService {
     const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
     const submodelElement = submodel.findSubmodelElementOrFail(idShortPath);
     const ability = await this.loadAbility(environment, subject);
-    const parentPath = IdShortPath.create({ path: `${submodel.idShort}.${idShortPath.getParentPath().toString()}` });
-    const result = submodelElement.toPlain({ ability, context: { fullParentIdShortPath: parentPath } });
+    const result = submodelElement.toPlain({ ability });
     if (isEmptyObject(result)) {
       throw new ForbiddenError();
     }

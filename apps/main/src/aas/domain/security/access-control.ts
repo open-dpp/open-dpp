@@ -44,11 +44,11 @@ export class AccessControl {
     if (options?.ability) {
       const rules = this.findRulesOfAllVisibleRolesOfSubject(options.ability.getSubject());
       return {
-        accessPermissionRules: rules.map(p => p.toPlain()),
+        accessPermissionRules: rules.map(p => p.toPlain(options)),
       };
     }
     return {
-      accessPermissionRules: this.accessPermissionRules.map(p => p.toPlain()),
+      accessPermissionRules: this.accessPermissionRules.map(p => p.toPlain(options)),
     };
   }
 

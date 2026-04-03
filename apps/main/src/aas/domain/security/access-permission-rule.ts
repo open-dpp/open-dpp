@@ -1,6 +1,7 @@
 import { ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
 import { IdShortPath } from "../common/id-short-path";
+import { ConvertToPlainOptions } from "../convertable-to-plain";
 import { ReferenceElement } from "../submodel-base/reference-element";
 import { Permission } from "./permission";
 import { PermissionPerObject, PermissionPerObjectSchema } from "./permission-per-object";
@@ -60,10 +61,21 @@ export class AccessPermissionRule {
     });
   }
 
-  toPlain(): Record<string, any> {
+  toPlain(options?: ConvertToPlainOptions): Record<string, any> {
+    let filteredPermissionsPerObject: PermissionPerObject[] = [];
+    if (options?.context?.filterSubmodels) {
+      for (const submodel of options.context.filterSubmodels) {
+        filteredPermissionsPerObject.push(...this.permissionsPerObject.filter(
+          p => IdShortPath.create({ path: p.object.idShort }).isChildOf(IdShortPath.create({ path: submodel.idShort })),
+        ));
+      }
+    }
+    else {
+      filteredPermissionsPerObject = this.permissionsPerObject;
+    }
     return {
       targetSubjectAttributes: this.targetSubjectAttributes.toPlain(),
-      permissionsPerObject: this.permissionsPerObject.map(p => p.toPlain()),
+      permissionsPerObject: filteredPermissionsPerObject.map(p => p.toPlain()),
     };
   }
 }

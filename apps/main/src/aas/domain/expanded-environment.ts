@@ -145,9 +145,12 @@ export class ExpandedEnvironment {
   }
 
   toPlain(options?: ConvertToPlainOptions): ExpandedEnvironmentPlain {
+    const submodels = removeEmptyItems(this.submodels.map(submodel => submodel.toPlain(options)));
     return {
-      assetAdministrationShells: this.shells.map(shell => shell.toPlain()),
-      submodels: removeEmptyItems(this.submodels.map(submodel => submodel.toPlain(options))),
+      assetAdministrationShells: this.shells.map(
+        shell => shell.toPlain({ context: { filterSubmodels: submodels } }),
+      ),
+      submodels,
       conceptDescriptions: this.conceptDescriptions.map(cd => cd.toPlain()),
     };
   }
@@ -158,26 +161,5 @@ export class ExpandedEnvironment {
       submodels: this.submodels.map(s => s.id),
       conceptDescriptions: this.conceptDescriptions.map(cd => cd.id),
     });
-  }
-
-  private resolveSubmodelReferences(
-    shell: AssetAdministrationShell,
-    idMap: Map<string, Submodel>,
-  ): Submodel[] {
-    const resolved: Submodel[] = [];
-
-    for (const ref of shell.submodels) {
-      const key = ref.keys.find(k => k.type === "Submodel" || k.type === "GlobalReference");
-      if (!key) {
-        continue;
-      }
-
-      const newSub = idMap.get(key.value);
-      if (newSub) {
-        resolved.push(newSub);
-      }
-    }
-
-    return resolved;
   }
 }

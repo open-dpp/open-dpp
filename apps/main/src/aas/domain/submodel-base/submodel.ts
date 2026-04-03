@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { NotFoundException } from "@nestjs/common";
-import { ModellingKindType, SubmodelJsonSchema } from "@open-dpp/dto";
+import { KeyTypes, ModellingKindType, ReferenceTypes, SubmodelJsonSchema } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { AdministrativeInformation } from "../common/administrative-information";
 import { IdShortPath } from "../common/id-short-path";
+import { Key } from "../common/key";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
@@ -252,4 +253,14 @@ export class Submodel implements ISubmodelBase, IPersistable {
       id: randomUUID(),
     });
   }
+}
+
+export function submodelToReference(submodel: Submodel): Reference {
+  return Reference.create({
+    type: ReferenceTypes.ModelReference,
+    keys: [Key.create({
+      type: KeyTypes.Submodel,
+      value: submodel.id,
+    })],
+  });
 }

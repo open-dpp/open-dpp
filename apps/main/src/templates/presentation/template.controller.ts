@@ -427,7 +427,7 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
   ) {
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
-    return await this.aasSerializationService.exportTemplate(template);
+    return await this.aasSerializationService.exportTemplate(template, subject);
   }
 
   @Post("/import")

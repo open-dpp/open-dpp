@@ -1,10 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { AssetAdministrationShellJsonSchema, AssetKind, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
+import { AssetAdministrationShellJsonSchema, AssetKind } from "@open-dpp/dto";
 import { AssetInformation } from "./asset-information";
 import { AdministrativeInformation } from "./common/administrative-information";
 import { IHasDataSpecification } from "./common/has-data-specification";
 import { IIdentifiable } from "./common/identifiable";
-import { Key } from "./common/key";
 import { hasUniqueLanguagesOrFail, LanguageText } from "./common/language-text";
 import { Reference } from "./common/reference";
 import { ConvertToPlainOptions } from "./convertable-to-plain";
@@ -14,7 +13,7 @@ import JsonVisitor from "./json-visitor";
 import { ModifierVisitor, ModifierVisitorOptions } from "./modifier-visitor";
 import { IPersistable } from "./persistable";
 import { Security } from "./security/security";
-import { Submodel } from "./submodel-base/submodel";
+import { Submodel, submodelToReference } from "./submodel-base/submodel";
 import { IVisitable, IVisitor } from "./visitor";
 
 export interface AssetAdministrationShellCreateProps {
@@ -101,13 +100,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
   }
 
   addSubmodel(submodel: Submodel): Reference {
-    const reference = Reference.create({
-      type: ReferenceTypes.ModelReference,
-      keys: [Key.create({
-        type: KeyTypes.Submodel,
-        value: submodel.id,
-      })],
-    });
+    const reference = submodelToReference(submodel);
 
     this.addSubmodelReference(reference);
     this.security.addDefaultPolicyForSubmodelIfNoExists(submodel);
@@ -189,6 +182,6 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
 
   toPlain(options?: ConvertToPlainOptions): Record<string, any> {
     const jsonVisitor = new JsonVisitor(options);
-    return this.accept(jsonVisitor);
+    return this.accept(jsonVisitor, options?.context);
   }
 }
