@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { IdShortPath } from "../common/id-short-path";
+import { ConvertToPlainOptions } from "../convertable-to-plain";
 import { Submodel } from "../submodel-base/submodel";
 import { AasAbility } from "./aas-ability";
 import { createAasObject } from "./aas-object";
@@ -36,10 +37,9 @@ export class Security {
     return this;
   }
 
-  toPlain(options?: { filterBySubject?: SubjectAttributes }) {
-    const opts = options ?? {};
+  toPlain(options?: ConvertToPlainOptions) {
     return {
-      localAccessControl: this.localAccessControl.toPlain(opts),
+      localAccessControl: this.localAccessControl.toPlain(options),
     };
   }
 
@@ -117,6 +117,6 @@ export class Security {
   }
 
   defineAbilityForSubject(subject: SubjectAttributes): AasAbility {
-    return AasAbility.create({ rules: this.findPoliciesBySubject(subject) });
+    return AasAbility.create({ rules: this.findPoliciesBySubject(subject), subject });
   }
 }

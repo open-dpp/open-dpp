@@ -7,13 +7,13 @@ import { IIdentifiable } from "./common/identifiable";
 import { Key } from "./common/key";
 import { hasUniqueLanguagesOrFail, LanguageText } from "./common/language-text";
 import { Reference } from "./common/reference";
+import { ConvertToPlainOptions } from "./convertable-to-plain";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
 import JsonVisitor from "./json-visitor";
 import { ModifierVisitor, ModifierVisitorOptions } from "./modifier-visitor";
 import { IPersistable } from "./persistable";
 import { Security } from "./security/security";
-import { SubjectAttributes } from "./security/subject-attributes";
 import { Submodel } from "./submodel-base/submodel";
 import { IVisitable, IVisitor } from "./visitor";
 
@@ -187,7 +187,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     }
   }
 
-  toPlain(options?: { filterBySubject?: SubjectAttributes }): Record<string, any> {
+  toPlain(options?: ConvertToPlainOptions): Record<string, any> {
     const jsonVisitor = new JsonVisitor(options);
     return this.accept(jsonVisitor);
   }

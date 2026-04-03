@@ -2,13 +2,18 @@ import { PermissionKind, PermissionType } from "@open-dpp/dto";
 import { IdShortPath } from "../common/id-short-path";
 import { AccessPermissionRule } from "./access-permission-rule";
 import { PermissionPerObject } from "./permission-per-object";
+import { SubjectAttributes } from "./subject-attributes";
 
 export class AasAbility {
-  private constructor(private rules: AccessPermissionRule[]) {
+  private constructor(private rules: AccessPermissionRule[], private readonly subject: SubjectAttributes) {
   }
 
-  static create(data: { rules: AccessPermissionRule[] }): AasAbility {
-    return new AasAbility(data.rules);
+  static create(data: { rules: AccessPermissionRule[]; subject: SubjectAttributes }): AasAbility {
+    return new AasAbility(data.rules, data.subject);
+  }
+
+  getSubject(): SubjectAttributes {
+    return this.subject;
   }
 
   private findPermissionForObject(object: IdShortPath): PermissionPerObject | undefined {

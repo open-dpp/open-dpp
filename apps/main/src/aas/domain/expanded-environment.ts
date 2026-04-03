@@ -1,7 +1,9 @@
 import { ValueError } from "@open-dpp/exception";
 import { z, ZodError } from "zod";
+import { removeEmptyItems } from "../../utils";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { ConceptDescription } from "./concept-description";
+import { ConvertToPlainOptions } from "./convertable-to-plain";
 import { Environment } from "./environment";
 import { Submodel } from "./submodel-base/submodel";
 
@@ -142,10 +144,10 @@ export class ExpandedEnvironment {
     return new ExpandedEnvironment(shells, submodels, conceptDescriptions);
   }
 
-  toPlain(): ExpandedEnvironmentPlain {
+  toPlain(options?: ConvertToPlainOptions): ExpandedEnvironmentPlain {
     return {
       assetAdministrationShells: this.shells.map(shell => shell.toPlain()),
-      submodels: this.submodels.map(submodel => submodel.toPlain()),
+      submodels: removeEmptyItems(this.submodels.map(submodel => submodel.toPlain(options))),
       conceptDescriptions: this.conceptDescriptions.map(cd => cd.toPlain()),
     };
   }

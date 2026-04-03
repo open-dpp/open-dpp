@@ -302,7 +302,8 @@ describe("security", () => {
       Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
       Permission.create({ permission: Permissions.Edit, kindOfPermission: PermissionKind.Allow }),
     ]);
-    expect(security.toPlain({ filterBySubject: SubjectAttributes.create({ userRole: UserRole.USER }) })).toEqual({
+    const ability = security.defineAbilityForSubject(SubjectAttributes.create({ userRole: UserRole.USER }));
+    expect(security.toPlain({ ability })).toEqual({
       localAccessControl: {
         accessPermissionRules: [{
           permissionsPerObject: [
@@ -351,7 +352,8 @@ describe("security", () => {
       },
     });
 
-    expect(security.toPlain({ filterBySubject: SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }) })).toEqual({
+    const ability2 = security.defineAbilityForSubject(SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }));
+    expect(security.toPlain({ ability: ability2 })).toEqual({
       localAccessControl: {
         accessPermissionRules: [
           {

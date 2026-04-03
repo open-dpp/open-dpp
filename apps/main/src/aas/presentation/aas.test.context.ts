@@ -204,7 +204,7 @@ export function createAasTestContext<T>(
     const response = await req.send();
     expect(response.status).toEqual(200);
     expect(response.body.paging_metadata.cursor).toEqual(aas.id);
-    expect(response.body.result).toEqual(AssetAdministrationShellPaginationResponseDtoSchema.shape.result.parse([aas.toPlain({ filterBySubject: subject })]));
+    expect(response.body.result).toEqual(AssetAdministrationShellPaginationResponseDtoSchema.shape.result.parse([aas.toPlain({ ability })]));
   }
 
   async function assertModifyShell(createEntity: CreateEntity, saveEntity: SaveEntity) {

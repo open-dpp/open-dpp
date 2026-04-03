@@ -3,6 +3,7 @@ import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { IdShortPath } from "../common/id-short-path";
+import { ConvertToPlainOptions } from "../convertable-to-plain";
 import { createAasObject } from "./aas-object";
 import { AccessPermissionRule, AccessPermissionRuleSchema } from "./access-permission-rule";
 import { Permission } from "./permission";
@@ -39,9 +40,9 @@ export class AccessControl {
     );
   }
 
-  toPlain(options: { filterBySubject?: SubjectAttributes }): Record<string, any> {
-    if (options.filterBySubject) {
-      const rules = this.findRulesOfAllVisibleRolesOfSubject(options.filterBySubject);
+  toPlain(options?: ConvertToPlainOptions): Record<string, any> {
+    if (options?.ability) {
+      const rules = this.findRulesOfAllVisibleRolesOfSubject(options.ability.getSubject());
       return {
         accessPermissionRules: rules.map(p => p.toPlain()),
       };
