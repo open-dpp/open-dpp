@@ -7,13 +7,13 @@ import {
   Permissions,
   ReferenceElementModificationSchema,
   ReferenceTypes,
-
 } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 
 import { useForm } from "vee-validate";
 import { computed } from "vue";
 import { z } from "zod";
+import { useAasAbility } from "../../composables/aas-ability.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";
 import { useAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
@@ -42,6 +42,13 @@ const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
         ? props.data.value.keys[0].value
         : null,
   },
+});
+
+const { can } = useAasAbility({
+  getAccessPermissionRules: props.getAccessPermissionRules,
+});
+const disableEdit = computed(() => {
+  return !can(Permissions.Edit, props.path.idShortPathIncludingSubmodel ?? "");
 });
 
 const showErrors = computed(() => {
@@ -87,12 +94,14 @@ defineExpose<{
 <template>
   <FormContainer>
     <ReferenceElementForm
+      :disabled="disableEdit"
       :data="props.data"
       :show-errors="showErrors"
       :errors="errors"
       :editor-mode="EditorMode.EDIT"
     />
     <PermissionsForm
+      :disabled="disableEdit"
       :edit-permissions="editPermissions"
       :get-permissions="getPermissions"
       :reset-permissions="resetPermissions"

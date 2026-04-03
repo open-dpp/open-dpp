@@ -75,6 +75,6 @@ describe("useRoleHierarchy", () => {
         },
         { userRole: UserRoleDto.ADMIN },
       ),
-    ).toBeTruthy();
+    ).toBeFalsy();
   });
 });

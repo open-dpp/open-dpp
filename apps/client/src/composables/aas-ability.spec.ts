@@ -18,6 +18,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent } from "vue";
 import { useAasAbility } from "./aas-ability.ts";
 
+const mocks = vi.hoisted(() => {
+  return {
+    asSubject: vi.fn(),
+  };
+});
+
+vi.mock("../stores/user.ts", () => ({
+  useUserStore: () => ({
+    asSubject: mocks.asSubject,
+  }),
+}));
+
 describe("aasAbility composable", () => {
   const mountedWrappers: Array<ReturnType<typeof mount>> = [];
 
@@ -56,9 +68,16 @@ describe("aasAbility composable", () => {
     const transientParams: SecurityPlainTransientParams = {
       policies: [
         {
-          subject: { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER },
+          subject: {
+            userRole: UserRoleDto.USER,
+            memberRole: MemberRoleDto.MEMBER,
+          },
           object: { idShortPath: "section1" },
           permissions: [
+            {
+              permission: Permissions.Read,
+              kindOfPermission: PermissionKind.Allow,
+            },
             {
               permission: Permissions.Create,
               kindOfPermission: PermissionKind.Allow,
@@ -70,6 +89,10 @@ describe("aasAbility composable", () => {
           object: { idShortPath: "section1" },
           permissions: [
             {
+              permission: Permissions.Read,
+              kindOfPermission: PermissionKind.Allow,
+            },
+            {
               permission: Permissions.Edit,
               kindOfPermission: PermissionKind.Allow,
             },
@@ -79,14 +102,29 @@ describe("aasAbility composable", () => {
     };
     const security: SecurityResponseDto = securityPlainFactory.build(undefined, { transient: transientParams });
 
-    const { can } = mountHarness({ accessPermissionRules: security.localAccessControl.accessPermissionRules });
+    const { can } = mountHarness({ getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules });
+
+    const member = {
+      userRole: UserRoleDto.USER,
+      memberRole: MemberRoleDto.MEMBER,
+    };
+    mocks.asSubject.mockReturnValue(member);
 
     expect(can(Permissions.Create, "section1")).toBeTruthy();
     expect(can(Permissions.Create, "section1.field1")).toBeTruthy();
-    expect(can(Permissions.Edit, "section1.field1")).toBeTruthy();
-
+    expect(can(Permissions.Edit, "section1.field1")).toBeFalsy();
     expect(can(Permissions.Create, "section2.field1")).toBeFalsy();
+    expect(can(Permissions.Read, "section1")).toBeTruthy();
 
-    expect(can(Permissions.Read, "section1")).toBeFalsy();
+    const admin = {
+      userRole: UserRoleDto.ADMIN,
+    };
+    mocks.asSubject.mockReturnValue(admin);
+
+    expect(can(Permissions.Edit, "section1")).toBeTruthy();
+    expect(can(Permissions.Edit, "section1.field1")).toBeTruthy();
+    expect(can(Permissions.Create, "section1.field1")).toBeFalsy();
+    expect(can(Permissions.Edit, "section2.field1")).toBeFalsy();
+    expect(can(Permissions.Read, "section1")).toBeTruthy();
   });
 });

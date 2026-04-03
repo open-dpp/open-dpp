@@ -1,24 +1,5 @@
 import type { AasNamespace } from "@open-dpp/api-client";
-import type {
-  AccessPermissionRuleResponseDto,
-  AssetAdministrationShellModificationDto,
-  AssetAdministrationShellResponseDto,
-  DataTypeDefType,
-  FileRequestDto,
-  LanguageTextDto,
-  LanguageType,
-  PagingParamsDto,
-  PropertyRequestDto,
-  ReferenceElementRequestDto,
-  SubmodelElementCollectionRequestDto,
-  SubmodelElementListRequestDto,
-  SubmodelElementModificationDto,
-  SubmodelElementSharedRequestDto,
-  SubmodelElementSharedResponseDto,
-  SubmodelModificationDto,
-  SubmodelRequestDto,
-  SubmodelResponseDto,
-} from "@open-dpp/dto";
+import type { AccessPermissionRuleResponseDto, AssetAdministrationShellModificationDto, AssetAdministrationShellResponseDto, DataTypeDefType, FileRequestDto, LanguageTextDto, LanguageType, PagingParamsDto, PropertyRequestDto, ReferenceElementRequestDto, SubmodelElementCollectionRequestDto, SubmodelElementListRequestDto, SubmodelElementModificationDto, SubmodelElementSharedRequestDto, SubmodelElementSharedResponseDto, SubmodelModificationDto, SubmodelRequestDto, SubmodelResponseDto } from "@open-dpp/dto";
 import type { TreeTableSelectionKeys } from "primevue";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
@@ -29,6 +10,7 @@ import type { AasEditorPath, IAasDrawer } from "./aas-drawer.ts";
 import type { MediaFileCollectionItem } from "./media-file.ts";
 import type { IPagination, PagingResult } from "./pagination.ts";
 import {
+
   AasSubmodelElements,
   AasSubmodelElementsEnum,
   DataTypeDef,
@@ -43,6 +25,7 @@ import { omit } from "lodash";
 import { ref, toRaw } from "vue";
 import { z } from "zod";
 import { HTTPCode } from "../stores/http-codes.ts";
+import { useAasAbility } from "./aas-ability.ts";
 import {
   EditorMode,
   useAasDrawer,
@@ -106,7 +89,9 @@ export function useAasEditor({
     changeQueryParams({ edit: undefined });
   };
 
-  const drawer = useAasDrawer({ onHideDrawer });
+  const { can } = useAasAbility({ getAccessPermissionRules });
+
+  const drawer = useAasDrawer({ onHideDrawer, can });
 
   const loading = ref(false);
   const submodelElementsToAdd = ref<MenuItem[]>([]);

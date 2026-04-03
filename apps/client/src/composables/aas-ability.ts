@@ -3,33 +3,39 @@ import type {
   PermissionType,
 } from "@open-dpp/dto";
 import { PermissionKind } from "@open-dpp/dto";
-import { findPermissionForObject } from "../lib/aas-security.ts";
+import { ruleHelper } from "../lib/aas-security.ts";
+import { useUserStore } from "../stores/user.ts";
 
 export interface IAasAbility {
   can: (action: PermissionType, object: string) => boolean;
 }
 
 export interface AasAbilityProps {
-  accessPermissionRules: AccessPermissionRuleResponseDto[];
+  getAccessPermissionRules: () => AccessPermissionRuleResponseDto[];
 }
 
 export function useAasAbility({
-  accessPermissionRules,
+  getAccessPermissionRules,
 }: AasAbilityProps): IAasAbility {
-  function can(action: PermissionType, object: string): boolean {
-    const permissionsPerSubject = findPermissionForObject(
-      object,
-      accessPermissionRules,
-    );
-    for (const permissionPerSubject of permissionsPerSubject) {
-      const allow = permissionPerSubject.permissions.some(
-        p =>
-          p.permission === action
-          && p.kindOfPermission === PermissionKind.Allow,
-      );
-      if (allow) {
-        return true;
+  const { asSubject } = useUserStore();
+
+  function findPermissionForObject(
+    object: string,
+  ) {
+    const rulesOfSubject = getAccessPermissionRules().filter(r => ruleHelper(r).hasEqualSubject(asSubject()));
+    for (const rule of rulesOfSubject) {
+      for (const permissionPerObject of rule.permissionsPerObject) {
+        if (permissionPerObject.object.idShort === object.toString()) {
+          return permissionPerObject;
+        }
       }
+    }
+  }
+
+  function can(action: PermissionType, object: string): boolean {
+    const permissionForObject = findPermissionForObject(object);
+    if (permissionForObject) {
+      return permissionForObject.permissions.some(p => p.permission === action && p.kindOfPermission === PermissionKind.Allow);
     }
 
     const parentPath = object.split(".").slice(0, -1);
@@ -37,6 +43,7 @@ export function useAasAbility({
     if (parentPath.length > 0) {
       return can(action, parentPath.join("."));
     }
+
     return false;
   }
 

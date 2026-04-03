@@ -15,6 +15,7 @@
     "qrCode": "QR-Code",
     "add": "Hinzufügen",
     "import": "Importieren",
+    "view": "Anzeigen",
     "change": "Ändern",
     "save": "Speichern",
     "create": "Erstellen",
@@ -65,6 +66,7 @@
   },
   "aasEditor": {
     "security": {
+      "missingPermission": "Fehlende Rechte",
       "inheritedPermission": "Berechtigung von einem übergeordneten Abschnitt geerbt",
       "permissions": "Berechtigungen",
       "edit": "Bearbeiten",

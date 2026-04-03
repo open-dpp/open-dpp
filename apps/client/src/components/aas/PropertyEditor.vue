@@ -7,9 +7,10 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { computed } from "vue";
 import { z } from "zod";
+import { useAasAbility } from "../../composables/aas-ability.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";
-import { useAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
 
+import { useAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import PropertyForm from "./PropertyForm.vue";
@@ -35,6 +36,12 @@ const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
 });
 
+const { can } = useAasAbility({
+  getAccessPermissionRules: props.getAccessPermissionRules,
+});
+const disableEdit = computed(() => {
+  return !can(Permissions.Edit, props.path.idShortPathIncludingSubmodel ?? "");
+});
 const { getPermissions, editPermissions, savePermissions, resetPermissions }
   = useAasPermissionsForm({
     allAccessPermissionRules: props.getAccessPermissionRules(),
@@ -63,8 +70,10 @@ defineExpose<{
       :show-errors="showErrors"
       :errors="errors"
       :editor-mode="EditorMode.EDIT"
+      :disabled="disableEdit"
     />
     <PermissionsForm
+      :disabled="disableEdit"
       :edit-permissions="editPermissions"
       :get-permissions="getPermissions"
       :reset-permissions="resetPermissions"

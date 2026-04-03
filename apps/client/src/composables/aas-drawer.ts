@@ -1,12 +1,14 @@
-import type { AssetAdministrationShellResponseDto, FileResponseDto, KeyTypes, PropertyResponseDto, ReferenceElementResponseDto, SubmodelElementCollectionResponseDto, SubmodelElementListResponseDto, SubmodelElementResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
+import type { AssetAdministrationShellResponseDto, FileResponseDto, KeyTypes, PermissionType, PropertyResponseDto, ReferenceElementResponseDto, SubmodelElementCollectionResponseDto, SubmodelElementListResponseDto, SubmodelElementResponseDto, SubmodelResponseDto } from "@open-dpp/dto";
 import type { Component, ComputedRef, Ref } from "vue";
 import {
+
   KeyTypes as AasKeyTypes,
-
   AasSubmodelElements,
-  AssetAdministrationShellJsonSchema,
 
+  AssetAdministrationShellJsonSchema,
   FileJsonSchema,
+
+  Permissions,
 
   PropertyJsonSchema,
 
@@ -142,6 +144,7 @@ export type OpenDrawerCallback<
 }) => void;
 interface AasDrawerProps {
   onHideDrawer: () => void;
+  can: (action: PermissionType, object: string) => boolean;
 }
 
 type EditorVNodeType = { component: Component | undefined; props: { path: AasEditorPath; data: any | null; callback: callbackType | null } } | null;
@@ -152,9 +155,10 @@ export interface IAasDrawer {
   drawerHeader: Ref<string>;
   drawerVisible: Ref<boolean>;
   editorVNode: ComputedRef<EditorVNodeType>;
+  saveButtonIsVisible: Ref<boolean>;
 }
 
-export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
+export function useAasDrawer({ onHideDrawer, can }: AasDrawerProps): IAasDrawer {
   const drawerHeader = ref<string>("");
   const drawerVisible = ref(false);
   const activeEditor = ref<EditorType | null>(null);
@@ -162,6 +166,7 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
   const activeData = ref<any | null>(null);
   const activePath = ref<AasEditorPath>({ idShortPath: "", idShortPathIncludingSubmodel: "" });
   const activeCallback = ref<callbackType | null>(null);
+  const saveButtonIsVisible = ref(true);
 
   const openDrawer: OpenDrawerCallback<EditorType, EditorModeType> = ({
     type,
@@ -178,6 +183,13 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
     activeCallback.value = callback ?? null;
     drawerHeader.value = title;
     drawerVisible.value = true;
+
+    if (activeEditor.value === AasKeyTypes.AssetAdministrationShell || activeEditor.value === ColumnEditorKey) {
+      saveButtonIsVisible.value = true;
+    }
+    else {
+      saveButtonIsVisible.value = activePath.value.idShortPathIncludingSubmodel ? can(Permissions.Edit, activePath.value.idShortPathIncludingSubmodel) : true;
+    }
   };
 
   const Editors: Record<
@@ -274,5 +286,5 @@ export function useAasDrawer({ onHideDrawer }: AasDrawerProps): IAasDrawer {
     onHideDrawer();
   };
 
-  return { openDrawer, hideDrawer, drawerHeader, drawerVisible, editorVNode };
+  return { openDrawer, hideDrawer, drawerHeader, drawerVisible, editorVNode, saveButtonIsVisible };
 }

@@ -8,6 +8,7 @@ import { useForm } from "vee-validate";
 
 import { computed } from "vue";
 import { z } from "zod";
+import { useAasAbility } from "../../composables/aas-ability.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";
 import { useAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
@@ -22,6 +23,13 @@ const formSchema = z.object({
   contentType: z.string().nullish(),
 });
 export type FormValues = z.infer<typeof formSchema>;
+
+const { can } = useAasAbility({
+  getAccessPermissionRules: props.getAccessPermissionRules,
+});
+const disableEdit = computed(() => {
+  return !can(Permissions.Edit, props.path.idShortPathIncludingSubmodel ?? "");
+});
 
 const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(formSchema),
@@ -60,8 +68,10 @@ defineExpose<{
       :show-errors="showErrors"
       :errors="errors"
       :editor-mode="EditorMode.EDIT"
+      :disabled="disableEdit"
     />
     <PermissionsForm
+      :disabled="disableEdit"
       :edit-permissions="editPermissions"
       :get-permissions="getPermissions"
       :reset-permissions="resetPermissions"

@@ -6,13 +6,14 @@ import type {
   RowMenuOptions,
 } from "../../composables/aas-table-extension.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
-import { AasSubmodelElements, DataTypeDef } from "@open-dpp/dto";
+import { AasSubmodelElements, DataTypeDef, Permissions } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useConfirm } from "primevue/useconfirm";
 import { useForm } from "vee-validate";
 import { computed, onErrorCaptured, ref, toRaw } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
+import { useAasAbility } from "../../composables/aas-ability.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";
 import { useAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
 import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
@@ -57,6 +58,26 @@ const { getPermissions, editPermissions, savePermissions, resetPermissions }
     modifyShell: props.modifyShell,
   });
 
+const { can } = useAasAbility({
+  getAccessPermissionRules: props.getAccessPermissionRules,
+});
+
+const idShortPathList = computed(
+  () => props.path.idShortPathIncludingSubmodel ?? "",
+);
+
+const canCreateColumnsAndRows = computed(() => {
+  return can(Permissions.Create, idShortPathList.value);
+});
+
+const canEdit = computed(() => {
+  return can(Permissions.Edit, idShortPathList.value);
+});
+
+const canDeleteColumnsAndRows = computed(() => {
+  return can(Permissions.Delete, idShortPathList.value);
+});
+
 const confirm = useConfirm();
 
 const {
@@ -81,6 +102,11 @@ const {
   translate: props.translate,
   openConfirm: confirm.require,
   aasNamespace: props.aasNamespace,
+  disableRowCreation: !canCreateColumnsAndRows.value,
+  disableColumnCreation: !canCreateColumnsAndRows.value,
+  disableRowDeletion: !canDeleteColumnsAndRows.value,
+  disableColumnDeletion: !canDeleteColumnsAndRows.value,
+  disableColumnEditing: !canEdit.value,
 });
 
 const showErrors = computed(() => {
@@ -139,6 +165,8 @@ onErrorCaptured((err) => {
   );
   return false; // stops error from bubbling further
 });
+
+const missingPermissionsMsg = t("aasEditor.security.missingPermission");
 </script>
 
 <template>
@@ -148,8 +176,10 @@ onErrorCaptured((err) => {
         :show-errors="showErrors"
         :errors="errors"
         :editor-mode="EditorMode.EDIT"
+        :disabled="!canEdit"
       />
       <PermissionsForm
+        :disabled="!canEdit"
         :edit-permissions="editPermissions"
         :get-permissions="getPermissions"
         :reset-permissions="resetPermissions"
@@ -176,7 +206,11 @@ onErrorCaptured((err) => {
             t("aasEditor.table.entries")
           }}</span>
           <Button
+            v-tooltip.top="
+              !canCreateColumnsAndRows ? missingPermissionsMsg : undefined
+            "
             :label="t('aasEditor.table.addColumnEnd')"
+            :disabled="!canCreateColumnsAndRows"
             @click="toggleColumnMenu($event, { position: columns.length })"
           />
         </div>
@@ -219,20 +253,31 @@ onErrorCaptured((err) => {
           <div v-else>
             <FileField
               v-if="
-                col.plain.modelType === AasSubmodelElements.File
+                canEdit
+                  && col.plain.modelType === AasSubmodelElements.File
                   && rowsContext[rowIndex] != null
                   && rowsContext[rowIndex][field] != null
               "
               :id="`${rowIndex}-${field}`"
               v-model:content-type="rowsContext[rowIndex][field].contentType"
+              :disabled="!canEdit"
               :model-value="cellData[field]"
               @update:model-value="
                 (value) => onFileChange(value, cellData, rowIndex, field)
               "
             />
+            <MediaFieldView
+              v-else-if="
+                !canEdit
+                  && col.plain.modelType === AasSubmodelElements.File
+                  && cellData[field] != null
+              "
+              :media-id="cellData[field]"
+            />
             <PropertyValue
               v-else-if="
-                col.plain.modelType === AasSubmodelElements.Property
+                canEdit
+                  && col.plain.modelType === AasSubmodelElements.Property
                   && (col.plain.valueType === DataTypeDef.Date
                     || col.plain.valueType === DataTypeDef.DateTime)
               "
@@ -259,12 +304,19 @@ onErrorCaptured((err) => {
             >
               {{ formatCellValue(cellData[field], col) }}
             </span>
-            <InputText v-else autofocus fluid readonly />
+            <InputText
+              v-else
+              autofocus
+              fluid
+              readonly
+              :disabled="!canEdit"
+            />
           </div>
         </template>
         <template
           v-if="
-            col.plain.modelType !== AasSubmodelElements.File
+            canEdit
+              && col.plain.modelType !== AasSubmodelElements.File
               && !(
                 col.plain.modelType === AasSubmodelElements.Property
                 && (col.plain.valueType === DataTypeDef.Date

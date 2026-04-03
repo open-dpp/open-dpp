@@ -10,6 +10,7 @@
     "edit": "Edit",
     "qrCode": "QR code",
     "add": "Add",
+    "view": "View",
     "import": "Import",
     "save": "Save",
     "create": "Create",
@@ -65,6 +66,7 @@
   },
   "aasEditor": {
     "security": {
+      "missingPermission": "Missing permissions",
       "inheritedPermission": "Inherited permission from parent section",
       "permissions": "Permissions",
       "edit": "Edit",

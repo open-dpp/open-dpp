@@ -14,9 +14,11 @@ const {
   editPermissions,
   resetPermissions,
   ignoredPermissionOptions,
+  disabled,
 } = defineProps<
   Omit<IAasPermissionsForm, "savePermissions"> & {
     ignoredPermissionOptions?: PermissionType[];
+    disabled?: boolean;
   }
 >();
 
@@ -84,9 +86,10 @@ function onResetPermissions() {
         option-label="name"
         placeholder="Select a role"
         class="w-full md:w-56"
+        :disabled="disabled"
       />
       <Button
-        :disabled="!canEditPermissions || disableResetButton"
+        :disabled="disabled || !canEditPermissions || disableResetButton"
         :label="t('common.reset')"
         @click="onResetPermissions"
       />
@@ -100,7 +103,7 @@ function onResetPermissions() {
         <Checkbox
           :model-value="permissions.permissions"
           :input-id="permission.key"
-          :disabled="!canEditPermissions || (permission.key === Permissions.Read && permissions.permissions.some(p => p !== Permissions.Read))"
+          :disabled="disabled || !canEditPermissions || (permission.key === Permissions.Read && permissions.permissions.some(p => p !== Permissions.Read))"
           name="permissions"
           :value="permission.key"
           @update:model-value="onPermissionChange"

@@ -36,9 +36,6 @@ export function useRoleHierarchy() {
   }
 
   function canEditPermissionsOfRole(subject: Subject, target: Subject) {
-    if (subject.userRole === UserRoleDto.ADMIN) {
-      return true;
-    }
     const subjectRoles = getRoleIndex(subject);
     const targetRoles = getRoleIndex(target);
     return subjectRoles < targetRoles;
