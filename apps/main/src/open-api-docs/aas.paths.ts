@@ -18,7 +18,7 @@ import {
   TemplatePaginationDtoSchema,
   ValueSchema,
 } from "@open-dpp/dto";
-import { aasExportSchemaJsonV1_0 } from "../aas/infrastructure/serialization/aas-export-v1.schema";
+import { aasExportSchemaJsonV1_0 } from "../aas/infrastructure/serialization/export-schemas/aas-export-v1.schema";
 import {
   ApiDeleteRowPath,
   ApiGetColumnByIdShortPath,
