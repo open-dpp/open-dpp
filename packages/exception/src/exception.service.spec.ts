@@ -1,5 +1,4 @@
 import type { TestingModule } from '@nestjs/testing'
-import { expect } from '@jest/globals'
 import { Test } from '@nestjs/testing'
 import { ExceptionService } from './exception.service'
 

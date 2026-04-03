@@ -11,6 +11,7 @@ const props = defineProps<{
   showErrors: boolean;
   errors: FormErrors<any>;
   editorMode: EditorModeType;
+  disabled?: boolean;
 }>();
 const { value } = useField<string | undefined | null>("value");
 
@@ -18,11 +19,17 @@ const { t } = useI18n();
 </script>
 
 <template>
-  <SubmodelBaseForm :show-errors="props.showErrors" :errors="props.errors" :editor-mode="props.editorMode" />
+  <SubmodelBaseForm
+    :disabled="props.disabled"
+    :show-errors="props.showErrors"
+    :errors="props.errors"
+    :editor-mode="props.editorMode"
+  />
   <div class="grid lg:grid-cols-3 grid-cols-1 gap-2">
     <PropertyValueField
       id="value"
       v-model="value"
+      :disabled="props.disabled"
       :label="t('aasEditor.formLabels.value')"
       :value-type="props.data.valueType"
       :show-error="showErrors"

@@ -14,7 +14,7 @@ describe("memberMapper", () => {
     id: "member-123",
     organizationId: orgId.toString(),
     userId: userId.toString(),
-    role: MemberRole.ADMIN,
+    role: MemberRole.MEMBER,
     createdAt: now,
   });
 
@@ -22,7 +22,7 @@ describe("memberMapper", () => {
     _id: "member-123",
     organizationId: orgId,
     userId,
-    role: MemberRole.ADMIN,
+    role: MemberRole.MEMBER,
     createdAt: now,
   } as unknown as MemberDocument;
 
@@ -42,7 +42,7 @@ describe("memberMapper", () => {
       id: "member-123",
       organizationId: orgId.toString(),
       userId: stringUserId, // String ID
-      role: MemberRole.ADMIN,
+      role: MemberRole.MEMBER,
       createdAt: now,
     });
 

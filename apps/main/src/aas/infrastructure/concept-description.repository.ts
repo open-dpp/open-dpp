@@ -18,7 +18,7 @@ export class ConceptDescriptionRepository {
     this.conceptDescriptionDoc = conceptDescriptionDoc;
   }
 
-  fromPlain(plain: any): ConceptDescription {
+  async fromPlain(plain: any) {
     return ConceptDescription.fromPlain(ConceptDescriptionDbSchema.encode(plain));
   }
 

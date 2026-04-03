@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import type { TreeNode } from "primevue/treenode";
 import type { AasEditModeType } from "../../lib/aas-editor.ts";
-import { KeyTypes } from "@open-dpp/dto";
+import { KeyTypes, Permissions } from "@open-dpp/dto";
 import { useConfirm } from "primevue/useconfirm";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
+import { useAasAbility } from "../../composables/aas-ability.ts";
 import { useAasEditor } from "../../composables/aas-editor.ts";
 import { AasEditMode } from "../../lib/aas-editor.ts";
 import apiClient from "../../lib/api-client.ts";
@@ -74,6 +75,7 @@ const {
   drawerVisible,
   drawerHeader,
   hideDrawer,
+  saveButtonIsVisible,
   editorVNode,
   currentPage,
   hasPrevious,
@@ -83,17 +85,17 @@ const {
   nextPage,
   displayName,
   aasGalleryFiles,
+  getAccessPermissionRules,
+  modifyShell,
 } = aasEditor;
+
+const { can } = useAasAbility({ getAccessPermissionRules });
 
 onMounted(async () => {
   await init();
 });
 
 const popover = ref();
-
-function onNodeSelect(node: TreeNode) {
-  selectTreeNode(node.key);
-}
 
 function onHideDrawer() {
   hideDrawer();
@@ -124,6 +126,7 @@ function onSubmit() {
   }
 }
 
+const missingPermissionMsg = t("aasEditor.security.missingPermission");
 const isFullPosition = computed(() => position.value === fullPosition);
 </script>
 
@@ -177,7 +180,6 @@ const isFullPosition = computed(() => position.value === fullPosition);
         :loading="loading"
         :rows="10"
         :rows-per-page-options="[10]"
-        @node-select="onNodeSelect"
       >
         <template #header>
           <div class="flex flex-wrap items-center justify-between gap-2">
@@ -197,15 +199,79 @@ const isFullPosition = computed(() => position.value === fullPosition);
             <div class="flex w-full justify-end">
               <div class="flex items-center rounded-md gap-2">
                 <Button
-                  v-if="node.data.actions.addChildren"
-                  icon="pi pi-plus"
+                  v-if="
+                    can(
+                      Permissions.Edit,
+                      node.data.path.idShortPathIncludingSubmodel,
+                    )
+                  "
+                  v-tooltip.top="t('common.edit')"
+                  :aria-label="t('common.edit')"
+                  icon="pi pi-pencil"
                   severity="primary"
+                  @click="selectTreeNode(node.key)"
+                />
+                <Button
+                  v-else
+                  v-tooltip.top="
+                    !can(
+                      Permissions.Read,
+                      node.data.path.idShortPathIncludingSubmodel,
+                    )
+                      ? missingPermissionMsg
+                      : t('common.add')
+                  "
+                  :aria-label="t('common.view')"
+                  :disabled="
+                    !can(
+                      Permissions.Read,
+                      node.data.path.idShortPathIncludingSubmodel,
+                    )
+                  "
+                  icon="pi pi-eye"
+                  severity="primary"
+                  @click="selectTreeNode(node.key)"
+                />
+                <Button
+                  v-if="node.data.actions.addChildren"
+                  v-tooltip.top="
+                    !can(
+                      Permissions.Edit,
+                      node.data.path.idShortPathIncludingSubmodel,
+                    )
+                      ? missingPermissionMsg
+                      : t('common.add')
+                  "
+                  :aria-label="t('common.add')"
+                  icon="pi pi-plus"
+                  severity="secondary"
+                  :disabled="
+                    !can(
+                      Permissions.Create,
+                      node.data.path.idShortPathIncludingSubmodel,
+                    )
+                  "
                   @click="addClicked($event, node)"
                 />
                 <Button
                   v-if="node.data.actions.delete"
+                  v-tooltip.top="
+                    !can(
+                      Permissions.Edit,
+                      node.data.path.idShortPathIncludingSubmodel,
+                    )
+                      ? missingPermissionMsg
+                      : t('common.remove')
+                  "
+                  :aria-label="t('common.delete')"
                   icon="pi pi-trash"
                   severity="danger"
+                  :disabled="
+                    !can(
+                      Permissions.Delete,
+                      node.data.path.idShortPathIncludingSubmodel,
+                    )
+                  "
                   @click="deleteClicked(node)"
                 />
               </div>
@@ -265,6 +331,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
                 @click="position = defaultPosition"
               />
               <Button
+                v-if="saveButtonIsVisible"
                 :label="
                   editorVNode?.component === SubmodelElementListCreateEditor
                     ? t('aasEditor.table.saveAndAddEntries')
@@ -285,6 +352,8 @@ const isFullPosition = computed(() => position.value === fullPosition);
           :open-drawer="aasEditor.openDrawer"
           :error-handling-store="errorHandlingStore"
           :translate="t"
+          :get-access-permission-rules="getAccessPermissionRules"
+          :modify-shell="modifyShell"
         />
       </Drawer>
     </div>

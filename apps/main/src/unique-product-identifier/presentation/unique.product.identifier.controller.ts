@@ -1,3 +1,5 @@
+import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
+import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
 import { BadRequestException, Controller, Get, NotFoundException, Param, Query } from "@nestjs/common";
 import {
   AssetAdministrationShellPaginationResponseDto,
@@ -10,7 +12,8 @@ import {
   SubmodelResponseDto,
   ValueResponseDto,
 } from "@open-dpp/dto";
-import { IdShortPath } from "../../aas/domain/submodel-base/submodel-base";
+import { IdShortPath } from "../../aas/domain/common/id-short-path";
+import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import {
   ApiGetShells,
   ApiGetSubmodelById,
@@ -29,6 +32,9 @@ import { IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
+import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators/member-role.decorator";
+import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
+import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { Pagination } from "../../pagination/pagination";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
@@ -95,7 +101,7 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     const passport = await this.loadPassport(id);
 
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getAasShells(passport.getEnvironment(), pagination);
+    return await this.environmentService.getAasShells(passport.getEnvironment(), pagination, SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }));
   }
 
   @AllowAnonymous()
@@ -104,10 +110,13 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     @IdParam() id: string,
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelPaginationResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassport(id);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodels(passport.getEnvironment(), pagination);
+    return await this.environmentService.getSubmodels(passport.getEnvironment(), pagination, subject);
   }
 
   @AllowAnonymous()
@@ -115,9 +124,13 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
   async getSubmodelById(
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+
     const passport = await this.loadPassport(id);
-    return await this.environmentService.getSubmodelById(passport.getEnvironment(), submodelId);
+    return await this.environmentService.getSubmodelById(passport.getEnvironment(), submodelId, subject);
   }
 
   @AllowAnonymous()
@@ -125,9 +138,12 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
   async getSubmodelValue(
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ValueResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassport(id);
-    return await this.environmentService.getSubmodelValue(passport.getEnvironment(), submodelId);
+    return await this.environmentService.getSubmodelValue(passport.getEnvironment(), submodelId, subject);
   }
 
   @AllowAnonymous()
@@ -137,10 +153,13 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     @SubmodelIdParam() submodelId: string,
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementPaginationResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassport(id);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodelElements(passport.getEnvironment(), submodelId, pagination);
+    return await this.environmentService.getSubmodelElements(passport.getEnvironment(), submodelId, pagination, subject);
   }
 
   @AllowAnonymous()
@@ -149,9 +168,12 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassport(id);
-    return await this.environmentService.getSubmodelElementById(passport.getEnvironment(), submodelId, idShortPath);
+    return await this.environmentService.getSubmodelElementById(passport.getEnvironment(), submodelId, idShortPath, subject);
   }
 
   @AllowAnonymous()
@@ -160,9 +182,12 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ValueResponseDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassport(id);
-    return await this.environmentService.getSubmodelElementValue(passport.getEnvironment(), submodelId, idShortPath);
+    return await this.environmentService.getSubmodelElementValue(passport.getEnvironment(), submodelId, idShortPath, subject);
   }
 
   private async loadPassport(id: string): Promise<Passport> {

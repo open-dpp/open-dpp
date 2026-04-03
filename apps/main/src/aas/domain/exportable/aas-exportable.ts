@@ -2,7 +2,8 @@ import { randomUUID } from "node:crypto";
 import { DateTime } from "../../../lib/date-time";
 import { Passport } from "../../../passports/domain/passport";
 import { Template } from "../../../templates/domain/template";
-import { aasExportSchemaJsonV1_0 } from "../../infrastructure/serialization/aas-export-v1.schema";
+import { aasExportSchemaJsonV1_0 } from "../../infrastructure/serialization/export-schemas/aas-export-v1.schema";
+import { ConvertToPlainOptions } from "../convertable-to-plain";
 import { ExpandedEnvironment } from "../expanded-environment";
 
 export class AasExportable {
@@ -72,8 +73,8 @@ export class AasExportable {
     );
   }
 
-  toExportPlain() {
-    const envPlain = this.environment.toPlain();
+  toExportPlain(options: ConvertToPlainOptions) {
+    const envPlain = this.environment.toPlain(options);
     return {
       id: this.id,
       environment: {

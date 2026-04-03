@@ -8,7 +8,7 @@ import {
 } from '@open-dpp/dto'
 import {
   aasPlainFactory,
-  propertyPlainFactory,
+  propertyInputPlainFactory,
   submodelCarbonFootprintPlainFactory,
   submodelDesignOfProductPlainFactory,
   submodelDesignOfProductValuePlainFactory,
@@ -47,9 +47,10 @@ export const submodelValueResponse: { Design_V01: any }
   = ValueSchema.parse(
     submodelDesignOfProductValuePlainFactory.build(),
   ) as { Design_V01: any }
-export const propertyToAdd = propertyPlainFactory.build(undefined, {
+export const propertyToAdd = propertyInputPlainFactory.build(undefined, {
   transient: { iriDomain },
 })
+
 export function aasHandlers(basePath: string) {
   const aasEndpointUrl = `${baseURL}/${basePath}`
 

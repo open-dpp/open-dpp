@@ -10,6 +10,7 @@ const props = defineProps<{
   showErrors: boolean;
   errors: FormErrors<any>;
   editorMode: EditorModeType;
+  disabled?: boolean;
 }>();
 
 const { value, errorMessage } = useField<string | undefined>("value");
@@ -24,13 +25,14 @@ const { value: contentType } = useField<string | undefined>("contentType");
       :show-errors="props.showErrors"
       :errors="errors"
       :editor-mode="props.editorMode"
+      :disabled="props.disabled"
     />
     <div class="grid lg:grid-cols-3 grid-cols-1 gap-2">
       <div class="flex flex-col gap-2">
         <span class="text-xl font-bold">{{
           t("aasEditor.formLabels.value")
         }}</span>
-        <FileField v-model="value" v-model:content-type="contentType" />
+        <FileField v-model="value" v-model:content-type="contentType" :disabled="props.disabled" />
         <Message
           v-if="errorMessage"
           size="small"

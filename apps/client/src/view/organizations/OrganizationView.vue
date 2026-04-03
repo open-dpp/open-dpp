@@ -114,11 +114,11 @@ onMounted(async () => {
                     <span
                       v-if="member.role === 'owner'"
                       class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
-                    >{{ t('organizations.memberCreator') }}</span>
+                    >{{ t('organizations.owner') }}</span>
                     <span
                       v-if="member.role === 'admin'"
                       class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
-                    >{{ t('organizations.memberAdmin') }}</span>
+                    >{{ t('user.admin') }}</span>
                   </div>
                 </div>
                 <div class="ml-4 shrink-0">

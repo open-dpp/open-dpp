@@ -3,9 +3,10 @@ import { jest } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvModule, EnvService } from "@open-dpp/env";
-import { generateMongoConfig } from "../../../database/config";
 
+import { generateMongoConfig } from "../../../database/config";
 import { OrganizationsModule } from "../../../identity/organizations/organizations.module";
+import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { UsersModule } from "../../../identity/users/users.module";
 import { Media } from "../../../media/domain/media";
 import { MediaService } from "../../../media/infrastructure/media.service";
@@ -15,6 +16,7 @@ import { PassportDoc, PassportSchema } from "../../../passports/infrastructure/p
 import { TemplateRepository } from "../../../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../../../templates/infrastructure/template.schema";
 import { Environment } from "../../domain/environment";
+import { SubjectAttributes } from "../../domain/security/subject-attributes";
 import { registerSubmodelElementClasses } from "../../domain/submodel-base/register-submodel-element-classes";
 import { EnvironmentService } from "../../presentation/environment.service";
 import { AasRepository } from "../aas.repository";
@@ -107,7 +109,7 @@ describe("aasSerializationService", () => {
   let passportRepository: PassportRepository;
   let templateRepository: TemplateRepository;
   let module: TestingModule;
-  let mockMediaService: { findByIds: jest.Mock };
+  let mockMediaService: { findByIds: jest.Mock<any> };
 
   beforeAll(async () => {
     registerSubmodelElementClasses();
@@ -184,7 +186,8 @@ describe("aasSerializationService", () => {
     });
     await passportRepository.save(passport);
     const foundAas = await passportRepository.findOneOrFail(passport.id);
-    const exportResult = await aasSerializationService.exportPassport(foundAas);
+    const subject = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+    const exportResult = await aasSerializationService.exportPassport(foundAas, subject);
     expect(exportResult).toBeDefined();
     expect(exportResult.format).toBe("open-dpp:json");
     expect(exportResult.version).toBe("1.0");
@@ -244,7 +247,8 @@ describe("aasSerializationService", () => {
 
       expect(passport).toBeDefined();
       const loaded = await passportRepository.findOneOrFail(passport!.id);
-      const exported = await aasSerializationService.exportPassport(loaded);
+      const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+      const exported = await aasSerializationService.exportPassport(loaded, admin);
       expect(exported.environment.assetAdministrationShells[0].assetInformation.defaultThumbnails).toEqual([]);
     });
 
@@ -298,7 +302,9 @@ describe("aasSerializationService", () => {
 
       expect(passport).toBeDefined();
       const loaded = await passportRepository.findOneOrFail(passport!.id);
-      const exported = await aasSerializationService.exportPassport(loaded);
+      const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+
+      const exported = await aasSerializationService.exportPassport(loaded, admin);
       const fileElement = exported.environment.submodels[0].submodelElements[0];
       expect(fileElement).toMatchObject({
         idShort: "productImage",
@@ -312,7 +318,7 @@ describe("aasSerializationService", () => {
 
     it("should generate new submodel IDs so imported passport does not share submodels with the original", async () => {
       const originalSubmodelId = randomUUID();
-      const data = buildExportData();
+      const data: any = buildExportData();
       data.environment.submodels[0].id = originalSubmodelId;
       data.environment.assetAdministrationShells[0].submodels = [
         {
@@ -335,7 +341,7 @@ describe("aasSerializationService", () => {
 
     it("should remap shell submodel references to the new submodel IDs", async () => {
       const originalSubmodelId = randomUUID();
-      const data = buildExportData();
+      const data: any = buildExportData();
       data.environment.submodels[0].id = originalSubmodelId;
       data.environment.assetAdministrationShells[0].submodels = [
         {
@@ -352,7 +358,9 @@ describe("aasSerializationService", () => {
       );
 
       const loaded = await passportRepository.findOneOrFail(passport.id);
-      const exported = await aasSerializationService.exportPassport(loaded);
+      const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+
+      const exported = await aasSerializationService.exportPassport(loaded, admin);
 
       const exportedSubmodelId = exported.environment.submodels[0].id;
       expect(exportedSubmodelId).not.toBe(originalSubmodelId);
@@ -402,7 +410,9 @@ describe("aasSerializationService", () => {
 
       expect(template).toBeDefined();
       const loaded = await templateRepository.findOneOrFail(template.id);
-      const exported = await aasSerializationService.exportTemplate(loaded);
+      const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+
+      const exported = await aasSerializationService.exportTemplate(loaded, admin);
       expect(exported.environment.assetAdministrationShells[0].assetInformation.defaultThumbnails).toEqual([]);
     });
   });

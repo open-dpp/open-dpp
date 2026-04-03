@@ -97,6 +97,7 @@ describe('apiClient', () => {
     const sdk = new OpenDppClient({
       dpp: { baseURL },
     })
+
     it('should return shells', async () => {
       const response = await sdk.dpp[appIdentifiable].aas.getShells(
         aasWrapperId,

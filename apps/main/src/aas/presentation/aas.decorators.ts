@@ -11,7 +11,8 @@ import {
 } from "@open-dpp/dto";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { z } from "zod";
-import { IdShortPath } from "../domain/submodel-base/submodel-base";
+
+import { IdShortPath } from "../domain/common/id-short-path";
 
 const DeleteHttpCode = HttpCode(204);
 

@@ -4,6 +4,7 @@ import type { ReferenceElementEditorProps } from "../../composables/aas-drawer.t
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import {
   KeyTypes,
+  Permissions,
   ReferenceElementModificationSchema,
   ReferenceTypes,
 } from "@open-dpp/dto";
@@ -12,7 +13,9 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { computed } from "vue";
 import { z } from "zod";
+import { useAasAbility } from "../../composables/aas-ability.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";
+import { useAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import ReferenceElementForm from "./ReferenceElementForm.vue";
@@ -41,9 +44,23 @@ const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
   },
 });
 
+const { can } = useAasAbility({
+  getAccessPermissionRules: props.getAccessPermissionRules,
+});
+const disableEdit = computed(() => {
+  return !can(Permissions.Edit, props.path.idShortPathIncludingSubmodel ?? "");
+});
+
 const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
 });
+
+const { getPermissions, editPermissions, savePermissions, resetPermissions }
+  = useAasPermissionsForm({
+    allAccessPermissionRules: props.getAccessPermissionRules(),
+    object: props.path.idShortPathIncludingSubmodel ?? "",
+    modifyShell: props.modifyShell,
+  });
 
 async function submit() {
   await handleSubmit(async (data) => {
@@ -63,6 +80,7 @@ async function submit() {
         : null,
     });
     await props.callback(body);
+    await savePermissions();
   })();
 }
 
@@ -76,10 +94,18 @@ defineExpose<{
 <template>
   <FormContainer>
     <ReferenceElementForm
+      :disabled="disableEdit"
       :data="props.data"
       :show-errors="showErrors"
       :errors="errors"
       :editor-mode="EditorMode.EDIT"
+    />
+    <PermissionsForm
+      :disabled="disableEdit"
+      :edit-permissions="editPermissions"
+      :get-permissions="getPermissions"
+      :reset-permissions="resetPermissions"
+      :ignored-permission-options="[Permissions.Create]"
     />
   </FormContainer>
 </template>

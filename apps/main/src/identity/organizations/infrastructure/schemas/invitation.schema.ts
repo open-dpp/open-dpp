@@ -1,3 +1,4 @@
+import type { MemberRoleType } from "../../domain/member-role.enum";
 import process from "node:process";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { HydratedDocument } from "mongoose";
@@ -20,8 +21,8 @@ export class Invitation {
   @Prop({ required: true, index: true })
   organizationId: string;
 
-  @Prop({ required: true, enum: MemberRole, type: String })
-  role: MemberRole;
+  @Prop({ required: true, enum: Object.values(MemberRole), type: String })
+  role: MemberRoleType;
 
   @Prop({ required: true, enum: InvitationStatus, type: String })
   status: InvitationStatus;
