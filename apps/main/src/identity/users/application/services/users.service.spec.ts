@@ -103,7 +103,7 @@ describe("UsersService", () => {
 
     await expect(service.setUserRole(user.id, UserRole.ADMIN))
       .rejects
-      .toThrow(`Failed to update role for user ${user.id}`);
+      .toThrow(NotFoundError);
   });
 
   it("should set user email verified via domain method", async () => {

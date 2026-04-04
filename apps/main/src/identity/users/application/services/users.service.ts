@@ -46,7 +46,7 @@ export class UsersService {
   async findOneAndFail(id: string) {
     const userEntity = await this.usersRepository.findOneById(id);
     if (!userEntity) {
-      throw new NotFoundError(User.name);
+      throw new NotFoundError(User.name, id);
     }
     return userEntity;
   }
@@ -62,12 +62,12 @@ export class UsersService {
   async setUserEmailVerified(email: string, emailVerified: boolean): Promise<User> {
     const user = await this.usersRepository.findOneByEmail(email);
     if (!user) {
-      throw new NotFoundError(User.name);
+      throw new NotFoundError(User.name, email);
     }
     const updatedUser = user.withEmailVerified(emailVerified);
     const saved = await this.usersRepository.update(updatedUser);
     if (!saved) {
-      throw new NotFoundError(User.name);
+      throw new NotFoundError(User.name, user.id);
     }
     return saved;
   }
@@ -77,7 +77,7 @@ export class UsersService {
     const updatedUser = user.withRole(role);
     const saved = await this.usersRepository.update(updatedUser);
     if (!saved) {
-      throw new Error(`Failed to update role for user ${id}`);
+      throw new NotFoundError(User.name, id);
     }
     return saved;
   }
