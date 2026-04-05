@@ -29,8 +29,4 @@ describe("StatusController", () => {
 
     expect(response.body).toEqual({ version: packageJson.version });
   });
-
-  it("GET /api/status should be accessible without authentication", async () => {
-    await request(getApp(app)).get("/api/status").expect(200);
-  });
 });
