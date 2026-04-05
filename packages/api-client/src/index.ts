@@ -58,3 +58,4 @@ export type { MediaInfoDto } from './media/media.dtos'
 export { MediaNamespace } from './media/media.namespace'
 
 export { OpenDppClient } from './open-dpp-client'
+export { StatusApiClient } from './status/status-api-client'
