@@ -10,8 +10,9 @@ export const useStatusStore = defineStore("status", () => {
       const { data } = await apiClient.status.get();
       version.value = data.version;
     }
-    catch {
-      // Silently swallow — no error shown to the user
+    catch (error) {
+      // Log but do not surface to the user — version is non-critical UI.
+      console.warn("Failed to fetch application status:", error);
     }
   };
 
