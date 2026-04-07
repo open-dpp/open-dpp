@@ -29,6 +29,7 @@ import { ConceptDescriptionDoc, ConceptDescriptionSchema } from "../schemas/conc
 import { SubmodelDoc, SubmodelSchema } from "../schemas/submodel.schema";
 import { SubmodelRepository } from "../submodel.repository";
 import { AasSerializationService } from "./aas-serialization.service";
+import { AasExportVersion } from "./export-schemas/aas-export-shared";
 
 function buildExportData(overrides: {
   defaultThumbnails?: Array<{ path: string; contentType: string | null }>;
@@ -190,7 +191,7 @@ describe("aasSerializationService", () => {
     const exportResult = await aasSerializationService.exportPassport(foundAas, subject);
     expect(exportResult).toBeDefined();
     expect(exportResult.format).toBe("open-dpp:json");
-    expect(exportResult.version).toBe("1.0");
+    expect(exportResult.version).toBe(AasExportVersion.v2_0);
   });
 
   describe("importPassport - media ownership validation", () => {

@@ -15,6 +15,7 @@ import {
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
+import { AasExportVersion } from "../../aas/infrastructure/serialization/export-schemas/aas-export-shared";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
 import { ORGANIZATION_ID_HEADER } from "../../identity/auth/presentation/decorators/organization-id.decorator";
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
@@ -396,7 +397,7 @@ describe("passportController", () => {
 
     expect(response.status).toEqual(200);
     expect(response.body.format).toEqual("open-dpp:json");
-    expect(response.body.version).toEqual("1.0");
+    expect(response.body.version).toEqual(AasExportVersion.v2_0);
     expect(response.body.id).toBeDefined();
     expect(response.body.environment).toBeDefined();
     expect(response.body.environment.assetAdministrationShells).toHaveLength(1);
@@ -482,7 +483,7 @@ describe("passportController", () => {
 
     expect(exportResponse.status).toEqual(200);
     expect(exportResponse.body.format).toEqual("open-dpp:json");
-    expect(exportResponse.body.version).toEqual("1.0");
+    expect(exportResponse.body.version).toEqual(AasExportVersion.v2_0);
     expect(exportResponse.body.environment.assetAdministrationShells).toHaveLength(1);
     expect(exportResponse.body.environment.submodels).toHaveLength(0);
     expect(exportResponse.body.environment.conceptDescriptions).toHaveLength(0);
