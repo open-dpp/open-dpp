@@ -638,10 +638,10 @@ describe("aasSerializationService", () => {
       expect(template).toBeDefined();
     });
 
-    it("should nullify thumbnail when media belongs to a different organization", async () => {
+    it("should nullify thumbnail when media belongs to a different organization or does not exist", async () => {
       const mediaId = randomUUID();
       const data = buildExportData({
-        defaultThumbnails: [{ path: mediaId, contentType: "image/webp" }],
+        defaultThumbnails: [{ path: mediaId, contentType: "image/webp" }, { path: "non-existing-media", contentType: "image/webp" }],
       });
 
       mockMediaService.findByIds.mockResolvedValue([

@@ -168,6 +168,11 @@ export class AasSerializationService {
         .filter(m => m.ownedByOrganizationId !== organizationId)
         .map(m => m.id),
     );
+    for (const mediaId of mediaIds) {
+      if (!foreignMediaIds.has(mediaId) && !foundMedia.find(m => m.id === mediaId)) {
+        foreignMediaIds.add(mediaId);
+      }
+    }
 
     if (foreignMediaIds.size === 0) {
       return { shells, submodels };
