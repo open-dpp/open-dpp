@@ -744,6 +744,10 @@ export function useAasTableExtension({
         const parsed = dayjs(String(value));
         return parsed.isValid() ? parsed.format("YYYY-MM-DD") : String(value);
       }
+      case DataTypeDef.DateTime: {
+        const parsed = dayjs(String(value));
+        return parsed.isValid() ? parsed.format("YYYY-MM-DDTHH:mm:ss") : String(value);
+      }
       default:
         return value;
     }

@@ -43,18 +43,13 @@ const NUMERIC_TYPES = new Set<DataTypeDefType>([
   DataTypeDef.Decimal,
 ]);
 
-const DATE_TYPES = new Set<DataTypeDefType>([
-  DataTypeDef.Date,
-  DataTypeDef.DateTime,
-]);
-
 const isNumeric = computed(() =>
   props.valueType ? NUMERIC_TYPES.has(props.valueType) : false,
 );
 
-const isDate = computed(() =>
-  props.valueType ? DATE_TYPES.has(props.valueType) : false,
-);
+const isDate = computed(() => props.valueType === DataTypeDef.Date);
+
+const isDateTime = computed(() => props.valueType === DataTypeDef.DateTime);
 
 const maxFractionDigits = computed(() =>
   props.valueType && INTEGER_TYPES.has(props.valueType) ? 0 : 5,
@@ -84,7 +79,8 @@ const dateValue = computed({
       emit("update:modelValue", null);
       return;
     }
-    emit("update:modelValue", dayjs(v).format("YYYY-MM-DD"));
+    const format = isDateTime.value ? "YYYY-MM-DDTHH:mm:ss" : "YYYY-MM-DD";
+    emit("update:modelValue", dayjs(v).format(format));
   },
 });
 
@@ -109,11 +105,13 @@ const textValue = computed({
     show-buttons
   />
   <DatePicker
-    v-else-if="isDate"
+    v-else-if="isDate || isDateTime"
     :id="props.id"
     v-model="dateValue"
     :disabled="props.disabled"
     :invalid="props.invalid"
+    :show-time="isDateTime"
+    :show-seconds="isDateTime"
     show-icon
     fluid
   />
