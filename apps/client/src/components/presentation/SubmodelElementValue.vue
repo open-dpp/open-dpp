@@ -29,7 +29,7 @@ const { t } = useI18n();
     {{ t("presentation.missingValue") }}
   </div>
   <dd
-    v-if="element.modelType === 'Property'"
+    v-else-if="element.modelType === 'Property'"
     class="mt-1 text-sm/6 text-gray-700 sm:mt-2"
   >
     <template
