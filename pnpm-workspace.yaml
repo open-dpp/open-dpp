@@ -1,5 +1,6 @@
 packages:
   - apps/*/*
+  - '!apps/*/dist'
   - apps/*
   - packages/*
   - docs
