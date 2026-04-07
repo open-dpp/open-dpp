@@ -1,10 +1,13 @@
 import { randomUUID } from "node:crypto";
-import { jest } from "@jest/globals";
+import { expect, jest } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
-import { EnvModule, EnvService } from "@open-dpp/env";
+import { PermissionKind, Permissions } from "@open-dpp/dto";
 
+import { EnvModule, EnvService } from "@open-dpp/env";
+import { allPermissionsAllow } from "@open-dpp/testing";
 import { generateMongoConfig } from "../../../database/config";
+import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
 import { OrganizationsModule } from "../../../identity/organizations/organizations.module";
 import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { UsersModule } from "../../../identity/users/users.module";
@@ -15,7 +18,12 @@ import { PassportRepository } from "../../../passports/infrastructure/passport.r
 import { PassportDoc, PassportSchema } from "../../../passports/infrastructure/passport.schema";
 import { TemplateRepository } from "../../../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../../../templates/infrastructure/template.schema";
+import { IdShortPath } from "../../domain/common/id-short-path";
 import { Environment } from "../../domain/environment";
+import { createAasObject } from "../../domain/security/aas-object";
+import { AccessPermissionRule } from "../../domain/security/access-permission-rule";
+import { Permission } from "../../domain/security/permission";
+import { PermissionPerObject } from "../../domain/security/permission-per-object";
 import { SubjectAttributes } from "../../domain/security/subject-attributes";
 import { registerSubmodelElementClasses } from "../../domain/submodel-base/register-submodel-element-classes";
 import { EnvironmentService } from "../../presentation/environment.service";
@@ -29,16 +37,136 @@ import { ConceptDescriptionDoc, ConceptDescriptionSchema } from "../schemas/conc
 import { SubmodelDoc, SubmodelSchema } from "../schemas/submodel.schema";
 import { SubmodelRepository } from "../submodel.repository";
 import { AasSerializationService } from "./aas-serialization.service";
-import { AasExportVersion } from "./export-schemas/aas-export-shared";
+import { AasExportVersion, AasExportVersionType } from "./export-schemas/aas-export-shared";
+
+const adminPlain = { subjectAttribute: [{
+  category: null,
+  description: [],
+  displayName: [],
+  embeddedDataSpecifications: [],
+  extensions: [],
+  idShort: "userRole",
+  modelType: "Property",
+  qualifiers: [],
+  semanticId: null,
+  supplementalSemanticIds: [],
+  value: UserRole.ADMIN,
+  valueId: null,
+  valueType: "String",
+}] };
+
+const memberPlain = { subjectAttribute: [{
+  category: null,
+  description: [],
+  displayName: [],
+  embeddedDataSpecifications: [],
+  extensions: [],
+  idShort: "userRole",
+  modelType: "Property",
+  qualifiers: [],
+  semanticId: null,
+  supplementalSemanticIds: [],
+  value: UserRole.USER,
+  valueId: null,
+  valueType: "String",
+}, {
+  category: null,
+  description: [],
+  displayName: [],
+  embeddedDataSpecifications: [],
+  extensions: [],
+  idShort: "memberRole",
+  modelType: "Property",
+  qualifiers: [],
+  semanticId: null,
+  supplementalSemanticIds: [],
+  value: MemberRole.MEMBER,
+  valueId: null,
+  valueType: "String",
+}] };
+
+const submodel1SecReference = {
+  category: null,
+  description: [],
+  displayName: [],
+  embeddedDataSpecifications: [],
+  extensions: [],
+  idShort: "submodel-1",
+  modelType: "ReferenceElement",
+  qualifiers: [],
+  semanticId: null,
+  supplementalSemanticIds: [],
+  value: null,
+};
+
+const submodel2SecReference = {
+  category: null,
+  description: [],
+  displayName: [],
+  embeddedDataSpecifications: [],
+  extensions: [],
+  idShort: "submodel-2",
+  modelType: "ReferenceElement",
+  qualifiers: [],
+  semanticId: null,
+  supplementalSemanticIds: [],
+  value: null,
+};
+
+const securityForV2_0 = {
+  localAccessControl: {
+    accessPermissionRules: [{
+      targetSubjectAttributes: adminPlain,
+      permissionsPerObject: [
+        {
+          object: submodel1SecReference,
+          permissions: [
+            {
+              kindOfPermission: "Allow",
+              permission: "Read",
+            },
+          ],
+        },
+        {
+          object: submodel2SecReference,
+          permissions: [
+            {
+              kindOfPermission: "Allow",
+              permission: "Read",
+            },
+          ],
+        },
+      ],
+    }, {
+      targetSubjectAttributes: memberPlain,
+      permissionsPerObject: [
+        {
+          object: submodel2SecReference,
+          permissions: [
+            {
+              kindOfPermission: "Allow",
+              permission: "Read",
+            },
+          ],
+        },
+      ],
+    }],
+  },
+};
 
 function buildExportData(overrides: {
   defaultThumbnails?: Array<{ path: string; contentType: string | null }>;
   submodelElements?: any[];
+  version?: AasExportVersionType;
 } = {}) {
+  const version = overrides.version ?? AasExportVersion.v2_0;
+  const security = overrides.version !== AasExportVersion.v1_0
+    ? securityForV2_0
+    : undefined;
   return {
     id: randomUUID(),
     format: "open-dpp:json",
-    version: "1.0",
+    version,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     environment: {
@@ -61,6 +189,7 @@ function buildExportData(overrides: {
             assetType: null,
             defaultThumbnails: overrides.defaultThumbnails ?? [],
           },
+          security,
         },
       ],
       submodels: [
@@ -69,6 +198,21 @@ function buildExportData(overrides: {
           extensions: [],
           category: null,
           idShort: "submodel-1",
+          displayName: [],
+          description: [],
+          administration: null,
+          kind: null,
+          semanticId: null,
+          supplementalSemanticIds: [],
+          qualifiers: [],
+          embeddedDataSpecifications: [],
+          submodelElements: overrides.submodelElements ?? [],
+        },
+        {
+          id: randomUUID(),
+          extensions: [],
+          category: null,
+          idShort: "submodel-2",
           displayName: [],
           description: [],
           administration: null,
@@ -111,6 +255,7 @@ describe("aasSerializationService", () => {
   let templateRepository: TemplateRepository;
   let module: TestingModule;
   let mockMediaService: { findByIds: jest.Mock<any> };
+  let environmentService: EnvironmentService;
 
   beforeAll(async () => {
     registerSubmodelElementClasses();
@@ -166,6 +311,7 @@ describe("aasSerializationService", () => {
     aasSerializationService = module.get<AasSerializationService>(AasSerializationService);
     passportRepository = module.get<PassportRepository>(PassportRepository);
     templateRepository = module.get<TemplateRepository>(TemplateRepository);
+    environmentService = module.get<EnvironmentService>(EnvironmentService);
   });
 
   beforeEach(() => {
@@ -336,7 +482,7 @@ describe("aasSerializationService", () => {
       );
 
       const importedSubmodelIds = passport.environment.submodels;
-      expect(importedSubmodelIds).toHaveLength(1);
+      expect(importedSubmodelIds).toHaveLength(2);
       expect(importedSubmodelIds[0]).not.toBe(originalSubmodelId);
     });
 
@@ -363,11 +509,110 @@ describe("aasSerializationService", () => {
 
       const exported = await aasSerializationService.exportPassport(loaded, admin);
 
+      expect(exported.environment.assetAdministrationShells[0].security).toEqual(securityForV2_0);
+
       const exportedSubmodelId = exported.environment.submodels[0].id;
       expect(exportedSubmodelId).not.toBe(originalSubmodelId);
 
       const shellSubmodelRef = exported.environment.assetAdministrationShells[0].submodels[0];
       expect(shellSubmodelRef.keys[0].value).toBe(exportedSubmodelId);
+
+      const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+
+      const exportedForMember = await aasSerializationService.exportPassport(loaded, member);
+      expect(exportedForMember.environment.assetAdministrationShells[0].security).toEqual({ localAccessControl: {
+        accessPermissionRules: [{
+          targetSubjectAttributes: adminPlain,
+          permissionsPerObject: [
+            {
+              object: submodel2SecReference,
+              permissions: [
+                {
+                  kindOfPermission: "Allow",
+                  permission: "Read",
+                },
+              ],
+            },
+          ],
+        }, {
+          targetSubjectAttributes: memberPlain,
+          permissionsPerObject: [
+            {
+              object: submodel2SecReference,
+              permissions: [
+                {
+                  kindOfPermission: "Allow",
+                  permission: "Read",
+                },
+              ],
+            },
+          ],
+        }],
+      } });
+      expect(exportedForMember.environment.submodels).toEqual([{
+        administration: null,
+        category: null,
+        description: [],
+        displayName: [],
+        embeddedDataSpecifications: [],
+        extensions: [],
+        id: expect.any(String),
+        idShort: "submodel-2",
+        kind: null,
+        qualifiers: [],
+        semanticId: null,
+        submodelElements: [],
+        supplementalSemanticIds: [],
+      }]);
+    });
+
+    it("should import passport of version 1.0", async () => {
+      const originalSubmodelId = randomUUID();
+      const data: any = buildExportData({ version: AasExportVersion.v1_0 });
+      data.environment.submodels[0].id = originalSubmodelId;
+      data.environment.assetAdministrationShells[0].submodels = [
+        {
+          type: "ModelReference",
+          keys: [{ type: "Submodel", value: originalSubmodelId }],
+          referredSemanticId: null,
+        },
+      ];
+
+      const passport = await aasSerializationService.importPassport(
+        data,
+        orgId,
+        async (p, options) => { await passportRepository.save(p, options); },
+      );
+
+      const expandedEnv = await environmentService.loadExpandedEnvironment(passport.environment);
+      const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+
+      const readPermission = [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })];
+      expect(expandedEnv.shells[0].security.localAccessControl.findRuleOfSubject(anonymous)).toEqual(AccessPermissionRule.create({
+        targetSubjectAttributes: anonymous,
+        permissionsPerObject: [PermissionPerObject.create({
+          object: createAasObject(IdShortPath.create({ path: expandedEnv.submodels[0].idShort })),
+          permissions: readPermission,
+        }), PermissionPerObject.create({
+          object: createAasObject(IdShortPath.create({ path: expandedEnv.submodels[1].idShort })),
+          permissions: readPermission,
+        })],
+      }));
+
+      const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+
+      expect(expandedEnv.shells[0].security.localAccessControl.findRuleOfSubject(member)).toEqual(AccessPermissionRule.create({
+        targetSubjectAttributes: member,
+        permissionsPerObject: [PermissionPerObject.create({
+          object: createAasObject(IdShortPath.create({ path: expandedEnv.submodels[0].idShort })),
+          permissions: allPermissionsAllow.map(Permission.fromPlain),
+        }), PermissionPerObject.create({
+          object: createAasObject(IdShortPath.create({ path: expandedEnv.submodels[1].idShort })),
+          permissions: allPermissionsAllow.map(Permission.fromPlain),
+        })],
+      }));
+
+      expect(expandedEnv.submodels[0].id).not.toEqual(originalSubmodelId);
     });
   });
 
