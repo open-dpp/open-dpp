@@ -106,6 +106,7 @@
     "textField": "Textfeld",
     "file": "Datei",
     "dateField": "Datumsfeld",
+    "dateTimeField": "Datum-Zeit-Feld",
     "numberField": "Zahlenfeld",
     "type": "Typ",
     "error": "{method} @:common.failed"
@@ -222,6 +223,8 @@
     "addFileField": "Fügen Sie einen Dateiupload hinzu",
     "dateField": "Datumsfeld",
     "addDateField": "Datumsfeld hinzufügen",
+    "dateTimeField": "Datum-Zeit-Feld",
+    "addDateTimeField": "Datum-Zeit-Feld hinzufügen",
     "passportDraft": "Passvorlagen Entwurf | Passvorlagen Entwürfe",
     "passportDraftDescription": "Alle Passvorlagen Entwürfe",
     "changeDataFieldType": "Datenfeldtyp ändern"

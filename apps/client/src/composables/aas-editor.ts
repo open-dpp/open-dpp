@@ -342,6 +342,9 @@ export function useAasEditor({
       if (valueType === DataTypeDef.Date) {
         return translate(`${translatePrefix}.dateField`);
       }
+      if (valueType === DataTypeDef.DateTime) {
+        return translate(`${translatePrefix}.dateTimeField`);
+      }
     }
     if (submodelBase.modelType === AasSubmodelElements.SubmodelElementList) {
       return translate(`${translatePrefix}.submodelElementList`);
@@ -418,6 +421,11 @@ export function useAasEditor({
         translate(`${translatePrefix}.dateField`),
         "pi pi-calendar",
         DataTypeDef.Date,
+      ),
+      buildPropertyEntry(
+        translate(`${translatePrefix}.dateTimeField`),
+        "pi pi-calendar-clock",
+        DataTypeDef.DateTime,
       ),
       {
         label: translate(`${translatePrefix}.file`),

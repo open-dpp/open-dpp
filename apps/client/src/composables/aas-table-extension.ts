@@ -550,6 +550,13 @@ export function useAasTableExtension({
         DataTypeDef.Date,
       ),
       buildColumnMenuItem(
+        translate(`${translatePrefix}.dateTimeField`),
+        icon,
+        options,
+        AasSubmodelElements.Property,
+        DataTypeDef.DateTime,
+      ),
+      buildColumnMenuItem(
         translate(`${translatePrefix}.file`),
         icon,
         options,
