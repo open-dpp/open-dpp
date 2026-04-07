@@ -17,22 +17,18 @@ const { description: name } = useDisplayName(title);
 <template>
   <div
     :id="idShort"
-    class="overflow-hidden bg-white shadow sm:rounded-lg w-full"
+    class="w-full mt-6 first:mt-0 rounded-xl border border-surface-200 bg-surface-0 shadow-sm p-6"
   >
-    <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg p-4">
-      <div class="px-4 sm:px-0">
-        <h3 class="font-extrabold text-gray-900">
-          {{ name }}
-        </h3>
-      </div>
-      <dl class="grid grid-cols-1 sm:grid-cols-2">
-        <SubmodelElement
-          v-for="element in submodelElements"
-          :key="element.idShort"
-          :element="element"
-          :parent-id="parentId"
-        />
-      </dl>
-    </div>
+    <h3 class="text-lg font-semibold text-surface-900 border-l-3 border-primary-500 pl-4 mb-6">
+      {{ name }}
+    </h3>
+    <dl class="grid grid-cols-1">
+      <SubmodelElement
+        v-for="element in submodelElements"
+        :key="element.idShort"
+        :element="element"
+        :parent-id="parentId"
+      />
+    </dl>
   </div>
 </template>
