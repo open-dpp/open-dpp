@@ -1,11 +1,11 @@
 import { INestApplication } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import request from "supertest";
-import { getApp } from "../../../test/utils.for.test";
 import packageJson from "../../../package.json";
+import { getApp } from "../../../test/utils.for.test";
 import { StatusModule } from "../status.module";
 
-describe("StatusController", () => {
+describe("statusController", () => {
   let app: INestApplication;
   let module: TestingModule;
 
@@ -24,7 +24,7 @@ describe("StatusController", () => {
     await module.close();
   });
 
-  it("GET /api/status should return 200 with version from package.json", async () => {
+  it("gET /api/status should return 200 with version from package.json", async () => {
     const response = await request(getApp(app)).get("/api/status").expect(200);
 
     expect(response.body).toEqual({ version: packageJson.version });

@@ -41,4 +41,15 @@ describe("statusStore", () => {
     await statusStore.fetchStatus();
     expect(statusStore.version).toBeNull();
   });
+
+  it("should reset version to null when fetch fails after a successful fetch", async () => {
+    const statusStore = useStatusStore();
+    mocks.get.mockResolvedValueOnce({ data: { version: "1.0.0" } });
+    await statusStore.fetchStatus();
+    expect(statusStore.version).toBe("1.0.0");
+
+    mocks.get.mockRejectedValueOnce(new Error("Network error"));
+    await statusStore.fetchStatus();
+    expect(statusStore.version).toBeNull();
+  });
 });

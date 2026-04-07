@@ -1,4 +1,5 @@
 import { Controller, Get } from "@nestjs/common";
+import { StatusDtoSchema } from "@open-dpp/dto";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
 import { StatusService } from "../application/services/status.service";
 
@@ -9,6 +10,6 @@ export class StatusController {
   @AllowAnonymous()
   @Get()
   getStatus() {
-    return this.statusService.getStatus().toPlain();
+    return StatusDtoSchema.parse(this.statusService.getStatus().toPlain());
   }
 }

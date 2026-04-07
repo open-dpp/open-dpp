@@ -1,6 +1,6 @@
 import { Status } from "./status";
 
-describe("Status", () => {
+describe("status", () => {
   it("should create a Status with the given version", () => {
     const status = Status.create({ version: "1.2.3" });
     expect(status.version).toBe("1.2.3");

@@ -11,6 +11,7 @@ export const useStatusStore = defineStore("status", () => {
       version.value = data.version;
     }
     catch (error) {
+      version.value = null;
       // Log but do not surface to the user — version is non-critical UI.
       console.warn("Failed to fetch application status:", error);
     }
