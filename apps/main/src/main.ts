@@ -59,6 +59,7 @@ async function bootstrap() {
       changeOrigin: true,
       ws: true,
     });
+    const httpServer = app.getHttpServer() as import("node:http").Server;
 
     proxy.on("error", (err, _req, _res) => {
       logger.error(`Proxy error: ${err.message}`);
@@ -70,6 +71,12 @@ async function bootstrap() {
       }
       else {
         next();
+      }
+    });
+
+    httpServer.on("upgrade", (req, socket, head) => {
+      if (req.url && !req.url.startsWith("/api")) {
+        proxy.ws(req, socket, head, { target: "http://localhost:5173" });
       }
     });
   }

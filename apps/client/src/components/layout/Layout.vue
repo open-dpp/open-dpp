@@ -250,7 +250,11 @@ const sidebarOpen = ref(false);
                 data-cy="sidebar"
               >
                 <div class="flex p-2 shrink-0 items-center">
-                  <BrandingLogo :url="src" @click="router.push('/')" />
+                  <BrandingLogo
+                    :center="false"
+                    :url="src"
+                    @click="router.push('/')"
+                  />
                 </div>
                 <nav class="flex flex-1 flex-col">
                   <ul class="flex flex-1 flex-col gap-y-7" role="list">
@@ -337,7 +341,7 @@ const sidebarOpen = ref(false);
         class="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6 pb-4"
       >
         <div class="flex p-2 shrink-0 items-start">
-          <BrandingLogo :url="src" @click="router.push('/')" />
+          <BrandingLogo :center="false" :url="src" @click="router.push('/')" />
         </div>
         <nav class="flex flex-1 flex-col">
           <ul class="flex flex-1 flex-col gap-y-7" role="list">
