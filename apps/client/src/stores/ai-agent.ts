@@ -5,6 +5,7 @@ import { ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { AGENT_WEBSOCKET_URL } from "../const";
+import { useIndexStore } from "./index.ts";
 
 export enum Sender {
   Bot = "Bot",
@@ -25,6 +26,7 @@ export const useAiAgentStore = defineStore("socket", () => {
   const route = useRoute();
   const isLastMessagePendingFromBot = ref<boolean>(false);
   const { t } = useI18n();
+  const indexStore = useIndexStore();
 
   let listenersBound = false;
   const connect = () => {
@@ -36,6 +38,10 @@ export const useAiAgentStore = defineStore("socket", () => {
       socket.value = io(AGENT_WEBSOCKET_URL, {
         autoConnect: true,
         path: "/api/ai-socket",
+        withCredentials: true,
+        auth: {
+          organizationId: indexStore.selectedOrganization,
+        },
       });
     }
     else if (!socket.value.connected) {

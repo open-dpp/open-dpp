@@ -4,8 +4,8 @@ import { Passport } from "../../../passports/domain/passport";
 import { Template } from "../../../templates/domain/template";
 import { AasExportVersion } from "../../infrastructure/serialization/export-schemas/aas-export-shared";
 import { aasExportSchemaJsonV1_0 } from "../../infrastructure/serialization/export-schemas/aas-export-v1.schema";
-import { ConvertToPlainOptions } from "../convertable-to-plain";
 import { ExpandedEnvironment } from "../expanded-environment";
+import { SubjectAttributes } from "../security/subject-attributes";
 
 export class AasExportable {
   private readonly EXPORT_FORMAT = "open-dpp:json";
@@ -74,8 +74,10 @@ export class AasExportable {
     );
   }
 
-  toExportPlain(options: ConvertToPlainOptions) {
-    const envPlain = this.environment.toPlain(options);
+  toExportPlain(subject: SubjectAttributes) {
+    const ability = this.environment.shells.length > 0 ? this.environment.shells[0].security.defineAbilityForSubject(subject) : undefined;
+
+    const envPlain = this.environment.toPlain({ ability });
     return {
       id: this.id,
       environment: {

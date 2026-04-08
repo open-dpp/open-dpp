@@ -31,10 +31,9 @@ import {
 import { IAasReadEndpoints } from "../../aas/presentation/aas.endpoints";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
-import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
 import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators/member-role.decorator";
+import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
 import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
-import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { Pagination } from "../../pagination/pagination";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
@@ -55,7 +54,7 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
   ) {
   }
 
-  @AllowAnonymous()
+  @OptionalAuth()
   @Get("/unique-product-identifiers")
   async getUniqueProductIdentifierByReference(
     @Query("reference") reference: string,
@@ -69,7 +68,7 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     return UniqueProductIdentifierListDtoSchema.parse(upids);
   }
 
-  @AllowAnonymous()
+  @OptionalAuth()
   @Get("/unique-product-identifiers/:id/passport")
   async getReferencedPassport(
     @Param("id") id: string,
@@ -77,7 +76,7 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     return PassportDtoSchema.parse((await this.loadPassport(id)));
   }
 
-  @AllowAnonymous()
+  @OptionalAuth()
   @Get("/unique-product-identifiers/:id/branding")
   async getPassportBranding(
     @Param("id") id: string,
@@ -91,20 +90,23 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     return BrandingDtoSchema.parse((await this.brandingRepository.findOneByOrganizationId(upiMetadata.organizationId)).toPlain());
   }
 
-  @AllowAnonymous()
+  @OptionalAuth()
   @ApiGetShells("unique-product-identifiers")
   async getShells(
     @IdParam() id: string,
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<AssetAdministrationShellPaginationResponseDto> {
     const passport = await this.loadPassport(id);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
 
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getAasShells(passport.getEnvironment(), pagination, SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }));
+    return await this.environmentService.getAasShells(passport.getEnvironment(), pagination, subject);
   }
 
-  @AllowAnonymous()
+  @OptionalAuth()
   @ApiGetSubmodels("unique-product-identifiers")
   async getSubmodels(
     @IdParam() id: string,
@@ -119,7 +121,7 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     return await this.environmentService.getSubmodels(passport.getEnvironment(), pagination, subject);
   }
 
-  @AllowAnonymous()
+  @OptionalAuth()
   @ApiGetSubmodelById("unique-product-identifiers")
   async getSubmodelById(
     @IdParam() id: string,
@@ -133,7 +135,7 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     return await this.environmentService.getSubmodelById(passport.getEnvironment(), submodelId, subject);
   }
 
-  @AllowAnonymous()
+  @OptionalAuth()
   @ApiGetSubmodelValue("unique-product-identifiers")
   async getSubmodelValue(
     @IdParam() id: string,
@@ -146,7 +148,7 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     return await this.environmentService.getSubmodelValue(passport.getEnvironment(), submodelId, subject);
   }
 
-  @AllowAnonymous()
+  @OptionalAuth()
   @ApiGetSubmodelElements("unique-product-identifiers")
   async getSubmodelElements(
     @IdParam() id: string,
@@ -162,7 +164,7 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     return await this.environmentService.getSubmodelElements(passport.getEnvironment(), submodelId, pagination, subject);
   }
 
-  @AllowAnonymous()
+  @OptionalAuth()
   @ApiGetSubmodelElementById("unique-product-identifiers")
   async getSubmodelElementById(
     @IdParam() id: string,
@@ -176,7 +178,7 @@ export class UniqueProductIdentifierController implements IAasReadEndpoints {
     return await this.environmentService.getSubmodelElementById(passport.getEnvironment(), submodelId, idShortPath, subject);
   }
 
-  @AllowAnonymous()
+  @OptionalAuth()
   @ApiGetSubmodelElementValue("unique-product-identifiers")
   async getSubmodelElementValue(
     @IdParam() id: string,

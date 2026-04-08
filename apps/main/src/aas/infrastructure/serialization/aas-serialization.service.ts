@@ -12,9 +12,6 @@ import { AasExportable } from "../../domain/exportable/aas-exportable";
 import { SubjectAttributes } from "../../domain/security/subject-attributes";
 import { Submodel } from "../../domain/submodel-base/submodel";
 import { EnvironmentService } from "../../presentation/environment.service";
-import { AasRepository } from "../aas.repository";
-import { ConceptDescriptionRepository } from "../concept-description.repository";
-import { SubmodelRepository } from "../submodel.repository";
 import { mapAssetAdministrationShells, mapConceptDescriptions, mapSubmodels } from "./aas-import.mapper";
 import {
   AasExport,
@@ -39,25 +36,19 @@ export class AasSerializationService {
 
   constructor(
     private readonly environmentService: EnvironmentService,
-    private readonly aasRepository: AasRepository,
-    private readonly submodelRepository: SubmodelRepository,
-    private readonly conceptDescriptionRepository: ConceptDescriptionRepository,
     private readonly mediaService: MediaService,
   ) {}
 
   async exportPassport(passport: Passport, subject: SubjectAttributes): Promise<AasExportLatestVersion> {
     const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(passport.environment);
     const aasExportable = AasExportable.createFromPassport(passport, expandedEnvironment);
-    const ability = expandedEnvironment.shells.length > 0 ? expandedEnvironment.shells[0].security.defineAbilityForSubject(subject) : undefined;
-    return aasExportSchemaJsonLatest.parse(aasExportable.toExportPlain({ ability }));
+    return aasExportSchemaJsonLatest.parse(aasExportable.toExportPlain(subject));
   }
 
   async exportTemplate(template: Template, subject: SubjectAttributes): Promise<AasExportLatestVersion> {
     const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(template.environment);
     const aasExportable = AasExportable.createFromTemplate(template, expandedEnvironment);
-    const ability = expandedEnvironment.shells[0].security.defineAbilityForSubject(subject);
-
-    return aasExportSchemaJsonLatest.parse(aasExportable.toExportPlain({ ability }));
+    return aasExportSchemaJsonLatest.parse(aasExportable.toExportPlain(subject));
   }
 
   async importPassport(
