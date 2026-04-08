@@ -20,11 +20,10 @@ import { parseSubmodelElement } from "../../domain/submodel-base/submodel-base";
 import { AasExportVersion, AasExportVersionType } from "./export-schemas/aas-export-shared";
 import { AasExport } from "./export-schemas/aas-export-types";
 import { ReferenceSchemaV1_0 } from "./export-schemas/aas-export-v1.schema";
-import { AssetAdministrationShellV2_0, SecuritySchemaV2_0 } from "./export-schemas/aas-export-v2.schema";
+import { AssetAdministrationShellV2_0 } from "./export-schemas/aas-export-v2.schema";
 
 type ReferenceSchema = z.infer<typeof ReferenceSchemaV1_0>;
 type ShellSchema = AasExport["environment"]["assetAdministrationShells"][number];
-type SecuritySchema = z.infer<typeof SecuritySchemaV2_0>;
 
 type SubmodelSchema = AasExport["environment"]["submodels"][number];
 type ConceptDescriptionSchema = AasExport["environment"]["conceptDescriptions"][number];
