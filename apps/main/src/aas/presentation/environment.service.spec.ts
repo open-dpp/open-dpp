@@ -322,11 +322,13 @@ describe("environmentService", () => {
   });
 
   it("should return submodel by id for subject", async () => {
-    const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
+    const { environment, admin, submodel1 } = await createDefaultEnvironment();
     const result = await environmentService.getSubmodelById(environment, submodel1.id, admin);
     expect(result).toEqual(SubmodelJsonSchema.parse(submodel1.toPlain()));
 
-    await expect(environmentService.getSubmodelById(environment, submodel1.id, member)).rejects.toThrow(new ForbiddenError());
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+
+    await expect(environmentService.getSubmodelById(environment, submodel1.id, anonymous)).rejects.toThrow(new ForbiddenError());
   });
 
   it("should return submodels elements for submodel", async () => {
@@ -340,29 +342,33 @@ describe("environmentService", () => {
   });
 
   it("should return submodel element by id", async () => {
-    const { environment, admin, member, submodel1, submodelElementCollection1, property1 } = await createDefaultEnvironment();
+    const { environment, admin, submodel1, submodelElementCollection1, property1 } = await createDefaultEnvironment();
     const idShortPath = IdShortPath.create({ path: `${submodelElementCollection1.idShort}.${property1.idShort}` });
     const submodelElement = await environmentService.getSubmodelElementById(environment, submodel1.id, idShortPath, admin);
     expect(submodelElement).toEqual(SubmodelElementSchema.parse(property1.toPlain()));
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
 
     await expect(
-      environmentService.getSubmodelElementById(environment, submodel1.id, idShortPath, member),
+      environmentService.getSubmodelElementById(environment, submodel1.id, idShortPath, anonymous),
     ).rejects.toThrow(new ForbiddenError());
   });
 
   it("should return value representation of submodel element by idShortPath", async () => {
-    const { environment, admin, member, submodel1, submodelElementCollection1, property1 } = await createDefaultEnvironment();
+    const { environment, admin, submodel1, submodelElementCollection1, property1 } = await createDefaultEnvironment();
     const idShortPath = IdShortPath.create({ path: `${submodelElementCollection1.idShort}.${property1.idShort}` });
     const submodelElement = await environmentService.getSubmodelElementValue(environment, submodel1.id, idShortPath, admin);
     expect(submodelElement).toEqual(property1.value);
+
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+
     //
     await expect(
-      environmentService.getSubmodelElementValue(environment, submodel1.id, idShortPath, member),
+      environmentService.getSubmodelElementValue(environment, submodel1.id, idShortPath, anonymous),
     ).rejects.toThrow(new ForbiddenError());
   });
 
   it("should return value representation of submodel value ", async () => {
-    const { environment, admin, member, submodel1, property1, property2 } = await createDefaultEnvironment();
+    const { environment, admin, submodel1, property1, property2 } = await createDefaultEnvironment();
     const submodelValue = await environmentService.getSubmodelValue(environment, submodel1.id, admin);
     expect(submodelValue).toEqual({
       subSection1: {
@@ -371,8 +377,11 @@ describe("environmentService", () => {
       },
     });
     //
+
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+
     await expect(
-      environmentService.getSubmodelValue(environment, submodel1.id, member),
+      environmentService.getSubmodelValue(environment, submodel1.id, anonymous),
     ).rejects.toThrow(new ForbiddenError("Cannot access submodel section1"));
   });
 

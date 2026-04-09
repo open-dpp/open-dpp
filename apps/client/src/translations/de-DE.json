@@ -67,7 +67,8 @@
   "aasEditor": {
     "security": {
       "missingPermission": "Fehlende Rechte",
-      "inheritedPermission": "Berechtigung von einem übergeordneten Abschnitt geerbt",
+      "inheritedPermission": "Berechtigung wird vom übergeordneten Knoten geerbt",
+      "overriddenPermission": "Berechtigung des übergeordneten Knoten wird überschrieben",
       "permissions": "Berechtigungen",
       "edit": "Bearbeiten",
       "delete": "Löschen",

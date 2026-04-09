@@ -112,10 +112,10 @@ const showErrors = computed(() => {
 async function submit() {
   await handleSubmit(async (data) => {
     try {
-      await save();
       if (permissionsFormRef.value) {
-        permissionsFormRef.value.savePermissions();
+        await permissionsFormRef.value.savePermissions();
       }
+      await save();
     }
     catch (e) {
       props.errorHandlingStore.logErrorWithNotification(
@@ -182,6 +182,9 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
         :path="props.path"
         :modify-shell="props.modifyShell"
         :get-access-permission-rules="props.getAccessPermissionRules"
+        :delete-policy-by-subject-and-object="
+          props.deletePolicyBySubjectAndObject
+        "
       />
     </FormContainer>
     <DataTable

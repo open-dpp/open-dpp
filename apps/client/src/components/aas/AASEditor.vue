@@ -87,6 +87,7 @@ const {
   aasGalleryFiles,
   getAccessPermissionRules,
   modifyShell,
+  deletePolicyBySubjectAndObject,
 } = aasEditor;
 
 const { can } = useAasAbility({ getAccessPermissionRules });
@@ -354,6 +355,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
           :translate="t"
           :get-access-permission-rules="getAccessPermissionRules"
           :modify-shell="modifyShell"
+          :delete-policy-by-subject-and-object="deletePolicyBySubjectAndObject"
         />
       </Drawer>
     </div>

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import type { PropertyModificationDto } from "@open-dpp/dto";
+import type {
+  PropertyModificationDto,
+} from "@open-dpp/dto";
 import type { PropertyEditorProps } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { Permissions, PropertyModificationSchema } from "@open-dpp/dto";
@@ -48,10 +50,10 @@ const disableEdit = computed(() => {
 
 async function submit() {
   await handleSubmit(async (data) => {
-    await props.callback(PropertyModificationSchema.parse({ ...data }));
     if (permissionsFormRef.value) {
-      permissionsFormRef.value.savePermissions();
+      await permissionsFormRef.value.savePermissions();
     }
+    await props.callback(PropertyModificationSchema.parse({ ...data }));
   })();
 }
 
@@ -77,6 +79,9 @@ defineExpose<{
       :ignored-permission-options="[Permissions.Create]"
       :path="props.path"
       :modify-shell="props.modifyShell"
+      :delete-policy-by-subject-and-object="
+        props.deletePolicyBySubjectAndObject
+      "
       :get-access-permission-rules="props.getAccessPermissionRules"
     />
   </FormContainer>

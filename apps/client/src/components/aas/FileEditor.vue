@@ -46,10 +46,10 @@ const showErrors = computed(() => {
 
 async function submit() {
   await handleSubmit(async (data) => {
-    await props.callback(FileModificationSchema.parse({ ...data }));
     if (permissionsFormRef.value) {
-      permissionsFormRef.value.savePermissions();
+      await permissionsFormRef.value.savePermissions();
     }
+    await props.callback(FileModificationSchema.parse({ ...data }));
   })();
 }
 
@@ -75,6 +75,7 @@ defineExpose<{
       :path="props.path"
       :modify-shell="props.modifyShell"
       :get-access-permission-rules="props.getAccessPermissionRules"
+      :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
     />
   </div>
 </template>

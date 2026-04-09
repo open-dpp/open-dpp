@@ -13,7 +13,8 @@ import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent } from "vue";
-import { isEqualSubject } from "../lib/aas-security.ts";
+import { isEqualSubject, makeSubjectAttributes } from "../lib/aas-security.ts";
+import { HTTPCode } from "../stores/http-codes.ts";
 import { useAasPermissionsForm } from "./aas-permissions-form.ts";
 
 const mocks = vi.hoisted(() => {
@@ -69,6 +70,7 @@ describe("aasPermissionsForm composable", () => {
   });
 
   const modifyShellMock = vi.fn();
+  const deletePolicyMock = vi.fn();
 
   it("should return all permissions for given object", async () => {
     const transientParams: SecurityPlainTransientParams = {
@@ -110,9 +112,10 @@ describe("aasPermissionsForm composable", () => {
     );
 
     let permissionsForm = mountHarness({
-      allAccessPermissionRules:
+      getAccessPermissionRules: () =>
         security.localAccessControl.accessPermissionRules,
       object: "section1",
+      deletePolicyBySubjectAndObject: deletePolicyMock,
       modifyShell: modifyShellMock,
     });
 
@@ -133,9 +136,10 @@ describe("aasPermissionsForm composable", () => {
     expect(permissionsForm.permissions.value.find(p => isEqualSubject(p.subject, anonymous))).toEqual({ subject: anonymous, permissions: [], inheritsPermissionsOf: null });
 
     permissionsForm = mountHarness({
-      allAccessPermissionRules: security.localAccessControl.accessPermissionRules,
+      getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules,
       object: "section1.field1",
       modifyShell: modifyShellMock,
+      deletePolicyBySubjectAndObject: deletePolicyMock,
     });
 
     expect(
@@ -143,10 +147,10 @@ describe("aasPermissionsForm composable", () => {
     ).toEqual({ subject: admin, permissions: [Permissions.Create, Permissions.Edit], inheritsPermissionsOf: "section1" });
 
     permissionsForm = mountHarness({
-      allAccessPermissionRules:
-        security.localAccessControl.accessPermissionRules,
+      getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules,
       object: "section3",
       modifyShell: modifyShellMock,
+      deletePolicyBySubjectAndObject: deletePolicyMock,
     });
     expect(
       permissionsForm.permissions.value.find(p => isEqualSubject(p.subject, member)),
@@ -203,10 +207,11 @@ describe("aasPermissionsForm composable", () => {
     };
     mocks.asSubject.mockReturnValue(owner);
     const { editPermissions, permissions, savePermissions } = mountHarness({
-      allAccessPermissionRules:
+      getAccessPermissionRules: () =>
         security.localAccessControl.accessPermissionRules,
       object: "section1",
       modifyShell: modifyShellMock,
+      deletePolicyBySubjectAndObject: deletePolicyMock,
     });
     const member = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER };
 
@@ -272,7 +277,7 @@ describe("aasPermissionsForm composable", () => {
     expect(modifyShellMock).toHaveBeenCalledWith(expected);
   });
 
-  it("should reset permissions", async () => {
+  it("should reset permissions to inherited permissions", async () => {
     const transientParams: SecurityPlainTransientParams = {
       policies: [
         {
@@ -292,17 +297,31 @@ describe("aasPermissionsForm composable", () => {
             },
           ],
         },
+        {
+          subject: {
+            userRole: UserRoleDto.USER,
+            memberRole: MemberRoleDto.MEMBER,
+          },
+          object: { idShortPath: "section1.prop1" },
+          permissions: [
+            {
+              permission: Permissions.Read,
+              kindOfPermission: PermissionKind.Allow,
+            },
+          ],
+        },
       ],
     };
     const security: SecurityResponseDto = securityPlainFactory.build(
       undefined,
       { transient: transientParams },
     );
-    let permissionsForm = mountHarness({
-      allAccessPermissionRules:
+    const permissionsForm = mountHarness({
+      getAccessPermissionRules: () =>
         security.localAccessControl.accessPermissionRules,
-      object: "section1",
+      object: "section1.prop1",
       modifyShell: modifyShellMock,
+      deletePolicyBySubjectAndObject: deletePolicyMock,
     });
     const owner = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.OWNER };
     const member = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER };
@@ -310,119 +329,21 @@ describe("aasPermissionsForm composable", () => {
     expect(
       permissionsForm.permissions.value.find(p => isEqualSubject(p.subject, member)),
     ).toEqual({ subject: member, permissions: [Permissions.Create, Permissions.Edit, Permissions.Read], inheritsPermissionsOf: null });
-    permissionsForm.resetPermissions(member);
+    deletePolicyMock.mockResolvedValue({ status: HTTPCode.NO_CONTENT });
+    await permissionsForm.resetToInheritedPermissions(member);
+    expect(deletePolicyMock).toHaveBeenCalledWith({
+      subject: makeSubjectAttributes(member),
+      object: "section1.prop1",
+    });
     expect(
       permissionsForm.permissions.value.find(p => isEqualSubject(p.subject, member)),
     ).toEqual({
-      subject: member,
-      permissions: [Permissions.Read, Permissions.Create],
-      inheritsPermissionsOf: null,
-    });
-    mocks.asSubject.mockReturnValueOnce(owner);
-    await permissionsForm.savePermissions();
-    expect(modifyShellMock).toHaveBeenCalledWith({
-      security: {
-        localAccessControl: {
-          accessPermissionRules: [
-            {
-              targetSubjectAttributes: {
-                subjectAttribute: [
-                  propertyOutputPlainFactory.build({
-                    idShort: "userRole",
-                    value: "user",
-                  }),
-                  propertyOutputPlainFactory.build({
-                    idShort: "memberRole",
-                    value: "member",
-                  }),
-                ],
-              },
-              permissionsPerObject: [
-                {
-                  object: permissionObjectPlainFactory.build({
-                    idShort: "section1",
-                  }),
-                  permissions: [
-                    {
-                      permission: Permissions.Read,
-                      kindOfPermission: PermissionKind.Allow,
-                    },
-                    {
-                      permission: Permissions.Create,
-                      kindOfPermission: PermissionKind.Allow,
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      },
-    });
-
-    permissionsForm = mountHarness({
-      allAccessPermissionRules:
-        security.localAccessControl.accessPermissionRules,
-      object: "section1.field1",
-      modifyShell: modifyShellMock,
-    });
-
-    permissionsForm.editPermissions(
-      [Permissions.Create, Permissions.Edit],
-      member,
-    );
-    expect(
-      permissionsForm.permissions.value.find(p => isEqualSubject(p.subject, member)),
-    ).toEqual({
-      subject: member,
-      permissions: [Permissions.Create, Permissions.Edit, Permissions.Read],
-      inheritsPermissionsOf: null,
-    });
-    permissionsForm.resetPermissions(member);
-    expect(permissionsForm.permissions.value.find(p => isEqualSubject(p.subject, member))).toEqual({
       subject: member,
       permissions: [Permissions.Read, Permissions.Create],
       inheritsPermissionsOf: "section1",
     });
+    mocks.asSubject.mockReturnValueOnce(owner);
     await permissionsForm.savePermissions();
-    expect(modifyShellMock).toHaveBeenCalledWith({
-      security: {
-        localAccessControl: {
-          accessPermissionRules: [
-            {
-              targetSubjectAttributes: {
-                subjectAttribute: [
-                  propertyOutputPlainFactory.build({
-                    idShort: "userRole",
-                    value: "user",
-                  }),
-                  propertyOutputPlainFactory.build({
-                    idShort: "memberRole",
-                    value: "member",
-                  }),
-                ],
-              },
-              permissionsPerObject: [
-                {
-                  object: permissionObjectPlainFactory.build({
-                    idShort: "section1",
-                  }),
-                  permissions: [
-                    {
-                      permission: Permissions.Read,
-                      kindOfPermission: PermissionKind.Allow,
-                    },
-                    {
-                      permission: Permissions.Create,
-                      kindOfPermission: PermissionKind.Allow,
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      },
-    });
+    expect(modifyShellMock).not.toHaveBeenCalled();
   });
 });

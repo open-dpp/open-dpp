@@ -2,6 +2,7 @@
 import type {
   AccessPermissionRuleResponseDto,
   AssetAdministrationShellModificationDto,
+  DeletePolicyDto,
   PermissionType,
 } from "@open-dpp/dto";
 import type { AasEditorPath } from "../../composables/aas-drawer.ts";
@@ -12,34 +13,32 @@ import type { Subject } from "../../lib/aas-security.ts";
 import { Permissions, UserRoleDto } from "@open-dpp/dto";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import {
-
-  useAasPermissionsForm,
-} from "../../composables/aas-permissions-form.ts";
+import { useAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
 import { useRoleHierarchy } from "../../composables/role-hierarchy.ts";
 import { isEqualSubject } from "../../lib/aas-security.ts";
 import { useUserStore } from "../../stores/user.ts";
 
-const {
-  getAccessPermissionRules,
-  path,
-  modifyShell,
-  ignoredPermissionOptions,
-  disabled,
-} = defineProps<{
+const props = defineProps<{
   ignoredPermissionOptions?: PermissionType[];
   disabled?: boolean;
   path: AasEditorPath;
   getAccessPermissionRules: () => AccessPermissionRuleResponseDto[];
   modifyShell: (data: AssetAdministrationShellModificationDto) => Promise<void>;
+  deletePolicyBySubjectAndObject: (data: DeletePolicyDto) => Promise<void>;
 }>();
 
-const { permissions, editPermissions, savePermissions, resetPermissions }
-  = useAasPermissionsForm({
-    allAccessPermissionRules: getAccessPermissionRules(), // accessPermissionRules.value,
-    object: path.idShortPathIncludingSubmodel ?? "",
-    modifyShell,
-  });
+const {
+  permissions,
+  editPermissions,
+  savePermissions,
+  resetToInheritedPermissions,
+  takeOverInheritedPermissions,
+} = useAasPermissionsForm({
+  getAccessPermissionRules: props.getAccessPermissionRules,
+  object: props.path.idShortPathIncludingSubmodel ?? "",
+  modifyShell: props.modifyShell,
+  deletePolicyBySubjectAndObject: props.deletePolicyBySubjectAndObject,
+});
 
 const { asSubject } = useUserStore();
 const { getVisibleRoles, canEditPermissionsOfRole } = useRoleHierarchy();
@@ -47,12 +46,15 @@ const { getVisibleRoles, canEditPermissionsOfRole } = useRoleHierarchy();
 const roles = ref(getVisibleRoles(asSubject()));
 const selectedRole = ref<Subject>(asSubject());
 
-const permissionsOfSelectedRole = computed<PermissionsPerSubject>(() =>
-  permissions.value.find(p => isEqualSubject(p.subject, selectedRole.value)) ?? {
-    subject: selectedRole.value,
-    permissions: [],
-    inheritsPermissionsOf: null,
-  },
+const permissionsOfSelectedRole = computed<PermissionsPerSubject>(
+  () =>
+    permissions.value.find(p =>
+      isEqualSubject(p.subject, selectedRole.value),
+    ) ?? {
+      subject: selectedRole.value,
+      permissions: [],
+      inheritsPermissionsOf: null,
+    },
 );
 
 const canEditPermissions = computed(() => {
@@ -76,31 +78,42 @@ const permissionOptions = computed(() => {
       { name: t("aasEditor.security.delete"), key: Permissions.Delete },
     );
   }
-  if (ignoredPermissionOptions) {
+  if (props.ignoredPermissionOptions !== undefined) {
     options = options.filter(
-      permission => !ignoredPermissionOptions.includes(permission.key),
+      permission =>
+        props.ignoredPermissionOptions
+        && !props.ignoredPermissionOptions.includes(permission.key),
     );
   }
 
   return options;
 });
 
-const disableResetButton = ref<boolean>(true);
-
 function onPermissionChange(newPermissions: PermissionType[]) {
   editPermissions(newPermissions, selectedRole.value);
-  disableResetButton.value = false;
 }
 
-function onResetPermissions() {
-  resetPermissions(selectedRole.value);
-  disableResetButton.value = true;
+async function savePermissionsAndClose() {
+  await savePermissions();
 }
+
+async function onToggleInheritance(shouldInherit: boolean) {
+  if (shouldInherit) {
+    await resetToInheritedPermissions(selectedRole.value);
+  }
+  else {
+    takeOverInheritedPermissions(selectedRole.value);
+  }
+}
+
+const permissionsInherited = computed(
+  () => permissionsOfSelectedRole.value.inheritsPermissionsOf !== null,
+);
 
 defineExpose<{
   savePermissions: () => Promise<void>;
 }>({
-  savePermissions,
+  savePermissions: savePermissionsAndClose,
 });
 </script>
 
@@ -119,13 +132,19 @@ defineExpose<{
         class="w-full md:w-56"
         :disabled="disabled"
       />
-      <Button
-        :disabled="disabled || !canEditPermissions"
-        :label="t('common.reset')"
-        @click="onResetPermissions"
-      />
     </div>
-    <div class="p-2">
+    <div class="flex flex-col p-2 gap-3">
+      <div class="flex items-center gap-2">
+        <ToggleSwitch
+          input-id="toggle-inheritance"
+          :model-value="permissionsInherited"
+          :disabled="disabled || !canEditPermissions"
+          @update:model-value="onToggleInheritance"
+        />
+        <label for="toggle-inheritance">{{
+          `${permissionsInherited ? t("aasEditor.security.inheritedPermission") : t("aasEditor.security.overriddenPermission")}`
+        }}</label>
+      </div>
       <div
         v-for="permission in permissionOptions"
         :key="permission.key"
@@ -137,6 +156,7 @@ defineExpose<{
           :disabled="
             disabled
               || !canEditPermissions
+              || permissionsInherited
               || (permission.key === Permissions.Read
                 && permissionsOfSelectedRole.permissions.some(
                   (p) => p !== Permissions.Read,
@@ -146,9 +166,7 @@ defineExpose<{
           :value="permission.key"
           @update:model-value="onPermissionChange"
         />
-        <label :for="permission.key">{{
-          `${permission.name}${permissionsOfSelectedRole.inheritsPermissionsOf !== null ? ` (${t("aasEditor.security.inheritedPermission")})` : ""}`
-        }}</label>
+        <label :for="permission.key">{{ `${permission.name}` }}</label>
       </div>
     </div>
   </div>

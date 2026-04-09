@@ -60,6 +60,10 @@ const permissionsFormRef = ref<{
 
 async function submit() {
   await handleSubmit(async (data) => {
+    if (permissionsFormRef.value) {
+      await permissionsFormRef.value.savePermissions();
+    }
+
     const body = ReferenceElementModificationSchema.parse({
       ...data,
       value: data.value
@@ -76,9 +80,6 @@ async function submit() {
         : null,
     });
     await props.callback(body);
-    if (permissionsFormRef.value) {
-      permissionsFormRef.value.savePermissions();
-    }
   })();
 }
 
@@ -105,6 +106,7 @@ defineExpose<{
       :path="props.path"
       :modify-shell="props.modifyShell"
       :get-access-permission-rules="props.getAccessPermissionRules"
+      :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
     />
   </FormContainer>
 </template>

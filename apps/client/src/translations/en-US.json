@@ -67,7 +67,8 @@
   "aasEditor": {
     "security": {
       "missingPermission": "Missing permissions",
-      "inheritedPermission": "Inherited permission from parent section",
+      "inheritedPermission": "Inherits permissions of parent node",
+      "overriddenPermission": "Overrides permissions of parent node",
       "permissions": "Permissions",
       "edit": "Edit",
       "delete": "Delete",

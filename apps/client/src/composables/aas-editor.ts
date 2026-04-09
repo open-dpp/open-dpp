@@ -90,6 +90,11 @@ export function useAasEditor({
     changeQueryParams({ edit: undefined });
   };
 
+  function getAccessPermissionRules() {
+    return assetAdministrationShell.value?.security.localAccessControl
+      .accessPermissionRules ?? [];
+  }
+
   const { can } = useAasAbility({ getAccessPermissionRules });
 
   const drawer = useAasDrawer({ onHideDrawer, can });
@@ -647,13 +652,6 @@ export function useAasEditor({
     if (initialSelectedKeys) {
       selectTreeNode(initialSelectedKeys);
     }
-  }
-
-  function getAccessPermissionRules(): AccessPermissionRuleResponseDto[] {
-    return (
-      assetAdministrationShell.value?.security.localAccessControl
-        .accessPermissionRules ?? []
-    );
   }
 
   return {
