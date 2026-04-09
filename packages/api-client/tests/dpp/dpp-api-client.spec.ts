@@ -1,7 +1,11 @@
 import { randomUUID } from 'node:crypto'
-import { SubmodelElementSchema } from '@open-dpp/dto'
+import {
+  SubmodelElementSchema,
+  UserRoleDto,
+} from '@open-dpp/dto'
 import {
   propertyModificationPlainFactory,
+  subjectPlainFactory,
   submodelCarbonFootprintPlainFactory,
   submodelModificationPlainFactory,
 } from '@open-dpp/testing'
@@ -169,6 +173,19 @@ describe('apiClient', () => {
       expect(response.data).toEqual(
         submodelCarbonFootprintResponse.submodelElements[0],
       )
+    })
+
+    it('should delete policy by subject and object', async () => {
+      const response = await sdk.dpp[
+        appIdentifiable
+      ].aas.deletePolicyBySubjectAndObject(
+        aasWrapperId,
+        {
+          subject: subjectPlainFactory.build(undefined, { transient: { userRole: UserRoleDto.ADMIN } }),
+          object: 'section1',
+        },
+      )
+      expect(response.status).toEqual(204)
     })
 
     it('should delete submodel element by id', async () => {

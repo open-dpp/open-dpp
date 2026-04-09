@@ -1,5 +1,5 @@
 import type { AasNamespace } from "@open-dpp/api-client";
-import type { AccessPermissionRuleResponseDto, AssetAdministrationShellModificationDto, AssetAdministrationShellResponseDto, DataTypeDefType, FileRequestDto, LanguageTextDto, LanguageType, PagingParamsDto, PropertyRequestDto, ReferenceElementRequestDto, SubmodelElementCollectionRequestDto, SubmodelElementListRequestDto, SubmodelElementModificationDto, SubmodelElementSharedRequestDto, SubmodelElementSharedResponseDto, SubmodelModificationDto, SubmodelRequestDto, SubmodelResponseDto } from "@open-dpp/dto";
+import type { AccessPermissionRuleResponseDto, AssetAdministrationShellModificationDto, AssetAdministrationShellResponseDto, DataTypeDefType, DeletePolicyDto, FileRequestDto, LanguageTextDto, LanguageType, PagingParamsDto, PropertyRequestDto, ReferenceElementRequestDto, SubmodelElementCollectionRequestDto, SubmodelElementListRequestDto, SubmodelElementModificationDto, SubmodelElementSharedRequestDto, SubmodelElementSharedResponseDto, SubmodelModificationDto, SubmodelRequestDto, SubmodelResponseDto } from "@open-dpp/dto";
 import type { TreeTableSelectionKeys } from "primevue";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
@@ -65,6 +65,7 @@ export interface IAasEditor extends IAasDrawer, IPagination {
   aasGalleryFiles: Ref<MediaFileCollectionItem[]>;
   getAccessPermissionRules: () => AccessPermissionRuleResponseDto[];
   modifyShell: (data: AssetAdministrationShellModificationDto) => Promise<void>;
+  deletePolicyBySubjectAndObject: (data: DeletePolicyDto) => Promise<void>;
 }
 
 export function useAasEditor({
@@ -174,6 +175,22 @@ export function useAasEditor({
       errorHandlingStore.logErrorWithNotification(errorMessage, e);
     }
   };
+
+  async function deletePolicyBySubjectAndObject(data: DeletePolicyDto) {
+    const errorMessage = translate(`${translatePrefix}.security.errorManagePolicy`);
+    try {
+      const response = await aasNamespace.deletePolicyBySubjectAndObject(id, data);
+      if (response.status === HTTPCode.NO_CONTENT) {
+        await fetchAssetAdministrationShell();
+      }
+      else {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+      }
+    }
+    catch (e) {
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
+    }
+  }
 
   async function updateAssetAdministrationShell(data: AssetAdministrationShellResponseDto | undefined) {
     assetAdministrationShell.value = data;
@@ -648,6 +665,7 @@ export function useAasEditor({
     openAssetAdministrationShellEditor,
     buildAddSubmodelElementMenu,
     createSubmodel,
+    deletePolicyBySubjectAndObject,
     deleteSubmodel,
     deleteSubmodelElement,
     findTreeNodeByKey,

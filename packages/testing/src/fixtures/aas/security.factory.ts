@@ -1,20 +1,20 @@
 import type {
   AccessPermissionRuleResponseDto,
   MemberRoleDtoType,
+
   PermissionKindType,
   PermissionType,
   ReferenceElementJsonSchema,
   SecurityResponseDto,
+  SubjectAttributesDto,
   UserRoleDtoType,
 } from '@open-dpp/dto'
 
 import type { z } from 'zod'
 
 import { randomUUID } from 'node:crypto'
-import {
-  PermissionKind,
-  Permissions,
-} from '@open-dpp/dto'
+
+import { PermissionKind, Permissions } from '@open-dpp/dto'
 import { Factory } from 'fishery'
 import { propertyOutputPlainFactory } from './submodel-element.factory'
 
@@ -38,6 +38,19 @@ export interface SecurityPlainTransientParams {
   }[]
 }
 
+export interface SubjectPlainParams {
+  userRole: UserRoleDtoType
+  memberRole?: MemberRoleDtoType
+}
+
+export const subjectPlainFactory
+  = Factory.define<SubjectAttributesDto, SubjectPlainParams>(({ transientParams }) => ({
+    subjectAttribute: [
+      propertyOutputPlainFactory.build({ idShort: 'userRole', value: transientParams.userRole }),
+      ...transientParams.memberRole ? [propertyOutputPlainFactory.build({ idShort: 'memberRole', value: transientParams.memberRole })] : [],
+    ],
+  }))
+
 export const allPermissionsAllow = Object.values(Permissions).map(permission => ({ permission, kindOfPermission: PermissionKind.Allow }))
 
 export const securityPlainFactory
@@ -58,12 +71,7 @@ export const securityPlainFactory
         }
         else {
           accessPermissionRules.push({
-            targetSubjectAttributes: {
-              subjectAttribute: [
-                propertyOutputPlainFactory.build({ idShort: 'userRole', value: policy.subject.userRole }),
-                ...policy.subject.memberRole ? [propertyOutputPlainFactory.build({ idShort: 'memberRole', value: policy.subject.memberRole })] : [],
-              ],
-            },
+            targetSubjectAttributes: subjectPlainFactory.build(undefined, { transient: { userRole: policy.subject.userRole, memberRole: policy.subject.memberRole } }),
             permissionsPerObject: [permissionPerObject],
           })
         }

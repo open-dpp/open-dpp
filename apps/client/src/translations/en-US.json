@@ -72,7 +72,8 @@
       "edit": "Edit",
       "delete": "Delete",
       "create": "Create",
-      "read": "Read"
+      "read": "Read",
+      "errorManagePolicy": "Failed to edit permissions"
     },
     "productImages": "Product images",
     "formLabels": {

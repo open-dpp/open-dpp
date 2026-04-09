@@ -65,8 +65,12 @@ export class Security {
     this.localAccessControl.addPolicy(subject, object, permissions);
   }
 
-  deletePoliciesByObject(object: IdShortPath): void {
-    this.localAccessControl.deletePoliciesByObject(object);
+  deletePolicyBySubjectAndObject(subject: SubjectAttributes, object: IdShortPath): void {
+    this.localAccessControl.deletePolicyBySubjectAndObject(subject, object);
+  }
+
+  deletePoliciesByObjectPath(objectPath: IdShortPath): void {
+    this.localAccessControl.deletePoliciesByObjectPath(objectPath);
   }
 
   modifyPolicy(subject: SubjectAttributes, object: IdShortPath, permissions: Permission[]): void {

@@ -281,6 +281,17 @@ describe("environmentService", () => {
         Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
       ],
     );
+
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: "section1" }),
+      [
+        Permission.create({
+          permission: Permissions.Read,
+          kindOfPermission: PermissionKind.Allow,
+        }),
+      ],
+    );
     const ability = security.defineAbilityForSubject(admin);
 
     const submodel1 = Submodel.create({ idShort: "section1" });
@@ -496,6 +507,21 @@ describe("environmentService", () => {
     await expect(
       environmentService.modifyValueOfSubmodelElement(environment, submodel1.id, modification, idShortPathToProperty1, member),
     ).rejects.toThrow(new ForbiddenError("Missing permissions to modify element section1.subSection1.property1."));
+  });
+
+  it("should delete policy", async () => {
+    const { environment, admin, member, submodel1 } = await createDefaultEnvironment();
+    let foundAas = await aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
+    expect(foundAas.security.findPoliciesBySubject(member)).not.toEqual([]);
+
+    await environmentService.deletePolicyBySubjectAndObject(
+      environment,
+      IdShortPath.create({ path: submodel1.idShort }),
+      member,
+      admin,
+    );
+    foundAas = await aasRepository.findOneOrFail(environment.assetAdministrationShells[0]);
+    expect(foundAas.security.findPoliciesBySubject(member)).toEqual([]);
   });
 
   it("should delete submodel from environment", async () => {

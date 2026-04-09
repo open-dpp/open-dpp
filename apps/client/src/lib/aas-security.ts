@@ -1,4 +1,10 @@
-import type { AccessPermissionRuleResponseDto, MemberRoleDtoType, PermissionDto, UserRoleDtoType } from "@open-dpp/dto";
+import type {
+  AccessPermissionRuleResponseDto,
+  MemberRoleDtoType,
+  PermissionDto,
+  SubjectAttributesDto,
+  UserRoleDtoType,
+} from "@open-dpp/dto";
 import {
 
   DataTypeDef,
@@ -13,6 +19,29 @@ import {
 export interface Subject {
   userRole: UserRoleDtoType;
   memberRole?: MemberRoleDtoType;
+}
+
+export function makeSubjectAttributes(subject: Subject): SubjectAttributesDto {
+  const createProperty = (idShort: string, value: string) => ({
+    value,
+    valueType: DataTypeDef.String,
+    idShort,
+    extensions: [],
+    displayName: [],
+    description: [],
+    supplementalSemanticIds: [],
+    qualifiers: [],
+    embeddedDataSpecifications: [],
+  });
+
+  const subjectAttribute = [createProperty("userRole", subject.userRole)];
+  if (subject.memberRole) {
+    subjectAttribute.push(createProperty("memberRole", subject.memberRole));
+  }
+
+  return {
+    subjectAttribute,
+  };
 }
 
 export function makeRule(data: { subject: Subject; object: string; permissions: PermissionDto[] }): AccessPermissionRuleResponseDto {

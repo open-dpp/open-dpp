@@ -1,5 +1,6 @@
 import type {
   AssetAdministrationShellModificationDto,
+  DeletePolicyDto,
   PassportDto,
   PassportPaginationDto,
   PassportRequestCreateDto,
@@ -46,6 +47,7 @@ import { parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-ba
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import {
   ApiDeleteColumn,
+  ApiDeletePolicy,
   ApiDeleteRow,
   ApiDeleteSubmodelById,
   ApiDeleteSubmodelElementById,
@@ -70,6 +72,7 @@ import {
   AssetAdministrationShellModificationRequestBody,
   ColumnParam,
   CursorQueryParam,
+  DeletePolicyRequestBody,
   IdParam,
   IdShortPathParam,
   LimitQueryParam,
@@ -258,6 +261,21 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
     const subject = SubjectAttributes.create({ userRole, memberRole });
     const passport = await this.loadPassportAndCheckOwnership(id, subject, organizationId);
     return await this.environmentService.addSubmodelToEnvironment(passport.getEnvironment(), body, this.saveEnvironmentCallback(passport));
+  }
+
+  @ApiDeletePolicy()
+  async deletePolicyBySubjectAndObject(
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @DeletePolicyRequestBody() body: DeletePolicyDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+  ): Promise<void> {
+    const administrator = SubjectAttributes.create({ userRole, memberRole });
+    const subject = SubjectAttributes.fromPlain(body.subject);
+    const object = IdShortPath.create({ path: body.object });
+    const passport = await this.loadPassportAndCheckOwnership(id, administrator, organizationId);
+    await this.environmentService.deletePolicyBySubjectAndObject(passport.getEnvironment(), object, subject, administrator);
   }
 
   @ApiDeleteSubmodelById()

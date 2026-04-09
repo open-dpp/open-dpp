@@ -1,5 +1,6 @@
 import type {
   AssetAdministrationShellModificationDto,
+  DeletePolicyDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementRequestDto,
@@ -35,6 +36,7 @@ import { parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-ba
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import {
   ApiDeleteColumn,
+  ApiDeletePolicy,
   ApiDeleteRow,
   ApiDeleteSubmodelById,
   ApiDeleteSubmodelElementById,
@@ -59,6 +61,7 @@ import {
   AssetAdministrationShellModificationRequestBody,
   ColumnParam,
   CursorQueryParam,
+  DeletePolicyRequestBody,
   IdParam,
   IdShortPathParam,
   LimitQueryParam,
@@ -155,6 +158,21 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
       body,
       this.saveEnvironmentCallback(template),
     );
+  }
+
+  @ApiDeletePolicy()
+  async deletePolicyBySubjectAndObject(
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @DeletePolicyRequestBody() body: DeletePolicyDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+  ): Promise<void> {
+    const administrator = SubjectAttributes.create({ userRole, memberRole });
+    const subject = SubjectAttributes.fromPlain(body.subject);
+    const object = IdShortPath.create({ path: body.object });
+    const template = await this.loadTemplateAndCheckOwnership(id, administrator, organizationId);
+    await this.environmentService.deletePolicyBySubjectAndObject(template.getEnvironment(), object, subject, administrator);
   }
 
   @ApiDeleteSubmodelById()

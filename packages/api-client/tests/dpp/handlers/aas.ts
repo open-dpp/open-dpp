@@ -81,9 +81,12 @@ export function aasHandlers(basePath: string) {
     http.patch(
       `${aasEndpointUrl}/${aasWrapperId}/shells/${btoa(aasResponse.id)}`,
       async () => {
-        return HttpResponse.json({ ...aasResponse, displayName: aasModification.displayName }, {
-          status: 200,
-        })
+        return HttpResponse.json(
+          { ...aasResponse, displayName: aasModification.displayName },
+          {
+            status: 200,
+          },
+        )
       },
     ),
     http.get(
@@ -114,6 +117,14 @@ export function aasHandlers(basePath: string) {
       async () => {
         return HttpResponse.json(submodelCarbonFootprintResponse, {
           status: 200,
+        })
+      },
+    ),
+    http.delete(
+      `${aasEndpointUrl}/${aasWrapperId}/security/policies`,
+      async () => {
+        return HttpResponse.json(null, {
+          status: 204,
         })
       },
     ),

@@ -1,6 +1,7 @@
 import type {
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellResponseDto,
+  DeletePolicyDto,
   SubmodelElementListResponseDto,
 } from "@open-dpp/dto";
 import {
@@ -153,4 +154,11 @@ export interface IAasDeleteEndpoints {
     userRole: UserRoleType,
     memberRole: MemberRoleType | undefined,
   ) => Promise<SubmodelElementListResponseDto>;
+  deletePolicyBySubjectAndObject: (
+    organizationId: string,
+    id: string,
+    body: DeletePolicyDto,
+    userRole: UserRoleType,
+    memberRole: MemberRoleType | undefined,
+  ) => Promise<void>;
 }

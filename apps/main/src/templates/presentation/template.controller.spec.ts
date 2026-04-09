@@ -75,6 +75,10 @@ describe("templateController", () => {
     await ctx.asserts.postSubmodel(createTemplate);
   });
 
+  it("/DELETE policy", async () => {
+    await ctx.asserts.deletePolicy(createTemplate);
+  });
+
   it("/DELETE submodel", async () => {
     await ctx.asserts.deleteSubmodel(createTemplate, saveTemplate);
   });

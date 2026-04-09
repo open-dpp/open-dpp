@@ -122,6 +122,17 @@ export class EnvironmentService {
     return environment;
   }
 
+  async deletePolicyBySubjectAndObject(
+    environment: Environment,
+    object: IdShortPath,
+    subject: SubjectAttributes,
+    administrator: SubjectAttributes,
+  ) {
+    const aas = await this.getFirstAssetAdministrationShell(environment);
+    aas.security.withAdministrator(administrator).deletePolicyBySubjectAndObject(subject, object);
+    await this.aasRepository.save(aas);
+  }
+
   async getAasShells(environment: Environment, pagination: Pagination, subject: SubjectAttributes): Promise<AssetAdministrationShellPaginationResponseDto> {
     const pages = pagination.nextPages(environment.assetAdministrationShells);
     const shells = await Promise.all(pages.map(p => this.aasRepository.findOneOrFail(p)));
@@ -211,7 +222,7 @@ export class EnvironmentService {
     const ability = aas.security.defineAbilityForSubject(subject);
     submodel.deleteSubmodelElement(
       idShortPath,
-      { ability, onDelete: s => aas.security.deletePoliciesByObject(s.getIdShortPath()) },
+      { ability, onDelete: s => aas.security.deletePoliciesByObjectPath(s.getIdShortPath()) },
     );
     const session = await this.connection.startSession();
     try {
@@ -318,7 +329,7 @@ export class EnvironmentService {
     const modifiedSubmodelElementList = submodel.deleteColumn(
       idShortPath,
       idShortOfColumn,
-      { ability, onDelete: s => aas.security.deletePoliciesByObject(s.getIdShortPath()) },
+      { ability, onDelete: s => aas.security.deletePoliciesByObjectPath(s.getIdShortPath()) },
     );
     const session = await this.connection.startSession();
     try {
@@ -348,7 +359,7 @@ export class EnvironmentService {
     const modifiedSubmodelElementList = submodel.deleteRow(
       idShortPath,
       idShortOfRow,
-      { ability, onDelete: s => aas.security.deletePoliciesByObject(s.getIdShortPath()) },
+      { ability, onDelete: s => aas.security.deletePoliciesByObjectPath(s.getIdShortPath()) },
     );
     const session = await this.connection.startSession();
     try {

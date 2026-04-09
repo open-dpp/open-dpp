@@ -2,6 +2,7 @@ import { applyDecorators, Body, Delete, Get, HttpCode, Param, Patch, Post, Query
 
 import {
   AssetAdministrationShellModificationSchema,
+  DeletePolicyDtoSchema,
   PopulateSchema,
   SubmodelElementModificationSchema,
   SubmodelElementSchema,
@@ -55,6 +56,14 @@ export const ApiGetSubmodelByIdPath = "/:id/submodels/:submodelId";
 export function ApiGetSubmodelById(prefix?: string) {
   return applyDecorators(
     Get(withPrefix(ApiGetSubmodelByIdPath, prefix)),
+  );
+}
+
+export const ApiDeletePolicyPath = "/:id/security/policies";
+export function ApiDeletePolicy() {
+  return applyDecorators(
+    Delete(withPrefix(ApiDeletePolicyPath)),
+    HttpCode(204), // Explicitly state the HTTP status code
   );
 }
 
@@ -269,3 +278,5 @@ export const SubmodelModificationRequestBody = () => Body(new ZodValidationPipe(
 export const SubmodelElementRequestBody = () => Body(new ZodValidationPipe(SubmodelElementSchema));
 export const SubmodelElementModificationRequestBody = () => Body(new ZodValidationPipe(SubmodelElementModificationSchema));
 export const SubmodelElementValueModificationRequestBody = () => Body(new ZodValidationPipe(ValueSchema));
+
+export const DeletePolicyRequestBody = () => Body(new ZodValidationPipe(DeletePolicyDtoSchema));

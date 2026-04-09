@@ -44,7 +44,7 @@ const disableEdit = computed(() => {
 });
 const { getPermissions, editPermissions, savePermissions, resetPermissions }
   = useAasPermissionsForm({
-    allAccessPermissionRules: props.getAccessPermissionRules(),
+    allAccessPermissionRules: props.getAccessPermissionRules(), // accessPermissionRules.value,
     object: props.path.idShortPathIncludingSubmodel ?? "",
     modifyShell: props.modifyShell,
   });

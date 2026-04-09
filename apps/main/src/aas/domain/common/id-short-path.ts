@@ -17,6 +17,10 @@ export class IdShortPath {
     return idShortPath.first === this.first;
   }
 
+  isEqual(idShortPath: IdShortPath): boolean {
+    return this.toString() === idShortPath.toString();
+  }
+
   concat(idShortPath: IdShortPath) {
     return new IdShortPath([...this.segments, ...idShortPath.segments]);
   }

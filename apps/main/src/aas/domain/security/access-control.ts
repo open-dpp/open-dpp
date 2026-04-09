@@ -71,7 +71,18 @@ export class AccessControl {
     rule.modifyPermissionForObject(aasObject, permissions);
   }
 
-  deletePoliciesByObject(object: IdShortPath): void {
+  deletePolicyBySubjectAndObject(subject: SubjectAttributes, object: IdShortPath) {
+    this.administratePolicyGuard(subject);
+    const rule = this.findRuleOfSubject(subject);
+    if (rule) {
+      rule.deletePermissionPerObject(object, { exactPathMatch: true });
+      if (rule.permissionsPerObject.length === 0) {
+        this._accessPermissionRules = this.accessPermissionRules.filter(r => r !== rule);
+      }
+    }
+  }
+
+  deletePoliciesByObjectPath(object: IdShortPath): void {
     const keepRules = [];
     for (const rule of this.accessPermissionRules) {
       this.administratePolicyGuard(rule.targetSubjectAttributes);

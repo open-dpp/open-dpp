@@ -264,6 +264,31 @@ export function createAasTestContext<T>(
     expect(found.security).toEqual(Security.fromPlain(body.security));
   }
 
+  async function assertDeletePolicy(createEntity: CreateEntity) {
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+    const passport = await createEntity(org?.id);
+    const user = SubjectAttributes.create({ userRole: UserRoleDto.USER });
+    aas.security.addPolicy(
+      user,
+      IdShortPath.create({ path: "section1" }),
+      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
+    );
+    await aasRepository.save(aas);
+    const body = {
+      subject: user.toPlain(),
+      object: "section1",
+    };
+    const response = await request(app.getHttpServer())
+      .delete(`${basePath}/${passport.id}/security/policies`)
+      .set("Cookie", userCookie)
+      .set(ORGANIZATION_ID_HEADER, org!.id)
+      .send(body);
+
+    expect(response.status).toEqual(204);
+    const foundAas = await aasRepository.findOneOrFail(aas.id);
+    expect(foundAas.security.findPoliciesBySubject(user)).toEqual([]);
+  }
+
   async function assertGetSubmodels(createEntity: CreateEntity) {
     const { org, userCookie } = await getOrganizationAndUserWithCookie();
     const passport = await createEntity(org?.id);
@@ -874,6 +899,7 @@ export function createAasTestContext<T>(
       modifyColumn: assertModifyColumn,
       deleteColumn: assertDeleteColumn,
       addRow: assertAddRow,
+      deletePolicy: assertDeletePolicy,
       deleteRow: assertDeleteRow,
       deleteSubmodel: assertDeleteSubmodel,
       deleteSubmodelElement: assertDeleteSubmodelElement,

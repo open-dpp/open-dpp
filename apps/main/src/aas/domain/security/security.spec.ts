@@ -265,7 +265,7 @@ describe("security", () => {
     ]);
   });
 
-  it("should delete policies", () => {
+  it("should delete policies by object", () => {
     const security = Security.create({ });
     const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
     const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
@@ -276,14 +276,56 @@ describe("security", () => {
     security.addPolicy(SubjectAttributes.create(member), IdShortPath.create({ path: "section2" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
 
     const pathToDelete = IdShortPath.create({ path: "section1" });
-    expect(() => security.withAdministrator(member).deletePoliciesByObject(pathToDelete)).toThrow(new ForbiddenError(policyManagementError));
+    expect(() => security.withAdministrator(member).deletePoliciesByObjectPath(pathToDelete)).toThrow(new ForbiddenError(policyManagementError));
 
-    security.withAdministrator(admin).deletePoliciesByObject(pathToDelete);
+    security.withAdministrator(admin).deletePoliciesByObjectPath(pathToDelete);
     expect(security.findPoliciesBySubject(admin)).toEqual([]);
     expect(security.findPoliciesBySubject(member)).toEqual([
       {
         targetSubjectAttributes: SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER }),
         _permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "section2" })),
+            permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
+          }),
+        ],
+      },
+    ]);
+  });
+
+  it("should delete policy by object and subject", () => {
+    const security = Security.create({ });
+    const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    security.addPolicy(SubjectAttributes.create(admin), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(SubjectAttributes.create(admin), IdShortPath.create({ path: "section1.subSection1.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+
+    security.addPolicy(SubjectAttributes.create(member), IdShortPath.create({ path: "section1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(SubjectAttributes.create(member), IdShortPath.create({ path: "section2" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+
+    const objectToDelete = IdShortPath.create({ path: "section1" });
+    expect(() => security.withAdministrator(member).deletePolicyBySubjectAndObject(admin, objectToDelete)).toThrow(new ForbiddenError(policyManagementError));
+
+    security.withAdministrator(admin).deletePolicyBySubjectAndObject(admin, objectToDelete);
+    expect(security.findPoliciesBySubject(admin)).toEqual([
+      {
+        targetSubjectAttributes: admin,
+        _permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "section1.subSection1.prop1" })),
+            permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
+          }),
+        ],
+      },
+    ]);
+    expect(security.findPoliciesBySubject(member)).toEqual([
+      {
+        targetSubjectAttributes: member,
+        _permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: "section1" })),
+            permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
+          }),
           PermissionPerObject.create({
             object: createAasObject(IdShortPath.create({ path: "section2" })),
             permissions: [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],

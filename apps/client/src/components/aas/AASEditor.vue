@@ -263,7 +263,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
                       ? missingPermissionMsg
                       : t('common.remove')
                   "
-                  :aria-label="t('common.delete')"
+                  :aria-label="t('common.remove')"
                   icon="pi pi-trash"
                   severity="danger"
                   :disabled="

@@ -8,6 +8,8 @@ export const SubjectAttributesDtoSchema = z.object({
   subjectAttribute: PropertyJsonSchema.array(),
 })
 
+export type SubjectAttributesDto = z.infer<typeof SubjectAttributesDtoSchema>
+
 export const PermissionDtoSchema = z.object({
   permission: PermissionEnum,
   kindOfPermission: PermissionKindEnum,

@@ -72,7 +72,8 @@
       "edit": "Bearbeiten",
       "delete": "Löschen",
       "create": "Erstellen",
-      "read": "Lesen"
+      "read": "Lesen",
+      "errorManagePolicy": "Ändern der Berechtigungen fehlgeschlagen"
     },
     "productImages": "Produktbilder",
     "formLabels": {

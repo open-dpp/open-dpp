@@ -89,7 +89,7 @@ function onResetPermissions() {
         :disabled="disabled"
       />
       <Button
-        :disabled="disabled || !canEditPermissions || disableResetButton"
+        :disabled="disabled || !canEditPermissions"
         :label="t('common.reset')"
         @click="onResetPermissions"
       />

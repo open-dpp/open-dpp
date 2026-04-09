@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { AccessPermissionRuleDtoSchema } from './access-permission-rule.dto'
+import { AccessPermissionRuleDtoSchema, SubjectAttributesDtoSchema } from './access-permission-rule.dto'
 
 export const AccessControlDtoSchema = z.object({
   accessPermissionRules: AccessPermissionRuleDtoSchema.array(),
@@ -9,3 +9,10 @@ export const SecurityDtoSchema = z.object({
 })
 
 export type SecurityResponseDto = z.infer<typeof SecurityDtoSchema>
+
+export const DeletePolicyDtoSchema = z.object({
+  subject: SubjectAttributesDtoSchema,
+  object: z.string(),
+})
+
+export type DeletePolicyDto = z.infer<typeof DeletePolicyDtoSchema>

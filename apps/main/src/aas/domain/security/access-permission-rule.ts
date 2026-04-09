@@ -23,10 +23,14 @@ export class AccessPermissionRule {
     return this._permissionsPerObject;
   }
 
-  deletePermissionPerObject(object: IdShortPath): void {
+  deletePermissionPerObject(object: IdShortPath, options: { exactPathMatch?: boolean } = { exactPathMatch: false }): void {
     const keepPermissions = [];
     for (const permissionsPerObject of this.permissionsPerObject) {
-      if (!IdShortPath.create({ path: permissionsPerObject.object.idShort }).isChildOf(object)) {
+      const idShortPath = IdShortPath.create({ path: permissionsPerObject.object.idShort });
+      if (!options.exactPathMatch && !idShortPath.isChildOf(object)) {
+        keepPermissions.push(permissionsPerObject);
+      }
+      else if (options.exactPathMatch && !idShortPath.isEqual(object)) {
         keepPermissions.push(permissionsPerObject);
       }
     }

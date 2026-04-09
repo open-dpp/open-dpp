@@ -314,6 +314,9 @@ describe("passportController", () => {
   it(`/POST submodel`, async () => {
     await ctx.asserts.postSubmodel(createPassport);
   });
+  it("/DELETE policy", async () => {
+    await ctx.asserts.deletePolicy(createPassport);
+  });
 
   it("/DELETE submodel", async () => {
     await ctx.asserts.deleteSubmodel(createPassport, savePassport);
