@@ -1,4 +1,3 @@
-import type { AasExportSchema } from "./aas-export-v1.schema";
 import { randomUUID } from "node:crypto";
 import { DataTypeDef, KeyTypes, Language, ModellingKind, QualifierKind, ReferenceTypes } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
@@ -14,15 +13,20 @@ import { ConceptDescription } from "../../domain/concept-description";
 import { EmbeddedDataSpecification } from "../../domain/embedded-data-specification";
 import { Extension } from "../../domain/extension";
 import { Resource } from "../../domain/resource";
+import { Security } from "../../domain/security/security";
 import { SpecificAssetId } from "../../domain/specific-asset-id";
 import { Submodel } from "../../domain/submodel-base/submodel";
 import { parseSubmodelElement } from "../../domain/submodel-base/submodel-base";
-import { ReferenceSchemaV1_0 } from "./aas-export-v1.schema";
+import { AasExportVersion, AasExportVersionType } from "./export-schemas/aas-export-shared";
+import { AasExport } from "./export-schemas/aas-export-types";
+import { ReferenceSchemaV1_0 } from "./export-schemas/aas-export-v1.schema";
+import { AssetAdministrationShellV2_0 } from "./export-schemas/aas-export-v2.schema";
 
 type ReferenceSchema = z.infer<typeof ReferenceSchemaV1_0>;
-type ShellSchema = AasExportSchema["environment"]["assetAdministrationShells"][number];
-type SubmodelSchema = AasExportSchema["environment"]["submodels"][number];
-type ConceptDescriptionSchema = AasExportSchema["environment"]["conceptDescriptions"][number];
+type ShellSchema = AasExport["environment"]["assetAdministrationShells"][number];
+
+type SubmodelSchema = AasExport["environment"]["submodels"][number];
+type ConceptDescriptionSchema = AasExport["environment"]["conceptDescriptions"][number];
 type ExtensionSchema = ShellSchema["extensions"][number];
 type QualifierSchema = SubmodelSchema["qualifiers"][number];
 
@@ -112,9 +116,24 @@ export function mapQualifiers(qualifiers: QualifierSchema[]): Qualifier[] {
     .map(mapQualifier);
 }
 
+export function mapSecurity(shell: ShellSchema, submodels: Submodel[], version: AasExportVersionType): Security {
+  if (version === AasExportVersion.v1_0) {
+    const security = Security.create({});
+    submodels.forEach((submodel) => {
+      security.addDefaultPolicyForSubmodelIfNoExists(submodel);
+    });
+    return security;
+  }
+  else {
+    return Security.fromPlain(AssetAdministrationShellV2_0.parse(shell).security);
+  }
+}
+
 export function mapAssetAdministrationShells(
   shells: ShellSchema[],
   submodelIdMapping: Map<string, string>,
+  submodels: Submodel[],
+  version: AasExportVersionType,
 ): AssetAdministrationShell[] {
   return shells.map((shell) => {
     const assetInformation = AssetInformation.create({
@@ -160,6 +179,8 @@ export function mapAssetAdministrationShells(
       })
       .filter((ref): ref is ReferenceSchema => ref !== null);
 
+    const security = mapSecurity(shell, submodels, version);
+
     return AssetAdministrationShell.create({
       assetInformation,
       extensions: mapExtensions(shell.extensions),
@@ -171,6 +192,7 @@ export function mapAssetAdministrationShells(
       embeddedDataSpecifications: mapEmbeddedDataSpecifications(shell.embeddedDataSpecifications),
       derivedFrom: mapNullableReference(shell.derivedFrom),
       submodels: mapReferences(remappedSubmodelRefs),
+      security,
     });
   });
 }

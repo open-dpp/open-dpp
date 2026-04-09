@@ -79,7 +79,7 @@ onMounted(async () => {
   <DataTable :value="rows">
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="text-xl font-bold">{{ t("organizations.member") }}</span>
+        <span class="text-xl font-bold">{{ t("organizations.member", 2) }}</span>
         <div class="flex items-center gap-2">
           <Button
             :label="t('organizations.inviteUser')"
@@ -116,10 +116,10 @@ onMounted(async () => {
     <Column field="role" :header="t('organizations.memberRole')">
       <template #body="{ data }: { data: MemberDto }">
         <div v-if="data.role === 'owner'" class="text-gray-900">
-          {{ t("organizations.memberCreator") }}
+          {{ t("organizations.owner") }}
         </div>
         <div v-else-if="data.role === 'admin'" class="text-gray-500">
-          {{ t("organizations.memberAdmin") }}
+          {{ t("user.admin") }}
         </div>
         <div v-else class="text-gray-500">
           {{ t("organizations.member") }}

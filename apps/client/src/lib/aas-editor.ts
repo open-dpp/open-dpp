@@ -1,5 +1,10 @@
 import type { AasNamespace } from "@open-dpp/api-client";
 import type {
+  AccessPermissionRuleResponseDto,
+  AssetAdministrationShellModificationDto,
+  DeletePolicyDto,
+} from "@open-dpp/dto";
+import type {
   AasEditorPath,
   EditorType,
   OpenDrawerCallback,
@@ -23,4 +28,7 @@ export interface SharedEditorProps<Data, RequestDto> {
   errorHandlingStore: IErrorHandlingStore;
   id: string;
   translate: (label: string, ...args: unknown[]) => string;
+  getAccessPermissionRules: () => AccessPermissionRuleResponseDto[];
+  modifyShell: (data: AssetAdministrationShellModificationDto) => Promise<void>;
+  deletePolicyBySubjectAndObject: (data: DeletePolicyDto) => Promise<void>;
 }

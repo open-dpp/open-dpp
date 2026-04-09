@@ -5,7 +5,7 @@ import { ZodValidationPipe } from "@open-dpp/exception";
 import { UserHasRole } from "../../auth/presentation/decorators/user-has-role.decorator";
 import { UsersService } from "../application/services/users.service";
 import { User } from "../domain/user";
-import { UserRole } from "../domain/user-role.enum";
+import { UserRole, UserRoleEnum } from "../domain/user-role.enum";
 
 @Controller("users")
 export class UsersController {
@@ -25,7 +25,7 @@ export class UsersController {
     @Param("id") id: string,
     @Body(new ZodValidationPipe(SetUserRoleDtoSchema)) body: SetUserRoleDto,
   ): Promise<User> {
-    return this.usersService.setUserRole(id, body.role as UserRole);
+    return this.usersService.setUserRole(id, UserRoleEnum.parse(body.role));
   }
 
   @Get(":id")

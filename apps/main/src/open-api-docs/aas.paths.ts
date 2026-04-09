@@ -2,6 +2,7 @@ import {
   AssetAdministrationShellJsonSchema,
   AssetAdministrationShellModificationSchema,
   AssetAdministrationShellPaginationResponseDtoSchema,
+  DeletePolicyDtoSchema,
   PassportDtoSchema,
   PassportPaginationDtoSchema,
   PassportRequestCreateDtoSchema,
@@ -18,8 +19,9 @@ import {
   TemplatePaginationDtoSchema,
   ValueSchema,
 } from "@open-dpp/dto";
-import { aasExportSchemaJsonV1_0 } from "../aas/infrastructure/serialization/aas-export-v1.schema";
+import { aasExportSchemaJsonV1_0 } from "../aas/infrastructure/serialization/export-schemas/aas-export-v1.schema";
 import {
+  ApiDeletePolicyPath,
   ApiDeleteRowPath,
   ApiGetColumnByIdShortPath,
   ApiGetShellsPath,
@@ -268,6 +270,21 @@ export function createAasPaths(tag: string) {
               [ContentType.JSON]: { schema: SubmodelElementListJsonSchema },
             },
           },
+        },
+      },
+    },
+    [`/${tag}${ApiDeletePolicyPath}`]: {
+      delete: {
+        tags: [tag],
+        summary: `Deletes policy for specified subject and object.`,
+        parameters: [IdParamSchema],
+        requestBody: {
+          content: {
+            [ContentType.JSON]: { schema: DeletePolicyDtoSchema },
+          },
+        },
+        responses: {
+          [HTTPCode.NO_CONTENT]: {},
         },
       },
     },

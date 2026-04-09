@@ -2,11 +2,12 @@ import type { Auth } from "better-auth";
 import { randomBytes } from "node:crypto";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { ObjectId } from "mongodb";
 import { Model } from "mongoose";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
-import { UserRole } from "../../domain/user-role.enum";
+import { UserRoleType } from "../../domain/user-role.enum";
 import { UserMapper } from "../mappers/user.mapper";
 import { User as UserSchema } from "../schemas/user.schema";
 
@@ -44,6 +45,14 @@ export class UsersRepository {
       this.logger.error(`Failed to create user ${user.email}`, error);
       return null;
     }
+  }
+
+  async findOneOrFail(id: string) {
+    const userEntity = await this.findOneById(id);
+    if (!userEntity) {
+      throw new NotFoundInDatabaseException(User.name);
+    }
+    return userEntity;
   }
 
   async findOneById(id: string): Promise<User | null> {
@@ -87,7 +96,7 @@ export class UsersRepository {
     await this.userModel.findOneAndUpdate({ email }, { $set: { emailVerified } });
   }
 
-  async setUserRole(id: string, role: UserRole): Promise<User | null> {
+  async setUserRole(id: string, role: UserRoleType): Promise<User | null> {
     if (!ObjectId.isValid(id)) {
       return null;
     }

@@ -8,6 +8,7 @@ import { ReferenceJsonSchema } from './common/reference-json-schema'
 import { EmbeddedDataSpecificationJsonSchema } from './embedded-data-specification-json-schema'
 import { ExtensionJsonSchema } from './extension-json-schema'
 import { ResourceJsonSchema } from './resource-json-schema'
+import { SecurityDtoSchema } from './security/security.dto'
 
 export const AssetAdministrationShellJsonSchema = z.object({
   id: z.string().meta({ description: 'Id of the AAS' }),
@@ -21,6 +22,7 @@ export const AssetAdministrationShellJsonSchema = z.object({
   embeddedDataSpecifications: EmbeddedDataSpecificationJsonSchema.array().default([]),
   derivedFrom: z.nullish(ResourceJsonSchema),
   submodels: ReferenceJsonSchema.array().default([]),
+  security: SecurityDtoSchema,
 })
 export const AssetAdministrationShellPaginationResponseDtoSchema = z
   .object({
@@ -42,6 +44,7 @@ export type AssetAdministrationShellRequestDto = z.input<typeof AssetAdministrat
 
 export const AssetAdministrationShellModificationSchema = NameAndDescriptionModificationSchema.extend({
   assetInformation: AssetInformationModificationSchema.optional(),
+  security: SecurityDtoSchema.optional(),
 })
 
 export type AssetAdministrationShellModificationDto = z.infer<

@@ -1,7 +1,9 @@
 import { ValueError } from "@open-dpp/exception";
 import { z, ZodError } from "zod";
+import { removeEmptyItems } from "../../utils";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { ConceptDescription } from "./concept-description";
+import { ConvertToPlainOptions } from "./convertable-to-plain";
 import { Environment } from "./environment";
 import { Submodel } from "./submodel-base/submodel";
 
@@ -142,10 +144,13 @@ export class ExpandedEnvironment {
     return new ExpandedEnvironment(shells, submodels, conceptDescriptions);
   }
 
-  toPlain(): ExpandedEnvironmentPlain {
+  toPlain(options?: ConvertToPlainOptions): ExpandedEnvironmentPlain {
+    const submodels = removeEmptyItems(this.submodels.map(submodel => submodel.toPlain(options)));
     return {
-      assetAdministrationShells: this.shells.map(shell => shell.toPlain()),
-      submodels: this.submodels.map(submodel => submodel.toPlain()),
+      assetAdministrationShells: this.shells.map(
+        shell => shell.toPlain({ context: { filterSubmodels: submodels } }),
+      ),
+      submodels,
       conceptDescriptions: this.conceptDescriptions.map(cd => cd.toPlain()),
     };
   }
@@ -156,26 +161,5 @@ export class ExpandedEnvironment {
       submodels: this.submodels.map(s => s.id),
       conceptDescriptions: this.conceptDescriptions.map(cd => cd.id),
     });
-  }
-
-  private resolveSubmodelReferences(
-    shell: AssetAdministrationShell,
-    idMap: Map<string, Submodel>,
-  ): Submodel[] {
-    const resolved: Submodel[] = [];
-
-    for (const ref of shell.submodels) {
-      const key = ref.keys.find(k => k.type === "Submodel" || k.type === "GlobalReference");
-      if (!key) {
-        continue;
-      }
-
-      const newSub = idMap.get(key.value);
-      if (newSub) {
-        resolved.push(newSub);
-      }
-    }
-
-    return resolved;
   }
 }

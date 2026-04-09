@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { MemberRole } from "./member-role.enum";
+import { MemberRole, MemberRoleType } from "./member-role.enum";
 
 export interface MemberCreateProps {
   organizationId: string;
   userId: string;
-  role: MemberRole;
+  role: MemberRoleType;
 }
 
 export type MemberDbProps = MemberCreateProps & {
@@ -23,7 +23,7 @@ export interface MemberWithUser {
   id: string;
   organizationId: string;
   userId: string;
-  role: MemberRole;
+  role: MemberRoleType;
   createdAt: Date;
   user: MemberUser | null;
 }
@@ -32,14 +32,14 @@ export class Member {
   public readonly id: string;
   public readonly organizationId: string;
   public readonly userId: string;
-  public readonly role: MemberRole;
+  public readonly role: MemberRoleType;
   public readonly createdAt: Date;
 
   private constructor(
     id: string,
     organizationId: string,
     userId: string,
-    role: MemberRole,
+    role: MemberRoleType,
     createdAt: Date,
   ) {
     this.id = id;
@@ -78,7 +78,7 @@ export class Member {
     id: string;
     organizationId: string;
     userId: string;
-    role: MemberRole;
+    role: MemberRoleType;
     createdAt: Date;
   } {
     return {
