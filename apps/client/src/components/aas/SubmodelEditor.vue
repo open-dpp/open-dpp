@@ -75,6 +75,7 @@ defineExpose<{
       :path="props.path"
       :modify-shell="props.modifyShell"
       :get-access-permission-rules="props.getAccessPermissionRules"
+      hide-inheritance-toggle
       :delete-policy-by-subject-and-object="
         props.deletePolicyBySubjectAndObject
       "

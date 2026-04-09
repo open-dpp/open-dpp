@@ -25,6 +25,7 @@ const props = defineProps<{
   getAccessPermissionRules: () => AccessPermissionRuleResponseDto[];
   modifyShell: (data: AssetAdministrationShellModificationDto) => Promise<void>;
   deletePolicyBySubjectAndObject: (data: DeletePolicyDto) => Promise<void>;
+  hideInheritanceToggle?: boolean;
 }>();
 
 const {
@@ -134,7 +135,7 @@ defineExpose<{
       />
     </div>
     <div class="flex flex-col p-2 gap-3">
-      <div class="flex items-center gap-2">
+      <div v-if="!props.hideInheritanceToggle" class="flex items-center gap-2">
         <ToggleSwitch
           input-id="toggle-inheritance"
           :model-value="permissionsInherited"
