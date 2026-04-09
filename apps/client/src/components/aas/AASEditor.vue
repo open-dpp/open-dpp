@@ -23,7 +23,7 @@ const props = defineProps<{
 const route = useRoute();
 const router = useRouter();
 const componentRef = ref<{
-  submit: () => Promise<Promise<void> | undefined>;
+  submit: () => Promise<void>;
 } | null>(null);
 
 const defaultPosition = "right";

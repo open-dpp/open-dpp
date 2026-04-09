@@ -6,11 +6,10 @@ import { FileModificationSchema, Permissions } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { z } from "zod";
 import { useAasAbility } from "../../composables/aas-ability.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";
-import { useAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FileForm from "./FileForm.vue";
 
@@ -31,6 +30,10 @@ const disableEdit = computed(() => {
   return !can(Permissions.Edit, props.path.idShortPathIncludingSubmodel ?? "");
 });
 
+const permissionsFormRef = ref<{
+  savePermissions: () => Promise<void>;
+} | null>(null);
+
 const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(formSchema),
   initialValues: {
@@ -41,17 +44,12 @@ const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
 });
 
-const { getPermissions, editPermissions, savePermissions, resetPermissions }
-  = useAasPermissionsForm({
-    allAccessPermissionRules: props.getAccessPermissionRules(),
-    object: props.path.idShortPathIncludingSubmodel ?? "",
-    modifyShell: props.modifyShell,
-  });
-
 async function submit() {
   await handleSubmit(async (data) => {
     await props.callback(FileModificationSchema.parse({ ...data }));
-    await savePermissions();
+    if (permissionsFormRef.value) {
+      permissionsFormRef.value.savePermissions();
+    }
   })();
 }
 
@@ -71,11 +69,12 @@ defineExpose<{
       :disabled="disableEdit"
     />
     <PermissionsForm
+      ref="permissionsFormRef"
       :disabled="disableEdit"
-      :edit-permissions="editPermissions"
-      :get-permissions="getPermissions"
-      :reset-permissions="resetPermissions"
       :ignored-permission-options="[Permissions.Create]"
+      :path="props.path"
+      :modify-shell="props.modifyShell"
+      :get-access-permission-rules="props.getAccessPermissionRules"
     />
   </div>
 </template>

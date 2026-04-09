@@ -1,26 +1,45 @@
 <script setup lang="ts">
-import type { PermissionType } from "@open-dpp/dto";
-import type { IAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
+import type {
+  AccessPermissionRuleResponseDto,
+  AssetAdministrationShellModificationDto,
+  PermissionType,
+} from "@open-dpp/dto";
+import type { AasEditorPath } from "../../composables/aas-drawer.ts";
+
+import type { PermissionsPerSubject } from "../../composables/aas-permissions-form.ts";
+
 import type { Subject } from "../../lib/aas-security.ts";
 import { Permissions, UserRoleDto } from "@open-dpp/dto";
-
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import {
+
+  useAasPermissionsForm,
+} from "../../composables/aas-permissions-form.ts";
 import { useRoleHierarchy } from "../../composables/role-hierarchy.ts";
+import { isEqualSubject } from "../../lib/aas-security.ts";
 import { useUserStore } from "../../stores/user.ts";
 
 const {
-  getPermissions,
-  editPermissions,
-  resetPermissions,
+  getAccessPermissionRules,
+  path,
+  modifyShell,
   ignoredPermissionOptions,
   disabled,
-} = defineProps<
-  Omit<IAasPermissionsForm, "savePermissions"> & {
-    ignoredPermissionOptions?: PermissionType[];
-    disabled?: boolean;
-  }
->();
+} = defineProps<{
+  ignoredPermissionOptions?: PermissionType[];
+  disabled?: boolean;
+  path: AasEditorPath;
+  getAccessPermissionRules: () => AccessPermissionRuleResponseDto[];
+  modifyShell: (data: AssetAdministrationShellModificationDto) => Promise<void>;
+}>();
+
+const { permissions, editPermissions, savePermissions, resetPermissions }
+  = useAasPermissionsForm({
+    allAccessPermissionRules: getAccessPermissionRules(), // accessPermissionRules.value,
+    object: path.idShortPathIncludingSubmodel ?? "",
+    modifyShell,
+  });
 
 const { asSubject } = useUserStore();
 const { getVisibleRoles, canEditPermissionsOfRole } = useRoleHierarchy();
@@ -28,8 +47,12 @@ const { getVisibleRoles, canEditPermissionsOfRole } = useRoleHierarchy();
 const roles = ref(getVisibleRoles(asSubject()));
 const selectedRole = ref<Subject>(asSubject());
 
-const permissions = computed<ReturnType<typeof getPermissions>>(() =>
-  getPermissions(selectedRole.value),
+const permissionsOfSelectedRole = computed<PermissionsPerSubject>(() =>
+  permissions.value.find(p => isEqualSubject(p.subject, selectedRole.value)) ?? {
+    subject: selectedRole.value,
+    permissions: [],
+    inheritsPermissionsOf: null,
+  },
 );
 
 const canEditPermissions = computed(() => {
@@ -42,7 +65,9 @@ const canEditPermissions = computed(() => {
 const { t } = useI18n();
 
 const permissionOptions = computed(() => {
-  let options: { name: string; key: PermissionType }[] = [{ name: t("aasEditor.security.read"), key: Permissions.Read }];
+  let options: { name: string; key: PermissionType }[] = [
+    { name: t("aasEditor.security.read"), key: Permissions.Read },
+  ];
 
   if (selectedRole.value.userRole !== UserRoleDto.ANONYMOUS) {
     options.push(
@@ -71,6 +96,12 @@ function onResetPermissions() {
   resetPermissions(selectedRole.value);
   disableResetButton.value = true;
 }
+
+defineExpose<{
+  savePermissions: () => Promise<void>;
+}>({
+  savePermissions,
+});
 </script>
 
 <template>
@@ -101,15 +132,22 @@ function onResetPermissions() {
         class="flex items-center gap-2"
       >
         <Checkbox
-          :model-value="permissions.permissions"
+          :model-value="permissionsOfSelectedRole.permissions"
           :input-id="permission.key"
-          :disabled="disabled || !canEditPermissions || (permission.key === Permissions.Read && permissions.permissions.some(p => p !== Permissions.Read))"
+          :disabled="
+            disabled
+              || !canEditPermissions
+              || (permission.key === Permissions.Read
+                && permissionsOfSelectedRole.permissions.some(
+                  (p) => p !== Permissions.Read,
+                ))
+          "
           name="permissions"
           :value="permission.key"
           @update:model-value="onPermissionChange"
         />
         <label :for="permission.key">{{
-          `${permission.name}${permissions.inheritsPermissionsOf !== null ? ` (${t("aasEditor.security.inheritedPermission")})` : ""}`
+          `${permission.name}${permissionsOfSelectedRole.inheritsPermissionsOf !== null ? ` (${t("aasEditor.security.inheritedPermission")})` : ""}`
         }}</label>
       </div>
     </div>

@@ -15,7 +15,6 @@ import { useI18n } from "vue-i18n";
 import { z } from "zod";
 import { useAasAbility } from "../../composables/aas-ability.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";
-import { useAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
 import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
@@ -51,12 +50,9 @@ const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
 
 const { t, locale } = useI18n();
 
-const { getPermissions, editPermissions, savePermissions, resetPermissions }
-  = useAasPermissionsForm({
-    allAccessPermissionRules: props.getAccessPermissionRules(),
-    object: props.path.idShortPathIncludingSubmodel ?? "",
-    modifyShell: props.modifyShell,
-  });
+const permissionsFormRef = ref<{
+  savePermissions: () => Promise<void>;
+} | null>(null);
 
 const { can } = useAasAbility({
   getAccessPermissionRules: props.getAccessPermissionRules,
@@ -117,7 +113,9 @@ async function submit() {
   await handleSubmit(async (data) => {
     try {
       await save();
-      await savePermissions();
+      if (permissionsFormRef.value) {
+        permissionsFormRef.value.savePermissions();
+      }
     }
     catch (e) {
       props.errorHandlingStore.logErrorWithNotification(
@@ -179,10 +177,11 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
         :disabled="!canEdit"
       />
       <PermissionsForm
+        ref="permissionsFormRef"
         :disabled="!canEdit"
-        :edit-permissions="editPermissions"
-        :get-permissions="getPermissions"
-        :reset-permissions="resetPermissions"
+        :path="props.path"
+        :modify-shell="props.modifyShell"
+        :get-access-permission-rules="props.getAccessPermissionRules"
       />
     </FormContainer>
     <DataTable
@@ -304,13 +303,7 @@ const missingPermissionsMsg = t("aasEditor.security.missingPermission");
             >
               {{ formatCellValue(cellData[field], col) }}
             </span>
-            <InputText
-              v-else
-              autofocus
-              fluid
-              readonly
-              :disabled="!canEdit"
-            />
+            <InputText v-else autofocus fluid readonly :disabled="!canEdit" />
           </div>
         </template>
         <template

@@ -1,9 +1,8 @@
 import type { AccessPermissionRuleResponseDto, AssetAdministrationShellModificationDto, MemberRoleDtoType, PermissionType, UserRoleDtoType } from "@open-dpp/dto";
+import type { Ref } from "vue";
 import {
-
   PermissionKind,
   Permissions,
-
 } from "@open-dpp/dto";
 import { ref, toRaw } from "vue";
 import { makeRule, ruleHelper } from "../lib/aas-security.ts";
@@ -15,11 +14,14 @@ interface Subject {
   memberRole?: MemberRoleDtoType;
 }
 
+export interface PermissionsPerSubject {
+  subject: Subject;
+  permissions: PermissionType[];
+  inheritsPermissionsOf: string | null;
+}
+
 export interface IAasPermissionsForm {
-  getPermissions: (subject: Subject) => {
-    permissions: PermissionType[];
-    inheritsPermissionsOf: string | null;
-  };
+  permissions: Ref<PermissionsPerSubject[]>;
   editPermissions: (permissions: PermissionType[], subject: Subject) => void;
   savePermissions: () => Promise<void>;
   resetPermissions: (subject: Subject) => void;
@@ -36,12 +38,14 @@ export function useAasPermissionsForm({
   object,
   modifyShell,
 }: AasPermissionsFormProps): IAasPermissionsForm {
-  const { canEditPermissionsOfRole } = useRoleHierarchy();
+  const { canEditPermissionsOfRole, hierarchy } = useRoleHierarchy();
   const { asSubject } = useUserStore();
 
   const accessPermissionRulesOfObject = ref<AccessPermissionRuleResponseDto[]>(
     filterRulesForObject(allAccessPermissionRules, object),
   );
+
+  const permissions = ref<PermissionsPerSubject[]>(getPermissionsForAllSubjects());
 
   function filterRulesForObject(rules: AccessPermissionRuleResponseDto[], object: string) {
     const clonedRules = structuredClone(toRaw(allAccessPermissionRules));
@@ -56,7 +60,7 @@ export function useAasPermissionsForm({
   }
 
   function resetPermissions(subject: Subject) {
-    const { permissions, inheritsPermissionsOf } = getPermissions(
+    const { permissions, inheritsPermissionsOf } = getPermissionsForSubject(
       subject,
       object,
       filterRulesForObject(allAccessPermissionRules, object),
@@ -70,26 +74,30 @@ export function useAasPermissionsForm({
     else {
       editPermissions(permissions, subject);
     }
+    updatePermissions();
   }
 
   function editPermissions(
-    permissions: PermissionType[],
+    newPermissions: PermissionType[],
     subject: Subject,
   ) {
     const foundRule = accessPermissionRulesOfObject.value.find(r =>
       ruleHelper(r).hasEqualSubject(subject),
     );
-    const allowedPermissions = permissions.map(p => ({
+    const allowedPermissions = newPermissions.map(p => ({
       permission: p,
       kindOfPermission: PermissionKind.Allow,
     }));
 
     // Create / Edit / Delete do not make sense without Read permission
     if (
-      !permissions.includes(Permissions.Read)
-      && permissions.some(p => p !== Permissions.Read)
+      !newPermissions.includes(Permissions.Read)
+      && newPermissions.some(p => p !== Permissions.Read)
     ) {
-      allowedPermissions.push({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow });
+      allowedPermissions.push({
+        permission: Permissions.Read,
+        kindOfPermission: PermissionKind.Allow,
+      });
     }
 
     if (foundRule) {
@@ -98,16 +106,25 @@ export function useAasPermissionsForm({
       }
     }
     else {
-      accessPermissionRulesOfObject.value.push(makeRule({ subject, object, permissions: allowedPermissions }));
+      accessPermissionRulesOfObject.value.push(
+        makeRule({ subject, object, permissions: allowedPermissions }),
+      );
     }
+    updatePermissions();
+  }
+
+  function updatePermissions() {
+    permissions.value = getPermissionsForAllSubjects();
   }
 
   async function savePermissions() {
     if (accessPermissionRulesOfObject.value.length > 0) {
-      const rulesAllowedToModify = accessPermissionRulesOfObject.value.filter((r) => {
-        const subject = asSubject();
-        return canEditPermissionsOfRole(subject, ruleHelper(r).getSubject());
-      });
+      const rulesAllowedToModify = accessPermissionRulesOfObject.value.filter(
+        (r) => {
+          const subject = asSubject();
+          return canEditPermissionsOfRole(subject, ruleHelper(r).getSubject());
+        },
+      );
 
       await modifyShell({
         security: {
@@ -119,7 +136,17 @@ export function useAasPermissionsForm({
     }
   }
 
-  function getPermissions(
+  function getPermissionsForAllSubjects() {
+    const allPermissions: { subject: Subject; permissions: PermissionType[]; inheritsPermissionsOf: string | null }[] = [];
+    const allSubjects = hierarchy.map(role => role.key);
+    for (const subject of allSubjects) {
+      const { permissions, inheritsPermissionsOf } = getPermissionsForSubject(subject);
+      allPermissions.push({ subject, permissions, inheritsPermissionsOf });
+    }
+    return allPermissions;
+  }
+
+  function getPermissionsForSubject(
     subject: Subject,
     consideredObject: string = object,
     accessPermissionRules?: AccessPermissionRuleResponseDto[],
@@ -139,11 +166,11 @@ export function useAasPermissionsForm({
     const parentPath = consideredObject.split(".").slice(0, -1);
 
     if (parentPath.length > 0) {
-      return getPermissions(subject, parentPath.join("."), allAccessPermissionRules);
+      return getPermissionsForSubject(subject, parentPath.join("."), allAccessPermissionRules);
     }
 
     return { permissions: [], inheritsPermissionsOf: null };
   }
 
-  return { editPermissions, getPermissions, savePermissions, resetPermissions };
+  return { permissions, editPermissions, savePermissions, resetPermissions };
 }

@@ -4,10 +4,9 @@ import type { SubmodelEditorProps } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { z } from "zod";
 import { EditorMode } from "../../composables/aas-drawer.ts";
-import { useAasPermissionsForm } from "../../composables/aas-permissions-form.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
@@ -32,17 +31,16 @@ const showErrors = computed(() => {
   return meta.value.dirty || submitCount.value > 0;
 });
 
-const { getPermissions, editPermissions, savePermissions, resetPermissions }
-  = useAasPermissionsForm({
-    allAccessPermissionRules: props.getAccessPermissionRules(),
-    object: props.path.idShortPathIncludingSubmodel ?? "",
-    modifyShell: props.modifyShell,
-  });
+const permissionsFormRef = ref<{
+  savePermissions: () => Promise<void>;
+} | null>(null);
 
 async function submit() {
   await handleSubmit(async (data) => {
     await props.callback({ ...data });
-    await savePermissions();
+    if (permissionsFormRef.value) {
+      permissionsFormRef.value.savePermissions();
+    }
   })();
 }
 
@@ -61,9 +59,10 @@ defineExpose<{
       :editor-mode="EditorMode.EDIT"
     />
     <PermissionsForm
-      :edit-permissions="editPermissions"
-      :get-permissions="getPermissions"
-      :reset-permissions="resetPermissions"
+      ref="permissionsFormRef"
+      :path="props.path"
+      :modify-shell="props.modifyShell"
+      :get-access-permission-rules="props.getAccessPermissionRules"
     />
   </FormContainer>
 </template>

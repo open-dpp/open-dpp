@@ -21,6 +21,14 @@ export interface Subject {
   memberRole?: MemberRoleDtoType;
 }
 
+export function isEqualSubject(subject1: Subject, subject2: Subject) {
+  return (
+    (subject1.userRole === UserRoleDto.ADMIN
+      && subject1.userRole === subject2.userRole)
+    || JSON.stringify(subject1) === JSON.stringify(subject2)
+  );
+}
+
 export function makeSubjectAttributes(subject: Subject): SubjectAttributesDto {
   const createProperty = (idShort: string, value: string) => ({
     value,
