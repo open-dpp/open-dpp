@@ -338,7 +338,7 @@
     "memberListDescription": "A list of all members in this organization.",
     "memberName": "Name",
     "memberRole": "Role",
-    "owner": "Owner",
+    "owner": "Organisation admin",
     "addUser": "Add user",
     "form": {
       "id": "ID",
@@ -451,7 +451,7 @@
   },
   "user": {
     "admin": "Admin",
-    "public": "Publicly",
+    "public": "Public",
     "profile": "Your profile",
     "personalInformation": "Personal information",
     "logout": "Logout",

@@ -1,5 +1,26 @@
 import type { AasNamespace } from "@open-dpp/api-client";
-import type { AccessPermissionRuleResponseDto, AssetAdministrationShellModificationDto, AssetAdministrationShellResponseDto, DataTypeDefType, DeletePolicyDto, FileRequestDto, LanguageTextDto, LanguageType, PagingParamsDto, PropertyRequestDto, ReferenceElementRequestDto, SubmodelElementCollectionRequestDto, SubmodelElementListRequestDto, SubmodelElementModificationDto, SubmodelElementSharedRequestDto, SubmodelElementSharedResponseDto, SubmodelModificationDto, SubmodelRequestDto, SubmodelResponseDto } from "@open-dpp/dto";
+import type {
+  AccessPermissionRuleResponseDto,
+  AssetAdministrationShellModificationDto,
+  AssetAdministrationShellResponseDto,
+  DataTypeDefType,
+  DeletePolicyDto,
+  FileRequestDto,
+  LanguageTextDto,
+  LanguageType,
+  PagingParamsDto,
+  PermissionType,
+  PropertyRequestDto,
+  ReferenceElementRequestDto,
+  SubmodelElementCollectionRequestDto,
+  SubmodelElementListRequestDto,
+  SubmodelElementModificationDto,
+  SubmodelElementSharedRequestDto,
+  SubmodelElementSharedResponseDto,
+  SubmodelModificationDto,
+  SubmodelRequestDto,
+  SubmodelResponseDto,
+} from "@open-dpp/dto";
 import type { TreeTableSelectionKeys } from "primevue";
 import type { ConfirmationOptions } from "primevue/confirmationoptions";
 import type { MenuItem, MenuItemCommandEvent } from "primevue/menuitem";
@@ -12,9 +33,11 @@ import type { IPagination, PagingResult } from "./pagination.ts";
 import {
 
   AasSubmodelElements,
+
   AasSubmodelElementsEnum,
   DataTypeDef,
   KeyTypes,
+  Permissions,
   PropertyJsonSchema,
   SubmodelElementSchema,
   SubmodelElementSharedSchema,
@@ -321,16 +344,17 @@ export function useAasEditor({
         key,
         data: {
           type: getVisualType(submodelElement),
-          label: translateDisplayName(submodelElement.displayName) ?? submodelElement.idShort,
+          label:
+            translateDisplayName(submodelElement.displayName)
+            ?? submodelElement.idShort,
           modelType: submodelElement.modelType,
           plain: submodelElement,
-          actions: {
-            addChildren: canHaveChildren,
-            delete: true,
-          },
+          actions: evaluateActions(canHaveChildren, idShortPathIncludingSubmodel),
           path,
         },
-        children: children ? convertSubmodelElementsToTree(submodelIdShort, path, children) : undefined,
+        children: children
+          ? convertSubmodelElementsToTree(submodelIdShort, path, children)
+          : undefined,
       };
     });
   }
@@ -382,6 +406,37 @@ export function useAasEditor({
     return undefined;
   }
 
+  function evaluateActions(createVisible: boolean, idShortPathIncludingSubmodel: string) {
+    const missingPermissionMsg = translate(
+      `${translatePrefix}.security.missingPermission`,
+    );
+    const labels = {
+      [Permissions.Read]: "view",
+      [Permissions.Edit]: "edit",
+      [Permissions.Delete]: "remove",
+      [Permissions.Create]: "add",
+    };
+    const visible = (permission: PermissionType) => {
+      if (permission === Permissions.Create) {
+        return createVisible;
+      }
+      if (permission === Permissions.Edit) {
+        return can(permission, idShortPathIncludingSubmodel);
+      }
+      return true;
+    };
+    return Object.values(Permissions).reduce((acc: Record<string, { visible: boolean; enabled: boolean; tooltip: string }>, permission) => {
+      acc[permission.toLowerCase()] = {
+        visible: visible(permission),
+        enabled: can(permission, idShortPathIncludingSubmodel),
+        tooltip: can(permission, idShortPathIncludingSubmodel)
+          ? translate(`common.${labels[permission]}`)
+          : missingPermissionMsg,
+      };
+      return acc;
+    }, {});
+  }
+
   function convertSubmodelsToTree(submodels: SubmodelResponseDto[]) {
     return submodels.map((submodel: SubmodelResponseDto) => ({
       key: submodel.id,
@@ -390,11 +445,11 @@ export function useAasEditor({
         type: getVisualType({ modelType: KeyTypes.Submodel, ...submodel }),
         modelType: KeyTypes.Submodel,
         plain: omit(submodel, "submodelElements"),
-        actions: {
-          addChildren: true,
-          delete: true,
+        actions: evaluateActions(true, submodel.idShort),
+        path: {
+          submodelId: submodel.id,
+          idShortPathIncludingSubmodel: submodel.idShort,
         },
-        path: { submodelId: submodel.id, idShortPathIncludingSubmodel: submodel.idShort },
       },
       children: convertSubmodelElementsToTree(
         submodel.idShort,

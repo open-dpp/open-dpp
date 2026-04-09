@@ -338,7 +338,7 @@
     "memberListDescription": "Eine Liste von allen Mitgliedern in dieser Organisation.",
     "memberName": "Name",
     "memberRole": "Rolle",
-    "owner": "Eigentümer*in",
+    "owner": "Organisationsadministrator*in",
     "addUser": "Benutzer hinzufügen",
     "form": {
       "id": "ID",
@@ -472,7 +472,7 @@
   },
   "user": {
     "admin": "Administrator*in",
-    "public": "Öffentlich",
+    "public": "Öffentlichkeit",
     "profile": "Dein Profil",
     "personalInformation": "Persönliche Informationen",
     "logout": "Abmelden",

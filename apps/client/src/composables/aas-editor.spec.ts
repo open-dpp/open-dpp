@@ -62,6 +62,7 @@ const mocks = vi.hoisted(() => {
     modifySubmodelElement: vi.fn(),
     logErrorNotification: vi.fn(),
     deleteSubmodelElementById: vi.fn(),
+    asSubject: vi.fn(),
   };
 });
 
@@ -100,6 +101,12 @@ const { fetchMediaMock } = vi.hoisted(() => ({
 vi.mock("../stores/media.ts", () => ({
   useMediaStore: () => ({
     fetchMedia: fetchMediaMock,
+  }),
+}));
+
+vi.mock("../stores/user.ts", () => ({
+  useUserStore: () => ({
+    asSubject: mocks.asSubject,
   }),
 }));
 
@@ -193,7 +200,7 @@ describe("aasEditor composable", () => {
                 memberRole: MemberRoleDto.MEMBER,
               },
               object: { idShortPath: submodel2.idShort },
-              permissions: allPermissionsAllow,
+              permissions: [],
             },
           ],
         },
@@ -325,6 +332,16 @@ describe("aasEditor composable", () => {
       status: HTTPCode.OK,
     });
 
+    mocks.getShells.mockResolvedValue({
+      data: { paging_metadata: { cursor: null }, result: [assetAdministrationShell1] },
+      status: HTTPCode.OK,
+    });
+
+    mocks.asSubject.mockReturnValue({
+      userRole: UserRoleDto.USER,
+      memberRole: MemberRoleDto.MEMBER,
+    });
+
     const { init, submodels, findTreeNodeByKey } = mountHarness({
       id: aasWrapperId,
       aasNamespace: apiClient.dpp.templates.aas,
@@ -335,13 +352,44 @@ describe("aasEditor composable", () => {
       translate,
     });
     await init();
+
+    expect(mocks.getShells).toHaveBeenCalledWith(aasWrapperId, {
+      cursor: undefined,
+      limit: 1,
+    });
+
     expect(mocks.getSubmodels).toHaveBeenCalledWith(aasWrapperId, {
       cursor: undefined,
       limit: 10,
     });
     expect(changeQueryParams).toHaveBeenCalledWith({ cursor: undefined });
-    const actionsOfParent = { addChildren: true, delete: true };
-    const actionsOfLeaveNode = { addChildren: false, delete: true };
+    const actionsOfParent = {
+      read: { visible: true, enabled: true, tooltip: "common.view" },
+      edit: { visible: true, enabled: true, tooltip: "common.edit" },
+      create: { visible: true, enabled: true, tooltip: "common.add" },
+      delete: { visible: true, enabled: true, tooltip: "common.remove" },
+    };
+    const actionsOfLeaveNode = {
+      read: { visible: true, enabled: true, tooltip: "common.view" },
+      edit: { visible: true, enabled: true, tooltip: "common.edit" },
+      create: { visible: false, enabled: true, tooltip: "common.add" },
+      delete: { visible: true, enabled: true, tooltip: "common.remove" },
+    };
+    const missingPermissionsMsg = "aasEditor.security.missingPermission";
+    const actionsOfParentWithoutPermissions = {
+      read: {
+        visible: true,
+        enabled: false,
+        tooltip: missingPermissionsMsg,
+      },
+      edit: {
+        visible: false,
+        enabled: false,
+        tooltip: missingPermissionsMsg,
+      },
+      create: { visible: true, enabled: false, tooltip: missingPermissionsMsg },
+      delete: { visible: true, enabled: false, tooltip: missingPermissionsMsg },
+    };
 
     const withoutChildren = (value: any) => omit(value, "children");
     const expectedSubmodel1 = {
@@ -367,7 +415,7 @@ describe("aasEditor composable", () => {
           idShortPathIncludingSubmodel: submodel2.idShort,
         },
         type: "aasEditor.submodel",
-        actions: actionsOfParent,
+        actions: actionsOfParentWithoutPermissions,
       },
     };
     expect(submodels.value!.map(withoutChildren)).toEqual([

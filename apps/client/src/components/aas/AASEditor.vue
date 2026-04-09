@@ -1,12 +1,11 @@
 <script lang="ts" setup>
 import type { TreeNode } from "primevue/treenode";
 import type { AasEditModeType } from "../../lib/aas-editor.ts";
-import { KeyTypes, Permissions } from "@open-dpp/dto";
+import { KeyTypes } from "@open-dpp/dto";
 import { useConfirm } from "primevue/useconfirm";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
-import { useAasAbility } from "../../composables/aas-ability.ts";
 import { useAasEditor } from "../../composables/aas-editor.ts";
 import { AasEditMode } from "../../lib/aas-editor.ts";
 import apiClient from "../../lib/api-client.ts";
@@ -90,8 +89,6 @@ const {
   deletePolicyBySubjectAndObject,
 } = aasEditor;
 
-const { can } = useAasAbility({ getAccessPermissionRules });
-
 onMounted(async () => {
   await init();
 });
@@ -127,7 +124,6 @@ function onSubmit() {
   }
 }
 
-const missingPermissionMsg = t("aasEditor.security.missingPermission");
 const isFullPosition = computed(() => position.value === fullPosition);
 </script>
 
@@ -200,79 +196,38 @@ const isFullPosition = computed(() => position.value === fullPosition);
             <div class="flex w-full justify-end">
               <div class="flex items-center rounded-md gap-2">
                 <Button
-                  v-if="
-                    can(
-                      Permissions.Edit,
-                      node.data.path.idShortPathIncludingSubmodel,
-                    )
-                  "
-                  v-tooltip.top="t('common.edit')"
-                  :aria-label="t('common.edit')"
+                  v-if="node.data.actions.edit.visible"
+                  v-tooltip.top="node.data.actions.edit.tooltip"
+                  :aria-label="node.data.actions.edit.tooltip"
                   icon="pi pi-pencil"
                   severity="primary"
                   @click="selectTreeNode(node.key)"
                 />
                 <Button
                   v-else
-                  v-tooltip.top="
-                    !can(
-                      Permissions.Read,
-                      node.data.path.idShortPathIncludingSubmodel,
-                    )
-                      ? missingPermissionMsg
-                      : t('common.add')
-                  "
-                  :aria-label="t('common.view')"
-                  :disabled="
-                    !can(
-                      Permissions.Read,
-                      node.data.path.idShortPathIncludingSubmodel,
-                    )
-                  "
+                  v-tooltip.top="node.data.actions.read.tooltip"
+                  :aria-label="node.data.actions.read.tooltip"
+                  :disabled="!node.data.actions.read.enabled"
                   icon="pi pi-eye"
                   severity="primary"
                   @click="selectTreeNode(node.key)"
                 />
                 <Button
-                  v-if="node.data.actions.addChildren"
-                  v-tooltip.top="
-                    !can(
-                      Permissions.Edit,
-                      node.data.path.idShortPathIncludingSubmodel,
-                    )
-                      ? missingPermissionMsg
-                      : t('common.add')
-                  "
+                  v-if="node.data.actions.create.visible"
+                  v-tooltip.top="node.data.actions.create.tooltip"
                   :aria-label="t('common.add')"
                   icon="pi pi-plus"
                   severity="secondary"
-                  :disabled="
-                    !can(
-                      Permissions.Create,
-                      node.data.path.idShortPathIncludingSubmodel,
-                    )
-                  "
+                  :disabled="!node.data.actions.create.enabled"
                   @click="addClicked($event, node)"
                 />
                 <Button
-                  v-if="node.data.actions.delete"
-                  v-tooltip.top="
-                    !can(
-                      Permissions.Edit,
-                      node.data.path.idShortPathIncludingSubmodel,
-                    )
-                      ? missingPermissionMsg
-                      : t('common.remove')
-                  "
+                  v-if="node.data.actions.delete.visible"
+                  v-tooltip.top="node.data.actions.delete.tooltip"
                   :aria-label="t('common.remove')"
                   icon="pi pi-trash"
                   severity="danger"
-                  :disabled="
-                    !can(
-                      Permissions.Delete,
-                      node.data.path.idShortPathIncludingSubmodel,
-                    )
-                  "
+                  :disabled="!node.data.actions.delete.enabled"
                   @click="deleteClicked(node)"
                 />
               </div>
