@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { MemberRole, MemberRoleType } from "./member-role.enum";
+import { MemberRole, MemberRoleEnum, MemberRoleType } from "./member-role.enum";
 
 export interface MemberCreateProps {
   organizationId: string;
@@ -61,11 +61,13 @@ export class Member {
   }
 
   public static loadFromDb(data: MemberDbProps) {
+    const parsedRole = MemberRoleEnum.safeParse(data.role);
+    const role = parsedRole.success ? parsedRole.data : MemberRole.MEMBER; // handle old records with outdated roles like 'admin'
     return new Member(
       data.id,
       data.organizationId,
       data.userId,
-      data.role,
+      role,
       data.createdAt,
     );
   }

@@ -113,7 +113,7 @@ export class User {
       data.emailVerified ?? false,
       data.createdAt,
       data.updatedAt,
-      data.role,
+      data.role ?? UserRole.USER, // handles old user records without role
       data.banned ?? false,
       data.banReason ?? null,
       data.banExpires ?? null,
