@@ -127,13 +127,17 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
     @CursorQueryParam() cursor: string | undefined,
     @PopulateQueryParam() populate: string[],
     @OrganizationId() organizationId: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<PassportPaginationDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     const pagination = Pagination.create({ limit, cursor });
     let pagingResult: PagingResult<any> = await this.passportRepository.findAllByOrganizationId(organizationId, pagination);
     if (populate.includes(Populates.assetAdministrationShells)) {
       pagingResult = await this.environmentService.populateEnvironmentForPagingResult(
         pagingResult,
         { assetAdministrationShells: true, submodels: false, ignoreMissing: false },
+        subject,
       );
     }
 
@@ -181,7 +185,7 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
       { templateId: P.string },
       async ({ templateId }) => {
         const template = await this.loadTemplateAndCheckOwnership(templateId, subject, organizationId);
-        return { environment: await this.environmentService.copyEnvironment(template.environment, subject), templateId };
+        return { environment: await this.environmentService.copyEnvironment(template.environment), templateId };
       },
     ).with({
       environment: { assetAdministrationShells: P.array() },

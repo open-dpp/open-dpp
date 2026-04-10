@@ -112,9 +112,11 @@ describe("environmentService", () => {
     const passport = Passport.create({ environment, organizationId: "organizationId" });
     await passportRepository.save(passport);
     const pagingResult = PagingResult.create({ pagination: Pagination.create({}), items: [passport] });
+    const subject = SubjectAttributes.create({ userRole: UserRole.ADMIN });
     const result = await environmentService.populateEnvironmentForPagingResult(
       pagingResult,
       { assetAdministrationShells: true, ignoreMissing: false },
+      subject,
     );
     expect(result.toPlain()).toEqual({
       result: [
@@ -413,17 +415,12 @@ describe("environmentService", () => {
   });
 
   it("should copy environment", async () => {
-    const { environment, admin } = await createDefaultEnvironment();
+    const { environment } = await createDefaultEnvironment();
     const copy = await environmentService.copyEnvironment(
       environment,
-      admin,
     );
 
     expect(copy.submodels).toHaveLength(1);
-    //
-    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
-    const anonymousCopy = await environmentService.copyEnvironment(environment, anonymous);
-    expect(anonymousCopy.submodels).toHaveLength(0);
   });
 
   async function createEnvironmentWithList() {
