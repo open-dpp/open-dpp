@@ -1,6 +1,7 @@
 import { AssetAdministrationShell } from "../domain/asset-adminstration-shell";
 import { IConvertableToPlain } from "../domain/convertable-to-plain";
 import { Environment } from "../domain/environment";
+import { AasAbility } from "../domain/security/aas-ability";
 import { Submodel } from "../domain/submodel-base/submodel";
 import { AasRepository } from "../infrastructure/aas.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
@@ -14,6 +15,7 @@ export class EnvironmentPopulateDecorator implements IConvertableToPlain {
     private environment: Environment,
     private aasRepository: AasRepository,
     private submodelRepository: SubmodelRepository,
+    private ability: AasAbility,
   ) {}
 
   async populate(options: PopulateOptions) {
@@ -61,12 +63,12 @@ export class EnvironmentPopulateDecorator implements IConvertableToPlain {
       ...this.environment.toPlain(),
       ...(this.assetAdministrationShells
         ? {
-            assetAdministrationShells: this.assetAdministrationShells.map(aas => aas.toPlain()),
+            assetAdministrationShells: this.assetAdministrationShells.map(aas => aas.toPlain({ ability: this.ability })),
           }
         : {}),
       ...(this.submodels
         ? {
-            submodels: this.submodels.map(submodel => submodel.toPlain()),
+            submodels: this.submodels.map(submodel => submodel.toPlain({ ability: this.ability })),
           }
         : {}),
     };

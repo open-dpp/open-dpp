@@ -439,24 +439,24 @@ export class EnvironmentService {
     }
   }
 
-  async populateEnvironmentForPagingResult(pagingResult: PagingResult<Passport | Template>, populateOptions: PopulateOptions) {
+  async populateEnvironmentForPagingResult(pagingResult: PagingResult<Passport | Template>, populateOptions: PopulateOptions, subject: SubjectAttributes) {
+    const ability = await this.loadAbility(pagingResult.items[0].environment, subject);
     const populatedItems = await Promise.all(pagingResult.items.map(
       async i => await new DigitalProductPassportIdentifiableEnvironmentPopulateDecorator(
         i,
         this.aasRepository,
         this.submodelRepository,
+        ability,
       ).populate(populateOptions),
     ));
     return PagingResult.create({ pagination: pagingResult.pagination, items: populatedItems });
   }
 
-  async copyEnvironment(environment: Environment, subject: SubjectAttributes): Promise<Environment> {
-    const ability = await this.loadAbility(environment, subject);
-
+  async copyEnvironment(environment: Environment): Promise<Environment> {
     const submodelsCopy: Submodel[] = [];
     for (const submodelId of environment.submodels) {
       const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
-      const copy = submodel.copy({ ability });
+      const copy = submodel.copy();
       if (copy) {
         submodelsCopy.push(copy);
       }
