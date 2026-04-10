@@ -9,3 +9,5 @@ export const ReferenceDbSchema: z.ZodType<any> = z.lazy(() =>
     keys: z.array(KeyDbSchema),
   }),
 );
+
+export type ReferenceDb = z.infer<typeof ReferenceDbSchema>;

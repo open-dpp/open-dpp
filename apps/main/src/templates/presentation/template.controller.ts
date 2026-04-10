@@ -1,5 +1,6 @@
 import type {
   AssetAdministrationShellModificationDto,
+  DeletePolicyDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
   SubmodelElementRequestDto,
@@ -8,7 +9,10 @@ import type {
   TemplateCreateDto,
   ValueRequestDto,
 } from "@open-dpp/dto";
-import { Body, Controller, Get, HttpCode, HttpStatus, Post } from "@nestjs/common";
+import type { MemberRoleType } from "../../identity/organizations/domain/member-role.enum";
+import type { UserRoleType } from "../../identity/users/domain/user-role.enum";
+import { Body, Controller, ForbiddenException, Get, HttpCode, HttpStatus, Post } from "@nestjs/common";
+
 import {
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellResponseDto,
@@ -24,13 +28,15 @@ import {
   TemplatePaginationDtoSchema,
   ValueResponseDto,
 } from "@open-dpp/dto";
+
 import { ZodValidationPipe } from "@open-dpp/exception";
-
-import { IdShortPath, parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
-
+import { IdShortPath } from "../../aas/domain/common/id-short-path";
+import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
+import { parseSubmodelElement } from "../../aas/domain/submodel-base/submodel-base";
 import { AasSerializationService } from "../../aas/infrastructure/serialization/aas-serialization.service";
 import {
   ApiDeleteColumn,
+  ApiDeletePolicy,
   ApiDeleteRow,
   ApiDeleteSubmodelById,
   ApiDeleteSubmodelElementById,
@@ -55,6 +61,7 @@ import {
   AssetAdministrationShellModificationRequestBody,
   ColumnParam,
   CursorQueryParam,
+  DeletePolicyRequestBody,
   IdParam,
   IdShortPathParam,
   LimitQueryParam,
@@ -72,20 +79,20 @@ import {
   IAasCreateEndpoints,
   IAasDeleteEndpoints,
   IAasModifyEndpoints,
-  IAasReadEndpoints,
+  IAasReadEndpointsWithOrganizationId,
 } from "../../aas/presentation/aas.endpoints";
 import { EnvironmentService } from "../../aas/presentation/environment.service";
 import { DbSessionOptions } from "../../database/query-options";
-import { Session } from "../../identity/auth/domain/session";
-import { AuthSession } from "../../identity/auth/presentation/decorators/auth-session.decorator";
+import { MemberRoleDecorator } from "../../identity/auth/presentation/decorators/member-role.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
+import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/user-role.decorator";
 import { Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
 import { Template } from "../domain/template";
 import { TemplateRepository } from "../infrastructure/template.repository";
 
 @Controller("/templates")
-export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoints, IAasModifyEndpoints, IAasDeleteEndpoints {
+export class TemplateController implements IAasReadEndpointsWithOrganizationId, IAasCreateEndpoints, IAasModifyEndpoints, IAasDeleteEndpoints {
   constructor(
     private readonly environmentService: EnvironmentService,
     private readonly templateRepository: TemplateRepository,
@@ -94,46 +101,58 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
 
   @ApiGetShells()
   async getShells(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<AssetAdministrationShellPaginationResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getAasShells(template.getEnvironment(), pagination);
+    return await this.environmentService.getAasShells(template.getEnvironment(), pagination, subject);
   }
 
   @ApiPatchShell()
   async modifyShell(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @AssetAdministrationShellIdParam() aasId: string,
     @AssetAdministrationShellModificationRequestBody() body: AssetAdministrationShellModificationDto,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<AssetAdministrationShellResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
-    return await this.environmentService.modifyAasShell(template.getEnvironment(), aasId, body);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    return await this.environmentService.modifyAasShell(template.getEnvironment(), aasId, body, subject);
   }
 
   @ApiGetSubmodels()
   async getSubmodels(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelPaginationResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodels(template.getEnvironment(), pagination);
+    return await this.environmentService.getSubmodels(template.getEnvironment(), pagination, subject);
   }
 
   @ApiPostSubmodel()
   async createSubmodel(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelRequestBody() body: SubmodelRequestDto,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
     return await this.environmentService.addSubmodelToEnvironment(
       template.getEnvironment(),
       body,
@@ -141,201 +160,267 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     );
   }
 
+  @ApiDeletePolicy()
+  async deletePolicyBySubjectAndObject(
+    @OrganizationId() organizationId: string,
+    @IdParam() id: string,
+    @DeletePolicyRequestBody() body: DeletePolicyDto,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
+  ): Promise<void> {
+    const administrator = SubjectAttributes.create({ userRole, memberRole });
+    const subject = SubjectAttributes.fromPlain(body.subject);
+    const object = IdShortPath.create({ path: body.object });
+    const template = await this.loadTemplateAndCheckOwnership(id, administrator, organizationId);
+    await this.environmentService.deletePolicyBySubjectAndObject(template.getEnvironment(), object, subject, administrator);
+  }
+
   @ApiDeleteSubmodelById()
   async deleteSubmodel(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<void> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
-    await this.environmentService.deleteSubmodelFromEnvironment(template.getEnvironment(), submodelId, this.saveEnvironmentCallback(template));
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    await this.environmentService.deleteSubmodelFromEnvironment(template.getEnvironment(), submodelId, this.saveEnvironmentCallback(template), subject);
   }
 
   @ApiPatchSubmodel()
   async modifySubmodel(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @SubmodelModificationRequestBody() body: SubmodelModificationDto,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
-    return await this.environmentService.modifySubmodel(template.getEnvironment(), submodelId, body);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    return await this.environmentService.modifySubmodel(template.getEnvironment(), submodelId, body, subject);
   }
 
   @ApiGetSubmodelById()
   async getSubmodelById(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
-    return await this.environmentService.getSubmodelById(template.getEnvironment(), submodelId);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    return await this.environmentService.getSubmodelById(template.getEnvironment(), submodelId, subject);
   }
 
   @ApiGetSubmodelValue()
   async getSubmodelValue(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ValueResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
-    return await this.environmentService.getSubmodelValue(template.getEnvironment(), submodelId);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    return await this.environmentService.getSubmodelValue(template.getEnvironment(), submodelId, subject);
   }
 
   @ApiGetSubmodelElements()
   async getSubmodelElements(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @LimitQueryParam() limit: number | undefined,
     @CursorQueryParam() cursor: string | undefined,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementPaginationResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
     const pagination = Pagination.create({ limit, cursor });
-    return await this.environmentService.getSubmodelElements(template.getEnvironment(), submodelId, pagination);
+    return await this.environmentService.getSubmodelElements(template.getEnvironment(), submodelId, pagination, subject);
   }
 
   @ApiPostSubmodelElement()
   async createSubmodelElement(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
-    return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body, subject);
   }
 
   @ApiDeleteSubmodelElementById()
   async deleteSubmodelElement(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<void> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
-    await this.environmentService.deleteSubmodelElement(template.getEnvironment(), submodelId, idShortPath);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    await this.environmentService.deleteSubmodelElement(template.getEnvironment(), submodelId, idShortPath, subject);
   }
 
   @ApiPostColumn()
   async addColumnToSubmodelElementList(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
     @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
     @PositionQueryParam() position: number | undefined,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
     const column = parseSubmodelElement(body);
-    return await this.environmentService.addColumn(template.getEnvironment(), submodelId, idShortPath, column, position);
+    return await this.environmentService.addColumn(template.getEnvironment(), submodelId, idShortPath, column, subject, position);
   }
 
   @ApiPatchColumn()
   async modifyColumnOfSubmodelElementList(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
     @ColumnParam() idShortOfColumn: string,
     @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
-    return await this.environmentService.modifyColumn(template.getEnvironment(), submodelId, idShortPath, idShortOfColumn, body);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    return await this.environmentService.modifyColumn(template.getEnvironment(), submodelId, idShortPath, idShortOfColumn, body, subject);
   }
 
   @ApiDeleteColumn()
   async deleteColumnFromSubmodelElementList(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
     @ColumnParam() idShortOfColumn: string,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
-    return await this.environmentService.deleteColumn(template.getEnvironment(), submodelId, idShortPath, idShortOfColumn);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    return await this.environmentService.deleteColumn(template.getEnvironment(), submodelId, idShortPath, idShortOfColumn, subject);
   }
 
   @ApiPostRow()
   async addRowToSubmodelElementList(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
     @PositionQueryParam() position: number | undefined,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
-    return await this.environmentService.addRow(template.getEnvironment(), submodelId, idShortPath, position);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    return await this.environmentService.addRow(template.getEnvironment(), submodelId, idShortPath, subject, position);
   }
 
   @ApiDeleteRow()
   async deleteRowFromSubmodelElementList(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
     @RowParam() idShortOfRow: string,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementListResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
-    return await this.environmentService.deleteRow(template.getEnvironment(), submodelId, idShortPath, idShortOfRow);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    return await this.environmentService.deleteRow(template.getEnvironment(), submodelId, idShortPath, idShortOfRow, subject);
   }
 
   @ApiPatchSubmodelElement()
   async modifySubmodelElement(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
     @SubmodelElementModificationRequestBody() body: SubmodelElementModificationDto,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
-    return await this.environmentService.modifySubmodelElement(template.getEnvironment(), submodelId, body, idShortPath);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    return await this.environmentService.modifySubmodelElement(template.getEnvironment(), submodelId, body, idShortPath, subject);
   }
 
   @ApiPatchSubmodelElementValue()
   async modifySubmodelElementValue(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
     @SubmodelElementValueModificationRequestBody() body: ValueRequestDto,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
-    return await this.environmentService.modifyValueOfSubmodelElement(template.getEnvironment(), submodelId, body, idShortPath);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    return await this.environmentService.modifyValueOfSubmodelElement(template.getEnvironment(), submodelId, body, idShortPath, subject);
   }
 
   @ApiGetSubmodelElementById()
   async getSubmodelElementById(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
-    return await this.environmentService.getSubmodelElementById(template.getEnvironment(), submodelId, idShortPath);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    return await this.environmentService.getSubmodelElementById(template.getEnvironment(), submodelId, idShortPath, subject);
   }
 
   @ApiPostSubmodelElementAtIdShortPath()
   async createSubmodelElementAtIdShortPath(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
     @SubmodelElementRequestBody() body: SubmodelElementRequestDto,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<SubmodelElementResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
-    return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body, idShortPath);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    return await this.environmentService.addSubmodelElement(template.getEnvironment(), submodelId, body, subject, idShortPath);
   }
 
   @ApiGetSubmodelElementValue()
   async getSubmodelElementValue(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
     @SubmodelIdParam() submodelId: string,
     @IdShortPathParam() idShortPath: IdShortPath,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<ValueResponseDto> {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
-    return await this.environmentService.getSubmodelElementValue(template.getEnvironment(), submodelId, idShortPath);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    return await this.environmentService.getSubmodelElementValue(template.getEnvironment(), submodelId, idShortPath, subject);
   }
 
   @Post()
@@ -353,11 +438,14 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
 
   @Get("/:id/export")
   async exportTemplate(
+    @OrganizationId() organizationId: string,
     @IdParam() id: string,
-    @AuthSession() session: Session,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ) {
-    const template = await this.loadTemplateAndCheckOwnership(id, session);
-    return await this.aasSerializationService.exportTemplate(template);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    const template = await this.loadTemplateAndCheckOwnership(id, subject, organizationId);
+    return await this.aasSerializationService.exportTemplate(template, subject);
   }
 
   @Post("/import")
@@ -398,8 +486,11 @@ export class TemplateController implements IAasReadEndpoints, IAasCreateEndpoint
     };
   }
 
-  private async loadTemplateAndCheckOwnership(id: string, session: Session): Promise<Template> {
+  private async loadTemplateAndCheckOwnership(id: string, subject: SubjectAttributes, organizationId: string): Promise<Template> {
     const template = await this.templateRepository.findOneOrFail(id);
-    return this.environmentService.checkOwnerShipOfDppIdentifiable(template, session);
+    if (template.getOrganizationId() !== organizationId || subject.memberRole === undefined) {
+      throw new ForbiddenException();
+    }
+    return template;
   }
 }

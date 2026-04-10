@@ -4,6 +4,7 @@ import { authClient } from "../auth-client.ts";
 import { LAST_SELECTED_ORGANIZATION_ID_KEY } from "../const";
 import apiClient from "../lib/api-client";
 import { setAxiosOrganizationId } from "../lib/axios";
+import { useUserStore } from "./user.ts";
 
 export const useIndexStore = defineStore("index", () => {
   const selectedOrganization = ref<string | null>(
@@ -11,6 +12,7 @@ export const useIndexStore = defineStore("index", () => {
       ? localStorage.getItem(LAST_SELECTED_ORGANIZATION_ID_KEY)
       : null,
   );
+  const { fetchMemberRole } = useUserStore();
 
   const selectOrganization = (organizationId: string | null) => {
     if (!organizationId) {
@@ -34,6 +36,7 @@ export const useIndexStore = defineStore("index", () => {
         await authClient.organization.setActive({
           organizationId: newVal,
         });
+        await fetchMemberRole(newVal);
       }
     },
     {

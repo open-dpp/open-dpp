@@ -51,7 +51,7 @@ describe("memberSchema", () => {
       _id: "member-123",
       userId: new Types.ObjectId(),
       organizationId: new Types.ObjectId(),
-      role: MemberRole.ADMIN,
+      role: MemberRole.MEMBER,
       createdAt: new Date(),
     };
 

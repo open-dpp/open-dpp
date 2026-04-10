@@ -15,6 +15,7 @@ describe("UsersService", () => {
   beforeEach(async () => {
     mockRepo = {
       save: jest.fn(),
+      findOneOrFail: jest.fn(),
       findOneById: jest.fn(),
       findOneByEmail: jest.fn(),
       findAllByIds: jest.fn(),
@@ -62,8 +63,8 @@ describe("UsersService", () => {
   });
 
   it("should throw if not found in findOneAndFail", async () => {
-    mockRepo.findOneById.mockResolvedValue(null);
-    await expect(service.findOneAndFail("1")).rejects.toThrow(NotFoundInDatabaseException);
+    mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
+    await expect(service.findOneOrFail("1")).rejects.toThrow(NotFoundInDatabaseException);
   });
 
   it("should find all by ids via batched repository call", async () => {
@@ -84,13 +85,13 @@ describe("UsersService", () => {
 
     const result = await service.setUserRole(user.id, UserRole.ADMIN);
 
-    expect(mockRepo.findOneById).toHaveBeenCalledWith(user.id);
+    expect(mockRepo.findOneOrFail).toHaveBeenCalledWith(user.id);
     expect(mockRepo.setUserRole).toHaveBeenCalledWith(user.id, UserRole.ADMIN);
     expect(result.role).toBe(UserRole.ADMIN);
   });
 
   it("should throw if user not found when setting role", async () => {
-    mockRepo.findOneById.mockResolvedValue(null);
+    mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
 
     await expect(service.setUserRole("nonexistent", UserRole.ADMIN))
       .rejects

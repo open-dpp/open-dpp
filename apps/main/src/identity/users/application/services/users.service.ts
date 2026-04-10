@@ -1,9 +1,8 @@
 import type { Auth } from "better-auth";
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { NotFoundInDatabaseException } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
-import { UserRole } from "../../domain/user-role.enum";
+import { UserRole, UserRoleType } from "../../domain/user-role.enum";
 import { UsersRepository } from "../../infrastructure/adapters/users.repository";
 
 @Injectable()
@@ -43,12 +42,8 @@ export class UsersService {
     return this.usersRepository.findOneById(id);
   }
 
-  async findOneAndFail(id: string) {
-    const userEntity = await this.usersRepository.findOneById(id);
-    if (!userEntity) {
-      throw new NotFoundInDatabaseException(User.name);
-    }
-    return userEntity;
+  async findOneOrFail(id: string) {
+    return await this.usersRepository.findOneOrFail(id);
   }
 
   async findByEmail(email: string) {
@@ -63,8 +58,8 @@ export class UsersService {
     await this.usersRepository.setUserEmailVerified(email, emailVerified);
   }
 
-  async setUserRole(id: string, role: UserRole): Promise<User> {
-    await this.findOneAndFail(id);
+  async setUserRole(id: string, role: UserRoleType): Promise<User> {
+    await this.findOneOrFail(id);
     const saved = await this.usersRepository.setUserRole(id, role);
     if (!saved) {
       throw new Error(`Failed to update role for user ${id}`);
