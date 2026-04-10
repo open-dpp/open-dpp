@@ -45,7 +45,7 @@ export const useUserStore = defineStore("user", (): IUserStore => {
     session: { user: BetterAuthSession } | null,
   ) {
     if (session) {
-      user.value.role = session.user.role ? UserRoleDtoEnum.parse(session.user.role) : UserRoleDto.ANONYMOUS;
+      user.value.role = session.user.role ? UserRoleDtoEnum.parse(session.user.role) : UserRoleDto.USER;
       user.value.id = session.user.id;
     }
     else {
