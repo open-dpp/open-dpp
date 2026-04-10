@@ -4,9 +4,9 @@ import type {
   SubmodelElementCollectionResponseDto,
   SubmodelElementResponseDto,
 } from "@open-dpp/dto";
-import dayjs from "dayjs";
-import localizedFormat from "dayjs/plugin/localizedFormat";
+import { DataTypeDef } from "@open-dpp/dto";
 import { useI18n } from "vue-i18n";
+import { formatDateValueForDisplay } from "../../lib/date-value.ts";
 import MediaFieldView from "../media/MediaFieldView.vue";
 import List from "./List.vue";
 import Reference from "./Reference.vue";
@@ -15,8 +15,6 @@ import SubmodelElementCollection from "./SubmodelElementCollection.vue";
 const { element } = defineProps<{
   element: SubmodelElementResponseDto;
 }>();
-
-dayjs.extend(localizedFormat);
 
 const { t } = useI18n();
 </script>
@@ -35,12 +33,12 @@ const { t } = useI18n();
     <template
       v-if="element.valueType === 'Date'"
     >
-      {{ dayjs(element.value as string).format('L') }}
+      {{ formatDateValueForDisplay(element.value as string, DataTypeDef.Date) }}
     </template>
     <template
       v-else-if="element.valueType === 'DateTime'"
     >
-      {{ dayjs(element.value as string).format('L LT') }}
+      {{ formatDateValueForDisplay(element.value as string, DataTypeDef.DateTime) }}
     </template>
     <template
       v-else

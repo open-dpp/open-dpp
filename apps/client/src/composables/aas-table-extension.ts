@@ -33,9 +33,12 @@ import {
   SubmodelElementSchema,
   ValueSchema,
 } from "@open-dpp/dto";
-import dayjs from "dayjs";
 import { match, P } from "ts-pattern";
 import { ref, toRaw } from "vue";
+import {
+  formatDateValueForDisplay,
+  getCurrentTimezone,
+} from "../lib/date-value.ts";
 import { HTTPCode } from "../stores/http-codes.ts";
 import { ColumnEditorKey, EditorMode } from "./aas-drawer.ts";
 
@@ -52,6 +55,11 @@ interface AasTableExtensionProps {
   translate: (label: string, ...args: unknown[]) => string;
   selectedLanguage: LanguageType;
   openConfirm: (option: ConfirmationOptions) => void;
+  /**
+   * IANA timezone for formatting DateTime cell values. Defaults to the
+   * runtime-resolved viewer timezone. Injected so tests can pin it.
+   */
+  timezone?: string;
 }
 
 export type ColumnMenuOptions = TableModificationParamsDto & {
@@ -100,7 +108,9 @@ export function useAasTableExtension({
   translate,
   selectedLanguage,
   openConfirm,
+  timezone,
 }: AasTableExtensionProps): IAasTableExtension {
+  const viewerTimezone = timezone ?? getCurrentTimezone();
   const translatePrefix = "aasEditor";
   const translateTablePrefix = `${translatePrefix}.table`;
   const columnMenu = ref<MenuItem[]>([]);
@@ -747,14 +757,15 @@ export function useAasTableExtension({
         return new Intl.NumberFormat(selectedLanguage, {
           style: "decimal",
         }).format(Number(value));
-      case DataTypeDef.Date: {
-        const parsed = dayjs(String(value));
-        return parsed.isValid() ? parsed.format("YYYY-MM-DD") : String(value);
-      }
-      case DataTypeDef.DateTime: {
-        const parsed = dayjs(String(value));
-        return parsed.isValid() ? parsed.format("YYYY-MM-DDTHH:mm:ss") : String(value);
-      }
+      case DataTypeDef.Date:
+      case DataTypeDef.DateTime:
+        return (
+          formatDateValueForDisplay(
+            String(value),
+            column.plain.valueType,
+            viewerTimezone,
+          ) ?? String(value)
+        );
       default:
         return value;
     }

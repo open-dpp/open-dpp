@@ -239,6 +239,19 @@ describe("aasTableExtension composable", () => {
     ]);
   });
 
+  const dateCol = {
+    idShort: "ColumnDate",
+    valueType: DataTypeDef.Date,
+    modelType: AasSubmodelElements.Property,
+    displayName: [{ language: "en", text: "Produced on" }],
+  };
+  const dateTimeCol = {
+    idShort: "ColumnDateTime",
+    valueType: DataTypeDef.DateTime,
+    modelType: AasSubmodelElements.Property,
+    displayName: [{ language: "en", text: "Produced at" }],
+  };
+
   it.each([
     {
       value: "mein wert",
@@ -258,6 +271,29 @@ describe("aasTableExtension composable", () => {
       },
       expected: "9,843,928.8",
     },
+    {
+      // Date renders as a calendar day with the viewer's zone appended so
+      // the UI is symmetric with DateTime rendering.
+      value: "2026-04-10",
+      column: {
+        idShort: "ColumnDate",
+        label: "Produced on",
+        plain: SubmodelElementSchema.parse(dateCol),
+      },
+      expected: "2026-04-10 Europe/Berlin",
+    },
+    {
+      // DateTime is stored as ISO-8601 UTC, displayed in the viewer's zone
+      // (Europe/Berlin in CI / dev machine), always suffixed with the zone name.
+      // 14:00 UTC on 2026-04-10 → 16:00 Europe/Berlin (CEST, +02:00).
+      value: "2026-04-10T14:00:00Z",
+      column: {
+        idShort: "ColumnDateTime",
+        label: "Produced at",
+        plain: SubmodelElementSchema.parse(dateTimeCol),
+      },
+      expected: "2026-04-10 16:00:00 Europe/Berlin",
+    },
   ])("should formatCellValue $value", async ({ value, column, expected }) => {
     const mockOnHideDrawer = vi.fn();
     const mockOpenConfirmDialog = vi.fn();
@@ -275,6 +311,7 @@ describe("aasTableExtension composable", () => {
       selectedLanguage: Language.en,
       openDrawer,
       callbackOfSubmodelElementListEditor,
+      timezone: "Europe/Berlin",
     });
     expect(formatCellValue(value, column)).toBe(expected);
   });

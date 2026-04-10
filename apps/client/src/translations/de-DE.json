@@ -108,6 +108,7 @@
     "dateField": "Datumsfeld",
     "dateTimeField": "Datum-Zeit-Feld",
     "numberField": "Zahlenfeld",
+    "timezone": "Zeitzone",
     "type": "Typ",
     "error": "{method} @:common.failed"
   },

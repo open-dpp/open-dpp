@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import type { DataTypeDefType } from "@open-dpp/dto";
 import { DataTypeDef } from "@open-dpp/dto";
-import dayjs from "dayjs";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
+import {
+  formatDateValueForModel,
+  parseDateValueFromModel,
+} from "../../lib/date-value.ts";
 
 const props = defineProps<{
   id: string;
@@ -68,19 +71,13 @@ const numericValue = computed({
 });
 
 const dateValue = computed({
-  get: () => {
-    if (!props.modelValue)
-      return null;
-    const parsed = dayjs(props.modelValue);
-    return parsed.isValid() ? parsed.toDate() : null;
-  },
+  get: () => parseDateValueFromModel(props.modelValue),
   set: (v: Date | null | undefined) => {
-    if (!v) {
+    if (!props.valueType) {
       emit("update:modelValue", null);
       return;
     }
-    const format = isDateTime.value ? "YYYY-MM-DDTHH:mm:ss" : "YYYY-MM-DD";
-    emit("update:modelValue", dayjs(v).format(format));
+    emit("update:modelValue", formatDateValueForModel(v ?? null, props.valueType));
   },
 });
 
@@ -113,6 +110,7 @@ const textValue = computed({
     :show-time="isDateTime"
     :show-seconds="isDateTime"
     show-icon
+    icon-display="input"
     fluid
   />
   <InputText
