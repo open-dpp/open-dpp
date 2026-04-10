@@ -7,6 +7,7 @@ import { useMediaFile } from "../../../composables/media-file.ts";
 import MediaModal from "../../media/MediaModal.vue";
 import MediaPreview from "../../media/MediaPreview.vue";
 
+const props = defineProps<{ disabled?: boolean }>();
 const mediaInfoId = defineModel<string>();
 const contentType = defineModel<string>("contentType");
 const { t } = useI18n();
@@ -48,12 +49,14 @@ async function updateFileFromModal(items: Array<MediaInfo>) {
           <div v-if="mediaInfo" class="max-w-full flex flex-col gap-4">
             <div class="flex flex-row gap-4 w-full justify-between">
               <MediaPreview :media="mediaInfo" class="grow h-48" />
-              <button
-                class="shrink bg-primary-500/50 rounded-sm p-2 hover:cursor-pointer my-auto"
+              <Button
+                size="small"
+                class="shrink my-auto"
+                :disabled="props.disabled"
                 @click.prevent="openFileModal = true"
               >
                 <PencilIcon class="h-4 w-4" />
-              </button>
+              </Button>
             </div>
             <div class="text-gray-600 text-sm my-auto max-w-full truncate">
               {{ mediaInfo.title }}
@@ -64,12 +67,13 @@ async function updateFileFromModal(items: Array<MediaInfo>) {
               {{ t("file.noSelection") }}
             </div>
             <div class="my-auto">
-              <button
-                class="bg-primary-500/50 rounded-sm p-2 hover:cursor-pointer my-auto"
+              <Button
+                size="small"
+                :disabled="props.disabled"
                 @click.prevent="openFileModal = true"
               >
                 <PencilIcon class="h-4 w-4" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>

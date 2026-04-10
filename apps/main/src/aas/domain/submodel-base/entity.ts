@@ -4,19 +4,24 @@ import {
   EntityTypeJsonSchema,
   EntityTypeType,
 } from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
+import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
+import { ConvertToPlainOptions } from "../convertable-to-plain";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { JsonVisitor } from "../json-visitor";
+import JsonVisitor from "../json-visitor";
 import { SpecificAssetId } from "../specific-asset-id";
 import { IVisitor } from "../visitor";
 import {
+  AddOptions,
+  addSubmodelElementOrFail,
+  DeleteOptions,
   deleteSubmodelElementOrFail,
   ISubmodelElement,
   parseSubmodelElement,
+  setParentIdShortPaths,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
@@ -24,6 +29,8 @@ import {
 export class Entity implements ISubmodelElement {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
+  private _parentIdShortPath: IdShortPath | undefined;
+
   private constructor(
     public readonly entityType: EntityTypeType,
     public readonly extensions: Array<Extension>,
@@ -41,6 +48,15 @@ export class Entity implements ISubmodelElement {
   ) {
     this.displayName = displayName;
     this.description = description;
+  }
+
+  setParentIdShortPath(parentIdShortPath: IdShortPath) {
+    this._parentIdShortPath = parentIdShortPath;
+    setParentIdShortPaths(this, this.idShort, this._parentIdShortPath);
+  }
+
+  getIdShortPath(): IdShortPath {
+    return this._parentIdShortPath ? this._parentIdShortPath.addPathSegment(this.idShort) : IdShortPath.create({ path: this.idShort });
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -109,25 +125,21 @@ export class Entity implements ISubmodelElement {
     return visitor.visitEntity(this, context);
   }
 
-  toPlain(): Record<string, any> {
-    const jsonVisitor = new JsonVisitor();
-    return this.accept(jsonVisitor);
+  toPlain(options?: ConvertToPlainOptions): Record<string, any> {
+    const jsonVisitor = new JsonVisitor(options);
+    return this.accept(jsonVisitor, options?.context);
   }
 
   getSubmodelElements(): ISubmodelElement[] {
     return this.statements;
   }
 
-  addSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
-    if (this.statements.some(s => s.idShort === submodelElement.idShort)) {
-      throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
-    }
-    this.statements.push(submodelElement);
-    return submodelElement;
+  addSubmodelElement(submodelElement: ISubmodelElement, options: AddOptions): ISubmodelElement {
+    return addSubmodelElementOrFail(this, submodelElement, options);
   }
 
-  deleteSubmodelElement(idShort: string) {
-    deleteSubmodelElementOrFail(this.statements, idShort);
+  deleteSubmodelElement(idShort: string, options: DeleteOptions) {
+    deleteSubmodelElementOrFail(this.statements, idShort, options);
   }
 
   getSubmodelElementType(): AasSubmodelElementsType {

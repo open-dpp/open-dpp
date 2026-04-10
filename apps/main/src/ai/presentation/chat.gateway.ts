@@ -1,4 +1,4 @@
-import { Logger, UseFilters } from "@nestjs/common";
+import { Logger, UseFilters, UseGuards } from "@nestjs/common";
 import {
   ConnectedSocket,
   MessageBody,
@@ -8,9 +8,11 @@ import {
 } from "@nestjs/websockets";
 import { SocketIoExceptionFilter } from "@open-dpp/exception";
 import { Server, Socket } from "socket.io";
-import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
+import { WebsocketAuthGuard } from "../../identity/auth/infrastructure/guards/websocket-auth.guard";
+import { OptionalAuth } from "../../identity/auth/presentation/decorators/optional-auth.decorator";
 import { ChatService } from "../chat.service";
 
+@UseGuards(WebsocketAuthGuard)
 @WebSocketGateway({ cors: true, path: "/api/ai-socket" })
 @UseFilters(new SocketIoExceptionFilter())
 export class ChatGateway {
@@ -25,7 +27,7 @@ export class ChatGateway {
     this.chatService = chatService;
   }
 
-  @AllowAnonymous()
+  @OptionalAuth()
   @SubscribeMessage("userMessage")
   async handleMessage(
     @MessageBody() message: { msg: string; uniqueProductIdentifierUuid: string },
@@ -38,6 +40,8 @@ export class ChatGateway {
       const reply = await this.chatService.askAgent(
         message.msg,
         message.uniqueProductIdentifierUuid,
+        client.data.user,
+        client.data.member,
       );
       client.emit("botMessage", reply);
       const endTime = Date.now();

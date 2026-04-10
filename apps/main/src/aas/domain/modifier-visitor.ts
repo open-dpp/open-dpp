@@ -3,6 +3,7 @@ import {
   AssetInformationModificationSchema,
   FileModificationSchema,
   NameAndDescriptionModificationSchema,
+  Permissions,
   PropertyModificationSchema,
   ReferenceElementModificationSchema,
   ReferenceModificationSchema,
@@ -10,7 +11,7 @@ import {
   SubmodelElementListModificationSchema,
   SubmodelElementModificationDto,
 } from "@open-dpp/dto";
-import { NotSupportedError, ValueError } from "@open-dpp/exception";
+import { ForbiddenError, NotSupportedError, ValueError } from "@open-dpp/exception";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";
 import { AdministrativeInformation } from "./common/administrative-information";
@@ -22,6 +23,9 @@ import { ConceptDescription } from "./concept-description";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
 import { Resource } from "./resource";
+import { AasAbility } from "./security/aas-ability";
+import { AccessPermissionRule } from "./security/access-permission-rule";
+import { SubjectAttributes } from "./security/subject-attributes";
 import { SpecificAssetId } from "./specific-asset-id";
 import { AnnotatedRelationshipElement } from "./submodel-base/annotated-relationship-element";
 import { Blob } from "./submodel-base/blob";
@@ -31,22 +35,34 @@ import { MultiLanguageProperty } from "./submodel-base/multi-language-property";
 import { Property } from "./submodel-base/property";
 import { Range } from "./submodel-base/range";
 import { ReferenceElement } from "./submodel-base/reference-element";
+
 import { RelationshipElement } from "./submodel-base/relationship-element";
 import { Submodel } from "./submodel-base/submodel";
-import { ISubmodelElement } from "./submodel-base/submodel-base";
-
+import { ISubmodelBase, ISubmodelElement } from "./submodel-base/submodel-base";
 import { SubmodelElementCollection } from "./submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "./submodel-base/submodel-element-list";
 import { IVisitor } from "./visitor";
 
-export class ModifierVisitor implements IVisitor<unknown, void> {
-  private modifyNameAndDescription<T extends { displayName: LanguageText[]; description: LanguageText[] }>(generalInfoDto: T, data: unknown) {
+export interface ModifierVisitorOptions { subject?: SubjectAttributes; ability: AasAbility }
+export interface ModifierVisitorContextType { data: unknown }
+export class ModifierVisitor implements IVisitor<ModifierVisitorContextType, void> {
+  constructor(private readonly options: ModifierVisitorOptions) {
+  }
+
+  private modifyNameAndDescription<T extends { displayName: LanguageText[]; description: LanguageText[] }>(generalInfoDto: T, data: unknown): void {
     const { displayName, description } = NameAndDescriptionModificationSchema.parse(data);
 
     generalInfoDto.displayName = displayName?.map(LanguageText.fromPlain) ?? generalInfoDto.displayName;
     generalInfoDto.description = description?.map(LanguageText.fromPlain) ?? generalInfoDto.description;
     hasUniqueLanguagesOrFail(generalInfoDto.displayName);
     hasUniqueLanguagesOrFail(generalInfoDto.description);
+  }
+
+  private modificationGuard(element: ISubmodelBase) {
+    const idShortPath = element.getIdShortPath();
+    if (!this.options.ability.can(Permissions.Edit, idShortPath)) {
+      throw new ForbiddenError(`Missing permissions to modify element ${idShortPath.toString()}.`);
+    }
   }
 
   visitAdministrativeInformation(_element: AdministrativeInformation, _context: unknown): void {
@@ -61,16 +77,23 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
     );
   }
 
-  visitAssetAdministrationShell(element: AssetAdministrationShell, context: unknown): void {
-    const parsed = AssetAdministrationShellModificationSchema.parse(context);
-    this.modifyNameAndDescription(element, parsed);
+  visitAssetAdministrationShell(element: AssetAdministrationShell, context?: ModifierVisitorContextType): void {
+    const parsed = AssetAdministrationShellModificationSchema.parse(context?.data);
+    if (parsed.displayName || parsed.description) {
+      // this.modificationGuard(element, context); Not yet supported
+      this.modifyNameAndDescription(element, parsed);
+    }
     if (parsed.assetInformation) {
-      element.assetInformation.accept(this, parsed.assetInformation);
+      element.assetInformation.accept(this, { ...context, data: parsed.assetInformation });
+    }
+    if (parsed.security && this.options.subject) {
+      element.security.withAdministrator(this.options.subject).applyModifiedRules(parsed.security.localAccessControl.accessPermissionRules.map(AccessPermissionRule.fromPlain));
     }
   }
 
-  visitAssetInformation(element: AssetInformation, context: unknown): void {
-    const parsed = AssetInformationModificationSchema.parse(context);
+  visitAssetInformation(element: AssetInformation, context?: ModifierVisitorContextType): void {
+    // this.modificationGuard(element, context); // Not yet supported
+    const parsed = AssetInformationModificationSchema.parse(context?.data);
     if (parsed.defaultThumbnails) {
       element.defaultThumbnails = parsed.defaultThumbnails.map(Resource.fromPlain);
     }
@@ -106,8 +129,9 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
     );
   }
 
-  visitFile(element: File, context: unknown): void {
-    const parsed = FileModificationSchema.parse(context);
+  visitFile(element: File, context?: ModifierVisitorContextType): void {
+    this.modificationGuard(element);
+    const parsed = FileModificationSchema.parse(context?.data);
     this.modifyNameAndDescription(element, parsed);
     if (parsed.value !== undefined) {
       element.value = parsed.value;
@@ -135,8 +159,9 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
     );
   }
 
-  visitProperty(element: Property, context: unknown): void {
-    const parsed = PropertyModificationSchema.parse(context);
+  visitProperty(element: Property, context?: ModifierVisitorContextType): void {
+    this.modificationGuard(element);
+    const parsed = PropertyModificationSchema.parse(context?.data);
     this.modifyNameAndDescription(element, parsed);
     if (parsed.value !== undefined) {
       element.value = parsed.value;
@@ -155,8 +180,8 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
     );
   }
 
-  visitReference(element: Reference, context: unknown): void {
-    const parsed = ReferenceModificationSchema.parse(context);
+  visitReference(element: Reference, context?: ModifierVisitorContextType): void {
+    const parsed = ReferenceModificationSchema.parse(context?.data);
 
     if (parsed.type !== undefined) {
       element.type = parsed.type;
@@ -166,7 +191,7 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
     }
     else if (parsed.referredSemanticId !== undefined) {
       if (element.referredSemanticId !== null) {
-        element.referredSemanticId.accept(this, parsed.referredSemanticId);
+        element.referredSemanticId.accept(this, { ...context, data: parsed.referredSemanticId });
       }
       else {
         element.referredSemanticId = Reference.fromPlain(parsed.referredSemanticId);
@@ -177,15 +202,18 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
     }
   }
 
-  visitReferenceElement(element: ReferenceElement, context: unknown): void {
-    const parsed = ReferenceElementModificationSchema.parse(context);
-    this.modifyNameAndDescription(element, parsed);
+  visitReferenceElement(element: ReferenceElement, context?: ModifierVisitorContextType): void {
+    const parsed = ReferenceElementModificationSchema.parse(context?.data);
+    this.modificationGuard(element);
+    if (parsed.description || parsed.displayName) {
+      this.modifyNameAndDescription(element, parsed);
+    }
     if (parsed.value === null) {
       element.value = parsed.value;
     }
     else if (parsed.value !== undefined) {
       if (element.value !== null) {
-        element.value.accept(this, parsed.value);
+        element.value.accept(this, { ...context, data: parsed.value });
       }
       else {
         element.value = Reference.fromPlain(parsed.value);
@@ -211,21 +239,29 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
     );
   }
 
-  visitSubmodel(element: Submodel, context: unknown): void {
-    this.modifyNameAndDescription(element, context);
+  visitSubmodel(element: Submodel, context?: ModifierVisitorContextType): void {
+    this.modificationGuard(element);
+    this.modifyNameAndDescription(element, context?.data);
   }
 
-  visitSubmodelElementCollection(element: SubmodelElementCollection, context: unknown): void {
-    const parsed = SubmodelElementCollectionModificationSchema.parse(context);
-    this.modifyNameAndDescription(element, parsed);
+  visitSubmodelElementCollection(element: SubmodelElementCollection, context?: ModifierVisitorContextType): void {
+    const parsed = SubmodelElementCollectionModificationSchema.parse(context?.data);
+    if (parsed.description || parsed.displayName) {
+      this.modificationGuard(element);
+      this.modifyNameAndDescription(element, parsed);
+    }
     if (parsed.value !== undefined) {
       this.visitSubmodelElements(element, parsed.value);
     }
   }
 
-  visitSubmodelElementList(element: SubmodelElementList, context: unknown): void {
-    const parsed = SubmodelElementListModificationSchema.parse(context);
-    this.modifyNameAndDescription(element, parsed);
+  visitSubmodelElementList(element: SubmodelElementList, context?: ModifierVisitorContextType): void {
+    const parsed = SubmodelElementListModificationSchema.parse(context?.data);
+    if (parsed.description || parsed.displayName) {
+      this.modificationGuard(element);
+      this.modifyNameAndDescription(element, parsed);
+    }
+
     if (parsed.value !== undefined) {
       this.visitSubmodelElements(element, parsed.value);
     }
@@ -237,7 +273,7 @@ export class ModifierVisitor implements IVisitor<unknown, void> {
       if (!foundElement) {
         throw new ValueError(`Could not find element with idShort ${submodelElement.idShort} within submodel element ${element.idShort}.`);
       }
-      foundElement.accept(this, submodelElement);
+      foundElement.accept(this, { data: submodelElement });
     }
   }
 }

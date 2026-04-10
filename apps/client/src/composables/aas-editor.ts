@@ -1,12 +1,15 @@
 import type { AasNamespace } from "@open-dpp/api-client";
 import type {
+  AccessPermissionRuleResponseDto,
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellResponseDto,
   DataTypeDefType,
+  DeletePolicyDto,
   FileRequestDto,
   LanguageTextDto,
   LanguageType,
   PagingParamsDto,
+  PermissionType,
   PropertyRequestDto,
   ReferenceElementRequestDto,
   SubmodelElementCollectionRequestDto,
@@ -28,10 +31,13 @@ import type { AasEditorPath, IAasDrawer } from "./aas-drawer.ts";
 import type { MediaFileCollectionItem } from "./media-file.ts";
 import type { IPagination, PagingResult } from "./pagination.ts";
 import {
+
   AasSubmodelElements,
+
   AasSubmodelElementsEnum,
   DataTypeDef,
   KeyTypes,
+  Permissions,
   PropertyJsonSchema,
   SubmodelElementSchema,
   SubmodelElementSharedSchema,
@@ -42,6 +48,7 @@ import { omit } from "lodash";
 import { ref, toRaw } from "vue";
 import { z } from "zod";
 import { HTTPCode } from "../stores/http-codes.ts";
+import { useAasAbility } from "./aas-ability.ts";
 import {
   EditorMode,
   useAasDrawer,
@@ -79,6 +86,9 @@ export interface IAasEditor extends IAasDrawer, IPagination {
   selectTreeNode: (key: string) => void;
   openAssetAdministrationShellEditor: () => void;
   aasGalleryFiles: Ref<MediaFileCollectionItem[]>;
+  getAccessPermissionRules: () => AccessPermissionRuleResponseDto[];
+  modifyShell: (data: AssetAdministrationShellModificationDto) => Promise<void>;
+  deletePolicyBySubjectAndObject: (data: DeletePolicyDto) => Promise<void>;
 }
 
 export function useAasEditor({
@@ -103,7 +113,14 @@ export function useAasEditor({
     changeQueryParams({ edit: undefined });
   };
 
-  const drawer = useAasDrawer({ onHideDrawer });
+  function getAccessPermissionRules() {
+    return assetAdministrationShell.value?.security.localAccessControl
+      .accessPermissionRules ?? [];
+  }
+
+  const { can } = useAasAbility({ getAccessPermissionRules });
+
+  const drawer = useAasDrawer({ onHideDrawer, can });
 
   const loading = ref(false);
   const submodelElementsToAdd = ref<MenuItem[]>([]);
@@ -141,13 +158,13 @@ export function useAasEditor({
         data: toRaw(assetAdministrationShell.value),
         mode: EditorMode.EDIT,
         title: translate(`common.edit`),
-        path: {},
-        callback: modifyAasEditor,
+        path: { idShortPathIncludingSubmodel: assetAdministrationShell.value.idShort ?? undefined },
+        callback: modifyShell,
       });
     }
   }
 
-  async function modifyAasEditor(data: AssetAdministrationShellModificationDto) {
+  async function modifyShell(data: AssetAdministrationShellModificationDto) {
     const errorMessage = translate(`${translatePrefix}.error`, { method: translate("common.edit") });
     if (assetAdministrationShell.value) {
       try {
@@ -186,6 +203,22 @@ export function useAasEditor({
       errorHandlingStore.logErrorWithNotification(errorMessage, e);
     }
   };
+
+  async function deletePolicyBySubjectAndObject(data: DeletePolicyDto) {
+    const errorMessage = translate(`${translatePrefix}.security.errorManagePolicy`);
+    try {
+      const response = await aasNamespace.deletePolicyBySubjectAndObject(id, data);
+      if (response.status === HTTPCode.NO_CONTENT) {
+        await fetchAssetAdministrationShell();
+      }
+      else {
+        errorHandlingStore.logErrorWithNotification(errorMessage);
+      }
+    }
+    catch (e) {
+      errorHandlingStore.logErrorWithNotification(errorMessage, e);
+    }
+  }
 
   async function updateAssetAdministrationShell(data: AssetAdministrationShellResponseDto | undefined) {
     assetAdministrationShell.value = data;
@@ -302,23 +335,26 @@ export function useAasEditor({
     return submodelElements.map((submodelElement): TreeNode => {
       const key = pathOfParent.idShortPath ? `${pathOfParent.idShortPath}.${submodelElement.idShort}` : `${submodelIdShort}.${submodelElement.idShort}`;
       const idShortPath = pathOfParent.idShortPath ? `${pathOfParent.idShortPath}.${submodelElement.idShort}` : submodelElement.idShort;
-      const path = { submodelId: pathOfParent.submodelId, idShortPath };
+      const idShortPathIncludingSubmodel = `${submodelIdShort}.${idShortPath}`;
+      const path = { submodelId: pathOfParent.submodelId, idShortPath, idShortPathIncludingSubmodel };
+
       const canHaveChildren = submodelElementCanHaveChildren(submodelElement);
       const children = getChildrenOfSubmodelElement(submodelElement);
       return {
         key,
         data: {
           type: getVisualType(submodelElement),
-          label: translateDisplayName(submodelElement.displayName) ?? submodelElement.idShort,
+          label:
+            translateDisplayName(submodelElement.displayName)
+            ?? submodelElement.idShort,
           modelType: submodelElement.modelType,
           plain: submodelElement,
-          actions: {
-            addChildren: canHaveChildren,
-            delete: true,
-          },
+          actions: evaluateActions(canHaveChildren, idShortPathIncludingSubmodel),
           path,
         },
-        children: children ? convertSubmodelElementsToTree(submodelIdShort, path, children) : undefined,
+        children: children
+          ? convertSubmodelElementsToTree(submodelIdShort, path, children)
+          : undefined,
       };
     });
   }
@@ -370,6 +406,37 @@ export function useAasEditor({
     return undefined;
   }
 
+  function evaluateActions(createVisible: boolean, idShortPathIncludingSubmodel: string) {
+    const missingPermissionMsg = translate(
+      `${translatePrefix}.security.missingPermission`,
+    );
+    const labels = {
+      [Permissions.Read]: "view",
+      [Permissions.Edit]: "edit",
+      [Permissions.Delete]: "remove",
+      [Permissions.Create]: "add",
+    };
+    const visible = (permission: PermissionType) => {
+      if (permission === Permissions.Create) {
+        return createVisible;
+      }
+      if (permission === Permissions.Edit) {
+        return can(permission, idShortPathIncludingSubmodel);
+      }
+      return true;
+    };
+    return Object.values(Permissions).reduce((acc: Record<string, { visible: boolean; enabled: boolean; tooltip: string }>, permission) => {
+      acc[permission.toLowerCase()] = {
+        visible: visible(permission),
+        enabled: can(permission, idShortPathIncludingSubmodel),
+        tooltip: can(permission, idShortPathIncludingSubmodel)
+          ? translate(`common.${labels[permission]}`)
+          : missingPermissionMsg,
+      };
+      return acc;
+    }, {});
+  }
+
   function convertSubmodelsToTree(submodels: SubmodelResponseDto[]) {
     return submodels.map((submodel: SubmodelResponseDto) => ({
       key: submodel.id,
@@ -378,13 +445,17 @@ export function useAasEditor({
         type: getVisualType({ modelType: KeyTypes.Submodel, ...submodel }),
         modelType: KeyTypes.Submodel,
         plain: omit(submodel, "submodelElements"),
-        actions: {
-          addChildren: true,
-          delete: true,
+        actions: evaluateActions(true, submodel.idShort),
+        path: {
+          submodelId: submodel.id,
+          idShortPathIncludingSubmodel: submodel.idShort,
         },
-        path: { submodelId: submodel.id },
       },
-      children: convertSubmodelElementsToTree(submodel.idShort, { submodelId: submodel.id }, submodel.submodelElements),
+      children: convertSubmodelElementsToTree(
+        submodel.idShort,
+        { submodelId: submodel.id },
+        submodel.submodelElements,
+      ),
     }));
   }
 
@@ -484,13 +555,14 @@ export function useAasEditor({
     async function createCallback(data: SubmodelRequestDto) {
       const response = await aasNamespace.createSubmodel(id, data);
       await finalizeApiRequest(response);
+      await fetchAssetAdministrationShell();
     }
     drawer.openDrawer({
       type: KeyTypes.Submodel,
       data: {},
       title: translate(`${translatePrefix}.addSubmodel`),
       mode: EditorMode.CREATE,
-      path: {},
+      path: { },
       callback: createCallback,
     });
   };
@@ -646,6 +718,7 @@ export function useAasEditor({
     openAssetAdministrationShellEditor,
     buildAddSubmodelElementMenu,
     createSubmodel,
+    deletePolicyBySubjectAndObject,
     deleteSubmodel,
     deleteSubmodelElement,
     findTreeNodeByKey,
@@ -654,5 +727,7 @@ export function useAasEditor({
     selectTreeNode,
     ...pagination,
     ...drawer,
+    getAccessPermissionRules,
+    modifyShell,
   };
 }

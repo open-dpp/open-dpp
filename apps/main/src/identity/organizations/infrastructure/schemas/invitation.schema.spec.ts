@@ -52,7 +52,7 @@ describe("invitationSchema", () => {
       email: "test@example.com",
       inviterId: "user-123",
       organizationId: "org-123",
-      role: MemberRole.ADMIN,
+      role: MemberRole.OWNER,
       status: InvitationStatus.PENDING,
       createdAt: new Date(),
       expiresAt: new Date(),

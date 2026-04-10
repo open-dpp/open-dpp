@@ -136,9 +136,10 @@ describe("aasTableExtension composable", () => {
   it("should init rows correctly", async () => {
     const mockOnHideDrawer = vi.fn();
     const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
 
-    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
-    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List", idShortPathIncludingSubmodel: "s1p.Path.To.List" };
     const { rows, rowsContext } = useAasTableExtension({
       id: aasId,
       pathToList,
@@ -199,9 +200,10 @@ describe("aasTableExtension composable", () => {
   it("should compute columns", async () => {
     const mockOnHideDrawer = vi.fn();
     const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
 
-    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
-    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List", idShortPathIncludingSubmodel: "s1p.Path.To.List" };
     const { columns } = useAasTableExtension({
       id: aasId,
       pathToList,
@@ -261,9 +263,14 @@ describe("aasTableExtension composable", () => {
   ])("should formatCellValue $value", async ({ value, column, expected }) => {
     const mockOnHideDrawer = vi.fn();
     const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
 
-    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
-    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
     const { formatCellValue } = useAasTableExtension({
       id: aasId,
       pathToList,
@@ -309,11 +316,17 @@ describe("aasTableExtension composable", () => {
     async ({ label, component, data, modelType }) => {
       const mockOnHideDrawer = vi.fn();
       const mockOpenConfirmDialog = vi.fn();
+      const mockCan = vi.fn();
 
       const { openDrawer, editorVNode, drawerVisible } = useAasDrawer({
         onHideDrawer: mockOnHideDrawer,
+        can: mockCan,
       });
-      const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+      const pathToList = {
+        submodelId: "s1",
+        idShortPath: "Path.To.List",
+        idShortPathIncludingSubmodel: "s1p.Path.To.List",
+      };
       const { columnMenu, buildColumnMenu } = useAasTableExtension({
         id: aasId,
         pathToList,
@@ -383,9 +396,14 @@ describe("aasTableExtension composable", () => {
   it("should modify cell", async () => {
     const mockOnHideDrawer = vi.fn();
     const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
 
-    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
-    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
     const { rows, onCellEditComplete } = useAasTableExtension({
       id: aasId,
       pathToList,
@@ -454,11 +472,17 @@ describe("aasTableExtension composable", () => {
   it("should modify column", async () => {
     const mockOnHideDrawer = vi.fn();
     const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
 
     const { openDrawer, editorVNode, drawerVisible } = useAasDrawer({
       onHideDrawer: mockOnHideDrawer,
+      can: mockCan,
     });
-    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
     const { columnMenu, buildColumnMenu } = useAasTableExtension({
       id: aasId,
       pathToList,
@@ -528,9 +552,14 @@ describe("aasTableExtension composable", () => {
     const openAutoConfirm = async (data: ConfirmationOptions) => {
       data.accept!();
     };
+    const mockCan = vi.fn();
 
-    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
-    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
     const { columnMenu, rows, rowsContext, buildColumnMenu, columns } = useAasTableExtension({
       id: aasId,
       pathToList,
@@ -610,9 +639,14 @@ describe("aasTableExtension composable", () => {
     const openAutoConfirm = async (data: ConfirmationOptions) => {
       data.accept!();
     };
+    const mockCan = vi.fn();
 
-    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
-    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
     const { rowMenu, buildRowMenu, rows, rowsContext } = useAasTableExtension({
       id: aasId,
       pathToList,
@@ -676,8 +710,10 @@ describe("aasTableExtension composable", () => {
   it("should add row", async () => {
     const mockOnHideDrawer = vi.fn();
     const openConfirm = vi.fn();
-    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
-    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const mockCan = vi.fn();
+
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List", idShortPathIncludingSubmodel: "s1p.Path.To.List" };
     const { rowMenu, rowsContext, buildRowMenu, rows } = useAasTableExtension({
       id: aasId,
       pathToList,

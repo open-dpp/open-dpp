@@ -6,7 +6,7 @@ import {
   Catch,
   HttpStatus,
 } from '@nestjs/common'
-import { NotFoundError, ValueError } from './domain.errors'
+import { ForbiddenError, NotFoundError, ValueError } from './domain.errors'
 import { NotFoundInDatabaseException } from './service.exceptions'
 
 @Catch(NotFoundInDatabaseException)
@@ -32,6 +32,21 @@ export class NotFoundExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest()
     response.status(HttpStatus.NOT_FOUND).json({
       statusCode: HttpStatus.NOT_FOUND,
+      timestamp: new Date().toISOString(),
+      path: request.url,
+      message: exception.message,
+    })
+  }
+}
+
+@Catch(ForbiddenError)
+export class ForbiddenExceptionFilter implements ExceptionFilter {
+  catch(exception: ForbiddenError, host: ArgumentsHost) {
+    const ctx = host.switchToHttp()
+    const response = ctx.getResponse()
+    const request = ctx.getRequest()
+    response.status(HttpStatus.FORBIDDEN).json({
+      statusCode: HttpStatus.FORBIDDEN,
       timestamp: new Date().toISOString(),
       path: request.url,
       message: exception.message,

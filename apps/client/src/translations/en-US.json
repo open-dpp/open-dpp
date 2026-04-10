@@ -3,12 +3,14 @@
     "required": "Required"
   },
   "common": {
+    "reset": "Reset",
     "untitled": "Untitled",
     "actions": "Actions",
     "clipboardSuccess": "Copied to clipboard.",
     "edit": "Edit",
     "qrCode": "QR code",
     "add": "Add",
+    "view": "View",
     "import": "Import",
     "save": "Save",
     "create": "Create",
@@ -63,6 +65,17 @@
     "templateImportFailed": "Failed to import template."
   },
   "aasEditor": {
+    "security": {
+      "missingPermission": "Missing permissions",
+      "inheritedPermission": "Inherits permissions of parent node",
+      "overriddenPermission": "Overrides permissions of parent node",
+      "permissions": "Permissions",
+      "edit": "Edit",
+      "delete": "Delete",
+      "create": "Create",
+      "read": "Read",
+      "errorManagePolicy": "Failed to edit permissions"
+    },
     "productImages": "Product images",
     "formLabels": {
       "value": "Value",
@@ -321,12 +334,11 @@
     "invite": "Invite",
     "inviteUser": "Invite user",
     "inviteUserSuccess": "The user has been successfully invited.",
-    "member": "Members",
+    "member": "Member | Members",
     "memberListDescription": "A list of all members in this organization.",
     "memberName": "Name",
     "memberRole": "Role",
-    "memberAdmin": "Admin",
-    "memberCreator": "Creator",
+    "owner": "Organisation admin",
     "addUser": "Add user",
     "form": {
       "id": "ID",
@@ -438,6 +450,8 @@
     }
   },
   "user": {
+    "admin": "Admin",
+    "public": "Public",
     "profile": "Your profile",
     "personalInformation": "Personal information",
     "logout": "Logout",

@@ -1,10 +1,10 @@
 import type { ArgumentsHost } from '@nestjs/common'
 import type { TestingModule } from '@nestjs/testing'
-import { expect } from '@jest/globals'
 import { HttpStatus } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
-import { ValueError } from './domain.errors'
+import { ForbiddenError, ValueError } from './domain.errors'
 import {
+  ForbiddenExceptionFilter,
   NotFoundInDatabaseExceptionFilter,
   ValueErrorFilter,
 } from './exception.handler'
@@ -12,6 +12,7 @@ import { NotFoundInDatabaseException } from './service.exceptions'
 
 describe('exceptionFilter', () => {
   let notFoundInDatabaseExceptionFilter: NotFoundInDatabaseExceptionFilter
+  let forbidenErrorFilter: ForbiddenExceptionFilter
   let valueErrorFilter: ValueErrorFilter
 
   let mockJson: jest.Mock
@@ -37,7 +38,7 @@ describe('exceptionFilter', () => {
 
     // Set up the filter
     const module: TestingModule = await Test.createTestingModule({
-      providers: [NotFoundInDatabaseExceptionFilter, ValueErrorFilter],
+      providers: [NotFoundInDatabaseExceptionFilter, ValueErrorFilter, ForbiddenExceptionFilter],
     }).compile()
 
     notFoundInDatabaseExceptionFilter
@@ -45,6 +46,7 @@ describe('exceptionFilter', () => {
         NotFoundInDatabaseExceptionFilter,
       )
     valueErrorFilter = module.get<ValueErrorFilter>(ValueErrorFilter)
+    forbidenErrorFilter = module.get<ForbiddenExceptionFilter>(ForbiddenExceptionFilter)
 
     // Mock Date.toISOString for consistent testing
     jest
@@ -82,6 +84,30 @@ describe('exceptionFilter', () => {
       timestamp: '2025-03-26T12:00:00.000Z',
       path: '/test-url',
       message: 'TestEntity could not be found.',
+    })
+  })
+
+  it('should transform ForbiddenError to a proper HTTP response', () => {
+    // Create a NotFoundInDatabaseException
+    const exception = new ForbiddenError('my message')
+
+    // Call the filter
+    forbidenErrorFilter.catch(exception, mockArgumentsHost)
+
+    // Verify the ArgumentsHost was used correctly
+    expect(mockArgumentsHost.switchToHttp).toHaveBeenCalled()
+    expect(mockArgumentsHost.switchToHttp().getResponse).toHaveBeenCalled()
+    expect(mockArgumentsHost.switchToHttp().getRequest).toHaveBeenCalled()
+
+    // Verify the response status was set to 404
+    expect(mockStatus).toHaveBeenCalledWith(HttpStatus.FORBIDDEN)
+
+    // Verify the JSON response has the correct format
+    expect(mockJson).toHaveBeenCalledWith({
+      statusCode: HttpStatus.FORBIDDEN,
+      timestamp: '2025-03-26T12:00:00.000Z',
+      path: '/test-url',
+      message: 'my message',
     })
   })
 

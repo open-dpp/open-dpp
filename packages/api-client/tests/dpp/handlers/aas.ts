@@ -8,7 +8,7 @@ import {
 } from '@open-dpp/dto'
 import {
   aasPlainFactory,
-  propertyPlainFactory,
+  propertyInputPlainFactory,
   submodelCarbonFootprintPlainFactory,
   submodelDesignOfProductPlainFactory,
   submodelDesignOfProductValuePlainFactory,
@@ -47,9 +47,10 @@ export const submodelValueResponse: { Design_V01: any }
   = ValueSchema.parse(
     submodelDesignOfProductValuePlainFactory.build(),
   ) as { Design_V01: any }
-export const propertyToAdd = propertyPlainFactory.build(undefined, {
+export const propertyToAdd = propertyInputPlainFactory.build(undefined, {
   transient: { iriDomain },
 })
+
 export function aasHandlers(basePath: string) {
   const aasEndpointUrl = `${baseURL}/${basePath}`
 
@@ -80,9 +81,12 @@ export function aasHandlers(basePath: string) {
     http.patch(
       `${aasEndpointUrl}/${aasWrapperId}/shells/${btoa(aasResponse.id)}`,
       async () => {
-        return HttpResponse.json({ ...aasResponse, displayName: aasModification.displayName }, {
-          status: 200,
-        })
+        return HttpResponse.json(
+          { ...aasResponse, displayName: aasModification.displayName },
+          {
+            status: 200,
+          },
+        )
       },
     ),
     http.get(
@@ -113,6 +117,14 @@ export function aasHandlers(basePath: string) {
       async () => {
         return HttpResponse.json(submodelCarbonFootprintResponse, {
           status: 200,
+        })
+      },
+    ),
+    http.delete(
+      `${aasEndpointUrl}/${aasWrapperId}/security/policies`,
+      async () => {
+        return HttpResponse.json(null, {
+          status: 204,
         })
       },
     ),

@@ -2,6 +2,7 @@ import type { Auth } from "better-auth";
 import { randomUUID } from "node:crypto";
 import { User as BetterAuthUser } from "better-auth";
 import { UsersService } from "../src/identity/users/application/services/users.service";
+import { UserRoleType } from "../src/identity/users/domain/user-role.enum";
 
 interface BetterAuthOrganization {
   id: string;
@@ -69,7 +70,7 @@ export class BetterAuthHelper {
     return cookie;
   }
 
-  async createUser() {
+  async createUser(role?: UserRoleType) {
     const userEmail = `${randomUUID()}@test.test`;
     if (!this.auth) {
       throw new Error("No auth setup");
@@ -85,6 +86,9 @@ export class BetterAuthHelper {
       body,
     });
     await this.usersService.setUserEmailVerified(data.user.email, true);
+    if (role) {
+      await this.usersService.setUserRole(data.user.id, role);
+    }
     const user = data.user;
     this.userMap.set(user.id, user);
     return {
@@ -123,20 +127,50 @@ export class BetterAuthHelper {
     return dataOrg;
   }
 
+  private findOrganizationOrFail(orgId: string) {
+    const org = this.organizationMap.get(orgId);
+    if (!org) {
+      throw new Error(`No organization found`);
+    }
+    return org;
+  }
+
+  private findUserOrFail(userId: string) {
+    const user = this.userMap.get(userId);
+    if (!user) {
+      throw new Error("No user found");
+    }
+    return user;
+  }
+
+  async getOrganizationAndUserWithCookie(orgId: string, userId: string) {
+    const org = this.findOrganizationOrFail(orgId);
+    const user = this.findUserOrFail(userId);
+    const userCookie = await this.signAsUser(user.id);
+    return {
+      org,
+      user,
+      userCookie,
+    };
+  }
+
+  async getUserWithCookie(userId: string) {
+    const user = this.findUserOrFail(userId);
+    const userCookie = await this.signAsUser(user.id);
+    return {
+      user,
+      userCookie,
+    };
+  }
+
   async getRandomOrganizationAndUserWithCookie() {
     const keys = Array.from(this.organizationMap.keys());
     if (keys.length === 0) {
       throw new Error("No organizations found");
     }
-    const org = this.organizationMap.get(keys[Math.floor(Math.random() * keys.length)]);
-    if (!org) {
-      throw new Error("No organization found");
-    }
+    const org = this.findOrganizationOrFail(keys[Math.floor(Math.random() * keys.length)]);
     const randomMember = org?.members[Math.floor(Math.random() * org?.members.length)];
-    const user = this.userMap.get(randomMember?.userId as string);
-    if (!user) {
-      throw new Error("No user found");
-    }
+    const user = this.findUserOrFail(randomMember?.userId as string);
     const userCookie = await this.signAsUser(user.id);
     return {
       org,
