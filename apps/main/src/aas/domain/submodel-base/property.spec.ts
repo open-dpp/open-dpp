@@ -1,7 +1,14 @@
 import { expect } from "@jest/globals";
-import { DataTypeDef } from "@open-dpp/dto";
+import { DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
-import { propertyPlainFactory } from "@open-dpp/testing";
+import { propertyInputPlainFactory } from "@open-dpp/testing";
+import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
+import { UserRole } from "../../../identity/users/domain/user-role.enum";
+import { IdShortPath } from "../common/id-short-path";
+import { Permission } from "../security/permission";
+import { Security } from "../security/security";
+import { SubjectAttributes } from "../security/subject-attributes";
+
 import { Property } from "./property";
 
 describe("property", () => {
@@ -53,7 +60,7 @@ describe("property", () => {
 
   it("should add submodel element", () => {
     const property = Property.create({ idShort: "b1", valueType: DataTypeDef.String });
-    expect(() => property.addSubmodelElement(Property.fromPlain(propertyPlainFactory.build()))).toThrow(
+    expect(() => property.addSubmodelElement(Property.fromPlain(propertyInputPlainFactory.build()))).toThrow(
       new ValueError("Property cannot contain submodel elements"),
     );
   });
@@ -61,5 +68,23 @@ describe("property", () => {
   it("should get submodel elements", () => {
     const property = Property.create({ idShort: "b1", valueType: DataTypeDef.String });
     expect(property.getSubmodelElements()).toEqual([]);
+  });
+
+  it("should return plain value", () => {
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+    const property = Property.create({
+      idShort: "prop1",
+      valueType: DataTypeDef.String,
+    });
+    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    let ability = security.defineAbilityForSubject(member);
+    expect(property.toPlain({ ability })).toMatchObject({
+      idShort: "prop1",
+      valueType: DataTypeDef.String,
+    });
+    ability = security.defineAbilityForSubject(anonymous);
+    expect(property.toPlain({ ability })).toEqual({});
   });
 });

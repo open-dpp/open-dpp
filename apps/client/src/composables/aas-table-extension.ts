@@ -55,6 +55,11 @@ interface AasTableExtensionProps {
   translate: (label: string, ...args: unknown[]) => string;
   selectedLanguage: LanguageType;
   openConfirm: (option: ConfirmationOptions) => void;
+  disableRowCreation?: boolean;
+  disableColumnCreation?: boolean;
+  disableRowDeletion?: boolean;
+  disableColumnDeletion?: boolean;
+  disableColumnEditing?: boolean;
   /**
    * IANA timezone for formatting DateTime cell values. Defaults to the
    * runtime-resolved viewer timezone. Injected so tests can pin it.
@@ -108,6 +113,11 @@ export function useAasTableExtension({
   translate,
   selectedLanguage,
   openConfirm,
+  disableColumnCreation,
+  disableRowCreation,
+  disableRowDeletion,
+  disableColumnDeletion,
+  disableColumnEditing,
   timezone,
 }: AasTableExtensionProps): IAasTableExtension {
   const viewerTimezone = timezone ?? getCurrentTimezone();
@@ -140,9 +150,10 @@ export function useAasTableExtension({
             : fieldLabel.toLowerCase(),
       },
     );
-    const labelAndIcon = {
+    const labelIconAndDisableOption = {
       label: fieldLabel,
       icon,
+      disabled: disableColumnCreation,
     };
     const sharedDrawerProps = {
       mode: EditorMode.CREATE,
@@ -152,7 +163,7 @@ export function useAasTableExtension({
 
     return match({ type, valueType })
       .with({ type: AasSubmodelElements.File }, ({ type }) => ({
-        ...labelAndIcon,
+        ...labelIconAndDisableOption,
         command: (_event: MenuItemCommandEvent) => {
           openDrawer({
             ...sharedDrawerProps,
@@ -166,7 +177,7 @@ export function useAasTableExtension({
       .with(
         { type: AasSubmodelElements.Property, valueType: P.string },
         ({ type, valueType }) => ({
-          ...labelAndIcon,
+          ...labelIconAndDisableOption,
           command: (_event: MenuItemCommandEvent) => {
             openDrawer({
               ...sharedDrawerProps,
@@ -179,7 +190,7 @@ export function useAasTableExtension({
         }),
       )
       .with({ type: AasSubmodelElements.ReferenceElement }, ({ type }) => ({
-        ...labelAndIcon,
+        ...labelIconAndDisableOption,
         command: (_event: MenuItemCommandEvent) => {
           openDrawer({
             ...sharedDrawerProps,
@@ -449,6 +460,7 @@ export function useAasTableExtension({
         command: async () => {
           await addRow(options);
         },
+        disabled: disableRowCreation,
       },
       {
         label: translate(`${translateTablePrefix}.addRowBelow`),
@@ -461,6 +473,7 @@ export function useAasTableExtension({
                 : rows.value.length,
           });
         },
+        disabled: disableRowCreation,
       },
       removeRowMenuItem(options.position ?? 0),
     ];
@@ -472,6 +485,7 @@ export function useAasTableExtension({
     return {
       label: removeLabel,
       icon: "pi pi-trash",
+      disabled: disableRowDeletion,
       command: async () => {
         openConfirm({
           message: translate(`${translateTablePrefix}.removeRow`),
@@ -609,6 +623,7 @@ export function useAasTableExtension({
     return {
       label: translate(`common.edit`),
       icon: "pi pi-pencil",
+      disabled: disableColumnEditing,
       command: (_event: MenuItemCommandEvent) => {
         openDrawer({
           type: ColumnEditorKey,
@@ -630,6 +645,7 @@ export function useAasTableExtension({
     return {
       label: removeLabel,
       icon: "pi pi-trash",
+      disabled: disableColumnDeletion,
       command: async () => {
         openConfirm({
           message: translate(`${translateTablePrefix}.removeColumn`),

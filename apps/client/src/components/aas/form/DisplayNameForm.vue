@@ -12,6 +12,7 @@ import TextFieldWithValidation from "../../basics/TextFieldWithValidation.vue";
 const props = defineProps<{
   showErrors: boolean;
   errors: FormErrors<any>;
+  disabled?: boolean;
 }>();
 const { t, locale } = useI18n();
 const {
@@ -53,7 +54,7 @@ function ignoreOptions(language: string) {
         <Button
           icon="pi pi-plus"
           raised
-          :disabled="remainingLanguages.length === 0"
+          :disabled="remainingLanguages.length === 0 || props.disabled"
           @click="
             pushDisplayName({
               text: '',
@@ -72,6 +73,7 @@ function ignoreOptions(language: string) {
         >
           <LanguageSelect
             v-model="field.value.language"
+            :disabled="props.disabled"
             :ignore-options="ignoreOptions(field.value.language)"
           />
           <TextFieldWithValidation
@@ -80,10 +82,12 @@ function ignoreOptions(language: string) {
             :label="t('aasEditor.formLabels.name')"
             :show-errors="props.showErrors"
             :error="props.errors[`displayName[${index}].text`]"
+            :disabled="props.disabled"
           />
           <Button
             icon="pi pi-trash"
             severity="danger"
+            :disabled="props.disabled"
             @click="removeDisplayName(Number(index))"
           />
         </div>

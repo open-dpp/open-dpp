@@ -1,18 +1,19 @@
 import { randomUUID } from "node:crypto";
-import { AssetAdministrationShellJsonSchema, AssetKind, KeyTypes, ReferenceTypes } from "@open-dpp/dto";
+import { AssetAdministrationShellJsonSchema, AssetKind } from "@open-dpp/dto";
 import { AssetInformation } from "./asset-information";
 import { AdministrativeInformation } from "./common/administrative-information";
 import { IHasDataSpecification } from "./common/has-data-specification";
 import { IIdentifiable } from "./common/identifiable";
-import { Key } from "./common/key";
 import { hasUniqueLanguagesOrFail, LanguageText } from "./common/language-text";
 import { Reference } from "./common/reference";
+import { ConvertToPlainOptions } from "./convertable-to-plain";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
-import { JsonVisitor } from "./json-visitor";
-import { ModifierVisitor } from "./modifier-visitor";
+import JsonVisitor from "./json-visitor";
+import { ModifierVisitor, ModifierVisitorOptions } from "./modifier-visitor";
 import { IPersistable } from "./persistable";
-import { Submodel } from "./submodel-base/submodel";
+import { Security } from "./security/security";
+import { Submodel, submodelToReference } from "./submodel-base/submodel";
 import { IVisitable, IVisitor } from "./visitor";
 
 export interface AssetAdministrationShellCreateProps {
@@ -27,6 +28,7 @@ export interface AssetAdministrationShellCreateProps {
   embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
   derivedFrom?: Reference | null;
   submodels?: Array<Reference>;
+  security?: Security;
 }
 
 export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable {
@@ -44,6 +46,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
     public readonly derivedFrom: Reference | null = null,
     public readonly submodels: Array<Reference>,
+    public readonly security: Security,
   ) {
     this.displayName = displayName;
     this.description = description;
@@ -84,11 +87,12 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
       data.embeddedDataSpecifications ?? [],
       data.derivedFrom ?? null,
       data.submodels ?? [],
+      data.security ?? Security.create({}),
     );
   };
 
-  modify(data: unknown) {
-    this.accept(new ModifierVisitor(), data);
+  modify(data: unknown, options: ModifierVisitorOptions) {
+    this.accept(new ModifierVisitor(options), { data });
   }
 
   addSubmodelReference(reference: Reference) {
@@ -96,15 +100,10 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
   }
 
   addSubmodel(submodel: Submodel): Reference {
-    const reference = Reference.create({
-      type: ReferenceTypes.ModelReference,
-      keys: [Key.create({
-        type: KeyTypes.Submodel,
-        value: submodel.id,
-      })],
-    });
+    const reference = submodelToReference(submodel);
 
     this.addSubmodelReference(reference);
+    this.security.addDefaultPolicyForSubmodelIfNoExists(submodel);
 
     return reference;
   }
@@ -126,6 +125,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
       this.embeddedDataSpecifications,
       this.derivedFrom,
       this.submodels,
+      this.security,
     );
   }
 
@@ -168,6 +168,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
       parsed.embeddedDataSpecifications.map(EmbeddedDataSpecification.fromPlain),
       parsed.derivedFrom ? Reference.fromPlain(parsed.derivedFrom) : null,
       parsed.submodels.map(Reference.fromPlain),
+      Security.fromPlain(parsed.security),
     );
   }
 
@@ -175,11 +176,12 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     const foundSubmodelIndex = this.submodels.findIndex(sm => sm.keys.some(k => k.value === submodel.id));
     if (foundSubmodelIndex > -1) {
       this.submodels.splice(foundSubmodelIndex, 1);
+      this.security.deletePoliciesByObjectPath(submodel.getIdShortPath());
     }
   }
 
-  toPlain(): Record<string, any> {
-    const jsonVisitor = new JsonVisitor();
-    return this.accept(jsonVisitor);
+  toPlain(options?: ConvertToPlainOptions): Record<string, any> {
+    const jsonVisitor = new JsonVisitor(options);
+    return this.accept(jsonVisitor, options?.context);
   }
 }

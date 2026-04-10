@@ -2,6 +2,7 @@ import type {
   AssetAdministrationShellModificationDto,
   AssetAdministrationShellPaginationResponseDto,
   AssetAdministrationShellResponseDto,
+  DeletePolicyDto,
   PagingParamsDto,
   SubmodelElementListResponseDto,
   SubmodelElementModificationDto,
@@ -45,6 +46,10 @@ export class AasNamespace {
 
   public async getSubmodelById(id: string, submodelId: string) {
     return this.axiosInstance.get<AssetAdministrationShellPaginationResponseDto>(`${this.aasEndpoint}/${id}/submodels/${submodelId}`)
+  }
+
+  public async deletePolicyBySubjectAndObject(id: string, data: DeletePolicyDto) {
+    return this.axiosInstance.delete(`${this.aasEndpoint}/${id}/security/policies`, { data })
   }
 
   public async deleteSubmodelById(id: string, submodelId: string) {

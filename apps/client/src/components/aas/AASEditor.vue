@@ -22,7 +22,7 @@ const props = defineProps<{
 const route = useRoute();
 const router = useRouter();
 const componentRef = ref<{
-  submit: () => Promise<Promise<void> | undefined>;
+  submit: () => Promise<void>;
 } | null>(null);
 
 const defaultPosition = "right";
@@ -74,6 +74,7 @@ const {
   drawerVisible,
   drawerHeader,
   hideDrawer,
+  saveButtonIsVisible,
   editorVNode,
   currentPage,
   hasPrevious,
@@ -83,6 +84,9 @@ const {
   nextPage,
   displayName,
   aasGalleryFiles,
+  getAccessPermissionRules,
+  modifyShell,
+  deletePolicyBySubjectAndObject,
 } = aasEditor;
 
 onMounted(async () => {
@@ -90,10 +94,6 @@ onMounted(async () => {
 });
 
 const popover = ref();
-
-function onNodeSelect(node: TreeNode) {
-  selectTreeNode(node.key);
-}
 
 function onHideDrawer() {
   hideDrawer();
@@ -177,7 +177,6 @@ const isFullPosition = computed(() => position.value === fullPosition);
         :loading="loading"
         :rows="10"
         :rows-per-page-options="[10]"
-        @node-select="onNodeSelect"
       >
         <template #header>
           <div class="flex flex-wrap items-center justify-between gap-2">
@@ -197,15 +196,38 @@ const isFullPosition = computed(() => position.value === fullPosition);
             <div class="flex w-full justify-end">
               <div class="flex items-center rounded-md gap-2">
                 <Button
-                  v-if="node.data.actions.addChildren"
-                  icon="pi pi-plus"
+                  v-if="node.data.actions.edit.visible"
+                  v-tooltip.top="node.data.actions.edit.tooltip"
+                  :aria-label="node.data.actions.edit.tooltip"
+                  icon="pi pi-pencil"
                   severity="primary"
+                  @click="selectTreeNode(node.key)"
+                />
+                <Button
+                  v-else
+                  v-tooltip.top="node.data.actions.read.tooltip"
+                  :aria-label="node.data.actions.read.tooltip"
+                  :disabled="!node.data.actions.read.enabled"
+                  icon="pi pi-eye"
+                  severity="primary"
+                  @click="selectTreeNode(node.key)"
+                />
+                <Button
+                  v-if="node.data.actions.create.visible"
+                  v-tooltip.top="node.data.actions.create.tooltip"
+                  :aria-label="t('common.add')"
+                  icon="pi pi-plus"
+                  severity="secondary"
+                  :disabled="!node.data.actions.create.enabled"
                   @click="addClicked($event, node)"
                 />
                 <Button
-                  v-if="node.data.actions.delete"
+                  v-if="node.data.actions.delete.visible"
+                  v-tooltip.top="node.data.actions.delete.tooltip"
+                  :aria-label="t('common.remove')"
                   icon="pi pi-trash"
                   severity="danger"
+                  :disabled="!node.data.actions.delete.enabled"
                   @click="deleteClicked(node)"
                 />
               </div>
@@ -265,6 +287,7 @@ const isFullPosition = computed(() => position.value === fullPosition);
                 @click="position = defaultPosition"
               />
               <Button
+                v-if="saveButtonIsVisible"
                 :label="
                   editorVNode?.component === SubmodelElementListCreateEditor
                     ? t('aasEditor.table.saveAndAddEntries')
@@ -285,6 +308,9 @@ const isFullPosition = computed(() => position.value === fullPosition);
           :open-drawer="aasEditor.openDrawer"
           :error-handling-store="errorHandlingStore"
           :translate="t"
+          :get-access-permission-rules="getAccessPermissionRules"
+          :modify-shell="modifyShell"
+          :delete-policy-by-subject-and-object="deletePolicyBySubjectAndObject"
         />
       </Drawer>
     </div>

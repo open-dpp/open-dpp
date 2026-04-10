@@ -6,13 +6,14 @@ import type {
   RowMenuOptions,
 } from "../../composables/aas-table-extension.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
-import { AasSubmodelElements, DataTypeDef } from "@open-dpp/dto";
+import { AasSubmodelElements, DataTypeDef, Permissions } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useConfirm } from "primevue/useconfirm";
 import { useForm } from "vee-validate";
 import { computed, onErrorCaptured, ref, toRaw } from "vue";
 import { useI18n } from "vue-i18n";
 import { z } from "zod";
+import { useAasAbility } from "../../composables/aas-ability.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";
 import { useAasTableExtension } from "../../composables/aas-table-extension.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
@@ -49,6 +50,30 @@ const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
 
 const { t, locale } = useI18n();
 
+const permissionsFormRef = ref<{
+  savePermissions: () => Promise<void>;
+} | null>(null);
+
+const { can } = useAasAbility({
+  getAccessPermissionRules: props.getAccessPermissionRules,
+});
+
+const idShortPathList = computed(
+  () => props.path.idShortPathIncludingSubmodel ?? "",
+);
+
+const canCreateColumnsAndRows = computed(() => {
+  return can(Permissions.Create, idShortPathList.value);
+});
+
+const canEdit = computed(() => {
+  return can(Permissions.Edit, idShortPathList.value);
+});
+
+const canDeleteColumnsAndRows = computed(() => {
+  return can(Permissions.Delete, idShortPathList.value);
+});
+
 const confirm = useConfirm();
 
 const {
@@ -73,6 +98,11 @@ const {
   translate: props.translate,
   openConfirm: confirm.require,
   aasNamespace: props.aasNamespace,
+  disableRowCreation: !canCreateColumnsAndRows.value,
+  disableColumnCreation: !canCreateColumnsAndRows.value,
+  disableRowDeletion: !canDeleteColumnsAndRows.value,
+  disableColumnDeletion: !canDeleteColumnsAndRows.value,
+  disableColumnEditing: !canEdit.value,
 });
 
 const showErrors = computed(() => {
@@ -82,6 +112,9 @@ const showErrors = computed(() => {
 async function submit() {
   await handleSubmit(async (data) => {
     try {
+      if (permissionsFormRef.value) {
+        await permissionsFormRef.value.savePermissions();
+      }
       await save();
     }
     catch (e) {
@@ -130,6 +163,8 @@ onErrorCaptured((err) => {
   );
   return false; // stops error from bubbling further
 });
+
+const missingPermissionsMsg = t("aasEditor.security.missingPermission");
 </script>
 
 <template>
@@ -139,6 +174,17 @@ onErrorCaptured((err) => {
         :show-errors="showErrors"
         :errors="errors"
         :editor-mode="EditorMode.EDIT"
+        :disabled="!canEdit"
+      />
+      <PermissionsForm
+        ref="permissionsFormRef"
+        :disabled="!canEdit"
+        :path="props.path"
+        :modify-shell="props.modifyShell"
+        :get-access-permission-rules="props.getAccessPermissionRules"
+        :delete-policy-by-subject-and-object="
+          props.deletePolicyBySubjectAndObject
+        "
       />
     </FormContainer>
     <DataTable
@@ -162,7 +208,11 @@ onErrorCaptured((err) => {
             t("aasEditor.table.entries")
           }}</span>
           <Button
+            v-tooltip.top="
+              !canCreateColumnsAndRows ? missingPermissionsMsg : undefined
+            "
             :label="t('aasEditor.table.addColumnEnd')"
+            :disabled="!canCreateColumnsAndRows"
             @click="toggleColumnMenu($event, { position: columns.length })"
           />
         </div>
@@ -205,20 +255,31 @@ onErrorCaptured((err) => {
           <div v-else>
             <FileField
               v-if="
-                col.plain.modelType === AasSubmodelElements.File
+                canEdit
+                  && col.plain.modelType === AasSubmodelElements.File
                   && rowsContext[rowIndex] != null
                   && rowsContext[rowIndex][field] != null
               "
               :id="`${rowIndex}-${field}`"
               v-model:content-type="rowsContext[rowIndex][field].contentType"
+              :disabled="!canEdit"
               :model-value="cellData[field]"
               @update:model-value="
                 (value) => onFileChange(value, cellData, rowIndex, field)
               "
             />
+            <MediaFieldView
+              v-else-if="
+                !canEdit
+                  && col.plain.modelType === AasSubmodelElements.File
+                  && cellData[field] != null
+              "
+              :media-id="cellData[field]"
+            />
             <PropertyValue
               v-else-if="
-                col.plain.modelType === AasSubmodelElements.Property
+                canEdit
+                  && col.plain.modelType === AasSubmodelElements.Property
                   && (col.plain.valueType === DataTypeDef.Date
                     || col.plain.valueType === DataTypeDef.DateTime)
               "
@@ -226,12 +287,13 @@ onErrorCaptured((err) => {
               :model-value="cellData[field]"
               :value-type="col.plain.valueType"
               @update:model-value="
-                (value) => onCellEditComplete({
-                  data: cellData,
-                  newValue: value ?? null,
-                  field,
-                  index: rowIndex,
-                })
+                (value) =>
+                  onCellEditComplete({
+                    data: cellData,
+                    newValue: value ?? null,
+                    field,
+                    index: rowIndex,
+                  })
               "
             />
             <span
@@ -244,15 +306,18 @@ onErrorCaptured((err) => {
             >
               {{ formatCellValue(cellData[field], col) }}
             </span>
-            <InputText v-else autofocus fluid readonly />
+            <InputText v-else autofocus fluid readonly :disabled="!canEdit" />
           </div>
         </template>
         <template
           v-if="
-            col.plain.modelType !== AasSubmodelElements.File
-              && !(col.plain.modelType === AasSubmodelElements.Property
+            canEdit
+              && col.plain.modelType !== AasSubmodelElements.File
+              && !(
+                col.plain.modelType === AasSubmodelElements.Property
                 && (col.plain.valueType === DataTypeDef.Date
-                  || col.plain.valueType === DataTypeDef.DateTime))
+                  || col.plain.valueType === DataTypeDef.DateTime)
+              )
           "
           #editor="{ data: editorData, field, index: rowIndex }"
         >

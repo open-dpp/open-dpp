@@ -1,7 +1,13 @@
-import { AssetKind, DataTypeDef } from "@open-dpp/dto";
+import { AssetKind, DataTypeDef, PermissionKind, Permissions } from "@open-dpp/dto";
+import { MemberRole } from "../../../identity/organizations/domain/member-role.enum";
+import { UserRole } from "../../../identity/users/domain/user-role.enum";
 import { AssetAdministrationShell } from "../../domain/asset-adminstration-shell";
 import { AssetInformation } from "../../domain/asset-information";
+import { IdShortPath } from "../../domain/common/id-short-path";
 import { Resource } from "../../domain/resource";
+import { Permission } from "../../domain/security/permission";
+import { Security } from "../../domain/security/security";
+import { SubjectAttributes } from "../../domain/security/subject-attributes";
 import { File } from "../../domain/submodel-base/file";
 import { Property } from "../../domain/submodel-base/property";
 import { Submodel } from "../../domain/submodel-base/submodel";
@@ -48,7 +54,19 @@ describe("extractMediaIds", () => {
       value: "nested-media-id",
     });
     const collection = SubmodelElementCollection.create({ idShort: "collection" });
-    collection.addSubmodelElement(file);
+    const security = Security.create({});
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: collection.idShort }),
+      [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+        Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+      ],
+    );
+    const ability = security.defineAbilityForSubject(member);
+    collection.addSubmodelElement(file, { ability });
 
     const submodel = Submodel.create({ idShort: "sm1", submodelElements: [collection] });
 

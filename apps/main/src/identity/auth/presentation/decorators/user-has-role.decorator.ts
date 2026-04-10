@@ -1,6 +1,6 @@
 import type { CustomDecorator } from "@nestjs/common";
 import { SetMetadata } from "@nestjs/common";
-import { UserRole } from "../../../users/domain/user-role.enum";
+import { UserRoleType } from "../../../users/domain/user-role.enum";
 
 export const USER_HAS_ROLE = "USER_HAS_ROLE";
 
@@ -10,6 +10,6 @@ export const USER_HAS_ROLE = "USER_HAS_ROLE";
  * include at least one of the specified roles.
  * @param roles - The roles required for access
  */
-export function UserHasRole(roles: UserRole[]): CustomDecorator {
+export function UserHasRole(roles: UserRoleType[]): CustomDecorator {
   return SetMetadata(USER_HAS_ROLE, roles);
 }

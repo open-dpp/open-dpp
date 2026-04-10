@@ -1,6 +1,9 @@
 import { MultiServerMCPClient } from "@langchain/mcp-adapters";
 import { Injectable, Logger, OnModuleDestroy } from "@nestjs/common";
 import { EnvService } from "@open-dpp/env";
+import { Member } from "../../identity/organizations/domain/member";
+import { User } from "../../identity/users/domain/user";
+import { UserRole } from "../../identity/users/domain/user-role.enum";
 
 @Injectable()
 export class McpClientService implements OnModuleDestroy {
@@ -56,7 +59,13 @@ export class McpClientService implements OnModuleDestroy {
     }
   }
 
-  async getTools(...servers: string[]) {
-    return await this.client.getTools(...servers);
+  async getTools(auth: { user: User | null; member: Member | null }) {
+    return await this.client.getTools(
+      ["productPassport"],
+      { headers: {
+        "x-user-role": auth.user?.role ?? UserRole.ANONYMOUS,
+        ...(auth.member ? { "x-member-role": auth.member?.role } : {}),
+      } },
+    );
   }
 }

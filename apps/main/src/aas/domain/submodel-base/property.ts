@@ -7,12 +7,14 @@ import {
 } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { z } from "zod";
+import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
+import { ConvertToPlainOptions } from "../convertable-to-plain";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { JsonVisitor } from "../json-visitor";
+import JsonVisitor from "../json-visitor";
 import { IVisitor } from "../visitor";
 import { ISubmodelElement, SubmodelBaseProps, submodelBasePropsFromPlain } from "./submodel-base";
 
@@ -20,6 +22,7 @@ export class Property implements ISubmodelElement {
   private _value: string | null = null;
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
+  private _parentIdShortPath: IdShortPath | undefined;
 
   private constructor(
     public readonly valueType: DataTypeDefType,
@@ -38,6 +41,14 @@ export class Property implements ISubmodelElement {
     this.value = value;
     this.displayName = displayName;
     this.description = description;
+  }
+
+  setParentIdShortPath(parentIdShortPath: IdShortPath) {
+    this._parentIdShortPath = parentIdShortPath;
+  }
+
+  getIdShortPath(): IdShortPath {
+    return this._parentIdShortPath ? this._parentIdShortPath.addPathSegment(this.idShort) : IdShortPath.create({ path: this.idShort });
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -134,9 +145,9 @@ export class Property implements ISubmodelElement {
     return visitor.visitProperty(this, context);
   }
 
-  toPlain(): Record<string, any> {
-    const jsonVisitor = new JsonVisitor();
-    return this.accept(jsonVisitor);
+  toPlain(options?: ConvertToPlainOptions): Record<string, any> {
+    const jsonVisitor = new JsonVisitor(options);
+    return this.accept(jsonVisitor, options?.context);
   }
 
   getSubmodelElements(): ISubmodelElement[] {

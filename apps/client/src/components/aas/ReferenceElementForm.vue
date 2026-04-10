@@ -12,6 +12,7 @@ const props = defineProps<{
   showErrors: boolean;
   errors: FormErrors<any>;
   editorMode: EditorModeType;
+  disabled?: boolean;
 }>();
 const { value } = useField<string | null>("value");
 const { t } = useI18n();
@@ -22,6 +23,7 @@ const { t } = useI18n();
     :show-errors="props.showErrors"
     :errors="props.errors"
     :editor-mode="props.editorMode"
+    :disabled="props.disabled"
   />
   <div class="grid lg:grid-cols-3 grid-cols-1 gap-2">
     <div class="flex flex-col gap-2">
@@ -31,6 +33,7 @@ const { t } = useI18n();
       <TextFieldWithValidation
         id="value"
         v-model="value"
+        :disabled="props.disabled"
         :label="t('aasEditor.formLabels.value')"
         :show-errors="props.showErrors"
         :error="props.errors.value"
