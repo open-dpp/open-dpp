@@ -181,7 +181,7 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
       { templateId: P.string },
       async ({ templateId }) => {
         const template = await this.loadTemplateAndCheckOwnership(templateId, subject, organizationId);
-        return { environment: await this.environmentService.copyEnvironment(template.environment), templateId };
+        return { environment: await this.environmentService.copyEnvironment(template.environment, subject), templateId };
       },
     ).with({
       environment: { assetAdministrationShells: P.array() },

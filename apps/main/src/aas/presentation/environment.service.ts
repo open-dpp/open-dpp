@@ -450,13 +450,28 @@ export class EnvironmentService {
     return PagingResult.create({ pagination: pagingResult.pagination, items: populatedItems });
   }
 
-  async copyEnvironment(environment: Environment): Promise<Environment> {
-    const submodelsCopy = await Promise.all(environment.submodels.map(async modelId => (await this.findSubmodelByIdOrFail(environment, modelId)).copy()));
+  async copyEnvironment(environment: Environment, subject: SubjectAttributes): Promise<Environment> {
+    const ability = await this.loadAbility(environment, subject);
+
+    const submodelsCopy: Submodel[] = [];
+    for (const submodelId of environment.submodels) {
+      const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+      const copy = submodel.copy({ ability });
+      if (copy) {
+        submodelsCopy.push(copy);
+      }
+    }
     const aasCopy = (await this.getFirstAssetAdministrationShell(environment)).copy(submodelsCopy);
-
-    await this.aasRepository.save(aasCopy);
-    await Promise.all(submodelsCopy.map(model => this.submodelRepository.save(model)));
-
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.aasRepository.save(aasCopy);
+        await Promise.all(submodelsCopy.map(model => this.submodelRepository.save(model)));
+      });
+    }
+    finally {
+      await session.endSession();
+    }
     return Environment.create({
       assetAdministrationShells: [aasCopy.id],
       submodels: submodelsCopy.map(model => model.id),
