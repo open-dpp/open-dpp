@@ -37,4 +37,8 @@ export class ConceptDescriptionRepository {
   async findByIds(ids: string[]): Promise<Map<string, ConceptDescription>> {
     return await findByIds(ids, this.conceptDescriptionDoc, this.fromPlain);
   }
+
+  async deleteById(id: string, options?: DbSessionOptions): Promise<void> {
+    await this.conceptDescriptionDoc.findByIdAndDelete(id, options);
+  }
 }

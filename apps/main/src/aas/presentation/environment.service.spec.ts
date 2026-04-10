@@ -1,7 +1,7 @@
 import type { TestingModule } from "@nestjs/testing";
 import { expect, jest } from "@jest/globals";
 
-import { MongooseModule } from "@nestjs/mongoose";
+import { getConnectionToken, MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
 import {
   AasSubmodelElements,
@@ -18,11 +18,12 @@ import {
 import { EnvModule, EnvService } from "@open-dpp/env";
 import { ForbiddenError } from "@open-dpp/exception";
 import { securityPlainFactory, SecurityPlainTransientParams } from "@open-dpp/testing";
+import { Connection } from "mongoose";
 import { generateMongoConfig } from "../../database/config";
+
 import { AuthModule } from "../../identity/auth/auth.module";
 
 import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
-
 import { OrganizationsModule } from "../../identity/organizations/organizations.module";
 import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { UsersModule } from "../../identity/users/users.module";
@@ -47,6 +48,7 @@ import { Submodel } from "../domain/submodel-base/submodel";
 import { SubmodelElementCollection } from "../domain/submodel-base/submodel-element-collection";
 import { SubmodelElementList } from "../domain/submodel-base/submodel-element-list";
 import { AasRepository } from "../infrastructure/aas.repository";
+import { ConceptDescriptionRepository } from "../infrastructure/concept-description.repository";
 import { SubmodelRepository } from "../infrastructure/submodel.repository";
 import { EnvironmentService } from "./environment.service";
 
@@ -56,6 +58,8 @@ describe("environmentService", () => {
   let submodelRepository: SubmodelRepository;
   let module: TestingModule;
   let passportRepository: PassportRepository;
+  let conceptDescriptionRepository: ConceptDescriptionRepository;
+  let connection: Connection;
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
@@ -79,6 +83,8 @@ describe("environmentService", () => {
     passportRepository = module.get<PassportRepository>(PassportRepository);
     aasRepository = module.get<AasRepository>(AasRepository);
     submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);
+    connection = module.get<Connection>(getConnectionToken());
+    conceptDescriptionRepository = module.get<ConceptDescriptionRepository>(ConceptDescriptionRepository);
   });
 
   it("should create environment", async () => {
@@ -578,6 +584,24 @@ describe("environmentService", () => {
     const foundSubmodel = await submodelRepository.findOneOrFail(submodel1.id);
     expect(foundSubmodel.findSubmodelElement(idShortPath)).toBeUndefined();
     //
+  });
+
+  it("should delete all resource of environment", async () => {
+    const { environment } = await createDefaultEnvironment();
+    const session = await connection.startSession();
+    await session.withTransaction(async () => {
+      await environmentService.deleteEnvironment(environment, session);
+    });
+    await session.endSession();
+    for (const aasId of environment.assetAdministrationShells) {
+      expect(await aasRepository.findOne(aasId)).toBeUndefined();
+    }
+    for (const submodelId of environment.submodels) {
+      expect(await submodelRepository.findOne(submodelId)).toBeUndefined();
+    }
+    for (const conceptDescriptionId of environment.conceptDescriptions) {
+      expect(await conceptDescriptionRepository.findOne(conceptDescriptionId)).toBeUndefined();
+    }
   });
 
   afterAll(async () => {

@@ -195,6 +195,17 @@ describe("aasRepository", () => {
     }
   });
 
+  it("should delete a aas", async () => {
+    const id = randomUUID();
+    const aas = AssetAdministrationShell.create({
+      id,
+    });
+    await aasRepository.save(aas);
+    await aasRepository.deleteById(aas.id);
+    const foundAas = await aasRepository.findOne(aas.id);
+    expect(foundAas).toBeUndefined();
+  });
+
   afterAll(async () => {
     await module.close();
   });
