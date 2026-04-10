@@ -412,6 +412,20 @@ describe("environmentService", () => {
     ).rejects.toThrow(new ForbiddenError("Missing permissions to modify element section1.subSection1.property1."));
   });
 
+  it("should copy environment", async () => {
+    const { environment, admin } = await createDefaultEnvironment();
+    const copy = await environmentService.copyEnvironment(
+      environment,
+      admin,
+    );
+
+    expect(copy.submodels).toHaveLength(1);
+    //
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+    const anonymousCopy = await environmentService.copyEnvironment(environment, anonymous);
+    expect(anonymousCopy.submodels).toHaveLength(0);
+  });
+
   async function createEnvironmentWithList() {
     const security = Security.create({});
     const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });

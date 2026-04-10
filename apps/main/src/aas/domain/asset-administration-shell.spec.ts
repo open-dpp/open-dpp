@@ -85,6 +85,87 @@ describe("assetAdministrationShell", () => {
     ]);
   });
 
+  it("should copy aas", () => {
+    const submodelId1 = "submodelId1";
+    const submodel1 = Submodel.create({ id: submodelId1, idShort: "s1" });
+    const submodelRef1 = submodelToReference(submodel1);
+    const submodelId2 = "submodelId2";
+    const submodel2 = Submodel.create({ id: submodelId2, idShort: "s2" });
+    const submodelRef2 = submodelToReference(submodel2);
+
+    const admin = SubjectAttributes.create({ userRole: UserRole.ADMIN });
+    const security = Security.create({});
+    security.addPolicy(admin, IdShortPath.create({ path: submodel1.idShort }), allPermissionsAllow.map(Permission.fromPlain));
+    security.addPolicy(admin, IdShortPath.create({ path: submodel2.idShort }), allPermissionsAllow.map(Permission.fromPlain));
+    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    security.addPolicy(member, IdShortPath.create({ path: submodel1.idShort }), allPermissionsAllow.map(Permission.fromPlain));
+
+    const aas = AssetAdministrationShell.create({
+      id: "aasId",
+      assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance, globalAssetId: "aasId" }),
+      submodels: [submodelRef1, submodelRef2],
+      security,
+    });
+
+    const copyS1 = submodel1.copy();
+    const copyS2 = submodel2.copy();
+    const copy = aas.copy([copyS1, copyS2]);
+    expect(copy.id).not.toEqual(aas.id);
+    expect(copy.assetInformation).toEqual({ ...aas.assetInformation, globalAssetId: copy.id });
+    expect(copy.submodels).toEqual([submodelToReference(copyS1), submodelToReference(copyS2)]);
+
+    expect(copy.security.localAccessControl.accessPermissionRules).toEqual([
+      AccessPermissionRule.create({
+        targetSubjectAttributes: admin,
+        permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: copyS1.idShort })),
+            permissions: allPermissionsAllow.map(Permission.fromPlain),
+          }),
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: copyS2.idShort })),
+            permissions: allPermissionsAllow.map(Permission.fromPlain),
+          }),
+        ],
+      }),
+      AccessPermissionRule.create({
+        targetSubjectAttributes: member,
+        permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: copyS1.idShort })),
+            permissions: allPermissionsAllow.map(Permission.fromPlain),
+          }),
+        ],
+      }),
+    ]);
+
+    const copyWithoutS2 = aas.copy([copyS1]);
+    expect(copyWithoutS2.id).not.toEqual(aas.id);
+    expect(copyWithoutS2.assetInformation).toEqual({ ...aas.assetInformation, globalAssetId: copyWithoutS2.id });
+    expect(copyWithoutS2.submodels).toEqual([submodelToReference(copyS1)]);
+
+    expect(copyWithoutS2.security.localAccessControl.accessPermissionRules).toEqual([
+      AccessPermissionRule.create({
+        targetSubjectAttributes: admin,
+        permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: copyS1.idShort })),
+            permissions: allPermissionsAllow.map(Permission.fromPlain),
+          }),
+        ],
+      }),
+      AccessPermissionRule.create({
+        targetSubjectAttributes: member,
+        permissionsPerObject: [
+          PermissionPerObject.create({
+            object: createAasObject(IdShortPath.create({ path: copyS1.idShort })),
+            permissions: allPermissionsAllow.map(Permission.fromPlain),
+          }),
+        ],
+      }),
+    ]);
+  });
+
   it("should be modified", () => {
     const aas = AssetAdministrationShell.create({
       assetInformation: AssetInformation.create({ assetKind: AssetKind.Instance, globalAssetId: "globalAssetId" }),
@@ -105,37 +186,6 @@ describe("assetAdministrationShell", () => {
     expect(aas.assetInformation.assetKind).toEqual(AssetKind.Instance);
     expect(aas.assetInformation.globalAssetId).toEqual("globalAssetId");
     expect(aas.assetInformation.defaultThumbnails).toEqual(defaultThumbnails.map(Resource.fromPlain));
-  });
-
-  it("should be able to be copied", () => {
-    const id = "aasId";
-    const aas = AssetAdministrationShell.create({
-      id,
-      assetInformation: AssetInformation.create({ assetKind: "Instance", globalAssetId: id }),
-    });
-
-    const submodel = Submodel.create({
-      id: randomUUID(),
-      idShort: "MySubmodel",
-    });
-
-    aas.addSubmodel(submodel);
-
-    const submodelCopy = submodel.copy();
-
-    const copy = aas.copy([submodelCopy]);
-
-    expect(copy.id).not.toEqual(aas.id);
-    expect(copy.assetInformation).toEqual({ ...aas.assetInformation, globalAssetId: copy.id });
-    expect(copy.submodels).toEqual([
-      Reference.create({
-        type: ReferenceTypes.ModelReference,
-        keys: [Key.create({
-          type: KeyTypes.Submodel,
-          value: submodelCopy.id,
-        })],
-      }),
-    ]);
   });
 
   it("should add a submodel", () => {
