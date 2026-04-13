@@ -1,6 +1,6 @@
 import type { QuotaPeriod } from "./quota";
 // policy.decorator.ts
-import { NumericEnvKeys } from "@open-dpp/env/dist/env";
+import { NumericEnvKeys } from "@open-dpp/env";
 
 export interface PolicyCapRule {
   type: "cap";
