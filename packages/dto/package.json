@@ -1,7 +1,9 @@
 {
   "name": "@open-dpp/dto",
   "version": "0.1.0",
-  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
   "packageManager": "pnpm@10.19.0",
   "description": "",
   "author": "",
