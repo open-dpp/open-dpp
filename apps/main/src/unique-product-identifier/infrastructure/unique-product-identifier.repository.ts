@@ -7,7 +7,7 @@ import { UniqueProductIdentifier } from "../domain/unique.product.identifier";
 import { UniqueProductIdentifierDoc, UniqueProductIdentifierSchemaVersion } from "./unique-product-identifier.schema";
 
 @Injectable()
-export class UniqueProductIdentifierService {
+export class UniqueProductIdentifierRepository {
   private uniqueProductIdentifierDoc: MongooseModel<UniqueProductIdentifierDoc>;
 
   constructor(
@@ -80,5 +80,9 @@ export class UniqueProductIdentifierService {
     return uniqueProductIdentifiers.map(permalink =>
       this.convertToDomain(permalink),
     );
+  }
+
+  async deleteByReferenceId(referenceId: string) {
+    await this.uniqueProductIdentifierDoc.findOneAndDelete({ referenceId });
   }
 }

@@ -4,10 +4,13 @@ import {
 
   Populates,
 } from "@open-dpp/dto";
+import { useConfirm } from "primevue/useconfirm";
 import { match, P } from "ts-pattern";
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import apiClient from "../lib/api-client.ts";
+import { useErrorHandlingStore } from "../stores/error.handling.ts";
 import { HTTPCode } from "../stores/http-codes.ts";
 
 export function usePassports() {
@@ -15,6 +18,9 @@ export function usePassports() {
   const loading = ref(false);
   const route = useRoute();
   const router = useRouter();
+  const { t } = useI18n();
+  const errorHandlingStore = useErrorHandlingStore();
+  const confirm = useConfirm();
 
   const fetchPassports = async (pagingParams: PagingParamsDto): Promise<PagingResult> => {
     loading.value = true;
@@ -48,5 +54,41 @@ export function usePassports() {
     return response.data;
   };
 
-  return { createPassport, fetchPassports, passports, loading };
+  async function deletePassport(id: string, onDeleted: () => Promise<void>) {
+    const errorMessage = t("passports.errorDelete");
+    const removeLabel = t("common.remove");
+    const cancelLabel = t("common.cancel");
+
+    confirm.require({
+      message: t(`passports.delete`),
+      header: removeLabel,
+      icon: "pi pi-info-circle",
+      rejectLabel: cancelLabel,
+      rejectProps: {
+        label: cancelLabel,
+        severity: "secondary",
+        outlined: true,
+      },
+      acceptProps: {
+        label: removeLabel,
+        severity: "danger",
+      },
+      accept: async () => {
+        try {
+          const response = await apiClient.dpp.passports.deleteById(id);
+          if (response.status === HTTPCode.NO_CONTENT) {
+            await onDeleted();
+          }
+          else {
+            errorHandlingStore.logErrorWithNotification(errorMessage);
+          }
+        }
+        catch (e) {
+          errorHandlingStore.logErrorWithNotification(errorMessage, e);
+        }
+      },
+    });
+  }
+
+  return { createPassport, fetchPassports, passports, loading, deletePassport };
 }

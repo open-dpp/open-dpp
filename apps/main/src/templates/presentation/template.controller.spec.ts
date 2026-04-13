@@ -8,9 +8,11 @@ import {
   buildEmptyExportPayload,
   buildRichExportPayload,
 } from "../../../test/export-payload.fixtures";
+import { AssetAdministrationShell } from "../../aas/domain/asset-adminstration-shell";
 import { LanguageText } from "../../aas/domain/common/language-text";
 import { Environment } from "../../aas/domain/environment";
 import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
+import { Submodel } from "../../aas/domain/submodel-base/submodel";
 import {
   ConceptDescriptionDoc,
   ConceptDescriptionSchema,
@@ -315,6 +317,41 @@ describe("templateController", () => {
     expect(exportResponse.body.environment.assetAdministrationShells).toHaveLength(1);
     expect(exportResponse.body.environment.submodels).toHaveLength(0);
     expect(exportResponse.body.environment.conceptDescriptions).toHaveLength(0);
+  });
+
+  it("/DELETE template", async () => {
+    const { app, getOrganizationAndUserWithCookie } = ctx.globals();
+    const { org, userCookie } = await getOrganizationAndUserWithCookie();
+
+    const aas = AssetAdministrationShell.create({});
+    const submodel = Submodel.create({ idShort: "testSubmodel" });
+    aas.addSubmodel(submodel);
+    const { aasRepository, dppIdentifiableRepository, submodelRepository } = ctx.getRepositories();
+    await aasRepository.save(aas);
+    await submodelRepository.save(submodel);
+
+    const template = Template.create({
+      organizationId: org!.id,
+      environment: Environment.create({
+        assetAdministrationShells: [aas.id],
+        submodels: [submodel.id],
+        conceptDescriptions: [],
+      }),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await dppIdentifiableRepository.save(template);
+
+    const response = await request(app.getHttpServer())
+      .delete(`${basePath}/${template.id}`)
+      .set("Cookie", userCookie)
+      .set("X-OPEN-DPP-ORGANIZATION-ID", org!.id);
+
+    expect(response.status).toEqual(204);
+    expect(await aasRepository.findOne(aas.id)).toBeUndefined();
+    expect(await submodelRepository.findOne(submodel.id)).toBeUndefined();
+    expect(await dppIdentifiableRepository.findOne(template.id)).toBeUndefined();
   });
 
   it("/POST import and /GET export template with all submodel element types", async () => {

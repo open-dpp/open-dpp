@@ -450,6 +450,8 @@
     "select": "Produktpass auswählen",
     "label": "Produktpass | Produktpässe",
     "create": "Neuen Produktpass erstellen",
+    "delete": "Soll der Produktpass wirklich gelöscht werden? Damit ist dieser nicht mehr verfügbar.",
+    "errorDelete": "Löschen des Produktpasses fehlgeschlagen",
     "blank": "Leer",
     "fromTemplate": "Aus Produktpassvorlage",
     "selectTemplate": "Passvorlage auswählen"
@@ -457,6 +459,8 @@
   "templates": {
     "label": "Passvorlagen",
     "create": "Neue Passvorlage erstellen",
+    "delete": "Soll die Passvorlage wirklich gelöscht werden? Damit ist diese nicht mehr verfügbar.",
+    "errorDelete": "Löschen der Passvorlage fehlgeschlagen",
     "createdAt": "Erstellt am",
     "updatedAt": "Aktualisiert am"
   },

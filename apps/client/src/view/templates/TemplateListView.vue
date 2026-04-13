@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { SharedDppDto } from "@open-dpp/dto";
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
@@ -31,6 +32,8 @@ const {
   templates,
   loading,
   init,
+  reloadCurrentPage,
+  deleteTemplate,
 } = useTemplates({
   changeQueryParams,
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
@@ -39,7 +42,11 @@ const { t } = useI18n();
 
 const createDialogVisible = ref(false);
 
-const { importing: importingTemplate, exportItem: exportTemplate, onFileSelect: onTemplateFileSelect } = useExportImport({
+const {
+  importing: importingTemplate,
+  exportItem: exportTemplate,
+  onFileSelect: onTemplateFileSelect,
+} = useExportImport({
   exportFn: async (id) => {
     const response = await apiClient.dpp.templates.export(id);
     return response.data;
@@ -52,6 +59,10 @@ const { importing: importingTemplate, exportItem: exportTemplate, onFileSelect: 
   exportErrorKey: "common.templateExportFailed",
   importErrorKey: "common.templateImportFailed",
 });
+
+async function onDeleteButtonClick(item: SharedDppDto) {
+  await deleteTemplate(item.id, reloadCurrentPage);
+}
 
 onMounted(async () => {
   await init();
@@ -99,7 +110,19 @@ onMounted(async () => {
         :title="t('common.exportTemplate')"
         @click="exportTemplate(passport.id)"
       />
+      <Button
+        icon="pi pi-trash"
+        severity="danger"
+        :aria-label="t('common.remove')"
+        :title="t('common.remove')"
+        @click="onDeleteButtonClick(passport)"
+      />
     </template>
   </DppTable>
-  <TemplateCreateDialog v-if="createDialogVisible" v-model="createDialogVisible" :create-template="createTemplate" />
+  <TemplateCreateDialog
+    v-if="createDialogVisible"
+    v-model="createDialogVisible"
+    :create-template="createTemplate"
+  />
+  <ConfirmDialog />
 </template>

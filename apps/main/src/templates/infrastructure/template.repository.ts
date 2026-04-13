@@ -40,4 +40,8 @@ export class TemplateRepository implements IDigitalProductPassportIdentifiableRe
   async findAllByOrganizationId(organizationId: string, pagination?: Pagination) {
     return await findAllByOrganizationId(this.templateDoc, Template.fromPlain, organizationId, pagination);
   }
+
+  async deleteById(id: string, options?: DbSessionOptions): Promise<void> {
+    await this.templateDoc.findByIdAndDelete(id, options);
+  }
 }

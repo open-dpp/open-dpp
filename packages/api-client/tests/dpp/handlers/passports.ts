@@ -14,31 +14,31 @@ export function passportsHandlers() {
   const passportsEndpointUrl = `${baseURL}/passports`
 
   return [
-    http.post(
-      `${passportsEndpointUrl}`,
-      async () => {
-        return HttpResponse.json(passport1, { status: 201 })
-      },
-    ),
-    http.get(
-      `${passportsEndpointUrl}`,
-      async ({ request }) => {
-        const errorResponse = checkQueryParameters(request, {
-          limit: paginationParams.limit.toFixed(),
-        })
+    http.post(`${passportsEndpointUrl}`, async () => {
+      return HttpResponse.json(passport1, { status: 201 })
+    }),
+    http.get(`${passportsEndpointUrl}`, async ({ request }) => {
+      const errorResponse = checkQueryParameters(request, {
+        limit: paginationParams.limit.toFixed(),
+      })
 
-        return (
-          errorResponse
-          || HttpResponse.json({
+      return (
+        errorResponse
+        || HttpResponse.json(
+          {
             paging_metadata: {
               cursor: passport2.id,
             },
             result: [passport1, passport2],
-          }, {
+          },
+          {
             status: 200,
-          })
+          },
         )
-      },
-    ),
+      )
+    }),
+    http.delete(`${passportsEndpointUrl}/${passport1.id}`, async () => {
+      return HttpResponse.json(undefined, { status: 204 })
+    }),
   ]
 }

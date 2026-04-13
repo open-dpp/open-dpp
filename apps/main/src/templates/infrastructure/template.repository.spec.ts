@@ -61,6 +61,22 @@ describe("templateRepository", () => {
     expect(foundTemplate).toEqual(template);
   });
 
+  it("should delete a template", async () => {
+    const template = Template.create({
+      id: randomUUID(),
+      organizationId: randomUUID(),
+      environment: Environment.create({
+        assetAdministrationShells: [randomUUID()],
+        submodels: [randomUUID()],
+        conceptDescriptions: [randomUUID()],
+      }),
+    });
+    await templateRepository.save(template);
+    await templateRepository.deleteById(template.id);
+    const foundTemplate = await templateRepository.findOne(template.id);
+    expect(foundTemplate).toBeUndefined();
+  });
+
   it("should find all templates of organization", async () => {
     const organizationId = randomUUID();
     const otherOrganizationId = randomUUID();

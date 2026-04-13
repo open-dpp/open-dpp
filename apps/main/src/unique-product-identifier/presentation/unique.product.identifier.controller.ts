@@ -37,7 +37,7 @@ import { UserRoleDecorator } from "../../identity/auth/presentation/decorators/u
 import { Pagination } from "../../pagination/pagination";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
-import { UniqueProductIdentifierService } from "../infrastructure/unique-product-identifier.service";
+import { UniqueProductIdentifierRepository } from "../infrastructure/unique-product-identifier.repository";
 import {
   UniqueProductIdentifierListDtoSchema,
 } from "./dto/unique-product-identifier-dto.schema";
@@ -47,7 +47,7 @@ import { UniqueProductIdentifierApplicationService } from "./unique.product.iden
 export class UniqueProductIdentifierController implements IAasReadEndpoints {
   constructor(
     private readonly uniqueProductIdentifierApplicationService: UniqueProductIdentifierApplicationService,
-    private readonly uniqueProductIdentifierService: UniqueProductIdentifierService,
+    private readonly uniqueProductIdentifierService: UniqueProductIdentifierRepository,
     private readonly passportRepository: PassportRepository,
     private readonly environmentService: EnvironmentService,
     private readonly brandingRepository: BrandingRepository,

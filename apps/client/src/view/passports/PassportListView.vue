@@ -27,7 +27,7 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
   });
 }
 
-const { passports, loading, fetchPassports } = usePassports();
+const { passports, loading, fetchPassports, deletePassport } = usePassports();
 
 const {
   hasPrevious,
@@ -36,6 +36,7 @@ const {
   previousPage,
   resetCursor,
   nextPage,
+  reloadCurrentPage,
 } = usePagination({
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
   limit: 10,
@@ -47,7 +48,11 @@ const createDialog = useTemplateRef("createDialog");
 
 const errorHandlingStore = useErrorHandlingStore();
 
-const { importing, exportItem: exportPassport, onFileSelect: onPassportFileSelect } = useExportImport({
+const {
+  importing,
+  exportItem: exportPassport,
+  onFileSelect: onPassportFileSelect,
+} = useExportImport({
   exportFn: async (id) => {
     const response = await axiosIns.get(`/passports/${id}/export`);
     return response.data;
@@ -105,6 +110,10 @@ async function forwardToPresentationChat(item: SharedDppDto) {
       e,
     );
   }
+}
+
+async function onDeleteButtonClick(item: SharedDppDto) {
+  await deletePassport(item.id, reloadCurrentPage);
 }
 
 onMounted(async () => {
@@ -166,7 +175,15 @@ onMounted(async () => {
         :title="t('common.exportPassport')"
         @click="exportPassport(passport.id)"
       />
+      <Button
+        icon="pi pi-trash"
+        severity="danger"
+        :aria-label="t('common.remove')"
+        :title="t('common.remove')"
+        @click="onDeleteButtonClick(passport)"
+      />
     </template>
   </DppTable>
   <PassportCreateDialog ref="createDialog" />
+  <ConfirmDialog />
 </template>

@@ -10,6 +10,13 @@ import { SubmodelDoc, SubmodelSchema } from "../../../aas/infrastructure/schemas
 import { generateMongoConfig } from "../../../database/config";
 import { OrganizationsModule } from "../../../identity/organizations/organizations.module";
 import { UsersModule } from "../../../identity/users/users.module";
+import {
+  UniqueProductIdentifierRepository,
+} from "../../../unique-product-identifier/infrastructure/unique-product-identifier.repository";
+import {
+  UniqueProductIdentifierDoc,
+  UniqueProductIdentifierSchema,
+} from "../../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
 import { PassportRepository } from "../../infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../../infrastructure/passport.schema";
 import { PassportService } from "./passport.service";
@@ -33,6 +40,7 @@ describe("passportService", () => {
           { name: PassportDoc.name, schema: PassportSchema },
           { name: AssetAdministrationShellDoc.name, schema: AssetAdministrationShellSchema },
           { name: SubmodelDoc.name, schema: SubmodelSchema },
+          { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema },
         ]),
         AasModule,
         UsersModule,
@@ -41,6 +49,7 @@ describe("passportService", () => {
       providers: [
         PassportService,
         PassportRepository,
+        UniqueProductIdentifierRepository,
       ],
     }).compile();
 

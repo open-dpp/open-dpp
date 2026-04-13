@@ -69,6 +69,11 @@ describe('apiClient', () => {
       })
       expect(response.data).toEqual(template1)
     })
+
+    it('should delete template', async () => {
+      const response = await sdk.dpp.templates.deleteById(template1.id)
+      expect(response.status).toEqual(204)
+    })
   })
 
   describe('passports', () => {
@@ -94,6 +99,11 @@ describe('apiClient', () => {
       })
 
       expect(response.data).toEqual(passport1)
+    })
+
+    it('should delete passport', async () => {
+      const response = await sdk.dpp.passports.deleteById(passport1.id)
+      expect(response.status).toEqual(204)
     })
   })
 

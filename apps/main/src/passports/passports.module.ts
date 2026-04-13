@@ -6,8 +6,8 @@ import { AuthModule } from "../identity/auth/auth.module";
 import { OrganizationsModule } from "../identity/organizations/organizations.module";
 import { TemplateRepository } from "../templates/infrastructure/template.repository";
 import { TemplateDoc, TemplateSchema } from "../templates/infrastructure/template.schema";
+import { UniqueProductIdentifierRepository } from "../unique-product-identifier/infrastructure/unique-product-identifier.repository";
 import { UniqueProductIdentifierDoc, UniqueProductIdentifierSchema } from "../unique-product-identifier/infrastructure/unique-product-identifier.schema";
-import { UniqueProductIdentifierService } from "../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { PassportService } from "./application/services/passport.service";
 import { PassportRepository } from "./infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "./infrastructure/passport.schema";
@@ -34,7 +34,7 @@ import { PassportController } from "./presentation/passport.controller";
     OrganizationsModule,
   ],
   controllers: [PassportController],
-  providers: [TemplateRepository, UniqueProductIdentifierService, PassportRepository, PassportService],
+  providers: [TemplateRepository, UniqueProductIdentifierRepository, PassportRepository, PassportService],
   exports: [PassportRepository, PassportService],
 })
 export class PassportsModule { }

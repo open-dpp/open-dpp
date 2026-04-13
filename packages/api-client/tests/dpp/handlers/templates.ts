@@ -14,31 +14,31 @@ export function templatesHandlers() {
   const templatesEndpointUrl = `${baseURL}/templates`
 
   return [
-    http.post(
-      `${templatesEndpointUrl}`,
-      async () => {
-        return HttpResponse.json(template1, { status: 201 })
-      },
-    ),
-    http.get(
-      `${templatesEndpointUrl}`,
-      async ({ request }) => {
-        const errorResponse = checkQueryParameters(request, {
-          limit: paginationParams.limit.toFixed(),
-        })
+    http.post(`${templatesEndpointUrl}`, async () => {
+      return HttpResponse.json(template1, { status: 201 })
+    }),
+    http.get(`${templatesEndpointUrl}`, async ({ request }) => {
+      const errorResponse = checkQueryParameters(request, {
+        limit: paginationParams.limit.toFixed(),
+      })
 
-        return (
-          errorResponse
-          || HttpResponse.json({
+      return (
+        errorResponse
+        || HttpResponse.json(
+          {
             paging_metadata: {
               cursor: template2.id,
             },
             result: [template1, template2],
-          }, {
+          },
+          {
             status: 200,
-          })
+          },
         )
-      },
-    ),
+      )
+    }),
+    http.delete(`${templatesEndpointUrl}/${template1.id}`, async () => {
+      return HttpResponse.json(undefined, { status: 204 })
+    }),
   ]
 }

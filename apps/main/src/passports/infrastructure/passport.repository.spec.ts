@@ -63,6 +63,22 @@ describe("passportRepository", () => {
     expect(foundAas).toEqual(passport);
   });
 
+  it("should delete a passport", async () => {
+    const passport = Passport.create({
+      id: randomUUID(),
+      organizationId: randomUUID(),
+      environment: Environment.create({
+        assetAdministrationShells: [randomUUID()],
+        submodels: [randomUUID()],
+        conceptDescriptions: [randomUUID()],
+      }),
+    });
+    await passportRepository.save(passport);
+    await passportRepository.deleteById(passport.id);
+    const foundAas = await passportRepository.findOne(passport.id);
+    expect(foundAas).toBeUndefined();
+  });
+
   it("should find all passports of organization", async () => {
     const organizationId = randomUUID();
     const otherOrganizationId = randomUUID();

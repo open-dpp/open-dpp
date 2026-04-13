@@ -43,4 +43,8 @@ export class PassportNamespace {
       `${this.passportEndpoint}/${passportId}/unique-product-identifier`,
     )
   }
+
+  public async deleteById(id: string) {
+    return await this.axiosInstance.delete(`${this.passportEndpoint}/${id}`)
+  }
 }

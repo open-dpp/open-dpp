@@ -408,6 +408,14 @@ function createTemplatePaths() {
           },
         },
       },
+      delete: {
+        tags: [tag],
+        summary: `Deletes template`,
+        parameters: [IdParamSchema],
+        responses: {
+          [HTTPCode.NO_CONTENT]: {},
+        },
+      },
     },
     [`/${tag}/{id}/export`]: {
       get: {
@@ -490,6 +498,14 @@ function createPassportPaths() {
               [ContentType.JSON]: { schema: PassportDtoSchema },
             },
           },
+        },
+      },
+      delete: {
+        tags: [tag],
+        summary: `Deletes passport`,
+        parameters: [IdParamSchema],
+        responses: {
+          [HTTPCode.NO_CONTENT]: {},
         },
       },
     },

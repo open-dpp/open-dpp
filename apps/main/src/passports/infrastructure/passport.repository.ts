@@ -38,4 +38,8 @@ export class PassportRepository {
   async findAllByOrganizationId(organizationId: string, pagination?: Pagination): Promise<PagingResult<Passport>> {
     return await findAllByOrganizationId(this.passportDoc, Passport.fromPlain, organizationId, pagination);
   }
+
+  async deleteById(id: string, options?: DbSessionOptions): Promise<void> {
+    await this.passportDoc.findByIdAndDelete(id, options);
+  }
 }
