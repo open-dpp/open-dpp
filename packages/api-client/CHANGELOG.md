@@ -1,5 +1,12 @@
 # @open-dpp/api-client
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes

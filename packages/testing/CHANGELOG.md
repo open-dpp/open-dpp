@@ -1,5 +1,13 @@
 # @open-dpp/testing
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @open-dpp/dto@0.1.2
+  - @open-dpp/env@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes
