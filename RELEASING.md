@@ -172,7 +172,7 @@ Both secrets are configured on the `open-dpp/open-dpp` repository:
 | Secret         | Purpose                                                                                                                    |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `NPM_TOKEN`    | npm automation token with publish rights to the `@open-dpp` scope. Consumed by `pnpm release` / `changeset publish`.       |
-| `GITHUB_TOKEN` | Provided automatically by Actions. Requires `contents: write` and `pull-requests: write`, already set in `release.yml`.    |
+| `GITHUB_TOKEN` | Provided automatically by Actions. Requires `contents: write`, `pull-requests: write`, and `actions: write` (for dispatching `build.yml` at the release tag), already set in `release.yml`. |
 
 If `NPM_TOKEN` is missing or expired, the `Release` job will fail at the publish step. Rotate the token in npm, update the GitHub secret, and re-run the failed job.
 
