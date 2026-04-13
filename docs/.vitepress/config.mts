@@ -1,6 +1,7 @@
 import { defineConfig } from "vitepress";
 import { useSidebar } from "vitepress-openapi";
 import spec from "../api-docs.json" with { type: "json" };
+import pkg from "../package.json" with { type: "json" };
 
 const sidebar = useSidebar({
   spec,
@@ -21,7 +22,14 @@ export default defineConfig({
       src: "/logo.svg",
       alt: "open-dpp Logo",
     },
-    nav: [{ text: "Home", link: "/home" }, { text: "Rest API", link: "/api"}],
+    nav: [
+      { text: "Home", link: "/home" },
+      { text: "Rest API", link: "/api" },
+      {
+        text: `v${pkg.version}`,
+        link: `https://github.com/open-dpp/open-dpp/releases/tag/v${pkg.version}`,
+      },
+    ],
 
     sidebar: {
       "/api": [
