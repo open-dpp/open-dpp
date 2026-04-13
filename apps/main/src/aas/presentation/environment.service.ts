@@ -439,24 +439,39 @@ export class EnvironmentService {
     }
   }
 
-  async populateEnvironmentForPagingResult(pagingResult: PagingResult<Passport | Template>, populateOptions: PopulateOptions) {
+  async populateEnvironmentForPagingResult(pagingResult: PagingResult<Passport | Template>, populateOptions: PopulateOptions, subject: SubjectAttributes) {
+    const ability = await this.loadAbility(pagingResult.items[0].environment, subject);
     const populatedItems = await Promise.all(pagingResult.items.map(
       async i => await new DigitalProductPassportIdentifiableEnvironmentPopulateDecorator(
         i,
         this.aasRepository,
         this.submodelRepository,
+        ability,
       ).populate(populateOptions),
     ));
     return PagingResult.create({ pagination: pagingResult.pagination, items: populatedItems });
   }
 
   async copyEnvironment(environment: Environment): Promise<Environment> {
-    const submodelsCopy = await Promise.all(environment.submodels.map(async modelId => (await this.findSubmodelByIdOrFail(environment, modelId)).copy()));
+    const submodelsCopy: Submodel[] = [];
+    for (const submodelId of environment.submodels) {
+      const submodel = await this.findSubmodelByIdOrFail(environment, submodelId);
+      const copy = submodel.copy();
+      if (copy) {
+        submodelsCopy.push(copy);
+      }
+    }
     const aasCopy = (await this.getFirstAssetAdministrationShell(environment)).copy(submodelsCopy);
-
-    await this.aasRepository.save(aasCopy);
-    await Promise.all(submodelsCopy.map(model => this.submodelRepository.save(model)));
-
+    const session = await this.connection.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await this.aasRepository.save(aasCopy);
+        await Promise.all(submodelsCopy.map(model => this.submodelRepository.save(model)));
+      });
+    }
+    finally {
+      await session.endSession();
+    }
     return Environment.create({
       assetAdministrationShells: [aasCopy.id],
       submodels: submodelsCopy.map(model => model.id),

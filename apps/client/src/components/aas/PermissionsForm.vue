@@ -39,6 +39,7 @@ const {
   object: props.path.idShortPathIncludingSubmodel ?? "",
   modifyShell: props.modifyShell,
   deletePolicyBySubjectAndObject: props.deletePolicyBySubjectAndObject,
+  ignoredPermissionOptions: props.ignoredPermissionOptions,
 });
 
 const { asSubject } = useUserStore();
@@ -111,6 +112,15 @@ const permissionsInherited = computed(
   () => permissionsOfSelectedRole.value.inheritsPermissionsOf !== null,
 );
 
+function isReadDisabledCauseOfOtherPermissionsAreActive(key: PermissionType) {
+  return (
+    key === Permissions.Read
+    && permissionsOfSelectedRole.value.permissions.some(
+      p => p !== Permissions.Read,
+    )
+  );
+}
+
 defineExpose<{
   savePermissions: () => Promise<void>;
 }>({
@@ -158,10 +168,7 @@ defineExpose<{
             disabled
               || !canEditPermissions
               || permissionsInherited
-              || (permission.key === Permissions.Read
-                && permissionsOfSelectedRole.permissions.some(
-                  (p) => p !== Permissions.Read,
-                ))
+              || isReadDisabledCauseOfOtherPermissionsAreActive(permission.key)
           "
           name="permissions"
           :value="permission.key"

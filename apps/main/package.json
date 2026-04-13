@@ -1,6 +1,7 @@
 {
   "name": "@open-dpp/main",
-  "version": "1.0.0",
+  "version": "0.1.1",
+  "private": true,
   "packageManager": "pnpm@10.26.2",
   "description": "",
   "author": "",

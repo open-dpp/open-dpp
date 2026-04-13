@@ -17,5 +17,8 @@ const apiClient = new OpenDppClient({
   media: {
     baseURL: MEDIA_SERVICE_URL,
   },
+  status: {
+    baseURL: API_URL,
+  },
 });
 export default apiClient;

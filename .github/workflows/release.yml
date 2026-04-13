@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+env:
+  NODE_VERSION: 24
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create Release Pull Request or Publish
+        id: changesets
+        uses: changesets/action@6a0a831ff30acef54f2c6aa1cbbc1096b066edaf # v1.7.0
+        with:
+          version: pnpm version-packages
+          publish: pnpm release
+          title: "chore: version packages"
+          commit: "chore: version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Push a repo-wide `v<version>` git tag so the release is reachable by
+      # tag name in git. Every `@open-dpp/*` package is in the `fixed` group
+      # in `.changeset/config.json`, so the first published package carries
+      # the canonical release version for the whole repo.
+      #
+      # Note: this tag push is made with `GITHUB_TOKEN`, which (by design)
+      # does not trigger other workflow runs. That's why the next step
+      # explicitly dispatches `build.yml` with the tag as its ref — it would
+      # otherwise never run for the versioned Docker image.
+      #
+      # PUBLISHED_PACKAGES is passed through an env var (not inlined via
+      # ${{ }}) to avoid script injection via workflow expression expansion.
+      - name: Push repo-wide version tag
+        id: version-tag
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
+        run: |
+          set -euo pipefail
+          version=$(jq -r '.[0].version' <<< "$PUBLISHED_PACKAGES")
+          if [ -z "$version" ] || [ "$version" = "null" ]; then
+            echo "Could not determine published version from changesets output" >&2
+            exit 1
+          fi
+          tag="v$version"
+          git fetch origin --tags --force
+          if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            existing_sha=$(git rev-parse "refs/tags/$tag^{commit}")
+            if [ "$existing_sha" != "$GITHUB_SHA" ]; then
+              echo "Tag $tag already exists at $existing_sha (expected $GITHUB_SHA)" >&2
+              exit 1
+            fi
+            echo "Tag $tag already exists at $GITHUB_SHA, skipping push."
+          else
+            git tag "$tag"
+            git push origin "$tag"
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      # Trigger `build.yml` at the tag ref so `docker/metadata-action` picks
+      # up the tag via `type=semver,pattern={{version}}` and publishes a
+      # version-tagged Docker image. RELEASE_TAG is read from the previous
+      # step's output via env var to avoid inlining `${{ }}` into `run:`.
+      - name: Trigger versioned Docker build
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.version-tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          gh workflow run build.yml --repo "$GITHUB_REPOSITORY" --ref "$RELEASE_TAG"

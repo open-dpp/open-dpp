@@ -1,6 +1,7 @@
 {
-  "name": "docs",
-  "version": "1.0.0",
+  "name": "@open-dpp/docs",
+  "private": true,
+  "version": "0.1.1",
   "description": "",
   "type": "module",
   "main": "index.js",
