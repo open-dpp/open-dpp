@@ -4,9 +4,14 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 permissions:
   contents: write
   pull-requests: write
+  actions: write
 
 env:
   NODE_VERSION: 24
@@ -67,11 +72,17 @@ jobs:
             exit 1
           fi
           tag="v$version"
-          if ! git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+          git fetch origin --tags --force
+          if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            existing_sha=$(git rev-parse "refs/tags/$tag^{commit}")
+            if [ "$existing_sha" != "$GITHUB_SHA" ]; then
+              echo "Tag $tag already exists at $existing_sha (expected $GITHUB_SHA)" >&2
+              exit 1
+            fi
+            echo "Tag $tag already exists at $GITHUB_SHA, skipping push."
+          else
             git tag "$tag"
             git push origin "$tag"
-          else
-            echo "Tag $tag already exists, skipping push."
           fi
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
