@@ -28,9 +28,7 @@ import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
 } from "../../unique-product-identifier/infrastructure/unique-product-identifier.schema";
-import {
-  UniqueProductIdentifierService,
-} from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
+import { UniqueProductIdentifierService } from "../../unique-product-identifier/infrastructure/unique-product-identifier.service";
 import { Passport } from "../domain/passport";
 import { PassportRepository } from "../infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../infrastructure/passport.schema";
@@ -43,28 +41,40 @@ describe("passportController", () => {
     basePath,
     {
       imports: [PassportsModule, AasModule],
-      providers: [PassportRepository, TemplateRepository, UniqueProductIdentifierService, AasSerializationService],
+      providers: [
+        PassportRepository,
+        TemplateRepository,
+        UniqueProductIdentifierService,
+        AasSerializationService,
+      ],
       controllers: [PassportController],
     },
-    [{ name: PassportDoc.name, schema: PassportSchema }, {
-      name: TemplateDoc.name,
-      schema: TemplateSchema,
-    }, { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema }, { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema }],
+    [
+      { name: PassportDoc.name, schema: PassportSchema },
+      {
+        name: TemplateDoc.name,
+        schema: TemplateSchema,
+      },
+      { name: UniqueProductIdentifierDoc.name, schema: UniqueProductIdentifierSchema },
+      { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
+    ],
     PassportRepository,
     SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.OWNER }),
   );
 
   async function createPassport(orgId?: string): Promise<Passport> {
     const { aas, submodels } = ctx.getAasObjects();
-    return ctx.getRepositories().dppIdentifiableRepository.save(Passport.create({
-      id: randomUUID(),
-      organizationId: orgId ?? randomUUID(),
-      environment: Environment.create({
-        assetAdministrationShells: [aas.id],
-        submodels: submodels.map(s => s.id),
-        conceptDescriptions: [],
+    return ctx.getRepositories().dppIdentifiableRepository.save(
+      Passport.create({
+        id: randomUUID(),
+        organizationId: orgId ?? randomUUID(),
+        environment: Environment.create({
+          assetAdministrationShells: [aas.id],
+          submodels: submodels.map((s) => s.id),
+          conceptDescriptions: [],
+        }),
       }),
-    }));
+    );
   }
 
   async function savePassport(passport: Passport): Promise<Template> {
@@ -76,15 +86,11 @@ describe("passportController", () => {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const { aas, submodels } = ctx.getAasObjects();
 
-    const firstCreate = new Date(
-      "2022-01-01T00:00:00.000Z",
-    );
+    const firstCreate = new Date("2022-01-01T00:00:00.000Z");
 
     const firstId = randomUUID();
 
-    const secondCreate = new Date(
-      "2023-05-01T00:00:00.000Z",
-    );
+    const secondCreate = new Date("2023-05-01T00:00:00.000Z");
 
     const secondId = randomUUID();
 
@@ -95,7 +101,7 @@ describe("passportController", () => {
       organizationId: org.id,
       environment: Environment.create({
         assetAdministrationShells: [aas.id],
-        submodels: submodels.map(s => s.id),
+        submodels: submodels.map((s) => s.id),
         conceptDescriptions: [],
       }),
       createdAt: firstCreate,
@@ -107,7 +113,7 @@ describe("passportController", () => {
       organizationId: org.id,
       environment: Environment.create({
         assetAdministrationShells: [aas.id],
-        submodels: submodels.map(s => s.id),
+        submodels: submodels.map((s) => s.id),
         conceptDescriptions: [],
       }),
       createdAt: secondCreate,
@@ -128,11 +134,16 @@ describe("passportController", () => {
       paging_metadata: {
         cursor: expect.any(String),
       },
-      result: [secondPassport, firstPassport].map(p => ({
+      result: [secondPassport, firstPassport].map((p) => ({
         ...p.toPlain(),
         environment: {
           ...p.environment.toPlain(),
-          assetAdministrationShells: [{ id: aas.id, displayName: aas.displayName.map(d => ({ language: d.language, text: d.text })) }],
+          assetAdministrationShells: [
+            {
+              id: aas.id,
+              displayName: aas.displayName.map((d) => ({ language: d.language, text: d.text })),
+            },
+          ],
         },
         createdAt: p.createdAt.toISOString(),
         updatedAt: p.updatedAt.toISOString(),
@@ -149,7 +160,7 @@ describe("passportController", () => {
       paging_metadata: {
         cursor: expect.any(String),
       },
-      result: [secondPassport, firstPassport].map(p => ({
+      result: [secondPassport, firstPassport].map((p) => ({
         ...p.toPlain(),
         createdAt: p.createdAt.toISOString(),
         updatedAt: p.updatedAt.toISOString(),
@@ -162,9 +173,7 @@ describe("passportController", () => {
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
     const { aas, submodels } = ctx.getAasObjects();
 
-    const createDate = new Date(
-      "2022-01-01T00:00:00.000Z",
-    );
+    const createDate = new Date("2022-01-01T00:00:00.000Z");
 
     const id = randomUUID();
 
@@ -175,7 +184,7 @@ describe("passportController", () => {
       organizationId: org.id,
       environment: Environment.create({
         assetAdministrationShells: [aas.id],
-        submodels: submodels.map(s => s.id),
+        submodels: submodels.map((s) => s.id),
         conceptDescriptions: [],
       }),
       createdAt: createDate,
@@ -200,9 +209,7 @@ describe("passportController", () => {
   it(`/POST Create blank passport`, async () => {
     const { betterAuthHelper, app } = ctx.globals();
     const { org, userCookie } = await betterAuthHelper.getRandomOrganizationAndUserWithCookie();
-    const now = new Date(
-      "2022-01-01T00:00:00.000Z",
-    );
+    const now = new Date("2022-01-01T00:00:00.000Z");
     jest.spyOn(DateTime, "now").mockReturnValue(now);
     const displayName = [{ language: "en", text: "Test passport" }];
     const body = {
@@ -222,9 +229,7 @@ describe("passportController", () => {
       organizationId: org.id,
       templateId: null,
       environment: {
-        assetAdministrationShells: [
-          expect.any(String),
-        ],
+        assetAdministrationShells: [expect.any(String)],
         submodels: [],
         conceptDescriptions: [],
       },
@@ -233,7 +238,9 @@ describe("passportController", () => {
     });
 
     const aasRepository = ctx.getModuleRef().get(AasRepository);
-    const aas = await aasRepository.findOneOrFail(response.body.environment.assetAdministrationShells[0]);
+    const aas = await aasRepository.findOneOrFail(
+      response.body.environment.assetAdministrationShells[0],
+    );
     expect(aas.displayName).toEqual(displayName.map(LanguageText.fromPlain));
 
     const upidService = ctx.getModuleRef().get(UniqueProductIdentifierService);
@@ -259,7 +266,7 @@ describe("passportController", () => {
       organizationId: org.id,
       environment: Environment.create({
         assetAdministrationShells: [aas.id],
-        submodels: submodels.map(s => s.id),
+        submodels: submodels.map((s) => s.id),
         conceptDescriptions: [],
       }),
       createdAt: templateCreation,
@@ -290,7 +297,9 @@ describe("passportController", () => {
       updatedAt: now.toISOString(),
     });
 
-    expect(response.body.environment.assetAdministrationShells).toHaveLength(template.environment.assetAdministrationShells.length);
+    expect(response.body.environment.assetAdministrationShells).toHaveLength(
+      template.environment.assetAdministrationShells.length,
+    );
     expect(response.body.environment.submodels).toHaveLength(template.environment.submodels.length);
 
     const upidService = ctx.getModuleRef().get(UniqueProductIdentifierService);
@@ -395,8 +404,7 @@ describe("passportController", () => {
     const response = await request(app.getHttpServer())
       .get(`${basePath}/${passport.id}/export`)
       .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org.id)
-    ;
+      .set(ORGANIZATION_ID_HEADER, org.id);
 
     expect(response.status).toEqual(200);
     expect(response.body.format).toEqual("open-dpp:json");
@@ -417,8 +425,7 @@ describe("passportController", () => {
     const exportResponse = await request(app.getHttpServer())
       .get(`${basePath}/${passport.id}/export`)
       .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org.id)
-    ;
+      .set(ORGANIZATION_ID_HEADER, org.id);
     expect(exportResponse.status).toEqual(200);
 
     const importResponse = await request(app.getHttpServer())
@@ -481,8 +488,7 @@ describe("passportController", () => {
     const exportResponse = await request(app.getHttpServer())
       .get(`${basePath}/${importResponse.body.id}/export`)
       .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org.id)
-    ;
+      .set(ORGANIZATION_ID_HEADER, org.id);
 
     expect(exportResponse.status).toEqual(200);
     expect(exportResponse.body.format).toEqual("open-dpp:json");
@@ -519,8 +525,7 @@ describe("passportController", () => {
     const exportResponse = await request(app.getHttpServer())
       .get(`${basePath}/${importResponse.body.id}/export`)
       .set("Cookie", userCookie)
-      .set(ORGANIZATION_ID_HEADER, org.id)
-    ;
+      .set(ORGANIZATION_ID_HEADER, org.id);
 
     expect(exportResponse.status).toEqual(200);
 
@@ -544,7 +549,9 @@ describe("passportController", () => {
     ]);
 
     // Verify property values are preserved
-    const stringProp = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "stringProp");
+    const stringProp = exportedSubmodel.submodelElements.find(
+      (e: any) => e.idShort === "stringProp",
+    );
     expect(stringProp.value).toEqual("hello");
     expect(stringProp.valueType).toEqual("String");
 
@@ -553,7 +560,9 @@ describe("passportController", () => {
     expect(intProp.valueType).toEqual("Int");
 
     // Verify range values are preserved
-    const rangeElement = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "rangeElement");
+    const rangeElement = exportedSubmodel.submodelElements.find(
+      (e: any) => e.idShort === "rangeElement",
+    );
     expect(rangeElement.min).toEqual("0.0");
     expect(rangeElement.max).toEqual("100.0");
     expect(rangeElement.valueType).toEqual("Double");
@@ -566,12 +575,16 @@ describe("passportController", () => {
     ]);
 
     // Verify blob value is preserved
-    const blobElement = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "blobElement");
+    const blobElement = exportedSubmodel.submodelElements.find(
+      (e: any) => e.idShort === "blobElement",
+    );
     expect(blobElement.contentType).toEqual("application/octet-stream");
     expect(blobElement.value).toEqual("SGVsbG8=");
 
     // Verify nested structures are preserved
-    const collection = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "collection");
+    const collection = exportedSubmodel.submodelElements.find(
+      (e: any) => e.idShort === "collection",
+    );
     expect(collection.value).toHaveLength(1);
     expect(collection.value[0].modelType).toEqual("Property");
     expect(collection.value[0].idShort).toEqual("nestedProp");
@@ -581,11 +594,15 @@ describe("passportController", () => {
     expect(list.value[0].idShort).toEqual("listItem1");
     expect(list.value[1].idShort).toEqual("listItem2");
 
-    const entity = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "entityElement");
+    const entity = exportedSubmodel.submodelElements.find(
+      (e: any) => e.idShort === "entityElement",
+    );
     expect(entity.statements).toHaveLength(1);
     expect(entity.entityType).toEqual("SelfManagedEntity");
 
-    const annotatedRel = exportedSubmodel.submodelElements.find((e: any) => e.idShort === "annotatedRelElement");
+    const annotatedRel = exportedSubmodel.submodelElements.find(
+      (e: any) => e.idShort === "annotatedRelElement",
+    );
     expect(annotatedRel.annotations).toHaveLength(1);
     expect(annotatedRel.annotations[0].modelType).toEqual("Property");
     expect(annotatedRel.annotations[0].idShort).toEqual("annotProp");
@@ -597,7 +614,9 @@ describe("passportController", () => {
     const exportedConceptDescriptions = exportResponse.body.environment.conceptDescriptions;
     expect(exportedConceptDescriptions).toHaveLength(1);
     expect(exportedConceptDescriptions[0].idShort).toEqual("conceptDesc1");
-    expect(exportedConceptDescriptions[0].displayName).toEqual([{ language: "en", text: "Test Concept" }]);
+    expect(exportedConceptDescriptions[0].displayName).toEqual([
+      { language: "en", text: "Test Concept" },
+    ]);
     expect(exportedConceptDescriptions[0].isCaseOf).toHaveLength(1);
   });
 
@@ -615,9 +634,7 @@ describe("passportController", () => {
 
       expect(response.status).toEqual(200);
       expect(response.body.result).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ id: passport.id }),
-        ]),
+        expect.arrayContaining([expect.objectContaining({ id: passport.id })]),
       );
     });
 

@@ -47,7 +47,9 @@ export class RelationshipElement implements ISubmodelElement, IRelationshipEleme
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath ? this._parentIdShortPath.addPathSegment(this.idShort) : IdShortPath.create({ path: this.idShort });
+    return this._parentIdShortPath
+      ? this._parentIdShortPath.addPathSegment(this.idShort)
+      : IdShortPath.create({ path: this.idShort });
   }
 
   set displayName(value: Array<LanguageText>) {

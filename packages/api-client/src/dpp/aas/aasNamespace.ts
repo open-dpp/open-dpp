@@ -61,7 +61,7 @@ export class AasNamespace {
   }
 
   public async deletePolicyBySubjectAndObject(id: string, data: DeletePolicyDto) {
-    return this.axiosInstance.delete(`${this.aasEndpoint}/${id}/security/policies`, { data })
+    return this.axiosInstance.delete(`${this.aasEndpoint}/${id}/security/policies`, { data });
   }
 
   public async deleteSubmodelById(id: string, submodelId: string) {

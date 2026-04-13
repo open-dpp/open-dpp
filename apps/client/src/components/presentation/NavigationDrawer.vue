@@ -20,16 +20,12 @@ function onMenuItemClick(item: PresentationMenuItem) {
 </script>
 
 <template>
-  <Drawer
-    v-model:visible="visible"
-    position="left"
-    :header="t('presentation.navigation')"
-  >
+  <Drawer v-model:visible="visible" position="left" :header="t('presentation.navigation')">
     <nav class="flex flex-col gap-6">
       <ul class="flex flex-col gap-1">
         <li v-for="item in menuItems" :key="item.label">
           <button
-            class="flex items-center gap-3 w-full rounded-lg px-3 py-3 text-left text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+            class="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
             @click="onMenuItemClick(item)"
           >
             <i :class="item.icon" class="text-base" />
@@ -38,7 +34,7 @@ function onMenuItemClick(item: PresentationMenuItem) {
         </li>
       </ul>
       <div class="border-t border-gray-100 pt-4">
-        <h3 class="text-xs font-medium uppercase tracking-wider text-gray-400 px-3 mb-2">
+        <h3 class="mb-2 px-3 text-xs font-medium tracking-wider text-gray-400 uppercase">
           {{ t("presentation.productpass") }}
         </h3>
         <NavigationTree @navigate="onNavigate" />

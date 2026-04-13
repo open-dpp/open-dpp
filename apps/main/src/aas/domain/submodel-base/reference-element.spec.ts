@@ -15,9 +15,9 @@ import { ReferenceElement } from "./reference-element";
 describe("referenceElement", () => {
   it("should add submodel element", () => {
     const referenceElement = ReferenceElement.create({ idShort: "b1" });
-    expect(() => referenceElement.addSubmodelElement(Property.fromPlain(propertyInputPlainFactory.build()))).toThrow(
-      new ValueError("ReferenceElement cannot contain submodel elements"),
-    );
+    expect(() =>
+      referenceElement.addSubmodelElement(Property.fromPlain(propertyInputPlainFactory.build())),
+    ).toThrow(new ValueError("ReferenceElement cannot contain submodel elements"));
   });
 
   it("should get submodel elements", () => {
@@ -27,13 +27,18 @@ describe("referenceElement", () => {
 
   it("should return plain value", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const referenceElement = ReferenceElement.create({
       idShort: "prop1",
     });
 
-    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     let ability = security.defineAbilityForSubject(member);
     expect(referenceElement.toPlain({ ability })).toMatchObject({
       idShort: "prop1",

@@ -445,7 +445,11 @@ describe("aasEditor composable", () => {
       data: {
         label: "FileProp",
         modelType: KeyTypes.File,
-        path: { submodelId: submodel1.id, idShortPath: key, idShortPathIncludingSubmodel: `${submodel1.idShort}.${key}` },
+        path: {
+          submodelId: submodel1.id,
+          idShortPath: key,
+          idShortPathIncludingSubmodel: `${submodel1.idShort}.${key}`,
+        },
         plain: SubmodelElementCollectionJsonSchema.parse(
           SubmodelElementCollectionJsonSchema.parse(submodel1.submodelElements[0]).value[1],
         ).value[3],

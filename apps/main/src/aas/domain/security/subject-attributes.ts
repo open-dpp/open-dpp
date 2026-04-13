@@ -1,8 +1,16 @@
 import { DataTypeDef, PropertyJsonSchema } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { z } from "zod/v4";
-import { MemberRole, MemberRoleEnum, MemberRoleType } from "../../../identity/organizations/domain/member-role.enum";
-import { UserRole, UserRoleEnum, UserRoleType } from "../../../identity/users/domain/user-role.enum";
+import {
+  MemberRole,
+  MemberRoleEnum,
+  MemberRoleType,
+} from "../../../identity/organizations/domain/member-role.enum";
+import {
+  UserRole,
+  UserRoleEnum,
+  UserRoleType,
+} from "../../../identity/users/domain/user-role.enum";
 import { Property } from "../submodel-base/property";
 
 export const SubjectAttributesSchema = z.object({
@@ -26,8 +34,12 @@ export class SubjectAttributes {
   }
 
   set subjectAttribute(subjectAttribute: Property[]) {
-    const userRole = subjectAttribute.find(p => p.idShort === SubjectAttributes.UserRoleKey);
-    if (!userRole || userRole.valueType !== DataTypeDef.String || typeof userRole.value !== "string") {
+    const userRole = subjectAttribute.find((p) => p.idShort === SubjectAttributes.UserRoleKey);
+    if (
+      !userRole ||
+      userRole.valueType !== DataTypeDef.String ||
+      typeof userRole.value !== "string"
+    ) {
       throw new ValueError("subjectAttribute.userRole must be a string Property");
     }
     this._subjectAttribute = subjectAttribute;
@@ -39,8 +51,20 @@ export class SubjectAttributes {
 
   static create(data: { userRole: UserRoleType; memberRole?: MemberRoleType }): SubjectAttributes {
     return new SubjectAttributes([
-      Property.create({ idShort: SubjectAttributes.UserRoleKey, valueType: DataTypeDef.String, value: data.userRole }),
-      ...(data.memberRole ? [Property.create({ idShort: SubjectAttributes.MemberRoleKey, valueType: DataTypeDef.String, value: data.memberRole })] : []),
+      Property.create({
+        idShort: SubjectAttributes.UserRoleKey,
+        valueType: DataTypeDef.String,
+        value: data.userRole,
+      }),
+      ...(data.memberRole
+        ? [
+            Property.create({
+              idShort: SubjectAttributes.MemberRoleKey,
+              valueType: DataTypeDef.String,
+              value: data.memberRole,
+            }),
+          ]
+        : []),
     ]);
   }
 
@@ -55,21 +79,31 @@ export class SubjectAttributes {
 
   toPlain(): Record<string, any> {
     return {
-      subjectAttribute: this.subjectAttribute.map(p => p.toPlain()),
+      subjectAttribute: this.subjectAttribute.map((p) => p.toPlain()),
     };
   }
 
   get userRole(): UserRoleType {
-    return UserRoleEnum.parse(this.subjectAttribute.find(p => p.idShort === SubjectAttributes.UserRoleKey)!.value);
+    return UserRoleEnum.parse(
+      this.subjectAttribute.find((p) => p.idShort === SubjectAttributes.UserRoleKey)!.value,
+    );
   }
 
   get memberRole(): MemberRoleType | undefined {
-    return MemberRoleEnum.optional().parse(this.subjectAttribute.find(p => p.idShort === SubjectAttributes.MemberRoleKey)?.value ?? undefined);
+    return MemberRoleEnum.optional().parse(
+      this.subjectAttribute.find((p) => p.idShort === SubjectAttributes.MemberRoleKey)?.value ??
+        undefined,
+    );
   }
 
-  private computeRoleHierarchyIndex(roles: { userRole: UserRoleType; memberRole?: MemberRoleType }): number {
-    return roleHierarchy.findIndex(role =>
-      (role.userRole === roles.userRole && role.userRole === UserRole.ADMIN) || (role.userRole === roles.userRole && role.memberRole === roles.memberRole),
+  private computeRoleHierarchyIndex(roles: {
+    userRole: UserRoleType;
+    memberRole?: MemberRoleType;
+  }): number {
+    return roleHierarchy.findIndex(
+      (role) =>
+        (role.userRole === roles.userRole && role.userRole === UserRole.ADMIN) ||
+        (role.userRole === roles.userRole && role.memberRole === roles.memberRole),
     );
   }
 
@@ -81,8 +115,11 @@ export class SubjectAttributes {
    * Returns negative integer if subjectAttributes1 < subjectAttributes2.
    * Returns 0 if subjectAttributes1 == subjectAttributes2.
    * Returns positive integer if subjectAttributes1 > subjectAttributes2.
-  */
-  private compareRoles(subjectAttributes1: SubjectAttributes, subjectAttributes2: SubjectAttributes): number {
+   */
+  private compareRoles(
+    subjectAttributes1: SubjectAttributes,
+    subjectAttributes2: SubjectAttributes,
+  ): number {
     const hierarchyIndex1 = this.computeRoleHierarchyIndex(subjectAttributes1.getRoles());
     const hierarchyIndex2 = this.computeRoleHierarchyIndex(subjectAttributes2.getRoles());
     return hierarchyIndex2 - hierarchyIndex1;
@@ -97,11 +134,14 @@ export class SubjectAttributes {
   }
 
   isEqual(other: SubjectAttributes): boolean {
-    return (this.userRole === other.userRole && this.userRole === UserRole.ADMIN) || (this.userRole === other.userRole && this.memberRole === other.memberRole);
+    return (
+      (this.userRole === other.userRole && this.userRole === UserRole.ADMIN) ||
+      (this.userRole === other.userRole && this.memberRole === other.memberRole)
+    );
   }
 
   getSubjectsWithSubordinatedRoles(): SubjectAttributes[] {
     const index = this.computeRoleHierarchyIndex(this.getRoles());
-    return roleHierarchy.slice(index + 1).map(roles => SubjectAttributes.create(roles));
+    return roleHierarchy.slice(index + 1).map((roles) => SubjectAttributes.create(roles));
   }
 }

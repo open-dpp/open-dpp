@@ -25,7 +25,7 @@ const { t } = useI18n();
     :errors="props.errors"
     :editor-mode="props.editorMode"
   />
-  <div class="grid lg:grid-cols-3 grid-cols-1 gap-2">
+  <div class="grid grid-cols-1 gap-2 lg:grid-cols-3">
     <PropertyValueField
       id="value"
       v-model="value"

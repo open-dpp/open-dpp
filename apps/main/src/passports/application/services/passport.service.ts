@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-} from "@nestjs/common";
+import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { Environment } from "../../../aas/domain/environment";
 import { ExpandedEnvironment } from "../../../aas/domain/expanded-environment";
 import { AasExportable } from "../../../aas/domain/exportable/aas-exportable";
@@ -21,9 +17,7 @@ export class PassportService {
   async getExpandedProductPassport(passportId: string): Promise<AasExportable> {
     const passport = await this.passportRepository.findOne(passportId);
     if (!passport) {
-      throw new NotFoundException(
-        `Product passport with id ${passportId} not found`,
-      );
+      throw new NotFoundException(`Product passport with id ${passportId} not found`);
     }
 
     if (!passport.environment) {
@@ -31,10 +25,20 @@ export class PassportService {
         `Passport ${passportId} has no environment; returning empty shells and submodels`,
       );
 
-      return AasExportable.createFromPassport(passport, ExpandedEnvironment.fromEnvironment(Environment.create({}), new Map(), new Map(), new Map()));
+      return AasExportable.createFromPassport(
+        passport,
+        ExpandedEnvironment.fromEnvironment(
+          Environment.create({}),
+          new Map(),
+          new Map(),
+          new Map(),
+        ),
+      );
     }
 
-    const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(passport.environment);
+    const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(
+      passport.environment,
+    );
 
     return AasExportable.createFromPassport(passport, expandedEnvironment);
   }

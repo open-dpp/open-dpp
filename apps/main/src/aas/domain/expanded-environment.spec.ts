@@ -232,14 +232,15 @@ describe("expandedEnvironment", () => {
   describe("toPlain", () => {
     it("should serialize all shells, submodels, and concept descriptions to plain objects", () => {
       const security = Security.create({});
-      const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+      const member = SubjectAttributes.create({
+        userRole: UserRole.USER,
+        memberRole: MemberRole.MEMBER,
+      });
       const submodel1 = createSubmodel();
       const submodel2 = createSubmodel();
-      security.addPolicy(
-        member,
-        IdShortPath.create({ path: submodel1.idShort }),
-        [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
-      );
+      security.addPolicy(member, IdShortPath.create({ path: submodel1.idShort }), [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      ]);
 
       const ability = security.defineAbilityForSubject(member);
 
@@ -250,7 +251,9 @@ describe("expandedEnvironment", () => {
       const plain = env.toPlain({ ability });
       expect(plain.assetAdministrationShells).toHaveLength(1);
       expect(plain.assetAdministrationShells[0].id).toBe(shell.id);
-      expect(plain.assetAdministrationShells[0].submodels).toEqual([submodelToReference(submodel1)]);
+      expect(plain.assetAdministrationShells[0].submodels).toEqual([
+        submodelToReference(submodel1),
+      ]);
 
       expect(plain.submodels).toHaveLength(1);
       expect(plain.submodels[0].id).toBe(submodel1.id);

@@ -35,7 +35,7 @@ describe("useRoleHierarchy", () => {
       getVisibleRoles({
         userRole: UserRoleDto.ADMIN,
       }),
-    ).toEqual(hierarchy.map(role => ({ ...role })));
+    ).toEqual(hierarchy.map((role) => ({ ...role })));
   });
 
   it("should return if role is editable by specified subject", () => {

@@ -1,4 +1,9 @@
-import { AasSubmodelElements, AasSubmodelElementsType, DataTypeDefType, SubmodelElementListJsonSchema } from "@open-dpp/dto";
+import {
+  AasSubmodelElements,
+  AasSubmodelElementsType,
+  DataTypeDefType,
+  SubmodelElementListJsonSchema,
+} from "@open-dpp/dto";
 import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
@@ -62,14 +67,16 @@ export class SubmodelElementList implements ISubmodelElement {
     return this._description;
   }
 
-  static create(data: SubmodelBaseProps & {
-    typeValueListElement: AasSubmodelElementsType;
-    extensions?: Array<Extension>;
-    orderRelevant?: boolean | null;
-    semanticIdListElement?: Reference | null;
-    valueTypeListElement?: DataTypeDefType | null;
-    value?: Array<ISubmodelElement>;
-  }) {
+  static create(
+    data: SubmodelBaseProps & {
+      typeValueListElement: AasSubmodelElementsType;
+      extensions?: Array<Extension>;
+      orderRelevant?: boolean | null;
+      semanticIdListElement?: Reference | null;
+      valueTypeListElement?: DataTypeDefType | null;
+      value?: Array<ISubmodelElement>;
+    },
+  ) {
     return new SubmodelElementList(
       data.typeValueListElement,
       data.extensions ?? [],
@@ -115,7 +122,9 @@ export class SubmodelElementList implements ISubmodelElement {
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath ? this._parentIdShortPath.addPathSegment(this.idShort) : IdShortPath.create({ path: this.idShort });
+    return this._parentIdShortPath
+      ? this._parentIdShortPath.addPathSegment(this.idShort)
+      : IdShortPath.create({ path: this.idShort });
   }
 
   accept<ContextT, R>(visitor: IVisitor<ContextT, R>, context?: ContextT): any {
@@ -133,7 +142,9 @@ export class SubmodelElementList implements ISubmodelElement {
 
   addSubmodelElement(submodelElement: ISubmodelElement, options: AddOptions): ISubmodelElement {
     if (submodelElement.getSubmodelElementType() !== this.typeValueListElement) {
-      throw new Error(`Submodel element type ${submodelElement.getSubmodelElementType()} does not match list type ${this.typeValueListElement}`);
+      throw new Error(
+        `Submodel element type ${submodelElement.getSubmodelElementType()} does not match list type ${this.typeValueListElement}`,
+      );
     }
     submodelElement.setParentIdShortPath(this.getIdShortPath());
     return addSubmodelElementOrFail(this, submodelElement, options);

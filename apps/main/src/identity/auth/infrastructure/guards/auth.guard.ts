@@ -1,9 +1,5 @@
 import type { CanActivate, ExecutionContext } from "@nestjs/common";
-import {
-  ForbiddenException,
-  Inject,
-  Injectable,
-} from "@nestjs/common";
+import { ForbiddenException, Inject, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { EnvService } from "@open-dpp/env";
 import { MembersRepository } from "../../../organizations/infrastructure/adapters/members.repository";
@@ -25,9 +21,7 @@ export class AuthGuard implements CanActivate {
     private readonly sessionsService: SessionsService,
     private readonly membersRepository: MembersRepository,
     private readonly usersRepository: UsersRepository,
-  ) {
-
-  }
+  ) {}
 
   /**
    * Validates if the current request is authenticated
@@ -52,12 +46,10 @@ export class AuthGuard implements CanActivate {
             token: "api-key",
           });
         }
-      }
-      catch {
+      } catch {
         // If API key verification fails, treat as no session
       }
-    }
-    else {
+    } else {
       const headers = new Headers();
       if (request.headers.cookie) {
         headers.set("cookie", request.headers.cookie);
@@ -67,8 +59,7 @@ export class AuthGuard implements CanActivate {
       }
       try {
         session = await this.sessionsService.getSession(headers);
-      }
-      catch {
+      } catch {
         // If session retrieval fails, treat as no session
       }
     }
@@ -107,7 +98,10 @@ export class AuthGuard implements CanActivate {
     if (!isBetterAuthUrl) {
       const organizationId = request.headers["x-open-dpp-organization-id"] ?? null;
       if (organizationId) {
-        const member = await this.membersRepository.findOneByUserIdAndOrganizationId(session.userId, organizationId);
+        const member = await this.membersRepository.findOneByUserIdAndOrganizationId(
+          session.userId,
+          organizationId,
+        );
         if (member === null) {
           return false;
         }

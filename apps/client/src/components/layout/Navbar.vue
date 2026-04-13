@@ -19,7 +19,7 @@ const { src } = useBrandingAnonymous(permalink);
 
 <template>
   <Menubar
-    class="px-6! py-3! bg-white/80! backdrop-blur-md! border-b! border-gray-100!"
+    class="border-b! border-gray-100! bg-white/80! px-6! py-3! backdrop-blur-md!"
     :model="menuItems"
     :pt="{
       button: { class: 'hidden!' },

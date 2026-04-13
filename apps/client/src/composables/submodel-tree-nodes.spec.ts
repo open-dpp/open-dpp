@@ -77,9 +77,7 @@ describe("useSubmodelTreeNodes", () => {
       createElement(
         "root",
         [createDisplayName("en", "Root")],
-        [
-          createElement("child", [createDisplayName("en", "Child")]),
-        ],
+        [createElement("child", [createDisplayName("en", "Child")])],
       ),
     ];
     const submodelTree = computed(() => elements);
@@ -91,9 +89,7 @@ describe("useSubmodelTreeNodes", () => {
         key: "root",
         label: "Root",
         data: { parentId: undefined },
-        children: [
-          { key: "child", label: "Child", data: { parentId: "root" }, children: [] },
-        ],
+        children: [{ key: "child", label: "Child", data: { parentId: "root" }, children: [] }],
       },
     ]);
   });

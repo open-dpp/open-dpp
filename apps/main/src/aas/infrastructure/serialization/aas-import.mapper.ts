@@ -128,15 +128,18 @@ export function mapQualifiers(qualifiers: QualifierSchema[]): Qualifier[] {
   return qualifiers.filter((q) => q.valueType != null && q.kind != null).map(mapQualifier);
 }
 
-export function mapSecurity(shell: ShellSchema, submodels: Submodel[], version: AasExportVersionType): Security {
+export function mapSecurity(
+  shell: ShellSchema,
+  submodels: Submodel[],
+  version: AasExportVersionType,
+): Security {
   if (version === AasExportVersion.v1_0) {
     const security = Security.create({});
     submodels.forEach((submodel) => {
       security.addDefaultPolicyForSubmodelIfNoExists(submodel);
     });
     return security;
-  }
-  else {
+  } else {
     return Security.fromPlain(AssetAdministrationShellV2_0.parse(shell).security);
   }
 }

@@ -2,10 +2,7 @@
 import type { SubmodelElementCollectionRequestDto } from "@open-dpp/dto";
 import type { SubmodelElementCollectionEditorProps } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
-import {
-  Permissions,
-
-} from "@open-dpp/dto";
+import { Permissions } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { computed, ref } from "vue";
@@ -16,12 +13,9 @@ import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
-const props
-  = defineProps<
-    SharedEditorProps<
-      SubmodelElementCollectionEditorProps,
-      SubmodelElementCollectionRequestDto
-    >
+const props =
+  defineProps<
+    SharedEditorProps<SubmodelElementCollectionEditorProps, SubmodelElementCollectionRequestDto>
   >();
 
 const propertyFormSchema = z.object({
@@ -83,9 +77,7 @@ defineExpose<{
       :path="props.path"
       :modify-shell="props.modifyShell"
       :get-access-permission-rules="props.getAccessPermissionRules"
-      :delete-policy-by-subject-and-object="
-        props.deletePolicyBySubjectAndObject
-      "
+      :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
     />
   </FormContainer>
 </template>

@@ -12,12 +12,8 @@ const { t } = useI18n();
 const passportStore = usePassportStore();
 const route = useRoute();
 
-const {
-  submodelTree,
-  submodelTreeDepth,
-  mapTreeElementsToSubmodels,
-  findTreeElementById,
-} = useSubmodelTree(passportStore.submodels);
+const { submodelTree, submodelTreeDepth, mapTreeElementsToSubmodels, findTreeElementById } =
+  useSubmodelTree(passportStore.submodels);
 
 const submodels = computed(() => {
   const submodelIdFromQuery = route.query.submodelid;
@@ -40,17 +36,17 @@ const submodels = computed(() => {
 </script>
 
 <template>
-  <div class="w-full py-8 flex flex-row gap-8">
+  <div class="flex w-full flex-row gap-8 py-8">
     <div
       v-if="submodelTreeDepth > 1"
-      class="min-w-48 hidden md:flex md:flex-col md:sticky md:top-20 self-start max-h-[calc(100vh-5rem)] overflow-y-auto rounded-xl border border-surface-200 bg-surface-0 shadow-sm"
+      class="border-surface-200 bg-surface-0 hidden max-h-[calc(100vh-5rem)] min-w-48 self-start overflow-y-auto rounded-xl border shadow-sm md:sticky md:top-20 md:flex md:flex-col"
     >
-      <h2 class="px-4 pt-4 pb-2 text-sm font-semibold text-surface-700">
+      <h2 class="text-surface-700 px-4 pt-4 pb-2 text-sm font-semibold">
         {{ t("presentation.productpass") }}
       </h2>
       <NavigationTree data-cy="sidebar" />
     </div>
-    <div data-cy="content" class="flex flex-col w-full relative">
+    <div data-cy="content" class="relative flex w-full flex-col">
       <PassportHeader />
       <div class="mt-10 flex flex-col">
         <Submodel

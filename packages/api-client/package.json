@@ -1,9 +1,6 @@
 {
   "name": "@open-dpp/api-client",
   "version": "0.1.2",
-  "publishConfig": {
-    "access": "public"
-  },
   "description": "A client for my API",
   "keywords": [],
   "license": "ISC",
@@ -18,6 +15,9 @@
       "require": "./dist/index.js",
       "default": "./dist/index.js"
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsc && rollup -c",

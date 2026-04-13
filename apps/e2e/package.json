@@ -1,7 +1,7 @@
 {
   "name": "e2e",
-  "private": true,
   "version": "0.1.0",
+  "private": true,
   "description": "",
   "keywords": [],
   "license": "ISC",

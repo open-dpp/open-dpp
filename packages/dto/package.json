@@ -1,9 +1,6 @@
 {
   "name": "@open-dpp/dto",
   "version": "0.1.2",
-  "publishConfig": {
-    "access": "public"
-  },
   "description": "",
   "keywords": [],
   "license": "ISC",
@@ -21,6 +18,9 @@
       "require": "./dist/index.js"
     },
     "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsc --project tsconfig.build.json",

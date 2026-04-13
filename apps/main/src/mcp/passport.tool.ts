@@ -33,12 +33,18 @@ export class PassportTool {
         ),
     }),
   })
-  async getProductPassport({ passportId }: { passportId: string }, _context: Context, request: Request) {
+  async getProductPassport(
+    { passportId }: { passportId: string },
+    _context: Context,
+    request: Request,
+  ) {
     this.logger.log(`product-passport-tool is called with id: ${passportId}`);
     const expandedPassport = await this.passportService.getExpandedProductPassport(passportId);
 
     const userRole = UserRoleEnum.parse(request.headers["x-user-role"]);
-    const memberRole = MemberRoleEnum.optional().parse(request.headers["x-member-role"] ?? undefined);
+    const memberRole = MemberRoleEnum.optional().parse(
+      request.headers["x-member-role"] ?? undefined,
+    );
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return expandedPassport.toExportPlain(subject);
   }

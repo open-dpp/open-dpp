@@ -74,7 +74,10 @@ export class AasExportable {
   }
 
   toExportPlain(subject: SubjectAttributes) {
-    const ability = this.environment.shells.length > 0 ? this.environment.shells[0].security.defineAbilityForSubject(subject) : undefined;
+    const ability =
+      this.environment.shells.length > 0
+        ? this.environment.shells[0].security.defineAbilityForSubject(subject)
+        : undefined;
 
     const envPlain = this.environment.toPlain({ ability });
     return {

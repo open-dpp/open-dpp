@@ -51,25 +51,13 @@ export class Member {
 
   public static create(data: MemberCreateProps) {
     const now = new Date();
-    return new Member(
-      randomUUID(),
-      data.organizationId,
-      data.userId,
-      data.role,
-      now,
-    );
+    return new Member(randomUUID(), data.organizationId, data.userId, data.role, now);
   }
 
   public static loadFromDb(data: MemberDbProps) {
     const parsedRole = MemberRoleEnum.safeParse(data.role);
     const role = parsedRole.success ? parsedRole.data : MemberRole.MEMBER; // handle old records with outdated roles like 'admin'
-    return new Member(
-      data.id,
-      data.organizationId,
-      data.userId,
-      role,
-      data.createdAt,
-    );
+    return new Member(data.id, data.organizationId, data.userId, role, data.createdAt);
   }
 
   public isOwner(): boolean {

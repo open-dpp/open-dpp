@@ -26,8 +26,7 @@ describe("statusController", () => {
     await module.close();
     if (originalAppVersion === undefined) {
       delete process.env.APP_VERSION;
-    }
-    else {
+    } else {
       process.env.APP_VERSION = originalAppVersion;
     }
   });
