@@ -468,13 +468,17 @@ export class TemplateController implements IAasReadEndpointsWithOrganizationId, 
     @CursorQueryParam() cursor: string | undefined,
     @PopulateQueryParam() populate: string[],
     @OrganizationId() organizationId: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<TemplatePaginationDto> {
     const pagination = Pagination.create({ limit, cursor });
     let pagingResult: PagingResult<any> = await this.templateRepository.findAllByOrganizationId(organizationId, pagination);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     if (populate.includes(Populates.assetAdministrationShells)) {
       pagingResult = await this.environmentService.populateEnvironmentForPagingResult(
         pagingResult,
         { assetAdministrationShells: true, submodels: false, ignoreMissing: false },
+        subject,
       );
     }
     return TemplatePaginationDtoSchema.parse(pagingResult.toPlain());

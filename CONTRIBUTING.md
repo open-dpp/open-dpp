@@ -119,6 +119,10 @@ pnpm run test:client
 pnpm run test:e2e
 ```
 
+## Releasing
+
+For information on how releases and versioning work, see [RELEASING.md](./RELEASING.md).
+
 ## Pull request guidelines
 
 When opening a PR, please:

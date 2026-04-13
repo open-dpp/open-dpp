@@ -33,6 +33,7 @@ export interface AasPermissionsFormProps {
   getAccessPermissionRules: () => AccessPermissionRuleResponseDto[];
   modifyShell: (data: AssetAdministrationShellModificationDto) => Promise<void>;
   deletePolicyBySubjectAndObject: (data: DeletePolicyDto) => Promise<void>;
+  ignoredPermissionOptions?: PermissionType[];
 }
 
 export function useAasPermissionsForm({
@@ -40,6 +41,7 @@ export function useAasPermissionsForm({
   object,
   modifyShell,
   deletePolicyBySubjectAndObject,
+  ignoredPermissionOptions,
 }: AasPermissionsFormProps): IAasPermissionsForm {
   const { canEditPermissionsOfRole, hierarchy } = useRoleHierarchy();
   const { asSubject } = useUserStore();
@@ -90,7 +92,9 @@ export function useAasPermissionsForm({
     // Create / Edit / Delete do not make sense without Read permission
     if (
       !newPermissions.includes(Permissions.Read)
-      && newPermissions.some(p => p !== Permissions.Read)
+      && newPermissions.some(
+        p => p !== Permissions.Read && !(ignoredPermissionOptions && ignoredPermissionOptions.includes(p)),
+      )
     ) {
       allowedPermissions.push({
         permission: Permissions.Read,
@@ -139,7 +143,12 @@ export function useAasPermissionsForm({
     const allSubjects = hierarchy.map(role => role.key);
     for (const subject of allSubjects) {
       const { permissions, inheritsPermissionsOf } = getPermissionsForSubject(subject);
-      allPermissions.push({ subject, permissions, inheritsPermissionsOf });
+      let filteredPermissions = permissions;
+      if (ignoredPermissionOptions) {
+        filteredPermissions = permissions.filter(p => !ignoredPermissionOptions.includes(p));
+      }
+
+      allPermissions.push({ subject, permissions: filteredPermissions, inheritsPermissionsOf });
     }
     return allPermissions;
   }
