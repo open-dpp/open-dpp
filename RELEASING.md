@@ -4,7 +4,7 @@ This document describes how releases are created in the `open-dpp` monorepo.
 
 ## Overview
 
-Releases are managed with [Changesets](https://github.com/changesets/changesets). Every `@open-dpp/*` workspace package is version-locked via the `fixed` group in [`.changeset/config.json`](./.changeset/config.json), so all packages always share the same version number. Only [`@open-dpp/api-client`](./packages/api-client/package.json) is actually published to npm — every other workspace (apps and packages) is marked `private: true` and participates in the version bump only to keep internal `workspace:*` references consistent.
+Releases are managed with [Changesets](https://github.com/changesets/changesets). Every `@open-dpp/*` workspace package is version-locked via the `fixed` group in [`.changeset/config.json`](./.changeset/config.json), so all packages always share the same version number. [`@open-dpp/dto`](./packages/dto/package.json) and [`@open-dpp/api-client`](./packages/api-client/package.json) are published to npm. Every other workspace (apps and packages) is marked `private: true` and participates in the version bump only to keep internal `workspace:*` references consistent.
 
 > **Publishing guardrail:** `.changeset/config.json` sets `"access": "restricted"` as the default for all packages. `@open-dpp/api-client` opts back in to public publishing via its own `publishConfig.access: "public"`. This means any _new_ scoped package added without an explicit `publishConfig` will fail to publish (on a free npm plan) instead of being silently published to the public registry — a safety net against accidentally shipping a package that forgot to set `"private": true`. If you add a new package that _should_ be public, set `publishConfig.access: "public"` in its `package.json` explicitly.
 
@@ -29,7 +29,11 @@ flowchart TD
     J --> K[pnpm build]
     K --> L[changeset publish]
     L --> M[Publish @open-dpp/api-client<br/>to npm]
-    L --> N[Push git tags]
+    L --> N[Create local git tag<br/>@open-dpp/api-client@X.Y.Z]
+    N --> O[changesets/action<br/>pushes tag to origin]
+    O --> P[Post-publish step:<br/>push repo-wide vX.Y.Z tag]
+    P --> Q[build.yml runs on tag push]
+    Q --> R[Publish ghcr.io/open-dpp/open-dpp:X.Y.Z]
 ```
 
 ## When you need a changeset
@@ -55,7 +59,7 @@ pnpm changeset
 
 Then follow the interactive prompts:
 
-1. **Select the bumped package(s).** In practice, select `@open-dpp/api-client`. Because of the `fixed` group, every other `@open-dpp/*` package will bump along with it automatically — you don't need to tick them manually.
+1. **Select the bumped package(s).** In practice, select `@open-dpp/api-client`. Because of the `fixed` group, every other `@open-dpp/*` package (including `@open-dpp/dto`) will bump along with it automatically — you don't need to tick them manually.
 2. **Pick the bump type** using semver:
    - `patch` — bug fixes and internal changes that don't affect the public API.
    - `minor` — backwards-compatible new features or additions to the public API.
@@ -92,6 +96,7 @@ sequenceDiagram
     participant WF as Release workflow
     participant CS as changesets/action
     participant NPM as npm registry
+    participant GHCR as ghcr.io
 
     Dev->>GH: Merge feature PR<br/>(includes .changeset/*.md)
     GH->>WF: Trigger on push to main
@@ -105,7 +110,11 @@ sequenceDiagram
     CS->>WF: Run pnpm release
     WF->>WF: pnpm build
     WF->>NPM: changeset publish<br/>(@open-dpp/api-client)
-    WF->>GH: Push git tags
+    WF->>WF: Create local tag<br/>@open-dpp/api-client@X.Y.Z
+    CS->>GH: Push new tag to origin
+    WF->>GH: Push repo-wide vX.Y.Z tag<br/>(post-publish step)
+    GH->>WF: Trigger build.yml on tag push
+    WF->>GHCR: Publish ghcr.io/open-dpp/open-dpp:X.Y.Z
 ```
 
 ## Cutting a release (maintainer flow)
@@ -119,10 +128,40 @@ sequenceDiagram
    ```bash
    pnpm build && changeset publish
    ```
-   `changeset publish` pushes git tags for the new version and publishes `@open-dpp/api-client` to npm under `--access public`. All private packages are skipped automatically.
+   `changeset publish` publishes `@open-dpp/api-client` to npm (using the `publishConfig.access: "public"` from its `package.json`) and creates a local git tag `@open-dpp/api-client@<version>`. All private packages are skipped automatically. `changesets/action` then pushes the new tag to `origin` as part of its post-publish step (no manual `git push --tags` needed in CI).
 5. Verify the release:
-   - A new tag appears on [GitHub](https://github.com/open-dpp/open-dpp/tags).
-   - The new version appears on [npmjs.com/package/@open-dpp/api-client](https://www.npmjs.com/package/@open-dpp/api-client).
+   - A new `@open-dpp/api-client@<version>` tag appears on [GitHub](https://github.com/open-dpp/open-dpp/tags). Changesets creates this per-package tag.
+   - A new repo-wide `v<version>` tag also appears — see [Docker images](#docker-images) below.
+   - The new version appears on [npmjs.com/package/@open-dpp/api-client](https://www.npmjs.com/package/@open-dpp/api-client) and [npmjs.com/package/@open-dpp/dto](https://www.npmjs.com/package/@open-dpp/dto).
+   - A new Docker image is published to [`ghcr.io/open-dpp/open-dpp:<version>`](https://github.com/open-dpp/open-dpp/pkgs/container/open-dpp).
+
+## Docker images
+
+The npm release flow and the Docker build flow ([`build.yml`](./.github/workflows/build.yml)) are **independent workflows** triggered from the same commits. `build.yml` runs on every push to `main` (and on every PR to `main`) and publishes multi-arch images to `ghcr.io/open-dpp/open-dpp` with tags `:latest`, `:main`, and `:sha-<short-sha>`.
+
+To give each Changesets release a corresponding version-tagged Docker image (e.g. `:0.2.0`), `release.yml` has a post-publish step that:
+
+1. Reads the released version from `changesets/action`'s `publishedPackages` output.
+2. Creates and pushes a repo-wide `v<version>` git tag (e.g. `v0.2.0`).
+
+This tag push triggers `build.yml` a second time via its `on.push.tags: ["v*"]` filter. `docker/metadata-action` picks up the tag via `type=ref,event=tag` and publishes the image as `ghcr.io/open-dpp/open-dpp:<version>`. The image is built from exactly the same commit as `:latest`, so `:latest` and `:<version>` always point at the same digest at release time.
+
+**Tag shapes you will see after a release:**
+
+| Tag                                  | Created by                       | Purpose                                                  |
+| ------------------------------------ | -------------------------------- | -------------------------------------------------------- |
+| `@open-dpp/api-client@<version>`     | `changeset publish`              | Per-package git tag for the published npm package.       |
+| `v<version>`                         | `release.yml` post-publish step  | Repo-wide git tag; drives version-tagged Docker builds.  |
+| Docker `:<version>`                  | `build.yml` (triggered by `v*`)  | Pinnable Docker image for the release.                   |
+| Docker `:latest`, `:main`, `:sha-*`  | `build.yml` (every push to main) | Rolling tags; unchanged by this flow.                    |
+
+If you run the **manual / local release** escape hatch, remember to create the `v<version>` tag yourself after `pnpm release`:
+
+```bash
+version=$(jq -r .version packages/api-client/package.json)
+git tag "v$version"
+git push origin "v$version"
+```
 
 ## Required repository secrets
 
@@ -152,6 +191,6 @@ git push --follow-tags
 
 - **"No changesets found" in a Release PR** — a changeset was not added to the merged PR. Create one with `pnpm changeset` in a follow-up PR.
 - **Release PR has no version bumps** — the changesets targeted only private packages. Target `@open-dpp/api-client` (or any member of the `fixed` group) so the bump actually happens.
-- **`changeset publish` skipped a package** — expected. Everything other than `@open-dpp/api-client` is `private: true` and intentionally not published.
+- **`changeset publish` skipped a package** — expected if it is not `@open-dpp/api-client` or `@open-dpp/dto`. Everything else is `private: true` and intentionally not published.
 - **npm publish failed with 401 / 403** — `NPM_TOKEN` is missing, expired, or lacks publish rights to the `@open-dpp` scope. Rotate it and re-run the job.
 - **A version bump is wrong after the Release PR is created** — close the Release PR, add a new changeset with the correct bump type, and push to `main`. The workflow will recreate the PR with the updated versions.
