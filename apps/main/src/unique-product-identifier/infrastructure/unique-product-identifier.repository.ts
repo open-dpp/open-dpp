@@ -82,7 +82,7 @@ export class UniqueProductIdentifierRepository {
     );
   }
 
-  async deleteByReferenceId(referenceId: string) {
-    await this.uniqueProductIdentifierDoc.findOneAndDelete({ referenceId });
+  async deleteByReferenceId(referenceId: string, options?: DbSessionOptions) {
+    await this.uniqueProductIdentifierDoc.findOneAndDelete({ referenceId }, options);
   }
 }

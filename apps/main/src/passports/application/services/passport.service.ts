@@ -57,7 +57,7 @@ export class PassportService {
       await session.withTransaction(async () => {
         await this.environmentService.deleteEnvironment(passport.environment, session);
         await this.passportRepository.deleteById(passport.id, { session });
-        await this.uniqueProductIdentifierRepository.deleteByReferenceId(passport.id);
+        await this.uniqueProductIdentifierRepository.deleteByReferenceId(passport.id, { session });
       });
     }
     finally {

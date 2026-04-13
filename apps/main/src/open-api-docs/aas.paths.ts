@@ -408,14 +408,6 @@ function createTemplatePaths() {
           },
         },
       },
-      delete: {
-        tags: [tag],
-        summary: `Deletes template`,
-        parameters: [IdParamSchema],
-        responses: {
-          [HTTPCode.NO_CONTENT]: {},
-        },
-      },
     },
     [`/${tag}/{id}/export`]: {
       get: {
@@ -428,6 +420,16 @@ function createTemplatePaths() {
               [ContentType.JSON]: { schema: aasExportSchemaJsonV1_0 },
             },
           },
+        },
+      },
+    },
+    [`/${tag}/{id}`]: {
+      delete: {
+        tags: [tag],
+        summary: `Deletes template`,
+        parameters: [IdParamSchema],
+        responses: {
+          [HTTPCode.NO_CONTENT]: {},
         },
       },
     },
@@ -500,14 +502,6 @@ function createPassportPaths() {
           },
         },
       },
-      delete: {
-        tags: [tag],
-        summary: `Deletes passport`,
-        parameters: [IdParamSchema],
-        responses: {
-          [HTTPCode.NO_CONTENT]: {},
-        },
-      },
     },
     [`/${tag}/{id}/export`]: {
       get: {
@@ -520,6 +514,16 @@ function createPassportPaths() {
               [ContentType.JSON]: { schema: aasExportSchemaJsonV1_0 },
             },
           },
+        },
+      },
+    },
+    [`/${tag}/{id}`]: {
+      delete: {
+        tags: [tag],
+        summary: `Deletes passport`,
+        parameters: [IdParamSchema],
+        responses: {
+          [HTTPCode.NO_CONTENT]: {},
         },
       },
     },

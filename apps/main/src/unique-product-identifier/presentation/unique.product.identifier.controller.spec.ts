@@ -33,7 +33,6 @@ describe("uniqueProductIdentifierController", () => {
         UniqueProductIdentifierRepository,
         PassportRepository,
         BrandingRepository,
-        UniqueProductIdentifierRepository,
         UniqueProductIdentifierApplicationService,
       ],
       controllers: [UniqueProductIdentifierController],

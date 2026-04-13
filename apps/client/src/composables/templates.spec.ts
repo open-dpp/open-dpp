@@ -118,8 +118,10 @@ describe("templates", () => {
       data.accept!();
     });
     await deleteTemplate(id, onDelete);
-    expect(mocks.deleteById).toHaveBeenCalledWith(id);
-    expect(onDelete).toHaveBeenCalled();
+    await vi.waitFor(() => {
+      expect(mocks.deleteById).toHaveBeenCalledWith(id);
+      expect(onDelete).toHaveBeenCalled();
+    });
   });
 
   it("should init templates", async () => {
