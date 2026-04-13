@@ -101,6 +101,12 @@ export class Property implements ISubmodelElement {
       if ([DataTypeDef.Double, DataTypeDef.Float].find(n => n === valueType)) {
         parse(z.coerce.number());
       }
+      else if (valueType === DataTypeDef.DateTime) {
+        // Require ISO-8601 with an explicit timezone offset so the value
+        // represents an unambiguous instant. A naive "2026-04-10T14:00:00"
+        // would render differently for users in different timezones.
+        parse(z.iso.datetime({ offset: true }));
+      }
       else {
         parse(z.string());
       }
