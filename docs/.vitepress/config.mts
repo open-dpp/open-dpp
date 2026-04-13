@@ -27,7 +27,7 @@ export default defineConfig({
       { text: "Rest API", link: "/api" },
       {
         text: `v${pkg.version}`,
-        link: `https://github.com/open-dpp/open-dpp/releases/tag/v${pkg.version}`,
+        link: "https://github.com/open-dpp/open-dpp/releases",
       },
     ],
 
