@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NotFoundException } from "@nestjs/common";
 import { KeyTypes, ModellingKindType, ReferenceTypes, SubmodelJsonSchema } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
+import { isEmptyObject } from "../../../utils";
 import { AdministrativeInformation } from "../common/administrative-information";
 import { IdShortPath } from "../common/id-short-path";
 import { Key } from "../common/key";
@@ -9,6 +10,7 @@ import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text"
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
 import { ConvertToPlainOptions } from "../convertable-to-plain";
+import { ICopyOptions } from "../copy-options";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
 import JsonVisitor from "../json-visitor";
@@ -247,9 +249,13 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return this.submodelElements;
   }
 
-  copy(): Submodel {
+  copy(options?: ICopyOptions): Submodel | undefined {
+    const plain = this.toPlain(options);
+    if (isEmptyObject(plain)) {
+      return undefined;
+    }
     return Submodel.fromPlain({
-      ...this.toPlain(),
+      ...plain,
       id: randomUUID(),
     });
   }

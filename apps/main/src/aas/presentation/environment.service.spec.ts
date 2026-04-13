@@ -118,9 +118,11 @@ describe("environmentService", () => {
     const passport = Passport.create({ environment, organizationId: "organizationId" });
     await passportRepository.save(passport);
     const pagingResult = PagingResult.create({ pagination: Pagination.create({}), items: [passport] });
+    const subject = SubjectAttributes.create({ userRole: UserRole.ADMIN });
     const result = await environmentService.populateEnvironmentForPagingResult(
       pagingResult,
       { assetAdministrationShells: true, ignoreMissing: false },
+      subject,
     );
     expect(result.toPlain()).toEqual({
       result: [
@@ -416,6 +418,15 @@ describe("environmentService", () => {
     await expect(
       environmentService.modifySubmodelElement(environment, submodel1.id, modification, idShortPathToProperty1, member),
     ).rejects.toThrow(new ForbiddenError("Missing permissions to modify element section1.subSection1.property1."));
+  });
+
+  it("should copy environment", async () => {
+    const { environment } = await createDefaultEnvironment();
+    const copy = await environmentService.copyEnvironment(
+      environment,
+    );
+
+    expect(copy.submodels).toHaveLength(1);
   });
 
   async function createEnvironmentWithList() {

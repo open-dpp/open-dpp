@@ -127,13 +127,17 @@ export class PassportController implements IAasReadEndpointsWithOrganizationId, 
     @CursorQueryParam() cursor: string | undefined,
     @PopulateQueryParam() populate: string[],
     @OrganizationId() organizationId: string,
+    @UserRoleDecorator() userRole: UserRoleType,
+    @MemberRoleDecorator() memberRole: MemberRoleType | undefined,
   ): Promise<PassportPaginationDto> {
+    const subject = SubjectAttributes.create({ userRole, memberRole });
     const pagination = Pagination.create({ limit, cursor });
     let pagingResult: PagingResult<any> = await this.passportRepository.findAllByOrganizationId(organizationId, pagination);
     if (populate.includes(Populates.assetAdministrationShells)) {
       pagingResult = await this.environmentService.populateEnvironmentForPagingResult(
         pagingResult,
         { assetAdministrationShells: true, submodels: false, ignoreMissing: false },
+        subject,
       );
     }
 

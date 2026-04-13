@@ -403,6 +403,33 @@ describe("submodel", () => {
     expect(submodel.toPlain({ ability })).toEqual({ ...submodel.toPlain(), submodelElements: [prop2.toPlain()] });
   });
 
+  it("should copy values readable by specified subject", () => {
+    const security = Security.create({});
+    const submodel = Submodel.create({ idShort: "section1" });
+
+    const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
+    security.addPolicy(
+      member,
+      IdShortPath.create({ path: "section1" }),
+      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow })],
+    );
+    security.addPolicy(member, IdShortPath.create({ path: "section1.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "section1.prop2" }), []);
+    let ability = security.defineAbilityForSubject(member);
+
+    const prop1 = Property.create({ idShort: "prop1", value: "10", valueType: DataTypeDef.Double });
+    const prop2 = Property.create({ idShort: "prop2", value: "10", valueType: DataTypeDef.Double });
+    submodel.addSubmodelElement(prop1, { ability });
+    submodel.addSubmodelElement(prop2, { ability });
+
+    expect(submodel.copy({ ability }).submodelElements).toEqual([prop1]);
+    ability = security.defineAbilityForSubject(anonymous);
+    expect(submodel.copy({ ability })).toEqual(undefined);
+    security.addPolicy(anonymous, IdShortPath.create({ path: "section1.prop2" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    ability = security.defineAbilityForSubject(anonymous);
+    expect(submodel.copy({ ability }).submodelElements).toEqual([prop2]);
+  });
+
   it("should get value representation for bill of material", () => {
     const iriDomain = `http://open-dpp.de/${randomUUID()}`;
     const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });

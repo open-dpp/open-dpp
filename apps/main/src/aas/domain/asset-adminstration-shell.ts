@@ -138,7 +138,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
    */
   copy(submodels: Submodel[]): AssetAdministrationShell {
     const copyId = randomUUID();
-    const plain = this.toPlain();
+    const plain = this.toPlain({ context: { filterSubmodels: submodels } });
     const copy = AssetAdministrationShell.fromPlain({
       ...plain,
       id: copyId,

@@ -554,8 +554,8 @@ export function useAasEditor({
   const createSubmodel = async () => {
     async function createCallback(data: SubmodelRequestDto) {
       const response = await aasNamespace.createSubmodel(id, data);
-      await finalizeApiRequest(response);
       await fetchAssetAdministrationShell();
+      await finalizeApiRequest(response);
     }
     drawer.openDrawer({
       type: KeyTypes.Submodel,
