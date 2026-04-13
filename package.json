@@ -28,6 +28,8 @@
     "release": "pnpm build && changeset publish"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/cli": "^2.30.0",
     "@dotenvx/dotenvx": "^1.52.0",
     "oxfmt": "^0.42.0",
     "oxlint": "^1.57.0",
