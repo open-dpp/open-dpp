@@ -170,7 +170,7 @@ jobs:
           tags: |
             type=sha
             type=ref,event=branch
-            type=ref,event=tag
+            type=semver,pattern={{version}}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build and push by digest
@@ -236,7 +236,7 @@ jobs:
           tags: |
             type=sha
             type=ref,event=branch
-            type=ref,event=tag
+            type=semver,pattern={{version}}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Create manifest list and push
