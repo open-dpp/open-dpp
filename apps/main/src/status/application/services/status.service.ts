@@ -1,10 +1,14 @@
+import process from "node:process";
 import { Injectable } from "@nestjs/common";
-import packageJson from "../../../../package.json";
 import { Status } from "../../domain/status";
 
 @Injectable()
 export class StatusService {
   getStatus(): Status {
-    return Status.create({ version: packageJson.version });
+    const version
+      = process.env.APP_VERSION
+        ?? process.env.npm_package_version
+        ?? "unknown";
+    return Status.create({ version });
   }
 }

@@ -1,4 +1,4 @@
-import type { AxiosInstance } from 'axios'
+import type { AxiosInstance, AxiosResponse } from 'axios'
 import type { ApiClientOptions, IApiClient } from '../api-client'
 import { createAxiosClient } from '../api-client'
 
@@ -21,8 +21,8 @@ export class StatusApiClient implements IApiClient {
     this.createNewAxiosInstance()
   }
 
-  public async get() {
-    return await this.axiosInstance.get<{ version: string }>('/status')
+  public async get(): Promise<AxiosResponse<{ version: string }>> {
+    return this.axiosInstance.get<{ version: string }>('/status')
   }
 
   private createNewAxiosInstance() {
