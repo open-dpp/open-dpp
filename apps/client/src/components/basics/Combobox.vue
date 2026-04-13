@@ -38,7 +38,7 @@ const queryOptions = computed(() => {
       class="flex"
       :class="[props.labelPosition === 'left' ? 'flex-row items-center gap-2' : 'flex-col gap-2']"
     >
-      <ComboboxLabel class="dark:text-white' block text-sm/6 font-medium text-gray-900">
+      <ComboboxLabel class="dark:text-white block text-sm/6 font-medium text-gray-900">
         {{ props.label }}
       </ComboboxLabel>
       <div class="relative">
