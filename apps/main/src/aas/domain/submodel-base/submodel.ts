@@ -1,26 +1,33 @@
 import { randomUUID } from "node:crypto";
 import { NotFoundException } from "@nestjs/common";
-import { ModellingKindType, SubmodelJsonSchema } from "@open-dpp/dto";
+import { KeyTypes, ModellingKindType, ReferenceTypes, SubmodelJsonSchema } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
+import { isEmptyObject } from "../../../utils";
 import { AdministrativeInformation } from "../common/administrative-information";
+import { IdShortPath } from "../common/id-short-path";
+import { Key } from "../common/key";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
+import { ConvertToPlainOptions } from "../convertable-to-plain";
+import { ICopyOptions } from "../copy-options";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { JsonVisitor } from "../json-visitor";
-import { ModifierVisitor } from "../modifier-visitor";
+import JsonVisitor from "../json-visitor";
+import { ModifierVisitor, ModifierVisitorOptions } from "../modifier-visitor";
 import { IPersistable } from "../persistable";
-import { ValueModifierVisitor } from "../value-modifier-visitor";
-import { JsonType, ValueVisitor } from "../value-visitor";
+import { ValueModifierVisitor, ValueModifierVisitorOptions } from "../value-modifier-visitor";
+import { JsonType, ValueVisitor, ValueVisitorOptions } from "../value-visitor";
 import { IVisitor } from "../visitor";
 import {
   AddOptions,
+  addSubmodelElementOrFail,
+  DeleteOptions,
   deleteSubmodelElementOrFail,
-  IdShortPath,
   ISubmodelBase,
   ISubmodelElement,
   parseSubmodelElement,
+  setParentIdShortPaths,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
@@ -47,6 +54,11 @@ export class Submodel implements ISubmodelBase, IPersistable {
   ) {
     this.displayName = displayName;
     this.description = description;
+    setParentIdShortPaths(this, this.idShort);
+  }
+
+  getIdShortPath(): IdShortPath {
+    return IdShortPath.create({ path: this.idShort });
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -68,7 +80,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
 
   static create(
     data: SubmodelBaseProps & {
-      id: string;
+      id?: string;
       extensions?: Array<Extension>;
       administration?: AdministrativeInformation | null;
       kind?: ModellingKindType | null;
@@ -76,7 +88,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     },
   ) {
     return new Submodel(
-      data.id,
+      data.id ?? randomUUID(),
       data.extensions ?? [],
       data.category ?? null,
       data.idShort,
@@ -90,14 +102,14 @@ export class Submodel implements ISubmodelBase, IPersistable {
       data.embeddedDataSpecifications ?? [],
       data.submodelElements ?? [],
     );
-  }
+  };
 
   static fromPlain(data: unknown): Submodel {
     const parsed = SubmodelJsonSchema.parse(data);
     const baseObjects = submodelBasePropsFromPlain(parsed);
     return new Submodel(
       parsed.id,
-      parsed.extensions.map((x) => Extension.fromPlain(x)),
+      parsed.extensions.map(x => Extension.fromPlain(x)),
       baseObjects.category,
       baseObjects.idShort,
       baseObjects.displayName,
@@ -110,21 +122,22 @@ export class Submodel implements ISubmodelBase, IPersistable {
       baseObjects.embeddedDataSpecifications,
       parsed.submodelElements.map(parseSubmodelElement),
     );
+  };
+
+  modify(data: unknown, options: ModifierVisitorOptions) {
+    this.accept(new ModifierVisitor(options), { data });
   }
 
-  modify(data: unknown) {
-    this.accept(new ModifierVisitor(), data);
-  }
-
-  modifySubmodelElement(data: unknown, idShortPath: IdShortPath) {
+  modifySubmodelElement(data: unknown, idShortPath: IdShortPath, options: ModifierVisitorOptions) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
-    submodelElement.accept(new ModifierVisitor(), data);
+
+    submodelElement.accept(new ModifierVisitor(options), { data });
     return submodelElement;
   }
 
-  modifyValueOfSubmodelElement(data: unknown, idShortPath: IdShortPath) {
+  modifyValueOfSubmodelElement(data: unknown, idShortPath: IdShortPath, options: ValueModifierVisitorOptions) {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
-    submodelElement.accept(new ValueModifierVisitor(), data);
+    submodelElement.accept(new ValueModifierVisitor(options), { data });
     return submodelElement;
   }
 
@@ -132,57 +145,52 @@ export class Submodel implements ISubmodelBase, IPersistable {
     const submodelElement = this.findSubmodelElementOrFail(idShortPath);
     if (submodelElement instanceof SubmodelElementList) {
       return new TableExtension(submodelElement);
-    } else {
-      throw new ValueError(
-        `Cannot add column to ${submodelElement.getSubmodelElementType()} submodel element`,
-      );
+    }
+    else {
+      throw new ValueError(`Cannot add column to ${submodelElement.getSubmodelElementType()} submodel element`);
     }
   }
 
-  addRow(idShortPath: IdShortPath, position?: number) {
+  addRow(idShortPath: IdShortPath, options: AddOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    const options = position !== undefined ? { position } : undefined;
     tableExtension.addRow(options);
     return tableExtension.getTableElement();
   }
 
-  deleteRow(idShortPath: IdShortPath, idShortOfRow: string) {
+  deleteRow(idShortPath: IdShortPath, idShortOfRow: string, options: DeleteOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    tableExtension.deleteRow(idShortOfRow);
+    tableExtension.deleteRow(idShortOfRow, options);
     return tableExtension.getTableElement();
   }
 
-  addColumn(idShortPath: IdShortPath, column: ISubmodelElement, position?: number) {
+  addColumn(idShortPath: IdShortPath, column: ISubmodelElement, options: AddOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    const options = position !== undefined ? { position } : undefined;
     tableExtension.addColumn(column, options);
     return tableExtension.getTableElement();
   }
 
-  modifyColumn(idShortPath: IdShortPath, idShortOfColumn: string, data: unknown) {
+  modifyColumn(idShortPath: IdShortPath, idShortOfColumn: string, data: unknown, options: ModifierVisitorOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    tableExtension.modifyColumn(idShortOfColumn, data);
+    tableExtension.modifyColumn(idShortOfColumn, data, options);
     return tableExtension.getTableElement();
   }
 
-  deleteColumn(idShortPath: IdShortPath, idShortOfColumn: string) {
+  deleteColumn(idShortPath: IdShortPath, idShortOfColumn: string, options: DeleteOptions) {
     const tableExtension = this.getListAsTableExtensionOrFail(idShortPath);
-    tableExtension.deleteColumn(idShortOfColumn);
+    tableExtension.deleteColumn(idShortOfColumn, options);
     return tableExtension.getTableElement();
   }
 
-  getValueRepresentation(idShortPath?: IdShortPath): JsonType {
+  getValueRepresentation({ idShortPath, options }: { idShortPath?: IdShortPath; options: ValueVisitorOptions }): JsonType {
     const element = idShortPath ? this.findSubmodelElementOrFail(idShortPath) : this;
-    const valueVisitor = new ValueVisitor();
+    const valueVisitor = new ValueVisitor(options);
     return element.accept(valueVisitor);
   }
 
   findSubmodelElementOrFail(idShortPath: IdShortPath): ISubmodelElement {
     const element = this.findSubmodelElement(idShortPath);
     if (!element) {
-      throw new NotFoundException(
-        `Submodel element with idShortPath ${idShortPath.toString()} not found`,
-      );
+      throw new NotFoundException(`Submodel element with idShortPath ${idShortPath.toString()} not found`);
     }
     return element;
   }
@@ -197,7 +205,7 @@ export class Submodel implements ISubmodelBase, IPersistable {
     let children = this.getSubmodelElements();
 
     for (const segment of idShortPath.segments) {
-      current = children.find((el) => el.idShort === segment);
+      current = children.find(el => el.idShort === segment);
       if (!current) {
         return undefined; // path broken
       }
@@ -207,35 +215,23 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return current;
   }
 
-  public addSubmodelElement(
-    submodelElement: ISubmodelElement,
-    options?: AddOptions,
-  ): ISubmodelElement {
-    if (options?.idShortPath) {
+  public addSubmodelElement(submodelElement: ISubmodelElement, options: AddOptions): ISubmodelElement {
+    if (options.idShortPath) {
       const parent = this.findSubmodelElementOrFail(options.idShortPath);
-      parent.addSubmodelElement(submodelElement, options);
-    } else {
-      if (this.submodelElements.find((el) => el.idShort === submodelElement.idShort)) {
-        throw new ValueError(
-          `Submodel element with idShort ${submodelElement.idShort} already exists`,
-        );
-      }
-      if (options?.position !== undefined) {
-        this.submodelElements.splice(options.position, 0, submodelElement);
-      } else {
-        this.submodelElements.push(submodelElement);
-      }
+      submodelElement.setParentIdShortPath(parent.getIdShortPath());
+      return parent.addSubmodelElement(submodelElement, options);
     }
-    return submodelElement;
+    return addSubmodelElementOrFail(this, submodelElement, options);
   }
 
-  public deleteSubmodelElement(idShortPath: IdShortPath) {
+  public deleteSubmodelElement(idShortPath: IdShortPath, options: DeleteOptions) {
     const parent = this.findSubmodelElementParent(idShortPath);
     if (idShortPath.last) {
       if (!parent) {
-        deleteSubmodelElementOrFail(this.submodelElements, idShortPath.last);
-      } else {
-        parent.deleteSubmodelElement(idShortPath.last);
+        deleteSubmodelElementOrFail(this.submodelElements, idShortPath.last, options);
+      }
+      else {
+        parent.deleteSubmodelElement(idShortPath.last, options);
       }
     }
   }
@@ -244,19 +240,33 @@ export class Submodel implements ISubmodelBase, IPersistable {
     return visitor.visitSubmodel(this, context);
   }
 
-  toPlain(): Record<string, any> {
-    const jsonVisitor = new JsonVisitor();
-    return this.accept(jsonVisitor);
+  toPlain(options?: ConvertToPlainOptions): Record<string, any> {
+    const jsonVisitor = new JsonVisitor(options);
+    return this.accept(jsonVisitor, options?.context);
   }
 
   getSubmodelElements(): ISubmodelElement[] {
     return this.submodelElements;
   }
 
-  copy(): Submodel {
+  copy(options?: ICopyOptions): Submodel | undefined {
+    const plain = this.toPlain(options);
+    if (isEmptyObject(plain)) {
+      return undefined;
+    }
     return Submodel.fromPlain({
-      ...this.toPlain(),
+      ...plain,
       id: randomUUID(),
     });
   }
+}
+
+export function submodelToReference(submodel: Submodel): Reference {
+  return Reference.create({
+    type: ReferenceTypes.ModelReference,
+    keys: [Key.create({
+      type: KeyTypes.Submodel,
+      value: submodel.id,
+    })],
+  });
 }

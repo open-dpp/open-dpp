@@ -4,7 +4,7 @@ import { Language } from "@open-dpp/dto";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 
-const props = defineProps<{ ignoreOptions: LanguageType[] }>();
+const props = defineProps<{ ignoreOptions: LanguageType[]; disabled?: boolean }>();
 const model = defineModel();
 const { t } = useI18n();
 
@@ -19,6 +19,7 @@ const languageOptions = computed(() => {
 <template>
   <Select
     v-model="model"
+    :disabled="props.disabled"
     :options="languageOptions"
     option-value="language"
     option-label="name"

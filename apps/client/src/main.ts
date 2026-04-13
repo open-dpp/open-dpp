@@ -13,6 +13,7 @@ import { router } from "./router";
 import { useIndexStore } from "./stores";
 import { useLanguageStore } from "./stores/language.ts";
 import { useOrganizationsStore } from "./stores/organizations";
+import { useUserStore } from "./stores/user.ts";
 import { i18n } from "./translations/i18n.ts";
 import "./index.css";
 import "primeicons/primeicons.css";
@@ -57,6 +58,8 @@ async function startApp() {
 
   const { data: session } = await authClient.getSession();
   const isSignedIn = session !== null;
+  const userStore = useUserStore();
+  userStore.updateUserBySession(session);
   if (isSignedIn) {
     const organizationStore = useOrganizationsStore();
     await organizationStore.fetchOrganizations();

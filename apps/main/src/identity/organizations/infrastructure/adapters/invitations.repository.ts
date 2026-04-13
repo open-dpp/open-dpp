@@ -7,7 +7,7 @@ import { Model } from "mongoose";
 import { AUTH } from "../../../auth/auth.provider";
 import { Invitation } from "../../domain/invitation";
 import { InvitationStatus } from "../../domain/invitation-status.enum";
-import { MemberRole } from "../../domain/member-role.enum";
+import { MemberRoleEnum } from "../../domain/member-role.enum";
 import { InvitationMapper } from "../mappers/invitation.mapper";
 import { Invitation as InvitationSchema } from "../schemas/invitation.schema";
 
@@ -46,7 +46,7 @@ export class InvitationsRepository {
       email: rawDoc.email as string,
       organizationId: rawDoc.organizationId?.toString() ?? "",
       inviterId: rawDoc.inviterId?.toString() ?? "",
-      role: rawDoc.role as MemberRole,
+      role: MemberRoleEnum.parse(rawDoc.role),
       status: rawDoc.status as InvitationStatus,
       createdAt: rawDoc.createdAt as Date,
       expiresAt: rawDoc.expiresAt as Date,

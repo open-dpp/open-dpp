@@ -1,8 +1,12 @@
 import type { CanActivate, ExecutionContext } from "@nestjs/common";
-import { ForbiddenException, Inject, Injectable } from "@nestjs/common";
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+} from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { EnvService } from "@open-dpp/env";
-import { MembersService } from "../../../organizations/application/services/members.service";
+import { MembersRepository } from "../../../organizations/infrastructure/adapters/members.repository";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { SessionsService } from "../../application/services/sessions.service";
 import { Session } from "../../domain/session";
@@ -14,25 +18,15 @@ import { USER_HAS_ROLE } from "../../presentation/decorators/user-has-role.decor
  */
 @Injectable()
 export class AuthGuard implements CanActivate {
-  private readonly reflector: Reflector;
-  private readonly configService: EnvService;
-  private readonly sessionsService: SessionsService;
-  private readonly membersService: MembersService;
-  private readonly usersRepository: UsersRepository;
-
   constructor(
     @Inject(Reflector)
-    reflector: Reflector,
-    configService: EnvService,
-    sessionsService: SessionsService,
-    membersService: MembersService,
-    usersRepository: UsersRepository,
+    private readonly reflector: Reflector,
+    private readonly configService: EnvService,
+    private readonly sessionsService: SessionsService,
+    private readonly membersRepository: MembersRepository,
+    private readonly usersRepository: UsersRepository,
   ) {
-    this.reflector = reflector;
-    this.configService = configService;
-    this.sessionsService = sessionsService;
-    this.membersService = membersService;
-    this.usersRepository = usersRepository;
+
   }
 
   /**
@@ -58,10 +52,12 @@ export class AuthGuard implements CanActivate {
             token: "api-key",
           });
         }
-      } catch {
+      }
+      catch {
         // If API key verification fails, treat as no session
       }
-    } else {
+    }
+    else {
       const headers = new Headers();
       if (request.headers.cookie) {
         headers.set("cookie", request.headers.cookie);
@@ -71,12 +67,17 @@ export class AuthGuard implements CanActivate {
       }
       try {
         session = await this.sessionsService.getSession(headers);
-      } catch {
+      }
+      catch {
         // If session retrieval fails, treat as no session
       }
     }
 
     request.session = session;
+    request.user = null;
+    if (session) {
+      request.user = (await this.usersRepository.findOneById(session.userId)) ?? null;
+    }
 
     const isPublic = this.reflector.getAllAndOverride<boolean>("PUBLIC", [
       context.getHandler(),
@@ -106,13 +107,11 @@ export class AuthGuard implements CanActivate {
     if (!isBetterAuthUrl) {
       const organizationId = request.headers["x-open-dpp-organization-id"] ?? null;
       if (organizationId) {
-        const isMember = await this.membersService.isMemberOfOrganization(
-          session.userId,
-          organizationId,
-        );
-        if (!isMember) {
+        const member = await this.membersRepository.findOneByUserIdAndOrganizationId(session.userId, organizationId);
+        if (member === null) {
           return false;
         }
+        request.member = member;
       }
     }
 
@@ -121,8 +120,7 @@ export class AuthGuard implements CanActivate {
       context.getClass(),
     ]);
     if (requiredRoles && requiredRoles.length > 0) {
-      const user = await this.usersRepository.findOneById(session.userId);
-      const userRole = user?.role;
+      const userRole = request.user?.role;
       if (!userRole || !requiredRoles.includes(userRole)) {
         throw new ForbiddenException({
           code: "FORBIDDEN",

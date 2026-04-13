@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { MemberRole } from "./member-role.enum";
+import { MemberRole, MemberRoleEnum, MemberRoleType } from "./member-role.enum";
 
 export interface MemberCreateProps {
   organizationId: string;
   userId: string;
-  role: MemberRole;
+  role: MemberRoleType;
 }
 
 export type MemberDbProps = MemberCreateProps & {
@@ -23,7 +23,7 @@ export interface MemberWithUser {
   id: string;
   organizationId: string;
   userId: string;
-  role: MemberRole;
+  role: MemberRoleType;
   createdAt: Date;
   user: MemberUser | null;
 }
@@ -32,14 +32,14 @@ export class Member {
   public readonly id: string;
   public readonly organizationId: string;
   public readonly userId: string;
-  public readonly role: MemberRole;
+  public readonly role: MemberRoleType;
   public readonly createdAt: Date;
 
   private constructor(
     id: string,
     organizationId: string,
     userId: string,
-    role: MemberRole,
+    role: MemberRoleType,
     createdAt: Date,
   ) {
     this.id = id;
@@ -51,11 +51,25 @@ export class Member {
 
   public static create(data: MemberCreateProps) {
     const now = new Date();
-    return new Member(randomUUID(), data.organizationId, data.userId, data.role, now);
+    return new Member(
+      randomUUID(),
+      data.organizationId,
+      data.userId,
+      data.role,
+      now,
+    );
   }
 
   public static loadFromDb(data: MemberDbProps) {
-    return new Member(data.id, data.organizationId, data.userId, data.role, data.createdAt);
+    const parsedRole = MemberRoleEnum.safeParse(data.role);
+    const role = parsedRole.success ? parsedRole.data : MemberRole.MEMBER; // handle old records with outdated roles like 'admin'
+    return new Member(
+      data.id,
+      data.organizationId,
+      data.userId,
+      role,
+      data.createdAt,
+    );
   }
 
   public isOwner(): boolean {
@@ -66,7 +80,7 @@ export class Member {
     id: string;
     organizationId: string;
     userId: string;
-    role: MemberRole;
+    role: MemberRoleType;
     createdAt: Date;
   } {
     return {

@@ -12,6 +12,7 @@ import TextFieldWithValidation from "../../basics/TextFieldWithValidation.vue";
 const props = defineProps<{
   showErrors: boolean;
   errors: FormErrors<any>;
+  disabled?: boolean;
 }>();
 const { t, locale } = useI18n();
 const {
@@ -22,19 +23,24 @@ const {
 
 const remainingLanguages = computed(() =>
   Object.keys(Language).filter(
-    (l) => !displayName.value.map((f) => f.value.language).includes(LanguageEnum.parse(l)),
+    l =>
+      !displayName.value
+        .map(f => f.value.language)
+        .includes(LanguageEnum.parse(l)),
   ),
 );
 
 function nextLanguage(): LanguageType {
   const bestMatch = remainingLanguages.value.find(
-    (l) => l === convertLocaleToLanguage(locale.value),
+    l => l === convertLocaleToLanguage(locale.value),
   );
   return LanguageEnum.parse(bestMatch ?? remainingLanguages.value[0]);
 }
 
 function ignoreOptions(language: string) {
-  return displayName.value.map((f) => f.value.language).filter((l) => l !== language);
+  return displayName.value
+    .map(f => f.value.language)
+    .filter(l => l !== language);
 }
 </script>
 
@@ -42,11 +48,13 @@ function ignoreOptions(language: string) {
   <DataView :value="displayName">
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="text-xl font-bold">{{ t("aasEditor.formLabels.name") }}</span>
+        <span class="text-xl font-bold">{{
+          t("aasEditor.formLabels.name")
+        }}</span>
         <Button
           icon="pi pi-plus"
           raised
-          :disabled="remainingLanguages.length === 0"
+          :disabled="remainingLanguages.length === 0 || props.disabled"
           @click="
             pushDisplayName({
               text: '',
@@ -61,10 +69,11 @@ function ignoreOptions(language: string) {
         <div
           v-for="(field, index) in slotProps.items"
           :key="field.key"
-          class="grid gap-4 pt-2 lg:grid-cols-3"
+          class="grid lg:grid-cols-3 gap-4 pt-2"
         >
           <LanguageSelect
             v-model="field.value.language"
+            :disabled="props.disabled"
             :ignore-options="ignoreOptions(field.value.language)"
           />
           <TextFieldWithValidation
@@ -73,8 +82,14 @@ function ignoreOptions(language: string) {
             :label="t('aasEditor.formLabels.name')"
             :show-errors="props.showErrors"
             :error="props.errors[`displayName[${index}].text`]"
+            :disabled="props.disabled"
           />
-          <Button icon="pi pi-trash" severity="danger" @click="removeDisplayName(Number(index))" />
+          <Button
+            icon="pi pi-trash"
+            severity="danger"
+            :disabled="props.disabled"
+            @click="removeDisplayName(Number(index))"
+          />
         </div>
       </div>
     </template>

@@ -1,12 +1,5 @@
-import { z } from "zod/v4";
-
-export const AasExportFormat = {
-  "open-dpp:json": "open-dpp:json",
-} as const;
-
-export const AasExportVersion = {
-  "1.0": "1.0",
-} as const;
+import { z } from "zod";
+import { AasExportFormat, AasExportVersion } from "./aas-export-shared";
 
 export const DataTypeDefV1_0 = {
   AnyUri: "AnyUri",
@@ -133,7 +126,7 @@ const SubmodelElementBaseV1_0 = {
 
 let SubmodelElementSchemaV1_0: z.ZodType<any>;
 
-const PropertySchemaV1_0 = z.object({
+export const PropertySchemaV1_0 = z.object({
   ...SubmodelElementBaseV1_0,
   modelType: z.literal("Property"),
   valueType: z.enum(DataTypeDefV1_0).nullable(),
@@ -186,7 +179,7 @@ const RangeSchemaV1_0 = z.object({
   max: z.string().nullable(),
 });
 
-const ReferenceElementSchemaV1_0 = z.object({
+export const ReferenceElementSchemaV1_0 = z.object({
   ...SubmodelElementBaseV1_0,
   modelType: z.literal("ReferenceElement"),
   value: ReferenceSchemaV1_0.nullable().optional(),
@@ -232,83 +225,81 @@ SubmodelElementSchemaV1_0 = z.lazy(() =>
   ]),
 );
 
+export const AssetAdministrationShellV1_0 = z.object({
+  assetInformation: z.object({
+    assetKind: z.enum(["Type", "Instance"]),
+    globalAssetId: z.string().nullable().optional(),
+    specificAssetIds: z.array(z.object({
+      name: z.string(),
+      value: z.string(),
+      semanticId: ReferenceSchemaV1_0.nullable(),
+      supplementalSemanticIds: z.array(ReferenceSchemaV1_0),
+      externalSubjectId: ReferenceSchemaV1_0.nullable(),
+    })),
+    assetType: z.string().nullable(),
+    defaultThumbnails: z.array(z.object({
+      path: z.string(),
+      contentType: z.string().nullable(),
+    })),
+  }),
+  extensions: z.array(ExtensionSchemaV1_0),
+  category: z.string().nullable(),
+  idShort: z.string().nullable(),
+  displayName: z.array(LanguageTextSchemaV1_0),
+  description: z.array(LanguageTextSchemaV1_0),
+  administration: AdministrationSchemaV1_0.nullable(),
+  embeddedDataSpecifications: z.array(EmbeddedDataSpecificationSchemaV1_0),
+  derivedFrom: ReferenceSchemaV1_0.nullable().optional(),
+  submodels: z.array(ReferenceSchemaV1_0),
+});
+
 export const aasExportSchemaJsonV1_0 = z.object({
   id: z.string(),
   environment: z.object({
-    assetAdministrationShells: z.array(
-      z.object({
-        assetInformation: z.object({
-          assetKind: z.enum(["Type", "Instance"]),
-          globalAssetId: z.string().nullable().optional(),
-          specificAssetIds: z.array(
-            z.object({
-              name: z.string(),
-              value: z.string(),
-              semanticId: ReferenceSchemaV1_0.nullable(),
-              supplementalSemanticIds: z.array(ReferenceSchemaV1_0),
-              externalSubjectId: ReferenceSchemaV1_0.nullable(),
-            }),
-          ),
-          assetType: z.string().nullable(),
-          defaultThumbnails: z.array(
-            z.object({
-              path: z.string(),
-              contentType: z.string().nullable(),
-            }),
-          ),
-        }),
-        extensions: z.array(ExtensionSchemaV1_0),
-        category: z.string().nullable(),
-        idShort: z.string().nullable(),
-        displayName: z.array(LanguageTextSchemaV1_0),
-        description: z.array(LanguageTextSchemaV1_0),
-        administration: AdministrationSchemaV1_0.nullable(),
-        embeddedDataSpecifications: z.array(EmbeddedDataSpecificationSchemaV1_0),
-        derivedFrom: ReferenceSchemaV1_0.nullable().optional(),
-        submodels: z.array(ReferenceSchemaV1_0),
-      }),
-    ),
-    submodels: z.array(
-      z.object({
-        id: z.string(),
-        extensions: z.array(ExtensionSchemaV1_0),
-        category: z.string().nullable(),
-        idShort: z.string(),
-        displayName: z.array(LanguageTextSchemaV1_0),
-        description: z.array(LanguageTextSchemaV1_0),
-        administration: AdministrationSchemaV1_0.nullable().optional(),
-        kind: z.enum(["Template", "Instance"]).nullable(),
-        semanticId: ReferenceSchemaV1_0.nullable().optional(),
-        supplementalSemanticIds: z.array(ReferenceSchemaV1_0),
-        qualifiers: z.array(QualifierSchemaV1_0),
-        embeddedDataSpecifications: z.array(EmbeddedDataSpecificationSchemaV1_0),
-        submodelElements: z.array(SubmodelElementSchemaV1_0),
-      }),
-    ),
-    conceptDescriptions: z.array(
-      z.object({
-        extensions: z.array(ExtensionSchemaV1_0),
-        category: z.string().nullable(),
-        idShort: z.string().nullable(),
-        displayName: z.array(LanguageTextSchemaV1_0),
-        description: z.array(LanguageTextSchemaV1_0),
-        semanticId: ReferenceSchemaV1_0.nullable(),
-        administration: AdministrationSchemaV1_0.nullable(),
-        embeddedDataSpecifications: z.array(EmbeddedDataSpecificationSchemaV1_0),
-        isCaseOf: z.array(ReferenceSchemaV1_0),
-      }),
-    ),
+    assetAdministrationShells: z.array(AssetAdministrationShellV1_0),
+    submodels: z.array(z.object({
+      id: z.string(),
+      extensions: z.array(ExtensionSchemaV1_0),
+      category: z.string().nullable(),
+      idShort: z.string(),
+      displayName: z.array(LanguageTextSchemaV1_0),
+      description: z.array(LanguageTextSchemaV1_0),
+      administration: AdministrationSchemaV1_0.nullable().optional(),
+      kind: z.enum(["Template", "Instance"]).nullable(),
+      semanticId: ReferenceSchemaV1_0.nullable().optional(),
+      supplementalSemanticIds: z.array(ReferenceSchemaV1_0),
+      qualifiers: z.array(QualifierSchemaV1_0),
+      embeddedDataSpecifications: z.array(EmbeddedDataSpecificationSchemaV1_0),
+      submodelElements: z.array(SubmodelElementSchemaV1_0),
+    })),
+    conceptDescriptions: z.array(z.object({
+      extensions: z.array(ExtensionSchemaV1_0),
+      category: z.string().nullable(),
+      idShort: z.string().nullable(),
+      displayName: z.array(LanguageTextSchemaV1_0),
+      description: z.array(LanguageTextSchemaV1_0),
+      semanticId: ReferenceSchemaV1_0.nullable(),
+      administration: AdministrationSchemaV1_0.nullable(),
+      embeddedDataSpecifications: z.array(EmbeddedDataSpecificationSchemaV1_0),
+      isCaseOf: z.array(ReferenceSchemaV1_0),
+    })),
   }),
-  createdAt: z.codec(z.iso.datetime(), z.date(), {
-    decode: (isoString) => new Date(isoString),
-    encode: (date) => date.toISOString(),
-  }),
-  updatedAt: z.codec(z.iso.datetime(), z.date(), {
-    decode: (isoString) => new Date(isoString),
-    encode: (date) => date.toISOString(),
-  }),
+  createdAt: z.codec(
+    z.iso.datetime(),
+    z.date(),
+    {
+      decode: isoString => new Date(isoString),
+      encode: date => date.toISOString(),
+    },
+  ),
+  updatedAt: z.codec(
+    z.iso.datetime(),
+    z.date(),
+    {
+      decode: isoString => new Date(isoString),
+      encode: date => date.toISOString(),
+    },
+  ),
   format: z.literal(AasExportFormat["open-dpp:json"].toString()),
-  version: z.literal(AasExportVersion["1.0"].toString()),
+  version: z.literal(AasExportVersion.v1_0),
 });
-
-export type AasExportSchema = z.infer<typeof aasExportSchemaJsonV1_0>;

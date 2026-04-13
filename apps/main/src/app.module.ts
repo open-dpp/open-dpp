@@ -24,6 +24,7 @@ import { MediaModule } from "./media/media.module";
 import { PassportsModule } from "./passports/passports.module";
 import { PolicyModule } from "./policy/policy.module";
 import { PolicyGuard } from "./policy/presentation/policy.guard";
+import { StatusModule } from "./status/status.module";
 import { TemplatesModule } from "./templates/templates.module";
 import { TraceabilityEventsModule } from "./traceability-events/traceability-events.module";
 import { UniqueProductIdentifierModule } from "./unique-product-identifier/unique.product.identifier.module";
@@ -63,6 +64,7 @@ import { UniqueProductIdentifierModule } from "./unique-product-identifier/uniqu
     EmailModule,
     InstanceSettingsModule,
     PolicyModule,
+    StatusModule,
   ],
   controllers: [],
   providers: [

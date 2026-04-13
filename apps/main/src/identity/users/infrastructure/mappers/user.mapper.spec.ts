@@ -70,4 +70,11 @@ describe("userMapper", () => {
     expect(domain.banReason).toBe(validUserDocument.banReason);
     expect(domain.banExpires).toBe(validUserDocument.banExpires);
   });
+
+  it("should map from persistence to domain and default to UserRole.USER", () => {
+    const domain = UserMapper.toDomain({ ...validUserDocument, role: undefined } as any);
+
+    expect(domain).toBeInstanceOf(User);
+    expect(domain.role).toEqual(UserRole.USER);
+  });
 });

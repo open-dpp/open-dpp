@@ -9,5 +9,6 @@ import { BrandingController } from "./presentation/branding.controller";
   imports: [AasModule, OrganizationsModule, EnvModule],
   controllers: [BrandingController],
   providers: [BrandingRepository],
+  exports: [BrandingRepository],
 })
 export class BrandingModule {}

@@ -2,17 +2,19 @@
 import type { FileModificationDto } from "@open-dpp/dto";
 import type { FileEditorProps } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
-import { FileModificationSchema } from "@open-dpp/dto";
+import { FileModificationSchema, Permissions } from "@open-dpp/dto";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { z } from "zod";
+import { useAasAbility } from "../../composables/aas-ability.ts";
 import { EditorMode } from "../../composables/aas-drawer.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FileForm from "./FileForm.vue";
 
-const props = defineProps<SharedEditorProps<FileEditorProps, FileModificationDto>>();
+const props
+  = defineProps<SharedEditorProps<FileEditorProps, FileModificationDto>>();
 
 const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
@@ -20,6 +22,17 @@ const formSchema = z.object({
   contentType: z.string().nullish(),
 });
 export type FormValues = z.infer<typeof formSchema>;
+
+const { can } = useAasAbility({
+  getAccessPermissionRules: props.getAccessPermissionRules,
+});
+const disableEdit = computed(() => {
+  return !can(Permissions.Edit, props.path.idShortPathIncludingSubmodel ?? "");
+});
+
+const permissionsFormRef = ref<{
+  savePermissions: () => Promise<void>;
+} | null>(null);
 
 const { handleSubmit, errors, meta, submitCount } = useForm<FormValues>({
   validationSchema: toTypedSchema(formSchema),
@@ -33,6 +46,9 @@ const showErrors = computed(() => {
 
 async function submit() {
   await handleSubmit(async (data) => {
+    if (permissionsFormRef.value) {
+      await permissionsFormRef.value.savePermissions();
+    }
     await props.callback(FileModificationSchema.parse({ ...data }));
   })();
 }
@@ -46,6 +62,20 @@ defineExpose<{
 
 <template>
   <div class="flex flex-col gap-4 p-2">
-    <FileForm :show-errors="showErrors" :errors="errors" :editor-mode="EditorMode.EDIT" />
+    <FileForm
+      :show-errors="showErrors"
+      :errors="errors"
+      :editor-mode="EditorMode.EDIT"
+      :disabled="disableEdit"
+    />
+    <PermissionsForm
+      ref="permissionsFormRef"
+      :disabled="disableEdit"
+      :ignored-permission-options="[Permissions.Create]"
+      :path="props.path"
+      :modify-shell="props.modifyShell"
+      :get-access-permission-rules="props.getAccessPermissionRules"
+      :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
+    />
   </div>
 </template>

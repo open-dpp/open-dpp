@@ -5,6 +5,7 @@ import { ConsoleLogger, Logger, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { EnvService } from "@open-dpp/env";
 import {
+  ForbiddenExceptionFilter,
   NotFoundExceptionFilter,
   NotFoundInDatabaseExceptionFilter,
   ValueErrorFilter,
@@ -88,6 +89,7 @@ async function bootstrap() {
     new NotFoundInDatabaseExceptionFilter(),
     new NotFoundExceptionFilter(),
     new ValueErrorFilter(),
+    new ForbiddenExceptionFilter(),
   );
   applyBodySizeHandler(app);
   app.use("/media/upload-dpp-file/:upi", bodyParser.urlencoded({ limit: "50mb", extended: true }));

@@ -28,12 +28,15 @@ async function inviteUserToOrg() {
 }
 
 async function fetchOrganization() {
-  const response = await apiClient.dpp.organizations.getById(props.organizationId);
+  const response = await apiClient.dpp.organizations.getById(
+    props.organizationId,
+  );
   organization.value = response.data;
   try {
     const membersResponse = await apiClient.dpp.organizations.getMembers(props.organizationId);
     members.value = membersResponse.data ?? [];
-  } catch (e) {
+  }
+  catch (e) {
     console.error("Failed to fetch organization members", e);
     members.value = [];
   }
@@ -48,17 +51,17 @@ onMounted(async () => {
   <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
     <div class="px-4 py-6 sm:px-6">
       <h3 class="text-base/7 font-semibold text-gray-900">
-        {{ t("organizations.info") }}
+        {{ t('organizations.info') }}
       </h3>
       <p class="mt-1 max-w-2xl text-sm/6 text-gray-500">
-        {{ t("organizations.details") }}
+        {{ t('organizations.details') }}
       </p>
     </div>
     <div v-if="organization" class="border-t border-gray-100">
       <dl class="divide-y divide-gray-100">
         <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
           <dt class="text-sm font-medium text-gray-900">
-            {{ t("organizations.form.id") }}
+            {{ t('organizations.form.id') }}
           </dt>
           <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
             {{ organization.id }}
@@ -66,7 +69,7 @@ onMounted(async () => {
         </div>
         <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
           <dt class="text-sm font-medium text-gray-900">
-            {{ t("organizations.form.name.label") }}
+            {{ t('organizations.form.name.label') }}
           </dt>
           <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
             {{ organization.name }}
@@ -77,43 +80,53 @@ onMounted(async () => {
         -->
         <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
           <dt class="text-sm font-medium text-gray-900">
-            {{ t("organizations.form.description") }}
+            {{ t('organizations.form.description') }}
           </dt>
           <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-            Fugiat ipsum ipsum deserunt culpa aute sint do nostrud anim incididunt cillum culpa
-            consequat. Excepteur qui ipsum aliquip consequat sint. Sit id mollit nulla mollit
-            nostrud in ea officia proident. Irure nostrud pariatur mollit ad adipisicing
-            reprehenderit deserunt qui eu.
+            Fugiat ipsum ipsum deserunt culpa aute sint do nostrud anim
+            incididunt cillum culpa consequat. Excepteur qui ipsum aliquip
+            consequat sint. Sit id mollit nulla mollit nostrud in ea officia
+            proident. Irure nostrud pariatur mollit ad adipisicing reprehenderit
+            deserunt qui eu.
           </dd>
         </div>
         <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-          <dt class="text-sm/6 font-medium text-gray-900">User</dt>
+          <dt class="text-sm/6 font-medium text-gray-900">
+            User
+          </dt>
           <dd class="mt-2 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
-            <ul class="divide-y divide-gray-100 rounded-md border border-gray-200" role="list">
+            <ul
+              class="divide-y divide-gray-100 rounded-md border border-gray-200"
+              role="list"
+            >
               <li
                 v-for="member of members"
                 :key="member.id"
-                class="flex items-center justify-between py-4 pr-5 pl-4 text-sm/6"
+                class="flex items-center justify-between py-4 pl-4 pr-5 text-sm/6"
               >
                 <div class="flex w-0 flex-1 items-center">
-                  <UserCircleIcon aria-hidden="true" class="h-5 w-5 shrink-0 text-gray-400" />
+                  <UserCircleIcon
+                    aria-hidden="true"
+                    class="h-5 w-5 shrink-0 text-gray-400"
+                  />
                   <div class="ml-4 flex min-w-0 flex-1 gap-2">
                     <span class="truncate font-medium">{{ member.user?.email }}</span>
                     <span
                       v-if="member.role === 'owner'"
-                      class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-green-600/20 ring-inset"
-                      >{{ t("organizations.memberCreator") }}</span
-                    >
+                      class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
+                    >{{ t('organizations.owner') }}</span>
                     <span
                       v-if="member.role === 'admin'"
-                      class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-green-600/20 ring-inset"
-                      >{{ t("organizations.memberAdmin") }}</span
-                    >
+                      class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
+                    >{{ t('user.admin') }}</span>
                   </div>
                 </div>
                 <div class="ml-4 shrink-0">
-                  <a class="font-medium text-red-600 hover:text-red-500" href="#">
-                    {{ t("common.remove") }}
+                  <a
+                    class="font-medium text-red-600 hover:text-red-500"
+                    href="#"
+                  >
+                    {{ t('common.remove') }}
                   </a>
                 </div>
               </li>
@@ -121,12 +134,16 @@ onMounted(async () => {
             <div class="mt-3 flex flex-row gap-3">
               <input
                 v-model="userEmailToAdd"
-                class="block min-w-80 rounded-md border-gray-300"
+                class="block rounded-md border-gray-300 min-w-80"
                 :placeholder="t('common.form.email.label')"
                 type="text"
-              />
-              <BaseButton variant="primary" type="button" @click="inviteUserToOrg">
-                {{ t("organizations.addUser") }}
+              >
+              <BaseButton
+                variant="primary"
+                type="button"
+                @click="inviteUserToOrg"
+              >
+                {{ t('organizations.addUser') }}
               </BaseButton>
             </div>
           </dd>

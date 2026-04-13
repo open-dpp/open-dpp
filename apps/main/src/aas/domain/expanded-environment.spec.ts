@@ -1,13 +1,19 @@
 import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
-import { AssetKindType } from "@open-dpp/dto";
+import { AssetKindType, PermissionKind, Permissions } from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
+import { MemberRole } from "../../identity/organizations/domain/member-role.enum";
+import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { AssetAdministrationShell } from "./asset-adminstration-shell";
 import { AssetInformation } from "./asset-information";
+import { IdShortPath } from "./common/id-short-path";
 import { ConceptDescription } from "./concept-description";
 import { Environment } from "./environment";
 import { ExpandedEnvironment } from "./expanded-environment";
-import { Submodel } from "./submodel-base/submodel";
+import { Permission } from "./security/permission";
+import { Security } from "./security/security";
+import { SubjectAttributes } from "./security/subject-attributes";
+import { Submodel, submodelToReference } from "./submodel-base/submodel";
 
 function createSubmodel(id?: string, idShort?: string): Submodel {
   const resolvedId = id ?? randomUUID();
@@ -19,9 +25,12 @@ function createConceptDescription(id?: string): ConceptDescription {
 }
 
 function createShell(id?: string, submodels: Submodel[] = []): AssetAdministrationShell {
+  const security = Security.create({});
+
   const shell = AssetAdministrationShell.create({
     id: id ?? randomUUID(),
     assetInformation: AssetInformation.create({ assetKind: "Type" as AssetKindType }),
+    security,
   });
   submodels.forEach((sm) => {
     shell.addSubmodel(sm);
@@ -222,17 +231,29 @@ describe("expandedEnvironment", () => {
 
   describe("toPlain", () => {
     it("should serialize all shells, submodels, and concept descriptions to plain objects", () => {
-      const submodel = createSubmodel();
-      const shell = createShell(undefined, [submodel]);
+      const security = Security.create({});
+      const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+      const submodel1 = createSubmodel();
+      const submodel2 = createSubmodel();
+      security.addPolicy(
+        member,
+        IdShortPath.create({ path: submodel1.idShort }),
+        [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
+      );
+
+      const ability = security.defineAbilityForSubject(member);
+
+      const shell = createShell(undefined, [submodel1, submodel2]);
       const cd = createConceptDescription("cd-1");
 
-      const env = ExpandedEnvironment.fromLoaded([shell], [submodel], [cd]);
-      const plain = env.toPlain();
-
+      const env = ExpandedEnvironment.fromLoaded([shell], [submodel1, submodel2], [cd]);
+      const plain = env.toPlain({ ability });
       expect(plain.assetAdministrationShells).toHaveLength(1);
       expect(plain.assetAdministrationShells[0].id).toBe(shell.id);
+      expect(plain.assetAdministrationShells[0].submodels).toEqual([submodelToReference(submodel1)]);
+
       expect(plain.submodels).toHaveLength(1);
-      expect(plain.submodels[0].id).toBe(submodel.id);
+      expect(plain.submodels[0].id).toBe(submodel1.id);
       expect(plain.conceptDescriptions).toHaveLength(1);
       expect(plain.conceptDescriptions[0].id).toBe("cd-1");
     });

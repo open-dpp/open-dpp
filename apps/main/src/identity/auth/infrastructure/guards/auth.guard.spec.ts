@@ -3,7 +3,9 @@ import { ExecutionContext } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EnvService } from "@open-dpp/env";
-import { MembersService } from "../../../organizations/application/services/members.service";
+import { Member } from "../../../organizations/domain/member";
+import { MemberRole } from "../../../organizations/domain/member-role.enum";
+import { MembersRepository } from "../../../organizations/infrastructure/adapters/members.repository";
 import { UsersRepository } from "../../../users/infrastructure/adapters/users.repository";
 import { SessionsService } from "../../application/services/sessions.service";
 import { AuthGuard } from "./auth.guard";
@@ -11,15 +13,15 @@ import { AuthGuard } from "./auth.guard";
 describe("authGuard Allowlist Repro", () => {
   let guard: AuthGuard;
   let mockSessionsService: any;
-  let mockMembersService: any;
+  let mockMembersRepository: any;
 
   beforeEach(async () => {
     mockSessionsService = {
       getSession: jest.fn<() => Promise<null>>().mockResolvedValue(null),
       verifyApiKey: jest.fn<() => Promise<null>>().mockResolvedValue(null),
     };
-    mockMembersService = {
-      isMemberOfOrganization: jest.fn<() => Promise<boolean>>().mockResolvedValue(false),
+    mockMembersRepository = {
+      findOneByUserIdAndOrganizationId: jest.fn<() => Promise<Member | null>>().mockResolvedValue(null),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -42,8 +44,8 @@ describe("authGuard Allowlist Repro", () => {
           useValue: mockSessionsService,
         },
         {
-          provide: MembersService,
-          useValue: mockMembersService,
+          provide: MembersRepository,
+          useValue: mockMembersRepository,
         },
         {
           provide: UsersRepository,
@@ -134,7 +136,7 @@ describe("authGuard Allowlist Repro", () => {
 
     it("should check org membership when API key and org header are provided", async () => {
       mockSessionsService.verifyApiKey.mockResolvedValue({ userId: "user-789" });
-      mockMembersService.isMemberOfOrganization.mockResolvedValue(true);
+      mockMembersRepository.findOneByUserIdAndOrganizationId.mockResolvedValue(Member.create({ userId: "user-789", organizationId: "org-1", role: MemberRole.MEMBER }));
       const context = createMockContext("/api/items", {
         "x-api-key": "valid-key",
         "x-open-dpp-organization-id": "org-1",
@@ -143,12 +145,12 @@ describe("authGuard Allowlist Repro", () => {
       const result = await guard.canActivate(context);
 
       expect(result).toBe(true);
-      expect(mockMembersService.isMemberOfOrganization).toHaveBeenCalledWith("user-789", "org-1");
+      expect(mockMembersRepository.findOneByUserIdAndOrganizationId).toHaveBeenCalledWith("user-789", "org-1");
     });
 
     it("should deny when API key user is not member of org", async () => {
       mockSessionsService.verifyApiKey.mockResolvedValue({ userId: "user-789" });
-      mockMembersService.isMemberOfOrganization.mockResolvedValue(false);
+      mockMembersRepository.findOneByUserIdAndOrganizationId.mockResolvedValue(null);
       const context = createMockContext("/api/items", {
         "x-api-key": "valid-key",
         "x-open-dpp-organization-id": "org-1",

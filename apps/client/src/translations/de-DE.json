@@ -3,6 +3,7 @@
     "required": "Erforderlich"
   },
   "common": {
+    "reset": "Zurücksetzen",
     "untitled": "Unbenannt",
     "id": "ID",
     "identification": "Identifikation",
@@ -14,6 +15,7 @@
     "qrCode": "QR-Code",
     "add": "Hinzufügen",
     "import": "Importieren",
+    "view": "Anzeigen",
     "change": "Ändern",
     "save": "Speichern",
     "create": "Erstellen",
@@ -63,6 +65,17 @@
     }
   },
   "aasEditor": {
+    "security": {
+      "missingPermission": "Fehlende Rechte",
+      "inheritedPermission": "Berechtigung wird vom übergeordneten Knoten geerbt",
+      "overriddenPermission": "Berechtigung des übergeordneten Knoten wird überschrieben",
+      "permissions": "Berechtigungen",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "create": "Erstellen",
+      "read": "Lesen",
+      "errorManagePolicy": "Ändern der Berechtigungen fehlgeschlagen"
+    },
     "productImages": "Produktbilder",
     "formLabels": {
       "value": "Wert",
@@ -106,7 +119,9 @@
     "textField": "Textfeld",
     "file": "Datei",
     "dateField": "Datumsfeld",
+    "dateTimeField": "Datum-Zeit-Feld",
     "numberField": "Zahlenfeld",
+    "timezone": "Zeitzone",
     "type": "Typ",
     "error": "{method} @:common.failed"
   },
@@ -222,6 +237,8 @@
     "addFileField": "Fügen Sie einen Dateiupload hinzu",
     "dateField": "Datumsfeld",
     "addDateField": "Datumsfeld hinzufügen",
+    "dateTimeField": "Datum-Zeit-Feld",
+    "addDateTimeField": "Datum-Zeit-Feld hinzufügen",
     "passportDraft": "Passvorlagen Entwurf | Passvorlagen Entwürfe",
     "passportDraftDescription": "Alle Passvorlagen Entwürfe",
     "changeDataFieldType": "Datenfeldtyp ändern"
@@ -321,12 +338,11 @@
     "invite": "Einladen",
     "inviteUser": "Benutzer einladen",
     "inviteUserSuccess": "Der Benutzer wurde erfolgreich eingeladen.",
-    "member": "Mitglieder",
+    "member": "Mitglied | Mitglieder",
     "memberListDescription": "Eine Liste von allen Mitgliedern in dieser Organisation.",
     "memberName": "Name",
     "memberRole": "Rolle",
-    "memberAdmin": "Admin",
-    "memberCreator": "Ersteller",
+    "owner": "Organisationsadministrator*in",
     "addUser": "Benutzer hinzufügen",
     "form": {
       "id": "ID",
@@ -459,6 +475,8 @@
     }
   },
   "user": {
+    "admin": "Administrator*in",
+    "public": "Öffentlichkeit",
     "profile": "Dein Profil",
     "personalInformation": "Persönliche Informationen",
     "logout": "Abmelden",
@@ -539,11 +557,12 @@
     "productDetails": "Produktdetails",
     "productDetailsDesc": "Allgemeine Informationen zum Produkt.",
     "additionalSections": "Weiterführende Abschnitte",
-    "moreInfo": "Mehr Informationen",
+    "moreInfo": "Details anzeigen",
     "navigation": "Navigation",
     "backToApp": "Zurück zur App",
     "toPass": "Zur Passansicht",
     "chatWithAI": "Mit KI chatten",
+    "generalInformation": "Allgemeine Informationen",
     "productpass": "Produktpass",
     "askQuestion": "Stellen Sie Ihre Frage...",
     "answerPending": "Wird verarbeitet...",

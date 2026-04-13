@@ -31,9 +31,9 @@ function setOrganization(organizationId: string) {
           {{ t("organizations.organizations", 2) }}
         </h1>
       </div>
-      <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+      <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
         <button
-          class="bg-primary-500 hover:bg-primary-600 block rounded-md px-3 py-1.5 text-center text-sm/6 font-semibold text-white shadow-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          class="block rounded-md bg-primary-500 px-3 py-1.5 text-center text-sm/6 font-semibold text-white shadow-xs hover:bg-primary-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           type="button"
         >
           <router-link to="/organizations/create">
@@ -52,14 +52,17 @@ function setOrganization(organizationId: string) {
           v-for="organization in organizationsStore.organizations"
           :key="organization.id"
           :class="{
-            'border-2 border-indigo-500': organization.id === indexStore.selectedOrganization,
+            'border-indigo-500 border-2':
+              organization.id === indexStore.selectedOrganization,
           }"
           class="col-span-1 divide-y divide-gray-200 rounded-lg bg-white shadow-sm"
         >
           <div class="flex w-full items-center justify-between space-x-6 p-6">
             <div class="flex items-center gap-2">
               <Checkbox
-                :model-value="organization.id === indexStore.selectedOrganization"
+                :model-value="
+                  organization.id === indexStore.selectedOrganization
+                "
                 binary
                 :disabled="organization.id === indexStore.selectedOrganization"
                 :input-id="`org-checkbox-${organization.id}`"
@@ -82,9 +85,8 @@ function setOrganization(organizationId: string) {
                   {{ organization.name }}
                 </h3>
                 <span
-                  class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-green-600/20 ring-inset"
-                  >{{ t("organizations.memberAdmin") }}</span
-                >
+                  class="inline-flex shrink-0 items-center rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20"
+                >{{ t("user.admin") }}</span>
               </div>
               <p class="mt-1 truncate text-sm text-gray-500">
                 {{ organization.id }}
@@ -92,7 +94,7 @@ function setOrganization(organizationId: string) {
             </div>
             <div>
               <button
-                class="flex flex-1 flex-row items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900"
+                class="flex flex-row flex-1 items-center justify-center gap-x-3 rounded-br-lg border border-transparent py-4 text-sm font-semibold text-gray-900"
                 @click="router.push(`/organizations/${organization.id}`)"
               >
                 <Cog8ToothIcon

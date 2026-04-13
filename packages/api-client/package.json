@@ -1,6 +1,9 @@
 {
   "name": "@open-dpp/api-client",
-  "version": "2.2.1",
+  "version": "0.1.2",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "A client for my API",
   "keywords": [],
   "license": "ISC",

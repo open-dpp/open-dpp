@@ -21,13 +21,14 @@ import {
   UsersIcon,
   XMarkIcon,
 } from "@heroicons/vue/24/outline";
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import { authClient } from "../../auth-client.ts";
 import { useBranding } from "../../composables/branding.ts";
 import { useIndexStore } from "../../stores";
 import { useLayoutStore } from "../../stores/layout";
+import { useStatusStore } from "../../stores/status";
 import Breadcrumbs from "../Breadcrumbs.vue";
 import BrandingLogo from "../media/BrandingLogo.vue";
 import NotificationHandler from "../notifications/NotificationHandler.vue";
@@ -189,6 +190,9 @@ const fullName = computed(() => {
 });
 
 const sidebarOpen = ref(false);
+
+const statusStore = useStatusStore();
+onMounted(() => statusStore.fetchStatus());
 </script>
 
 <template>
@@ -311,6 +315,9 @@ const sidebarOpen = ref(false);
                     </li>
                   </ul>
                 </nav>
+                <p v-if="statusStore.version" class="pb-2 text-center text-xs text-gray-500">
+                  v{{ statusStore.version }}
+                </p>
               </div>
             </DialogPanel>
           </TransitionChild>
@@ -388,6 +395,9 @@ const sidebarOpen = ref(false);
             </li>
             <li class="mt-auto">
               <SelectOrganization />
+              <p v-if="statusStore.version" class="mt-2 text-center text-xs text-gray-500">
+                v{{ statusStore.version }}
+              </p>
             </li>
           </ul>
         </nav>

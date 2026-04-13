@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { Invitation } from "./invitation";
 import { Member } from "./member";
-import { MemberRole } from "./member-role.enum";
+import { MemberRoleType } from "./member-role.enum";
 
 export interface OrganizationCreateProps {
   name: string;
@@ -103,7 +103,7 @@ export class Organization {
     );
   }
 
-  inviteMember(email: string, inviterId: string, role: MemberRole): Invitation {
+  inviteMember(email: string, inviterId: string, role: MemberRoleType): Invitation {
     return Invitation.create({
       email,
       inviterId,

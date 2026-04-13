@@ -6,7 +6,7 @@ import { LanguageText } from "./common/language-text";
 import { Reference } from "./common/reference";
 import { EmbeddedDataSpecification } from "./embedded-data-specification";
 import { Extension } from "./extension";
-import { JsonVisitor } from "./json-visitor";
+import JsonVisitor from "./json-visitor";
 import { IPersistable } from "./persistable";
 import { IVisitable, IVisitor } from "./visitor";
 

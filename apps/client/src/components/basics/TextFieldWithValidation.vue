@@ -4,6 +4,7 @@ import { computed } from "vue";
 const props = defineProps<{
   id: string;
   label?: string;
+  disabled?: boolean;
   showErrors: boolean;
   error: string | undefined;
   modelValue: string | null;
@@ -28,6 +29,7 @@ const internalValue = computed({
           :id="props.id"
           v-model="internalValue"
           :invalid="props.showErrors && !!props.error"
+          :disabled="props.disabled"
         />
         <label :for="props.id">{{ props.label }}</label>
       </FloatLabel>
@@ -36,6 +38,7 @@ const internalValue = computed({
         :id="props.id"
         v-model="internalValue"
         :invalid="props.showErrors && !!props.error"
+        :disabled="props.disabled"
       />
     </InputGroup>
     <Message v-if="props.showErrors && props.error" size="small" severity="error" variant="simple">

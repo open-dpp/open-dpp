@@ -48,7 +48,7 @@ describe("MembersRepository", () => {
     const member = Member.create({
       organizationId: new Types.ObjectId().toHexString(),
       userId: new Types.ObjectId().toHexString(),
-      role: MemberRole.ADMIN,
+      role: MemberRole.MEMBER,
     });
 
     const savedMember = await repository.save(member);
@@ -57,14 +57,14 @@ describe("MembersRepository", () => {
     expect(savedMember.id).toBe(member.id);
     expect(savedMember.organizationId).toBe(member.organizationId);
     expect(savedMember.userId).toBe(member.userId);
-    expect(savedMember.role).toBe(MemberRole.ADMIN);
+    expect(savedMember.role).toBe(MemberRole.MEMBER);
   });
 
   it("should find a member by id", async () => {
     const member = Member.create({
       organizationId: new Types.ObjectId().toHexString(),
       userId: new Types.ObjectId().toHexString(),
-      role: MemberRole.ADMIN,
+      role: MemberRole.MEMBER,
     });
 
     await repository.save(member);
@@ -91,7 +91,7 @@ describe("MembersRepository", () => {
     const member2 = Member.create({
       organizationId: new Types.ObjectId().toHexString(),
       userId,
-      role: MemberRole.ADMIN,
+      role: MemberRole.OWNER,
     });
     const otherMember = Member.create({
       organizationId: new Types.ObjectId().toHexString(),
@@ -119,7 +119,7 @@ describe("MembersRepository", () => {
     const member2 = Member.create({
       organizationId,
       userId: new Types.ObjectId().toHexString(),
-      role: MemberRole.ADMIN,
+      role: MemberRole.MEMBER,
     });
     const otherMember = Member.create({
       organizationId: new Types.ObjectId().toHexString(),
@@ -180,13 +180,13 @@ describe("MembersRepository", () => {
       id: member.id,
       organizationId,
       userId,
-      role: MemberRole.ADMIN,
+      role: MemberRole.MEMBER,
       createdAt: member.createdAt,
     });
 
     const result = await repository.save(updatedMember);
 
     expect(result).toBeInstanceOf(Member);
-    expect(result.role).toBe(MemberRole.ADMIN);
+    expect(result.role).toBe(MemberRole.MEMBER);
   });
 });

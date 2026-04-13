@@ -23,7 +23,7 @@ export class PassportDoc extends Document<string> {
   declare _id: string;
 
   @Prop({ type: String, required: false })
-  templateId: string;
+  templateId: string | null;
 
   @Prop({ type: String, required: true })
   organizationId: string;

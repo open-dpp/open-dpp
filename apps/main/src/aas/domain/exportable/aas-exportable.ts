@@ -2,12 +2,14 @@ import { randomUUID } from "node:crypto";
 import { DateTime } from "../../../lib/date-time";
 import { Passport } from "../../../passports/domain/passport";
 import { Template } from "../../../templates/domain/template";
-import { aasExportSchemaJsonV1_0 } from "../../infrastructure/serialization/aas-export-v1.schema";
+import { AasExportVersion } from "../../infrastructure/serialization/export-schemas/aas-export-shared";
+import { aasExportSchemaJsonV1_0 } from "../../infrastructure/serialization/export-schemas/aas-export-v1.schema";
 import { ExpandedEnvironment } from "../expanded-environment";
+import { SubjectAttributes } from "../security/subject-attributes";
 
 export class AasExportable {
   private readonly EXPORT_FORMAT = "open-dpp:json";
-  private readonly EXPORT_VERSION = "1.0";
+  private readonly EXPORT_VERSION = AasExportVersion.v2_0;
 
   private constructor(
     public readonly id: string,
@@ -71,8 +73,10 @@ export class AasExportable {
     );
   }
 
-  toExportPlain() {
-    const envPlain = this.environment.toPlain();
+  toExportPlain(subject: SubjectAttributes) {
+    const ability = this.environment.shells.length > 0 ? this.environment.shells[0].security.defineAbilityForSubject(subject) : undefined;
+
+    const envPlain = this.environment.toPlain({ ability });
     return {
       id: this.id,
       environment: {

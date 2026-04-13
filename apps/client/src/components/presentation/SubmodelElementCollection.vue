@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { FolderIcon } from "@heroicons/vue/16/solid";
+import { ChevronRightIcon } from "@heroicons/vue/16/solid";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useSubmodelTree } from "../../composables/submodel-tree";
@@ -26,13 +26,9 @@ const { t } = useI18n();
   <router-link
     :to="`?submodelid=${parentId}`"
     :data-cy="parentId"
-    class="flex gap-2 rounded-md border-2 p-2 hover:bg-gray-50"
+    class="inline-flex items-center gap-1.5 mt-1 text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
   >
-    <div class="flex items-center">
-      <FolderIcon class="size-5 shrink-0 text-gray-400" aria-hidden="true" />
-    </div>
-    <span>
-      {{ t("presentation.moreInfo") }}
-    </span>
+    <span>{{ t("presentation.moreInfo") }}</span>
+    <ChevronRightIcon class="size-4 shrink-0" aria-hidden="true" />
   </router-link>
 </template>

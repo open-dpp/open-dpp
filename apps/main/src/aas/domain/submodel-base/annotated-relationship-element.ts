@@ -1,21 +1,22 @@
-import {
-  AasSubmodelElements,
-  AasSubmodelElementsType,
-  AnnotatedRelationshipElementJsonSchema,
-} from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
+import { AasSubmodelElements, AasSubmodelElementsType, AnnotatedRelationshipElementJsonSchema } from "@open-dpp/dto";
+import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
 import { Reference } from "../common/reference";
+import { ConvertToPlainOptions } from "../convertable-to-plain";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
 import { Extension } from "../extension";
-import { JsonVisitor } from "../json-visitor";
+import JsonVisitor from "../json-visitor";
 import { IVisitor } from "../visitor";
 import { IRelationshipElement } from "./relationship-element";
 import {
+  AddOptions,
+  addSubmodelElementOrFail,
+  DeleteOptions,
   deleteSubmodelElementOrFail,
   ISubmodelElement,
   parseSubmodelElement,
+  setParentIdShortPaths,
   SubmodelBaseProps,
   submodelBasePropsFromPlain,
 } from "./submodel-base";
@@ -23,6 +24,8 @@ import {
 export class AnnotatedRelationshipElement implements ISubmodelElement, IRelationshipElement {
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
+  private _parentIdShortPath: IdShortPath | undefined;
+
   protected constructor(
     public readonly first: Reference,
     public readonly second: Reference,
@@ -39,6 +42,15 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
   ) {
     this.displayName = displayName;
     this.description = description;
+  }
+
+  setParentIdShortPath(parentIdShortPath: IdShortPath) {
+    this._parentIdShortPath = parentIdShortPath;
+    setParentIdShortPaths(this, this.idShort, this._parentIdShortPath);
+  }
+
+  getIdShortPath(): IdShortPath {
+    return this._parentIdShortPath ? this._parentIdShortPath.addPathSegment(this.idShort) : IdShortPath.create({ path: this.idShort });
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -59,14 +71,12 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
     return this._description;
   }
 
-  static create(
-    data: SubmodelBaseProps & {
-      first: Reference;
-      second: Reference;
-      extensions?: Array<Extension>;
-      annotations?: Array<ISubmodelElement>;
-    },
-  ) {
+  static create(data: SubmodelBaseProps & {
+    first: Reference;
+    second: Reference;
+    extensions?: Array<Extension>;
+    annotations?: Array<ISubmodelElement>;
+  }) {
     return new AnnotatedRelationshipElement(
       data.first,
       data.second,
@@ -89,7 +99,7 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
     return new AnnotatedRelationshipElement(
       Reference.fromPlain(parsed.first),
       Reference.fromPlain(parsed.second),
-      parsed.extensions.map((e) => Extension.fromPlain(e)),
+      parsed.extensions.map(e => Extension.fromPlain(e)),
       baseObjects.category,
       baseObjects.idShort,
       baseObjects.displayName,
@@ -106,27 +116,21 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
     return visitor.visitAnnotatedRelationshipElement(this, context);
   }
 
-  toPlain(): Record<string, any> {
-    const jsonVisitor = new JsonVisitor();
-    return this.accept(jsonVisitor);
+  toPlain(options?: ConvertToPlainOptions): Record<string, any> {
+    const jsonVisitor = new JsonVisitor(options);
+    return this.accept(jsonVisitor, options?.context);
   }
 
   getSubmodelElements(): ISubmodelElement[] {
     return this.annotations;
   }
 
-  addSubmodelElement(submodelElement: ISubmodelElement): ISubmodelElement {
-    if (this.annotations.some((e) => e.idShort === submodelElement.idShort)) {
-      throw new ValueError(
-        `Submodel element with idShort ${submodelElement.idShort} already exists`,
-      );
-    }
-    this.annotations.push(submodelElement);
-    return submodelElement;
+  addSubmodelElement(submodelElement: ISubmodelElement, options: AddOptions): ISubmodelElement {
+    return addSubmodelElementOrFail(this, submodelElement, options);
   }
 
-  deleteSubmodelElement(idShort: string) {
-    deleteSubmodelElementOrFail(this.annotations, idShort);
+  deleteSubmodelElement(idShort: string, options: DeleteOptions) {
+    deleteSubmodelElementOrFail(this.annotations, idShort, options);
   }
 
   getSubmodelElementType(): AasSubmodelElementsType {

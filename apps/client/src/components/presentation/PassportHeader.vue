@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Galleria from "primevue/galleria";
 import { computed, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useAasGallery } from "../../composables/aas-gallery.ts";
@@ -6,7 +7,6 @@ import { useAasUtils } from "../../composables/aas-utils.ts";
 import { useErrorHandlingStore } from "../../stores/error.handling.ts";
 import { usePassportStore } from "../../stores/passport";
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
-import ProductImageGalleria from "../media/ProductImageGalleria.vue";
 
 const passportStore = usePassportStore();
 
@@ -31,10 +31,20 @@ const firstShell = computed(() => {
 });
 
 const displayName = computed(() =>
-  firstShell.value ? aasUtils.parseDisplayNameFromAas(firstShell.value) : undefined,
+  firstShell.value
+    ? aasUtils.parseDisplayNameFromAas(firstShell.value)
+    : undefined,
 );
 
 const productPassport = computed(() => passportStore.productPassport);
+
+const hasImages = computed(
+  () => files.value !== undefined && files.value.length > 0,
+);
+
+const hasMultipleImages = computed(
+  () => files.value !== undefined && files.value.length > 1,
+);
 
 watch(
   () => firstShell.value,
@@ -48,37 +58,52 @@ watch(
 </script>
 
 <template>
-  <div class="grid grid-cols-3 grid-rows-1 gap-5">
-    <div class="order-2 col-span-3 bg-white shadow-sm md:order-1 md:col-span-2">
-      <div id="product-details" class="px-4 py-6 sm:px-6">
-        <h3 class="text-base/7 font-semibold text-gray-900">
-          {{ t("presentation.productDetails") }}
-        </h3>
-        <p class="mt-1 max-w-2xl text-sm/6 text-gray-500">
-          {{ t("presentation.productDetailsDesc") }}
-        </p>
-      </div>
-      <div v-if="productPassport" class="border-t border-gray-100">
-        <dl class="divide-y divide-gray-100">
-          <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-            <dt class="text-sm font-medium text-gray-900">
-              {{ t("common.identification") }}
-            </dt>
-            <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-              {{ productPassport.id }}
-            </dd>
-            <dt v-if="displayName" class="text-sm font-medium text-gray-900">
-              {{ t("common.name") }}
-            </dt>
-            <dd v-if="displayName" class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-              {{ displayName }}
-            </dd>
-          </div>
-        </dl>
-      </div>
-    </div>
-    <div class="order-1 col-span-3 mx-auto w-full md:order-2 md:col-span-1">
-      <ProductImageGalleria v-model="files" auto-play />
+  <div id="product-details" class="flex flex-col gap-6">
+    <!-- Image gallery -->
+    <Galleria
+      v-if="hasImages"
+      :value="files"
+      :show-thumbnails="false"
+      :auto-play="hasMultipleImages"
+      :show-item-navigators="hasMultipleImages"
+      :show-item-navigators-on-hover="hasMultipleImages"
+      :show-indicators="hasMultipleImages"
+      :transition-interval="4000"
+      :circular="true"
+      class="w-full rounded-xl overflow-hidden"
+    >
+      <template #item="{ item }">
+        <img
+          :src="item.url"
+          :alt="displayName ?? t('presentation.productDetails')"
+          class="w-full aspect-[16/9] sm:aspect-[21/9] object-cover"
+        >
+      </template>
+    </Galleria>
+
+    <!-- General information card -->
+    <div class="rounded-xl border border-surface-200 bg-surface-0 shadow-sm p-6">
+      <h3 class="text-lg font-semibold text-surface-900 border-l-3 border-primary-500 pl-4 mb-6">
+        {{ t("presentation.generalInformation") }}
+      </h3>
+      <dl class="grid grid-cols-1">
+        <div v-if="displayName" class="flex justify-between py-4 border-b border-surface-100">
+          <dt class="text-surface-500">
+            {{ t("common.name") }}
+          </dt>
+          <dd class="text-surface-900 font-medium">
+            {{ displayName }}
+          </dd>
+        </div>
+        <div v-if="productPassport" class="flex justify-between py-4 border-b border-surface-100 last:border-b-0">
+          <dt class="text-surface-500">
+            {{ t("common.id") }}
+          </dt>
+          <dd class="text-surface-900 font-mono text-sm">
+            {{ productPassport.id }}
+          </dd>
+        </div>
+      </dl>
     </div>
   </div>
 </template>

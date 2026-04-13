@@ -18,7 +18,7 @@ export class SubmodelRepository {
     this.submodelDoc = submodelDoc;
   }
 
-  fromPlain(plain: any): Submodel {
+  async fromPlain(plain: any) {
     return Submodel.fromPlain(SubmodelDbSchema.encode(plain));
   }
 

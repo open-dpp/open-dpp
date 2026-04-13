@@ -29,7 +29,10 @@ RUN pnpm deploy --filter=@open-dpp/main --prod ./prod/main
 
 FROM node:25-slim AS production
 
+ARG APP_VERSION=unknown
+
 ENV NODE_ENV=production
+ENV APP_VERSION=${APP_VERSION}
 ENV OPEN_DPP_BACKEND_MAIN=/app/dist/main.js
 ENV OPEN_DPP_FRONTEND_ROOT=/app/dist/client/dist
 

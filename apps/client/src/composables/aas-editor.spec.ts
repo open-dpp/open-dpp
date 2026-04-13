@@ -9,11 +9,15 @@ import {
   DataTypeDef,
   KeyTypes,
   Language,
+  MemberRoleDto,
   ReferenceTypes,
   SubmodelElementCollectionJsonSchema,
   SubmodelElementSchema,
+  UserRoleDto,
 } from "@open-dpp/dto";
 import {
+  allPermissionsAllow,
+  securityPlainFactory,
   submodelCarbonFootprintPlainFactory,
   submodelDesignOfProductPlainFactory,
   submodelPlainToResponse,
@@ -21,6 +25,7 @@ import {
 import { waitFor } from "@testing-library/vue";
 import { mount } from "@vue/test-utils";
 import { omit } from "lodash";
+import { createPinia, setActivePinia } from "pinia";
 import { v4 as uuid4 } from "uuid";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent } from "vue";
@@ -54,6 +59,7 @@ const mocks = vi.hoisted(() => {
     modifySubmodelElement: vi.fn(),
     logErrorNotification: vi.fn(),
     deleteSubmodelElementById: vi.fn(),
+    asSubject: vi.fn(),
   };
 });
 
@@ -90,6 +96,12 @@ vi.mock("../stores/media.ts", () => ({
   }),
 }));
 
+vi.mock("../stores/user.ts", () => ({
+  useUserStore: () => ({
+    asSubject: mocks.asSubject,
+  }),
+}));
+
 describe("aasEditor composable", () => {
   const mountedWrappers: Array<ReturnType<typeof mount>> = [];
 
@@ -112,6 +124,7 @@ describe("aasEditor composable", () => {
   }
 
   beforeEach(() => {
+    setActivePinia(createPinia());
     vi.resetAllMocks();
   });
 
@@ -158,6 +171,31 @@ describe("aasEditor composable", () => {
         keys: [{ type: KeyTypes.Submodel, value: submodel2.id }],
       },
     ],
+    security: securityPlainFactory.build(
+      {},
+      {
+        transient: {
+          policies: [
+            {
+              subject: {
+                userRole: UserRoleDto.USER,
+                memberRole: MemberRoleDto.MEMBER,
+              },
+              object: { idShortPath: submodel1.idShort },
+              permissions: allPermissionsAllow,
+            },
+            {
+              subject: {
+                userRole: UserRoleDto.USER,
+                memberRole: MemberRoleDto.MEMBER,
+              },
+              object: { idShortPath: submodel2.idShort },
+              permissions: [],
+            },
+          ],
+        },
+      },
+    ),
   };
 
   const selectedLanguage = Language.en;
@@ -273,6 +311,16 @@ describe("aasEditor composable", () => {
       status: HTTPCode.OK,
     });
 
+    mocks.getShells.mockResolvedValue({
+      data: { paging_metadata: { cursor: null }, result: [assetAdministrationShell1] },
+      status: HTTPCode.OK,
+    });
+
+    mocks.asSubject.mockReturnValue({
+      userRole: UserRoleDto.USER,
+      memberRole: MemberRoleDto.MEMBER,
+    });
+
     const { init, submodels, findTreeNodeByKey } = mountHarness({
       id: aasWrapperId,
       aasNamespace: apiClient.dpp.templates.aas,
@@ -283,13 +331,44 @@ describe("aasEditor composable", () => {
       translate,
     });
     await init();
+
+    expect(mocks.getShells).toHaveBeenCalledWith(aasWrapperId, {
+      cursor: undefined,
+      limit: 1,
+    });
+
     expect(mocks.getSubmodels).toHaveBeenCalledWith(aasWrapperId, {
       cursor: undefined,
       limit: 10,
     });
     expect(changeQueryParams).toHaveBeenCalledWith({ cursor: undefined });
-    const actionsOfParent = { addChildren: true, delete: true };
-    const actionsOfLeaveNode = { addChildren: false, delete: true };
+    const actionsOfParent = {
+      read: { visible: true, enabled: true, tooltip: "common.view" },
+      edit: { visible: true, enabled: true, tooltip: "common.edit" },
+      create: { visible: true, enabled: true, tooltip: "common.add" },
+      delete: { visible: true, enabled: true, tooltip: "common.remove" },
+    };
+    const actionsOfLeaveNode = {
+      read: { visible: true, enabled: true, tooltip: "common.view" },
+      edit: { visible: true, enabled: true, tooltip: "common.edit" },
+      create: { visible: false, enabled: true, tooltip: "common.add" },
+      delete: { visible: true, enabled: true, tooltip: "common.remove" },
+    };
+    const missingPermissionsMsg = "aasEditor.security.missingPermission";
+    const actionsOfParentWithoutPermissions = {
+      read: {
+        visible: true,
+        enabled: false,
+        tooltip: missingPermissionsMsg,
+      },
+      edit: {
+        visible: false,
+        enabled: false,
+        tooltip: missingPermissionsMsg,
+      },
+      create: { visible: true, enabled: false, tooltip: missingPermissionsMsg },
+      delete: { visible: true, enabled: false, tooltip: missingPermissionsMsg },
+    };
 
     const withoutChildren = (value: any) => omit(value, "children");
     const expectedSubmodel1 = {
@@ -298,7 +377,7 @@ describe("aasEditor composable", () => {
         label: submodel1.idShort,
         modelType: KeyTypes.Submodel,
         plain: omit(submodel1, "submodelElements"),
-        path: { submodelId: submodel1.id },
+        path: { submodelId: submodel1.id, idShortPathIncludingSubmodel: submodel1.idShort },
         type: "aasEditor.submodel",
         actions: actionsOfParent,
       },
@@ -310,9 +389,12 @@ describe("aasEditor composable", () => {
         label: "Carbon Footprint",
         modelType: KeyTypes.Submodel,
         plain: omit(submodel2, "submodelElements"),
-        path: { submodelId: submodel2.id },
+        path: {
+          submodelId: submodel2.id,
+          idShortPathIncludingSubmodel: submodel2.idShort,
+        },
         type: "aasEditor.submodel",
-        actions: actionsOfParent,
+        actions: actionsOfParentWithoutPermissions,
       },
     };
     expect(submodels.value!.map(withoutChildren)).toEqual([expectedSubmodel1, expectedSubmodel2]);
@@ -322,7 +404,11 @@ describe("aasEditor composable", () => {
       data: {
         label: "Design_V01",
         modelType: "SubmodelElementCollection",
-        path: { submodelId: submodel1.id, idShortPath: `Design_V01` },
+        path: {
+          submodelId: submodel1.id,
+          idShortPath: `Design_V01`,
+          idShortPathIncludingSubmodel: `${submodel1.idShort}.Design_V01`,
+        },
         plain: submodel1.submodelElements[0],
         type: "aasEditor.submodelElementCollection",
         actions: actionsOfParent,
@@ -340,6 +426,7 @@ describe("aasEditor composable", () => {
         path: {
           submodelId: submodel1.id,
           idShortPath: `Design_V01.Author.AuthorName`,
+          idShortPathIncludingSubmodel: `${submodel1.idShort}.Design_V01.Author.AuthorName`,
         },
         plain: SubmodelElementCollectionJsonSchema.parse(
           SubmodelElementCollectionJsonSchema.parse(submodel1.submodelElements[0]).value[0],
@@ -358,7 +445,7 @@ describe("aasEditor composable", () => {
       data: {
         label: "FileProp",
         modelType: KeyTypes.File,
-        path: { submodelId: submodel1.id, idShortPath: key },
+        path: { submodelId: submodel1.id, idShortPath: key, idShortPathIncludingSubmodel: `${submodel1.idShort}.${key}` },
         plain: SubmodelElementCollectionJsonSchema.parse(
           SubmodelElementCollectionJsonSchema.parse(submodel1.submodelElements[0]).value[1],
         ).value[3],
@@ -377,7 +464,8 @@ describe("aasEditor composable", () => {
         modelType: KeyTypes.SubmodelElementList,
         path: {
           submodelId: submodel1.id,
-          idShortPath: `Design_V01.Author.ListProp`,
+          idShortPath: key,
+          idShortPathIncludingSubmodel: `${submodel1.idShort}.${key}`,
         },
         plain: SubmodelElementCollectionJsonSchema.parse(
           SubmodelElementCollectionJsonSchema.parse(submodel1.submodelElements[0]).value[0],
@@ -393,7 +481,10 @@ describe("aasEditor composable", () => {
     {
       keyToSelect: submodel2.id,
       expected: {
-        path: { submodelId: submodel2.id },
+        path: {
+          submodelId: submodel2.id,
+          idShortPathIncludingSubmodel: submodel2.idShort,
+        },
         component: SubmodelEditor,
         haveBeenCalled: mocks.modifySubmodel,
       },
@@ -404,6 +495,7 @@ describe("aasEditor composable", () => {
         path: {
           submodelId: submodel2.id,
           idShortPath: `ProductCarbonFootprint_A4`,
+          idShortPathIncludingSubmodel: `${submodel2.idShort}.ProductCarbonFootprint_A4`,
         },
         component: SubmodelElementCollectionEditor,
         haveBeenCalled: mocks.modifySubmodelElement,
@@ -415,6 +507,7 @@ describe("aasEditor composable", () => {
         path: {
           submodelId: submodel1.id,
           idShortPath: `Design_V01.Author.AuthorName`,
+          idShortPathIncludingSubmodel: `${submodel1.idShort}.Design_V01.Author.AuthorName`,
         },
         component: PropertyEditor,
         haveBeenCalled: mocks.modifySubmodelElement,
@@ -426,6 +519,7 @@ describe("aasEditor composable", () => {
         path: {
           submodelId: submodel1.id,
           idShortPath: `Design_V01.AdditionalInformation.FileProp`,
+          idShortPathIncludingSubmodel: `${submodel1.idShort}.Design_V01.AdditionalInformation.FileProp`,
         },
         component: FileEditor,
         haveBeenCalled: mocks.modifySubmodelElement,
@@ -437,6 +531,7 @@ describe("aasEditor composable", () => {
         path: {
           submodelId: submodel1.id,
           idShortPath: `Design_V01.Author.ListProp`,
+          idShortPathIncludingSubmodel: `${submodel1.idShort}.Design_V01.Author.ListProp`,
         },
         component: SubmodelElementListEditor,
         haveBeenCalled: mocks.modifySubmodelElement,
@@ -486,12 +581,20 @@ describe("aasEditor composable", () => {
       paging_metadata: { cursor: null },
       result: [submodel],
     };
+    const paginationResponseShells = {
+      paging_metadata: { cursor: null },
+      result: [assetAdministrationShell1],
+    };
     beforeEach(() => {
       vi.resetAllMocks();
     });
     it("should create submodel", async () => {
       mocks.getSubmodels.mockResolvedValue({
         data: paginationResponse,
+        status: HTTPCode.OK,
+      });
+      mocks.getShells.mockResolvedValue({
+        data: paginationResponseShells,
         status: HTTPCode.OK,
       });
       mocks.createSubmodel.mockResolvedValue({ status: HTTPCode.CREATED });
@@ -513,6 +616,7 @@ describe("aasEditor composable", () => {
       const data = { idShort: "newSubmodel" };
       await editorVNode.value!.props.callback!(data);
       expect(mocks.createSubmodel).toHaveBeenCalledWith(aasWrapperId, data);
+      expect(mocks.getShells).toHaveBeenNthCalledWith(2, aasWrapperId, { limit: 1 });
     });
 
     const sharedCreationProps = {
@@ -544,6 +648,7 @@ describe("aasEditor composable", () => {
       expect(aasEditor.drawerVisible.value).toBeTruthy();
       expect(aasEditor.editorVNode.value!.props.path).toEqual({
         submodelId: submodel1.id,
+        idShortPathIncludingSubmodel: submodel1.idShort,
       });
       expect(aasEditor.editorVNode.value!.props.data).toEqual(expectedCreationData ?? {});
       expect(aasEditor.editorVNode.value!.component).toEqual(expectedEditor);
@@ -918,6 +1023,7 @@ describe("aasEditor composable", () => {
       const pathToDelete = {
         submodelId: submodel.id!,
         idShortPath: submodel.submodelElements[0]!.idShort!,
+        idShortPathIncludingSubmodel: `${submodel.idShort}.${submodel.submodelElements[0]!.idShort}`,
       };
       await deleteSubmodelElement(pathToDelete);
       expect(drawerVisible.value).toBeFalsy();

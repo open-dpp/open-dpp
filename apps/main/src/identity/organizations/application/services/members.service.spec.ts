@@ -23,6 +23,7 @@ describe("MembersService", () => {
       findManyByMember: jest.fn(),
     };
     mockUsersRepo = {
+      findOneOrFail: jest.fn(),
       findOneById: jest.fn(),
       findAllByIds: jest.fn(),
     };

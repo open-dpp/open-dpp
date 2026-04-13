@@ -11,9 +11,11 @@ import apiClient from "../../lib/api-client.ts";
 import { SigninFormSchema } from "../../lib/signin-form.ts";
 import { useIndexStore } from "../../stores";
 import { useOrganizationsStore } from "../../stores/organizations.ts";
+import { useStatusStore } from "../../stores/status.ts";
 
 const indexStore = useIndexStore();
 const organizationsStore = useOrganizationsStore();
+const statusStore = useStatusStore();
 const route = useRoute();
 const { t } = useI18n();
 const toast = useToast();
@@ -39,6 +41,7 @@ const showErrors = computed(() => {
 });
 
 onMounted(async () => {
+  statusStore.fetchStatus();
   try {
     const res = await apiClient.dpp.instanceSettings.getPublic();
     signupEnabled.value = res.data.signupEnabled;
@@ -217,5 +220,8 @@ const signin = handleSubmit(async (values) => {
         </p>
       </template>
     </Card>
+    <p v-if="statusStore.version" class="mt-4 text-center text-xs text-gray-500">
+      v{{ statusStore.version }}
+    </p>
   </div>
 </template>

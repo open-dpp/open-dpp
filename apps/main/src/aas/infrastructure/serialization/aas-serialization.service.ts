@@ -1,4 +1,3 @@
-import type { AasExportSchema } from "./aas-export-v1.schema";
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { KeyTypes } from "@open-dpp/dto";
 import { z } from "zod/v4";
@@ -10,26 +9,25 @@ import { AssetAdministrationShell } from "../../domain/asset-adminstration-shell
 import { ConceptDescription } from "../../domain/concept-description";
 import { Environment } from "../../domain/environment";
 import { AasExportable } from "../../domain/exportable/aas-exportable";
+import { SubjectAttributes } from "../../domain/security/subject-attributes";
 import { Submodel } from "../../domain/submodel-base/submodel";
 import { EnvironmentService } from "../../presentation/environment.service";
-import { AasRepository } from "../aas.repository";
-import { ConceptDescriptionRepository } from "../concept-description.repository";
-import { SubmodelRepository } from "../submodel.repository";
-import { aasExportSchemaJsonV1_0 } from "./aas-export-v1.schema";
+import { mapAssetAdministrationShells, mapConceptDescriptions, mapSubmodels } from "./aas-import.mapper";
 import {
-  mapAssetAdministrationShells,
-  mapConceptDescriptions,
-  mapSubmodels,
-} from "./aas-import.mapper";
+  AasExport,
+  AasExportLatestVersion,
+  aasExportSchemaJsonLatest,
+  AasExportSchemas,
+} from "./export-schemas/aas-export-types";
 import { extractMediaIds } from "./extract-media-ids";
 
-export { DataTypeDefV1_0, KeyTypesV1_0, LanguageTypeSchemaV1_0 } from "./aas-export-v1.schema";
+export { DataTypeDefV1_0, KeyTypesV1_0, LanguageTypeSchemaV1_0 } from "./export-schemas/aas-export-v1.schema";
 
 interface ImportedEnvironmentData {
   shells: AssetAdministrationShell[];
   submodels: Submodel[];
   conceptDescriptions: ConceptDescription[];
-  schema: AasExportSchema;
+  schema: AasExport;
 }
 
 @Injectable()
@@ -38,26 +36,19 @@ export class AasSerializationService {
 
   constructor(
     private readonly environmentService: EnvironmentService,
-    private readonly aasRepository: AasRepository,
-    private readonly submodelRepository: SubmodelRepository,
-    private readonly conceptDescriptionRepository: ConceptDescriptionRepository,
     private readonly mediaService: MediaService,
   ) {}
 
-  async exportPassport(passport: Passport): Promise<AasExportSchema> {
-    const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(
-      passport.environment,
-    );
+  async exportPassport(passport: Passport, subject: SubjectAttributes): Promise<AasExportLatestVersion> {
+    const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(passport.environment);
     const aasExportable = AasExportable.createFromPassport(passport, expandedEnvironment);
-    return aasExportSchemaJsonV1_0.parse(aasExportable.toExportPlain());
+    return aasExportSchemaJsonLatest.parse(aasExportable.toExportPlain(subject));
   }
 
-  async exportTemplate(template: Template): Promise<AasExportSchema> {
-    const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(
-      template.environment,
-    );
+  async exportTemplate(template: Template, subject: SubjectAttributes): Promise<AasExportLatestVersion> {
+    const expandedEnvironment = await this.environmentService.loadExpandedEnvironment(template.environment);
     const aasExportable = AasExportable.createFromTemplate(template, expandedEnvironment);
-    return aasExportSchemaJsonV1_0.parse(aasExportable.toExportPlain());
+    return aasExportSchemaJsonLatest.parse(aasExportable.toExportPlain(subject));
   }
 
   async importPassport(
@@ -68,13 +59,13 @@ export class AasSerializationService {
     try {
       const { shells, submodels, conceptDescriptions } = this.parseAndMapEnvironment(data);
 
-      const { shells: sanitizedShells, submodels: sanitizedSubmodels } =
-        await this.nullifyForeignMedia(shells, submodels, organizationId);
+      const { shells: sanitizedShells, submodels: sanitizedSubmodels }
+        = await this.nullifyForeignMedia(shells, submodels, organizationId);
 
       const environment = Environment.create({
-        assetAdministrationShells: sanitizedShells.map((aas) => aas.id),
-        submodels: sanitizedSubmodels.map((s) => s.id),
-        conceptDescriptions: conceptDescriptions.map((cd) => cd.id),
+        assetAdministrationShells: sanitizedShells.map(aas => aas.id),
+        submodels: sanitizedSubmodels.map(s => s.id),
+        conceptDescriptions: conceptDescriptions.map(cd => cd.id),
       });
 
       const passport = Passport.create({
@@ -88,16 +79,19 @@ export class AasSerializationService {
         sanitizedShells,
         sanitizedSubmodels,
         conceptDescriptions,
-        async (options) => {
-          await savePassport(passport, options);
-        },
+        async (options) => { await savePassport(passport, options); },
       );
 
       return passport;
-    } catch (error) {
+    }
+    catch (error) {
       if (error instanceof z.ZodError) {
-        const details = error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
-        throw new BadRequestException(`Invalid import data format: ${details.join("; ")}`);
+        const details = error.issues.map(
+          i => `${i.path.join(".")}: ${i.message}`,
+        );
+        throw new BadRequestException(
+          `Invalid import data format: ${details.join("; ")}`,
+        );
       }
       throw error;
     }
@@ -111,13 +105,13 @@ export class AasSerializationService {
     try {
       const { shells, submodels, conceptDescriptions } = this.parseAndMapEnvironment(data);
 
-      const { shells: sanitizedShells, submodels: sanitizedSubmodels } =
-        await this.nullifyForeignMedia(shells, submodels, organizationId);
+      const { shells: sanitizedShells, submodels: sanitizedSubmodels }
+        = await this.nullifyForeignMedia(shells, submodels, organizationId);
 
       const environment = Environment.create({
-        assetAdministrationShells: sanitizedShells.map((aas) => aas.id),
-        submodels: sanitizedSubmodels.map((s) => s.id),
-        conceptDescriptions: conceptDescriptions.map((cd) => cd.id),
+        assetAdministrationShells: sanitizedShells.map(aas => aas.id),
+        submodels: sanitizedSubmodels.map(s => s.id),
+        conceptDescriptions: conceptDescriptions.map(cd => cd.id),
       });
 
       const template = Template.create({
@@ -131,16 +125,19 @@ export class AasSerializationService {
         sanitizedShells,
         sanitizedSubmodels,
         conceptDescriptions,
-        async (options) => {
-          await saveTemplate(template, options);
-        },
+        async (options) => { await saveTemplate(template, options); },
       );
 
       return template;
-    } catch (error) {
+    }
+    catch (error) {
       if (error instanceof z.ZodError) {
-        const details = error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
-        throw new BadRequestException(`Invalid import data format: ${details.join("; ")}`);
+        const details = error.issues.map(
+          i => `${i.path.join(".")}: ${i.message}`,
+        );
+        throw new BadRequestException(
+          `Invalid import data format: ${details.join("; ")}`,
+        );
       }
       throw error;
     }
@@ -158,17 +155,26 @@ export class AasSerializationService {
 
     const foundMedia = await this.mediaService.findByIds(mediaIds);
     const foreignMediaIds = new Set(
-      foundMedia.filter((m) => m.ownedByOrganizationId !== organizationId).map((m) => m.id),
+      foundMedia
+        .filter(m => m.ownedByOrganizationId !== organizationId)
+        .map(m => m.id),
     );
+    for (const mediaId of mediaIds) {
+      if (!foreignMediaIds.has(mediaId) && !foundMedia.find(m => m.id === mediaId)) {
+        foreignMediaIds.add(mediaId);
+      }
+    }
 
     if (foreignMediaIds.size === 0) {
       return { shells, submodels };
     }
 
-    const sanitizedShells = shells.map((shell) =>
+    const sanitizedShells = shells.map(shell =>
       shell.withAssetInformation(
         shell.assetInformation.withDefaultThumbnails(
-          shell.assetInformation.defaultThumbnails.filter((t) => !foreignMediaIds.has(t.path)),
+          shell.assetInformation.defaultThumbnails.filter(
+            t => !foreignMediaIds.has(t.path),
+          ),
         ),
       ),
     );
@@ -177,10 +183,7 @@ export class AasSerializationService {
       const plain = submodel.toPlain();
       return Submodel.fromPlain({
         ...plain,
-        submodelElements: this.withNullifiedForeignFileValues(
-          plain.submodelElements,
-          foreignMediaIds,
-        ),
+        submodelElements: this.withNullifiedForeignFileValues(plain.submodelElements, foreignMediaIds),
       });
     });
 
@@ -194,18 +197,17 @@ export class AasSerializationService {
     return elements.map((element) => {
       let result = element;
 
-      if (
-        element.modelType === KeyTypes.File &&
-        typeof element.value === "string" &&
-        foreignMediaIds.has(element.value)
-      ) {
+      if (element.modelType === KeyTypes.File
+        && typeof element.value === "string"
+        && foreignMediaIds.has(element.value)) {
         result = { ...element, value: null };
       }
 
       if (Array.isArray(element.value)) {
         const newValue = this.withNullifiedForeignFileValues(element.value, foreignMediaIds);
-        result =
-          result === element ? { ...element, value: newValue } : { ...result, value: newValue };
+        result = result === element
+          ? { ...element, value: newValue }
+          : { ...result, value: newValue };
       }
 
       return result;
@@ -213,10 +215,12 @@ export class AasSerializationService {
   }
 
   private parseAndMapEnvironment(data: unknown): ImportedEnvironmentData {
-    const schema = aasExportSchemaJsonV1_0.parse(data);
+    const schema = AasExportSchemas.parse(data);
+
     const { submodels, idMapping } = mapSubmodels(schema.environment.submodels);
+
     return {
-      shells: mapAssetAdministrationShells(schema.environment.assetAdministrationShells, idMapping),
+      shells: mapAssetAdministrationShells(schema.environment.assetAdministrationShells, idMapping, submodels, schema.version),
       submodels,
       conceptDescriptions: mapConceptDescriptions(schema.environment.conceptDescriptions),
       schema,

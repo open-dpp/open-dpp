@@ -1,9 +1,12 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
-import { Test } from "@nestjs/testing";
-import { EnvModule, EnvService } from "@open-dpp/env";
 
+import { Test } from "@nestjs/testing";
+
+import { EnvModule, EnvService } from "@open-dpp/env";
+import { AasModule } from "../../aas/aas.module";
 import { Environment } from "../../aas/domain/environment";
 
 import { generateMongoConfig } from "../../database/config";
@@ -15,7 +18,9 @@ import { PassportDoc, PassportSchema } from "./passport.schema";
 
 describe("passportRepository", () => {
   let passportRepository: PassportRepository;
+
   let module: TestingModule;
+
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
@@ -33,6 +38,7 @@ describe("passportRepository", () => {
             schema: PassportSchema,
           },
         ]),
+        AasModule,
       ],
       providers: [PassportRepository],
     }).compile();

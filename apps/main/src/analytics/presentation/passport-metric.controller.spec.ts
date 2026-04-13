@@ -21,6 +21,7 @@ import { UsersModule } from "../../identity/users/users.module";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
 import { PassportDoc, PassportSchema } from "../../passports/infrastructure/passport.schema";
+import { PassportsModule } from "../../passports/passports.module";
 import {
   UniqueProductIdentifierDoc,
   UniqueProductIdentifierSchema,
@@ -63,6 +64,7 @@ describe("passportMetricController", () => {
             schema: PassportSchema,
           },
         ]),
+        PassportsModule,
         AnalyticsModule,
         AuthModule,
         OrganizationsModule,
@@ -71,7 +73,6 @@ describe("passportMetricController", () => {
       providers: [
         UniqueProductIdentifierService,
         UniqueProductIdentifierApplicationService,
-        PassportRepository,
         {
           provide: APP_GUARD,
           useClass: AuthGuard,

@@ -2,16 +2,17 @@ import { randomUUID } from "node:crypto";
 import { expect } from "@jest/globals";
 import request from "supertest";
 import { Environment } from "../../aas/domain/environment";
+import { SubjectAttributes } from "../../aas/domain/security/subject-attributes";
 import {
   ConceptDescriptionDoc,
   ConceptDescriptionSchema,
 } from "../../aas/infrastructure/schemas/concept-description.schema";
 import { createAasTestContext } from "../../aas/presentation/aas.test.context";
+
 import { BrandingRepository } from "../../branding/infrastructure/branding.repository";
-import { PassportService } from "../../passports/application/services/passport.service";
+import { UserRole } from "../../identity/users/domain/user-role.enum";
 import { Passport } from "../../passports/domain/passport";
 import { PassportRepository } from "../../passports/infrastructure/passport.repository";
-
 import { PassportDoc, PassportSchema } from "../../passports/infrastructure/passport.schema";
 import {
   UniqueProductIdentifierDoc,
@@ -32,7 +33,6 @@ describe("uniqueProductIdentifierController", () => {
         UniqueProductIdentifierService,
         PassportRepository,
         BrandingRepository,
-        PassportService,
         UniqueProductIdentifierService,
         UniqueProductIdentifierApplicationService,
       ],
@@ -48,22 +48,24 @@ describe("uniqueProductIdentifierController", () => {
         schema: UniqueProductIdentifierSchema,
       },
       { name: ConceptDescriptionDoc.name, schema: ConceptDescriptionSchema },
+
     ],
     UniqueProductIdentifierService,
+    SubjectAttributes.create({ userRole: UserRole.ANONYMOUS }),
   );
 
-  async function createPassportWithUniqueProductIdentifier(orgId: string) {
+  async function createPassportWithUniqueProductIdentifier() {
     const { aas, submodels } = ctx.getAasObjects();
 
     const environment = Environment.create({
       assetAdministrationShells: [aas.id],
-      submodels: submodels.map((s) => s.id),
+      submodels: submodels.map(s => s.id),
       conceptDescriptions: [],
     });
 
     const passport = Passport.create({
       id: randomUUID(),
-      organizationId: orgId,
+      organizationId: randomUUID(),
       environment,
     });
 
@@ -75,7 +77,7 @@ describe("uniqueProductIdentifierController", () => {
     const persistable = {
       id: upid.uuid,
       upid,
-      getOrganizationId: () => orgId,
+      getOrganizationId: () => passport.organizationId,
       getEnvironment: () => environment,
       toPlain: () => ({ id: upid.uuid }),
       passport,
@@ -85,14 +87,14 @@ describe("uniqueProductIdentifierController", () => {
   }
 
   it(`/GET passport from unique product identifier`, async () => {
-    const { org, userCookie } = await ctx
-      .globals()
-      .betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { userCookie } = await ctx.globals().betterAuthHelper.getUserWithCookie(ctx.globals().userId);
 
-    const upid = await createPassportWithUniqueProductIdentifier(org.id);
+    const upid = await createPassportWithUniqueProductIdentifier();
 
     const response = await request(ctx.globals().app.getHttpServer())
-      .get(`/unique-product-identifiers/${upid.id}/passport`)
+      .get(
+        `/unique-product-identifiers/${upid.id}/passport`,
+      )
       .set("Cookie", userCookie);
 
     expect(response.status).toEqual(200);
@@ -104,18 +106,20 @@ describe("uniqueProductIdentifierController", () => {
   });
 
   it(`/GET unique product identifier from reference`, async () => {
-    const { org, userCookie } = await ctx
-      .globals()
-      .betterAuthHelper.getRandomOrganizationAndUserWithCookie();
+    const { userCookie } = await ctx.globals().betterAuthHelper.getUserWithCookie(ctx.globals().userId);
 
-    const upid = await createPassportWithUniqueProductIdentifier(org.id);
+    const upid = await createPassportWithUniqueProductIdentifier();
 
     const response = await request(ctx.globals().app.getHttpServer())
-      .get(`/unique-product-identifiers?reference=${upid.passport.id}`)
+      .get(
+        `/unique-product-identifiers?reference=${upid.passport.id}`,
+      )
       .set("Cookie", userCookie);
 
     expect(response.status).toEqual(200);
-    expect(response.body).toEqual([upid.upid.toPlain()]);
+    expect(response.body).toEqual([
+      upid.upid.toPlain(),
+    ]);
   });
 
   it(`/GET shells`, async () => {

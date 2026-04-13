@@ -1,14 +1,16 @@
-import { AasSubmodelElementsType, KeyTypesEnum, SubmodelBaseJsonSchema } from "@open-dpp/dto";
-import { ValueError } from "@open-dpp/exception";
+import { AasSubmodelElementsType, KeyTypesEnum, Permissions, SubmodelBaseJsonSchema } from "@open-dpp/dto";
+import { ForbiddenError, ValueError } from "@open-dpp/exception";
 import { z } from "zod";
 import { IHasDataSpecification } from "../common/has-data-specification";
 import { IHasSemantics } from "../common/has-semantics";
+import { IdShortPath } from "../common/id-short-path";
 import { LanguageText } from "../common/language-text";
 import { IQualifiable, Qualifier } from "../common/qualififiable";
 import { IReferable } from "../common/referable";
 import { Reference } from "../common/reference";
 import { IConvertableToPlain } from "../convertable-to-plain";
 import { EmbeddedDataSpecification } from "../embedded-data-specification";
+import { AasAbility } from "../security/aas-ability";
 import { IVisitable } from "../visitor";
 import { getSubmodelClass } from "./submodel-registry";
 
@@ -23,69 +25,48 @@ export interface SubmodelBaseProps {
   embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
 }
 
-export interface SubmodelBaseObjects
-  extends IReferable, IHasSemantics, IQualifiable, IHasDataSpecification {}
+export interface SubmodelBaseObjects extends IReferable, IHasSemantics, IQualifiable, IHasDataSpecification {
+}
 
 export function submodelBasePropsFromPlain(data: Record<string, unknown>): SubmodelBaseObjects {
   const parsed = SubmodelBaseJsonSchema.parse(data);
   return {
     category: parsed.category ?? null,
     idShort: parsed.idShort,
-    displayName: parsed.displayName.map((x) => LanguageText.fromPlain(x)),
-    description: parsed.description.map((x) => LanguageText.fromPlain(x)),
+    displayName: parsed.displayName.map(x => LanguageText.fromPlain(x)),
+    description: parsed.description.map(x => LanguageText.fromPlain(x)),
     semanticId: parsed.semanticId ? Reference.fromPlain(parsed.semanticId) : null,
-    supplementalSemanticIds: parsed.supplementalSemanticIds.map((x) => Reference.fromPlain(x)),
-    qualifiers: parsed.qualifiers.map((q) => Qualifier.fromPlain(q)),
-    embeddedDataSpecifications: parsed.embeddedDataSpecifications.map((e) =>
-      EmbeddedDataSpecification.fromPlain(e),
-    ),
+    supplementalSemanticIds: parsed.supplementalSemanticIds.map(x => Reference.fromPlain(x)),
+    qualifiers: parsed.qualifiers.map(q => Qualifier.fromPlain(q)),
+    embeddedDataSpecifications: parsed.embeddedDataSpecifications.map(e => EmbeddedDataSpecification.fromPlain(e)),
   };
-}
-
-export class IdShortPath {
-  constructor(private readonly _segments: Array<string>) {}
-
-  static create(data: { path: string }): IdShortPath {
-    return new IdShortPath(data.path.split("."));
-  }
-
-  addPathSegment(segment: string) {
-    this._segments.push(segment);
-  }
-
-  getParentPath(): IdShortPath {
-    return new IdShortPath(this._segments.slice(0, -1));
-  }
-
-  get last(): string | undefined {
-    if (this._segments.length === 0) {
-      return undefined;
-    }
-    return this._segments[this._segments.length - 1];
-  }
-
-  get segments(): IterableIterator<string> {
-    return this._segments[Symbol.iterator]();
-  }
-
-  toString(): string {
-    return this._segments.join(".");
-  }
 }
 
 export interface AddOptions {
   idShortPath?: IdShortPath;
   position?: number;
+  ability: AasAbility;
 }
 
-export interface ISubmodelBase extends SubmodelBaseObjects, IVisitable, IConvertableToPlain {
-  addSubmodelElement: (submodelElement: ISubmodelElement, options?: AddOptions) => ISubmodelElement;
+export interface IHasIdShortPath {
+  getIdShortPath: () => IdShortPath;
+}
+
+export interface IHasSubmodelElements {
+  addSubmodelElement: (submodelElement: ISubmodelElement, options: AddOptions) => ISubmodelElement;
   getSubmodelElements: () => ISubmodelElement[];
+}
+
+export interface ISubmodelBase
+  extends SubmodelBaseObjects, IHasIdShortPath,
+  IVisitable,
+  IConvertableToPlain, IHasSubmodelElements {
 }
 
 export interface ISubmodelElement extends ISubmodelBase {
   getSubmodelElementType: () => AasSubmodelElementsType;
-  deleteSubmodelElement: (idShort: string) => void;
+  deleteSubmodelElement: (idShort: string, options: DeleteOptions) => void;
+  setParentIdShortPath: (parentIdShortPath: IdShortPath) => void;
 }
 
 export function parseSubmodelElement(submodelBase: any): ISubmodelElement {
@@ -94,25 +75,48 @@ export function parseSubmodelElement(submodelBase: any): ISubmodelElement {
   return AasClass.fromPlain(submodelBase);
 }
 
-export function deleteSubmodelElementOrFail(
-  submodelElements: ISubmodelElement[],
-  idShort: string,
-): void {
-  const foundIndex = submodelElements.findIndex((e) => e.idShort === idShort);
+export interface DeleteOptions {
+  ability: AasAbility;
+  onDelete: (submodelElement: ISubmodelElement) => void;
+}
+export function deleteSubmodelElementOrFail(submodelElements: ISubmodelElement[], idShort: string, { ability, onDelete }: DeleteOptions): void {
+  const foundIndex = submodelElements.findIndex(e => e.idShort === idShort);
   if (foundIndex === -1) {
-    throw new ValueError(
-      `Cannot delete submodel element with idShort ${idShort}, since it does not exist.`,
-    );
+    throw new ValueError(`Cannot delete submodel element with idShort ${idShort}, since it does not exist.`);
   }
+  const submodelElementToDelete = submodelElements[foundIndex];
+  if (!ability.can(Permissions.Delete, submodelElementToDelete.getIdShortPath())) {
+    throw new ForbiddenError(`Missing permissions to delete element ${submodelElementToDelete.getIdShortPath().toString()}.`);
+  }
+
   submodelElements.splice(foundIndex, 1);
+  onDelete(submodelElementToDelete);
 }
 
-export function cloneSubmodelElement(
-  submodelElement: ISubmodelElement,
-  override?: any,
-): ISubmodelElement {
-  const clone = override
-    ? { ...submodelElement.toPlain(), ...override }
-    : submodelElement.toPlain();
+export function setParentIdShortPaths(submodelBase: ISubmodelBase, idShort: string, parentIdShortPath?: IdShortPath): void {
+  const idShortPath = parentIdShortPath ? parentIdShortPath.addPathSegment(idShort) : IdShortPath.create({ path: idShort });
+  submodelBase.getSubmodelElements().forEach(element => element.setParentIdShortPath(idShortPath));
+}
+
+export function cloneSubmodelElement(submodelElement: ISubmodelElement, override?: any): ISubmodelElement {
+  const clone = override ? { ...submodelElement.toPlain(), ...override } : submodelElement.toPlain();
   return parseSubmodelElement(clone);
+}
+
+export function addSubmodelElementOrFail(parent: IHasSubmodelElements & IHasIdShortPath, submodelElement: ISubmodelElement, options: AddOptions): ISubmodelElement {
+  submodelElement.setParentIdShortPath(parent.getIdShortPath());
+  if (!options.ability.can(Permissions.Create, parent.getIdShortPath())) {
+    throw new ForbiddenError(`Missing permissions to add element to ${parent.getIdShortPath()}.`);
+  }
+  const submodelElements = parent.getSubmodelElements();
+  if (submodelElements.some(s => s.idShort === submodelElement.idShort)) {
+    throw new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`);
+  }
+  if (options?.position !== undefined) {
+    submodelElements.splice(options.position, 0, submodelElement);
+  }
+  else {
+    submodelElements.push(submodelElement);
+  }
+  return submodelElement;
 }

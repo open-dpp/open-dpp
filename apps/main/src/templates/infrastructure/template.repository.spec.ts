@@ -1,11 +1,12 @@
 import type { TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
+import { expect } from "@jest/globals";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Test } from "@nestjs/testing";
+
 import { EnvModule, EnvService } from "@open-dpp/env";
-
+import { AasModule } from "../../aas/aas.module";
 import { Environment } from "../../aas/domain/environment";
-
 import { generateMongoConfig } from "../../database/config";
 import { encodeCursor, Pagination } from "../../pagination/pagination";
 import { PagingResult } from "../../pagination/paging-result";
@@ -15,7 +16,9 @@ import { TemplateDoc, TemplateSchema } from "./template.schema";
 
 describe("templateRepository", () => {
   let templateRepository: TemplateRepository;
+
   let module: TestingModule;
+
   beforeAll(async () => {
     module = await Test.createTestingModule({
       imports: [
@@ -33,6 +36,7 @@ describe("templateRepository", () => {
             schema: TemplateSchema,
           },
         ]),
+        AasModule,
       ],
       providers: [TemplateRepository],
     }).compile();
