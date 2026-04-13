@@ -42,15 +42,20 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Push a repo-wide `v<version>` git tag so `build.yml` (which triggers
-      # on `tags: ["v*"]`) rebuilds the Docker image with a version-numbered
-      # tag. Every `@open-dpp/*` package is in the `fixed` group in
-      # `.changeset/config.json`, so the first published package carries the
-      # canonical release version for the whole repo.
+      # Push a repo-wide `v<version>` git tag so the release is reachable by
+      # tag name in git. Every `@open-dpp/*` package is in the `fixed` group
+      # in `.changeset/config.json`, so the first published package carries
+      # the canonical release version for the whole repo.
+      #
+      # Note: this tag push is made with `GITHUB_TOKEN`, which (by design)
+      # does not trigger other workflow runs. That's why the next step
+      # explicitly dispatches `build.yml` with the tag as its ref — it would
+      # otherwise never run for the versioned Docker image.
       #
       # PUBLISHED_PACKAGES is passed through an env var (not inlined via
       # ${{ }}) to avoid script injection via workflow expression expansion.
-      - name: Push repo-wide version tag for Docker
+      - name: Push repo-wide version tag
+        id: version-tag
         if: steps.changesets.outputs.published == 'true'
         env:
           PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
@@ -62,9 +67,23 @@ jobs:
             exit 1
           fi
           tag="v$version"
-          if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
-            echo "Tag $tag already exists, skipping."
-            exit 0
+          if ! git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            git tag "$tag"
+            git push origin "$tag"
+          else
+            echo "Tag $tag already exists, skipping push."
           fi
-          git tag "$tag"
-          git push origin "$tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      # Trigger `build.yml` at the tag ref so `docker/metadata-action` picks
+      # up the tag via `type=semver,pattern={{version}}` and publishes a
+      # version-tagged Docker image. RELEASE_TAG is read from the previous
+      # step's output via env var to avoid inlining `${{ }}` into `run:`.
+      - name: Trigger versioned Docker build
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.version-tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          gh workflow run build.yml --repo "$GITHUB_REPOSITORY" --ref "$RELEASE_TAG"

@@ -31,9 +31,9 @@ flowchart TD
     L --> M[Publish @open-dpp/api-client<br/>+ @open-dpp/dto to npm]
     L --> N[Create local git tags<br/>@open-dpp/api-client@X.Y.Z<br/>@open-dpp/dto@X.Y.Z]
     N --> O[changesets/action<br/>pushes tag to origin]
-    O --> P[Post-publish step:<br/>push repo-wide vX.Y.Z tag]
-    P --> Q[build.yml runs on tag push]
-    Q --> R[Publish ghcr.io/open-dpp/open-dpp:X.Y.Z]
+    O --> P[Push repo-wide vX.Y.Z tag<br/>post-publish step]
+    P --> Q[Dispatch build.yml at tag ref<br/>post-publish step]
+    Q --> R[build.yml publishes<br/>ghcr.io/open-dpp/open-dpp:X.Y.Z]
 ```
 
 ## When you need a changeset
@@ -113,7 +113,8 @@ sequenceDiagram
     WF->>WF: Create local tags<br/>@open-dpp/api-client@X.Y.Z<br/>@open-dpp/dto@X.Y.Z
     CS->>GH: Push new tag to origin
     WF->>GH: Push repo-wide vX.Y.Z tag<br/>(post-publish step)
-    GH->>WF: Trigger build.yml on tag push
+    WF->>GH: Dispatch build.yml at vX.Y.Z ref<br/>(post-publish step)
+    GH->>WF: Run build.yml via workflow_dispatch
     WF->>GHCR: Publish ghcr.io/open-dpp/open-dpp:X.Y.Z
 ```
 
@@ -139,12 +140,12 @@ sequenceDiagram
 
 The npm release flow and the Docker build flow ([`build.yml`](./.github/workflows/build.yml)) are **independent workflows** triggered from the same commits. `build.yml` runs on every push to `main` (and on every PR to `main`) and publishes multi-arch images to `ghcr.io/open-dpp/open-dpp` with tags `:latest`, `:main`, and `:sha-<short-sha>`.
 
-To give each Changesets release a corresponding version-tagged Docker image (e.g. `:0.2.0`), `release.yml` has a post-publish step that:
+To give each Changesets release a corresponding version-tagged Docker image (e.g. `:0.2.0`), `release.yml` has two post-publish steps that:
 
-1. Reads the released version from `changesets/action`'s `publishedPackages` output.
-2. Creates and pushes a repo-wide `v<version>` git tag (e.g. `v0.2.0`).
+1. Read the released version from `changesets/action`'s `publishedPackages` output and push a repo-wide `v<version>` git tag (e.g. `v0.2.0`).
+2. Dispatch `build.yml` via `gh workflow run build.yml --ref v<version>`. This triggers a second `build.yml` run with `github.ref = refs/tags/v<version>`, so `docker/metadata-action` picks up the ref via `type=semver,pattern={{version}}` and publishes the image as `ghcr.io/open-dpp/open-dpp:<version>`. The image is built from exactly the same commit as `:latest`, so `:latest` and `:<version>` always point at the same digest at release time.
 
-This tag push triggers `build.yml` a second time via its `on.push.tags: ["v*"]` filter. `docker/metadata-action` picks up the tag via `type=ref,event=tag` and publishes the image as `ghcr.io/open-dpp/open-dpp:<version>`. The image is built from exactly the same commit as `:latest`, so `:latest` and `:<version>` always point at the same digest at release time.
+> **Why the explicit dispatch?** The tag push alone would not trigger `build.yml`. Pushes made by `GITHUB_TOKEN` (including the `git push origin v<version>` in the post-publish step) are, by design, prevented from triggering other workflow runs. Dispatching `build.yml` via the GitHub API (`gh workflow run`) bypasses that restriction. The `tags: ["v*"]` filter on `build.yml` is still honored for **manual / local** tag pushes (see escape hatch below), which are made with a human token rather than `GITHUB_TOKEN`.
 
 **Tag shapes you will see after a release:**
 
@@ -152,8 +153,8 @@ This tag push triggers `build.yml` a second time via its `on.push.tags: ["v*"]` 
 | ------------------------------------ | -------------------------------- | -------------------------------------------------------- |
 | `@open-dpp/api-client@<version>`     | `changeset publish`              | Per-package git tag for the published npm package.       |
 | `@open-dpp/dto@<version>`            | `changeset publish`              | Per-package git tag for the published npm package.       |
-| `v<version>`                         | `release.yml` post-publish step  | Repo-wide git tag; drives version-tagged Docker builds.  |
-| Docker `:<version>`                  | `build.yml` (triggered by `v*`)  | Pinnable Docker image for the release.                   |
+| `v<version>`                         | `release.yml` post-publish step  | Repo-wide git reference for the release; used as the ref of the dispatched `build.yml` run. |
+| Docker `:<version>`                  | `build.yml` (dispatched at `v<version>` ref) | Pinnable Docker image for the release.                                                      |
 | Docker `:latest`, `:main`, `:sha-*`  | `build.yml` (every push to main) | Rolling tags; unchanged by this flow.                    |
 
 If you run the **manual / local release** escape hatch, remember to create the `v<version>` tag yourself after `pnpm release`:
