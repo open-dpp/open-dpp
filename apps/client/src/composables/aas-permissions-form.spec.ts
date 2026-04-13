@@ -157,6 +157,72 @@ describe("aasPermissionsForm composable", () => {
     ).toEqual({ subject: member, permissions: allPermissionsAllow.map(p => p.permission), inheritsPermissionsOf: null });
   });
 
+  it("should consider ignorePermissionsOptions", async () => {
+    const transientParams: SecurityPlainTransientParams = {
+      policies: [
+        {
+          subject: {
+            userRole: UserRoleDto.USER,
+            memberRole: MemberRoleDto.MEMBER,
+          },
+          object: { idShortPath: "section1" },
+          permissions: [
+            {
+              permission: Permissions.Read,
+              kindOfPermission: PermissionKind.Allow,
+            },
+            {
+              permission: Permissions.Create,
+              kindOfPermission: PermissionKind.Allow,
+            },
+          ],
+        },
+      ],
+    };
+    const security: SecurityResponseDto = securityPlainFactory.build(
+      undefined,
+      { transient: transientParams },
+    );
+    const owner = {
+      userRole: UserRoleDto.USER,
+      memberRole: MemberRoleDto.OWNER,
+    };
+    mocks.asSubject.mockReturnValue(owner);
+    const { editPermissions, permissions } = mountHarness({
+      getAccessPermissionRules: () =>
+        security.localAccessControl.accessPermissionRules,
+      object: "section1.prop1",
+      modifyShell: modifyShellMock,
+      deletePolicyBySubjectAndObject: deletePolicyMock,
+      ignoredPermissionOptions: [Permissions.Create],
+    });
+    const member = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER };
+    expect(
+      permissions.value.find(p => isEqualSubject(p.subject, member)),
+    ).toEqual({
+      subject: member,
+      permissions: [Permissions.Read],
+      inheritsPermissionsOf: "section1",
+    });
+    editPermissions([Permissions.Edit], member);
+    expect(
+      permissions.value.find(p => isEqualSubject(p.subject, member)),
+    ).toEqual({
+      subject: member,
+      permissions: [Permissions.Edit, Permissions.Read],
+      inheritsPermissionsOf: null,
+    });
+    editPermissions([], member);
+
+    expect(
+      permissions.value.find(p => isEqualSubject(p.subject, member)),
+    ).toEqual({
+      subject: member,
+      permissions: [],
+      inheritsPermissionsOf: null,
+    });
+  });
+
   it("should modify permissions", async () => {
     const transientParams: SecurityPlainTransientParams = {
       policies: [
