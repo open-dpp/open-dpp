@@ -8,3 +8,5 @@ export const ReferenceElementDbSchema = z.object({
   extensions: ExtensionDbSchema.array().default([]),
   value: z.nullish(ReferenceDbSchema),
 });
+
+export type ReferenceElementDb = z.infer<typeof ReferenceElementDbSchema>;

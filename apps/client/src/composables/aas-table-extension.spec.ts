@@ -136,9 +136,10 @@ describe("aasTableExtension composable", () => {
   it("should init rows correctly", async () => {
     const mockOnHideDrawer = vi.fn();
     const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
 
-    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
-    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List", idShortPathIncludingSubmodel: "s1p.Path.To.List" };
     const { rows, rowsContext } = useAasTableExtension({
       id: aasId,
       pathToList,
@@ -199,9 +200,10 @@ describe("aasTableExtension composable", () => {
   it("should compute columns", async () => {
     const mockOnHideDrawer = vi.fn();
     const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
 
-    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
-    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List", idShortPathIncludingSubmodel: "s1p.Path.To.List" };
     const { columns } = useAasTableExtension({
       id: aasId,
       pathToList,
@@ -239,6 +241,19 @@ describe("aasTableExtension composable", () => {
     ]);
   });
 
+  const dateCol = {
+    idShort: "ColumnDate",
+    valueType: DataTypeDef.Date,
+    modelType: AasSubmodelElements.Property,
+    displayName: [{ language: "en", text: "Produced on" }],
+  };
+  const dateTimeCol = {
+    idShort: "ColumnDateTime",
+    valueType: DataTypeDef.DateTime,
+    modelType: AasSubmodelElements.Property,
+    displayName: [{ language: "en", text: "Produced at" }],
+  };
+
   it.each([
     {
       value: "mein wert",
@@ -258,12 +273,40 @@ describe("aasTableExtension composable", () => {
       },
       expected: "9,843,928.8",
     },
+    {
+      // Date renders as a calendar day with the viewer's zone appended so
+      // the UI is symmetric with DateTime rendering.
+      value: "2026-04-10",
+      column: {
+        idShort: "ColumnDate",
+        label: "Produced on",
+        plain: SubmodelElementSchema.parse(dateCol),
+      },
+      expected: "2026-04-10 Europe/Berlin",
+    },
+    {
+      // DateTime is stored as ISO-8601 UTC, displayed in the viewer's zone
+      // (Europe/Berlin in CI / dev machine), always suffixed with the zone name.
+      // 14:00 UTC on 2026-04-10 → 16:00 Europe/Berlin (CEST, +02:00).
+      value: "2026-04-10T14:00:00Z",
+      column: {
+        idShort: "ColumnDateTime",
+        label: "Produced at",
+        plain: SubmodelElementSchema.parse(dateTimeCol),
+      },
+      expected: "2026-04-10 16:00:00 Europe/Berlin",
+    },
   ])("should formatCellValue $value", async ({ value, column, expected }) => {
     const mockOnHideDrawer = vi.fn();
     const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
 
-    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
-    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
     const { formatCellValue } = useAasTableExtension({
       id: aasId,
       pathToList,
@@ -275,6 +318,7 @@ describe("aasTableExtension composable", () => {
       selectedLanguage: Language.en,
       openDrawer,
       callbackOfSubmodelElementListEditor,
+      timezone: "Europe/Berlin",
     });
     expect(formatCellValue(value, column)).toBe(expected);
   });
@@ -309,11 +353,17 @@ describe("aasTableExtension composable", () => {
     async ({ label, component, data, modelType }) => {
       const mockOnHideDrawer = vi.fn();
       const mockOpenConfirmDialog = vi.fn();
+      const mockCan = vi.fn();
 
       const { openDrawer, editorVNode, drawerVisible } = useAasDrawer({
         onHideDrawer: mockOnHideDrawer,
+        can: mockCan,
       });
-      const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+      const pathToList = {
+        submodelId: "s1",
+        idShortPath: "Path.To.List",
+        idShortPathIncludingSubmodel: "s1p.Path.To.List",
+      };
       const { columnMenu, buildColumnMenu } = useAasTableExtension({
         id: aasId,
         pathToList,
@@ -383,9 +433,14 @@ describe("aasTableExtension composable", () => {
   it("should modify cell", async () => {
     const mockOnHideDrawer = vi.fn();
     const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
 
-    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
-    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
     const { rows, onCellEditComplete } = useAasTableExtension({
       id: aasId,
       pathToList,
@@ -454,11 +509,17 @@ describe("aasTableExtension composable", () => {
   it("should modify column", async () => {
     const mockOnHideDrawer = vi.fn();
     const mockOpenConfirmDialog = vi.fn();
+    const mockCan = vi.fn();
 
     const { openDrawer, editorVNode, drawerVisible } = useAasDrawer({
       onHideDrawer: mockOnHideDrawer,
+      can: mockCan,
     });
-    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
     const { columnMenu, buildColumnMenu } = useAasTableExtension({
       id: aasId,
       pathToList,
@@ -528,9 +589,14 @@ describe("aasTableExtension composable", () => {
     const openAutoConfirm = async (data: ConfirmationOptions) => {
       data.accept!();
     };
+    const mockCan = vi.fn();
 
-    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
-    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
     const { columnMenu, rows, rowsContext, buildColumnMenu, columns } = useAasTableExtension({
       id: aasId,
       pathToList,
@@ -610,9 +676,14 @@ describe("aasTableExtension composable", () => {
     const openAutoConfirm = async (data: ConfirmationOptions) => {
       data.accept!();
     };
+    const mockCan = vi.fn();
 
-    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
-    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = {
+      submodelId: "s1",
+      idShortPath: "Path.To.List",
+      idShortPathIncludingSubmodel: "s1p.Path.To.List",
+    };
     const { rowMenu, buildRowMenu, rows, rowsContext } = useAasTableExtension({
       id: aasId,
       pathToList,
@@ -676,8 +747,10 @@ describe("aasTableExtension composable", () => {
   it("should add row", async () => {
     const mockOnHideDrawer = vi.fn();
     const openConfirm = vi.fn();
-    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer });
-    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List" };
+    const mockCan = vi.fn();
+
+    const { openDrawer } = useAasDrawer({ onHideDrawer: mockOnHideDrawer, can: mockCan });
+    const pathToList = { submodelId: "s1", idShortPath: "Path.To.List", idShortPathIncludingSubmodel: "s1p.Path.To.List" };
     const { rowMenu, rowsContext, buildRowMenu, rows } = useAasTableExtension({
       id: aasId,
       pathToList,

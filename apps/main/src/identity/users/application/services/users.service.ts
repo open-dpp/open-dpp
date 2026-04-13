@@ -3,7 +3,7 @@ import { Inject, Injectable, Logger } from "@nestjs/common";
 import { NotFoundError } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
-import { UserRole } from "../../domain/user-role.enum";
+import { UserRole, UserRoleType } from "../../domain/user-role.enum";
 import { UsersRepository } from "../../infrastructure/adapters/users.repository";
 
 @Injectable()
@@ -43,12 +43,8 @@ export class UsersService {
     return this.usersRepository.findOneById(id);
   }
 
-  async findOneAndFail(id: string) {
-    const userEntity = await this.usersRepository.findOneById(id);
-    if (!userEntity) {
-      throw new NotFoundError(User.name, id);
-    }
-    return userEntity;
+  async findOneOrFail(id: string) {
+    return await this.usersRepository.findOneOrFail(id);
   }
 
   async findByEmail(email: string) {
@@ -72,8 +68,8 @@ export class UsersService {
     return saved;
   }
 
-  async setUserRole(id: string, role: UserRole): Promise<User> {
-    const user = await this.findOneAndFail(id);
+  async setUserRole(id: string, role: UserRoleType): Promise<User> {
+    const user = await this.findOneOrFail(id);
     const updatedUser = user.withRole(role);
     const saved = await this.usersRepository.update(updatedUser);
     if (!saved) {

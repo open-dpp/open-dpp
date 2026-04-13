@@ -2,6 +2,8 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { Injectable, Logger } from "@nestjs/common";
+import { Member } from "../identity/organizations/domain/member";
+import { User } from "../identity/users/domain/user";
 import { PassportRepository } from "../passports/infrastructure/passport.repository";
 import { PolicyKey } from "../policy/domain/policy";
 import { PolicyService } from "../policy/infrastructure/policy.service";
@@ -37,7 +39,7 @@ export class ChatService {
     this.passportRepository = passportRepository;
   }
 
-  async askAgent(query: string, uniqueProductIdentifierUuid: string) {
+  async askAgent(query: string, uniqueProductIdentifierUuid: string, user: User | null, member: Member | null) {
     this.logger.log(`Resolve passport from UniqueProductIdentifier: ${uniqueProductIdentifierUuid}`);
     const uniqueProductIdentifier
       = await this.uniqueProductIdentifierService.findOneOrFail(uniqueProductIdentifierUuid);
@@ -79,12 +81,12 @@ export class ChatService {
       aiConfiguration.model,
     );
     this.logger.log(`Get tools`);
-    const tools = await this.mcpClientService.getTools();
+    const tools = await this.mcpClientService.getTools({ user, member });
     const agent = this.aiService.getAgent({
       llm,
       tools,
     });
-    const systemPrompt = `You are a helpful assistant. The current product passport has the passportId: <${passport.id}>`;
+    const systemPrompt = `You are a helpful assistant. The current product passport has the passportId: <${passport.id}>.`;
     this.logger.log(systemPrompt);
     const prompt = ChatPromptTemplate.fromMessages([
       [
@@ -110,7 +112,6 @@ export class ChatService {
     const errorFunc = (type: string, err: any) => {
       console.error(type, err);
     };
-
     const result = await chain.invoke({ input: query }, {
       callbacks: [
         {

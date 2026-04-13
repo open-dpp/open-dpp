@@ -1,6 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Tool } from "@rekog/mcp-nest";
+import { Context, Tool } from "@rekog/mcp-nest";
+import { Request } from "express";
 import { z } from "zod";
+import { SubjectAttributes } from "../aas/domain/security/subject-attributes";
+import { MemberRoleEnum } from "../identity/organizations/domain/member-role.enum";
+import { UserRoleEnum } from "../identity/users/domain/user-role.enum";
 import { PassportService } from "../passports/application/services/passport.service";
 
 @Injectable()
@@ -34,8 +38,13 @@ export class PassportTool {
         ),
     }),
   })
-  async getProductPassport({ passportId }: { passportId: string }) {
+  async getProductPassport({ passportId }: { passportId: string }, _context: Context, request: Request) {
     this.logger.log(`product-passport-tool is called with id: ${passportId}`);
-    return this.passportService.getExpandedProductPassport(passportId);
+    const expandedPassport = await this.passportService.getExpandedProductPassport(passportId);
+
+    const userRole = UserRoleEnum.parse(request.headers["x-user-role"]);
+    const memberRole = MemberRoleEnum.optional().parse(request.headers["x-member-role"] ?? undefined);
+    const subject = SubjectAttributes.create({ userRole, memberRole });
+    return expandedPassport.toExportPlain(subject);
   }
 }

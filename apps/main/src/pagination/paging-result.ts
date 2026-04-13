@@ -1,4 +1,5 @@
-import { IConvertableToPlain } from "../aas/domain/convertable-to-plain";
+import { ConvertToPlainOptions, IConvertableToPlain } from "../aas/domain/convertable-to-plain";
+import { removeEmptyItems } from "../utils";
 import { Pagination } from "./pagination";
 
 export class PagingResult<T extends IConvertableToPlain> {
@@ -9,10 +10,10 @@ export class PagingResult<T extends IConvertableToPlain> {
     return new PagingResult(data.pagination, data.items);
   }
 
-  toPlain() {
+  toPlain(options?: ConvertToPlainOptions) {
     return {
       paging_metadata: { cursor: this.pagination.cursor },
-      result: this.items.map(item => item.toPlain()),
+      result: removeEmptyItems(this.items.map(item => item.toPlain(options))),
     };
   }
 }

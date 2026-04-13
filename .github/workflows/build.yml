@@ -170,7 +170,7 @@ jobs:
           tags: |
             type=sha
             type=ref,event=branch
-            type=ref,event=tag
+            type=semver,pattern={{version}}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build and push by digest
@@ -182,6 +182,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           target: ${{ matrix.target }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_VERSION=${{ steps.meta.outputs.version }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}:build-cache-${{ matrix.target }}-${{ env.PLATFORM_PAIR }}
           cache-to: type=registry,mode=max,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}:build-cache-${{ matrix.target }}-${{ env.PLATFORM_PAIR }}
           outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }},push-by-digest=true,name-canonical=true,push=true
@@ -236,7 +238,7 @@ jobs:
           tags: |
             type=sha
             type=ref,event=branch
-            type=ref,event=tag
+            type=semver,pattern={{version}}
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Create manifest list and push
