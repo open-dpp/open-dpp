@@ -14,4 +14,11 @@ export class BrandingNamespace {
       this.brandingEndpoint,
     )
   }
+
+  public async set(branding: BrandingDto) {
+    return await this.axiosInstance.post<BrandingDto>(
+      this.brandingEndpoint,
+      branding,
+    )
+  }
 }

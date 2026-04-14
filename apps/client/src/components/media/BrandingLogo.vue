@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { url = "/api/branding/instance", center = true } = defineProps<{
+const { url = "/api/branding/instance/logo", center = true } = defineProps<{
   url?: string;
   center?: boolean;
 }>();

@@ -15,7 +15,7 @@ const openFileModal = ref(false);
 
 const { download, mediaInfo } = useMediaFile();
 
-const model = defineModel<string>();
+const model = defineModel<string | null>();
 const { t } = useI18n();
 
 function updateFileFromModal(files: MediaInfo[]) {
