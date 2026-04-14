@@ -19,12 +19,10 @@ export class BrandingController {
   async getOrganizationBranding(
     @OrganizationId() organizationId: string,
   ): Promise<BrandingDto> {
-    const defaultBranding = this.brandingRepository.getDefaultBranding().toPlain();
     const organizationBranding = (await this.brandingRepository.findOneByOrganizationId(organizationId)).toPlain();
-    return BrandingDtoSchema.parse({
-      ...defaultBranding,
-      ...organizationBranding,
-    });
+    return BrandingDtoSchema.parse(
+      organizationBranding,
+    );
   }
 
   @Post()
@@ -33,13 +31,6 @@ export class BrandingController {
     @Body(new ZodValidationPipe(BrandingDtoSchema)) branding: BrandingDto,
   ): Promise<BrandingDto> {
     return BrandingDtoSchema.parse((await this.brandingRepository.save(Branding.fromPlain(branding, organizationId))).toPlain());
-  }
-
-  @Get("/logo")
-  async getOrganizationLogo(
-    @OrganizationId() organizationId: string,
-  ): Promise<BrandingDto> {
-    return BrandingDtoSchema.parse((await this.brandingRepository.findOneByOrganizationId(organizationId)).toPlain());
   }
 
   @AllowAnonymous()

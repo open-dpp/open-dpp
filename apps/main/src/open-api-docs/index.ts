@@ -2,6 +2,7 @@ import type { INestApplication } from "@nestjs/common";
 import { OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
 import { createDocument } from "zod-openapi";
 import { aasPaths } from "./aas.paths";
+import { brandingPaths } from "./branding.path";
 
 const document
   = createDocument({
@@ -18,6 +19,7 @@ const document
     ],
     paths: {
       ...aasPaths,
+      ...brandingPaths,
     },
   });
 
