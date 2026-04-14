@@ -163,7 +163,7 @@ describe("UsersRepository", () => {
       const result = await repository.findAllByIds([a.id, b.id]);
 
       expect(result).toHaveLength(2);
-      const resultIds = result.map(u => u.id).sort();
+      const resultIds = result.map((u) => u.id).sort();
       expect(resultIds).toEqual([a.id, b.id].sort());
     });
 

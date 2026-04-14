@@ -40,7 +40,11 @@ describe("UsersService", () => {
   });
 
   it("should create user", async () => {
-    const savedUser = User.create({ email: "test@example.com", firstName: "John", lastName: "Doe" });
+    const savedUser = User.create({
+      email: "test@example.com",
+      firstName: "John",
+      lastName: "Doe",
+    });
     mockRepo.save.mockResolvedValue(savedUser);
     const result = await service.createUser("test@example.com", "John", "Doe");
     expect(mockRepo.save).toHaveBeenCalledWith(expect.any(User));
@@ -49,9 +53,9 @@ describe("UsersService", () => {
 
   it("should throw if save returns null", async () => {
     mockRepo.save.mockResolvedValue(null);
-    await expect(service.createUser("test@example.com", "John", "Doe"))
-      .rejects
-      .toThrow("Failed to save user with email test@example.com");
+    await expect(service.createUser("test@example.com", "John", "Doe")).rejects.toThrow(
+      "Failed to save user with email test@example.com",
+    );
   });
 
   it("should find one by id", async () => {
@@ -77,7 +81,12 @@ describe("UsersService", () => {
   });
 
   it("should set user role via domain method", async () => {
-    const user = User.create({ email: "test@example.com", firstName: "John", lastName: "Doe", role: UserRole.USER });
+    const user = User.create({
+      email: "test@example.com",
+      firstName: "John",
+      lastName: "Doe",
+      role: UserRole.USER,
+    });
     const updatedUser = user.withRole(UserRole.ADMIN);
     mockRepo.findOneOrFail.mockResolvedValue(user);
     mockRepo.update.mockResolvedValue(updatedUser);
@@ -92,9 +101,9 @@ describe("UsersService", () => {
   it("should throw if user not found when setting role", async () => {
     mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
 
-    await expect(service.setUserRole("nonexistent", UserRole.ADMIN))
-      .rejects
-      .toThrow(NotFoundInDatabaseException);
+    await expect(service.setUserRole("nonexistent", UserRole.ADMIN)).rejects.toThrow(
+      NotFoundInDatabaseException,
+    );
   });
 
   it("should throw if repository fails to update role", async () => {
@@ -102,9 +111,7 @@ describe("UsersService", () => {
     mockRepo.findOneOrFail.mockResolvedValue(user);
     mockRepo.update.mockResolvedValue(null);
 
-    await expect(service.setUserRole(user.id, UserRole.ADMIN))
-      .rejects
-      .toThrow(NotFoundError);
+    await expect(service.setUserRole(user.id, UserRole.ADMIN)).rejects.toThrow(NotFoundError);
   });
 
   it("should set user email verified via domain method", async () => {
@@ -123,9 +130,9 @@ describe("UsersService", () => {
   it("should throw if user not found when setting email verified", async () => {
     mockRepo.findOneByEmail.mockResolvedValue(null);
 
-    await expect(service.setUserEmailVerified("nonexistent@example.com", true))
-      .rejects
-      .toThrow(NotFoundError);
+    await expect(service.setUserEmailVerified("nonexistent@example.com", true)).rejects.toThrow(
+      NotFoundError,
+    );
   });
 
   it("should throw if repository fails to update email verified", async () => {
@@ -133,8 +140,8 @@ describe("UsersService", () => {
     mockRepo.findOneByEmail.mockResolvedValue(user);
     mockRepo.update.mockResolvedValue(null);
 
-    await expect(service.setUserEmailVerified("test@example.com", true))
-      .rejects
-      .toThrow(NotFoundError);
+    await expect(service.setUserEmailVerified("test@example.com", true)).rejects.toThrow(
+      NotFoundError,
+    );
   });
 });
