@@ -1,5 +1,6 @@
 import type { Auth } from "better-auth";
 import { Inject, Injectable, Logger } from "@nestjs/common";
+import { NotFoundError } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
 import { UserRole, UserRoleType } from "../../domain/user-role.enum";
@@ -12,7 +13,7 @@ export class UsersService {
   constructor(
     private readonly usersRepository: UsersRepository,
     @Inject(AUTH) private readonly auth: Auth,
-  ) { }
+  ) {}
 
   async createUser(email: string, firstName?: string, lastName?: string): Promise<User> {
     const fn = firstName?.trim() ?? "";
@@ -28,11 +29,10 @@ export class UsersService {
       throw new Error(`Failed to save user with email ${email}`);
     }
     try {
-      await (this.auth.api).requestPasswordReset({
+      await this.auth.api.requestPasswordReset({
         body: { email, redirectTo: "/password-reset" },
       });
-    }
-    catch (error) {
+    } catch (error) {
       this.logger.error("Failed to send password reset email", error);
     }
     return saved;
@@ -54,15 +54,25 @@ export class UsersService {
     return this.usersRepository.findAllByIds(ids);
   }
 
-  async setUserEmailVerified(email: string, emailVerified: boolean): Promise<void> {
-    await this.usersRepository.setUserEmailVerified(email, emailVerified);
+  async setUserEmailVerified(email: string, emailVerified: boolean): Promise<User> {
+    const user = await this.usersRepository.findOneByEmail(email);
+    if (!user) {
+      throw new NotFoundError(User.name, email);
+    }
+    const updatedUser = user.withEmailVerified(emailVerified);
+    const saved = await this.usersRepository.update(updatedUser);
+    if (!saved) {
+      throw new NotFoundError(User.name, user.id);
+    }
+    return saved;
   }
 
   async setUserRole(id: string, role: UserRoleType): Promise<User> {
-    await this.findOneOrFail(id);
-    const saved = await this.usersRepository.setUserRole(id, role);
+    const user = await this.findOneOrFail(id);
+    const updatedUser = user.withRole(role);
+    const saved = await this.usersRepository.update(updatedUser);
     if (!saved) {
-      throw new Error(`Failed to update role for user ${id}`);
+      throw new NotFoundError(User.name, id);
     }
     return saved;
   }

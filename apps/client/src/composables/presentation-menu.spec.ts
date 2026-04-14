@@ -96,9 +96,7 @@ describe("usePresentationMenu", () => {
 
       menuItems.value[1]!.command();
 
-      expect(mocks.routerPush).toHaveBeenCalledWith(
-        "/presentation/my-product/chat",
-      );
+      expect(mocks.routerPush).toHaveBeenCalledWith("/presentation/my-product/chat");
     });
 
     it("backToApp command navigates to root", () => {
@@ -118,9 +116,7 @@ describe("usePresentationMenu", () => {
 
       navigateToAiChat();
 
-      expect(mocks.routerPush).toHaveBeenCalledWith(
-        "/presentation/my-product/chat",
-      );
+      expect(mocks.routerPush).toHaveBeenCalledWith("/presentation/my-product/chat");
     });
   });
 });

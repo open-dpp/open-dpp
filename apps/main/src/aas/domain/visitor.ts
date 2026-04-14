@@ -29,7 +29,10 @@ export interface IVisitor<ContextT, R> {
   visitLanguageText: (element: LanguageText, context?: ContextT) => R;
   visitQualifier: (element: Qualifier, context?: ContextT) => R;
   visitReference: (element: Reference, context?: ContextT) => R;
-  visitAnnotatedRelationshipElement: (element: AnnotatedRelationshipElement, context?: ContextT) => R;
+  visitAnnotatedRelationshipElement: (
+    element: AnnotatedRelationshipElement,
+    context?: ContextT,
+  ) => R;
   visitBlob: (element: Blob, context?: ContextT) => R;
   visitEntity: (element: Entity, context?: ContextT) => R;
   visitFile: (element: File, context?: ContextT) => R;

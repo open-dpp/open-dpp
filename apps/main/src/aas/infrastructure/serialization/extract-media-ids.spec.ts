@@ -55,16 +55,15 @@ describe("extractMediaIds", () => {
     });
     const collection = SubmodelElementCollection.create({ idShort: "collection" });
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
 
-    security.addPolicy(
-      member,
-      IdShortPath.create({ path: collection.idShort }),
-      [
-        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
-        Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
-      ],
-    );
+    security.addPolicy(member, IdShortPath.create({ path: collection.idShort }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+    ]);
     const ability = security.defineAbilityForSubject(member);
     collection.addSubmodelElement(file, { ability });
 
@@ -101,9 +100,7 @@ describe("extractMediaIds", () => {
     const shell = AssetAdministrationShell.create({
       assetInformation: AssetInformation.create({
         assetKind: AssetKind.Instance,
-        defaultThumbnails: [
-          Resource.create({ path: "shared-id", contentType: "image/webp" }),
-        ],
+        defaultThumbnails: [Resource.create({ path: "shared-id", contentType: "image/webp" })],
       }),
     });
 
@@ -122,9 +119,7 @@ describe("extractMediaIds", () => {
     const shell = AssetAdministrationShell.create({
       assetInformation: AssetInformation.create({
         assetKind: AssetKind.Instance,
-        defaultThumbnails: [
-          Resource.create({ path: "thumbnail-id", contentType: "image/webp" }),
-        ],
+        defaultThumbnails: [Resource.create({ path: "thumbnail-id", contentType: "image/webp" })],
       }),
     });
 

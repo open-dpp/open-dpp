@@ -22,4 +22,4 @@ import { PassportTool } from "./passport.tool";
   ],
   providers: [PassportTool],
 })
-export class McpServerModule { }
+export class McpServerModule {}

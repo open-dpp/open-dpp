@@ -149,13 +149,13 @@ To give each Changesets release a corresponding version-tagged Docker image (e.g
 
 **Tag shapes you will see after a release:**
 
-| Tag                                  | Created by                       | Purpose                                                  |
-| ------------------------------------ | -------------------------------- | -------------------------------------------------------- |
-| `@open-dpp/api-client@<version>`     | `changeset publish`              | Per-package git tag for the published npm package.       |
-| `@open-dpp/dto@<version>`            | `changeset publish`              | Per-package git tag for the published npm package.       |
-| `v<version>`                         | `release.yml` post-publish step  | Repo-wide git reference for the release; used as the ref of the dispatched `build.yml` run. |
-| Docker `:<version>`                  | `build.yml` (dispatched at `v<version>` ref) | Pinnable Docker image for the release.                                                      |
-| Docker `:latest`, `:main`, `:sha-*`  | `build.yml` (every push to main) | Rolling tags; unchanged by this flow.                    |
+| Tag                                 | Created by                                   | Purpose                                                                                     |
+| ----------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `@open-dpp/api-client@<version>`    | `changeset publish`                          | Per-package git tag for the published npm package.                                          |
+| `@open-dpp/dto@<version>`           | `changeset publish`                          | Per-package git tag for the published npm package.                                          |
+| `v<version>`                        | `release.yml` post-publish step              | Repo-wide git reference for the release; used as the ref of the dispatched `build.yml` run. |
+| Docker `:<version>`                 | `build.yml` (dispatched at `v<version>` ref) | Pinnable Docker image for the release.                                                      |
+| Docker `:latest`, `:main`, `:sha-*` | `build.yml` (every push to main)             | Rolling tags; unchanged by this flow.                                                       |
 
 If you run the **manual / local release** escape hatch, remember to create the `v<version>` tag yourself after `pnpm release`:
 
@@ -169,9 +169,9 @@ git push origin "v$version"
 
 Both secrets are configured on the `open-dpp/open-dpp` repository:
 
-| Secret         | Purpose                                                                                                                    |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `NPM_TOKEN`    | npm automation token with publish rights to the `@open-dpp` scope. Consumed by `pnpm release` / `changeset publish`.       |
+| Secret         | Purpose                                                                                                                                                                                     |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NPM_TOKEN`    | npm automation token with publish rights to the `@open-dpp` scope. Consumed by `pnpm release` / `changeset publish`.                                                                        |
 | `GITHUB_TOKEN` | Provided automatically by Actions. Requires `contents: write`, `pull-requests: write`, and `actions: write` (for dispatching `build.yml` at the release tag), already set in `release.yml`. |
 
 If `NPM_TOKEN` is missing or expired, the `Release` job will fail at the publish step. Rotate the token in npm, update the GitHub secret, and re-run the failed job.

@@ -45,19 +45,15 @@ onMounted(async () => {
   try {
     const res = await apiClient.dpp.instanceSettings.getPublic();
     signupEnabled.value = res.data.signupEnabled;
-  }
-  catch {
+  } catch {
     signupEnabled.value = false;
-  }
-  finally {
+  } finally {
     checkingSettings.value = false;
   }
 });
 
 const redirectUri = computed(() => {
-  return route.query.redirect
-    ? decodeURIComponent(route.query.redirect as string)
-    : "/";
+  return route.query.redirect ? decodeURIComponent(route.query.redirect as string) : "/";
 });
 
 const signin = handleSubmit(async (values) => {
@@ -84,36 +80,32 @@ const signin = handleSubmit(async (values) => {
     const lastSelectedOrganization = indexStore.selectedOrganization;
     if (
       !organizationsStore.organizations.find(
-        organization => organization.id === lastSelectedOrganization,
+        (organization) => organization.id === lastSelectedOrganization,
       )
     ) {
       indexStore.selectOrganization(null);
     }
-  }
-  catch {
+  } catch {
     toast.add({
       severity: "error",
       summary: t("auth.signin.error"),
       life: 5000,
     });
     resetField("password");
-  }
-  finally {
+  } finally {
     loading.value = false;
   }
 });
 </script>
 
 <template>
-  <div
-    class="flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8"
-  >
-    <Card class="sm:mx-auto sm:w-full sm:max-w-md p-3">
+  <div class="flex min-h-full flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <Card class="p-3 sm:mx-auto sm:w-full sm:max-w-md">
       <template #header>
         <BrandingLogo />
       </template>
       <template #title>
-        <p class="text-center py-2">
+        <p class="py-2 text-center">
           {{ t("auth.signin.title") }}
         </p>
       </template>
@@ -124,7 +116,8 @@ const signin = handleSubmit(async (values) => {
               <label
                 for="email"
                 class="block text-sm/6 font-medium text-gray-900 dark:text-white"
-              >{{ t("user.email") }}</label>
+                >{{ t("user.email") }}</label
+              >
               <div class="mt-2">
                 <InputText
                   id="email"
@@ -152,7 +145,8 @@ const signin = handleSubmit(async (values) => {
               <label
                 for="password"
                 class="block text-sm/6 font-medium text-gray-900 dark:text-white"
-              >{{ t("user.password") }}</label>
+                >{{ t("user.password") }}</label
+              >
               <div class="mt-2">
                 <Password
                   v-model="password"
@@ -182,10 +176,9 @@ const signin = handleSubmit(async (values) => {
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <Checkbox v-model="rememberMe" input-id="remember-me" binary />
-                <label
-                  for="remember-me"
-                  class="block text-sm/6 text-gray-900 dark:text-white"
-                >{{ t("auth.signin.rememberMe") }}</label>
+                <label for="remember-me" class="block text-sm/6 text-gray-900 dark:text-white">{{
+                  t("auth.signin.rememberMe")
+                }}</label>
               </div>
 
               <div class="text-sm/6">

@@ -20,7 +20,14 @@ export class InviteUserToOrganizationMail extends BaseEmail {
     subject: string,
     templateProperties: InviteUserToOrganizationMailTemplateProps,
   ) {
-    super(id, "INVITE_USER_TO_ORGANIZATION", "invite-user-to-organization.mjml", to, subject, templateProperties);
+    super(
+      id,
+      "INVITE_USER_TO_ORGANIZATION",
+      "invite-user-to-organization.mjml",
+      to,
+      subject,
+      templateProperties,
+    );
   }
 
   public static create(data: InviteUserToOrganizationMailCreateProps) {

@@ -8,9 +8,7 @@ export const AiConfigurationUpsertDtoSchema = z.object({
   isEnabled: z.boolean(),
 });
 
-export type AiConfigurationUpsertDto = z.infer<
-  typeof AiConfigurationUpsertDtoSchema
->;
+export type AiConfigurationUpsertDto = z.infer<typeof AiConfigurationUpsertDtoSchema>;
 
 export const AiConfigurationDtoSchema = z.object({
   id: z.string(),
@@ -25,19 +23,13 @@ export const AiConfigurationDtoSchema = z.object({
 
 export type AiConfigurationDto = z.infer<typeof AiConfigurationDtoSchema>;
 
-export function aiConfigurationToDto(
-  aiConfiguration: AiConfiguration,
-): AiConfigurationDto {
+export function aiConfigurationToDto(aiConfiguration: AiConfiguration): AiConfigurationDto {
   return AiConfigurationDtoSchema.parse({
     id: aiConfiguration.id,
     ownedByOrganizationId: aiConfiguration.ownedByOrganizationId,
     createdByUserId: aiConfiguration.createdByUserId,
-    createdAt: aiConfiguration.createdAt
-      ? aiConfiguration.createdAt.toISOString()
-      : null,
-    updatedAt: aiConfiguration.updatedAt
-      ? aiConfiguration.updatedAt.toISOString()
-      : null,
+    createdAt: aiConfiguration.createdAt ? aiConfiguration.createdAt.toISOString() : null,
+    updatedAt: aiConfiguration.updatedAt ? aiConfiguration.updatedAt.toISOString() : null,
     provider: aiConfiguration.provider,
     model: aiConfiguration.model,
     isEnabled: aiConfiguration.isEnabled,

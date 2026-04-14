@@ -10,7 +10,9 @@ import JsonVisitor from "./json-visitor";
 import { IPersistable } from "./persistable";
 import { IVisitable, IVisitor } from "./visitor";
 
-export class ConceptDescription implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable {
+export class ConceptDescription
+  implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable
+{
   private constructor(
     public readonly id: string,
     public readonly extensions: Array<Extension>,
@@ -22,23 +24,20 @@ export class ConceptDescription implements IIdentifiable, IHasDataSpecification,
     public readonly administration: AdministrativeInformation | null = null,
     public readonly embeddedDataSpecifications: Array<EmbeddedDataSpecification>,
     public readonly isCaseOf: Reference[],
-  ) {
-  }
+  ) {}
 
-  static create(
-    data: {
-      id: string;
-      extensions?: Array<Extension>;
-      category?: string | null;
-      idShort?: string | null;
-      displayName?: Array<LanguageText>;
-      description?: Array<LanguageText>;
-      semanticId?: Reference | null;
-      administration?: AdministrativeInformation;
-      embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
-      isCaseOf?: Reference[];
-    },
-  ) {
+  static create(data: {
+    id: string;
+    extensions?: Array<Extension>;
+    category?: string | null;
+    idShort?: string | null;
+    displayName?: Array<LanguageText>;
+    description?: Array<LanguageText>;
+    semanticId?: Reference | null;
+    administration?: AdministrativeInformation;
+    embeddedDataSpecifications?: Array<EmbeddedDataSpecification>;
+    isCaseOf?: Reference[];
+  }) {
     return new ConceptDescription(
       data.id,
       data.extensions ?? [],

@@ -1,4 +1,8 @@
-import { AasSubmodelElements, AasSubmodelElementsType, AnnotatedRelationshipElementJsonSchema } from "@open-dpp/dto";
+import {
+  AasSubmodelElements,
+  AasSubmodelElementsType,
+  AnnotatedRelationshipElementJsonSchema,
+} from "@open-dpp/dto";
 import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
@@ -50,7 +54,9 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath ? this._parentIdShortPath.addPathSegment(this.idShort) : IdShortPath.create({ path: this.idShort });
+    return this._parentIdShortPath
+      ? this._parentIdShortPath.addPathSegment(this.idShort)
+      : IdShortPath.create({ path: this.idShort });
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -71,12 +77,14 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
     return this._description;
   }
 
-  static create(data: SubmodelBaseProps & {
-    first: Reference;
-    second: Reference;
-    extensions?: Array<Extension>;
-    annotations?: Array<ISubmodelElement>;
-  }) {
+  static create(
+    data: SubmodelBaseProps & {
+      first: Reference;
+      second: Reference;
+      extensions?: Array<Extension>;
+      annotations?: Array<ISubmodelElement>;
+    },
+  ) {
     return new AnnotatedRelationshipElement(
       data.first,
       data.second,
@@ -99,7 +107,7 @@ export class AnnotatedRelationshipElement implements ISubmodelElement, IRelation
     return new AnnotatedRelationshipElement(
       Reference.fromPlain(parsed.first),
       Reference.fromPlain(parsed.second),
-      parsed.extensions.map(e => Extension.fromPlain(e)),
+      parsed.extensions.map((e) => Extension.fromPlain(e)),
       baseObjects.category,
       baseObjects.idShort,
       baseObjects.displayName,

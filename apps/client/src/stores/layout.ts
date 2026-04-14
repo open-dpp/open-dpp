@@ -60,17 +60,12 @@ export const useLayoutStore = defineStore("layout", () => {
   };
 
   const addQuickAccessItem = (item: QuickAccessItem) => {
-    quickAccessItems.value = quickAccessItems.value.filter(
-      i => i.path === item.path,
-    );
+    quickAccessItems.value = quickAccessItems.value.filter((i) => i.path === item.path);
     if (quickAccessItems.value.length === 5) {
       quickAccessItems.value.pop();
     }
     quickAccessItems.value.push(item);
-    localStorage.setItem(
-      "quickAccessItems",
-      JSON.stringify(quickAccessItems.value),
-    );
+    localStorage.setItem("quickAccessItems", JSON.stringify(quickAccessItems.value));
   };
 
   return {

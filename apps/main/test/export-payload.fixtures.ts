@@ -21,9 +21,7 @@ export function makeReference(value = "urn:example:ref") {
   };
 }
 
-export function buildEmptyExportPayload(
-  assetKind: "Type" | "Instance" = "Type",
-) {
+export function buildEmptyExportPayload(assetKind: "Type" | "Instance" = "Type") {
   return {
     id: randomUUID(),
     format: "open-dpp:json",
@@ -58,15 +56,12 @@ export function buildEmptyExportPayload(
   };
 }
 
-export function buildRichExportPayload(
-  assetKind: "Type" | "Instance" = "Type",
-) {
+export function buildRichExportPayload(assetKind: "Type" | "Instance" = "Type") {
   const base = baseElement();
   const ref = makeReference();
-  const label
-    = assetKind === "Type" ? "Rich Template" : "Rich Passport";
-  const desc
-    = assetKind === "Type"
+  const label = assetKind === "Type" ? "Rich Template" : "Rich Passport";
+  const desc =
+    assetKind === "Type"
       ? "A template with all element types"
       : "A passport with all element types";
 
@@ -113,20 +108,62 @@ export function buildRichExportPayload(
           qualifiers: [],
           embeddedDataSpecifications: [],
           submodelElements: [
-            { ...base, modelType: "Property", idShort: "stringProp", valueType: "String", value: "hello", valueId: null },
-            { ...base, modelType: "Property", idShort: "intProp", valueType: "Int", value: "42", valueId: null },
-            { ...base, modelType: "File", idShort: "fileElement", contentType: "image/png", value: null },
-            { ...base, modelType: "Blob", idShort: "blobElement", contentType: "application/octet-stream", value: "SGVsbG8=" },
-            { ...base, modelType: "Range", idShort: "rangeElement", valueType: "Double", min: "0.0", max: "100.0" },
+            {
+              ...base,
+              modelType: "Property",
+              idShort: "stringProp",
+              valueType: "String",
+              value: "hello",
+              valueId: null,
+            },
+            {
+              ...base,
+              modelType: "Property",
+              idShort: "intProp",
+              valueType: "Int",
+              value: "42",
+              valueId: null,
+            },
+            {
+              ...base,
+              modelType: "File",
+              idShort: "fileElement",
+              contentType: "image/png",
+              value: null,
+            },
+            {
+              ...base,
+              modelType: "Blob",
+              idShort: "blobElement",
+              contentType: "application/octet-stream",
+              value: "SGVsbG8=",
+            },
+            {
+              ...base,
+              modelType: "Range",
+              idShort: "rangeElement",
+              valueType: "Double",
+              min: "0.0",
+              max: "100.0",
+            },
             {
               ...base,
               modelType: "MultiLanguageProperty",
               idShort: "mlProp",
-              value: [{ language: "en", text: "English" }, { language: "de", text: "Deutsch" }],
+              value: [
+                { language: "en", text: "English" },
+                { language: "de", text: "Deutsch" },
+              ],
               valueId: null,
             },
             { ...base, modelType: "ReferenceElement", idShort: "refElement", value: ref },
-            { ...base, modelType: "RelationshipElement", idShort: "relElement", first: ref, second: ref },
+            {
+              ...base,
+              modelType: "RelationshipElement",
+              idShort: "relElement",
+              first: ref,
+              second: ref,
+            },
             {
               ...base,
               modelType: "AnnotatedRelationshipElement",
@@ -134,7 +171,14 @@ export function buildRichExportPayload(
               first: ref,
               second: ref,
               annotations: [
-                { ...base, modelType: "Property", idShort: "annotProp", valueType: "String", value: "annotation-value", valueId: null },
+                {
+                  ...base,
+                  modelType: "Property",
+                  idShort: "annotProp",
+                  valueType: "String",
+                  value: "annotation-value",
+                  valueId: null,
+                },
               ],
             },
             {
@@ -143,7 +187,14 @@ export function buildRichExportPayload(
               idShort: "entityElement",
               entityType: "SelfManagedEntity",
               statements: [
-                { ...base, modelType: "Property", idShort: "statementProp", valueType: "String", value: "statement-value", valueId: null },
+                {
+                  ...base,
+                  modelType: "Property",
+                  idShort: "statementProp",
+                  valueType: "String",
+                  value: "statement-value",
+                  valueId: null,
+                },
               ],
               globalAssetId: null,
               specificAssetIds: [],
@@ -153,7 +204,14 @@ export function buildRichExportPayload(
               modelType: "SubmodelElementCollection",
               idShort: "collection",
               value: [
-                { ...base, modelType: "Property", idShort: "nestedProp", valueType: "Boolean", value: "true", valueId: null },
+                {
+                  ...base,
+                  modelType: "Property",
+                  idShort: "nestedProp",
+                  valueType: "Boolean",
+                  value: "true",
+                  valueId: null,
+                },
               ],
             },
             {
@@ -165,8 +223,22 @@ export function buildRichExportPayload(
               valueTypeListElement: "String",
               typeValueListElement: "Property",
               value: [
-                { ...base, modelType: "Property", idShort: "listItem1", valueType: "String", value: "item-1", valueId: null },
-                { ...base, modelType: "Property", idShort: "listItem2", valueType: "String", value: "item-2", valueId: null },
+                {
+                  ...base,
+                  modelType: "Property",
+                  idShort: "listItem1",
+                  valueType: "String",
+                  value: "item-1",
+                  valueId: null,
+                },
+                {
+                  ...base,
+                  modelType: "Property",
+                  idShort: "listItem2",
+                  valueType: "String",
+                  value: "item-2",
+                  valueId: null,
+                },
               ],
             },
           ],

@@ -34,7 +34,10 @@ import { ValueVisitor } from "./value-visitor";
 describe("value-visitor", () => {
   it("should return value representation of property", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const property = Property.create({
       idShort: "prop1",
@@ -42,7 +45,9 @@ describe("value-visitor", () => {
       value: "blub1",
     });
 
-    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     let ability = security.defineAbilityForSubject(member);
 
     let visitor = new ValueVisitor({ ability });
@@ -55,7 +60,10 @@ describe("value-visitor", () => {
 
   it("should return value representation of multilanguage property", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const enValue = { language: Language.en, text: "blub1" };
     const multiLanguageProperty = MultiLanguageProperty.create({
@@ -63,13 +71,17 @@ describe("value-visitor", () => {
       value: [LanguageText.create(enValue)],
     });
 
-    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     let ability = security.defineAbilityForSubject(member);
 
     let visitor = new ValueVisitor({ ability });
-    expect(visitor.visitMultiLanguageProperty(multiLanguageProperty)).toEqual([{
-      [enValue.language]: enValue.text,
-    }]);
+    expect(visitor.visitMultiLanguageProperty(multiLanguageProperty)).toEqual([
+      {
+        [enValue.language]: enValue.text,
+      },
+    ]);
 
     ability = security.defineAbilityForSubject(anonymous);
     visitor = new ValueVisitor({ ability });
@@ -78,7 +90,10 @@ describe("value-visitor", () => {
 
   it("should return value representation of reference element", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const referenceElement = ReferenceElement.create({
       idShort: "prop1",
@@ -88,15 +103,15 @@ describe("value-visitor", () => {
       }),
     });
 
-    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     let ability = security.defineAbilityForSubject(member);
 
     let visitor = new ValueVisitor({ ability });
     expect(visitor.visitReferenceElement(referenceElement)).toEqual({
       type: ReferenceTypes.ExternalReference,
-      keys: [
-        { type: KeyTypes.GlobalReference, value: "http://example.com" },
-      ],
+      keys: [{ type: KeyTypes.GlobalReference, value: "http://example.com" }],
     });
 
     ability = security.defineAbilityForSubject(anonymous);
@@ -106,7 +121,10 @@ describe("value-visitor", () => {
 
   it("should return value representation of range", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const range = Range.create({
       idShort: "prop1",
@@ -115,7 +133,9 @@ describe("value-visitor", () => {
       max: "10",
     });
 
-    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     let ability = security.defineAbilityForSubject(member);
 
     let visitor = new ValueVisitor({ ability });
@@ -131,7 +151,10 @@ describe("value-visitor", () => {
 
   it("should return value representation of file", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const file = File.create({
       idShort: "prop1",
@@ -139,7 +162,9 @@ describe("value-visitor", () => {
       value: "blub1",
     });
 
-    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     let ability = security.defineAbilityForSubject(member);
 
     let visitor = new ValueVisitor({ ability });
@@ -152,7 +177,10 @@ describe("value-visitor", () => {
 
   it("should return value representation of blob", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const blob = Blob.create({
       idShort: "prop1",
@@ -160,7 +188,9 @@ describe("value-visitor", () => {
       value: Buffer.from("hello"),
     });
 
-    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     let ability = security.defineAbilityForSubject(member);
 
     let visitor = new ValueVisitor({ ability });
@@ -173,21 +203,35 @@ describe("value-visitor", () => {
 
   it("should return value representation of relationship element", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
-    const reference1 = Reference.create({ type: ReferenceTypes.ExternalReference, keys: [Key.create({ type: KeyTypes.GlobalReference, value: "http://first" })] });
-    const reference2 = Reference.create({ type: ReferenceTypes.ExternalReference, keys: [Key.create({ type: KeyTypes.GlobalReference, value: "http://second" })] });
+    const reference1 = Reference.create({
+      type: ReferenceTypes.ExternalReference,
+      keys: [Key.create({ type: KeyTypes.GlobalReference, value: "http://first" })],
+    });
+    const reference2 = Reference.create({
+      type: ReferenceTypes.ExternalReference,
+      keys: [Key.create({ type: KeyTypes.GlobalReference, value: "http://second" })],
+    });
     const relationshipElement = RelationshipElement.create({
       idShort: "prop1",
       first: reference1,
       second: reference2,
     });
 
-    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     let ability = security.defineAbilityForSubject(member);
 
     let visitor = new ValueVisitor({ ability });
-    expect(visitor.visitRelationshipElement(relationshipElement)).toEqual({ first: visitor.visitReference(reference1), second: visitor.visitReference(reference2) });
+    expect(visitor.visitRelationshipElement(relationshipElement)).toEqual({
+      first: visitor.visitReference(reference1),
+      second: visitor.visitReference(reference2),
+    });
 
     ability = security.defineAbilityForSubject(anonymous);
     visitor = new ValueVisitor({ ability });
@@ -196,54 +240,84 @@ describe("value-visitor", () => {
 
   it("should return value representation of annotated relationship element", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
-    const reference1 = Reference.create({ type: ReferenceTypes.ExternalReference, keys: [Key.create({ type: KeyTypes.GlobalReference, value: "http://first" })] });
-    const reference2 = Reference.create({ type: ReferenceTypes.ExternalReference, keys: [Key.create({ type: KeyTypes.GlobalReference, value: "http://second" })] });
+    const reference1 = Reference.create({
+      type: ReferenceTypes.ExternalReference,
+      keys: [Key.create({ type: KeyTypes.GlobalReference, value: "http://first" })],
+    });
+    const reference2 = Reference.create({
+      type: ReferenceTypes.ExternalReference,
+      keys: [Key.create({ type: KeyTypes.GlobalReference, value: "http://second" })],
+    });
     const annotatedRelationshipElement = AnnotatedRelationshipElement.create({
       idShort: "prop1",
       first: reference1,
       second: reference2,
-      annotations: [Property.create({ idShort: "ann1", value: "val", valueType: DataTypeDef.String })],
+      annotations: [
+        Property.create({ idShort: "ann1", value: "val", valueType: DataTypeDef.String }),
+      ],
     });
 
-    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     let ability = security.defineAbilityForSubject(member);
 
     let visitor = new ValueVisitor({ ability });
-    expect(visitor.visitAnnotatedRelationshipElement(annotatedRelationshipElement)).toEqual(
-      { first: visitor.visitReference(reference1), second: visitor.visitReference(reference2) },
-    );
+    expect(visitor.visitAnnotatedRelationshipElement(annotatedRelationshipElement)).toEqual({
+      first: visitor.visitReference(reference1),
+      second: visitor.visitReference(reference2),
+    });
 
     ability = security.defineAbilityForSubject(anonymous);
     visitor = new ValueVisitor({ ability });
-    expect(visitor.visitAnnotatedRelationshipElement(annotatedRelationshipElement)).toEqual(undefined);
+    expect(visitor.visitAnnotatedRelationshipElement(annotatedRelationshipElement)).toEqual(
+      undefined,
+    );
   });
 
   it("should return value representation of submodel element collection", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
-    security.addPolicy(member, IdShortPath.create({ path: "subSection1.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "subSection1.prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     security.addPolicy(member, IdShortPath.create({ path: "subSection1.prop2" }), []);
-    security.addPolicy(
-      member,
-      IdShortPath.create({ path: "subSection1" }),
-      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow })],
-    );
+    security.addPolicy(member, IdShortPath.create({ path: "subSection1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+    ]);
 
     const submodelElementCollection = SubmodelElementCollection.create({
       idShort: "subSection1",
     });
-    const property1 = Property.create({ idShort: "prop1", valueType: DataTypeDef.String, value: "blub1" });
-    const property2 = Property.create({ idShort: "prop2", valueType: DataTypeDef.String, value: "blub2" });
+    const property1 = Property.create({
+      idShort: "prop1",
+      valueType: DataTypeDef.String,
+      value: "blub1",
+    });
+    const property2 = Property.create({
+      idShort: "prop2",
+      valueType: DataTypeDef.String,
+      value: "blub2",
+    });
     const ability = security.defineAbilityForSubject(member);
 
     submodelElementCollection.addSubmodelElement(property1, { ability });
     submodelElementCollection.addSubmodelElement(property2, { ability });
 
     let visitor = new ValueVisitor({ ability });
-    expect(visitor.visitSubmodelElementCollection(submodelElementCollection)).toEqual({ prop1: "blub1" });
+    expect(visitor.visitSubmodelElementCollection(submodelElementCollection)).toEqual({
+      prop1: "blub1",
+    });
 
     const anonymousAbility = security.defineAbilityForSubject(anonymous);
     visitor = new ValueVisitor({ ability: anonymousAbility });
@@ -252,13 +326,18 @@ describe("value-visitor", () => {
 
   it("should return value representation of submodel element list", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     security.addPolicy(member, IdShortPath.create({ path: "subSection1" }), [
       Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
       Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
     ]);
-    security.addPolicy(member, IdShortPath.create({ path: "subSection1.row1.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "subSection1.row1.prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     security.addPolicy(member, IdShortPath.create({ path: "subSection1.row1.prop2" }), []);
 
     let ability = security.defineAbilityForSubject(member);
@@ -270,8 +349,16 @@ describe("value-visitor", () => {
     const row = SubmodelElementCollection.create({ idShort: "row1" });
     submodelElementList.addSubmodelElement(row, { ability });
 
-    const property1 = Property.create({ idShort: "prop1", valueType: DataTypeDef.String, value: "blub1" });
-    const property2 = Property.create({ idShort: "prop2", valueType: DataTypeDef.String, value: "blub2" });
+    const property1 = Property.create({
+      idShort: "prop1",
+      valueType: DataTypeDef.String,
+      value: "blub1",
+    });
+    const property2 = Property.create({
+      idShort: "prop2",
+      valueType: DataTypeDef.String,
+      value: "blub2",
+    });
     row.addSubmodelElement(property1, { ability });
     row.addSubmodelElement(property2, { ability });
 
@@ -285,27 +372,36 @@ describe("value-visitor", () => {
 
   it("should return value representation of entity", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
-    security.addPolicy(
-      member,
-      IdShortPath.create({ path: "entity" }),
-      [
-        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
-        Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
-      ],
-    );
-    security.addPolicy(member, IdShortPath.create({ path: "entity.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "entity" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+    ]);
+    security.addPolicy(member, IdShortPath.create({ path: "entity.prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     let ability = security.defineAbilityForSubject(member);
 
     const entity = Entity.create({
       idShort: "entity",
       entityType: EntityType.SelfManagedEntity,
     });
-    entity.addSubmodelElement(Property.create({ idShort: "prop1", valueType: DataTypeDef.String, value: "blub1" }), { ability });
+    entity.addSubmodelElement(
+      Property.create({ idShort: "prop1", valueType: DataTypeDef.String, value: "blub1" }),
+      { ability },
+    );
 
     let visitor = new ValueVisitor({ ability });
-    expect(visitor.visitEntity(entity)).toEqual({ entityType: EntityType.SelfManagedEntity, globalAssetId: null, statements: [{ prop1: "blub1" }], specificAssetIds: [] });
+    expect(visitor.visitEntity(entity)).toEqual({
+      entityType: EntityType.SelfManagedEntity,
+      globalAssetId: null,
+      statements: [{ prop1: "blub1" }],
+      specificAssetIds: [],
+    });
 
     ability = security.defineAbilityForSubject(anonymous);
     visitor = new ValueVisitor({ ability });

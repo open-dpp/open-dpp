@@ -17,8 +17,7 @@ import {
 import { convertLocaleToLanguage } from "../../translations/i18n.ts";
 import FileForm from "./FileForm.vue";
 
-const props
-  = defineProps<SharedEditorProps<FileCreateEditorProps, FileRequestDto>>();
+const props = defineProps<SharedEditorProps<FileCreateEditorProps, FileRequestDto>>();
 
 const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
@@ -59,10 +58,6 @@ defineExpose<{
 
 <template>
   <div class="flex flex-col gap-1 p-2">
-    <FileForm
-      :show-errors="showErrors"
-      :errors="errors"
-      :editor-mode="EditorMode.CREATE"
-    />
+    <FileForm :show-errors="showErrors" :errors="errors" :editor-mode="EditorMode.CREATE" />
   </div>
 </template>

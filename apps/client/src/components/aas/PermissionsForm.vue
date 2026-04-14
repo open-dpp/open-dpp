@@ -50,9 +50,7 @@ const selectedRole = ref<Subject>(asSubject());
 
 const permissionsOfSelectedRole = computed<PermissionsPerSubject>(
   () =>
-    permissions.value.find(p =>
-      isEqualSubject(p.subject, selectedRole.value),
-    ) ?? {
+    permissions.value.find((p) => isEqualSubject(p.subject, selectedRole.value)) ?? {
       subject: selectedRole.value,
       permissions: [],
       inheritsPermissionsOf: null,
@@ -82,9 +80,8 @@ const permissionOptions = computed(() => {
   }
   if (props.ignoredPermissionOptions !== undefined) {
     options = options.filter(
-      permission =>
-        props.ignoredPermissionOptions
-        && !props.ignoredPermissionOptions.includes(permission.key),
+      (permission) =>
+        props.ignoredPermissionOptions && !props.ignoredPermissionOptions.includes(permission.key),
     );
   }
 
@@ -102,8 +99,7 @@ async function savePermissionsAndClose() {
 async function onToggleInheritance(shouldInherit: boolean) {
   if (shouldInherit) {
     await resetToInheritedPermissions(selectedRole.value);
-  }
-  else {
+  } else {
     takeOverInheritedPermissions(selectedRole.value);
   }
 }
@@ -114,10 +110,8 @@ const permissionsInherited = computed(
 
 function isReadDisabledCauseOfOtherPermissionsAreActive(key: PermissionType) {
   return (
-    key === Permissions.Read
-    && permissionsOfSelectedRole.value.permissions.some(
-      p => p !== Permissions.Read,
-    )
+    key === Permissions.Read &&
+    permissionsOfSelectedRole.value.permissions.some((p) => p !== Permissions.Read)
   );
 }
 
@@ -130,9 +124,7 @@ defineExpose<{
 
 <template>
   <div class="flex flex-col gap-2">
-    <span class="text-xl font-bold">{{
-      t("aasEditor.security.permissions")
-    }}</span>
+    <span class="text-xl font-bold">{{ t("aasEditor.security.permissions") }}</span>
     <div class="flex flex-row gap-2">
       <Select
         v-model="selectedRole"
@@ -144,7 +136,7 @@ defineExpose<{
         :disabled="disabled"
       />
     </div>
-    <div class="flex flex-col p-2 gap-3">
+    <div class="flex flex-col gap-3 p-2">
       <div v-if="!props.hideInheritanceToggle" class="flex items-center gap-2">
         <ToggleSwitch
           input-id="toggle-inheritance"
@@ -165,10 +157,10 @@ defineExpose<{
           :model-value="permissionsOfSelectedRole.permissions"
           :input-id="permission.key"
           :disabled="
-            disabled
-              || !canEditPermissions
-              || permissionsInherited
-              || isReadDisabledCauseOfOtherPermissionsAreActive(permission.key)
+            disabled ||
+            !canEditPermissions ||
+            permissionsInherited ||
+            isReadDisabledCauseOfOtherPermissionsAreActive(permission.key)
           "
           name="permissions"
           :value="permission.key"

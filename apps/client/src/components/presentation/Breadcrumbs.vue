@@ -13,9 +13,7 @@ const { t } = useI18n();
 
 const passportStore = usePassportStore();
 
-const { submodelTree, getSubmodelTreeElementsBefore } = useSubmodelTree(
-  passportStore.submodels,
-);
+const { submodelTree, getSubmodelTreeElementsBefore } = useSubmodelTree(passportStore.submodels);
 
 const breadcrumbs = computed(() => {
   const submodelIdFromQuery = route.query.submodelid;
@@ -53,31 +51,25 @@ function getLinkTarget(index: number) {
 </script>
 
 <template>
-  <div class="flex gap-2 justify-center items-center">
-    <router-link
-      class="text-gray-400 hover:text-gray-500"
-      :to="{ path: route.path }"
-    >
+  <div class="flex items-center justify-center gap-2">
+    <router-link class="text-gray-400 hover:text-gray-500" :to="{ path: route.path }">
       <HomeIcon aria-hidden="true" class="h-5 w-5 shrink-0" />
       <span class="sr-only">{{ t("common.home") }}</span>
     </router-link>
     <div
       v-for="(breadcrumb, index) in breadcrumbs.slice(0, breadcrumbs.length - 1)"
       :key="breadcrumb.idShort"
-      class="flex justify-center items-center gap-2"
+      class="flex items-center justify-center gap-2"
     >
       <svg
         aria-hidden="true"
-        class="w-2 h-3 shrink-0 text-gray-200"
+        class="h-3 w-2 shrink-0 text-gray-200"
         preserveAspectRatio="none"
         viewBox="0 0 24 44"
       >
         <path d="M.293 0l22 22-22 22h1.414l22-22-22-22H.293z" />
       </svg>
-      <router-link
-        class="text-gray-400 hover:text-gray-500"
-        :to="getLinkTarget(index - 1)"
-      >
+      <router-link class="text-gray-400 hover:text-gray-500" :to="getLinkTarget(index - 1)">
         <span>
           {{ useDisplayName(breadcrumb.name).description }}
         </span>

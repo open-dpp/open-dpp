@@ -9,23 +9,14 @@ const props = defineProps<{
 </script>
 
 <template>
-  <div
-    class="flex justify-between items-center border-b border-gray-900/5 bg-gray-50"
-  >
+  <div class="flex items-center justify-between border-b border-gray-900/5 bg-gray-50">
     <div class="flex items-center gap-2">
       <div
-        class="flex size-16 items-center justify-center" :class="[
-          props.section.type === SectionType.REPEATABLE
-            ? 'bg-pink-500'
-            : 'bg-indigo-500',
-        ]"
+        class="flex size-16 items-center justify-center"
+        :class="[props.section.type === SectionType.REPEATABLE ? 'bg-pink-500' : 'bg-indigo-500']"
       >
         <component
-          :is="
-            props.section.type === SectionType.REPEATABLE
-              ? ArrowPathIcon
-              : TableCellsIcon
-          "
+          :is="props.section.type === SectionType.REPEATABLE ? ArrowPathIcon : TableCellsIcon"
           class="size-6 text-white"
           aria-hidden="true"
         />

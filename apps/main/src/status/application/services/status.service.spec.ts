@@ -17,14 +17,12 @@ describe("StatusService", () => {
   afterEach(() => {
     if (originalAppVersion === undefined) {
       delete process.env.APP_VERSION;
-    }
-    else {
+    } else {
       process.env.APP_VERSION = originalAppVersion;
     }
     if (originalNpmPackageVersion === undefined) {
       delete process.env.npm_package_version;
-    }
-    else {
+    } else {
       process.env.npm_package_version = originalNpmPackageVersion;
     }
   });

@@ -13,8 +13,7 @@ import { EditorMode } from "../../composables/aas-drawer.ts";
 import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FileForm from "./FileForm.vue";
 
-const props
-  = defineProps<SharedEditorProps<FileEditorProps, FileModificationDto>>();
+const props = defineProps<SharedEditorProps<FileEditorProps, FileModificationDto>>();
 
 const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,

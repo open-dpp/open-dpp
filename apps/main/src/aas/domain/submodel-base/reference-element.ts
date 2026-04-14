@@ -1,4 +1,8 @@
-import { AasSubmodelElements, AasSubmodelElementsType, ReferenceElementJsonSchema } from "@open-dpp/dto";
+import {
+  AasSubmodelElements,
+  AasSubmodelElementsType,
+  ReferenceElementJsonSchema,
+} from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
@@ -37,7 +41,9 @@ export class ReferenceElement implements ISubmodelElement {
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath ? this._parentIdShortPath.addPathSegment(this.idShort) : IdShortPath.create({ path: this.idShort });
+    return this._parentIdShortPath
+      ? this._parentIdShortPath.addPathSegment(this.idShort)
+      : IdShortPath.create({ path: this.idShort });
   }
 
   set displayName(value: Array<LanguageText>) {

@@ -13,10 +13,7 @@ import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
-const props
-  = defineProps<
-    SharedEditorProps<SubmodelEditorProps, SubmodelModificationDto>
-  >();
+const props = defineProps<SharedEditorProps<SubmodelEditorProps, SubmodelModificationDto>>();
 
 const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
@@ -76,9 +73,7 @@ defineExpose<{
       :modify-shell="props.modifyShell"
       :get-access-permission-rules="props.getAccessPermissionRules"
       hide-inheritance-toggle
-      :delete-policy-by-subject-and-object="
-        props.deletePolicyBySubjectAndObject
-      "
+      :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
     />
   </FormContainer>
 </template>

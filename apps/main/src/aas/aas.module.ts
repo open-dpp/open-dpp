@@ -8,7 +8,10 @@ import {
   AssetAdministrationShellDoc,
   AssetAdministrationShellSchema,
 } from "./infrastructure/schemas/asset-administration-shell.schema";
-import { ConceptDescriptionDoc, ConceptDescriptionSchema } from "./infrastructure/schemas/concept-description.schema";
+import {
+  ConceptDescriptionDoc,
+  ConceptDescriptionSchema,
+} from "./infrastructure/schemas/concept-description.schema";
 import { SubmodelDoc, SubmodelSchema } from "./infrastructure/schemas/submodel.schema";
 import { AasSerializationService } from "./infrastructure/serialization/aas-serialization.service";
 import { SubmodelRepository } from "./infrastructure/submodel.repository";
@@ -35,4 +38,4 @@ import { SubmodelRegistryInitializer } from "./presentation/submodel-registry-in
   ],
   exports: [AasRepository, SubmodelRepository, EnvironmentService, AasSerializationService],
 })
-export class AasModule { }
+export class AasModule {}

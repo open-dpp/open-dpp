@@ -1,9 +1,5 @@
 import type { Subject } from "../lib/aas-security.ts";
-import {
-  MemberRoleDto,
-  UserRoleDto,
-
-} from "@open-dpp/dto";
+import { MemberRoleDto, UserRoleDto } from "@open-dpp/dto";
 import { useI18n } from "vue-i18n";
 import { isEqualSubject } from "../lib/aas-security.ts";
 

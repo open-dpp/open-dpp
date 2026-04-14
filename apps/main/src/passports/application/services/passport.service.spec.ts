@@ -38,10 +38,7 @@ describe("passportService", () => {
         UsersModule,
         OrganizationsModule,
       ],
-      providers: [
-        PassportService,
-        PassportRepository,
-      ],
+      providers: [PassportService, PassportRepository],
     }).compile();
 
     service = module.get<PassportService>(PassportService);

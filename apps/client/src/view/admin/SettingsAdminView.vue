@@ -21,14 +21,12 @@ async function fetchSettings() {
     const res = await apiClient.dpp.instanceSettings.get();
     signupEnabled.value = res.data.signupEnabled.value;
     isSignupLocked.value = !!res.data.signupEnabled.locked;
-  }
-  catch (error) {
+  } catch (error) {
     errorHandlingStore.logErrorWithNotification(
       t("organizations.admin.instanceSettings.error"),
       error,
     );
-  }
-  finally {
+  } finally {
     loading.value = false;
   }
 }
@@ -48,15 +46,13 @@ async function toggleSignup() {
       summary: t("organizations.admin.instanceSettings.saved"),
       life: 3000,
     });
-  }
-  catch (error) {
+  } catch (error) {
     signupEnabled.value = !signupEnabled.value;
     errorHandlingStore.logErrorWithNotification(
       t("organizations.admin.instanceSettings.error"),
       error,
     );
-  }
-  finally {
+  } finally {
     isSaving.value = false;
   }
 }
@@ -89,7 +85,10 @@ onMounted(async () => {
                 <span class="text-sm text-gray-500">
                   {{ t("organizations.admin.instanceSettings.signupEnabledDescription") }}
                 </span>
-                <span v-if="isSignupLocked" class="mt-1 flex items-center gap-1 text-sm text-amber-600">
+                <span
+                  v-if="isSignupLocked"
+                  class="mt-1 flex items-center gap-1 text-sm text-amber-600"
+                >
                   <LockClosedIcon class="size-4" />
                   {{ t("organizations.admin.instanceSettings.lockedByEnv") }}
                 </span>

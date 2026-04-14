@@ -1,15 +1,11 @@
-import type {
-  AiConfigurationDto,
-} from '../../../src/agent-server/ai-configuration/ai-configuration.dtos'
-import { randomUUID } from 'node:crypto'
+import type { AiConfigurationDto } from "../../../src/agent-server/ai-configuration/ai-configuration.dtos";
+import { randomUUID } from "node:crypto";
 
-import { http, HttpResponse } from 'msw'
-import {
-  AiProvider,
-} from '../../../src/agent-server/ai-configuration/ai-configuration.dtos'
-import { agentServerURL } from './index'
+import { http, HttpResponse } from "msw";
+import { AiProvider } from "../../../src/agent-server/ai-configuration/ai-configuration.dtos";
+import { agentServerURL } from "./index";
 
-export const nowDate = new Date('2025-01-01T12:00:00Z')
+export const nowDate = new Date("2025-01-01T12:00:00Z");
 
 export const aiConfigurationDto: AiConfigurationDto = {
   id: randomUUID(),
@@ -18,21 +14,15 @@ export const aiConfigurationDto: AiConfigurationDto = {
   createdAt: nowDate.toISOString(),
   updatedAt: nowDate.toISOString(),
   provider: AiProvider.Mistral,
-  model: 'codestral-latest',
+  model: "codestral-latest",
   isEnabled: true,
-}
+};
 
 export const aiConfigurationHandler = [
-  http.put(
-    `${agentServerURL}/configurations`,
-    () => {
-      return HttpResponse.json(aiConfigurationDto)
-    },
-  ),
-  http.get(
-    `${agentServerURL}/configurations`,
-    () => {
-      return HttpResponse.json(aiConfigurationDto)
-    },
-  ),
-]
+  http.put(`${agentServerURL}/configurations`, () => {
+    return HttpResponse.json(aiConfigurationDto);
+  }),
+  http.get(`${agentServerURL}/configurations`, () => {
+    return HttpResponse.json(aiConfigurationDto);
+  }),
+];

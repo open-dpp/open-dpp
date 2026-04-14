@@ -54,9 +54,7 @@ describe("InvitationsRepository", () => {
     }).compile();
 
     repository = module.get<InvitationsRepository>(InvitationsRepository);
-    invitationModel = module.get<Model<InvitationSchema>>(
-      `${InvitationSchema.name}Model`,
-    );
+    invitationModel = module.get<Model<InvitationSchema>>(`${InvitationSchema.name}Model`);
   });
 
   afterAll(async () => {

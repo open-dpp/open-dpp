@@ -12,9 +12,7 @@ export class PassportTool {
   private readonly logger: Logger = new Logger(PassportTool.name);
   private readonly passportService: PassportService;
 
-  constructor(
-    passportService: PassportService,
-  ) {
+  constructor(passportService: PassportService) {
     this.passportService = passportService;
   }
 
@@ -24,10 +22,7 @@ export class PassportTool {
     parameters: z.object({
       passportId: z
         .string()
-        .regex(
-          /<([^>]+)>/,
-          "Must be a valid id",
-        )
+        .regex(/<([^>]+)>/, "Must be a valid id")
         .transform((val) => {
           // Extract the content between < and >
           const match = /<([^>]+)>/.exec(val);
@@ -38,12 +33,18 @@ export class PassportTool {
         ),
     }),
   })
-  async getProductPassport({ passportId }: { passportId: string }, _context: Context, request: Request) {
+  async getProductPassport(
+    { passportId }: { passportId: string },
+    _context: Context,
+    request: Request,
+  ) {
     this.logger.log(`product-passport-tool is called with id: ${passportId}`);
     const expandedPassport = await this.passportService.getExpandedProductPassport(passportId);
 
     const userRole = UserRoleEnum.parse(request.headers["x-user-role"]);
-    const memberRole = MemberRoleEnum.optional().parse(request.headers["x-member-role"] ?? undefined);
+    const memberRole = MemberRoleEnum.optional().parse(
+      request.headers["x-member-role"] ?? undefined,
+    );
     const subject = SubjectAttributes.create({ userRole, memberRole });
     return expandedPassport.toExportPlain(subject);
   }

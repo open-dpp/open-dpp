@@ -18,15 +18,13 @@ export class Timeseries {
     return new Timeseries(data.dataPoints);
   }
 
-  densify(
-    options: {
-      startIsoString: string;
-      endIsoString: string;
-      step: number; // step size (e.g. 1 for 1 hour, 1 day, etc.)
-      unit: TimePeriod;
-      fillValue?: number; // default 0
-    },
-  ): DataPoint[] {
+  densify(options: {
+    startIsoString: string;
+    endIsoString: string;
+    step: number; // step size (e.g. 1 for 1 hour, 1 day, etc.)
+    unit: TimePeriod;
+    fillValue?: number; // default 0
+  }): DataPoint[] {
     const { startIsoString, endIsoString, step, unit, fillValue = 0 } = options;
 
     const startDate = dayjs.utc(startIsoString);

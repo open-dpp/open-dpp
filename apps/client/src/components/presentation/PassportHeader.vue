@@ -31,20 +31,14 @@ const firstShell = computed(() => {
 });
 
 const displayName = computed(() =>
-  firstShell.value
-    ? aasUtils.parseDisplayNameFromAas(firstShell.value)
-    : undefined,
+  firstShell.value ? aasUtils.parseDisplayNameFromAas(firstShell.value) : undefined,
 );
 
 const productPassport = computed(() => passportStore.productPassport);
 
-const hasImages = computed(
-  () => files.value !== undefined && files.value.length > 0,
-);
+const hasImages = computed(() => files.value !== undefined && files.value.length > 0);
 
-const hasMultipleImages = computed(
-  () => files.value !== undefined && files.value.length > 1,
-);
+const hasMultipleImages = computed(() => files.value !== undefined && files.value.length > 1);
 
 watch(
   () => firstShell.value,
@@ -70,24 +64,24 @@ watch(
       :show-indicators="hasMultipleImages"
       :transition-interval="4000"
       :circular="true"
-      class="w-full rounded-xl overflow-hidden"
+      class="w-full overflow-hidden rounded-xl"
     >
       <template #item="{ item }">
         <img
           :src="item.url"
           :alt="displayName ?? t('presentation.productDetails')"
-          class="w-full aspect-[16/9] sm:aspect-[21/9] object-cover"
-        >
+          class="aspect-[16/9] w-full object-cover sm:aspect-[21/9]"
+        />
       </template>
     </Galleria>
 
     <!-- General information card -->
-    <div class="rounded-xl border border-surface-200 bg-surface-0 shadow-sm p-6">
-      <h3 class="text-lg font-semibold text-surface-900 border-l-3 border-primary-500 pl-4 mb-6">
+    <div class="border-surface-200 bg-surface-0 rounded-xl border p-6 shadow-sm">
+      <h3 class="text-surface-900 border-primary-500 mb-6 border-l-3 pl-4 text-lg font-semibold">
         {{ t("presentation.generalInformation") }}
       </h3>
       <dl class="grid grid-cols-1">
-        <div v-if="displayName" class="flex justify-between py-4 border-b border-surface-100">
+        <div v-if="displayName" class="border-surface-100 flex justify-between border-b py-4">
           <dt class="text-surface-500">
             {{ t("common.name") }}
           </dt>
@@ -95,7 +89,10 @@ watch(
             {{ displayName }}
           </dd>
         </div>
-        <div v-if="productPassport" class="flex justify-between py-4 border-b border-surface-100 last:border-b-0">
+        <div
+          v-if="productPassport"
+          class="border-surface-100 flex justify-between border-b py-4 last:border-b-0"
+        >
           <dt class="text-surface-500">
             {{ t("common.id") }}
           </dt>

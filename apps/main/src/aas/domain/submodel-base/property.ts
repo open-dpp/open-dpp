@@ -48,7 +48,9 @@ export class Property implements ISubmodelElement {
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath ? this._parentIdShortPath.addPathSegment(this.idShort) : IdShortPath.create({ path: this.idShort });
+    return this._parentIdShortPath
+      ? this._parentIdShortPath.addPathSegment(this.idShort)
+      : IdShortPath.create({ path: this.idShort });
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -68,12 +70,14 @@ export class Property implements ISubmodelElement {
     return this._description;
   }
 
-  static create(data: SubmodelBaseProps & {
-    valueType: DataTypeDefType;
-    extensions?: Extension[];
-    value?: string | null;
-    valueId?: Reference | null;
-  }) {
+  static create(
+    data: SubmodelBaseProps & {
+      valueType: DataTypeDefType;
+      extensions?: Extension[];
+      value?: string | null;
+      valueId?: Reference | null;
+    },
+  ) {
     return new Property(
       data.valueType,
       data.extensions ?? [],
@@ -94,20 +98,20 @@ export class Property implements ISubmodelElement {
     function parse(schema: z.ZodSchema): void {
       const result = schema.safeParse(value);
       if (!result.success) {
-        throw new ValueError(`Invalid value for valueType ${valueType}: ${z.flattenError(result.error).formErrors[0]}`);
+        throw new ValueError(
+          `Invalid value for valueType ${valueType}: ${z.flattenError(result.error).formErrors[0]}`,
+        );
       }
     }
     if (value !== null) {
-      if ([DataTypeDef.Double, DataTypeDef.Float].find(n => n === valueType)) {
+      if ([DataTypeDef.Double, DataTypeDef.Float].find((n) => n === valueType)) {
         parse(z.coerce.number());
-      }
-      else if (valueType === DataTypeDef.DateTime) {
+      } else if (valueType === DataTypeDef.DateTime) {
         // Require ISO-8601 with an explicit timezone offset so the value
         // represents an unambiguous instant. A naive "2026-04-10T14:00:00"
         // would render differently for users in different timezones.
         parse(z.iso.datetime({ offset: true }));
-      }
-      else {
+      } else {
         parse(z.string());
       }
     }

@@ -23,4 +23,4 @@ import { BrandingController } from "./presentation/branding.controller";
   providers: [BrandingRepository],
   exports: [BrandingRepository],
 })
-export class BrandingModule { }
+export class BrandingModule {}

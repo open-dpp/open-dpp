@@ -22,9 +22,7 @@ const passport = computed({
     return model.value?.id;
   },
   set: (updateId: string) => {
-    model.value = passportList.value.find(
-      passport => passport.id === updateId,
-    );
+    model.value = passportList.value.find((passport) => passport.id === updateId);
   },
 });
 
@@ -41,7 +39,7 @@ async function loadMorePassports() {
     await nextPage();
     if (passports.value) {
       passportList.value.push(
-        ...passports.value.result.map(passport => ({
+        ...passports.value.result.map((passport) => ({
           ...passport,
           label: getOptionLabel(passport),
         })),
@@ -70,7 +68,7 @@ onMounted(async () => {
   await nextPage();
   if (passports.value) {
     passportList.value.push(
-      ...passports.value.result.map(passport => ({
+      ...passports.value.result.map((passport) => ({
         ...passport,
         label: getOptionLabel(passport),
       })),

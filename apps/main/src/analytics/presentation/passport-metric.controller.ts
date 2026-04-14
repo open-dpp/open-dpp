@@ -1,12 +1,5 @@
 import type { PassportPageViewDto } from "./dto/passport-page-view.dto";
-import {
-  Body,
-  Controller,
-  Get,
-  Logger,
-  Post,
-  Query,
-} from "@nestjs/common";
+import { Body, Controller, Get, Logger, Post, Query } from "@nestjs/common";
 import { ZodValidationPipe } from "@open-dpp/exception";
 import { AllowAnonymous } from "../../identity/auth/presentation/decorators/allow-anonymous.decorator";
 import { OrganizationId } from "../../identity/auth/presentation/decorators/organization-id.decorator";
@@ -31,8 +24,8 @@ export class PassportMetricController {
     @Body(new ZodValidationPipe(PassportPageViewSchema))
     passportPageViewDto: PassportPageViewDto,
   ) {
-    const passportMetadata
-      = await this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifierOrFail(
+    const passportMetadata =
+      await this.uniqueProductIdentifierApplicationService.getMetadataByUniqueProductIdentifierOrFail(
         passportPageViewDto.uuid,
       );
 
@@ -79,9 +72,6 @@ export class PassportMetricController {
         query,
       )}`,
     );
-    return this.passportMetricService.computeStatistic(
-      organizationId,
-      query,
-    );
+    return this.passportMetricService.computeStatistic(organizationId, query);
   }
 }

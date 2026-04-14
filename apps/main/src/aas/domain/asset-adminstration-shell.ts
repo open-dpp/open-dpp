@@ -31,7 +31,9 @@ export interface AssetAdministrationShellCreateProps {
   security?: Security;
 }
 
-export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable {
+export class AssetAdministrationShell
+  implements IIdentifiable, IHasDataSpecification, IVisitable, IPersistable
+{
   private _displayName: Array<LanguageText>;
   private _description: Array<LanguageText>;
   private constructor(
@@ -70,14 +72,13 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
     return this._description;
   }
 
-  static create(
-    data: AssetAdministrationShellCreateProps,
-  ) {
+  static create(data: AssetAdministrationShellCreateProps) {
     const id = data.id ?? randomUUID();
 
     return new AssetAdministrationShell(
       id,
-      data.assetInformation ?? AssetInformation.create({ assetKind: AssetKind.Instance, globalAssetId: id }),
+      data.assetInformation ??
+        AssetInformation.create({ assetKind: AssetKind.Instance, globalAssetId: id }),
       data.extensions ?? [],
       data.category ?? null,
       data.idShort ?? null,
@@ -89,7 +90,7 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
       data.submodels ?? [],
       data.security ?? Security.create({}),
     );
-  };
+  }
 
   modify(data: unknown, options: ModifierVisitorOptions) {
     this.accept(new ModifierVisitor(options), { data });
@@ -144,12 +145,15 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
       id: copyId,
       assetInformation: {
         ...plain.assetInformation,
-        globalAssetId: plain.id === plain.assetInformation.globalAssetId ? copyId : plain.assetInformation.globalAssetId,
+        globalAssetId:
+          plain.id === plain.assetInformation.globalAssetId
+            ? copyId
+            : plain.assetInformation.globalAssetId,
       },
       submodels: [],
     });
 
-    submodels.forEach(model => copy.addSubmodel(model));
+    submodels.forEach((model) => copy.addSubmodel(model));
 
     return copy;
   }
@@ -173,7 +177,9 @@ export class AssetAdministrationShell implements IIdentifiable, IHasDataSpecific
   }
 
   deleteSubmodel(submodel: Submodel) {
-    const foundSubmodelIndex = this.submodels.findIndex(sm => sm.keys.some(k => k.value === submodel.id));
+    const foundSubmodelIndex = this.submodels.findIndex((sm) =>
+      sm.keys.some((k) => k.value === submodel.id),
+    );
     if (foundSubmodelIndex > -1) {
       this.submodels.splice(foundSubmodelIndex, 1);
       this.security.deletePoliciesByObjectPath(submodel.getIdShortPath());

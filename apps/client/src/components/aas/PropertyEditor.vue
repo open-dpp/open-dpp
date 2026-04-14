@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import type {
-  PropertyModificationDto,
-} from "@open-dpp/dto";
+import type { PropertyModificationDto } from "@open-dpp/dto";
 import type { PropertyEditorProps } from "../../composables/aas-drawer.ts";
 import type { SharedEditorProps } from "../../lib/aas-editor.ts";
 import { Permissions, PropertyModificationSchema } from "@open-dpp/dto";
@@ -16,10 +14,7 @@ import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 import FormContainer from "./form/FormContainer.vue";
 import PropertyForm from "./PropertyForm.vue";
 
-const props
-  = defineProps<
-    SharedEditorProps<PropertyEditorProps, PropertyModificationDto>
-  >();
+const props = defineProps<SharedEditorProps<PropertyEditorProps, PropertyModificationDto>>();
 
 const formSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
@@ -79,9 +74,7 @@ defineExpose<{
       :ignored-permission-options="[Permissions.Create]"
       :path="props.path"
       :modify-shell="props.modifyShell"
-      :delete-policy-by-subject-and-object="
-        props.deletePolicyBySubjectAndObject
-      "
+      :delete-policy-by-subject-and-object="props.deletePolicyBySubjectAndObject"
       :get-access-permission-rules="props.getAccessPermissionRules"
     />
   </FormContainer>

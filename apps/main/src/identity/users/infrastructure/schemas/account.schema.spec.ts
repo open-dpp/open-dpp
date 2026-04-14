@@ -22,9 +22,7 @@ describe("accountSchema", () => {
           }),
           inject: [EnvService],
         }),
-        MongooseModule.forFeature([
-          { name: Account.name, schema: AccountSchema },
-        ]),
+        MongooseModule.forFeature([{ name: Account.name, schema: AccountSchema }]),
       ],
     }).compile();
     mongoConnection = module.get<Connection>(getConnectionToken());
@@ -68,8 +66,7 @@ describe("accountSchema", () => {
     let err: any;
     try {
       await account.save();
-    }
-    catch (error) {
+    } catch (error) {
       err = error;
     }
 

@@ -4,11 +4,7 @@ import type {
   AssetAdministrationShellModificationDto,
   DeletePolicyDto,
 } from "@open-dpp/dto";
-import type {
-  AasEditorPath,
-  EditorType,
-  OpenDrawerCallback,
-} from "../composables/aas-drawer.ts";
+import type { AasEditorPath, EditorType, OpenDrawerCallback } from "../composables/aas-drawer.ts";
 import type { IErrorHandlingStore } from "../stores/error.handling.ts";
 import { z } from "zod";
 

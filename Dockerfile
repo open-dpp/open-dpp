@@ -15,7 +15,6 @@ COPY --chown=node:node apps/client/package.json apps/client/
 COPY --chown=node:node packages/dto/package.json packages/dto/
 COPY --chown=node:node packages/api-client/package.json packages/api-client/
 COPY --chown=node:node packages/env/package.json packages/env/
-COPY --chown=node:node packages/config-eslint/package.json packages/config-eslint/
 COPY --chown=node:node packages/exception/package.json packages/exception/
 COPY --chown=node:node packages/permission/package.json packages/permission/
 COPY --chown=node:node packages/testing/package.json packages/testing/

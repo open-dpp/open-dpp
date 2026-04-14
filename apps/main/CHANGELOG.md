@@ -1,5 +1,31 @@
 # @open-dpp/main
 
+## 0.1.4
+
+### Patch Changes
+
+- [#464](https://github.com/open-dpp/open-dpp/pull/464) [`48fc474`](https://github.com/open-dpp/open-dpp/commit/48fc474a3e54a1aa0a1f0601fa9af1215dfea86c) Thanks [@florianBieck](https://github.com/florianBieck)! - Change lint and format tooling to oxlint and oxfmt.
+
+- Updated dependencies [[`48fc474`](https://github.com/open-dpp/open-dpp/commit/48fc474a3e54a1aa0a1f0601fa9af1215dfea86c)]:
+  - @open-dpp/api-client@0.1.4
+  - @open-dpp/permission@0.1.4
+  - @open-dpp/exception@0.1.4
+  - @open-dpp/dto@0.1.4
+  - @open-dpp/env@0.1.4
+
+## 0.1.3
+
+### Patch Changes
+
+- [#465](https://github.com/open-dpp/open-dpp/pull/465) [`2d7f141`](https://github.com/open-dpp/open-dpp/commit/2d7f141ed7f5c2745bc171d0972b8383e83f1c87) Thanks [@florianBieck](https://github.com/florianBieck)! - Refactored DDD usage in user domain
+
+- Updated dependencies []:
+  - @open-dpp/api-client@0.1.3
+  - @open-dpp/dto@0.1.3
+  - @open-dpp/env@0.1.3
+  - @open-dpp/exception@0.1.3
+  - @open-dpp/permission@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes

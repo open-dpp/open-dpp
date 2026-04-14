@@ -13,10 +13,7 @@ import { SubmodelBaseFormSchema } from "../../lib/submodel-base-form.ts";
 
 import SubmodelBaseForm from "./SubmodelBaseForm.vue";
 
-const props
-  = defineProps<
-    SharedEditorProps<ColumnEditorProps, SubmodelElementModificationDto>
-  >();
+const props = defineProps<SharedEditorProps<ColumnEditorProps, SubmodelElementModificationDto>>();
 
 const columnFormSchema = z.object({
   ...SubmodelBaseFormSchema.shape,
@@ -53,10 +50,6 @@ defineExpose<{
 
 <template>
   <div class="flex flex-col gap-4 p-2">
-    <SubmodelBaseForm
-      :show-errors="showErrors"
-      :errors="errors"
-      :editor-mode="EditorMode.EDIT"
-    />
+    <SubmodelBaseForm :show-errors="showErrors" :errors="errors" :editor-mode="EditorMode.EDIT" />
   </div>
 </template>

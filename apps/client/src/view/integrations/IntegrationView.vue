@@ -34,9 +34,7 @@ async function createApiKey() {
     prefix: "project-api-key",
   });
   if (error) {
-    notificationStore.addErrorNotification(
-      t("integrations.apiKey.createError"),
-    );
+    notificationStore.addErrorNotification(t("integrations.apiKey.createError"));
     return;
   }
   apiKey.value = data.key;
@@ -52,51 +50,33 @@ onMounted(async () => {
 </script>
 
 <template>
-  <Dialog
-    :visible="apiKey.length > 0"
-    modal
-    header="API Key"
-    :style="{ width: '75rem' }"
-  >
-    <span class="text-surface-500 dark:text-surface-400 block mb-8">{{
+  <Dialog :visible="apiKey.length > 0" modal header="API Key" :style="{ width: '75rem' }">
+    <span class="text-surface-500 dark:text-surface-400 mb-8 block">{{
       t("integrations.apiKey.createSuccess")
     }}</span>
-    <div class="flex items-center gap-4 mb-4">
+    <div class="mb-4 flex items-center gap-4">
       <InputGroup>
         <Button :label="t('common.copy')" @click="copyApiKeyToClipboard" />
         <InputText placeholder="API-Key" :readonly="true" :value="apiKey" />
       </InputGroup>
     </div>
     <div class="flex justify-end gap-2">
-      <Button
-        type="button"
-        :label="t('common.close')"
-        severity="secondary"
-        @click="apiKey = ''"
-      />
+      <Button type="button" :label="t('common.close')" severity="secondary" @click="apiKey = ''" />
     </div>
   </Dialog>
   <DataTable :value="rows">
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="text-xl font-bold">{{
-          t("integrations.integrations")
-        }}</span>
+        <span class="text-xl font-bold">{{ t("integrations.integrations") }}</span>
         <div class="flex items-center gap-2">
           <slot name="headerActions">
-            <Button
-              :label="t('integrations.apiKey.create')"
-              @click="createApiKey"
-            />
+            <Button :label="t('integrations.apiKey.create')" @click="createApiKey" />
           </slot>
         </div>
       </div>
     </template>
     <Column field="name" :header="t('common.name')" />
-    <Column
-      field="status"
-      :header="t('integrations.connections.status.label')"
-    />
+    <Column field="status" :header="t('integrations.connections.status.label')" />
     <Column field="action" :header="t('common.actions')">
       <template #body="{ data }">
         <router-link

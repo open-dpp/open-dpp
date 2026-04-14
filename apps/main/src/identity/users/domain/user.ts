@@ -86,21 +86,29 @@ export class User {
     );
   }
 
-  public withRole(role: UserRoleType): User {
+  private copyWith(overrides: Partial<Omit<UserDbProps, "name">>): User {
     return new User(
-      this.id,
-      this.email,
-      this.firstName,
-      this.lastName,
-      this.image,
-      this.emailVerified,
-      this.createdAt,
-      new Date(),
-      role,
-      this.banned,
-      this.banReason,
-      this.banExpires,
+      overrides.id ?? this.id,
+      overrides.email ?? this.email,
+      overrides.firstName !== undefined ? overrides.firstName : this.firstName,
+      overrides.lastName !== undefined ? overrides.lastName : this.lastName,
+      overrides.image !== undefined ? overrides.image : this.image,
+      overrides.emailVerified ?? this.emailVerified,
+      overrides.createdAt ?? this.createdAt,
+      overrides.updatedAt ?? new Date(),
+      overrides.role ?? this.role,
+      overrides.banned ?? this.banned,
+      overrides.banReason !== undefined ? overrides.banReason : this.banReason,
+      overrides.banExpires !== undefined ? overrides.banExpires : this.banExpires,
     );
+  }
+
+  public withRole(role: UserRoleType): User {
+    return this.copyWith({ role });
+  }
+
+  public withEmailVerified(emailVerified: boolean): User {
+    return this.copyWith({ emailVerified });
   }
 
   public static loadFromDb(data: UserDbProps) {

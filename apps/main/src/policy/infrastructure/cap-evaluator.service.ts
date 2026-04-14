@@ -10,7 +10,7 @@ export class CapEvaluatorService {
     switch (key) {
       case PolicyKey.MEDIA_STORAGE_CAP: {
         const bytesUsed = await this.mediaService.calculateOrganizationStorageUsage(orgId);
-        const mbUsed = Math.round(bytesUsed / (1024 * 1024) * 100) / 100;
+        const mbUsed = Math.round((bytesUsed / (1024 * 1024)) * 100) / 100;
         return mbUsed;
       }
       default:

@@ -6,7 +6,10 @@ import { Types } from "mongoose";
 import { generateMongoConfig } from "../../../../database/config";
 import { Member } from "../../domain/member";
 import { MemberRole } from "../../domain/member-role.enum";
-import { Member as MemberSchema, MemberSchema as MemberSchemaDefinition } from "../schemas/member.schema";
+import {
+  Member as MemberSchema,
+  MemberSchema as MemberSchemaDefinition,
+} from "../schemas/member.schema";
 import { MembersRepository } from "./members.repository";
 
 describe("MembersRepository", () => {
@@ -103,7 +106,7 @@ describe("MembersRepository", () => {
     const result = await repository.findByUserId(userId);
 
     expect(result).toHaveLength(2);
-    expect(result.every(m => m.userId === userId)).toBe(true);
+    expect(result.every((m) => m.userId === userId)).toBe(true);
   });
 
   it("should find members by organization id", async () => {
@@ -131,7 +134,7 @@ describe("MembersRepository", () => {
     const result = await repository.findByOrganizationId(organizationId);
 
     expect(result).toHaveLength(2);
-    expect(result.every(m => m.organizationId === organizationId)).toBe(true);
+    expect(result.every((m) => m.organizationId === organizationId)).toBe(true);
   });
 
   it("should find one member by user id and organization id", async () => {

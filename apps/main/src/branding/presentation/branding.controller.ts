@@ -10,10 +10,7 @@ import { BrandingRepository } from "../infrastructure/branding.repository";
 
 @Controller("/branding")
 export class BrandingController {
-  constructor(
-    private readonly brandingRepository: BrandingRepository,
-  ) {
-  }
+  constructor(private readonly brandingRepository: BrandingRepository) {}
 
   @Get()
   async getOrganizationBranding(

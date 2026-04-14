@@ -24,9 +24,7 @@ describe("memberSchema", () => {
           }),
           inject: [EnvService],
         }),
-        MongooseModule.forFeature([
-          { name: Member.name, schema: MemberSchema },
-        ]),
+        MongooseModule.forFeature([{ name: Member.name, schema: MemberSchema }]),
       ],
     }).compile();
     mongoConnection = module.get<Connection>(getConnectionToken());

@@ -62,7 +62,11 @@ describe("organization", () => {
       metadata: {},
     });
 
-    const invitation = organization.inviteMember("invite@example.com", "inviter-1", MemberRole.MEMBER);
+    const invitation = organization.inviteMember(
+      "invite@example.com",
+      "inviter-1",
+      MemberRole.MEMBER,
+    );
 
     expect(invitation.id).toBeDefined();
     expect(invitation.email).toEqual("invite@example.com");

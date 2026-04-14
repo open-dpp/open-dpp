@@ -1,14 +1,13 @@
 import type { SecurityResponseDto } from "@open-dpp/dto";
 import type { SecurityPlainTransientParams } from "@open-dpp/testing";
 import type { AasPermissionsFormProps } from "./aas-permissions-form.ts";
+import { MemberRoleDto, PermissionKind, Permissions, UserRoleDto } from "@open-dpp/dto";
 import {
-  MemberRoleDto,
-
-  PermissionKind,
-  Permissions,
-  UserRoleDto,
-} from "@open-dpp/dto";
-import { allPermissionsAllow, permissionObjectPlainFactory, propertyOutputPlainFactory, securityPlainFactory } from "@open-dpp/testing";
+  allPermissionsAllow,
+  permissionObjectPlainFactory,
+  propertyOutputPlainFactory,
+  securityPlainFactory,
+} from "@open-dpp/testing";
 import { mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -106,34 +105,38 @@ describe("aasPermissionsForm composable", () => {
         },
       ],
     };
-    const security: SecurityResponseDto = securityPlainFactory.build(
-      undefined,
-      { transient: transientParams },
-    );
+    const security: SecurityResponseDto = securityPlainFactory.build(undefined, {
+      transient: transientParams,
+    });
 
     let permissionsForm = mountHarness({
-      getAccessPermissionRules: () =>
-        security.localAccessControl.accessPermissionRules,
+      getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules,
       object: "section1",
       deletePolicyBySubjectAndObject: deletePolicyMock,
       modifyShell: modifyShellMock,
     });
 
     const admin = { userRole: UserRoleDto.ADMIN };
-    expect(
-      permissionsForm.permissions.value.find(p => isEqualSubject(p.subject, admin)),
-    ).toEqual({ subject: admin, permissions: [Permissions.Create, Permissions.Edit], inheritsPermissionsOf: null });
+    expect(permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, admin))).toEqual(
+      {
+        subject: admin,
+        permissions: [Permissions.Create, Permissions.Edit],
+        inheritsPermissionsOf: null,
+      },
+    );
 
     const member = {
       userRole: UserRoleDto.USER,
       memberRole: MemberRoleDto.MEMBER,
     };
     expect(
-      permissionsForm.permissions.value.find(p => isEqualSubject(p.subject, member)),
+      permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, member)),
     ).toEqual({ subject: member, permissions: [Permissions.Create], inheritsPermissionsOf: null });
 
     const anonymous = { userRole: UserRoleDto.ANONYMOUS };
-    expect(permissionsForm.permissions.value.find(p => isEqualSubject(p.subject, anonymous))).toEqual({ subject: anonymous, permissions: [], inheritsPermissionsOf: null });
+    expect(
+      permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, anonymous)),
+    ).toEqual({ subject: anonymous, permissions: [], inheritsPermissionsOf: null });
 
     permissionsForm = mountHarness({
       getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules,
@@ -142,9 +145,13 @@ describe("aasPermissionsForm composable", () => {
       deletePolicyBySubjectAndObject: deletePolicyMock,
     });
 
-    expect(
-      permissionsForm.permissions.value.find(p => isEqualSubject(p.subject, admin)),
-    ).toEqual({ subject: admin, permissions: [Permissions.Create, Permissions.Edit], inheritsPermissionsOf: "section1" });
+    expect(permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, admin))).toEqual(
+      {
+        subject: admin,
+        permissions: [Permissions.Create, Permissions.Edit],
+        inheritsPermissionsOf: "section1",
+      },
+    );
 
     permissionsForm = mountHarness({
       getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules,
@@ -153,8 +160,12 @@ describe("aasPermissionsForm composable", () => {
       deletePolicyBySubjectAndObject: deletePolicyMock,
     });
     expect(
-      permissionsForm.permissions.value.find(p => isEqualSubject(p.subject, member)),
-    ).toEqual({ subject: member, permissions: allPermissionsAllow.map(p => p.permission), inheritsPermissionsOf: null });
+      permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, member)),
+    ).toEqual({
+      subject: member,
+      permissions: allPermissionsAllow.map((p) => p.permission),
+      inheritsPermissionsOf: null,
+    });
   });
 
   it("should consider ignorePermissionsOptions", async () => {
@@ -179,44 +190,36 @@ describe("aasPermissionsForm composable", () => {
         },
       ],
     };
-    const security: SecurityResponseDto = securityPlainFactory.build(
-      undefined,
-      { transient: transientParams },
-    );
+    const security: SecurityResponseDto = securityPlainFactory.build(undefined, {
+      transient: transientParams,
+    });
     const owner = {
       userRole: UserRoleDto.USER,
       memberRole: MemberRoleDto.OWNER,
     };
     mocks.asSubject.mockReturnValue(owner);
     const { editPermissions, permissions } = mountHarness({
-      getAccessPermissionRules: () =>
-        security.localAccessControl.accessPermissionRules,
+      getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules,
       object: "section1.prop1",
       modifyShell: modifyShellMock,
       deletePolicyBySubjectAndObject: deletePolicyMock,
       ignoredPermissionOptions: [Permissions.Create],
     });
     const member = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER };
-    expect(
-      permissions.value.find(p => isEqualSubject(p.subject, member)),
-    ).toEqual({
+    expect(permissions.value.find((p) => isEqualSubject(p.subject, member))).toEqual({
       subject: member,
       permissions: [Permissions.Read],
       inheritsPermissionsOf: "section1",
     });
     editPermissions([Permissions.Edit], member);
-    expect(
-      permissions.value.find(p => isEqualSubject(p.subject, member)),
-    ).toEqual({
+    expect(permissions.value.find((p) => isEqualSubject(p.subject, member))).toEqual({
       subject: member,
       permissions: [Permissions.Edit, Permissions.Read],
       inheritsPermissionsOf: null,
     });
     editPermissions([], member);
 
-    expect(
-      permissions.value.find(p => isEqualSubject(p.subject, member)),
-    ).toEqual({
+    expect(permissions.value.find((p) => isEqualSubject(p.subject, member))).toEqual({
       subject: member,
       permissions: [],
       inheritsPermissionsOf: null,
@@ -263,18 +266,16 @@ describe("aasPermissionsForm composable", () => {
         },
       ],
     };
-    const security: SecurityResponseDto = securityPlainFactory.build(
-      undefined,
-      { transient: transientParams },
-    );
+    const security: SecurityResponseDto = securityPlainFactory.build(undefined, {
+      transient: transientParams,
+    });
     const owner = {
       userRole: UserRoleDto.USER,
       memberRole: MemberRoleDto.OWNER,
     };
     mocks.asSubject.mockReturnValue(owner);
     const { editPermissions, permissions, savePermissions } = mountHarness({
-      getAccessPermissionRules: () =>
-        security.localAccessControl.accessPermissionRules,
+      getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules,
       object: "section1",
       modifyShell: modifyShellMock,
       deletePolicyBySubjectAndObject: deletePolicyMock,
@@ -283,14 +284,14 @@ describe("aasPermissionsForm composable", () => {
 
     editPermissions([Permissions.Create, Permissions.Edit], member);
     editPermissions([Permissions.Create, Permissions.Edit], member);
-    expect(permissions.value.find(p => isEqualSubject(p.subject, member))).toEqual({
+    expect(permissions.value.find((p) => isEqualSubject(p.subject, member))).toEqual({
       subject: member,
       permissions: [Permissions.Create, Permissions.Edit, Permissions.Read],
       inheritsPermissionsOf: null,
     });
     editPermissions([Permissions.Read, Permissions.Delete], owner);
 
-    expect(permissions.value.find(p => isEqualSubject(p.subject, owner))).toEqual({
+    expect(permissions.value.find((p) => isEqualSubject(p.subject, owner))).toEqual({
       subject: owner,
       permissions: [Permissions.Read, Permissions.Delete],
       inheritsPermissionsOf: null,
@@ -378,13 +379,11 @@ describe("aasPermissionsForm composable", () => {
         },
       ],
     };
-    const security: SecurityResponseDto = securityPlainFactory.build(
-      undefined,
-      { transient: transientParams },
-    );
+    const security: SecurityResponseDto = securityPlainFactory.build(undefined, {
+      transient: transientParams,
+    });
     const permissionsForm = mountHarness({
-      getAccessPermissionRules: () =>
-        security.localAccessControl.accessPermissionRules,
+      getAccessPermissionRules: () => security.localAccessControl.accessPermissionRules,
       object: "section1.prop1",
       modifyShell: modifyShellMock,
       deletePolicyBySubjectAndObject: deletePolicyMock,
@@ -393,8 +392,12 @@ describe("aasPermissionsForm composable", () => {
     const member = { userRole: UserRoleDto.USER, memberRole: MemberRoleDto.MEMBER };
     permissionsForm.editPermissions([Permissions.Create, Permissions.Edit], member);
     expect(
-      permissionsForm.permissions.value.find(p => isEqualSubject(p.subject, member)),
-    ).toEqual({ subject: member, permissions: [Permissions.Create, Permissions.Edit, Permissions.Read], inheritsPermissionsOf: null });
+      permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, member)),
+    ).toEqual({
+      subject: member,
+      permissions: [Permissions.Create, Permissions.Edit, Permissions.Read],
+      inheritsPermissionsOf: null,
+    });
     deletePolicyMock.mockResolvedValue({ status: HTTPCode.NO_CONTENT });
     await permissionsForm.resetToInheritedPermissions(member);
     expect(deletePolicyMock).toHaveBeenCalledWith({
@@ -402,7 +405,7 @@ describe("aasPermissionsForm composable", () => {
       object: "section1.prop1",
     });
     expect(
-      permissionsForm.permissions.value.find(p => isEqualSubject(p.subject, member)),
+      permissionsForm.permissions.value.find((p) => isEqualSubject(p.subject, member)),
     ).toEqual({
       subject: member,
       permissions: [Permissions.Read, Permissions.Create],

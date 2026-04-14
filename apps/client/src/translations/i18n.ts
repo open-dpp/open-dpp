@@ -31,7 +31,9 @@ z.config({
 
 export function convertLocaleToLanguage(locale: string): LanguageType {
   switch (locale) {
-    case "de-DE": return Language.de;
-    default: return Language.en;
+    case "de-DE":
+      return Language.de;
+    default:
+      return Language.en;
   }
 }

@@ -38,7 +38,9 @@ export class File implements ISubmodelElement {
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath ? this._parentIdShortPath.addPathSegment(this.idShort) : IdShortPath.create({ path: this.idShort });
+    return this._parentIdShortPath
+      ? this._parentIdShortPath.addPathSegment(this.idShort)
+      : IdShortPath.create({ path: this.idShort });
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -58,11 +60,13 @@ export class File implements ISubmodelElement {
     return this._description;
   }
 
-  static create(data: SubmodelBaseProps & {
-    contentType: string;
-    extensions?: Array<Extension>;
-    value?: string | null;
-  }) {
+  static create(
+    data: SubmodelBaseProps & {
+      contentType: string;
+      extensions?: Array<Extension>;
+      value?: string | null;
+    },
+  ) {
     return new File(
       data.contentType,
       data.extensions ?? [],
@@ -83,7 +87,7 @@ export class File implements ISubmodelElement {
     const baseObjects = submodelBasePropsFromPlain(parsed);
     return new File(
       parsed.contentType,
-      parsed.extensions.map(e => Extension.fromPlain(e)),
+      parsed.extensions.map((e) => Extension.fromPlain(e)),
       baseObjects.category,
       baseObjects.idShort,
       baseObjects.displayName,

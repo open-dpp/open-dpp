@@ -9,9 +9,7 @@ export class Environment implements IConvertableToPlain {
     public readonly assetAdministrationShells: Array<string>,
     public readonly submodels: Array<string>,
     public readonly conceptDescriptions: Array<string>,
-  ) {
-
-  }
+  ) {}
 
   static create(data: {
     assetAdministrationShells?: Array<string>;
@@ -34,9 +32,13 @@ export class Environment implements IConvertableToPlain {
     );
   }
 
-  addAssetAdministrationShell(assetAdministrationShell: AssetAdministrationShell): AssetAdministrationShell {
+  addAssetAdministrationShell(
+    assetAdministrationShell: AssetAdministrationShell,
+  ): AssetAdministrationShell {
     if (this.assetAdministrationShells.includes(assetAdministrationShell.id)) {
-      throw new ValueError(`AssetAdministrationShell with id ${assetAdministrationShell.id} already exists`);
+      throw new ValueError(
+        `AssetAdministrationShell with id ${assetAdministrationShell.id} already exists`,
+      );
     }
     this.assetAdministrationShells.push(assetAdministrationShell.id);
     return assetAdministrationShell;

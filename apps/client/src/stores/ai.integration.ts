@@ -1,7 +1,4 @@
-import type {
-  AiConfigurationDto,
-  AiConfigurationUpsertDto,
-} from "@open-dpp/api-client";
+import type { AiConfigurationDto, AiConfigurationUpsertDto } from "@open-dpp/api-client";
 import { AxiosError } from "axios";
 import { defineStore } from "pinia";
 import { ref } from "vue";
@@ -20,12 +17,10 @@ export const useAiIntegrationStore = defineStore("ai-integration", () => {
     try {
       const response = await apiClient.agentServer.aiConfigurations.get();
       configuration.value = response.data;
-    }
-    catch (error) {
+    } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 404) {
         console.error("Configuration not found.");
-      }
-      else {
+      } else {
         errorHandlingStore.logErrorWithNotification(
           t("integrations.ai.errorLoadingConfiguration"),
           error,
@@ -34,20 +29,12 @@ export const useAiIntegrationStore = defineStore("ai-integration", () => {
     }
   };
 
-  const modifyConfiguration = async (
-    upsertConfiguration: AiConfigurationUpsertDto,
-  ) => {
+  const modifyConfiguration = async (upsertConfiguration: AiConfigurationUpsertDto) => {
     try {
-      const response
-        = await apiClient.agentServer.aiConfigurations.upsert(
-          upsertConfiguration,
-        );
+      const response = await apiClient.agentServer.aiConfigurations.upsert(upsertConfiguration);
       configuration.value = response.data;
-      notificationStore.addSuccessNotification(
-        t("integrations.ai.savedConfigurationSuccess"),
-      );
-    }
-    catch (error) {
+      notificationStore.addSuccessNotification(t("integrations.ai.savedConfigurationSuccess"));
+    } catch (error) {
       errorHandlingStore.logErrorWithNotification(
         t("integrations.ai.modifyConfigurationError"),
         error,

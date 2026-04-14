@@ -10,15 +10,11 @@ const members = ref<Array<MemberDto>>([]);
 const indexStore = useIndexStore();
 
 async function fetchMembers() {
-  if (!indexStore.selectedOrganization)
-    return;
+  if (!indexStore.selectedOrganization) return;
   try {
-    const { data } = await apiClient.dpp.organizations.getMembers(
-      indexStore.selectedOrganization,
-    );
+    const { data } = await apiClient.dpp.organizations.getMembers(indexStore.selectedOrganization);
     members.value = data;
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Failed to fetch members", error);
     members.value = [];
   }

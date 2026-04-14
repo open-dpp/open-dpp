@@ -1,7 +1,4 @@
-import type {
-  MeasurementType,
-  PassportMeasurementDto,
-} from "@open-dpp/api-client";
+import type { MeasurementType, PassportMeasurementDto } from "@open-dpp/api-client";
 import { TimePeriod } from "@open-dpp/api-client";
 import dayjs from "dayjs";
 import advancedFormat from "dayjs/plugin/advancedFormat";
@@ -60,12 +57,8 @@ export const useAnalyticsStore = defineStore("analytics", () => {
         period: timePeriods[requestedTimeView.value],
       });
       passportMeasurements.value = response.data;
-    }
-    catch (error) {
-      errorHandlingStore.logErrorWithNotification(
-        t("analytics.loadingMetricError"),
-        error,
-      );
+    } catch (error) {
+      errorHandlingStore.logErrorWithNotification(t("analytics.loadingMetricError"), error);
     }
   };
 
@@ -85,13 +78,11 @@ export const useAnalyticsStore = defineStore("analytics", () => {
       [TimeView.MONTHLY]: "DD.MM",
       [TimeView.YEARLY]: "MMMM",
     };
-    return dayjs(isoDateString).tz(getCurrentTimezone()).format(
-      format[requestedTimeView.value],
-    );
+    return dayjs(isoDateString).tz(getCurrentTimezone()).format(format[requestedTimeView.value]);
   };
 
   const getMeasurementsAsTimeseries = () => {
-    return passportMeasurements.value.map(m => ({
+    return passportMeasurements.value.map((m) => ({
       x: getXLabel(m.datetime),
       y: m.sum,
     }));

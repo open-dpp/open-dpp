@@ -10,15 +10,19 @@ export class TableExtension {
   private headerRow: ISubmodelElement | undefined;
   constructor(private data: SubmodelElementList) {
     if (this.data.typeValueListElement !== AasSubmodelElements.SubmodelElementCollection) {
-      throw new Error(`List type ${this.data.typeValueListElement} is not supported by table extension`);
+      throw new Error(
+        `List type ${this.data.typeValueListElement} is not supported by table extension`,
+      );
     }
     this.setHeaderRow();
   }
 
   private setHeaderRow() {
-    this.headerRow = this.data.value.length > 0 && this.data.value[0].getSubmodelElementType() === AasSubmodelElements.SubmodelElementCollection
-      ? this.data.value[0]
-      : undefined;
+    this.headerRow =
+      this.data.value.length > 0 &&
+      this.data.value[0].getSubmodelElementType() === AasSubmodelElements.SubmodelElementCollection
+        ? this.data.value[0]
+        : undefined;
   }
 
   getTableElement() {
@@ -49,7 +53,7 @@ export class TableExtension {
     }
 
     for (const row of this.rows) {
-      const column = row.getSubmodelElements().find(el => el.idShort === idShort);
+      const column = row.getSubmodelElements().find((el) => el.idShort === idShort);
       if (column) {
         column.accept(new ModifierVisitor(options), { data: { ...data, idShort } });
       }
@@ -67,7 +71,10 @@ export class TableExtension {
   }
 
   private addHeaderRow(options: AddOptions): ISubmodelElement {
-    this.headerRow = SubmodelElementCollection.create({ idShort: this.generateRowIdShort(), value: [] });
+    this.headerRow = SubmodelElementCollection.create({
+      idShort: this.generateRowIdShort(),
+      value: [],
+    });
     this.data.addSubmodelElement(this.headerRow, options);
     return this.headerRow;
   }
@@ -75,8 +82,7 @@ export class TableExtension {
   addRow(options: AddOptions) {
     if (!this.headerRow) {
       return this.addHeaderRow(options);
-    }
-    else {
+    } else {
       const newRow = SubmodelElementCollection.create({ idShort: this.generateRowIdShort() });
       this.data.addSubmodelElement(newRow, options);
       this.columns.forEach((column) => {

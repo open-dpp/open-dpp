@@ -39,7 +39,11 @@ const { t } = useI18n();
 
 const createDialogVisible = ref(false);
 
-const { importing: importingTemplate, exportItem: exportTemplate, onFileSelect: onTemplateFileSelect } = useExportImport({
+const {
+  importing: importingTemplate,
+  exportItem: exportTemplate,
+  onFileSelect: onTemplateFileSelect,
+} = useExportImport({
   exportFn: async (id) => {
     const response = await apiClient.dpp.templates.export(id);
     return response.data;
@@ -101,5 +105,9 @@ onMounted(async () => {
       />
     </template>
   </DppTable>
-  <TemplateCreateDialog v-if="createDialogVisible" v-model="createDialogVisible" :create-template="createTemplate" />
+  <TemplateCreateDialog
+    v-if="createDialogVisible"
+    v-model="createDialogVisible"
+    :create-template="createTemplate"
+  />
 </template>

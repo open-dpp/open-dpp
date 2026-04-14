@@ -75,21 +75,23 @@ export class PolicyService {
   }
 
   async saveCap(cap: Cap): Promise<Cap> {
-    const capDoc = await this.capModel.findOneAndUpdate(
-      { key: cap.getKey(), organizationId: cap.getOrganizationId() },
-      {
-        $set: {
-          key: cap.getKey(),
-          organizationId: cap.getOrganizationId(),
-          limit: cap.getLimit(),
+    const capDoc = await this.capModel
+      .findOneAndUpdate(
+        { key: cap.getKey(), organizationId: cap.getOrganizationId() },
+        {
+          $set: {
+            key: cap.getKey(),
+            organizationId: cap.getOrganizationId(),
+            limit: cap.getLimit(),
+          },
         },
-      },
-      {
-        new: true,
-        upsert: true,
-        runValidators: true,
-      },
-    ).exec();
+        {
+          new: true,
+          upsert: true,
+          runValidators: true,
+        },
+      )
+      .exec();
 
     return this.convertCapToDomain(capDoc);
   }
@@ -151,24 +153,26 @@ export class PolicyService {
   }
 
   async saveQuota(quota: Quota): Promise<Quota> {
-    const quotaDoc = await this.quotaModel.findOneAndUpdate(
-      { key: quota.getKey(), organizationId: quota.getOrganizationId() },
-      {
-        $set: {
-          key: quota.getKey(),
-          organizationId: quota.getOrganizationId(),
-          limit: quota.getLimit(),
-          count: quota.getCount(),
-          period: quota.getPeriod(),
-          lastSetBack: quota.getLastReset(),
+    const quotaDoc = await this.quotaModel
+      .findOneAndUpdate(
+        { key: quota.getKey(), organizationId: quota.getOrganizationId() },
+        {
+          $set: {
+            key: quota.getKey(),
+            organizationId: quota.getOrganizationId(),
+            limit: quota.getLimit(),
+            count: quota.getCount(),
+            period: quota.getPeriod(),
+            lastSetBack: quota.getLastReset(),
+          },
         },
-      },
-      {
-        new: true,
-        upsert: true,
-        runValidators: true,
-      },
-    ).exec();
+        {
+          new: true,
+          upsert: true,
+          runValidators: true,
+        },
+      )
+      .exec();
 
     return this.convertQuotaToDomain(quotaDoc);
   }
@@ -198,8 +202,7 @@ export class PolicyService {
       let limitAndValue: LimitAndValue;
       if (rule.type === "cap") {
         limitAndValue = await this.isCapReached(organizationId, key);
-      }
-      else {
+      } else {
         limitAndValue = await this.isQuotaExceeded(organizationId, key);
       }
 

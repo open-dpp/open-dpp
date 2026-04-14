@@ -86,7 +86,12 @@ describe("expandedEnvironment", () => {
       const submodelMap = new Map([[submodel.id, submodel]]);
       const cdMap = new Map([[cd.id, cd]]);
 
-      const expanded = ExpandedEnvironment.fromEnvironment(environment, shellMap, submodelMap, cdMap);
+      const expanded = ExpandedEnvironment.fromEnvironment(
+        environment,
+        shellMap,
+        submodelMap,
+        cdMap,
+      );
 
       expect(expanded.shells).toEqual([shell]);
       expect(expanded.submodels).toEqual([submodel]);
@@ -100,12 +105,9 @@ describe("expandedEnvironment", () => {
         conceptDescriptions: [],
       });
 
-      expect(() => ExpandedEnvironment.fromEnvironment(
-        environment,
-        new Map(),
-        new Map(),
-        new Map(),
-      )).toThrow(ValueError);
+      expect(() =>
+        ExpandedEnvironment.fromEnvironment(environment, new Map(), new Map(), new Map()),
+      ).toThrow(ValueError);
     });
 
     it("should throw ValueError when submodels are missing from map", () => {
@@ -115,12 +117,9 @@ describe("expandedEnvironment", () => {
         conceptDescriptions: [],
       });
 
-      expect(() => ExpandedEnvironment.fromEnvironment(
-        environment,
-        new Map(),
-        new Map(),
-        new Map(),
-      )).toThrow(ValueError);
+      expect(() =>
+        ExpandedEnvironment.fromEnvironment(environment, new Map(), new Map(), new Map()),
+      ).toThrow(ValueError);
     });
 
     it("should throw ValueError when concept descriptions are missing from map", () => {
@@ -130,12 +129,9 @@ describe("expandedEnvironment", () => {
         conceptDescriptions: ["missing-cd-id"],
       });
 
-      expect(() => ExpandedEnvironment.fromEnvironment(
-        environment,
-        new Map(),
-        new Map(),
-        new Map(),
-      )).toThrow(ValueError);
+      expect(() =>
+        ExpandedEnvironment.fromEnvironment(environment, new Map(), new Map(), new Map()),
+      ).toThrow(ValueError);
     });
 
     it("should include all missing IDs in the error message", () => {
@@ -145,12 +141,9 @@ describe("expandedEnvironment", () => {
         conceptDescriptions: ["cd-1"],
       });
 
-      expect(() => ExpandedEnvironment.fromEnvironment(
-        environment,
-        new Map(),
-        new Map(),
-        new Map(),
-      )).toThrow(
+      expect(() =>
+        ExpandedEnvironment.fromEnvironment(environment, new Map(), new Map(), new Map()),
+      ).toThrow(
         /Missing shells: \[shell-1, shell-2\].*missing submodels: \[sub-1\].*missing concept descriptions: \[cd-1\]/,
       );
     });
@@ -239,14 +232,15 @@ describe("expandedEnvironment", () => {
   describe("toPlain", () => {
     it("should serialize all shells, submodels, and concept descriptions to plain objects", () => {
       const security = Security.create({});
-      const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+      const member = SubjectAttributes.create({
+        userRole: UserRole.USER,
+        memberRole: MemberRole.MEMBER,
+      });
       const submodel1 = createSubmodel();
       const submodel2 = createSubmodel();
-      security.addPolicy(
-        member,
-        IdShortPath.create({ path: submodel1.idShort }),
-        [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })],
-      );
+      security.addPolicy(member, IdShortPath.create({ path: submodel1.idShort }), [
+        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      ]);
 
       const ability = security.defineAbilityForSubject(member);
 
@@ -257,7 +251,9 @@ describe("expandedEnvironment", () => {
       const plain = env.toPlain({ ability });
       expect(plain.assetAdministrationShells).toHaveLength(1);
       expect(plain.assetAdministrationShells[0].id).toBe(shell.id);
-      expect(plain.assetAdministrationShells[0].submodels).toEqual([submodelToReference(submodel1)]);
+      expect(plain.assetAdministrationShells[0].submodels).toEqual([
+        submodelToReference(submodel1),
+      ]);
 
       expect(plain.submodels).toHaveLength(1);
       expect(plain.submodels[0].id).toBe(submodel1.id);

@@ -25,7 +25,8 @@ const colorClasses = computed(() => {
 
 <template>
   <button
-    class="m-2 block rounded-md px-3 py-1.5 text-center text-sm/6 font-semibold shadow-xs focus-visible:outline focus-visible:outline-offset-2" :class="[
+    class="m-2 block rounded-md px-3 py-1.5 text-center text-sm/6 font-semibold shadow-xs focus-visible:outline focus-visible:outline-offset-2"
+    :class="[
       colorClasses,
       props.disabled ? 'cursor-not-allowed opacity-50' : 'hover:cursor-pointer',
     ]"

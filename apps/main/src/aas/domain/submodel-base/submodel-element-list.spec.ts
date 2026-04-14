@@ -23,27 +23,40 @@ describe("submodelElementList", () => {
       idShort: "idShort",
     });
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
 
-    security.addPolicy(
-      member,
-      IdShortPath.create({ path: submodelElementList.idShort }),
-      [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow })],
-    );
+    security.addPolicy(member, IdShortPath.create({ path: submodelElementList.idShort }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+    ]);
     const ability = security.defineAbilityForSubject(member);
-    const submodelElement = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "submodelElement1" }));
+    const submodelElement = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "submodelElement1" }),
+    );
     submodelElementList.addSubmodelElement(submodelElement, { ability });
     expect(submodelElementList.getSubmodelElements()).toEqual([submodelElement]);
 
-    const submodelElement0 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "submodelElement0" }));
+    const submodelElement0 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "submodelElement0" }),
+    );
     submodelElementList.addSubmodelElement(submodelElement0, { position: 0, ability });
     expect(submodelElementList.getSubmodelElements()).toEqual([submodelElement0, submodelElement]);
 
     expect(() => submodelElementList.addSubmodelElement(submodelElement, { ability })).toThrow(
       new Error(`Submodel element with idShort ${submodelElement.idShort} already exists`),
     );
-    expect(() => submodelElementList.addSubmodelElement(SubmodelElementCollection.create({ idShort: "sec1" }), { ability })).toThrow(
-      new Error(`Submodel element type SubmodelElementCollection does not match list type Property`),
+    expect(() =>
+      submodelElementList.addSubmodelElement(
+        SubmodelElementCollection.create({ idShort: "sec1" }),
+        { ability },
+      ),
+    ).toThrow(
+      new Error(
+        `Submodel element type SubmodelElementCollection does not match list type Property`,
+      ),
     );
   });
 
@@ -53,22 +66,25 @@ describe("submodelElementList", () => {
       idShort: "list",
     });
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
 
-    security.addPolicy(
-      member,
-      IdShortPath.create({ path: "list" }),
-      [
-        Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
-        Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
-        Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
-      ],
-    );
+    security.addPolicy(member, IdShortPath.create({ path: "list" }), [
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Delete, kindOfPermission: PermissionKind.Allow }),
+    ]);
     const ability = security.defineAbilityForSubject(member);
 
-    const submodelElement0 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "submodelElement0" }));
+    const submodelElement0 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "submodelElement0" }),
+    );
     submodelElementList.addSubmodelElement(submodelElement0, { ability });
-    const submodelElement1 = Property.fromPlain(propertyInputPlainFactory.build({ idShort: "submodelElement1" }));
+    const submodelElement1 = Property.fromPlain(
+      propertyInputPlainFactory.build({ idShort: "submodelElement1" }),
+    );
     submodelElementList.addSubmodelElement(submodelElement1, { ability });
     expect(submodelElementList.getSubmodelElements()).toEqual([submodelElement0, submodelElement1]);
     const onDelete = jest.fn();
@@ -76,13 +92,18 @@ describe("submodelElementList", () => {
     expect(onDelete).toHaveBeenCalledWith(submodelElement0);
     expect(submodelElementList.getSubmodelElements()).toEqual([submodelElement1]);
 
-    expect(() => submodelElementList.deleteSubmodelElement("unknown", { ability, onDelete })).toThrow(ValueError);
+    expect(() =>
+      submodelElementList.deleteSubmodelElement("unknown", { ability, onDelete }),
+    ).toThrow(ValueError);
     expect(onDelete).toHaveBeenCalledTimes(1);
   });
 
   it("should get values readable by specified subject", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
 
     const submodelElementList = SubmodelElementList.create({
@@ -90,8 +111,13 @@ describe("submodelElementList", () => {
       idShort: "list",
     });
 
-    security.addPolicy(member, IdShortPath.create({ path: "list" }), [Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }), Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
-    security.addPolicy(member, IdShortPath.create({ path: "list.row.prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "list" }), [
+      Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
+    security.addPolicy(member, IdShortPath.create({ path: "list.row.prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     security.addPolicy(member, IdShortPath.create({ path: "list.row.prop2" }), []);
 
     let ability = security.defineAbilityForSubject(member);
@@ -104,8 +130,11 @@ describe("submodelElementList", () => {
     row.addSubmodelElement(prop1, { ability });
     row.addSubmodelElement(prop2, { ability });
 
-    expect(submodelElementList.toPlain({ ability })).toEqual({ ...submodelElementList.toPlain(), value: [{ ...row.toPlain(), value: [prop1.toPlain()] }] });
+    expect(submodelElementList.toPlain({ ability })).toEqual({
+      ...submodelElementList.toPlain(),
+      value: [{ ...row.toPlain(), value: [prop1.toPlain()] }],
+    });
     ability = security.defineAbilityForSubject(anonymous);
-    expect(submodelElementList.toPlain({ ability })).toEqual({ });
+    expect(submodelElementList.toPlain({ ability })).toEqual({});
   });
 });

@@ -1,12 +1,12 @@
-import { z } from 'zod'
-import { ReferenceJsonSchema } from '../common/reference-json-schema'
-import { ExtensionJsonSchema } from '../extension-json-schema'
-import { SubmodelBaseJsonSchema } from './submodel-base-json-schema'
-import { SubmodelElementSchema } from './submodel-element-schema'
+import { z } from "zod";
+import { ReferenceJsonSchema } from "../common/reference-json-schema";
+import { ExtensionJsonSchema } from "../extension-json-schema";
+import { SubmodelBaseJsonSchema } from "./submodel-base-json-schema";
+import { SubmodelElementSchema } from "./submodel-element-schema";
 
-export const AnnotatedRelationshipElementJsonSchema = z.lazy(() =>
-  AnnotatedRelationshipElementJsonSchemaImpl(),
-).meta({ id: 'AnnotatedRelationshipElement' })
+export const AnnotatedRelationshipElementJsonSchema = z
+  .lazy(() => AnnotatedRelationshipElementJsonSchemaImpl())
+  .meta({ id: "AnnotatedRelationshipElement" });
 
 export function AnnotatedRelationshipElementJsonSchemaImpl() {
   return z.object({
@@ -15,5 +15,5 @@ export function AnnotatedRelationshipElementJsonSchemaImpl() {
     second: ReferenceJsonSchema,
     extensions: ExtensionJsonSchema.array().default([]),
     annotations: SubmodelElementSchema.array().default([]),
-  })
-};
+  });
+}

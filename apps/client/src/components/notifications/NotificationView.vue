@@ -1,7 +1,5 @@
 <script lang="ts" setup>
-import type {
-  Notification,
-} from "../../stores/notification";
+import type { Notification } from "../../stores/notification";
 import { XMarkIcon } from "@heroicons/vue/20/solid";
 import {
   CheckCircleIcon,
@@ -11,10 +9,7 @@ import {
 } from "@heroicons/vue/24/outline";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import {
-  NotificationType,
-  useNotificationStore,
-} from "../../stores/notification";
+import { NotificationType, useNotificationStore } from "../../stores/notification";
 
 const props = defineProps<{ notification: Notification }>();
 
@@ -60,11 +55,7 @@ const title = computed<string>(() => {
             aria-hidden="true"
             class="size-6 text-orange-400"
           />
-          <InformationCircleIcon
-            v-else
-            aria-hidden="true"
-            class="size-6 text-blue-400"
-          />
+          <InformationCircleIcon v-else aria-hidden="true" class="size-6 text-blue-400" />
         </div>
         <div class="ml-3 w-0 flex-1 pt-0.5">
           <p class="text-sm font-medium text-gray-900">
@@ -76,7 +67,7 @@ const title = computed<string>(() => {
           <div v-if="props.notification.actionLink" class="mt-3 flex space-x-7">
             <router-link
               :to="props.notification.actionLink.to"
-              class="rounded-md bg-white text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              class="rounded-md bg-white text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
               type="button"
             >
               {{ props.notification.actionLink.label }}
@@ -86,7 +77,7 @@ const title = computed<string>(() => {
         <div class="ml-4 flex shrink-0">
           <button
             :data-cy="`closeNotification-${props.notification.id}`"
-            class="inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            class="inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
             type="button"
             @click="onDelete"
           >

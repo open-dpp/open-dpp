@@ -39,32 +39,25 @@ watch(
 
 <template>
   <div
-    class="group grow min-w-0 text-base mb-4 data-disabled:select-none data-disabled:opacity-50 data-disabled:pointer-events-none formkit-outer"
+    class="group formkit-outer mb-4 min-w-0 grow text-base data-disabled:pointer-events-none data-disabled:opacity-50 data-disabled:select-none"
     data-auto-animate="true"
     data-complete="true"
     data-family="text"
     data-type="text"
     style="position: relative"
   >
-    <div
-      class="mb-1.5 flex flex-col gap-2 items-start justify-start last:mb-0 formkit-wrapper"
-    >
-      <label
-        class="block text-sm font-medium leading-6 text-gray-900"
-        for="input_1"
-      >{{ label }}</label>
+    <div class="formkit-wrapper mb-1.5 flex flex-col items-start justify-start gap-2 last:mb-0">
+      <label class="block text-sm leading-6 font-medium text-gray-900" for="input_1">{{
+        label
+      }}</label>
       <div class="flex w-full gap-4">
-        <MediaPreview
-          v-if="model && mediaInfo"
-          :media="mediaInfo"
-          class="grow h-48"
-        />
-        <div v-else class="text-gray-600 my-auto">
+        <MediaPreview v-if="model && mediaInfo" :media="mediaInfo" class="h-48 grow" />
+        <div v-else class="my-auto text-gray-600">
           {{ t("file.noSelection") }}
         </div>
-        <div class="flex flex-col justify-center gap-2 shrink">
+        <div class="flex shrink flex-col justify-center gap-2">
           <button
-            class="shrink bg-primary-500/50 rounded-sm p-2 hover:cursor-pointer"
+            class="bg-primary-500/50 shrink rounded-sm p-2 hover:cursor-pointer"
             @click.prevent="openFileModal = true"
           >
             <PencilIcon class="h-4 w-4" />
@@ -78,10 +71,7 @@ watch(
           </button>
         </div>
       </div>
-      <MediaModal
-        v-model="openFileModal"
-        @confirm="(items) => updateFileFromModal(items)"
-      />
+      <MediaModal v-model="openFileModal" @confirm="(items) => updateFileFromModal(items)" />
     </div>
   </div>
 </template>

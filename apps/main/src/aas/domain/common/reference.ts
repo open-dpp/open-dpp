@@ -7,8 +7,7 @@ export class Reference implements IVisitable {
     public type: ReferenceTypesType,
     public referredSemanticId: Reference | null,
     public keys: Key[],
-  ) {
-  }
+  ) {}
 
   static create(data: {
     type: ReferenceTypesType;
@@ -22,7 +21,9 @@ export class Reference implements IVisitable {
     const parsed = ReferenceJsonSchema.parse(json);
     return Reference.create({
       type: parsed.type,
-      referredSemanticId: parsed.referredSemanticId ? Reference.fromPlain(parsed.referredSemanticId) : undefined,
+      referredSemanticId: parsed.referredSemanticId
+        ? Reference.fromPlain(parsed.referredSemanticId)
+        : undefined,
       keys: parsed.keys.map(Key.fromPlain),
     });
   }

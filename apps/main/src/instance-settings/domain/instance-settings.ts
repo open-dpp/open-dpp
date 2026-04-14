@@ -56,22 +56,17 @@ export class InstanceSettings {
   }
 
   public withEnvOverrides(overrides: EnvOverrideProps): InstanceSettings {
-    return new InstanceSettings(
-      this.id,
-      {
-        value: overrides.signupEnabled !== undefined ? overrides.signupEnabled : this.signupEnabled.value,
-        locked: overrides.signupEnabled === undefined ? undefined : true,
-      },
-    );
+    return new InstanceSettings(this.id, {
+      value:
+        overrides.signupEnabled !== undefined ? overrides.signupEnabled : this.signupEnabled.value,
+      locked: overrides.signupEnabled === undefined ? undefined : true,
+    });
   }
 
   public update(props: Partial<InstanceSettingsDbProps>): InstanceSettings {
-    return new InstanceSettings(
-      this.id,
-      {
-        value: props.signupEnabled !== undefined ? props.signupEnabled : this.signupEnabled.value,
-      },
-    );
+    return new InstanceSettings(this.id, {
+      value: props.signupEnabled !== undefined ? props.signupEnabled : this.signupEnabled.value,
+    });
   }
 
   public toPlain(): InstanceSettingsDbProps {

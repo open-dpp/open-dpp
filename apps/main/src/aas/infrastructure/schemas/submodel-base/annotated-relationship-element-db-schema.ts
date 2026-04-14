@@ -16,4 +16,4 @@ export function AnnotatedRelationshipElementDbSchemaImpl() {
     extensions: ExtensionDbSchema.array().default([]),
     annotations: SubmodelElementDbSchema.array().default([]),
   });
-};
+}

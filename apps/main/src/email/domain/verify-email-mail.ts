@@ -23,11 +23,6 @@ export class VerifyEmailMail extends BaseEmail {
   }
 
   public static create(data: VerifyEmailMailCreateProps) {
-    return new VerifyEmailMail(
-      randomUUID(),
-      data.to,
-      data.subject,
-      data.templateProperties,
-    );
+    return new VerifyEmailMail(randomUUID(), data.to, data.subject, data.templateProperties);
   }
 }

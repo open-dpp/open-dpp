@@ -63,11 +63,7 @@ describe("OrganizationsService", () => {
     const headers = {};
 
     await expect(
-      service.createOrganization(
-        { name: "Test", slug, metadata: {} },
-        session,
-        headers,
-      ),
+      service.createOrganization({ name: "Test", slug, metadata: {} }, session, headers),
     ).rejects.toThrow(BadRequestException);
   });
 });

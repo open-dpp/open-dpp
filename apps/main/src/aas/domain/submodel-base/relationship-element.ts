@@ -1,4 +1,8 @@
-import { AasSubmodelElements, AasSubmodelElementsType, RelationshipElementJsonSchema } from "@open-dpp/dto";
+import {
+  AasSubmodelElements,
+  AasSubmodelElementsType,
+  RelationshipElementJsonSchema,
+} from "@open-dpp/dto";
 import { ValueError } from "@open-dpp/exception";
 import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
@@ -43,7 +47,9 @@ export class RelationshipElement implements ISubmodelElement, IRelationshipEleme
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath ? this._parentIdShortPath.addPathSegment(this.idShort) : IdShortPath.create({ path: this.idShort });
+    return this._parentIdShortPath
+      ? this._parentIdShortPath.addPathSegment(this.idShort)
+      : IdShortPath.create({ path: this.idShort });
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -92,7 +98,7 @@ export class RelationshipElement implements ISubmodelElement, IRelationshipEleme
     return new RelationshipElement(
       Reference.fromPlain(parsed.first),
       Reference.fromPlain(parsed.second),
-      parsed.extensions.map(e => Extension.fromPlain(e)),
+      parsed.extensions.map((e) => Extension.fromPlain(e)),
       baseObjects.category,
       baseObjects.idShort,
       baseObjects.displayName,

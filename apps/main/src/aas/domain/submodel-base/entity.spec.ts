@@ -15,7 +15,10 @@ import { Property } from "./property";
 describe("entity", () => {
   it("should add submodel element", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     security.addPolicy(member, IdShortPath.create({ path: "idShort" }), [
       Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
       Permission.create({ permission: Permissions.Create, kindOfPermission: PermissionKind.Allow }),
@@ -28,20 +31,25 @@ describe("entity", () => {
     const submodelElement = Property.fromPlain(propertyInputPlainFactory.build());
     entity.addSubmodelElement(submodelElement, { ability });
     expect(entity.getSubmodelElements()).toEqual([submodelElement]);
-    expect(() => entity.addSubmodelElement(submodelElement, { ability })).toThrow(new ValueError(
-      `Submodel element with idShort ${submodelElement.idShort} already exists`,
-    ));
+    expect(() => entity.addSubmodelElement(submodelElement, { ability })).toThrow(
+      new ValueError(`Submodel element with idShort ${submodelElement.idShort} already exists`),
+    );
   });
 
   it("should return plain value", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const entity = Entity.create({
       idShort: "prop1",
       entityType: EntityType.CoManagedEntity,
     });
-    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     let ability = security.defineAbilityForSubject(member);
     expect(entity.toPlain({ ability })).toMatchObject({
       idShort: "prop1",

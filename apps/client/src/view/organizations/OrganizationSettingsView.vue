@@ -62,10 +62,7 @@ async function save() {
   }
   catch (e) {
     nameInvalid.value = true;
-    errorHandlingStore.logErrorWithNotification(
-      t("organizations.form.updateError"),
-      e,
-    );
+    errorHandlingStore.logErrorWithNotification(t("organizations.form.updateError"), e);
   }
 }
 
@@ -77,7 +74,7 @@ onMounted(async () => {
 
 <template>
   <ContentViewWrapper>
-    <h3 class="text-xl py-2 font-semibold leading-6 text-gray-900">
+    <h3 class="py-2 text-xl leading-6 font-semibold text-gray-900">
       {{ t("organizations.settings.title") }}
     </h3>
     <div class="mt-5 max-w-xl">

@@ -1,4 +1,8 @@
-import { AasSubmodelElements, AasSubmodelElementsType, SubmodelElementCollectionJsonSchema } from "@open-dpp/dto";
+import {
+  AasSubmodelElements,
+  AasSubmodelElementsType,
+  SubmodelElementCollectionJsonSchema,
+} from "@open-dpp/dto";
 import { IdShortPath } from "../common/id-short-path";
 import { hasUniqueLanguagesOrFail, LanguageText } from "../common/language-text";
 import { Qualifier } from "../common/qualififiable";
@@ -47,7 +51,9 @@ export class SubmodelElementCollection implements ISubmodelElement {
   }
 
   getIdShortPath(): IdShortPath {
-    return this._parentIdShortPath ? this._parentIdShortPath.addPathSegment(this.idShort) : IdShortPath.create({ path: this.idShort });
+    return this._parentIdShortPath
+      ? this._parentIdShortPath.addPathSegment(this.idShort)
+      : IdShortPath.create({ path: this.idShort });
   }
 
   set displayName(value: Array<LanguageText>) {
@@ -67,10 +73,12 @@ export class SubmodelElementCollection implements ISubmodelElement {
     return this._description;
   }
 
-  static create(data: SubmodelBaseProps & {
-    extensions?: Array<Extension>;
-    value?: Array<ISubmodelElement>;
-  }) {
+  static create(
+    data: SubmodelBaseProps & {
+      extensions?: Array<Extension>;
+      value?: Array<ISubmodelElement>;
+    },
+  ) {
     return new SubmodelElementCollection(
       data.extensions ?? [],
       data.category ?? null,
@@ -83,7 +91,7 @@ export class SubmodelElementCollection implements ISubmodelElement {
       data.embeddedDataSpecifications ?? [],
       data.value ?? [],
     );
-  };
+  }
 
   addSubmodelElement(submodelElement: ISubmodelElement, options: AddOptions): ISubmodelElement {
     return addSubmodelElementOrFail(this, submodelElement, options);

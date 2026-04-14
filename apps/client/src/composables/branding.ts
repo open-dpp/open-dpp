@@ -99,7 +99,7 @@ function useBrandingCommon(requestBranding: () => Promise<AxiosResponse<Branding
   };
 
   return { logo, src, applyBranding };
-};
+}
 
 export function useBranding() {
   const { src, applyBranding } = useBrandingCommon(async () => await apiClient.dpp.branding.get());
@@ -119,7 +119,9 @@ export function useBranding() {
 }
 
 export function useBrandingAnonymous(upi: Ref<string>) {
-  const { src, applyBranding } = useBrandingCommon(async () => apiClient.dpp.uniqueProductIdentifiers.getBranding(upi.value));
+  const { src, applyBranding } = useBrandingCommon(async () =>
+    apiClient.dpp.uniqueProductIdentifiers.getBranding(upi.value),
+  );
 
   watch(
     () => upi.value,

@@ -37,7 +37,7 @@ const rowMenuItems = ref<MenuItem[]>([]);
 const activeRowId = ref("");
 
 const rows = computed(() => {
-  return props.users.map(i => ({
+  return props.users.map((i) => ({
     id: i.id,
     email: i.email,
     role: i.role ?? "user",
@@ -75,7 +75,7 @@ function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {
   <DataTable :value="rows" table-style="min-width: 50rem">
     <template #header>
       <div class="flex flex-wrap items-center justify-between gap-2">
-        <span class="text-xl font-bold">{{ t('organizations.admin.users') }}</span>
+        <span class="text-xl font-bold">{{ t("organizations.admin.users") }}</span>
         <Button :label="t('common.add')" @click="emits('add')" />
       </div>
     </template>
@@ -113,17 +113,11 @@ function toggleRowMenu(event: Event, row: (typeof rows.value)[number]) {
       </template>
     </Column>
   </DataTable>
-  <Menu
-    id="overlay_row_menu"
-    ref="rowMenuRef"
-    :model="rowMenuItems"
-    :popup="true"
-    class="p-2"
-  >
+  <Menu id="overlay_row_menu" ref="rowMenuRef" :model="rowMenuItems" :popup="true" class="p-2">
     <template #start>
       <div>
         <InputGroup>
-          <InputGroupAddon>{{ t('common.id') }}</InputGroupAddon>
+          <InputGroupAddon>{{ t("common.id") }}</InputGroupAddon>
           <InputText readonly :value="activeRowId" />
           <InputGroupAddon>
             <Button icon="pi pi-copy" severity="secondary" @click="copyId" />

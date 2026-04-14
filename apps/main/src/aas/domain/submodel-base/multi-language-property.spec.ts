@@ -16,18 +16,28 @@ import { Property } from "./property";
 describe("multiLanguageProperty", () => {
   it("should add submodel element", () => {
     const multiLanguageProperty = MultiLanguageProperty.create({ idShort: "b1" });
-    expect(() => multiLanguageProperty.addSubmodelElement(Property.fromPlain(propertyInputPlainFactory.build()))).toThrow(
-      new ValueError("MultiLanguageProperty cannot contain submodel elements"),
-    );
+    expect(() =>
+      multiLanguageProperty.addSubmodelElement(
+        Property.fromPlain(propertyInputPlainFactory.build()),
+      ),
+    ).toThrow(new ValueError("MultiLanguageProperty cannot contain submodel elements"));
   });
 
   it("should return plain value", () => {
     const security = Security.create({});
-    const member = SubjectAttributes.create({ userRole: UserRole.USER, memberRole: MemberRole.MEMBER });
+    const member = SubjectAttributes.create({
+      userRole: UserRole.USER,
+      memberRole: MemberRole.MEMBER,
+    });
     const anonymous = SubjectAttributes.create({ userRole: UserRole.ANONYMOUS });
     const valueEn = LanguageText.create({ language: "en", text: "value" });
-    const multiLanguageProperty = MultiLanguageProperty.create({ idShort: "prop1", value: [valueEn] });
-    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow })]);
+    const multiLanguageProperty = MultiLanguageProperty.create({
+      idShort: "prop1",
+      value: [valueEn],
+    });
+    security.addPolicy(member, IdShortPath.create({ path: "prop1" }), [
+      Permission.create({ permission: Permissions.Read, kindOfPermission: PermissionKind.Allow }),
+    ]);
     let ability = security.defineAbilityForSubject(member);
     expect(multiLanguageProperty.toPlain({ ability })).toMatchObject({
       idShort: "prop1",

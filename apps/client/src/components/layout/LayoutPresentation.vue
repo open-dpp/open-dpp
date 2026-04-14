@@ -7,11 +7,11 @@ const drawerVisible = ref(false);
 </script>
 
 <template>
-  <div class="bg-gray-50/50 min-h-screen">
+  <div class="min-h-screen bg-gray-50/50">
     <div class="sticky top-0 z-10">
       <Navbar :drawer-visible="drawerVisible" @toggle-menu="drawerVisible = !drawerVisible" />
     </div>
-    <main class="max-w-5xl mx-auto px-4 sm:px-8 lg:px-12">
+    <main class="mx-auto max-w-5xl px-4 sm:px-8 lg:px-12">
       <router-view />
     </main>
     <NavigationDrawer v-model="drawerVisible" />

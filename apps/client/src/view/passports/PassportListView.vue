@@ -29,14 +29,7 @@ function changeQueryParams(newQuery: Record<string, string | undefined>) {
 
 const { passports, loading, fetchPassports } = usePassports();
 
-const {
-  hasPrevious,
-  hasNext,
-  currentPage,
-  previousPage,
-  resetCursor,
-  nextPage,
-} = usePagination({
+const { hasPrevious, hasNext, currentPage, previousPage, resetCursor, nextPage } = usePagination({
   initialCursor: route.query.cursor ? String(route.query.cursor) : undefined,
   limit: 10,
   fetchCallback: fetchPassports,
@@ -47,7 +40,11 @@ const createDialog = useTemplateRef("createDialog");
 
 const errorHandlingStore = useErrorHandlingStore();
 
-const { importing, exportItem: exportPassport, onFileSelect: onPassportFileSelect } = useExportImport({
+const {
+  importing,
+  exportItem: exportPassport,
+  onFileSelect: onPassportFileSelect,
+} = useExportImport({
   exportFn: async (id) => {
     const response = await axiosIns.get(`/passports/${id}/export`);
     return response.data;
@@ -77,12 +74,9 @@ async function routeToQrCode(id: string) {
 
 function forwardToPresentationErrorMessage(e: unknown): string {
   if (e instanceof AxiosError) {
-    if (!e.response)
-      return t("dpp.forwardToPresentationErrorNetwork");
-    if (e.response.status === 404)
-      return t("dpp.forwardToPresentationError404");
-    if (e.response.status === 403)
-      return t("dpp.forwardToPresentationError403");
+    if (!e.response) return t("dpp.forwardToPresentationErrorNetwork");
+    if (e.response.status === 404) return t("dpp.forwardToPresentationError404");
+    if (e.response.status === 403) return t("dpp.forwardToPresentationError403");
   }
   return t("dpp.forwardToPresentationError");
 }
@@ -98,12 +92,8 @@ async function forwardToPresentationChat(item: SharedDppDto) {
   try {
     const uuid = await resolvePassportUuid(item);
     await router.push(`/presentation/${uuid}/chat`);
-  }
-  catch (e) {
-    errorHandlingStore.logErrorWithNotification(
-      forwardToPresentationErrorMessage(e),
-      e,
-    );
+  } catch (e) {
+    errorHandlingStore.logErrorWithNotification(forwardToPresentationErrorMessage(e), e);
   }
 }
 

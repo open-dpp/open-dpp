@@ -10,12 +10,8 @@ const mocks = vi.hoisted(() => {
   };
 });
 
-const fetchMediaMock
-  = vi.fn<
-    (
-      mediaId: string,
-    ) => Promise<{ blob: Blob | null; mediaInfo: { id: string } }>
-  >();
+const fetchMediaMock =
+  vi.fn<(mediaId: string) => Promise<{ blob: Blob | null; mediaInfo: { id: string } }>>();
 
 vi.mock("../stores/media.ts", () => ({
   useMediaStore: () => ({
@@ -46,9 +42,7 @@ describe("useMediaFileCollection", () => {
   });
   const translate = (key: string) => key;
 
-  const errorHandlingStore = generatedErrorHandlingStoreMock(
-    mocks.logErrorNotification,
-  );
+  const errorHandlingStore = generatedErrorHandlingStoreMock(mocks.logErrorNotification);
 
   function mountHarness() {
     const Harness = defineComponent({
@@ -150,7 +144,7 @@ describe("useMediaFileCollection", () => {
 
     move("c", 1);
     expect(files.value).toHaveLength(3);
-    expect(files.value.map(m => m.mediaInfo.id)).toEqual(["a", "c", "b"]);
+    expect(files.value.map((m) => m.mediaInfo.id)).toEqual(["a", "c", "b"]);
   });
 
   it("modify file", async () => {
@@ -172,6 +166,6 @@ describe("useMediaFileCollection", () => {
     await add("f");
     await modify("f", "g");
     expect(files.value).toHaveLength(4);
-    expect(files.value.map(m => m.mediaInfo.id)).toEqual(["e", "d", "c", "g"]);
+    expect(files.value.map((m) => m.mediaInfo.id)).toEqual(["e", "d", "c", "g"]);
   });
 });

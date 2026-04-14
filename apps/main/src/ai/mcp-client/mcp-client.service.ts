@@ -60,12 +60,11 @@ export class McpClientService implements OnModuleDestroy {
   }
 
   async getTools(auth: { user: User | null; member: Member | null }) {
-    return await this.client.getTools(
-      ["productPassport"],
-      { headers: {
+    return await this.client.getTools(["productPassport"], {
+      headers: {
         "x-user-role": auth.user?.role ?? UserRole.ANONYMOUS,
         ...(auth.member ? { "x-member-role": auth.member?.role } : {}),
-      } },
-    );
+      },
+    });
   }
 }

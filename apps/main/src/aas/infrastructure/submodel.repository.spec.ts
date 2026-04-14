@@ -37,10 +37,7 @@ describe("submodelRepository", () => {
           },
         ]),
       ],
-      providers: [
-        SubmodelRegistryInitializer,
-        SubmodelRepository,
-      ],
+      providers: [SubmodelRegistryInitializer, SubmodelRepository],
     }).compile();
     await module.init();
     submodelRepository = module.get<SubmodelRepository>(SubmodelRepository);
@@ -55,26 +52,23 @@ describe("submodelRepository", () => {
           entityType: EntityType.CoManagedEntity,
           idShort: "EntitySubId",
           statements: [
-            Property.create(
-              {
-                value: "http://shells.smartfactory.de/aHR0cHM6Ly9zbWFydGZhY3RvcnkuZGUvc2hlbGxzLy1TUjdCYm5jSkc",
-                valueType: DataTypeDef.String,
-                category: "CONSTANT",
-                description: [
-                  LanguageText.create(
-                    {
-                      language: "en",
-                      text: "URL of the application",
-                    },
-                  ),
-                  LanguageText.create({
-                    language: "de",
-                    text: "URL der Anwendung",
-                  }),
-                ],
-                idShort: "ApplicationURL",
-              },
-            ),
+            Property.create({
+              value:
+                "http://shells.smartfactory.de/aHR0cHM6Ly9zbWFydGZhY3RvcnkuZGUvc2hlbGxzLy1TUjdCYm5jSkc",
+              valueType: DataTypeDef.String,
+              category: "CONSTANT",
+              description: [
+                LanguageText.create({
+                  language: "en",
+                  text: "URL of the application",
+                }),
+                LanguageText.create({
+                  language: "de",
+                  text: "URL der Anwendung",
+                }),
+              ],
+              idShort: "ApplicationURL",
+            }),
           ],
         }),
       ],

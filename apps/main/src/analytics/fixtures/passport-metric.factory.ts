@@ -9,27 +9,24 @@ import {
 
 export const nowDate = new Date("2025-01-01T12:00:00Z");
 
-export const passportMetricCreateFactory
-  = Factory.define<PassportMetricCreateProps>(() => ({
-    source: {
-      passportId: randomUUID(),
-      type: MeasurementType.PAGE_VIEWS,
-      templateId: randomUUID(),
-      organizationId: randomUUID(),
-    },
-    date: nowDate,
-  }));
+export const passportMetricCreateFactory = Factory.define<PassportMetricCreateProps>(() => ({
+  source: {
+    passportId: randomUUID(),
+    type: MeasurementType.PAGE_VIEWS,
+    templateId: randomUUID(),
+    organizationId: randomUUID(),
+  },
+  date: nowDate,
+}));
 
-export const passportMetricFactory = Factory.define<PassportMetricDbProps>(
-  () => ({
-    id: uuidv7(),
-    source: {
-      passportId: randomUUID(),
-      type: MeasurementType.PAGE_VIEWS,
-      templateId: randomUUID(),
-      organizationId: randomUUID(),
-    },
-    date: nowDate,
-    values: [],
-  }),
-);
+export const passportMetricFactory = Factory.define<PassportMetricDbProps>(() => ({
+  id: uuidv7(),
+  source: {
+    passportId: randomUUID(),
+    type: MeasurementType.PAGE_VIEWS,
+    templateId: randomUUID(),
+    organizationId: randomUUID(),
+  },
+  date: nowDate,
+  values: [],
+}));

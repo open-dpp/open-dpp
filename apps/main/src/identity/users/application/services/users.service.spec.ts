@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Test, TestingModule } from "@nestjs/testing";
-import { NotFoundInDatabaseException } from "@open-dpp/exception";
+import { NotFoundError, NotFoundInDatabaseException } from "@open-dpp/exception";
 import { AUTH } from "../../../auth/auth.provider";
 import { User } from "../../domain/user";
 import { UserRole } from "../../domain/user-role.enum";
@@ -19,8 +19,7 @@ describe("UsersService", () => {
       findOneById: jest.fn(),
       findOneByEmail: jest.fn(),
       findAllByIds: jest.fn(),
-      setUserEmailVerified: jest.fn(),
-      setUserRole: jest.fn(),
+      update: jest.fn(),
     };
 
     mockAuth = {
@@ -41,7 +40,11 @@ describe("UsersService", () => {
   });
 
   it("should create user", async () => {
-    const savedUser = User.create({ email: "test@example.com", firstName: "John", lastName: "Doe" });
+    const savedUser = User.create({
+      email: "test@example.com",
+      firstName: "John",
+      lastName: "Doe",
+    });
     mockRepo.save.mockResolvedValue(savedUser);
     const result = await service.createUser("test@example.com", "John", "Doe");
     expect(mockRepo.save).toHaveBeenCalledWith(expect.any(User));
@@ -50,9 +53,9 @@ describe("UsersService", () => {
 
   it("should throw if save returns null", async () => {
     mockRepo.save.mockResolvedValue(null);
-    await expect(service.createUser("test@example.com", "John", "Doe"))
-      .rejects
-      .toThrow("Failed to save user with email test@example.com");
+    await expect(service.createUser("test@example.com", "John", "Doe")).rejects.toThrow(
+      "Failed to save user with email test@example.com",
+    );
   });
 
   it("should find one by id", async () => {
@@ -62,7 +65,7 @@ describe("UsersService", () => {
     expect(result).toEqual({ id: "1" });
   });
 
-  it("should throw if not found in findOneAndFail", async () => {
+  it("should propagate repository error in findOneOrFail", async () => {
     mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
     await expect(service.findOneOrFail("1")).rejects.toThrow(NotFoundInDatabaseException);
   });
@@ -77,34 +80,68 @@ describe("UsersService", () => {
     expect(mockRepo.findAllByIds).toHaveBeenCalledWith(["1", "2"]);
   });
 
-  it("should set user role", async () => {
-    const user = User.create({ email: "test@example.com", firstName: "John", lastName: "Doe", role: UserRole.USER });
+  it("should set user role via domain method", async () => {
+    const user = User.create({
+      email: "test@example.com",
+      firstName: "John",
+      lastName: "Doe",
+      role: UserRole.USER,
+    });
     const updatedUser = user.withRole(UserRole.ADMIN);
-    mockRepo.findOneById.mockResolvedValue(user);
-    mockRepo.setUserRole.mockResolvedValue(updatedUser);
+    mockRepo.findOneOrFail.mockResolvedValue(user);
+    mockRepo.update.mockResolvedValue(updatedUser);
 
     const result = await service.setUserRole(user.id, UserRole.ADMIN);
 
     expect(mockRepo.findOneOrFail).toHaveBeenCalledWith(user.id);
-    expect(mockRepo.setUserRole).toHaveBeenCalledWith(user.id, UserRole.ADMIN);
+    expect(mockRepo.update).toHaveBeenCalledWith(expect.objectContaining({ role: UserRole.ADMIN }));
     expect(result.role).toBe(UserRole.ADMIN);
   });
 
   it("should throw if user not found when setting role", async () => {
     mockRepo.findOneOrFail.mockRejectedValue(new NotFoundInDatabaseException(User.name));
 
-    await expect(service.setUserRole("nonexistent", UserRole.ADMIN))
-      .rejects
-      .toThrow(NotFoundInDatabaseException);
+    await expect(service.setUserRole("nonexistent", UserRole.ADMIN)).rejects.toThrow(
+      NotFoundInDatabaseException,
+    );
   });
 
   it("should throw if repository fails to update role", async () => {
     const user = User.create({ email: "test@example.com", firstName: "John", lastName: "Doe" });
-    mockRepo.findOneById.mockResolvedValue(user);
-    mockRepo.setUserRole.mockResolvedValue(null);
+    mockRepo.findOneOrFail.mockResolvedValue(user);
+    mockRepo.update.mockResolvedValue(null);
 
-    await expect(service.setUserRole(user.id, UserRole.ADMIN))
-      .rejects
-      .toThrow(`Failed to update role for user ${user.id}`);
+    await expect(service.setUserRole(user.id, UserRole.ADMIN)).rejects.toThrow(NotFoundError);
+  });
+
+  it("should set user email verified via domain method", async () => {
+    const user = User.create({ email: "test@example.com", firstName: "John", lastName: "Doe" });
+    const updatedUser = user.withEmailVerified(true);
+    mockRepo.findOneByEmail.mockResolvedValue(user);
+    mockRepo.update.mockResolvedValue(updatedUser);
+
+    const result = await service.setUserEmailVerified("test@example.com", true);
+
+    expect(mockRepo.findOneByEmail).toHaveBeenCalledWith("test@example.com");
+    expect(mockRepo.update).toHaveBeenCalledWith(expect.objectContaining({ emailVerified: true }));
+    expect(result.emailVerified).toBe(true);
+  });
+
+  it("should throw if user not found when setting email verified", async () => {
+    mockRepo.findOneByEmail.mockResolvedValue(null);
+
+    await expect(service.setUserEmailVerified("nonexistent@example.com", true)).rejects.toThrow(
+      NotFoundError,
+    );
+  });
+
+  it("should throw if repository fails to update email verified", async () => {
+    const user = User.create({ email: "test@example.com", firstName: "John", lastName: "Doe" });
+    mockRepo.findOneByEmail.mockResolvedValue(user);
+    mockRepo.update.mockResolvedValue(null);
+
+    await expect(service.setUserEmailVerified("test@example.com", true)).rejects.toThrow(
+      NotFoundError,
+    );
   });
 });

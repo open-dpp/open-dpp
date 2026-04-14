@@ -1,7 +1,4 @@
-import {
-
-  Language,
-} from "@open-dpp/dto";
+import { Language } from "@open-dpp/dto";
 
 import { describe, expect, it } from "vitest";
 import { useAasUtils } from "./aas-utils.ts";
@@ -16,9 +13,7 @@ describe("aas", () => {
     let aasUtils = useAasUtils({ translate, selectedLanguage: Language.en });
     expect(aasUtils.parseDisplayNameFromAas(assetAdministrationShell)).toEqual("my name");
     aasUtils = useAasUtils({ translate, selectedLanguage: Language.de });
-    expect(aasUtils.parseDisplayNameFromAas(assetAdministrationShell)).toEqual(
-      "common.untitled",
-    );
+    expect(aasUtils.parseDisplayNameFromAas(assetAdministrationShell)).toEqual("common.untitled");
 
     const environment = {
       assetAdministrationShells: [{ ...assetAdministrationShell, id: "id1" }],

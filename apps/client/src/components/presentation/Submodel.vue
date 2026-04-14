@@ -17,9 +17,9 @@ const { description: name } = useDisplayName(title);
 <template>
   <div
     :id="idShort"
-    class="w-full mt-6 first:mt-0 rounded-xl border border-surface-200 bg-surface-0 shadow-sm p-6"
+    class="border-surface-200 bg-surface-0 mt-6 w-full rounded-xl border p-6 shadow-sm first:mt-0"
   >
-    <h3 class="text-lg font-semibold text-surface-900 border-l-3 border-primary-500 pl-4 mb-6">
+    <h3 class="text-surface-900 border-primary-500 mb-6 border-l-3 pl-4 text-lg font-semibold">
       {{ name }}
     </h3>
     <dl class="grid grid-cols-1">

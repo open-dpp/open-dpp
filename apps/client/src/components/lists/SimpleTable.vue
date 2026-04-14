@@ -20,8 +20,8 @@ const headers = computed(() =>
 
 const rowKeys = computed(() => {
   return props.rows.length > 0
-    ? Object.keys((props.rows[0] as Record<string, string>)).filter(
-        key => !props.ignoreRowKeys?.includes(key),
+    ? Object.keys(props.rows[0] as Record<string, string>).filter(
+        (key) => !props.ignoreRowKeys?.includes(key),
       )
     : [];
 });
@@ -29,11 +29,7 @@ const rowKeys = computed(() => {
 function copyIdentifierToClipboard(key: string, text: string) {
   if (key === "uuid" || key === "id") {
     navigator.clipboard.writeText(text);
-    notificationStore.addSuccessNotification(
-      "In die Zwischenablage kopiert.",
-      undefined,
-      1000,
-    );
+    notificationStore.addSuccessNotification("In die Zwischenablage kopiert.", undefined, 1000);
   }
 }
 </script>
@@ -53,25 +49,20 @@ function copyIdentifierToClipboard(key: string, text: string) {
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-200 bg-white">
-      <tr
-        v-for="(row, rowIndex) in rows"
-        :key="rowIndex"
-        :data-cy="`row-${rowIndex}`"
-      >
+      <tr v-for="(row, rowIndex) in rows" :key="rowIndex" :data-cy="`row-${rowIndex}`">
         <td
           v-for="(key, colIndex) in rowKeys"
           :key="colIndex"
           :class="{
-            'hover:cursor-pointer hover:text-indigo-600':
-              key === 'uuid' || key === 'id',
+            'hover:cursor-pointer hover:text-indigo-600': key === 'uuid' || key === 'id',
           }"
-          class="whitespace-nowrap py-4 text-sm text-gray-500"
+          class="py-4 text-sm whitespace-nowrap text-gray-500"
           @click="copyIdentifierToClipboard(key, row[key] as string)"
         >
           {{ row[key] }}
         </td>
         <td
-          class="whitespace-nowrap py-4 pr-4 text-right text-sm font-medium sm:pr-3 gap-4 flex flex-row"
+          class="flex flex-row gap-4 py-4 pr-4 text-right text-sm font-medium whitespace-nowrap sm:pr-3"
         >
           <router-link
             v-for="(action, index) in rowActions"

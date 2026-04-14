@@ -1,11 +1,11 @@
-import { http, HttpResponse } from 'msw'
+import { http, HttpResponse } from "msw";
 
-const baseURL = 'https://api.cloud.open-dpp.de'
+const baseURL = "https://api.cloud.open-dpp.de";
 
-export const statusResponse = { version: '0.1.0' }
+export const statusResponse = { version: "0.1.0" };
 
 export const statusHandlers = [
   http.get(`${baseURL}/status`, () => {
-    return HttpResponse.json(statusResponse)
+    return HttpResponse.json(statusResponse);
   }),
-]
+];

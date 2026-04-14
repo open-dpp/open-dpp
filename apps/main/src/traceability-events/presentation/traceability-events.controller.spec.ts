@@ -49,13 +49,14 @@ describe("dppEventsController", () => {
           useClass: AuthGuard,
         },
       ],
-    }).overrideProvider(EmailService).useValue({
-      send: jest.fn(),
-    }).compile();
+    })
+      .overrideProvider(EmailService)
+      .useValue({
+        send: jest.fn(),
+      })
+      .compile();
 
-    controller = module.get<TraceabilityEventsController>(
-      TraceabilityEventsController,
-    );
+    controller = module.get<TraceabilityEventsController>(TraceabilityEventsController);
   });
 
   it("should be defined", () => {

@@ -18,16 +18,9 @@ const emits = defineEmits<{
       <select
         aria-label="Select a tab"
         class="col-start-1 row-start-1 w-full appearance-none rounded-md bg-white py-2 pr-8 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
-        @change="
-          (event) =>
-            emits('change', (event.target as HTMLSelectElement).selectedIndex)
-        "
+        @change="(event) => emits('change', (event.target as HTMLSelectElement).selectedIndex)"
       >
-        <option
-          v-for="(tab, index) in tabs"
-          :key="index"
-          :selected="index === value"
-        >
+        <option v-for="(tab, index) in tabs" :key="index" :selected="index === value">
           {{ tab }}
         </option>
       </select>
@@ -37,30 +30,24 @@ const emits = defineEmits<{
       />
     </div>
     <div class="hidden sm:block">
-      <nav
-        aria-label="Tabs"
-        class="isolate flex divide-x divide-gray-200 rounded-lg shadow-sm"
-      >
+      <nav aria-label="Tabs" class="isolate flex divide-x divide-gray-200 rounded-lg shadow-sm">
         <button
           v-for="(tab, index) in tabs"
           :key="index"
           :aria-current="index === value ? 'page' : undefined"
           :class="[
-            index === value
-              ? 'text-gray-900'
-              : 'text-gray-500 hover:text-gray-700',
+            index === value ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700',
             index === 0 ? 'rounded-l-lg' : '',
             index === tabs.length - 1 ? 'rounded-r-lg' : '',
           ]"
-          class="hover:cursor-pointer group relative min-w-0 flex-1 overflow-hidden bg-white px-4 py-4 text-center text-sm font-medium hover:bg-gray-50 focus:z-10"
+          class="group relative min-w-0 flex-1 overflow-hidden bg-white px-4 py-4 text-center text-sm font-medium hover:cursor-pointer hover:bg-gray-50 focus:z-10"
           type="button"
           @click="emits('change', index)"
         >
           <span>{{ tab }}</span>
           <span
-            class="absolute inset-x-0 bottom-0 h-0.5" :class="[
-              index === value ? 'bg-indigo-500' : 'bg-transparent',
-            ]"
+            class="absolute inset-x-0 bottom-0 h-0.5"
+            :class="[index === value ? 'bg-indigo-500' : 'bg-transparent']"
             aria-hidden="true"
           />
         </button>

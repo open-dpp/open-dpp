@@ -31,10 +31,7 @@ const spinnerStyle = computed(() => {
 
 <template>
   <div v-show="loading" class="v-spinner">
-    <div
-      class="v-ring v-ring1"
-      :style="{ height: size, width: size, position: 'relative' }"
-    >
+    <div class="v-ring v-ring1" :style="{ height: size, width: size, position: 'relative' }">
       <div class="v-ring v-ring2" :style="{ ...spinnerStyle }" />
       <div class="v-ring v-ring3" :style="{ ...spinnerStyle }" />
     </div>
