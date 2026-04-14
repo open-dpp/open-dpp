@@ -1,8 +1,13 @@
 @import "tailwindcss";
 
+:root {
+  --primary-500: #6bad87;
+  --primary-600: #00965e;
+}
+
 @theme {
-  --color-primary-500: #6bad87;
-  --color-primary-600: #00965e;
+  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-600);
 }
 
 @plugin '@tailwindcss/forms';

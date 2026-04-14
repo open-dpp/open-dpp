@@ -359,6 +359,11 @@
         "label": "Name der Organisation",
         "error": "Bitte geben Sie einen Namen ein."
       },
+      "color": {
+        "label": "Vordergrundfarbe",
+        "description": "Diese Farbe wird als Grundlage für eine Farbpalette genommen, aus der Vordergrundfarfben ausgewählt werden.",
+        "badContrast": "Schlechter Kontrast: Diese Farbe könnte zu unleserlichen Texten führen"
+      },
       "updateError": "Fehler beim Aktualisieren der Organisation.",
       "updateSuccess": "Organisationseinstellungen erfolgreich gespeichert."
     },
@@ -381,7 +386,8 @@
       "description": "Einladungen zu dieser Organisation"
     },
     "settings": {
-      "title": "Organisation anpassen"
+      "title": "Organisation anpassen",
+      "branding": "Branding"
     },
     "admin": {
       "title": "Administration",

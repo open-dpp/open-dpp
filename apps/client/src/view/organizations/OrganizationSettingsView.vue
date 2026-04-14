@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import type { OrganizationDto } from "@open-dpp/api-client";
 import type { BrandingDto } from "@open-dpp/dto";
-import { updatePreset } from "@primeuix/themes";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
 import { onMounted, ref } from "vue";
@@ -26,21 +25,6 @@ const branding = ref<BrandingDto | null>(null);
 const nameInvalid = ref(false);
 const { applyBranding } = useBranding();
 
-function lightenHexColor(hex: string, amount: number): string {
-  const normalizedHex = hex.trim().replace(/^#/, "");
-  if (!/^[0-9a-f]{6}$/i.test(normalizedHex)) {
-    return normalizedHex;
-  }
-
-  const channel = (index: number) => {
-    const value = Number.parseInt(normalizedHex.slice(index, index + 2), 16);
-    const adjusted = Math.round(value + (255 - value) * amount);
-    return Math.min(255, Math.max(0, adjusted)).toString(16).padStart(2, "0");
-  };
-
-  return `${channel(0)}${channel(2)}${channel(4)}`;
-}
-
 async function save() {
   if (
     !organization.value
@@ -64,16 +48,6 @@ async function save() {
     });
 
     branding.value = brandingResult.data;
-    const primaryColor = branding.value.primaryColor ?? "000000";
-
-    updatePreset({
-      semantic: {
-        primary: {
-          500: `#${primaryColor}`,
-          600: `#${lightenHexColor(primaryColor, 0.08)}`,
-        },
-      },
-    });
 
     nameInvalid.value = false;
     organization.value = result.data;
@@ -141,6 +115,7 @@ onMounted(async () => {
             for="name"
             class="block text-sm font-medium leading-6 text-gray-900"
           >{{ t("organizations.form.color.label") }}</label>
+          <small class="text-gray-700">{{ t("organizations.form.color.description") }}</small>
           <div class="flex items-center gap-2">
             <ColorPicker
               id="name"
@@ -157,6 +132,13 @@ onMounted(async () => {
                 :invalid="nameInvalid"
               />
             </InputGroup>
+            <Button
+              severity="secondary"
+              :disabled="branding.primaryColor === null"
+              @click="branding.primaryColor = null"
+            >
+              {{ t("common.reset") }}
+            </Button>
           </div>
         </div>
       </form>
