@@ -26,37 +26,39 @@ const nameInvalid = ref(false);
 const { applyBranding } = useBranding();
 
 async function save() {
-  if (
-    !organization.value
-    || !branding.value
-    || !indexStore.selectedOrganization
-  ) {
-    return;
-  }
-
   try {
-    const result = await apiClient.dpp.organizations.update(
-      indexStore.selectedOrganization,
-      {
-        name: organization.value.name,
-      },
-    );
+    let updatedSettings = false;
+    if (organization.value && indexStore.selectedOrganization) {
+      const result = await apiClient.dpp.organizations.update(
+        indexStore.selectedOrganization,
+        {
+          name: organization.value.name,
+        },
+      );
 
-    const brandingResult = await apiClient.dpp.branding.set({
-      logo: branding.value.logo,
-      primaryColor: branding.value.primaryColor,
-    });
+      nameInvalid.value = false;
+      organization.value = result.data;
+      updatedSettings = true;
 
-    branding.value = brandingResult.data;
+      await organizationStore.fetchOrganizations();
+    }
 
-    nameInvalid.value = false;
-    organization.value = result.data;
+    if (branding.value) {
+      const brandingResult = await apiClient.dpp.branding.set({
+        logo: branding.value.logo,
+        primaryColor: branding.value.primaryColor,
+      });
 
-    await organizationStore.fetchOrganizations();
-    await applyBranding();
-    notificationStore.addSuccessNotification(
-      t("organizations.form.updateSuccess"),
-    );
+      branding.value = brandingResult.data;
+      updatedSettings = true;
+    }
+
+    if (updatedSettings) {
+      await applyBranding();
+      notificationStore.addSuccessNotification(
+        t("organizations.form.updateSuccess"),
+      );
+    }
   }
   catch (e) {
     nameInvalid.value = true;
@@ -99,7 +101,7 @@ onMounted(async () => {
           }}</small>
         </div>
       </form>
-      <form v-if="branding" class="mt-5">
+      <form v-if="branding" @submit.prevent="save" class="mt-5">
         <h3 class="text-lg py-2 font-semibold leading-6 text-gray-900">
           {{ t("organizations.settings.branding") }}
         </h3>
@@ -115,7 +117,9 @@ onMounted(async () => {
             for="name"
             class="block text-sm font-medium leading-6 text-gray-900"
           >{{ t("organizations.form.color.label") }}</label>
-          <small class="text-gray-700">{{ t("organizations.form.color.description") }}</small>
+          <small class="text-gray-700">{{
+            t("organizations.form.color.description")
+          }}</small>
           <div class="flex items-center gap-2">
             <ColorPicker
               id="name"

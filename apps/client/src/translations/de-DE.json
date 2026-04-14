@@ -360,9 +360,9 @@
         "error": "Bitte geben Sie einen Namen ein."
       },
       "color": {
-        "label": "Vordergrundfarbe",
-        "description": "Diese Farbe wird als Grundlage für eine Farbpalette genommen, aus der Vordergrundfarfben ausgewählt werden.",
-        "badContrast": "Schlechter Kontrast: Diese Farbe könnte zu unleserlichen Texten führen"
+        "label": "Primärfarbe",
+        "description": "Diese Farbe dient als Ausgangspunkt für die generierte Farbpalette.",
+        "badContrast": "Schwacher Kontrast: Diese Farbe könnte zu schwer lesbarem Text führen"
       },
       "updateError": "Fehler beim Aktualisieren der Organisation.",
       "updateSuccess": "Organisationseinstellungen erfolgreich gespeichert."

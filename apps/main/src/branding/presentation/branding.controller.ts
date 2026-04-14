@@ -37,7 +37,7 @@ export class BrandingController {
   @Get("/instance")
   async getInstanceBranding(
   ) {
-    return BrandingDtoSchema.parse(this.brandingRepository.getDefaultBranding());
+    return BrandingDtoSchema.parse(this.brandingRepository.getDefaultBranding().toPlain());
   }
 
   @AllowAnonymous()

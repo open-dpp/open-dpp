@@ -72,7 +72,7 @@ watch(
           <button
             v-if="model"
             class="shrink bg-red-200 rounded-sm p-2 hover:cursor-pointer"
-            @click.prevent="model = undefined"
+            @click.prevent="model = null"
           >
             <TrashIcon class="h-4 w-4" />
           </button>

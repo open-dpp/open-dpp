@@ -15,7 +15,7 @@ import { useMediaStore } from "../stores/media";
 
 const logo = ref<MediaFile>();
 
-function useBrandingCommon(requestLogo: () => Promise<AxiosResponse<BrandingDto>>) {
+function useBrandingCommon(requestBranding: () => Promise<AxiosResponse<BrandingDto>>) {
   const errorHandlingStore = useErrorHandlingStore();
   const mediaStore = useMediaStore();
   const { t } = useI18n();
@@ -29,47 +29,65 @@ function useBrandingCommon(requestLogo: () => Promise<AxiosResponse<BrandingDto>
 
   const src = computed(() => logo.value ? logo.value.url : "/api/branding/instance/logo");
 
+  const applyPrimaryColor = (primaryColor?: string | null) => {
+    let primary = "#6bad87";
+
+    if (primaryColor && primaryColor !== null) {
+      primary = `#${primaryColor}`;
+    }
+
+    const colorPalette = createColorPalette(primary);
+
+    updatePreset({
+      semantic: {
+        primary: {
+          ...colorPalette,
+        },
+      },
+    });
+
+    document.documentElement.style.setProperty(
+      "--primary-500",
+      colorPalette[500],
+    );
+
+    document.documentElement.style.setProperty(
+      "--primary-600",
+      colorPalette[600],
+    );
+  };
+
+  const applyLogo = async (newLogo?: string | null) => {
+    cleanupMediaUrls();
+    if (newLogo && newLogo !== null) {
+      try {
+        const mediaResult = await mediaStore.fetchMedia(newLogo);
+        if (mediaResult && mediaResult.blob) {
+          logo.value = {
+            blob: mediaResult.blob,
+            mediaInfo: mediaResult.mediaInfo,
+            url: createObjectUrl(mediaResult.blob),
+          };
+        }
+      }
+      catch (logoError) {
+        errorHandlingStore.logErrorWithNotification(
+          t("presentation.loadPassportMediaError"),
+          logoError,
+        );
+      }
+    }
+    else {
+      logo.value = undefined;
+    }
+  };
+
   const applyBranding = async () => {
     try {
-      const response = await requestLogo();
-      cleanupMediaUrls();
+      const response = await requestBranding();
       if (response.status === HTTPCode.OK) {
-        if (response.data.logo) {
-          const mediaResult = await mediaStore.fetchMedia(response.data.logo);
-          if (mediaResult && mediaResult.blob) {
-            logo.value = {
-              blob: mediaResult.blob,
-              mediaInfo: mediaResult.mediaInfo,
-              url: createObjectUrl(mediaResult.blob),
-            };
-          }
-        }
-
-        let primary = "#6bad87";
-
-        if (response.data.primaryColor && response.data.primaryColor !== null) {
-          primary = `#${response.data.primaryColor}`;
-        }
-
-        const colorPalette = createColorPalette(primary);
-
-        updatePreset({
-          semantic: {
-            primary: {
-              ...colorPalette,
-            },
-          },
-        });
-
-        document.documentElement.style.setProperty(
-          "--primary-500",
-          colorPalette[500],
-        );
-
-        document.documentElement.style.setProperty(
-          "--primary-600",
-          colorPalette[600],
-        );
+        applyPrimaryColor(response.data.primaryColor);
+        applyLogo(response.data.logo);
       }
     }
     catch (error) {
