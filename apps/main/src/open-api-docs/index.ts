@@ -10,11 +10,6 @@ const document = createDocument({
     title: "open-dpp API",
     version: "1.0.0",
   },
-  servers: [
-    {
-      url: "http://localhost:3000/api",
-      description: "Local test server",
-    },
     servers: [
       {
         url: "http://localhost:3000/api",
