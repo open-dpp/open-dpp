@@ -29,3 +29,9 @@ The instance logo is shown in the top-left area of the UI whenever no organizati
 In open-dpp, go to **Configure organizations** in the sidebar, then upload an image in the **Image for organization profile** field.
 
 Once uploaded, the organization logo will be displayed instead of the instance logo for that organization. This will also be visible for users visiting passports of the organization.
+
+## Primary Color
+
+In the same area as the Organization Logo settings, you can also configure the primary color.
+
+This color is applied across open-dpp for the selected organization, including the dashboard and all digital product passports created by that organization.
