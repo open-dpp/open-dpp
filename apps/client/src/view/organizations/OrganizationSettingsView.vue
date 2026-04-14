@@ -101,7 +101,7 @@ onMounted(async () => {
           }}</small>
         </div>
       </form>
-      <form v-if="branding" @submit.prevent="save" class="mt-5">
+      <form v-if="branding" class="mt-5" @submit.prevent="save">
         <h3 class="text-lg py-2 font-semibold leading-6 text-gray-900">
           {{ t("organizations.settings.branding") }}
         </h3>

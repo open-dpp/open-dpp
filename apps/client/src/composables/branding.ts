@@ -32,7 +32,7 @@ function useBrandingCommon(requestBranding: () => Promise<AxiosResponse<Branding
   const applyPrimaryColor = (primaryColor?: string | null) => {
     let primary = "#6bad87";
 
-    if (primaryColor && primaryColor !== null) {
+    if (primaryColor) {
       primary = `#${primaryColor}`;
     }
 
@@ -59,7 +59,7 @@ function useBrandingCommon(requestBranding: () => Promise<AxiosResponse<Branding
 
   const applyLogo = async (newLogo?: string | null) => {
     cleanupMediaUrls();
-    if (newLogo && newLogo !== null) {
+    if (newLogo) {
       try {
         const mediaResult = await mediaStore.fetchMedia(newLogo);
         if (mediaResult && mediaResult.blob) {
