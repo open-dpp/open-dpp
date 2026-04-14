@@ -18,8 +18,7 @@ export class BrandingRepository {
     private readonly envService: EnvService,
     @InjectModel(BrandingDoc.name)
     private readonly BrandingDoc: MongooseModel<BrandingDoc>,
-  ) {
-  }
+  ) {}
 
   async findOneByOrganizationId(organizationId: string): Promise<Branding> {
     const brandingDoc = await this.BrandingDoc.findOne({ organizationId });
@@ -32,9 +31,14 @@ export class BrandingRepository {
 
       this.logger.debug("migrating branding from organization collection to branding collection");
 
-      return await this.save(Branding.fromPlain({
-        logo: activeOrganization.logo,
-      }, organizationId));
+      return await this.save(
+        Branding.fromPlain(
+          {
+            logo: activeOrganization.logo,
+          },
+          organizationId,
+        ),
+      );
     }
 
     return Branding.loadFromDb(brandingDoc.toObject());
@@ -47,7 +51,10 @@ export class BrandingRepository {
   async save(branding: Branding): Promise<Branding> {
     let brandingDoc = await this.BrandingDoc.findOne({ organizationId: branding.organizationId });
     if (!brandingDoc) {
-      brandingDoc = new this.BrandingDoc({ _schemaVersion: BrandingDocVersion.v1_0_0, _id: branding.id });
+      brandingDoc = new this.BrandingDoc({
+        _schemaVersion: BrandingDocVersion.v1_0_0,
+        _id: branding.id,
+      });
     }
 
     brandingDoc.set({

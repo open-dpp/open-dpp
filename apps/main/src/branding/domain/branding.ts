@@ -7,8 +7,7 @@ export class Branding {
     public readonly organizationId: string,
     public readonly logo: string | null = null,
     public readonly primaryColor: string | null = null,
-  ) {
-  }
+  ) {}
 
   static create(data: {
     id?: string;
@@ -30,12 +29,7 @@ export class Branding {
     logo?: string;
     primaryColor?: string;
   }) {
-    return new Branding(
-      data._id,
-      data.organizationId,
-      data.logo,
-      data.primaryColor,
-    );
+    return new Branding(data._id, data.organizationId, data.logo, data.primaryColor);
   }
 
   static fromPlain(data: unknown, organizationId: string) {

@@ -27,7 +27,7 @@ function useBrandingCommon(requestBranding: () => Promise<AxiosResponse<Branding
     }
   };
 
-  const src = computed(() => logo.value ? logo.value.url : "/api/branding/instance/logo");
+  const src = computed(() => (logo.value ? logo.value.url : "/api/branding/instance/logo"));
 
   const applyPrimaryColor = (primaryColor?: string | null) => {
     let primary = "#6bad87";
@@ -46,15 +46,9 @@ function useBrandingCommon(requestBranding: () => Promise<AxiosResponse<Branding
       },
     });
 
-    document.documentElement.style.setProperty(
-      "--primary-500",
-      colorPalette[500],
-    );
+    document.documentElement.style.setProperty("--primary-500", colorPalette[500]);
 
-    document.documentElement.style.setProperty(
-      "--primary-600",
-      colorPalette[600],
-    );
+    document.documentElement.style.setProperty("--primary-600", colorPalette[600]);
   };
 
   const applyLogo = async (newLogo?: string | null) => {
@@ -69,15 +63,13 @@ function useBrandingCommon(requestBranding: () => Promise<AxiosResponse<Branding
             url: createObjectUrl(mediaResult.blob),
           };
         }
-      }
-      catch (logoError) {
+      } catch (logoError) {
         errorHandlingStore.logErrorWithNotification(
           t("presentation.loadPassportMediaError"),
           logoError,
         );
       }
-    }
-    else {
+    } else {
       logo.value = undefined;
     }
   };
@@ -89,12 +81,8 @@ function useBrandingCommon(requestBranding: () => Promise<AxiosResponse<Branding
         applyPrimaryColor(response.data.primaryColor);
         applyLogo(response.data.logo);
       }
-    }
-    catch (error) {
-      errorHandlingStore.logErrorWithNotification(
-        t("presentation.loadPassportMediaError"),
-        error,
-      );
+    } catch (error) {
+      errorHandlingStore.logErrorWithNotification(t("presentation.loadPassportMediaError"), error);
     }
   };
 

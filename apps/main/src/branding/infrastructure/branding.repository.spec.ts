@@ -73,15 +73,13 @@ describe("brandingRepository", () => {
     const orgId = randomUUID();
     const logo = "logo-from-organization";
 
-    jest
-      .spyOn(organizationService, "getOrganization")
-      .mockResolvedValue(
-        Organization.create({
-          name: "acme",
-          slug: `acme-${randomUUID()}`,
-          logo,
-        }),
-      );
+    jest.spyOn(organizationService, "getOrganization").mockResolvedValue(
+      Organization.create({
+        name: "acme",
+        slug: `acme-${randomUUID()}`,
+        logo,
+      }),
+    );
 
     const migratedBranding = await brandingRepository.findOneByOrganizationId(orgId);
     expect(organizationService.getOrganization).toHaveBeenCalledWith(orgId);

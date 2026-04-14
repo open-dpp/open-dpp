@@ -85,17 +85,7 @@ describe("createColorPalette", () => {
   it("creates all palette keys from 100 to 900", () => {
     const palette = createColorPalette("#336699");
 
-    expect(Object.keys(palette).map(Number)).toEqual([
-      100,
-      200,
-      300,
-      400,
-      500,
-      600,
-      700,
-      800,
-      900,
-    ]);
+    expect(Object.keys(palette).map(Number)).toEqual([100, 200, 300, 400, 500, 600, 700, 800, 900]);
   });
 
   it("places the original color at the contrast-determined palette position", () => {

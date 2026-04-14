@@ -10,17 +10,17 @@ const document = createDocument({
     title: "open-dpp API",
     version: "1.0.0",
   },
-    servers: [
-      {
-        url: "http://localhost:3000/api",
-        description: "Local test server",
-      },
-    ],
-    paths: {
-      ...aasPaths,
-      ...brandingPaths,
+  servers: [
+    {
+      url: "http://localhost:3000/api",
+      description: "Local test server",
     },
-  });
+  ],
+  paths: {
+    ...aasPaths,
+    ...brandingPaths,
+  },
+});
 
 export function buildOpenApiDocumentation(): OpenAPIObject {
   return JSON.parse(JSON.stringify(document)) as unknown as OpenAPIObject;

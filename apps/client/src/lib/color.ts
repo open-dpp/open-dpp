@@ -4,7 +4,7 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
   if (normalized.length === 3) {
     normalized = normalized
       .split("")
-      .map(c => c + c)
+      .map((c) => c + c)
       .join("");
   }
 
@@ -66,9 +66,7 @@ function darkenHex(hex: string, amount: number): string {
 
 function srgbToLinear(channel: number): number {
   const c = channel / 255;
-  return c <= 0.04045
-    ? c / 12.92
-    : ((c + 0.055) / 1.055) ** 2.4;
+  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
 }
 
 function getLuminance(rgb: { r: number; g: number; b: number }): number {
@@ -121,9 +119,8 @@ function createColorPalette(hex: string): ColorPalette {
     const distance = Math.abs(index - baseIndex);
     const amount = distance * stepAmount;
 
-    palette[level] = index < baseIndex
-      ? lightenHex(normalizedHex, amount)
-      : darkenHex(normalizedHex, amount);
+    palette[level] =
+      index < baseIndex ? lightenHex(normalizedHex, amount) : darkenHex(normalizedHex, amount);
   }
 
   return palette;

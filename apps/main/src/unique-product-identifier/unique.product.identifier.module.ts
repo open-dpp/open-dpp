@@ -2,8 +2,14 @@ import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AasModule } from "../aas/aas.module";
 
-import { AssetAdministrationShellDoc, AssetAdministrationShellSchema } from "../aas/infrastructure/schemas/asset-administration-shell.schema";
-import { ConceptDescriptionDoc, ConceptDescriptionSchema } from "../aas/infrastructure/schemas/concept-description.schema";
+import {
+  AssetAdministrationShellDoc,
+  AssetAdministrationShellSchema,
+} from "../aas/infrastructure/schemas/asset-administration-shell.schema";
+import {
+  ConceptDescriptionDoc,
+  ConceptDescriptionSchema,
+} from "../aas/infrastructure/schemas/concept-description.schema";
 import { SubmodelDoc, SubmodelSchema } from "../aas/infrastructure/schemas/submodel.schema";
 import { BrandingModule } from "../branding/branding.module";
 import { BrandingDoc, BrandingSchema } from "../branding/infrastructure/branding.schema";
