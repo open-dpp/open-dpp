@@ -21,7 +21,7 @@
     "@types/qrcode": "^1.5.6",
     "@vee-validate/zod": "^4.15.1",
     "axios": "^1.13.2",
-    "better-auth": "^1.4.8",
+    "better-auth": "^1.6.2",
     "chart.js": "^4.5.1",
     "dayjs": "^1.11.19",
     "dompurify": "^3.3.1",
